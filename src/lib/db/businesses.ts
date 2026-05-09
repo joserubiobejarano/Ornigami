@@ -44,41 +44,34 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
 }
 
 export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusinessRow> {
-  const existing = await getBusinessForUser(userId);
+  const ownerUser = await resolveOwnerUser(userId);
+  const resolvedUserId = ownerUser?.id ?? userId;
+
+  const existing = await getBusinessForUser(resolvedUserId);
   if (existing) {
-    await ensureBusinessDefaults(existing.id, userId);
+    await ensureBusinessDefaults(existing.id, resolvedUserId);
     return existing;
   }
 
-  const identityRows = await sql`
-    SELECT u.email, p.business_name
-    FROM public.users u
-    LEFT JOIN public.profiles p ON p.id = u.id
-    WHERE u.id = ${userId}
-    LIMIT 1
-  `;
-  const identity = identityRows[0] as
-    | {
-        email: string | null;
-        business_name: string | null;
-      }
-    | undefined;
+  if (!ownerUser?.id) {
+    throw new Error("Could not resolve user in public.users for business creation.");
+  }
 
   const businessName =
-    identity?.business_name?.trim() ||
-    identity?.email?.trim() ||
+    ownerUser.business_name?.trim() ||
+    ownerUser.email?.trim() ||
     "My Business";
 
   const insertedRows = await sql`
     INSERT INTO public.businesses (owner_user_id, name)
-    VALUES (${userId}, ${businessName})
+    VALUES (${resolvedUserId}, ${businessName})
     RETURNING
       id, owner_user_id, name, business_type, city, country, website, phone,
       google_review_url, rebooking_url, tone, language, email_from_name, created_at, updated_at
   `;
   const created = insertedRows[0] as DbBusinessRow;
 
-  await ensureBusinessDefaults(created.id, userId);
+  await ensureBusinessDefaults(created.id, resolvedUserId);
   return created;
 }
 
@@ -138,4 +131,50 @@ async function ensureBusinessDefaults(businessId: string, userId: string): Promi
   await upsertBusinessAgentStatus(businessId, "review_replies", "active");
   await upsertBusinessAgentStatus(businessId, "review_booster", "inactive");
   await upsertBusinessAgentStatus(businessId, "speed_to_lead", "inactive");
+}
+
+async function resolveOwnerUser(userId: string): Promise<{
+  id: string | null;
+  email: string | null;
+  business_name: string | null;
+} | null> {
+  const byIdRows = await sql`
+    SELECT u.id, u.email, p.business_name
+    FROM public.users u
+    LEFT JOIN public.profiles p ON p.id = u.id
+    WHERE u.id = ${userId}
+    LIMIT 1
+  `;
+  const byId = byIdRows[0] as
+    | {
+        id: string;
+        email: string | null;
+        business_name: string | null;
+      }
+    | undefined;
+  if (byId) {
+    return byId;
+  }
+
+  // Legacy sessions can carry an id that no longer exists in public.users.
+  // If it looks like an email, resolve the canonical user row by email.
+  if (userId.includes("@")) {
+    const byEmailRows = await sql`
+      SELECT u.id, u.email, p.business_name
+      FROM public.users u
+      LEFT JOIN public.profiles p ON p.id = u.id
+      WHERE lower(u.email) = lower(${userId})
+      LIMIT 1
+    `;
+    const byEmail = byEmailRows[0] as
+      | {
+          id: string;
+          email: string | null;
+          business_name: string | null;
+        }
+      | undefined;
+    return byEmail ?? null;
+  }
+
+  return null;
 }

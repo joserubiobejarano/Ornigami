@@ -10,14 +10,22 @@ import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
 
 export default async function DashboardPageRoute() {
   const session = await requireUser();
-  const business = await getOrCreateBusinessForUser(session.user.id);
+  let businessName: string | null = null;
+  try {
+    const business = await getOrCreateBusinessForUser(session.user.id);
+    businessName = business.name;
+  } catch {
+    // Keep dashboard functional for legacy/misaligned sessions.
+  }
 
   return (
     <DashboardPage width="lg" className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Welcome to Ornigami</h1>
         <p className="text-sm text-foreground">Manage your AI agents for local business growth.</p>
-        <p className="text-sm text-muted-foreground">Business: {business.name}</p>
+        {businessName ? (
+          <p className="text-sm text-muted-foreground">Business: {businessName}</p>
+        ) : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
