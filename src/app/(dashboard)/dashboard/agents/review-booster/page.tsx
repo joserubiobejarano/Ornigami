@@ -11,7 +11,21 @@ import {
 
 export default async function ReviewBoosterPage() {
   const session = await requireUser();
-  const business = await getOrCreateBusinessForUser(session.user.id);
+  let business;
+  try {
+    business = await getOrCreateBusinessForUser(session.user.id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (
+      message.includes("Could not resolve user in public.users") &&
+      session.user.email
+    ) {
+      business = await getOrCreateBusinessForUser(session.user.email);
+    } else {
+      throw error;
+    }
+  }
+
   const [stats, recentVisits] = await Promise.all([
     getFollowupStats(business.id),
     getRecentVisits(business.id, 20),

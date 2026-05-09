@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/neon";
+import { ensureUserFromOAuth } from "@/lib/db/users";
 
 export type DbBusinessRow = {
   id: string;
@@ -29,7 +30,17 @@ export type DbBusinessAgentRow = {
   updated_at: string;
 };
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 export async function getBusinessForUser(userId: string): Promise<DbBusinessRow | null> {
+  if (!isUuid(userId)) {
+    return null;
+  }
+
   const rows = await sql`
     SELECT
       id, owner_user_id, name, business_type, city, country, website, phone,
@@ -44,8 +55,22 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
 }
 
 export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusinessRow> {
-  const ownerUser = await resolveOwnerUser(userId);
+  let ownerUser = await resolveOwnerUser(userId);
+
+  if (!ownerUser?.id && userId.includes("@")) {
+    await ensureUserFromOAuth({
+      email: userId,
+      name: null,
+      image: null,
+    });
+    ownerUser = await resolveOwnerUser(userId);
+  }
+
   const resolvedUserId = ownerUser?.id ?? userId;
+
+  if (!isUuid(resolvedUserId)) {
+    throw new Error("Could not resolve user in public.users for business creation.");
+  }
 
   const existing = await getBusinessForUser(resolvedUserId);
   if (existing) {
@@ -138,26 +163,8 @@ async function resolveOwnerUser(userId: string): Promise<{
   email: string | null;
   business_name: string | null;
 } | null> {
-  const byIdRows = await sql`
-    SELECT u.id, u.email, p.business_name
-    FROM public.users u
-    LEFT JOIN public.profiles p ON p.id = u.id
-    WHERE u.id = ${userId}
-    LIMIT 1
-  `;
-  const byId = byIdRows[0] as
-    | {
-        id: string;
-        email: string | null;
-        business_name: string | null;
-      }
-    | undefined;
-  if (byId) {
-    return byId;
-  }
-
-  // Legacy sessions can carry an id that no longer exists in public.users.
-  // If it looks like an email, resolve the canonical user row by email.
+  // Legacy sessions can carry email in place of UUID user ids.
+  // Resolve by email first to avoid UUID cast errors in Postgres.
   if (userId.includes("@")) {
     const byEmailRows = await sql`
       SELECT u.id, u.email, p.business_name
@@ -174,6 +181,24 @@ async function resolveOwnerUser(userId: string): Promise<{
         }
       | undefined;
     return byEmail ?? null;
+  }
+
+  const byIdRows = await sql`
+    SELECT u.id, u.email, p.business_name
+    FROM public.users u
+    LEFT JOIN public.profiles p ON p.id = u.id
+    WHERE u.id = ${userId}
+    LIMIT 1
+  `;
+  const byId = byIdRows[0] as
+    | {
+        id: string;
+        email: string | null;
+        business_name: string | null;
+      }
+    | undefined;
+  if (byId) {
+    return byId;
   }
 
   return null;
