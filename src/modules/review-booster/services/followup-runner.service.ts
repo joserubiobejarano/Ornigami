@@ -1,4 +1,11 @@
 import { buildSubject, generateFollowupEmailBody } from "@/modules/review-booster/services/followup-email-generator.service";
+import {
+  createFollowupMessage,
+  hasSentMessageForVisit,
+  listEligibleFollowupVisits,
+  markVisitFailed,
+  markVisitSent
+} from "@/modules/review-booster/services/review-booster-db.service";
 import { sendWithResend } from "@/modules/review-booster/services/resend.provider";
 import { FollowupRunResult, FollowupVisit } from "@/modules/review-booster/types/followup.types";
 
@@ -101,5 +108,36 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
     sent,
     failed,
     skipped
+  };
+}
+
+export function createFollowupRunnerDependencies(businessId: string): FollowupRunnerDependencies {
+  // TODO: enforce caller/user permission checks for this businessId in route/action layer.
+  return {
+    listEligibleVisits: () => listEligibleFollowupVisits(businessId),
+    hasSentMessageForVisit,
+    markVisitSent,
+    markVisitFailed,
+    recordSentMessage: async (input) => {
+      await createFollowupMessage({
+        visitId: input.visitId,
+        businessId: input.businessId,
+        subject: input.subject,
+        body: input.body,
+        providerMessageId: input.providerMessageId,
+        status: "sent",
+        sentAt: new Date().toISOString()
+      });
+    },
+    recordFailedMessage: async (input) => {
+      await createFollowupMessage({
+        visitId: input.visitId,
+        businessId: input.businessId,
+        subject: input.subject,
+        body: input.body,
+        status: "failed",
+        errorMessage: input.errorMessage
+      });
+    }
   };
 }

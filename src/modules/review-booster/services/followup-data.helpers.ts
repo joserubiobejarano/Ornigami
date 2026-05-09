@@ -54,7 +54,4 @@ export function normalizeBusinessSettings(input: BusinessSettingsInput): Busines
   };
 }
 
-// Pending integration:
-// Legacy Follow-Up data helpers relied on DB-bound methods (getFirstBusiness,
-// upsertFirstBusiness, createVisit, findCsvVisitDuplicate, getRecentVisits).
-// They are intentionally not connected here until Review Booster DB schema is finalized.
+// DB-bound helpers now live in review-booster-db.service.ts and require explicit business scoping.
