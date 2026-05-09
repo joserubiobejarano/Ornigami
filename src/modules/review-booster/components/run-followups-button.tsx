@@ -24,7 +24,7 @@ export function RunFollowupsButton({
     setResult(null);
 
     try {
-      const res = await fetch("/api/followups/run-now", { method: "POST" });
+      const res = await fetch("/api/review-booster/run-now", { method: "POST" });
       const data = await res.json();
 
       if (!res.ok) {
