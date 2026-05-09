@@ -5,9 +5,7 @@ import { ReactNode, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 
 import { DashboardCallout, DashboardTopNav } from "@/components/dashboard";
-import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 function readDemoCookie(): boolean {
   return typeof document !== "undefined" && document.cookie.includes("ll_demo=true");
@@ -48,7 +46,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh flex flex-col">
       {!isConnectGate && (
-        <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="mx-auto flex max-w-5xl items-center justify-center px-4 py-3 lg:px-8">
             <DashboardTopNav className="w-full justify-center" />
           </div>
@@ -60,10 +58,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {isConnectGate ? (
             <div className="flex min-h-0 flex-1 flex-col justify-center">{children}</div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start">
-              <DashboardSidebar className="lg:sticky lg:top-20" />
-              <div className={cn("flex min-h-0 flex-1 flex-col")}>{children}</div>
-            </div>
+            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
           )}
         </div>
       </main>

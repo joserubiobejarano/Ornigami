@@ -65,7 +65,6 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       customer_name: visit.customer_name,
       service_name: visit.service_name,
       google_review_url: visit.google_review_url,
-      rebooking_url: visit.rebooking_url,
       tone_setting: visit.tone,
       language: visit.language
     });
@@ -76,7 +75,8 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
         business_name: visit.business_name || "Your Business",
         customer_email: String(visit.customer_email || ""),
         subject,
-        body
+        body,
+        google_review_url: visit.google_review_url
       });
 
       await deps.recordSentMessage({

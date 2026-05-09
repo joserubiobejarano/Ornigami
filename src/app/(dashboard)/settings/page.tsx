@@ -21,6 +21,13 @@ import { toast } from "sonner";
 
 const DEFAULT_TONE = "Friendly and professional";
 
+const TONE_OPTIONS = [
+  "Warm and friendly",
+  "Professional",
+  "Casual",
+  "Luxury",
+] as const;
+
 type GoogleLocation = {
   id: string;
   locationName: string;
@@ -254,7 +261,7 @@ function SettingsPageContent() {
 
   if (isDemo) {
     return (
-      <DashboardPage width="sm">
+      <DashboardPage width="md">
         <DashboardPageHeader
           title="Settings"
           description="Configure review reply defaults and connect Google Business Profile."
@@ -294,11 +301,8 @@ function SettingsPageContent() {
   const gbpConnected = Boolean(connectionData?.connected);
 
   return (
-    <DashboardPage width="sm">
-      <DashboardPageHeader
-        title="Settings"
-        description="Reply defaults for AI-generated text and your Google Business Profile connection."
-      />
+    <DashboardPage width="md">
+      <DashboardPageHeader title="Settings" />
 
       <Card className="shadow-sm">
         <CardHeader>
@@ -327,12 +331,18 @@ function SettingsPageContent() {
                 />
               </FormField>
               <FormField label="Tone" htmlFor="settings-tone">
-                <Input
+                <select
                   id="settings-tone"
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  placeholder={DEFAULT_TONE}
-                />
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-foreground"
+                >
+                  {TONE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </FormField>
               <FormField
                 label="Owner name or team name (optional)"
@@ -514,7 +524,7 @@ export default function SettingsPage() {
   return (
     <Suspense
       fallback={
-        <DashboardPage width="sm">
+        <DashboardPage width="md">
           <p className="text-sm text-muted-foreground">Loading settings…</p>
         </DashboardPage>
       }

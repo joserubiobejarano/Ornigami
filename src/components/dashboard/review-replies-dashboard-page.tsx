@@ -5,9 +5,8 @@ import {
   DashboardCallout,
   DashboardEmptyState,
   DashboardPage,
-  DashboardSection,
 } from "@/components/dashboard";
-import { Button } from "@/components/ui/button";
+import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-agent-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { getDashboardMetrics } from "@/lib/dashboard-metrics";
@@ -42,7 +41,9 @@ export async function ReviewRepliesDashboardPage() {
     !isDemo && metrics && !metrics.criticalError && metrics.totalReviewsSynced === 0;
 
   return (
-    <DashboardPage width="lg">
+    <DashboardPage width="md">
+      <ReviewRepliesAgentNav />
+
       {planInfo && hasPaidAccess && !isDemo && (
         <UpgradeBanner planStatus={planInfo.planStatus} currentPeriodEnd={planInfo.currentPeriodEnd} />
       )}
@@ -125,7 +126,7 @@ export async function ReviewRepliesDashboardPage() {
           description={
             <>
               Open{" "}
-              <Link href="/reviews" className="text-foreground underline-offset-4 hover:underline">
+              <Link href="/dashboard/agents/review-replies/reviews" className="text-foreground underline-offset-4 hover:underline">
                 Reviews
               </Link>{" "}
               and sync from Google Business Profile to load your inbox. Or try the workflow first with{" "}
@@ -149,20 +150,6 @@ export async function ReviewRepliesDashboardPage() {
           </p>
         </DashboardCallout>
       )}
-
-      <DashboardSection title="Quick actions">
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/reviews">Go to Reviews</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/demo">Test sample reviews</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/settings">Account &amp; reply settings</Link>
-          </Button>
-        </div>
-      </DashboardSection>
     </DashboardPage>
   );
 }

@@ -27,20 +27,12 @@ import {
 } from "@/lib/demo";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { DashboardCallout } from "@/components/dashboard";
+import { DashboardTopNav } from "@/components/dashboard/top-nav";
+import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-agent-nav";
 import { toast } from "sonner";
 
 const DEMO_HANDLED_HINT =
   "Handled for this demo — reply area is locked. Switch business type above or refresh the page to reset.";
-
-function ConnectCta() {
-  return (
-    <div className="flex flex-col items-stretch sm:items-center">
-      <Button asChild size="lg" className="w-full sm:w-auto">
-        <Link href="/settings">Connect your Google Business Profile</Link>
-      </Button>
-    </div>
-  );
-}
 
 function loadDemoState(type: DemoBusinessType) {
   return hydrateDemoDataset(getDemoDataset(type).reviews);
@@ -207,44 +199,45 @@ export default function DemoPage() {
   const [businessType, setBusinessType] = useState<DemoBusinessType>("restaurant");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10 pb-16">
-        <header className="flex justify-center sm:justify-start">
-          <ConnectCta />
-        </header>
+    <div className="min-h-dvh bg-background text-foreground">
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-5xl items-center justify-center px-4 py-3 lg:px-8">
+          <DashboardTopNav className="w-full justify-center" />
+        </div>
+      </header>
+      <main className="px-4 py-8 pb-16">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+          <ReviewRepliesAgentNav />
 
-        <section className="space-y-3">
-          <label htmlFor="demo-business-type" className="block text-sm font-medium">
-            Business type
-          </label>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
-            <select
-              id="demo-business-type"
-              className={cn(nativeSelectClassName, "w-full sm:max-w-md sm:shrink-0")}
-              value={businessType}
-              onChange={(e) => setBusinessType(e.target.value as DemoBusinessType)}
-            >
-              {DEMO_BUSINESS_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <DashboardCallout
-              variant="warning"
-              className="min-w-0 flex-1 py-2.5 sm:items-center [&>div]:space-y-0"
-            >
-              <p>Demo mode: you&apos;re using sample reviews.</p>
-            </DashboardCallout>
-          </div>
-        </section>
+          <section className="space-y-3">
+            <label htmlFor="demo-business-type" className="block text-sm font-medium">
+              Business type
+            </label>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
+              <select
+                id="demo-business-type"
+                className={cn(nativeSelectClassName, "w-full sm:max-w-md sm:shrink-0")}
+                value={businessType}
+                onChange={(e) => setBusinessType(e.target.value as DemoBusinessType)}
+              >
+                {DEMO_BUSINESS_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <DashboardCallout
+                variant="warning"
+                className="min-w-0 flex-1 py-2.5 sm:items-center [&>div]:space-y-0"
+              >
+                <p>Demo mode: you&apos;re using sample reviews.</p>
+              </DashboardCallout>
+            </div>
+          </section>
 
-        <DemoWorkspace key={businessType} businessType={businessType} />
-
-        <footer className="border-t border-border pt-8">
-          <ConnectCta />
-        </footer>
-      </div>
+          <DemoWorkspace key={businessType} businessType={businessType} />
+        </div>
+      </main>
     </div>
   );
 }

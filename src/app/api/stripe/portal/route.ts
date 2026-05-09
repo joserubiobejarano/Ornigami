@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { auth } from "@/auth";
 import { getServerAppUrl } from "@/lib/env";
+import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { sql } from "@/lib/db/neon";
 
 export async function POST() {
   try {
@@ -12,13 +14,51 @@ export async function POST() {
     if (!session?.user?.id || !session.user.email) {
       return NextResponse.redirect(new URL("/login", appUrl));
     }
+    const userEmail = session.user.email;
 
-    const customers = await stripe.customers.list({ email: session.user.email, limit: 1 });
-    const customer = customers.data[0] ?? (await stripe.customers.create({ email: session.user.email }));
+    let business;
+    try {
+      business = await getOrCreateBusinessForUser(session.user.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("Could not resolve user in public.users") && session.user.email) {
+        business = await getOrCreateBusinessForUser(session.user.email);
+      } else {
+        throw error;
+      }
+    }
+
+    const businessRows = await sql`
+      SELECT stripe_customer_id
+      FROM public.businesses
+      WHERE id = ${business.id}
+      LIMIT 1
+    `;
+    const existingBusinessCustomerId = (businessRows[0] as { stripe_customer_id: string | null } | undefined)
+      ?.stripe_customer_id;
+
+    const customer =
+      existingBusinessCustomerId
+        ? await stripe.customers.retrieve(existingBusinessCustomerId).catch(async () => {
+            const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+            return customers.data[0] ?? (await stripe.customers.create({ email: userEmail }));
+          })
+        : (await stripe.customers.list({ email: userEmail, limit: 1 })).data[0] ??
+          (await stripe.customers.create({ email: userEmail }));
+
+    if (!("id" in customer)) {
+      return NextResponse.json({ error: "Stripe customer resolution failed" }, { status: 500 });
+    }
+
+    await sql`
+      UPDATE public.businesses
+      SET stripe_customer_id = ${customer.id}
+      WHERE id = ${business.id}
+    `;
 
     const portal = await stripe.billingPortal.sessions.create({
       customer: customer.id,
-      return_url: `${appUrl}/settings`,
+      return_url: `${appUrl}/dashboard/billing`,
     });
 
     if (!portal.url) return NextResponse.json({ error: "Stripe portal URL missing" }, { status: 500 });

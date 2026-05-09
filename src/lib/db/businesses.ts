@@ -30,6 +30,8 @@ export type DbBusinessAgentRow = {
   updated_at: string;
 };
 
+const ACTIVE_ACCESS_STATUSES = new Set(["active", "trialing"]);
+
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value
@@ -115,6 +117,27 @@ export async function getBusinessAgentStatus(
   return row ?? null;
 }
 
+export async function getBusinessAgents(businessId: string): Promise<DbBusinessAgentRow[]> {
+  const rows = await sql`
+    SELECT
+      id, business_id, agent_id, status, activated_at, deactivated_at, created_at, updated_at
+    FROM public.business_agents
+    WHERE business_id = ${businessId}
+    ORDER BY agent_id ASC
+  `;
+
+  return rows as DbBusinessAgentRow[];
+}
+
+export async function canAccessAgent(businessId: string, agentId: string): Promise<boolean> {
+  const statusRow = await getBusinessAgentStatus(businessId, agentId);
+  if (!statusRow) {
+    return false;
+  }
+
+  return ACTIVE_ACCESS_STATUSES.has(statusRow.status);
+}
+
 export async function upsertBusinessAgentStatus(
   businessId: string,
   agentId: string,
@@ -153,9 +176,29 @@ async function ensureBusinessDefaults(businessId: string, userId: string): Promi
     ON CONFLICT (business_id, user_id) DO NOTHING
   `;
 
-  await upsertBusinessAgentStatus(businessId, "review_replies", "active");
-  await upsertBusinessAgentStatus(businessId, "review_booster", "inactive");
-  await upsertBusinessAgentStatus(businessId, "speed_to_lead", "inactive");
+  await ensureDefaultBusinessAgents(businessId);
+}
+
+export async function ensureDefaultBusinessAgents(businessId: string): Promise<void> {
+  const defaults: ReadonlyArray<{ agentId: string; status: string }> = [
+    { agentId: "review_replies", status: "active" },
+    { agentId: "review_booster", status: "inactive" },
+    { agentId: "speed_to_lead", status: "inactive" },
+  ];
+
+  for (const item of defaults) {
+    await sql`
+      INSERT INTO public.business_agents (business_id, agent_id, status, activated_at, deactivated_at)
+      VALUES (
+        ${businessId},
+        ${item.agentId},
+        ${item.status},
+        CASE WHEN ${item.status} = 'active' THEN now() ELSE NULL END,
+        CASE WHEN ${item.status} = 'inactive' THEN now() ELSE NULL END
+      )
+      ON CONFLICT (business_id, agent_id) DO NOTHING
+    `;
+  }
 }
 
 async function resolveOwnerUser(userId: string): Promise<{

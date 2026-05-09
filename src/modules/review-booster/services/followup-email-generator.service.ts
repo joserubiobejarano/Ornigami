@@ -7,7 +7,6 @@ type EmailInput = {
   customer_name?: string | null;
   service_name?: string | null;
   google_review_url: string;
-  rebooking_url?: string | null;
   tone_setting?: string | null;
   language?: string | null;
 };
@@ -21,16 +20,12 @@ export function buildSubject(businessName: string) {
 export function buildFallbackEmailBody(input: EmailInput) {
   const customerName = input.customer_name || "there";
   const serviceName = input.service_name ? ` for ${input.service_name}` : "";
-  const rebookText = input.rebooking_url
-    ? `If you would like to visit again, you can rebook here: ${input.rebooking_url}`
-    : "";
 
   return [
     `Hi ${customerName},`,
     "",
     `Thank you so much for visiting ${input.business_name}${serviceName} yesterday. We truly appreciate your trust and support.`,
-    `If you had a great experience, we would be grateful if you shared a quick Google review: ${input.google_review_url}`,
-    rebookText,
+    "If you had a great experience, we would be grateful if you could leave a quick Google review.",
     "",
     "Warmly,",
     input.business_name
@@ -49,11 +44,11 @@ Write a short, friendly follow-up email to ${input.customer_name || "the custome
 
 Include:
 - A genuine thank-you, maximum 2 sentences
-- A subtle ask to leave a Google review using this link: ${input.google_review_url}
-- A soft invite to rebook using this link if available: ${input.rebooking_url || "N/A"}
+- A subtle ask to leave a Google review using a short CTA sentence like "Leave your review"
 - Keep it warm, simple, and not pushy
 - Max 120 words
 - No subject line
+- Do not include raw URLs in the email body
 
 Tone: ${input.tone_setting || "warm and friendly"}
 Language: ${input.language || "en"}

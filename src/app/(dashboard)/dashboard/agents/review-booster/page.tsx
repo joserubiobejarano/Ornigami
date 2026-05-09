@@ -1,9 +1,11 @@
+import Link from "next/link";
+
+import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
 import { requireUser } from "@/lib/auth";
-import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
 import { FollowupsNav } from "@/modules/review-booster/components/followups-nav";
-import { PageHeader } from "@/modules/review-booster/components/page-header";
 import { RunFollowupsButton } from "@/modules/review-booster/components/run-followups-button";
-import { SummaryCard } from "@/modules/review-booster/components/summary-card";
+import { StatusBadge } from "@/modules/review-booster/components/status-badge";
 import {
   getFollowupStats,
   getRecentVisits,
@@ -25,55 +27,100 @@ export default async function ReviewBoosterPage() {
       throw error;
     }
   }
+  const hasAccess = await canAccessAgent(business.id, "review_booster");
+  if (!hasAccess) {
+    return (
+      <AgentActivationPlaceholder
+        agentName="Review Booster"
+        description="Post-visit review request automations."
+      />
+    );
+  }
 
   const [stats, recentVisits] = await Promise.all([
     getFollowupStats(business.id),
     getRecentVisits(business.id, 20),
   ]);
 
+  const statCards = [
+    { label: "Pending", value: stats.pending },
+    { label: "Sent", value: stats.sent },
+    { label: "Failed", value: stats.failed },
+    { label: "Skipped", value: stats.skipped },
+  ];
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <FollowupsNav />
-      <PageHeader
-        title="Review Booster Dashboard"
-        description="Send thank-you emails and Google review requests after customer visits."
-      >
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-          Business: {business.name}
-        </span>
-      </PageHeader>
+
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Review Booster Dashboard</h1>
+        </div>
+        <Link
+          href="/dashboard/agents/review-booster/new"
+          className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+        >
+          Add Visit
+        </Link>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-800 shadow-sm">
+        Upload completed visits and automatically send warm thank-you emails with a Google review request.
+      </section>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <SummaryCard label="Pending" value={stats.pending} />
-        <SummaryCard label="Sent" value={stats.sent} />
-        <SummaryCard label="Failed" value={stats.failed} />
-        <SummaryCard label="Skipped" value={stats.skipped} />
+        {statCards.map((card) => (
+          <article key={card.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{card.label}</p>
+            <p className="mt-2 text-4xl font-semibold leading-none text-slate-900">{card.value}</p>
+          </article>
+        ))}
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <RunFollowupsButton />
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Recent visits</h2>
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-4 py-4">
+          <h2 className="text-2xl font-semibold text-slate-900">Recent Visits</h2>
+        </div>
         {recentVisits.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-600">No visits yet for this business.</p>
+          <p className="px-4 py-5 text-sm text-slate-600">No visits yet for this business.</p>
         ) : (
-          <ul className="mt-3 space-y-2">
-            {recentVisits.map((visit) => (
-              <li
-                key={visit.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm"
-              >
-                <span className="font-medium text-slate-900">
-                  {visit.customer_name || "Unknown customer"}
-                </span>
-                <span className="text-slate-600">
-                  {visit.service_name || "Service"} - {visit.followup_status || "pending"}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-900">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Customer</th>
+                  <th className="px-4 py-3 font-semibold">Email</th>
+                  <th className="px-4 py-3 font-semibold">Service</th>
+                  <th className="px-4 py-3 font-semibold">Visited At</th>
+                  <th className="px-4 py-3 font-semibold">Source</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Error Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentVisits.map((visit) => (
+                  <tr key={visit.id} className="border-b border-slate-200 last:border-b-0">
+                    <td className="px-4 py-3 text-slate-900">{visit.customer_name || "-"}</td>
+                    <td className="px-4 py-3 text-slate-900">{visit.customer_email || "-"}</td>
+                    <td className="px-4 py-3 text-slate-900">{visit.service_name || "-"}</td>
+                    <td className="px-4 py-3 text-slate-900">
+                      {new Date(visit.visited_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-slate-900 capitalize">{visit.source || "-"}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={visit.followup_status || "pending"} />
+                    </td>
+                    <td className="px-4 py-3 text-slate-900">-</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>

@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AGENT_REGISTRY } from "@/lib/agents/registry";
 import { requireUser } from "@/lib/auth";
-import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { getBusinessAgents, getOrCreateBusinessForUser } from "@/lib/db/businesses";
 
 export default async function DashboardPageRoute() {
   const session = await requireUser();
   let businessName: string | null = null;
+  let agentStatusById = new Map<string, string>();
   try {
     const business = await getOrCreateBusinessForUser(session.user.id);
     businessName = business.name;
+    const businessAgents = await getBusinessAgents(business.id);
+    agentStatusById = new Map(businessAgents.map((row) => [row.agent_id, row.status]));
   } catch {
     // Keep dashboard functional for legacy/misaligned sessions.
   }
@@ -30,36 +33,58 @@ export default async function DashboardPageRoute() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {AGENT_REGISTRY.map((agent) => {
-          const isActive = agent.status === "active";
-          const hasRoute = agent.id !== "speed_to_lead";
+          const agentStatus = agentStatusById.get(agent.id);
+          const canOpen = agentStatus === "active" || agentStatus === "trialing";
+          const isComingSoon = agent.id === "speed_to_lead";
 
           return (
-            <Card key={agent.id} className="shadow-sm">
+            <Card key={agent.id} className="shadow-md md:shadow-lg">
               <CardHeader>
                 <div className="flex items-center justify-between gap-2">
                   <CardTitle>{agent.name}</CardTitle>
-                  <Badge variant={isActive ? "default" : "secondary"}>
-                    {isActive ? "Active" : "Coming soon"}
-                  </Badge>
+                  {isComingSoon ? (
+                    <Badge variant="secondary">Coming soon</Badge>
+                  ) : canOpen ? (
+                    <Badge className="border border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                      Active
+                    </Badge>
+                  ) : (
+                    <Badge className="border border-red-200 bg-red-100 text-red-700 hover:bg-red-100">
+                      Not active
+                    </Badge>
+                  )}
                 </div>
                 <CardDescription>{agent.shortDescription}</CardDescription>
               </CardHeader>
               <CardContent>
-                {hasRoute ? (
-                  <Button asChild variant={isActive ? "default" : "outline"}>
-                    <Link href={agent.basePath}>
-                      {isActive ? "Open agent" : "View placeholder"}
-                    </Link>
-                  </Button>
-                ) : (
+                {isComingSoon ? (
                   <Button disabled variant="outline">
                     Coming soon
                   </Button>
+                ) : canOpen ? (
+                  <Button asChild className="bg-[#0f172b] text-white hover:opacity-90">
+                    <Link href={agent.basePath}>
+                      Open agent
+                    </Link>
+                  </Button>
+                ) : (
+                  <form action="/api/stripe/checkout" method="post">
+                    <input type="hidden" name="agent_id" value={agent.id} />
+                    <Button type="submit" className="bg-[#0f172b] text-white hover:opacity-90">
+                      Activate
+                    </Button>
+                  </form>
                 )}
               </CardContent>
             </Card>
           );
         })}
+      </div>
+
+      <div>
+        <Button asChild className="bg-[#0f172b] text-white hover:opacity-90">
+          <Link href="/dashboard/billing">Billing & subscriptions</Link>
+        </Button>
       </div>
     </DashboardPage>
   );

@@ -23,7 +23,7 @@ export const AGENT_REGISTRY: AgentRegistryItem[] = [
     slug: "review-booster",
     name: "Review Booster",
     shortDescription: "Post-visit review request automations.",
-    status: "coming_soon",
+    status: "active",
     basePath: "/dashboard/agents/review-booster",
   },
   {

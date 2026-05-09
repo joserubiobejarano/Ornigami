@@ -4,6 +4,7 @@ type SendEmailInput = {
   customer_email: string;
   subject: string;
   body: string;
+  google_review_url: string;
 };
 
 type ResendSendResponse = {
@@ -24,6 +25,24 @@ export async function sendWithResend(input: SendEmailInput) {
 
   const fromName = input.email_from_name || input.business_name;
   const from = `${fromName} <${process.env.EMAIL_FROM}>`;
+  const safeBody = input.body
+    .split("&")
+    .join("&amp;")
+    .split("<")
+    .join("&lt;")
+    .split(">")
+    .join("&gt;");
+
+  const bodyHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+      <p>${safeBody.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>")}</p>
+      <p style="margin-top: 16px;">
+        <a href="${input.google_review_url}" style="display:inline-block;background:#0f172b;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">
+          Leave your review
+        </a>
+      </p>
+    </div>
+  `.trim();
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -35,7 +54,8 @@ export async function sendWithResend(input: SendEmailInput) {
       from,
       to: input.customer_email,
       subject: input.subject,
-      text: input.body
+      text: `${input.body}\n\nLeave your review: ${input.google_review_url}`,
+      html: bodyHtml
     })
   });
 
