@@ -15,7 +15,10 @@ export function PageHeader({
   return (
     <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 shadow-sm sm:p-8">
       {backToOverview ? (
-        <Link href="/dashboard/followups" className="mb-3 inline-flex text-sm font-medium text-slate-700 hover:text-slate-900">
+        <Link
+          href="/dashboard/agents/review-booster"
+          className="mb-3 inline-flex text-sm font-medium text-slate-700 hover:text-slate-900"
+        >
           Back to overview
         </Link>
       ) : null}

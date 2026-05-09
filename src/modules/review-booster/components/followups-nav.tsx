@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-  { href: "/dashboard/followups", label: "Overview" },
-  { href: "/dashboard/followups/upload", label: "Upload CSV" },
-  { href: "/dashboard/followups/new", label: "Add Visit" },
-  { href: "/dashboard/followups/settings", label: "Settings" }
+  { href: "/dashboard/agents/review-booster", label: "Overview" },
+  { href: "/dashboard/agents/review-booster/upload", label: "Upload CSV" },
+  { href: "/dashboard/agents/review-booster/new", label: "Add Visit" },
+  { href: "/dashboard/agents/review-booster/settings", label: "Settings" }
 ];
 
 export function FollowupsNav() {
