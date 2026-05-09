@@ -5,13 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AGENT_REGISTRY } from "@/lib/agents/registry";
+import { requireUser } from "@/lib/auth";
+import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
 
-export default function DashboardPageRoute() {
+export default async function DashboardPageRoute() {
+  const session = await requireUser();
+  const business = await getOrCreateBusinessForUser(session.user.id);
+
   return (
     <DashboardPage width="lg" className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Welcome to Ornigami</h1>
         <p className="text-sm text-foreground">Manage your AI agents for local business growth.</p>
+        <p className="text-sm text-muted-foreground">Business: {business.name}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
