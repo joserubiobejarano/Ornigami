@@ -1,12 +1,23 @@
 # Neon database migrations
 
-**Canonical schema** for LocalLift lives only in `neon/migrations/`. Apply files **in numeric order** in the Neon SQL Editor, `psql`, or your migration runner before relying on new columns or tables.
+Canonical schema for LocalLift lives only in `neon/migrations`.
+
+Apply files in numeric order:
+
+1. `001_initial.sql`
+2. `002_auto_reply_profiles.sql`
+3. `003_business_foundation.sql`
+4. `004_review_booster_tables.sql`
+5. `005_business_agent_billing_fields.sql`
+
+## File purposes
 
 | File | Purpose |
 |------|---------|
-| `001_initial.sql` | Core tables: `users`, `profiles`, subscriptions/billing, GBP, `reviews`, `review_replies`, `leads`, `feedback`, etc. |
-| `002_auto_reply_profiles.sql` | Ensures `profiles.auto_reply_all_reviews` exists (idempotent if already present from `001_initial`). |
+| `001_initial.sql` | Core platform tables (`users`, `profiles`, billing, GBP, reviews, leads, feedback, projects). |
+| `002_auto_reply_profiles.sql` | Ensures `profiles.auto_reply_all_reviews` is present (idempotent safeguard). |
+| `003_business_foundation.sql` | Business ownership model: `businesses`, `business_members`, `business_agents`. |
+| `004_review_booster_tables.sql` | Review Booster domain tables for visits, sent messages, and integration events. |
+| `005_business_agent_billing_fields.sql` | Adds Stripe linkage fields to business/agent records. |
 
-Do **not** use removed legacy migration trees; this folder is the single source of truth.
-
-**Importing data from an old stack:** If you have a CSV or dump from another Postgres instance, map foreign keys to `public.users.id` and load into matching tables after the schema is applied.
+Do not maintain parallel migration trees. This folder is the only migration source of truth.
