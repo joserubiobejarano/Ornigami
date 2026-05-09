@@ -1,168 +1,62 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 
-import {
-  DashboardCallout,
-  DashboardEmptyState,
-  DashboardPage,
-  DashboardSection,
-} from "@/components/dashboard";
+import { DashboardPage } from "@/components/dashboard";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UpgradeBanner } from "@/components/UpgradeBanner";
-import { getDashboardMetrics } from "@/lib/dashboard-metrics";
-import { getUserPlanInfo } from "@/lib/plan-server";
-import { isPaidUser, isTrialing } from "@/lib/plan";
-import { auth } from "@/auth";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default async function DashboardPageRoute() {
-  const cookieStore = await cookies();
-  const isDemo = cookieStore.get("ll_demo")?.value === "true";
-
-  const metrics = await getDashboardMetrics(isDemo);
-  let planInfo = null;
-  let hasPaidAccess = false;
-
-  if (!isDemo) {
-    const session = await auth();
-    const user = session?.user;
-
-    if (user?.id) {
-      try {
-        planInfo = await getUserPlanInfo(user.id);
-        hasPaidAccess = isPaidUser(planInfo.planStatus) || isTrialing(planInfo.planStatus);
-      } catch (e) {
-        console.error("[Dashboard] Failed to fetch plan info:", e);
-      }
-    }
-  }
-
-  const showError = !isDemo && Boolean(metrics?.criticalError);
-  const isEmpty =
-    !isDemo && metrics && !metrics.criticalError && metrics.totalReviewsSynced === 0;
-
+export default function DashboardPageRoute() {
   return (
-    <DashboardPage width="lg">
-      {planInfo && hasPaidAccess && !isDemo && (
-        <UpgradeBanner planStatus={planInfo.planStatus} currentPeriodEnd={planInfo.currentPeriodEnd} />
-      )}
+    <DashboardPage width="lg" className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight">Welcome to Ornigami</h1>
+        <p className="text-sm text-foreground">Manage your AI agents for local business growth.</p>
+      </div>
 
-      {showError && (
-        <DashboardCallout variant="error">
-          <p>{metrics?.criticalError ?? "We could not load stats. Please refresh."}</p>
-        </DashboardCallout>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="shadow-sm">
-          <CardHeader className="space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-foreground">Reviews loaded</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-3xl font-bold tabular-nums tracking-tight">
-              {metrics?.totalReviewsSynced ?? 0}
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle>Review Replies</CardTitle>
+              <Badge>Active</Badge>
             </div>
-            <p className="text-xs leading-relaxed text-foreground">
-              {isDemo
-                ? "Sample data — mirrors “Loaded” on Reviews."
-                : "Reviews synced into your review inbox from Google Business Profile (all locations)."}
-            </p>
+            <CardDescription>Handle and respond to your Google reviews.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/dashboard/agents/review-replies">Open agent</Link>
+            </Button>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm">
-          <CardHeader className="space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-foreground">Unanswered</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-3xl font-bold tabular-nums tracking-tight">
-              {metrics?.unansweredReviews ?? 0}
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle>Review Booster</CardTitle>
+              <Badge variant="secondary">Coming soon</Badge>
             </div>
-            <p className="text-xs leading-relaxed text-foreground">
-              {isDemo
-                ? "Sample data — mirrors “Unanswered” on Reviews (no reply on Google yet)."
-                : "Not yet marked replied on Google after sync. On Reviews, some of these may already have a draft in the editor."}
-            </p>
+            <CardDescription>Post-visit review request automations.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link href="/dashboard/agents/review-booster">View placeholder</Link>
+            </Button>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm">
-          <CardHeader className="space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-foreground">Drafts</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-3xl font-bold tabular-nums tracking-tight">
-              {metrics?.draftsCount ?? 0}
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle>Speed to Lead</CardTitle>
+              <Badge variant="secondary">Coming soon</Badge>
             </div>
-            <p className="text-xs leading-relaxed text-foreground">
-              {isDemo
-                ? "Sample count — mirrors drafts in progress on the Reviews page."
-                : "Unposted drafts saved in LocalLift (database). Text you only have in the Reviews editor is not counted here."}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-foreground">Posted / replied</CardTitle>
+            <CardDescription>Lead response and qualification workflows.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-3xl font-bold tabular-nums tracking-tight">
-              {metrics?.repliesPostedThisMonth ?? 0}
-            </div>
-            <p className="text-xs leading-relaxed text-foreground">
-              {isDemo
-                ? "Sample data — replied reviews this period in demo."
-                : "Reviews marked replied on Google, updated this calendar month."}
-            </p>
+          <CardContent>
+            <Button disabled variant="outline">Coming soon</Button>
           </CardContent>
         </Card>
       </div>
-
-      {isEmpty && (
-        <DashboardEmptyState
-          title="No reviews synced yet"
-          description={
-            <>
-              Open{" "}
-              <Link href="/reviews" className="text-foreground underline-offset-4 hover:underline">
-                Reviews
-              </Link>{" "}
-              and sync from Google Business Profile to load your inbox. Or try the workflow first with{" "}
-              <Link href="/demo" className="text-foreground underline-offset-4 hover:underline">
-                sample reviews
-              </Link>{" "}
-              (no GBP required).
-            </>
-          }
-        />
-      )}
-
-      {isDemo && (
-        <DashboardCallout variant="info">
-          <p>
-            You&apos;re viewing sample review data. Open{" "}
-            <Link href="/demo" className="text-foreground underline-offset-4 hover:underline">
-              the live demo
-            </Link>{" "}
-            to walk through generate, draft, and reply — then connect GBP when you&apos;re ready.
-          </p>
-        </DashboardCallout>
-      )}
-
-      <DashboardSection title="Quick actions">
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/reviews">Go to Reviews</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/demo">Test sample reviews</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/settings">Account &amp; reply settings</Link>
-          </Button>
-        </div>
-      </DashboardSection>
     </DashboardPage>
   );
 }
