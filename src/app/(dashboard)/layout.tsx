@@ -5,6 +5,7 @@ import { ReactNode, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 
 import { DashboardCallout, DashboardTopNav } from "@/components/dashboard";
+import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -54,16 +55,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
       )}
       <main className="flex min-h-0 flex-1 flex-col p-6 lg:p-8">
-        <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
           <DemoBanner />
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col",
-              isConnectGate && "justify-center"
-            )}
-          >
-            {children}
-          </div>
+          {isConnectGate ? (
+            <div className="flex min-h-0 flex-1 flex-col justify-center">{children}</div>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start">
+              <DashboardSidebar className="lg:sticky lg:top-20" />
+              <div className={cn("flex min-h-0 flex-1 flex-col")}>{children}</div>
+            </div>
+          )}
         </div>
       </main>
     </div>
