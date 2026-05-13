@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AGENT_REGISTRY } from "@/lib/agents/registry";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,11 @@ import { cn } from "@/lib/utils";
 export function DashboardTopNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const activeAgents = useMemo(
     () => AGENT_REGISTRY.filter((agent) => agent.status === "active"),
     []
@@ -46,32 +51,44 @@ export function DashboardTopNav({ className }: { className?: string }) {
         Dashboard
       </Link>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className="h-10 min-w-52 justify-between rounded-lg border-border bg-background/90 px-3 text-sm font-medium"
-          >
-            <span>{selectedAgent?.name ?? "Select an agent"}</span>
-            <ChevronsUpDown className="size-4 opacity-70" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-52 rounded-lg p-1.5">
-          {activeAgents.map((agent) => {
-            const active = agent.basePath === selectedAgentPath;
-            return (
-              <DropdownMenuItem
-                key={agent.id}
-                onSelect={() => router.push(agent.basePath)}
-                className="cursor-pointer rounded-md px-2.5 py-2"
-              >
-                <span className="flex-1">{agent.name}</span>
-                {active ? <Check className="size-4 text-foreground" /> : null}
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {isMounted ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-10 min-w-52 justify-between rounded-lg border-border bg-background/90 px-3 text-sm font-medium"
+            >
+              <span>{selectedAgent?.name ?? "Select an agent"}</span>
+              <ChevronsUpDown className="size-4 opacity-70" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-52 rounded-lg p-1.5">
+            {activeAgents.map((agent) => {
+              const active = agent.basePath === selectedAgentPath;
+              return (
+                <DropdownMenuItem
+                  key={agent.id}
+                  onSelect={() => router.push(agent.basePath)}
+                  className="cursor-pointer rounded-md px-2.5 py-2"
+                >
+                  <span className="flex-1">{agent.name}</span>
+                  {active ? <Check className="size-4 text-foreground" /> : null}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <Button
+          variant="outline"
+          className="h-10 min-w-52 justify-between rounded-lg border-border bg-background/90 px-3 text-sm font-medium"
+          aria-hidden="true"
+          tabIndex={-1}
+        >
+          <span>{selectedAgent?.name ?? "Select an agent"}</span>
+          <ChevronsUpDown className="size-4 opacity-70" />
+        </Button>
+      )}
     </nav>
   );
 }

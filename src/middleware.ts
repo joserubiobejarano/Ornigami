@@ -43,6 +43,18 @@ export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
 
+  if (pathname === "/demo/review-replies") {
+    return NextResponse.rewrite(new URL("/demo-review-replies", req.url));
+  }
+
+  if (pathname === "/demo/review-booster") {
+    return NextResponse.rewrite(new URL("/demo-review-booster", req.url));
+  }
+
+  if (pathname === "/api/public-demo/review-booster") {
+    return NextResponse.rewrite(new URL("/api-public-demo-review-booster", req.url));
+  }
+
   const demoCookie = req.cookies.get("ll_demo")?.value === "true";
   const isDemoMode = !sessionUser && demoCookie;
 

@@ -1,591 +1,879 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import {
   MessageSquare,
+  Star,
   FileText,
-  CheckCircle,
-  UtensilsCrossed,
-  Stethoscope,
-  Scissors,
-  Dumbbell,
-  Wrench,
-  ShoppingBag,
+  Check,
+  ArrowRight,
+  ChevronDown,
+  MapPin,
+  Users,
+  Send,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
-import { FeatureCard } from "@/components/marketing/FeatureCard";
-import { FeatureSplit } from "@/components/marketing/FeatureSplit";
-import { TestimonialCard } from "@/components/marketing/TestimonialCard";
-import { FAQAccordion } from "@/components/marketing/FAQAccordion";
 
-const howItWorks = [
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const agents = [
   {
-    number: 1,
-    title: "Connect your Google Business Profile",
+    name: "Review Replies",
+    tagline: "Reply to every review in seconds",
     description:
-      "Link your GBP in a few clicks so LocalLift can pull in your reviews and business details.",
-    accent: "from-purple-500 to-sky-400",
+      "Our AI monitors your Google inbox and drafts personalized, on-brand replies. Approve in one click — or let it run automatically.",
+    href: "/review-replies",
+    icon: MessageSquare,
+    gradient: "from-purple-500 to-sky-400",
+    lightBg: "bg-purple-50",
+    lightBorder: "border-purple-100",
+    bullets: ["Full review inbox, one clean view", "AI replies that sound like you", "Post directly to Google"],
   },
   {
-    number: 2,
-    title: "We learn your tone and sync your reviews",
+    name: "Review Booster",
+    tagline: "Turn customers into 5-star reviewers",
     description:
-      "Your reviews, business info, and insights update automatically — no manual input needed.",
-    accent: "from-orange-400 to-pink-500",
+      "After every visit, Review Booster sends a friendly follow-up asking for feedback. More reviews, more trust, higher Google rankings.",
+    href: "/review-booster",
+    icon: Star,
+    gradient: "from-orange-400 to-pink-500",
+    lightBg: "bg-orange-50",
+    lightBorder: "border-orange-100",
+    bullets: ["Automatic follow-up after each visit", "Smart timing for maximum response rate", "Track every campaign in real time"],
   },
   {
-    number: 3,
-    title: "Replies, content, and audits — all handled",
+    name: "Local SEO Content",
+    tagline: "Content that helps you show up first",
     description:
-      "AI-powered review replies, blog ideas, and Google posts from a single clean dashboard.",
-    accent: "from-emerald-400 to-teal-400",
+      "Blog posts, Google updates, and FAQ ideas written for your exact city, niche, and customer base — ready to publish in minutes.",
+    href: "/local-seo",
+    icon: FileText,
+    gradient: "from-emerald-400 to-teal-500",
+    lightBg: "bg-emerald-50",
+    lightBorder: "border-emerald-100",
+    bullets: ["Hyper-local blog drafts", "Google Business Profile posts", "FAQ ideas from real search data"],
   },
 ];
 
-const featureCards = [
+const steps = [
   {
-    label: "Review replies",
-    title: "Reply to every review in seconds",
-    points: [
-      "Inbox view of all your reviews in one place",
-      "On-brand AI drafts you can approve in one click",
-      "Send replies directly to Google",
-    ],
-    accent: "from-purple-500 to-sky-400",
-    icon: MessageSquare,
+    number: "01",
+    title: "Connect your Google Business Profile",
+    body: "Link your profile in a few clicks. No technical setup, no spreadsheets — just sign in and we take it from there.",
+    gradient: "from-purple-500 to-sky-400",
   },
   {
-    label: "Local content",
-    title: "Turn searchers into regulars",
-    points: [
-      "Blog ideas and outlines tailored to your city",
-      "Ready-to-post Google updates for promos and events",
-      "FAQ ideas based on what people actually search",
-    ],
-    accent: "from-orange-400 to-pink-500",
-    icon: FileText,
+    number: "02",
+    title: "We learn your tone and sync your reviews",
+    body: "Our AI reads your business info and past reviews to understand your voice. Your review inbox syncs automatically.",
+    gradient: "from-orange-400 to-pink-500",
   },
   {
-    label: "Profile audits",
-    title: "Keep your profile fully optimized",
-    points: [
-      "Spot missing hours, photos, and descriptions",
-      "Fix ranking issues with clear action steps",
-      "Get ongoing health checks for your profile",
-    ],
-    accent: "from-emerald-400 to-teal-400",
-    icon: CheckCircle,
+    number: "03",
+    title: "Three agents handle the rest",
+    body: "Replies go out, follow-ups get sent, content stays fresh. You stay in control and approve anything before it goes live.",
+    gradient: "from-emerald-400 to-teal-500",
   },
 ];
 
 const testimonials = [
   {
-    business: "BurgerMat",
-    role: "Owner",
-    location: "Madrid",
     name: "Marta Ruiz",
-    text: "Before LocalLift, I replied to reviews from my phone between orders. Now every review gets a thoughtful answer without me staying up late.",
-    color: "bg-gradient-to-br from-orange-500/30 to-pink-500/20",
+    role: "Owner",
+    business: "BurgerMat · Madrid",
+    text: "Before LocalLift, I'd reply to reviews from my phone between orders. Now every review gets a thoughtful answer without me staying up late.",
+    stars: 5,
   },
   {
-    business: "Smiles & Co Dental",
-    role: "Clinic manager",
-    location: "London",
     name: "Dr. Alex Carter",
+    role: "Clinic manager",
+    business: "Smiles & Co Dental · London",
     text: "We get a lot of anxious patients reading our reviews first. LocalLift helps us answer fast and keep the tone warm and professional.",
-    color: "bg-gradient-to-br from-purple-500/30 to-indigo-500/20",
+    stars: 5,
   },
   {
-    business: "UrbanFit Gym",
-    role: "Marketing lead",
-    location: "Barcelona",
     name: "Nina López",
+    role: "Marketing lead",
+    business: "UrbanFit Gym · Barcelona",
     text: "Our team was too busy to keep the Google profile updated. Now we have fresh posts each week and reviews are always replied to.",
-    color: "bg-gradient-to-br from-sky-500/30 to-blue-500/20",
+    stars: 5,
   },
 ];
 
-const audience = [
+const faqs = [
   {
-    label: "Restaurants",
-    icon: UtensilsCrossed,
-    colors:
-      "from-orange-500/20 to-pink-500/20 border-orange-500/40 hover:from-orange-500/30 hover:to-pink-500/30",
+    q: "Do I need a website to use LocalLift?",
+    a: "No. LocalLift works even if you only have a Google Business Profile. Connect your profile and we'll start replying to reviews and generating content right away.",
   },
   {
-    label: "Clinics",
-    icon: Stethoscope,
-    colors:
-      "from-purple-500/20 to-sky-500/20 border-purple-500/40 hover:from-purple-500/30 hover:to-sky-500/30",
+    q: "Will the AI replies sound like my brand?",
+    a: "Yes. During onboarding we learn your preferred tone, business personality, and style. Drafts sound like you — not like a robot.",
   },
   {
-    label: "Salons",
-    icon: Scissors,
-    colors:
-      "from-emerald-500/20 to-teal-500/20 border-emerald-500/40 hover:from-emerald-500/30 hover:to-teal-500/30",
+    q: "Is there a free trial?",
+    a: "Yes. You get a 7-day free trial with full access. No credit card required and you can cancel anytime.",
   },
   {
-    label: "Gyms",
-    icon: Dumbbell,
-    colors:
-      "from-orange-500/20 to-rose-500/20 border-orange-500/40 hover:from-orange-500/30 hover:to-rose-500/30",
+    q: "What is the Review Booster and how does it work?",
+    a: "Review Booster sends a short follow-up message to customers after their visit, asking them to leave a review on Google. You log the visit (or upload a CSV), and the agent handles the outreach.",
   },
   {
-    label: "Local services",
-    icon: Wrench,
-    colors:
-      "from-indigo-500/20 to-purple-500/20 border-indigo-500/40 hover:from-indigo-500/30 hover:to-purple-500/30",
+    q: "Will LocalLift post anything without my approval?",
+    a: "No. Everything is approve-first by default. You see the draft, make any edits, and decide what goes live. Automation is opt-in.",
   },
   {
-    label: "Retail stores",
-    icon: ShoppingBag,
-    colors:
-      "from-sky-500/20 to-blue-500/20 border-sky-500/40 hover:from-sky-500/30 hover:to-blue-500/30",
+    q: "Can I manage multiple locations?",
+    a: "Yes. You can connect multiple Google Business Profiles and manage all their reviews and content from a single dashboard.",
   },
 ];
+
+// ─── HERO MOCKUP ─────────────────────────────────────────────────────────────
+
+function ReviewInboxMockup() {
+  return (
+    <div className="relative select-none">
+      {/* Depth layers */}
+      <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-2xl bg-slate-100" />
+      <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-2xl border border-slate-200 bg-slate-50" />
+
+      {/* Card */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {/* Top bar */}
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+            </div>
+            <span className="ml-1 text-xs font-medium text-slate-400">Review Inbox</span>
+          </div>
+          <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Live
+          </span>
+        </div>
+
+        {/* Summary row */}
+        <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5">
+          <span className="text-xs text-slate-500">3 reviews today</span>
+          <span className="text-xs font-semibold text-slate-700">100% reply rate</span>
+        </div>
+
+        {/* Review items */}
+        <div className="space-y-0 divide-y divide-slate-100">
+          {[
+            {
+              stars: 5,
+              author: "Sarah M.",
+              text: "Amazing food and the staff was so friendly!",
+              replied: true,
+            },
+            {
+              stars: 4,
+              author: "James K.",
+              text: "Great place, parking was a bit tricky but worth it.",
+              replied: false,
+            },
+            {
+              stars: 5,
+              author: "Luna R.",
+              text: "Best coffee in the neighborhood, will come back!",
+              replied: false,
+            },
+          ].map((review, idx) => (
+            <div key={idx} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-amber-400">{"★".repeat(review.stars)}</span>
+                    <span className="text-[11px] font-medium text-slate-600">{review.author}</span>
+                  </div>
+                  <p className="mt-0.5 truncate text-[11px] text-slate-500">{review.text}</p>
+                </div>
+                {review.replied ? (
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                    ✓ Sent
+                  </span>
+                ) : (
+                  <button className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    Approve
+                  </button>
+                )}
+              </div>
+              {!review.replied && (
+                <div className="mt-2 rounded-lg border border-purple-100 bg-purple-50 px-2.5 py-2">
+                  <p className="mb-1 text-[10px] font-medium text-purple-400">AI draft ready</p>
+                  <div className="h-1.5 w-full rounded-full bg-purple-200/60" />
+                  <div className="mt-1 h-1.5 w-3/4 rounded-full bg-purple-100" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Stats footer */}
+        <div className="border-t border-slate-100 bg-gradient-to-r from-purple-50 via-white to-orange-50 px-4 py-3">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-slate-500">This week</span>
+            <div className="flex gap-4">
+              <span className="font-semibold text-slate-800">+28% profile views</span>
+              <span className="font-semibold text-slate-800">0 unanswered</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── FEATURE MOCKUPS ─────────────────────────────────────────────────────────
+
+function ReviewRepliesMockup() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+          </div>
+          <span className="ml-1 text-xs text-slate-400">Review Inbox</span>
+        </div>
+        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+          ● 12 new
+        </span>
+      </div>
+
+      <div className="divide-y divide-slate-800">
+        {[
+          { stars: 5, author: "Maria G.", text: "Fantastic service! We had a wonderful evening.", accent: "purple" },
+          { stars: 4, author: "Tom S.", text: "Great food, a little loud on weekends.", accent: "orange" },
+          { stars: 5, author: "Ana R.", text: "My favourite spot in the whole city.", accent: "sky" },
+        ].map((r, i) => (
+          <div key={i} className="px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-amber-400">{"★".repeat(r.stars)}</span>
+                  <span className="text-[11px] font-medium text-slate-300">{r.author}</span>
+                </div>
+                <p className="mt-0.5 truncate text-[11px] text-slate-500">{r.text}</p>
+              </div>
+              <button className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-900">
+                Approve
+              </button>
+            </div>
+            <div className="mt-2 rounded-lg border border-purple-500/20 bg-purple-500/10 px-2.5 py-1.5">
+              <p className="mb-1 text-[10px] font-medium text-purple-400">AI reply ready →</p>
+              <div className="h-1.5 w-full rounded-full bg-purple-500/25" />
+              <div className="mt-1 h-1.5 w-2/3 rounded-full bg-purple-500/15" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReviewBoosterMockup() {
+  const customers = [
+    { name: "Maria G.", date: "Today, 2:30 pm", status: "sent", review: true },
+    { name: "Tom S.", date: "Today, 11:00 am", status: "pending", review: false },
+    { name: "Ana R.", date: "Yesterday", status: "sent", review: true },
+    { name: "Luis P.", date: "Yesterday", status: "pending", review: false },
+  ];
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+          </div>
+          <span className="ml-1 text-xs text-slate-400">Review Booster</span>
+        </div>
+        <button className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-2.5 py-1 text-[10px] font-semibold text-white">
+          ▶ Run campaign
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 divide-x divide-slate-800 border-b border-slate-800">
+        {[
+          { label: "Visits", value: "24" },
+          { label: "Follow-ups", value: "8" },
+          { label: "New reviews", value: "5" },
+        ].map((s) => (
+          <div key={s.label} className="px-3 py-3 text-center">
+            <p className="text-base font-bold text-slate-100">{s.value}</p>
+            <p className="text-[10px] text-slate-500">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Customer list */}
+      <div className="divide-y divide-slate-800">
+        {customers.map((c, i) => (
+          <div key={i} className="flex items-center justify-between px-4 py-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[10px] font-semibold text-slate-300">
+                {c.name.split(" ").map((n) => n[0]).join("")}
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-200">{c.name}</p>
+                <p className="text-[10px] text-slate-500">{c.date}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {c.review && (
+                <span className="text-[10px] text-amber-400">★★★★★</span>
+              )}
+              {c.status === "sent" ? (
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                  Sent
+                </span>
+              ) : (
+                <button className="rounded-full border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-300">
+                  Pending
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── FAQ ITEM ─────────────────────────────────────────────────────────────────
+
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 transition-colors hover:border-slate-700">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+      >
+        <span className="text-sm font-medium text-slate-100">{q}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="px-5 pb-4 text-sm leading-relaxed text-slate-400">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── PAGE ────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
-      {/* Background accents */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-48 top-0 h-72 w-72 rounded-full bg-purple-700/30 blur-3xl" />
-        <div className="absolute -right-40 top-40 h-72 w-72 rounded-full bg-orange-500/25 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 h-72 w-96 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 md:px-6 lg:px-8">
-        {/* HERO */}
-        <section className="grid gap-10 py-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-center md:py-16">
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-4 inline-flex items-center rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-xs font-medium text-slate-200/80"
-            >
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-orange-400 text-[10px] text-slate-950">
-                AI
-              </span>
-              For local businesses
-            </motion.div>
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-white pb-24 pt-16">
+        {/* Background blobs */}
+        <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-purple-100/60 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-orange-100/50 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-sky-100/30 blur-3xl" />
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-balance text-5xl font-semibold tracking-tight sm:text-6xl md:text-7xl"
-            >
-              Win more local customers,{" "}
-              <span className="bg-gradient-to-r from-orange-400 via-fuchsia-400 to-purple-400 bg-clip-text text-transparent">
-                without doing more work
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mt-5 max-w-2xl text-lg text-slate-200/80 sm:text-xl"
-            >
-              LocalLift manages your Google Business Profile for you. Automatic review
-              replies, weekly local content, and profile audits — so you show up higher
-              and attract more customers.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-6 flex flex-wrap items-center gap-3"
-            >
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-orange-500/30 transition-all hover:brightness-110"
+        <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+          <div className="grid gap-14 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center">
+            {/* Left — text */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600"
               >
-                Start free trial
-              </Link>
-              <button className="inline-flex items-center justify-center rounded-full border border-slate-700/80 bg-slate-900/60 px-6 py-3 text-sm font-semibold text-slate-100 transition-colors hover:border-slate-500">
-                Watch demo
-              </button>
-            </motion.div>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                AI-powered local reputation management
+              </motion.div>
 
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.08 }}
+                className="text-balance text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
+              >
+                Your local reputation,{" "}
+                <span className="bg-gradient-to-r from-purple-600 via-fuchsia-500 to-orange-500 bg-clip-text text-transparent">
+                  on autopilot
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.16 }}
+                className="mt-5 max-w-xl text-lg leading-relaxed text-slate-600"
+              >
+                Three AI agents that reply to your Google reviews, generate new ones from happy customers, and keep your profile fully optimized — so you show up first and win more business.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.24 }}
+                className="mt-8 flex flex-wrap gap-3"
+              >
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition-all hover:brightness-105 hover:shadow-orange-200"
+                >
+                  Try it free
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/demo"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+                >
+                  See a live demo
+                </Link>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  7-day free trial
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  No credit card required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  Cancel anytime
+                </span>
+              </motion.div>
+            </div>
+
+            {/* Right — mockup */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-400"
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.2 }}
+              className="w-full max-w-sm md:max-w-none"
             >
-              <span>500+ businesses</span>
-              <span className="h-1 w-1 rounded-full bg-slate-600" />
-              <span>100K+ reviews replied</span>
-              <span className="h-1 w-1 rounded-full bg-slate-600" />
-              <span>No credit card required</span>
+              <ReviewInboxMockup />
             </motion.div>
           </div>
+        </div>
+      </section>
 
-          {/* Hero visual */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative"
-          >
-            <div className="absolute -right-10 -top-6 h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500 to-sky-400 opacity-60 blur-lg md:h-20 md:w-20" />
-            <div className="absolute -left-6 bottom-0 h-20 w-20 rounded-3xl bg-gradient-to-br from-orange-500 to-rose-500 opacity-60 blur-xl" />
-            <div className="relative rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/40 backdrop-blur">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-slate-400">Today&apos;s reviews</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <p className="text-2xl font-semibold">23</p>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                    </span>
-                  </div>
-                </div>
-                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-                  100% replied
-                </span>
-              </div>
-              <div className="mt-5 space-y-3">
-                {[
-                  "Great food and friendly staff!",
-                  "Parking was tricky but service was great.",
-                  "Fast service, will come back!",
-                ].map((text, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start justify-between rounded-2xl border border-slate-800 bg-slate-900/80 px-3 py-3"
-                  >
-                    <div className="mr-3">
-                      <p className="text-xs font-medium text-slate-300">Google review</p>
-                      <p className="mt-1 line-clamp-2 text-xs text-slate-300/90">{text}</p>
-                    </div>
-                    <button className="mt-1 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-950 transition-colors hover:bg-white">
-                      Approve reply
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 grid gap-3 rounded-2xl bg-gradient-to-r from-sky-500/10 via-purple-500/10 to-orange-500/10 p-4">
-                <p className="text-xs font-medium text-slate-300">This week&apos;s impact</p>
-                <div className="flex flex-wrap items-center gap-5 text-xs text-slate-200/80">
-                  <div>
-                    <p className="font-semibold text-white">+37%</p>
-                    <p className="text-slate-400">More profile views</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">+22%</p>
-                    <p className="text-slate-400">Calls from Google</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">0</p>
-                    <p className="text-slate-400">Unanswered reviews</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* HOW IT WORKS */}
-        <section className="py-12">
+      {/* ── AGENTS ────────────────────────────────────────────────────────── */}
+      <section className="bg-slate-50 py-24">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="mb-10 text-center"
+            className="mb-12 text-center"
           >
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-              How it works
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+              The platform
             </p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-              Get started in 3 simple steps
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              Three agents. One platform.
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
+              Each agent handles a specific part of your local presence, running automatically in the background while you focus on your business.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {agents.map((agent, idx) => (
+              <motion.div
+                key={agent.name}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div
+                  className={`mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${agent.gradient}`}
+                >
+                  <agent.icon className="h-5 w-5 text-white" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                  {agent.name}
+                </p>
+                <h3 className="mt-1.5 text-lg font-semibold text-slate-900">{agent.tagline}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{agent.description}</p>
+                <ul className="mt-4 space-y-2">
+                  {agent.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6 flex-1 flex items-end">
+                  <Link
+                    href={agent.href}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 transition-colors group-hover:text-slate-900"
+                  >
+                    Learn more <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-14 text-center"
+          >
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+              Setup
+            </p>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              Up and running in minutes
             </h2>
           </motion.div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {howItWorks.map((step, index) => (
+
+          <div className="relative grid gap-8 md:grid-cols-3">
+            {/* Connector line (desktop) */}
+            <div className="absolute left-[16.66%] right-[16.66%] top-8 hidden h-px bg-gradient-to-r from-purple-200 via-orange-200 to-emerald-200 md:block" />
+
+            {steps.map((step, idx) => (
               <motion.div
                 key={step.number}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6"
+                transition={{ duration: 0.5, delay: idx * 0.12 }}
+                className="relative flex flex-col items-center text-center"
               >
                 <div
-                  className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${step.accent} text-sm font-bold text-white`}
+                  className={`relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${step.gradient} shadow-md`}
                 >
-                  {step.number}
+                  <span className="text-lg font-bold text-white">{step.number}</span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-50">{step.title}</h3>
-                <p className="mt-2 text-sm text-slate-300/85">{step.description}</p>
+                <h3 className="text-base font-semibold text-slate-900">{step.title}</h3>
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-600">{step.body}</p>
               </motion.div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* OVERVIEW / FEATURES */}
-        <section id="features" className="py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 text-center"
-          >
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-              Your toolkit
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-              Everything your local profile needs, handled automatically
-            </h2>
-            <p className="mx-auto mt-3 max-w-3xl text-base text-slate-300/80 sm:text-lg">
-              LocalLift keeps your Google Business Profile active, accurate, and
-              customer-ready — without you spending hours inside dashboards.
-            </p>
-          </motion.div>
+      {/* ── FEATURE SHOWCASE (dark band) ──────────────────────────────────── */}
+      <section className="bg-slate-950 py-24">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {featureCards.map((card, index) => (
-              <motion.div
-                key={card.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <FeatureCard
-                  label={card.label}
-                  title={card.title}
-                  points={card.points}
-                  accent={card.accent}
-                  icon={card.icon}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* PAIN / PAYOFF */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mt-10 grid gap-10 rounded-3xl bg-slate-900/60 px-6 py-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:px-10"
-        >
-          <div>
-            <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              Stop losing customers to outdated profiles
-            </h2>
-            <p className="mt-4 text-base text-slate-300/85 sm:text-lg">
-              When people search on Google Maps, they compare you to competitors in
-              seconds. If your profile looks empty, slow, or out of date, you lose
-              them — often without knowing it.
-            </p>
-            <ul className="mt-6 space-y-3 text-sm text-slate-200/80">
-              <li>• People trust businesses that answer reviews quickly.</li>
-              <li>• Incomplete profiles get pushed down in search results.</li>
-              <li>• Most owners don&apos;t have time to keep everything updated.</li>
-              <li>• LocalLift does the boring work for you, automatically.</li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-red-500/40 bg-red-500/5 p-4">
-              <p className="text-xs font-semibold text-red-300">Without LocalLift</p>
-              <ul className="mt-3 space-y-2 text-xs text-red-100/90">
-                <li>• Unanswered reviews sitting for days or weeks</li>
-                <li>• Outdated opening hours and old photos</li>
-                <li>• Competitors with fresher profiles winning the click</li>
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-4">
-              <p className="text-xs font-semibold text-emerald-300">With LocalLift</p>
-              <ul className="mt-3 space-y-2 text-xs text-emerald-100/90">
-                <li>• Every review receives a warm, professional reply</li>
-                <li>• Weekly content and updates keep you visible</li>
-                <li>• Ongoing audits catch issues before customers do</li>
-              </ul>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* FEATURE DEEP DIVES */}
-        <section className="space-y-14 py-16">
-          {[
-            {
-              label: "Review replies",
-              title: "Reply to every review in seconds",
-              description:
-                "LocalLift turns your Google reviews into a simple inbox. We draft on-brand replies instantly, so you can approve and send in one click.",
-              bullets: [
-                "One clean inbox view for all your reviews",
-                "Suggested replies based on your tone of voice",
-                "Send directly to Google, no copy/paste needed",
-              ],
-              variant: "left" as const,
-            },
-            {
-              label: "Local SEO content",
-              title: "Turn searchers into regulars with local content",
-              description:
-                "Stop guessing what to post. LocalLift writes content ideas and drafts tailored to your city, niche, and customers.",
-              bullets: [
-                "Blog outlines and drafts based on your services and area",
-                "Google posts for promos, events, and seasonal offers",
-                "FAQ content that answers what people actually search",
-              ],
-              variant: "right" as const,
-            },
-            {
-              label: "Profile audits",
-              title: "Keep your profile fully optimized",
-              description:
-                "LocalLift audits your profile on autopilot, so you never get caught with missing info or poor local visibility.",
-              bullets: [
-                "Automatic checks for hours, photos, descriptions, and links",
-                "Suggestions to improve rankings and conversion",
-                "Alerts when something important needs your attention",
-              ],
-              variant: "left" as const,
-            },
-          ].map((split) => (
+          {/* Review Replies */}
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <motion.div
-              key={split.label}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              transition={{ duration: 0.55 }}
             >
-              <FeatureSplit {...split} />
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-purple-400">
+                Review Replies agent
+              </p>
+              <h2 className="text-4xl font-bold tracking-tight text-slate-50 sm:text-5xl">
+                Every review answered, every time
+              </h2>
+              <p className="mt-4 text-lg leading-relaxed text-slate-400">
+                Stop leaving reviews unanswered. Our agent monitors your Google inbox, drafts personalized responses in your brand voice, and waits for your approval — or sends automatically.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  { icon: MessageSquare, text: "One clean inbox for all your Google reviews" },
+                  { icon: Zap, text: "AI drafts ready in seconds, not hours" },
+                  { icon: Check, text: "Approve in one click and post directly to Google" },
+                ].map((item) => (
+                  <li key={item.text} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-500/20">
+                      <item.icon className="h-3 w-3 text-purple-400" />
+                    </div>
+                    <span className="text-sm text-slate-300">{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <Link
+                  href="/review-replies"
+                  className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2.5 text-sm font-semibold text-purple-300 transition-all hover:bg-purple-500/20"
+                >
+                  See how it works <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </motion.div>
-          ))}
-        </section>
 
-        {/* TESTIMONIALS */}
-        <section id="testimonials" className="py-12">
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+            >
+              <ReviewRepliesMockup />
+            </motion.div>
+          </div>
+
+          {/* Divider */}
+          <div className="my-20 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+
+          {/* Review Booster */}
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55 }}
+              className="md:order-2"
+            >
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-orange-400">
+                Review Booster agent
+              </p>
+              <h2 className="text-4xl font-bold tracking-tight text-slate-50 sm:text-5xl">
+                Turn customers into 5-star reviewers
+              </h2>
+              <p className="mt-4 text-lg leading-relaxed text-slate-400">
+                Most happy customers don&apos;t leave reviews — they just forget. Review Booster sends a short follow-up after every visit and asks for feedback at exactly the right moment.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  { icon: Users, text: "Log visits manually or import via CSV" },
+                  { icon: Send, text: "Personalised follow-up messages sent automatically" },
+                  { icon: Clock, text: "Smart timing for the highest response rate" },
+                ].map((item) => (
+                  <li key={item.text} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/20">
+                      <item.icon className="h-3 w-3 text-orange-400" />
+                    </div>
+                    <span className="text-sm text-slate-300">{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <Link
+                  href="/review-booster"
+                  className="inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-500/10 px-5 py-2.5 text-sm font-semibold text-orange-300 transition-all hover:bg-orange-500/20"
+                >
+                  See how it works <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+              className="md:order-1"
+            >
+              <ReviewBoosterMockup />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="mb-8 text-center"
+            className="mb-12 text-center"
           >
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
               Testimonials
             </p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-              Trusted by local businesses that rely on Google
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              Trusted by local business owners
             </h2>
-            <p className="mx-auto mt-3 max-w-3xl text-base text-slate-300/80 sm:text-lg">
-              From busy restaurants to clinics and gyms, LocalLift helps owners keep
-              their profiles sharp without staying up late replying to reviews.
-            </p>
           </motion.div>
+
           <div className="grid gap-6 md:grid-cols-3">
-            {testimonials.map((t, index) => (
+            {testimonials.map((t, idx) => (
               <motion.div
-                key={t.business}
+                key={t.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
               >
-                <TestimonialCard {...t} />
+                <div className="mb-3 text-sm text-amber-400">
+                  {"★".repeat(t.stars)}
+                </div>
+                <p className="flex-1 text-sm leading-relaxed text-slate-700">&ldquo;{t.text}&rdquo;</p>
+                <div className="mt-5 flex items-center gap-3 border-t border-slate-200 pt-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-200 to-orange-200 text-xs font-semibold text-slate-700">
+                    {t.name.split(" ").map((n) => n[0]).join("")}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.business}</p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* WHO IT'S FOR */}
-        <section className="mt-10 rounded-3xl bg-slate-900/70 px-6 py-10">
+      {/* ── LOCAL PRESENCE STRIP ──────────────────────────────────────────── */}
+      <section className="bg-slate-50 py-16">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center"
+            className="grid gap-10 rounded-2xl border border-slate-200 bg-white p-8 md:grid-cols-2 md:items-center md:p-12"
           >
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-              Who it&apos;s for
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-              If customers find you on Google Maps, LocalLift can help
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600">
+                <MapPin className="h-3.5 w-3.5" /> Built for local business
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                If customers find you on Google Maps, LocalLift can help
+              </h2>
+              <p className="mt-4 text-slate-600">
+                Restaurants, salons, clinics, gyms, service businesses — any local business that depends on Google reviews and visibility can use LocalLift from day one.
+              </p>
+              <Link
+                href="/signup"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-100 transition-all hover:brightness-105"
+              >
+                Start your free trial <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Restaurants", emoji: "🍽️" },
+                { label: "Clinics", emoji: "🏥" },
+                { label: "Salons & Spas", emoji: "✂️" },
+                { label: "Gyms", emoji: "💪" },
+                { label: "Local services", emoji: "🔧" },
+                { label: "Retail stores", emoji: "🛍️" },
+              ].map(({ label, emoji }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5"
+                >
+                  <span className="text-lg">{emoji}</span>
+                  <span className="text-sm font-medium text-slate-700">{label}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FAQ ───────────────────────────────────────────────────────────── */}
+      <section className="bg-slate-950 py-24">
+        <div className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-12 text-center"
+          >
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">FAQ</p>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-50 sm:text-5xl">
+              Common questions
             </h2>
           </motion.div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3 md:grid-cols-6">
-            {audience.map(({ label, icon: Icon, colors }, idx) => (
+
+          <div className="space-y-3">
+            {faqs.map((faq, idx) => (
               <motion.div
-                key={label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                key={faq.q}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
-                whileHover={{ scale: 1.05, y: -4 }}
-                className={`flex h-32 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border bg-gradient-to-br ${colors} text-center transition-all duration-300 hover:shadow-lg`}
               >
-                <Icon className="h-6 w-6 text-slate-200" />
-                <span className="text-sm font-semibold text-slate-100">{label}</span>
+                <FAQItem q={faq.q} a={faq.a} />
               </motion.div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* FAQ */}
-        <section id="faq" className="py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 text-center"
-          >
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">FAQ</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-              Stuff people ask before they start
-            </h2>
-          </motion.div>
-          <FAQAccordion />
-        </section>
-
-        {/* FINAL CTA */}
-        <motion.section
+      {/* ── FINAL CTA ─────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-white py-24">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-orange-50" />
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mt-4 rounded-3xl bg-gradient-to-r from-purple-600 via-fuchsia-500 to-orange-400 px-6 py-10 text-center text-slate-950"
+          className="relative mx-auto max-w-3xl px-4 text-center md:px-6"
         >
-          <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-            Ready to boost your local visibility?
+          <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
+            Ready to grow your local reputation?
           </h2>
-          <p className="mx-auto mt-3 max-w-3xl text-base sm:text-lg">
-            Start your free trial today and see how many more customers you can win
-            from Google — without adding more to your to-do list.
+          <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
+            Start your 7-day free trial today. No credit card, no setup fees — just three AI agents working for your business from day one.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href="/signup"
-              className="inline-flex items-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-slate-50 shadow-lg transition-colors hover:bg-black"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition-all hover:brightness-105"
             >
-              Start free trial
+              Try it free — 7 days on us
+              <ArrowRight className="h-4 w-4" />
             </Link>
-            <button className="inline-flex items-center rounded-full border border-slate-950/30 bg-white/10 px-6 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-white/20">
-              Talk to us
-            </button>
+            <Link
+              href="/demo"
+              className="inline-flex items-center rounded-full border border-slate-200 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+            >
+              See a live demo first
+            </Link>
           </div>
-          <p className="mt-3 text-xs text-slate-950/80">
-            No setup fees. 14-day free trial. Cancel anytime.
+          <p className="mt-4 text-xs text-slate-400">
+            $14.99/month after trial · Cancel anytime · No long-term contracts
           </p>
-        </motion.section>
-      </main>
+        </motion.div>
+      </section>
     </div>
   );
 }
