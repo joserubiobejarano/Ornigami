@@ -58,9 +58,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Stripe price ID not configured" }, { status: 500 });
     }
 
+    const resolvedUserRows = await sql`
+      SELECT id
+      FROM public.users
+      WHERE lower(email) = lower(${session.user.email})
+      LIMIT 1
+    `;
+    const resolvedUser = resolvedUserRows[0] as { id: string } | undefined;
+    const canonicalUserId = resolvedUser?.id ?? session.user.id;
+
     let business;
     try {
-      business = await getOrCreateBusinessForUser(session.user.id);
+      business = await getOrCreateBusinessForUser(canonicalUserId);
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       if (message.includes("Could not resolve user in public.users") && session.user.email) {
@@ -75,7 +84,7 @@ export async function POST(request: Request) {
 
     await sql`
       INSERT INTO public.user_billing (user_id, stripe_customer_id)
-      VALUES (${session.user.id}, ${customer.id})
+      VALUES (${canonicalUserId}, ${customer.id})
       ON CONFLICT (user_id) DO UPDATE SET
         stripe_customer_id = EXCLUDED.stripe_customer_id
     `;
@@ -88,18 +97,18 @@ export async function POST(request: Request) {
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customer.id,
-      client_reference_id: session.user.id,
+      client_reference_id: canonicalUserId,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         metadata: {
-          user_id: session.user.id,
+          user_id: canonicalUserId,
           business_id: business.id,
           agent_id: agentId ?? "starter_plan",
         },
         trial_period_days: 7,
       },
       metadata: {
-        user_id: session.user.id,
+        user_id: canonicalUserId,
         business_id: business.id,
         agent_id: agentId ?? "starter_plan",
       },
