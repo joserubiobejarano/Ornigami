@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -72,7 +72,7 @@ export default function ContentPage() {
       setProjects([
         {
           id: "demo-1",
-          title: "[Legacy sample] Review marketing — Joe's Pizza",
+          title: "[Legacy sample] Review marketing , Joe's Pizza",
           type: "blog",
           input: { businessName: "Joe's Pizza", city: "New York", service: "Pizza", tone: "Friendly" },
           output_md: "# The Best Pizza in NYC\n\nCome visit Joe's Pizza for an authentic slice...",
@@ -80,10 +80,10 @@ export default function ContentPage() {
         },
         {
           id: "demo-2",
-          title: "[Legacy sample] Short post — Joe's Pizza",
+          title: "[Legacy sample] Short post , Joe's Pizza",
           type: "gbp_post",
           input: { businessName: "Joe's Pizza", city: "New York", service: "Pizza", tone: "Exciting" },
-          output_md: "🍕 Craving the perfect slice? Stop by Joe's Pizza today! #NYC #Pizza",
+          output_md: "ðŸ• Craving the perfect slice? Stop by Joe's Pizza today! #NYC #Pizza",
           created_at: new Date(Date.now() - 86400000).toISOString()
         }
       ]);
@@ -252,7 +252,7 @@ export default function ContentPage() {
     <div className="grid grid-cols-[1fr_320px] gap-6">
       <div className="space-y-6">
         <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 text-sm text-amber-950 dark:text-amber-100">
-          <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
+          <p className="font-medium text-foreground">Legacy tool , not part of the review product</p>
           <p className="mt-1 text-muted-foreground">
             LocalLift is focused on your <strong>review inbox</strong> and <strong>AI replies</strong>. Use{" "}
             <Link href="/reviews" className="underline underline-offset-2">
@@ -358,7 +358,7 @@ export default function ContentPage() {
             </ReactMarkdown>
           ) : (
             <p className="text-foreground">
-              Your generated Markdown will appear here…
+              Your generated Markdown will appear hereâ€¦
             </p>
           )}
         </div>
@@ -404,4 +404,5 @@ export default function ContentPage() {
     </div>
   );
 }
+
 

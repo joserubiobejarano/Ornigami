@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
@@ -249,8 +249,8 @@ function SettingsPageContent() {
       setAutoReplyAllReviews(next);
       toast.success(
         next
-          ? "Auto-reply on — new replies will post to Google after sync or when you generate."
-          : "Auto-reply off — replies are saved as drafts."
+          ? "Auto-reply on , new replies will post to Google after sync or when you generate."
+          : "Auto-reply off , replies are saved as drafts."
       );
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Could not update auto-reply");
@@ -318,7 +318,7 @@ function SettingsPageContent() {
             </DashboardCallout>
           )}
           {settingsLoading ? (
-            <p className="text-sm text-foreground">Loading reply settings…</p>
+            <p className="text-sm text-foreground">Loading reply settingsâ€¦</p>
           ) : (
             <>
               <FormField label="Business name" htmlFor="settings-business-name">
@@ -373,7 +373,7 @@ function SettingsPageContent() {
                   onClick={() => void handleSaveReplySettings()}
                   disabled={saveState === "saving"}
                 >
-                  {saveState === "saving" ? "Saving…" : "Save reply settings"}
+                  {saveState === "saving" ? "Savingâ€¦" : "Save reply settings"}
                 </Button>
                 {saveState === "saved" && (
                   <Badge variant="secondary" className="font-normal text-foreground">
@@ -396,7 +396,7 @@ function SettingsPageContent() {
               </CardTitle>
               <CardDescription>
                 {connLoading
-                  ? "Loading connection…"
+                  ? "Loading connectionâ€¦"
                   : gbpConnected
                     ? `Locations synced: ${locations.length}`
                     : "Connect to sync locations and reviews."}
@@ -412,7 +412,7 @@ function SettingsPageContent() {
           )}
 
           {connLoading && (
-            <p className="text-sm text-foreground">Loading Google connection…</p>
+            <p className="text-sm text-foreground">Loading Google connectionâ€¦</p>
           )}
 
           {!connLoading && !gbpConnected && (
@@ -436,7 +436,7 @@ function SettingsPageContent() {
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleSyncLocations} disabled={isSyncing}>
-                  {isSyncing ? "Syncing…" : "Sync locations"}
+                  {isSyncing ? "Syncingâ€¦" : "Sync locations"}
                 </Button>
                 <Button onClick={handleDisconnect}>
                   Disconnect Google
@@ -498,8 +498,8 @@ function SettingsPageContent() {
               <p className="text-sm font-medium text-foreground">Automatic posting</p>
               <p className="text-xs text-foreground">
                 {autoReplyAllReviews
-                  ? "ON — replies publish to GBP when generated or after sync."
-                  : "OFF — replies are stored as drafts only."}
+                  ? "ON , replies publish to GBP when generated or after sync."
+                  : "OFF , replies are stored as drafts only."}
               </p>
             </div>
             <Switch
@@ -525,7 +525,7 @@ export default function SettingsPage() {
     <Suspense
       fallback={
         <DashboardPage width="md">
-          <p className="text-sm text-muted-foreground">Loading settings…</p>
+          <p className="text-sm text-muted-foreground">Loading settingsâ€¦</p>
         </DashboardPage>
       }
     >
@@ -533,3 +533,4 @@ export default function SettingsPage() {
     </Suspense>
   );
 }
+

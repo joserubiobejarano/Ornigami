@@ -64,6 +64,7 @@ export default function ReviewBoosterSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageKind, setMessageKind] = useState<"success" | "error" | "info">("info");
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleLocations, setGoogleLocations] = useState<GoogleProfileLocation[]>([]);
   const [autoGoogleReviewUrl, setAutoGoogleReviewUrl] = useState<string | null>(null);
@@ -73,10 +74,12 @@ export default function ReviewBoosterSettingsPage() {
     async function loadSettings() {
       setLoading(true);
       setMessage("");
+      setMessageKind("info");
       try {
         const res = await fetch("/api/review-booster/settings");
         const data = (await res.json()) as SettingsResponse;
         if (!res.ok) {
+          setMessageKind("error");
           setMessage(data?.error || "Failed to load settings.");
           return;
         }
@@ -99,6 +102,7 @@ export default function ReviewBoosterSettingsPage() {
         setGoogleLocations(data.google_profile_locations ?? []);
         setAutoGoogleReviewUrl(data.auto_google_review_url ?? null);
       } catch (error) {
+        setMessageKind("error");
         setMessage(error instanceof Error ? error.message : "Failed to load settings.");
       } finally {
         setLoading(false);
@@ -111,10 +115,12 @@ export default function ReviewBoosterSettingsPage() {
   async function syncLocations() {
     setSyncingLocations(true);
     setMessage("");
+    setMessageKind("info");
     try {
       const syncRes = await fetch("/api/google/locations/sync", { method: "POST" });
       const syncData = await syncRes.json().catch(() => ({}));
       if (!syncRes.ok) {
+        setMessageKind("error");
         setMessage(
           (syncData as { error?: string })?.error || "Failed to sync locations from Google."
         );
@@ -124,6 +130,7 @@ export default function ReviewBoosterSettingsPage() {
       const settingsRes = await fetch("/api/review-booster/settings");
       const settingsData = (await settingsRes.json()) as SettingsResponse;
       if (!settingsRes.ok) {
+        setMessageKind("error");
         setMessage((settingsData as { error?: string })?.error || "Failed to refresh settings.");
         return;
       }
@@ -136,8 +143,10 @@ export default function ReviewBoosterSettingsPage() {
         ...prev,
         selected_location_id: refreshedLocations[0]?.id ?? ""
       }));
+      setMessageKind("success");
       setMessage("Google locations synced.");
     } catch (error) {
+      setMessageKind("error");
       setMessage(error instanceof Error ? error.message : "Failed to sync locations from Google.");
     } finally {
       setSyncingLocations(false);
@@ -148,6 +157,7 @@ export default function ReviewBoosterSettingsPage() {
     event.preventDefault();
     setSaving(true);
     setMessage("");
+    setMessageKind("info");
 
     try {
       const res = await fetch("/api/review-booster/settings", {
@@ -163,14 +173,17 @@ export default function ReviewBoosterSettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        setMessageKind("error");
         setMessage(data?.error || "Failed to save settings.");
       } else {
         setGoogleConnected(Boolean((data as SettingsResponse).google_profile_connected));
         setGoogleLocations((data as SettingsResponse).google_profile_locations ?? []);
         setAutoGoogleReviewUrl((data as SettingsResponse).auto_google_review_url ?? null);
+        setMessageKind("success");
         setMessage("Settings saved.");
       }
     } catch (error) {
+      setMessageKind("error");
       setMessage(error instanceof Error ? error.message : "Failed to save settings.");
     } finally {
       setSaving(false);
@@ -306,7 +319,21 @@ export default function ReviewBoosterSettingsPage() {
           </button>
           {loading ? <span>Loading settings...</span> : null}
         </div>
-        {message ? <p>{message}</p> : null}
+        {message ? (
+          <div
+            role="status"
+            className={
+              messageKind === "success"
+                ? "rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900"
+                : messageKind === "error"
+                  ? "rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900"
+                  : "rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800"
+            }
+          >
+            {messageKind === "success" ? "Settings updated successfully. " : null}
+            {message}
+          </div>
+        ) : null}
       </form>
     </div>
   );

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 import { MessageSquare, FileText, CheckCircle } from "lucide-react";
@@ -9,7 +9,7 @@ const features = [
     icon: MessageSquare,
     title: "Review autopilot",
     description:
-      "Automatic, on-brand replies to every Google review — without lifting a finger.",
+      "Automatic, on-brand replies to every Google review , without lifting a finger.",
     color: "#6366F1",
   },
   {
@@ -109,4 +109,5 @@ export function FeaturesSection() {
     </section>
   );
 }
+
 

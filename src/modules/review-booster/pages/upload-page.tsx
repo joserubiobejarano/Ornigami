@@ -19,6 +19,7 @@ export default function ReviewBoosterUploadPage() {
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<UploadResult | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [statusKind, setStatusKind] = useState<"idle" | "success" | "error" | "uploading">("idle");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   function openFilePicker() {
@@ -26,7 +27,10 @@ export default function ReviewBoosterUploadPage() {
   }
 
   function onDownloadTemplate() {
-    const content = "customer_name,customer_email,customer_phone,service_name,visited_at\n";
+    const content = [
+      "customer_name,customer_email,service_received,visited_at",
+      "Jane Doe,jane@example.com,Teeth cleaning,2026-05-25"
+    ].join("\n");
     const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -42,9 +46,11 @@ export default function ReviewBoosterUploadPage() {
     event.preventDefault();
     setMessage("");
     setResult(null);
+    setStatusKind("idle");
 
     if (!file) {
       setMessage("Please choose a CSV file.");
+      setStatusKind("error");
       return;
     }
 
@@ -52,6 +58,9 @@ export default function ReviewBoosterUploadPage() {
     formData.append("file", file);
 
     setUploading(true);
+    setStatusKind("uploading");
+    setMessage("Uploading and validating your CSV...");
+
     try {
       const res = await fetch("/api/review-booster/upload", {
         method: "POST",
@@ -60,12 +69,15 @@ export default function ReviewBoosterUploadPage() {
       const data = await res.json();
       if (!res.ok) {
         setMessage(data?.error || "Upload failed.");
+        setStatusKind("error");
       } else {
         setResult(data);
-        setMessage("Upload complete.");
+        setMessage("Upload complete. Your CSV was processed successfully.");
+        setStatusKind("success");
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Upload failed.");
+      setStatusKind("error");
     } finally {
       setUploading(false);
     }
@@ -104,7 +116,11 @@ export default function ReviewBoosterUploadPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">Expected CSV columns</h2>
         <p className="mt-3 rounded-md bg-slate-100 px-3 py-2 font-mono text-sm text-slate-800">
-          customer_name, customer_email, customer_phone, service_name, visited_at
+          customer_name, customer_email, service_received, visited_at
+        </p>
+        <p className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+          Example row: Jane Doe, jane@example.com, Teeth cleaning, 2026-05-25
+          <span className="ml-1 text-sky-700">(Use date format: YYYY-MM-DD)</span>
         </p>
       </section>
 
@@ -151,14 +167,23 @@ export default function ReviewBoosterUploadPage() {
             dragActive ? "border-slate-500 bg-slate-100" : "border-slate-300 bg-slate-50"
           ].join(" ")}
         >
-          <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#0f172b] text-lg text-white">
-            ↑
+          <div
+            className={[
+              "mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full text-lg text-white",
+              uploading ? "animate-pulse bg-sky-600" : file ? "bg-emerald-700" : "bg-[#0f172b]"
+            ].join(" ")}
+          >
+            {uploading ? "..." : file ? "OK" : "UP"}
           </div>
           <p className="text-base font-medium text-slate-900">
             Drag and drop your CSV file here, or click to browse
           </p>
           <p className="mt-1 text-sm text-slate-500">CSV files only</p>
-          {file ? <p className="mt-2 text-sm font-medium text-slate-700">Selected: {file.name}</p> : null}
+          {file ? (
+            <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">
+              File selected: {file.name}
+            </p>
+          ) : null}
         </div>
         <button
           type="submit"
@@ -167,15 +192,37 @@ export default function ReviewBoosterUploadPage() {
         >
           {uploading ? "Uploading..." : "Upload CSV"}
         </button>
-        {message ? <p className="text-slate-700">{message}</p> : null}
+        {message ? (
+          <div
+            className={[
+              "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium",
+              statusKind === "success"
+                ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                : statusKind === "error"
+                  ? "border-rose-300 bg-rose-50 text-rose-900"
+                  : statusKind === "uploading"
+                    ? "border-sky-300 bg-sky-50 text-sky-900"
+                    : "border-slate-300 bg-slate-50 text-slate-800"
+            ].join(" ")}
+          >
+            <span className={statusKind === "uploading" ? "inline-block h-2 w-2 animate-ping rounded-full bg-sky-600" : ""} />
+            <span>{message}</span>
+          </div>
+        ) : null}
         {result ? (
-          <div className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-center gap-2 text-slate-900">
+              <span className="inline-flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                OK
+              </span>
+              <p className="text-sm font-semibold">Upload processing complete</p>
+            </div>
             <p>rows_processed: {result.rows_processed}</p>
             <p>visits_inserted: {result.visits_inserted}</p>
             <p>rows_skipped: {result.rows_skipped}</p>
             <p>duplicates_skipped: {result.duplicates_skipped}</p>
             {result.errors.length > 0 ? (
-              <ul className="list-disc pl-5">
+              <ul className="list-disc rounded-md border border-amber-300 bg-amber-50 p-3 pl-8 text-amber-900">
                 {result.errors.map((err, idx) => (
                   <li key={`${err.row}-${idx}`}>
                     row {err.row}: {err.message}

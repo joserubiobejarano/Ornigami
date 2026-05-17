@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// ─── MOCKUP ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ContentMockup() {
   return (
@@ -28,7 +28,7 @@ function ContentMockup() {
             <span className="h-3 w-3 rounded-full bg-amber-500/60" />
             <span className="h-3 w-3 rounded-full bg-emerald-500/60" />
           </div>
-          <span className="ml-2 text-xs text-slate-400">Local SEO Content — LocalLift</span>
+          <span className="ml-2 text-xs text-slate-400">Local SEO Content , LocalLift</span>
         </div>
         <button className="rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-3 py-1 text-[10px] font-semibold text-white">
           + Generate content
@@ -58,7 +58,7 @@ function ContentMockup() {
             <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
             <span className="text-[11px] font-semibold text-emerald-400">Generated for you</span>
           </div>
-          <span className="text-[10px] text-slate-500">Madrid · Italian restaurant</span>
+          <span className="text-[10px] text-slate-500">Madrid Â· Italian restaurant</span>
         </div>
 
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
@@ -88,9 +88,9 @@ function ContentMockup() {
         <div className="mt-3 space-y-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">More ideas for you</p>
           {[
-            { type: "GBP Post", idea: "Weekend pasta special — limited spots", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
+            { type: "GBP Post", idea: "Weekend pasta special , limited spots", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
             { type: "FAQ", idea: "Do you offer gluten-free options?", color: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
-            { type: "Blog", idea: "The best places for a date night in Malasaña", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+            { type: "Blog", idea: "The best places for a date night in MalasaÃ±a", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
           ].map((item) => (
             <div key={item.idea} className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 ${item.color}`}>
               <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${item.color}`}>
@@ -98,7 +98,7 @@ function ContentMockup() {
               </span>
               <span className="truncate text-[11px] text-slate-300">{item.idea}</span>
               <button className="ml-auto shrink-0 text-[10px] text-slate-500 hover:text-slate-300">
-                Generate →
+                Generate â†’
               </button>
             </div>
           ))}
@@ -108,7 +108,7 @@ function ContentMockup() {
   );
 }
 
-// ─── AUDIT MOCKUP ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ AUDIT MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AuditMockup() {
   const checks = [
@@ -150,13 +150,13 @@ function AuditMockup() {
         ))}
       </div>
       <div className="border-t border-slate-100 bg-emerald-50 px-4 py-3">
-        <p className="text-xs text-emerald-700 font-medium">3 issues found · Fix them to improve your ranking</p>
+        <p className="text-xs text-emerald-700 font-medium">3 issues found Â· Fix them to improve your ranking</p>
       </div>
     </div>
   );
 }
 
-// ─── PAGE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const features = [
   {
@@ -178,7 +178,7 @@ const features = [
     gradient: "from-sky-400 to-indigo-500",
     title: "FAQ ideas from real searches",
     description:
-      "We generate FAQ content based on what people actually search for in your area — directly improving your Google visibility.",
+      "We generate FAQ content based on what people actually search for in your area , directly improving your Google visibility.",
   },
   {
     icon: BarChart2,
@@ -192,7 +192,7 @@ const features = [
     gradient: "from-violet-500 to-purple-600",
     title: "Business-aware AI",
     description:
-      "Content is generated with your business name, location, services, and tone in mind. Nothing generic — everything tailored.",
+      "Content is generated with your business name, location, services, and tone in mind. Nothing generic , everything tailored.",
   },
   {
     icon: Edit3,
@@ -226,14 +226,14 @@ export default function LocalSeoPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-emerald-100/60 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-teal-100/40 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="grid gap-14 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-center">
-            {/* Left — text */}
+            {/* Left , text */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -301,7 +301,7 @@ export default function LocalSeoPage() {
               </motion.div>
             </div>
 
-            {/* Right — mockup */}
+            {/* Right , mockup */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -313,7 +313,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ──────────────────────────────────────────────────────── */}
+      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -350,7 +350,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* ── AUDIT SECTION ─────────────────────────────────────────────────── */}
+      {/* â”€â”€ AUDIT SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
@@ -372,7 +372,7 @@ export default function LocalSeoPage() {
                   "Missing hours, photos, descriptions, and links",
                   "Profile completeness score out of 100",
                   "Specific fixes with impact on local ranking",
-                  "Also available as a free public audit — no account needed",
+                  "Also available as a free public audit , no account needed",
                 ].map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm text-slate-700">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
@@ -402,7 +402,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -441,7 +441,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-slate-950 py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-950/60 via-slate-950 to-teal-950/40" />
         <motion.div
@@ -472,10 +472,11 @@ export default function LocalSeoPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of LocalLift · $14.99/month · 7-day free trial
+            Part of LocalLift Â· $14.99/month Â· 7-day free trial
           </p>
         </motion.div>
       </section>
     </div>
   );
 }
+

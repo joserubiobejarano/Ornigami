@@ -1,9 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Header } from "@/components/marketing/Header";
 import { Check, X } from "lucide-react";
 
 export const metadata = {
-  title: "Pricing — LocalLift",
+  title: "Pricing , LocalLift",
   description: "One simple plan for local business growth. Start your 7-day free trial.",
 };
 
@@ -45,7 +45,7 @@ export default function PricingPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-400">
-            7-day free trial · Cancel anytime · No long-term contracts
+            7-day free trial Â· Cancel anytime Â· No long-term contracts
           </p>
         </section>
 
@@ -69,7 +69,7 @@ export default function PricingPage() {
                 "20 content pieces per month (blogs + Google posts + FAQs)",
                 "5 profile audits per month",
                 "Unlimited manual review replies",
-                "Review Booster — automated follow-up campaigns",
+                "Review Booster , automated follow-up campaigns",
                 "Google Business Profile connection and review sync",
                 "Access to the free profile audit tool",
               ].map((item) => (
@@ -110,7 +110,7 @@ export default function PricingPage() {
                 {[
                   "Manually replying to every review",
                   "No idea what to post on Google",
-                  "Inconsistent local SEO — ranking slips",
+                  "Inconsistent local SEO , ranking slips",
                   "Happy customers leave without reviewing",
                   "Profile issues go unnoticed for months",
                 ].map((item) => (
@@ -209,3 +209,4 @@ export default function PricingPage() {
     </div>
   );
 }
+

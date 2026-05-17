@@ -7,13 +7,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AGENT_REGISTRY } from "@/lib/agents/registry";
 import { requireUser } from "@/lib/auth";
 import { getBusinessAgents, getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { sql } from "@/lib/db/neon";
 
 export default async function DashboardPageRoute() {
   const session = await requireUser();
+  const resolvedUserRows = await sql`
+    SELECT id
+    FROM public.users
+    WHERE lower(email) = lower(${session.user.email})
+    LIMIT 1
+  `;
+  const resolvedUser = resolvedUserRows[0] as { id: string } | undefined;
+  const canonicalUserId = resolvedUser?.id ?? session.user.id;
+
   let businessName: string | null = null;
   let agentStatusById = new Map<string, string>();
   try {
-    const business = await getOrCreateBusinessForUser(session.user.id);
+    let business;
+    try {
+      business = await getOrCreateBusinessForUser(canonicalUserId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("Could not resolve user in public.users") && session.user.email) {
+        business = await getOrCreateBusinessForUser(session.user.email);
+      } else {
+        throw error;
+      }
+    }
     businessName = business.name;
     const businessAgents = await getBusinessAgents(business.id);
     agentStatusById = new Map(businessAgents.map((row) => [row.agent_id, row.status]));

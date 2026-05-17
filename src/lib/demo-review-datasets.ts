@@ -1,4 +1,4 @@
-import type { Review } from "@/components/reviews/review-workflow";
+﻿import type { Review } from "@/components/reviews/review-workflow";
 
 export type DemoBusinessType = "restaurant" | "clinic" | "gym" | "salon" | "retail_store";
 
@@ -47,7 +47,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Priya N.",
         star_rating: 4,
         comment:
-          "Food was great and the patio vibe is lovely. We waited almost 40 minutes for a table on Saturday—worth it, but plan ahead.",
+          "Food was great and the patio vibe is lovely. We waited almost 40 minutes for a table on Saturday,worth it, but plan ahead.",
         status: "unanswered",
         review_update_time: daysAgo(5),
       },
@@ -65,7 +65,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Elena Rossi",
         star_rating: 2,
         comment:
-          "Noise level was unbearable and we found a hair in one appetizer. Staff apologized but we probably won’t return.",
+          "Noise level was unbearable and we found a hair in one appetizer. Staff apologized but we probably won't return.",
         status: "unanswered",
         review_update_time: daysAgo(11),
       },
@@ -74,10 +74,10 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Chris O.",
         star_rating: 1,
         comment:
-          "Charged twice on my card and still haven’t gotten a refund after two emails. Very frustrated.",
+          "Charged twice on my card and still haven't gotten a refund after two emails. Very frustrated.",
         status: "replied",
         reply_comment:
-          "Chris, we’re sorry for the billing trouble — that’s not the experience we want. Please DM us your reservation name and last four digits of the card and we’ll escalate with our payments team today.",
+          "Chris, we're sorry for the billing trouble , that's not the experience we want. Please DM us your reservation name and last four digits of the card and we'll escalate with our payments team today.",
         review_update_time: daysAgo(1),
       },
     ],
@@ -101,7 +101,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Robert Chen",
         star_rating: 4,
         comment:
-          "Good care overall. Parking is tight during lunch hour—maybe add directions for the overflow lot on the website.",
+          "Good care overall. Parking is tight during lunch hour,maybe add directions for the overflow lot on the website.",
         status: "unanswered",
         review_update_time: daysAgo(6),
       },
@@ -131,7 +131,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
           "Telehealth follow-up was seamless. Prescription sent to my pharmacy within an hour.",
         status: "replied",
         reply_comment:
-          "Thank you, Nina — we’re glad the telehealth visit worked smoothly. Don’t hesitate to reach out if you have any questions about your prescription.",
+          "Thank you, Nina , we're glad the telehealth visit worked smoothly. Don't hesitate to reach out if you have any questions about your prescription.",
         review_update_time: daysAgo(4),
       },
     ],
@@ -155,7 +155,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Melissa H.",
         star_rating: 4,
         comment:
-          "Love the class schedule. Locker rooms could use another fan—gets humid after evening classes.",
+          "Love the class schedule. Locker rooms could use another fan,gets humid after evening classes.",
         status: "unanswered",
         review_update_time: daysAgo(5),
       },
@@ -164,7 +164,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "James L.",
         star_rating: 3,
         comment:
-          "Good equipment but crowding between 5–7pm makes leg day tough. Any chance of expanding the free-weight area?",
+          "Good equipment but crowding between 5â€“7pm makes leg day tough. Any chance of expanding the free-weight area?",
         status: "unanswered",
         review_update_time: daysAgo(7),
       },
@@ -198,7 +198,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Isabella G.",
         star_rating: 5,
         comment:
-          "Best color I’ve had in years—natural grow-out and exactly the tone we discussed. Already booked my next visit.",
+          "Best color I've had in years,natural grow-out and exactly the tone we discussed. Already booked my next visit.",
         status: "unanswered",
         review_update_time: daysAgo(2),
       },
@@ -216,7 +216,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Quinn R.",
         star_rating: 3,
         comment:
-          "Cut was fine but pricing wasn’t clear upfront—ended up higher than I expected after add-ons.",
+          "Cut was fine but pricing wasn't clear upfront,ended up higher than I expected after add-ons.",
         status: "unanswered",
         review_update_time: daysAgo(8),
       },
@@ -234,10 +234,10 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Alex T.",
         star_rating: 5,
         comment:
-          "Scalp treatment was amazing—no hard sell on products, just honest recommendations.",
+          "Scalp treatment was amazing,no hard sell on products, just honest recommendations.",
         status: "replied",
         reply_comment:
-          "Alex, thank you! We’re happy the scalp treatment helped. See you next time at Lumen.",
+          "Alex, thank you! We're happy the scalp treatment helped. See you next time at Lumen.",
         review_update_time: daysAgo(4),
       },
     ],
@@ -261,7 +261,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Yuki A.",
         star_rating: 4,
         comment:
-          "Great selection of basics. Checkout line moved slowly—only two registers open on a Saturday.",
+          "Great selection of basics. Checkout line moved slowly,only two registers open on a Saturday.",
         status: "unanswered",
         review_update_time: daysAgo(5),
       },
@@ -270,7 +270,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "Patricia L.",
         star_rating: 3,
         comment:
-          "Website said item was in stock but it wasn’t on the shelf. Associate located one in back—took extra time.",
+          "Website said item was in stock but it wasn't on the shelf. Associate located one in back,took extra time.",
         status: "unanswered",
         review_update_time: daysAgo(7),
       },
@@ -346,3 +346,4 @@ export function hydrateDemoDataset(seeds: DemoSeedReview[]): {
 export function getDemoDataset(type: DemoBusinessType): DemoBusinessDataset {
   return DEMO_REVIEW_DATASETS[type];
 }
+

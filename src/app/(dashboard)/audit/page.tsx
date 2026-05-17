@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
@@ -165,7 +165,7 @@ function AuditPageContent() {
   return (
     <div className="space-y-6">
       <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 text-sm text-amber-950 dark:text-amber-100">
-        <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
+        <p className="font-medium text-foreground">Legacy tool , not part of the review product</p>
         <p className="mt-1 text-foreground">
           For day-to-day work use{" "}
           <Link href="/reviews" className="underline underline-offset-2">
@@ -188,7 +188,7 @@ function AuditPageContent() {
       {(isDemo || useSampleData) && (
         <div className="rounded-md border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 p-3">
           <p className="text-sm text-orange-800 dark:text-orange-200">
-            Demo mode — sample report only. Connect Google in Settings to sync real reviews to{" "}
+            Demo mode , sample report only. Connect Google in Settings to sync real reviews to{" "}
             <Link href="/reviews" className="underline underline-offset-2">
               Reviews
             </Link>
@@ -205,7 +205,7 @@ function AuditPageContent() {
         <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 space-y-2">
           <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
             Upgrade to LocalLift Starter to connect Google Business Profile, sync reviews, and use the
-            review inbox — this legacy report is not the main product.
+            review inbox , this legacy report is not the main product.
           </p>
           <p className="text-xs text-amber-800 dark:text-amber-200">
             You can still try a quick check below without a connection. Public tool:{" "}
@@ -341,7 +341,7 @@ function AuditPageContent() {
 
         {/* Results section */}
         {loading && (
-          <div className="text-foreground">Generating report…</div>
+          <div className="text-foreground">Generating reportâ€¦</div>
         )}
 
         {error && (
@@ -387,7 +387,7 @@ export default function AuditPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold mb-2">Legacy profile report</h1>
-          <p className="text-foreground">Loading…</p>
+          <p className="text-foreground">Loadingâ€¦</p>
         </div>
         <div className="text-foreground">Loading...</div>
       </div>
@@ -396,4 +396,5 @@ export default function AuditPage() {
     </Suspense>
   );
 }
+
 

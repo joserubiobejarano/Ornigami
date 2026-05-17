@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+﻿import OpenAI from "openai";
 
 let client: OpenAI | null = null;
 
@@ -33,7 +33,7 @@ City: ${input.city}
 Service: ${input.service}
 Tone: ${input.tone}
 
-Write an 800–1200 word blog post targeting local search intent with 3–5 specific local references (neighborhoods, landmarks, seasonal events). Include practical tips and avoid fluff. Output Markdown only.`;
+Write an 800â€“1200 word blog post targeting local search intent with 3â€“5 specific local references (neighborhoods, landmarks, seasonal events). Include practical tips and avoid fluff. Output Markdown only.`;
 
   const res = await getClient().chat.completions.create({
     model: "gpt-4o-mini",
@@ -54,7 +54,7 @@ City: ${input.city}
 Service: ${input.service}
 Tone: ${input.tone}
 
-Write a 120–200 word GBP post announcing value for local customers (offer, tip, event, update). Include a clear CTA ("Call us", "Book now"). Output Markdown only.`;
+Write a 120â€“200 word GBP post announcing value for local customers (offer, tip, event, update). Include a clear CTA ("Call us", "Book now"). Output Markdown only.`;
 
   const res = await getClient().chat.completions.create({
     model: "gpt-4o-mini",
@@ -75,7 +75,7 @@ City: ${input.city}
 Service: ${input.service}
 Tone: ${input.tone}
 
-Write 6–10 FAQs customers in ${input.city} often ask about ${input.service}. Make them locally relevant. Output Markdown only.`;
+Write 6â€“10 FAQs customers in ${input.city} often ask about ${input.service}. Make them locally relevant. Output Markdown only.`;
 
   const res = await getClient().chat.completions.create({
     model: "gpt-4o-mini",
@@ -99,7 +99,7 @@ export type ReviewReplyInput = {
   contactPreference?: string;
 };
 
-const REVIEW_REPLY_SYSTEM = `You write Google Business Profile owner replies. The output should feel like a short, natural reply from a local business owner — not an email, support ticket, or corporate response.
+const REVIEW_REPLY_SYSTEM = `You write Google Business Profile owner replies. The output should feel like a short, natural reply from a local business owner , not an email, support ticket, or corporate response.
 
 STYLE TARGET
 - Local business owner; short Google review reply; natural and believable.
@@ -108,23 +108,23 @@ STYLE TARGET
 GENERAL RULES
 - Reply like a real small-business owner or manager.
 - Keep the response concise.
-- Positive replies (4–5 stars): usually 1–3 sentences.
-- Negative replies (1–2 stars): usually 2–4 sentences.
-- Mixed/3-star replies: usually 2–4 sentences; acknowledge both positive and negative when relevant.
+- Positive replies (4â€“5 stars): usually 1â€“3 sentences.
+- Negative replies (1â€“2 stars): usually 2â€“4 sentences.
+- Mixed/3-star replies: usually 2â€“4 sentences; acknowledge both positive and negative when relevant.
 - Mention one real detail from the review when possible.
 - Do not use emojis.
 - Do not use placeholders such as [Reviewer's Name], [Your Name], [Business Name], or [contact info].
 - Do not invent names, policies, refunds, promises, or facts not provided.
-- Do not say "your feedback motivates us" or similar cliché phrases unless truly natural.
+- Do not say "your feedback motivates us" or similar clichÃ© phrases unless truly natural.
 - Avoid repetitive openings like "Thank you so much for your kind words."
 - Avoid making every reply sound the same. Vary phrasing.
 
-POSITIVE REVIEW RULES (4–5 stars)
+POSITIVE REVIEW RULES (4â€“5 stars)
 - Thank the customer naturally.
 - Reference something specific from the review.
 - End simply. Do not overdo enthusiasm.
 
-NEGATIVE REVIEW RULES (1–2 stars)
+NEGATIVE REVIEW RULES (1â€“2 stars)
 - Acknowledge the issue calmly.
 - Apologize when appropriate. Do not be defensive.
 - Do not over-explain.
@@ -213,19 +213,19 @@ export async function generateProfileAudit(input: ProfileAuditInput): Promise<st
 
   userMessage += `Analyze this business profile and return markdown only with the following sections:\n\n`;
   userMessage += `## Overview\n`;
-  userMessage += `2–3 sentences summarizing the current state.\n\n`;
-  userMessage += `## Quick score (0–100)\n`;
+  userMessage += `2â€“3 sentences summarizing the current state.\n\n`;
+  userMessage += `## Quick score (0â€“100)\n`;
   userMessage += `A single line like: Score: 78/100\n\n`;
   userMessage += `## Priority fixes (next 7 days)\n`;
   userMessage += `Bullet list of the most critical issues to address.\n\n`;
   userMessage += `## Suggested GBP name\n`;
-  userMessage += `1–2 SEO-friendly variants of the business name.\n\n`;
+  userMessage += `1â€“2 SEO-friendly variants of the business name.\n\n`;
   userMessage += `## Suggested description\n`;
-  userMessage += `Around 600–800 characters of an optimized business description.\n\n`;
+  userMessage += `Around 600â€“800 characters of an optimized business description.\n\n`;
   userMessage += `## Post ideas\n`;
-  userMessage += `5–8 post ideas with titles and one-line angles.\n\n`;
+  userMessage += `5â€“8 post ideas with titles and one-line angles.\n\n`;
   userMessage += `## Image recommendations\n`;
-  userMessage += `4–6 concrete image ideas that would improve the profile.\n\n`;
+  userMessage += `4â€“6 concrete image ideas that would improve the profile.\n\n`;
   userMessage += `Output Markdown only.`;
 
   const res = await getClient().chat.completions.create({
@@ -238,4 +238,5 @@ export async function generateProfileAudit(input: ProfileAuditInput): Promise<st
 
   return res.choices[0]?.message?.content ?? "";
 }
+
 

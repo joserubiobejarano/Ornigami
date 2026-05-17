@@ -27,6 +27,25 @@ function isValidDateInput(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0 && !Number.isNaN(Date.parse(value));
 }
 
+function looksLikeTemplateExampleRow(input: {
+  customerName: string | null;
+  customerEmail: string | null;
+  serviceName: string | null;
+  visitedAt: string | null;
+}): boolean {
+  const name = input.customerName?.toLowerCase() ?? "";
+  const email = input.customerEmail?.toLowerCase() ?? "";
+  const service = input.serviceName?.toLowerCase() ?? "";
+  const visited = input.visitedAt?.toLowerCase() ?? "";
+
+  return (
+    name === "jane doe" &&
+    email === "jane@example.com" &&
+    service === "teeth cleaning" &&
+    visited === "2026-05-25"
+  );
+}
+
 async function resolveBusinessForSessionUser(userId: string, email?: string | null) {
   try {
     return await getOrCreateBusinessForUser(userId);
@@ -69,9 +88,13 @@ export async function POST(req: Request) {
 
       const customerName = normalizeOptionalString(row.customer_name);
       const customerEmail = normalizeOptionalString(row.customer_email);
-      const customerPhone = normalizeOptionalString(row.customer_phone);
-      const serviceName = normalizeOptionalString(row.service_name);
+      const serviceName = normalizeOptionalString(row.service_received ?? row.service_name);
       const visitedAt = normalizeOptionalString(row.visited_at);
+
+      if (looksLikeTemplateExampleRow({ customerName, customerEmail, serviceName, visitedAt })) {
+        rowsSkipped += 1;
+        continue;
+      }
 
       if (!visitedAt || !isValidDateInput(visitedAt)) {
         rowsSkipped += 1;
@@ -79,19 +102,19 @@ export async function POST(req: Request) {
         continue;
       }
 
-      if (!customerEmail && !customerPhone) {
+      if (!customerEmail) {
         rowsSkipped += 1;
-        errors.push({ row: rowNumber, message: "Either customer_email or customer_phone is required" });
+        errors.push({ row: rowNumber, message: "customer_email is required" });
         continue;
       }
 
-      if (customerEmail && !isValidEmail(customerEmail)) {
+      if (!isValidEmail(customerEmail)) {
         rowsSkipped += 1;
         errors.push({ row: rowNumber, message: "customer_email must be a valid email address" });
         continue;
       }
 
-      const dedupeKey = `${customerEmail?.toLowerCase() ?? ""}|${customerPhone ?? ""}|${serviceName ?? ""}|${visitedAt}`;
+      const dedupeKey = `${customerEmail.toLowerCase()}|${serviceName ?? ""}|${visitedAt}`;
       if (inFileDuplicateKeys.has(dedupeKey)) {
         rowsSkipped += 1;
         duplicatesSkipped += 1;
@@ -99,25 +122,23 @@ export async function POST(req: Request) {
       }
       inFileDuplicateKeys.add(dedupeKey);
 
-      if (customerEmail) {
-        const duplicateInDb = await findCsvVisitDuplicate({
-          businessId: business.id,
-          customerEmail,
-          serviceName,
-          visitedAt
-        });
-        if (duplicateInDb) {
-          rowsSkipped += 1;
-          duplicatesSkipped += 1;
-          continue;
-        }
+      const duplicateInDb = await findCsvVisitDuplicate({
+        businessId: business.id,
+        customerEmail,
+        serviceName,
+        visitedAt
+      });
+      if (duplicateInDb) {
+        rowsSkipped += 1;
+        duplicatesSkipped += 1;
+        continue;
       }
 
       await createFollowupVisit({
         businessId: business.id,
         customerName,
         customerEmail,
-        customerPhone,
+        customerPhone: null,
         serviceName,
         visitedAt,
         source: "csv"

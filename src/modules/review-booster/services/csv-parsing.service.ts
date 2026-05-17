@@ -1,7 +1,7 @@
 export type ParsedCsvRow = {
   customer_name?: string;
   customer_email?: string;
-  customer_phone?: string;
+  service_received?: string;
   service_name?: string;
   visited_at?: string;
   source?: string;

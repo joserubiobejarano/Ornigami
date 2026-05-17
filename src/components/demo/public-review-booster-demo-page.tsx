@@ -62,7 +62,6 @@ export function PublicReviewBoosterDemoPage() {
   const [customerName, setCustomerName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
-  const [rebookingUrl, setRebookingUrl] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("warm and friendly");
 
   const remaining = useMemo(() => Math.max(0, CLIENT_LIMIT_MAX - getClientDailyCount()), [result]);
@@ -88,7 +87,6 @@ export function PublicReviewBoosterDemoPage() {
           customer_name: customerName || null,
           recipient_email: recipientEmail,
           google_review_url: googleReviewUrl || null,
-          rebooking_url: rebookingUrl || null,
           tone,
         }),
       });
@@ -158,10 +156,6 @@ export function PublicReviewBoosterDemoPage() {
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="google_review_url">Google review URL</Label>
                 <Input id="google_review_url" type="url" value={googleReviewUrl} onChange={(e) => setGoogleReviewUrl(e.target.value)} maxLength={500} />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="rebooking_url">Rebooking URL</Label>
-                <Input id="rebooking_url" type="url" value={rebookingUrl} onChange={(e) => setRebookingUrl(e.target.value)} maxLength={500} />
               </div>
             </div>
 

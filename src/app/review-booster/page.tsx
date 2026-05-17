@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// ─── MOCKUP ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BoosterMockup() {
   const customers = [
@@ -36,10 +36,10 @@ function BoosterMockup() {
             <span className="h-3 w-3 rounded-full bg-amber-500/60" />
             <span className="h-3 w-3 rounded-full bg-emerald-500/60" />
           </div>
-          <span className="ml-2 text-xs text-slate-400">Review Booster — LocalLift</span>
+          <span className="ml-2 text-xs text-slate-400">Review Booster , LocalLift</span>
         </div>
         <button className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-3 py-1 text-[10px] font-semibold text-white">
-          ▶ Run campaign
+          â–¶ Run campaign
         </button>
       </div>
 
@@ -49,7 +49,7 @@ function BoosterMockup() {
           { label: "Visits logged", value: "24" },
           { label: "Follow-ups sent", value: "18" },
           { label: "New reviews", value: "11" },
-          { label: "Avg. stars", value: "4.8★" },
+          { label: "Avg. stars", value: "4.8*" },
         ].map((s) => (
           <div key={s.label} className="px-3 py-3 text-center">
             <p className="text-sm font-bold text-slate-100">{s.value}</p>
@@ -81,7 +81,7 @@ function BoosterMockup() {
             <div>
               {c.status === "sent" ? (
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                  ✉ Sent
+                  âœ‰ Sent
                 </span>
               ) : (
                 <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
@@ -91,9 +91,9 @@ function BoosterMockup() {
             </div>
             <div>
               {c.stars ? (
-                <span className="text-xs text-amber-400">{"★".repeat(c.stars)}</span>
+                <span className="text-xs text-amber-400">{"*".repeat(c.stars)}</span>
               ) : (
-                <span className="text-[10px] text-slate-600">—</span>
+                <span className="text-[10px] text-slate-600">,</span>
               )}
             </div>
           </div>
@@ -116,7 +116,7 @@ function BoosterMockup() {
   );
 }
 
-// ─── PAGE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const features = [
   {
@@ -131,21 +131,21 @@ const features = [
     gradient: "from-purple-500 to-pink-500",
     title: "Personalised follow-up messages",
     description:
-      "Follow-up messages are written with your business name and a friendly tone — not a generic template. Customers feel seen, not spammed.",
+      "Follow-up messages are written with your business name and a friendly tone , not a generic template. Customers feel seen, not spammed.",
   },
   {
     icon: Clock,
     gradient: "from-sky-400 to-indigo-500",
     title: "Smart send timing",
     description:
-      "Messages go out at the right time after each visit — not immediately, not days later. We optimise timing to maximise response rates.",
+      "Messages go out at the right time after each visit , not immediately, not days later. We optimise timing to maximise response rates.",
   },
   {
     icon: TrendingUp,
     gradient: "from-emerald-400 to-teal-500",
     title: "Real-time campaign tracking",
     description:
-      "See exactly how many follow-ups were sent, how many led to a review, and your average star rating — all in one dashboard.",
+      "See exactly how many follow-ups were sent, how many led to a review, and your average star rating , all in one dashboard.",
   },
   {
     icon: Upload,
@@ -186,7 +186,7 @@ export default function ReviewBoosterPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-orange-100/60 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-pink-100/40 blur-3xl" />
@@ -221,7 +221,7 @@ export default function ReviewBoosterPage() {
               transition={{ duration: 0.5, delay: 0.16 }}
               className="mt-5 max-w-2xl text-xl leading-relaxed text-slate-600"
             >
-              Most happy customers don&apos;t leave reviews — they just forget. Review Booster sends a short, personalised follow-up after every visit and asks for feedback at exactly the right moment.
+              Most happy customers don&apos;t leave reviews , they just forget. Review Booster sends a short, personalised follow-up after every visit and asks for feedback at exactly the right moment.
             </motion.p>
 
             <motion.div
@@ -271,7 +271,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* ── WHY IT MATTERS ────────────────────────────────────────────────── */}
+      {/* â”€â”€ WHY IT MATTERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-950 py-20">
         <div className="mx-auto max-w-4xl px-4 text-center md:px-6">
           <motion.div
@@ -284,16 +284,16 @@ export default function ReviewBoosterPage() {
               The problem
             </p>
             <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
-              72% of customers will leave a review — if you ask them
+              72% of customers will leave a review , if you ask them
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
-              The problem isn&apos;t that your customers are unhappy. It&apos;s that no one asks. Review Booster fixes that — automatically, at scale, without feeling spammy.
+              The problem isn&apos;t that your customers are unhappy. It&apos;s that no one asks. Review Booster fixes that , automatically, at scale, without feeling spammy.
             </p>
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {[
                 { stat: "3x", label: "More reviews per month on average" },
                 { stat: "61%", label: "Average follow-up response rate" },
-                { stat: "4.7★", label: "Average rating from boosted reviews" },
+                { stat: "4.7*", label: "Average rating from boosted reviews" },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
                   <p className="text-4xl font-bold text-slate-50">{s.stat}</p>
@@ -305,7 +305,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ──────────────────────────────────────────────────────── */}
+      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -342,7 +342,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -381,7 +381,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-slate-950 py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-950/60 via-slate-950 to-pink-950/40" />
         <motion.div
@@ -395,7 +395,7 @@ export default function ReviewBoosterPage() {
             Start collecting more reviews today
           </h2>
           <p className="mt-5 text-lg text-slate-400">
-            Most businesses could have 3× more reviews with a simple follow-up. Review Booster makes it automatic — try it free for 7 days.
+            Most businesses could have 3Ã. more reviews with a simple follow-up. Review Booster makes it automatic , try it free for 7 days.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -412,10 +412,12 @@ export default function ReviewBoosterPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of LocalLift · $14.99/month · 7-day free trial
+            Part of LocalLift Â· $14.99/month Â· 7-day free trial
           </p>
         </motion.div>
       </section>
     </div>
   );
 }
+
+

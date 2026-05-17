@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LocalLift – Win More Local Customers",
+  title: "LocalLift â€“ Win More Local Customers",
   description:
-    "LocalLift manages your Google Business Profile for you. Automatic review replies, weekly local content, and profile audits — so you show up higher and attract more customers.",
+    "LocalLift manages your Google Business Profile for you. Automatic review replies, weekly local content, and profile audits , so you show up higher and attract more customers.",
 };
 
 export default function RootLayout({
@@ -37,3 +37,4 @@ export default function RootLayout({
     </html>
   );
 }
+

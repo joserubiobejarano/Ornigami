@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { motion } from "motion/react";
@@ -17,7 +17,7 @@ const steps = [
     number: 2,
     title: "Sync your reviews and local data",
     description:
-      "Your reviews, business info, and insights update automatically — no manual input.",
+      "Your reviews, business info, and insights update automatically , no manual input.",
     color: "#FB923C",
   },
   {
@@ -113,4 +113,5 @@ export function HowItWorksSection() {
     </section>
   );
 }
+
 

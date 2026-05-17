@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// ─── MOCKUP ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function InboxMockup() {
   const reviews = [
@@ -22,7 +22,7 @@ function InboxMockup() {
       author: "Sarah M.",
       time: "2h ago",
       text: "The staff was so warm and the food was incredible. Will definitely be back soon!",
-      draft: "Thank you so much, Sarah! We're thrilled to hear you had a wonderful experience. Our team works hard to make every visit special — we look forward to welcoming you back!",
+      draft: "Thank you so much, Sarah! We're thrilled to hear you had a wonderful experience. Our team works hard to make every visit special , we look forward to welcoming you back!",
       status: "pending" as const,
     },
     {
@@ -30,7 +30,7 @@ function InboxMockup() {
       author: "James K.",
       time: "5h ago",
       text: "Great food and good service. Parking outside was a bit of a nightmare though.",
-      draft: "Thanks for the kind words, James! We appreciate your feedback on parking — it's something we hear from time to time and we'll keep it in mind.",
+      draft: "Thanks for the kind words, James! We appreciate your feedback on parking , it's something we hear from time to time and we'll keep it in mind.",
       status: "pending" as const,
     },
     {
@@ -53,10 +53,10 @@ function InboxMockup() {
             <span className="h-3 w-3 rounded-full bg-amber-500/60" />
             <span className="h-3 w-3 rounded-full bg-emerald-500/60" />
           </div>
-          <span className="ml-2 text-xs text-slate-400">Review Inbox — LocalLift</span>
+          <span className="ml-2 text-xs text-slate-400">Review Inbox , LocalLift</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-          ● Google synced
+          â. Google synced
         </span>
       </div>
 
@@ -72,7 +72,7 @@ function InboxMockup() {
             </button>
           ))}
         </div>
-        <span className="text-[10px] text-slate-500">3 reviews · 2 need replies</span>
+        <span className="text-[10px] text-slate-500">3 reviews Â· 2 need replies</span>
       </div>
 
       {/* Review list */}
@@ -88,8 +88,8 @@ function InboxMockup() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-medium text-slate-200">{r.author}</span>
-                      <span className="text-[10px] text-amber-400">{"★".repeat(r.stars)}</span>
-                      <span className="text-[10px] text-slate-600">·</span>
+                      <span className="text-[10px] text-amber-400">{"*".repeat(r.stars)}</span>
+                      <span className="text-[10px] text-slate-600">Â·</span>
                       <span className="text-[10px] text-slate-500">{r.time}</span>
                     </div>
                     <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{r.text}</p>
@@ -99,7 +99,7 @@ function InboxMockup() {
               <div className="shrink-0">
                 {r.status === "replied" ? (
                   <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-                    ✓ Replied
+                    âœ“ Replied
                   </span>
                 ) : (
                   <button className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-900 transition-colors hover:bg-white">
@@ -133,7 +133,7 @@ function InboxMockup() {
   );
 }
 
-// ─── PAGE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const features = [
   {
@@ -141,14 +141,14 @@ const features = [
     gradient: "from-purple-500 to-sky-400",
     title: "One clean review inbox",
     description:
-      "All your Google reviews in one place. No switching tabs, no copy-pasting — just a simple inbox where you can see, manage, and reply to every review.",
+      "All your Google reviews in one place. No switching tabs, no copy-pasting , just a simple inbox where you can see, manage, and reply to every review.",
   },
   {
     icon: Zap,
     gradient: "from-orange-400 to-pink-500",
     title: "AI drafts in seconds",
     description:
-      "Our AI reads the review context, your business info, and your tone preferences to generate a reply that sounds like you — not a template.",
+      "Our AI reads the review context, your business info, and your tone preferences to generate a reply that sounds like you , not a template.",
   },
   {
     icon: Check,
@@ -162,7 +162,7 @@ const features = [
     gradient: "from-sky-400 to-indigo-500",
     title: "Automatic review sync",
     description:
-      "New reviews appear in your inbox automatically. No manual imports, no browser extensions — just connect your Google Business Profile and we handle the rest.",
+      "New reviews appear in your inbox automatically. No manual imports, no browser extensions , just connect your Google Business Profile and we handle the rest.",
   },
   {
     icon: Star,
@@ -176,7 +176,7 @@ const features = [
     gradient: "from-violet-500 to-purple-600",
     title: "Always approve first",
     description:
-      "Nothing goes live without your say. Every reply is a draft first. Automation is opt-in — you decide how much control to keep.",
+      "Nothing goes live without your say. Every reply is a draft first. Automation is opt-in , you decide how much control to keep.",
   },
 ];
 
@@ -194,7 +194,7 @@ const steps = [
   {
     number: "03",
     title: "Approve replies and go live",
-    body: "New reviews appear with AI drafts ready. Approve, edit, or skip — then watch your reply rate hit 100%.",
+    body: "New reviews appear with AI drafts ready. Approve, edit, or skip , then watch your reply rate hit 100%.",
   },
 ];
 
@@ -203,7 +203,7 @@ export default function ReviewRepliesPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-purple-100/60 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-sky-100/40 blur-3xl" />
@@ -238,7 +238,7 @@ export default function ReviewRepliesPage() {
               transition={{ duration: 0.5, delay: 0.16 }}
               className="mt-5 max-w-2xl text-xl leading-relaxed text-slate-600"
             >
-              Our AI monitors your Google inbox and drafts personalized, on-brand replies for every review — so you can approve and send in one click, or let it run automatically.
+              Our AI monitors your Google inbox and drafts personalized, on-brand replies for every review , so you can approve and send in one click, or let it run automatically.
             </motion.p>
 
             <motion.div
@@ -288,7 +288,7 @@ export default function ReviewRepliesPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ──────────────────────────────────────────────────────── */}
+      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -325,7 +325,7 @@ export default function ReviewRepliesPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -364,7 +364,7 @@ export default function ReviewRepliesPage() {
         </div>
       </section>
 
-      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-slate-950 py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-950/60 via-slate-950 to-sky-950/40" />
         <motion.div
@@ -378,7 +378,7 @@ export default function ReviewRepliesPage() {
             Stop leaving reviews unanswered
           </h2>
           <p className="mt-5 text-lg text-slate-400">
-            Every unanswered review is a missed opportunity. Start replying to all of them — automatically — with a 7-day free trial.
+            Every unanswered review is a missed opportunity. Start replying to all of them , automatically , with a 7-day free trial.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -395,10 +395,12 @@ export default function ReviewRepliesPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of LocalLift · $14.99/month · 7-day free trial
+            Part of LocalLift Â· $14.99/month Â· 7-day free trial
           </p>
         </motion.div>
       </section>
     </div>
   );
 }
+
+

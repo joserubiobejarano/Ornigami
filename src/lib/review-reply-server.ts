@@ -1,4 +1,4 @@
-import { googleFetch } from "@/lib/google";
+﻿import { googleFetch } from "@/lib/google";
 import { sql } from "@/lib/db/neon";
 import type { ReviewReplyInput } from "@/lib/openai";
 import { generateReviewReply, sanitizeReviewReply } from "@/lib/openai";
@@ -143,7 +143,7 @@ export async function postReplyToGoogleAndPersist(
 
   const persist = await persistReplyPostedLocally(userId, googleReviewId, reply);
   if (!persist.ok) {
-    // Google accepted the reply but local row missing — still report success to match prior behavior
+    // Google accepted the reply but local row missing , still report success to match prior behavior
   }
 
   return { ok: true };
@@ -157,3 +157,4 @@ export async function generateReplyForReviewRow(
   const raw = await generateReviewReply(input);
   return sanitizeReviewReply(raw);
 }
+

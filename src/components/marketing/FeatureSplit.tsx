@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+﻿import { Check } from "lucide-react";
 
 type FeatureSplitProps = {
   label: string;
@@ -53,14 +53,14 @@ export function FeatureSplit({
             {label.toLowerCase().includes("review") && (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-sky-500/20 p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-sky-400 text-xs font-bold text-white">5★</div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-sky-400 text-xs font-bold text-white">5*</div>
                   <div className="flex-1">
                     <div className="mb-2 h-2 w-full rounded-full bg-purple-500/40" />
                     <div className="h-2 w-3/4 rounded-full bg-purple-400/30" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-xl border border-orange-500/30 bg-gradient-to-r from-orange-500/20 to-pink-500/20 p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-pink-400 text-xs font-bold text-white">4★</div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-pink-400 text-xs font-bold text-white">4*</div>
                   <div className="flex-1">
                     <div className="mb-2 h-2 w-full rounded-full bg-orange-500/40" />
                     <div className="h-2 w-2/3 rounded-full bg-orange-400/30" />
@@ -119,3 +119,4 @@ export function FeatureSplit({
     </div>
   );
 }
+

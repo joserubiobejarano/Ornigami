@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ export type ReviewListProps = {
 };
 
 const DEFAULT_HANDLED_HINT =
-  'Handled for this demo — reply area is locked. Use "Load sample reviews" or refresh to reset.';
+  'Handled for this demo , reply area is locked. Use "Load sample reviews" or refresh to reset.';
 
 export function ReviewList({
   reviews,
@@ -91,7 +91,7 @@ export function ReviewList({
                       {rv.reviewer_name ?? "Anonymous"}
                     </span>
                     <span className="text-foreground">
-                      {typeof rv.star_rating === "number" ? `${rv.star_rating}★` : "—"}
+                      {typeof rv.star_rating === "number" ? `${rv.star_rating}*` : ","}
                     </span>
                     {rv.review_update_time && (
                       <span className="text-foreground text-xs">
@@ -104,7 +104,7 @@ export function ReviewList({
                   </div>
                   <p className="mt-0.5 text-sm text-foreground truncate">
                     {preview}
-                    {preview.length >= 80 ? "…" : ""}
+                    {preview.length >= 80 ? "â€¦" : ""}
                   </p>
                 </div>
                 <span className="text-xs text-foreground shrink-0">Click to expand</span>
@@ -127,7 +127,7 @@ export function ReviewList({
                     {rv.reviewer_name ?? "Anonymous"}
                   </span>
                   <span className="text-foreground">
-                    {typeof rv.star_rating === "number" ? `${rv.star_rating}★` : "—"}
+                    {typeof rv.star_rating === "number" ? `${rv.star_rating}*` : ","}
                   </span>
                   {rv.review_update_time && (
                     <span className="text-foreground">
@@ -173,12 +173,12 @@ export function ReviewList({
                 <label className="text-xs font-medium text-foreground">Draft reply</label>
                 {workflow === "unsaved_draft" && !isHandled && (
                   <span className="text-[10px] text-amber-700 dark:text-amber-200/90">
-                    Not saved yet — click Save draft to pin this version
+                    Not saved yet , click Save draft to pin this version
                   </span>
                 )}
                 {workflow === "draft_saved" && !isHandled && (
                   <span className="text-[10px] text-sky-800 dark:text-sky-200/90">
-                    Draft saved — edit anytime, or mark as posted when final
+                    Draft saved , edit anytime, or mark as posted when final
                   </span>
                 )}
               </div>
@@ -236,3 +236,4 @@ export function ReviewList({
     </div>
   );
 }
+

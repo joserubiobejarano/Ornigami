@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -18,14 +18,14 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// ─── DATA ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const agents = [
   {
     name: "Review Replies",
     tagline: "Reply to every review in seconds",
     description:
-      "Our AI monitors your Google inbox and drafts personalized, on-brand replies. Approve in one click — or let it run automatically.",
+      "Our AI monitors your Google inbox and drafts personalized, on-brand replies. Approve in one click , or let it run automatically.",
     href: "/review-replies",
     icon: MessageSquare,
     gradient: "from-purple-500 to-sky-400",
@@ -49,7 +49,7 @@ const agents = [
     name: "Local SEO Content",
     tagline: "Content that helps you show up first",
     description:
-      "Blog posts, Google updates, and FAQ ideas written for your exact city, niche, and customer base — ready to publish in minutes.",
+      "Blog posts, Google updates, and FAQ ideas written for your exact city, niche, and customer base , ready to publish in minutes.",
     href: "/local-seo",
     icon: FileText,
     gradient: "from-emerald-400 to-teal-500",
@@ -63,7 +63,7 @@ const steps = [
   {
     number: "01",
     title: "Connect your Google Business Profile",
-    body: "Link your profile in a few clicks. No technical setup, no spreadsheets — just sign in and we take it from there.",
+    body: "Link your profile in a few clicks. No technical setup, no spreadsheets , just sign in and we take it from there.",
     gradient: "from-purple-500 to-sky-400",
   },
   {
@@ -84,21 +84,21 @@ const testimonials = [
   {
     name: "Marta Ruiz",
     role: "Owner",
-    business: "BurgerMat · Madrid",
+    business: "BurgerMat Â· Madrid",
     text: "Before LocalLift, I'd reply to reviews from my phone between orders. Now every review gets a thoughtful answer without me staying up late.",
     stars: 5,
   },
   {
     name: "Dr. Alex Carter",
     role: "Clinic manager",
-    business: "Smiles & Co Dental · London",
+    business: "Smiles & Co Dental Â· London",
     text: "We get a lot of anxious patients reading our reviews first. LocalLift helps us answer fast and keep the tone warm and professional.",
     stars: 5,
   },
   {
-    name: "Nina López",
+    name: "Nina LÃ³pez",
     role: "Marketing lead",
-    business: "UrbanFit Gym · Barcelona",
+    business: "UrbanFit Gym Â· Barcelona",
     text: "Our team was too busy to keep the Google profile updated. Now we have fresh posts each week and reviews are always replied to.",
     stars: 5,
   },
@@ -111,7 +111,7 @@ const faqs = [
   },
   {
     q: "Will the AI replies sound like my brand?",
-    a: "Yes. During onboarding we learn your preferred tone, business personality, and style. Drafts sound like you — not like a robot.",
+    a: "Yes. During onboarding we learn your preferred tone, business personality, and style. Drafts sound like you , not like a robot.",
   },
   {
     q: "Is there a free trial?",
@@ -131,7 +131,7 @@ const faqs = [
   },
 ];
 
-// ─── HERO MOCKUP ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ HERO MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ReviewInboxMockup() {
   return (
@@ -190,14 +190,14 @@ function ReviewInboxMockup() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-amber-400">{"★".repeat(review.stars)}</span>
+                    <span className="text-[11px] text-amber-400">{"*".repeat(review.stars)}</span>
                     <span className="text-[11px] font-medium text-slate-600">{review.author}</span>
                   </div>
                   <p className="mt-0.5 truncate text-[11px] text-slate-500">{review.text}</p>
                 </div>
                 {review.replied ? (
                   <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                    ✓ Sent
+                    âœ“ Sent
                   </span>
                 ) : (
                   <button className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold text-white">
@@ -231,7 +231,7 @@ function ReviewInboxMockup() {
   );
 }
 
-// ─── FEATURE MOCKUPS ─────────────────────────────────────────────────────────
+// â”€â”€â”€ FEATURE MOCKUPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ReviewRepliesMockup() {
   return (
@@ -246,7 +246,7 @@ function ReviewRepliesMockup() {
           <span className="ml-1 text-xs text-slate-400">Review Inbox</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-          ● 12 new
+          â. 12 new
         </span>
       </div>
 
@@ -260,7 +260,7 @@ function ReviewRepliesMockup() {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-amber-400">{"★".repeat(r.stars)}</span>
+                  <span className="text-[11px] text-amber-400">{"*".repeat(r.stars)}</span>
                   <span className="text-[11px] font-medium text-slate-300">{r.author}</span>
                 </div>
                 <p className="mt-0.5 truncate text-[11px] text-slate-500">{r.text}</p>
@@ -270,7 +270,7 @@ function ReviewRepliesMockup() {
               </button>
             </div>
             <div className="mt-2 rounded-lg border border-purple-500/20 bg-purple-500/10 px-2.5 py-1.5">
-              <p className="mb-1 text-[10px] font-medium text-purple-400">AI reply ready →</p>
+              <p className="mb-1 text-[10px] font-medium text-purple-400">AI reply ready â†’</p>
               <div className="h-1.5 w-full rounded-full bg-purple-500/25" />
               <div className="mt-1 h-1.5 w-2/3 rounded-full bg-purple-500/15" />
             </div>
@@ -301,7 +301,7 @@ function ReviewBoosterMockup() {
           <span className="ml-1 text-xs text-slate-400">Review Booster</span>
         </div>
         <button className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-2.5 py-1 text-[10px] font-semibold text-white">
-          ▶ Run campaign
+          â–¶ Run campaign
         </button>
       </div>
 
@@ -334,7 +334,7 @@ function ReviewBoosterMockup() {
             </div>
             <div className="flex items-center gap-2">
               {c.review && (
-                <span className="text-[10px] text-amber-400">★★★★★</span>
+                <span className="text-[10px] text-amber-400">*****</span>
               )}
               {c.status === "sent" ? (
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
@@ -353,7 +353,7 @@ function ReviewBoosterMockup() {
   );
 }
 
-// ─── FAQ ITEM ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ FAQ ITEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -385,14 +385,14 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-// ─── PAGE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         {/* Background blobs */}
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-purple-100/60 blur-3xl" />
@@ -401,7 +401,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="grid gap-14 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center">
-            {/* Left — text */}
+            {/* Left , text */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -431,7 +431,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.16 }}
                 className="mt-5 max-w-xl text-lg leading-relaxed text-slate-600"
               >
-                Three AI agents that reply to your Google reviews, generate new ones from happy customers, and keep your profile fully optimized — so you show up first and win more business.
+                Three AI agents that reply to your Google reviews, generate new ones from happy customers, and keep your profile fully optimized , so you show up first and win more business.
               </motion.p>
 
               <motion.div
@@ -476,7 +476,7 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* Right — mockup */}
+            {/* Right , mockup */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -489,7 +489,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── AGENTS ────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ AGENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -553,7 +553,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -597,7 +597,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURE SHOWCASE (dark band) ──────────────────────────────────── */}
+      {/* â”€â”€ FEATURE SHOWCASE (dark band) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-950 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
 
@@ -616,7 +616,7 @@ export default function HomePage() {
                 Every review answered, every time
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-slate-400">
-                Stop leaving reviews unanswered. Our agent monitors your Google inbox, drafts personalized responses in your brand voice, and waits for your approval — or sends automatically.
+                Stop leaving reviews unanswered. Our agent monitors your Google inbox, drafts personalized responses in your brand voice, and waits for your approval , or sends automatically.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
@@ -671,7 +671,7 @@ export default function HomePage() {
                 Turn customers into 5-star reviewers
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-slate-400">
-                Most happy customers don&apos;t leave reviews — they just forget. Review Booster sends a short follow-up after every visit and asks for feedback at exactly the right moment.
+                Most happy customers don&apos;t leave reviews , they just forget. Review Booster sends a short follow-up after every visit and asks for feedback at exactly the right moment.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
@@ -710,7 +710,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ TESTIMONIALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -739,7 +739,7 @@ export default function HomePage() {
                 className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
               >
                 <div className="mb-3 text-sm text-amber-400">
-                  {"★".repeat(t.stars)}
+                  {"*".repeat(t.stars)}
                 </div>
                 <p className="flex-1 text-sm leading-relaxed text-slate-700">&ldquo;{t.text}&rdquo;</p>
                 <div className="mt-5 flex items-center gap-3 border-t border-slate-200 pt-4">
@@ -757,7 +757,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── LOCAL PRESENCE STRIP ──────────────────────────────────────────── */}
+      {/* â”€â”€ LOCAL PRESENCE STRIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-50 py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -775,7 +775,7 @@ export default function HomePage() {
                 If customers find you on Google Maps, LocalLift can help
               </h2>
               <p className="mt-4 text-slate-600">
-                Restaurants, salons, clinics, gyms, service businesses — any local business that depends on Google reviews and visibility can use LocalLift from day one.
+                Restaurants, salons, clinics, gyms, service businesses , any local business that depends on Google reviews and visibility can use LocalLift from day one.
               </p>
               <Link
                 href="/signup"
@@ -786,12 +786,12 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Restaurants", emoji: "🍽️" },
-                { label: "Clinics", emoji: "🏥" },
-                { label: "Salons & Spas", emoji: "✂️" },
-                { label: "Gyms", emoji: "💪" },
-                { label: "Local services", emoji: "🔧" },
-                { label: "Retail stores", emoji: "🛍️" },
+                { label: "Restaurants", emoji: "ðŸ½ï¸" },
+                { label: "Clinics", emoji: "ðŸ¥" },
+                { label: "Salons & Spas", emoji: "âœ‚ï¸" },
+                { label: "Gyms", emoji: "ðŸ’ª" },
+                { label: "Local services", emoji: "ðŸ”§" },
+                { label: "Retail stores", emoji: "ðŸ›ï¸" },
               ].map(({ label, emoji }) => (
                 <div
                   key={label}
@@ -806,7 +806,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FAQ ───────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ FAQ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-950 py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -838,7 +838,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FINAL CTA ─────────────────────────────────────────────────────── */}
+      {/* â”€â”€ FINAL CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden bg-white py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-orange-50" />
         <motion.div
@@ -852,14 +852,14 @@ export default function HomePage() {
             Ready to grow your local reputation?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
-            Start your 7-day free trial today. No credit card, no setup fees — just three AI agents working for your business from day one.
+            Start your 7-day free trial today. No credit card, no setup fees , just three AI agents working for your business from day one.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition-all hover:brightness-105"
             >
-              Try it free — 7 days on us
+              Try it free , 7 days on us
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -870,10 +870,12 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-400">
-            $14.99/month after trial · Cancel anytime · No long-term contracts
+            $14.99/month after trial Â· Cancel anytime Â· No long-term contracts
           </p>
         </motion.div>
       </section>
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -300,7 +300,7 @@ function ReviewsPageContent() {
               setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
             }
             toast.success(
-              "Reply generated. Could not post to Google — saved as draft. Edit or post manually when ready."
+              "Reply generated. Could not post to Google , saved as draft. Edit or post manually when ready."
             );
           }
         } else {
@@ -355,7 +355,7 @@ function ReviewsPageContent() {
     if (!shouldShowTestWorkflowActions(review, false)) return;
     const text = drafts[review.google_review_id] ?? "";
     if (!text.trim()) {
-      toast.error("Nothing to save yet — generate a reply or type your draft first.");
+      toast.error("Nothing to save yet , generate a reply or type your draft first.");
       return;
     }
     setSavedDraftSnapshots((s) => ({
@@ -384,7 +384,7 @@ function ReviewsPageContent() {
       [review.google_review_id]: reply,
     }));
     toast.success(
-      "Marked as posted (test mode). This review is handled — no further action needed for this test session."
+      "Marked as posted (test mode). This review is handled , no further action needed for this test session."
     );
   }
 
@@ -442,7 +442,7 @@ function ReviewsPageContent() {
         )}
 
         {isSampleMode && (
-          <DashboardCallout variant="neutral" title="Test mode — sample reviews">
+          <DashboardCallout variant="neutral" title="Test mode , sample reviews">
             <p className="text-foreground">
               This is a demo. In live mode, replies are posted to your Google Business Profile
               automatically.
@@ -522,7 +522,7 @@ function ReviewsPageContent() {
 
       {loading && reviews.length === 0 && (
         <div className="rounded-xl border border-border bg-card px-6 py-12 text-center text-sm text-foreground shadow-sm">
-          <p>Loading reviews…</p>
+          <p>Loading reviewsâ€¦</p>
         </div>
       )}
 
@@ -579,4 +579,5 @@ function ReviewsPageContent() {
 export default function ReviewsPage() {
   return <ReviewsPageContent />;
 }
+
 
