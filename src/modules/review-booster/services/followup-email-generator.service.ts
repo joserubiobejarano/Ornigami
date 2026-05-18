@@ -13,6 +13,10 @@ type EmailInput = {
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
+function normalizeEmailBodyPunctuation(body: string): string {
+  return body.replace(/[—–]/g, "-");
+}
+
 export function buildSubject(businessName: string) {
   return `Thank you for visiting ${businessName}`;
 }
@@ -49,6 +53,7 @@ Include:
 - Max 120 words
 - No subject line
 - Do not include raw URLs in the email body
+- Never use em dashes or en dashes (no "—" or "–"). Use commas, periods, or a simple hyphen "-" instead.
 
 Tone: ${input.tone_setting || "warm and friendly"}
 Language: ${input.language || "en"}
@@ -61,7 +66,7 @@ Return only the email body.`;
       input: prompt
     });
 
-    const body = (response.output_text || "").trim();
+    const body = normalizeEmailBodyPunctuation((response.output_text || "").trim());
     if (!body) return buildFallbackEmailBody(input);
     return body;
   } catch {
