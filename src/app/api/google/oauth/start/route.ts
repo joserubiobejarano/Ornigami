@@ -8,6 +8,7 @@ import { getServerAppUrl } from "@/lib/env";
 import { buildGoogleOAuthState } from "@/lib/google-oauth-state";
 import { getUserPlan } from "@/lib/plan-server";
 import { canUseGoogleConnection } from "@/lib/plan";
+import { safeLogger } from "@/lib/safe-logger";
 
 export async function GET(req: Request) {
   const user = await resolveUser(req);
@@ -20,14 +21,14 @@ export async function GET(req: Request) {
 
   const state = buildGoogleOAuthState(user.id);
   const url = googleAuthUrl(state);
-  console.log("[GBP OAuth] redirect:", url);
 
   const u = new URL(req.url);
-  if (u.searchParams.get("debug") === "1") {
+  if (process.env.NODE_ENV !== "production" && u.searchParams.get("debug") === "1") {
+    safeLogger.info("google.oauth.start.debug");
     return NextResponse.json({
       appBaseUrl: getServerAppUrl(),
       redirectUri: getGoogleGbpOAuthRedirectUri(),
-      redirect: url,
+      redirect: "[REDACTED]",
     });
   }
 

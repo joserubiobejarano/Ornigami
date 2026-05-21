@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { checkAndIncrementPublicDemoLimit, getRequestIp, hashValue } from "@/lib/public-demo-limiter";
+import {
+  checkAndIncrementPublicDemoLimit,
+  checkAndIncrementPublicDemoLimitDurable,
+  getRequestIp,
+  hashValue,
+} from "@/lib/public-demo-limiter";
+import { safeLogger } from "@/lib/safe-logger";
 import {
   buildSubject,
   generateFollowupEmailBody,
@@ -53,7 +59,12 @@ export async function POST(req: Request) {
   const input = parsed.data;
   const emailHash = hashValue(input.recipient_email.toLowerCase());
   const emailLimiterKey = `review_booster:email:${emailHash}`;
-  if (!checkAndIncrementPublicDemoLimit(emailLimiterKey, 2)) {
+  const emailAllowed = await checkAndIncrementPublicDemoLimitDurable({
+    keyType: "email",
+    keyHash: emailHash,
+    maxPerDay: 2,
+  }).catch(() => checkAndIncrementPublicDemoLimit(emailLimiterKey, 2));
+  if (!emailAllowed) {
     return NextResponse.json(
       { error: "You have reached the daily demo limit for this email." },
       { status: 429 }
@@ -63,7 +74,12 @@ export async function POST(req: Request) {
   const requestIp = getRequestIp(req.headers);
   if (requestIp) {
     const ipLimiterKey = `review_booster:ip:${hashValue(requestIp)}`;
-    if (!checkAndIncrementPublicDemoLimit(ipLimiterKey, 20)) {
+    const ipAllowed = await checkAndIncrementPublicDemoLimitDurable({
+      keyType: "ip",
+      keyHash: hashValue(requestIp),
+      maxPerDay: 20,
+    }).catch(() => checkAndIncrementPublicDemoLimit(ipLimiterKey, 20));
+    if (!ipAllowed) {
       return NextResponse.json(
         { error: "Too many demo attempts. Please try again tomorrow." },
         { status: 429 }
@@ -104,7 +120,9 @@ export async function POST(req: Request) {
       email_from_name: businessName,
     });
   } catch (error) {
-    console.error("[public-demo/review-booster] send failed", error);
+    safeLogger.error("public_demo.review_booster.send_failed", {
+      error: error instanceof Error ? error.message : "unknown",
+    });
     return NextResponse.json(
       { error: "We could not send the demo email right now. Please try again shortly." },
       { status: 500 }

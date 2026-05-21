@@ -6,6 +6,13 @@ import { NextResponse } from "next/server";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
+import { z } from "zod";
+
+const ProjectUpdateSchema = z.object({
+  title: z.string().trim().min(1).max(180).optional(),
+  output_md: z.string().max(50000).optional(),
+});
 import { demoProjects } from "@/lib/demo-data";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -38,8 +45,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     return NextResponse.json({ project: data });
   } catch (e: unknown) {
-    console.error("[projects.id.GET] error:", e);
-    return NextResponse.json({ error: (e as Error).message ?? "Server error" }, { status: 500 });
+    safeLogger.error("projects.id.get.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
@@ -80,7 +87,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const { id } = await params;
     const body = await req.json();
-    const { title, output_md } = body ?? {};
+    const parsed = ProjectUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid project payload" }, { status: 400 });
+    }
+    const { title, output_md } = parsed.data;
 
     const rows = await sql`
       UPDATE public.projects
@@ -98,8 +109,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     return NextResponse.json({ project: data });
   } catch (e: unknown) {
-    console.error("[projects.id.PUT] error:", e);
-    return NextResponse.json({ error: (e as Error).message ?? "Server error" }, { status: 500 });
+    safeLogger.error("projects.id.put.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
@@ -125,7 +136,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    console.error("[projects.id.DELETE] error:", e);
-    return NextResponse.json({ error: (e as Error).message ?? "Server error" }, { status: 500 });
+    safeLogger.error("projects.id.delete.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

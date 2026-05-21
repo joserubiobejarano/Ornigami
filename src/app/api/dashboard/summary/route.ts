@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
 
 export async function GET(req: Request) {
   try {
     const user = await resolveUser(req);
     if (!user) {
-      console.warn("[dashboard.summary] unauthorized request");
       return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "content-type": "application/json" },
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       locationsCount: Number((locationsRow as { c: number }).c ?? 0),
     });
   } catch (e: unknown) {
-    console.error("[dashboard.summary] error:", e);
+    safeLogger.error("dashboard.summary.get.failed", { error: e instanceof Error ? e.message : "unknown" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

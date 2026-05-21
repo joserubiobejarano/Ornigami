@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { z } from "zod";
 
 import { createUserWithPassword, findUserByEmail } from "@/lib/db/users";
+import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
 
@@ -45,8 +46,7 @@ export async function POST(req: Request) {
     res.cookies.set("ll_demo", "", { path: "/", maxAge: 0 });
     return res;
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Server error";
-    console.error("[auth/register]", e);
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    safeLogger.error("auth.register.post.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
   }
 }

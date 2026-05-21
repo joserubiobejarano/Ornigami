@@ -4,18 +4,24 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
 import { generateProfileAudit, type ProfileAuditInput } from "@/lib/openai";
+import { z } from "zod";
+import { safeLogger } from "@/lib/safe-logger";
+
+const FreeAuditSchema = z.object({
+  businessQuery: z.string().trim().min(1).max(500),
+  city: z.string().trim().max(120).optional().nullable(),
+  category: z.string().trim().max(120).optional().nullable(),
+  email: z.string().trim().email().max(254),
+});
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { businessQuery, city, category, email } = body;
-
-    if (!businessQuery || !email || !businessQuery.trim() || !email.trim()) {
-      return NextResponse.json(
-        { ok: false, error: "Missing required fields" },
-        { status: 400 }
-      );
+    const parsed = FreeAuditSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false, error: "Invalid request payload" }, { status: 400 });
     }
+    const { businessQuery, city, category, email } = parsed.data;
 
     const input: ProfileAuditInput = {
       mode: "quick",
@@ -41,16 +47,16 @@ export async function POST(req: NextRequest) {
         INSERT INTO public.leads (
           email, business_query, city, category, audit_text, score
         ) VALUES (
-          ${email.trim()},
-          ${businessQuery.trim()},
-          ${city?.trim() || null},
-          ${category?.trim() || null},
+          ${email},
+          ${businessQuery},
+          ${city || null},
+          ${category || null},
           ${auditText},
           ${score}
         )
       `;
     } catch (insertErr) {
-      console.error("[free-audit] insert error:", insertErr);
+      safeLogger.warn("free_audit.insert_failed");
     }
 
     return NextResponse.json({
@@ -59,7 +65,7 @@ export async function POST(req: NextRequest) {
       score,
     });
   } catch (err: unknown) {
-    console.error("[free-audit] error:", err);
+    safeLogger.error("free_audit.post.failed", { error: err instanceof Error ? err.message : "unknown" });
     return NextResponse.json(
       {
         ok: false,

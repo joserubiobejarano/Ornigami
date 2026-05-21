@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import {
   createFollowupRunnerDependencies,
   runEligibleFollowups
@@ -10,18 +10,6 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function resolveBusinessForSessionUser(userId: string, email?: string | null) {
-  try {
-    return await getOrCreateBusinessForUser(userId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Could not resolve user in public.users") && email) {
-      return getOrCreateBusinessForUser(email);
-    }
-    throw error;
-  }
-}
-
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -29,12 +17,11 @@ export async function POST() {
   }
 
   try {
-    const business = await resolveBusinessForSessionUser(session.user.id, session.user.email);
+    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster");
     const deps = createFollowupRunnerDependencies(business.id);
     const result = await runEligibleFollowups(deps);
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeApiErrorResponse(error, "review_booster.run_now.post");
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,20 +80,37 @@ async function updateBusinessAgentFromSubscription(params: {
   `;
 }
 
+async function businessBelongsToUser(businessId: string, userId: string): Promise<boolean> {
+  const rows = await sql`
+    SELECT 1
+    FROM public.business_members
+    WHERE business_id = ${businessId}
+      AND user_id = ${userId}
+    LIMIT 1
+  `;
+  return rows.length > 0;
+}
+
 export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  }
   const body = await req.text();
-  const signature = req.headers.get("stripe-signature") as string;
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
 
   let event;
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     );
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Webhook error";
-    return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
+    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
   }
 
   try {
@@ -149,7 +167,7 @@ export async function POST(req: NextRequest) {
             updated_at = now()
           WHERE id = ${user_id}
         `;
-        if (businessId && SUPPORTED_AGENT_IDS.has(agentId)) {
+        if (businessId && SUPPORTED_AGENT_IDS.has(agentId) && (await businessBelongsToUser(businessId, user_id))) {
           await updateBusinessAgentFromSubscription({
             businessId,
             agentId,
@@ -215,7 +233,7 @@ export async function POST(req: NextRequest) {
             updated_at = now()
           WHERE id = ${user_id}
         `;
-        if (businessId && SUPPORTED_AGENT_IDS.has(agentId)) {
+        if (businessId && SUPPORTED_AGENT_IDS.has(agentId) && (await businessBelongsToUser(businessId, user_id))) {
           await updateBusinessAgentFromSubscription({
             businessId,
             agentId,
@@ -251,7 +269,7 @@ export async function POST(req: NextRequest) {
         const user_id = mapping?.user_id ?? null;
         const businessId = await resolveBusinessId(sub.metadata, stripeCustomerId, user_id);
         const agentId = sub.metadata?.agent_id ?? "starter_plan";
-        if (businessId && SUPPORTED_AGENT_IDS.has(agentId)) {
+        if (businessId && SUPPORTED_AGENT_IDS.has(agentId) && user_id && (await businessBelongsToUser(businessId, user_id))) {
           await updateBusinessAgentFromSubscription({
             businessId,
             agentId,
@@ -269,8 +287,11 @@ export async function POST(req: NextRequest) {
         break;
     }
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Webhook handler error";
-    return new NextResponse(`Webhook handler error: ${message}`, { status: 500 });
+    safeLogger.error("stripe.webhook.failed", {
+      eventType: event.type,
+      error: err instanceof Error ? err.message : "unknown",
+    });
+    return NextResponse.json({ error: "Webhook handler error" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true }, { status: 200 });

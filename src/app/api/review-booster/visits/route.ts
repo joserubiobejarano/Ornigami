@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import { createFollowupVisit } from "@/modules/review-booster/services/review-booster-db.service";
 
 export const runtime = "nodejs";
@@ -17,16 +17,8 @@ function isValidDateInput(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0 && !Number.isNaN(Date.parse(value));
 }
 
-async function resolveBusinessForSessionUser(userId: string, email?: string | null) {
-  try {
-    return await getOrCreateBusinessForUser(userId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Could not resolve user in public.users") && email) {
-      return getOrCreateBusinessForUser(email);
-    }
-    throw error;
-  }
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 export async function POST(req: Request) {
@@ -43,9 +35,11 @@ export async function POST(req: Request) {
   }
 
   const payload = (body ?? {}) as Record<string, unknown>;
-  const customerEmail = normalizeOptionalString(payload.customer_email);
+  const customerEmail = normalizeOptionalString(payload.customer_email)?.toLowerCase();
   const customerPhone = normalizeOptionalString(payload.customer_phone);
   const visitedAt = payload.visited_at;
+  const customerName = normalizeOptionalString(payload.customer_name);
+  const serviceName = normalizeOptionalString(payload.service_name);
 
   if (!isValidDateInput(visitedAt)) {
     return NextResponse.json({ error: "visited_at is required and must be a valid date" }, { status: 400 });
@@ -54,22 +48,33 @@ export async function POST(req: Request) {
   if (!customerEmail && !customerPhone) {
     return NextResponse.json({ error: "Either customer_email or customer_phone is required" }, { status: 400 });
   }
+  if (customerEmail && customerEmail.length > 254) {
+    return NextResponse.json({ error: "customer_email is too long" }, { status: 400 });
+  }
+  if (customerEmail && !isValidEmail(customerEmail)) {
+    return NextResponse.json({ error: "customer_email must be valid" }, { status: 400 });
+  }
+  if (customerName && customerName.length > 120) {
+    return NextResponse.json({ error: "customer_name is too long" }, { status: 400 });
+  }
+  if (serviceName && serviceName.length > 120) {
+    return NextResponse.json({ error: "service_name is too long" }, { status: 400 });
+  }
 
   try {
-    const business = await resolveBusinessForSessionUser(session.user.id, session.user.email);
+    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster");
     const visit = await createFollowupVisit({
       businessId: business.id,
-      customerName: normalizeOptionalString(payload.customer_name),
+      customerName,
       customerEmail,
       customerPhone,
-      serviceName: normalizeOptionalString(payload.service_name),
+      serviceName,
       visitedAt,
       source: "manual"
     });
 
     return NextResponse.json(visit, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeApiErrorResponse(error, "review_booster.visits.post");
   }
 }

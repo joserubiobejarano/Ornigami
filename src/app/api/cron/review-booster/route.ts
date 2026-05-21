@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
 import {
   createFollowupRunnerDependencies,
   runEligibleFollowups
@@ -40,16 +41,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const businessIds = await listActiveReviewBoosterBusinesses();
-    const results: Array<{
-      business_id: string;
-      ok: boolean;
-      scanned: number;
-      sent: number;
-      failed: number;
-      skipped: number;
-      error?: string;
-    }> = [];
-
     let totalSent = 0;
     let totalFailed = 0;
     let totalSkipped = 0;
@@ -62,25 +53,9 @@ export async function GET(request: NextRequest) {
         totalFailed += runResult.failed;
         totalSkipped += runResult.skipped;
 
-        results.push({
-          business_id: businessId,
-          ok: runResult.ok,
-          scanned: runResult.scanned,
-          sent: runResult.sent,
-          failed: runResult.failed,
-          skipped: runResult.skipped
-        });
       } catch (error) {
         totalFailed += 1;
-        results.push({
-          business_id: businessId,
-          ok: false,
-          scanned: 0,
-          sent: 0,
-          failed: 1,
-          skipped: 0,
-          error: error instanceof Error ? error.message : "Unknown error"
-        });
+        safeLogger.error("cron.review_booster.business_failed", { businessId });
       }
     }
 
@@ -90,13 +65,15 @@ export async function GET(request: NextRequest) {
       total_sent: totalSent,
       total_failed: totalFailed,
       total_skipped: totalSkipped,
-      results
     });
   } catch (error) {
+    safeLogger.error("cron.review_booster.failed", {
+      error: error instanceof Error ? error.message : "unknown",
+    });
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Server error"
+        error: "Server error"
       },
       { status: 500 }
     );

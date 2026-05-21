@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { sql } from "@/lib/db/neon";
 
 type CounterBucket = {
   count: number;
@@ -31,6 +32,22 @@ export function checkAndIncrementPublicDemoLimit(key: string, maxPerDay: number)
   prev.count += 1;
   buckets.set(key, prev);
   return true;
+}
+
+export async function checkAndIncrementPublicDemoLimitDurable(params: {
+  keyType: "email" | "ip";
+  keyHash: string;
+  maxPerDay: number;
+}): Promise<boolean> {
+  const rows = await sql`
+    INSERT INTO public.public_demo_events (event_date, key_type, key_hash, count)
+    VALUES (CURRENT_DATE, ${params.keyType}, ${params.keyHash}, 1)
+    ON CONFLICT (event_date, key_type, key_hash)
+    DO UPDATE SET count = public.public_demo_events.count + 1, updated_at = now()
+    RETURNING count
+  `;
+  const count = Number((rows[0] as { count?: number } | undefined)?.count ?? 0);
+  return count <= params.maxPerDay;
 }
 
 export function getRequestIp(headers: Headers): string | null {

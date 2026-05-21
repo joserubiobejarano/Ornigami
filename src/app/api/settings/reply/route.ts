@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { sql } from "@/lib/db/neon";
 import { resolveUser } from "@/lib/user-from-req";
@@ -35,25 +36,30 @@ export async function GET(req: Request) {
   if (!user || isDemoUser(user)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  try {
+    const email = "email" in user ? user.email : null;
+    await requireActiveAgentAccess(user.id, email, "review_replies");
+    const row = await getProfileReplyDefaults(user.id);
+    if (!row) {
+      return NextResponse.json({
+        businessName: "",
+        tone: "",
+        ownerName: "",
+        contactPreference: "",
+        autoReplyAllReviews: false,
+      });
+    }
 
-  const row = await getProfileReplyDefaults(user.id);
-  if (!row) {
     return NextResponse.json({
-      businessName: "",
-      tone: "",
-      ownerName: "",
-      contactPreference: "",
-      autoReplyAllReviews: false,
+      businessName: row.business_name?.trim() ?? "",
+      tone: row.reply_tone?.trim() ?? "",
+      ownerName: row.owner_name?.trim() ?? "",
+      contactPreference: row.contact_preference?.trim() ?? "",
+      autoReplyAllReviews: row.auto_reply_all_reviews === true,
     });
+  } catch (error) {
+    return safeApiErrorResponse(error, "settings.reply.get");
   }
-
-  return NextResponse.json({
-    businessName: row.business_name?.trim() ?? "",
-    tone: row.reply_tone?.trim() ?? "",
-    ownerName: row.owner_name?.trim() ?? "",
-    contactPreference: row.contact_preference?.trim() ?? "",
-    autoReplyAllReviews: row.auto_reply_all_reviews === true,
-  });
 }
 
 export async function PUT(req: Request) {
@@ -65,6 +71,12 @@ export async function PUT(req: Request) {
   const user = await resolveUser(req);
   if (!user || isDemoUser(user)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const email = "email" in user ? user.email : null;
+    await requireActiveAgentAccess(user.id, email, "review_replies");
+  } catch (error) {
+    return safeApiErrorResponse(error, "settings.reply.guard");
   }
 
   let body: unknown;
@@ -89,17 +101,20 @@ export async function PUT(req: Request) {
       ? autoReplyAllReviews
       : (existing?.auto_reply_all_reviews ?? false);
 
-  await sql`
-    UPDATE public.profiles
-    SET
-      business_name = ${emptyToNull(businessName)},
-      reply_tone = ${emptyToNull(tone)},
-      owner_name = ${emptyToNull(ownerName)},
-      contact_preference = ${emptyToNull(contactPreference)},
-      auto_reply_all_reviews = ${nextAutoReply},
-      updated_at = now()
-    WHERE id = ${user.id}
-  `;
-
-  return NextResponse.json({ ok: true });
+  try {
+    await sql`
+      UPDATE public.profiles
+      SET
+        business_name = ${emptyToNull(businessName)},
+        reply_tone = ${emptyToNull(tone)},
+        owner_name = ${emptyToNull(ownerName)},
+        contact_preference = ${emptyToNull(contactPreference)},
+        auto_reply_all_reviews = ${nextAutoReply},
+        updated_at = now()
+      WHERE id = ${user.id}
+    `;
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return safeApiErrorResponse(error, "settings.reply.put");
+  }
 }

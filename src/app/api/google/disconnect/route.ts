@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
 
 export async function POST(req: NextRequest) {
   const isDemo = req.headers.get("x-demo") === "true";
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     `;
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    safeLogger.error("google.disconnect.post.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

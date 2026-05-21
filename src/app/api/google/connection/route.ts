@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
 
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
       locations: transformedLocations,
     });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    safeLogger.error("google.connection.get.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

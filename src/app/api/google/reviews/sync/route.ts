@@ -10,6 +10,8 @@ import { sql } from "@/lib/db/neon";
 import { demoReviews } from "@/lib/demo-data";
 import { getUserPlan } from "@/lib/plan-server";
 import { canUseReviewAutomation } from "@/lib/plan";
+import { requireActiveAgentAccess } from "@/lib/api-security";
+import { safeLogger } from "@/lib/safe-logger";
 
 export async function POST(req: NextRequest) {
   const isDemo = req.headers.get("x-demo") === "true";
@@ -27,6 +29,8 @@ export async function POST(req: NextRequest) {
   if (!canUseReviewAutomation(plan)) {
     return NextResponse.json({ error: "Review sync requires a paid plan" }, { status: 403 });
   }
+  const userEmail = "email" in user ? user.email : null;
+  await requireActiveAgentAccess(user.id, userEmail, "review_replies");
 
   const { locationName } = await req.json();
 
@@ -40,8 +44,7 @@ export async function POST(req: NextRequest) {
     const r = await googleFetch(user.id, url);
 
     if (!r.ok) {
-      const t = await r.text();
-      return NextResponse.json({ error: t }, { status: r.status });
+      return NextResponse.json({ error: "Google reviews sync failed" }, { status: 502 });
     }
 
     const json = await r.json();
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ imported: rows.length });
   } catch (e: unknown) {
-    console.error("[GBP reviews sync] failed", e);
+    safeLogger.error("google.reviews.sync.failed", { error: e instanceof Error ? e.message : "unknown" });
     return NextResponse.json({ error: "Review sync failed. Please try again." }, { status: 500 });
   }
 }

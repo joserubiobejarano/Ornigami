@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import { resolveUser } from "@/lib/user-from-req";
 
 import { postReplyToGoogleAndPersist } from "@/lib/review-reply-server";
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const email = "email" in user ? user.email : null;
+    await requireActiveAgentAccess(user.id, email, "review_replies");
     const result = await postReplyToGoogleAndPersist(user.id, reviewId, locationName, reply);
 
     if (!result.ok) {
@@ -43,7 +46,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeApiErrorResponse(e, "google.replies.post");
   }
 }

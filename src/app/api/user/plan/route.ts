@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { getUserPlanInfo } from "@/lib/plan-server";
+import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,8 +17,7 @@ export async function GET() {
     const planInfo = await getUserPlanInfo(session.user.id);
     return NextResponse.json(planInfo);
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Server error";
-    console.error("[user/plan]", e);
-    return NextResponse.json({ error: message }, { status: 500 });
+    safeLogger.error("user.plan.get.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

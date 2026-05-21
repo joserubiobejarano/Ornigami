@@ -7,6 +7,7 @@ import { googleFetch } from "@/lib/google";
 import { sql } from "@/lib/db/neon";
 import { getUserPlan } from "@/lib/plan-server";
 import { canUseGoogleConnection } from "@/lib/plan";
+import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
 
@@ -27,8 +28,7 @@ export async function GET(req: NextRequest) {
     const r = await googleFetch(user.id, LIST_URL);
 
     if (!r.ok) {
-      const t = await r.text();
-      return NextResponse.json({ error: t }, { status: r.status });
+      return NextResponse.json({ error: "Google locations sync failed" }, { status: 502 });
     }
 
     const json = await r.json();
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ locations: json.locations ?? [] });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    safeLogger.error("google.locations.get.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

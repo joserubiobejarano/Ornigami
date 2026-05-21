@@ -7,6 +7,7 @@ import { upsertGbpConnection } from "@/lib/db/gbp";
 import { getServerAppUrl } from "@/lib/env";
 import { parseGoogleOAuthState } from "@/lib/google-oauth-state";
 import { resolveUser } from "@/lib/user-from-req";
+import { safeLogger } from "@/lib/safe-logger";
 
 function redirectWithGoogleError(reason: string) {
   const res = NextResponse.redirect(
@@ -76,7 +77,9 @@ export async function GET(req: Request) {
       scope: tokens.scope ?? null,
     });
   } catch (e: unknown) {
-    console.error("[GBP OAuth callback] failed to save connection", e);
+    safeLogger.error("google.oauth.callback.save_failed", {
+      error: e instanceof Error ? e.message : "unknown",
+    });
     return redirectWithGoogleError("connection_failed");
   }
 

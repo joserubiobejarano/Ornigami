@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import { sql } from "@/lib/db/neon";
 import { getBusinessFollowupSettings } from "@/modules/review-booster/services/review-booster-db.service";
 
@@ -107,20 +107,6 @@ async function getGoogleProfileDataForUser(userId: string) {
   return { connected: true as const, locations: transformed };
 }
 
-async function resolveBusinessIdForSessionUser(sessionUserId: string, email?: string | null): Promise<string> {
-  try {
-    const business = await getOrCreateBusinessForUser(sessionUserId);
-    return business.id;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Could not resolve user in public.users") && email) {
-      const business = await getOrCreateBusinessForUser(email);
-      return business.id;
-    }
-    throw error;
-  }
-}
-
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -128,7 +114,8 @@ export async function GET() {
   }
 
   try {
-    const businessId = await resolveBusinessIdForSessionUser(session.user.id, session.user.email);
+    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster");
+    const businessId = business.id;
     const settings = await getBusinessFollowupSettings(businessId);
     if (!settings) {
       return NextResponse.json({ error: "Business not found" }, { status: 404 });
@@ -147,8 +134,7 @@ export async function GET() {
       effective_google_review_url: settings.google_review_url ?? autoGoogleReviewUrl,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeApiErrorResponse(error, "review_booster.settings.get");
   }
 }
 
@@ -167,12 +153,13 @@ export async function POST(req: Request) {
 
   const payload = (body ?? {}) as Record<string, unknown>;
   const businessName = normalizeOptionalString(payload.business_name);
-  if (!businessName) {
+  if (!businessName || businessName.length > 120) {
     return NextResponse.json({ error: "business_name is required" }, { status: 400 });
   }
 
   try {
-    const businessId = await resolveBusinessIdForSessionUser(session.user.id, session.user.email);
+    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster");
+    const businessId = business.id;
     const googleProfile = await getGoogleProfileDataForUser(session.user.id);
     const selectedLocationId = normalizeOptionalString(payload.selected_location_id);
     const selectedLocation =
@@ -186,6 +173,9 @@ export async function POST(req: Request) {
       null;
 
     const manualGoogleReviewUrl = normalizeOptionalString(payload.google_review_url);
+    if (manualGoogleReviewUrl && manualGoogleReviewUrl.length > 500) {
+      return NextResponse.json({ error: "google_review_url is too long" }, { status: 400 });
+    }
     const googleReviewUrl = manualGoogleReviewUrl ?? autoGoogleReviewUrl;
 
     if (!googleReviewUrl) {
@@ -220,7 +210,6 @@ export async function POST(req: Request) {
       effective_google_review_url: googleReviewUrl,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeApiErrorResponse(error, "review_booster.settings.post");
   }
 }

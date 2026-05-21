@@ -7,13 +7,27 @@ import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { generateProfileAudit, type ProfileAuditInput } from "@/lib/openai";
+import { safeLogger } from "@/lib/safe-logger";
+import { z } from "zod";
+
+const AuditProfileSchema = z.object({
+  mode: z.enum(["connected", "quick"]),
+  locationId: z.string().uuid().optional(),
+  urlOrName: z.string().trim().min(1).max(500).optional(),
+  city: z.string().trim().max(120).optional().nullable(),
+  category: z.string().trim().max(120).optional().nullable(),
+});
 
 export async function POST(req: NextRequest) {
   try {
     const user = await resolveUser(req);
 
     const body = await req.json();
-    const { mode, locationId, urlOrName, city, category } = body;
+    const parsed = AuditProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request payload" }, { status: 400 });
+    }
+    const { mode, locationId, urlOrName, city, category } = parsed.data;
 
     if (mode !== "connected" && mode !== "quick") {
       return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
@@ -108,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ markdown });
   } catch (err: unknown) {
-    console.error("[audit] error", err);
+    safeLogger.error("audit.profile.post.failed", { error: err instanceof Error ? err.message : "unknown" });
     return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
   }
 }

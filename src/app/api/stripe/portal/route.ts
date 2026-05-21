@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getServerAppUrl } from "@/lib/env";
 import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
 import { sql } from "@/lib/db/neon";
+import { safeLogger } from "@/lib/safe-logger";
 
 export async function POST() {
   try {
@@ -65,8 +66,10 @@ export async function POST() {
 
     return NextResponse.redirect(portal.url, { status: 303 });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    safeLogger.error("stripe.portal.failed", {
+      error: e instanceof Error ? e.message : "unknown",
+    });
+    return NextResponse.json({ error: "Unable to open billing portal" }, { status: 500 });
   }
 }
 

@@ -9,6 +9,7 @@ import { sql } from "@/lib/db/neon";
 import { canUseReviewAutomation } from "@/lib/plan";
 import { getUserPlan } from "@/lib/plan-server";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
+import { requireActiveAgentAccess } from "@/lib/api-security";
 import {
   generateReplyForReviewRow,
   postReplyToGoogleAndPersist,
@@ -60,6 +61,8 @@ export async function POST(req: NextRequest) {
   const autoReply = profile?.auto_reply_all_reviews === true;
   const plan = await getUserPlan(user.id);
   const canPost = canUseReviewAutomation(plan);
+  const userEmail = "email" in user ? user.email : null;
+  await requireActiveAgentAccess(user.id, userEmail, "review_replies");
 
   const rows = (await sql`
     SELECT id, google_review_id, comment, star_rating

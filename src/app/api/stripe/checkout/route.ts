@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getServerAppUrl } from "@/lib/env";
 import { sql } from "@/lib/db/neon";
 import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { safeLogger } from "@/lib/safe-logger";
 
 type CheckoutAgentId = "review_replies" | "review_booster";
 const CHECKOUT_AGENT_IDS = new Set<CheckoutAgentId>(["review_replies", "review_booster"]);
@@ -121,8 +122,10 @@ export async function POST(request: Request) {
 
     return NextResponse.redirect(checkout.url, { status: 303 });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    safeLogger.error("stripe.checkout.failed", {
+      error: e instanceof Error ? e.message : "unknown",
+    });
+    return NextResponse.json({ error: "Unable to create checkout session" }, { status: 500 });
   }
 }
 

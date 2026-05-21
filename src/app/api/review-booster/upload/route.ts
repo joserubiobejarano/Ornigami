@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import { parseCsv } from "@/modules/review-booster/services/csv-parsing.service";
 import { createFollowupVisit, findCsvVisitDuplicate } from "@/modules/review-booster/services/review-booster-db.service";
 
@@ -46,17 +46,8 @@ function looksLikeTemplateExampleRow(input: {
   );
 }
 
-async function resolveBusinessForSessionUser(userId: string, email?: string | null) {
-  try {
-    return await getOrCreateBusinessForUser(userId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Could not resolve user in public.users") && email) {
-      return getOrCreateBusinessForUser(email);
-    }
-    throw error;
-  }
-}
+const MAX_CSV_BYTES = 1024 * 1024;
+const MAX_CSV_ROWS = 500;
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -71,10 +62,25 @@ export async function POST(req: Request) {
     if (!(csvFile instanceof File)) {
       return NextResponse.json({ error: "CSV file is required (form-data key: file)" }, { status: 400 });
     }
+    const hasCsvExtension = csvFile.name.toLowerCase().endsWith(".csv");
+    const hasCsvMime =
+      csvFile.type.length === 0 ||
+      csvFile.type === "text/csv" ||
+      csvFile.type === "application/vnd.ms-excel" ||
+      csvFile.type.includes("csv");
+    if (!hasCsvExtension || !hasCsvMime) {
+      return NextResponse.json({ error: "Only CSV files are allowed" }, { status: 400 });
+    }
+    if (csvFile.size <= 0 || csvFile.size > MAX_CSV_BYTES) {
+      return NextResponse.json({ error: "CSV file size must be between 1 byte and 1 MB" }, { status: 400 });
+    }
 
-    const business = await resolveBusinessForSessionUser(session.user.id, session.user.email);
+    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster");
     const text = await csvFile.text();
     const rows = parseCsv(text);
+    if (rows.length > MAX_CSV_ROWS) {
+      return NextResponse.json({ error: `CSV must contain at most ${MAX_CSV_ROWS} rows` }, { status: 400 });
+    }
 
     const inFileDuplicateKeys = new Set<string>();
     const errors: UploadError[] = [];
@@ -154,7 +160,6 @@ export async function POST(req: Request) {
       errors
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return safeApiErrorResponse(error, "review_booster.upload.post");
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import type { ReviewReplyInput } from "@/lib/openai";
 import { generateReviewReply } from "@/lib/openai";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
@@ -104,7 +105,6 @@ function mergeWithProfileDefaults(
 export async function POST(req: Request) {
   const rawBody = await parseBody(req);
   if (rawBody === null) {
-    console.error("[review-reply] Invalid JSON body");
     return NextResponse.json(
       { error: "Invalid request body (JSON required)" },
       { status: 400 }
@@ -143,7 +143,6 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       const first = parsed.error.issues[0];
       const message = first ? `${first.path.join(".")}: ${first.message}` : "Invalid input";
-      console.error("[review-reply] Sample request validation failed", parsed.error.issues);
       return NextResponse.json({ error: message }, { status: 400 });
     }
     try {
@@ -153,13 +152,11 @@ export async function POST(req: Request) {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Server error";
       if (message.includes("OPENAI_API_KEY") || message.includes("Missing credentials")) {
-        console.error("[review-reply] Missing OpenAI API key");
         return NextResponse.json(
           { error: "Missing OpenAI API key. Configure OPENAI_API_KEY to generate replies." },
           { status: 500 }
         );
       }
-      console.error("[review-reply] Sample generation failed", err);
       return NextResponse.json(
         { error: "Reply generation failed. Please try again." },
         { status: 500 }
@@ -169,11 +166,7 @@ export async function POST(req: Request) {
 
   const user = await resolveUser(req);
   if (!user) {
-    console.error("[review-reply] Unauthorized: no authenticated user");
-    return NextResponse.json(
-      { error: "Unauthorized", reason: "no authenticated user" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const parsed = RequestSchema.safeParse(rawBody);
@@ -184,6 +177,8 @@ export async function POST(req: Request) {
   }
 
   try {
+    const email = "email" in user ? user.email : null;
+    await requireActiveAgentAccess(user.id, email, "review_replies");
     const normalized = normalizeBody(parsed.data);
     const saved = await getProfileReplyDefaults(user.id);
     const input = mergeWithProfileDefaults(parsed.data, normalized, saved);
@@ -192,17 +187,12 @@ export async function POST(req: Request) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Server error";
     if (message.includes("OPENAI_API_KEY") || message.includes("Missing credentials")) {
-      console.error("[review-reply] Missing OpenAI API key");
       return NextResponse.json(
         { error: "Missing OpenAI API key. Configure OPENAI_API_KEY to generate replies." },
         { status: 500 }
       );
     }
-    console.error("[review-reply] Generation failed", err);
-    return NextResponse.json(
-      { error: "Reply generation failed. Please try again." },
-      { status: 500 }
-    );
+    return safeApiErrorResponse(err, "openai.review_reply.post");
   }
 }
 

@@ -7,6 +7,15 @@ import { NextResponse } from "next/server";
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
 import { demoProjects } from "@/lib/demo-data";
+import { safeLogger } from "@/lib/safe-logger";
+import { z } from "zod";
+
+const ProjectCreateSchema = z.object({
+  title: z.string().trim().min(1).max(180),
+  type: z.string().trim().min(1).max(80),
+  input: z.unknown(),
+  output_md: z.string().max(50000).optional().nullable(),
+});
 
 export async function GET(req: Request) {
   try {
@@ -29,8 +38,8 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ projects: data ?? [] });
   } catch (e: unknown) {
-    console.error("[projects.GET] error:", e);
-    return NextResponse.json({ error: (e as Error).message ?? "Server error" }, { status: 500 });
+    safeLogger.error("projects.get.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
@@ -57,11 +66,11 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { title, type, input, output_md } = body ?? {};
-
-    if (!title || !type || !input) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    const parsed = ProjectCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid project payload" }, { status: 400 });
     }
+    const { title, type, input, output_md } = parsed.data;
 
     const rows = await sql`
       INSERT INTO public.projects (user_id, title, type, input, output_md)
@@ -78,7 +87,7 @@ export async function POST(req: Request) {
     const data = rows[0];
     return NextResponse.json({ project: data });
   } catch (e: unknown) {
-    console.error("[projects.POST] error:", e);
-    return NextResponse.json({ error: (e as Error).message ?? "Server error" }, { status: 500 });
+    safeLogger.error("projects.post.failed", { error: e instanceof Error ? e.message : "unknown" });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

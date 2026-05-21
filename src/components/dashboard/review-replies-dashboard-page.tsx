@@ -13,6 +13,8 @@ import { getDashboardMetrics } from "@/lib/dashboard-metrics";
 import { getUserPlanInfo } from "@/lib/plan-server";
 import { isPaidUser, isTrialing } from "@/lib/plan";
 import { auth } from "@/auth";
+import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
+import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
 
 export async function ReviewRepliesDashboardPage() {
   const cookieStore = await cookies();
@@ -28,6 +30,20 @@ export async function ReviewRepliesDashboardPage() {
 
     if (user?.id) {
       try {
+        const business = await getOrCreateBusinessForUser(user.id);
+        const hasAgentAccess = await canAccessAgent(business.id, "review_replies");
+        if (!hasAgentAccess) {
+          return (
+            <DashboardPage width="md">
+              <ReviewRepliesAgentNav />
+              <AgentActivationPlaceholder
+                agentId="review_replies"
+                agentName="Review Replies"
+                description="AI drafting and one-click posting for Google reviews."
+              />
+            </DashboardPage>
+          );
+        }
         planInfo = await getUserPlanInfo(user.id);
         hasPaidAccess = isPaidUser(planInfo.planStatus) || isTrialing(planInfo.planStatus);
       } catch (e) {

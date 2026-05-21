@@ -4,6 +4,7 @@ import { z } from "zod";
 import { resolveUser } from "@/lib/user-from-req";
 import { generateLocalBlogPost, generateLocalGBPPost, generateLocalFAQs } from "@/lib/agents/localSeoAgent";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
+import { safeLogger } from "@/lib/safe-logger";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -81,7 +82,10 @@ export async function POST(req: Request) {
     await incrementUsage(user.id, "ai_posts");
 
     return NextResponse.json({ markdown });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    safeLogger.error("openai.generate.failed", {
+      error: e instanceof Error ? e.message : "unknown",
+    });
+    return NextResponse.json({ error: "Failed to generate content. Please try again." }, { status: 500 });
   }
 }
