@@ -10,7 +10,6 @@ import {
   Check,
   ArrowRight,
   ChevronDown,
-  MapPin,
   Users,
   Send,
   Clock,
@@ -757,55 +756,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ LOCAL PRESENCE STRIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <section className="bg-slate-50 py-16">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="grid gap-10 rounded-2xl border border-slate-200 bg-white p-8 md:grid-cols-2 md:items-center md:p-12"
-          >
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600">
-                <MapPin className="h-3.5 w-3.5" /> Built for local business
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                If customers find you on Google Maps, Ornigami helps you win them
-              </h2>
-              <p className="mt-4 text-slate-600">
-                Restaurants, salons, clinics, gyms, and service businesses can run Ornigami from day one.
-              </p>
-              <Link
-                href="/signup"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-100 transition-all hover:brightness-105"
-              >
-                Start your free trial <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Restaurants", emoji: "ðŸ½ï¸" },
-                { label: "Clinics", emoji: "ðŸ¥" },
-                { label: "Salons & Spas", emoji: "âœ‚ï¸" },
-                { label: "Gyms", emoji: "ðŸ’ª" },
-                { label: "Local services", emoji: "ðŸ”§" },
-                { label: "Retail stores", emoji: "ðŸ›ï¸" },
-              ].map(({ label, emoji }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5"
-                >
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-200 text-xs font-semibold text-slate-700">{emoji}</span>
-                  <span className="text-sm font-medium text-slate-700">{label}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* â”€â”€ FAQ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-slate-950 py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8">
@@ -869,9 +819,6 @@ export default function HomePage() {
               See a live demo first
             </Link>
           </div>
-          <p className="mt-4 text-xs text-slate-400">
-            $14.99/month after trial Â· Cancel anytime Â· No long-term contracts
-          </p>
         </motion.div>
       </section>
     </div>
