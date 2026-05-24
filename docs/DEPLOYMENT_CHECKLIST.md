@@ -1,131 +1,120 @@
-# Vercel Deployment Checklist for LocalLift
+# Deployment Checklist
 
-## Prerequisites
+This checklist is for deploying the current app to Vercel with Neon.
 
-- [ ] GitHub repository is set up and all code is committed
-- [ ] You have a Vercel account (sign up at https://vercel.com if needed)
-- [ ] Neon project created and `DATABASE_URL` (pooled) available
-- [ ] You have your API keys ready (OpenAI, Google, Stripe)
+## 1. Prerequisites
 
-## Step 1: Connect GitHub Repository to Vercel
+- [ ] GitHub repository is connected to Vercel
+- [ ] Neon database is provisioned
+- [ ] Google OAuth credentials are created
+- [ ] Stripe account, products, and price ids are created
+- [ ] Resend is configured for the sending domain or mailbox
+- [ ] OpenAI API key is available
 
-1. [ ] Go to https://vercel.com/dashboard
-2. [ ] Click "Add New..." → "Project"
-3. [ ] Import your GitHub repository
-4. [ ] Select the repository and click "Import"
-5. [ ] Vercel will auto-detect Next.js settings (framework preset: Next.js)
+## 2. Vercel project setup
 
-## Step 2: Configure Build Settings
+- [ ] Framework preset is `Next.js`
+- [ ] Root directory is the repository root
+- [ ] Build command is `npm run build`
+- [ ] Install command is `npm install`
+- [ ] Node.js version is compatible with Next.js 16
 
-1. [ ] **Framework Preset**: Should be "Next.js" (auto-detected)
-2. [ ] **Root Directory**: Leave as `.` (root)
-3. [ ] **Build Command**: `npm run build` (default)
-4. [ ] **Output Directory**: `.next` (default)
-5. [ ] **Install Command**: `npm install` (default)
-6. [ ] **Node.js Version**: 20.x (recommended; 18+ supported)
+## 3. Environment variables
 
-## Step 3: Add Environment Variables in Vercel
+Set the variables documented in [docs/ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md).
 
-Go to **Settings** → **Environment Variables**. Full descriptions: [docs/ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md).
+Minimum production set:
 
-### Database (required)
-
-- [ ] `DATABASE_URL` = Neon pooled connection string (`postgresql://...?sslmode=require`)
-
-### Auth.js / NextAuth (required)
-
-- [ ] `AUTH_SECRET` = Random secret (e.g. `openssl rand -base64 32`)
-- [ ] `AUTH_URL` = Public origin of this app on that environment (e.g. `https://your-app.vercel.app` or `http://localhost:3000` for local)
-
-### Google (required for sign-in + GBP)
-
+- [ ] `DATABASE_URL`
+- [ ] `AUTH_SECRET`
+- [ ] `AUTH_URL`
+- [ ] `AUTH_TRUST_HOST` if needed
+- [ ] `NEXT_PUBLIC_APP_URL`
+- [ ] `OPENAI_API_KEY`
 - [ ] `GOOGLE_CLIENT_ID`
 - [ ] `GOOGLE_CLIENT_SECRET`
-
-### OpenAI (required for AI features)
-
-- [ ] `OPENAI_API_KEY`
-
-### Stripe (required for billing)
-
 - [ ] `STRIPE_SECRET_KEY`
 - [ ] `STRIPE_WEBHOOK_SECRET`
-- [ ] `STRIPE_STARTER_PRICE_ID` = Price ID used by checkout
+- [ ] `STRIPE_PRICE_STARTER`
+- [ ] `STRIPE_REVIEW_REPLIES_PRICE_ID`
+- [ ] `STRIPE_REVIEW_BOOSTER_PRICE_ID`
+- [ ] `CRON_SECRET`
+- [ ] `RESEND_API_KEY`
+- [ ] `EMAIL_FROM`
 
-### App URL (required)
+## 4. Database migrations
 
-- [ ] `NEXT_PUBLIC_APP_URL` = Same canonical origin as the app (no trailing slash), e.g. your Vercel URL
+Apply all migrations in order:
 
-### Optional
+1. [ ] `001_initial.sql`
+2. [ ] `002_auto_reply_profiles.sql`
+3. [ ] `003_business_foundation.sql`
+4. [ ] `004_review_booster_tables.sql`
+5. [ ] `005_business_agent_billing_fields.sql`
 
-- [ ] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- [ ] `DATABASE_URL_UNPOOLED` for admin/migration tools
-- [ ] `AUTH_TRUST_HOST=true` if Auth.js warns about the host behind a proxy
+## 5. Google OAuth callbacks
 
-### Environment scope
+Google OAuth must allow both callback routes:
 
-- [ ] Set variables for **Production**, **Preview**, and/or **Development** as needed
-- [ ] For preview deploys, ensure `AUTH_URL` / `NEXT_PUBLIC_APP_URL` match the preview URL or your chosen stable staging URL
+- [ ] `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google`
+- [ ] `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback`
 
-## Step 4: Neon schema
+If local development is used, also add localhost variants.
 
-1. [ ] In Neon, run `neon/migrations/001_initial.sql`, then `002_auto_reply_profiles.sql`, in order (SQL Editor or `psql`)
+## 6. Stripe configuration
 
-## Step 5: Google Cloud OAuth redirect URIs
+- [ ] Create or confirm the price id used by `STRIPE_REVIEW_REPLIES_PRICE_ID`
+- [ ] Create or confirm the price id used by `STRIPE_REVIEW_BOOSTER_PRICE_ID`
+- [ ] Decide whether `STRIPE_PRICE_STARTER` is still needed as a fallback
+- [ ] Configure Stripe webhook endpoint: `/api/stripe/webhook`
+- [ ] Subscribe webhook to the subscription lifecycle events the handler expects
 
-Use **one** Web application OAuth client for NextAuth **and** GBP (see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)).
+## 7. Resend configuration
 
-1. [ ] [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
-2. [ ] **Authorized redirect URIs** must include exactly:
-   - `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google`
-   - `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback`
-3. [ ] Repeat for local dev origins if you test locally (`http://localhost:3000/...`)
+- [ ] Verify the sending mailbox or domain in Resend
+- [ ] Set `RESEND_API_KEY`
+- [ ] Set `EMAIL_FROM` to the raw mailbox address only, for example `noreply@yourdomain.com`
 
-## Step 6: Stripe webhook
+## 8. Review Booster cron setup
 
-1. [ ] Stripe Dashboard → **Developers** → **Webhooks** → **Add endpoint**
-2. [ ] URL: `https://your-deployment.vercel.app/api/stripe/webhook`
-3. [ ] Events: subscription lifecycle events your webhook handler expects (`customer.subscription.*`, etc.)
-4. [ ] Copy signing secret → `STRIPE_WEBHOOK_SECRET` in Vercel
+- [ ] Configure an external scheduler to call `/api/cron/review-booster`
+- [ ] Send `Authorization: Bearer <CRON_SECRET>`
+- [ ] Confirm only active Review Booster businesses are processed
 
-## Step 7: Test build locally
+## 9. Pre-deploy verification
+
+Run locally before deploying:
 
 ```bash
 npm install
 npm run build
+npm run lint
 ```
 
-- [ ] Build completes successfully
-- [ ] No TypeScript errors
+Checklist:
 
-## Step 8: Deploy to Vercel
+- [ ] Build passes
+- [ ] Lint passes
+- [ ] No missing env-var errors during test flows
 
-1. [ ] Deploy from the dashboard or via git push
-2. [ ] Fix any build errors using Vercel logs
+## 10. Post-deploy smoke test
 
-## Step 9: After first deploy
+- [ ] Homepage loads
+- [ ] Login and signup work
+- [ ] Dashboard loads
+- [ ] Billing page loads
+- [ ] Review Replies settings and Google connection work
+- [ ] Review Booster settings save successfully
+- [ ] Review Booster manual visit creation works
+- [ ] Review Booster CSV upload works
+- [ ] Review Booster run-now works
+- [ ] Stripe checkout redirects successfully
+- [ ] Stripe webhook updates plan and agent state
 
-1. [ ] Set `NEXT_PUBLIC_APP_URL` and `AUTH_URL` to the real deployment URL if they were placeholders
-2. [ ] Add the same URLs to Google OAuth redirect URIs
-3. [ ] Update Stripe webhook URL if the domain changed
-4. [ ] Redeploy if env vars changed
+Then run [docs/SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md).
 
-## Step 10: Verify
+## 11. Deployment caveats
 
-- [ ] Open the deployment URL; homepage loads
-- [ ] Run [docs/SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md)
-
-## Troubleshooting
-
-### Build fails
-
-- Check Vercel build logs, `npm run build` locally, and required env vars
-
-### Auth / OAuth redirects fail
-
-- `AUTH_URL` and `NEXT_PUBLIC_APP_URL` must match the browser origin
-- Google redirect URIs must match exactly (scheme, host, port, path)
-
-### API 500s
-
-- Vercel function logs; verify `DATABASE_URL` and server-only secrets on that environment
+- Branding and pricing copy are still mixed across the app, so verify environment-specific marketing pages manually.
+- Review Booster depends on both Stripe activation and valid Review Booster settings to behave correctly.
+- There is no built-in scheduler in this repo; cron orchestration must be provided externally.

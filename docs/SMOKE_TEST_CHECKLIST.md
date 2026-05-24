@@ -1,166 +1,118 @@
-# Smoke Test Checklist for LocalLift Staging
+# Smoke Test Checklist
 
-After deploying to Vercel, run through these tests to verify everything works.
+Use this checklist after a deployment or after major changes.
 
-## Pre-Test Setup
+## Pre-test
 
-- [ ] Clear browser cache and cookies (or use incognito/private window)
-- [ ] Open browser developer console (F12) to check for errors
-- [ ] Note your Vercel staging URL: `https://locallift-staging.vercel.app` (or your actual URL)
+- [ ] Use a clean browser session or incognito window
+- [ ] Open browser console and network tab
+- [ ] Confirm the environment URL under test
+- [ ] Confirm required env vars are set in that environment
 
-## 1. Homepage & Landing Page
+## 1. Public site
 
-- [ ] Visit `/` (root URL)
-- [ ] Page loads without errors
-- [ ] No console errors in browser dev tools
-- [ ] Navigation links work
-- [ ] CTA buttons are visible and clickable
+- [ ] `/` loads without console errors
+- [ ] Header links work
+- [ ] Pricing page loads
+- [ ] Review Booster marketing page loads
+- [ ] Review Replies marketing page loads
+- [ ] Login and signup links work
 
-## 2. Authentication - Sign Up
+## 2. Authentication
 
-- [ ] Visit `/signup`
-- [ ] Sign up form is visible
-- [ ] Create a test account with email/password
-- [ ] Sign up completes successfully
-- [ ] Redirects to `/dashboard` after sign up (or your configured default)
-- [ ] No console errors
+### Credentials signup/login
 
-## 3. Authentication - Login
+- [ ] `/signup` loads
+- [ ] A new account can be created
+- [ ] Post-signup redirect lands in the dashboard
+- [ ] `/login` loads
+- [ ] Existing credentials login works
 
-- [ ] Visit `/login`
-- [ ] Login form is visible
-- [ ] Log in with test account credentials
-- [ ] Login completes successfully
-- [ ] Redirects to `/dashboard` after login (or `callbackUrl` when provided)
-- [ ] No console errors
+### Google sign-in
 
-## 4. Authentication - Google OAuth (Optional)
+- [ ] Google sign-in button starts OAuth flow
+- [ ] Callback returns to the app successfully
+- [ ] Auth session is established
 
-- [ ] Visit `/login`
-- [ ] Click "Continue with Google" button
-- [ ] Redirects to Google OAuth consent screen
-- [ ] Complete Google OAuth flow
-- [ ] Completes OAuth and returns to the app (NextAuth callback at `/api/auth/callback/google`)
-- [ ] Then lands on the post-login destination (e.g. `/dashboard` or the `callbackUrl` you used)
-- [ ] User is logged in
-- [ ] No console errors
+## 3. Dashboard shell
 
-## 5. Dashboard Pages - Content
+- [ ] `/dashboard` loads
+- [ ] Business name renders when available
+- [ ] Billing page loads
+- [ ] Agent cards render with expected activation status
 
-- [ ] Visit `/content` (while logged in)
-- [ ] Page loads without errors
-- [ ] Demo mode banner appears (if applicable)
-- [ ] Content generation forms are visible
-- [ ] No console errors
-- [ ] Try generating content (if OpenAI is configured)
-- [ ] Check that demo mode indicators are visible
+## 4. Review Replies flow
 
-## 6. Dashboard Pages - Reviews
+- [ ] `/settings` loads
+- [ ] Reply settings can be saved
+- [ ] Google Business Profile can connect
+- [ ] Locations can sync
+- [ ] `/reviews` loads
+- [ ] Location selector works
+- [ ] Review sync runs successfully
+- [ ] Generate reply works
+- [ ] Draft save works
+- [ ] Post reply works when available
+- [ ] Auto-reply toggle can be changed
 
-- [ ] Visit `/reviews` (while logged in)
-- [ ] Page loads without errors
-- [ ] Demo mode banner appears (if applicable)
-- [ ] Reviews list/interface is visible
-- [ ] No console errors
-- [ ] If Google is connected, reviews should sync (optional test)
+## 5. Review Booster flow
 
-## 7. Dashboard Pages - Audit
+- [ ] Billing page shows Review Booster activation state correctly
+- [ ] `/dashboard/agents/review-booster` loads for an active business
+- [ ] `/dashboard/agents/review-booster/settings` loads
+- [ ] Review Booster settings save successfully
+- [ ] Google review URL is resolved either from GBP or manual input
+- [ ] Manual visit creation works
+- [ ] CSV template downloads
+- [ ] CSV upload succeeds for a valid file
+- [ ] CSV validation errors are displayed for invalid rows
+- [ ] Run-now endpoint processes eligible visits
+- [ ] Visit statuses update after sending attempts
 
-- [ ] Visit `/audit` (while logged in)
-- [ ] Page loads without errors
-- [ ] Demo mode banner appears (if applicable)
-- [ ] Audit interface is visible
-- [ ] No console errors
-- [ ] Try running a quick audit (if configured)
+## 6. Billing and subscription lifecycle
 
-## 8. Dashboard Pages - Settings
+- [ ] Stripe checkout starts from billing page
+- [ ] Success redirect returns to dashboard billing
+- [ ] Stripe portal opens for active subscriptions
+- [ ] Webhook updates `profiles.plan_status`
+- [ ] Webhook updates `business_agents.status`
 
-- [ ] Visit `/settings` (while logged in)
-- [ ] Page loads without errors
-- [ ] Profile information is displayed
-- [ ] Plan & Billing section is visible
-- [ ] Google Business Profile section is visible
-- [ ] No console errors
+## 7. Review Booster cron
 
-## 9. Settings - Google Connection (Optional)
+- [ ] Calling `/api/cron/review-booster` without auth returns `401`
+- [ ] Calling it with `Authorization: Bearer <CRON_SECRET>` succeeds
+- [ ] Only active Review Booster businesses are scanned
 
-- [ ] In `/settings`, click "Connect Google" (if not connected)
-- [ ] Redirects to Google OAuth
-- [ ] Complete OAuth flow
-- [ ] Returns to `/settings?google=connected`
-- [ ] Google connection status shows "Connected ✅"
-- [ ] "Sync Locations" button is visible
-- [ ] No console errors
+## 8. Demo and legacy surfaces
 
-## 10. Settings - Stripe Integration (Optional)
+- [ ] `/demo` loads
+- [ ] Review demo pages still render
+- [ ] Legacy `/content` page still renders if intentionally kept available
+- [ ] Legacy `/audit` page still renders if intentionally kept available
 
-- [ ] In `/settings`, click "Upgrade" button (if Stripe is configured)
-- [ ] Redirects to Stripe Checkout (test mode)
-- [ ] Complete or cancel checkout
-- [ ] Returns to `/settings`
-- [ ] No console errors
+## 9. Error handling
 
-## 11. API Routes - Basic Health Check
+- [ ] Invalid route shows expected 404 behavior
+- [ ] API validation errors return readable JSON
+- [ ] No unexpected 500s appear in the network tab during normal flows
 
-Test a few API routes directly (optional, for debugging):
+## 10. Responsive sanity check
 
-- [ ] `GET /api/dashboard/summary` (should require auth, may redirect to login)
-- [ ] Check Vercel function logs for any errors
+- [ ] Public site is usable on mobile width
+- [ ] Dashboard navigation is usable on mobile width
+- [ ] Review Booster pages remain readable on mobile width
 
-## 12. Error Handling
+## 11. Release sign-off
 
-- [ ] Visit a non-existent route (e.g., `/this-does-not-exist`)
-- [ ] 404 page displays (or redirects appropriately)
-- [ ] No console errors
-
-## 13. Logout
-
-- [ ] Click logout/sign out button (if available)
-- [ ] User is logged out
-- [ ] Redirects to login or homepage
-- [ ] Session is cleared
-- [ ] No console errors
-
-## 14. Demo Mode Verification
-
-- [ ] Verify demo mode banners appear on `/content`, `/reviews`, `/audit`
-- [ ] Demo mode indicators are clearly visible
-- [ ] App does not crash in demo mode
-- [ ] Demo data displays correctly (if applicable)
-
-## 15. Mobile/Responsive Check (Quick)
-
-- [ ] Resize browser window to mobile size
-- [ ] Navigation works on mobile
-- [ ] Forms are usable on mobile
-- [ ] No layout breaking issues
-
-## Post-Test Verification
-
-- [ ] Check Vercel function logs for any errors during testing
-- [ ] Check browser console for any persistent errors
-- [ ] Verify no 500 errors in network tab
-- [ ] All critical user flows work end-to-end
-
-## Known Issues to Document
-
-If you find any issues during smoke testing, document them here:
-
-1. [ ] Issue: ________________
-   - Steps to reproduce: ________________
-   - Expected: ________________
-   - Actual: ________________
-
-2. [ ] Issue: ________________
-   - Steps to reproduce: ________________
-   - Expected: ________________
-   - Actual: ________________
-
-## Sign-off
-
-- [ ] All critical tests passed
 - [ ] No blocking issues found
-- [ ] Staging environment is ready for use
-- [ ] Date: _______________
-- [ ] Tester: _______________
+- [ ] Any non-blocking issues are documented
+- [ ] Deployment is acceptable for internal review or customer use
 
+## Notes
+
+Document any issues found during the run here:
+
+1. Issue:
+2. Repro steps:
+3. Expected:
+4. Actual:

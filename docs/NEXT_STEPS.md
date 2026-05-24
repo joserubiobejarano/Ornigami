@@ -1,113 +1,78 @@
-# LocalLift - Next Steps (Developer Guide)
+# Next Steps
 
-Actionable priorities aligned with the current codebase (Neon + Auth.js, GBP APIs wired, Settings/Reviews UI largely built).
+This is the practical short list for the next maintainer or product owner.
 
----
+## Top priority
 
-## 🎯 Current Status
+### 1. Make Review Booster the cleanest experience in the app
 
-**Phase 3: Google Business Profile & polish** – Backend and primary dashboard UI are in place; focus shifts to consistency, demo behavior, analytics, and launch hardening.
+Why:
 
-- ✅ **Auth & DB**: Auth.js, `public.users` / `public.profiles`, Neon migrations under `neon/migrations/`
-- ✅ **GBP**: OAuth, sync, replies, disconnect; Settings shows locations, sync, auto-reply toggle, disconnect; Reviews has location selector, sync, workflow UI (`src/components/reviews/`)
-- 🚧 **Product polish**: Demo limits/copy, audit funnel, dashboard charts, QA
+- It is the clearest current growth offer.
+- It has the best chance of being sold and demoed quickly.
+- It already exists end to end, so polish work has immediate leverage.
 
----
+Do next:
 
-## 📋 Immediate priorities (in order)
+- Enforce the intended follow-up timing rule in backend selection logic.
+- Surface send failure reasons in the dashboard.
+- Simplify settings copy for non-technical users.
+- Improve the first-run experience after activation.
 
-### ▶ STEP 1: Demo mode polish ⭐ **CURRENT PRIORITY**
+## Product alignment work
 
-**Status**: Cookie + middleware + `UpgradeModal` exist; tighten limits and messaging  
-**Complexity**: Low
+### 2. Resolve brand and pricing drift
 
-- [ ] Align demo limits with product goals (e.g. cap mock generations/replies) in `src/lib/demo.ts` / consumers
-- [ ] Ensure “Post to Google” and paid-only paths are clearly no-op or blocked in demo (reviews + API `x-demo` behavior)
-- [ ] Banner copy and dismiss behavior (dashboard layout + demo entry at `/demo`)
+Do next:
 
-**Files to check**: `src/middleware.ts`, `src/lib/demo.ts`, `src/lib/demo-actions.ts`, `src/app/(dashboard)/layout.tsx`, review/content API routes with demo branches
+- Choose whether the product is officially `Ornigami`, `LocalLift`, or a transition with a clear rule.
+- Align homepage, pricing, billing page, and docs.
+- Decide whether pricing is single-plan, per-agent, or hybrid.
 
----
+## Reliability work
 
-### ▶ STEP 2: Plan gating verification
+### 3. Add tests and observability around the core flows
 
-**Status**: `PlanGate`, `UpgradeBanner`, and paid checks exist; audit for gaps  
-**Complexity**: Low
+Do next:
 
-- [ ] GBP connect/sync/post: only for paid/trial where intended
-- [ ] Content and audit: enforce monthly caps from `profiles`
-- [ ] Consistent upgrade CTAs when limits hit
+- Add automated coverage for auth, billing webhook behavior, Review Replies sync/post flow, and Review Booster upload/send flow.
+- Add production monitoring and alerting.
+- Make release verification easier and faster.
 
-**Files to check**: `src/components/PlanGate.tsx`, dashboard pages, `src/app/api/**` for usage checks
+## Product cleanup work
 
----
+### 4. Decide what to do with legacy surfaces
 
-### ▶ STEP 3: Audit funnel & marketing
+Do next:
 
-**Status**: `/free-audit` works; conversion UX can improve  
-**Complexity**: Low–medium
+- Decide whether `/content` stays, gets hidden, or gets removed.
+- Decide whether audit pages remain a supporting acquisition funnel.
+- Remove or relabel product copy that no longer matches the main offer.
 
-- [ ] Results layout, CTA to sign up / pricing
-- [ ] Optional social proof on funnel pages
+## Medium-term product exploration
 
-**Files**: `src/app/free-audit/**`, related components
+### 5. Decide the fate of `speed_to_lead`
 
----
+Questions to answer:
 
-### ▶ STEP 4: Dashboard analytics
+- Is it a real next product?
+- Does it belong in this app?
+- Is it only a placeholder that should be removed from billing and navigation stories for now?
 
-**Status**: Summary API exists; no charts  
-**Complexity**: Medium
+## Suggested execution order
 
-- [ ] Trends vs previous period (reuse `GET /api/dashboard/summary` or extend)
-- [ ] Simple charts (e.g. Recharts) for usage over time
+1. Review Booster polish
+2. Brand and pricing alignment
+3. Test and monitoring coverage
+4. Legacy-surface cleanup
+5. Future-agent strategy
 
-**Files**: `src/app/(dashboard)/dashboard/page.tsx`, new small chart components
+## Useful files to start with
 
----
-
-### ▶ STEP 5: Pre-launch QA
-
-**Status**: Ongoing  
-**Complexity**: High (real GBP helps)
-
-- [ ] End-to-end: signup, Stripe trial, GBP connect, sync, draft reply, post reply, disconnect
-- [ ] Error logging (e.g. Sentry), Vercel logs review
-- [ ] `npm run build` clean; run [docs/SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md) on staging
-
----
-
-### ▶ STEP 6: Marketing site (non-blocking)
-
-- [ ] “Why LocalLift?” / case studies / SEO as needed
-
----
-
-## 🔮 Later phases
-
-See [docs/ROADMAP.md](./ROADMAP.md) for automation (n8n), agency mode, and advanced analytics.
-
----
-
-## 🛠️ Development tips
-
-```bash
-npm run dev
-npm run build
-npm run lint
-```
-
-Neon schema: apply `neon/migrations/*.sql` in order ([neon/README.md](../neon/README.md)).
-
----
-
-## 📞 Decisions to clarify when implementing
-
-1. **Demo**: Hard caps vs time-based demo?
-2. **Analytics**: Default time range for charts (7d vs 30d)?
-3. **GBP**: Any locations that should skip auto-reply regardless of profile toggle?
-
----
-
-**Last updated:** April 2026  
-**Current focus:** Step 1 – Demo mode polish and Step 2 – Plan gating verification
+- `src/app/(dashboard)/dashboard/agents/review-booster/page.tsx`
+- `src/app/api/review-booster/settings/route.ts`
+- `src/app/api/review-booster/upload/route.ts`
+- `src/modules/review-booster/services/followup-runner.service.ts`
+- `src/modules/review-booster/services/review-booster-db.service.ts`
+- `src/app/(dashboard)/dashboard/billing/page.tsx`
+- `src/app/pricing/page.tsx`

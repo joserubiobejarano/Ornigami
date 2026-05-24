@@ -1,102 +1,149 @@
 # Project Scope
 
-This document explains what LocalLift is, what it owns, and what is currently in scope in this repository.
+This document explains what the product is today, what this repository owns, and what is still transitional.
 
-## Product mission
+## Product definition
 
-LocalLift helps local businesses operate reputation and growth workflows from one app:
+This repository contains the web application for Ornigami, also referred to in older code and docs as LocalLift.
 
-- Generate and manage customer-review replies
-- Connect and operate Google Business Profile workflows
-- Run post-visit follow-up campaigns that request reviews
-- Track activity and usage in a business dashboard
+Today the product is best understood as an agent hub for local-business reputation work.
 
-## Primary personas
+Primary jobs to be done:
 
-- Local business owners
-- Multi-location operators
-- Agencies supporting local clients
+- Help businesses handle Google reviews faster
+- Help businesses ask for more Google reviews after real visits
+- Let each business activate specific agents through billing
+- Support marketing, demo, and onboarding flows around those agents
 
-## Core modules
+## Core product pillars
 
-### 1) Auth and user identity
+### Review Replies
 
-- Credentials login and signup
-- Google OAuth login via Auth.js
-- Session-backed protected dashboard routes
-- User/profile persistence in Postgres
+Current scope:
 
-### 2) Review Replies agent
-
-- Manual review ingestion
-- AI-generated reply drafts
-- Posting replies to Google reviews
-- Reply preferences and workflow settings
-
-### 3) Google Business Profile integration
-
-- OAuth authorization (separate GBP flow)
-- Connection status checks
-- Location sync and location listing
+- Google Business Profile OAuth connection
+- Location sync
 - Review sync
-- Reply submission to GBP
+- AI reply generation
+- Draft saving
+- Direct posting to Google
+- Optional auto-reply behavior when the business enables it
 
-### 4) Review Booster agent
+This is one of the two main production features in the app right now.
 
-- Visit ingestion (manual + CSV upload)
-- Follow-up candidate tracking (`pending`, `sent`, `failed`, `skipped`)
-- Automated follow-up message generation/sending pipeline
-- Manual trigger endpoint and cron trigger endpoint
-- Agent activation gate through `business_agents`
+### Review Booster
 
-### 5) Billing and plan gating
+Current scope:
 
-- Stripe checkout session creation
-- Stripe webhook-driven state synchronization
-- Feature access checks by plan and status
-- Dashboard upgrade prompts and feature gates
+- Agent-level activation gate through `public.business_agents`
+- Business-level follow-up settings
+- Auto-derived Google review URL when GBP is connected
+- Manual visit entry
+- CSV visit import
+- Manual send trigger
+- Cron send trigger
+- Delivery through Resend
+- Visit and message persistence in Postgres
 
-### 6) Marketing and lead capture
+This is the growth feature with the clearest current commercial focus.
 
-- Landing pages, pricing, legal pages
-- Free audit flow and lead submission endpoint
-- Feedback endpoint
+### Billing and agent activation
 
-## Data model scope
+Current scope:
 
-This project owns and uses:
+- Stripe checkout for agent activation
+- Stripe portal access for active subscriptions
+- Webhook-based subscription updates
+- Business-agent status updates (`active`, `trialing`, `past_due`, `inactive`, `canceled`)
 
-- Account and profile tables (`users`, `profiles`)
-- Billing mirrors (`subscriptions`, `user_billing`)
-- Content/review domain tables
-- Google connection, location, and review tables
-- Business and business-agent activation tables
-- Follow-up visit/message/event tables for Review Booster
+### Public site and onboarding surfaces
 
-See [DATABASE.md](./DATABASE.md) for details.
+Current scope:
 
-## In-repo boundaries
+- Homepage and feature landing pages
+- Pricing page
+- Login and signup
+- Demo pages
+- Legal, privacy, terms, contact, and feedback pages
 
-In scope:
+## Legacy or secondary features still in repo
 
-- Web app (Next.js routes, UI, APIs)
-- SQL migrations under `neon/migrations`
-- Internal service-layer logic under `src/lib` and `src/modules`
+These are still present and usable, but they are not the clearest expression of the product today:
 
-Out of scope:
+- Legacy content generator at `/content`
+- Audit-related flows and free-audit positioning
+- Local SEO marketing copy spread across the public site
 
-- External orchestration systems (unless explicitly integrated)
+These should be treated as supporting or transitional features unless product strategy explicitly brings them back to center stage.
+
+## Main personas
+
+- Single-location local business owners
+- Multi-location businesses
+- Agencies supporting local businesses
+
+## What this repository owns
+
+### Frontend
+
+- Public marketing pages
+- Auth pages
+- Dashboard pages
+- Review workflows
+- Review Booster pages
+- Billing pages
+
+### Backend
+
+- Next.js route handlers under `src/app/api`
+- OpenAI integration endpoints
+- Google Business Profile OAuth and data-sync endpoints
+- Stripe checkout, portal, and webhook endpoints
+- Review Booster operational endpoints
+
+### Data model
+
+- Users and profiles
+- Billing mirrors and plan views
+- Google Business Profile connection and review data
+- Business ownership and agent activation tables
+- Review Booster visits, messages, and integration events
+- Projects, leads, and feedback tables from earlier product scope
+
+## What is explicitly not in scope
+
 - Mobile apps
-- Separate monorepo packages
+- Separate backend service outside this Next.js app
+- Separate worker service for Review Booster
+- Full agency account hierarchy beyond the current business model
+- A completed `speed_to_lead` feature
 
-## Operational assumptions
+## Operational realities
 
-- Postgres security is enforced at application layer (query scoping by user/business), not RLS
-- Environment variables are the source of secret/config management
-- Cron endpoint access is bearer-token protected with `CRON_SECRET`
+- Authorization is enforced at the application layer, not through database RLS
+- Secrets are managed through environment variables
+- Cron execution is protected with `CRON_SECRET`
+- Several user/account flows still contain compatibility logic for legacy session/user-id behavior
 
-## Known maturity notes
+## Product maturity assessment
 
-- Strong foundation for auth, billing, review workflows, and GBP sync/reply pipeline
-- Review Booster includes active runtime surfaces and database backing
-- Automated test suite is not yet present in package scripts
+What feels production-capable today:
+
+- Auth and session handling
+- Review Replies flow
+- Google Business Profile connection and syncing
+- Stripe billing plumbing
+- Review Booster visit ingestion and email sending flow
+
+What still needs alignment or cleanup:
+
+- Mixed branding between Ornigami and LocalLift
+- Mixed pricing story between public site and dashboard billing
+- Legacy content/audit surfaces that no longer match the core product direction
+- Automated tests and stronger observability
+
+## Scope summary in one sentence
+
+If a new maintainer needs the shortest accurate description:
+
+This repo powers an agent-based local-business reputation app whose live center of gravity is Google review replies plus Review Booster follow-up automation, with older local-SEO surfaces still present in the codebase.

@@ -1,37 +1,72 @@
-# Deployment summary – LocalLift (Vercel + Neon)
+# Deployment Summary
 
-This file is a **short operator reference**. Authoritative env documentation is [docs/ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md). Step-by-step setup is [docs/DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md).
+This is the short operator view of the current deployment model.
 
-## Environment variables (quick reference)
+## Hosting model
+
+- App hosting: Vercel
+- Database: Neon Postgres
+- Auth: Auth.js
+- AI: OpenAI
+- Email: Resend
+- Billing: Stripe
+- Scheduled Review Booster execution: external cron calling app endpoint
+
+## Critical environment areas
 
 | Area | Variables |
 |------|-----------|
-| **Database** | `DATABASE_URL` (Neon pooled; optional `DATABASE_URL_UNPOOLED`) |
-| **Auth.js** | `AUTH_SECRET`, `AUTH_URL` (production), optional `AUTH_TRUST_HOST` |
-| **Google** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (NextAuth + GBP) |
-| **OpenAI** | `OPENAI_API_KEY` |
-| **Stripe** | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_STARTER_PRICE_ID` |
-| **App** | `NEXT_PUBLIC_APP_URL` (no trailing slash) |
-| **Stripe (client)** | Optional `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` |
+| Database | `DATABASE_URL` |
+| Auth | `AUTH_SECRET`, `AUTH_URL`, optional `AUTH_TRUST_HOST` |
+| Public app URL | `NEXT_PUBLIC_APP_URL` |
+| Google | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| OpenAI | `OPENAI_API_KEY` |
+| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_STARTER`, `STRIPE_REVIEW_REPLIES_PRICE_ID`, `STRIPE_REVIEW_BOOSTER_PRICE_ID` |
+| Review Booster cron | `CRON_SECRET` |
+| Review Booster email | `RESEND_API_KEY`, `EMAIL_FROM` |
 
-## OAuth redirect URIs (Google Cloud Console)
+Full detail: [docs/ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)
 
-Register **both** for the same OAuth client:
+## Required callbacks and webhooks
 
-- `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google` — sign-in (NextAuth)
-- `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback` — Google Business Profile connection
+### Google OAuth callbacks
 
-## Database
+- `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google`
+- `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback`
 
-- Apply SQL in [neon/migrations/](../neon/migrations/) in order (`001_initial.sql`, then `002_auto_reply_profiles.sql`).
-- There is **no** Supabase project or Supabase env vars for this app.
+### Stripe webhook
 
-## App URL helpers
+- `{NEXT_PUBLIC_APP_URL}/api/stripe/webhook`
 
-Server and client code use [src/lib/env.ts](../src/lib/env.ts) (`getServerAppUrl`, `getAppUrl`) so OAuth and redirects resolve a consistent base URL, with localhost fallback in development.
+### Review Booster cron target
 
-## After deploy
+- `{NEXT_PUBLIC_APP_URL}/api/cron/review-booster`
+- Header: `Authorization: Bearer <CRON_SECRET>`
 
-1. Confirm `NEXT_PUBLIC_APP_URL` and `AUTH_URL` match the live origin.
-2. Confirm Google redirect URIs and Stripe webhook URL match the deployment.
-3. Run [docs/SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md).
+## Database setup
+
+Apply these migrations in order:
+
+1. `001_initial.sql`
+2. `002_auto_reply_profiles.sql`
+3. `003_business_foundation.sql`
+4. `004_review_booster_tables.sql`
+5. `005_business_agent_billing_fields.sql`
+
+## Operational notes
+
+- The deployment is a single Next.js app; there is no separate worker service.
+- Review Booster email sending happens inside route execution using Resend.
+- Agent activation state depends on Stripe webhook success plus `business_agents` updates.
+- `EMAIL_FROM` must be a bare mailbox address, not a display-name string.
+
+## Recommended deployment validation order
+
+1. Confirm env vars.
+2. Confirm migrations.
+3. Confirm auth flows.
+4. Confirm Google OAuth.
+5. Confirm Stripe checkout and webhook.
+6. Confirm Review Booster settings save.
+7. Confirm Review Booster send flow.
+8. Confirm cron invocation.

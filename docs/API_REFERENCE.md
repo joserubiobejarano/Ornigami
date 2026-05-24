@@ -1,51 +1,48 @@
 # API Reference
 
-This is a route-level reference for current API handlers in `src/app/api`.
+This is a route-level map of the current API surface.
 
 ## Auth
 
 - `GET|POST /api/auth/[...nextauth]`
-  - Auth.js session, callbacks, and provider flows.
+  - Auth.js handlers.
 - `POST /api/auth/register`
   - Credentials signup.
 - `POST /api/auth/signout`
-  - Explicit signout route.
+  - Sign out helper.
 
 ## User and plan
 
 - `GET /api/user/plan`
-  - Returns user plan/subscription context for gating.
+  - Returns current plan/subscription context.
 
 ## Dashboard
 
 - `GET /api/dashboard/summary`
-  - Dashboard counters and usage summary.
+  - Returns dashboard summary metrics.
 
-## Projects
+## Projects (legacy content surface)
 
 - `GET|POST /api/projects`
-  - List/create project artifacts.
+  - Project history for the legacy content generator.
 - `GET /api/projects/[id]`
-  - Read a single project.
+  - Single project lookup.
 
-## Reviews
+## Reviews and reply settings
 
 - `GET|POST /api/reviews`
-  - Review list/create workflows.
+  - Review list and create workflows.
 - `POST /api/reviews/draft`
-  - Draft-related review reply handling.
-
-## Reply settings
-
+  - Save review reply drafts.
 - `GET|PUT /api/settings/reply`
-  - Reply profile/settings update and retrieval.
+  - Review reply defaults and auto-reply setting.
 
 ## OpenAI
 
 - `POST /api/openai/generate`
-  - Content generation.
+  - Legacy content generation.
 - `POST /api/openai/review-reply`
-  - AI review-reply generation.
+  - AI reply generation for reviews.
 
 ## Google Business Profile
 
@@ -54,45 +51,45 @@ This is a route-level reference for current API handlers in `src/app/api`.
 - `GET /api/google/oauth/callback`
   - Handles GBP OAuth callback.
 - `GET /api/google/connection`
-  - Connection status.
-- `GET /api/google/locations`
-  - Location payload for app usage.
-- `GET /api/google/locations/list`
-  - Lightweight location listing.
-- `POST /api/google/locations/sync`
-  - Pulls/syncs locations.
-- `POST /api/google/reviews/sync`
-  - Pulls/syncs reviews.
-- `POST /api/google/reviews/process-pending`
-  - Processes pending review workflows.
-- `POST /api/google/replies`
-  - Posts reply to a Google review.
+  - Returns current GBP connection status.
 - `POST /api/google/disconnect`
-  - Disconnects GBP account.
+  - Disconnects GBP.
+- `GET /api/google/locations`
+  - Detailed locations payload.
+- `GET /api/google/locations/list`
+  - Lightweight location list for dashboard usage.
+- `POST /api/google/locations/sync`
+  - Pulls locations from Google.
+- `POST /api/google/reviews/sync`
+  - Pulls reviews from Google.
+- `POST /api/google/reviews/process-pending`
+  - Generates and saves/posts replies for synced reviews.
+- `POST /api/google/replies`
+  - Posts a reply to Google.
 
 ## Review Booster
 
-- `GET|PUT /api/review-booster/settings`
-  - Review Booster settings read/update.
-- `GET /api/review-booster/visits`
-  - Review Booster visit listing.
+- `GET|POST /api/review-booster/settings`
+  - Read and write Review Booster settings.
+- `POST /api/review-booster/visits`
+  - Create a manual completed-visit record.
 - `POST /api/review-booster/upload`
-  - CSV upload/import endpoint.
+  - Import visits from CSV.
 - `POST /api/review-booster/run-now`
-  - Manual run for the authenticated business.
+  - Run follow-ups now for the current business.
 
 ## Cron
 
 - `GET /api/cron/review-booster`
-  - Runs follow-ups across active Review Booster businesses.
+  - Runs Review Booster follow-ups across active businesses.
   - Requires `Authorization: Bearer <CRON_SECRET>`.
 
-## Audit, leads, feedback
+## Public marketing and intake flows
 
 - `POST /api/audit/profile`
   - Authenticated audit flow.
 - `POST /api/audit/free-profile`
-  - Public free-audit flow.
+  - Public audit flow.
 - `POST /api/leads`
   - Lead capture.
 - `POST /api/feedback`
@@ -101,16 +98,40 @@ This is a route-level reference for current API handlers in `src/app/api`.
 ## Stripe
 
 - `POST /api/stripe/checkout`
-  - Creates checkout sessions.
-- `GET /api/stripe/portal`
-  - Customer portal redirect/session flow.
+  - Creates a Stripe checkout session and redirects.
+- `POST /api/stripe/portal`
+  - Opens Stripe customer portal.
 - `POST /api/stripe/webhook`
-  - Stripe event ingestion.
+  - Handles Stripe events and updates profile/business-agent state.
 
-## Error handling conventions
+## Demo-specific surface
 
-Most routes return JSON error objects with HTTP status codes for:
+- `POST /api-public-demo-review-booster`
+  - Public Review Booster demo endpoint used by demo experiences.
 
+## Current API notes
+
+### Review Booster settings write to `businesses`
+
+Review Booster settings are not stored in a separate settings table. They are currently written onto the business row.
+
+### Agent gating matters
+
+The important runtime-gated endpoints are protected through `requireActiveAgentAccess`, especially for:
+
+- Review Replies
+- Review Booster
+
+### Legacy content routes still exist
+
+The content generator API remains in the app even though review workflows are now the main product focus.
+
+## Error conventions
+
+Most routes return JSON error payloads with appropriate HTTP statuses, commonly:
+
+- `400` validation or malformed input
 - `401` unauthorized
-- `400` bad request / validation
-- `500` server or integration errors
+- `403` feature/agent access denied
+- `404` missing resource
+- `500` server or integration failure

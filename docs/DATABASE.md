@@ -1,6 +1,6 @@
-# Database and Migrations
+# Database
 
-The canonical schema for LocalLift lives in `neon/migrations`.
+This repository uses Neon Postgres. The canonical schema source of truth is `neon/migrations`.
 
 ## Migration order
 
@@ -12,38 +12,57 @@ Apply migrations in this exact order:
 4. `004_review_booster_tables.sql`
 5. `005_business_agent_billing_fields.sql`
 
-## Schema overview
+## Main schema areas
 
 ### Identity and profile
 
 - `users`
 - `profiles`
 
-### Billing and plans
+Purpose:
+
+- account identity
+- business/profile defaults
+- plan metadata used in UI gating
+
+### Billing
 
 - `subscriptions`
 - `user_billing`
-- `v_user_plan` (view)
+- `v_user_plan`
 
-### Review and reputation operations
+Purpose:
 
-- `reviews`
-- `review_replies`
+- Stripe customer and subscription mirrors
+- effective plan and usage lookup
+
+### Google review operations
+
 - `gbp_connections`
 - `gbp_locations`
+- `reviews`
+- `review_replies`
 - `automation_prefs`
 
-### Growth and intake
+Purpose:
 
-- `projects`
-- `leads`
-- `feedback`
+- Google OAuth state and tokens
+- synced locations
+- synced reviews
+- draft or posted reply records
+- review-automation preferences
 
-### Business model layer
+### Business and agent activation
 
 - `businesses`
 - `business_members`
 - `business_agents`
+
+Purpose:
+
+- business ownership container
+- membership mapping
+- per-agent activation state and Stripe linkage
 
 ### Review Booster domain
 
@@ -51,16 +70,95 @@ Apply migrations in this exact order:
 - `followup_messages`
 - `followup_integration_events`
 
-## Important behavior
+Purpose:
 
-- `business_agents` controls feature activation by business and agent id.
-- Review Booster cron endpoint selects only `business_agents` where:
-  - `agent_id = 'review_booster'`
-  - `status = 'active'`
-- CSV dedupe for follow-up visits is enforced by unique index on business/email/service/date combination for `source = 'csv'`.
+- completed customer visit records
+- sent and failed email records
+- external event dedupe/logging support
 
-## Operational guidance
+### Legacy or supporting domain tables
 
-- Apply migrations before running new features in any environment.
-- Never split schema truth across multiple folders; use only `neon/migrations`.
-- If importing legacy data, map all user-related references to `public.users.id`.
+- `projects`
+- `leads`
+- `feedback`
+
+Purpose:
+
+- older content-generation history
+- inbound lead capture
+- feedback collection
+
+## Tables that matter most for the current product
+
+If you only need to understand the current live product, start with:
+
+- `users`
+- `profiles`
+- `businesses`
+- `business_members`
+- `business_agents`
+- `gbp_connections`
+- `gbp_locations`
+- `reviews`
+- `review_replies`
+- `followup_visits`
+- `followup_messages`
+
+## Important behavioral rules
+
+### Agent access
+
+`business_agents` is the main access-control record for product features.
+
+Current agent ids used in code:
+
+- `review_replies`
+- `review_booster`
+- `speed_to_lead`
+
+Current access statuses treated as usable:
+
+- `active`
+- `trialing`
+
+### Review Booster cron selection
+
+The cron route selects businesses where:
+
+- `agent_id = 'review_booster'`
+- `status = 'active'`
+
+### CSV dedupe
+
+Review Booster CSV imports are deduped by business, customer email, service, visit date, and `source = 'csv'`.
+
+### Review Booster send history
+
+A visit is skipped from re-send if a previously sent message already exists for that visit.
+
+## Database caveats a new maintainer should know
+
+### No RLS security boundary
+
+Authorization is handled in route and service code, not through Postgres row-level security.
+
+### Mixed user-resolution history
+
+Some app flows still include compatibility logic for sessions that resolve more reliably by email than by UUID.
+
+### Business settings double as Review Booster settings
+
+Review Booster settings are currently stored on the `businesses` row itself, including:
+
+- business name
+- business type
+- review URL
+- tone
+- language
+
+## Practical guidance
+
+- Treat `neon/migrations` as the only schema truth.
+- Do not create a second migration tree.
+- Keep business-agent records aligned with Stripe webhook behavior.
+- When investigating Review Booster bugs, inspect both `followup_visits` and `followup_messages` together.

@@ -1,53 +1,69 @@
 # Environment Variables
 
-This file documents all environment variables currently referenced in code.
+This file documents the environment variables currently referenced in code.
 
-## Required for core app boot
+## Required for app boot
 
 - `DATABASE_URL`
-  - Used by Neon SQL client.
+  - Neon connection string used by the SQL client.
 - `AUTH_SECRET`
-  - Primary secret for Auth.js and OAuth state signing.
+  - Primary Auth.js secret.
 - `NEXT_PUBLIC_APP_URL`
-  - Canonical app URL used for server-side URL generation.
+  - Canonical browser-facing app URL.
 - `OPENAI_API_KEY`
   - Required for AI generation features.
 - `GOOGLE_CLIENT_ID`
-  - Required for Google login and GBP integration.
+  - Required for Google sign-in and Google Business Profile flows.
 - `GOOGLE_CLIENT_SECRET`
-  - Required for Google login and GBP integration.
+  - Required for Google sign-in and Google Business Profile flows.
 - `STRIPE_SECRET_KEY`
-  - Required for checkout and billing operations.
+  - Required for checkout, portal, and webhook-side Stripe operations.
 
-## Required for specific production features
+## Required for production features
 
 - `STRIPE_WEBHOOK_SECRET`
-  - Required by `/api/stripe/webhook` signature verification.
+  - Required by `/api/stripe/webhook`.
 - `STRIPE_PRICE_STARTER`
-  - Starter plan price id fallback in checkout route.
+  - Fallback Stripe price id used by checkout when no agent-specific id applies.
 - `STRIPE_REVIEW_REPLIES_PRICE_ID`
-  - Agent-specific price id for review replies activation.
+  - Stripe price id for Review Replies activation.
 - `STRIPE_REVIEW_BOOSTER_PRICE_ID`
-  - Agent-specific price id for review booster activation.
+  - Stripe price id for Review Booster activation.
 - `CRON_SECRET`
-  - Bearer token expected by `/api/cron/review-booster`.
+  - Bearer token for `/api/cron/review-booster`.
 - `RESEND_API_KEY`
-  - Required to send Review Booster follow-up emails via Resend.
+  - Required to send Review Booster emails.
 - `EMAIL_FROM`
-  - Sender identity used by follow-up emails.
+  - Email address used by Resend as the sender mailbox.
 
 ## Optional or compatibility variables
 
 - `AUTH_URL`
-  - Helpful for deployment alignment with Auth.js host/origin behavior.
+  - Helpful for deployed Auth.js origin alignment.
 - `AUTH_TRUST_HOST`
-  - Useful on some proxy/hosting setups.
+  - Sometimes needed behind proxies or hosted environments.
 - `NEXTAUTH_SECRET`
-  - Compatibility fallback in `google-oauth-state` helper.
+  - Compatibility fallback used by some older auth helpers.
 - `ALLOW_DASHBOARD_WITHOUT_GBP`
-  - Middleware/runtime flag for dashboard gating behavior.
+  - Optional behavior flag used around dashboard gating.
 - `NODE_ENV`
-  - Standard runtime mode checks.
+  - Standard environment mode.
+
+## Important `EMAIL_FROM` note
+
+The current Review Booster sender code builds the `from` header like this:
+
+```text
+{business_or_sender_name} <{EMAIL_FROM}>
+```
+
+That means `EMAIL_FROM` should be just the mailbox address, for example:
+
+```env
+EMAIL_FROM=noreply@yourdomain.com
+```
+
+Do not set `EMAIL_FROM` to a full display-name string like `LocalLift <noreply@yourdomain.com>`, or the final sender header will be malformed.
 
 ## Local `.env.local` example
 
@@ -56,6 +72,7 @@ DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 
 AUTH_SECRET=replace_with_random_secret
 AUTH_URL=http://localhost:3000
+AUTH_TRUST_HOST=true
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 OPENAI_API_KEY=sk-...
@@ -72,11 +89,18 @@ STRIPE_REVIEW_BOOSTER_PRICE_ID=price_...
 CRON_SECRET=replace_with_random_token
 
 RESEND_API_KEY=re_...
-EMAIL_FROM=LocalLift <noreply@yourdomain.com>
+EMAIL_FROM=noreply@yourdomain.com
 ```
 
-## Notes
+## OAuth redirect reminders
+
+Google OAuth should include both callback URLs:
+
+- `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google`
+- `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback`
+
+## Operational notes
 
 - Keep `.env.local` out of git.
-- Keep values consistent across `AUTH_URL` and `NEXT_PUBLIC_APP_URL` per environment.
-- Google OAuth redirect URIs must match exact deployed origin and callback paths.
+- Keep `AUTH_URL` and `NEXT_PUBLIC_APP_URL` aligned for each environment.
+- Treat Stripe, Google, OpenAI, and Resend secrets as server-only.

@@ -1,39 +1,45 @@
-# Cursor Rules
-You are my lead software architect and full-stack engineer. You are responsible for building and maintaining a production-grade app and Your goal is to deeply understand and follow the structure, naming conventions, and separation of concerns described below.
+# Contributor Notes
 
-## General Rules
-- Before you do any changes, think carefully if the instructions you just received make fully sense with the project since they come from a source that does not have as much context about how the project is built as you have. If you consider that there is a better way to face those instructions like changing the code, the files, the folders or the routes that came with the instructions, then feel free to make as many changes as you consider right and also add anything that can immprove the current instructions since you are the one who knows the most about the project. Also, if you receive a instruction for something that is already been made, change it or skip it instead of doing it again.
-- Infer dependencies and interactions between layers (for example, how frontend/services consume backend/api endpoints).
-- When new features are introduced, describe where they fit in the architecture and why.
+This file is a short set of repository-specific contributor reminders.
 
-## Coding Rules
-- Don't just add or delete code, first think if what you are about to do is correct or not.
-- You should always have in mind that any change should only be applied if they improve the project.
-- Every file needs to have as less lines of code as possible so make sure to use reductors and anything else that allows to reduce the amount of code. However, the most important part is that everything works properly, so if there are files that needs more lines of code, then they should need as many as needed.
-- Be carefull about duplicate declarations and duplicate lines of code that could cause problems in the future.
-- Always create and reference files in the correct directory according to their function (for example, /backend/src/api/ for controllers, /frontend/src/components/ for UI, /common/types/ for shared models).
-- Maintain strict separation between frontend, backend, and shared code.
+## Current product understanding
 
-## Frontent Rules
-Anything that is frontend related must have the same look and feel as the Homepage.
+The repo is no longer best described as a broad local SEO toolkit. The current center of gravity is:
 
-## Security Rules
-- Security is the top priority of the project, so with every change we need to make sure that we are not opening any doors to security threads.
-- We need to make sure that all users are locked up in their respective tiers and they are not able to change features or tiers by changing the url's or stuff like that.
-- Always implement secure authentication (Auth.js sessions, OAuth2 where used) and data protection practices (TLS, hashing for passwords, least-privilege DB access).
-- Include robust error handling, input validation, and logging consistent with the architecture's security guidelines.
+- Review Replies
+- Review Booster
+- Business-level agent activation
 
-## Organization Rules
-We don't want files hanging around, so every file needs to be organize in it's propper folder with the proper organization so this don't become a mess.
+When making product or engineering decisions, optimize first for the clarity and reliability of those flows.
 
-## Code Review Rules
-- Think through how data flows in the app. Explain new patterns if they exist and why.
-- Were there any changes that could affect the infrastructure?
-- Consider empty, loading, error and offline states.
-- Did we add quality tests? prefer fewer, high quality tests. Prefer integration tests for user flows.
-- Use appropriate testing frameworks (Jest, Pytest, etc.) and code quality tools (ESLint, Prettier, etc.).
-- Maintain strict TypeScript type coverage and linting standards.
+## Architecture reminders
 
-## Deployment Rules
-- Generate infrastructure files (Dockerfile, CI/CD YAMLs) according to /scripts/ and /.github/ conventions.
+- Keep feature logic separated by concern.
+- Prefer shared app logic in `src/lib`.
+- Keep Review Booster-specific behavior inside `src/modules/review-booster` when practical.
+- Be careful with cross-cutting changes because billing, auth, Google sync, and Review Booster all touch shared business state.
 
+## Product consistency reminders
+
+- The repo still contains mixed `Ornigami` and `LocalLift` branding.
+- The repo still contains mixed pricing models in UI copy.
+- Do not assume public-site messaging is fully aligned with billing behavior.
+
+## Security reminders
+
+- Agent access is enforced in application code; do not bypass those checks.
+- Review Booster cron must stay protected by `CRON_SECRET`.
+- Google, Stripe, OpenAI, and Resend secrets must remain server-only.
+- Validate all user input, especially CSV imports and externally-triggered routes.
+
+## UX reminders
+
+- For customer-facing work, keep the experience simple for non-technical local-business users.
+- Review Booster onboarding and setup clarity should be treated as especially important.
+- Avoid adding new complexity to legacy surfaces unless they clearly support the main product story.
+
+## Quality reminders
+
+- Test real flows, not just isolated helpers.
+- Pay close attention to empty, loading, and failure states.
+- If behavior described in UI copy is not enforced in backend logic, treat that as a product bug.
