@@ -67,6 +67,13 @@ Main routes:
 - `/dashboard/agents/review-booster/new`
 - `/dashboard/agents/review-booster/upload`
 - `/dashboard/agents/review-booster/settings`
+- `/demo-review-booster` (public sample flow)
+
+Public demo behavior:
+
+- The demo endpoint is `POST /api/public-demo/review-booster` (rewritten internally).
+- It sends a sample email preview only.
+- It does not create business records, visits, or automations.
 
 ### 3. Billing and activation
 

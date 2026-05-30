@@ -117,6 +117,20 @@ export function PublicReviewBoosterDemoPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-5 rounded-md border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">How to use this demo</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+              <li>Fill in your business name and your own email address.</li>
+              <li>Pick a tone to preview how the follow-up message style changes.</li>
+              <li>Optionally add a Google review URL to test your real call-to-action link.</li>
+              <li>Click send and check your inbox. A preview is also shown below after success.</li>
+            </ul>
+            <p className="mt-3 text-xs text-slate-600">
+              This page is only a safe preview. It does not save visits, create businesses, trigger dashboard
+              workflows, or enable recurring automation.
+            </p>
+          </div>
+
           <p className="mb-4 text-sm text-slate-600">Remaining sends today on this browser: {remaining}</p>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -186,6 +200,15 @@ export function PublicReviewBoosterDemoPage() {
               </CardContent>
             </Card>
           ) : null}
+
+          <div className="mt-6 rounded-md border border-slate-200 p-4">
+            <p className="text-sm font-semibold text-slate-900">Quick answers</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+              <li>The daily send cap is enforced to prevent demo abuse.</li>
+              <li>If no review link is provided, a generic Google review link is used.</li>
+              <li>Need full automation? Use the dashboard Review Booster pages after activation.</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
     </div>

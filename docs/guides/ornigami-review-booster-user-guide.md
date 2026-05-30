@@ -30,6 +30,24 @@ Review Booster works like this:
 
 Note: if you connect Google Business Profile, Ornigami can usually pull the review link automatically. If not, you can paste the link manually in Review Booster settings.
 
+## Public demo (quick preview)
+
+If you only want to preview the email quality first, use the public Review Booster demo page.
+
+What the public demo is for:
+
+- Sending yourself a sample follow-up email
+- Testing tone and basic input combinations
+- Reviewing subject/body output before onboarding a business
+
+What the public demo does not do:
+
+- It does not create a business record
+- It does not save completed visits
+- It does not enable scheduled follow-up automation
+
+Use the dashboard flow when you are ready for production usage with real business data.
+
 ## Your first setup in 5 steps
 
 ### Step 1: Sign in and open Billing

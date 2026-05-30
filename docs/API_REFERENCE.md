@@ -106,8 +106,10 @@ This is a route-level map of the current API surface.
 
 ## Demo-specific surface
 
-- `POST /api-public-demo-review-booster`
+- `POST /api/public-demo/review-booster`
   - Public Review Booster demo endpoint used by demo experiences.
+  - Middleware rewrites this path internally to `src/app/api-public-demo-review-booster/route.ts`.
+  - Intended for demo previews only. It does not create business records, visits, or automations.
 
 ## Current API notes
 
