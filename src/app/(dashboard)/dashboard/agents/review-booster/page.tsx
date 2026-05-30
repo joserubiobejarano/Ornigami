@@ -68,6 +68,9 @@ export default async function ReviewBoosterPage() {
 
       <section className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-800 shadow-sm">
         Upload completed visits and automatically send warm thank-you emails with a Google review request.
+        <p className="mt-2 text-xs text-slate-600">
+          Tip: in Settings, use the direct Google Maps "Write a review" link so customers land on the review form immediately.
+        </p>
       </section>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">

@@ -35,6 +35,9 @@ This file documents the environment variables currently referenced in code.
   - Required to send Review Booster emails.
 - `EMAIL_FROM`
   - Email address used by Resend as the sender mailbox.
+- `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET`
+  - Recommended HMAC secret for signing unsubscribe links in Review Booster emails.
+  - If unset, code falls back to `NEXTAUTH_SECRET`.
 
 ## Optional or compatibility variables
 

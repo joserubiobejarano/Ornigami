@@ -11,6 +11,7 @@ Review Booster is the follow-up engine that helps a business ask for more Google
 - Saves business-level Review Booster settings
 - Generates follow-up email copy
 - Sends follow-up emails through Resend
+- Adds unsubscribe links to follow-up emails and suppresses future sends for opted-out recipients
 - Records sent and failed message attempts
 - Supports both manual runs and cron runs
 
@@ -79,6 +80,7 @@ Review Booster depends on these migration steps:
 - `003_business_foundation.sql`
 - `004_review_booster_tables.sql`
 - `005_business_agent_billing_fields.sql`
+- `007_review_booster_unsubscribes.sql`
 
 ## Important implementation notes
 
@@ -89,6 +91,8 @@ Review Booster settings are currently stored on the `businesses` row, not in a d
 ### Google review URL resolution
 
 The module prefers a Google-derived review URL when synced locations are available. A manually entered URL is used as fallback.
+
+For highest conversion, use the direct Google Maps "Write a review" link (popup review form) whenever possible.
 
 ### CSV rules
 

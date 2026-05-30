@@ -75,6 +75,10 @@ Public demo behavior:
 - It sends a sample email preview only.
 - It does not create business records, visits, or automations.
 
+Review URL tip:
+
+- Prefer the direct Google Maps "Write a review" link (the popup review form link) over a generic profile URL for lower friction.
+
 ### 3. Billing and activation
 
 The app currently uses agent-level billing and activation records in `public.business_agents`.
@@ -101,6 +105,7 @@ This is not two separate products. It is one product in the middle of a naming t
 The full Review Booster workflow exists end to end, but there are a few implementation details worth knowing:
 
 - Settings save the business-level review URL, tone, and language.
+- Follow-up emails include an unsubscribe link; opted-out recipients are excluded from future pending sends for that business.
 - If Google Business Profile is connected, Review Booster can derive the review URL automatically from synced locations.
 - Emails are sent through Resend.
 - The dashboard and upload page describe a timing window, but the current runner processes all eligible pending visits with a customer email and a business review URL. The time-window rule is not currently enforced in `listEligibleFollowupVisits`.
@@ -176,6 +181,8 @@ neon/migrations/002_auto_reply_profiles.sql
 neon/migrations/003_business_foundation.sql
 neon/migrations/004_review_booster_tables.sql
 neon/migrations/005_business_agent_billing_fields.sql
+neon/migrations/006_public_demo_events.sql
+neon/migrations/007_review_booster_unsubscribes.sql
 ```
 
 4. Start the app.

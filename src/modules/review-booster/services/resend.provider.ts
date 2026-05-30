@@ -1,4 +1,7 @@
+import { buildUnsubscribeUrl } from "@/modules/review-booster/services/unsubscribe-token.service";
+
 type SendEmailInput = {
+  business_id?: string | null;
   email_from_name?: string | null;
   business_name: string;
   customer_email: string;
@@ -32,6 +35,12 @@ export async function sendWithResend(input: SendEmailInput) {
     .join("&lt;")
     .split(">")
     .join("&gt;");
+  const unsubscribeUrl = input.business_id
+    ? buildUnsubscribeUrl({
+        businessId: input.business_id,
+        customerEmail: input.customer_email,
+      })
+    : null;
 
   const bodyHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
@@ -41,8 +50,17 @@ export async function sendWithResend(input: SendEmailInput) {
           Leave your review
         </a>
       </p>
+      ${
+        unsubscribeUrl
+          ? `<p style="margin-top: 18px; font-size: 12px; color: #64748b;">Don't want future follow-up emails? <a href="${unsubscribeUrl}" style="color:#334155;">Unsubscribe</a>.</p>`
+          : ""
+      }
     </div>
   `.trim();
+
+  const textUnsubscribe = unsubscribeUrl
+    ? `\n\nDon't want future follow-up emails? Unsubscribe: ${unsubscribeUrl}`
+    : "";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -54,7 +72,7 @@ export async function sendWithResend(input: SendEmailInput) {
       from,
       to: input.customer_email,
       subject: input.subject,
-      text: `${input.body}\n\nLeave your review: ${input.google_review_url}`,
+      text: `${input.body}\n\nLeave your review: ${input.google_review_url}${textUnsubscribe}`,
       html: bodyHtml
     })
   });

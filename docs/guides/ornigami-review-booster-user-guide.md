@@ -30,6 +30,8 @@ Review Booster works like this:
 
 Note: if you connect Google Business Profile, Ornigami can usually pull the review link automatically. If not, you can paste the link manually in Review Booster settings.
 
+Recommended link format: use the direct Google Maps `Write a review` link (the popup review form link) rather than a generic business profile URL. This usually reduces friction and increases completion.
+
 ## Public demo (quick preview)
 
 If you only want to preview the email quality first, use the public Review Booster demo page.
@@ -71,6 +73,8 @@ Complete these fields:
 - Google review URL
 - Tone
 - Language
+
+For best results, use the direct Google Maps `Write a review` link that opens the review form immediately.
 
 ### Step 3: Connect Google Business Profile if you want auto-fill help
 
@@ -181,6 +185,10 @@ Use the CSV upload flow. It is the easiest way to import many visits at once.
 ### What if a send fails?
 
 Check your Review Booster settings, your sending setup, and your review link, then run again after the issue is fixed.
+
+### Can customers unsubscribe from follow-up emails?
+
+Yes. Review Booster emails include an unsubscribe link. If clicked, future pending follow-ups for that business and customer email are skipped.
 
 ## A good first-week goal
 

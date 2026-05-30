@@ -271,6 +271,9 @@ export default function ReviewBoosterSettingsPage() {
 
         <label className="block space-y-1">
           <span className="font-medium text-slate-900">Google review URL (manual fallback)</span>
+          <p className="text-xs text-slate-600">
+            Use the direct Google Maps "Write a review" link (the popup review form link). This removes friction and usually converts better than a generic profile link.
+          </p>
           <input
             value={form.google_review_url}
             onChange={(e) => setForm((prev) => ({ ...prev, google_review_url: e.target.value }))}

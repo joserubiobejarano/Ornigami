@@ -77,6 +77,8 @@ This is a route-level map of the current API surface.
   - Import visits from CSV.
 - `POST /api/review-booster/run-now`
   - Run follow-ups now for the current business.
+- `GET /api/review-booster/unsubscribe?token=...`
+  - Public unsubscribe endpoint for Review Booster follow-up emails.
 
 ## Cron
 

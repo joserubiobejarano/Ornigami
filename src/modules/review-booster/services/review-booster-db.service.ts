@@ -171,9 +171,38 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
       AND v.customer_email IS NOT NULL
       AND b.google_review_url IS NOT NULL
       AND length(trim(v.customer_email)) > 0
+      AND NOT EXISTS (
+        SELECT 1
+        FROM public.followup_unsubscribes u
+        WHERE u.business_id = v.business_id
+          AND u.customer_email_normalized = lower(v.customer_email)
+      )
     ORDER BY v.visited_at ASC
   `;
   return rows as FollowupVisit[];
+}
+
+export async function unsubscribeCustomerFromBusinessFollowups(input: {
+  businessId: string;
+  customerEmail: string;
+}): Promise<void> {
+  const email = input.customerEmail.trim().toLowerCase();
+  await sql`
+    INSERT INTO public.followup_unsubscribes (business_id, customer_email, reason, updated_at)
+    VALUES (${input.businessId}, ${email}, 'email_link', now())
+    ON CONFLICT (business_id, customer_email_normalized)
+    DO UPDATE SET updated_at = now()
+  `;
+
+  await sql`
+    UPDATE public.followup_visits
+    SET followup_status = 'skipped', updated_at = now()
+    WHERE business_id = ${input.businessId}
+      AND customer_email IS NOT NULL
+      AND lower(customer_email) = lower(${email})
+      AND lower(followup_status) = 'pending'
+      AND followup_sent_at IS NULL
+  `;
 }
 
 export async function getBusinessFollowupSettings(businessId: string): Promise<BusinessFollowupSettings | null> {

@@ -122,7 +122,7 @@ export function PublicReviewBoosterDemoPage() {
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
               <li>Fill in your business name and your own email address.</li>
               <li>Pick a tone to preview how the follow-up message style changes.</li>
-              <li>Optionally add a Google review URL to test your real call-to-action link.</li>
+              <li>Optionally add your direct Google Maps "Write a review" link to test your real call-to-action link.</li>
               <li>Click send and check your inbox. A preview is also shown below after success.</li>
             </ul>
             <p className="mt-3 text-xs text-slate-600">
@@ -206,6 +206,7 @@ export function PublicReviewBoosterDemoPage() {
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
               <li>The daily send cap is enforced to prevent demo abuse.</li>
               <li>If no review link is provided, a generic Google review link is used.</li>
+              <li>Best results usually come from the direct "Write a review" popup link from Google Maps.</li>
               <li>Need full automation? Use the dashboard Review Booster pages after activation.</li>
             </ul>
           </div>

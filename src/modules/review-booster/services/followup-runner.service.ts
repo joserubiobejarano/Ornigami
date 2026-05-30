@@ -71,6 +71,7 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
 
     try {
       const providerMessageId = await sendWithResend({
+        business_id: visit.business_id,
         email_from_name: visit.email_from_name,
         business_name: visit.business_name || "Your Business",
         customer_email: String(visit.customer_email || ""),
