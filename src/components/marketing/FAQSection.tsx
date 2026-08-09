@@ -7,24 +7,24 @@ import { FloatingDots } from "./FloatingDots";
 
 const faqs = [
   {
-    question: "Do I need a website to use LocalLift?",
+    question: "Do I need a website to use Ornigami?",
     answer:
-      "No. LocalLift works even if you only have a Google Business Profile. You can connect your profile and start replying to reviews and generating content right away.",
+      "No. Ornigami works even if you only have a Google Business Profile. You can connect your profile and start replying to reviews right away.",
   },
   {
-    question: "Can I use LocalLift if I manage multiple locations?",
+    question: "Can I use Ornigami if I manage multiple locations?",
     answer:
-      "Yes. You can connect multiple locations under one account and see all your reviews and content in one dashboard.",
+      "Not yet. The launch version supports one location per subscription; multi-location management is planned.",
   },
   {
     question: "Will the AI replies sound like my brand?",
     answer:
-      "You can set tone and guidelines, then LocalLift follows them for every reply. You can also edit any draft before sending it.",
+      "You can set tone and guidelines, then Ornigami follows them for every reply. You can also edit any draft before sending it.",
   },
   {
     question: "Is there a free trial?",
     answer:
-      "Yes. You get a 14 day free trial to connect your profile, test content, and see if LocalLift fits your workflow.",
+      "Yes. You get a 14-day free trial to connect your profile, test content, and see if Ornigami fits your workflow.",
   },
   {
     question: "Can I stop anytime?",

@@ -57,6 +57,14 @@ export async function POST(req: Request) {
   }
 
   const input = parsed.data;
+  const globallyAllowed = await checkAndIncrementPublicDemoLimitDurable({
+    keyType: "global",
+    keyHash: "review_booster_demo",
+    maxPerDay: 100,
+  }).catch(() => checkAndIncrementPublicDemoLimit("review_booster:global", 100));
+  if (!globallyAllowed) {
+    return NextResponse.json({ error: "Daily demo capacity has been reached. Please try again tomorrow." }, { status: 429 });
+  }
   const emailHash = hashValue(input.recipient_email.toLowerCase());
   const emailLimiterKey = `review_booster:email:${emailHash}`;
   const emailAllowed = await checkAndIncrementPublicDemoLimitDurable({
@@ -88,8 +96,7 @@ export async function POST(req: Request) {
   }
 
   const businessName = input.business_name.trim();
-  const googleReviewUrl =
-    normalizeOptional(input.google_review_url) ?? "https://search.google.com/local/writereview";
+  const googleReviewUrl = "https://search.google.com/local/writereview";
 
   const subject = `[Demo] ${buildSubject(businessName)}`;
   const body = await generateFollowupEmailBody({

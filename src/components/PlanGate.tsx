@@ -40,12 +40,12 @@ export function PlanGate({ children, fallback, showBanner = true, featureName = 
             title="Paid plan"
             action={
               <Button asChild size="sm">
-                <Link href="/settings#billing">Upgrade to Starter</Link>
+                <Link href="/settings#billing">Choose a plan</Link>
               </Button>
             }
           >
             <p className="text-muted-foreground">
-              {featureName} is available on LocalLift Starter. Upgrade to connect Google Business Profile,
+              {featureName} is available on Ornigami Starter. Upgrade to connect Google Business Profile,
               sync reviews, and use AI reply drafts.
             </p>
           </DashboardCallout>
@@ -70,7 +70,7 @@ export function PlanGateModal({ open, onOpenChange, featureName = "this feature"
         <DialogHeader>
           <DialogTitle>Upgrade required</DialogTitle>
           <DialogDescription>
-            {featureName} is available on LocalLift Starter. Upgrade to connect Google Business Profile,
+            {featureName} is available on Ornigami Starter. Upgrade to connect Google Business Profile,
             sync reviews, and post AI-drafted replies.
           </DialogDescription>
         </DialogHeader>
@@ -79,7 +79,7 @@ export function PlanGateModal({ open, onOpenChange, featureName = "this feature"
             Cancel
           </Button>
           <Link href="/settings#billing">
-            <Button>Upgrade to LocalLift Starter ($14.99/mo)</Button>
+            <Button>Choose a plan (from €39/month)</Button>
           </Link>
         </DialogFooter>
       </DialogContent>

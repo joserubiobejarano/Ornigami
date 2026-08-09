@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,7 +38,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/review-replies" className="text-slate-600 hover:text-slate-900">Review Replies</Link></li>
               <li><Link href="/review-booster" className="text-slate-600 hover:text-slate-900">Review Booster</Link></li>
-              <li><Link href="/local-seo" className="text-slate-600 hover:text-slate-900">Local SEO Content</Link></li>
+
             </ul>
           </div>
 

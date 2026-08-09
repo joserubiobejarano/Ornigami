@@ -102,7 +102,7 @@ function DemoWorkspace({ businessType }: { businessType: DemoBusinessType }) {
     const body = {
       businessName: ds.businessNameForAi,
       city: ds.cityForAi,
-      rating: Math.min(5, Math.max(1, Number(review.star_rating) || 5)),
+      rating: Math.min(5, Math.max(1, typeof review.star_rating === "number" ? review.star_rating : 3)),
       text: review.comment || "",
     };
 

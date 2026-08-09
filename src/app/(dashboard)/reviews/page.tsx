@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -154,6 +154,7 @@ function ReviewsPageContent() {
               posted?: number;
               drafted?: number;
               autoHandled?: number;
+              skippedNoComment?: number;
               errors?: string[];
             };
             await loadReviews();
@@ -166,6 +167,7 @@ function ReviewsPageContent() {
               if (typeof pj.drafted === "number" && pj.drafted > 0) {
                 bits.push(`${pj.drafted} saved as drafts`);
               }
+              if (typeof pj.skippedNoComment === "number" && pj.skippedNoComment > 0) bits.push(`${pj.skippedNoComment} star-only review${pj.skippedNoComment === 1 ? "" : "s"} skipped`);
               if (bits.length) message += ` ${bits.join(", ")}.`;
             }
             if (Array.isArray(pj.errors) && pj.errors.length > 0) {
@@ -229,14 +231,14 @@ function ReviewsPageContent() {
       ? {
           businessName: "My Business",
           city: "Local",
-          rating: Math.min(5, Math.max(1, Number(review.star_rating) || 5)),
+          rating: Math.min(5, Math.max(1, typeof review.star_rating === "number" ? review.star_rating : 3)),
           text: review.comment || "",
         }
       : {
           reviewText: review.comment || "",
           businessName: "",
           city: "",
-          rating: Math.min(5, Math.max(1, Number(review.star_rating) || 5)),
+          rating: Math.min(5, Math.max(1, typeof review.star_rating === "number" ? review.star_rating : 3)),
         };
 
     const headers: Record<string, string> = {
@@ -300,7 +302,7 @@ function ReviewsPageContent() {
               setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
             }
             toast.success(
-              "Reply generated. Could not post to Google , saved as draft. Edit or post manually when ready."
+              "Reply generated. Could not post to Google — saved as draft. Edit or post manually when ready."
             );
           }
         } else {
@@ -355,7 +357,7 @@ function ReviewsPageContent() {
     if (!shouldShowTestWorkflowActions(review, false)) return;
     const text = drafts[review.google_review_id] ?? "";
     if (!text.trim()) {
-      toast.error("Nothing to save yet , generate a reply or type your draft first.");
+      toast.error("Nothing to save yet — generate a reply or type your draft first.");
       return;
     }
     setSavedDraftSnapshots((s) => ({
@@ -384,7 +386,7 @@ function ReviewsPageContent() {
       [review.google_review_id]: reply,
     }));
     toast.success(
-      "Marked as posted (test mode). This review is handled , no further action needed for this test session."
+      "Marked as posted (test mode). This review is handled — no further action needed for this test session."
     );
   }
 
@@ -442,7 +444,7 @@ function ReviewsPageContent() {
         )}
 
         {isSampleMode && (
-          <DashboardCallout variant="neutral" title="Test mode , sample reviews">
+          <DashboardCallout variant="neutral" title="Test mode — sample reviews">
             <p className="text-foreground">
               This is a demo. In live mode, replies are posted to your Google Business Profile
               automatically.

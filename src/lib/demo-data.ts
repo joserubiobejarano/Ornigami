@@ -45,7 +45,7 @@ export const demoLocations: DemoLocation[] = [
   },
 ];
 
-export function demoReviews(locationId?: string): DemoReview[] {
+export function demoReviews(): DemoReview[] {
   const reviews: DemoReview[] = [
     {
       id: "demo-review-1",

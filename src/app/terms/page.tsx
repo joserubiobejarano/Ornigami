@@ -8,7 +8,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Acceptance of Terms</h2>
           <p>
-            By accessing and using LocalLift, you accept and agree to be bound by the terms
+            By accessing and using Ornigami, you accept and agree to be bound by the terms
             and provision of this agreement.
           </p>
         </section>
@@ -16,7 +16,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Use License</h2>
           <p>
-            Permission is granted to temporarily use LocalLift for personal or commercial
+            Permission is granted to temporarily use Ornigami for personal or commercial
             business purposes. This is the grant of a license, not a transfer of title.
           </p>
         </section>
@@ -32,7 +32,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Limitations</h2>
           <p>
-            LocalLift shall not be liable for any damages arising from the use or inability
+            Ornigami shall not be liable for any damages arising from the use or inability
             to use the service.
           </p>
         </section>

@@ -37,12 +37,12 @@ export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerPro
         variant="warning"
         action={
           <Button asChild size="sm">
-            <Link href="/settings#billing">Upgrade to Starter</Link>
+            <Link href="/settings#billing">Choose a plan</Link>
           </Button>
         }
       >
         <p>
-          Upgrade to LocalLift Starter ($14.99/mo) to connect Google Business Profile, sync reviews, and
+          Choose a plan (from €39/month) to connect Google Business Profile, sync reviews, and
           use AI reply drafts.
         </p>
       </DashboardCallout>

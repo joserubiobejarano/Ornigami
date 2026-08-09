@@ -7,28 +7,11 @@ import { Button } from "@/components/ui/button";
 
 const testimonials = [
   {
-    business: "BurgerMat",
-    quote:
-      "Before LocalLift, I was replying to reviews from my phone between orders. Now every review gets a thoughtful answer without me staying up late.",
-    person: "Marta Ruiz",
-    role: "Owner, BurgerMat • Madrid",
+    business: "Illustrative workflow",
+    quote: "Verified customer stories will appear here after launch. Explore the live demo to see the product workflow.",
+    person: "Example only",
+    role: "Not a customer testimonial",
     bgColor: "bg-orange-50",
-  },
-  {
-    business: "Smiles & Co Dental",
-    quote:
-      "We get a lot of anxious patients reading our reviews first. LocalLift helps us answer fast and keep the tone warm and professional.",
-    person: "Dr. Alex Carter",
-    role: "Clinic manager, Smiles & Co • London",
-    bgColor: "bg-pink-50",
-  },
-  {
-    business: "UrbanFit Gym",
-    quote:
-      "Our team was too busy to keep the Google profile updated. Now we have fresh posts every week and our reviews are always replied to.",
-    person: "Nina López",
-    role: "Marketing lead, UrbanFit Gym • Barcelona",
-    bgColor: "bg-violet-50",
   },
 ];
 

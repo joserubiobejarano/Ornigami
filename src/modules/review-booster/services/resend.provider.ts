@@ -8,6 +8,8 @@ type SendEmailInput = {
   subject: string;
   body: string;
   google_review_url: string;
+  review_link_url?: string | null;
+  reply_to_email?: string | null;
 };
 
 type ResendSendResponse = {
@@ -35,6 +37,7 @@ export async function sendWithResend(input: SendEmailInput) {
     .join("&lt;")
     .split(">")
     .join("&gt;");
+  const reviewLinkUrl = input.review_link_url || input.google_review_url;
   const unsubscribeUrl = input.business_id
     ? buildUnsubscribeUrl({
         businessId: input.business_id,
@@ -46,7 +49,7 @@ export async function sendWithResend(input: SendEmailInput) {
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
       <p>${safeBody.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>")}</p>
       <p style="margin-top: 16px;">
-        <a href="${input.google_review_url}" style="display:inline-block;background:#0f172b;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">
+        <a href="${reviewLinkUrl}" style="display:inline-block;background:#0f172b;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">
           Leave your review
         </a>
       </p>
@@ -72,8 +75,15 @@ export async function sendWithResend(input: SendEmailInput) {
       from,
       to: input.customer_email,
       subject: input.subject,
-      text: `${input.body}\n\nLeave your review: ${input.google_review_url}${textUnsubscribe}`,
-      html: bodyHtml
+      text: `${input.body}\n\nLeave your review: ${reviewLinkUrl}${textUnsubscribe}`,
+      html: bodyHtml,
+      reply_to: input.reply_to_email || process.env.REPLY_TO_EMAIL || process.env.EMAIL_FROM,
+      ...(unsubscribeUrl ? {
+        headers: {
+          "List-Unsubscribe": `<${unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        }
+      } : {})
     })
   });
 

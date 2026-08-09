@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/review-booster", "schedule": "0 * * * *" },
+    { "path": "/api/cron/review-replies", "schedule": "0 */4 * * *" }
+  ]
+}

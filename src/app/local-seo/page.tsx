@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -28,7 +28,7 @@ function ContentMockup() {
             <span className="h-3 w-3 rounded-full bg-amber-500/60" />
             <span className="h-3 w-3 rounded-full bg-emerald-500/60" />
           </div>
-          <span className="ml-2 text-xs text-slate-400">Local SEO Content , Ornigami</span>
+          <span className="ml-2 text-xs text-slate-400">Local SEO Content — Ornigami</span>
         </div>
         <button className="rounded-full bg-slate-900 px-3 py-1 text-[10px] font-semibold text-white">
           + Generate content
@@ -88,7 +88,7 @@ function ContentMockup() {
         <div className="mt-3 space-y-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">More ideas for you</p>
           {[
-            { type: "GBP Post", idea: "Weekend pasta special , limited spots", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
+            { type: "GBP Post", idea: "Weekend pasta special — limited spots", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
             { type: "FAQ", idea: "Do you offer gluten-free options?", color: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
             { type: "Blog", idea: "The best places for a date night in MalasaÃ±a", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
           ].map((item) => (
@@ -178,7 +178,7 @@ const features = [
     gradient: "from-sky-400 to-indigo-500",
     title: "FAQ ideas from real searches",
     description:
-      "We generate FAQ content based on what people actually search for in your area , directly improving your Google visibility.",
+      "We generate FAQ content based on what people actually search for in your area — directly improving your Google visibility.",
   },
   {
     icon: BarChart2,
@@ -192,7 +192,7 @@ const features = [
     gradient: "from-violet-500 to-purple-600",
     title: "Business-aware AI",
     description:
-      "Content is generated with your business name, location, services, and tone in mind. Nothing generic , everything tailored.",
+      "Content is generated with your business name, location, services, and tone in mind. Nothing generic — everything tailored.",
   },
   {
     icon: Edit3,
@@ -233,7 +233,7 @@ export default function LocalSeoPage() {
 
         <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="grid gap-14 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-center">
-            {/* Left , text */}
+            {/* Left — text */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -292,7 +292,7 @@ export default function LocalSeoPage() {
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
               >
-                {["7-day free trial", "No credit card required", "Cancel anytime"].map((t) => (
+                {["14-day free trial", "Card required, cancel anytime", "Cancel anytime"].map((t) => (
                   <span key={t} className="flex items-center gap-1.5">
                     <Check className="h-3.5 w-3.5 text-emerald-500" />
                     {t}
@@ -301,7 +301,7 @@ export default function LocalSeoPage() {
               </motion.div>
             </div>
 
-            {/* Right , mockup */}
+            {/* Right — mockup */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -372,7 +372,7 @@ export default function LocalSeoPage() {
                   "Missing hours, photos, descriptions, and links",
                   "Profile completeness score out of 100",
                   "Specific fixes with impact on local ranking",
-                  "Also available as a free public audit , no account needed",
+                  "Also available as a free public audit — no account needed",
                 ].map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm text-slate-700">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
@@ -472,7 +472,7 @@ export default function LocalSeoPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of Ornigami Â· $14.99/month Â· 7-day free trial
+            Part of Ornigami Â· from €39/month Â· 14-day free trial
           </p>
         </motion.div>
       </section>

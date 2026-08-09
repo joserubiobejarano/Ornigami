@@ -1,212 +1,66 @@
-﻿import Link from "next/link";
-import { Header } from "@/components/marketing/Header";
-import { Check, X } from "lucide-react";
+"use client";
 
-export const metadata = {
-  title: "Pricing - Ornigami",
-  description: "One simple plan for local business growth. Start your 7-day free trial.",
-};
+import Link from "next/link";
+import { useState } from "react";
+
+import { BillingPeriodToggle } from "@/components/billing/billing-period-toggle";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PLANS, PLAN_ORDER, effectiveMonthlyFromAnnual, formatAnnualSavings, formatPrice } from "@/lib/billing/plans";
+
+const faqs = [
+  ["What happens after the trial?", "Your plan continues automatically after 14 days. Cancel anytime from billing."],
+  ["Can I use just one agent?", "Yes. Review Replies or Review Booster is €39/month, and you can upgrade to Complete from billing at any time."],
+  ["Do I need a website?", "No. You only need a Google Business Profile for Review Replies."],
+  ["Will you post anything without my approval?", "Only 4-5 star replies can be configured for automatic posting. 1-3 star reviews always require your approval."],
+  ["Can I cancel anytime?", "Yes. Manage or cancel your subscription from the billing portal."],
+  ["Do you support Spanish?", "Yes. Replies match the reviewer's language."],
+];
 
 export default function PricingPage() {
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <Header />
+    <main className="min-h-screen bg-background">
+      <section className="mx-auto max-w-6xl px-6 pb-16 pt-24 text-center">
+        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Simple pricing</p>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-6xl">Get the reviews. Answer every one.</h1>
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">Two tools that work while you run the business. 14-day free trial, cancel anytime.</p>
+      </section>
 
-      <main className="mx-auto max-w-5xl px-4 pb-24 pt-16 md:px-6 lg:px-8">
-        {/* HERO */}
-        <section className="text-center">
-          <div className="mb-5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-600">
-            Pricing
-          </div>
-          <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
-            One simple plan for local growth
-          </h1>
-          <p className="mt-4 text-lg text-slate-500">
-            Start your 7-day free trial. No credit card, no setup fees. Cancel anytime.
-          </p>
+      <section className="mx-auto max-w-6xl px-6 pb-5 text-center">
+        <BillingPeriodToggle value={billingPeriod} onChange={setBillingPeriod} id="pricing-billing-period-toggle" />
+        <p className="mt-3 text-sm text-muted-foreground">Annual plans are billed once per year.</p>
+      </section>
 
-          <div className="mt-8 flex items-baseline justify-center gap-1.5">
-            <span className="text-5xl font-bold tracking-tight text-slate-900">$14.99</span>
-            <span className="text-lg text-slate-500">/ month</span>
-          </div>
+      <section className="mx-auto grid max-w-6xl gap-5 px-6 pb-12 md:grid-cols-3">
+        {PLAN_ORDER.map((planId) => {
+          const plan = PLANS[planId];
+          return (
+            <Card key={planId} className={plan.recommended ? "border-primary shadow-lg" : ""}>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle>{plan.name}</CardTitle>
+                  {plan.recommended ? <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">Most popular</span> : null}
+                </div>
+                <CardDescription>{plan.tagline}</CardDescription>
+                <div className="pt-4"><span className="text-4xl font-semibold">{formatPrice(planId, billingPeriod)}</span><span className="text-muted-foreground"> / {billingPeriod === "annual" ? "year" : "month"}</span></div>
+                <p className="text-sm text-muted-foreground">{billingPeriod === "annual" ? `${formatAnnualSavings(planId)} · ${effectiveMonthlyFromAnnual(planId)}/month effective` : `or ${effectiveMonthlyFromAnnual(planId)}/month billed annually`}</p>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <ul className="space-y-3 text-sm">{plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="text-primary">✓</span><span>{feature}</span></li>)}</ul>
+                <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start free trial</Button></form>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </section>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-300 transition-all hover:bg-slate-800"
-            >
-              Start free trial
-            </Link>
-            <Link
-              href="/demo"
-              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-8 py-3 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
-            >
-              Try live demo
-            </Link>
-          </div>
-          <p className="mt-4 text-xs text-slate-400">
-            7-day free trial Â· Cancel anytime Â· No long-term contracts
-          </p>
-        </section>
+      <p className="mx-auto max-w-4xl px-6 pb-20 text-center text-sm text-muted-foreground">All plans are per location. Running more than one location? <Link className="underline" href="/contact">Get in touch</Link> and we&apos;ll set you up.</p>
 
-        {/* PLAN CARD */}
-        <section className="mt-16">
-          <div className="relative mx-auto max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-slate-900">Ornigami Starter</h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Everything you need to manage your Google reviews and local content.
-              </p>
-              <div className="mt-5 flex items-baseline justify-center gap-1.5">
-                <span className="text-4xl font-bold text-slate-900">$14.99</span>
-                <span className="text-sm text-slate-500">/ month</span>
-              </div>
-            </div>
+      <section className="bg-muted/40 px-6 py-16"><div className="mx-auto max-w-3xl"><h2 className="text-3xl font-semibold">Frequently asked questions</h2><div className="mt-8 space-y-6">{faqs.map(([question, answer]) => <div key={question}><h3 className="font-medium">{question}</h3><p className="mt-2 text-sm text-muted-foreground">{answer}</p></div>)}</div></div></section>
 
-            <ul className="mt-8 space-y-4 text-sm text-slate-700">
-              {[
-                "AI replies for all your Google reviews",
-                "20 content pieces per month (blogs + Google posts + FAQs)",
-                "5 profile audits per month",
-                "Unlimited manual review replies",
-                "Review Booster , automated follow-up campaigns",
-                "Google Business Profile connection and review sync",
-                "Access to the free profile audit tool",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <Check className="h-5 w-5 shrink-0 text-emerald-500" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-8">
-              <Link
-                href="/signup"
-                className="block w-full rounded-xl bg-slate-900 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-              >
-                Start free trial
-              </Link>
-              <p className="mt-4 text-center text-xs text-slate-400">
-                Need higher limits or agency features?{" "}
-                <a href="mailto:support@locallift.com" className="underline hover:text-slate-600">
-                  Contact us
-                </a>
-                .
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* COMPARISON */}
-        <section className="mt-20">
-          <h2 className="mb-8 text-center text-2xl font-bold tracking-tight text-slate-900">
-            Before and after Ornigami
-          </h2>
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-              <h3 className="mb-4 text-sm font-semibold text-slate-400">Without Ornigami</h3>
-              <ul className="space-y-3 text-sm text-slate-500">
-                {[
-                  "Manually replying to every review",
-                  "No idea what to post on Google",
-                  "Inconsistent local SEO , ranking slips",
-                  "Happy customers leave without reviewing",
-                  "Profile issues go unnoticed for months",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <X className="h-5 w-5 shrink-0 text-slate-300" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-              <h3 className="mb-4 text-sm font-semibold text-emerald-600">With Ornigami</h3>
-              <ul className="space-y-3 text-sm text-emerald-800">
-                {[
-                  "AI drafts replies to every review in seconds",
-                  "Local content ideas tailored to your city",
-                  "Regular content keeps your ranking climbing",
-                  "Automatic follow-ups turn visitors into reviewers",
-                  "Ongoing audits catch issues before customers do",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <Check className="h-5 w-5 shrink-0 text-emerald-500" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="mx-auto mt-24 max-w-3xl">
-          <h2 className="mb-10 text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Frequently asked questions
-          </h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: "Do I need a website to use Ornigami?",
-                a: "No. You can use Ornigami even if you only have a Google Business Profile. We generate Google posts, review replies, and profile audits without needing a website.",
-              },
-              {
-                q: "Can I try it without connecting my Google account?",
-                a: "Yes. You can use the live demo with sample data before connecting your Google account.",
-              },
-              {
-                q: "What happens when I hit my monthly limits?",
-                a: "You can still log in and see your data, but new content and audits will pause until your monthly usage resets. Contact us if you need more volume.",
-              },
-              {
-                q: "What is the Review Booster?",
-                a: "Review Booster is an agent that sends follow-up messages to your customers after their visit, asking them to leave a Google review. You log the visit, and the agent handles the outreach.",
-              },
-              {
-                q: "Will Ornigami post anything without my approval?",
-                a: "No. Everything is approve-first by default. You see every draft before it goes live. Automation is opt-in.",
-              },
-              {
-                q: "Can I cancel anytime?",
-                a: "Yes. You can manage your subscription from the billing portal and cancel at any time. Your data remains accessible.",
-              },
-            ].map(({ q, a }) => (
-              <div key={q} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                <h3 className="font-semibold text-slate-900">{q}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{a}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="mt-24 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center md:p-12">
-          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Not ready to commit?
-          </h2>
-          <p className="mt-3 text-slate-500">
-            Start with a trial, then upgrade when Ornigami proves its value.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-            >
-              Start free trial
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Start free trial
-            </Link>
-          </div>
-        </section>
-      </main>
-    </div>
+      <section className="mx-auto flex max-w-4xl flex-col items-center gap-4 px-6 py-20 text-center"><h2 className="text-3xl font-semibold">Ready to make reviews easier?</h2><p className="text-muted-foreground">Start with a 14-day trial and see the workflow on your own business.</p><div className="flex flex-wrap justify-center gap-3"><Link href="/signup"><Button>Start free trial</Button></Link><Link href="/demo"><Button variant="outline">See a live demo</Button></Link></div></section>
+    </main>
   );
 }
-

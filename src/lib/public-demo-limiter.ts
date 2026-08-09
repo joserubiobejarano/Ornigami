@@ -35,7 +35,7 @@ export function checkAndIncrementPublicDemoLimit(key: string, maxPerDay: number)
 }
 
 export async function checkAndIncrementPublicDemoLimitDurable(params: {
-  keyType: "email" | "ip";
+  keyType: "email" | "ip" | "global";
   keyHash: string;
   maxPerDay: number;
 }): Promise<boolean> {

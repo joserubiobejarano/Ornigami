@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -22,7 +22,7 @@ function InboxMockup() {
       author: "Sarah M.",
       time: "2h ago",
       text: "The staff was so warm and the food was incredible. Will definitely be back soon!",
-      draft: "Thank you so much, Sarah! We're thrilled to hear you had a wonderful experience. Our team works hard to make every visit special , we look forward to welcoming you back!",
+      draft: "Thank you so much, Sarah! We're thrilled to hear you had a wonderful experience. Our team works hard to make every visit special — we look forward to welcoming you back!",
       status: "pending" as const,
     },
     {
@@ -30,7 +30,7 @@ function InboxMockup() {
       author: "James K.",
       time: "5h ago",
       text: "Great food and good service. Parking outside was a bit of a nightmare though.",
-      draft: "Thanks for the kind words, James! We appreciate your feedback on parking , it's something we hear from time to time and we'll keep it in mind.",
+      draft: "Thanks for the kind words, James! We appreciate your feedback on parking — it's something we hear from time to time and we'll keep it in mind.",
       status: "pending" as const,
     },
     {
@@ -53,7 +53,7 @@ function InboxMockup() {
             <span className="h-3 w-3 rounded-full bg-amber-500/60" />
             <span className="h-3 w-3 rounded-full bg-emerald-500/60" />
           </div>
-          <span className="ml-2 text-xs text-slate-400">Review Inbox , LocalLift</span>
+          <span className="ml-2 text-xs text-slate-400">Review Inbox — Ornigami</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
           â. Google synced
@@ -141,14 +141,14 @@ const features = [
     gradient: "from-purple-500 to-sky-400",
     title: "One clean review inbox",
     description:
-      "All your Google reviews in one place. No switching tabs, no copy-pasting , just a simple inbox where you can see, manage, and reply to every review.",
+      "All your Google reviews in one place. No switching tabs, no copy-pasting — just a simple inbox where you can see, manage, and reply to every review.",
   },
   {
     icon: Zap,
     gradient: "from-orange-400 to-pink-500",
     title: "AI drafts in seconds",
     description:
-      "Our AI reads the review context, your business info, and your tone preferences to generate a reply that sounds like you , not a template.",
+      "Our AI reads the review context, your business info, and your tone preferences to generate a reply that sounds like you — not a template.",
   },
   {
     icon: Check,
@@ -162,21 +162,21 @@ const features = [
     gradient: "from-sky-400 to-indigo-500",
     title: "Automatic review sync",
     description:
-      "New reviews appear in your inbox automatically. No manual imports, no browser extensions , just connect your Google Business Profile and we handle the rest.",
+      "New reviews appear in your inbox automatically. No manual imports, no browser extensions — just connect your Google Business Profile and we handle the rest.",
   },
   {
     icon: Star,
     gradient: "from-amber-400 to-orange-500",
     title: "Learn your brand voice",
     description:
-      "The more you use LocalLift, the better it understands your style. Replies become more accurate and personal over time.",
+      "The more you use Ornigami, the better it understands your style. Replies become more accurate and personal over time.",
   },
   {
     icon: Shield,
     gradient: "from-violet-500 to-purple-600",
     title: "Always approve first",
     description:
-      "Nothing goes live without your say. Every reply is a draft first. Automation is opt-in , you decide how much control to keep.",
+      "Nothing goes live without your say. Every reply is a draft first. Automation is opt-in — you decide how much control to keep.",
   },
 ];
 
@@ -184,7 +184,7 @@ const steps = [
   {
     number: "01",
     title: "Connect your Google Business Profile",
-    body: "Sign in with Google and authorize LocalLift to access your reviews. Takes less than two minutes.",
+    body: "Sign in with Google and authorize Ornigami to access your reviews. Takes less than two minutes.",
   },
   {
     number: "02",
@@ -194,7 +194,7 @@ const steps = [
   {
     number: "03",
     title: "Approve replies and go live",
-    body: "New reviews appear with AI drafts ready. Approve, edit, or skip , then watch your reply rate hit 100%.",
+    body: "New reviews appear with AI drafts ready. Approve, edit, or skip — then watch your reply rate hit 100%.",
   },
 ];
 
@@ -238,7 +238,7 @@ export default function ReviewRepliesPage() {
               transition={{ duration: 0.5, delay: 0.16 }}
               className="mt-5 max-w-2xl text-xl leading-relaxed text-slate-600"
             >
-              Our AI monitors your Google inbox and drafts personalized, on-brand replies for every review , so you can approve and send in one click, or let it run automatically.
+              Ornigami syncs your Google inbox and drafts personalized, on-brand replies for every review, so you can approve and send in one click.
             </motion.p>
 
             <motion.div
@@ -267,7 +267,7 @@ export default function ReviewRepliesPage() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
             >
-              {["7-day free trial", "No credit card required", "Cancel anytime"].map((t) => (
+              {["14-day free trial", "Card required, cancel anytime", "Cancel anytime"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
                   {t}
@@ -378,7 +378,7 @@ export default function ReviewRepliesPage() {
             Stop leaving reviews unanswered
           </h2>
           <p className="mt-5 text-lg text-slate-400">
-            Every unanswered review is a missed opportunity. Start replying to all of them , automatically , with a 7-day free trial.
+            Every unanswered review is a missed opportunity. Start replying to all of them — automatically — with a 14-day free trial.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -395,7 +395,7 @@ export default function ReviewRepliesPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of LocalLift Â· $14.99/month Â· 7-day free trial
+            Part of Ornigami Â· from €39/month Â· 14-day free trial
           </p>
         </motion.div>
       </section>

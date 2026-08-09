@@ -5,65 +5,66 @@ import { auth } from "@/auth";
 import { getServerAppUrl } from "@/lib/env";
 import { sql } from "@/lib/db/neon";
 import { getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { isPlanId, planForAgent, stripePriceId, type BillingPeriod, type PlanId } from "@/lib/billing/plans";
 import { safeLogger } from "@/lib/safe-logger";
 
-type CheckoutAgentId = "review_replies" | "review_booster";
-const CHECKOUT_AGENT_IDS = new Set<CheckoutAgentId>(["review_replies", "review_booster"]);
-
-function resolvePriceId(agentId: CheckoutAgentId | null): string | null {
-  if (agentId === "review_replies") {
-    return process.env.STRIPE_REVIEW_REPLIES_PRICE_ID ?? null;
-  }
-  if (agentId === "review_booster") {
-    return process.env.STRIPE_REVIEW_BOOSTER_PRICE_ID ?? null;
-  }
-  return process.env.STRIPE_PRICE_STARTER ?? null;
+function isBillingPeriod(value: unknown): value is BillingPeriod {
+  return value === "monthly" || value === "annual";
 }
 
-async function getRequestAgentId(request: Request): Promise<string | null> {
+async function getRequestValues(request: Request): Promise<{
+  plan_id?: string;
+  billing_period?: string;
+  agent_id?: string;
+}> {
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
-    const body = (await request.json().catch(() => null)) as { agent_id?: string } | null;
-    return body?.agent_id ?? null;
+    return ((await request.json().catch(() => null)) ?? {}) as {
+      plan_id?: string;
+      billing_period?: string;
+      agent_id?: string;
+    };
   }
   if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
     const form = await request.formData();
-    const value = form.get("agent_id");
-    return typeof value === "string" ? value : null;
+    return {
+      plan_id: typeof form.get("plan_id") === "string" ? String(form.get("plan_id")) : undefined,
+      billing_period: typeof form.get("billing_period") === "string" ? String(form.get("billing_period")) : undefined,
+      agent_id: typeof form.get("agent_id") === "string" ? String(form.get("agent_id")) : undefined,
+    };
   }
-  return null;
+  return {};
 }
 
 export async function POST(request: Request) {
   try {
     const appUrl = getServerAppUrl();
-
     const session = await auth();
     if (!session?.user?.email || !session.user.id) {
       return NextResponse.redirect(new URL("/login", appUrl));
     }
-    const rawAgentId = await getRequestAgentId(request);
-    if (rawAgentId === "speed_to_lead") {
+
+    const values = await getRequestValues(request);
+    if (values.agent_id === "speed_to_lead") {
       return NextResponse.json({ error: "speed_to_lead is coming soon" }, { status: 400 });
     }
-    const isAgentCheckout = rawAgentId !== null;
-    const agentId = CHECKOUT_AGENT_IDS.has(rawAgentId as CheckoutAgentId)
-      ? (rawAgentId as CheckoutAgentId)
-      : null;
-    if (isAgentCheckout && !agentId) {
-      return NextResponse.json({ error: "Invalid agent_id" }, { status: 400 });
-    }
 
-    const priceId = resolvePriceId(agentId);
-    if (!priceId) {
-      return NextResponse.json({ error: "Stripe price ID not configured" }, { status: 500 });
+    const planId: PlanId | null = isPlanId(values.plan_id)
+      ? values.plan_id
+      : values.agent_id === "review_replies" || values.agent_id === "review_booster"
+        ? planForAgent(values.agent_id)
+        : null;
+    if (!planId) return NextResponse.json({ error: "A valid plan_id is required" }, { status: 400 });
+
+    const billingPeriod: BillingPeriod = values.billing_period === undefined
+      ? "monthly"
+      : isBillingPeriod(values.billing_period) ? values.billing_period : "invalid" as BillingPeriod;
+    if (!isBillingPeriod(billingPeriod)) {
+      return NextResponse.json({ error: "Invalid billing_period" }, { status: 400 });
     }
 
     const resolvedUserRows = await sql`
-      SELECT id
-      FROM public.users
-      WHERE lower(email) = lower(${session.user.email})
-      LIMIT 1
+      SELECT id FROM public.users WHERE lower(email) = lower(${session.user.email}) LIMIT 1
     `;
     const resolvedUser = resolvedUserRows[0] as { id: string } | undefined;
     const canonicalUserId = resolvedUser?.id ?? session.user.id;
@@ -80,53 +81,55 @@ export async function POST(request: Request) {
       }
     }
 
+    const existingSubscription = await sql`
+      SELECT stripe_subscription_id, plan_id
+      FROM public.business_agents
+      WHERE business_id = ${business.id}
+        AND lower(status) IN ('active', 'trialing', 'past_due')
+        AND stripe_subscription_id IS NOT NULL
+      LIMIT 1
+    `;
+    if (existingSubscription.length) {
+      return NextResponse.json(
+        { error: "existing_subscription", plan_id: (existingSubscription[0] as { plan_id?: string }).plan_id ?? null },
+        { status: 409 }
+      );
+    }
+
+    const priceId = stripePriceId(planId, billingPeriod);
     const customers = await stripe.customers.list({ email: session.user.email, limit: 1 });
     const customer = customers.data[0] ?? (await stripe.customers.create({ email: session.user.email }));
 
     await sql`
       INSERT INTO public.user_billing (user_id, stripe_customer_id)
       VALUES (${canonicalUserId}, ${customer.id})
-      ON CONFLICT (user_id) DO UPDATE SET
-        stripe_customer_id = EXCLUDED.stripe_customer_id
+      ON CONFLICT (user_id) DO UPDATE SET stripe_customer_id = EXCLUDED.stripe_customer_id
     `;
-    await sql`
-      UPDATE public.businesses
-      SET stripe_customer_id = ${customer.id}
-      WHERE id = ${business.id}
-    `;
+    await sql`UPDATE public.businesses SET stripe_customer_id = ${customer.id} WHERE id = ${business.id}`;
 
+    const metadata = {
+      user_id: canonicalUserId,
+      business_id: business.id,
+      plan_id: planId,
+      billing_period: billingPeriod,
+    };
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customer.id,
       client_reference_id: canonicalUserId,
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: {
-        metadata: {
-          user_id: canonicalUserId,
-          business_id: business.id,
-          agent_id: agentId ?? "starter_plan",
-        },
-        trial_period_days: 7,
-      },
-      metadata: {
-        user_id: canonicalUserId,
-        business_id: business.id,
-        agent_id: agentId ?? "starter_plan",
-      },
+      currency: "eur",
+      subscription_data: { metadata, trial_period_days: 14 },
+      metadata,
       success_url: `${appUrl}/dashboard/billing?success=1`,
       cancel_url: `${appUrl}/dashboard/billing?canceled=1`,
       allow_promotion_codes: true,
     });
 
     if (!checkout.url) return NextResponse.json({ error: "Stripe checkout URL missing" }, { status: 500 });
-
     return NextResponse.redirect(checkout.url, { status: 303 });
-  } catch (e: unknown) {
-    safeLogger.error("stripe.checkout.failed", {
-      error: e instanceof Error ? e.message : "unknown",
-    });
+  } catch (error: unknown) {
+    safeLogger.error("stripe.checkout.failed", { error: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "Unable to create checkout session" }, { status: 500 });
   }
 }
-
-export const runtime = "nodejs";

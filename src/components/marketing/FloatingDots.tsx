@@ -18,13 +18,14 @@ export function FloatingDots({
   return (
     <>
       {Array.from({ length: count }).map((_, i) => {
-        const duration = 4 + Math.random() * 3; // 4-7 seconds
-        const delay = Math.random() * 2;
-        const x = Math.random() * 100; // 0-100%
-        const y = Math.random() * 100; // 0-100%
-        const xOffset = (Math.random() - 0.5) * 40; // -20px to 20px
-        const yOffset = (Math.random() - 0.5) * 40; // -20px to 20px
-
+        // Keep the layout stable across renders while preserving visual variation per dot.
+        const seed = i + 1;
+        const duration = 4 + ((seed * 37) % 100) / 100 * 3; // 4-7 seconds
+        const delay = ((seed * 17) % 100) / 100 * 2;
+        const x = (seed * 47) % 100; // 0-100%
+        const y = (seed * 73) % 100; // 0-100%
+        const xOffset = (((seed * 29) % 100) / 100 - 0.5) * 40; // -20px to 20px
+        const yOffset = (((seed * 61) % 100) / 100 - 0.5) * 40; // -20px to 20px
         return (
           <motion.div
             key={i}

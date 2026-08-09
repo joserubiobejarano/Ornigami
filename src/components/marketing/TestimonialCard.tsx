@@ -1,4 +1,4 @@
-﻿type TestimonialCardProps = {
+type TestimonialCardProps = {
   business: string;
   role: string;
   location: string;

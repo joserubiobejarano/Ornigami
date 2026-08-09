@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FloatingDots } from "./FloatingDots";
 
@@ -10,14 +9,14 @@ const steps = [
   {
     number: 1,
     title: "Connect your Google Business Profile",
-    description: "Link your GBP in a few clicks so LocalLift can pull in your reviews and business details.",
+    description: "Link your GBP in a few clicks so Ornigami can pull in your reviews and business details.",
     color: "#F97316",
   },
   {
     number: 2,
     title: "Sync your reviews and local data",
     description:
-      "Your reviews, business info, and insights update automatically , no manual input.",
+      "Your reviews, business info, and insights update automatically — no manual input.",
     color: "#FB923C",
   },
   {

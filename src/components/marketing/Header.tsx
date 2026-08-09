@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, MessageSquare, Star, FileText, Menu, X } from "lucide-react";
+import { ChevronDown, MessageSquare, Star, Menu, X } from "lucide-react";
 
 const agents = [
   {
@@ -19,13 +19,6 @@ const agents = [
     href: "/review-booster",
     icon: Star,
     gradient: "bg-emerald-600",
-  },
-  {
-    name: "Local SEO Content",
-    description: "Blogs, posts and FAQs for your city",
-    href: "/local-seo",
-    icon: FileText,
-    gradient: "bg-amber-600",
   },
 ];
 

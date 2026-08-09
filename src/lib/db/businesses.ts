@@ -24,6 +24,8 @@ export type DbBusinessAgentRow = {
   business_id: string;
   agent_id: string;
   status: string;
+  plan_id?: string | null;
+  billing_period?: string | null;
   activated_at: string | null;
   deactivated_at: string | null;
   created_at: string;
@@ -108,7 +110,7 @@ export async function getBusinessAgentStatus(
 ): Promise<DbBusinessAgentRow | null> {
   const rows = await sql`
     SELECT
-      id, business_id, agent_id, status, activated_at, deactivated_at, created_at, updated_at
+      id, business_id, agent_id, status, plan_id, billing_period, activated_at, deactivated_at, created_at, updated_at
     FROM public.business_agents
     WHERE business_id = ${businessId} AND agent_id = ${agentId}
     LIMIT 1
@@ -120,7 +122,7 @@ export async function getBusinessAgentStatus(
 export async function getBusinessAgents(businessId: string): Promise<DbBusinessAgentRow[]> {
   const rows = await sql`
     SELECT
-      id, business_id, agent_id, status, activated_at, deactivated_at, created_at, updated_at
+      id, business_id, agent_id, status, plan_id, billing_period, activated_at, deactivated_at, created_at, updated_at
     FROM public.business_agents
     WHERE business_id = ${businessId}
     ORDER BY agent_id ASC
@@ -129,6 +131,11 @@ export async function getBusinessAgents(businessId: string): Promise<DbBusinessA
   return rows as DbBusinessAgentRow[];
 }
 
+export async function userHasActiveAgentAccess(userId: string, agentId: string): Promise<boolean> {
+  const business = await getBusinessForUser(userId);
+  if (!business) return false;
+  return canAccessAgent(business.id, agentId);
+}
 export async function canAccessAgent(businessId: string, agentId: string): Promise<boolean> {
   const statusRow = await getBusinessAgentStatus(businessId, agentId);
   if (!statusRow) {
@@ -164,7 +171,7 @@ export async function upsertBusinessAgentStatus(
       END,
       updated_at = now()
     RETURNING
-      id, business_id, agent_id, status, activated_at, deactivated_at, created_at, updated_at
+      id, business_id, agent_id, status, plan_id, billing_period, activated_at, deactivated_at, created_at, updated_at
   `;
   return rows[0] as DbBusinessAgentRow;
 }

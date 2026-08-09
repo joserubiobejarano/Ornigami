@@ -1,4 +1,4 @@
-﻿import type { Review } from "@/components/reviews/review-workflow";
+import type { Review } from "@/components/reviews/review-workflow";
 
 export type DemoBusinessType = "restaurant" | "clinic" | "gym" | "salon" | "retail_store";
 
@@ -77,7 +77,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
           "Charged twice on my card and still haven't gotten a refund after two emails. Very frustrated.",
         status: "replied",
         reply_comment:
-          "Chris, we're sorry for the billing trouble , that's not the experience we want. Please DM us your reservation name and last four digits of the card and we'll escalate with our payments team today.",
+          "Chris, we're sorry for the billing trouble — that's not the experience we want. Please DM us your reservation name and last four digits of the card and we'll escalate with our payments team today.",
         review_update_time: daysAgo(1),
       },
     ],
@@ -131,7 +131,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
           "Telehealth follow-up was seamless. Prescription sent to my pharmacy within an hour.",
         status: "replied",
         reply_comment:
-          "Thank you, Nina , we're glad the telehealth visit worked smoothly. Don't hesitate to reach out if you have any questions about your prescription.",
+          "Thank you, Nina — we're glad the telehealth visit worked smoothly. Don't hesitate to reach out if you have any questions about your prescription.",
         review_update_time: daysAgo(4),
       },
     ],

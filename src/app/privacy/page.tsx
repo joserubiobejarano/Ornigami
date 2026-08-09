@@ -33,8 +33,8 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-semibold mb-4">Contact</h2>
           <p>
             If you have questions about this Privacy Policy, please contact us at{" "}
-            <a href="mailto:privacy@locallift.com" className="text-primary hover:underline">
-              privacy@locallift.com
+            <a href="mailto:privacy@ornigami.app" className="text-primary hover:underline">
+              privacy@ornigami.app
             </a>
           </p>
         </section>

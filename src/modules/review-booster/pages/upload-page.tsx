@@ -112,7 +112,7 @@ export default function ReviewBoosterUploadPage() {
           Manual/CSV visits can trigger follow-ups if the visit happened between 23 hours and 7 days ago.
         </p>
         <p className="mt-2 text-xs text-slate-600">
-          For better review conversion, make sure Settings uses the direct Google Maps "Write a review" link.
+          For better review conversion, make sure Settings uses the direct Google Maps &quot;Write a review&quot; link.
         </p>
       </section>
 

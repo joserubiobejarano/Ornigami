@@ -9,6 +9,7 @@ import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { generateProfileAudit, type ProfileAuditInput } from "@/lib/openai";
 import { safeLogger } from "@/lib/safe-logger";
 import { z } from "zod";
+import { checkAndIncrementPublicDemoLimit, checkAndIncrementPublicDemoLimitDurable, getRequestIp, hashValue } from "@/lib/public-demo-limiter";
 
 const AuditProfileSchema = z.object({
   mode: z.enum(["connected", "quick"]),
@@ -31,6 +32,17 @@ export async function POST(req: NextRequest) {
 
     if (mode !== "connected" && mode !== "quick") {
       return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
+    }
+
+    if (mode === "quick") {
+      const globalAllowed = await checkAndIncrementPublicDemoLimitDurable({ keyType: "global", keyHash: "profile_audit_quick", maxPerDay: 50 }).catch(() => checkAndIncrementPublicDemoLimit("profile_audit:global", 50));
+      if (!globalAllowed) return NextResponse.json({ error: "Daily audit capacity has been reached. Please try again tomorrow." }, { status: 429 });
+      const requestIp = getRequestIp(req.headers);
+      if (requestIp) {
+        const ipHash = hashValue(requestIp);
+        const ipAllowed = await checkAndIncrementPublicDemoLimitDurable({ keyType: "ip", keyHash: ipHash, maxPerDay: 3 }).catch(() => checkAndIncrementPublicDemoLimit(`profile_audit:ip:${ipHash}`, 3));
+        if (!ipAllowed) return NextResponse.json({ error: "Too many audit attempts. Please try again tomorrow." }, { status: 429 });
+      }
     }
 
     if (mode === "connected" && !user) {

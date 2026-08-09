@@ -19,6 +19,9 @@ export type FollowupVisit = {
   tone?: string | null;
   language?: string | null;
   email_from_name?: string | null;
+  error_reason?: string | null;
+  attempt_count?: number;
+  next_attempt_at?: string | Date | null;
 };
 
 export type FollowupRunResult = {

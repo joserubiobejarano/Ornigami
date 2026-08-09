@@ -1,4 +1,4 @@
-﻿import OpenAI from "openai";
+import OpenAI from "openai";
 
 let client: OpenAI | null = null;
 
@@ -99,7 +99,7 @@ export type ReviewReplyInput = {
   contactPreference?: string;
 };
 
-const REVIEW_REPLY_SYSTEM = `You write Google Business Profile owner replies. The output should feel like a short, natural reply from a local business owner , not an email, support ticket, or corporate response.
+const REVIEW_REPLY_SYSTEM = `You write Google Business Profile owner replies. The output should feel like a short, natural reply from a local business owner — not an email, support ticket, or corporate response.
 
 STYLE TARGET
 - Local business owner; short Google review reply; natural and believable.
@@ -190,7 +190,7 @@ export type ProfileAuditInput = {
   city?: string | null;
   category?: string | null;
   urlOrName?: string | null;
-  gbpData?: any | null; // raw row from gbp_locations when available
+  gbpData?: Record<string, unknown> | null; // raw row from gbp_locations when available
 };
 
 export async function generateProfileAudit(input: ProfileAuditInput): Promise<string> {

@@ -10,6 +10,7 @@ import { canUseReviewAutomation } from "@/lib/plan";
 import { getUserPlan } from "@/lib/plan-server";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { requireActiveAgentAccess } from "@/lib/api-security";
+import { safeLogger } from "@/lib/safe-logger";
 import {
   generateReplyForReviewRow,
   postReplyToGoogleAndPersist,
@@ -23,6 +24,12 @@ const BodySchema = z.object({
 
 const MAX_BATCH = 40;
 
+function safeProcessingError(kind: "post" | "draft" | "generate"): string {
+  if (kind === "post") return "Could not post the reply to Google; it was kept as a draft.";
+  if (kind === "draft") return "Could not save the generated reply as a draft.";
+  return "Could not generate a reply for this review.";
+}
+
 export async function POST(req: NextRequest) {
   const isDemo = req.headers.get("x-demo") === "true";
   if (isDemo) {
@@ -31,6 +38,7 @@ export async function POST(req: NextRequest) {
       posted: 0,
       drafted: 0,
       skipped: 0,
+      skippedNoComment: 0,
       autoHandled: 0,
       errors: [],
     });
@@ -74,16 +82,18 @@ export async function POST(req: NextRequest) {
     LIMIT ${MAX_BATCH}
   `) as ReviewRowForReply[];
 
-  let posted = 0;
+  const posted = 0;
   let drafted = 0;
   let autoHandled = 0;
   let skipped = 0;
+  let skippedNoComment = 0;
   const errors: string[] = [];
 
   for (const row of rows) {
     const text = (row.comment ?? "").trim();
     if (!text) {
       skipped += 1;
+      skippedNoComment += 1;
       continue;
     }
 
@@ -95,12 +105,14 @@ export async function POST(req: NextRequest) {
       }
 
       const shouldAutoPost = autoReply && canPost;
-      if (shouldAutoPost) {
+      const hasKnownSafeRating = typeof row.star_rating === "number" && row.star_rating >= 4;
+      if (shouldAutoPost && hasKnownSafeRating) {
         const res = await postReplyToGoogleAndPersist(user.id, row.google_review_id, locationName, reply);
         if (res.ok) {
           autoHandled += 1;
         } else {
-          errors.push(`${row.google_review_id}: ${res.error}`);
+          safeLogger.warn("reviews.process_pending.post_failed", { reviewId: row.google_review_id, error: res.error });
+          errors.push(`${row.google_review_id}: ${safeProcessingError("post")}`);
           const draftRes = await saveReplyDraft(user.id, row.google_review_id, reply);
           if (draftRes.ok) drafted += 1;
         }
@@ -109,12 +121,13 @@ export async function POST(req: NextRequest) {
         if (draftRes.ok) {
           drafted += 1;
         } else {
-          errors.push(`${row.google_review_id}: ${draftRes.error}`);
+          safeLogger.warn("reviews.process_pending.draft_failed", { reviewId: row.google_review_id, error: draftRes.error });
+          errors.push(`${row.google_review_id}: ${safeProcessingError("draft")}`);
         }
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Generation failed";
-      errors.push(`${row.google_review_id}: ${msg}`);
+      safeLogger.warn("reviews.process_pending.generate_failed", { reviewId: row.google_review_id, error: e instanceof Error ? e.message : "unknown" });
+      errors.push(`${row.google_review_id}: ${safeProcessingError("generate")}`);
     }
   }
 
@@ -124,6 +137,7 @@ export async function POST(req: NextRequest) {
     drafted,
     autoHandled,
     skipped,
+    skippedNoComment,
     errors,
   });
 }

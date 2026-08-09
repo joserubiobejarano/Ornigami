@@ -25,19 +25,19 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                         Unlock the full review inbox
                     </DialogTitle>
                     <DialogDescription className="text-base pt-2">
-                        {description || "You've reached the demo limit. Start your free trial for unlimited AI reply drafts, review sync, and posting to Google (fair use applies)."}
+                        {description || "You&apos;ve reached the demo limit. Start your free trial for unlimited AI reply drafts, review sync, and posting to Google (fair use applies)."}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 pt-4">
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
-                        <h3 className="font-medium text-slate-900">What you'll get:</h3>
+                        <h3 className="font-medium text-slate-900">What you&apos;ll get:</h3>
                         <ul className="text-sm text-slate-600 space-y-1">
                             <li>✓ Unlimited AI reply drafts</li>
                             <li>✓ Post replies to Google</li>
                             <li>✓ Sync reviews from all locations</li>
                             <li>✓ Connect your Google Business Profile</li>
-                            <li>✓ 14-day free trial, no credit card required</li>
+                            <li>✓ 14-day free trial, card required</li>
                         </ul>
                     </div>
 

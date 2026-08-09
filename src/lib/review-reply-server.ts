@@ -1,14 +1,15 @@
-﻿import { googleFetch } from "@/lib/google";
+import { googleFetch } from "@/lib/google";
 import { sql } from "@/lib/db/neon";
 import type { ReviewReplyInput } from "@/lib/openai";
 import { generateReviewReply, sanitizeReviewReply } from "@/lib/openai";
 import type { ProfileReplyRow } from "@/lib/reply-profile-defaults";
+import { parseGoogleStarRating } from "@/lib/google-review-rating";
 
 export type ReviewRowForReply = {
   id: string | number;
   google_review_id: string;
   comment: string | null;
-  star_rating: number | null;
+  star_rating: number | string | null;
 };
 
 /** Build OpenAI input from a stored review row + saved profile defaults. */
@@ -21,7 +22,9 @@ export function buildReviewReplyInputFromRow(
   return {
     businessName: profile?.business_name?.trim() ?? "",
     city: "",
-    rating: Math.min(5, Math.max(1, Number(review.star_rating) || 5)),
+    rating: Math.min(5, Math.max(1, typeof review.star_rating === "number"
+      ? review.star_rating
+      : parseGoogleStarRating(review.star_rating) ?? 3)),
     text: (review.comment ?? "").trim(),
     tone,
     ownerName: profile?.owner_name?.trim() || undefined,
@@ -143,7 +146,7 @@ export async function postReplyToGoogleAndPersist(
 
   const persist = await persistReplyPostedLocally(userId, googleReviewId, reply);
   if (!persist.ok) {
-    // Google accepted the reply but local row missing , still report success to match prior behavior
+    // Google accepted the reply but local row missing — still report success to match prior behavior
   }
 
   return { ok: true };

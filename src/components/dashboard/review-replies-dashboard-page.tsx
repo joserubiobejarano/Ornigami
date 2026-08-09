@@ -23,6 +23,7 @@ export async function ReviewRepliesDashboardPage() {
   const metrics = await getDashboardMetrics(isDemo);
   let planInfo = null;
   let hasPaidAccess = false;
+  let shouldShowActivation = false;
 
   if (!isDemo) {
     const session = await auth();
@@ -33,25 +34,29 @@ export async function ReviewRepliesDashboardPage() {
         const business = await getOrCreateBusinessForUser(user.id);
         const hasAgentAccess = await canAccessAgent(business.id, "review_replies");
         if (!hasAgentAccess) {
-          return (
-            <DashboardPage width="md">
-              <ReviewRepliesAgentNav />
-              <AgentActivationPlaceholder
-                agentId="review_replies"
-                agentName="Review Replies"
-                description="AI drafting and one-click posting for Google reviews."
-              />
-            </DashboardPage>
-          );
+          shouldShowActivation = true;
+        } else {
+          planInfo = await getUserPlanInfo(user.id);
+          hasPaidAccess = isPaidUser(planInfo.planStatus) || isTrialing(planInfo.planStatus);
         }
-        planInfo = await getUserPlanInfo(user.id);
-        hasPaidAccess = isPaidUser(planInfo.planStatus) || isTrialing(planInfo.planStatus);
       } catch (e) {
         console.error("[Dashboard] Failed to fetch plan info:", e);
       }
     }
   }
 
+  if (shouldShowActivation) {
+    return (
+      <DashboardPage width="md">
+        <ReviewRepliesAgentNav />
+        <AgentActivationPlaceholder
+          agentId="review_replies"
+          agentName="Review Replies"
+          description="AI drafting and one-click posting for Google reviews."
+        />
+      </DashboardPage>
+    );
+  }
   const showError = !isDemo && Boolean(metrics?.criticalError);
   const isEmpty =
     !isDemo && metrics && !metrics.criticalError && metrics.totalReviewsSynced === 0;

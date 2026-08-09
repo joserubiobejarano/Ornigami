@@ -9,7 +9,7 @@ type TabKey = "replies" | "content" | "audit";
 const tabData = {
   replies: {
     headline: "Reply to every review in seconds",
-    body: "Turn your Google review inbox into a handled list. LocalLift drafts on brand replies instantly so you can approve and send in one click.",
+    body: "Turn your Google review inbox into a handled list. Ornigami drafts on brand replies instantly so you can approve and send in one click.",
     bullets: [
       "Inbox style view of all your reviews in one place",
       "AI drafted replies that match your tone",
@@ -18,7 +18,7 @@ const tabData = {
   },
   content: {
     headline: "Turn searchers into regulars with local content",
-    body: "Stop guessing what to post. LocalLift writes blog ideas, GBP posts, and FAQ content tailored to your city, niche, and customers.",
+    body: "Stop guessing what to post. Ornigami writes blog ideas, GBP posts, and FAQ content tailored to your city, niche, and customers.",
     bullets: [
       "Blog outlines and drafts based on your city and services",
       "Ready to post Google Business updates for promos and events",
@@ -76,7 +76,7 @@ export function FeatureShowcase() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg text-[#111827]/70 max-w-2xl mx-auto"
           >
-            Switch between features to see how LocalLift keeps your local presence running on autopilot.
+            Switch between features to see how Ornigami keeps your review workflow organized.
           </motion.p>
         </div>
 

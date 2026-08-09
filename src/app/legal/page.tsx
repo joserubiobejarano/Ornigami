@@ -26,7 +26,7 @@ export default function LegalPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Disclaimer</h2>
           <p>
-            The information on this website is provided on an "as is" basis. To the fullest
+            The information on this website is provided on an &quot;as is&quot; basis. To the fullest
             extent permitted by law, LocalLift excludes all representations, warranties,
             and conditions relating to our website and the use of this website.
           </p>
@@ -35,4 +35,3 @@ export default function LegalPage() {
     </div>
   );
 }
-

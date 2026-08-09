@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getAppBaseUrl } from "@/lib/app-base-url";
 import { userHasGbpConnection } from "@/lib/db/gbp";
+import { userHasActiveAgentAccess } from "@/lib/db/businesses";
 
 function isProtectedAppPage(pathname: string): boolean {
   const prefixes = [
@@ -39,7 +40,7 @@ function readAllowDashboardWithoutGbp(): boolean {
   return v === "true" || v === "1" || v === "yes";
 }
 
-export default auth(async (req) => {
+const proxy = auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
 
@@ -59,6 +60,8 @@ export default auth(async (req) => {
   const isDemoMode = !sessionUser && demoCookie;
 
   const requestHeaders = new Headers(req.headers);
+  // Internal demo headers are controlled by middleware, never by the client.
+  requestHeaders.delete("x-demo");
   if (isDemoMode) {
     requestHeaders.set("x-demo", "true");
   }
@@ -94,7 +97,7 @@ export default auth(async (req) => {
   const userId = sessionUser?.id;
   const allowDevBypassWithoutGbp = readAllowDashboardWithoutGbp();
 
-  if (userId && !pathname.startsWith("/api")) {
+  if (userId && (isProtectedAppPage(pathname) || pathname === "/connect" || pathname.startsWith("/connect/"))) {
     try {
       const hasGbp = await userHasGbpConnection(userId);
 
@@ -108,7 +111,17 @@ export default auth(async (req) => {
         );
       }
 
-      if (needsGbpBeforeAccess(pathname, allowDevBypassWithoutGbp) && !hasGbp) {
+      const canUseBoosterWithoutGbp =
+        pathname === "/dashboard" ||
+        pathname === "/dashboard/billing" ||
+        pathname.startsWith("/dashboard/agents/review-booster");
+      const hasRepliesAccess = await userHasActiveAgentAccess(userId, "review_replies");
+
+      if (
+        needsGbpBeforeAccess(pathname, allowDevBypassWithoutGbp) &&
+        !hasGbp &&
+        !(canUseBoosterWithoutGbp && !hasRepliesAccess)
+      ) {
         return NextResponse.redirect(new URL("/connect", getAppBaseUrl(req)), 302);
       }
     } catch (e) {
@@ -122,6 +135,8 @@ export default auth(async (req) => {
     },
   });
 });
+
+export { proxy };
 
 export const config = {
   matcher: [

@@ -36,7 +36,7 @@ export function DashboardUserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild id="dashboard-user-menu-trigger">
         <Button
           variant="outline"
           className="h-10 rounded-lg border-border bg-background/90 px-2"
@@ -50,7 +50,7 @@ export function DashboardUserMenu() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 rounded-lg p-1.5">
+      <DropdownMenuContent id="dashboard-user-menu-content" align="end" className="w-56 rounded-lg p-1.5">
         <DropdownMenuLabel className="space-y-0.5">
           <div className="truncate text-sm font-semibold">{userName}</div>
           {userEmail ? <div className="truncate text-xs text-muted-foreground">{userEmail}</div> : null}

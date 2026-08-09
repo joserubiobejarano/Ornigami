@@ -19,7 +19,7 @@ function getStripe(): Stripe {
 export const stripe = new Proxy({} as Stripe, {
   get(_target, prop) {
     const client = getStripe();
-    const value = (client as any)[prop];
+    const value = Reflect.get(client, prop);
     // Bind functions to the client, return other values as-is
     if (typeof value === "function") {
       return value.bind(client);

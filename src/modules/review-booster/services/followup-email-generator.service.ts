@@ -9,6 +9,7 @@ type EmailInput = {
   google_review_url: string;
   tone_setting?: string | null;
   language?: string | null;
+  visited_at?: string | Date | null;
 };
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
@@ -17,8 +18,26 @@ function normalizeEmailBodyPunctuation(body: string): string {
   return body.replace(/[—–]/g, "-");
 }
 
-export function buildSubject(businessName: string) {
-  return `Thank you for visiting ${businessName}`;
+export function buildSubject(businessName: string, language?: string | null) {
+  const subjects: Record<string, string> = {
+    es: `Gracias por visitarnos en ${businessName}`,
+    fr: `Merci de votre visite chez ${businessName}`,
+    de: `Danke für Ihren Besuch bei ${businessName}`,
+    it: `Grazie per aver visitato ${businessName}`,
+    pt: `Obrigado por visitar ${businessName}`,
+  };
+  return subjects[language?.toLowerCase().slice(0, 2) ?? ""] || `Thank you for visiting ${businessName}`;
+}
+
+function visitTimingPhrase(visitedAt?: string | Date | null): string {
+  if (!visitedAt) return "yesterday";
+  const timestamp = new Date(visitedAt).getTime();
+  if (!Number.isFinite(timestamp)) return "recently";
+  const daysAgo = Math.floor((Date.now() - timestamp) / 86_400_000);
+  if (daysAgo <= 0) return "today";
+  if (daysAgo === 1) return "yesterday";
+  if (daysAgo < 7) return `${daysAgo} days ago`;
+  return "recently";
 }
 
 export function buildFallbackEmailBody(input: EmailInput) {
@@ -28,7 +47,7 @@ export function buildFallbackEmailBody(input: EmailInput) {
   return [
     `Hi ${customerName},`,
     "",
-    `Thank you so much for visiting ${input.business_name}${serviceName} yesterday. We truly appreciate your trust and support.`,
+    `Thank you so much for visiting ${input.business_name}${serviceName} ${visitTimingPhrase(input.visited_at)}. We truly appreciate your trust and support.`,
     "If you had a great experience, we would be grateful if you could leave a quick Google review.",
     "",
     "Warmly,",
@@ -44,7 +63,7 @@ export async function generateFollowupEmailBody(input: EmailInput) {
   }
 
   const prompt = `You are a warm assistant for ${input.business_name}, a ${input.business_type || "local business"} in ${input.city || "their city"}.
-Write a short, friendly follow-up email to ${input.customer_name || "the customer"} who visited yesterday for ${input.service_name || "a service"}.
+Write a short, friendly follow-up email to ${input.customer_name || "the customer"} who visited ${visitTimingPhrase(input.visited_at)} for ${input.service_name || "a service"}.
 
 Include:
 - A genuine thank-you, maximum 2 sentences

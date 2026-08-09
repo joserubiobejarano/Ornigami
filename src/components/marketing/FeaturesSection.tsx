@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 import { MessageSquare, FileText, CheckCircle } from "lucide-react";
@@ -7,9 +7,9 @@ import { FloatingDots } from "./FloatingDots";
 const features = [
   {
     icon: MessageSquare,
-    title: "Review autopilot",
+    title: "Review workflow",
     description:
-      "Automatic, on-brand replies to every Google review , without lifting a finger.",
+      "On-brand drafts for every Google review, ready for your approval.",
     color: "#6366F1",
   },
   {

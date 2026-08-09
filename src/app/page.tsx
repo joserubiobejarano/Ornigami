@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   MessageSquare,
   Star,
-  FileText,
+
   Check,
   ArrowRight,
   ChevronDown,
@@ -24,7 +24,7 @@ const agents = [
     name: "Review Replies",
     tagline: "Reply to every review in seconds",
     description:
-      "Our AI monitors your Google inbox and drafts personalized, on-brand replies. Approve in one click , or let it run automatically.",
+      "Our AI syncs your Google reviews and drafts personalized, on-brand replies. Approve in one click, or enable automatic posting for eligible reviews.",
     href: "/review-replies",
     icon: MessageSquare,
     gradient: "bg-slate-700",
@@ -44,25 +44,13 @@ const agents = [
     lightBorder: "border-orange-100",
     bullets: ["Automatic follow-up after each visit", "Smart timing for maximum response rate", "Track every campaign in real time"],
   },
-  {
-    name: "Local SEO Content",
-    tagline: "Content that helps you show up first",
-    description:
-      "Blog posts, Google updates, and FAQ ideas written for your exact city, niche, and customer base , ready to publish in minutes.",
-    href: "/local-seo",
-    icon: FileText,
-    gradient: "bg-amber-600",
-    lightBg: "bg-emerald-50",
-    lightBorder: "border-emerald-100",
-    bullets: ["Hyper-local blog drafts", "Google Business Profile posts", "FAQ ideas from real search data"],
-  },
 ];
 
 const steps = [
   {
     number: "01",
     title: "Connect your Google Business Profile",
-    body: "Link your profile in a few clicks. No technical setup, no spreadsheets , just sign in and we take it from there.",
+    body: "Link your profile in a few clicks. No technical setup, no spreadsheets — just sign in and we take it from there.",
     gradient: "bg-slate-700",
   },
   {
@@ -73,33 +61,19 @@ const steps = [
   },
   {
     number: "03",
-    title: "Your agent hub handles the execution",
-    body: "Replies go out, follow-ups get sent, content stays fresh. You stay in control and approve anything before it goes live.",
+    title: "Your workspace handles the execution",
+    body: "Replies and follow-ups stay organized in one workspace. You stay in control and approve anything that needs your attention.",
     gradient: "bg-amber-600",
   },
 ];
 
 const testimonials = [
   {
-    name: "Marta Ruiz",
-    role: "Owner",
-    business: "BurgerMat Â· Madrid",
-    text: "Before Ornigami, I'd reply to reviews from my phone between orders. Now every review gets a thoughtful answer without me staying up late.",
-    stars: 5,
-  },
-  {
-    name: "Dr. Alex Carter",
-    role: "Clinic manager",
-    business: "Smiles & Co Dental Â· London",
-    text: "We get a lot of anxious patients reading our reviews first. Ornigami helps us answer fast and keep the tone warm and professional.",
-    stars: 5,
-  },
-  {
-    name: "Nina LÃ³pez",
-    role: "Marketing lead",
-    business: "UrbanFit Gym Â· Barcelona",
-    text: "Our team was too busy to keep the Google profile updated. Now we have fresh posts each week and reviews are always replied to.",
-    stars: 5,
+    name: "Illustrative workflow",
+    role: "Example only",
+    business: "Not a customer testimonial",
+    text: "Verified customer stories will appear here after launch. For now, explore the live demo to see the workflow.",
+    stars: 0,
   },
 ];
 
@@ -110,11 +84,11 @@ const faqs = [
   },
   {
     q: "Will the AI replies sound like my brand?",
-    a: "Yes. During onboarding we learn your preferred tone, business personality, and style. Drafts sound like you , not like a robot.",
+    a: "Yes. During onboarding we learn your preferred tone, business personality, and style. Drafts sound like you — not like a robot.",
   },
   {
     q: "Is there a free trial?",
-    a: "Yes. You get a 7-day free trial with full access. No credit card required and you can cancel anytime.",
+    a: "Yes. You get a 14-day free trial with full access. A card is required at checkout, and you can cancel anytime.",
   },
   {
     q: "What is the Review Booster and how does it work?",
@@ -126,7 +100,7 @@ const faqs = [
   },
   {
     q: "Can I manage multiple locations?",
-    a: "Yes. You can connect multiple Google Business Profiles and manage all their reviews and content from a single dashboard.",
+    a: "Not yet. The launch version supports one location per subscription; multi-location management is planned.",
   },
 ];
 
@@ -400,7 +374,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="grid gap-14 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center">
-            {/* Left , text */}
+            {/* Left — text */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -462,11 +436,11 @@ export default function HomePage() {
               >
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  7-day free trial
+                  14-day free trial
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  No credit card required
+                  Card required, cancel anytime
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -475,7 +449,7 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* Right , mockup */}
+            {/* Right — mockup */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -502,10 +476,10 @@ export default function HomePage() {
               The platform
             </p>
             <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              An agent hub for local growth.
+              A calmer way to manage local reviews.
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
-              Each agent handles a specific part of your local presence, running automatically in the background while you focus on your business.
+              Keep review replies and customer follow-ups moving while you focus on running your business.
             </p>
           </motion.div>
 
@@ -615,7 +589,7 @@ export default function HomePage() {
                 Every review answered, every time
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-slate-400">
-                Stop leaving reviews unanswered. Our agent monitors your Google inbox, drafts personalized responses in your brand voice, and waits for your approval , or sends automatically.
+                Stop leaving reviews unanswered. Ornigami syncs your Google inbox, drafts personalized responses in your brand voice, and lets you decide what goes live.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
@@ -670,7 +644,7 @@ export default function HomePage() {
                 Turn customers into 5-star reviewers
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-slate-400">
-                Most happy customers don&apos;t leave reviews , they just forget. Review Booster sends a short follow-up after every visit and asks for feedback at exactly the right moment.
+                Most happy customers don&apos;t leave reviews — they just forget. Review Booster sends a short follow-up after every visit and asks for feedback at exactly the right moment.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
@@ -802,14 +776,14 @@ export default function HomePage() {
             Ready to grow your local reputation?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
-            Start your 7-day free trial today. No credit card, no setup fees , with an agent hub working for your business from day one.
+            Start your 14-day free trial today. Card required, no setup fees — with a focused review workspace working for your business from day one.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition-all hover:brightness-105"
             >
-              Try it free , 7 days on us
+              Try it free — 14 days on us
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link

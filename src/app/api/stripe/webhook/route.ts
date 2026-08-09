@@ -1,12 +1,13 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+
 import { stripe } from "@/lib/stripe";
 import { sql } from "@/lib/db/neon";
+import { agentsForPlan, isPlanId, planForAgent, planIdFromStripePrice, type AgentId, type BillingPeriod, type PlanId } from "@/lib/billing/plans";
 import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const SUPPORTED_AGENT_IDS = new Set(["review_replies", "review_booster"]);
 
 function toBusinessAgentStatus(stripeStatus: string): string {
   if (stripeStatus === "active" || stripeStatus === "trialing") return stripeStatus;
@@ -15,44 +16,56 @@ function toBusinessAgentStatus(stripeStatus: string): string {
   return "inactive";
 }
 
+function periodEndFromSubscription(subscription: Stripe.Subscription): string | null {
+  const timestamp = subscription.items.data[0]?.current_period_end;
+  return timestamp ? new Date(timestamp * 1000).toISOString() : null;
+}
+
+function billingPeriodFromMetadata(metadata: Stripe.Metadata | null | undefined): BillingPeriod {
+  return metadata?.billing_period === "annual" ? "annual" : "monthly";
+}
+
+function planFromMetadata(metadata: Stripe.Metadata | null | undefined, priceId: string | null): PlanId | null {
+  if (isPlanId(metadata?.plan_id)) return metadata.plan_id;
+  if (metadata?.agent_id === "review_replies" || metadata?.agent_id === "review_booster") {
+    return planForAgent(metadata.agent_id);
+  }
+  return planIdFromStripePrice(priceId);
+}
+
 async function resolveBusinessId(
-  metadata: Record<string, string> | null | undefined,
+  metadata: Stripe.Metadata | null | undefined,
   stripeCustomerId: string | null,
   userId: string | null
 ): Promise<string | null> {
-  if (metadata?.business_id) {
-    return metadata.business_id;
-  }
-
+  if (metadata?.business_id) return metadata.business_id;
   if (stripeCustomerId) {
-    const businessRows = await sql`
-      SELECT id
-      FROM public.businesses
-      WHERE stripe_customer_id = ${stripeCustomerId}
-      LIMIT 1
-    `;
-    const business = businessRows[0] as { id: string } | undefined;
+    const rows = await sql`SELECT id FROM public.businesses WHERE stripe_customer_id = ${stripeCustomerId} LIMIT 1`;
+    const business = rows[0] as { id: string } | undefined;
     if (business?.id) return business.id;
   }
-
   if (userId) {
-    const businessRows = await sql`
-      SELECT id
-      FROM public.businesses
-      WHERE owner_user_id = ${userId}
-      ORDER BY created_at ASC
-      LIMIT 1
-    `;
-    const business = businessRows[0] as { id: string } | undefined;
+    const rows = await sql`SELECT id FROM public.businesses WHERE owner_user_id = ${userId} ORDER BY created_at ASC LIMIT 1`;
+    const business = rows[0] as { id: string } | undefined;
     if (business?.id) return business.id;
   }
-
   return null;
+}
+
+async function businessBelongsToUser(businessId: string, userId: string): Promise<boolean> {
+  const rows = await sql`
+    SELECT 1 FROM public.business_members
+    WHERE business_id = ${businessId} AND user_id = ${userId}
+    LIMIT 1
+  `;
+  return rows.length > 0;
 }
 
 async function updateBusinessAgentFromSubscription(params: {
   businessId: string;
-  agentId: string;
+  agentId: AgentId;
+  planId: PlanId;
+  billingPeriod: BillingPeriod;
   status: string;
   subscriptionId: string | null;
   priceId: string | null;
@@ -60,237 +73,171 @@ async function updateBusinessAgentFromSubscription(params: {
 }) {
   const mappedStatus = toBusinessAgentStatus(params.status);
   await sql`
-    UPDATE public.business_agents
-    SET
-      status = ${mappedStatus},
+    INSERT INTO public.business_agents (
+      business_id, agent_id, status, plan_id, billing_period,
+      stripe_subscription_id, stripe_price_id, current_period_end,
+      activated_at, updated_at
+    ) VALUES (
+      ${params.businessId}, ${params.agentId}, ${mappedStatus}, ${params.planId}, ${params.billingPeriod},
+      ${params.subscriptionId}, ${params.priceId}, ${params.currentPeriodEnd},
+      CASE WHEN ${mappedStatus} IN ('active', 'trialing') THEN now() ELSE NULL END, now()
+    )
+    ON CONFLICT (business_id, agent_id) DO UPDATE SET
+      status = EXCLUDED.status,
+      plan_id = EXCLUDED.plan_id,
+      billing_period = EXCLUDED.billing_period,
+      stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, public.business_agents.stripe_subscription_id),
+      stripe_price_id = COALESCE(EXCLUDED.stripe_price_id, public.business_agents.stripe_price_id),
+      current_period_end = EXCLUDED.current_period_end,
       activated_at = CASE
-        WHEN ${mappedStatus} IN ('active', 'trialing') THEN COALESCE(activated_at, now())
-        ELSE activated_at
+        WHEN EXCLUDED.status IN ('active', 'trialing') THEN COALESCE(public.business_agents.activated_at, now())
+        ELSE public.business_agents.activated_at
       END,
       deactivated_at = CASE
-        WHEN ${mappedStatus} IN ('canceled', 'inactive', 'past_due') THEN now()
-        ELSE deactivated_at
+        WHEN EXCLUDED.status IN ('canceled', 'inactive', 'past_due') THEN now()
+        ELSE public.business_agents.deactivated_at
       END,
-      stripe_subscription_id = COALESCE(${params.subscriptionId}, stripe_subscription_id),
-      stripe_price_id = COALESCE(${params.priceId}, stripe_price_id),
-      current_period_end = ${params.currentPeriodEnd},
       updated_at = now()
-    WHERE business_id = ${params.businessId}
-      AND agent_id = ${params.agentId}
   `;
 }
 
-async function businessBelongsToUser(businessId: string, userId: string): Promise<boolean> {
-  const rows = await sql`
-    SELECT 1
-    FROM public.business_members
-    WHERE business_id = ${businessId}
-      AND user_id = ${userId}
-    LIMIT 1
+async function syncPlanAgents(params: {
+  businessId: string;
+  planId: PlanId;
+  billingPeriod: BillingPeriod;
+  status: string;
+  subscriptionId: string | null;
+  priceId: string | null;
+  currentPeriodEnd: string | null;
+}) {
+  const includedAgents = agentsForPlan(params.planId);
+  for (const agentId of ["review_replies", "review_booster"] as AgentId[]) {
+    await updateBusinessAgentFromSubscription({
+      ...params,
+      agentId,
+      status: includedAgents.includes(agentId) ? params.status : "inactive",
+    });
+  }
+}
+
+async function persistSubscription(params: {
+  subscription: Stripe.Subscription;
+  userId: string;
+}) {
+  const priceId = params.subscription.items.data[0]?.price?.id ?? null;
+  const currentPeriodEnd = periodEndFromSubscription(params.subscription);
+  await sql`
+    INSERT INTO public.subscriptions (id, user_id, status, price_id, current_period_end, updated_at)
+    VALUES (${params.subscription.id}, ${params.userId}, ${params.subscription.status}, ${priceId}, ${currentPeriodEnd}, now())
+    ON CONFLICT (id) DO UPDATE SET
+      user_id = EXCLUDED.user_id, status = EXCLUDED.status, price_id = EXCLUDED.price_id,
+      current_period_end = EXCLUDED.current_period_end, updated_at = now()
   `;
-  return rows.length > 0;
+  return { priceId, currentPeriodEnd };
 }
 
 export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
-  }
+  if (!webhookSecret) return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
-  if (!signature) {
-    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-  }
+  if (!signature) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
 
-  let event;
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
-  } catch (err: unknown) {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch {
     return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
   }
 
   try {
+    const inserted = await sql`
+      INSERT INTO public.stripe_events (id, type)
+      VALUES (${event.id}, ${event.type})
+      ON CONFLICT (id) DO NOTHING
+      RETURNING id
+    `;
+    if (!inserted.length) return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+
     switch (event.type) {
       case "checkout.session.completed": {
-        const sess = event.data.object as {
-          customer: string;
-          subscription: string;
-          metadata?: Record<string, string>;
-        };
-        const stripeCustomerId = sess.customer;
-        const subscriptionId = sess.subscription;
-
-        const mapRows = await sql`
-          SELECT user_id FROM public.user_billing
-          WHERE stripe_customer_id = ${stripeCustomerId}
-          LIMIT 1
-        `;
-        const mapping = mapRows[0] as { user_id: string } | undefined;
+        const session = event.data.object as Stripe.Checkout.Session;
+        const customerId = typeof session.customer === "string" ? session.customer : null;
+        const subscriptionId = typeof session.subscription === "string" ? session.subscription : null;
+        if (!customerId || !subscriptionId) break;
+        const mappingRows = await sql`SELECT user_id FROM public.user_billing WHERE stripe_customer_id = ${customerId} LIMIT 1`;
+        const mapping = mappingRows[0] as { user_id: string } | undefined;
         if (!mapping) break;
-
-        const user_id = mapping.user_id;
-
-        const subscription = (await stripe.subscriptions.retrieve(subscriptionId)) as {
-          items?: { data?: { price?: { id?: string } }[] };
-          current_period_end?: number;
-          status?: string;
-        };
-        const price_id = subscription.items?.data?.[0]?.price?.id ?? null;
-        const current_period_end = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
-          : null;
-        const status = subscription.status as string;
-        const agentId = sess.metadata?.agent_id ?? "starter_plan";
-        const businessId = await resolveBusinessId(sess.metadata, stripeCustomerId, user_id);
-
-        await sql`
-          INSERT INTO public.subscriptions (id, user_id, status, price_id, current_period_end, updated_at)
-          VALUES (${subscriptionId}, ${user_id}, ${status}, ${price_id}, ${current_period_end}, now())
-          ON CONFLICT (id) DO UPDATE SET
-            user_id = EXCLUDED.user_id,
-            status = EXCLUDED.status,
-            price_id = EXCLUDED.price_id,
-            current_period_end = EXCLUDED.current_period_end,
-            updated_at = now()
-        `;
-
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const priceId = subscription.items.data[0]?.price?.id ?? null;
+        const planId = planFromMetadata(session.metadata, priceId);
+        if (!planId) {
+          safeLogger.warn("stripe.webhook.plan_missing", { eventId: event.id, priceId });
+          break;
+        }
+        const currentPeriodEnd = periodEndFromSubscription(subscription);
+        await persistSubscription({ subscription, userId: mapping.user_id });
         await sql`
           UPDATE public.profiles
-          SET
-            plan_type = 'starter',
-            plan_status = ${status},
-            plan_current_period_end = ${current_period_end},
-            updated_at = now()
-          WHERE id = ${user_id}
+          SET plan_type = ${planId}, plan_status = ${subscription.status},
+              plan_current_period_end = ${currentPeriodEnd}, updated_at = now()
+          WHERE id = ${mapping.user_id}
         `;
-        if (businessId && SUPPORTED_AGENT_IDS.has(agentId) && (await businessBelongsToUser(businessId, user_id))) {
-          await updateBusinessAgentFromSubscription({
-            businessId,
-            agentId,
-            status,
-            subscriptionId,
-            priceId: price_id,
-            currentPeriodEnd: current_period_end,
-          });
+        const businessId = await resolveBusinessId(session.metadata, customerId, mapping.user_id);
+        if (businessId && await businessBelongsToUser(businessId, mapping.user_id)) {
+          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromMetadata(session.metadata), status: subscription.status, subscriptionId, priceId, currentPeriodEnd });
         }
         break;
       }
       case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
-        const sub = event.data.object as {
-          id: string;
-          customer: string;
-          metadata?: Record<string, string>;
-          items?: { data?: { price?: { id?: string } }[] };
-          current_period_end?: number;
-          status?: string;
-        };
-        const stripeCustomerId = sub.customer;
-
-        const mapRows = await sql`
-          SELECT user_id FROM public.user_billing
-          WHERE stripe_customer_id = ${stripeCustomerId}
-          LIMIT 1
-        `;
-        const mapping = mapRows[0] as { user_id: string } | undefined;
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = typeof subscription.customer === "string" ? subscription.customer : null;
+        if (!customerId) break;
+        const mappingRows = await sql`SELECT user_id FROM public.user_billing WHERE stripe_customer_id = ${customerId} LIMIT 1`;
+        const mapping = mappingRows[0] as { user_id: string } | undefined;
         if (!mapping) break;
-
-        const user_id = mapping.user_id;
-
-        const price_id = sub.items?.data?.[0]?.price?.id ?? null;
-        const current_period_end = sub.current_period_end
-          ? new Date(sub.current_period_end * 1000).toISOString()
-          : null;
-        const status = sub.status as string;
-        const agentId = sub.metadata?.agent_id ?? "starter_plan";
-        const businessId = await resolveBusinessId(sub.metadata, stripeCustomerId, user_id);
-
-        await sql`
-          INSERT INTO public.subscriptions (id, user_id, status, price_id, current_period_end, updated_at)
-          VALUES (${sub.id}, ${user_id}, ${status}, ${price_id}, ${current_period_end}, now())
-          ON CONFLICT (id) DO UPDATE SET
-            user_id = EXCLUDED.user_id,
-            status = EXCLUDED.status,
-            price_id = EXCLUDED.price_id,
-            current_period_end = EXCLUDED.current_period_end,
-            updated_at = now()
-        `;
-
-        const planType =
-          status === "canceled" || status === "unpaid" ? "free" : "starter";
-
+        const { priceId, currentPeriodEnd } = await persistSubscription({ subscription, userId: mapping.user_id });
+        const planId = planFromMetadata(subscription.metadata, priceId);
+        if (!planId) break;
+        const profilePlan = subscription.status === "canceled" || subscription.status === "unpaid" ? "free" : planId;
         await sql`
           UPDATE public.profiles
-          SET
-            plan_type = ${planType},
-            plan_status = ${status},
-            plan_current_period_end = ${current_period_end},
-            updated_at = now()
-          WHERE id = ${user_id}
+          SET plan_type = ${profilePlan}, plan_status = ${subscription.status},
+              plan_current_period_end = ${currentPeriodEnd}, updated_at = now()
+          WHERE id = ${mapping.user_id}
         `;
-        if (businessId && SUPPORTED_AGENT_IDS.has(agentId) && (await businessBelongsToUser(businessId, user_id))) {
-          await updateBusinessAgentFromSubscription({
-            businessId,
-            agentId,
-            status,
-            subscriptionId: sub.id,
-            priceId: price_id,
-            currentPeriodEnd: current_period_end,
-          });
+        const businessId = await resolveBusinessId(subscription.metadata, customerId, mapping.user_id);
+        if (businessId && await businessBelongsToUser(businessId, mapping.user_id)) {
+          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromMetadata(subscription.metadata), status: subscription.status, subscriptionId: subscription.id, priceId, currentPeriodEnd });
         }
         break;
       }
       case "invoice.payment_failed": {
-        const invoice = event.data.object as {
-          customer?: string;
-          subscription?: string | null;
-        };
-        const stripeCustomerId = invoice.customer ?? null;
-        const subscriptionId = invoice.subscription ?? null;
-        if (!stripeCustomerId || !subscriptionId) break;
-
-        const sub = (await stripe.subscriptions.retrieve(subscriptionId)) as {
-          metadata?: Record<string, string>;
-          items?: { data?: { price?: { id?: string } }[] };
-          current_period_end?: number;
-        };
-
-        const mapRows = await sql`
-          SELECT user_id FROM public.user_billing
-          WHERE stripe_customer_id = ${stripeCustomerId}
-          LIMIT 1
-        `;
-        const mapping = mapRows[0] as { user_id: string } | undefined;
-        const user_id = mapping?.user_id ?? null;
-        const businessId = await resolveBusinessId(sub.metadata, stripeCustomerId, user_id);
-        const agentId = sub.metadata?.agent_id ?? "starter_plan";
-        if (businessId && SUPPORTED_AGENT_IDS.has(agentId) && user_id && (await businessBelongsToUser(businessId, user_id))) {
-          await updateBusinessAgentFromSubscription({
-            businessId,
-            agentId,
-            status: "past_due",
-            subscriptionId,
-            priceId: sub.items?.data?.[0]?.price?.id ?? null,
-            currentPeriodEnd: sub.current_period_end
-              ? new Date(sub.current_period_end * 1000).toISOString()
-              : null,
-          });
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = typeof invoice.customer === "string" ? invoice.customer : null;
+        const subscriptionId = invoice.parent?.subscription_details?.subscription;
+        const resolvedSubscriptionId = typeof subscriptionId === "string" ? subscriptionId : null;
+        if (!customerId || !resolvedSubscriptionId) break;
+        const subscription = await stripe.subscriptions.retrieve(resolvedSubscriptionId);
+        const mappingRows = await sql`SELECT user_id FROM public.user_billing WHERE stripe_customer_id = ${customerId} LIMIT 1`;
+        const mapping = mappingRows[0] as { user_id: string } | undefined;
+        if (!mapping) break;
+        const priceId = subscription.items.data[0]?.price?.id ?? null;
+        const planId = planFromMetadata(subscription.metadata, priceId);
+        if (!planId) break;
+        const businessId = await resolveBusinessId(subscription.metadata, customerId, mapping.user_id);
+        if (businessId && await businessBelongsToUser(businessId, mapping.user_id)) {
+          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromMetadata(subscription.metadata), status: "past_due", subscriptionId: resolvedSubscriptionId, priceId, currentPeriodEnd: periodEndFromSubscription(subscription) });
         }
         break;
       }
       default:
         break;
     }
-  } catch (err: unknown) {
-    safeLogger.error("stripe.webhook.failed", {
-      eventType: event.type,
-      error: err instanceof Error ? err.message : "unknown",
-    });
+  } catch (error: unknown) {
+    safeLogger.error("stripe.webhook.failed", { eventType: event.type, error: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "Webhook handler error" }, { status: 500 });
   }
 

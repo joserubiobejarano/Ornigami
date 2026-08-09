@@ -4,16 +4,23 @@ import {
   hasSentMessageForVisit,
   listEligibleFollowupVisits,
   markVisitFailed,
-  markVisitSent
+  markVisitSent,
+  markVisitSkipped,
+  getReviewBoosterMonthlyUsage
 } from "@/modules/review-booster/services/review-booster-db.service";
 import { sendWithResend } from "@/modules/review-booster/services/resend.provider";
+import { buildReviewLinkUrl } from "@/lib/review-link-token";
 import { FollowupRunResult, FollowupVisit } from "@/modules/review-booster/types/followup.types";
+import { hasReachedMonthlyAllowance } from "@/modules/review-booster/services/fair-use";
+
+export const MAX_FOLLOWUPS_PER_RUN = 50;
 
 export type FollowupRunnerDependencies = {
   listEligibleVisits: () => Promise<FollowupVisit[]>;
   hasSentMessageForVisit: (visitId: string) => Promise<boolean>;
   markVisitSent: (visitId: string) => Promise<void>;
   markVisitFailed: (visitId: string, errorMessage: string) => Promise<void>;
+  markVisitSkipped: (visitId: string, reason: string) => Promise<void>;
   recordSentMessage: (input: {
     visitId: string;
     businessId: string;
@@ -28,15 +35,25 @@ export type FollowupRunnerDependencies = {
     body: string;
     errorMessage: string;
   }) => Promise<void>;
+  getMonthlyUsage: () => Promise<{ sent: number; allowance: number }>;
 };
 
 export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Promise<FollowupRunResult> {
-  const visits = await deps.listEligibleVisits();
+  const eligibleVisits = await deps.listEligibleVisits();
+  const visits = eligibleVisits.slice(0, MAX_FOLLOWUPS_PER_RUN);
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  const monthlyUsage = await deps.getMonthlyUsage();
+  const fairUseLimitReached = hasReachedMonthlyAllowance(monthlyUsage.sent, sent, monthlyUsage.allowance);
 
   for (const visit of visits) {
+    if (fairUseLimitReached) {
+      await deps.markVisitSkipped(visit.id, "fair_use_limit");
+      skipped += 1;
+      continue;
+    }
+
     const alreadySent = await deps.hasSentMessageForVisit(visit.id);
     if (alreadySent) {
       skipped += 1;
@@ -50,14 +67,14 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       await deps.recordFailedMessage({
         visitId: visit.id,
         businessId: visit.business_id,
-        subject: buildSubject(visit.business_name || "your business"),
+        subject: buildSubject(visit.business_name || "your business", visit.language),
         body: "",
         errorMessage: missingUrlError
       });
       continue;
     }
 
-    const subject = buildSubject(visit.business_name || "your business");
+    const subject = buildSubject(visit.business_name || "your business", visit.language);
     const body = await generateFollowupEmailBody({
       business_name: visit.business_name || "Your Business",
       business_type: visit.business_type,
@@ -70,6 +87,7 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
     });
 
     try {
+      const reviewLinkUrl = buildReviewLinkUrl({ businessId: visit.business_id, visitId: visit.id, reviewUrl: visit.google_review_url });
       const providerMessageId = await sendWithResend({
         business_id: visit.business_id,
         email_from_name: visit.email_from_name,
@@ -77,7 +95,8 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
         customer_email: String(visit.customer_email || ""),
         subject,
         body,
-        google_review_url: visit.google_review_url
+        google_review_url: visit.google_review_url,
+        review_link_url: reviewLinkUrl
       });
 
       await deps.recordSentMessage({
@@ -119,6 +138,8 @@ export function createFollowupRunnerDependencies(businessId: string): FollowupRu
     hasSentMessageForVisit,
     markVisitSent,
     markVisitFailed,
+    markVisitSkipped,
+    getMonthlyUsage: () => getReviewBoosterMonthlyUsage(businessId),
     recordSentMessage: async (input) => {
       await createFollowupMessage({
         visitId: input.visitId,

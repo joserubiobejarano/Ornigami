@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AGENT_REGISTRY } from "@/lib/agents/registry";
 import { cn } from "@/lib/utils";
@@ -14,11 +14,8 @@ function isActivePath(pathname: string, href: string) {
 export function DashboardSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const isInAgents = isActivePath(pathname, "/dashboard/agents");
-  const [agentsOpen, setAgentsOpen] = useState(isInAgents);
-
-  useEffect(() => {
-    if (isInAgents) setAgentsOpen(true);
-  }, [isInAgents]);
+  const [agentsOpenOverride, setAgentsOpenOverride] = useState<boolean | null>(null);
+  const agentsOpen = agentsOpenOverride ?? isInAgents;
 
   const agents = useMemo(
     () =>
@@ -47,7 +44,7 @@ export function DashboardSidebar({ className }: { className?: string }) {
         <div>
           <button
             type="button"
-            onClick={() => setAgentsOpen((prev) => !prev)}
+            onClick={() => setAgentsOpenOverride((prev) => !(prev ?? isInAgents))}
             className={cn(
               "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
               isInAgents ? "bg-muted text-foreground shadow-sm" : "text-foreground hover:bg-muted/60"

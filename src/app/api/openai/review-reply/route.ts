@@ -137,7 +137,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ reply: mockReply });
   }
 
-  // Sample-review test mode: no auth, no GBP/location/plan required; validate payload only
+  // Sample generation is still an authenticated product capability; the client hint cannot bypass access checks.
+  const sampleUser = await resolveUser(req);
+  if (!sampleUser) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Sample-review test mode: validate payload only
   if (isSampleRequest) {
     const parsed = RequestSchema.safeParse(rawBody);
     if (!parsed.success) {

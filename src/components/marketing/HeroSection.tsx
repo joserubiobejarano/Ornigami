@@ -28,7 +28,7 @@ export function HeroSection() {
             <div className="w-8 h-8 bg-gradient-to-br from-[#6366F1] to-[#4F46E5] rounded-lg flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="text-[#111827] font-semibold">LocalLift</span>
+            <span className="text-[#111827] font-semibold">Ornigami</span>
           </div>
 
           {/* Nav buttons */}
@@ -75,7 +75,7 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-lg md:text-xl text-[#111827]/70 mb-8 max-w-2xl mx-auto"
           >
-            LocalLift watches your Google Business Profile 24/7, replies to reviews in your tone, writes local SEO content, and tells you what to fix on your profile so more people choose you over the competitors down the street.
+            Ornigami helps you manage Google reviews with on-brand drafts, customer follow-ups, and clear profile-audit recommendations.
           </motion.p>
 
           {/* CTA buttons */}

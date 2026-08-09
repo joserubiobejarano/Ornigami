@@ -1,12 +1,14 @@
 import Link from "next/link";
 
 import { DashboardPage } from "@/components/dashboard";
+import { ActivationChecklist, type ActivationChecklistStep } from "@/components/dashboard/activation-checklist";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AGENT_REGISTRY } from "@/lib/agents/registry";
 import { requireUser } from "@/lib/auth";
 import { getBusinessAgents, getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { userHasGbpConnection } from "@/lib/db/gbp";
 import { sql } from "@/lib/db/neon";
 
 export default async function DashboardPageRoute() {
@@ -22,6 +24,7 @@ export default async function DashboardPageRoute() {
 
   let businessName: string | null = null;
   let agentStatusById = new Map<string, string>();
+  let activationSteps: ActivationChecklistStep[] = [];
   try {
     let business;
     try {
@@ -37,6 +40,51 @@ export default async function DashboardPageRoute() {
     businessName = business.name;
     const businessAgents = await getBusinessAgents(business.id);
     agentStatusById = new Map(businessAgents.map((row) => [row.agent_id, row.status]));
+    const hasBooster = ["active", "trialing"].includes(agentStatusById.get("review_booster") ?? "");
+    const hasReplies = ["active", "trialing"].includes(agentStatusById.get("review_replies") ?? "");
+    const visitRows = hasBooster
+      ? await sql`SELECT count(*)::int AS count FROM public.followup_visits WHERE business_id = ${business.id}`
+      : [];
+    const hasVisits = Number((visitRows[0] as { count?: number } | undefined)?.count ?? 0) > 0;
+    const hasGbp = hasReplies ? await userHasGbpConnection(canonicalUserId) : true;
+    if (hasBooster || hasReplies) {
+      activationSteps = [
+        {
+          label: "Activate an agent",
+          description: "Your subscription is active and ready to use.",
+          complete: hasBooster || hasReplies,
+        },
+        ...(hasBooster
+          ? [
+              {
+                label: "Add your review link",
+                description: "Tell Review Booster where customers should leave their review.",
+                complete: Boolean(business.google_review_url),
+                href: "/dashboard/agents/review-booster/settings",
+                actionLabel: "Add link",
+              },
+              {
+                label: "Add your first visit",
+                description: "Create or upload a visit so the follow-up workflow can begin.",
+                complete: hasVisits,
+                href: "/dashboard/agents/review-booster/new",
+                actionLabel: "Add visit",
+              },
+            ]
+          : []),
+        ...(hasReplies
+          ? [
+              {
+                label: "Connect Google Business Profile",
+                description: "Connect your profile so Review Replies can sync and draft replies.",
+                complete: hasGbp,
+                href: "/connect",
+                actionLabel: "Connect",
+              },
+            ]
+          : []),
+      ];
+    }
   } catch {
     // Keep dashboard functional for legacy/misaligned sessions.
   }
@@ -83,9 +131,7 @@ export default async function DashboardPageRoute() {
                   </Button>
                 ) : canOpen ? (
                   <Button asChild className="bg-[#0f172b] text-white hover:opacity-90">
-                    <Link href={agent.basePath}>
-                      Open agent
-                    </Link>
+                    <Link href={agent.basePath}>Open agent</Link>
                   </Button>
                 ) : (
                   <form action="/api/stripe/checkout" method="post">
@@ -100,6 +146,8 @@ export default async function DashboardPageRoute() {
           );
         })}
       </div>
+
+      <ActivationChecklist steps={activationSteps} />
 
       <div>
         <Button asChild className="bg-[#0f172b] text-white hover:opacity-90">

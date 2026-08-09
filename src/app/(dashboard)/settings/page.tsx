@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
@@ -249,8 +249,8 @@ function SettingsPageContent() {
       setAutoReplyAllReviews(next);
       toast.success(
         next
-          ? "Auto-reply on , new replies will post to Google after sync or when you generate."
-          : "Auto-reply off , replies are saved as drafts."
+          ? "Auto-reply on — new replies will post to Google after sync or when you generate."
+          : "Auto-reply off — replies are saved as drafts."
       );
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Could not update auto-reply");
@@ -418,7 +418,7 @@ function SettingsPageContent() {
           {!connLoading && !gbpConnected && (
             <div className="space-y-4">
               <p className="text-sm leading-relaxed text-foreground">
-                Sync your locations and reviews so LocalLift can help you reply on Google Business
+                Sync your locations and reviews so Ornigami can help you reply on Google Business
                 Profile.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -498,8 +498,8 @@ function SettingsPageContent() {
               <p className="text-sm font-medium text-foreground">Automatic posting</p>
               <p className="text-xs text-foreground">
                 {autoReplyAllReviews
-                  ? "ON , replies publish to GBP when generated or after sync."
-                  : "OFF , replies are stored as drafts only."}
+                  ? "ON — replies publish to GBP when generated or after sync."
+                  : "OFF — replies are stored as drafts only."}
               </p>
             </div>
             <Switch

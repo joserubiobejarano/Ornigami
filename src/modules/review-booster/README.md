@@ -71,7 +71,7 @@ Required values:
 
 - `agent_id = review_booster`
 - `status in ('active', 'trialing')` for user-facing access
-- `status = 'active'` for the cron route's business scan
+- `status in ('active', 'trialing')` for the cron route's business scan
 
 ## Data dependencies
 
@@ -81,6 +81,10 @@ Review Booster depends on these migration steps:
 - `004_review_booster_tables.sql`
 - `005_business_agent_billing_fields.sql`
 - `007_review_booster_unsubscribes.sql`
+- `009_review_booster_error_reason.sql`
+- `010_review_booster_retries.sql`
+- `011_review_link_clicks.sql`
+- `012_cron_runs.sql`
 
 ## Important implementation notes
 
@@ -104,14 +108,16 @@ Current CSV expectations:
 - expected columns are `customer_name`, `customer_email`, `service_received` or `service_name`, and `visited_at`
 - duplicate CSV rows are skipped
 
-### Current gap: timing rule mismatch
+### Current send eligibility
 
-The upload page explains a review-request timing window, but the current send query does not enforce that window. The actual runner currently processes pending visits that have:
+The runner enforces the review-request timing and suppression rules. A visit is eligible when it has:
 
-- `followup_status = 'pending'`
+- `followup_status = 'pending'`, or a retryable failure with fewer than three attempts
 - no previous sent message
-- customer email present
+- customer email present and not unsubscribed
 - business review URL present
+- `visited_at` between 23 hours and seven days ago
+- retry backoff elapsed when retrying a failed send
 
 ## Why this module matters
 

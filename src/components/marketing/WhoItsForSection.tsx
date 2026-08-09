@@ -47,7 +47,7 @@ export function WhoItsForSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg text-[#111827]/70 max-w-2xl mx-auto"
           >
-            If customers find you on Google Maps, LocalLift can help you.
+            If customers find you on Google Maps, Ornigami can help you.
           </motion.p>
         </div>
 
