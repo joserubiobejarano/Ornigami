@@ -9,6 +9,13 @@ This folder is the database source of truth for the application.
 3. `003_business_foundation.sql`
 4. `004_review_booster_tables.sql`
 5. `005_business_agent_billing_fields.sql`
+6. `006_public_demo_events.sql`
+7. `007_review_booster_unsubscribes.sql`
+8. `008_pricing_plans.sql`
+9. `009_review_booster_error_reason.sql`
+10. `010_review_booster_retries.sql`
+11. `011_review_link_clicks.sql`
+12. `012_cron_runs.sql`
 
 ## What each migration adds
 
@@ -19,6 +26,13 @@ This folder is the database source of truth for the application.
 | `003_business_foundation.sql` | Adds the business ownership model: `businesses`, `business_members`, and `business_agents`. |
 | `004_review_booster_tables.sql` | Adds Review Booster tables: visits, messages, and integration events. |
 | `005_business_agent_billing_fields.sql` | Adds Stripe linkage and billing-period fields used for business-agent activation. |
+| `006_public_demo_events.sql` | Adds durable rate-limit tracking for public demo actions. |
+| `007_review_booster_unsubscribes.sql` | Adds unsubscribe tokens and suppression records for Review Booster recipients. |
+| `008_pricing_plans.sql` | Adds pricing-plan fields and Stripe webhook idempotency events. |
+| `009_review_booster_error_reason.sql` | Adds persisted Review Booster processing error reasons. |
+| `010_review_booster_retries.sql` | Adds bounded retry state for failed Review Booster messages. |
+| `011_review_link_clicks.sql` | Adds review-link click attribution tracking. |
+| `012_cron_runs.sql` | Adds durable execution history for scheduled jobs. |
 
 ## Current database strategy
 

@@ -237,6 +237,8 @@ export async function POST(req: NextRequest) {
         break;
     }
   } catch (error: unknown) {
+    // Roll back the idempotency marker so Stripe's automatic retry re-processes this event.
+    await sql`DELETE FROM public.stripe_events WHERE id = ${event.id}`.catch(() => {});
     safeLogger.error("stripe.webhook.failed", { eventType: event.type, error: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "Webhook handler error" }, { status: 500 });
   }
