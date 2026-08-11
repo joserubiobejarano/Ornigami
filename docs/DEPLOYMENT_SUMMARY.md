@@ -52,6 +52,14 @@ Apply these migrations in order:
 3. `003_business_foundation.sql`
 4. `004_review_booster_tables.sql`
 5. `005_business_agent_billing_fields.sql`
+6. `006_public_demo_events.sql`
+7. `007_review_booster_unsubscribes.sql`
+8. `008_pricing_plans.sql`
+9. `009_review_booster_error_reason.sql`
+10. `010_review_booster_retries.sql`
+11. `011_review_link_clicks.sql`
+12. `012_cron_runs.sql`
+13. `013_review_business_tenancy.sql`
 
 ## Operational notes
 

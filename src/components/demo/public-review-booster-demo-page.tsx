@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,23 +144,6 @@ export function PublicReviewBoosterDemoPage() {
                 <Input id="recipient_email" type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} required maxLength={254} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="business_type">Business type</Label>
-                <select id="business_type" className={nativeSelectClassName} value={businessType} onChange={(e) => setBusinessType(e.target.value)}>
-                  <option value="">Select (optional)</option>
-                  {BUSINESS_TYPES.map((item) => (
-                    <option key={item} value={item}>{item}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={80} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer_name">Customer name</Label>
-                <Input id="customer_name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} maxLength={80} />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="tone">Tone</Label>
                 <select id="tone" className={nativeSelectClassName} value={tone} onChange={(e) => setTone(e.target.value as (typeof TONES)[number])}>
                   {TONES.map((item) => (
@@ -167,11 +151,36 @@ export function PublicReviewBoosterDemoPage() {
                   ))}
                 </select>
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="google_review_url">Google review URL</Label>
-                <Input id="google_review_url" type="url" value={googleReviewUrl} onChange={(e) => setGoogleReviewUrl(e.target.value)} maxLength={500} />
-              </div>
             </div>
+
+            <details className="rounded-md border border-slate-200 px-4 py-3">
+              <summary className="cursor-pointer text-sm font-medium text-slate-700">
+                Personalize further (optional)
+              </summary>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="business_type">Business type</Label>
+                  <select id="business_type" className={nativeSelectClassName} value={businessType} onChange={(e) => setBusinessType(e.target.value)}>
+                    <option value="">Select (optional)</option>
+                    {BUSINESS_TYPES.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={80} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customer_name">Customer name</Label>
+                  <Input id="customer_name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} maxLength={80} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="google_review_url">Google review URL</Label>
+                  <Input id="google_review_url" type="url" value={googleReviewUrl} onChange={(e) => setGoogleReviewUrl(e.target.value)} maxLength={500} />
+                </div>
+              </div>
+            </details>
 
             <Button type="submit" disabled={loading}>
               {loading ? "Sending..." : "Send me a sample follow-up email"}
@@ -185,7 +194,7 @@ export function PublicReviewBoosterDemoPage() {
               <CardHeader>
                 <CardTitle className="text-base">Demo email sent</CardTitle>
                 <CardDescription>
-                  Preview shown below. This is a demo email.
+                  Check your inbox for the real sample. Here is a styled preview of what customers receive.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -195,7 +204,22 @@ export function PublicReviewBoosterDemoPage() {
                 </div>
                 <div>
                   <p className="text-xs uppercase text-slate-500">Body</p>
-                  <pre className="whitespace-pre-wrap rounded border bg-white p-3 text-sm">{result.body}</pre>
+                  <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-700 shadow-sm">
+                    <div className="mb-4 border-b border-slate-100 pb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      A note from your business
+                    </div>
+                    <div className="whitespace-pre-wrap">{result.body}</div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="font-semibold text-emerald-950">This is one email. The real product runs the loop automatically.</p>
+                  <p className="mt-1 text-sm text-emerald-900">
+                    Visit recorded → follow-up timed → customer chooses whether to review → results tracked in your dashboard.
+                  </p>
+                  <Button asChild className="mt-4">
+                    <Link href="/signup">Start your 14-day trial</Link>
+                  </Button>
+                  <p className="mt-2 text-xs text-emerald-800">Card required at checkout. Cancel anytime.</p>
                 </div>
               </CardContent>
             </Card>

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import { resolveUser } from "@/lib/user-from-req";
+import { getBusinessForUser } from "@/lib/db/businesses";
 
 import { postReplyToGoogleAndPersist } from "@/lib/review-reply-server";
 import { canUseReviewAutomation } from "@/lib/plan";
@@ -38,7 +39,9 @@ export async function POST(req: NextRequest) {
   try {
     const email = "email" in user ? user.email : null;
     await requireActiveAgentAccess(user.id, email, "review_replies");
-    const result = await postReplyToGoogleAndPersist(user.id, reviewId, locationName, reply);
+    const business = await getBusinessForUser(user.id);
+    if (!business) return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
+    const result = await postReplyToGoogleAndPersist(user.id, business.id, reviewId, locationName, reply);
 
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status ?? 502 });

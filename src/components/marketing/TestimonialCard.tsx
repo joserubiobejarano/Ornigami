@@ -24,7 +24,7 @@ export function TestimonialCard({ business, role, location, name, text, color }:
         <div className="text-xs text-slate-200/90 sm:text-sm">
           <p className="font-semibold text-slate-50">{name}</p>
           <p>
-            {role} Â· {location}
+            {role} · {location}
           </p>
         </div>
       </div>

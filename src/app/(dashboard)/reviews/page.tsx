@@ -524,7 +524,7 @@ function ReviewsPageContent() {
 
       {loading && reviews.length === 0 && (
         <div className="rounded-xl border border-border bg-card px-6 py-12 text-center text-sm text-foreground shadow-sm">
-          <p>Loading reviewsâ€¦</p>
+          <p>Loading reviews…</p>
         </div>
       )}
 

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// â”€â”€â”€ DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── DATA ────────────────────────────────────────────────────────────────────
 
 const agents = [
   {
@@ -104,7 +104,7 @@ const faqs = [
   },
 ];
 
-// â”€â”€â”€ HERO MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── HERO MOCKUP ─────────────────────────────────────────────────────────────
 
 function ReviewInboxMockup() {
   return (
@@ -170,7 +170,7 @@ function ReviewInboxMockup() {
                 </div>
                 {review.replied ? (
                   <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                    âœ“ Sent
+                    ✓ Sent
                   </span>
                 ) : (
                   <button className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold text-white">
@@ -204,7 +204,7 @@ function ReviewInboxMockup() {
   );
 }
 
-// â”€â”€â”€ FEATURE MOCKUPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FEATURE MOCKUPS ─────────────────────────────────────────────────────────
 
 function ReviewRepliesMockup() {
   return (
@@ -219,7 +219,7 @@ function ReviewRepliesMockup() {
           <span className="ml-1 text-xs text-slate-400">Review Inbox</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-          â. 12 new
+          �.� 12 new
         </span>
       </div>
 
@@ -243,7 +243,7 @@ function ReviewRepliesMockup() {
               </button>
             </div>
             <div className="mt-2 rounded-lg border border-purple-500/20 bg-purple-500/10 px-2.5 py-1.5">
-              <p className="mb-1 text-[10px] font-medium text-purple-400">AI reply ready â†’</p>
+              <p className="mb-1 text-[10px] font-medium text-purple-400">AI reply ready →</p>
               <div className="h-1.5 w-full rounded-full bg-purple-500/25" />
               <div className="mt-1 h-1.5 w-2/3 rounded-full bg-purple-500/15" />
             </div>
@@ -274,7 +274,7 @@ function ReviewBoosterMockup() {
           <span className="ml-1 text-xs text-slate-400">Review Booster</span>
         </div>
         <button className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold text-white">
-          â–¶ Run campaign
+          ▶ Run campaign
         </button>
       </div>
 
@@ -326,7 +326,7 @@ function ReviewBoosterMockup() {
   );
 }
 
-// â”€â”€â”€ FAQ ITEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FAQ ITEM ─────────────────────────────────────────────────────────────────
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -358,14 +358,14 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PAGE ────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         {/* Background blobs */}
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-purple-100/60 blur-3xl" />
@@ -462,7 +462,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ AGENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── AGENTS ────────────────────────────────────────────────────────── */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -526,7 +526,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -570,7 +570,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ FEATURE SHOWCASE (dark band) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FEATURE SHOWCASE (dark band) ──────────────────────────────────── */}
       <section className="bg-slate-950 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
 
@@ -683,7 +683,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ TESTIMONIALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -730,7 +730,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ FAQ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FAQ ───────────────────────────────────────────────────────────── */}
       <section className="bg-slate-950 py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -762,7 +762,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€ FINAL CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FINAL CTA ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-white py-24">
         <div className="pointer-events-none absolute inset-0 bg-slate-100" />
         <motion.div

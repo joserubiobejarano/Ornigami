@@ -183,6 +183,12 @@ neon/migrations/004_review_booster_tables.sql
 neon/migrations/005_business_agent_billing_fields.sql
 neon/migrations/006_public_demo_events.sql
 neon/migrations/007_review_booster_unsubscribes.sql
+neon/migrations/008_pricing_plans.sql
+neon/migrations/009_review_booster_error_reason.sql
+neon/migrations/010_review_booster_retries.sql
+neon/migrations/011_review_link_clicks.sql
+neon/migrations/012_cron_runs.sql
+neon/migrations/013_review_business_tenancy.sql
 ```
 
 4. Start the app.

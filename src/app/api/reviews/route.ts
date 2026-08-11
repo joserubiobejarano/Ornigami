@@ -4,11 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
+import { getBusinessForUser } from "@/lib/db/businesses";
 
 export async function GET(req: NextRequest) {
   const user = await resolveUser(req);
 
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const business = await getBusinessForUser(user.id);
+  if (!business) return NextResponse.json({ items: [] });
 
   const loc = new URL(req.url).searchParams.get("loc");
 
@@ -31,7 +35,7 @@ export async function GET(req: NextRequest) {
       ORDER BY rr.updated_at DESC NULLS LAST, rr.created_at DESC
       LIMIT 1
     ) draft ON true
-    WHERE r.user_id = ${user.id}
+    WHERE r.business_id = ${business.id}
       AND r.location_name = ${loc}
     ORDER BY r.review_update_time DESC NULLS LAST
     LIMIT 100

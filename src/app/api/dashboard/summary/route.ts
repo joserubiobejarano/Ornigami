@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
+import { getBusinessForUser } from "@/lib/db/businesses";
 import { safeLogger } from "@/lib/safe-logger";
 
 export async function GET(req: Request) {
@@ -19,9 +20,10 @@ export async function GET(req: Request) {
     const [projectsRow] = await sql`
       SELECT count(*)::int AS c FROM public.projects WHERE user_id = ${user.id}
     `;
-    const [reviewsRow] = await sql`
-      SELECT count(*)::int AS c FROM public.reviews WHERE user_id = ${user.id}
-    `;
+    const business = await getBusinessForUser(user.id);
+    const [reviewsRow] = business
+      ? await sql`SELECT count(*)::int AS c FROM public.reviews WHERE business_id = ${business.id}`
+      : [{ c: 0 }];
     const [locationsRow] = await sql`
       SELECT count(*)::int AS c FROM public.gbp_locations WHERE user_id = ${user.id}
     `;

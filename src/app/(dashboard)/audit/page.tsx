@@ -339,7 +339,7 @@ function AuditPageContent() {
 
         {/* Results section */}
         {loading && (
-          <div className="text-foreground">Generating reportâ€¦</div>
+          <div className="text-foreground">Generating report…</div>
         )}
 
         {error && (
@@ -385,7 +385,7 @@ export default function AuditPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold mb-2">Legacy profile report</h1>
-          <p className="text-foreground">Loadingâ€¦</p>
+          <p className="text-foreground">Loading…</p>
         </div>
         <div className="text-foreground">Loading...</div>
       </div>

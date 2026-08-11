@@ -14,6 +14,20 @@ export default function DemoLandingPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-emerald-300 bg-emerald-50/40">
+          <CardHeader>
+            <CardTitle>Review Booster Demo</CardTitle>
+            <CardDescription>
+              Send yourself a sample post-visit review request email and see the customer experience.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/demo/review-booster">Try Review Booster demo</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Review Replies Demo</CardTitle>
@@ -24,20 +38,6 @@ export default function DemoLandingPage() {
           <CardContent>
             <Button asChild>
               <Link href="/demo/review-replies">Try Review Replies demo</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Review Booster Demo</CardTitle>
-            <CardDescription>
-              Send yourself a sample post-visit review request email.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/demo/review-booster">Try Review Booster demo</Link>
             </Button>
           </CardContent>
         </Card>

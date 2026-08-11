@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// â”€â”€â”€ MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MOCKUP ──────────────────────────────────────────────────────────────────
 
 function ContentMockup() {
   return (
@@ -58,7 +58,7 @@ function ContentMockup() {
             <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
             <span className="text-[11px] font-semibold text-emerald-400">Generated for you</span>
           </div>
-          <span className="text-[10px] text-slate-500">Madrid Â· Italian restaurant</span>
+          <span className="text-[10px] text-slate-500">Madrid · Italian restaurant</span>
         </div>
 
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
@@ -90,7 +90,7 @@ function ContentMockup() {
           {[
             { type: "GBP Post", idea: "Weekend pasta special — limited spots", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
             { type: "FAQ", idea: "Do you offer gluten-free options?", color: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
-            { type: "Blog", idea: "The best places for a date night in MalasaÃ±a", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+            { type: "Blog", idea: "The best places for a date night in Malasaña", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
           ].map((item) => (
             <div key={item.idea} className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 ${item.color}`}>
               <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${item.color}`}>
@@ -98,7 +98,7 @@ function ContentMockup() {
               </span>
               <span className="truncate text-[11px] text-slate-300">{item.idea}</span>
               <button className="ml-auto shrink-0 text-[10px] text-slate-500 hover:text-slate-300">
-                Generate â†’
+                Generate →
               </button>
             </div>
           ))}
@@ -108,7 +108,7 @@ function ContentMockup() {
   );
 }
 
-// â”€â”€â”€ AUDIT MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── AUDIT MOCKUP ─────────────────────────────────────────────────────────────
 
 function AuditMockup() {
   const checks = [
@@ -150,13 +150,13 @@ function AuditMockup() {
         ))}
       </div>
       <div className="border-t border-slate-100 bg-emerald-50 px-4 py-3">
-        <p className="text-xs text-emerald-700 font-medium">3 issues found Â· Fix them to improve your ranking</p>
+        <p className="text-xs text-emerald-700 font-medium">3 issues found · Fix them to improve your ranking</p>
       </div>
     </div>
   );
 }
 
-// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PAGE ────────────────────────────────────────────────────────────────────
 
 const features = [
   {
@@ -226,7 +226,7 @@ export default function LocalSeoPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-emerald-100/60 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-teal-100/40 blur-3xl" />
@@ -313,7 +313,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FEATURES ──────────────────────────────────────────────────────── */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -350,7 +350,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* â”€â”€ AUDIT SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── AUDIT SECTION ─────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
@@ -402,7 +402,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -441,7 +441,7 @@ export default function LocalSeoPage() {
         </div>
       </section>
 
-      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-slate-950 py-24">
         <div className="pointer-events-none absolute inset-0 bg-slate-900/20" />
         <motion.div
@@ -472,7 +472,7 @@ export default function LocalSeoPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of Ornigami Â· from €39/month Â· 14-day free trial
+            Part of Ornigami · from €39/month · 14-day free trial
           </p>
         </motion.div>
       </section>

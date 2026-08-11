@@ -34,13 +34,13 @@ export function buildReviewReplyInputFromRow(
 
 /** Replace any existing unposted draft for this review, then insert one row. */
 export async function saveReplyDraft(
-  userId: string,
+  businessId: string,
   googleReviewId: string,
   markdown: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const reviewRows = await sql`
     SELECT id FROM public.reviews
-    WHERE user_id = ${userId}
+    WHERE business_id = ${businessId}
       AND google_review_id = ${googleReviewId}
     LIMIT 1
   `;
@@ -51,16 +51,17 @@ export async function saveReplyDraft(
 
   await sql`
     DELETE FROM public.review_replies
-    WHERE user_id = ${userId}
+    WHERE business_id = ${businessId}
       AND review_id = ${review.id}
       AND posted = false
   `;
 
   await sql`
     INSERT INTO public.review_replies (
-      user_id, review_id, draft_markdown, posted, posted_at
+      user_id, business_id, review_id, draft_markdown, posted, posted_at
     ) VALUES (
-      ${userId},
+      (SELECT owner_user_id FROM public.businesses WHERE id = ${businessId}),
+      ${businessId},
       ${review.id},
       ${markdown},
       false,
@@ -76,13 +77,13 @@ export async function saveReplyDraft(
  * Used for MVP auto-reply simulation after sync; mirrors the persist step of real posting.
  */
 export async function persistReplyPostedLocally(
-  userId: string,
+  businessId: string,
   googleReviewId: string,
   reply: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const reviewRows = await sql`
     SELECT id FROM public.reviews
-    WHERE user_id = ${userId}
+    WHERE business_id = ${businessId}
       AND google_review_id = ${googleReviewId}
     LIMIT 1
   `;
@@ -94,16 +95,17 @@ export async function persistReplyPostedLocally(
 
   await sql`
     DELETE FROM public.review_replies
-    WHERE user_id = ${userId}
+    WHERE business_id = ${businessId}
       AND review_id = ${review.id}
       AND posted = false
   `;
 
   await sql`
     INSERT INTO public.review_replies (
-      user_id, review_id, draft_markdown, posted, posted_at
+      user_id, business_id, review_id, draft_markdown, posted, posted_at
     ) VALUES (
-      ${userId},
+      (SELECT owner_user_id FROM public.businesses WHERE id = ${businessId}),
+      ${businessId},
       ${review.id},
       ${reply},
       true,
@@ -127,6 +129,7 @@ export async function persistReplyPostedLocally(
 /** Post reply to Google GBP and persist posted state (same behavior as /api/google/replies). */
 export async function postReplyToGoogleAndPersist(
   userId: string,
+  businessId: string,
   googleReviewId: string,
   locationName: string,
   reply: string
@@ -144,7 +147,7 @@ export async function postReplyToGoogleAndPersist(
     return { ok: false, error: t, status: r.status };
   }
 
-  const persist = await persistReplyPostedLocally(userId, googleReviewId, reply);
+  const persist = await persistReplyPostedLocally(businessId, googleReviewId, reply);
   if (!persist.ok) {
     // Google accepted the reply but local row missing — still report success to match prior behavior
   }

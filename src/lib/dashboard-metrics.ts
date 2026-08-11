@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { sql } from "@/lib/db/neon";
+import { getBusinessForUser } from "@/lib/db/businesses";
 
 export type DashboardMetrics = {
   /** @deprecated kept for backward compatibility; use review-centric fields below */
@@ -79,27 +80,29 @@ export async function getDashboardMetrics(isDemo: boolean = false): Promise<Dash
     if (!userId) {
       return zeroedMetrics();
     }
+    const business = await getBusinessForUser(userId);
+    if (!business) return zeroedMetrics();
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
 
     const [totalReviewsRow] = await sql`
-      SELECT count(*)::int AS c FROM public.reviews WHERE user_id = ${userId}
+      SELECT count(*)::int AS c FROM public.reviews WHERE business_id = ${business.id}
     `;
     const [unansweredRow] = await sql`
       SELECT count(*)::int AS c FROM public.reviews
-      WHERE user_id = ${userId}
+      WHERE business_id = ${business.id}
         AND (status IS NULL OR lower(status) <> 'replied')
     `;
     const [draftsRow] = await sql`
       SELECT count(*)::int AS c FROM public.review_replies
-      WHERE user_id = ${userId}
+      WHERE business_id = ${business.id}
         AND posted = false
     `;
     const [reviewsCountRow] = await sql`
       SELECT count(*)::int AS c FROM public.reviews
-      WHERE user_id = ${userId}
+      WHERE business_id = ${business.id}
         AND status = 'replied'
         AND updated_at >= ${startOfMonth}
         AND updated_at < ${endOfMonth}

@@ -11,6 +11,14 @@ Apply migrations in this exact order:
 3. `003_business_foundation.sql`
 4. `004_review_booster_tables.sql`
 5. `005_business_agent_billing_fields.sql`
+6. `006_public_demo_events.sql`
+7. `007_review_booster_unsubscribes.sql`
+8. `008_pricing_plans.sql`
+9. `009_review_booster_error_reason.sql`
+10. `010_review_booster_retries.sql`
+11. `011_review_link_clicks.sql`
+12. `012_cron_runs.sql`
+13. `013_review_business_tenancy.sql`
 
 ## Main schema areas
 
@@ -75,6 +83,13 @@ Purpose:
 - completed customer visit records
 - sent and failed email records
 - external event dedupe/logging support
+
+### Review tenancy
+
+- `reviews.business_id` is the canonical ownership key shared with Review Booster.
+- `review_replies.business_id` follows the owning review's business.
+- The legacy `user_id` columns remain temporarily for compatibility, but application reads and writes use `business_id`.
+- Migration `013_review_business_tenancy.sql` backfills existing rows from the owner's earliest business and enforces non-null business ownership.
 
 ### Legacy or supporting domain tables
 

@@ -358,7 +358,7 @@ export default function ContentPage() {
             </ReactMarkdown>
           ) : (
             <p className="text-foreground">
-              Your generated Markdown will appear hereâ€¦
+              Your generated Markdown will appear here…
             </p>
           )}
         </div>

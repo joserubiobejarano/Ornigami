@@ -104,7 +104,7 @@ export function ReviewList({
                   </div>
                   <p className="mt-0.5 text-sm text-foreground truncate">
                     {preview}
-                    {preview.length >= 80 ? "â€¦" : ""}
+                    {preview.length >= 80 ? "…" : ""}
                   </p>
                 </div>
                 <span className="text-xs text-foreground shrink-0">Click to expand</span>

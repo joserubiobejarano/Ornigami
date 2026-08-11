@@ -12,6 +12,7 @@ import { requireActiveAgentAccess } from "@/lib/api-security";
 import { safeLogger } from "@/lib/safe-logger";
 import { parseGoogleStarRating } from "@/lib/google-review-rating";
 import { sendNewReviewAlert } from "@/lib/review-alerts";
+import { getBusinessForUser } from "@/lib/db/businesses";
 
 export async function POST(req: NextRequest) {
   const isDemo = req.headers.get("x-demo") === "true";
@@ -29,6 +30,8 @@ export async function POST(req: NextRequest) {
   }
   const userEmail = "email" in user ? user.email : null;
   await requireActiveAgentAccess(user.id, userEmail, "review_replies");
+  const business = await getBusinessForUser(user.id);
+  if (!business) return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
 
   const { locationName } = await req.json();
   if (!locationName) return NextResponse.json({ error: "locationName required" }, { status: 400 });
@@ -44,6 +47,7 @@ export async function POST(req: NextRequest) {
 
     const rows = reviews.map((rv) => ({
       user_id: user.id,
+      business_id: business.id,
       location_name: locationName as string,
       google_review_id: rv.reviewId as string,
       reviewer_name: (rv.reviewer as { displayName?: string } | undefined)?.displayName ?? null,
@@ -63,13 +67,13 @@ export async function POST(req: NextRequest) {
     for (const row of rows) {
       const inserted = await sql`
         INSERT INTO public.reviews (
-          user_id, location_name, google_review_id, reviewer_name, star_rating, comment,
+          user_id, business_id, location_name, google_review_id, reviewer_name, star_rating, comment,
           review_update_time, language_code, reply_comment, reply_update_time, status, updated_at
         ) VALUES (
-          ${row.user_id}, ${row.location_name}, ${row.google_review_id}, ${row.reviewer_name}, ${row.star_rating}, ${row.comment},
+          ${row.user_id}, ${row.business_id}, ${row.location_name}, ${row.google_review_id}, ${row.reviewer_name}, ${row.star_rating}, ${row.comment},
           ${row.review_update_time}, ${row.language_code}, ${row.reply_comment}, ${row.reply_update_time}, ${row.status}, ${row.updated_at}
         )
-        ON CONFLICT (user_id, google_review_id) DO NOTHING
+        ON CONFLICT (business_id, google_review_id) DO NOTHING
         RETURNING id
       `;
       if (inserted.length > 0) {
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
         SET location_name = ${row.location_name}, reviewer_name = ${row.reviewer_name}, star_rating = ${row.star_rating},
             comment = ${row.comment}, review_update_time = ${row.review_update_time}, language_code = ${row.language_code},
             reply_comment = ${row.reply_comment}, reply_update_time = ${row.reply_update_time}, status = ${row.status}, updated_at = ${row.updated_at}
-        WHERE user_id = ${row.user_id} AND google_review_id = ${row.google_review_id}
+        WHERE business_id = ${row.business_id} AND google_review_id = ${row.google_review_id}
       `;
     }
 

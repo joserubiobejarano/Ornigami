@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// â”€â”€â”€ MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MOCKUP ──────────────────────────────────────────────────────────────────
 
 function InboxMockup() {
   const reviews = [
@@ -56,7 +56,7 @@ function InboxMockup() {
           <span className="ml-2 text-xs text-slate-400">Review Inbox — Ornigami</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-          â. Google synced
+          �.� Google synced
         </span>
       </div>
 
@@ -72,7 +72,7 @@ function InboxMockup() {
             </button>
           ))}
         </div>
-        <span className="text-[10px] text-slate-500">3 reviews Â· 2 need replies</span>
+        <span className="text-[10px] text-slate-500">3 reviews · 2 need replies</span>
       </div>
 
       {/* Review list */}
@@ -89,7 +89,7 @@ function InboxMockup() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-medium text-slate-200">{r.author}</span>
                       <span className="text-[10px] text-amber-400">{"*".repeat(r.stars)}</span>
-                      <span className="text-[10px] text-slate-600">Â·</span>
+                      <span className="text-[10px] text-slate-600">·</span>
                       <span className="text-[10px] text-slate-500">{r.time}</span>
                     </div>
                     <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{r.text}</p>
@@ -99,7 +99,7 @@ function InboxMockup() {
               <div className="shrink-0">
                 {r.status === "replied" ? (
                   <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-                    âœ“ Replied
+                    ✓ Replied
                   </span>
                 ) : (
                   <button className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-900 transition-colors hover:bg-white">
@@ -133,7 +133,7 @@ function InboxMockup() {
   );
 }
 
-// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PAGE ────────────────────────────────────────────────────────────────────
 
 const features = [
   {
@@ -203,7 +203,7 @@ export default function ReviewRepliesPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-purple-100/60 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-sky-100/40 blur-3xl" />
@@ -288,7 +288,7 @@ export default function ReviewRepliesPage() {
         </div>
       </section>
 
-      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FEATURES ──────────────────────────────────────────────────────── */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -325,7 +325,7 @@ export default function ReviewRepliesPage() {
         </div>
       </section>
 
-      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -364,7 +364,7 @@ export default function ReviewRepliesPage() {
         </div>
       </section>
 
-      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-slate-950 py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-950/60 via-slate-950 to-sky-950/40" />
         <motion.div
@@ -395,7 +395,7 @@ export default function ReviewRepliesPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of Ornigami Â· from €39/month Â· 14-day free trial
+            Part of Ornigami · from €39/month · 14-day free trial
           </p>
         </motion.div>
       </section>

@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { resolveUser } from "@/lib/user-from-req";
 import { saveReplyDraft } from "@/lib/review-reply-server";
+import { getBusinessForUser } from "@/lib/db/businesses";
 
 const BodySchema = z.object({
   reviewId: z.string().min(1),
@@ -38,7 +39,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { reviewId, reply } = parsed.data;
-  const result = await saveReplyDraft(user.id, reviewId, reply);
+  const business = await getBusinessForUser(user.id);
+  if (!business) {
+    return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
+  }
+  const result = await saveReplyDraft(business.id, reviewId, reply);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 404 });
   }

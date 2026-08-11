@@ -118,11 +118,12 @@ export async function POST(req: Request) {
   }
 
   try {
+    const demoBody = `${body}\n\n—\nSample sent by Ornigami for demonstration purposes.`;
     await sendWithResend({
       business_name: businessName,
       customer_email: input.recipient_email,
       subject,
-      body: `[DEMO EMAIL]\n\n${body}`,
+      body: demoBody,
       google_review_url: googleReviewUrl,
       email_from_name: businessName,
     });
@@ -136,5 +137,5 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, subject, body: `[DEMO EMAIL]\n\n${body}` });
+  return NextResponse.json({ ok: true, subject, body: `${body}\n\n—\nSample sent by Ornigami for demonstration purposes.` });
 }

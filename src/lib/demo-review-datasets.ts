@@ -164,7 +164,7 @@ export const DEMO_REVIEW_DATASETS: Record<DemoBusinessType, DemoBusinessDataset>
         reviewer_name: "James L.",
         star_rating: 3,
         comment:
-          "Good equipment but crowding between 5â€“7pm makes leg day tough. Any chance of expanding the free-weight area?",
+          "Good equipment but crowding between 5–7pm makes leg day tough. Any chance of expanding the free-weight area?",
         status: "unanswered",
         review_update_time: daysAgo(7),
       },

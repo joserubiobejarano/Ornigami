@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/marketing/Header";
 
-// â”€â”€â”€ MOCKUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MOCKUP ──────────────────────────────────────────────────────────────────
 
 function BoosterMockup() {
   const customers = [
@@ -39,7 +39,7 @@ function BoosterMockup() {
           <span className="ml-2 text-xs text-slate-400">Review Booster — Ornigami</span>
         </div>
         <button className="rounded-full bg-gradient-to-r from-orange-400 to-pink-500 px-3 py-1 text-[10px] font-semibold text-white">
-          â–¶ Run campaign
+          ▶ Run campaign
         </button>
       </div>
 
@@ -81,7 +81,7 @@ function BoosterMockup() {
             <div>
               {c.status === "sent" ? (
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                  âœ‰ Sent
+                  ✉ Sent
                 </span>
               ) : (
                 <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
@@ -116,7 +116,7 @@ function BoosterMockup() {
   );
 }
 
-// â”€â”€â”€ PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PAGE ────────────────────────────────────────────────────────────────────
 
 const features = [
   {
@@ -186,7 +186,7 @@ export default function ReviewBoosterPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      {/* â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-white pb-24 pt-16">
         <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-orange-100/60 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-pink-100/40 blur-3xl" />
@@ -271,7 +271,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* â”€â”€ WHY IT MATTERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── WHY IT MATTERS ────────────────────────────────────────────────── */}
       <section className="bg-slate-950 py-20">
         <div className="mx-auto max-w-4xl px-4 text-center md:px-6">
           <motion.div
@@ -305,7 +305,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FEATURES ──────────────────────────────────────────────────────── */}
       <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -342,7 +342,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* â”€â”€ HOW IT WORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-8">
           <motion.div
@@ -381,7 +381,7 @@ export default function ReviewBoosterPage() {
         </div>
       </section>
 
-      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-slate-950 py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-950/60 via-slate-950 to-pink-950/40" />
         <motion.div
@@ -412,7 +412,7 @@ export default function ReviewBoosterPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Part of Ornigami Â· from €39/month Â· 14-day free trial
+            Part of Ornigami · from €39/month · 14-day free trial
           </p>
         </motion.div>
       </section>

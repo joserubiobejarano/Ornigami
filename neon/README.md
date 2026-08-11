@@ -16,6 +16,7 @@ This folder is the database source of truth for the application.
 10. `010_review_booster_retries.sql`
 11. `011_review_link_clicks.sql`
 12. `012_cron_runs.sql`
+13. `013_review_business_tenancy.sql`
 
 ## What each migration adds
 
@@ -33,6 +34,7 @@ This folder is the database source of truth for the application.
 | `010_review_booster_retries.sql` | Adds bounded retry state for failed Review Booster messages. |
 | `011_review_link_clicks.sql` | Adds review-link click attribution tracking. |
 | `012_cron_runs.sql` | Adds durable execution history for scheduled jobs. |
+| `013_review_business_tenancy.sql` | Reconciles Review Replies with business-scoped tenancy and adds canonical `business_id` ownership to reviews and reply drafts. |
 
 ## Current database strategy
 

@@ -155,7 +155,7 @@ export async function getReviewOutcomeStats(businessId: string): Promise<ReviewO
       count(DISTINCT c.id)::int AS link_clicks
     FROM public.businesses b
     LEFT JOIN public.followup_visits v ON v.business_id = b.id
-    LEFT JOIN public.reviews r ON r.user_id = b.owner_user_id
+    LEFT JOIN public.reviews r ON r.business_id = b.id
     LEFT JOIN public.review_replies rr ON rr.review_id = r.id
     LEFT JOIN public.review_link_clicks c ON c.business_id = b.id
     WHERE b.id = ${businessId}

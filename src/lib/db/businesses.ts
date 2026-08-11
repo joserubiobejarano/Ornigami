@@ -50,7 +50,8 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
       id, owner_user_id, name, business_type, city, country, website, phone,
       google_review_url, rebooking_url, tone, language, email_from_name, created_at, updated_at
     FROM public.businesses
-    WHERE owner_user_id = ${userId}
+    LEFT JOIN public.business_members bm ON bm.business_id = public.businesses.id
+    WHERE owner_user_id = ${userId} OR bm.user_id = ${userId}
     ORDER BY created_at ASC
     LIMIT 1
   `;

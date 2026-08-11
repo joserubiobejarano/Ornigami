@@ -6,10 +6,10 @@ export default function LegalPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Company Information</h2>
           <p>
-            LocalLift is operated by LocalLift, Inc. For legal inquiries, please contact
+            Ornigami is operated by Ornigami. For legal inquiries, please contact
             us at{" "}
-            <a href="mailto:legal@locallift.com" className="text-primary hover:underline">
-              legal@locallift.com
+            <a href="mailto:legal@ornigami.app" className="text-primary hover:underline">
+              legal@ornigami.app
             </a>
           </p>
         </section>
@@ -17,7 +17,7 @@ export default function LegalPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Intellectual Property</h2>
           <p>
-            All content, features, and functionality of LocalLift are owned by LocalLift, Inc.
+            All content, features, and functionality of Ornigami are owned by Ornigami
             and are protected by international copyright, trademark, and other intellectual
             property laws.
           </p>
@@ -27,7 +27,7 @@ export default function LegalPage() {
           <h2 className="text-2xl font-semibold mb-4">Disclaimer</h2>
           <p>
             The information on this website is provided on an &quot;as is&quot; basis. To the fullest
-            extent permitted by law, LocalLift excludes all representations, warranties,
+            extent permitted by law, Ornigami excludes all representations, warranties,
             and conditions relating to our website and the use of this website.
           </p>
         </section>

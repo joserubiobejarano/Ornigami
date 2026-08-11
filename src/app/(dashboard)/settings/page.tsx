@@ -318,7 +318,7 @@ function SettingsPageContent() {
             </DashboardCallout>
           )}
           {settingsLoading ? (
-            <p className="text-sm text-foreground">Loading reply settingsâ€¦</p>
+            <p className="text-sm text-foreground">Loading reply settings…</p>
           ) : (
             <>
               <FormField label="Business name" htmlFor="settings-business-name">
@@ -373,7 +373,7 @@ function SettingsPageContent() {
                   onClick={() => void handleSaveReplySettings()}
                   disabled={saveState === "saving"}
                 >
-                  {saveState === "saving" ? "Savingâ€¦" : "Save reply settings"}
+                  {saveState === "saving" ? "Saving…" : "Save reply settings"}
                 </Button>
                 {saveState === "saved" && (
                   <Badge variant="secondary" className="font-normal text-foreground">
@@ -396,7 +396,7 @@ function SettingsPageContent() {
               </CardTitle>
               <CardDescription>
                 {connLoading
-                  ? "Loading connectionâ€¦"
+                  ? "Loading connection…"
                   : gbpConnected
                     ? `Locations synced: ${locations.length}`
                     : "Connect to sync locations and reviews."}
@@ -412,7 +412,7 @@ function SettingsPageContent() {
           )}
 
           {connLoading && (
-            <p className="text-sm text-foreground">Loading Google connectionâ€¦</p>
+            <p className="text-sm text-foreground">Loading Google connection…</p>
           )}
 
           {!connLoading && !gbpConnected && (
@@ -436,7 +436,7 @@ function SettingsPageContent() {
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleSyncLocations} disabled={isSyncing}>
-                  {isSyncing ? "Syncingâ€¦" : "Sync locations"}
+                  {isSyncing ? "Syncing…" : "Sync locations"}
                 </Button>
                 <Button onClick={handleDisconnect}>
                   Disconnect Google
@@ -525,7 +525,7 @@ export default function SettingsPage() {
     <Suspense
       fallback={
         <DashboardPage width="md">
-          <p className="text-sm text-muted-foreground">Loading settingsâ€¦</p>
+          <p className="text-sm text-muted-foreground">Loading settings…</p>
         </DashboardPage>
       }
     >
