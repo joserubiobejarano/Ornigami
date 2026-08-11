@@ -47,12 +47,25 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
 
   const rows = await sql`
     SELECT
-      id, owner_user_id, name, business_type, city, country, website, phone,
-      google_review_url, rebooking_url, tone, language, email_from_name, created_at, updated_at
+      public.businesses.id,
+      public.businesses.owner_user_id,
+      public.businesses.name,
+      public.businesses.business_type,
+      public.businesses.city,
+      public.businesses.country,
+      public.businesses.website,
+      public.businesses.phone,
+      public.businesses.google_review_url,
+      public.businesses.rebooking_url,
+      public.businesses.tone,
+      public.businesses.language,
+      public.businesses.email_from_name,
+      public.businesses.created_at,
+      public.businesses.updated_at
     FROM public.businesses
     LEFT JOIN public.business_members bm ON bm.business_id = public.businesses.id
-    WHERE owner_user_id = ${userId} OR bm.user_id = ${userId}
-    ORDER BY created_at ASC
+    WHERE public.businesses.owner_user_id = ${userId} OR bm.user_id = ${userId}
+    ORDER BY public.businesses.created_at ASC
     LIMIT 1
   `;
   const row = rows[0] as DbBusinessRow | undefined;
