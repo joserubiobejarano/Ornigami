@@ -88,7 +88,7 @@ function InboxMockup() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-medium text-slate-200">{r.author}</span>
-                      <span className="text-[10px] text-amber-400">{"*".repeat(r.stars)}</span>
+                      <span className="text-[10px] text-amber-400" aria-label={`${r.stars} out of 5 stars`}>{"★".repeat(r.stars)}</span>
                       <span className="text-[10px] text-slate-600">·</span>
                       <span className="text-[10px] text-slate-500">{r.time}</span>
                     </div>
@@ -402,5 +402,4 @@ export default function ReviewRepliesPage() {
     </div>
   );
 }
-
 

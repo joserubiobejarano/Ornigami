@@ -49,7 +49,7 @@ function BoosterMockup() {
           { label: "Visits logged", value: "24" },
           { label: "Follow-ups sent", value: "18" },
           { label: "New reviews", value: "11" },
-          { label: "Avg. stars", value: "4.8*" },
+          { label: "Avg. stars", value: "4.8★" },
         ].map((s) => (
           <div key={s.label} className="px-3 py-3 text-center">
             <p className="text-sm font-bold text-slate-100">{s.value}</p>
@@ -91,7 +91,7 @@ function BoosterMockup() {
             </div>
             <div>
               {c.stars ? (
-                <span className="text-xs text-amber-400">{"*".repeat(c.stars)}</span>
+                <span className="text-xs text-amber-400" aria-label={`${c.stars} out of 5 stars`}>{"★".repeat(c.stars)}</span>
               ) : (
                 <span className="text-[10px] text-slate-600">,</span>
               )}
@@ -293,7 +293,7 @@ export default function ReviewBoosterPage() {
               {[
                 { stat: "More", label: "opportunities to hear from customers" },
                 { stat: "61%", label: "Average follow-up response rate" },
-                { stat: "4.7*", label: "Average rating from boosted reviews" },
+                { stat: "4.7★", label: "Average rating from boosted reviews" },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
                   <p className="text-4xl font-bold text-slate-50">{s.stat}</p>
@@ -419,5 +419,4 @@ export default function ReviewBoosterPage() {
     </div>
   );
 }
-
 

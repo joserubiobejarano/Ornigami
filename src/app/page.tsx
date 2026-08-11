@@ -163,7 +163,7 @@ function ReviewInboxMockup() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-amber-400">{"*".repeat(review.stars)}</span>
+                    <span className="text-[11px] text-amber-400" aria-label={`${review.stars} out of 5 stars`}>{"★".repeat(review.stars)}</span>
                     <span className="text-[11px] font-medium text-slate-600">{review.author}</span>
                   </div>
                   <p className="mt-0.5 truncate text-[11px] text-slate-500">{review.text}</p>
@@ -233,7 +233,7 @@ function ReviewRepliesMockup() {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-amber-400">{"*".repeat(r.stars)}</span>
+                  <span className="text-[11px] text-amber-400" aria-label={`${r.stars} out of 5 stars`}>{"★".repeat(r.stars)}</span>
                   <span className="text-[11px] font-medium text-slate-300">{r.author}</span>
                 </div>
                 <p className="mt-0.5 truncate text-[11px] text-slate-500">{r.text}</p>
@@ -307,7 +307,7 @@ function ReviewBoosterMockup() {
             </div>
             <div className="flex items-center gap-2">
               {c.review && (
-                <span className="text-[10px] text-amber-400">*****</span>
+                <span className="text-[10px] text-amber-400" aria-label="5 out of 5 stars">★★★★★</span>
               )}
               {c.status === "sent" ? (
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
@@ -712,7 +712,7 @@ export default function HomePage() {
                 className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
               >
                 <div className="mb-3 text-sm text-amber-400">
-                  {"*".repeat(t.stars)}
+                  <span aria-label={`${t.stars} out of 5 stars`}>{"★".repeat(t.stars)}</span>
                 </div>
                 <p className="flex-1 text-sm leading-relaxed text-slate-700">&ldquo;{t.text}&rdquo;</p>
                 <div className="mt-5 flex items-center gap-3 border-t border-slate-200 pt-4">
@@ -798,7 +798,6 @@ export default function HomePage() {
     </div>
   );
 }
-
 
 
 
