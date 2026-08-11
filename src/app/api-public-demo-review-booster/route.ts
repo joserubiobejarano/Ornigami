@@ -25,7 +25,7 @@ const PublicDemoSchema = z.object({
   city: z.string().trim().max(80).optional().nullable(),
   customer_name: z.string().trim().max(80).optional().nullable(),
   recipient_email: z.string().trim().email().max(254),
-  google_review_url: z.string().trim().url().max(500).optional().nullable(),
+  google_review_url: z.string().trim().url().max(500),
   rebooking_url: z.string().trim().url().max(500).optional().nullable(),
   tone: z.enum(toneOptions).optional().nullable(),
 });
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
   }
 
   const businessName = input.business_name.trim();
-  const googleReviewUrl = "https://search.google.com/local/writereview";
+  const googleReviewUrl = input.google_review_url.trim();
 
   const subject = `[Demo] ${buildSubject(businessName)}`;
   const body = await generateFollowupEmailBody({

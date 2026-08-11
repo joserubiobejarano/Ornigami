@@ -151,6 +151,21 @@ export function PublicReviewBoosterDemoPage() {
                   ))}
                 </select>
               </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="google_review_url">Google review URL</Label>
+                <Input
+                  id="google_review_url"
+                  type="url"
+                  value={googleReviewUrl}
+                  onChange={(e) => setGoogleReviewUrl(e.target.value)}
+                  placeholder="https://g.page/r/.../review"
+                  required
+                  maxLength={500}
+                />
+                <p className="text-xs text-slate-500">
+                  Use your direct Google Maps “Write a review” link so the button in the sample email goes to your profile.
+                </p>
+              </div>
             </div>
 
             <details className="rounded-md border border-slate-200 px-4 py-3">
@@ -174,10 +189,6 @@ export function PublicReviewBoosterDemoPage() {
                 <div className="space-y-2">
                   <Label htmlFor="customer_name">Customer name</Label>
                   <Input id="customer_name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} maxLength={80} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="google_review_url">Google review URL</Label>
-                  <Input id="google_review_url" type="url" value={googleReviewUrl} onChange={(e) => setGoogleReviewUrl(e.target.value)} maxLength={500} />
                 </div>
               </div>
             </details>

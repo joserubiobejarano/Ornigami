@@ -37,7 +37,10 @@ export async function sendWithResend(input: SendEmailInput) {
     .join("&lt;")
     .split(">")
     .join("&gt;");
-  const reviewLinkUrl = input.review_link_url || input.google_review_url;
+  const reviewLinkUrl = (input.review_link_url || input.google_review_url || "").trim();
+  if (!reviewLinkUrl) {
+    throw new Error("Missing google review URL");
+  }
   const unsubscribeUrl = input.business_id
     ? buildUnsubscribeUrl({
         businessId: input.business_id,
