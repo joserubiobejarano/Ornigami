@@ -6,14 +6,11 @@ import { cn } from "@/lib/utils";
 type StatusTone = "success" | "warning" | "error" | "info" | "neutral";
 
 const toneClass: Record<StatusTone, string> = {
-  success:
-    "border-emerald-600/35 bg-emerald-500/10 font-medium text-emerald-900 dark:text-emerald-100",
-  warning:
-    "border-amber-600/35 bg-amber-500/10 font-medium text-amber-950 dark:text-amber-100",
-  error:
-    "border-red-600/35 bg-red-500/10 font-medium text-red-900 dark:text-red-100",
+  success: "border-accent-green/35 bg-accent-green/10 font-medium text-primary",
+  warning: "border-accent-yellow/35 bg-accent-yellow/10 font-medium text-primary",
+  error: "border-destructive/35 bg-destructive/10 font-medium text-destructive",
   info:
-    "border-sky-600/35 bg-sky-500/10 font-medium text-sky-900 dark:text-sky-100",
+    "border-accent-yellow/35 bg-accent-yellow/10 font-medium text-primary",
   neutral: "font-normal text-foreground",
 };
 

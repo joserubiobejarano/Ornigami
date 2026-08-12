@@ -19,9 +19,7 @@ export function DashboardTopNav({ className }: { className?: string }) {
 
   return (
     <nav className={cn("flex flex-wrap items-center justify-center gap-1 rounded-xl border border-border/70 bg-muted/40 px-2 py-2 shadow-sm", className)} aria-label="Dashboard">
-      <Link href="/dashboard" className={cn("rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90", pathname === "/dashboard" ? "ring-1 ring-primary/30" : "ring-1 ring-transparent")}>
-        Dashboard
-      </Link>
+      <Button asChild size="sm" className={cn(pathname === "/dashboard" ? "ring-1 ring-primary/30" : "ring-1 ring-transparent")}><Link href="/dashboard">Dashboard</Link></Button>
       {[{ href: "/reviews", label: "Reviews" }, { href: "/content", label: "Content" }, { href: "/audit", label: "Audit" }, { href: "/settings", label: "Settings" }, { href: "/dashboard/billing", label: "Billing" }].map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return <Link key={item.href} href={item.href} className={cn("rounded-lg px-3 py-2 text-sm font-medium transition-colors", active ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:bg-background hover:text-foreground")}>{item.label}</Link>;

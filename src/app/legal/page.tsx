@@ -1,8 +1,8 @@
+import { PageHero } from "@/components/marketing/primitives";
+
 export default function LegalPage() {
   return (
-    <div className="container max-w-3xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold mb-6">Legal Information</h1>
-      <div className="prose max-w-none space-y-6">
+    <main><PageHero eyebrow="Legal" title="Legal information" intro="The short version of how Ornigami operates and where to direct formal notices." /><article className="prose prose-slate mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
         <section>
           <h2 className="text-2xl font-semibold mb-4">Company Information</h2>
           <p>
@@ -36,7 +36,6 @@ export default function LegalPage() {
             and conditions relating to our website and the use of this website.
           </p>
         </section>
-      </div>
-    </div>
+      </article></main>
   );
 }

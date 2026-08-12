@@ -163,7 +163,7 @@ function AuditPageContent() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 text-sm text-amber-950 dark:text-amber-100">
+      <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 text-sm text-primary">
         <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
         <p className="mt-1 text-foreground">
           For day-to-day work use{" "}
@@ -185,8 +185,8 @@ function AuditPageContent() {
       </div>
 
       {(isDemo || useSampleData) && (
-        <div className="rounded-md border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 p-3">
-          <p className="text-sm text-orange-800 dark:text-orange-200">
+        <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-3">
+          <p className="text-sm text-primary">
             Demo mode — sample report only. Connect Google in Settings to sync real reviews to{" "}
             <Link href="/reviews" className="underline underline-offset-2">
               Reviews
@@ -201,12 +201,12 @@ function AuditPageContent() {
       )}
 
       {!planLoading && !hasPaidAccess && !isDemo && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 space-y-2">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+        <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 space-y-2">
+          <p className="text-sm font-medium text-primary">
             Choose a plan to connect Google Business Profile, sync reviews, and use the
             review inbox — this legacy report is not the main product.
           </p>
-          <p className="text-xs text-amber-800 dark:text-amber-200">
+          <p className="text-xs text-muted-foreground">
             You can still try a quick check below without a connection. Public tool:{" "}
             <Link href="/free-audit" className="underline">
               /free-audit
@@ -219,7 +219,7 @@ function AuditPageContent() {
       <div className="space-y-6">
         {/* Sample audit option */}
         {locations.length === 0 && !result && !useSampleData && !isDemo && (
-          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900">
+          <Card className="border-border bg-surface">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -372,7 +372,7 @@ function AuditPageContent() {
         onClose={() => setShowUpgradeModal(false)}
         description={
           isDemo
-            ? "You've reached the demo limit for this legacy screen. Start your free trial for the full review inbox."
+            ? "You've reached the demo limit for this legacy screen. Start free trial for the full review inbox."
             : undefined
         }
       />

@@ -4,6 +4,29 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { LayoutFrame } from "@/components/layout-frame";
 import { Toaster } from "sonner";
 import { ThemeSync } from "@/components/theme-sync";
+import { MotionProvider } from "@/components/motion-provider";
+import { Geist_Mono, Hanken_Grotesk, Inter } from "next/font/google";
+
+const displayFont = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["600", "700"],
+  display: "swap",
+});
+
+const sansFont = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const monoFont = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "600"],
+  display: "swap",
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
 
@@ -41,11 +64,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased flex flex-col min-h-screen">
+      <body className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} antialiased flex min-h-screen flex-col`}>
         <AuthProvider>
-          <ThemeSync />
-          <LayoutFrame>{children}</LayoutFrame>
-          <Toaster position="bottom-right" richColors closeButton />
+          <MotionProvider>
+            <ThemeSync />
+            <LayoutFrame>{children}</LayoutFrame>
+            <Toaster position="bottom-right" richColors closeButton />
+          </MotionProvider>
         </AuthProvider>
       </body>
     </html>

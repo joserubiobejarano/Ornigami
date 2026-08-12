@@ -37,7 +37,7 @@ export function ActivationChecklist({ steps }: { steps: ActivationChecklistStep[
                 <span
                   aria-hidden="true"
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                    step.complete ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+                    step.complete ? "bg-accent-green/10 text-accent-green" : "bg-surface text-muted-foreground"
                   }`}
                 >
                   {step.complete ? "✓" : ""}

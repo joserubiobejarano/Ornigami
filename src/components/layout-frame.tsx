@@ -21,12 +21,11 @@ function isInAppRoute(pathname: string): boolean {
 export function LayoutFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const showFooter = !isInAppRoute(pathname);
-  const pageProvidesHeader = pathname === "/" || pathname === "/review-replies" || pathname === "/review-booster";
   const showMarketingChrome = !isInAppRoute(pathname);
 
   return (
     <>
-      {showMarketingChrome && !pageProvidesHeader ? <Header /> : null}
+      {showMarketingChrome ? <Header /> : null}
       <div className="flex-1">{children}</div>
       {showFooter ? <Footer /> : null}
       {showMarketingChrome ? <CookieConsent /> : null}

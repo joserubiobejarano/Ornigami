@@ -53,9 +53,9 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-muted/30 p-6">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold"><BrandMark className="h-7 w-7 text-violet-700" /> Ornigami</Link>
+    <div className="flex min-h-dvh items-center justify-center bg-surface/70 p-6">
+      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-7 shadow-md">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-primary"><BrandMark className="h-7 w-7 text-accent-purple" /> Ornigami</Link>
         <h1 className="text-2xl font-semibold">Log in</h1>
         <Button
           type="button"

@@ -1,29 +1,15 @@
-export default function ContactPage() {
-  return (
-    <div className="container max-w-3xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
-      <div className="prose max-w-none space-y-6">
-        <p className="text-muted-foreground">
-          Have questions or need support? We&apos;re here to help.
-        </p>
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Email</h2>
-            <p>
-              <a href="mailto:support@ornigami.com" className="text-primary hover:underline">
-                support@ornigami.com
-              </a>
-            </p>
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Response Time</h2>
-            <p className="text-muted-foreground">
-              We typically respond within 24-48 hours during business days.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+"use client";
 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHero } from "@/components/marketing/primitives";
+
+export default function ContactPage() {
+  const [message, setMessage] = useState(""); const [category, setCategory] = useState("General"); const [email, setEmail] = useState(""); const [sent, setSent] = useState(false); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null);
+  async function submit(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); setLoading(true); setError(null); try { const response = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: `${email ? `Reply to: ${email}\n\n` : ""}${message}`, category, url: window.location.href, browser: navigator.userAgent }) }); if (!response.ok) throw new Error("Could not send your message. Please try again."); setSent(true); setMessage(""); } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not send your message."); } finally { setLoading(false); } }
+  return <main><PageHero eyebrow="Contact" title="A clear place to reach us." intro="Questions, support, partnership ideas, or product feedback — send a note and we will get back to you during business days." /><section className="mx-auto grid max-w-5xl gap-10 px-4 py-16 md:grid-cols-[1fr_1.25fr] md:px-6 md:py-20"><div><h2 className="text-2xl font-bold text-primary">How can we help?</h2><p className="mt-4 leading-relaxed text-muted-foreground">Use the form for general questions or feedback. For privacy and legal requests, email the address listed on the relevant policy page.</p><p className="mt-6 text-sm text-muted-foreground">Typical response time: 24–48 hours on business days.</p></div><Card><CardHeader><CardTitle>{sent ? "Message sent" : "Send a message"}</CardTitle></CardHeader><CardContent>{sent ? <div className="space-y-4"><p className="text-sm text-muted-foreground">Thanks — we received your note and will be in touch.</p><Button variant="secondary" onClick={() => setSent(false)}>Send another</Button></div> : <form onSubmit={submit} className="space-y-5"><div className="space-y-2"><Label htmlFor="contact-category">Topic</Label><select id="contact-category" value={category} onChange={(event) => setCategory(event.target.value)} className="h-11 w-full rounded-[var(--radius)] border border-input bg-background px-3.5 text-sm text-primary focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><option>General</option><option>Feedback</option><option>Support</option><option>Partnership</option></select></div><div className="space-y-2"><Label htmlFor="contact-email">Email</Label><Input id="contact-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required /></div><div className="space-y-2"><Label htmlFor="contact-message">Message</Label><Textarea id="contact-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="How can we help?" rows={6} required /></div>{error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}<Button type="submit" disabled={loading}>{loading ? "Sending…" : "Send message"}</Button></form>}</CardContent></Card></section></main>;
+}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 type RunResult = {
   scanned: number;
   sent: number;
@@ -57,32 +59,32 @@ export function RunFollowupsButton({
 
   return (
     <div className="space-y-3">
-      <button
+      <Button
         type="button"
         onClick={runNow}
         disabled={loading || disabled}
-        className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
+        size="sm"
       >
         {loading ? (
           <span className="inline-flex items-center gap-2">
-            <span className="inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-sky-300" />
+            <span className="inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-accent-yellow" />
             Running follow-ups...
           </span>
         ) : (
           "Send eligible follow-ups now"
         )}
-      </button>
+      </Button>
       {disabled && disabledReason ? <p className="text-sm text-muted-foreground">{disabledReason}</p> : null}
       {message ? (
         <div
           role="status"
           className={
             messageKind === "success"
-              ? "rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
+              ? "rounded-lg border border-accent-green/35 bg-accent-green/10 px-3 py-2 text-sm font-medium text-primary"
               : messageKind === "error"
-                ? "rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100"
+                ? "rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
                 : messageKind === "running"
-                  ? "rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"
+                  ? "rounded-lg border border-accent-yellow/35 bg-accent-yellow/10 px-3 py-2 text-sm font-medium text-primary"
                   : "rounded-lg border border-border bg-muted px-3 py-2 text-sm font-medium text-card-foreground"
           }
         >
@@ -94,8 +96,8 @@ export function RunFollowupsButton({
           <p className="font-semibold text-card-foreground">Run summary</p>
           <p>
             scanned: <span className="font-semibold">{result.scanned}</span> | sent:{" "}
-            <span className="font-semibold text-emerald-700">{result.sent}</span> | failed:{" "}
-            <span className={result.failed > 0 ? "font-semibold text-rose-700" : "font-semibold"}>{result.failed}</span> | skipped:{" "}
+            <span className="font-semibold text-accent-green">{result.sent}</span> | failed:{" "}
+            <span className={result.failed > 0 ? "font-semibold text-destructive" : "font-semibold"}>{result.failed}</span> | skipped:{" "}
             <span className="font-semibold">{result.skipped}</span>
           </p>
         </div>

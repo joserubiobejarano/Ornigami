@@ -251,7 +251,7 @@ export default function ContentPage() {
   return (
     <div className="grid grid-cols-[1fr_320px] gap-6">
       <div className="space-y-6">
-        <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 text-sm text-amber-950 dark:text-amber-100">
+        <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 text-sm text-primary">
           <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
           <p className="mt-1 text-muted-foreground">
             Ornigami is focused on your <strong>review inbox</strong> and <strong>reply drafts</strong>. Use{" "}
@@ -277,8 +277,8 @@ export default function ContentPage() {
         )}
 
         {!planLoading && !hasPaidAccess && !isDemo && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 space-y-2">
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+          <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 space-y-2">
+            <p className="text-sm font-medium text-primary">
               Choose a plan to connect Google Business Profile, sync reviews, and use reply
               reply drafts (this legacy generator is not the main product).
             </p>
@@ -371,7 +371,7 @@ export default function ContentPage() {
             <button
               key={project.id}
               onClick={() => openProject(project)}
-              className="w-full text-left border rounded p-2 hover:bg-accent"
+              className="w-full rounded border p-2 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <div className="text-sm font-medium">{project.title}</div>
               <div className="text-xs text-muted-foreground">
@@ -397,7 +397,7 @@ export default function ContentPage() {
         onClose={() => setShowUpgradeModal(false)}
         description={
           isDemo
-            ? "You've reached the demo limit for this legacy screen. Start your free trial for the full review inbox (sync, drafts, posting)."
+            ? "You've reached the demo limit for this legacy screen. Start free trial for the full review inbox (sync, drafts, posting)."
             : undefined
         }
       />

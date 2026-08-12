@@ -1,13 +1,11 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, Check, Compass, HeartHandshake, Layers3 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { PageHero, FeatureCard, CTASection } from "@/components/marketing/primitives";
+
 export default function AboutPage() {
-  return (
-    <main className="mx-auto max-w-3xl px-6 py-20">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-700">About Ornigami</p>
-      <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900">Less busywork. More follow-through.</h1>
-      <div className="mt-6 space-y-5 text-base leading-8 text-slate-600">
-        <p>Ornigami helps local businesses keep review replies and customer follow-ups moving without adding another complicated system to the day.</p>
-        <p>We build focused workflows that keep people in control: clear drafts, useful context, and simple approvals when a decision matters.</p>
-        <p>Questions or partnership ideas? <a className="font-medium text-violet-700 underline" href="mailto:support@ornigami.com">Contact us</a>.</p>
-      </div>
-    </main>
-  );
+  return <main><PageHero eyebrow="About Ornigami" title="Tools for the work local businesses already do." intro="Ornigami is building a calmer way to manage reviews, customer follow-up, and local visibility — with practical automation and clear human control." /><section className="mx-auto grid max-w-7xl gap-12 px-4 py-20 md:grid-cols-2 md:px-6 lg:px-8"><div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Our mission</p><h2 className="mt-3 text-3xl font-bold text-primary sm:text-4xl">Make the important moments easier to keep up with.</h2><p className="mt-5 leading-relaxed text-muted-foreground">A review deserves an answer. A great visit deserves a thoughtful follow-up. A business profile deserves attention. We bring those moments into one focused workspace so local teams can spend less time chasing tabs and more time serving customers.</p><Button className="mt-8" asChild><Link href="/demo">See a live demo <ArrowRight className="h-4 w-4" /></Link></Button></div><div className="rounded-2xl border border-border bg-surface p-8"><p className="text-sm font-semibold text-primary">How we work</p><ul className="mt-6 space-y-5">{["Start with clear, useful workflows.", "Keep automation visible and approval-first.", "Design for busy people, not perfect conditions."].map((item) => <li key={item} className="flex gap-3 text-sm leading-relaxed text-muted-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-green" />{item}</li>)}</ul></div></section><section className="border-y border-border bg-surface py-20"><div className="mx-auto grid max-w-7xl gap-5 px-4 md:grid-cols-3 md:px-6 lg:px-8"><FeatureCard icon={Compass} title="Practical first" body="Every feature should make a real part of local work clearer or lighter." /><FeatureCard icon={HeartHandshake} accent="green" title="Human in the loop" body="Automation supports judgment. It does not hide it or replace it." /><FeatureCard icon={Layers3} accent="yellow" title="One calm system" body="Reviews, follow-ups, and visibility should feel like parts of one product." /></div></section><CTASection title="See what Ornigami can take off your plate." body="Explore the product with sample data, or start a 14-day trial with no card required." /></main>;
 }

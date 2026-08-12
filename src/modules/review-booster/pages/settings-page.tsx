@@ -4,6 +4,9 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { FollowupsNav } from "@/modules/review-booster/components/followups-nav";
 import { PageHeader } from "@/modules/review-booster/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { nativeSelectClassName } from "@/lib/form-controls";
 
 type SettingsPayload = {
   business_name: string;
@@ -194,64 +197,63 @@ export default function ReviewBoosterSettingsPage() {
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <FollowupsNav />
       <PageHeader title="Settings" backToOverview />
-      <form onSubmit={onSubmit} className="w-full space-y-4 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700 shadow-sm">
+      <form onSubmit={onSubmit} className="w-full space-y-4 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Business name</span>
-          <input
+          <span className="font-medium text-primary">Business name</span>
+          <Input
             required
             value={form.business_name}
             onChange={(e) => setForm((prev) => ({ ...prev, business_name: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
             placeholder="Your Business Name"
           />
         </label>
 
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Business type</span>
-          <input
+          <span className="font-medium text-primary">Business type</span>
+          <Input
             value={form.business_type}
             onChange={(e) => setForm((prev) => ({ ...prev, business_type: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
             placeholder="Dental clinic, salon, gym..."
           />
         </label>
 
-        <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm font-medium text-slate-900">Google Business Profile</p>
-          <p className="mt-1 text-xs text-slate-600">
+        <section className="rounded-lg border border-border bg-surface p-4">
+          <p className="text-sm font-medium text-primary">Google Business Profile</p>
+          <p className="mt-1 text-xs text-muted-foreground">
             {googleConnected
               ? "Connected. We can auto-use your Google review URL."
               : "Not connected. Connect it to auto-load your review URL."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {googleConnected ? (
-              <button
+              <Button
                 type="button"
                 onClick={() => void syncLocations()}
                 disabled={syncingLocations}
-                className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100 disabled:opacity-70"
+                variant="secondary"
+                size="sm"
               >
                 {syncingLocations ? "Syncing..." : "Sync locations"}
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   window.location.href = "/api/google/oauth/start";
                 }}
-                className="inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+                size="sm"
               >
                 Connect Google Business Profile
-              </button>
+              </Button>
             )}
           </div>
           {googleLocations.length > 0 ? (
             <label className="mt-3 block space-y-1">
-              <span className="text-xs font-medium text-slate-700">Connected location</span>
+              <span className="text-xs font-medium text-primary">Connected location</span>
               <select
                 value={form.selected_location_id}
                 onChange={(e) => setForm((prev) => ({ ...prev, selected_location_id: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                className={nativeSelectClassName}
               >
                 {googleLocations.map((location) => (
                   <option key={location.id} value={location.id}>
@@ -263,31 +265,30 @@ export default function ReviewBoosterSettingsPage() {
             </label>
           ) : null}
           {autoGoogleReviewUrl ? (
-            <p className="mt-2 text-xs text-slate-600">
+            <p className="mt-2 text-xs text-muted-foreground">
               Auto-detected review URL available. Manual URL below will be used only as fallback.
             </p>
           ) : null}
         </section>
 
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Google review URL (manual fallback)</span>
-          <p className="text-xs text-slate-600">
+          <span className="font-medium text-primary">Google review URL (manual fallback)</span>
+          <p className="text-xs text-muted-foreground">
             Use the direct Google Maps &quot;Write a review&quot; link (the popup review form link). This removes friction and usually converts better than a generic profile link.
           </p>
-          <input
+          <Input
             value={form.google_review_url}
             onChange={(e) => setForm((prev) => ({ ...prev, google_review_url: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
             placeholder="https://..."
           />
         </label>
 
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Tone</span>
+          <span className="font-medium text-primary">Tone</span>
           <select
             value={form.tone}
             onChange={(e) => setForm((prev) => ({ ...prev, tone: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+            className={nativeSelectClassName}
           >
             {TONE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -298,11 +299,11 @@ export default function ReviewBoosterSettingsPage() {
         </label>
 
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Language</span>
+          <span className="font-medium text-primary">Language</span>
           <select
             value={form.language}
             onChange={(e) => setForm((prev) => ({ ...prev, language: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+            className={nativeSelectClassName}
           >
             {LANGUAGE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -313,13 +314,12 @@ export default function ReviewBoosterSettingsPage() {
         </label>
 
         <div className="flex items-center gap-3">
-          <button
+          <Button
             type="submit"
             disabled={loading || saving}
-            className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
           >
             {saving ? "Saving..." : "Save settings"}
-          </button>
+          </Button>
           {loading ? <span>Loading settings...</span> : null}
         </div>
         {message ? (
@@ -327,10 +327,10 @@ export default function ReviewBoosterSettingsPage() {
             role="status"
             className={
               messageKind === "success"
-                ? "rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900"
+                ? "rounded-lg border border-accent-green/35 bg-accent-green/10 px-3 py-2 text-sm font-medium text-primary"
                 : messageKind === "error"
-                  ? "rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900"
-                  : "rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800"
+                  ? "rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+                  : "rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-primary"
             }
           >
             {messageKind === "success" ? "Settings updated successfully. " : null}

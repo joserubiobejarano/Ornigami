@@ -82,7 +82,7 @@ export default async function ReviewBoosterPage() {
       </section>
 
       {usagePercent >= 80 && (
-        <section className={`rounded-xl border p-4 text-sm ${usagePercent >= 100 ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100" : "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"}`}>
+        <section className={`rounded-xl border p-4 text-sm ${usagePercent >= 100 ? "border-destructive/35 bg-destructive/10 text-destructive" : "border-accent-yellow/35 bg-accent-yellow/10 text-primary"}`}>
           {usagePercent >= 100
             ? `Monthly review request allowance reached (${monthlyUsage.sent}/${monthlyUsage.allowance}). New eligible visits are being skipped until next month.`
             : `You've used ${monthlyUsage.sent} of ${monthlyUsage.allowance} review requests this month.`}

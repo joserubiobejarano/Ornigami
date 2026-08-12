@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function CookieConsent() {
   const storedConsent = useSyncExternalStore(
@@ -20,9 +21,7 @@ export function CookieConsent() {
         We use essential cookies to keep Ornigami secure and remember your preferences. Read our{" "}
         <Link href="/privacy" className="font-medium text-slate-900 underline underline-offset-4">privacy policy</Link>.
       </p>
-      <button type="button" className="mt-3 inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-slate-900 px-5 text-sm font-semibold text-white transition hover:bg-slate-700 sm:mt-0" onClick={() => { window.localStorage.setItem("ornigami-cookie-consent", "accepted"); setDismissed(true); }}>
-        Got it
-      </button>
+      <Button type="button" className="mt-3 sm:mt-0" onClick={() => { window.localStorage.setItem("ornigami-cookie-consent", "accepted"); setDismissed(true); }}>Got it</Button>
     </aside>
   );
 }

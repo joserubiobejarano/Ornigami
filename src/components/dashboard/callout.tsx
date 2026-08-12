@@ -8,11 +8,9 @@ const calloutVariants = cva(
   {
     variants: {
       variant: {
-        info: "border-blue-200/80 bg-blue-50/90 text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/25 dark:text-blue-100",
-        warning:
-          "border-amber-200/80 bg-amber-50/90 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-100",
-        success:
-          "border-emerald-200/80 bg-emerald-50/90 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/25 dark:text-emerald-100",
+        info: "border-accent-yellow/35 bg-accent-yellow/10 text-primary",
+        warning: "border-accent-yellow/35 bg-accent-yellow/10 text-primary",
+        success: "border-accent-green/35 bg-accent-green/10 text-primary",
         error:
           "border-destructive/35 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/15",
         neutral: "border-border bg-muted/50 text-foreground",

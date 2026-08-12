@@ -50,7 +50,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {!isConnectGate && (
         <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-3 lg:px-8">
-            <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg text-violet-700" aria-label="Ornigami home">
+            <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg text-accent-purple" aria-label="Ornigami home">
               <BrandMark className="h-8 w-8" />
             </Link>
             <DashboardTopNav className="w-full justify-center" />

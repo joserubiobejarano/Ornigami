@@ -81,7 +81,7 @@ export function ReviewList({
               className={cn(
                 "w-full rounded-xl border p-4 text-left shadow-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                 isHandled
-                  ? "border-emerald-500/35 bg-emerald-500/[0.06] hover:bg-emerald-500/10"
+                  ? "border-accent-green/35 bg-accent-green/10 hover:bg-accent-green/15"
                   : "border-border bg-card hover:bg-muted/40"
               )}
             >
@@ -118,7 +118,7 @@ export function ReviewList({
             key={rv.google_review_id}
             className={cn(
               "rounded-xl border border-border bg-card p-5 space-y-4 shadow-sm transition-colors",
-              isHandled && "border-emerald-500/40 bg-emerald-500/[0.05] shadow-none"
+              isHandled && "border-accent-green/40 bg-accent-green/10 shadow-none"
             )}
           >
             <div className="flex items-start justify-between gap-3">
@@ -150,7 +150,7 @@ export function ReviewList({
                   )}
                 </div>
                 {showTestModeHandledNote && (
-                  <p className="text-xs text-emerald-800 dark:text-emerald-200/90">
+                  <p className="text-xs text-accent-green">
                     {testModeHandledResetHint}
                   </p>
                 )}
@@ -173,7 +173,7 @@ export function ReviewList({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <label className="text-xs font-medium text-foreground">Draft reply</label>
                 {workflow === "unsaved_draft" && !isHandled && (
-                  <span className="text-[10px] text-amber-700 dark:text-amber-200/90">
+                  <span className="text-[10px] text-accent-yellow">
                     Not saved yet — click Save draft to pin this version
                   </span>
                 )}

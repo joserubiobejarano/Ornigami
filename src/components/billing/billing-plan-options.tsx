@@ -39,7 +39,7 @@ export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm">{plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="font-semibold text-primary">✓</span><span>{feature}</span></li>)}</ul>
-                {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start 14-day trial</Button></form> : isCurrent ? <p className="text-sm font-medium text-emerald-700">Current plan</p> : currentPlan !== "complete" && planId === "complete" ? <ChangePlanButton planId="complete" billingPeriod={billingPeriod} /> : <p className="text-sm text-muted-foreground">Switch plans or billing periods from Manage billing.</p>}
+                {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start free trial</Button></form> : isCurrent ? <p className="text-sm font-medium text-accent-green">Current plan</p> : currentPlan !== "complete" && planId === "complete" ? <ChangePlanButton planId="complete" billingPeriod={billingPeriod} /> : <p className="text-sm text-muted-foreground">Switch plans or billing periods from Manage billing.</p>}
               </CardContent>
             </Card>
           );

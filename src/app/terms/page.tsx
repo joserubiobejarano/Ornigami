@@ -1,8 +1,8 @@
+import { PageHero } from "@/components/marketing/primitives";
+
 export default function TermsPage() {
   return (
-    <div className="container max-w-3xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
-      <div className="prose max-w-none space-y-6">
+    <main><PageHero eyebrow="Legal" title="Terms of service" intro="The rules for using Ornigami and the responsibilities that come with an account." /><article className="prose prose-slate mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
         <p className="text-muted-foreground">Last updated: 12 August 2026</p>
         
         <section>
@@ -69,8 +69,7 @@ export default function TermsPage() {
             </a>.
           </p>
         </section>
-      </div>
-    </div>
+      </article></main>
   );
 }
 

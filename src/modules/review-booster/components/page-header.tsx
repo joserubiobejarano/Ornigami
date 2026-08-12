@@ -13,7 +13,7 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-gradient-to-br from-muted via-card to-secondary p-6 shadow-sm sm:p-8">
+    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
       {backToOverview ? (
         <Link
           href="/dashboard/agents/review-booster"

@@ -4,6 +4,8 @@ import { FormEvent, useState } from "react";
 
 import { FollowupsNav } from "@/modules/review-booster/components/followups-nav";
 import { PageHeader } from "@/modules/review-booster/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type NewVisitPayload = {
   customer_name: string;
@@ -59,48 +61,44 @@ export default function ReviewBoosterNewVisitPage() {
       <PageHeader title="Add Completed Visit" backToOverview />
       <form
         onSubmit={onSubmit}
-        className="w-full space-y-5 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700 shadow-sm"
+        className="w-full space-y-5 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm"
       >
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Customer name</span>
-          <input
+          <span className="font-medium text-primary">Customer name</span>
+          <Input
             value={form.customer_name}
             onChange={(e) => setForm((prev) => ({ ...prev, customer_name: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
             placeholder="Jane Smith"
           />
         </label>
 
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Customer email</span>
-          <input
+          <span className="font-medium text-primary">Customer email</span>
+          <Input
             type="email"
             required
             value={form.customer_email}
             onChange={(e) => setForm((prev) => ({ ...prev, customer_email: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
             placeholder="jane@example.com"
           />
         </label>
 
         <label className="block space-y-1">
-          <span className="font-medium text-slate-900">Service name (optional)</span>
-          <input
+          <span className="font-medium text-primary">Service name (optional)</span>
+          <Input
             value={form.service_name}
             onChange={(e) => setForm((prev) => ({ ...prev, service_name: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
             placeholder="Haircut"
           />
         </label>
 
-        <button
+        <Button
           type="submit"
           disabled={saving}
-          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
         >
           {saving ? "Saving..." : "Save Visit"}
-        </button>
-        {message ? <p className="text-slate-700">{message}</p> : null}
+        </Button>
+        {message ? <p className="text-foreground">{message}</p> : null}
       </form>
     </div>
   );

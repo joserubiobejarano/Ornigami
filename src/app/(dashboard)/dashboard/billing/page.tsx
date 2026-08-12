@@ -41,11 +41,11 @@ export default async function BillingPage() {
       </div>
 
       {currentPlan ? (
-        <Card className="border-emerald-200 bg-emerald-50/50">
+        <Card className="border-accent-green/35 bg-accent-green/10">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <CardTitle>{PLANS[currentPlan].name}</CardTitle>
-              <Badge className="border border-emerald-300 bg-emerald-100 text-emerald-800">{activeAgent?.status}</Badge>
+              <Badge className="border border-accent-green/35 bg-accent-green/10 text-primary">{activeAgent?.status}</Badge>
             </div>
             <CardDescription>{formatPrice(currentPlan, period)} / {period === "annual" ? "year" : "month"}</CardDescription>
           </CardHeader>

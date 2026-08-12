@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { nativeSelectClassName } from "@/lib/form-controls";
+import { PageHero } from "@/components/marketing/primitives";
 
 const BUSINESS_TYPES = [
   "Restaurant",
@@ -114,9 +115,10 @@ export function PublicReviewBoosterDemoPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
+      <PageHero eyebrow="Review Booster demo" title="Try a post-visit follow-up with sample data." intro="This safe preview sends one sample email and does not create a business, visit, or recurring automation." />
       <Card>
         <CardHeader>
-          <CardTitle>Public Review Booster Demo</CardTitle>
+          <CardTitle>Send a sample follow-up</CardTitle>
           <CardDescription>
             Send yourself one sample post-visit follow-up email. This is a demo flow and does not create
             business records or automations.
@@ -207,7 +209,7 @@ export function PublicReviewBoosterDemoPage() {
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
           {result ? (
-            <Card className="mt-6 border-emerald-300 bg-emerald-50/50">
+            <Card className="mt-6 border-border bg-surface">
               <CardHeader>
                 <CardTitle className="text-base">Demo email sent</CardTitle>
                 <CardDescription>
@@ -228,15 +230,15 @@ export function PublicReviewBoosterDemoPage() {
                     <div className="whitespace-pre-wrap">{result.body}</div>
                   </div>
                 </div>
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="font-semibold text-emerald-950">This is one email. The real product runs the loop automatically.</p>
-                  <p className="mt-1 text-sm text-emerald-900">
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <p className="font-semibold text-primary">This is one email. The real product runs the loop automatically.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Visit recorded → follow-up timed → customer chooses whether to review → results tracked in your dashboard.
                   </p>
                   <Button asChild className="mt-4">
-                    <Link href="/signup">Start your 14-day trial</Link>
+                    <Link href="/signup">Start free trial</Link>
                   </Button>
-                  <p className="mt-2 text-xs text-emerald-800">Card required at checkout. Cancel anytime.</p>
+                   <p className="mt-2 text-xs text-muted-foreground">14-day free trial. No card required to start. Cancel anytime.</p>
                 </div>
               </CardContent>
             </Card>

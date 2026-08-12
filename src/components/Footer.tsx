@@ -2,73 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import { BrandMark } from "@/components/brand-mark";
+import { Button } from "@/components/ui/button";
+
+const groups = [
+  { title: "Product", links: [["Review Replies", "/review-replies"], ["Review Booster", "/review-booster"], ["Pricing", "/pricing"], ["Live demo", "/demo"]] },
+  { title: "Company", links: [["About", "/about"], ["Contact", "/contact"]] },
+  { title: "Legal", links: [["Privacy", "/privacy"], ["Terms", "/terms"]] },
+];
 
 export function Footer() {
   const pathname = usePathname();
-  const isDemoPage = pathname === "/demo";
-
-  if (isDemoPage) {
-    return (
-      <footer className="border-t border-slate-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
-          <p className="text-center text-sm text-slate-400">
-            &copy; {new Date().getFullYear()} Ornigami. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    );
-  }
-
-  return (
-    <footer className="border-t border-slate-100 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <BrandMark className="h-8 w-8 text-violet-700" />
-              <span className="text-base font-semibold text-slate-900">Ornigami</span>
-            </Link>
-            <p className="mt-3 max-w-xs text-sm text-slate-500">Practical tools for reputation and follow-up workflows at local businesses.</p>
-          </div>
-
-          <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">Products</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/review-replies" className="text-slate-600 hover:text-slate-900">Review Replies</Link></li>
-              <li><Link href="/review-booster" className="text-slate-600 hover:text-slate-900">Review Booster</Link></li>
-              <li><Link href="/pricing" className="text-slate-600 hover:text-slate-900">Pricing</Link></li>
-
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">Company</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/demo" className="text-slate-600 hover:text-slate-900">Live demo</Link></li>
-              <li><Link href="/contact" className="text-slate-600 hover:text-slate-900">Contact</Link></li>
-              <li><Link href="/feedback" className="text-slate-600 hover:text-slate-900">Feedback</Link></li>
-              <li><Link href="/about" className="text-slate-600 hover:text-slate-900">About</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">Legal</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/privacy" className="text-slate-600 hover:text-slate-900">Privacy policy</Link></li>
-              <li><Link href="/terms" className="text-slate-600 hover:text-slate-900">Terms of service</Link></li>
-              <li><Link href="/legal" className="text-slate-600 hover:text-slate-900">Legal</Link></li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-8 sm:flex-row">
-          <p className="text-sm text-slate-400">&copy; {new Date().getFullYear()} Ornigami. All rights reserved.</p>
-          <Link href="/signup" className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800">
-            Try it free
-          </Link>
-        </div>
-      </div>
-    </footer>
-  );
+  if (pathname === "/demo") return <footer className="border-t border-border bg-white"><div className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8"><p className="text-center text-sm text-muted-foreground">© {new Date().getFullYear()} Ornigami. All rights reserved.</p></div></footer>;
+  return <footer className="border-t border-border bg-white"><div className="mx-auto max-w-7xl px-4 py-10 md:px-6 lg:px-8"><div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4"><div><Link href="/" className="inline-flex items-center gap-2.5"><BrandMark className="h-8 w-8 text-accent-purple" /><span className="text-base font-semibold text-primary">Ornigami</span></Link><p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">Practical tools for reputation and follow-up workflows at local businesses.</p></div>{groups.map((group) => <div key={group.title}><h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">{group.title}</h3><ul className="space-y-2 text-sm">{group.links.map(([label, href]) => <li key={href}><Link href={href} className="text-muted-foreground transition-colors hover:text-primary">{label}</Link></li>)}</ul></div>)}</div><div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 md:flex-row"><p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Ornigami. All rights reserved.</p><Button asChild><Link href="/signup">Start free trial</Link></Button></div></div></footer>;
 }

@@ -28,7 +28,6 @@ import {
   checkDemoLimit,
 } from "@/lib/demo";
 import { DashboardCallout } from "@/components/dashboard";
-import { DashboardTopNav } from "@/components/dashboard/top-nav";
 import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-agent-nav";
 import { toast } from "sonner";
 
@@ -44,10 +43,10 @@ function DemoLimitCard() {
   const dashboardHref = session?.user ? "/dashboard" : "/login";
 
   return (
-    <Card className="border-amber-300 bg-amber-50/60">
+    <Card className="border-border bg-surface">
       <CardHeader>
         <CardTitle className="text-base">Demo limit reached</CardTitle>
-        <CardDescription className="text-sm text-slate-700">
+        <CardDescription className="text-sm text-muted-foreground">
           You&apos;ve reached the demo limit. Create a free account to connect your real Google Business
           Profile.
         </CardDescription>
@@ -216,12 +215,7 @@ export function PublicReviewRepliesDemoPage() {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-5xl items-center justify-center px-4 py-3 lg:px-8">
-          <DashboardTopNav className="w-full justify-center" />
-        </div>
-      </header>
-      <main className="px-4 py-8 pb-16">
+      <main className="px-4 py-10 pb-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           <ReviewRepliesAgentNav />
 

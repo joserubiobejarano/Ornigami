@@ -21,11 +21,11 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-semibold bg-gradient-to-r from-purple-600 via-fuchsia-500 to-orange-400 bg-clip-text text-transparent">
+                    <DialogTitle className="text-2xl font-semibold text-primary">
                         Unlock the full review inbox
                     </DialogTitle>
                     <DialogDescription className="text-base pt-2">
-                        {description || "You&apos;ve reached the demo limit. Start your free trial for unlimited reply drafts, review sync, and posting to Google (fair use applies)."}
+                        {description || "You&apos;ve reached the demo limit. Start a free trial for unlimited reply drafts, review sync, and posting to Google (fair use applies)."}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -44,9 +44,9 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                     <div className="flex gap-3">
                         <Link href="/dashboard/billing" className="flex-1">
                             <Button
-                                className="w-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-orange-400 hover:opacity-90"
+                                className="w-full"
                             >
-                                Start your free trial
+                                Start free trial
                             </Button>
                         </Link>
                         <Button onClick={onClose}>

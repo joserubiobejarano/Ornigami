@@ -4,6 +4,7 @@ import { FormEvent, useRef, useState } from "react";
 
 import { FollowupsNav } from "@/modules/review-booster/components/followups-nav";
 import { PageHeader } from "@/modules/review-booster/components/page-header";
+import { Button } from "@/components/ui/button";
 
 type UploadResult = {
   rows_processed: number;
@@ -91,43 +92,43 @@ export default function ReviewBoosterUploadPage() {
         description="Import completed visits from CSV so follow-ups can be created automatically with the same validation and dedupe safeguards."
         backToOverview
       >
-        <button
+        <Button
           type="button"
           onClick={onDownloadTemplate}
-          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+          size="sm"
         >
           Download template
-        </button>
+        </Button>
       </PageHeader>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-3xl font-semibold text-slate-900">How it works</h2>
-        <ol className="mt-4 space-y-2 text-slate-800">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-3xl font-semibold text-primary">How it works</h2>
+        <ol className="mt-4 space-y-2 text-foreground">
           <li>1. Step 1: Download the template</li>
           <li>2. Step 2: Fill in completed visits</li>
           <li>3. Step 3: Upload the CSV</li>
           <li>4. Step 4: Follow-ups send automatically</li>
         </ol>
-        <p className="mt-4 text-slate-600">
+        <p className="mt-4 text-muted-foreground">
           Manual/CSV visits can trigger follow-ups if the visit happened between 23 hours and 7 days ago.
         </p>
-        <p className="mt-2 text-xs text-slate-600">
+        <p className="mt-2 text-xs text-muted-foreground">
           For better review conversion, make sure Settings uses the direct Google Maps &quot;Write a review&quot; link.
         </p>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-900">Expected CSV columns</h2>
-        <p className="mt-3 rounded-md bg-slate-100 px-3 py-2 font-mono text-sm text-slate-800">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-primary">Expected CSV columns</h2>
+        <p className="mt-3 rounded-md bg-surface px-3 py-2 font-mono text-sm text-foreground">
           customer_name, customer_email, service_received, visited_at
         </p>
-        <p className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+        <p className="mt-3 rounded-md border border-accent-yellow/35 bg-accent-yellow/10 px-3 py-2 text-sm text-primary">
           Example row: Jane Doe, jane@example.com, Teeth cleaning, 2026-05-25
-          <span className="ml-1 text-sky-700">(Use date format: YYYY-MM-DD)</span>
+          <span className="ml-1 text-muted-foreground">(Use date format: YYYY-MM-DD)</span>
         </p>
       </section>
 
-      <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700 shadow-sm">
+      <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
         <input
           ref={fileInputRef}
           type="file"
@@ -166,56 +167,55 @@ export default function ReviewBoosterUploadPage() {
             }
           }}
           className={[
-            "flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 text-center transition",
-            dragActive ? "border-slate-500 bg-slate-100" : "border-slate-300 bg-slate-50"
+            "flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            dragActive ? "border-primary bg-surface" : "border-border bg-surface"
           ].join(" ")}
         >
           <div
             className={[
               "mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full text-lg text-white",
-              uploading ? "animate-pulse bg-sky-600" : file ? "bg-emerald-700" : "bg-primary"
+              uploading ? "animate-pulse bg-accent-yellow" : file ? "bg-accent-green" : "bg-primary"
             ].join(" ")}
           >
             {uploading ? "..." : file ? "OK" : "UP"}
           </div>
-          <p className="text-base font-medium text-slate-900">
+          <p className="text-base font-medium text-primary">
             Drag and drop your CSV file here, or click to browse
           </p>
-          <p className="mt-1 text-sm text-slate-500">CSV files only</p>
+          <p className="mt-1 text-sm text-muted-foreground">CSV files only</p>
           {file ? (
-            <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">
+            <p className="mt-2 rounded-md border border-accent-green/35 bg-accent-green/10 px-3 py-1 text-sm font-semibold text-primary">
               File selected: {file.name}
             </p>
           ) : null}
         </div>
-        <button
+        <Button
           type="submit"
           disabled={uploading}
-          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
         >
           {uploading ? "Uploading..." : "Upload CSV"}
-        </button>
+        </Button>
         {message ? (
           <div
             className={[
               "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium",
               statusKind === "success"
-                ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                ? "border-accent-green/35 bg-accent-green/10 text-primary"
                 : statusKind === "error"
-                  ? "border-rose-300 bg-rose-50 text-rose-900"
+                  ? "border-destructive/35 bg-destructive/10 text-destructive"
                   : statusKind === "uploading"
-                    ? "border-sky-300 bg-sky-50 text-sky-900"
-                    : "border-slate-300 bg-slate-50 text-slate-800"
+                    ? "border-accent-yellow/35 bg-accent-yellow/10 text-primary"
+                    : "border-border bg-surface text-primary"
             ].join(" ")}
           >
-            <span className={statusKind === "uploading" ? "inline-block h-2 w-2 animate-ping rounded-full bg-sky-600" : ""} />
+            <span className={statusKind === "uploading" ? "inline-block h-2 w-2 animate-ping rounded-full bg-accent-yellow" : ""} />
             <span>{message}</span>
           </div>
         ) : null}
         {result ? (
-          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-center gap-2 text-slate-900">
-              <span className="inline-flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+          <div className="space-y-2 rounded-lg border border-border bg-surface p-4">
+            <div className="flex items-center gap-2 text-primary">
+              <span className="inline-flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-accent-green text-[10px] font-bold text-white">
                 OK
               </span>
               <p className="text-sm font-semibold">Upload processing complete</p>
@@ -225,7 +225,7 @@ export default function ReviewBoosterUploadPage() {
             <p>rows_skipped: {result.rows_skipped}</p>
             <p>duplicates_skipped: {result.duplicates_skipped}</p>
             {result.errors.length > 0 ? (
-              <ul className="list-disc rounded-md border border-amber-300 bg-amber-50 p-3 pl-8 text-amber-900">
+              <ul className="list-disc rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-3 pl-8 text-primary">
                 {result.errors.map((err, idx) => (
                   <li key={`${err.row}-${idx}`}>
                     row {err.row}: {err.message}
