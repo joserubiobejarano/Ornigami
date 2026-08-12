@@ -72,26 +72,26 @@ export function RunFollowupsButton({
           "Send eligible follow-ups now"
         )}
       </button>
-      {disabled && disabledReason ? <p className="text-sm text-slate-600">{disabledReason}</p> : null}
+      {disabled && disabledReason ? <p className="text-sm text-muted-foreground">{disabledReason}</p> : null}
       {message ? (
         <div
           role="status"
           className={
             messageKind === "success"
-              ? "rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900"
+              ? "rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
               : messageKind === "error"
-                ? "rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900"
+                ? "rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100"
                 : messageKind === "running"
-                  ? "rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900"
-                  : "rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800"
+                  ? "rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"
+                  : "rounded-lg border border-border bg-muted px-3 py-2 text-sm font-medium text-card-foreground"
           }
         >
           {message}
         </div>
       ) : null}
       {result ? (
-        <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800">
-          <p className="font-semibold text-slate-900">Run summary</p>
+        <div className="space-y-2 rounded-lg border border-border bg-muted p-3 text-sm text-card-foreground">
+          <p className="font-semibold text-card-foreground">Run summary</p>
           <p>
             scanned: <span className="font-semibold">{result.scanned}</span> | sent:{" "}
             <span className="font-semibold text-emerald-700">{result.sent}</span> | failed:{" "}
