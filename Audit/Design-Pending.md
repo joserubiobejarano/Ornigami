@@ -28,6 +28,15 @@ Final verification evidence:
 - `npm run test:security` passed: 5/5.
 - Browser QA covered 18 routes: all returned HTTP 200, rendered content, showed no Next error overlay, and produced no console or page errors. Reduced-motion mode and the Products menu interaction were also verified. The home and login layouts were visually inspected from fresh screenshots.
 
+## Owner-directed visual restoration pass - 2026-08-13
+
+After the audit was marked complete, the owner requested two targeted restorations from the prior implementation. These are now implemented and verified:
+
+- The homepage hero was returned to the previous reference treatment: original headline and copy, trust row, CTA labels, background treatment, and review inbox mockup.
+- The dark feature-band mockups beside "Every review answered, every time." and "Turn good visits into lasting trust." were returned to their previous versions, including the dark review inbox, purple reply-ready panels, Review Booster stats, and four-customer follow-up list.
+- Browser verification confirmed both restored mockups render on the homepage with the reference content and no application error overlay.
+- `npm run lint` and `npm run build` continue to pass after the restoration pass.
+
 This document is now complete for the Agent-LocalLift redesign scope. Any future work should be treated as a new product or app-focused pass, not as pending work from this brief.
 
 ## Direction decisions (locked by owner)
