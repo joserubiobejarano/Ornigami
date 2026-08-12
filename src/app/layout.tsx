@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { LayoutFrame } from "@/components/layout-frame";
 import { Toaster } from "sonner";
+import { ThemeSync } from "@/components/theme-sync";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased flex flex-col min-h-screen">
         <AuthProvider>
+          <ThemeSync />
           <LayoutFrame>{children}</LayoutFrame>
           <Toaster position="bottom-right" richColors closeButton />
         </AuthProvider>

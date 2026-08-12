@@ -27,7 +27,7 @@ export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan
           const plan = PLANS[planId];
           const isCurrent = currentPlan === planId;
           return (
-            <Card key={planId} className={plan.recommended ? "border-primary shadow-md" : ""}>
+            <Card key={planId} className={`transition-transform hover:-translate-y-1 hover:shadow-lg ${plan.recommended ? "border-primary shadow-md" : ""}`}>
               <CardHeader>
                 <div className="flex items-center justify-between gap-2">
                   <CardTitle>{plan.name}</CardTitle>
@@ -38,7 +38,7 @@ export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan
                 <p className="text-xs text-muted-foreground">{billingPeriod === "annual" ? `${formatAnnualSavings(planId)} · ${effectiveMonthlyFromAnnual(planId)}/month effective` : `or ${effectiveMonthlyFromAnnual(planId)}/month billed annually`}</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ul className="space-y-2 text-sm">{plan.features.map((feature) => <li key={feature}>✓ {feature}</li>)}</ul>
+                <ul className="space-y-2 text-sm">{plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="font-semibold text-primary">✓</span><span>{feature}</span></li>)}</ul>
                 {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start 14-day trial</Button></form> : isCurrent ? <p className="text-sm font-medium text-emerald-700">Current plan</p> : currentPlan !== "complete" && planId === "complete" ? <ChangePlanButton planId="complete" billingPeriod={billingPeriod} /> : null}
               </CardContent>
             </Card>

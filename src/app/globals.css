@@ -44,6 +44,7 @@
 }
 
 :root {
+  color-scheme: light;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -83,6 +84,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -129,4 +131,22 @@
     font-family: "Avenir Next", "Segoe UI", sans-serif;
   }
   h1, h2, h3, h4, h5, h6 { font-family: "Trebuchet MS", "Avenir Next", sans-serif; }
+}
+
+/* Shared visual contract for legacy dashboard surfaces that still use slate
+   utility classes. These adapters keep older agent screens readable when dark
+   mode is enabled while tokenized components remain the source of truth. */
+@layer utilities {
+  .dark .bg-white { background-color: var(--card); }
+  .dark .bg-slate-50 { background-color: var(--muted); }
+  .dark .bg-slate-100 { background-color: var(--secondary); }
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-slate-700 { color: var(--card-foreground); }
+  .dark .text-slate-600,
+  .dark .text-slate-500,
+  .dark .text-slate-400 { color: var(--muted-foreground); }
+  .dark .border-slate-100,
+  .dark .border-slate-200,
+  .dark .border-slate-300 { border-color: var(--border); }
 }

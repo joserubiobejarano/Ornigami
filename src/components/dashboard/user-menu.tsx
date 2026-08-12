@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { LogOut, Settings, CreditCard, UserRound, Moon, Sun } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { THEME_STORAGE_KEY } from "@/components/theme-sync";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const THEME_STORAGE_KEY = "ornigami-theme";
 
 function subscribeToTheme(onChange: () => void): () => void {
   window.addEventListener("storage", onChange);
@@ -53,10 +52,6 @@ export function DashboardUserMenu() {
     getThemeSnapshot,
     getServerThemeSnapshot
   );
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
 
   async function handleSignOut() {
     await fetch("/api/auth/signout", { method: "POST" });
