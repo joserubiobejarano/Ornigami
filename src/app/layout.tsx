@@ -38,6 +38,11 @@ export const metadata: Metadata = {
   icons: { icon: "/file.svg" },
 };
 
+// The proxy supplies a per-request CSP nonce. Static HTML cannot receive that
+// nonce, so keep the root document dynamic so Next.js can nonce its streamed
+// inline hydration scripts correctly.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{

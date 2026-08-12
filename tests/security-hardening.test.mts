@@ -34,6 +34,8 @@ test("Sentry is configured not to send default PII", () => {
 
 test("CSP nonces are passed to Next.js and Sentry ingest is allowed", () => {
   const proxy = readFileSync("src/proxy.ts", "utf8");
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
   assert.match(proxy, /requestHeaders\.set\("Content-Security-Policy", buildContentSecurityPolicy\(nonce\)\)/);
   assert.match(proxy, /https:\/\/\*\.sentry\.io/);
+  assert.match(layout, /export const dynamic = "force-dynamic"/);
 });
