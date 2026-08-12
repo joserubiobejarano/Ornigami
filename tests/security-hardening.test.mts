@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { decryptToken, encryptToken } from "../src/lib/encrypted-token.ts";
@@ -13,4 +14,20 @@ test("OAuth token encryption round-trips and does not expose plaintext", () => {
 test("trusted IP extraction ignores the spoofable left-most forwarded hop", () => {
   const headers = new Headers({ "x-forwarded-for": "spoofed, proxy, trusted" });
   assert.equal(getTrustedRequestIp(headers), "trusted");
+});
+
+test("privacy retention windows are explicit and wired to cleanup", () => {
+  const retention = readFileSync("src/lib/privacy-retention.ts", "utf8");
+  const route = readFileSync("src/app/api/cron/privacy/route.ts", "utf8");
+  assert.match(retention, /leads: 90/);
+  assert.match(retention, /feedback: 365/);
+  assert.match(retention, /cronRuns: 30/);
+  assert.match(route, /followup_integration_events/);
+  assert.match(route, /cron_runs/);
+});
+
+test("Sentry is configured not to send default PII", () => {
+  assert.match(readFileSync("sentry.client.config.ts", "utf8"), /sendDefaultPii: false/);
+  assert.match(readFileSync("sentry.server.config.ts", "utf8"), /sendDefaultPii: false/);
+  assert.match(readFileSync("sentry.edge.config.ts", "utf8"), /sendDefaultPii: false/);
 });
