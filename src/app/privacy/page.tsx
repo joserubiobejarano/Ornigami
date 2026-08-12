@@ -3,7 +3,7 @@ export default function PrivacyPage() {
     <div className="container max-w-3xl mx-auto py-12 px-4">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
       <div className="prose max-w-none space-y-6">
-        <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+        <p className="text-muted-foreground">Last updated: 12 August 2026</p>
         
         <section>
           <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>
@@ -20,10 +20,10 @@ export default function PrivacyPage() {
             events are retained for 90 days; feedback, review-link clicks, and integration events for
             365 days; cron history for 30 days; and rate-limit state for 2 days. Demo challenges and
             verification records are removed after expiry. You may export or
-            permanently delete your account data through the privacy API or by contacting privacy@ornigami.app.
+            permanently delete your account data through the privacy API or by contacting privacy@ornigami.com.
           </p>
           <p>
-            We use Google, Stripe, Twilio, OpenAI, Resend, Sentry, and Neon as service providers where
+            We use Google, Stripe, Twilio, Resend, Sentry, and Neon as service providers where
             needed to deliver the product. Google OAuth tokens are encrypted before storage.
           </p>
         </section>
@@ -33,6 +33,21 @@ export default function PrivacyPage() {
           <p>
             We use the information we collect to provide, maintain, and improve our services,
             process transactions, and communicate with you.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Cookies and legal bases</h2>
+          <p>
+            Ornigami uses essential cookies and browser storage for authentication, security,
+            rate-limiting, and saved preferences. We do not use those technologies to sell personal
+            information. Where GDPR applies, we process account data to provide the service, meet
+            legal obligations, protect the service, and with your consent where consent is required.
+          </p>
+          <p>
+            You may request access, correction, portability, restriction, or deletion of your data,
+            and may object to processing where applicable. Contact privacy@ornigami.com to exercise
+            these rights.
           </p>
         </section>
 
@@ -48,8 +63,8 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-semibold mb-4">Contact</h2>
           <p>
             If you have questions about this Privacy Policy, please contact us at{" "}
-            <a href="mailto:privacy@ornigami.app" className="text-primary hover:underline">
-              privacy@ornigami.app
+            <a href="mailto:privacy@ornigami.com" className="text-primary hover:underline">
+              privacy@ornigami.com
             </a>
           </p>
         </section>

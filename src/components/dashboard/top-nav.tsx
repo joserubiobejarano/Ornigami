@@ -18,10 +18,14 @@ export function DashboardTopNav({ className }: { className?: string }) {
   const selectedAgent = activeAgents.find((agent) => agent.basePath === selectedAgentPath);
 
   return (
-    <nav className={cn("flex flex-wrap items-center justify-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-2 py-2 shadow-sm", className)} aria-label="Dashboard">
-      <Link href="/dashboard" className={cn("rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0f172b]/90", pathname === "/dashboard" ? "ring-1 ring-[#0f172b]/25" : "ring-1 ring-transparent")}>
+    <nav className={cn("flex flex-wrap items-center justify-center gap-1 rounded-xl border border-border/70 bg-muted/40 px-2 py-2 shadow-sm", className)} aria-label="Dashboard">
+      <Link href="/dashboard" className={cn("rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90", pathname === "/dashboard" ? "ring-1 ring-primary/30" : "ring-1 ring-transparent")}>
         Dashboard
       </Link>
+      {[{ href: "/reviews", label: "Reviews" }, { href: "/content", label: "Content" }, { href: "/audit", label: "Audit" }, { href: "/settings", label: "Settings" }, { href: "/dashboard/billing", label: "Billing" }].map((item) => {
+        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        return <Link key={item.href} href={item.href} className={cn("rounded-lg px-3 py-2 text-sm font-medium transition-colors", active ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:bg-background hover:text-foreground")}>{item.label}</Link>;
+      })}
       <DropdownMenu>
         <DropdownMenuTrigger asChild id="dashboard-agent-menu-trigger">
           <Button variant="outline" className="h-10 min-w-52 justify-between rounded-lg border-border bg-background/90 px-3 text-sm font-medium">

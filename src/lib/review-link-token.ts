@@ -33,6 +33,6 @@ export function verifyReviewLinkToken(token: string): ReviewLinkPayload | null {
 }
 
 export function buildReviewLinkUrl(payload: ReviewLinkPayload): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
   return `${baseUrl.replace(/\/$/, "")}/r/${buildReviewLinkToken(payload)}`;
 }

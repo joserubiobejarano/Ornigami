@@ -239,7 +239,7 @@ export default function ReviewBoosterSettingsPage() {
                 onClick={() => {
                   window.location.href = "/api/google/oauth/start";
                 }}
-                className="inline-flex rounded-lg bg-[#0f172b] px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                className="inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
               >
                 Connect Google Business Profile
               </button>
@@ -316,7 +316,7 @@ export default function ReviewBoosterSettingsPage() {
           <button
             type="submit"
             disabled={loading || saving}
-            className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-70"
+            className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
           >
             {saving ? "Saving..." : "Save settings"}
           </button>

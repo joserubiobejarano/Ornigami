@@ -73,7 +73,7 @@ export default async function ReviewBoosterPage() {
         </div>
         <Link
           href="/dashboard/agents/review-booster/new"
-          className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
         >
           Add Visit
         </Link>
@@ -119,7 +119,10 @@ export default async function ReviewBoosterPage() {
       </section>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <RunFollowupsButton />
+        <RunFollowupsButton
+          disabled={stats.pending === 0 || !business.name.trim()}
+          disabledReason={!business.name.trim() ? "Add your business name in Settings before sending follow-ups." : stats.pending === 0 ? "There are no eligible visits to send right now." : undefined}
+        />
       </div>
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -127,7 +130,7 @@ export default async function ReviewBoosterPage() {
           <h2 className="text-2xl font-semibold text-slate-900">Recent Visits</h2>
         </div>
         {recentVisits.length === 0 ? (
-          <p className="px-4 py-5 text-sm text-slate-600">No visits yet for this business.</p>
+          <div className="px-4 py-6"><p className="text-sm text-slate-600">No visits yet for this business.</p><Link href="/dashboard/agents/review-booster/new" className="mt-3 inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Add your first visit</Link></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">

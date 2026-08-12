@@ -3,7 +3,7 @@ export default function TermsPage() {
     <div className="container max-w-3xl mx-auto py-12 px-4">
       <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
       <div className="prose max-w-none space-y-6">
-        <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+        <p className="text-muted-foreground">Last updated: 12 August 2026</p>
         
         <section>
           <h2 className="text-2xl font-semibold mb-4">Acceptance of Terms</h2>
@@ -24,8 +24,9 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Subscription and Billing</h2>
           <p>
-            Subscriptions are billed monthly. You may cancel your subscription at any time.
-            Refunds are provided according to our refund policy.
+            Plans may be billed monthly or annually, according to the billing period selected at
+            checkout. You may cancel your subscription at any time from the billing portal. If a
+            refund is available, contact support@ornigami.com and include your account details.
           </p>
         </section>
 

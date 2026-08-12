@@ -12,7 +12,7 @@ const tabData = {
     body: "Turn your Google review inbox into a handled list. Ornigami drafts on brand replies instantly so you can approve and send in one click.",
     bullets: [
       "Inbox style view of all your reviews in one place",
-      "AI drafted replies that match your tone",
+      "Drafted replies that match your tone",
       "Queue or send replies directly to Google",
     ],
   },

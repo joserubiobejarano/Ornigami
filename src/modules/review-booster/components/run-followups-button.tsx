@@ -10,9 +10,13 @@ type RunResult = {
 };
 
 export function RunFollowupsButton({
-  onFinished
+  onFinished,
+  disabled = false,
+  disabledReason,
 }: {
   onFinished?: (result: RunResult) => void;
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -56,8 +60,8 @@ export function RunFollowupsButton({
       <button
         type="button"
         onClick={runNow}
-        disabled={loading}
-        className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-70"
+        disabled={loading || disabled}
+        className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
       >
         {loading ? (
           <span className="inline-flex items-center gap-2">
@@ -68,6 +72,7 @@ export function RunFollowupsButton({
           "Send eligible follow-ups now"
         )}
       </button>
+      {disabled && disabledReason ? <p className="text-sm text-slate-600">{disabledReason}</p> : null}
       {message ? (
         <div
           role="status"

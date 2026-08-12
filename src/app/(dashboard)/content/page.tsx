@@ -254,7 +254,7 @@ export default function ContentPage() {
         <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 text-sm text-amber-950 dark:text-amber-100">
           <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
           <p className="mt-1 text-muted-foreground">
-            Ornigami is focused on your <strong>review inbox</strong> and <strong>AI replies</strong>. Use{" "}
+            Ornigami is focused on your <strong>review inbox</strong> and <strong>reply drafts</strong>. Use{" "}
             <Link href="/reviews" className="underline underline-offset-2">
               Reviews
             </Link>{" "}
@@ -279,7 +279,7 @@ export default function ContentPage() {
         {!planLoading && !hasPaidAccess && !isDemo && (
           <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4 space-y-2">
             <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-              Choose a plan to connect Google Business Profile, sync reviews, and use AI
+              Choose a plan to connect Google Business Profile, sync reviews, and use reply
               reply drafts (this legacy generator is not the main product).
             </p>
           </div>
@@ -389,7 +389,7 @@ export default function ContentPage() {
       <PlanGateModal
         open={showPlanGateModal}
         onOpenChange={setShowPlanGateModal}
-        featureName="Syncing reviews from Google Business Profile, AI reply drafts, and posting replies"
+        featureName="Syncing reviews from Google Business Profile, drafting replies, and posting replies"
       />
 
       <UpgradeModal
@@ -397,7 +397,7 @@ export default function ContentPage() {
         onClose={() => setShowUpgradeModal(false)}
         description={
           isDemo
-            ? "You've reached the demo limit for this legacy screen. Start your free trial for the full review inbox (sync, AI drafts, posting)."
+            ? "You've reached the demo limit for this legacy screen. Start your free trial for the full review inbox (sync, drafts, posting)."
             : undefined
         }
       />

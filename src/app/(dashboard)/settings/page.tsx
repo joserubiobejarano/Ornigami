@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import {
   DashboardCallout,
@@ -18,8 +19,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { nativeSelectClassName } from "@/lib/form-controls";
 
-const DEFAULT_TONE = "Friendly and professional";
+const DEFAULT_TONE = "Warm and friendly";
 
 const TONE_OPTIONS = [
   "Warm and friendly",
@@ -42,6 +45,7 @@ type ConnectionData = {
 };
 
 function SettingsPageContent() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [isDemo, setIsDemo] = useState(false);
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -103,7 +107,9 @@ function SettingsPageContent() {
           const s = await settingsRes.json();
           setBusinessName(typeof s.businessName === "string" ? s.businessName : "");
           setTone(
-            typeof s.tone === "string" && s.tone.trim() ? s.tone.trim() : DEFAULT_TONE
+            typeof s.tone === "string" && TONE_OPTIONS.includes(s.tone as (typeof TONE_OPTIONS)[number])
+              ? s.tone
+              : DEFAULT_TONE
           );
           setOwnerName(typeof s.ownerName === "string" ? s.ownerName : "");
           setContactPreference(typeof s.contactPreference === "string" ? s.contactPreference : "");
@@ -185,6 +191,7 @@ function SettingsPageContent() {
         throw new Error(typeof j.error === "string" ? j.error : "Save failed");
       }
       setSaveState("saved");
+      toast.success("Reply settings saved.");
       setTimeout(() => setSaveState("idle"), 2500);
     } catch (e: unknown) {
       setSaveState("error");
@@ -211,6 +218,7 @@ function SettingsPageContent() {
   };
 
   const handleDisconnect = async () => {
+    if (!window.confirm("Disconnect Google Business Profile? Review syncing and posting will stop until you reconnect.")) return;
     setError(null);
     try {
       const res = await fetch("/api/google/disconnect", { method: "POST" });
@@ -318,7 +326,7 @@ function SettingsPageContent() {
             </DashboardCallout>
           )}
           {settingsLoading ? (
-            <p className="text-sm text-foreground">Loading reply settings…</p>
+            <div className="space-y-3"><Skeleton className="h-4 w-32" /><Skeleton className="h-9 w-full" /><Skeleton className="h-4 w-24" /><Skeleton className="h-9 w-full" /></div>
           ) : (
             <>
               <FormField label="Business name" htmlFor="settings-business-name">
@@ -335,7 +343,7 @@ function SettingsPageContent() {
                   id="settings-tone"
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-foreground"
+                  className={nativeSelectClassName}
                 >
                   {TONE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -412,7 +420,7 @@ function SettingsPageContent() {
           )}
 
           {connLoading && (
-            <p className="text-sm text-foreground">Loading Google connection…</p>
+            <div className="space-y-2"><Skeleton className="h-4 w-44" /><Skeleton className="h-10 w-full" /></div>
           )}
 
           {!connLoading && !gbpConnected && (
@@ -513,7 +521,7 @@ function SettingsPageContent() {
       </Card>
 
       <div className="border-t border-border pt-6">
-        <p className="mb-3 text-sm text-foreground">Signed in as your account.</p>
+        <p className="mb-3 text-sm text-muted-foreground">Signed in as {session?.user?.email ?? "your account"}.</p>
         <SignOutButton className="w-full sm:w-auto" />
       </div>
     </DashboardPage>

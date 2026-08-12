@@ -22,7 +22,7 @@ export function AgentActivationPlaceholder({
             <input type="hidden" name="agent_id" value={agentId} />
             <button
               type="submit"
-              className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+              className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               Activate agent
             </button>

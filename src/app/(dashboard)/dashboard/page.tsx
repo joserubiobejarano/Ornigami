@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { DashboardPage } from "@/components/dashboard";
+import { DashboardPage, StatusBadge } from "@/components/dashboard";
 import { ActivationChecklist, type ActivationChecklistStep } from "@/components/dashboard/activation-checklist";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,7 +93,7 @@ export default async function DashboardPageRoute() {
     <DashboardPage width="lg" className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Welcome to Ornigami</h1>
-        <p className="text-sm text-foreground">Manage your AI agents for local business growth.</p>
+        <p className="text-sm text-muted-foreground">Manage your tools for local business growth.</p>
         {businessName ? (
           <p className="text-sm text-muted-foreground">Business: {businessName}</p>
         ) : null}
@@ -113,13 +113,13 @@ export default async function DashboardPageRoute() {
                   {isComingSoon ? (
                     <Badge variant="secondary">Coming soon</Badge>
                   ) : canOpen ? (
-                    <Badge className="border border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                    <StatusBadge tone="success">
                       Active
-                    </Badge>
+                    </StatusBadge>
                   ) : (
-                    <Badge className="border border-red-200 bg-red-100 text-red-700 hover:bg-red-100">
+                    <StatusBadge tone="error">
                       Not active
-                    </Badge>
+                    </StatusBadge>
                   )}
                 </div>
                 <CardDescription>{agent.shortDescription}</CardDescription>
@@ -130,13 +130,13 @@ export default async function DashboardPageRoute() {
                     Coming soon
                   </Button>
                 ) : canOpen ? (
-                  <Button asChild className="bg-[#0f172b] text-white hover:opacity-90">
+                  <Button asChild>
                     <Link href={agent.basePath}>Open agent</Link>
                   </Button>
                 ) : (
                   <form action="/api/stripe/checkout" method="post">
                     <input type="hidden" name="agent_id" value={agent.id} />
-                    <Button type="submit" className="bg-[#0f172b] text-white hover:opacity-90">
+                    <Button type="submit">
                       Activate
                     </Button>
                   </form>
@@ -150,7 +150,7 @@ export default async function DashboardPageRoute() {
       <ActivationChecklist steps={activationSteps} />
 
       <div>
-        <Button asChild className="bg-[#0f172b] text-white hover:opacity-90">
+        <Button asChild>
           <Link href="/dashboard/billing">Billing & subscriptions</Link>
         </Button>
       </div>

@@ -19,13 +19,13 @@ export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerPro
         variant="info"
         action={
           <Button asChild size="sm">
-            <Link href="/settings#billing">Upgrade now</Link>
+            <Link href="/dashboard/billing">Upgrade now</Link>
           </Button>
         }
       >
         <p>
           Trial ends on <span className="font-medium text-foreground">{trialEndDate}</span>. Upgrade to keep
-          syncing reviews, AI reply drafts, and posting to Google.
+          syncing reviews, reply drafts, and posting to Google.
         </p>
       </DashboardCallout>
     );
@@ -37,13 +37,13 @@ export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerPro
         variant="warning"
         action={
           <Button asChild size="sm">
-            <Link href="/settings#billing">Choose a plan</Link>
+          <Link href="/dashboard/billing">Choose a plan</Link>
           </Button>
         }
       >
         <p>
           Choose a plan (from €39/month) to connect Google Business Profile, sync reviews, and
-          use AI reply drafts.
+          use reply drafts.
         </p>
       </DashboardCallout>
     );

@@ -4,11 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, MessageSquare, Star, Menu, X } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 
 const agents = [
   {
     name: "Review Replies",
-    description: "AI drafts for every Google review",
+    description: "Draft replies for every Google review",
     href: "/review-replies",
     icon: MessageSquare,
     gradient: "bg-slate-700",
@@ -42,9 +43,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900">
-            <span className="text-xs font-bold text-white">OR</span>
-          </div>
+          <BrandMark className="h-8 w-8 text-violet-700" />
           <span className="text-base font-semibold tracking-tight text-slate-900">Ornigami</span>
         </Link>
 
@@ -106,6 +105,10 @@ export function Header() {
               )}
             </AnimatePresence>
           </div>
+
+          <Link href="/pricing" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
+            Pricing
+          </Link>
 
         </nav>
 
@@ -169,6 +172,9 @@ export function Header() {
                 </Link>
               ))}
               <div className="border-t border-slate-100 pt-2" />
+              <Link href="/pricing" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
+                Pricing
+              </Link>
               <div className="flex flex-col gap-2 border-t border-slate-100 pt-2">
                 <Link
                   href="/login"

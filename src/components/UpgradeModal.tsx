@@ -25,7 +25,7 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                         Unlock the full review inbox
                     </DialogTitle>
                     <DialogDescription className="text-base pt-2">
-                        {description || "You&apos;ve reached the demo limit. Start your free trial for unlimited AI reply drafts, review sync, and posting to Google (fair use applies)."}
+                        {description || "You&apos;ve reached the demo limit. Start your free trial for unlimited reply drafts, review sync, and posting to Google (fair use applies)."}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -33,7 +33,7 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
                         <h3 className="font-medium text-slate-900">What you&apos;ll get:</h3>
                         <ul className="text-sm text-slate-600 space-y-1">
-                            <li>✓ Unlimited AI reply drafts</li>
+                            <li>✓ Unlimited reply drafts</li>
                             <li>✓ Post replies to Google</li>
                             <li>✓ Sync reviews from all locations</li>
                             <li>✓ Connect your Google Business Profile</li>
@@ -42,7 +42,7 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                     </div>
 
                     <div className="flex gap-3">
-                        <Link href="/settings#billing" className="flex-1">
+                        <Link href="/dashboard/billing" className="flex-1">
                             <Button
                                 className="w-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-orange-400 hover:opacity-90"
                             >

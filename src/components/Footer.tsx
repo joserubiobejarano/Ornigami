@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandMark } from "@/components/brand-mark";
 
 export function Footer() {
   const pathname = usePathname();
@@ -25,12 +26,10 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900">
-                <span className="text-xs font-bold text-white">OR</span>
-              </div>
+              <BrandMark className="h-8 w-8 text-violet-700" />
               <span className="text-base font-semibold text-slate-900">Ornigami</span>
             </Link>
-            <p className="mt-3 max-w-xs text-sm text-slate-500">AI-powered reputation management for local businesses.</p>
+            <p className="mt-3 max-w-xs text-sm text-slate-500">Practical tools for reputation and follow-up workflows at local businesses.</p>
           </div>
 
           <div>
@@ -38,6 +37,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/review-replies" className="text-slate-600 hover:text-slate-900">Review Replies</Link></li>
               <li><Link href="/review-booster" className="text-slate-600 hover:text-slate-900">Review Booster</Link></li>
+              <li><Link href="/pricing" className="text-slate-600 hover:text-slate-900">Pricing</Link></li>
 
             </ul>
           </div>
@@ -48,6 +48,7 @@ export function Footer() {
               <li><Link href="/demo" className="text-slate-600 hover:text-slate-900">Live demo</Link></li>
               <li><Link href="/contact" className="text-slate-600 hover:text-slate-900">Contact</Link></li>
               <li><Link href="/feedback" className="text-slate-600 hover:text-slate-900">Feedback</Link></li>
+              <li><Link href="/about" className="text-slate-600 hover:text-slate-900">About</Link></li>
             </ul>
           </div>
 

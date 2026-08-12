@@ -23,7 +23,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     agents: ["review_replies"], recommended: false, seats: 1, monthlyRequestAllowance: 500,
     amounts: { monthly: 39, annual: 360 },
     priceEnv: { monthly: "STRIPE_PRICE_REPLIES_MONTHLY", annual: "STRIPE_PRICE_REPLIES_ANNUAL" },
-    features: ["AI-drafted replies for every Google review", "Approve in one click, or let 4-5 star replies post automatically", "1-3 star reviews always go to you first", "Replies in your customer's own language", "Unlimited reviews synced from your profile", "1 location, 1 user"],
+    features: ["Drafted replies for every Google review", "Approve in one click, or let 4-5 star replies post automatically", "1-3 star reviews always go to you first", "Replies in your customer's own language", "Unlimited reviews synced from your profile", "1 location, 1 user"],
   },
   booster: {
     id: "booster", name: "Review Booster", tagline: "Ask every customer for a review, automatically.",

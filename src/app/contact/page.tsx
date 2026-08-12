@@ -10,15 +10,15 @@ export default function ContactPage() {
           <div>
             <h2 className="text-xl font-semibold mb-2">Email</h2>
             <p>
-              <a href="mailto:support@ornigami.app" className="text-primary hover:underline">
-                support@ornigami.app
+              <a href="mailto:support@ornigami.com" className="text-primary hover:underline">
+                support@ornigami.com
               </a>
             </p>
           </div>
           <div>
             <h2 className="text-xl font-semibold mb-2">Response Time</h2>
             <p className="text-muted-foreground">
-              ee typically respond within 24-48 hours during business days.
+              We typically respond within 24-48 hours during business days.
             </p>
           </div>
         </div>

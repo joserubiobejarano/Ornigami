@@ -22,7 +22,7 @@ const steps = [
   {
     number: 3,
     title: "Create content & replies from one dashboard",
-    description: "Generate AI-powered review replies, blog ideas, and Google posts from a single place.",
+    description: "Generate review replies, blog ideas, and Google posts from a single place.",
     color: "#4F46E5",
   },
 ];

@@ -17,7 +17,7 @@ const faqs = [
       "Not yet. The launch version supports one location per subscription; multi-location management is planned.",
   },
   {
-    question: "Will the AI replies sound like my brand?",
+    question: "Will the replies sound like my brand?",
     answer:
       "You can set tone and guidelines, then Ornigami follows them for every reply. You can also edit any draft before sending it.",
   },

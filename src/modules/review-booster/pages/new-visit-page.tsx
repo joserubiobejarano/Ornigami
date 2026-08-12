@@ -96,7 +96,7 @@ export default function ReviewBoosterNewVisitPage() {
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-70"
+          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
         >
           {saving ? "Saving..." : "Save Visit"}
         </button>

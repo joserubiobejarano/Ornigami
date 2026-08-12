@@ -60,6 +60,20 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       continue;
     }
 
+    if (!visit.business_name?.trim()) {
+      const missingBusinessName = "Add your business name in Review Booster settings before sending follow-ups.";
+      await deps.markVisitFailed(visit.id, missingBusinessName);
+      await deps.recordFailedMessage({
+        visitId: visit.id,
+        businessId: visit.business_id,
+        subject: "Follow-up not sent",
+        body: "",
+        errorMessage: missingBusinessName,
+      });
+      failed += 1;
+      continue;
+    }
+
     if (!visit.google_review_url) {
       skipped += 1;
       const missingUrlError = "Missing google_review_url";
@@ -67,16 +81,16 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       await deps.recordFailedMessage({
         visitId: visit.id,
         businessId: visit.business_id,
-        subject: buildSubject(visit.business_name || "your business", visit.language),
+        subject: buildSubject(visit.business_name, visit.language),
         body: "",
         errorMessage: missingUrlError
       });
       continue;
     }
 
-    const subject = buildSubject(visit.business_name || "your business", visit.language);
+    const subject = buildSubject(visit.business_name, visit.language);
     const body = await generateFollowupEmailBody({
-      business_name: visit.business_name || "Your Business",
+      business_name: visit.business_name,
       business_type: visit.business_type,
       city: visit.city,
       customer_name: visit.customer_name,
@@ -91,7 +105,7 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       const providerMessageId = await sendWithResend({
         business_id: visit.business_id,
         email_from_name: visit.email_from_name,
-        business_name: visit.business_name || "Your Business",
+        business_name: visit.business_name,
         customer_email: String(visit.customer_email || ""),
         subject,
         body,

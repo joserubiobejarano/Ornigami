@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { DashboardCallout, DashboardTopNav } from "@/components/dashboard";
 import { DashboardUserMenu } from "@/components/dashboard/user-menu";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand-mark";
 
 function readDemoCookie(): boolean {
   return typeof document !== "undefined" && document.cookie.includes("ll_demo=true");
@@ -28,7 +29,7 @@ function DemoBanner() {
       className="mb-2"
       action={
         <Button asChild size="sm">
-          <Link href="/settings#billing">Start free trial</Link>
+          <Link href="/dashboard/billing">Start free trial</Link>
         </Button>
       }
     >
@@ -49,7 +50,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {!isConnectGate && (
         <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-3 lg:px-8">
-            <div className="h-10 w-10" aria-hidden="true" />
+            <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg text-violet-700" aria-label="Ornigami home">
+              <BrandMark className="h-8 w-8" />
+            </Link>
             <DashboardTopNav className="w-full justify-center" />
             <div className="justify-self-end">
               <DashboardUserMenu />

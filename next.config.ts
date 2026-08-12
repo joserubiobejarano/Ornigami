@@ -4,17 +4,22 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   async headers() {
+    const headers = [
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
+    ];
+
+    if (process.env.NODE_ENV === "production") {
+      headers.unshift({ key: "Content-Security-Policy-Report-Only", value: "require-trusted-types-for 'script'" });
+    }
+
     return [
       {
         source: "/(.*)",
-        headers: [
-          { key: "Content-Security-Policy-Report-Only", value: "require-trusted-types-for 'script'" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
-        ],
+        headers,
       },
     ];
   },

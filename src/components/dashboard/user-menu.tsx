@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Settings, CreditCard, UserRound } from "lucide-react";
+import { LogOut, Settings, CreditCard, UserRound, Moon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,10 +57,14 @@ export function DashboardUserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2.5 py-2">
-          <Link href="/dashboard/settings">
+          <Link href="/settings">
             <Settings className="size-4" />
             User settings
           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => document.documentElement.classList.toggle("dark")} className="cursor-pointer rounded-md px-2.5 py-2">
+          <Moon className="size-4" />
+          Toggle dark mode
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2.5 py-2">
           <Link href="/dashboard/billing">

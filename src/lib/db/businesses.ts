@@ -100,10 +100,7 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
     throw new Error("Could not resolve user in public.users for business creation.");
   }
 
-  const businessName =
-    ownerUser.business_name?.trim() ||
-    ownerUser.email?.trim() ||
-    "My Business";
+  const businessName = ownerUser.business_name?.trim() || "";
 
   const insertedRows = await sql`
     INSERT INTO public.businesses (owner_user_id, name)

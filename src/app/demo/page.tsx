@@ -32,7 +32,7 @@ export default function DemoLandingPage() {
           <CardHeader>
             <CardTitle>Review Replies Demo</CardTitle>
             <CardDescription>
-              Try AI-generated replies with sample Google reviews.
+              Try drafted replies with sample Google reviews.
             </CardDescription>
           </CardHeader>
           <CardContent>

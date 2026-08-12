@@ -56,7 +56,7 @@ function InboxMockup() {
           <span className="ml-2 text-xs text-slate-400">Review Inbox — Ornigami</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-          �.� Google synced
+          <><RefreshCw className="h-3 w-3" /> Google synced</>
         </span>
       </div>
 
@@ -113,7 +113,7 @@ function InboxMockup() {
               <div className="mt-3 rounded-xl border border-purple-500/25 bg-purple-500/5 p-3">
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <Zap className="h-3 w-3 text-purple-400" />
-                  <span className="text-[10px] font-semibold text-purple-400">AI draft</span>
+                  <span className="text-[10px] font-semibold text-purple-400">Draft</span>
                 </div>
                 <p className="text-[11px] leading-relaxed text-slate-400">{r.draft}</p>
                 <div className="mt-2 flex gap-2">
@@ -146,9 +146,9 @@ const features = [
   {
     icon: Zap,
     gradient: "from-orange-400 to-pink-500",
-    title: "AI drafts in seconds",
+    title: "Draft replies in seconds",
     description:
-      "Our AI reads the review context, your business info, and your tone preferences to generate a reply that sounds like you — not a template.",
+      "Ornigami reads the review context, your business info, and your tone preferences to generate a reply that sounds like you — not a template.",
   },
   {
     icon: Check,
@@ -194,7 +194,7 @@ const steps = [
   {
     number: "03",
     title: "Approve replies and go live",
-    body: "New reviews appear with AI drafts ready. Approve, edit, or skip — then watch your reply rate hit 100%.",
+    body: "New reviews appear with drafts ready. Approve, edit, or skip — then watch your reply rate hit 100%.",
   },
 ];
 
@@ -267,7 +267,7 @@ export default function ReviewRepliesPage() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
             >
-              {["14-day free trial", "Card required, cancel anytime", "Cancel anytime"].map((t) => (
+              {["Start free", "No card required", "Cancel anytime"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
                   {t}
@@ -402,4 +402,3 @@ export default function ReviewRepliesPage() {
     </div>
   );
 }
-

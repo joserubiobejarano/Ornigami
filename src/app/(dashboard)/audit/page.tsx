@@ -21,6 +21,7 @@ import { isPaidUser, isTrialing } from "@/lib/plan";
 import { UpgradeBanner, PlanGateModal } from "@/components/PlanGate";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Location = {
   id: string;
@@ -387,7 +388,7 @@ export default function AuditPage() {
           <h1 className="text-2xl font-semibold mb-2">Legacy profile report</h1>
           <p className="text-foreground">Loading…</p>
         </div>
-        <div className="text-foreground">Loading...</div>
+        <div className="space-y-3"><Skeleton className="h-5 w-40" /><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>
       </div>
     }>
       <AuditPageContent />

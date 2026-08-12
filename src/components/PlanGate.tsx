@@ -8,6 +8,7 @@ import { isPaidUser, isTrialing } from "@/lib/plan";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Re-export UpgradeBanner for convenience
 export { UpgradeBanner };
@@ -23,7 +24,7 @@ export function PlanGate({ children, fallback, showBanner = true, featureName = 
   const { planStatus, isLoading, planInfo } = useCurrentPlan();
 
   if (isLoading) {
-    return <div className="text-muted-foreground">Loading...</div>;
+    return <Skeleton className="h-10 w-full" />;
   }
 
   const hasAccess = isPaidUser(planStatus) || isTrialing(planStatus);
@@ -40,13 +41,13 @@ export function PlanGate({ children, fallback, showBanner = true, featureName = 
             title="Paid plan"
             action={
               <Button asChild size="sm">
-                <Link href="/settings#billing">Choose a plan</Link>
+                <Link href="/dashboard/billing">Choose a plan</Link>
               </Button>
             }
           >
             <p className="text-muted-foreground">
               {featureName} is available on Ornigami Starter. Upgrade to connect Google Business Profile,
-              sync reviews, and use AI reply drafts.
+              sync reviews, and use reply drafts.
             </p>
           </DashboardCallout>
         )}
@@ -71,14 +72,14 @@ export function PlanGateModal({ open, onOpenChange, featureName = "this feature"
           <DialogTitle>Upgrade required</DialogTitle>
           <DialogDescription>
             {featureName} is available on Ornigami Starter. Upgrade to connect Google Business Profile,
-            sync reviews, and post AI-drafted replies.
+              sync reviews, and post drafted replies.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Link href="/settings#billing">
+          <Link href="/dashboard/billing">
             <Button>Choose a plan (from €39/month)</Button>
           </Link>
         </DialogFooter>

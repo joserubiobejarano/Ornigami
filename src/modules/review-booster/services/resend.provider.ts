@@ -52,7 +52,7 @@ export async function sendWithResend(input: SendEmailInput) {
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
       <p>${safeBody.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>")}</p>
       <p style="margin-top: 16px;">
-        <a href="${reviewLinkUrl}" style="display:inline-block;background:#0f172b;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">
+        <a href="${reviewLinkUrl}" style="display:inline-block;background:#6d28d9;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">
           Leave your review
         </a>
       </p>

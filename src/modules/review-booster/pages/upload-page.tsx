@@ -94,7 +94,7 @@ export default function ReviewBoosterUploadPage() {
         <button
           type="button"
           onClick={onDownloadTemplate}
-          className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
         >
           Download template
         </button>
@@ -173,7 +173,7 @@ export default function ReviewBoosterUploadPage() {
           <div
             className={[
               "mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full text-lg text-white",
-              uploading ? "animate-pulse bg-sky-600" : file ? "bg-emerald-700" : "bg-[#0f172b]"
+              uploading ? "animate-pulse bg-sky-600" : file ? "bg-emerald-700" : "bg-primary"
             ].join(" ")}
           >
             {uploading ? "..." : file ? "OK" : "UP"}
@@ -191,7 +191,7 @@ export default function ReviewBoosterUploadPage() {
         <button
           type="submit"
           disabled={uploading}
-          className="inline-flex rounded-lg bg-[#0f172b] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-70"
+          className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-70"
         >
           {uploading ? "Uploading..." : "Upload CSV"}
         </button>

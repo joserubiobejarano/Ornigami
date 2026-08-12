@@ -21,10 +21,10 @@ export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-white">
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-24 text-center">
-        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Simple pricing</p>
-        <h1 className="text-4xl font-semibold tracking-tight md:text-6xl">Get the reviews. Answer every one.</h1>
+        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-violet-700">Simple pricing</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900 md:text-6xl">Make local growth easier to run.</h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">Two tools that work while you run the business. 14-day free trial, cancel anytime.</p>
       </section>
 
@@ -37,7 +37,7 @@ export default function PricingPage() {
         {PLAN_ORDER.map((planId) => {
           const plan = PLANS[planId];
           return (
-            <Card key={planId} className={plan.recommended ? "border-primary shadow-lg" : ""}>
+            <Card key={planId} className={`rounded-2xl border-slate-200 bg-white shadow-sm ${plan.recommended ? "border-violet-400 shadow-lg shadow-violet-100" : ""}`}>
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle>{plan.name}</CardTitle>

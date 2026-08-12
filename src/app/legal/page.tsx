@@ -8,8 +8,8 @@ export default function LegalPage() {
           <p>
             Ornigami is operated by Ornigami. For legal inquiries, please contact
             us at{" "}
-            <a href="mailto:legal@ornigami.app" className="text-primary hover:underline">
-              legal@ornigami.app
+            <a href="mailto:legal@ornigami.com" className="text-primary hover:underline">
+              legal@ornigami.com
             </a>
           </p>
         </section>

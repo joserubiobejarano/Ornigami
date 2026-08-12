@@ -250,7 +250,7 @@ export default function ReviewBoosterPage() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
             >
-              {["14-day free trial", "Card required, cancel anytime", "Cancel anytime"].map((t) => (
+              {["Start free", "No card required", "Cancel anytime"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
                   {t}
@@ -419,4 +419,3 @@ export default function ReviewBoosterPage() {
     </div>
   );
 }
-

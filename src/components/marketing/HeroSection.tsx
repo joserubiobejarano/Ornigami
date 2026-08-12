@@ -55,7 +55,7 @@ export function HeroSection() {
             className="mb-6"
           >
             <span className="inline-block px-4 py-1.5 bg-white/80 border border-[#E5E7EB] rounded-full text-sm font-medium text-[#111827]">
-              AI for local businesses
+              Tools for local businesses
             </span>
           </motion.div>
 
@@ -109,7 +109,7 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-sm text-[#111827]/60"
           >
-            No setup fees. 14 day free trial. Cancel anytime.
+            No setup fees. Start free. Cancel anytime.
           </motion.div>
         </div>
       </div>

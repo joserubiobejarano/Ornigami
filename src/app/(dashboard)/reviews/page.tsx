@@ -16,6 +16,7 @@ import { nativeSelectClassName } from "@/lib/form-controls";
 import { useCurrentPlan } from "@/lib/use-current-plan";
 import { isPaidUser, isTrialing } from "@/lib/plan";
 import { UpgradeBanner, PlanGateModal } from "@/components/PlanGate";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ReviewList } from "@/components/reviews/review-list";
 import {
@@ -182,7 +183,6 @@ function ReviewsPageContent() {
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Review sync failed. Please try again.";
       setError(message);
-      toast.error(message);
     } finally {
       setSyncing(false);
     }
@@ -524,11 +524,11 @@ function ReviewsPageContent() {
 
       {loading && reviews.length === 0 && (
         <div className="rounded-xl border border-border bg-card px-6 py-12 text-center text-sm text-foreground shadow-sm">
-          <p>Loading reviews…</p>
+          <div className="space-y-3"><Skeleton className="mx-auto h-5 w-40" /><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
         </div>
       )}
 
-      {!loading && reviews.length === 0 && (
+      {!loading && reviews.length === 0 && hasRealLocations && (
         <DashboardEmptyState
           title="No reviews yet"
           description="Connect Google Business Profile, then sync locations in Settings to load your review inbox."
@@ -572,7 +572,7 @@ function ReviewsPageContent() {
       <PlanGateModal
         open={showPlanGateModal}
         onOpenChange={setShowPlanGateModal}
-        featureName="Syncing reviews from Google Business Profile, AI reply drafts, and posting replies"
+        featureName="Syncing reviews from Google Business Profile, drafting replies, and posting replies"
       />
     </DashboardPage>
   );

@@ -24,13 +24,13 @@ const agents = [
     name: "Review Replies",
     tagline: "Reply to every review in seconds",
     description:
-      "Our AI syncs your Google reviews and drafts personalized, on-brand replies. Approve in one click, or enable automatic posting for eligible reviews.",
+      "Ornigami syncs your Google reviews and drafts personalized, on-brand replies. Approve in one click, or enable automatic posting for eligible reviews.",
     href: "/review-replies",
     icon: MessageSquare,
     gradient: "bg-slate-700",
     lightBg: "bg-purple-50",
     lightBorder: "border-purple-100",
-    bullets: ["Full review inbox, one clean view", "AI replies that sound like you", "Post directly to Google"],
+    bullets: ["Full review inbox, one clean view", "Replies that sound like you", "Post directly to Google"],
   },
   {
     name: "Review Booster",
@@ -56,7 +56,7 @@ const steps = [
   {
     number: "02",
     title: "We learn your tone and sync your reviews",
-    body: "Our AI reads your business info and past reviews to understand your voice. Your review inbox syncs automatically.",
+    body: "Ornigami reads your business info and past reviews to understand your voice. Your review inbox syncs automatically.",
     gradient: "bg-emerald-600",
   },
   {
@@ -83,12 +83,12 @@ const faqs = [
     a: "No. Ornigami works even if you only have a Google Business Profile. Connect your profile and we'll start replying to reviews and generating content right away.",
   },
   {
-    q: "Will the AI replies sound like my brand?",
+    q: "Will the replies sound like my brand?",
     a: "Yes. During onboarding we learn your preferred tone, business personality, and style. Drafts sound like you — not like a robot.",
   },
   {
     q: "Is there a free trial?",
-    a: "Yes. You get a 14-day free trial with full access. A card is required at checkout, and you can cancel anytime.",
+    a: "Yes. Create an account to start with no card required. Upgrade from billing when you are ready, and cancel anytime.",
   },
   {
     q: "What is the Review Booster and how does it work?",
@@ -180,7 +180,7 @@ function ReviewInboxMockup() {
               </div>
               {!review.replied && (
                 <div className="mt-2 rounded-lg border border-purple-100 bg-purple-50 px-2.5 py-2">
-                  <p className="mb-1 text-[10px] font-medium text-purple-400">AI draft ready</p>
+                  <p className="mb-1 text-[10px] font-medium text-purple-400">Draft ready</p>
                   <div className="h-1.5 w-full rounded-full bg-purple-200/60" />
                   <div className="mt-1 h-1.5 w-3/4 rounded-full bg-purple-100" />
                 </div>
@@ -219,7 +219,7 @@ function ReviewRepliesMockup() {
           <span className="ml-1 text-xs text-slate-400">Review Inbox</span>
         </div>
         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-          �.� 12 new
+          ↻ 12 new
         </span>
       </div>
 
@@ -243,7 +243,7 @@ function ReviewRepliesMockup() {
               </button>
             </div>
             <div className="mt-2 rounded-lg border border-purple-500/20 bg-purple-500/10 px-2.5 py-1.5">
-              <p className="mb-1 text-[10px] font-medium text-purple-400">AI reply ready →</p>
+              <p className="mb-1 text-[10px] font-medium text-purple-400">Reply ready →</p>
               <div className="h-1.5 w-full rounded-full bg-purple-500/25" />
               <div className="mt-1 h-1.5 w-2/3 rounded-full bg-purple-500/15" />
             </div>
@@ -383,7 +383,7 @@ export default function HomePage() {
                 className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                AI-powered local reputation management
+                Local reputation management, made practical
               </motion.div>
 
               <motion.h1
@@ -440,7 +440,7 @@ export default function HomePage() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  Card required, cancel anytime
+                  No card required
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -494,9 +494,7 @@ export default function HomePage() {
                 whileHover={{ y: -4 }}
                 className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div
-                  className={`mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900`}
-                >
+                <div className={`mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl ${agent.gradient}`}>
                   <agent.icon className="h-5 w-5 text-white" />
                 </div>
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -558,7 +556,7 @@ export default function HomePage() {
                 className="relative flex flex-col items-center text-center"
               >
                 <div
-                  className={`relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 shadow-md`}
+                    className={`relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${step.gradient} shadow-md`}
                 >
                   <span className="text-lg font-bold text-white">{step.number}</span>
                 </div>
@@ -594,7 +592,7 @@ export default function HomePage() {
               <ul className="mt-6 space-y-3">
                 {[
                   { icon: MessageSquare, text: "One clean inbox for all your Google reviews" },
-                  { icon: Zap, text: "AI drafts ready in seconds, not hours" },
+                  { icon: Zap, text: "Drafts ready in seconds, not hours" },
                   { icon: Check, text: "Approve in one click and post directly to Google" },
                 ].map((item) => (
                   <li key={item.text} className="flex items-start gap-3">
@@ -694,10 +692,10 @@ export default function HomePage() {
             className="mb-12 text-center"
           >
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
-              Testimonials
+              Explore the workflow
             </p>
             <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Trusted by local business owners
+              See how Ornigami fits into a busy day
             </h2>
           </motion.div>
 
@@ -711,9 +709,6 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                 className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
               >
-                <div className="mb-3 text-sm text-amber-400">
-                  <span aria-label={`${t.stars} out of 5 stars`}>{"★".repeat(t.stars)}</span>
-                </div>
                 <p className="flex-1 text-sm leading-relaxed text-slate-700">&ldquo;{t.text}&rdquo;</p>
                 <div className="mt-5 flex items-center gap-3 border-t border-slate-200 pt-4">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
@@ -776,7 +771,7 @@ export default function HomePage() {
             Ready to grow your local reputation?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
-            Start your 14-day free trial today. Card required, no setup fees — with a focused review workspace working for your business from day one.
+            Start free today with no card required — with a focused review workspace working for your business from day one.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
@@ -798,6 +793,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-
-

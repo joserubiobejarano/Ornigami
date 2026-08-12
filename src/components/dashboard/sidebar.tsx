@@ -78,10 +78,10 @@ export function DashboardSidebar({ className }: { className?: string }) {
         </div>
 
         <Link
-          href="/settings#billing"
+          href="/dashboard/billing"
           className={cn(
             "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
-            pathname === "/settings" ? "bg-muted text-foreground shadow-sm" : "text-foreground hover:bg-muted/60"
+            pathname.startsWith("/dashboard/billing") ? "bg-muted text-foreground shadow-sm" : "text-foreground hover:bg-muted/60"
           )}
         >
           Billing

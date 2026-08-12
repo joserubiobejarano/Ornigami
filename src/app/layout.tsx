@@ -1,20 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { LayoutFrame } from "@/components/layout-frame";
+import { Toaster } from "sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.app";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -27,7 +17,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: "Ornigami",
     type: "website",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Ornigami — AI agents for local growth" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Ornigami — practical tools for local growth" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -35,7 +25,7 @@ export const metadata: Metadata = {
     description: "Reviews, follow-ups, and visibility workflows in one hub.",
     images: ["/opengraph-image"],
   },
-  icons: { icon: "/file.svg" },
+  icons: { icon: "/favicon.ico", apple: "/favicon.ico" },
 };
 
 // The proxy supplies a per-request CSP nonce. Static HTML cannot receive that
@@ -49,12 +39,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased flex flex-col min-h-screen">
         <AuthProvider>
           <LayoutFrame>{children}</LayoutFrame>
+          <Toaster position="bottom-right" richColors closeButton />
         </AuthProvider>
       </body>
     </html>

@@ -16,7 +16,7 @@ const features = [
     icon: FileText,
     title: "Local SEO content",
     description:
-      "AI-generated blog posts and Google Business Profile updates tailored to your city, niche, and customers.",
+      "Blog posts and Google Business Profile updates tailored to your city, niche, and customers.",
     color: "#14B8A6",
   },
   {

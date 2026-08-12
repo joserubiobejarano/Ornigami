@@ -52,7 +52,7 @@ export async function ReviewRepliesDashboardPage() {
         <AgentActivationPlaceholder
           agentId="review_replies"
           agentName="Review Replies"
-          description="AI drafting and one-click posting for Google reviews."
+          description="Reply drafting and one-click posting for Google reviews."
         />
       </DashboardPage>
     );
