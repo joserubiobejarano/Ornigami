@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { z } from "zod";
 
 import { createUserWithPassword, findUserByEmail } from "@/lib/db/users";
+import { createEmailVerification } from "@/lib/auth-verification";
 import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
@@ -36,13 +37,14 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = await hash(password, 10);
-    await createUserWithPassword({
+    const created = await createUserWithPassword({
       email,
       passwordHash,
       fullName: fullName ?? null,
     });
 
-    const res = NextResponse.json({ ok: true });
+    await createEmailVerification(email, created.id);
+    const res = NextResponse.json({ ok: true, verificationRequired: true });
     res.cookies.set("ll_demo", "", { path: "/", maxAge: 0 });
     return res;
   } catch (e: unknown) {

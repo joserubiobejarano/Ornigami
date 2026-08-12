@@ -4,6 +4,8 @@ import { auth } from "@/auth";
 import { sql } from "@/lib/db/neon";
 import { safeLogger } from "@/lib/safe-logger";
 import { z } from "zod";
+import { getTrustedRequestIp } from "@/lib/trusted-request-ip";
+import { checkPublicWriteRateLimit } from "@/lib/public-write-limiter";
 
 const FeedbackSchema = z.object({
   message: z.string().trim().min(1).max(3000),
@@ -17,6 +19,9 @@ export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
     const session = await auth();
+    const ip = getTrustedRequestIp(req.headers);
+    const allowed = await checkPublicWriteRateLimit(`feedback:ip:${ip ?? "unknown"}`, 10);
+    if (!allowed) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     const body = await req.json();
     const parsed = FeedbackSchema.safeParse(body);
     if (!parsed.success) {

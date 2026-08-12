@@ -6,6 +6,7 @@ import type { ReviewReplyInput } from "@/lib/openai";
 import { generateReviewReply } from "@/lib/openai";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { resolveUser } from "@/lib/user-from-req";
+import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
 
 /** Core review fields; at least one of text/reviewText required for generation. */
 const RequestSchema = z
@@ -145,6 +146,12 @@ export async function POST(req: Request) {
 
   // Sample-review test mode: validate payload only
   if (isSampleRequest) {
+    const sampleEmail = "email" in sampleUser ? sampleUser.email : null;
+    const sampleBusiness = await requireActiveAgentAccess(sampleUser.id, sampleEmail, "review_replies");
+    const sampleUsage = await checkReviewReplyUsage(sampleUser.id, sampleBusiness.id);
+    if (!sampleUsage.allowed) {
+      return NextResponse.json({ error: "Monthly review reply generation limit reached." }, { status: 429 });
+    }
     const parsed = RequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       const first = parsed.error.issues[0];
@@ -154,6 +161,7 @@ export async function POST(req: Request) {
     try {
       const input = normalizeBody(parsed.data);
       const reply = await generateReviewReply(input);
+      await incrementReviewReplyUsage(sampleUser.id);
       return NextResponse.json({ reply });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Server error";
@@ -184,11 +192,16 @@ export async function POST(req: Request) {
 
   try {
     const email = "email" in user ? user.email : null;
-    await requireActiveAgentAccess(user.id, email, "review_replies");
+    const business = await requireActiveAgentAccess(user.id, email, "review_replies");
+    const usage = await checkReviewReplyUsage(user.id, business.id);
+    if (!usage.allowed) {
+      return NextResponse.json({ error: "Monthly review reply generation limit reached." }, { status: 429 });
+    }
     const normalized = normalizeBody(parsed.data);
     const saved = await getProfileReplyDefaults(user.id);
     const input = mergeWithProfileDefaults(parsed.data, normalized, saved);
     const reply = await generateReviewReply(input);
+    await incrementReviewReplyUsage(user.id);
     return NextResponse.json({ reply });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Server error";

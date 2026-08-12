@@ -9,7 +9,9 @@ type GoogleOAuthStatePayload = {
 const STATE_TTL_SECONDS = 10 * 60;
 
 function getSigningSecret(): string {
-  return process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "local-dev-google-oauth-secret";
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET is required in production.");
+  return secret || "local-dev-google-oauth-secret";
 }
 
 function base64url(value: string): string {

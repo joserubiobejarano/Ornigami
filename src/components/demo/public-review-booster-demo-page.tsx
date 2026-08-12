@@ -25,6 +25,7 @@ const CLIENT_LIMIT_KEY = "publicDemoReviewBoosterSends";
 const CLIENT_LIMIT_MAX = 2;
 
 type ApiSuccess = { ok: true; subject: string; body: string };
+type ApiConfirmation = { ok: false; confirmationRequired: true; message: string };
 
 type ApiError = { error: string };
 
@@ -92,7 +93,11 @@ export function PublicReviewBoosterDemoPage() {
         }),
       });
 
-      const json = (await response.json()) as ApiSuccess | ApiError;
+      const json = (await response.json()) as ApiSuccess | ApiConfirmation | ApiError;
+      if (response.status === 202 && "confirmationRequired" in json) {
+        setError(json.message);
+        return;
+      }
       if (!response.ok) {
         setError((json as ApiError).error || "Failed to send demo email.");
         return;

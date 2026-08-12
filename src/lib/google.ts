@@ -1,6 +1,7 @@
 import { getSql } from "@/lib/db/neon";
 import { updateGbpTokens } from "@/lib/db/gbp";
 import { getServerAppUrl } from "@/lib/env";
+import { decryptToken } from "@/lib/encrypted-token";
 
 const GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -101,7 +102,19 @@ export async function getUserGoogleTokens(userId: string): Promise<Tokens | null
   `;
   const data = rows[0] as Tokens | undefined;
   if (!data) return null;
-  return data;
+  const access = decryptToken(data.access_token);
+  const refresh = decryptToken(data.refresh_token);
+  const result = { ...data, access_token: access.value, refresh_token: refresh.value };
+  if (access.legacy || refresh.legacy) {
+    await updateGbpTokens({
+      userId,
+      accessToken: result.access_token,
+      refreshToken: result.refresh_token,
+      expiresAt: result.expires_at,
+      scope: result.scope ?? null,
+    });
+  }
+  return result;
 }
 
 function isExpired(expires_at: string, skewSec = 120): boolean {

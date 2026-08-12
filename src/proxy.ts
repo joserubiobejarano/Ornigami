@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
 
 import { auth } from "@/auth";
 import { getAppBaseUrl } from "@/lib/app-base-url";
@@ -40,26 +41,48 @@ function readAllowDashboardWithoutGbp(): boolean {
   return v === "true" || v === "1" || v === "yes";
 }
 
+function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data: https:",
+      "style-src 'self' 'unsafe-inline' https:",
+      `script-src 'self' 'nonce-${nonce}' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com`,
+      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app",
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com",
+      "object-src 'none'",
+    ].join("; "),
+  );
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  return response;
+}
+
 const proxy = auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
+  const nonce = randomBytes(16).toString("base64url");
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
 
   if (pathname === "/demo/review-replies") {
-    return NextResponse.rewrite(new URL("/demo-review-replies", req.url));
+    return withSecurityHeaders(NextResponse.rewrite(new URL("/demo-review-replies", req.url)), nonce);
   }
 
   if (pathname === "/demo/review-booster") {
-    return NextResponse.rewrite(new URL("/demo-review-booster", req.url));
+    return withSecurityHeaders(NextResponse.rewrite(new URL("/demo-review-booster", req.url)), nonce);
   }
 
   if (pathname === "/api/public-demo/review-booster") {
-    return NextResponse.rewrite(new URL("/api-public-demo-review-booster", req.url));
+    return withSecurityHeaders(NextResponse.rewrite(new URL("/api-public-demo-review-booster", req.url)), nonce);
   }
 
   const demoCookie = req.cookies.get("ll_demo")?.value === "true";
   const isDemoMode = !sessionUser && demoCookie;
 
-  const requestHeaders = new Headers(req.headers);
   // Internal demo headers are controlled by middleware, never by the client.
   requestHeaders.delete("x-demo");
   if (isDemoMode) {
@@ -68,15 +91,15 @@ const proxy = auth(async (req) => {
 
   if (isDemoMode) {
     if (pathname.startsWith("/api/google/oauth")) {
-      return NextResponse.json(
+      return withSecurityHeaders(NextResponse.json(
         { error: "Google connection not available in demo mode" },
         { status: 403 }
-      );
+      ), nonce);
     }
 
-    return NextResponse.next({
+    return withSecurityHeaders(NextResponse.next({
       request: { headers: requestHeaders },
-    });
+    }), nonce);
   }
 
   const isAuthPage =
@@ -91,7 +114,7 @@ const proxy = auth(async (req) => {
     const callbackPath = pathname + (req.nextUrl.search || "");
     const loginSearch = new URLSearchParams({ callbackUrl: callbackPath });
     const login = new URL(`/login?${loginSearch.toString()}`, getAppBaseUrl(req));
-    return NextResponse.redirect(login);
+    return withSecurityHeaders(NextResponse.redirect(login), nonce);
   }
 
   const userId = sessionUser?.id;
@@ -105,10 +128,10 @@ const proxy = auth(async (req) => {
         (pathname === "/connect" || pathname.startsWith("/connect/")) &&
         hasGbp
       ) {
-        return NextResponse.redirect(
+        return withSecurityHeaders(NextResponse.redirect(
           new URL("/dashboard", getAppBaseUrl(req)),
           302
-        );
+        ), nonce);
       }
 
       const canUseBoosterWithoutGbp =
@@ -122,18 +145,18 @@ const proxy = auth(async (req) => {
         !hasGbp &&
         !(canUseBoosterWithoutGbp && !hasRepliesAccess)
       ) {
-        return NextResponse.redirect(new URL("/connect", getAppBaseUrl(req)), 302);
+        return withSecurityHeaders(NextResponse.redirect(new URL("/connect", getAppBaseUrl(req)), 302), nonce);
       }
     } catch (e) {
       console.error("[middleware] GBP connection check failed", e);
     }
   }
 
-  return NextResponse.next({
+  return withSecurityHeaders(NextResponse.next({
     request: {
       headers: requestHeaders,
     },
-  });
+  }), nonce);
 });
 
 export { proxy };

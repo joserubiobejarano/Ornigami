@@ -14,6 +14,20 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="text-2xl font-semibold mb-4">Retention and Your Rights</h2>
+          <p>
+            Account and business data is retained while your account is active. Operational lead and
+            review data is routinely purged after 90 days to one year depending on its purpose; demo,
+            rate-limit, and expired verification records are removed automatically. You may export or
+            permanently delete your account data through the privacy API or by contacting privacy@ornigami.app.
+          </p>
+          <p>
+            We use Google, Stripe, Twilio, OpenAI, Resend, Sentry, and Neon as service providers where
+            needed to deliver the product. Google OAuth tokens are encrypted before storage.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold mb-4">How We Use Your Information</h2>
           <p>
             We use the information we collect to provide, maintain, and improve our services,

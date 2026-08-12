@@ -5,13 +5,17 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 
 import { ensureUserFromOAuth, findUserByEmail } from "@/lib/db/users";
+import {
+  clearCredentialsLoginFailures,
+  isCredentialsLoginRateLimited,
+  recordCredentialsLoginFailure,
+} from "@/lib/auth-rate-limit";
 
 export const authConfig = {
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       id: "credentials",
@@ -20,16 +24,28 @@ export const authConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
+        const forwarded = request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
+        const ipAddress = request.headers.get("x-real-ip") ?? forwarded ?? null;
+        if (await isCredentialsLoginRateLimited(email, ipAddress)) return null;
+
         const user = await findUserByEmail(email);
-        if (!user?.password_hash) return null;
+        if (!user?.password_hash || !user.email_verified) {
+          await recordCredentialsLoginFailure(email, ipAddress);
+          return null;
+        }
 
         const ok = await compare(password, user.password_hash);
-        if (!ok) return null;
+        if (!ok) {
+          await recordCredentialsLoginFailure(email, ipAddress);
+          return null;
+        }
+
+        await clearCredentialsLoginFailures(email, ipAddress);
 
         return {
           id: user.id,
@@ -41,6 +57,12 @@ export const authConfig = {
     }),
   ],
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider === "google") {
+        return (profile as { email_verified?: boolean } | undefined)?.email_verified === true;
+      }
+      return true;
+    },
     async jwt({ token, user, account }) {
       if (user) {
         if (account?.type === "oauth" && account.provider === "google") {

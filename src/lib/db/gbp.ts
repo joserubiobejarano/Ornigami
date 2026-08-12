@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/neon";
+import { encryptToken } from "@/lib/encrypted-token";
 
 /** Returns true if the user has a Google Business Profile OAuth row saved. */
 export async function userHasGbpConnection(userId: string): Promise<boolean> {
@@ -23,8 +24,8 @@ export async function upsertGbpConnection(input: {
       user_id, access_token, refresh_token, expires_at, scope, updated_at
     ) VALUES (
       ${input.userId},
-      ${input.accessToken},
-      ${input.refreshToken},
+      ${encryptToken(input.accessToken)},
+      ${encryptToken(input.refreshToken)},
       ${input.expiresAt},
       ${input.scope},
       now()
@@ -48,8 +49,8 @@ export async function updateGbpTokens(input: {
   await sql`
     UPDATE public.gbp_connections
     SET
-      access_token = ${input.accessToken},
-      refresh_token = ${input.refreshToken},
+      access_token = ${encryptToken(input.accessToken)},
+      refresh_token = ${encryptToken(input.refreshToken)},
       expires_at = ${input.expiresAt},
       scope = ${input.scope},
       updated_at = now()

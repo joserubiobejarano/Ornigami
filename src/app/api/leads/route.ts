@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/neon";
 import { z } from "zod";
 import { safeLogger } from "@/lib/safe-logger";
+import { getTrustedRequestIp } from "@/lib/trusted-request-ip";
+import { checkPublicWriteRateLimit } from "@/lib/public-write-limiter";
 
 const LeadsSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -21,6 +23,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid lead payload" }, { status: 400 });
     }
     const { email, query_text, audit_result } = parsed.data;
+    const ip = getTrustedRequestIp(req.headers);
+    const allowed = await checkPublicWriteRateLimit(`leads:ip:${ip ?? "unknown"}`, 20);
+    if (!allowed) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
     const auditText =
       typeof audit_result === "string"

@@ -5,11 +5,10 @@ export type ResolvedUser =
   | { demo: true; id: string };
 
 /**
- * Resolve the current user for API routes: demo cookie short-circuit, then Auth.js session.
+ * Resolve the current user for API routes: middleware-controlled demo header, then Auth.js session.
  */
 export async function resolveUser(req: Request): Promise<ResolvedUser | null> {
-  const cookieHeader = req.headers.get("cookie") || "";
-  if (cookieHeader.includes("ll_demo=true")) {
+  if (req.headers.get("x-demo") === "true") {
     return { demo: true, id: "demo-user" };
   }
 

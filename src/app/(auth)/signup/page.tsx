@@ -28,18 +28,7 @@ export default function SignupPage() {
       return;
     }
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (res?.error) {
-      toast.error("Account created but sign-in failed. Try logging in.");
-      return;
-    }
-
-    window.location.href = "/dashboard";
+    toast.success("Account created. Check your inbox to verify your email before signing in.");
   }
 
   async function signInWithGoogle() {

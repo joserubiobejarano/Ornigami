@@ -51,17 +51,10 @@ export async function checkAndIncrementPublicDemoLimitDurable(params: {
 }
 
 export function getRequestIp(headers: Headers): string | null {
-  const forwardedFor = headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-    if (first) return first;
+  for (const name of ["x-vercel-forwarded-for", "x-real-ip", "cf-connecting-ip"]) {
+    const value = headers.get(name)?.trim();
+    if (value) return value;
   }
-
-  const realIp = headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
-
-  const cfIp = headers.get("cf-connecting-ip")?.trim();
-  if (cfIp) return cfIp;
-
-  return null;
+  const hops = headers.get("x-forwarded-for")?.split(",").map((value) => value.trim()).filter(Boolean) ?? [];
+  return hops.at(-1) ?? null;
 }

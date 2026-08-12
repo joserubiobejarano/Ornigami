@@ -1,9 +1,34 @@
 import { sql } from "@/lib/db/neon";
+import { PLANS, isPlanId } from "@/lib/billing/plans";
 
 const STARTER_LIMITS = {
   aiPosts: 20,
   audits: 5,
 };
+
+export async function checkReviewReplyUsage(userId: string, businessId: string) {
+  await checkUsageLimit(userId, "ai_posts");
+  const rows = await sql`
+    SELECT p.review_replies_used, ba.plan_id
+    FROM public.profiles p
+    LEFT JOIN public.business_agents ba ON ba.business_id = ${businessId} AND ba.agent_id = 'review_replies'
+    WHERE p.id = ${userId}
+    LIMIT 1
+  `;
+  const row = rows[0] as { review_replies_used?: number | null; plan_id?: string | null } | undefined;
+  const planId = row?.plan_id && isPlanId(row.plan_id) ? row.plan_id : "replies";
+  const limit = PLANS[planId].monthlyRequestAllowance;
+  const used = Number(row?.review_replies_used ?? 0);
+  return { allowed: used < limit, used, limit };
+}
+
+export async function incrementReviewReplyUsage(userId: string): Promise<void> {
+  await sql`
+    UPDATE public.profiles
+    SET review_replies_used = COALESCE(review_replies_used, 0) + 1, updated_at = now()
+    WHERE id = ${userId}
+  `;
+}
 
 type ProfileUsageRow = {
   ai_posts_used: number | null;
@@ -42,6 +67,7 @@ export async function checkUsageLimit(
       SET
         ai_posts_used = 0,
         audits_used = 0,
+        review_replies_used = 0,
         usage_reset_date = ${nextReset},
         updated_at = now()
       WHERE id = ${userId}

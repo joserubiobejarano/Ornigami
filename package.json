@@ -7,7 +7,9 @@
         "build": "next build",
         "start": "next start",
         "lint": "eslint",
-        "test": "node --experimental-strip-types tests/first-phase.test.mts"
+        "test": "node --experimental-strip-types tests/first-phase.test.mts",
+        "test:security": "node --experimental-strip-types tests/security-hardening.test.mts",
+        "security:audit": "npm audit --audit-level=high"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.0.2",
@@ -24,8 +26,8 @@
         "clsx": "^2.1.1",
         "lucide-react": "^0.553.0",
         "motion": "^12.23.24",
-        "next": "^16.1.6",
-        "next-auth": "^5.0.0-beta.30",
+        "next": "16.3.0",
+        "next-auth": "5.0.0-beta.32",
         "openai": "^6.8.1",
         "react": "19.2.0",
         "react-dom": "19.2.0",

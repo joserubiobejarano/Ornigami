@@ -3,12 +3,9 @@ import { buildCoreUnsubscribeToken, verifyCoreUnsubscribeToken, type Unsubscribe
 import { getServerAppUrl } from "@/lib/env";
 
 function getUnsubscribeSecret(): string {
-  return (
-    process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET ||
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "review-booster-local-secret"
-  );
+  const value = process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!value && process.env.NODE_ENV === "production") throw new Error("A review unsubscribe signing secret is required in production.");
+  return value || "review-booster-local-secret";
 }
 
 export function buildUnsubscribeToken(payload: UnsubscribeTokenPayload): string {

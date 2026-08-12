@@ -3,7 +3,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export type ReviewLinkPayload = { businessId: string; visitId: string; reviewUrl: string };
 
 function secret(): string {
-  return process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "review-booster-local-secret";
+  const value = process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!value && process.env.NODE_ENV === "production") throw new Error("A review link signing secret is required in production.");
+  return value || "review-booster-local-secret";
 }
 function encode(value: string): string { return Buffer.from(value, "utf8").toString("base64url"); }
 function decode(value: string): string { return Buffer.from(value, "base64url").toString("utf8"); }
