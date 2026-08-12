@@ -41,22 +41,23 @@ function readAllowDashboardWithoutGbp(): boolean {
   return v === "true" || v === "1" || v === "yes";
 }
 
+function buildContentSecurityPolicy(nonce: string): string {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https:",
+    "style-src 'self' 'unsafe-inline' https:",
+    `script-src 'self' 'nonce-${nonce}' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com`,
+    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app https://*.sentry.io",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com",
+    "object-src 'none'",
+  ].join("; ");
+}
+
 function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
-  response.headers.set(
-    "Content-Security-Policy",
-    [
-      "default-src 'self'",
-      "base-uri 'self'",
-      "frame-ancestors 'none'",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data: https:",
-      "style-src 'self' 'unsafe-inline' https:",
-      `script-src 'self' 'nonce-${nonce}' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com`,
-      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app",
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com",
-      "object-src 'none'",
-    ].join("; "),
-  );
+  response.headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   return response;
 }
@@ -67,6 +68,9 @@ const proxy = auth(async (req) => {
   const nonce = randomBytes(16).toString("base64url");
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  // Next.js reads the request CSP to apply the nonce to streamed inline
+  // hydration scripts. The response CSP alone is too late for those scripts.
+  requestHeaders.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
 
   if (pathname === "/demo/review-replies") {
     return withSecurityHeaders(NextResponse.rewrite(new URL("/demo-review-replies", req.url)), nonce);

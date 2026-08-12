@@ -31,3 +31,9 @@ test("Sentry is configured not to send default PII", () => {
   assert.match(readFileSync("sentry.server.config.ts", "utf8"), /sendDefaultPii: false/);
   assert.match(readFileSync("sentry.edge.config.ts", "utf8"), /sendDefaultPii: false/);
 });
+
+test("CSP nonces are passed to Next.js and Sentry ingest is allowed", () => {
+  const proxy = readFileSync("src/proxy.ts", "utf8");
+  assert.match(proxy, /requestHeaders\.set\("Content-Security-Policy", buildContentSecurityPolicy\(nonce\)\)/);
+  assert.match(proxy, /https:\/\/\*\.sentry\.io/);
+});
