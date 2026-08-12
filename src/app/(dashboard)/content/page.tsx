@@ -83,7 +83,7 @@ export default function ContentPage() {
           title: "[Legacy sample] Short post — Joe's Pizza",
           type: "gbp_post",
           input: { businessName: "Joe's Pizza", city: "New York", service: "Pizza", tone: "Exciting" },
-          output_md: "ðŸ• Craving the perfect slice? Stop by Joe's Pizza today! #NYC #Pizza",
+          output_md: "Pizza craving? Stop by Joe's Pizza today! #NYC #Pizza",
           created_at: new Date(Date.now() - 86400000).toISOString()
         }
       ]);

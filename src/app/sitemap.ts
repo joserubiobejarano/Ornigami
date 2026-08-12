@@ -4,7 +4,7 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = siteUrl.replace(/\/$/, "");
-  const routes = ["", "/pricing", "/review-booster", "/review-replies", "/audit", "/contact", "/privacy", "/terms", "/legal"];
+  const routes = ["", "/about", "/pricing", "/review-booster", "/review-replies", "/audit", "/contact", "/privacy", "/terms", "/legal"];
   return routes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),

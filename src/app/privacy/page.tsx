@@ -8,8 +8,10 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>
           <p>
-            We collect information you provide directly to us, such as when you create an account,
-            use our services, or contact us for support.
+            We collect information you provide directly to us, such as your name, email address,
+            business details, review links, billing information, support messages, and the content
+            you submit to the product. We also receive technical information needed to secure and
+            operate the service, such as device, browser, request, and diagnostic data.
           </p>
         </section>
 
@@ -24,7 +26,9 @@ export default function PrivacyPage() {
           </p>
           <p>
             We use Google, Stripe, Twilio, Resend, Sentry, and Neon as service providers where
-            needed to deliver the product. Google OAuth tokens are encrypted before storage.
+            needed to deliver the product. Google OAuth tokens are encrypted before storage. Those
+            providers may process information in other countries; we use the safeguards required
+            for the applicable transfer and service arrangement.
           </p>
         </section>
 
@@ -32,7 +36,19 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-semibold mb-4">How We Use Your Information</h2>
           <p>
             We use the information we collect to provide, maintain, and improve our services,
-            process transactions, and communicate with you.
+            process transactions, authenticate access, prevent abuse, send requested notifications,
+            provide support, and communicate important service or account changes. We do not sell
+            personal information.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Your Choices and Complaints</h2>
+          <p>
+            You can update your account and business details in Settings, unsubscribe from optional
+            follow-up messages, and request a copy or deletion of your data. You may also complain
+            to the data protection authority where you live or work if you believe your rights have
+            not been respected.
           </p>
         </section>
 

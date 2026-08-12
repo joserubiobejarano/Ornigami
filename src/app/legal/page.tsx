@@ -6,11 +6,16 @@ export default function LegalPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Company Information</h2>
           <p>
-            Ornigami is operated by Ornigami. For legal inquiries, please contact
-            us at{" "}
+            Ornigami is the product name used by the service operator. The legal entity name,
+            registered address, and registration details should be confirmed in the applicable
+            order or subscription records. For legal inquiries, please contact us at{" "}
             <a href="mailto:legal@ornigami.com" className="text-primary hover:underline">
               legal@ornigami.com
             </a>
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Please use this address for requests about contracts, intellectual property, or formal
+            notices. The Privacy Policy explains how to exercise data-protection rights.
           </p>
         </section>
 

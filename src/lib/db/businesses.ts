@@ -92,6 +92,14 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
 
   const existing = await getBusinessForUser(resolvedUserId);
   if (existing) {
+    if (isPlaceholderBusinessName(existing.name, ownerUser?.email)) {
+      await sql`
+        UPDATE public.businesses
+        SET name = '', updated_at = now()
+        WHERE id = ${existing.id}
+      `;
+      existing.name = "";
+    }
     await ensureBusinessDefaults(existing.id, resolvedUserId);
     return existing;
   }
@@ -100,7 +108,9 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
     throw new Error("Could not resolve user in public.users for business creation.");
   }
 
-  const businessName = ownerUser.business_name?.trim() || "";
+  const businessName = isPlaceholderBusinessName(ownerUser.business_name, ownerUser.email)
+    ? ""
+    : ownerUser.business_name?.trim() || "";
 
   const insertedRows = await sql`
     INSERT INTO public.businesses (owner_user_id, name)
@@ -113,6 +123,12 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
 
   await ensureBusinessDefaults(created.id, resolvedUserId);
   return created;
+}
+
+function isPlaceholderBusinessName(name: string | null | undefined, email: string | null | undefined): boolean {
+  const normalizedName = name?.trim().toLowerCase();
+  const normalizedEmail = email?.trim().toLowerCase();
+  return Boolean(normalizedName && normalizedEmail && normalizedName === normalizedEmail);
 }
 
 export async function getBusinessAgentStatus(

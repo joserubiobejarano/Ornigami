@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { BillingPlanOptions } from "@/components/billing/billing-plan-options";
 import { DashboardPage } from "@/components/dashboard";
 import { ChangePlanButton } from "@/components/dashboard/change-plan-button";
@@ -23,7 +25,19 @@ export default async function BillingPage() {
     <DashboardPage width="lg" className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Billing & subscriptions</h1>
-        <p className="text-sm text-muted-foreground">Plans are per location. Business: {business.name}</p>
+        <p className="text-sm text-muted-foreground">
+          Plans are per location. {business.name.trim() ? (
+            <>Business: {business.name}</>
+          ) : (
+            <>
+              Add your business name in{" "}
+              <Link href="/settings" className="font-medium text-primary underline underline-offset-4">
+                Settings
+              </Link>{" "}
+              to personalize your workspace.
+            </>
+          )}
+        </p>
       </div>
 
       {currentPlan ? (

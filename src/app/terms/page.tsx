@@ -22,6 +22,16 @@ export default function TermsPage() {
         </section>
 
         <section>
+          <h2 className="text-2xl font-semibold mb-4">Your Account and Content</h2>
+          <p>
+            You are responsible for keeping your account credentials secure and for ensuring that
+            the information and content you submit may be used for the requested workflow. Do not
+            use the service to send unlawful, deceptive, abusive, or unsolicited messages, or to
+            interfere with the service or another person&apos;s account.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold mb-4">Subscription and Billing</h2>
           <p>
             Plans may be billed monthly or annually, according to the billing period selected at
@@ -35,6 +45,28 @@ export default function TermsPage() {
           <p>
             Ornigami shall not be liable for any damages arising from the use or inability
             to use the service.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Third-Party Services and Availability</h2>
+          <p>
+            Ornigami connects with third-party services such as Google, Stripe, Twilio, Resend,
+            Sentry, and Neon. Their availability and terms may affect parts of the service. We work
+            to keep Ornigami available and secure, but do not promise uninterrupted or error-free
+            operation.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Changes and Contact</h2>
+          <p>
+            We may update these terms when the service or legal requirements change. We will update
+            the date above and provide notice where required. Questions about these terms can be sent
+            to{" "}
+            <a href="mailto:legal@ornigami.com" className="text-primary hover:underline">
+              legal@ornigami.com
+            </a>.
           </p>
         </section>
       </div>
