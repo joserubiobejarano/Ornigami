@@ -26,13 +26,189 @@ function ReviewInboxMockup() {
   return <div className="relative"><div className="absolute inset-0 translate-x-3 translate-y-3 rounded-2xl bg-surface" /><div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-2xl border border-border bg-surface" /><div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-md"><FoldedCorner /><div className="flex items-center justify-between border-b border-border px-4 py-3"><div className="flex items-center gap-2"><div className="flex gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-border" /><span className="h-2.5 w-2.5 rounded-full bg-border" /><span className="h-2.5 w-2.5 rounded-full bg-border" /></div><span className="text-xs font-medium text-muted-foreground">Review inbox</span></div><span className="flex items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold text-accent-green"><span className="h-1.5 w-1.5 rounded-full bg-accent-green" />Live</span></div><div className="flex items-center justify-between bg-surface px-4 py-2.5 text-xs"><span className="text-muted-foreground">3 reviews today</span><span className="font-semibold text-primary">100% reply rate</span></div><div className="divide-y divide-border">{reviews.map(([author, text, replied]) => <div key={author} className="px-4 py-3"><div className="flex items-start justify-between gap-2"><div><div className="flex items-center gap-1.5"><span className="text-[11px] text-accent-yellow" aria-label="5 out of 5 stars">★★★★★</span><span className="text-[11px] font-medium text-primary">{author}</span></div><p className="mt-0.5 text-[11px] text-muted-foreground">{text}</p></div>{replied ? <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold text-accent-green">✓ Sent</span> : <span className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold text-white">Approve</span>}</div>{!replied ? <div className="mt-2 rounded-lg border border-border bg-surface px-2.5 py-2"><p className="mb-1 text-[10px] font-medium text-accent-purple">Draft ready</p><div className="h-1.5 w-full rounded-full bg-border" /><div className="mt-1 h-1.5 w-3/4 rounded-full bg-border" /></div> : null}</div>)}</div><div className="border-t border-border bg-surface px-4 py-3"><div className="flex items-center justify-between text-[11px]"><span className="text-muted-foreground">This week</span><span className="font-semibold text-primary">0 unanswered</span></div></div></div></div>;
 }
 
+function PreviousReviewInboxMockup() {
+  const reviews = [
+    ["Sarah M.", "Amazing food and the staff was so friendly!", true, 5],
+    ["James K.", "Great place, parking was a bit tricky but worth it.", false, 4],
+    ["Luna R.", "Best coffee in the neighborhood, will come back!", false, 5],
+  ] as const;
+
+  return (
+    <div className="relative select-none">
+      <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-2xl bg-slate-100" />
+      <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-2xl border border-slate-200 bg-slate-50" />
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+            </div>
+            <span className="ml-1 text-xs font-medium text-slate-400">Review Inbox</span>
+          </div>
+          <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Live
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5">
+          <span className="text-xs text-slate-500">3 reviews today</span>
+          <span className="text-xs font-semibold text-slate-700">100% reply rate</span>
+        </div>
+
+        <div className="divide-y divide-slate-100">
+          {reviews.map(([author, text, replied, stars]) => (
+            <div key={author} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-amber-400" aria-label={`${stars} out of 5 stars`}>
+                      {"★".repeat(stars)}
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-600">{author}</span>
+                  </div>
+                  <p className="mt-0.5 truncate text-[11px] text-slate-500">{text}</p>
+                </div>
+                {replied ? (
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                    ✓ Sent
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    Approve
+                  </span>
+                )}
+              </div>
+              {!replied && (
+                <div className="mt-2 rounded-lg border border-purple-100 bg-purple-50 px-2.5 py-2">
+                  <p className="mb-1 text-[10px] font-medium text-purple-400">Draft ready</p>
+                  <div className="h-1.5 w-full rounded-full bg-purple-200/60" />
+                  <div className="mt-1 h-1.5 w-3/4 rounded-full bg-purple-100" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-slate-100 bg-slate-50 px-4 py-3">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-slate-500">This week</span>
+            <div className="flex gap-4">
+              <span className="font-semibold text-slate-800">+28% profile views</span>
+              <span className="font-semibold text-slate-800">0 unanswered</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviousHero() {
+  return (
+    <div className="previous-hero">
+      <section className="relative overflow-hidden bg-white pb-24 pt-16">
+        <div className="pointer-events-none absolute -left-48 -top-24 h-[500px] w-[500px] rounded-full bg-purple-100/60 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 top-20 h-[400px] w-[400px] rounded-full bg-orange-100/50 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-sky-100/30 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+          <div className="grid gap-14 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:items-center">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Local reputation management, made practical
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.08 }}
+                className="text-balance text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
+              >
+                A smarter way to run <span className="text-slate-900">your local growth</span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.16 }}
+                className="mt-5 max-w-xl text-lg leading-relaxed text-slate-600"
+              >
+                Ornigami gives you an evolving hub of specialized agents for reviews, reputation, and local visibility, so your team can execute faster without losing brand control.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.24 }}
+                className="mt-8 flex flex-wrap gap-3"
+              >
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition-all hover:brightness-105 hover:shadow-orange-200"
+                >
+                  Try it free
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/demo"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+                >
+                  See a live demo
+                </Link>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  14-day free trial
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  No card required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  Cancel anytime
+                </span>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.2 }}
+              className="w-full max-w-sm md:max-w-none"
+            >
+              <PreviousReviewInboxMockup />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function AgentMockup({ kind }: { kind: "replies" | "booster" }) {
   return <div className="overflow-hidden rounded-2xl border border-slate-700 bg-navy-800 shadow-md"><div className="flex items-center justify-between border-b border-slate-700 px-4 py-3"><div className="flex items-center gap-2"><span className={`flex h-7 w-7 items-center justify-center rounded-lg bg-slate-700 ${kind === "replies" ? "text-accent-purple" : "text-accent-green"}`}>{kind === "replies" ? <MessageSquare className="h-3.5 w-3.5" /> : <Star className="h-3.5 w-3.5" />}</span><span className="text-xs text-slate-300">{kind === "replies" ? "Review inbox" : "Review Booster"}</span></div><span className="rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-semibold text-slate-200">{kind === "replies" ? "12 new" : "Live"}</span></div>{kind === "replies" ? <div className="divide-y divide-slate-700">{["Maria G.", "Tom S.", "Ana R."].map((name) => <div key={name} className="px-4 py-3"><div className="flex items-center justify-between"><div><span className="text-[11px] text-accent-yellow">★★★★★</span><span className="ml-2 text-[11px] font-medium text-slate-200">{name}</span><p className="mt-1 text-[11px] text-slate-400">A new review is ready for your voice.</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-navy-900">Approve</span></div><div className="mt-2 rounded-lg border border-slate-600 bg-slate-700/60 px-2.5 py-1.5"><p className="text-[10px] font-medium text-accent-purple">Reply ready →</p><div className="mt-1 h-1.5 w-full rounded-full bg-slate-500" /></div></div>)}</div> : <><div className="grid grid-cols-3 divide-x divide-slate-700 border-b border-slate-700">{[["Visits", "24"], ["Follow-ups", "8"], ["New reviews", "5"]].map(([label, value]) => <div key={label} className="px-3 py-3 text-center"><p className="font-mono text-base font-semibold text-slate-100">{value}</p><p className="text-[10px] text-slate-400">{label}</p></div>)}</div><div className="divide-y divide-slate-700">{[["Maria G.", "Sent"], ["Tom S.", "Pending"], ["Ana R.", "Sent"]].map(([name, status]) => <div key={name} className="flex items-center justify-between px-4 py-3"><div className="flex items-center gap-2.5"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-700 text-[10px] font-semibold text-slate-300">{name.split(" ").map((part) => part[0]).join("")}</span><div><p className="text-xs font-medium text-slate-200">{name}</p><p className="text-[10px] text-slate-400">Today, 2:30 pm</p></div></div><span className={`rounded-full bg-slate-700 px-2 py-0.5 text-[10px] font-semibold ${status === "Sent" ? "text-accent-green" : "text-slate-300"}`}>{status}</span></div>)}</div></>}</div>;
 }
 
 export default function HomePage() {
   return <main className="overflow-hidden">
-    <section className="relative py-16 md:py-24 lg:py-28"><div className="mx-auto grid max-w-7xl items-center gap-14 px-4 md:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8"><motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.07 } } }}><motion.div variants={reveal} transition={revealTransition}><Eyebrow>Reviews, reputation, visibility</Eyebrow></motion.div><motion.h1 variants={reveal} transition={revealTransition} className="mt-5 max-w-2xl text-5xl font-bold leading-[1.05] text-primary sm:text-6xl lg:text-[4.25rem]">A calmer way to grow your local business.</motion.h1><motion.p variants={reveal} transition={revealTransition} className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">Ornigami helps local teams keep reviews answered, follow up with customers, and stay visible on Google from one focused workspace.</motion.p><motion.div variants={reveal} transition={revealTransition} className="mt-8 flex flex-wrap gap-3"><Button size="lg" asChild><Link href="/signup">Start free trial <ArrowRight className="h-4 w-4" /></Link></Button><Button size="lg" variant="secondary" asChild><Link href="/demo">See a live demo</Link></Button></motion.div><motion.div variants={reveal} transition={revealTransition} className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">{["14-day free trial", "No card required", "Cancel anytime"].map((item) => <span key={item} className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-accent-green" />{item}</span>)}</motion.div></motion.div><motion.div initial="hidden" animate="visible" variants={reveal} transition={{ ...revealTransition, delay: 0.25 }}><ReviewInboxMockup /></motion.div></div></section>
+    <PreviousHero />
 
     <section className="border-y border-border bg-surface py-20 md:py-24"><div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8"><SectionHeading eyebrow="What Ornigami does" title="A focused platform for the moments that shape local growth." intro="Keep the customer-facing work moving without adding another noisy dashboard to your day." align="center" /><div className="mt-12 grid gap-5 md:grid-cols-3"><FeatureCard icon={MessageSquare} label="Review Replies" title="Every review answered" body="Bring your Google review inbox into one place and turn your voice into polished, approval-ready drafts." bullets={["One clean review inbox", "Drafts that sound like you", "Approve before anything goes live"]} href="/review-replies" /><FeatureCard icon={Send} accent="green" label="Review Booster" title="More feedback after each visit" body="Follow up at the right moment with a friendly message that makes it easy for happy customers to share feedback." bullets={["Automatic follow-up timing", "Simple campaign tracking", "Your review link, your voice"]} href="/review-booster" /><FeatureCard icon={Search} accent="yellow" label="Local visibility" title="Keep your profile complete" body="Turn the overlooked details of your Google Business Profile into clear, actionable visibility work." bullets={["Profile completeness checks", "Local content ideas", "Practical next steps"]} href="/local-seo" /></div></div></section>
 
