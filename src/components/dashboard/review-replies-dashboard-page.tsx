@@ -20,7 +20,6 @@ export async function ReviewRepliesDashboardPage() {
   const cookieStore = await cookies();
   const isDemo = cookieStore.get("ll_demo")?.value === "true";
 
-  const metrics = await getDashboardMetrics(isDemo);
   let planInfo = null;
   let hasPaidAccess = false;
   let shouldShowActivation = false;
@@ -57,6 +56,7 @@ export async function ReviewRepliesDashboardPage() {
       </DashboardPage>
     );
   }
+  const metrics = await getDashboardMetrics(isDemo);
   const showError = !isDemo && Boolean(metrics?.criticalError);
   const isEmpty =
     !isDemo && metrics && !metrics.criticalError && metrics.totalReviewsSynced === 0;

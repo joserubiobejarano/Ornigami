@@ -167,7 +167,7 @@ export async function POST(req: Request) {
       const message = err instanceof Error ? err.message : "Server error";
       if (message.includes("OPENAI_API_KEY") || message.includes("Missing credentials")) {
         return NextResponse.json(
-          { error: "Missing OpenAI API key. Configure OPENAI_API_KEY to generate replies." },
+          { error: "Reply generation is not configured. Please contact support." },
           { status: 500 }
         );
       }
@@ -207,7 +207,7 @@ export async function POST(req: Request) {
     const message = err instanceof Error ? err.message : "Server error";
     if (message.includes("OPENAI_API_KEY") || message.includes("Missing credentials")) {
       return NextResponse.json(
-        { error: "Missing OpenAI API key. Configure OPENAI_API_KEY to generate replies." },
+        { error: "Reply generation is not configured. Please contact support." },
         { status: 500 }
       );
     }

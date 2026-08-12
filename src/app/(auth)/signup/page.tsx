@@ -39,6 +39,10 @@ export default function SignupPage() {
       }
 
       toast.success("Account created. Check your inbox to verify your email before signing in.");
+    } catch {
+      const message = "Could not create account. Please try again.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

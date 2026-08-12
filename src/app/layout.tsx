@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     description: "Reviews, follow-ups, and visibility workflows in one hub.",
     images: ["/opengraph-image"],
   },
-  icons: { icon: "/favicon.ico", apple: "/favicon.ico" },
+  icons: { icon: "/ornigami-mark.svg", apple: "/ornigami-mark.svg" },
 };
 
 // The proxy supplies a per-request CSP nonce. Static HTML cannot receive that

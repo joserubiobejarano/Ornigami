@@ -211,7 +211,7 @@ export default function ReviewRepliesPage() {
         <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="mb-14 max-w-3xl">
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 1, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="mb-5 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-semibold text-purple-700"
@@ -221,7 +221,7 @@ export default function ReviewRepliesPage() {
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 1, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.08 }}
               className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
@@ -233,7 +233,7 @@ export default function ReviewRepliesPage() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 1, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.16 }}
               className="mt-5 max-w-2xl text-xl leading-relaxed text-slate-600"
@@ -242,7 +242,7 @@ export default function ReviewRepliesPage() {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 1, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.24 }}
               className="mt-8 flex flex-wrap gap-3"
@@ -262,7 +262,7 @@ export default function ReviewRepliesPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={{ opacity: 1 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
               className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500"
@@ -278,7 +278,7 @@ export default function ReviewRepliesPage() {
 
           {/* Full-width mockup */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 1, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.2 }}
             className="mx-auto max-w-2xl"

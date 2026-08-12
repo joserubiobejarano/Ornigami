@@ -19,7 +19,7 @@ const BUSINESS_TYPES = [
   "Home services",
 ];
 
-const TONES = ["warm and friendly", "professional", "casual", "grateful"] as const;
+const TONES = ["Warm and friendly", "Professional", "Casual", "Grateful"] as const;
 
 const CLIENT_LIMIT_KEY = "publicDemoReviewBoosterSends";
 const CLIENT_LIMIT_MAX = 2;
@@ -64,7 +64,7 @@ export function PublicReviewBoosterDemoPage() {
   const [customerName, setCustomerName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
-  const [tone, setTone] = useState<(typeof TONES)[number]>("warm and friendly");
+  const [tone, setTone] = useState<(typeof TONES)[number]>("Warm and friendly");
 
   const remaining = Math.max(0, CLIENT_LIMIT_MAX - getClientDailyCount());
 
@@ -198,9 +198,10 @@ export function PublicReviewBoosterDemoPage() {
               </div>
             </details>
 
-            <Button type="submit" disabled={loading}>
-              {loading ? "Sending..." : "Send me a sample follow-up email"}
+            <Button type="submit" disabled={loading || remaining === 0}>
+              {loading ? "Sending..." : remaining === 0 ? "Daily demo limit reached" : "Send me a sample follow-up email"}
             </Button>
+            {remaining === 0 ? <p className="text-sm text-muted-foreground">You have used today&apos;s demo sends. Please come back tomorrow.</p> : null}
           </form>
 
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}

@@ -37,6 +37,10 @@ function LoginForm() {
       }
 
       window.location.href = afterLoginUrl;
+    } catch {
+      const message = "Could not sign in. Check your details and try again.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

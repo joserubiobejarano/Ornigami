@@ -20,7 +20,7 @@ export type DashboardMetrics = {
   totalReviewsSynced: number;
   /** Reviews that do not have a reply yet */
   unansweredReviews: number;
-  /** Replies generated (AI drafts) this month; placeholder if not tracked */
+  /** Replies generated this month; placeholder if not tracked */
   repliesGeneratedThisMonth: number;
   /**
    * Unposted rows in `review_replies` (posted = false). In-browser drafts on Reviews are not included until persisted.

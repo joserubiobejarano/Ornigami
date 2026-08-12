@@ -101,7 +101,7 @@ export default function ReviewBoosterUploadPage() {
       </PageHeader>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-3 font-semibold text-slate-900">How it works</h2>
+        <h2 className="text-3xl font-semibold text-slate-900">How it works</h2>
         <ol className="mt-4 space-y-2 text-slate-800">
           <li>1. Step 1: Download the template</li>
           <li>2. Step 2: Fill in completed visits</li>

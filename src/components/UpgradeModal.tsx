@@ -37,7 +37,7 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                             <li>✓ Post replies to Google</li>
                             <li>✓ Sync reviews from all locations</li>
                             <li>✓ Connect your Google Business Profile</li>
-                            <li>✓ 14-day free trial, card required</li>
+                          <li>✓ 14-day free trial, no card required to start</li>
                         </ul>
                     </div>
 

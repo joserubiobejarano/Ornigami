@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { formatProductDate } from "@/lib/format-date";
 import {
   getReviewWorkflowDisplay,
   shouldShowTestWorkflowActions,
@@ -95,7 +96,7 @@ export function ReviewList({
                     </span>
                     {rv.review_update_time && (
                       <span className="text-foreground text-xs">
-                        {new Date(rv.review_update_time).toLocaleDateString()}
+                        {formatProductDate(rv.review_update_time)}
                       </span>
                     )}
                     <Badge variant={badge.variant} className={cn("text-[10px]", badge.className)}>
@@ -131,7 +132,7 @@ export function ReviewList({
                   </span>
                   {rv.review_update_time && (
                     <span className="text-foreground">
-                      {new Date(rv.review_update_time).toLocaleDateString()}
+                      {formatProductDate(rv.review_update_time)}
                     </span>
                   )}
                   <Badge variant={badge.variant} className={cn("text-xs", badge.className)}>

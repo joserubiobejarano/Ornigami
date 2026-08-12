@@ -5,6 +5,7 @@ import { DashboardCallout } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
 import type { PlanStatus } from "@/lib/plan";
 import { isTrialing, isFreeUser } from "@/lib/plan";
+import { formatProductDate } from "@/lib/format-date";
 
 type UpgradeBannerProps = {
   planStatus: PlanStatus;
@@ -13,7 +14,7 @@ type UpgradeBannerProps = {
 
 export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerProps) {
   if (isTrialing(planStatus) && currentPeriodEnd) {
-    const trialEndDate = new Date(currentPeriodEnd).toLocaleDateString();
+    const trialEndDate = formatProductDate(currentPeriodEnd);
     return (
       <DashboardCallout
         variant="info"
