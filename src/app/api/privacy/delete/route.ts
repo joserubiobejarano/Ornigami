@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { sql } from "@/lib/db/neon";
 
 export const runtime = "nodejs";
@@ -12,5 +12,6 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   if (body?.confirmation !== "DELETE MY DATA") return NextResponse.json({ error: "Confirmation required." }, { status: 400 });
   await sql`DELETE FROM public.users WHERE id = ${userId}`;
-  return NextResponse.json({ ok: true });
+  await signOut({ redirect: false });
+  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }
