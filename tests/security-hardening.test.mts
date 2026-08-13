@@ -32,16 +32,15 @@ test("Sentry is configured not to send default PII", () => {
   assert.match(readFileSync("sentry.edge.config.ts", "utf8"), /sendDefaultPii: false/);
 });
 
-test("CSP split keeps dynamic nonces and static marketing hashes", () => {
+test("CSP nonces cover every Next.js HTML route", () => {
   const proxy = readFileSync("src/proxy.ts", "utf8");
   const layout = readFileSync("src/app/layout.tsx", "utf8");
   const dashboardLayout = readFileSync("src/app/(dashboard)/layout.tsx", "utf8");
   assert.match(proxy, /requestHeaders\.set\("Content-Security-Policy", buildContentSecurityPolicy\(nonce\)\)/);
-  assert.match(proxy, /buildStaticContentSecurityPolicy/);
   assert.match(proxy, /script-src 'self'/);
   assert.doesNotMatch(proxy, /script-src[^\n]*'unsafe-inline'/);
   assert.match(proxy, /https:\/\/\*\.sentry\.io/);
-  assert.doesNotMatch(layout, /export const dynamic = "force-dynamic"/);
+  assert.match(layout, /export const dynamic = "force-dynamic"/);
   assert.match(dashboardLayout, /export const dynamic = "force-dynamic"/);
 });
 

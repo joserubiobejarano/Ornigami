@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 
 import { auth } from "@/auth";
 import { getAppBaseUrl } from "@/lib/app-base-url";
@@ -59,66 +57,8 @@ function buildContentSecurityPolicy(nonce: string): string {
   ].join("; ");
 }
 
-const PUBLIC_STATIC_ROUTES = new Set([
-  "/",
-  "/about",
-  "/pricing",
-  "/review-replies",
-  "/review-booster",
-  "/local-seo",
-  "/privacy",
-  "/terms",
-  "/legal",
-  "/contact",
-  "/free-audit",
-  "/demo",
-  "/demo-review-replies",
-  "/demo-review-booster",
-  "/feedback",
-  "/login",
-  "/signup",
-]);
-
-function isPublicStaticRoute(pathname: string): boolean {
-  return PUBLIC_STATIC_ROUTES.has(pathname);
-}
-
-function readStaticScriptHashes(): string[] {
-  const filePath = join(process.cwd(), ".next", "static-csp-hashes.json");
-  if (!existsSync(filePath)) return [];
-  try {
-    const parsed = JSON.parse(readFileSync(filePath, "utf8")) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function buildStaticContentSecurityPolicy(): string {
-  const developmentScriptPolicy = process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : "";
-  const scriptHashes = readStaticScriptHashes().map((hash) => `'sha256-${hash}'`).join(" ");
-  return [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "frame-ancestors 'none'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data: https:",
-    "style-src 'self' 'unsafe-inline' https:",
-    `script-src 'self' ${scriptHashes}${developmentScriptPolicy} https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com`,
-    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app https://*.sentry.io",
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com",
-    "object-src 'none'",
-  ].join("; ");
-}
-
 function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
   response.headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
-  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-  return response;
-}
-
-function withStaticSecurityHeaders(response: NextResponse): NextResponse {
-  response.headers.set("Content-Security-Policy", buildStaticContentSecurityPolicy());
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   return response;
 }
@@ -127,24 +67,26 @@ const proxy = auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
 
-  if (pathname === "/demo/review-replies") {
-    return withStaticSecurityHeaders(NextResponse.rewrite(new URL("/demo-review-replies", req.url)));
-  }
-
-  if (pathname === "/demo/review-booster") {
-    return withStaticSecurityHeaders(NextResponse.rewrite(new URL("/demo-review-booster", req.url)));
-  }
-
-  if (isPublicStaticRoute(pathname)) {
-    return withStaticSecurityHeaders(NextResponse.next());
-  }
-
   const nonce = randomBytes(16).toString("base64url");
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
   // Next.js reads the request CSP to apply the nonce to streamed inline
   // hydration scripts. The response CSP alone is too late for those scripts.
   requestHeaders.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
+
+  if (pathname === "/demo/review-replies") {
+    return withSecurityHeaders(
+      NextResponse.rewrite(new URL("/demo-review-replies", req.url), { request: { headers: requestHeaders } }),
+      nonce
+    );
+  }
+
+  if (pathname === "/demo/review-booster") {
+    return withSecurityHeaders(
+      NextResponse.rewrite(new URL("/demo-review-booster", req.url), { request: { headers: requestHeaders } }),
+      nonce
+    );
+  }
 
   if (pathname === "/api/public-demo/review-booster") {
     return withSecurityHeaders(NextResponse.rewrite(new URL("/api-public-demo-review-booster", req.url)), nonce);

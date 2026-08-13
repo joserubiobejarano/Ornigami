@@ -8,6 +8,8 @@ import { MotionProvider } from "@/components/motion-provider";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Bricolage_Grotesque, Geist_Mono, Inter } from "next/font/google";
 
+export const dynamic = "force-dynamic";
+
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-display",
