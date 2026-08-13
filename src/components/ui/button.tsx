@@ -5,18 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-150 active:scale-[.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_8px_20px_-6px_rgba(17,28,54,.28)] hover:-translate-y-px hover:bg-primary-hover",
-        primary: "bg-primary text-primary-foreground shadow-[0_8px_20px_-6px_rgba(17,28,54,.28)] hover:-translate-y-px hover:bg-primary-hover",
+        default: "bg-primary text-primary-foreground shadow-[0_8px_20px_-6px_rgb(18_50_39_/_0.28)] hover:-translate-y-px hover:bg-primary-hover",
+        primary: "bg-primary text-primary-foreground shadow-[0_8px_20px_-6px_rgb(18_50_39_/_0.28)] hover:-translate-y-px hover:bg-primary-hover",
+        accent: "bg-accent-marigold text-primary shadow-[0_8px_20px_-6px_rgb(18_50_39_/_0.22)] hover:-translate-y-px hover:brightness-95",
+        "primary-on-ink": "bg-background text-primary hover:-translate-y-px hover:bg-background/90",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border border-border bg-background text-primary shadow-xs hover:bg-surface hover:border-primary/25",
+          "border-[1.5px] border-border bg-card text-primary shadow-xs hover:bg-surface hover:border-primary/25",
         secondary:
-          "border border-border bg-background text-primary shadow-xs hover:bg-surface hover:border-primary/25",
+          "border-[1.5px] border-border bg-card text-primary shadow-xs hover:bg-surface hover:border-primary/25",
         ghost:
           "text-muted-foreground hover:bg-surface hover:text-primary",
         link: "text-primary underline-offset-4 hover:underline [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5",
