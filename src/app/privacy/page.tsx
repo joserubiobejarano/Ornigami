@@ -1,8 +1,11 @@
 import { PageHero } from "@/components/marketing/primitives";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({ title: "Privacy policy | Ornigami", description: "Read how Ornigami collects, uses, and protects information when you use the service.", path: "/privacy" });
 
 export default function PrivacyPage() {
   return (
-    <main><PageHero eyebrow="Legal" title="Privacy policy" intro="How Ornigami collects, uses, retains, and protects information." /><article className="prose prose-slate mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+    <main><PageHero eyebrow="Privacy" title="Privacy at Ornigami" intro="What we collect, why, and the control you have over it." /><article className="prose mx-auto max-w-[70ch] px-4 text-foreground md:px-6">
         <p className="text-muted-foreground">Last updated: 12 August 2026</p>
         
         <section>

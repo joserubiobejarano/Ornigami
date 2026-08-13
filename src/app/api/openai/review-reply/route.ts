@@ -3,10 +3,11 @@ import { z } from "zod";
 
 import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
 import type { ReviewReplyInput } from "@/lib/openai";
-import { generateReviewReply } from "@/lib/openai";
+import { sanitizeReviewReply, streamReviewReply } from "@/lib/openai";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { resolveUser } from "@/lib/user-from-req";
 import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
+import { textChunks, textStreamResponse } from "@/lib/streaming";
 
 /** Core review fields; at least one of text/reviewText required for generation. */
 const RequestSchema = z
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
     } else {
       mockReply = `We're sorry to hear about your experience. At ${String(json.businessName || "our business")}, we strive for excellence and it seems we missed the mark. Please contact us directly so we can make it right.`;
     }
-    return NextResponse.json({ reply: mockReply });
+    return textStreamResponse(textChunks(mockReply));
   }
 
   // Sample generation is still an authenticated product capability; the client hint cannot bypass access checks.
@@ -160,9 +161,12 @@ export async function POST(req: Request) {
     }
     try {
       const input = normalizeBody(parsed.data);
-      const reply = await generateReviewReply(input);
-      await incrementReviewReplyUsage(sampleUser.id);
-      return NextResponse.json({ reply });
+      const stream = await streamReviewReply(input);
+      return textStreamResponse(
+        stream,
+        () => incrementReviewReplyUsage(sampleUser.id).then(() => undefined),
+        sanitizeReviewReply
+      );
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Server error";
       if (message.includes("OPENAI_API_KEY") || message.includes("Missing credentials")) {
@@ -200,9 +204,12 @@ export async function POST(req: Request) {
     const normalized = normalizeBody(parsed.data);
     const saved = await getProfileReplyDefaults(user.id);
     const input = mergeWithProfileDefaults(parsed.data, normalized, saved);
-    const reply = await generateReviewReply(input);
-    await incrementReviewReplyUsage(user.id);
-    return NextResponse.json({ reply });
+    const stream = await streamReviewReply(input);
+    return textStreamResponse(
+      stream,
+      () => incrementReviewReplyUsage(user.id).then(() => undefined),
+      sanitizeReviewReply
+    );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Server error";
     if (message.includes("OPENAI_API_KEY") || message.includes("Missing credentials")) {

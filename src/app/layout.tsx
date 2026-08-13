@@ -5,12 +5,13 @@ import { LayoutFrame } from "@/components/layout-frame";
 import { Toaster } from "sonner";
 import { ThemeSync } from "@/components/theme-sync";
 import { MotionProvider } from "@/components/motion-provider";
-import { Geist_Mono, Hanken_Grotesk, Inter } from "next/font/google";
+import { JsonLd } from "@/components/seo/json-ld";
+import { Bricolage_Grotesque, Geist_Mono, Inter } from "next/font/google";
 
-const displayFont = Hanken_Grotesk({
+const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["600", "700"],
+  weight: ["700", "800"],
   display: "swap",
 });
 
@@ -24,7 +25,7 @@ const sansFont = Inter({
 const monoFont = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  weight: ["400", "500", "600"],
+  weight: ["400", "600"],
   display: "swap",
 });
 
@@ -32,12 +33,12 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Ornigami - Review replies and follow-ups for local businesses",
+  title: "Ornigami — every review, answered in your voice",
   description:
-    "Ornigami helps local teams manage review replies and customer follow-ups from one focused workspace.",
+    "Ornigami helps local businesses reply to every Google review in their own voice, follow up with happy customers, and stay easy to find — from one calm workspace.",
   openGraph: {
-    title: "Ornigami - Review replies and follow-ups for local businesses",
-    description: "Reviews, follow-ups, and visibility workflows in one hub.",
+    title: "Ornigami — every review, answered in your voice",
+    description: "Reviews, follow-ups, and visibility workflows in one calm workspace.",
     url: siteUrl,
     siteName: "Ornigami",
     type: "website",
@@ -45,17 +46,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ornigami - Review replies and follow-ups for local businesses",
+    title: "Ornigami — every review, answered in your voice",
     description: "Reviews, follow-ups, and visibility workflows in one hub.",
     images: ["/opengraph-image"],
   },
-  icons: { icon: "/ornigami-mark.svg", apple: "/ornigami-mark.svg" },
+  icons: { icon: [{ url: "/ornigami-favicon.svg", type: "image/svg+xml" }, { url: "/ornigami-mark-32.png", sizes: "32x32" }, { url: "/ornigami-mark-16.png", sizes: "16x16" }], apple: "/ornigami-mark-180.png" },
 };
-
-// The proxy supplies a per-request CSP nonce. Static HTML cannot receive that
-// nonce, so keep the root document dynamic so Next.js can nonce its streamed
-// inline hydration scripts correctly.
-export const dynamic = "force-dynamic";
 
 export default function RootLayout({
   children,
@@ -70,6 +66,7 @@ export default function RootLayout({
             <ThemeSync />
             <LayoutFrame>{children}</LayoutFrame>
             <Toaster position="bottom-right" richColors closeButton />
+            <JsonLd data={{ "@context": "https://schema.org", "@type": "Organization", name: "Ornigami", url: siteUrl, logo: `${siteUrl}/logo-ink.svg` }} />
           </MotionProvider>
         </AuthProvider>
       </body>

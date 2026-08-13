@@ -29,7 +29,7 @@ Minimum production set:
 - [ ] `AUTH_SECRET`
 - [ ] `AUTH_URL`
 - [ ] `AUTH_TRUST_HOST` if needed
-- [ ] `NEXT_PUBLIC_APP_URL`
+- [x] `NEXT_PUBLIC_APP_URL` is present in Vercel; the production build now fails unless it resolves to `https://ornigami.com`
 - [ ] `OPENAI_API_KEY`
 - [ ] `GOOGLE_CLIENT_ID`
 - [ ] `GOOGLE_CLIENT_SECRET`
@@ -119,7 +119,7 @@ Checklist:
 - [ ] Stripe checkout redirects successfully
 - [ ] Stripe webhook updates plan and agent state
 
-Then run [docs/SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md).
+Then review the production smoke-test side note in [`Audit/Design-Redesign.md`](../../Audit/Design-Redesign.md).
 
 ## 11. Deployment caveats
 

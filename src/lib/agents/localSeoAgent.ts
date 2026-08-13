@@ -8,6 +8,28 @@ type LocalSEOInput = {
   tone?: string;
 };
 
+export type LocalContentType = "blog" | "gbp_post" | "faq";
+
+export async function streamLocalContent(type: LocalContentType, input: LocalSEOInput) {
+  const categoryText = input.category ? `\nCategory: ${input.category}` : "";
+  const tone = input.tone || "Friendly and helpful";
+  const prompts: Record<LocalContentType, { system: string; user: string }> = {
+    blog: {
+      system: "You are an expert local SEO writer. Produce helpful, unique, locally relevant content in clean Markdown with H2/H3 headings, bullets where useful, and a short CTA at the end. No keyword stuffing.",
+      user: `Business: ${input.businessName}\nCity: ${input.city}${categoryText}\nTone: ${tone}\n\nWrite an 800–1200 word blog post targeting local search intent with 3–5 specific local references (neighborhoods, landmarks, seasonal events). Include practical tips and avoid fluff. Output Markdown only.`,
+    },
+    gbp_post: {
+      system: "You are a GBP content specialist. Write concise, engaging posts for Google Business Profile that feel local and useful. Output Markdown only, no hashtags.",
+      user: `Business: ${input.businessName}\nCity: ${input.city}${categoryText}\nTone: ${tone}\n\nWrite a 120–200 word GBP post announcing value for local customers (offer, tip, event, update). Include a clear CTA (\"Call us\", \"Book now\"). Make it feel local to ${input.city}. Output Markdown only.`,
+    },
+    faq: {
+      system: "You craft concise, helpful FAQs for local service businesses. Output Markdown with H3 for each question and a short paragraph answer. Avoid generic filler.",
+      user: `Business: ${input.businessName}\nCity: ${input.city}${categoryText}\nTone: ${tone}\n\nWrite 6–10 FAQs customers in ${input.city} often ask about ${input.category || "this business"}. Make them locally relevant. Output Markdown only.`,
+    },
+  };
+  return getClient().chat.completions.create({ model: "gpt-4o-mini", messages: [{ role: "system", content: prompts[type].system }, { role: "user", content: prompts[type].user }], stream: true });
+}
+
 export async function generateLocalContent({
   businessName,
   city,

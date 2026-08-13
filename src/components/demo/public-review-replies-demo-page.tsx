@@ -28,7 +28,8 @@ import {
   checkDemoLimit,
 } from "@/lib/demo";
 import { DashboardCallout } from "@/components/dashboard";
-import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-agent-nav";
+import { PageHero } from "@/components/marketing/primitives";
+import { readTextStream } from "@/lib/stream-client";
 import { toast } from "sonner";
 
 const DEMO_HANDLED_HINT =
@@ -115,22 +116,32 @@ function DemoWorkspace({ businessType }: { businessType: DemoBusinessType }) {
       body: JSON.stringify(body),
     });
 
-    let json: { reply?: string; markdown?: string; text?: string; error?: string } = {};
-    try {
-      json = await response.json();
-    } catch {
-      // ignore invalid JSON
-    }
-
     if (!response.ok) {
-      toast.error(json?.error ?? `Generate failed (${response.status})`);
+      let message = `Generate failed (${response.status})`;
+      try {
+        const json = (await response.json()) as { error?: string };
+        message = json.error ?? message;
+      } catch {
+        // Keep the status-based message when the error response is not JSON.
+      }
+      toast.error(message);
       return;
     }
 
-    const replyText = json.reply ?? json.markdown ?? json.text ?? "";
-    setDrafts((d) => ({ ...d, [review.google_review_id]: replyText }));
-    incrementDemoUsage(DEMO_STORAGE_KEYS.REPLIES_USED);
-    toast.success("Reply generated. Save as draft or mark as posted (demo) when you are happy with it.");
+    let replyText = "";
+    try {
+      await readTextStream(response, (chunk) => {
+        replyText += chunk;
+        setDrafts((d) => ({ ...d, [review.google_review_id]: replyText }));
+      }, (finalText) => {
+        replyText = finalText;
+        setDrafts((d) => ({ ...d, [review.google_review_id]: finalText }));
+      });
+      incrementDemoUsage(DEMO_STORAGE_KEYS.REPLIES_USED);
+      toast.success("Reply generated. Save as draft or mark as posted (demo) when you are happy with it.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Reply generation failed. Please try again.");
+    }
   }
 
   function saveTestDraft(review: Review) {
@@ -168,7 +179,7 @@ function DemoWorkspace({ businessType }: { businessType: DemoBusinessType }) {
 
       {reviews.length > 0 ? (
         <div
-          className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs"
+          className="flex flex-wrap items-center gap-2 rounded-xl border-[1.5px] border-border bg-surface px-3 py-2.5 text-xs shadow-ink-sm"
           aria-live="polite"
         >
           <span className="font-semibold">Summary</span>
@@ -176,7 +187,7 @@ function DemoWorkspace({ businessType }: { businessType: DemoBusinessType }) {
             Loaded {reviewSummary.total}
           </Badge>
           <Badge variant="outline" className="font-normal tabular-nums">
-            Unanswered {reviewSummary.unanswered}
+            Awaiting approval {reviewSummary.unanswered}
           </Badge>
           <Badge variant="outline" className="font-normal tabular-nums">
             Drafts {reviewSummary.drafts}
@@ -217,7 +228,7 @@ export function PublicReviewRepliesDemoPage() {
     <div className="min-h-dvh bg-background text-foreground">
       <main className="px-4 py-10 pb-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-          <ReviewRepliesAgentNav />
+          <PageHero eyebrow="Review Replies demo" title="Try replying with sample data." intro="See how drafts appear and how approving works. Nothing posts to Google from this demo." />
 
           <section className="space-y-3">
             <label htmlFor="demo-business-type" className="block text-sm font-medium">

@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
+        "build": "next build && node scripts/generate-static-csp-hashes.mjs",
+        "analyze": "next experimental-analyze --output",
         "start": "next start",
         "lint": "eslint",
         "test": "node --experimental-strip-types tests/first-phase.test.mts",

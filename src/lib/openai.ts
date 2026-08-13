@@ -184,6 +184,15 @@ export async function generateReviewReply(input: ReviewReplyInput): Promise<stri
   return sanitizeReviewReply(raw);
 }
 
+export async function streamReviewReply(input: ReviewReplyInput) {
+  const user = buildReviewReplyUserMessage(input);
+  return getClient().chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "system", content: REVIEW_REPLY_SYSTEM }, { role: "user", content: user }],
+    stream: true,
+  });
+}
+
 export type ProfileAuditInput = {
   mode: "connected" | "quick";
   businessName?: string | null;

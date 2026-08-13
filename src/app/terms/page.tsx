@@ -1,8 +1,11 @@
 import { PageHero } from "@/components/marketing/primitives";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({ title: "Terms of service | Ornigami", description: "Read the terms that apply when you use Ornigami's review and local growth workflows.", path: "/terms" });
 
 export default function TermsPage() {
   return (
-    <main><PageHero eyebrow="Legal" title="Terms of service" intro="The rules for using Ornigami and the responsibilities that come with an account." /><article className="prose prose-slate mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+    <main><PageHero eyebrow="Terms" title="Terms of service" intro="The agreement between you and Ornigami, in plain terms." /><article className="prose mx-auto max-w-[70ch] px-4 text-foreground md:px-6">
         <p className="text-muted-foreground">Last updated: 12 August 2026</p>
         
         <section>

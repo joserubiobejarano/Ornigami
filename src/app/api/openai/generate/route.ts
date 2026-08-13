@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { resolveUser } from "@/lib/user-from-req";
-import { generateLocalBlogPost, generateLocalGBPPost, generateLocalFAQs } from "@/lib/agents/localSeoAgent";
+import { streamLocalContent } from "@/lib/agents/localSeoAgent";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { safeLogger } from "@/lib/safe-logger";
+import { textChunks, textStreamResponse } from "@/lib/streaming";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
         mockMarkdown = `### Frequently Asked Questions\n\n**Q: Do you offer ${json.service || "services"} in ${json.city || "my area"}?**\n\nA: Yes, we serve the entire ${json.city || "region"} with pride!\n\n**Q: How can I book?**\n\nA: Simply call us or visit our website.`;
       }
       
-      return NextResponse.json({ markdown: mockMarkdown });
+      return textStreamResponse(textChunks(mockMarkdown));
     }
 
     const user = await resolveUser(req);
@@ -66,22 +67,14 @@ export async function POST(req: Request) {
     }
 
     const { type, service, ...rest } = parsed.data;
-    let markdown = "";
-
     // Use local SEO agent with category from service field
     const input = {
       ...rest,
       category: service,
     };
 
-    if (type === "blog") markdown = await generateLocalBlogPost(input);
-    if (type === "gbp_post") markdown = await generateLocalGBPPost(input);
-    if (type === "faq") markdown = await generateLocalFAQs(input);
-
-    // Increment usage after successful generation
-    await incrementUsage(user.id, "ai_posts");
-
-    return NextResponse.json({ markdown });
+    const stream = await streamLocalContent(type, input);
+    return textStreamResponse(stream, () => incrementUsage(user.id, "ai_posts").then(() => undefined));
   } catch (e: unknown) {
     safeLogger.error("openai.generate.failed", {
       error: e instanceof Error ? e.message : "unknown",

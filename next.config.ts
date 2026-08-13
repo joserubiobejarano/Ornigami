@@ -1,8 +1,16 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+if (process.env.VERCEL_ENV === "production" && configuredAppUrl !== "https://ornigami.com") {
+  throw new Error("NEXT_PUBLIC_APP_URL must be https://ornigami.com in Vercel production.");
+}
+
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    sri: { algorithm: "sha256" },
+  },
   async headers() {
     const headers = [
       { key: "X-Frame-Options", value: "DENY" },

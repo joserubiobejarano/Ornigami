@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
@@ -21,6 +23,8 @@ import {
 } from "@/lib/demo";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { toast } from "sonner";
+import { DashboardPage, DashboardPageHeader } from "@/components/dashboard";
+import { readTextStream } from "@/lib/stream-client";
 
 type GeneratorType = "blog" | "gbp_post" | "faq";
 
@@ -72,7 +76,7 @@ export default function ContentPage() {
       setProjects([
         {
           id: "demo-1",
-          title: "[Legacy sample] Review marketing — Joe's Pizza",
+          title: "Example: Review marketing — Joe's Pizza",
           type: "blog",
           input: { businessName: "Joe's Pizza", city: "New York", service: "Pizza", tone: "Friendly" },
           output_md: "# The Best Pizza in NYC\n\nCome visit Joe's Pizza for an authentic slice...",
@@ -80,7 +84,7 @@ export default function ContentPage() {
         },
         {
           id: "demo-2",
-          title: "[Legacy sample] Short post — Joe's Pizza",
+          title: "Example: Short post — Joe's Pizza",
           type: "gbp_post",
           input: { businessName: "Joe's Pizza", city: "New York", service: "Pizza", tone: "Exciting" },
           output_md: "Pizza craving? Stop by Joe's Pizza today! #NYC #Pizza",
@@ -161,10 +165,16 @@ export default function ContentPage() {
         body: JSON.stringify({ type, businessName, city, service, tone }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Generation failed");
-
-      setMarkdown(data.markdown || "");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Generation failed");
+      }
+      if (res.headers.get("content-type")?.includes("text/event-stream")) {
+        await readTextStream(res, (text) => setMarkdown((current) => current + text));
+      } else {
+        const data = await res.json();
+        setMarkdown(data.markdown || "");
+      }
 
       if (isDemo) {
         incrementDemoUsage(DEMO_STORAGE_KEYS.CONTENT_USED);
@@ -205,7 +215,7 @@ export default function ContentPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Save failed");
+      if (!res.ok) throw new Error(data.error || "Something went wrong. Try again in a moment.");
 
       await loadProjects();
       alert("Saved!");
@@ -219,8 +229,8 @@ export default function ContentPage() {
   function onCopy() {
     if (!markdown) return;
     navigator.clipboard.writeText(markdown).then(
-      () => alert("Copied to clipboard"),
-      () => alert("Failed to copy")
+      () => alert("Done."),
+      () => alert("We couldn't copy that. Try again.")
     );
   }
 
@@ -249,10 +259,10 @@ export default function ContentPage() {
   }
 
   return (
-    <div className="grid grid-cols-[1fr_320px] gap-6">
+    <DashboardPage width="lg" className="grid grid-cols-[minmax(0,1fr)_320px] gap-6">
       <div className="space-y-6">
-        <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 text-sm text-primary">
-          <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
+        <div className="rounded-2xl border-[1.5px] border-accent-marigold/35 bg-tint-butter p-4 text-sm text-primary shadow-ink-sm">
+          <p className="font-semibold text-primary">Legacy content tool</p>
           <p className="mt-1 text-muted-foreground">
             Ornigami is focused on your <strong>review inbox</strong> and <strong>reply drafts</strong>. Use{" "}
             <Link href="/reviews" className="underline underline-offset-2">
@@ -265,22 +275,16 @@ export default function ContentPage() {
             for reply defaults and Google Business Profile. This screen may be removed later.
           </p>
         </div>
-        <div>
-          <h1 className="text-2xl font-semibold">Legacy content generator</h1>
-          <p className="text-muted-foreground">
-            Older marketing drafts (blog, posts, FAQs). Prefer Reviews and Settings for day-to-day work.
-          </p>
-        </div>
+        <DashboardPageHeader kicker="Content" title="Create a useful draft." description="This older generator is still available, but your review inbox is the main workspace." />
 
         {planInfo && hasPaidAccess && !isDemo && (
           <UpgradeBanner planStatus={planStatus} currentPeriodEnd={planInfo.currentPeriodEnd} />
         )}
 
         {!planLoading && !hasPaidAccess && !isDemo && (
-          <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 space-y-2">
+          <div className="rounded-2xl border-[1.5px] border-accent-marigold/35 bg-tint-butter p-4 space-y-2 shadow-ink-sm">
             <p className="text-sm font-medium text-primary">
-              Choose a plan to connect Google Business Profile, sync reviews, and use reply
-              reply drafts (this legacy generator is not the main product).
+              This legacy generator is not part of the main review product. Upgrade to turn on content suggestions.
             </p>
           </div>
         )}
@@ -351,7 +355,7 @@ export default function ContentPage() {
           </div>
         </div>
 
-        <div className="prose max-w-none border rounded-md p-4">
+        <div className="prose max-w-none rounded-2xl border-[1.5px] border-border bg-card p-6 shadow-ink-sm">
           {markdown ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {markdown}
@@ -364,8 +368,8 @@ export default function ContentPage() {
         </div>
       </div>
 
-      <aside className="border-l pl-4">
-        <h3 className="font-medium mb-2">Your Projects</h3>
+      <aside className="rounded-2xl border-[1.5px] border-border bg-card p-4 shadow-ink-sm">
+        <h3 className="font-bold text-primary mb-2">Your projects</h3>
         <div className="space-y-2 max-h-[80vh] overflow-auto pr-2">
           {projects.map((project) => (
             <button
@@ -389,7 +393,7 @@ export default function ContentPage() {
       <PlanGateModal
         open={showPlanGateModal}
         onOpenChange={setShowPlanGateModal}
-        featureName="Syncing reviews from Google Business Profile, drafting replies, and posting replies"
+        featureName="Content suggestions"
       />
 
       <UpgradeModal
@@ -401,7 +405,7 @@ export default function ContentPage() {
             : undefined
         }
       />
-    </div>
+    </DashboardPage>
   );
 }
 

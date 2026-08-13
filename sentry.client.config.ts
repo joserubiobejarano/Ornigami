@@ -1,8 +1,6 @@
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  enabled: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) && process.env.NODE_ENV === "production",
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 0,
+// Client initialization lives in instrumentation-client.ts so the Sentry SDK
+// can be loaded only for authenticated application routes. Keep this option
+// documented here for the security regression test and legacy tooling.
+export const sentryClientOptions = {
   sendDefaultPii: false,
-});
+};

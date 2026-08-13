@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -19,6 +21,7 @@ import { UpgradeBanner, PlanGateModal } from "@/components/PlanGate";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ReviewList } from "@/components/reviews/review-list";
+import { readTextStream } from "@/lib/stream-client";
 import {
   getReviewWorkflowDisplay,
   shouldShowTestWorkflowActions,
@@ -44,7 +47,7 @@ function ReviewsPageContent() {
   const [showPlanGateModal, setShowPlanGateModal] = useState(false);
 
   const NO_CONNECTED_MSG =
-    "No connected Google Business Profile yet. Connect your account to load locations and reviews.";
+    "Connect your Google profile to load locations and reviews.";
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLoc, setSelectedLoc] = useState<string>("");
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -104,7 +107,7 @@ function ReviewsPageContent() {
         if (r.status === 401) {
           setError(NO_CONNECTED_MSG);
         } else {
-          setError("Failed to load locations");
+          setError("We couldn't load your locations. Try again in a moment.");
         }
         return;
       }
@@ -116,7 +119,7 @@ function ReviewsPageContent() {
         }
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to load locations");
+      setError(e instanceof Error ? e.message : "We couldn't load your locations. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -172,7 +175,7 @@ function ReviewsPageContent() {
               if (bits.length) message += ` ${bits.join(", ")}.`;
             }
             if (Array.isArray(pj.errors) && pj.errors.length > 0) {
-              toast.warning("Some reviews could not be processed. Try again or post manually.");
+              toast.warning("Some reviews weren't processed. Try again or post manually.");
             }
           }
         } catch {
@@ -196,7 +199,7 @@ function ReviewsPageContent() {
     try {
       const res = await fetch(`/api/reviews?loc=${encodeURIComponent(selectedLoc)}`);
       if (!res.ok) {
-        throw new Error("Failed to load reviews");
+        throw new Error("We couldn't load your reviews. Try again in a moment.");
       }
       const js = await res.json();
       if (Array.isArray(js.items)) {
@@ -220,7 +223,7 @@ function ReviewsPageContent() {
         );
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to load reviews");
+      setError(e instanceof Error ? e.message : "We couldn't load your reviews. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -252,20 +255,20 @@ function ReviewsPageContent() {
       body: JSON.stringify(body),
     });
 
-    let j: { reply?: string; markdown?: string; text?: string; error?: string } = {};
-    try {
-      j = await r.json();
-    } catch {
-      // non-JSON response
-    }
-
     if (!r.ok) {
+      const j = await r.json().catch(() => ({})) as { error?: string };
       const message = j?.error ?? `Generate failed (${r.status})`;
       toast.error(message);
       return;
     }
 
-    const replyText = j.reply ?? j.markdown ?? j.text ?? "";
+    let replyText = "";
+    if (r.headers.get("content-type")?.includes("text/event-stream")) {
+      await readTextStream(r, (text) => { replyText += text; }, (finalText) => { replyText = finalText; });
+    } else {
+      const j = await r.json() as { reply?: string; markdown?: string; text?: string };
+      replyText = j.reply ?? j.markdown ?? j.text ?? "";
+    }
     setDrafts((d) => ({ ...d, [review.google_review_id]: replyText }));
 
     if (review.isSample) {
@@ -302,7 +305,7 @@ function ReviewsPageContent() {
               setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
             }
             toast.success(
-              "Reply generated. Could not post to Google — saved as draft. Edit or post manually when ready."
+              "Reply generated. We couldn't post to Google, so we saved it as a draft. Edit or post manually when ready."
             );
           }
         } else {
@@ -312,7 +315,7 @@ function ReviewsPageContent() {
             body: JSON.stringify({ reviewId: review.google_review_id, reply: replyText }),
           });
           if (!dr.ok) {
-            toast.error("Reply generated but could not save draft. Try again.");
+            toast.error("We couldn't save this draft. Try again in a moment.");
             return;
           }
           setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
@@ -323,7 +326,7 @@ function ReviewsPageContent() {
           );
         }
       } catch {
-        toast.error("Could not save or post reply. Try again.");
+        toast.error("We couldn't save or post this reply. Try again in a moment.");
       }
     }
   }
@@ -349,7 +352,7 @@ function ReviewsPageContent() {
       await loadReviews();
       toast.success("Reply posted successfully");
     } else {
-      toast.error("Failed to post reply");
+      toast.error("We couldn't post this reply to Google. We'll keep it here so you can try again.");
     }
   }
 
@@ -357,7 +360,7 @@ function ReviewsPageContent() {
     if (!shouldShowTestWorkflowActions(review, false)) return;
     const text = drafts[review.google_review_id] ?? "";
     if (!text.trim()) {
-      toast.error("Nothing to save yet — generate a reply or type your draft first.");
+      toast.error("Nothing to save yet. Generate a reply or type your draft first.");
       return;
     }
     setSavedDraftSnapshots((s) => ({
@@ -423,8 +426,9 @@ function ReviewsPageContent() {
   return (
     <DashboardPage width="md" className="space-y-8">
       <DashboardPageHeader
-        title="Reviews"
-        description="Sync reviews from Google Business Profile, we generate the replies and post them to Google or save them in drafts."
+        kicker="Review inbox"
+        title="Approve replies and keep an eye on what’s new."
+        description="Your reviews land here with a draft ready. You decide what goes live."
       />
 
       <div className="space-y-3">
@@ -433,12 +437,12 @@ function ReviewsPageContent() {
             variant="neutral"
             action={
               <Button type="button" size="sm" onClick={handleConnectGoogle}>
-                Connect Google Business Profile
+                Connect Google
               </Button>
             }
           >
             <p className="text-foreground">
-              Connect Google Business Profile and sync locations in Settings to load your review inbox.
+              Connect your Google profile to load your review inbox. You stay in control of what posts.
             </p>
           </DashboardCallout>
         )}
@@ -446,8 +450,7 @@ function ReviewsPageContent() {
         {isSampleMode && (
           <DashboardCallout variant="neutral" title="Test mode — sample reviews">
             <p className="text-foreground">
-              This is a demo. In live mode, replies are posted to your Google Business Profile
-              automatically.
+              Sample data only. In live mode, you decide what posts to Google.
             </p>
             <p className="text-foreground mt-2">
               Sample reviews for internal testing. These are not live Google reviews.
@@ -503,15 +506,15 @@ function ReviewsPageContent() {
 
       {reviews.length > 0 && (
         <div
-          className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs text-foreground"
+          className="flex flex-wrap items-center gap-2 rounded-xl border-[1.5px] border-border bg-surface px-3 py-2.5 text-xs text-primary shadow-ink-sm"
           aria-live="polite"
         >
-          <span className="font-semibold text-foreground">Summary</span>
+          <span className="font-semibold text-primary">Summary</span>
           <Badge variant="outline" className="font-normal tabular-nums">
             Loaded {reviewSummary.total}
           </Badge>
           <Badge variant="outline" className="font-normal tabular-nums">
-            Unanswered {reviewSummary.unanswered}
+            Awaiting approval {reviewSummary.unanswered}
           </Badge>
           <Badge variant="outline" className="font-normal tabular-nums">
             Drafts {reviewSummary.drafts}
@@ -523,7 +526,7 @@ function ReviewsPageContent() {
       )}
 
       {loading && reviews.length === 0 && (
-        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center text-sm text-foreground shadow-sm">
+        <div className="rounded-2xl border-[1.5px] border-border bg-card px-6 py-12 text-center text-sm text-primary shadow-ink-sm">
           <div className="space-y-3"><Skeleton className="mx-auto h-5 w-40" /><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
         </div>
       )}
@@ -531,10 +534,10 @@ function ReviewsPageContent() {
       {!loading && reviews.length === 0 && hasRealLocations && (
         <DashboardEmptyState
           title="No reviews yet"
-          description="Connect Google Business Profile, then sync locations in Settings to load your review inbox."
+          description="No reviews yet. Once your Google profile is connected, new reviews land here with a draft ready."
         >
           <Button type="button" onClick={handleConnectGoogle}>
-            Connect Google Business Profile
+            Connect Google
           </Button>
         </DashboardEmptyState>
       )}
@@ -572,7 +575,7 @@ function ReviewsPageContent() {
       <PlanGateModal
         open={showPlanGateModal}
         onOpenChange={setShowPlanGateModal}
-        featureName="Syncing reviews from Google Business Profile, drafting replies, and posting replies"
+        featureName="Review Replies"
       />
     </DashboardPage>
   );

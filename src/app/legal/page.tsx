@@ -1,8 +1,11 @@
 import { PageHero } from "@/components/marketing/primitives";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({ title: "Legal information | Ornigami", description: "Find Ornigami's company information, privacy policy, terms, and contact details.", path: "/legal" });
 
 export default function LegalPage() {
   return (
-    <main><PageHero eyebrow="Legal" title="Legal information" intro="The short version of how Ornigami operates and where to direct formal notices." /><article className="prose prose-slate mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+    <main><PageHero eyebrow="Legal" title="Legal" intro="Privacy, terms, and how to reach us, in plain language." /><article className="prose mx-auto max-w-[70ch] px-4 py-16 text-foreground md:px-6 md:py-20">
         <section>
           <h2 className="text-2xl font-semibold mb-4">Company Information</h2>
           <p>
