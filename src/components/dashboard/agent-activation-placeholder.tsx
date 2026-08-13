@@ -14,11 +14,12 @@ export function AgentActivationPlaceholder({
   description,
 }: AgentActivationPlaceholderProps) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 p-6">
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-card-foreground">{agentName}</h1>
+    <div className="mx-auto w-full max-w-3xl space-y-4">
+      <div className="relative overflow-hidden rounded-2xl border-[1.5px] border-border bg-tint-butter p-7 shadow-ink-md">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Agent</p>
+        <h1 className="mt-3 text-3xl font-extrabold text-primary">{agentName}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-        <p className="mt-4 text-sm text-card-foreground">This agent is not active for your business.</p>
+        <p className="mt-4 text-sm text-card-foreground">This is part of the {agentName} plan. Upgrade to turn it on.</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <form action="/api/stripe/checkout" method="post">
             <input type="hidden" name="agent_id" value={agentId} />

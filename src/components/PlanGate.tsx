@@ -17,10 +17,9 @@ type PlanGateProps = {
   children: ReactNode;
   fallback?: ReactNode;
   showBanner?: boolean;
-  featureName?: string;
 };
 
-export function PlanGate({ children, fallback, showBanner = true, featureName = "this feature" }: PlanGateProps) {
+export function PlanGate({ children, fallback, showBanner = true }: PlanGateProps) {
   const { planStatus, isLoading, planInfo } = useCurrentPlan();
 
   if (isLoading) {
@@ -38,16 +37,15 @@ export function PlanGate({ children, fallback, showBanner = true, featureName = 
         {fallback || (
           <DashboardCallout
             variant="neutral"
-            title="Paid plan"
+            title="This feature needs a plan"
             action={
               <Button asChild size="sm">
-                <Link href="/dashboard/billing">Choose a plan</Link>
+                <Link href="/dashboard/billing">See plans</Link>
               </Button>
             }
           >
             <p className="text-muted-foreground">
-              {featureName} is available on Ornigami Starter. Upgrade to connect Google Business Profile,
-              sync reviews, and use reply drafts.
+              This feature is available with an active agent plan. Upgrade to turn it on.
             </p>
           </DashboardCallout>
         )}
@@ -69,10 +67,9 @@ export function PlanGateModal({ open, onOpenChange, featureName = "this feature"
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upgrade required</DialogTitle>
+          <DialogTitle>Unlock {featureName}</DialogTitle>
           <DialogDescription>
-            {featureName} is available on Ornigami Starter. Upgrade to connect Google Business Profile,
-              sync reviews, and post drafted replies.
+            Activate a review agent to turn this workflow on. Your data stays exactly where it is.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -80,7 +77,7 @@ export function PlanGateModal({ open, onOpenChange, featureName = "this feature"
             Cancel
           </Button>
           <Link href="/dashboard/billing">
-            <Button>Choose a plan (from €39/month)</Button>
+            <Button>Upgrade</Button>
           </Link>
         </DialogFooter>
       </DialogContent>

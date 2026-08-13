@@ -17,6 +17,10 @@ This folder is the database source of truth for the application.
 11. `011_review_link_clicks.sql`
 12. `012_cron_runs.sql`
 13. `013_review_business_tenancy.sql`
+14. `014_security_hardening.sql`
+15. `015_stripe_usage_periods.sql`
+16. `016_remove_legacy_plan_taxonomy.sql`
+17. `017_team_invitations.sql`
 
 ## What each migration adds
 
@@ -35,6 +39,7 @@ This folder is the database source of truth for the application.
 | `011_review_link_clicks.sql` | Adds review-link click attribution tracking. |
 | `012_cron_runs.sql` | Adds durable execution history for scheduled jobs. |
 | `013_review_business_tenancy.sql` | Reconciles Review Replies with business-scoped tenancy and adds canonical `business_id` ownership to reviews and reply drafts. |
+| `017_team_invitations.sql` | Adds expiring Complete-plan team invitations. |
 
 ## Current database strategy
 

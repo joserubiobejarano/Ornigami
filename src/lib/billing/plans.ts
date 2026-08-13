@@ -20,7 +20,7 @@ export const TRIAL_PERIOD_DAYS = 14;
 export const PLANS: Record<PlanId, PlanDefinition> = {
   replies: {
     id: "replies", name: "Review Replies", tagline: "Every Google review answered, in your voice.",
-    agents: ["review_replies"], recommended: false, seats: 1, monthlyRequestAllowance: 500,
+    agents: ["review_replies"], recommended: false, seats: 1, monthlyRequestAllowance: 2000,
     amounts: { monthly: 39, annual: 360 },
     priceEnv: { monthly: "STRIPE_PRICE_REPLIES_MONTHLY", annual: "STRIPE_PRICE_REPLIES_ANNUAL" },
     features: ["Drafted replies for every Google review", "Approve in one click, or let 4-5 star replies post automatically", "1-3 star reviews always go to you first", "Replies in your customer's own language", "Unlimited reviews synced from your profile", "1 location, 1 user"],
@@ -30,14 +30,14 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     agents: ["review_booster"], recommended: false, seats: 1, monthlyRequestAllowance: 500,
     amounts: { monthly: 39, annual: 360 },
     priceEnv: { monthly: "STRIPE_PRICE_BOOSTER_MONTHLY", annual: "STRIPE_PRICE_BOOSTER_ANNUAL" },
-    features: ["Automatic review requests after every visit", "Import customers from a spreadsheet, or add them one by one", "QR code and short link for your counter", "Send window and quiet hours you control", "Up to 500 requests per month", "1 location, 1 user"],
+    features: ["Automatic review requests after every visit", "Import customers from a spreadsheet, or add them one by one", "Your Google review link included in every follow-up", "Built-in 23-hour to 7-day send window", "Up to 500 requests per month", "1 location, 1 user"],
   },
   complete: {
     id: "complete", name: "Complete", tagline: "Get the reviews, and answer every one of them.",
     agents: ["review_replies", "review_booster"], recommended: true, seats: 3, monthlyRequestAllowance: 1500,
     amounts: { monthly: 59, annual: 560 },
     priceEnv: { monthly: "STRIPE_PRICE_COMPLETE_MONTHLY", annual: "STRIPE_PRICE_COMPLETE_ANNUAL" },
-    features: ["Everything in Review Replies and Review Booster", "See which requests turned into real reviews", "Alerts the moment a new review lands", "Monthly report you can forward to your team", "Up to 1,500 requests per month", "1 location, 3 users"],
+    features: ["Everything in Review Replies and Review Booster", "See which requests turned into real reviews", "Alerts the moment a new review lands", "Up to 1,500 requests per month", "1 location, 3 users"],
   },
 };
 
@@ -68,6 +68,15 @@ export function planIdFromStripePrice(priceId: string | null): PlanId | null {
     for (const period of ["monthly", "annual"] as BillingPeriod[]) {
       if (process.env[plan.priceEnv[period]] === priceId) return plan.id;
     }
+  }
+  return null;
+}
+
+export function periodFromStripePrice(priceId: string | null): BillingPeriod | null {
+  if (!priceId) return null;
+  for (const plan of Object.values(PLANS)) {
+    if (process.env[plan.priceEnv.monthly] === priceId) return "monthly";
+    if (process.env[plan.priceEnv.annual] === priceId) return "annual";
   }
   return null;
 }

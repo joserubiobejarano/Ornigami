@@ -11,6 +11,7 @@ import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { sendNewReviewAlert } from "@/lib/review-alerts";
 import { finishCronRun, startCronRun } from "@/lib/cron-health";
 import { parseGoogleStarRating } from "@/lib/google-review-rating";
+import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
 
 type LocationRow = { business_id: string; user_id: string; location_name: string };
 type NewReview = { reviewerName: string | null; starRating: number | null; comment: string | null };
@@ -65,8 +66,11 @@ async function draftPending(userId: string, businessId: string, locationName: st
   `) as ReviewRowForReply[];
   let drafted = 0;
   for (const row of rows) {
+    const usage = await checkReviewReplyUsage(userId, businessId);
+    if (!usage.allowed) break;
     const reply = await generateReplyForReviewRow(row, profile);
     if (!reply.trim()) continue;
+    await incrementReviewReplyUsage(userId);
     const result = await saveReplyDraft(businessId, row.google_review_id, reply);
     if (result.ok) drafted += 1;
   }

@@ -5,6 +5,7 @@ import {
   DashboardCallout,
   DashboardEmptyState,
   DashboardPage,
+  DashboardPageHeader,
 } from "@/components/dashboard";
 import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-agent-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,11 @@ export async function ReviewRepliesDashboardPage() {
     return (
       <DashboardPage width="md">
         <ReviewRepliesAgentNav />
+        <DashboardPageHeader
+          kicker="Review Replies"
+          title="A thoughtful reply, without the inbox sprawl."
+          description="See what’s new, what’s drafted, and what still needs your approval."
+        />
         <AgentActivationPlaceholder
           agentId="review_replies"
           agentName="Review Replies"
@@ -64,6 +70,11 @@ export async function ReviewRepliesDashboardPage() {
   return (
     <DashboardPage width="md">
       <ReviewRepliesAgentNav />
+      <DashboardPageHeader
+        kicker="Review Replies"
+        title="A thoughtful reply, without the inbox sprawl."
+        description="See what’s new, what’s drafted, and what still needs your approval."
+      />
 
       {planInfo && hasPaidAccess && !isDemo && (
         <UpgradeBanner planStatus={planInfo.planStatus} currentPeriodEnd={planInfo.currentPeriodEnd} />
@@ -71,12 +82,12 @@ export async function ReviewRepliesDashboardPage() {
 
       {showError && (
         <DashboardCallout variant="error">
-          <p>{metrics?.criticalError ?? "We could not load stats. Please refresh."}</p>
+          <p>{metrics?.criticalError ?? "We couldn't load your stats. Try again in a moment."}</p>
         </DashboardCallout>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="shadow-sm">
+        <Card className="border-[1.5px] border-border bg-tint-navy shadow-ink-sm">
           <CardHeader className="space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-foreground">Reviews loaded</CardTitle>
           </CardHeader>
@@ -92,9 +103,9 @@ export async function ReviewRepliesDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="border-[1.5px] border-border bg-tint-butter shadow-ink-sm">
           <CardHeader className="space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-foreground">Unanswered</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">Awaiting your approval</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-3xl font-bold tabular-nums tracking-tight">
@@ -102,13 +113,13 @@ export async function ReviewRepliesDashboardPage() {
             </div>
             <p className="text-xs leading-relaxed text-foreground">
               {isDemo
-                ? "Sample data mirrors 'Unanswered' on Reviews (no reply on Google yet)."
-                : "Not yet marked replied on Google after sync. On Reviews, some of these may already have a draft in the editor."}
+                ? "Sample data mirrors reviews waiting for your approval."
+                : "Reviews waiting for a draft or your approval before anything posts."}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="border-[1.5px] border-border bg-tint-peach shadow-ink-sm">
           <CardHeader className="space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-foreground">Drafts</CardTitle>
           </CardHeader>
@@ -124,7 +135,7 @@ export async function ReviewRepliesDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="border-[1.5px] border-border bg-tint-mint shadow-ink-sm">
           <CardHeader className="space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-foreground">Posted / replied</CardTitle>
           </CardHeader>
@@ -150,7 +161,7 @@ export async function ReviewRepliesDashboardPage() {
               <Link href="/dashboard/agents/review-replies/reviews" className="text-foreground underline-offset-4 hover:underline">
                 Reviews
               </Link>{" "}
-              and sync from Google Business Profile to load your inbox. Or try the workflow first with{" "}
+              and sync from Google to load your inbox. Or try the workflow first with{" "}
               <Link href="/demo" className="text-foreground underline-offset-4 hover:underline">
                 sample reviews
               </Link>{" "}

@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { BillingPeriod, PlanId } from "@/lib/billing/plans";
 
-export function ChangePlanButton({ planId, billingPeriod }: { planId: PlanId; billingPeriod: BillingPeriod }) {
+export function ChangePlanButton({ planId, billingPeriod, label = "Change plan" }: { planId: PlanId; billingPeriod: BillingPeriod; label?: string }) {
   const [busy, setBusy] = useState(false);
   async function changePlan() {
+    if (!window.confirm("This change will be applied to your Stripe subscription and invoiced immediately. Continue?")) return;
     setBusy(true);
     const response = await fetch("/api/stripe/change-plan", {
       method: "POST",
@@ -15,7 +16,7 @@ export function ChangePlanButton({ planId, billingPeriod }: { planId: PlanId; bi
     });
     setBusy(false);
     if (response.ok) window.location.reload();
-    else window.alert("We could not change your plan. Please try again.");
+    else window.alert("We couldn't change your plan. Try again in a moment.");
   }
-  return <Button type="button" onClick={changePlan} disabled={busy}>{busy ? "Changing..." : "Upgrade to Complete"}</Button>;
+  return <Button type="button" onClick={changePlan} disabled={busy}>{busy ? "Changing…" : label}</Button>;
 }

@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 import { stripe } from "@/lib/stripe";
 import { sql } from "@/lib/db/neon";
-import { agentsForPlan, isPlanId, planForAgent, planIdFromStripePrice, type AgentId, type BillingPeriod, type PlanId } from "@/lib/billing/plans";
+import { agentsForPlan, isPlanId, periodFromStripePrice, planForAgent, planIdFromStripePrice, type AgentId, type BillingPeriod, type PlanId } from "@/lib/billing/plans";
 import { safeLogger } from "@/lib/safe-logger";
 
 export const runtime = "nodejs";
@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 function toBusinessAgentStatus(stripeStatus: string): string {
   if (stripeStatus === "active" || stripeStatus === "trialing") return stripeStatus;
-  if (stripeStatus === "past_due" || stripeStatus === "unpaid") return "past_due";
+  if (stripeStatus === "past_due") return "past_due";
+  if (stripeStatus === "unpaid") return "unpaid";
   if (stripeStatus === "canceled") return "canceled";
   return "inactive";
 }
@@ -21,8 +22,13 @@ function periodEndFromSubscription(subscription: Stripe.Subscription): string | 
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
 }
 
-function billingPeriodFromMetadata(metadata: Stripe.Metadata | null | undefined): BillingPeriod {
-  return metadata?.billing_period === "annual" ? "annual" : "monthly";
+function periodStartFromSubscription(subscription: Stripe.Subscription): string | null {
+  const timestamp = subscription.items.data[0]?.current_period_start;
+  return timestamp ? new Date(timestamp * 1000).toISOString() : null;
+}
+
+function billingPeriodFromSubscription(priceId: string | null, metadata: Stripe.Metadata | null | undefined): BillingPeriod {
+  return periodFromStripePrice(priceId) ?? (metadata?.billing_period === "annual" ? "annual" : "monthly");
 }
 
 function planFromMetadata(metadata: Stripe.Metadata | null | undefined, priceId: string | null): PlanId | null {
@@ -69,17 +75,18 @@ async function updateBusinessAgentFromSubscription(params: {
   status: string;
   subscriptionId: string | null;
   priceId: string | null;
+  currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
 }) {
   const mappedStatus = toBusinessAgentStatus(params.status);
   await sql`
     INSERT INTO public.business_agents (
       business_id, agent_id, status, plan_id, billing_period,
-      stripe_subscription_id, stripe_price_id, current_period_end,
+      stripe_subscription_id, stripe_price_id, current_period_start, current_period_end,
       activated_at, updated_at
     ) VALUES (
       ${params.businessId}, ${params.agentId}, ${mappedStatus}, ${params.planId}, ${params.billingPeriod},
-      ${params.subscriptionId}, ${params.priceId}, ${params.currentPeriodEnd},
+      ${params.subscriptionId}, ${params.priceId}, ${params.currentPeriodStart}, ${params.currentPeriodEnd},
       CASE WHEN ${mappedStatus} IN ('active', 'trialing') THEN now() ELSE NULL END, now()
     )
     ON CONFLICT (business_id, agent_id) DO UPDATE SET
@@ -88,13 +95,14 @@ async function updateBusinessAgentFromSubscription(params: {
       billing_period = EXCLUDED.billing_period,
       stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, public.business_agents.stripe_subscription_id),
       stripe_price_id = COALESCE(EXCLUDED.stripe_price_id, public.business_agents.stripe_price_id),
+      current_period_start = EXCLUDED.current_period_start,
       current_period_end = EXCLUDED.current_period_end,
       activated_at = CASE
         WHEN EXCLUDED.status IN ('active', 'trialing') THEN COALESCE(public.business_agents.activated_at, now())
         ELSE public.business_agents.activated_at
       END,
       deactivated_at = CASE
-        WHEN EXCLUDED.status IN ('canceled', 'inactive', 'past_due') THEN now()
+        WHEN EXCLUDED.status IN ('canceled', 'inactive', 'past_due', 'unpaid') THEN now()
         ELSE public.business_agents.deactivated_at
       END,
       updated_at = now()
@@ -108,6 +116,7 @@ async function syncPlanAgents(params: {
   status: string;
   subscriptionId: string | null;
   priceId: string | null;
+  currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
 }) {
   const includedAgents = agentsForPlan(params.planId);
@@ -170,6 +179,7 @@ export async function POST(req: NextRequest) {
         if (!mapping) break;
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const priceId = subscription.items.data[0]?.price?.id ?? null;
+        const currentPeriodStart = periodStartFromSubscription(subscription);
         const planId = planFromMetadata(session.metadata, priceId);
         if (!planId) {
           safeLogger.warn("stripe.webhook.plan_missing", { eventId: event.id, priceId });
@@ -185,7 +195,7 @@ export async function POST(req: NextRequest) {
         `;
         const businessId = await resolveBusinessId(session.metadata, customerId, mapping.user_id);
         if (businessId && await businessBelongsToUser(businessId, mapping.user_id)) {
-          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromMetadata(session.metadata), status: subscription.status, subscriptionId, priceId, currentPeriodEnd });
+          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromSubscription(priceId, session.metadata), status: subscription.status, subscriptionId, priceId, currentPeriodStart, currentPeriodEnd });
         }
         break;
       }
@@ -199,6 +209,7 @@ export async function POST(req: NextRequest) {
         const mapping = mappingRows[0] as { user_id: string } | undefined;
         if (!mapping) break;
         const { priceId, currentPeriodEnd } = await persistSubscription({ subscription, userId: mapping.user_id });
+        const currentPeriodStart = periodStartFromSubscription(subscription);
         const planId = planFromMetadata(subscription.metadata, priceId);
         if (!planId) break;
         const profilePlan = subscription.status === "canceled" || subscription.status === "unpaid" ? "free" : planId;
@@ -210,7 +221,7 @@ export async function POST(req: NextRequest) {
         `;
         const businessId = await resolveBusinessId(subscription.metadata, customerId, mapping.user_id);
         if (businessId && await businessBelongsToUser(businessId, mapping.user_id)) {
-          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromMetadata(subscription.metadata), status: subscription.status, subscriptionId: subscription.id, priceId, currentPeriodEnd });
+          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromSubscription(priceId, subscription.metadata), status: subscription.status, subscriptionId: subscription.id, priceId, currentPeriodStart, currentPeriodEnd });
         }
         break;
       }
@@ -225,11 +236,23 @@ export async function POST(req: NextRequest) {
         const mapping = mappingRows[0] as { user_id: string } | undefined;
         if (!mapping) break;
         const priceId = subscription.items.data[0]?.price?.id ?? null;
+        const currentPeriodStart = periodStartFromSubscription(subscription);
+        const currentPeriodEnd = periodEndFromSubscription(subscription);
         const planId = planFromMetadata(subscription.metadata, priceId);
         if (!planId) break;
+        await persistSubscription({ subscription, userId: mapping.user_id });
+        const paymentFailureStatus = subscription.status === "unpaid" || subscription.status === "canceled"
+          ? subscription.status
+          : "past_due";
+        const profileStatus = paymentFailureStatus === "canceled" ? "canceled" : paymentFailureStatus === "past_due" ? "past_due" : "free";
+        await sql`
+          UPDATE public.profiles
+          SET plan_status = ${profileStatus}, plan_current_period_end = ${currentPeriodEnd}, updated_at = now()
+          WHERE id = ${mapping.user_id}
+        `;
         const businessId = await resolveBusinessId(subscription.metadata, customerId, mapping.user_id);
         if (businessId && await businessBelongsToUser(businessId, mapping.user_id)) {
-          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromMetadata(subscription.metadata), status: "past_due", subscriptionId: resolvedSubscriptionId, priceId, currentPeriodEnd: periodEndFromSubscription(subscription) });
+          await syncPlanAgents({ businessId, planId, billingPeriod: billingPeriodFromSubscription(priceId, subscription.metadata), status: paymentFailureStatus, subscriptionId: resolvedSubscriptionId, priceId, currentPeriodStart, currentPeriodEnd });
         }
         break;
       }

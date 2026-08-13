@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/neon";
+import { isPlanId } from "@/lib/billing/plans";
 import type { PlanId, PlanStatus } from "@/lib/plan";
 
 export type UserPlanInfo = {
@@ -16,6 +17,11 @@ export async function getUserPlan(userId: string): Promise<PlanId> {
   return info.planId;
 }
 
+function normalizePlanId(value: unknown): PlanId {
+  if (value === "free") return "free";
+  return isPlanId(value) ? value : "free";
+}
+
 export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
   const rows = await sql`
     SELECT *
@@ -28,15 +34,16 @@ export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
     | Record<string, unknown>
     | undefined;
 
+  const storedPlanStatus = plan?.plan_status as PlanStatus | undefined;
   const planStatus: PlanStatus =
-    (plan?.subscription_status as PlanStatus) ||
-    (plan?.plan_status as PlanStatus) ||
+    (storedPlanStatus === "past_due" ? storedPlanStatus : plan?.subscription_status as PlanStatus) ||
+    storedPlanStatus ||
     "free";
 
   const effectivePlanId: PlanId =
     planStatus === "active" || planStatus === "trialing" || planStatus === "past_due"
-      ? ((plan?.plan_type as PlanId) || "free")
-      : ((plan?.manual_plan as PlanId) || "free");
+      ? normalizePlanId(plan?.plan_type)
+      : normalizePlanId(plan?.manual_plan);
 
   return {
     planId: effectivePlanId,

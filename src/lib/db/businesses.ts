@@ -26,6 +26,8 @@ export type DbBusinessAgentRow = {
   status: string;
   plan_id?: string | null;
   billing_period?: string | null;
+  current_period_start?: string | null;
+  current_period_end?: string | null;
   activated_at: string | null;
   deactivated_at: string | null;
   created_at: string;
@@ -33,6 +35,16 @@ export type DbBusinessAgentRow = {
 };
 
 const ACTIVE_ACCESS_STATUSES = new Set(["active", "trialing"]);
+export const PAST_DUE_GRACE_DAYS = 7;
+
+function isWithinPastDueGracePeriod(currentPeriodEnd: string | null | undefined): boolean {
+  if (!currentPeriodEnd) return false;
+
+  const periodEnd = new Date(currentPeriodEnd).getTime();
+  if (!Number.isFinite(periodEnd)) return false;
+
+  return Date.now() <= periodEnd + PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000;
+}
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -137,7 +149,7 @@ export async function getBusinessAgentStatus(
 ): Promise<DbBusinessAgentRow | null> {
   const rows = await sql`
     SELECT
-      id, business_id, agent_id, status, plan_id, billing_period, activated_at, deactivated_at, created_at, updated_at
+      id, business_id, agent_id, status, plan_id, billing_period, current_period_start, current_period_end, activated_at, deactivated_at, created_at, updated_at
     FROM public.business_agents
     WHERE business_id = ${businessId} AND agent_id = ${agentId}
     LIMIT 1
@@ -149,7 +161,7 @@ export async function getBusinessAgentStatus(
 export async function getBusinessAgents(businessId: string): Promise<DbBusinessAgentRow[]> {
   const rows = await sql`
     SELECT
-      id, business_id, agent_id, status, plan_id, billing_period, activated_at, deactivated_at, created_at, updated_at
+      id, business_id, agent_id, status, plan_id, billing_period, current_period_start, current_period_end, activated_at, deactivated_at, created_at, updated_at
     FROM public.business_agents
     WHERE business_id = ${businessId}
     ORDER BY agent_id ASC
@@ -169,7 +181,12 @@ export async function canAccessAgent(businessId: string, agentId: string): Promi
     return false;
   }
 
-  return ACTIVE_ACCESS_STATUSES.has(statusRow.status);
+  if (ACTIVE_ACCESS_STATUSES.has(statusRow.status)) return true;
+  if (statusRow.status === "past_due") {
+    return isWithinPastDueGracePeriod(statusRow.current_period_end);
+  }
+
+  return false;
 }
 
 export async function upsertBusinessAgentStatus(
@@ -198,7 +215,7 @@ export async function upsertBusinessAgentStatus(
       END,
       updated_at = now()
     RETURNING
-      id, business_id, agent_id, status, plan_id, billing_period, activated_at, deactivated_at, created_at, updated_at
+      id, business_id, agent_id, status, plan_id, billing_period, current_period_start, current_period_end, activated_at, deactivated_at, created_at, updated_at
   `;
   return rows[0] as DbBusinessAgentRow;
 }

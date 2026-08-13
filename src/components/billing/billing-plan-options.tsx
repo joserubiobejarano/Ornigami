@@ -26,8 +26,9 @@ export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan
         {PLAN_ORDER.map((planId) => {
           const plan = PLANS[planId];
           const isCurrent = currentPlan === planId;
+          const isCurrentSelection = isCurrent && billingPeriod === currentPeriod;
           return (
-            <Card key={planId} className={`transition-transform hover:-translate-y-1 hover:shadow-lg ${plan.recommended ? "border-primary shadow-md" : ""}`}>
+            <Card key={planId} className={`transition-transform hover:-translate-y-1 hover:shadow-ink-md ${plan.recommended ? "border-primary ring-2 ring-primary" : ""}`}>
               <CardHeader>
                 <div className="flex items-center justify-between gap-2">
                   <CardTitle>{plan.name}</CardTitle>
@@ -39,7 +40,7 @@ export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm">{plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="font-semibold text-primary">✓</span><span>{feature}</span></li>)}</ul>
-                {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start free trial</Button></form> : isCurrent ? <p className="text-sm font-medium text-accent-green">Current plan</p> : currentPlan !== "complete" && planId === "complete" ? <ChangePlanButton planId="complete" billingPeriod={billingPeriod} /> : <p className="text-sm text-muted-foreground">Switch plans or billing periods from Manage billing.</p>}
+                {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start free trial</Button></form> : isCurrentSelection ? <p className="text-sm font-medium text-accent-green">Current plan</p> : <ChangePlanButton planId={planId} billingPeriod={billingPeriod} />}
               </CardContent>
             </Card>
           );

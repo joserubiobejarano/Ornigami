@@ -151,7 +151,7 @@ export async function POST(req: Request) {
     const sampleBusiness = await requireActiveAgentAccess(sampleUser.id, sampleEmail, "review_replies");
     const sampleUsage = await checkReviewReplyUsage(sampleUser.id, sampleBusiness.id);
     if (!sampleUsage.allowed) {
-      return NextResponse.json({ error: "Monthly review reply generation limit reached." }, { status: 429 });
+      return NextResponse.json({ error: "Reply generation is temporarily paused after reaching the monthly safety threshold." }, { status: 429 });
     }
     const parsed = RequestSchema.safeParse(rawBody);
     if (!parsed.success) {
@@ -199,7 +199,7 @@ export async function POST(req: Request) {
     const business = await requireActiveAgentAccess(user.id, email, "review_replies");
     const usage = await checkReviewReplyUsage(user.id, business.id);
     if (!usage.allowed) {
-      return NextResponse.json({ error: "Monthly review reply generation limit reached." }, { status: 429 });
+      return NextResponse.json({ error: "Reply generation is temporarily paused after reaching the monthly safety threshold." }, { status: 429 });
     }
     const normalized = normalizeBody(parsed.data);
     const saved = await getProfileReplyDefaults(user.id);

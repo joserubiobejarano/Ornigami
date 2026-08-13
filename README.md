@@ -108,23 +108,24 @@ The full Review Booster workflow exists end to end, but there are a few implemen
 - Follow-up emails include an unsubscribe link; opted-out recipients are excluded from future pending sends for that business.
 - If Google Business Profile is connected, Review Booster can derive the review URL automatically from synced locations.
 - Emails are sent through Resend.
-- The dashboard and upload page describe a timing window, but the current runner processes all eligible pending visits with a customer email and a business review URL. The time-window rule is not currently enforced in `listEligibleFollowupVisits`.
+- The runner enforces the current 23-hour-to-7-day eligibility window. The remaining product gap is that the window and quiet hours are not yet user-configurable.
 - Failed sends are marked `failed`; the visit table UI currently does not expose detailed error reasons even though failed message rows are recorded.
 
-### Pricing copy is not fully consistent yet
+### Current pricing model
 
-There are two pricing models reflected in the current app:
+The app currently uses three EUR plans, each with monthly and annual Stripe prices:
 
-- Public marketing pages still present a single starter plan at `$14.99/month`
-- Dashboard billing presents per-agent activation prices (`Review Replies` and `Review Booster` separately)
+- Review Replies: €39/month or €360/year
+- Review Booster: €39/month or €360/year
+- Complete: €59/month or €560/year
 
-The Stripe checkout flow supports agent-specific price ids:
+The checkout flow reads these environment variables:
 
-- `STRIPE_REVIEW_REPLIES_PRICE_ID`
-- `STRIPE_REVIEW_BOOSTER_PRICE_ID`
-- `STRIPE_PRICE_STARTER` as a fallback
+- `STRIPE_PRICE_REPLIES_MONTHLY` / `STRIPE_PRICE_REPLIES_ANNUAL`
+- `STRIPE_PRICE_BOOSTER_MONTHLY` / `STRIPE_PRICE_BOOSTER_ANNUAL`
+- `STRIPE_PRICE_COMPLETE_MONTHLY` / `STRIPE_PRICE_COMPLETE_ANNUAL`
 
-Anyone taking over the project should treat pricing and plan messaging as an open product-alignment task.
+All plans include a 14-day trial. Whether that trial should remain card-free is still an open Stripe/product decision.
 
 ### Content and audit surfaces are legacy
 
@@ -157,7 +158,7 @@ The legacy content generator and audit flows still work as supporting or histori
 - [API Reference](./docs/API_REFERENCE.md)
 - [Deployment Checklist](./docs/DEPLOYMENT_CHECKLIST.md)
 - [Deployment Summary](./docs/DEPLOYMENT_SUMMARY.md)
-- [Smoke Test Checklist](./docs/SMOKE_TEST_CHECKLIST.md)
+- [Production smoke-test notes](../Audit/Design-Redesign.md)
 - [Roadmap](./docs/ROADMAP.md)
 - [Next Steps](./docs/NEXT_STEPS.md)
 - [Review Booster module README](./src/modules/review-booster/README.md)

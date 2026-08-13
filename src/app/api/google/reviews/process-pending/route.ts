@@ -12,6 +12,7 @@ import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { requireActiveAgentAccess } from "@/lib/api-security";
 import { getBusinessForUser } from "@/lib/db/businesses";
 import { safeLogger } from "@/lib/safe-logger";
+import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
 import {
   generateReplyForReviewRow,
   postReplyToGoogleAndPersist,
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
   let skipped = 0;
   let skippedNoComment = 0;
   const errors: string[] = [];
+  let safetyLimitReached = false;
 
   for (const row of rows) {
     const text = (row.comment ?? "").trim();
@@ -101,11 +103,17 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+      const usage = await checkReviewReplyUsage(user.id, business.id);
+      if (!usage.allowed) {
+        safetyLimitReached = true;
+        break;
+      }
       const reply = await generateReplyForReviewRow(row, profile);
       if (!reply.trim()) {
         skipped += 1;
         continue;
       }
+      await incrementReviewReplyUsage(user.id);
 
       const shouldAutoPost = autoReply && canPost;
       const hasKnownSafeRating = typeof row.star_rating === "number" && row.star_rating >= 4;
@@ -141,6 +149,8 @@ export async function POST(req: NextRequest) {
     autoHandled,
     skipped,
     skippedNoComment,
-    errors,
+    errors: safetyLimitReached
+      ? [...errors, "Reply drafting is temporarily paused after reaching the monthly safety threshold."]
+      : errors,
   });
 }

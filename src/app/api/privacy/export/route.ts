@@ -19,11 +19,13 @@ export async function GET() {
     );
   }
 
-  const [profiles, businesses, reviews, visits] = await Promise.all([
+  const [profiles, businesses, memberships, invitations, reviews, visits] = await Promise.all([
     sql`SELECT id, full_name, business_name, city, country, plan_type, plan_status, created_at, updated_at FROM public.profiles WHERE id = ${userId}`,
     sql`SELECT * FROM public.businesses WHERE owner_user_id = ${userId}`,
+    sql`SELECT bm.business_id, bm.role, bm.created_at, b.name AS business_name FROM public.business_members bm INNER JOIN public.businesses b ON b.id = bm.business_id WHERE bm.user_id = ${userId}`,
+    sql`SELECT i.business_id, i.email, i.role, i.expires_at, i.accepted_at, i.created_at FROM public.team_invitations i INNER JOIN public.businesses b ON b.id = i.business_id WHERE i.invited_by = ${userId}`,
     sql`SELECT * FROM public.reviews WHERE user_id = ${userId}`,
     sql`SELECT v.* FROM public.followup_visits v JOIN public.businesses b ON b.id = v.business_id WHERE b.owner_user_id = ${userId}`,
   ]);
-  return NextResponse.json({ user, profiles, businesses, reviews, visits }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ user, profiles, businesses, memberships, invitations, reviews, visits }, { headers: { "Cache-Control": "no-store" } });
 }

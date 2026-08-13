@@ -25,33 +25,27 @@ export function UpgradeModal({ open, onClose, description }: UpgradeModalProps) 
                         Unlock the full review inbox
                     </DialogTitle>
                     <DialogDescription className="text-base pt-2">
-                        {description || "You&apos;ve reached the demo limit. Start a free trial for unlimited reply drafts, review sync, and posting to Google (fair use applies)."}
+                        {description || "The full plan adds unlimited reply drafts, review sync, and posting to Google. Start your free trial — your data stays exactly where it is."}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 pt-4">
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
-                        <h3 className="font-medium text-slate-900">What you&apos;ll get:</h3>
-                        <ul className="text-sm text-slate-600 space-y-1">
+                    <div className="space-y-2 rounded-2xl border-[1.5px] border-border bg-tint-butter p-4">
+                        <h3 className="font-medium text-primary">What you&apos;ll get:</h3>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
                             <li>✓ Unlimited reply drafts</li>
                             <li>✓ Post replies to Google</li>
                             <li>✓ Sync reviews from all locations</li>
                             <li>✓ Connect your Google Business Profile</li>
-                          <li>✓ 14-day free trial, no card required to start</li>
+                            <li>✓ 14-day free trial · No card required · Cancel anytime</li>
                         </ul>
                     </div>
 
                     <div className="flex gap-3">
                         <Link href="/dashboard/billing" className="flex-1">
-                            <Button
-                                className="w-full"
-                            >
-                                Start free trial
-                            </Button>
+                            <Button className="w-full">Start free trial</Button>
                         </Link>
-                        <Button onClick={onClose}>
-                            Continue exploring
-                        </Button>
+                        <Button onClick={onClose}>Maybe later</Button>
                     </div>
                 </div>
             </DialogContent>

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -13,6 +15,7 @@ import {
   StatusBadge,
 } from "@/components/dashboard";
 import SignOutButton from "@/components/SignOutButton";
+import { TeamMembersCard } from "@/components/dashboard/team-members-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,7 +72,7 @@ function SettingsPageContent() {
       const normalized = raw.error.toLowerCase();
       if (normalized.includes("not connected")) return "Google connection failed. Please try again.";
       if (normalized.includes("paid plans"))
-        return "Connecting Google Business Profile and syncing reviews requires a paid plan.";
+        return "Connecting Google and syncing reviews requires a paid plan.";
       return raw.error;
     }
     return fallback;
@@ -115,20 +118,20 @@ function SettingsPageContent() {
           setContactPreference(typeof s.contactPreference === "string" ? s.contactPreference : "");
           setAutoReplyAllReviews(Boolean(s.autoReplyAllReviews));
         } else {
-          setSettingsError("Could not load reply settings.");
+          setSettingsError("We couldn't load your reply settings. Try again in a moment.");
         }
 
         if (connRes.ok) {
           const data = await connRes.json();
           setConnectionData(data);
         } else {
-          setError("Failed to load Google connection.");
+          setError("We couldn't load your Google connection. Try again in a moment.");
           setConnectionData(null);
         }
       } catch {
         if (!cancelled) {
-          setError("Failed to load Google connection.");
-          setSettingsError("Could not load reply settings.");
+          setError("We couldn't load your Google connection. Try again in a moment.");
+          setSettingsError("We couldn't load your reply settings. Try again in a moment.");
           setConnectionData(null);
         }
       } finally {
@@ -161,11 +164,11 @@ function SettingsPageContent() {
     setError(null);
     try {
       const res = await fetch("/api/google/connection");
-      if (!res.ok) throw new Error("Failed to load connection data");
+      if (!res.ok) throw new Error("We couldn't load your Google connection. Try again in a moment.");
       const data = await res.json();
       setConnectionData(data);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to load connection data");
+      setError(e instanceof Error ? e.message : "We couldn't load your Google connection. Try again in a moment.");
     } finally {
       setConnLoading(false);
     }
@@ -188,14 +191,14 @@ function SettingsPageContent() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(typeof j.error === "string" ? j.error : "Save failed");
+        throw new Error(typeof j.error === "string" ? j.error : "Something went wrong. Try again in a moment.");
       }
       setSaveState("saved");
-      toast.success("Reply settings saved.");
+      toast.success("Settings saved.");
       setTimeout(() => setSaveState("idle"), 2500);
     } catch (e: unknown) {
       setSaveState("error");
-      setSettingsError(e instanceof Error ? e.message : "Save failed");
+      setSettingsError(e instanceof Error ? e.message : "Something went wrong. Try again in a moment.");
       setTimeout(() => setSaveState("idle"), 3000);
     }
   };
@@ -218,17 +221,17 @@ function SettingsPageContent() {
   };
 
   const handleDisconnect = async () => {
-    if (!window.confirm("Disconnect Google Business Profile? Review syncing and posting will stop until you reconnect.")) return;
+    if (!window.confirm("Disconnect Google? Review syncing and posting will stop until you reconnect.")) return;
     setError(null);
     try {
       const res = await fetch("/api/google/disconnect", { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(readApiErrorMessage(body, "Failed to disconnect"));
+        throw new Error(readApiErrorMessage(body, "We couldn't disconnect Google. Try again in a moment."));
       }
       await fetchConnectionData();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to disconnect");
+      setError(e instanceof Error ? e.message : "We couldn't disconnect Google. Try again in a moment.");
     }
   };
 
@@ -252,16 +255,16 @@ function SettingsPageContent() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(typeof j.error === "string" ? j.error : "Save failed");
+        throw new Error(typeof j.error === "string" ? j.error : "Something went wrong. Try again in a moment.");
       }
       setAutoReplyAllReviews(next);
       toast.success(
         next
-          ? "Auto-reply on — new replies will post to Google after sync or when you generate."
-          : "Auto-reply off — replies are saved as drafts."
+          ? "Auto-post on — trusted replies can post to Google after sync."
+          : "Auto-post off — replies are saved as drafts."
       );
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Could not update auto-reply");
+      toast.error(e instanceof Error ? e.message : "Something went wrong. Try again in a moment.");
     } finally {
       setAutoReplySaving(false);
     }
@@ -272,7 +275,7 @@ function SettingsPageContent() {
       <DashboardPage width="md">
         <DashboardPageHeader
           title="Settings"
-          description="Configure review reply defaults and connect Google Business Profile."
+          description="Set your reply tone and connect Google to start syncing reviews."
         />
 
         <DashboardCallout
@@ -285,14 +288,13 @@ function SettingsPageContent() {
           }
         >
           <p className="text-foreground">
-            Settings are not available in demo mode. Create your free account to save reply preferences
-            and connect Google Business Profile.
+            Create your free account to save reply preferences and connect Google.
           </p>
         </DashboardCallout>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-ink-sm">
           <CardHeader>
-            <CardTitle>Google Business Profile</CardTitle>
+            <CardTitle>Google profile</CardTitle>
             <CardDescription>Google connection is not available in demo mode.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -312,11 +314,11 @@ function SettingsPageContent() {
     <DashboardPage width="md">
       <DashboardPageHeader title="Settings" />
 
-      <Card className="shadow-sm">
+      <Card className="border-[1.5px] border-border shadow-ink-sm">
         <CardHeader>
-          <CardTitle>Reply settings</CardTitle>
+            <CardTitle>Your reply tone</CardTitle>
           <CardDescription>
-            These defaults are used when generating review replies. Optional fields can be left blank.
+            Set the context Ornigami uses for reply drafts. Optional fields can be left blank.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -381,7 +383,7 @@ function SettingsPageContent() {
                   onClick={() => void handleSaveReplySettings()}
                   disabled={saveState === "saving"}
                 >
-                  {saveState === "saving" ? "Saving…" : "Save reply settings"}
+                  {saveState === "saving" ? "Saving…" : "Save changes"}
                 </Button>
                 {saveState === "saved" && (
                   <Badge variant="secondary" className="font-normal text-foreground">
@@ -394,12 +396,12 @@ function SettingsPageContent() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm">
+      <Card className="border-[1.5px] border-border shadow-ink-sm">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 space-y-1">
               <CardTitle className="flex flex-wrap items-center gap-2">
-                <span>Google Business Profile</span>
+                <span>Google profile</span>
                 {!connLoading && gbpConnected && <StatusBadge tone="success">Connected</StatusBadge>}
               </CardTitle>
               <CardDescription>
@@ -430,7 +432,7 @@ function SettingsPageContent() {
                 Profile.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button onClick={handleConnectGoogle}>Connect with Google</Button>
+                <Button onClick={handleConnectGoogle}>Connect Google</Button>
                 {error && (
                   <Button type="button" onClick={() => void fetchConnectionData()}>
                     Retry
@@ -452,8 +454,8 @@ function SettingsPageContent() {
               </div>
 
               {locations.length > 0 ? (
-                <div className="overflow-hidden rounded-xl border border-border shadow-sm">
-                  <div className="border-b border-border bg-muted/50 px-4 py-2.5 text-sm font-medium">
+                <div className="overflow-hidden rounded-xl border-[1.5px] border-border shadow-ink-sm">
+                  <div className="border-b border-border bg-surface px-4 py-2.5 text-sm font-medium text-primary">
                     Locations
                   </div>
                   <ul className="max-h-80 divide-y divide-border overflow-auto">
@@ -491,17 +493,15 @@ function SettingsPageContent() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm">
+      <Card className="border-[1.5px] border-border shadow-ink-sm">
         <CardHeader>
-          <CardTitle>Auto-reply to all reviews</CardTitle>
+          <CardTitle>Auto-post trusted replies</CardTitle>
           <CardDescription>
-            When enabled, we generate replies after each review sync and when you click Generate, then post
-            them to Google Business Profile automatically. When disabled, replies are saved as drafts for you
-            to review and post manually.
+            When on, Ornigami can post replies for the cases you allow. You can turn this off anytime.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-row items-center justify-between gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
+          <div className="flex flex-row items-center justify-between gap-4 rounded-xl border-[1.5px] border-border bg-surface px-4 py-3">
             <div className="min-w-0 space-y-0.5">
               <p className="text-sm font-medium text-foreground">Automatic posting</p>
               <p className="text-xs text-foreground">
@@ -514,11 +514,13 @@ function SettingsPageContent() {
               checked={autoReplyAllReviews}
               onCheckedChange={(v) => void persistAutoReply(v)}
               disabled={autoReplySaving || settingsLoading}
-              aria-label="Auto-reply to all reviews"
+              aria-label="Auto-post trusted replies"
             />
           </div>
         </CardContent>
       </Card>
+
+      <TeamMembersCard />
 
       <div className="border-t border-border pt-6">
         <p className="mb-3 text-sm text-muted-foreground">Signed in as {session?.user?.email ?? "your account"}.</p>

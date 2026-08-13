@@ -106,6 +106,11 @@ This is a route-level map of the current API surface.
 - `POST /api/stripe/webhook`
   - Handles Stripe events and updates profile/business-agent state.
 
+- `GET|POST /api/team`
+  - Lists Complete-plan workspace members or creates an owner-only teammate invitation.
+- `POST /api/team/invitations/[token]`
+  - Accepts an invitation for the invited email address.
+
 ## Demo-specific surface
 
 - `POST /api/public-demo/review-booster`

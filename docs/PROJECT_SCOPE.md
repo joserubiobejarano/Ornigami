@@ -138,7 +138,7 @@ What feels production-capable today:
 What still needs alignment or cleanup:
 
 - Mixed branding between Ornigami and LocalLift
-- Mixed pricing story between public site and dashboard billing
+- Open product decisions around trial card collection, quota policy, and feature promises
 - Legacy content/audit surfaces that no longer match the core product direction
 - Automated tests and stronger observability
 

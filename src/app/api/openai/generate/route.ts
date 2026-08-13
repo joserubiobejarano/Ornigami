@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Check usage limits
-    const usage = await checkUsageLimit(user.id, "ai_posts");
+    const usage = await checkUsageLimit(user.id);
     if (!usage.allowed) {
       return NextResponse.json(
         {

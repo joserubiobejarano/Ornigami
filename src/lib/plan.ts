@@ -1,16 +1,18 @@
-export type PlanId = "free" | "starter" | "pro" | "agency";
+import { agentsForPlan, type AgentId, type PlanId as BillingPlanId } from "@/lib/billing/plans";
+
+export type PlanId = "free" | BillingPlanId;
 export type PlanStatus = "free" | "active" | "trialing" | "past_due" | "canceled";
+
+export function canUseAgent(plan: PlanId, agentId: AgentId): boolean {
+  return plan !== "free" && agentsForPlan(plan).includes(agentId);
+}
 
 export function canUseGoogleConnection(plan: PlanId): boolean {
   return plan !== "free";
 }
 
 export function canUseReviewAutomation(plan: PlanId): boolean {
-  return plan !== "free";
-}
-
-export function canUseUnlimitedAudits(plan: PlanId): boolean {
-  return plan !== "free";
+  return canUseAgent(plan, "review_replies");
 }
 
 export function isPaidUser(planStatus: PlanStatus | null | undefined): boolean {

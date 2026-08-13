@@ -121,12 +121,12 @@ export type ReviewOutcomeStats = {
   linkClicks: number;
 };
 
-export type ReviewBoosterMonthlyUsage = {
+export type ReviewBoosterBillingPeriodUsage = {
   sent: number;
   allowance: number;
 };
 
-export async function getReviewBoosterMonthlyUsage(businessId: string): Promise<ReviewBoosterMonthlyUsage> {
+export async function getReviewBoosterBillingPeriodUsage(businessId: string): Promise<ReviewBoosterBillingPeriodUsage> {
   const rows = await sql`
     SELECT
       ba.plan_id,
@@ -135,7 +135,15 @@ export async function getReviewBoosterMonthlyUsage(businessId: string): Promise<
         FROM public.followup_messages fm
         WHERE fm.business_id = ${businessId}
           AND lower(fm.status) = 'sent'
-          AND fm.sent_at >= date_trunc('month', now())
+          AND fm.sent_at >= COALESCE(
+            ba.current_period_start,
+            CASE
+              WHEN ba.current_period_end IS NOT NULL AND ba.billing_period = 'annual' THEN ba.current_period_end - INTERVAL '1 year'
+              WHEN ba.current_period_end IS NOT NULL THEN ba.current_period_end - INTERVAL '1 month'
+              ELSE ba.activated_at
+            END,
+            now()
+          )
       ) AS sent
     FROM public.business_agents ba
     WHERE ba.business_id = ${businessId}

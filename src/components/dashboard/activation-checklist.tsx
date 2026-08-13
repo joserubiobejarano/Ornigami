@@ -14,16 +14,25 @@ export type ActivationChecklistStep = {
 
 export function ActivationChecklist({ steps }: { steps: ActivationChecklistStep[] }) {
   const remaining = steps.filter((step) => !step.complete).length;
-  if (remaining === 0) return null;
+  if (remaining === 0) {
+    return (
+      <Card className="border-[1.5px] border-accent-green/35 bg-tint-mint shadow-ink-sm">
+        <CardContent className="flex items-center gap-3 p-5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-green/15 text-sm font-bold text-accent-green" aria-hidden="true">✓</span>
+          <p className="text-sm font-semibold text-primary">You&apos;re all set — Ornigami is working in the background.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className="border-[1.5px] border-border bg-tint-mint shadow-ink-sm">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <CardTitle>Complete your first setup</CardTitle>
+            <CardTitle>A few steps to get set up</CardTitle>
             <CardDescription className="mt-2">
-              Finish these steps to start getting value from your active agent.
+              Connect your Google profile, set your tone, and let the quiet work begin.
             </CardDescription>
           </div>
           <Badge variant="secondary">{remaining} left</Badge>
@@ -32,7 +41,7 @@ export function ActivationChecklist({ steps }: { steps: ActivationChecklistStep[
       <CardContent>
         <ol className="space-y-3">
           {steps.map((step) => (
-            <li key={step.label} className="flex items-start justify-between gap-4 rounded-lg border p-4">
+            <li key={step.label} className="flex items-start justify-between gap-4 rounded-xl border-[1.5px] border-border bg-card/70 p-4">
               <div className="flex min-w-0 gap-3">
                 <span
                   aria-hidden="true"
@@ -46,7 +55,7 @@ export function ActivationChecklist({ steps }: { steps: ActivationChecklistStep[
                   <p className={`text-sm font-medium ${step.complete ? "text-muted-foreground line-through" : ""}`}>
                     {step.label}
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
                 </div>
               </div>
               {!step.complete && step.href && step.actionLabel ? (

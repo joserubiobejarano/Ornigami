@@ -13,6 +13,22 @@ type UpgradeBannerProps = {
 };
 
 export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerProps) {
+  if (planStatus === "past_due") {
+    return (
+      <DashboardCallout
+        variant="warning"
+        title="Payment needs attention"
+        action={
+          <Button asChild size="sm">
+            <Link href="/dashboard/billing">Update payment</Link>
+          </Button>
+        }
+      >
+        <p>Your latest payment failed. Update your payment method to keep your subscription active.</p>
+      </DashboardCallout>
+    );
+  }
+
   if (isTrialing(planStatus) && currentPeriodEnd) {
     const trialEndDate = formatProductDate(currentPeriodEnd);
     return (
@@ -20,13 +36,12 @@ export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerPro
         variant="info"
         action={
           <Button asChild size="sm">
-            <Link href="/dashboard/billing">Upgrade now</Link>
+            <Link href="/dashboard/billing">See plans</Link>
           </Button>
         }
       >
         <p>
-          Trial ends on <span className="font-medium text-foreground">{trialEndDate}</span>. Upgrade to keep
-          syncing reviews, reply drafts, and posting to Google.
+          You&apos;re on the free trial. It ends on <span className="font-medium text-foreground">{trialEndDate}</span>. Add a payment method before then to keep Ornigami running.
         </p>
       </DashboardCallout>
     );
@@ -38,13 +53,12 @@ export function UpgradeBanner({ planStatus, currentPeriodEnd }: UpgradeBannerPro
         variant="warning"
         action={
           <Button asChild size="sm">
-          <Link href="/dashboard/billing">Choose a plan</Link>
+            <Link href="/dashboard/billing">See plans</Link>
           </Button>
         }
       >
         <p>
-          Choose a plan (from €39/month) to connect Google Business Profile, sync reviews, and
-          use reply drafts.
+          This is part of your free trial. Upgrade anytime to keep Ornigami running.
         </p>
       </DashboardCallout>
     );

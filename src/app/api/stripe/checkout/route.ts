@@ -90,6 +90,11 @@ export async function POST(request: Request) {
       LIMIT 1
     `;
     if (existingSubscription.length) {
+      const contentType = request.headers.get("content-type") ?? "";
+      const isBrowserForm = contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data");
+      if (isBrowserForm) {
+        return NextResponse.redirect(new URL("/dashboard/billing?existing=1", appUrl), { status: 303 });
+      }
       return NextResponse.json(
         { error: "existing_subscription", plan_id: (existingSubscription[0] as { plan_id?: string }).plan_id ?? null },
         { status: 409 }
@@ -115,11 +120,16 @@ export async function POST(request: Request) {
     };
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
+      payment_method_collection: "if_required",
       customer: customer.id,
       client_reference_id: canonicalUserId,
       line_items: [{ price: priceId, quantity: 1 }],
       currency: "eur",
-      subscription_data: { metadata, trial_period_days: 14 },
+      subscription_data: {
+        metadata,
+        trial_period_days: 14,
+        trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+      },
       metadata,
       success_url: `${appUrl}/dashboard/billing?success=1`,
       cancel_url: `${appUrl}/dashboard/billing?canceled=1`,

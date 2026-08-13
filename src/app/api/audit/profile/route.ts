@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (mode === "connected" && user && !("demo" in user && user.demo)) {
-      const usage = await checkUsageLimit(user.id, "audits");
+      const usage = await checkUsageLimit(user.id);
       if (!usage.allowed) {
         return NextResponse.json(
           {

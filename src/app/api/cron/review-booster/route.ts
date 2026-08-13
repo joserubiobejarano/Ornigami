@@ -4,7 +4,7 @@ import { sql } from "@/lib/db/neon";
 import { safeLogger } from "@/lib/safe-logger";
 import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { finishCronRun, startCronRun } from "@/lib/cron-health";
-import { getReviewBoosterMonthlyUsage } from "@/modules/review-booster/services/review-booster-db.service";
+import { getReviewBoosterBillingPeriodUsage } from "@/modules/review-booster/services/review-booster-db.service";
 import {
   createFollowupRunnerDependencies,
   runEligibleFollowups
@@ -46,12 +46,12 @@ export async function GET(request: NextRequest) {
         totalSent += runResult.sent;
         totalFailed += runResult.failed;
         totalSkipped += runResult.skipped;
-        const monthlyUsage = await getReviewBoosterMonthlyUsage(businessId);
-        if (monthlyUsage.sent >= monthlyUsage.allowance && runResult.skipped > 0) {
+        const periodUsage = await getReviewBoosterBillingPeriodUsage(businessId);
+        if (periodUsage.sent >= periodUsage.allowance && runResult.skipped > 0) {
           safeLogger.warn("cron.review_booster.fair_use_limit", {
             businessId,
-            sent: monthlyUsage.sent,
-            allowance: monthlyUsage.allowance,
+            sent: periodUsage.sent,
+            allowance: periodUsage.allowance,
             skipped: runResult.skipped,
           });
         }

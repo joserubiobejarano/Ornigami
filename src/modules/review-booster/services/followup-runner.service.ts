@@ -6,7 +6,7 @@ import {
   markVisitFailed,
   markVisitSent,
   markVisitSkipped,
-  getReviewBoosterMonthlyUsage
+  getReviewBoosterBillingPeriodUsage
 } from "@/modules/review-booster/services/review-booster-db.service";
 import { sendWithResend } from "@/modules/review-booster/services/resend.provider";
 import { buildReviewLinkUrl } from "@/lib/review-link-token";
@@ -45,10 +45,9 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
   let failed = 0;
   let skipped = 0;
   const monthlyUsage = await deps.getMonthlyUsage();
-  const fairUseLimitReached = hasReachedMonthlyAllowance(monthlyUsage.sent, sent, monthlyUsage.allowance);
 
   for (const visit of visits) {
-    if (fairUseLimitReached) {
+    if (hasReachedMonthlyAllowance(monthlyUsage.sent, sent, monthlyUsage.allowance)) {
       await deps.markVisitSkipped(visit.id, "fair_use_limit");
       skipped += 1;
       continue;
@@ -153,7 +152,7 @@ export function createFollowupRunnerDependencies(businessId: string): FollowupRu
     markVisitSent,
     markVisitFailed,
     markVisitSkipped,
-    getMonthlyUsage: () => getReviewBoosterMonthlyUsage(businessId),
+    getMonthlyUsage: () => getReviewBoosterBillingPeriodUsage(businessId),
     recordSentMessage: async (input) => {
       await createFollowupMessage({
         visitId: input.visitId,

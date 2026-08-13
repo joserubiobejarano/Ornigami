@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 
@@ -22,6 +24,8 @@ import { UpgradeBanner, PlanGateModal } from "@/components/PlanGate";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardPage, DashboardPageHeader } from "@/components/dashboard";
+import { nativeSelectClassName } from "@/lib/form-controls";
 
 type Location = {
   id: string;
@@ -141,13 +145,13 @@ function AuditPageContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to generate report");
+        setError(data.error || "We couldn't generate the report. Try again in a moment.");
         return;
       }
 
       setResult(data.markdown || "");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : "Something went wrong. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -156,15 +160,15 @@ function AuditPageContent() {
   function onCopy() {
     if (!result) return;
     navigator.clipboard.writeText(result).then(
-      () => alert("Copied to clipboard"),
-      () => alert("Failed to copy")
+      () => alert("Done."),
+      () => alert("We couldn't copy that. Try again.")
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 text-sm text-primary">
-        <p className="font-medium text-foreground">Legacy tool — not part of the review product</p>
+    <DashboardPage width="lg" className="space-y-6">
+      <div className="rounded-2xl border-[1.5px] border-accent-marigold/35 bg-tint-butter p-4 text-sm text-primary shadow-ink-sm">
+        <p className="font-semibold text-primary">Legacy profile report</p>
         <p className="mt-1 text-foreground">
           For day-to-day work use{" "}
           <Link href="/reviews" className="underline underline-offset-2">
@@ -177,15 +181,10 @@ function AuditPageContent() {
           (reply defaults &amp; Google Business Profile). This page may be removed later.
         </p>
       </div>
-      <div>
-        <h1 className="text-2xl font-semibold mb-2">Legacy profile report</h1>
-        <p className="text-foreground">
-          Older local-presence-style report. Your review workflow lives on Reviews.
-        </p>
-      </div>
+      <DashboardPageHeader kicker="Audit" title="Profile check" description="What’s complete on your Google profile, and what to improve. Your review workflow lives in Reviews." />
 
       {(isDemo || useSampleData) && (
-        <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-3">
+        <div className="rounded-2xl border-[1.5px] border-accent-marigold/35 bg-tint-butter p-3 shadow-ink-sm">
           <p className="text-sm text-primary">
             Demo mode — sample report only. Connect Google in Settings to sync real reviews to{" "}
             <Link href="/reviews" className="underline underline-offset-2">
@@ -201,10 +200,9 @@ function AuditPageContent() {
       )}
 
       {!planLoading && !hasPaidAccess && !isDemo && (
-        <div className="rounded-md border border-accent-yellow/35 bg-accent-yellow/10 p-4 space-y-2">
+        <div className="rounded-2xl border-[1.5px] border-accent-marigold/35 bg-tint-butter p-4 space-y-2 shadow-ink-sm">
           <p className="text-sm font-medium text-primary">
-            Choose a plan to connect Google Business Profile, sync reviews, and use the
-            review inbox — this legacy report is not the main product.
+            This feature is available with an active agent plan. Upgrade to turn it on.
           </p>
           <p className="text-xs text-muted-foreground">
             You can still try a quick check below without a connection. Public tool:{" "}
@@ -219,7 +217,7 @@ function AuditPageContent() {
       <div className="space-y-6">
         {/* Sample audit option */}
         {locations.length === 0 && !result && !useSampleData && !isDemo && (
-          <Card className="border-border bg-surface">
+          <Card className="border-[1.5px] border-border bg-surface shadow-ink-sm">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -248,7 +246,7 @@ function AuditPageContent() {
         <div className="space-y-3">
           <h2 className="text-lg font-medium">Connected locations</h2>
           {locations.length === 0 ? (
-            <Card>
+            <Card className="border-[1.5px] border-border shadow-ink-sm">
               <CardContent className="pt-6">
                 <p className="text-sm text-foreground">
                   No Google Business locations found. Connect in Settings or use the quick check below.
@@ -260,7 +258,7 @@ function AuditPageContent() {
               <div className="flex-1">
                 <label className="text-sm font-medium mb-1 block">Location</label>
                 <select
-                  className="border-input dark:bg-input/30 h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  className={nativeSelectClassName}
                   value={selectedLocationId || ""}
                   onChange={(e) => setSelectedLocationId(e.target.value || undefined)}
                 >
@@ -349,7 +347,7 @@ function AuditPageContent() {
 
         {result && (
           <div className="space-y-3">
-            <div className="prose max-w-none border rounded-md p-4">
+            <div className="prose max-w-none rounded-2xl border-[1.5px] border-border bg-card p-6 shadow-ink-sm">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {result}
               </ReactMarkdown>
@@ -364,7 +362,7 @@ function AuditPageContent() {
       <PlanGateModal
         open={showPlanGateModal}
         onOpenChange={setShowPlanGateModal}
-        featureName="Google Business Profile connection and review sync"
+        featureName="Profile checks"
       />
 
       <UpgradeModal
@@ -376,7 +374,7 @@ function AuditPageContent() {
             : undefined
         }
       />
-    </div>
+    </DashboardPage>
   );
 }
 

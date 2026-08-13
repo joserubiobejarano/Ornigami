@@ -1,24 +1,47 @@
 import { sql } from "@/lib/db/neon";
-import { PLANS, isPlanId } from "@/lib/billing/plans";
 
-const STARTER_LIMITS = {
-  aiPosts: 20,
-  audits: 5,
-};
+// Product promise: effectively unlimited reply drafting. This internal ceiling
+// only protects against runaway automation or abuse and is intentionally high.
+export const REVIEW_REPLY_SAFETY_LIMIT = 2_000;
 
 export async function checkReviewReplyUsage(userId: string, businessId: string) {
-  await checkUsageLimit(userId, "ai_posts");
   const rows = await sql`
-    SELECT p.review_replies_used, ba.plan_id
+    SELECT
+      p.review_replies_used,
+      p.review_replies_usage_period_start,
+      COALESCE(
+        ba.current_period_start,
+        CASE
+          WHEN ba.current_period_end IS NOT NULL AND ba.billing_period = 'annual' THEN ba.current_period_end - INTERVAL '1 year'
+          WHEN ba.current_period_end IS NOT NULL THEN ba.current_period_end - INTERVAL '1 month'
+          ELSE ba.activated_at
+        END,
+        now()
+      ) AS current_period_start
     FROM public.profiles p
     LEFT JOIN public.business_agents ba ON ba.business_id = ${businessId} AND ba.agent_id = 'review_replies'
     WHERE p.id = ${userId}
     LIMIT 1
   `;
-  const row = rows[0] as { review_replies_used?: number | null; plan_id?: string | null } | undefined;
-  const planId = row?.plan_id && isPlanId(row.plan_id) ? row.plan_id : "replies";
-  const limit = PLANS[planId].monthlyRequestAllowance;
-  const used = Number(row?.review_replies_used ?? 0);
+  const row = rows[0] as {
+    review_replies_used?: number | null;
+    review_replies_usage_period_start?: string | null;
+    current_period_start?: string | null;
+  } | undefined;
+  const limit = REVIEW_REPLY_SAFETY_LIMIT;
+  const currentPeriodStart = row?.current_period_start ? new Date(row.current_period_start) : null;
+  const storedPeriodStart = row?.review_replies_usage_period_start ? new Date(row.review_replies_usage_period_start) : null;
+  const periodChanged = Boolean(currentPeriodStart && (!storedPeriodStart || storedPeriodStart.getTime() !== currentPeriodStart.getTime()));
+  if (periodChanged && currentPeriodStart) {
+    await sql`
+      UPDATE public.profiles
+      SET review_replies_used = 0,
+          review_replies_usage_period_start = ${currentPeriodStart.toISOString()},
+          updated_at = now()
+      WHERE id = ${userId}
+    `;
+  }
+  const used = periodChanged ? 0 : Number(row?.review_replies_used ?? 0);
   return { allowed: used < limit, used, limit };
 }
 
@@ -34,16 +57,13 @@ type ProfileUsageRow = {
   ai_posts_used: number | null;
   audits_used: number | null;
   usage_reset_date: string | null;
-  plan_type: string | null;
-  plan_status: string | null;
 };
 
 export async function checkUsageLimit(
-  userId: string,
-  type: "ai_posts" | "audits"
+  userId: string
 ): Promise<{ allowed: boolean; used: number; limit: number; resetDate: string | null }> {
   const rows = await sql`
-    SELECT ai_posts_used, audits_used, usage_reset_date, plan_type, plan_status
+    SELECT ai_posts_used, audits_used, usage_reset_date
     FROM public.profiles
     WHERE id = ${userId}
     LIMIT 1
@@ -67,7 +87,6 @@ export async function checkUsageLimit(
       SET
         ai_posts_used = 0,
         audits_used = 0,
-        review_replies_used = 0,
         usage_reset_date = ${nextReset},
         updated_at = now()
       WHERE id = ${userId}
@@ -76,36 +95,15 @@ export async function checkUsageLimit(
     return {
       allowed: true,
       used: 0,
-      limit: STARTER_LIMITS[type === "ai_posts" ? "aiPosts" : "audits"],
+      limit: 0,
       resetDate: nextReset,
     };
   }
 
-  const isStarter =
-    profile.plan_type === "starter" &&
-    (profile.plan_status === "active" ||
-      profile.plan_status === "trialing" ||
-      profile.plan_status === "past_due");
-
-  if (!isStarter) {
-    return {
-      allowed: true,
-      used: 0,
-      limit: 0,
-      resetDate: resetDate?.toISOString().split("T")[0] ?? null,
-    };
-  }
-
-  const used =
-    type === "ai_posts"
-      ? (profile.ai_posts_used ?? 0)
-      : (profile.audits_used ?? 0);
-  const limit = STARTER_LIMITS[type === "ai_posts" ? "aiPosts" : "audits"];
-
   return {
-    allowed: used < limit,
-    used,
-    limit,
+    allowed: true,
+    used: 0,
+    limit: 0,
     resetDate: resetDate?.toISOString().split("T")[0] ?? null,
   };
 }

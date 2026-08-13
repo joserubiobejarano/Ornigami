@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
 import { requireUser } from "@/lib/auth";
 import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
@@ -11,7 +12,7 @@ import {
   getFollowupStats,
   getRecentVisits,
   getReviewOutcomeStats,
-  getReviewBoosterMonthlyUsage,
+  getReviewBoosterBillingPeriodUsage,
 } from "@/modules/review-booster/services/review-booster-db.service";
 
 export default async function ReviewBoosterPage() {
@@ -45,13 +46,13 @@ export default async function ReviewBoosterPage() {
     getFollowupStats(business.id),
     getRecentVisits(business.id, 20),
     getReviewOutcomeStats(business.id),
-    getReviewBoosterMonthlyUsage(business.id),
+    getReviewBoosterBillingPeriodUsage(business.id),
   ]);
 
   const statCards = [
-    { label: "Pending", value: stats.pending },
+    { label: "Scheduled", value: stats.pending },
     { label: "Sent", value: stats.sent },
-    { label: "Failed", value: stats.failed },
+    { label: "Couldn't send", value: stats.failed },
     { label: "Skipped", value: stats.skipped },
   ];
 
@@ -65,47 +66,49 @@ export default async function ReviewBoosterPage() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
+    <div className="mx-auto w-full max-w-6xl space-y-8">
       <FollowupsNav />
 
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-7 shadow-sm">
+      <section className="relative overflow-hidden rounded-2xl border-[1.5px] border-border bg-tint-mint p-7 shadow-ink-md">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-card-foreground">Review Booster Dashboard</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-green">Review Booster</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-primary">Follow up with recent customers.</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Follow up with recent customers and invite happy ones to leave a review.</p>
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card px-5 py-4 text-sm text-card-foreground shadow-sm">
-        Upload completed visits and automatically send warm thank-you emails with a Google review request.
+      <section className="rounded-2xl border-[1.5px] border-border bg-card px-5 py-4 text-sm text-primary shadow-ink-sm">
+        Follow up with recent customers and invite happy ones to leave a review.
         <p className="mt-2 text-xs text-muted-foreground">
           Tip: in Settings, use the direct Google Maps review link so customers land on the review form immediately.
         </p>
       </section>
 
       {usagePercent >= 80 && (
-        <section className={`rounded-xl border p-4 text-sm ${usagePercent >= 100 ? "border-destructive/35 bg-destructive/10 text-destructive" : "border-accent-yellow/35 bg-accent-yellow/10 text-primary"}`}>
+        <section className={`rounded-2xl border-[1.5px] p-4 text-sm ${usagePercent >= 100 ? "border-destructive/35 bg-destructive/10 text-destructive" : "border-accent-marigold/35 bg-accent-marigold/10 text-primary"}`}>
           {usagePercent >= 100
-            ? `Monthly review request allowance reached (${monthlyUsage.sent}/${monthlyUsage.allowance}). New eligible visits are being skipped until next month.`
+            ? `Your monthly review request allowance is full (${monthlyUsage.sent}/${monthlyUsage.allowance}). New eligible visits will wait until next month.`
             : `You've used ${monthlyUsage.sent} of ${monthlyUsage.allowance} review requests this month.`}
         </section>
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         {statCards.map((card) => (
-          <article key={card.label} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <article key={card.label} className="rounded-xl border-[1.5px] border-border bg-card p-4 shadow-ink-sm">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{card.label}</p>
             <p className="mt-2 text-4xl font-semibold leading-none text-card-foreground">{card.value}</p>
           </article>
         ))}
       </div>
 
-      <section className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-sm">
+      <section className="space-y-3 rounded-2xl border-[1.5px] border-border bg-card p-5 shadow-ink-sm">
         <div>
           <h2 className="text-lg font-semibold text-card-foreground">Outcomes</h2>
           <p className="mt-1 text-xs text-muted-foreground">New reviews synced around the same time are shown as context, not guaranteed attribution to these requests.</p>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
           {outcomeCards.map((card) => (
-            <article key={card.label} className="rounded-lg bg-muted p-4">
+            <article key={card.label} className="rounded-xl border-[1.5px] border-border bg-surface p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{card.label}</p>
               <p className="mt-2 text-3xl font-semibold leading-none text-card-foreground">{card.value}</p>
             </article>
@@ -113,31 +116,31 @@ export default async function ReviewBoosterPage() {
         </div>
       </section>
 
-      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="rounded-2xl border-[1.5px] border-border bg-card p-4 shadow-ink-sm">
         <RunFollowupsButton
           disabled={stats.pending === 0 || !business.name.trim()}
           disabledReason={!business.name.trim() ? "Add your business name in Settings before sending follow-ups." : stats.pending === 0 ? "There are no eligible visits to send right now." : undefined}
         />
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <section className="overflow-hidden rounded-2xl border-[1.5px] border-border bg-card shadow-ink-sm">
         <div className="border-b border-border px-4 py-4">
-          <h2 className="text-2xl font-semibold text-card-foreground">Recent Visits</h2>
+          <h2 className="text-2xl font-semibold text-card-foreground">Recent visits</h2>
         </div>
         {recentVisits.length === 0 ? (
-          <div className="px-4 py-6"><p className="text-sm text-muted-foreground">No visits yet for this business.</p><Link href="/dashboard/agents/review-booster/new" className="mt-3 inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Add your first visit</Link></div>
+          <div className="px-4 py-6"><p className="text-sm text-muted-foreground">No visits yet for this business.</p><Button asChild className="mt-3"><Link href="/dashboard/agents/review-booster/new">Add your first visit</Link></Button></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="border-b border-border bg-muted text-left text-card-foreground">
+              <thead className="border-b border-border bg-surface text-left text-primary">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Customer</th>
                   <th className="px-4 py-3 font-semibold">Email</th>
                   <th className="px-4 py-3 font-semibold">Service</th>
-                  <th className="px-4 py-3 font-semibold">Visited At</th>
+                  <th className="px-4 py-3 font-semibold">Visit date</th>
                   <th className="px-4 py-3 font-semibold">Source</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">Error Reason</th>
+                  <th className="px-4 py-3 font-semibold">Why it didn&apos;t send</th>
                 </tr>
               </thead>
               <tbody>

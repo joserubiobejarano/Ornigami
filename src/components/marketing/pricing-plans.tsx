@@ -5,20 +5,7 @@ import { BillingPeriodToggle } from "@/components/billing/billing-period-toggle"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FoldedCorner } from "@/components/marketing/primitives";
-import {
-  PLANS,
-  PLAN_ORDER,
-  effectiveMonthlyFromAnnual,
-  formatAnnualSavings,
-  formatPrice,
-  type PlanId,
-} from "@/lib/billing/plans";
-
-const planCopy: Record<PlanId, { name: string; tagline: string }> = {
-  replies: { name: "Start", tagline: "Answer every review." },
-  booster: { name: "Grow", tagline: "Reviews and follow-ups, together." },
-  complete: { name: "Complete", tagline: "Your full local reputation toolkit." },
-};
+import { PLANS, PLAN_ORDER, effectiveMonthlyFromAnnual, formatAnnualSavings, formatPrice } from "@/lib/billing/plans";
 
 export function PricingPlans() {
   return (
@@ -39,7 +26,6 @@ export function PricingPlans() {
       >
         {PLAN_ORDER.map((planId) => {
           const plan = PLANS[planId];
-          const copy = planCopy[planId];
           return (
             <Card
               key={planId}
@@ -48,14 +34,14 @@ export function PricingPlans() {
               {plan.recommended ? <FoldedCorner /> : null}
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
-                  <CardTitle className="text-xl">{copy.name}</CardTitle>
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
                   {plan.recommended ? (
                     <span className="rounded-full bg-tint-butter px-3 py-1 text-xs font-bold text-primary">
                       Most popular
                     </span>
                   ) : null}
                 </div>
-                <CardDescription>{copy.tagline}</CardDescription>
+                <CardDescription>{plan.tagline}</CardDescription>
                 <div className="pt-4">
                   <span className="font-mono text-4xl font-semibold text-primary group-data-[billing-period=annual]:hidden">
                     {formatPrice(planId, "monthly")}
