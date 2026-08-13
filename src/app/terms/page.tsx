@@ -51,7 +51,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Third-Party Services and Availability</h2>
           <p>
-            Ornigami connects with third-party services such as Google, Stripe, Twilio, Resend,
+            Ornigami connects with third-party services such as Google, OpenAI, Stripe, Resend,
             Sentry, and Neon. Their availability and terms may affect parts of the service. We work
             to keep Ornigami available and secure, but do not promise uninterrupted or error-free
             operation.

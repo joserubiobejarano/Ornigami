@@ -39,3 +39,33 @@ test("CSP nonces are passed to Next.js and Sentry ingest is allowed", () => {
   assert.match(proxy, /https:\/\/\*\.sentry\.io/);
   assert.match(layout, /export const dynamic = "force-dynamic"/);
 });
+
+test("published legal pages disclose LocalLift processors consistently", () => {
+  const privacy = readFileSync("src/app/privacy/page.tsx", "utf8");
+  const terms = readFileSync("src/app/terms/page.tsx", "utf8");
+
+  for (const provider of ["Google", "OpenAI", "Resend", "Stripe", "Sentry", "Neon"]) {
+    assert.match(privacy, new RegExp(provider));
+    assert.match(terms, new RegExp(provider));
+  }
+  assert.doesNotMatch(privacy, /Twilio/i);
+  assert.doesNotMatch(terms, /Twilio/i);
+  assert.match(privacy, /Leads and public demo\s+events are retained for 90 days/);
+  assert.match(privacy, /feedback, review-link clicks, and integration events for\s+365 days/);
+  assert.match(privacy, /cron history for 30 days/);
+  assert.match(privacy, /rate-limit state for 2 days/);
+});
+
+test("Trusted Types reporting is wired to a bounded, rate-limited endpoint", () => {
+  const config = readFileSync("next.config.ts", "utf8");
+  const route = readFileSync("src/app/api/csp-report/route.ts", "utf8");
+
+  assert.match(config, /Reporting-Endpoints/);
+  assert.match(config, /csp-endpoint="\/api\/csp-report"/);
+  assert.match(config, /require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint/);
+  assert.match(route, /checkPublicWriteRateLimit/);
+  assert.match(route, /getTrustedRequestIp/);
+  assert.match(route, /safeLogger/);
+  assert.match(route, /MAX_BODY_BYTES/);
+  assert.match(route, /MAX_REPORTS_PER_REQUEST/);
+});

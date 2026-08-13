@@ -13,7 +13,13 @@ const nextConfig: NextConfig = {
     ];
 
     if (process.env.NODE_ENV === "production") {
-      headers.unshift({ key: "Content-Security-Policy-Report-Only", value: "require-trusted-types-for 'script'" });
+      headers.unshift(
+        { key: "Reporting-Endpoints", value: 'csp-endpoint="/api/csp-report"' },
+        {
+          key: "Content-Security-Policy-Report-Only",
+          value: "require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint",
+        }
+      );
     }
 
     return [

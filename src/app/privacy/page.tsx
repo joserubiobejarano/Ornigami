@@ -25,8 +25,10 @@ export default function PrivacyPage() {
             permanently delete your account data through the privacy API or by contacting privacy@ornigami.com.
           </p>
           <p>
-            We use Google, Stripe, Twilio, Resend, Sentry, and Neon as service providers where
-            needed to deliver the product. Google OAuth tokens are encrypted before storage. Those
+            We use Google for Business Profile access and OAuth, OpenAI for AI-generated reply
+            drafting and profile/content assistance using review text, business name, and business
+            context, Resend for email delivery, Stripe for payments, Sentry for error monitoring,
+            and Neon for database hosting. Google OAuth tokens are encrypted before storage. Those
             providers may process information in other countries; we use the safeguards required
             for the applicable transfer and service arrangement.
           </p>
