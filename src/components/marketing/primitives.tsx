@@ -1,5 +1,23 @@
 import Link from "next/link";
-import { ArrowRight, Check, ChevronDown, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Check,
+  ChevronDown,
+  Clock3,
+  FileText,
+  HeartHandshake,
+  Layers3,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Search,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +35,37 @@ const accentClass: Record<string, string> = {
   green: "text-accent-green",
   marigold: "text-accent-marigold",
   coral: "text-accent-coral",
+};
+
+export type MarketingIconName =
+  | "bar-chart"
+  | "clock"
+  | "file-text"
+  | "heart-handshake"
+  | "layers"
+  | "mail"
+  | "map-pin"
+  | "message-square"
+  | "search"
+  | "send"
+  | "shield-check"
+  | "sparkles"
+  | "users";
+
+const marketingIcons: Record<MarketingIconName, LucideIcon> = {
+  "bar-chart": BarChart3,
+  clock: Clock3,
+  "file-text": FileText,
+  "heart-handshake": HeartHandshake,
+  layers: Layers3,
+  mail: Mail,
+  "map-pin": MapPin,
+  "message-square": MessageSquare,
+  search: Search,
+  send: Send,
+  "shield-check": ShieldCheck,
+  sparkles: Sparkles,
+  users: Users,
 };
 
 export function Eyebrow({ children, light = false, tint = "mint" }: { children: React.ReactNode; light?: boolean; tint?: Tint }) {
@@ -43,7 +92,8 @@ export function ProductFrame({ children, title = "Review inbox", live = true, cl
   return <div className={`relative overflow-hidden rounded-2xl border-[1.5px] border-border bg-card shadow-ink-md ${className}`}><FoldedCorner /><div className="flex items-center justify-between border-b border-border px-4 py-3"><div className="flex items-center gap-2"><div className="flex gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-border" /><span className="h-2.5 w-2.5 rounded-full bg-border" /><span className="h-2.5 w-2.5 rounded-full bg-border" /></div><span className="ml-1 text-xs font-semibold text-muted-foreground">{title}</span></div>{live ? <span className="flex items-center gap-1.5 rounded-full bg-tint-mint px-2.5 py-1 text-[10px] font-bold text-accent-green"><span className="h-1.5 w-1.5 rounded-full bg-accent-green" />Live</span> : null}</div>{children}</div>;
 }
 
-export function TintCard({ icon: Icon, tint = "mint", accent = "navy", label, title, body, bullets = [], href, children }: { icon?: LucideIcon; tint?: Tint; accent?: string; label?: string; title: string; body: string; bullets?: string[]; href?: string; children?: React.ReactNode }) {
+export function TintCard({ icon, tint = "mint", accent = "navy", label, title, body, bullets = [], href, children }: { icon?: MarketingIconName; tint?: Tint; accent?: string; label?: string; title: string; body: string; bullets?: string[]; href?: string; children?: React.ReactNode }) {
+  const Icon = icon ? marketingIcons[icon] : null;
   return <article className={`rounded-2xl border-[1.5px] border-border p-6 shadow-ink-sm transition-shadow hover:-translate-y-1 hover:shadow-ink-md ${tintClass[tint]}`}>
     {Icon ? <div className={`mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-card/70 ${accentClass[accent] ?? "text-primary"}`}><Icon className="h-5 w-5" /></div> : null}
     {label ? <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">{label}</p> : null}
@@ -54,7 +104,7 @@ export function TintCard({ icon: Icon, tint = "mint", accent = "navy", label, ti
   </article>;
 }
 
-export function FeatureCard(props: { icon: LucideIcon; accent?: "green" | "navy" | "coral" | "marigold"; label?: string; title: string; body: string; bullets?: string[]; href?: string }) {
+export function FeatureCard(props: { icon: MarketingIconName; accent?: "green" | "navy" | "coral" | "marigold"; label?: string; title: string; body: string; bullets?: string[]; href?: string }) {
   const tint = props.accent === "green" ? "mint" : props.accent === "marigold" ? "butter" : props.accent === "coral" ? "peach" : "navy";
   return <TintCard {...props} tint={tint} />;
 }
