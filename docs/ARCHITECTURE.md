@@ -1,245 +1,95 @@
 # Architecture
 
-This document describes the current application architecture as it exists in code today.
+This document describes the application as implemented in the current codebase.
 
-## Stack
+## Stack and deployment shape
 
-- Next.js 16 App Router
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- Radix UI
+- Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4, Radix UI
 - Auth.js / NextAuth v5 beta
 - Neon Postgres via `@neondatabase/serverless`
-- OpenAI API
-- Stripe API
-- Resend API
+- Google Business Profile APIs, OpenAI, Stripe, Resend, and Sentry
+- One Vercel-hosted Next.js application; no separate worker service
+- GitHub Actions invokes the Review Booster and Review Replies cron endpoints
 
-## High-level architecture
+## Layers
 
-### Presentation layer
+### Presentation
 
-Main folders:
+- `src/app` — public pages, auth, dashboard, API route handlers, legal pages, and demos
+- `src/components` — shared dashboard, marketing, billing, and UI components
+- `src/modules/review-replies` — Review Replies pages, hooks, services, and types
+- `src/modules/review-booster` — Review Booster pages, components, services, and types
 
-- `src/app`
-- `src/components`
-- `src/modules/review-replies/components`
-- `src/modules/review-replies/pages`
-- `src/modules/review-replies/services`
-- `src/modules/review-replies/types`
-- `src/modules/review-booster/components`
-- `src/modules/review-booster/pages`
+### Route handlers
 
-This layer contains:
+`src/app/api` contains authentication, privacy, team, billing, Google sync/posting, Review Booster, scheduled jobs, public intake, and legacy project routes. Routes enforce authentication, plan/agent access, business membership, or cron bearer authentication at their boundaries.
 
-- public landing pages
-- auth pages
-- dashboard pages
-- review UI
-- Review Booster UI
-- billing and settings screens
+### Shared services
 
-### Route-handler layer
+`src/lib` contains Auth.js helpers, environment validation, business/plan access, Google and OpenAI integrations, Stripe policy/webhook handling, privacy retention, encrypted tokens, security headers, Sentry options, dashboard metrics, and database access.
 
-Main folder:
+### Feature modules
 
-- `src/app/api`
+Feature-specific UI, services, types, and API adapters live under `src/modules/<agent>`. Shared providers remain in `src/lib`. App Router pages select the canonical URL and compose the module page.
 
-This layer contains:
+## Domain model
 
-- auth registration and signout helpers
-- review reply generation and review posting flows
-- Google Business Profile OAuth, sync, and disconnect flows
-- Review Booster settings, visit, upload, run-now, and cron endpoints
-- Stripe checkout, portal, and webhook handlers
-- public-facing lead/audit/feedback endpoints
+### Identity and business tenancy
 
-### Shared application-services layer
+- `users`, `profiles`, and Auth.js sessions hold identity and account settings.
+- `businesses` are the operational containers.
+- `business_members` represents workspace membership.
+- `business_agents` represents per-business agent entitlement and Stripe state.
 
-Main folder:
+### Agents
 
-- `src/lib`
+The registry contains:
 
-This layer contains:
+- `review_replies` — active
+- `review_booster` — active
+- `speed_to_lead` — registered as coming soon only
 
-- auth helpers
-- environment helpers
-- plan and usage helpers
-- Google integration helpers
-- OpenAI integration helpers
-- dashboard metrics
-- business and user database helpers
-- security helpers used by multiple routes
+User-facing access treats `active` and `trialing` as usable. Complete-plan team access also considers `past_due` while the billing state is being resolved.
 
-### Review Booster module layer
+### Review Replies flow
 
-Main folder:
+1. A business activates Review Replies.
+2. The user connects Google Business Profile through OAuth.
+3. Locations and reviews are synced into business-scoped tables.
+4. OpenAI generates reply drafts.
+5. A user saves, posts, or enables the configured auto-reply behavior.
+6. The scheduled Review Replies job can sync and draft replies for active/trialing businesses.
 
-- `src/modules/review-booster`
+### Review Booster flow
 
-This is the most intentionally modularized feature area in the repo.
+1. A business activates Review Booster.
+2. The user configures business, tone, language, and a Google review URL.
+3. The URL is manually entered or derived from a synced Google location.
+4. Visits arrive manually or through CSV import.
+5. Manual or scheduled execution selects eligible visits.
+6. The service generates email copy, sends through Resend, records the message, and updates visit state.
 
-It contains:
+Eligibility currently requires a pending visit or retryable failure, no previous sent message, a valid email and review URL, no business/customer unsubscribe, and `visited_at` between 23 hours and seven days ago. Retries use bounded exponential backoff and the plan’s monthly allowance is enforced.
 
-- feature-specific pages and components
-- CSV parsing
-- follow-up runner logic
-- email generation
-- Resend delivery
-- Review Booster database access helpers
-- shared Review Booster types
+### Billing and team flow
 
-### Feature module convention
+Stripe checkout creates a subscription with `business_id`, `user_id`, `plan_id`, and billing-period metadata. Webhooks update subscription state, plan, usage-period fields, and `business_agents`. The Complete plan can invite up to three workspace users through expiring tokenized invitations.
 
-Agent-specific UI, API adapters, types, and business services belong under
-`src/modules/<agent>/{pages,components,services,types}`. App routes should stay
-thin: they select the canonical URL, compose the module page, and enforce
-framework-level concerns. Shared integrations such as Google, Stripe, and
-OpenAI remain in `src/lib` and are consumed by feature services.
+## Security and privacy model
 
-## Core domain model
+- Application-layer authorization is the active security boundary; Postgres RLS is not used.
+- Business-scoped services verify membership where an actor id is available.
+- Google tokens are encrypted at rest and legacy plaintext tokens are upgraded when read.
+- OAuth state, unsubscribe links, and review-link redirects are signed.
+- Cron endpoints require `CRON_SECRET`.
+- CSP uses dynamic nonces for protected pages and static hashes for static marketing pages; Trusted Types remains report-only pending production observation.
+- Privacy export/delete routes and scheduled retention cleanup are implemented.
 
-### Identity
+## Current architectural debt and external dependencies
 
-- `users`
-- `profiles`
-- Auth.js sessions
-
-### Business container
-
-A `business` is the operational container for agent activation and Review Booster settings.
-
-Important tables:
-
-- `businesses`
-- `business_members`
-- `business_agents`
-
-### Agent model
-
-The codebase currently recognizes three agents:
-
-- `review_replies`
-- `review_booster`
-- `speed_to_lead`
-
-Only the first two are wired into real runtime flows today.
-
-### Review domain
-
-Important concerns:
-
-- storing synced reviews
-- drafting replies
-- posting replies to Google
-- tracking whether a review has already been replied to
-
-### Review Booster domain
-
-Important concerns:
-
-- storing completed visits
-- selecting pending visits for follow-up
-- generating email copy
-- sending emails with Resend
-- recording sent and failed attempts
-
-## Review Replies architecture
-
-High-level flow:
-
-1. User activates the `review_replies` agent.
-2. User connects Google Business Profile.
-3. Locations are synced through Google APIs.
-4. Reviews are synced into the app.
-5. OpenAI generates a reply draft.
-6. The reply is saved as a draft or posted to Google.
-7. If auto-reply is enabled, some reply generation/posting can happen immediately after sync.
-
-Primary files:
-
-- `src/modules/review-replies/pages/reviews-page.tsx`
-- `src/modules/review-replies/pages/settings-page.tsx`
-- `src/modules/review-replies/pages/connect-page.tsx`
-- `src/modules/review-replies/services/review-replies-api.service.ts`
-- `src/modules/review-replies/types/review.types.ts`
-- `src/app/api/google/**`
-- `src/app/api/openai/review-reply/route.ts`
-- `src/app/api/reviews/**`
-- `src/app/api/settings/reply/route.ts`
-
-## Review Booster architecture
-
-High-level flow:
-
-1. User activates the `review_booster` agent.
-2. User configures business settings, tone, language, and review URL.
-3. Visits are added manually or imported by CSV.
-4. A manual run or cron run scans eligible visits.
-5. Email content is generated.
-6. Email is sent through Resend.
-7. Visit and message state are updated in Postgres.
-
-Primary files:
-
-- `src/app/(dashboard)/dashboard/agents/review-booster/**`
-- `src/app/api/review-booster/**`
-- `src/app/api/cron/review-booster/route.ts`
-- `src/modules/review-booster/**`
-
-## Billing architecture
-
-High-level flow:
-
-1. User submits checkout for an agent.
-2. Checkout session includes `business_id`, `user_id`, and `agent_id` metadata.
-3. Stripe webhook receives subscription lifecycle events.
-4. Profile plan status is updated.
-5. Matching `business_agents` record is updated for supported agent ids.
-
-Primary files:
-
-- `src/app/(dashboard)/dashboard/billing/page.tsx`
-- `src/app/api/stripe/checkout/route.ts`
-- `src/app/api/stripe/portal/route.ts`
-- `src/app/api/stripe/webhook/route.ts`
-
-## Security model
-
-Current posture:
-
-- Route handlers authenticate requests with Auth.js or bearer checks.
-- Authorization is enforced in application code, at both the route boundary
-  and business-scoped service boundary where the service accepts an actor id.
-- `requireActiveAgentAccess` is the main helper for agent-gated routes.
-- Cron routes are protected by `Authorization: Bearer <CRON_SECRET>`.
-- Secrets are expected through env vars.
-
-Important limitation:
-
-- Postgres RLS is not the active security boundary here. Application-layer query scoping is the real control plane.
-
-## Known architectural debt
-
-### Branding
-
-Ornigami is the standardized product name. Historical internal identifiers are
-kept only where changing them would require a compatibility migration.
-
-### Legacy surfaces
-
-The public Local SEO and free-audit marketing pages remain intentionally
-available, while the retired internal content/audit dashboard and generation
-API surface has been removed.
-
-### Review Booster timing rule mismatch
-
-The upload UI communicates a visit-age window, but the current runner selects pending visits without enforcing that window in the query layer.
-
-### Compatibility fallbacks
-
-Several places resolve users by email when old session/user-id behavior does not line up with `public.users.id`.
-
-## Architecture summary
-
-This app is a single Next.js product that combines public site, authenticated dashboard, API layer, and business logic in one codebase, with Review Booster standing out as the cleanest feature module and the most obvious candidate for continued product investment.
+- Google Business Profile API quota/access approval and OAuth consent-screen publication/verification are external launch blockers for real Review Replies customers; see `ROADMAP.md`.
+- Google fetches do not yet implement explicit 429/backoff handling.
+- Review sync still performs one upsert per review rather than a batched upsert.
+- Review Booster sends are serial within a run; the per-run cap and plan allowance are bounded, but higher-volume throughput needs future work.
+- Some legacy user-resolution fallbacks use email when older sessions do not match the canonical user id.
+- Public Local SEO/free-audit pages and the legacy project API remain available as supporting surfaces.

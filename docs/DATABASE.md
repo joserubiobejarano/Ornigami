@@ -1,179 +1,58 @@
 # Database
 
-This repository uses Neon Postgres. The canonical schema source of truth is `neon/migrations`.
+Neon Postgres is the database. `neon/migrations` is the only schema source of truth; apply migrations in numeric order.
 
 ## Migration order
 
-Apply migrations in this exact order:
-
-1. `001_initial.sql`
-2. `002_auto_reply_profiles.sql`
-3. `003_business_foundation.sql`
-4. `004_review_booster_tables.sql`
-5. `005_business_agent_billing_fields.sql`
-6. `006_public_demo_events.sql`
-7. `007_review_booster_unsubscribes.sql`
-8. `008_pricing_plans.sql`
-9. `009_review_booster_error_reason.sql`
-10. `010_review_booster_retries.sql`
-11. `011_review_link_clicks.sql`
-12. `012_cron_runs.sql`
-13. `013_review_business_tenancy.sql`
+1. `001_initial.sql` — core users, profiles, billing mirrors, reviews, projects, leads, feedback, and Google tables
+2. `002_auto_reply_profiles.sql` — reply-profile automation fields
+3. `003_business_foundation.sql` — businesses, members, and agent activation
+4. `004_review_booster_tables.sql` — visits, messages, and integration events
+5. `005_business_agent_billing_fields.sql` — Stripe linkage and billing-period fields
+6. `006_public_demo_events.sql` — public demo rate-limit tracking
+7. `007_review_booster_unsubscribes.sql` — recipient suppression records
+8. `008_pricing_plans.sql` — plan fields and Stripe webhook idempotency
+9. `009_review_booster_error_reason.sql` — persisted processing error reasons
+10. `010_review_booster_retries.sql` — bounded retry state
+11. `011_review_link_clicks.sql` — review-link click attribution
+12. `012_cron_runs.sql` — scheduled-job execution history
+13. `013_review_business_tenancy.sql` — canonical business ownership for reviews and reply drafts
+14. `014_security_hardening.sql` — email verification, login attempts, API/public-demo rate limits, and Review Replies usage counter
+15. `015_stripe_usage_periods.sql` — current billing-period start fields
+16. `016_remove_legacy_plan_taxonomy.sql` — current plan constraints (`free`, `replies`, `booster`, `complete`)
+17. `017_team_invitations.sql` — expiring Complete-plan workspace invitations
 
 ## Main schema areas
 
-### Identity and profile
+- Identity: `users`, `profiles`, `email_verification_tokens`
+- Billing: `subscriptions`, `user_billing`, `v_user_plan`, `business_agents`, Stripe event/idempotency fields
+- Business tenancy: `businesses`, `business_members`, `business_agents`
+- Google operations: `gbp_connections`, `gbp_locations`, `reviews`, `review_replies`, `automation_prefs`
+- Review Booster: `followup_visits`, `followup_messages`, `followup_integration_events`, `followup_unsubscribes`, `review_link_clicks`
+- Operations/privacy: `cron_runs`, `api_rate_limits`, `auth_login_attempts`, `public_demo_events`, `public_demo_email_challenges`
+- Team: `team_invitations`
+- Legacy/supporting: `projects`, `leads`, `feedback`
 
-- `users`
-- `profiles`
+## Tenancy and access rules
 
-Purpose:
+- `reviews.business_id` is the canonical ownership key.
+- `review_replies.business_id` follows its owning review.
+- Legacy `user_id` columns remain for compatibility; application reads/writes use business scope.
+- `business_agents` grants feature access. User-facing active statuses are `active` and `trialing`.
+- Scheduled Review Booster and Review Replies jobs process `active` or `trialing` agent records.
 
-- account identity
-- business/profile defaults
-- plan metadata used in UI gating
+## Review Booster rules
 
-### Billing
+- CSV duplicates are detected by business, normalized customer email, service, visit date, and `source = 'csv'`.
+- The runner skips visits with a sent message or active unsubscribe.
+- Eligible visits are pending or retryable failures, have a review URL and email, and are 23 hours to seven days old.
+- Failed sends persist an error, increment attempts, and use bounded backoff.
+- Monthly allowances are derived from the active plan and enforced before sending.
+- Review Booster settings are stored on `businesses`, including name, type, city, review URL, rebooking URL, tone, language, and sender name.
 
-- `subscriptions`
-- `user_billing`
-- `v_user_plan`
+## Maintainer guidance
 
-Purpose:
-
-- Stripe customer and subscription mirrors
-- effective plan and usage lookup
-
-### Google review operations
-
-- `gbp_connections`
-- `gbp_locations`
-- `reviews`
-- `review_replies`
-- `automation_prefs`
-
-Purpose:
-
-- Google OAuth state and tokens
-- synced locations
-- synced reviews
-- draft or posted reply records
-- review-automation preferences
-
-### Business and agent activation
-
-- `businesses`
-- `business_members`
-- `business_agents`
-
-Purpose:
-
-- business ownership container
-- membership mapping
-- per-agent activation state and Stripe linkage
-
-### Review Booster domain
-
-- `followup_visits`
-- `followup_messages`
-- `followup_integration_events`
-
-Purpose:
-
-- completed customer visit records
-- sent and failed email records
-- external event dedupe/logging support
-
-### Review tenancy
-
-- `reviews.business_id` is the canonical ownership key shared with Review Booster.
-- `review_replies.business_id` follows the owning review's business.
-- The legacy `user_id` columns remain temporarily for compatibility, but application reads and writes use `business_id`.
-- Migration `013_review_business_tenancy.sql` backfills existing rows from the owner's earliest business and enforces non-null business ownership.
-
-### Legacy or supporting domain tables
-
-- `projects`
-- `leads`
-- `feedback`
-
-Purpose:
-
-- older content-generation history
-- inbound lead capture
-- feedback collection
-
-## Tables that matter most for the current product
-
-If you only need to understand the current live product, start with:
-
-- `users`
-- `profiles`
-- `businesses`
-- `business_members`
-- `business_agents`
-- `gbp_connections`
-- `gbp_locations`
-- `reviews`
-- `review_replies`
-- `followup_visits`
-- `followup_messages`
-
-## Important behavioral rules
-
-### Agent access
-
-`business_agents` is the main access-control record for product features.
-
-Current agent ids used in code:
-
-- `review_replies`
-- `review_booster`
-- `speed_to_lead`
-
-Current access statuses treated as usable:
-
-- `active`
-- `trialing`
-
-### Review Booster cron selection
-
-The cron route selects businesses where:
-
-- `agent_id = 'review_booster'`
-- `status = 'active'`
-
-### CSV dedupe
-
-Review Booster CSV imports are deduped by business, customer email, service, visit date, and `source = 'csv'`.
-
-### Review Booster send history
-
-A visit is skipped from re-send if a previously sent message already exists for that visit.
-
-## Database caveats a new maintainer should know
-
-### No RLS security boundary
-
-Authorization is handled in route and service code, not through Postgres row-level security.
-
-### Mixed user-resolution history
-
-Some app flows still include compatibility logic for sessions that resolve more reliably by email than by UUID.
-
-### Business settings double as Review Booster settings
-
-Review Booster settings are currently stored on the `businesses` row itself, including:
-
-- business name
-- business type
-- review URL
-- tone
-- language
-
-## Practical guidance
-
-- Treat `neon/migrations` as the only schema truth.
+- Inspect `followup_visits` and `followup_messages` together when debugging delivery.
+- Keep `neon/README.md` and this file aligned with every new migration.
 - Do not create a second migration tree.
-- Keep business-agent records aligned with Stripe webhook behavior.
-- When investigating Review Booster bugs, inspect both `followup_visits` and `followup_messages` together.
+- Application code, not RLS, owns authorization and business scoping.

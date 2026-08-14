@@ -1,128 +1,122 @@
 # Deployment Checklist
 
-This checklist is for deploying the current app to Vercel with Neon.
+This is the single deployment and operator document for the Vercel + Neon application.
 
-## 1. Prerequisites
+## At a glance
 
-- [ ] GitHub repository is connected to Vercel
-- [ ] Neon database is provisioned
-- [ ] Google OAuth credentials are created
-- [ ] Stripe account, products, and price ids are created
-- [ ] Resend is configured for the sending domain or mailbox
-- [ ] OpenAI API key is available
+- Hosting: Vercel
+- Database: Neon Postgres
+- Auth: Auth.js
+- Integrations: Google Business Profile, OpenAI, Stripe, Resend, Sentry
+- Scheduled jobs: GitHub Actions calls the Review Booster hourly and Review Replies every four hours
+- There is no separate worker service.
 
-## 2. Vercel project setup
+## 1. Accounts and prerequisites
 
-- [ ] Framework preset is `Next.js`
-- [ ] Root directory is the repository root
-- [ ] Build command is `npm run build`
-- [ ] Install command is `npm install`
-- [ ] Node.js version is compatible with Next.js 16
+- [ ] GitHub repository is connected to the Vercel project.
+- [ ] Neon database is provisioned.
+- [ ] Google OAuth credentials exist in the project used by `GOOGLE_CLIENT_ID`.
+- [ ] Google Business Profile APIs are enabled, access/quota is approved, and the OAuth consent screen is published/verified as required. This remains an external blocker; see `ROADMAP.md`.
+- [ ] Stripe products and six monthly/annual price IDs are created.
+- [ ] Resend sending domain/mailbox is verified.
+- [ ] OpenAI API access is available.
+- [ ] Sentry project and auth values are configured if production error monitoring is expected.
+
+## 2. Vercel configuration
+
+- [ ] Framework preset is Next.js.
+- [ ] Root directory is the `Agent-LocalLift` repository root.
+- [ ] Build command is `npm run build`.
+- [ ] Install command is `npm install`.
+- [ ] Node.js version is compatible with Next.js 16.
+- [ ] Production `NEXT_PUBLIC_APP_URL` is exactly `https://ornigami.com`; the build rejects another Vercel production URL.
 
 ## 3. Environment variables
 
-Set the variables documented in [docs/ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md).
+Configure the variables in [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md). The production feature set normally includes:
 
-Minimum production set:
-
-- [ ] `DATABASE_URL`
-- [ ] `AUTH_SECRET`
-- [ ] `AUTH_URL`
-- [ ] `AUTH_TRUST_HOST` if needed
-- [x] `NEXT_PUBLIC_APP_URL` is present in Vercel; the production build now fails unless it resolves to `https://ornigami.com`
-- [ ] `OPENAI_API_KEY`
-- [ ] `GOOGLE_CLIENT_ID`
-- [ ] `GOOGLE_CLIENT_SECRET`
-- [ ] `STRIPE_SECRET_KEY`
-- [ ] `STRIPE_WEBHOOK_SECRET`
-- [ ] `STRIPE_PRICE_STARTER`
-- [ ] `STRIPE_REVIEW_REPLIES_PRICE_ID`
-- [ ] `STRIPE_REVIEW_BOOSTER_PRICE_ID`
-- [ ] `CRON_SECRET`
-- [ ] `RESEND_API_KEY`
-- [ ] `EMAIL_FROM`
+- [ ] `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`
+- [ ] `OPENAI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- [ ] `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- [ ] `STRIPE_PRICE_REPLIES_MONTHLY`, `STRIPE_PRICE_REPLIES_ANNUAL`
+- [ ] `STRIPE_PRICE_BOOSTER_MONTHLY`, `STRIPE_PRICE_BOOSTER_ANNUAL`
+- [ ] `STRIPE_PRICE_COMPLETE_MONTHLY`, `STRIPE_PRICE_COMPLETE_ANNUAL`
+- [ ] `CRON_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`
+- [ ] `TOKEN_ENCRYPTION_KEY` or an intentionally managed `AUTH_SECRET` fallback
+- [ ] `REPLY_TO_EMAIL` and `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET` if used
+- [ ] `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` where applicable
 
 ## 4. Database migrations
 
-Apply all migrations in order:
+Apply all migrations in order, including the current tail:
 
-1. [ ] `001_initial.sql`
-2. [ ] `002_auto_reply_profiles.sql`
-3. [ ] `003_business_foundation.sql`
-4. [ ] `004_review_booster_tables.sql`
-5. [ ] `005_business_agent_billing_fields.sql`
-6. [ ] `006_public_demo_events.sql`
-7. [ ] `007_review_booster_unsubscribes.sql`
-8. [ ] `008_pricing_plans.sql`
-9. [ ] `009_review_booster_error_reason.sql`
-10. [ ] `010_review_booster_retries.sql`
-11. [ ] `011_review_link_clicks.sql`
-12. [ ] `012_cron_runs.sql`
-13. [x] `013_review_business_tenancy.sql` applied to the configured Neon database
+- [ ] `001_initial.sql` through `013_review_business_tenancy.sql`
+- [ ] `014_security_hardening.sql`
+- [ ] `015_stripe_usage_periods.sql`
+- [ ] `016_remove_legacy_plan_taxonomy.sql`
+- [ ] `017_team_invitations.sql`
 
-## 5. Google OAuth callbacks
+Do not mark these permanently complete in a reusable checklist; verify the target environment each time.
 
-Google OAuth must allow both callback routes:
+## 5. Google OAuth and Business Profile readiness
 
-- [ ] `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google`
-- [ ] `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback`
+Google Cloud Console must contain both authorized redirect URIs:
 
-If local development is used, also add localhost variants.
+- [ ] `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google` for Google sign-in.
+- [ ] `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback` for Business Profile connection.
 
-## 6. Stripe configuration
+Before onboarding real Review Replies customers:
 
-- [ ] Create or confirm the price id used by `STRIPE_REVIEW_REPLIES_PRICE_ID`
-- [ ] Create or confirm the price id used by `STRIPE_REVIEW_BOOSTER_PRICE_ID`
-- [ ] Decide whether `STRIPE_PRICE_STARTER` is still needed as a fallback
-- [ ] Configure Stripe webhook endpoint: `/api/stripe/webhook`
-- [ ] Subscribe webhook to the subscription lifecycle events the handler expects
+- [ ] Confirm the `business.manage` scope is approved for the OAuth app.
+- [ ] Confirm the Business Profile APIs used by the app are enabled and quota is granted for the project behind `GOOGLE_CLIENT_ID`.
+- [ ] Confirm the consent screen is published and verification is complete if Google requires it.
+- [ ] Connect a real GBP account, sync a location, sync a review, save a draft, and post a controlled reply.
 
-## 7. Resend configuration
+Review Booster can operate with email and a manually entered review URL while this external dependency remains unresolved.
 
-- [ ] Verify the sending mailbox or domain in Resend
-- [ ] Set `RESEND_API_KEY`
-- [ ] Set `EMAIL_FROM` to the raw mailbox address only, for example `noreply@yourdomain.com`
+## 6. Stripe and email
 
-## 8. Review Booster cron setup
+- [ ] Configure `/api/stripe/webhook` and subscribe it to the lifecycle events handled by the app.
+- [ ] Test checkout for Review Replies, Review Booster, and Complete in Stripe test mode.
+- [ ] Test plan changes, duplicate webhook replay, trial behavior, and payment failure state updates.
+- [ ] Verify the Resend sending mailbox/domain.
+- [ ] Keep `EMAIL_FROM` as a bare mailbox address, for example `noreply@yourdomain.com`.
 
-- [ ] Configure an external scheduler to call `/api/cron/review-booster`
-- [ ] Send `Authorization: Bearer <CRON_SECRET>`
-- [ ] Confirm only active Review Booster businesses are processed
+## 7. Scheduled jobs
 
-## 9. Pre-deploy verification
+- [ ] Confirm GitHub Actions secrets `APP_BASE_URL` and `CRON_SECRET`.
+- [ ] Confirm Review Booster cron returns success and processes active/trialing businesses.
+- [ ] Confirm Review Replies cron returns success and processes active/trialing businesses.
+- [ ] Confirm `/api/cron/health` shows persisted `cron_runs` records.
+- [ ] Confirm the privacy cleanup job is scheduled if retention cleanup is required in production.
 
-Run locally before deploying:
+## 8. Pre-deploy verification
+
+Run from the repository root:
 
 ```bash
-npm install
-npm run build
+npm ci
 npm run lint
+npx tsc --noEmit
+npm test
+npm run test:security
+npm run build
 ```
 
-Checklist:
+## 9. Post-deploy smoke test
 
-- [ ] Build passes
-- [ ] Lint passes
-- [ ] No missing env-var errors during test flows
+- [ ] Homepage, pricing, login, signup, legal, and demos load.
+- [ ] Email verification works for credentials signup.
+- [ ] Dashboard and billing load.
+- [ ] Review Booster settings, manual visit entry, CSV upload, run-now, unsubscribe, and tracked review-link redirect work.
+- [ ] Review Replies Google connection and controlled sync/post flow work, if Google approval is complete.
+- [ ] Team invitation works on Complete.
+- [ ] Privacy export/delete works with a test account.
+- [ ] Stripe webhook updates plan and agent state.
+- [ ] Sentry receives a controlled test error, then the test is removed or clearly identified.
 
-## 10. Post-deploy smoke test
+## Current caveats
 
-- [ ] Homepage loads
-- [ ] Login and signup work
-- [ ] Dashboard loads
-- [ ] Billing page loads
-- [ ] Review Replies settings and Google connection work
-- [ ] Review Booster settings save successfully
-- [ ] Review Booster manual visit creation works
-- [ ] Review Booster CSV upload works
-- [ ] Review Booster run-now works
-- [ ] Stripe checkout redirects successfully
-- [ ] Stripe webhook updates plan and agent state
-
-Then review the production smoke-test side note in [`Audit/Design-Redesign.md`](../../Audit/Design-Redesign.md).
-
-## 11. Deployment caveats
-
-- Branding and pricing copy are still mixed across the app, so verify environment-specific marketing pages manually.
-- Review Booster depends on both Stripe activation and valid Review Booster settings to behave correctly.
-- There is no built-in scheduler in this repo; cron orchestration must be provided externally.
+- Google Business Profile API access/quota and OAuth publication/verification are external dependencies, not code tasks.
+- Review Booster has a bounded per-run cap and plan allowance, but higher-volume delivery is still serial.
+- Public Local SEO/free-audit pages and the legacy project API remain available, although they are not the product center.

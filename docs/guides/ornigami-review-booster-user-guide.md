@@ -1,203 +1,80 @@
-# Ornigami User Guide
+# Ornigami Review Booster User Guide
 
-This guide is written for new users and non-technical teams.
+Review Booster helps a local business ask customers for a Google review after a completed visit.
 
-## What Ornigami helps you do
+## How it works
 
-Ornigami helps local businesses manage customer reviews with simple AI agents.
+1. Add a completed visit manually or by CSV.
+2. Ornigami waits until the visit is eligible.
+3. It generates and sends a friendly email through Resend.
+4. The customer follows the tracked review link, and the visit/message state is recorded.
 
-The two most important agents today are:
+## Before you begin
 
-- Review Booster: helps you ask more customers for Google reviews after a completed visit
-- Review Replies: helps you reply faster to reviews that come into your Google Business Profile
+You need:
 
-## The easiest way to explain Review Booster
+- an Ornigami account;
+- an active Review Booster or Complete plan;
+- a verified sender mailbox/domain;
+- a Google review link, or a connected Google Business Profile location;
+- a process for recording completed visits.
 
-Review Booster works like this:
+Google Business Profile connection is optional for Review Booster. If it is unavailable or still awaiting external API approval, paste a direct Google Maps `Write a review` link in settings.
 
-1. You finish a customer visit.
-2. You add that visit to Ornigami manually or by CSV.
-3. Ornigami sends a friendly follow-up email asking the customer to leave a Google review.
-4. You track what was sent, what is still pending, and what needs attention.
+## First setup
 
-## What you need before you begin
+1. Open **Billing** and activate Review Booster or Complete.
+2. Open **Dashboard → Review Booster → Settings**.
+3. Complete business name, business type, city, tone, language, sender name, and Google review URL.
+4. Use **New visit** for one visit or **Upload CSV** for a batch.
+5. Click **Run follow-ups now**, or let the scheduled job process eligible visits.
 
-- An Ornigami account
-- An active Review Booster subscription
-- A Google review link
-- A business email setup that can send outbound messages through Resend
-- A simple process for recording completed visits
+## CSV fields and limits
 
-Note: if you connect Google Business Profile, Ornigami can usually pull the review link automatically. If not, you can paste the link manually in Review Booster settings.
-
-Recommended link format: use the direct Google Maps `Write a review` link (the popup review form link) rather than a generic business profile URL. This usually reduces friction and increases completion.
-
-## Public demo (quick preview)
-
-If you only want to preview the email quality first, use the public Review Booster demo page.
-
-What the public demo is for:
-
-- Sending yourself a sample follow-up email
-- Testing tone and basic input combinations
-- Reviewing subject/body output before onboarding a business
-
-What the public demo does not do:
-
-- It does not create a business record
-- It does not save completed visits
-- It does not enable scheduled follow-up automation
-
-Use the dashboard flow when you are ready for production usage with real business data.
-
-## Your first setup in 5 steps
-
-### Step 1: Sign in and open Billing
-
-Go to the dashboard and open `Billing & subscriptions`.
-
-Activate `Review Booster`.
-
-### Step 2: Open Review Booster Settings
-
-Go to:
-
-- `Dashboard`
-- `Review Booster`
-- `Settings`
-
-Complete these fields:
-
-- Business name
-- Business type
-- Google review URL
-- Tone
-- Language
-
-For best results, use the direct Google Maps `Write a review` link that opens the review form immediately.
-
-### Step 3: Connect Google Business Profile if you want auto-fill help
-
-This step is optional, but recommended.
-
-If connected, Ornigami can help find the correct review link from your synced Google locations.
-
-### Step 4: Start adding completed visits
-
-You can do this in two ways:
-
-- Add visits one by one
-- Upload a CSV file for many visits at once
-
-### Step 5: Run follow-ups
-
-Use `Run follow-ups now` to send emails to eligible customers.
-
-Your team can also schedule regular runs through the cron endpoint if you want a more automated setup.
-
-## Two ways to use Review Booster
-
-### Option A: Manual daily workflow
-
-Best for:
-
-- small teams
-- lower visit volume
-- teams that want more control
-
-Typical routine:
-
-1. Add completed visits during the day
-2. Review your dashboard
-3. Click `Run follow-ups now`
-4. Check which visits are marked `sent`, `pending`, or `failed`
-
-### Option B: CSV upload workflow
-
-Best for:
-
-- clinics
-- salons
-- gyms
-- service teams with many daily visits
-
-Typical routine:
-
-1. Export completed visits from your existing system
-2. Match the Ornigami CSV template
-3. Upload the file
-4. Review results
-5. Run follow-ups
-
-## CSV template fields
-
-Current expected fields:
+Required columns:
 
 - `customer_name`
 - `customer_email`
 - `service_received` or `service_name`
 - `visited_at`
 
-Use a real customer email and a valid visit date.
+CSV uploads are limited to 1 MB and 500 rows. Duplicate CSV records are skipped using business, normalized email, service, visit date, and CSV source.
 
-## What the statuses mean
+## Send timing and statuses
 
-- `pending`: the visit is waiting to be processed
-- `sent`: the follow-up email was sent
-- `failed`: the send attempt did not complete successfully
-- `skipped`: the visit was intentionally not sent, usually because it was a duplicate or already handled
+The current runner selects visits that are between 23 hours and seven days old. Failed sends use bounded retries and backoff. Monthly allowances are enforced by plan: Review Booster allows up to 500 requests and Complete up to 1,500 requests per billing period.
 
-## Best practices for better results
+- `pending` — waiting for an eligible run.
+- `sent` — email delivered to Resend successfully.
+- `failed` — the attempt failed; the dashboard shows the latest reason when available.
+- `skipped` — intentionally not sent, for example duplicate, unsubscribed, already sent, or plan limit.
 
-- Add visits soon after the appointment or service
-- Make sure the Google review link is correct
-- Use a warm, human tone
-- Only upload real completed visits
-- Make sure customers have agreed to receive follow-up emails
-- Check failures regularly so you can fix settings quickly
+## Best practices
 
-## When to also use Review Replies
+- Test the review link before sending a live batch.
+- Add visits soon after the service, but expect the 23-hour wait window.
+- Upload only customers who should receive the follow-up.
+- Check failed rows and correct settings or email configuration before retrying.
+- Use a verified sending domain as volume grows.
 
-Review Booster helps you get more reviews.
+## Review Booster and Review Replies together
 
-Review Replies helps you answer those reviews faster.
+Review Booster helps generate more review volume. Review Replies helps respond to the reviews that arrive. They are separate agents connected through the same business workspace.
 
-Together they create a simple loop:
-
-1. Review Booster helps generate more review volume
-2. Review Replies helps you stay responsive and professional
-3. Your business looks more active and trusted on Google
-
-## Simple FAQ
+## FAQ
 
 ### Do I need Google Business Profile connected?
 
-No. You can still use Review Booster if you paste your review link manually.
+No. A manually entered Google review URL is enough for Review Booster. GBP connection is required for the Google review syncing/reply workflow.
 
-### Can I start with a small team?
+### Can I use an existing customer system?
 
-Yes. Manual visit entry works well for smaller businesses.
+Yes. Export completed visits and map them to the CSV fields.
 
-### What if I already track visits in another system?
+### What happens when a customer unsubscribes?
 
-Use the CSV upload flow. It is the easiest way to import many visits at once.
+The unsubscribe link records suppression for that customer email and business. Future pending follow-ups for that customer are skipped.
 
-### What if a send fails?
+### What does the public demo do?
 
-Check your Review Booster settings, your sending setup, and your review link, then run again after the issue is fixed.
-
-### Can customers unsubscribe from follow-up emails?
-
-Yes. Review Booster emails include an unsubscribe link. If clicked, future pending follow-ups for that business and customer email are skipped.
-
-## A good first-week goal
-
-If you are onboarding a new customer, a simple goal is:
-
-- activate Review Booster
-- save settings
-- add 10 to 20 recent visits
-- run the first follow-up batch
-- confirm emails are sending correctly
-
-That is enough for a team to understand the product and start seeing value quickly.
+The public Review Booster demo sends a sample email preview to the tester. It does not create a business, visit, subscription, or scheduled automation.

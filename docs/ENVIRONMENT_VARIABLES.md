@@ -1,109 +1,85 @@
 # Environment Variables
 
-This file documents the environment variables currently referenced in code.
+This file documents environment values recognized by `src/lib/env.ts` and the deployment-specific values used by the application. The schema allows local boot without every integration; a variable is required when its feature is used.
 
-## Required for app boot
+## Core application and authentication
 
-- `DATABASE_URL`
-  - Neon connection string used by the SQL client.
-- `AUTH_SECRET`
-  - Primary Auth.js secret.
-- `NEXT_PUBLIC_APP_URL`
-  - Canonical browser-facing app URL.
-- `OPENAI_API_KEY`
-  - Required for AI generation features.
-- `GOOGLE_CLIENT_ID`
-  - Required for Google sign-in and Google Business Profile flows.
-- `GOOGLE_CLIENT_SECRET`
-  - Required for Google sign-in and Google Business Profile flows.
-- `STRIPE_SECRET_KEY`
-  - Required for checkout, portal, and webhook-side Stripe operations.
+- `DATABASE_URL` — Neon Postgres connection string; required for data access.
+- `AUTH_SECRET` — Auth.js and signing/encryption secret; required in production.
+- `NEXTAUTH_SECRET` — compatibility fallback for older helpers.
+- `NEXT_PUBLIC_APP_URL` — canonical application URL. Production must be `https://ornigami.com`.
+- `AUTH_URL` — optional Auth.js deployment hint; keep aligned with the public app URL if configured.
+- `AUTH_TRUST_HOST` — optional Auth.js proxy setting where required by the hosting setup.
 
-## Required for production features
+## Integrations
 
-- `STRIPE_WEBHOOK_SECRET`
-  - Required by `/api/stripe/webhook`.
-- `STRIPE_PRICE_STARTER`
-  - Fallback Stripe price id used by checkout when no agent-specific id applies.
-- `STRIPE_REVIEW_REPLIES_PRICE_ID`
-  - Stripe price id for Review Replies activation.
-- `STRIPE_REVIEW_BOOSTER_PRICE_ID`
-  - Stripe price id for Review Booster activation.
-- `CRON_SECRET`
-  - Bearer token for `/api/cron/review-booster`.
-- `RESEND_API_KEY`
-  - Required to send Review Booster emails.
-- `EMAIL_FROM`
-  - Email address used by Resend as the sender mailbox.
-- `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET`
-  - Recommended HMAC secret for signing unsubscribe links in Review Booster emails.
-  - If unset, code falls back to `NEXTAUTH_SECRET`.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — Google sign-in and Business Profile OAuth.
+- `OPENAI_API_KEY` — Review Replies and Review Booster copy generation.
+- `STRIPE_SECRET_KEY` — checkout, portal, plan changes, and webhook processing.
+- `STRIPE_WEBHOOK_SECRET` — signature verification for `/api/stripe/webhook`.
+- `RESEND_API_KEY` — Review Booster, demo, verification, alert, and team-invitation email delivery.
+- `EMAIL_FROM` — verified bare sender mailbox, for example `noreply@yourdomain.com`.
+- `REPLY_TO_EMAIL` — optional reply-to mailbox.
 
-## Optional or compatibility variables
+## Stripe price IDs
 
-- `AUTH_URL`
-  - Helpful for deployed Auth.js origin alignment.
-- `AUTH_TRUST_HOST`
-  - Sometimes needed behind proxies or hosted environments.
-- `NEXTAUTH_SECRET`
-  - Compatibility fallback used by some older auth helpers.
-- `ALLOW_DASHBOARD_WITHOUT_GBP`
-  - Optional behavior flag used around dashboard gating.
-- `NODE_ENV`
-  - Standard environment mode.
+The current catalog uses monthly and annual prices for three plans:
 
-## Important `EMAIL_FROM` note
+- `STRIPE_PRICE_REPLIES_MONTHLY`
+- `STRIPE_PRICE_REPLIES_ANNUAL`
+- `STRIPE_PRICE_BOOSTER_MONTHLY`
+- `STRIPE_PRICE_BOOSTER_ANNUAL`
+- `STRIPE_PRICE_COMPLETE_MONTHLY`
+- `STRIPE_PRICE_COMPLETE_ANNUAL`
 
-The current Review Booster sender code builds the `from` header like this:
+The old `STRIPE_PRICE_STARTER`, `STRIPE_REVIEW_REPLIES_PRICE_ID`, and `STRIPE_REVIEW_BOOSTER_PRICE_ID` names are no longer read by the current billing code.
 
-```text
-{business_or_sender_name} <{EMAIL_FROM}>
-```
+## Security, scheduled jobs, and compatibility
 
-That means `EMAIL_FROM` should be just the mailbox address, for example:
+- `CRON_SECRET` — bearer token for scheduled jobs.
+- `TOKEN_ENCRYPTION_KEY` — preferred production key for encrypted Google tokens; `AUTH_SECRET` is the fallback.
+- `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET` — preferred signing secret for unsubscribe and review-link tokens; auth secrets are fallbacks.
+- `ALLOW_DASHBOARD_WITHOUT_GBP` — optional development/preview behavior flag.
+- `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` — Sentry runtime/build configuration where enabled.
+- `NODE_ENV` — standard `development`, `test`, or `production` mode.
 
-```env
-EMAIL_FROM=noreply@yourdomain.com
-```
-
-Do not set `EMAIL_FROM` to a full display-name string like `Ornigami <noreply@yourdomain.com>`, or the final sender header will be malformed.
-
-## Local `.env.local` example
+## Local example
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 
 AUTH_SECRET=replace_with_random_secret
-AUTH_URL=http://localhost:3000
-AUTH_TRUST_HOST=true
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 OPENAI_API_KEY=sk-...
-
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 
 STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_STARTER=price_...
-STRIPE_REVIEW_REPLIES_PRICE_ID=price_...
-STRIPE_REVIEW_BOOSTER_PRICE_ID=price_...
+STRIPE_PRICE_REPLIES_MONTHLY=price_...
+STRIPE_PRICE_REPLIES_ANNUAL=price_...
+STRIPE_PRICE_BOOSTER_MONTHLY=price_...
+STRIPE_PRICE_BOOSTER_ANNUAL=price_...
+STRIPE_PRICE_COMPLETE_MONTHLY=price_...
+STRIPE_PRICE_COMPLETE_ANNUAL=price_...
 
 CRON_SECRET=replace_with_random_token
+TOKEN_ENCRYPTION_KEY=replace_with_random_key
+REVIEW_BOOSTER_UNSUBSCRIBE_SECRET=replace_with_random_secret
 
 RESEND_API_KEY=re_...
 EMAIL_FROM=noreply@yourdomain.com
+REPLY_TO_EMAIL=hello@yourdomain.com
 ```
 
-## OAuth redirect reminders
+## Google redirect URIs
 
-Google OAuth should include both callback URLs:
+Register both routes in Google Cloud Console:
 
 - `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google`
 - `{NEXT_PUBLIC_APP_URL}/api/google/oauth/callback`
 
-## Operational notes
+The Business Profile flow requests the `https://www.googleapis.com/auth/business.manage` scope. API enablement, quota approval, and consent-screen publication/verification are external setup items tracked in `ROADMAP.md`.
 
-- Keep `.env.local` out of git.
-- Keep `AUTH_URL` and `NEXT_PUBLIC_APP_URL` aligned for each environment.
-- Treat Stripe, Google, OpenAI, and Resend secrets as server-only.
+Keep `.env.local` out of Git and treat all integration secrets as server-only.
