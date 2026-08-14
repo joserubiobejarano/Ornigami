@@ -45,7 +45,6 @@ Everything else in the repo should be evaluated relative to whether it strengthe
 
 ### 1. Product alignment
 
-- Unify branding between Ornigami and LocalLift
 - Unify pricing story between public site and billing page
 - Decide how much of the legacy content/audit product remains customer-facing
 

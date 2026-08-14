@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { normalizeAppBaseUrl } from "@/lib/env";
+import { getOptionalEnv } from "@/lib/env";
 
 /**
  * Canonical browser origin for redirects. Prefer `NEXT_PUBLIC_APP_URL` so
@@ -8,7 +9,7 @@ import { normalizeAppBaseUrl } from "@/lib/env";
  * `AUTH_URL` (must still point at your app origin, not a DB/auth host).
  */
 export function getAppBaseUrl(req: NextRequest): string {
-  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const raw = getOptionalEnv("NEXT_PUBLIC_APP_URL")?.trim();
   const fromEnv = raw ? normalizeAppBaseUrl(raw) : undefined;
   if (fromEnv) return fromEnv;
 

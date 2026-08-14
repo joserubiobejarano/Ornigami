@@ -48,9 +48,9 @@ export function DashboardPageHeader({
   const centered = align === "center";
 
   return (
-    <header className={cn("space-y-2", centered && "text-center", className)} {...props}>
+    <header className={cn("space-y-3", centered && "text-center", className)} {...props}>
       {kicker ? (
-        <p className="text-xs font-medium uppercase tracking-wide text-foreground">{kicker}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-marigold">{kicker}</p>
       ) : null}
       <div
         className={cn(
@@ -61,9 +61,9 @@ export function DashboardPageHeader({
         )}
       >
         <div className={cn("space-y-1", !centered && "min-w-0")}>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">{title}</h1>
           {description ? (
-            <div className="text-sm leading-relaxed text-foreground">{description}</div>
+            <div className="text-sm leading-relaxed text-muted-foreground">{description}</div>
           ) : null}
         </div>
         {children ? (
@@ -94,8 +94,8 @@ export function DashboardSection({
   return (
     <section className={cn("space-y-4", className)} {...props}>
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-        {description ? <p className="text-sm text-foreground">{description}</p> : null}
+        <h2 className="text-xl font-bold tracking-tight text-primary">{title}</h2>
+        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {children}
     </section>

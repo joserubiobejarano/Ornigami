@@ -1,5 +1,5 @@
 import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-agent-nav";
-import SettingsPage from "@/app/(dashboard)/settings/page";
+import SettingsPage from "@/modules/review-replies/pages/settings-page";
 
 export default function ReviewRepliesSettingsRoute() {
   return (
@@ -9,4 +9,3 @@ export default function ReviewRepliesSettingsRoute() {
     </div>
   );
 }
-

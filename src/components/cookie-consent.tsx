@@ -16,10 +16,10 @@ export function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <aside className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/10 sm:flex sm:items-center sm:gap-5">
-      <p className="text-sm leading-relaxed text-slate-600">
+    <aside className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-2xl rounded-2xl border-[1.5px] border-border bg-card p-4 shadow-ink-md sm:flex sm:items-center sm:gap-5">
+      <p className="text-sm leading-relaxed text-muted-foreground">
         We use essential cookies to keep Ornigami secure and remember your preferences. Read our{" "}
-        <Link href="/privacy" className="font-medium text-slate-900 underline underline-offset-4">privacy policy</Link>.
+        <Link href="/privacy" className="font-medium text-primary underline underline-offset-4">privacy policy</Link>.
       </p>
       <Button type="button" className="mt-3 sm:mt-0" onClick={() => { window.localStorage.setItem("ornigami-cookie-consent", "accepted"); setDismissed(true); }}>Got it</Button>
     </aside>

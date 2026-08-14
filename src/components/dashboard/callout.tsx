@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const calloutVariants = cva(
-  "rounded-lg border px-4 py-3 text-sm [&_a]:font-medium [&_a]:underline-offset-4 [&_a]:hover:underline",
+  "rounded-2xl border-[1.5px] px-4 py-3 text-sm [&_a]:font-medium [&_a]:underline-offset-4 [&_a]:hover:underline",
   {
     variants: {
       variant: {
-        info: "border-accent-yellow/35 bg-accent-yellow/10 text-primary",
-        warning: "border-accent-yellow/35 bg-accent-yellow/10 text-primary",
+        info: "border-navy/35 bg-tint-navy text-primary",
+        warning: "border-accent-marigold/35 bg-tint-butter text-primary",
         success: "border-accent-green/35 bg-accent-green/10 text-primary",
         error:
           "border-destructive/35 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/15",
-        neutral: "border-border bg-muted/50 text-foreground",
+        neutral: "border-border bg-surface text-primary",
       },
     },
     defaultVariants: {
@@ -41,7 +41,7 @@ export function DashboardCallout({
       role={variant === "error" ? "alert" : undefined}
       className={cn(
         calloutVariants({ variant }),
-        "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
+        "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 shadow-ink-sm",
         className
       )}
       {...props}

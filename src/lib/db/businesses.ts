@@ -1,50 +1,15 @@
 import { sql } from "@/lib/db/neon";
 import { ensureUserFromOAuth } from "@/lib/db/users";
+import { DbBusinessAgentRowSchema, DbBusinessRowSchema } from "@/lib/validators";
+import { isWithinPastDueGracePeriod as isWithinPastDueGracePeriodPolicy, PAST_DUE_GRACE_DAYS as PAST_DUE_GRACE_DAYS_POLICY } from "@/lib/business-access-policy";
+import { z } from "zod";
 
-export type DbBusinessRow = {
-  id: string;
-  owner_user_id: string;
-  name: string;
-  business_type: string | null;
-  city: string | null;
-  country: string | null;
-  website: string | null;
-  phone: string | null;
-  google_review_url: string | null;
-  rebooking_url: string | null;
-  tone: string | null;
-  language: string | null;
-  email_from_name: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type DbBusinessAgentRow = {
-  id: string;
-  business_id: string;
-  agent_id: string;
-  status: string;
-  plan_id?: string | null;
-  billing_period?: string | null;
-  current_period_start?: string | null;
-  current_period_end?: string | null;
-  activated_at: string | null;
-  deactivated_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
+export type DbBusinessRow = z.infer<typeof DbBusinessRowSchema>;
+export type DbBusinessAgentRow = z.infer<typeof DbBusinessAgentRowSchema>;
 
 const ACTIVE_ACCESS_STATUSES = new Set(["active", "trialing"]);
-export const PAST_DUE_GRACE_DAYS = 7;
-
-function isWithinPastDueGracePeriod(currentPeriodEnd: string | null | undefined): boolean {
-  if (!currentPeriodEnd) return false;
-
-  const periodEnd = new Date(currentPeriodEnd).getTime();
-  if (!Number.isFinite(periodEnd)) return false;
-
-  return Date.now() <= periodEnd + PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000;
-}
+export const PAST_DUE_GRACE_DAYS = PAST_DUE_GRACE_DAYS_POLICY;
+export const isWithinPastDueGracePeriod = isWithinPastDueGracePeriodPolicy;
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -80,7 +45,7 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
     ORDER BY public.businesses.created_at ASC
     LIMIT 1
   `;
-  const row = rows[0] as DbBusinessRow | undefined;
+  const row = rows[0] ? DbBusinessRowSchema.parse(rows[0]) : undefined;
   return row ?? null;
 }
 
@@ -131,7 +96,7 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
       id, owner_user_id, name, business_type, city, country, website, phone,
       google_review_url, rebooking_url, tone, language, email_from_name, created_at, updated_at
   `;
-  const created = insertedRows[0] as DbBusinessRow;
+  const created = DbBusinessRowSchema.parse(insertedRows[0]);
 
   await ensureBusinessDefaults(created.id, resolvedUserId);
   return created;
@@ -154,7 +119,7 @@ export async function getBusinessAgentStatus(
     WHERE business_id = ${businessId} AND agent_id = ${agentId}
     LIMIT 1
   `;
-  const row = rows[0] as DbBusinessAgentRow | undefined;
+  const row = rows[0] ? DbBusinessAgentRowSchema.parse(rows[0]) : undefined;
   return row ?? null;
 }
 
@@ -167,7 +132,7 @@ export async function getBusinessAgents(businessId: string): Promise<DbBusinessA
     ORDER BY agent_id ASC
   `;
 
-  return rows as DbBusinessAgentRow[];
+  return rows.map((row) => DbBusinessAgentRowSchema.parse(row));
 }
 
 export async function userHasActiveAgentAccess(userId: string, agentId: string): Promise<boolean> {
@@ -217,7 +182,7 @@ export async function upsertBusinessAgentStatus(
     RETURNING
       id, business_id, agent_id, status, plan_id, billing_period, current_period_start, current_period_end, activated_at, deactivated_at, created_at, updated_at
   `;
-  return rows[0] as DbBusinessAgentRow;
+  return DbBusinessAgentRowSchema.parse(rows[0]);
 }
 
 async function ensureBusinessDefaults(businessId: string, userId: string): Promise<void> {
@@ -237,19 +202,14 @@ export async function ensureDefaultBusinessAgents(businessId: string): Promise<v
     { agentId: "speed_to_lead", status: "inactive" },
   ];
 
-  for (const item of defaults) {
-    await sql`
-      INSERT INTO public.business_agents (business_id, agent_id, status, activated_at, deactivated_at)
-      VALUES (
-        ${businessId},
-        ${item.agentId},
-        ${item.status},
-        CASE WHEN ${item.status} = 'active' THEN now() ELSE NULL END,
-        CASE WHEN ${item.status} = 'inactive' THEN now() ELSE NULL END
-      )
-      ON CONFLICT (business_id, agent_id) DO NOTHING
-    `;
-  }
+  await sql`
+    INSERT INTO public.business_agents (business_id, agent_id, status, activated_at, deactivated_at)
+    VALUES
+      (${businessId}, ${defaults[0].agentId}, ${defaults[0].status}, NULL, now()),
+      (${businessId}, ${defaults[1].agentId}, ${defaults[1].status}, NULL, now()),
+      (${businessId}, ${defaults[2].agentId}, ${defaults[2].status}, NULL, now())
+    ON CONFLICT (business_id, agent_id) DO NOTHING
+  `;
 }
 
 async function resolveOwnerUser(userId: string): Promise<{

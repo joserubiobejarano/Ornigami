@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { stripe } from "@/lib/stripe";
+import { TRIAL_CHECKOUT_POLICY } from "@/lib/billing/checkout-policy";
 import { auth } from "@/auth";
 import { getServerAppUrl } from "@/lib/env";
 import { sql } from "@/lib/db/neon";
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
     };
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
-      payment_method_collection: "if_required",
+      payment_method_collection: TRIAL_CHECKOUT_POLICY.paymentMethodCollection,
       customer: customer.id,
       client_reference_id: canonicalUserId,
       line_items: [{ price: priceId, quantity: 1 }],
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
       subscription_data: {
         metadata,
         trial_period_days: 14,
-        trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+        trial_settings: { end_behavior: { missing_payment_method: TRIAL_CHECKOUT_POLICY.missingPaymentMethod } },
       },
       metadata,
       success_url: `${appUrl}/dashboard/billing?success=1`,

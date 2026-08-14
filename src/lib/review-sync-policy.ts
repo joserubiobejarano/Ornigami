@@ -1,0 +1,1 @@
+export const DEFAULT_GOOGLE_REVIEWS_MAX_PAGES = 20;

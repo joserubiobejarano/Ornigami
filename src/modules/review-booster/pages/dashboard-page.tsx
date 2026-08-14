@@ -7,14 +7,14 @@ export default function ReviewBoosterDashboardPagePlaceholder() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
       <FollowupsNav />
-      <PageHeader title="Review Booster Dashboard (Placeholder)" description="Imported from legacy Follow-Up app. Route and data wiring pending." />
+      <PageHeader title="Review Booster" description="Follow up with recent customers and invite happy ones to leave a review." />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <SummaryCard label="Pending" value={0} />
+        <SummaryCard label="Scheduled" value={0} />
         <SummaryCard label="Sent" value={0} />
-        <SummaryCard label="Failed" value={0} />
+        <SummaryCard label="Couldn't send" value={0} />
         <SummaryCard label="Skipped" value={0} />
       </div>
-      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="rounded-2xl border-[1.5px] border-border bg-card p-4 shadow-ink-sm">
         <RunFollowupsButton />
       </div>
     </div>

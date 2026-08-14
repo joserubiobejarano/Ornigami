@@ -11,7 +11,7 @@ import { safeLogger } from "@/lib/safe-logger";
 
 function redirectWithGoogleError(reason: string) {
   const res = NextResponse.redirect(
-    new URL(`/connect?google=error&reason=${reason}`, getServerAppUrl()),
+    new URL(`/dashboard/agents/review-replies/google-connection?google=error&reason=${reason}`, getServerAppUrl()),
     { status: 302 }
   );
   res.cookies.set("ll_gbp_oauth_state", "", {

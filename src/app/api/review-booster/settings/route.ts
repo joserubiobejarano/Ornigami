@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
+import { requireActiveAgentAccess, safeApiErrorResponse, withActiveAgent } from "@/lib/api-security";
 import { sql } from "@/lib/db/neon";
 import { getBusinessFollowupSettings } from "@/modules/review-booster/services/review-booster-db.service";
 
@@ -107,36 +107,25 @@ async function getGoogleProfileDataForUser(userId: string) {
   return { connected: true as const, locations: transformed };
 }
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = withActiveAgent("review_booster", async (_request, { session, business }) => {
+  const settings = await getBusinessFollowupSettings(business.id, session.user.id);
+  if (!settings) {
+    return NextResponse.json({ error: "Business not found" }, { status: 404 });
   }
 
-  try {
-    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster");
-    const businessId = business.id;
-    const settings = await getBusinessFollowupSettings(businessId);
-    if (!settings) {
-      return NextResponse.json({ error: "Business not found" }, { status: 404 });
-    }
+  const googleProfile = await getGoogleProfileDataForUser(session.user.id);
+  const autoGoogleReviewUrl =
+    googleProfile.locations.find((location) => typeof location.review_url === "string" && location.review_url)?.review_url ??
+    null;
 
-    const googleProfile = await getGoogleProfileDataForUser(session.user.id);
-    const autoGoogleReviewUrl =
-      googleProfile.locations.find((location) => typeof location.review_url === "string" && location.review_url)?.review_url ??
-      null;
-
-    return NextResponse.json({
-      ...settings,
-      google_profile_connected: googleProfile.connected,
-      google_profile_locations: googleProfile.locations,
-      auto_google_review_url: autoGoogleReviewUrl,
-      effective_google_review_url: settings.google_review_url ?? autoGoogleReviewUrl,
-    });
-  } catch (error) {
-    return safeApiErrorResponse(error, "review_booster.settings.get");
-  }
-}
+  return NextResponse.json({
+    ...settings,
+    google_profile_connected: googleProfile.connected,
+    google_profile_locations: googleProfile.locations,
+    auto_google_review_url: autoGoogleReviewUrl,
+    effective_google_review_url: settings.google_review_url ?? autoGoogleReviewUrl,
+  });
+});
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -199,7 +188,7 @@ export async function POST(req: Request) {
       WHERE id = ${businessId}
     `;
 
-    const settings = await getBusinessFollowupSettings(businessId);
+    const settings = await getBusinessFollowupSettings(businessId, session.user.id);
     const refreshedGoogleProfile = await getGoogleProfileDataForUser(session.user.id);
 
     return NextResponse.json({

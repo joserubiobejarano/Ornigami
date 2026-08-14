@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
-import { getServerAppUrl } from "@/lib/env";
+import { getOptionalEnv, getServerAppUrl } from "@/lib/env";
 
 export const TEAM_INVITATION_DAYS = 7;
 
@@ -31,7 +31,9 @@ export async function sendTeamInvitationEmail(input: {
   inviterEmail: string;
   invitationUrl: string;
 }): Promise<{ sent: boolean }> {
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+  const resendApiKey = getOptionalEnv("RESEND_API_KEY");
+  const emailFrom = getOptionalEnv("EMAIL_FROM");
+  if (!resendApiKey || !emailFrom) {
     return { sent: false };
   }
 
@@ -41,11 +43,11 @@ export async function sendTeamInvitationEmail(input: {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${resendApiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `Ornigami <${process.env.EMAIL_FROM}>`,
+      from: `Ornigami <${emailFrom}>`,
       to: input.email,
       subject: `You have been invited to ${input.businessName || "an Ornigami workspace"}`,
       text: `${input.inviterEmail} invited you to join ${input.businessName || "their Ornigami workspace"}. Accept the invitation: ${input.invitationUrl}`,

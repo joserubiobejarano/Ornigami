@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { sql } from "@/lib/db/neon";
 import { getBusinessForUser } from "@/lib/db/businesses";
+import { safeLogger } from "@/lib/safe-logger";
 
 export type DashboardMetrics = {
   /** @deprecated kept for backward compatibility; use review-centric fields below */
@@ -150,7 +151,9 @@ export async function getDashboardMetrics(isDemo: boolean = false): Promise<Dash
       repliesPostedThisMonth: reviewsCount,
     };
   } catch (error) {
-    console.error("[DashboardMetrics] Unexpected error:", error);
+    safeLogger.error("dashboard_metrics.failed", {
+      error: error instanceof Error ? error.message : "unknown",
+    });
     return zeroedMetrics({ criticalError: "We could not load stats. Please refresh." });
   }
 }

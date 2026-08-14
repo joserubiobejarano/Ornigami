@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { sql } from "@/lib/db/neon";
-import { dateDaysAgo, PRIVACY_RETENTION_DAYS } from "@/lib/privacy-retention";
+import {
+  dateDaysAgo,
+  PRIVACY_CLEANUP_OPERATIONS,
+  PRIVACY_RETENTION_DAYS,
+} from "@/lib/privacy-retention";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +21,7 @@ export async function GET(request: Request) {
   const integrationEventsCutoff = dateDaysAgo(PRIVACY_RETENTION_DAYS.followupIntegrationEvents, now);
   const cronRunsCutoff = dateDaysAgo(PRIVACY_RETENTION_DAYS.cronRuns, now);
   const stateCutoff = dateDaysAgo(PRIVACY_RETENTION_DAYS.rateLimitState, now);
-  const results = await Promise.all([
+  await Promise.all([
     sql`DELETE FROM public.leads WHERE created_at < ${leadsCutoff}`,
     sql`DELETE FROM public.feedback WHERE created_at < ${feedbackCutoff}`,
     sql`DELETE FROM public.public_demo_events WHERE event_date < ${demoEventsCutoff}`,
@@ -29,5 +33,5 @@ export async function GET(request: Request) {
     sql`DELETE FROM public.followup_integration_events WHERE created_at < ${integrationEventsCutoff}`,
     sql`DELETE FROM public.cron_runs WHERE started_at < ${cronRunsCutoff}`,
   ]);
-  return NextResponse.json({ ok: true, operations: results.length });
+  return NextResponse.json({ ok: true, operations: PRIVACY_CLEANUP_OPERATIONS.length });
 }

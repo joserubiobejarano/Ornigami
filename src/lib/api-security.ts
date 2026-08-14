@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import type { Session } from "next-auth";
+import type { DbBusinessRow } from "@/lib/db/businesses";
 
 import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
 import { safeLogger } from "@/lib/safe-logger";
@@ -48,3 +51,26 @@ export async function requireActiveAgentAccess(
   return business;
 }
 
+export type ActiveAgentHandlerContext = {
+  session: Session;
+  business: DbBusinessRow;
+};
+
+export function withActiveAgent(
+  agentId: "review_booster" | "review_replies",
+  handler: (request: Request, context: ActiveAgentHandlerContext) => Promise<Response>
+) {
+  return async function activeAgentRoute(request: Request): Promise<Response> {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+      const business = await requireActiveAgentAccess(session.user.id, session.user.email, agentId);
+      return await handler(request, { session, business });
+    } catch (error) {
+      return safeApiErrorResponse(error, `agent.${agentId}.request_failed`);
+    }
+  };
+}

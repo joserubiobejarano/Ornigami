@@ -12,9 +12,9 @@ function isInAppRoute(pathname: string): boolean {
     pathname.startsWith("/dashboard") ||
     pathname === "/reviews" ||
     pathname === "/settings" ||
-    pathname === "/content" ||
-    pathname === "/audit" ||
-    pathname === "/connect"
+    pathname === "/connect" ||
+    pathname === "/login" ||
+    pathname === "/signup"
   );
 }
 

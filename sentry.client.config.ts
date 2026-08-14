@@ -1,6 +1,5 @@
 // Client initialization lives in instrumentation-client.ts so the Sentry SDK
-// can be loaded only for authenticated application routes. Keep this option
-// documented here for the security regression test and legacy tooling.
-export const sentryClientOptions = {
-  sendDefaultPii: false,
-};
+// can be loaded only for authenticated application routes.
+import { SENTRY_OPTIONS } from "./src/lib/sentry-options";
+
+export const sentryClientOptions = SENTRY_OPTIONS;

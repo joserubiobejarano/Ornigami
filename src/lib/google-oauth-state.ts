@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { getOptionalEnv } from "@/lib/env";
 
 type GoogleOAuthStatePayload = {
   uid: string;
@@ -9,8 +10,8 @@ type GoogleOAuthStatePayload = {
 const STATE_TTL_SECONDS = 10 * 60;
 
 function getSigningSecret(): string {
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-  if (!secret && process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET is required in production.");
+  const secret = getOptionalEnv("AUTH_SECRET") || getOptionalEnv("NEXTAUTH_SECRET");
+  if (!secret && getOptionalEnv("NODE_ENV") === "production") throw new Error("AUTH_SECRET is required in production.");
   return secret || "local-dev-google-oauth-secret";
 }
 

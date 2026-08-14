@@ -1,3 +1,5 @@
+import { getEnvValue } from "../env.ts";
+
 export type BillingPeriod = "monthly" | "annual";
 export type PlanId = "replies" | "booster" | "complete";
 export type AgentId = "review_replies" | "review_booster";
@@ -57,7 +59,7 @@ export function planForAgent(agentId: AgentId): PlanId {
 
 export function stripePriceId(planId: PlanId, period: BillingPeriod): string {
   const envName = PLANS[planId].priceEnv[period];
-  const value = process.env[envName];
+  const value = getEnvValue(envName);
   if (!value) throw new Error(`Missing Stripe price env var ${envName} for plan ${planId}/${period}`);
   return value;
 }
@@ -66,7 +68,7 @@ export function planIdFromStripePrice(priceId: string | null): PlanId | null {
   if (!priceId) return null;
   for (const plan of Object.values(PLANS)) {
     for (const period of ["monthly", "annual"] as BillingPeriod[]) {
-      if (process.env[plan.priceEnv[period]] === priceId) return plan.id;
+      if (getEnvValue(plan.priceEnv[period]) === priceId) return plan.id;
     }
   }
   return null;
@@ -75,8 +77,8 @@ export function planIdFromStripePrice(priceId: string | null): PlanId | null {
 export function periodFromStripePrice(priceId: string | null): BillingPeriod | null {
   if (!priceId) return null;
   for (const plan of Object.values(PLANS)) {
-    if (process.env[plan.priceEnv.monthly] === priceId) return "monthly";
-    if (process.env[plan.priceEnv.annual] === priceId) return "annual";
+    if (getEnvValue(plan.priceEnv.monthly) === priceId) return "monthly";
+    if (getEnvValue(plan.priceEnv.annual) === priceId) return "annual";
   }
   return null;
 }

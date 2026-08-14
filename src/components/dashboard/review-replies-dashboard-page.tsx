@@ -16,6 +16,7 @@ import { isPaidUser, isTrialing } from "@/lib/plan";
 import { auth } from "@/auth";
 import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
 import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { safeLogger } from "@/lib/safe-logger";
 
 export async function ReviewRepliesDashboardPage() {
   const cookieStore = await cookies();
@@ -40,7 +41,9 @@ export async function ReviewRepliesDashboardPage() {
           hasPaidAccess = isPaidUser(planInfo.planStatus) || isTrialing(planInfo.planStatus);
         }
       } catch (e) {
-        console.error("[Dashboard] Failed to fetch plan info:", e);
+        safeLogger.error("review_replies_dashboard.plan_failed", {
+          error: e instanceof Error ? e.message : "unknown",
+        });
       }
     }
   }

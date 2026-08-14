@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { href: "/dashboard/agents/review-replies", label: "Overview" },
   { href: "/dashboard/agents/review-replies/reviews", label: "Reviews" },
-  { href: "/demo", label: "Test Sample Reviews" },
+  { href: "/dashboard/agents/review-replies/google-connection", label: "Google profile" },
   { href: "/dashboard/agents/review-replies/settings", label: "Settings" },
 ] as const;
 
@@ -16,7 +16,7 @@ export function ReviewRepliesAgentNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="rounded-xl border border-border bg-card p-2 shadow-sm" aria-label="Review Replies">
+    <nav className="rounded-2xl border-[1.5px] border-border bg-card p-2 shadow-ink-sm" aria-label="Review Replies">
       <ul className="flex flex-wrap gap-2">
         {items.map((item) => {
           const active =
@@ -30,8 +30,8 @@ export function ReviewRepliesAgentNav() {
                 className={cn(
                   "inline-flex rounded-lg px-3 py-2 text-sm font-medium transition",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary hover:text-card-foreground"
+                    ? "bg-tint-navy text-primary shadow-ink-sm"
+                    : "text-muted-foreground hover:bg-surface hover:text-primary"
                 )}
               >
                 {item.label}

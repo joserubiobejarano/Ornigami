@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { getOptionalEnv } from "@/lib/env";
 
 type EmailInput = {
   business_name: string;
@@ -12,7 +13,8 @@ type EmailInput = {
   visited_at?: string | Date | null;
 };
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+const openaiApiKey = getOptionalEnv("OPENAI_API_KEY");
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
 function normalizeEmailBodyPunctuation(body: string): string {
   return body.replace(/[—–]/g, "-");

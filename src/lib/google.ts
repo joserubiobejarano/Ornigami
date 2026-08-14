@@ -2,6 +2,7 @@ import { getSql } from "@/lib/db/neon";
 import { updateGbpTokens } from "@/lib/db/gbp";
 import { getServerAppUrl } from "@/lib/env";
 import { decryptToken } from "@/lib/encrypted-token";
+import { getRequiredEnv } from "@/lib/env";
 
 const GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -14,7 +15,7 @@ export function getGoogleGbpOAuthRedirectUri(): string {
 
 export function googleAuthUrl(state: string) {
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_id: getRequiredEnv("GOOGLE_CLIENT_ID"),
     redirect_uri: getGoogleGbpOAuthRedirectUri(),
     response_type: "code",
     access_type: "offline",
@@ -29,8 +30,8 @@ export function googleAuthUrl(state: string) {
 export async function exchangeCodeForTokens(code: string) {
   const body = new URLSearchParams({
     code,
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+    client_id: getRequiredEnv("GOOGLE_CLIENT_ID"),
+    client_secret: getRequiredEnv("GOOGLE_CLIENT_SECRET"),
     redirect_uri: getGoogleGbpOAuthRedirectUri(),
     grant_type: "authorization_code",
   });
@@ -55,8 +56,8 @@ export async function exchangeCodeForTokens(code: string) {
 export async function refreshAccessToken(refresh_token: string) {
   const body = new URLSearchParams({
     refresh_token,
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+    client_id: getRequiredEnv("GOOGLE_CLIENT_ID"),
+    client_secret: getRequiredEnv("GOOGLE_CLIENT_SECRET"),
     grant_type: "refresh_token",
   });
 
@@ -125,8 +126,8 @@ export async function refreshIfNeeded(userId: string, tokens: Tokens): Promise<T
   if (!isExpired(tokens.expires_at)) return tokens;
 
   const params = new URLSearchParams();
-  params.set("client_id", process.env.GOOGLE_CLIENT_ID!);
-  params.set("client_secret", process.env.GOOGLE_CLIENT_SECRET!);
+  params.set("client_id", getRequiredEnv("GOOGLE_CLIENT_ID"));
+  params.set("client_secret", getRequiredEnv("GOOGLE_CLIENT_SECRET"));
   params.set("grant_type", "refresh_token");
   params.set("refresh_token", tokens.refresh_token);
 

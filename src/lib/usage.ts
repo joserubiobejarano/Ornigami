@@ -1,9 +1,9 @@
 import { sql } from "@/lib/db/neon";
+import { ProfileUsageRowSchema } from "@/lib/validators";
+import { REVIEW_REPLY_SAFETY_LIMIT } from "@/lib/review-reply-policy";
 
 // Product promise: effectively unlimited reply drafting. This internal ceiling
 // only protects against runaway automation or abuse and is intentionally high.
-export const REVIEW_REPLY_SAFETY_LIMIT = 2_000;
-
 export async function checkReviewReplyUsage(userId: string, businessId: string) {
   const rows = await sql`
     SELECT
@@ -53,12 +53,6 @@ export async function incrementReviewReplyUsage(userId: string): Promise<void> {
   `;
 }
 
-type ProfileUsageRow = {
-  ai_posts_used: number | null;
-  audits_used: number | null;
-  usage_reset_date: string | null;
-};
-
 export async function checkUsageLimit(
   userId: string
 ): Promise<{ allowed: boolean; used: number; limit: number; resetDate: string | null }> {
@@ -69,7 +63,7 @@ export async function checkUsageLimit(
     LIMIT 1
   `;
 
-  const profile = rows[0] as ProfileUsageRow | undefined;
+  const profile = rows[0] ? ProfileUsageRowSchema.parse(rows[0]) : undefined;
 
   if (!profile) {
     return { allowed: false, used: 0, limit: 0, resetDate: null };

@@ -17,8 +17,8 @@ export function DashboardTopNav({ className }: { className?: string }) {
   const selectedAgentPath = activeAgents.find((agent) => pathname === agent.basePath || pathname.startsWith(`${agent.basePath}/`))?.basePath ?? "";
   const selectedAgent = activeAgents.find((agent) => agent.basePath === selectedAgentPath);
   const navigationItems = [
-    { href: "/reviews", label: "Reviews" },
-    { href: "/settings", label: "Settings" },
+    { href: "/dashboard/agents/review-replies/reviews", label: "Reviews" },
+    { href: "/dashboard/agents/review-replies/settings", label: "Settings" },
     { href: "/dashboard/billing", label: "Billing" },
   ];
 

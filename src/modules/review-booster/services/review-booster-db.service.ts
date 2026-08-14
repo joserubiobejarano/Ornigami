@@ -1,6 +1,54 @@
 import { sql } from "@/lib/db/neon";
 import { PLANS, isPlanId } from "@/lib/billing/plans";
 import { FollowupStats, FollowupVisit } from "@/modules/review-booster/types/followup.types";
+import { MAX_FOLLOWUP_ATTEMPTS } from "@/lib/followup-retry-policy";
+import { z } from "zod";
+
+const DbDateSchema = z.union([z.string(), z.date()]);
+const FollowupVisitRowSchema = z.object({
+  id: z.string(),
+  business_id: z.string(),
+  business_name: z.string().nullable().optional(),
+  business_type: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  customer_name: z.string().nullable().optional(),
+  customer_email: z.string().nullable().optional(),
+  customer_phone: z.string().nullable().optional(),
+  service_name: z.string().nullable().optional(),
+  visited_at: DbDateSchema,
+  source: z.string().nullable().optional(),
+  followup_status: z.string(),
+  followup_sent_at: DbDateSchema.nullable().optional(),
+  google_review_url: z.string().nullable().optional(),
+  rebooking_url: z.string().nullable().optional(),
+  tone: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  email_from_name: z.string().nullable().optional(),
+  error_reason: z.string().nullable().optional(),
+  attempt_count: z.coerce.number().optional(),
+  next_attempt_at: DbDateSchema.nullable().optional(),
+});
+const FollowupStatsRowSchema = z.object({
+  pending: z.coerce.number(),
+  sent: z.coerce.number(),
+  failed: z.coerce.number(),
+  skipped: z.coerce.number(),
+});
+const ReviewBoosterUsageRowSchema = z.object({
+  sent: z.coerce.number().optional(),
+  plan_id: z.string().nullable().optional(),
+});
+const BusinessFollowupSettingsSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  business_type: z.string().nullable(),
+  city: z.string().nullable(),
+  google_review_url: z.string().nullable(),
+  rebooking_url: z.string().nullable(),
+  tone: z.string().nullable(),
+  language: z.string().nullable(),
+  email_from_name: z.string().nullable(),
+});
 
 export type CreateFollowupVisitInput = {
   businessId: string;
@@ -55,8 +103,23 @@ export type FollowupIntegrationEventInput = {
   processedAt?: string | Date | null;
 };
 
-export async function createFollowupVisit(input: CreateFollowupVisitInput): Promise<FollowupVisit> {
-  // TODO: enforce business membership/ownership authorization before creating followup visits.
+export async function assertBusinessMember(businessId: string, actorUserId: string): Promise<void> {
+  const rows = await sql`
+    SELECT 1
+    FROM public.business_members
+    WHERE business_id = ${businessId} AND user_id = ${actorUserId}
+    LIMIT 1
+  `;
+  if (!rows.length) {
+    throw new Error("Business access denied.");
+  }
+}
+
+export async function createFollowupVisit(
+  input: CreateFollowupVisitInput,
+  actorUserId: string
+): Promise<FollowupVisit> {
+  await assertBusinessMember(input.businessId, actorUserId);
   const rows = await sql`
     INSERT INTO public.followup_visits (
       business_id, customer_name, customer_email, customer_phone, service_name, visited_at, source, external_id
@@ -75,7 +138,7 @@ export async function createFollowupVisit(input: CreateFollowupVisitInput): Prom
       id, business_id, customer_name, customer_email, customer_phone, service_name,
       visited_at, source, followup_status, followup_sent_at
   `;
-  return rows[0] as FollowupVisit;
+  return FollowupVisitRowSchema.parse(rows[0]);
 }
 
 export async function findCsvVisitDuplicate(input: CsvVisitDuplicateInput): Promise<FollowupVisit | null> {
@@ -92,7 +155,7 @@ export async function findCsvVisitDuplicate(input: CsvVisitDuplicateInput): Prom
       AND visited_at = ${input.visitedAt}
     LIMIT 1
   `;
-  return (rows[0] as FollowupVisit | undefined) ?? null;
+  return rows[0] ? FollowupVisitRowSchema.parse(rows[0]) : null;
 }
 
 export async function getFollowupStats(businessId: string): Promise<FollowupStats> {
@@ -105,7 +168,7 @@ export async function getFollowupStats(businessId: string): Promise<FollowupStat
     FROM public.followup_visits
     WHERE business_id = ${businessId}
   `;
-  const row = rows[0] as { pending: number; sent: number; failed: number; skipped: number } | undefined;
+  const row = rows[0] ? FollowupStatsRowSchema.parse(rows[0]) : undefined;
   return {
     pending: row?.pending ?? 0,
     sent: row?.sent ?? 0,
@@ -150,7 +213,7 @@ export async function getReviewBoosterBillingPeriodUsage(businessId: string): Pr
       AND ba.agent_id = 'review_booster'
     LIMIT 1
   `;
-  const row = rows[0] as { sent?: number; plan_id?: string | null } | undefined;
+  const row = rows[0] ? ReviewBoosterUsageRowSchema.parse(rows[0]) : undefined;
   const planId = row?.plan_id && isPlanId(row.plan_id) ? row.plan_id : "booster";
   return { sent: Number(row?.sent ?? 0), allowance: PLANS[planId].monthlyRequestAllowance };
 }
@@ -211,7 +274,7 @@ export async function getRecentVisits(businessId: string, limit = 50): Promise<F
     ORDER BY v.visited_at DESC
     LIMIT ${Math.max(1, Math.min(limit, 500))}
   `;
-  return rows as FollowupVisit[];
+  return rows.map((row) => FollowupVisitRowSchema.parse(row));
 }
 
 export async function listEligibleFollowupVisits(businessId: string): Promise<FollowupVisit[]> {
@@ -241,7 +304,7 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
     FROM public.followup_visits v
     JOIN public.businesses b ON b.id = v.business_id
     WHERE v.business_id = ${businessId}
-      AND (lower(v.followup_status) = 'pending' OR (lower(v.followup_status) = 'failed' AND coalesce(v.attempt_count, 0) < 3 AND (v.next_attempt_at IS NULL OR v.next_attempt_at <= now())))
+      AND (lower(v.followup_status) = 'pending' OR (lower(v.followup_status) = 'failed' AND coalesce(v.attempt_count, 0) < ${MAX_FOLLOWUP_ATTEMPTS} AND (v.next_attempt_at IS NULL OR v.next_attempt_at <= now())))
       AND v.followup_sent_at IS NULL
       AND v.customer_email IS NOT NULL
       AND b.google_review_url IS NOT NULL
@@ -256,7 +319,7 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
       )
     ORDER BY v.visited_at ASC
   `;
-  return rows as FollowupVisit[];
+  return rows.map((row) => FollowupVisitRowSchema.parse(row));
 }
 
 export async function unsubscribeCustomerFromBusinessFollowups(input: {
@@ -282,8 +345,11 @@ export async function unsubscribeCustomerFromBusinessFollowups(input: {
   `;
 }
 
-export async function getBusinessFollowupSettings(businessId: string): Promise<BusinessFollowupSettings | null> {
-  // TODO: enforce caller authorization to read business followup settings.
+export async function getBusinessFollowupSettings(
+  businessId: string,
+  actorUserId: string
+): Promise<BusinessFollowupSettings | null> {
+  await assertBusinessMember(businessId, actorUserId);
   const rows = await sql`
     SELECT
       id, name, business_type, city, google_review_url, rebooking_url, tone, language, email_from_name
@@ -291,7 +357,7 @@ export async function getBusinessFollowupSettings(businessId: string): Promise<B
     WHERE id = ${businessId}
     LIMIT 1
   `;
-  return (rows[0] as BusinessFollowupSettings | undefined) ?? null;
+  return rows[0] ? BusinessFollowupSettingsSchema.parse(rows[0]) : null;
 }
 
 export async function createFollowupMessage(input: CreateFollowupMessageInput): Promise<void> {

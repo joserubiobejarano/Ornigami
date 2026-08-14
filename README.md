@@ -1,6 +1,6 @@
-# Ornigami / LocalLift
+# Ornigami
 
-Ornigami is the product name used in the current UI and marketing pages. `LocalLift` is the legacy repository and internal platform name that still appears in parts of the codebase, database comments, and older docs.
+Ornigami is the product name for this application and its user-facing workflows.
 
 This repository currently powers a Next.js web app for local-business reputation workflows, with a strong emphasis on:
 
@@ -20,16 +20,9 @@ What is live in the current codebase:
 - Stripe checkout, portal, and webhook handling for agent activation
 - Public-facing marketing pages, demos, and supporting legal/contact pages
 
-What still exists but is no longer the main product focus:
-
-- Legacy content generation (`/content`)
-- Legacy audit flow (`/audit` and related marketing funnels)
-- Early local SEO content positioning across some marketing copy
-
 What is not fully shipped yet:
 
 - `speed_to_lead` agent (registered, but still coming soon)
-- A fully unified brand pass across repo, docs, and UI copy
 - Automated tests in package scripts
 - Production observability beyond app-level logging
 
@@ -91,14 +84,11 @@ Implemented agent ids:
 
 ## Important realities for anyone reviewing this repo
 
-### Branding is mixed
+### Branding
 
-You will see both `Ornigami` and `LocalLift`.
-
-- UI and marketing pages mostly say `Ornigami`
-- Repo name, older docs, and some system copy still say `LocalLift`
-
-This is not two separate products. It is one product in the middle of a naming transition.
+The product and user-facing documentation use the Ornigami name consistently.
+Some compatibility-sensitive internal identifiers retain their historical names
+so existing sessions, deployments, and database integrations continue to work.
 
 ### Review Booster is real, but still maturing
 

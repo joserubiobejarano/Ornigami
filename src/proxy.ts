@@ -3,15 +3,15 @@ import { randomBytes } from "node:crypto";
 
 import { auth } from "@/auth";
 import { getAppBaseUrl } from "@/lib/app-base-url";
-import { userHasGbpConnection } from "@/lib/db/gbp";
-import { userHasActiveAgentAccess } from "@/lib/db/businesses";
+import { getMiddlewareAccessState } from "@/lib/db/access";
+import { safeLogger } from "@/lib/safe-logger";
+import { getOptionalEnv } from "@/lib/env";
+import { buildContentSecurityPolicy } from "@/lib/security-headers";
 
 function isProtectedAppPage(pathname: string): boolean {
   const prefixes = [
     "/dashboard",
     "/reviews",
-    "/content",
-    "/audit",
     "/settings",
     "/connect",
   ];
@@ -32,29 +32,13 @@ function needsGbpBeforeAccess(
   if (allowDevBypassWithoutGbp && isGbpDevBypassPath(pathname)) {
     return false;
   }
-  const prefixes = ["/dashboard", "/reviews", "/content", "/audit", "/settings"];
+  const prefixes = ["/dashboard", "/reviews", "/settings"];
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function readAllowDashboardWithoutGbp(): boolean {
-  const v = process.env.ALLOW_DASHBOARD_WITHOUT_GBP?.trim().toLowerCase();
+  const v = getOptionalEnv("ALLOW_DASHBOARD_WITHOUT_GBP")?.trim().toLowerCase();
   return v === "true" || v === "1" || v === "yes";
-}
-
-function buildContentSecurityPolicy(nonce: string): string {
-  const developmentScriptPolicy = process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : "";
-  return [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "frame-ancestors 'none'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data: https:",
-    "style-src 'self' 'unsafe-inline' https:",
-    `script-src 'self' 'nonce-${nonce}'${developmentScriptPolicy} https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com`,
-    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app https://*.sentry.io",
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com",
-    "object-src 'none'",
-  ].join("; ");
 }
 
 function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
@@ -138,7 +122,7 @@ const proxy = auth(async (req) => {
 
   if (userId && (isProtectedAppPage(pathname) || pathname === "/connect" || pathname.startsWith("/connect/"))) {
     try {
-      const hasGbp = await userHasGbpConnection(userId);
+      const { hasGbp, hasRepliesAccess } = await getMiddlewareAccessState(userId);
 
       if (
         (pathname === "/connect" || pathname.startsWith("/connect/")) &&
@@ -154,17 +138,21 @@ const proxy = auth(async (req) => {
         pathname === "/dashboard" ||
         pathname === "/dashboard/billing" ||
         pathname.startsWith("/dashboard/agents/review-booster");
-      const hasRepliesAccess = await userHasActiveAgentAccess(userId, "review_replies");
+      const shouldCheckRepliesAccess =
+        needsGbpBeforeAccess(pathname, allowDevBypassWithoutGbp) || canUseBoosterWithoutGbp;
+      const effectiveRepliesAccess = shouldCheckRepliesAccess ? hasRepliesAccess : false;
 
       if (
         needsGbpBeforeAccess(pathname, allowDevBypassWithoutGbp) &&
         !hasGbp &&
-        !(canUseBoosterWithoutGbp && !hasRepliesAccess)
+        !(canUseBoosterWithoutGbp && !effectiveRepliesAccess)
       ) {
         return withSecurityHeaders(NextResponse.redirect(new URL("/connect", getAppBaseUrl(req)), 302), nonce);
       }
     } catch (e) {
-      console.error("[middleware] GBP connection check failed", e);
+      safeLogger.error("middleware.gbp_check_failed", {
+        error: e instanceof Error ? e.message : "unknown",
+      });
     }
   }
 

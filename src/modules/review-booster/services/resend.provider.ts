@@ -1,4 +1,5 @@
 import { buildUnsubscribeUrl } from "@/modules/review-booster/services/unsubscribe-token.service";
+import { getOptionalEnv, getRequiredEnv } from "@/lib/env";
 
 type SendEmailInput = {
   business_id?: string | null;
@@ -20,16 +21,12 @@ type ResendSendResponse = {
 };
 
 export async function sendWithResend(input: SendEmailInput) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not set");
-  }
-
-  if (!process.env.EMAIL_FROM) {
-    throw new Error("EMAIL_FROM is not set");
-  }
+  const resendApiKey = getRequiredEnv("RESEND_API_KEY");
+  const emailFrom = getRequiredEnv("EMAIL_FROM");
+  const replyToEmail = getOptionalEnv("REPLY_TO_EMAIL");
 
   const fromName = input.email_from_name || input.business_name;
-  const from = `${fromName} <${process.env.EMAIL_FROM}>`;
+  const from = `${fromName} <${emailFrom}>`;
   const safeBody = input.body
     .split("&")
     .join("&amp;")
@@ -71,7 +68,7 @@ export async function sendWithResend(input: SendEmailInput) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${resendApiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -80,7 +77,7 @@ export async function sendWithResend(input: SendEmailInput) {
       subject: input.subject,
       text: `${input.body}\n\nLeave your review: ${reviewLinkUrl}${textUnsubscribe}`,
       html: bodyHtml,
-      reply_to: input.reply_to_email || process.env.REPLY_TO_EMAIL || process.env.EMAIL_FROM,
+      reply_to: input.reply_to_email || replyToEmail || emailFrom,
       ...(unsubscribeUrl ? {
         headers: {
           "List-Unsubscribe": `<${unsubscribeUrl}>`,

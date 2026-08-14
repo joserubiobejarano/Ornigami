@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     for (const businessId of businessIds) {
       try {
-        const deps = createFollowupRunnerDependencies(businessId);
+        const deps = await createFollowupRunnerDependencies(businessId);
         const runResult = await runEligibleFollowups(deps);
         totalSent += runResult.sent;
         totalFailed += runResult.failed;

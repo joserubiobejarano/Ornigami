@@ -100,14 +100,14 @@ export function PublicReviewBoosterDemoPage() {
         return;
       }
       if (!response.ok) {
-        setError((json as ApiError).error || "Failed to send demo email.");
+        setError((json as ApiError).error || "We couldn't send the demo email. Try again in a moment.");
         return;
       }
 
       incrementClientDailyCount();
       setResult(json as ApiSuccess);
     } catch {
-      setError("Failed to send demo email.");
+      setError("We couldn't send the demo email. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export function PublicReviewBoosterDemoPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
-      <PageHero eyebrow="Review Booster demo" title="Try a post-visit follow-up with sample data." intro="This safe preview sends one sample email and does not create a business, visit, or recurring automation." />
+      <PageHero eyebrow="Review Booster demo" title="Try a follow-up with sample data." intro="See how visits turn into gentle review requests. Nothing sends unless you choose to send this sample." />
       <Card>
         <CardHeader>
           <CardTitle>Send a sample follow-up</CardTitle>
@@ -125,21 +125,21 @@ export function PublicReviewBoosterDemoPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-5 rounded-md border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm font-semibold text-slate-900">How to use this demo</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+          <div className="mb-5 rounded-2xl border-[1.5px] border-border bg-tint-peach p-4">
+            <p className="text-sm font-semibold text-primary">How to use this demo</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
               <li>Fill in your business name and your own email address.</li>
               <li>Pick a tone to preview how the follow-up message style changes.</li>
               <li>Optionally add your direct Google Maps &quot;Write a review&quot; link to test your real call-to-action link.</li>
               <li>Click send and check your inbox. A preview is also shown below after success.</li>
             </ul>
-            <p className="mt-3 text-xs text-slate-600">
+            <p className="mt-3 text-xs text-muted-foreground">
               This page is only a safe preview. It does not save visits, create businesses, trigger dashboard
               workflows, or enable recurring automation.
             </p>
           </div>
 
-          <p className="mb-4 text-sm text-slate-600">Remaining sends today on this browser: {remaining}</p>
+          <p className="mb-4 text-sm text-muted-foreground">Remaining sends today on this browser: {remaining}</p>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -169,14 +169,14 @@ export function PublicReviewBoosterDemoPage() {
                   required
                   maxLength={500}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Use your direct Google Maps “Write a review” link so the button in the sample email goes to your profile.
                 </p>
               </div>
             </div>
 
-            <details className="rounded-md border border-slate-200 px-4 py-3">
-              <summary className="cursor-pointer text-sm font-medium text-slate-700">
+            <details className="rounded-2xl border-[1.5px] border-border px-4 py-3">
+              <summary className="cursor-pointer text-sm font-medium text-primary">
                 Personalize further (optional)
               </summary>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -218,19 +218,19 @@ export function PublicReviewBoosterDemoPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-xs uppercase text-slate-500">Subject</p>
+                  <p className="text-xs uppercase text-muted-foreground">Subject</p>
                   <p className="text-sm font-medium">{result.subject}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase text-slate-500">Body</p>
-                  <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-700 shadow-sm">
-                    <div className="mb-4 border-b border-slate-100 pb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="text-xs uppercase text-muted-foreground">Body</p>
+                  <div className="rounded-2xl border-[1.5px] border-border bg-card p-5 text-sm leading-6 text-primary shadow-ink-sm">
+                    <div className="mb-4 border-b border-border pb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       A note from your business
                     </div>
                     <div className="whitespace-pre-wrap">{result.body}</div>
                   </div>
                 </div>
-                <div className="rounded-lg border border-border bg-surface p-4">
+                <div className="rounded-xl border-[1.5px] border-border bg-surface p-4">
                   <p className="font-semibold text-primary">This is one email. The real product runs the loop automatically.</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Visit recorded → follow-up timed → customer chooses whether to review → results tracked in your dashboard.
@@ -244,9 +244,9 @@ export function PublicReviewBoosterDemoPage() {
             </Card>
           ) : null}
 
-          <div className="mt-6 rounded-md border border-slate-200 p-4">
-            <p className="text-sm font-semibold text-slate-900">Quick answers</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+          <div className="mt-6 rounded-2xl border-[1.5px] border-border p-4">
+            <p className="text-sm font-semibold text-primary">Quick answers</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
               <li>The daily send cap is enforced to prevent demo abuse.</li>
               <li>If no review link is provided, a generic Google review link is used.</li>
               <li>Best results usually come from the direct &quot;Write a review&quot; popup link from Google Maps.</li>

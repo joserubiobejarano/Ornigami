@@ -1,15 +1,11 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { getRequiredEnv } from "@/lib/env";
 
 let sqlInstance: NeonQueryFunction<false, false> | undefined;
 
 export function getSql(): NeonQueryFunction<false, false> {
   if (!sqlInstance) {
-    const url = process.env.DATABASE_URL;
-    if (!url) {
-      throw new Error(
-        "Missing DATABASE_URL. Add your Neon connection string to .env.local."
-      );
-    }
+    const url = getRequiredEnv("DATABASE_URL");
     sqlInstance = neon(url);
   }
   return sqlInstance;

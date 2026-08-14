@@ -79,10 +79,10 @@ export function ReviewList({
               type="button"
               onClick={() => onExpandedIdChange(rv.google_review_id)}
               className={cn(
-                "w-full rounded-xl border p-4 text-left shadow-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                "w-full rounded-xl border-[1.5px] border-border p-4 text-left shadow-ink-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                 isHandled
                   ? "border-accent-green/35 bg-accent-green/10 hover:bg-accent-green/15"
-                  : "border-border bg-card hover:bg-muted/40"
+                  : "bg-card hover:bg-surface"
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -117,7 +117,7 @@ export function ReviewList({
           <div
             key={rv.google_review_id}
             className={cn(
-              "rounded-xl border border-border bg-card p-5 space-y-4 shadow-sm transition-colors",
+              "rounded-xl border-[1.5px] border-border bg-card p-5 space-y-4 shadow-ink-sm transition-colors",
               isHandled && "border-accent-green/40 bg-accent-green/10 shadow-none"
             )}
           >
@@ -171,14 +171,14 @@ export function ReviewList({
             </div>
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <label className="text-xs font-medium text-foreground">Draft reply</label>
+                <label className="text-xs font-semibold text-primary">Suggested reply</label>
                 {workflow === "unsaved_draft" && !isHandled && (
-                  <span className="text-[10px] text-accent-yellow">
+                  <span className="text-[10px] text-accent-marigold">
                     Not saved yet — click Save draft to pin this version
                   </span>
                 )}
                 {workflow === "draft_saved" && !isHandled && (
-                  <span className="text-[10px] text-sky-800 dark:text-sky-200/90">
+                  <span className="text-[10px] text-navy">
                     Draft saved — edit anytime, or mark as posted when final
                   </span>
                 )}
@@ -202,7 +202,7 @@ export function ReviewList({
                 }
                 disabled={isHandled}
               >
-                Generate reply
+                  {draftText.trim() ? "Regenerate" : "Generate reply"}
               </Button>
               {showTestActions && (
                 <Button
@@ -227,7 +227,7 @@ export function ReviewList({
                   disabled={isHandled || !draftText.trim() || isDemo}
                   title={isDemo ? "Posting disabled in demo mode" : undefined}
                 >
-                  Post to Google
+                  Approve &amp; send
                 </Button>
               )}
             </div>

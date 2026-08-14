@@ -1,86 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { BrandMark } from "@/components/brand-mark";
 
-export default function SignupPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    setIsSubmitting(true);
-
-    try {
-      const reg = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, fullName }) });
-
-      const data = await reg.json().catch(() => ({}));
-      if (!reg.ok) {
-        const message = data.error || "Could not create account";
-        setError(message);
-        toast.error(message);
-        return;
-      }
-
-      toast.success("Account created. Check your inbox to verify your email before signing in.");
-    } catch {
-      const message = "Could not create account. Please try again.";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function signInWithGoogle() {
-    await signIn("google", { callbackUrl: "/dashboard" });
-  }
-
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-surface/70 p-6">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-7 shadow-md">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-primary"><BrandMark className="h-7 w-7 text-accent-purple" /> Ornigami</Link>
-        <h1 className="text-2xl font-semibold">Create account</h1>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={signInWithGoogle}
-          className="w-full"
-        >
-          Continue with Google
-        </Button>
-        <div className="space-y-2"><Label htmlFor="signup-name">Full name</Label><Input id="signup-name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
-        <div className="space-y-2"><Label htmlFor="signup-email">Email</Label><Input id="signup-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-        <div className="space-y-2"><Label htmlFor="signup-password">Password</Label><Input id="signup-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required /><p className="text-xs text-muted-foreground">Use at least 8 characters.</p></div>
-        <div className="space-y-2"><Label htmlFor="signup-confirm-password">Confirm password</Label><Input id="signup-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required /></div>
-        {error ? <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
-        <p className="text-xs text-muted-foreground">By creating an account, you agree to our <Link className="underline" href="/terms">Terms</Link> and <Link className="underline" href="/privacy">Privacy Policy</Link>.</p>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Creating account…" : "Sign up"}
-        </Button>
-        <p className="text-sm text-muted-foreground">
-          Have an account?{" "}
-          <Link className="underline" href="/login">
-            Log in
-          </Link>
-        </p>
-      </form>
-    </div>
-  );
-}
+export default function SignupPage() { const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [fullName, setFullName] = useState(""); const [confirmPassword, setConfirmPassword] = useState(""); const [error, setError] = useState<string | null>(null); const [isSubmitting, setIsSubmitting] = useState(false); async function onSubmit(e: React.FormEvent) { e.preventDefault(); setError(null); if (!email) { setError("Enter your email address."); return; } if (password !== confirmPassword) { setError("Passwords do not match."); return; } setIsSubmitting(true); try { const reg = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, fullName }) }); const data = await reg.json().catch(() => ({})); if (!reg.ok) { setError(data.error || "There's already an account with this email. Log in instead?"); return; } setError("Account created. Check your inbox to verify your email before signing in."); } catch { setError("Could not create your account just now. Try again in a moment."); } finally { setIsSubmitting(false); } } async function signInWithGoogle() { await signIn("google", { callbackUrl: "/dashboard" }); } return <main className="flex min-h-dvh items-center justify-center bg-surface/55 p-6"><form onSubmit={onSubmit} className="w-full max-w-md space-y-5 rounded-3xl border-[1.5px] border-border bg-card p-8 shadow-ink-md"><Link href="/" className="inline-flex"><Image src="/logo-ink.svg" alt="Ornigami" width={180} height={72} className="h-10 w-[150px] object-contain object-left dark:hidden" /><Image src="/logo-paper.svg" alt="Ornigami" width={180} height={72} className="hidden h-10 w-[150px] object-contain object-left dark:block" /></Link><div><span className="inline-flex rounded-full border border-border bg-tint-butter px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-primary">Start your free trial</span><h1 className="mt-4 text-3xl font-extrabold text-primary">Start your free trial.</h1><p className="mt-2 text-sm text-muted-foreground">14 days free. No card required.</p></div><Button type="button" variant="secondary" onClick={signInWithGoogle} className="w-full">Continue with Google</Button><div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div><div className="space-y-2"><Label htmlFor="signup-name">Your name</Label><Input id="signup-name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div><div className="space-y-2"><Label htmlFor="signup-email">Email</Label><Input id="signup-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div><div className="space-y-2"><Label htmlFor="signup-password">Password</Label><Input id="signup-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required /><p className="text-xs text-muted-foreground">Use at least 8 characters.</p></div><div className="space-y-2"><Label htmlFor="signup-confirm-password">Confirm password</Label><Input id="signup-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required /></div>{error ? <p role="alert" className="rounded-xl border-[1.5px] border-border bg-surface px-3 py-2 text-sm text-muted-foreground">{error}</p> : null}<p className="text-xs text-muted-foreground">By creating an account, you agree to our <Link className="underline" href="/terms">Terms</Link> and <Link className="underline" href="/privacy">Privacy Policy</Link>.</p><Button type="submit" variant="accent" className="w-full" disabled={isSubmitting}>{isSubmitting ? "Creating account…" : "Create account"}</Button><p className="text-sm text-muted-foreground">Already have an account? <Link className="font-semibold text-primary underline underline-offset-4" href="/login">Log in</Link></p></form></main>; }

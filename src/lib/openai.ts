@@ -1,15 +1,19 @@
 import OpenAI from "openai";
+import { getRequiredEnv } from "@/lib/env";
 
 let client: OpenAI | null = null;
 
+export const OPENAI_MODEL = "gpt-4o-mini";
+export const OPENAI_REQUEST_TIMEOUT_MS = 20_000;
+export const OPENAI_MAX_RETRIES = 2;
+
 function getClient(): OpenAI {
   if (!client) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Missing credentials. Please pass an 'apiKey', or set the 'OPENAI_API_KEY' environment variable.");
-    }
+    const apiKey = getRequiredEnv("OPENAI_API_KEY");
     client = new OpenAI({
       apiKey,
+      timeout: OPENAI_REQUEST_TIMEOUT_MS,
+      maxRetries: OPENAI_MAX_RETRIES,
     });
   }
   return client;
@@ -17,76 +21,6 @@ function getClient(): OpenAI {
 
 // Re-export for lazy initialization at runtime only
 export { getClient };
-
-type BaseInput = {
-  businessName: string;
-  city: string;
-  service: string;
-  tone: string;
-};
-
-export async function generateBlog(input: BaseInput) {
-  const system =
-    "You are an expert local SEO writer. Produce helpful, unique, locally relevant content in clean Markdown with H2/H3 headings, bullets where useful, and a short CTA at the end. No keyword stuffing.";
-  const user = `Business: ${input.businessName}
-City: ${input.city}
-Service: ${input.service}
-Tone: ${input.tone}
-
-Write an 800–1200 word blog post targeting local search intent with 3–5 specific local references (neighborhoods, landmarks, seasonal events). Include practical tips and avoid fluff. Output Markdown only.`;
-
-  const res = await getClient().chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  });
-
-  return res.choices[0]?.message?.content ?? "";
-}
-
-export async function generateGBPPost(input: BaseInput) {
-  const system =
-    "You are a GBP content specialist. Write concise, engaging posts for Google Business Profile that feel local and useful. Output Markdown only, no hashtags.";
-  const user = `Business: ${input.businessName}
-City: ${input.city}
-Service: ${input.service}
-Tone: ${input.tone}
-
-Write a 120–200 word GBP post announcing value for local customers (offer, tip, event, update). Include a clear CTA ("Call us", "Book now"). Output Markdown only.`;
-
-  const res = await getClient().chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  });
-
-  return res.choices[0]?.message?.content ?? "";
-}
-
-export async function generateFAQs(input: BaseInput) {
-  const system =
-    "You craft concise, helpful FAQs for local service businesses. Output Markdown with H3 for each question and a short paragraph answer. Avoid generic filler.";
-  const user = `Business: ${input.businessName}
-City: ${input.city}
-Service: ${input.service}
-Tone: ${input.tone}
-
-Write 6–10 FAQs customers in ${input.city} often ask about ${input.service}. Make them locally relevant. Output Markdown only.`;
-
-  const res = await getClient().chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  });
-
-  return res.choices[0]?.message?.content ?? "";
-}
 
 export type ReviewReplyInput = {
   businessName: string;
@@ -174,7 +108,7 @@ export function sanitizeReviewReply(reply: string): string {
 export async function generateReviewReply(input: ReviewReplyInput): Promise<string> {
   const user = buildReviewReplyUserMessage(input);
   const res = await getClient().chat.completions.create({
-    model: "gpt-4o-mini",
+    model: OPENAI_MODEL,
     messages: [
       { role: "system", content: REVIEW_REPLY_SYSTEM },
       { role: "user", content: user },
@@ -187,7 +121,7 @@ export async function generateReviewReply(input: ReviewReplyInput): Promise<stri
 export async function streamReviewReply(input: ReviewReplyInput) {
   const user = buildReviewReplyUserMessage(input);
   return getClient().chat.completions.create({
-    model: "gpt-4o-mini",
+    model: OPENAI_MODEL,
     messages: [{ role: "system", content: REVIEW_REPLY_SYSTEM }, { role: "user", content: user }],
     stream: true,
   });
@@ -238,7 +172,7 @@ export async function generateProfileAudit(input: ProfileAuditInput): Promise<st
   userMessage += `Output Markdown only.`;
 
   const res = await getClient().chat.completions.create({
-    model: "gpt-4o-mini",
+    model: OPENAI_MODEL,
     messages: [
       { role: "system", content: system },
       { role: "user", content: userMessage },
@@ -247,5 +181,4 @@ export async function generateProfileAudit(input: ProfileAuditInput): Promise<st
 
   return res.choices[0]?.message?.content ?? "";
 }
-
 

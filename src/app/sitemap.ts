@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { getOptionalEnv } from "@/lib/env";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
+const siteUrl = getOptionalEnv("NEXT_PUBLIC_APP_URL") || "https://ornigami.com";
 
 const pageDates: Record<string, string> = {
   "": "2026-08-13",

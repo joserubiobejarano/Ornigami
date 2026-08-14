@@ -5,11 +5,12 @@ import { z } from "zod";
 import { createUserWithPassword, findUserByEmail } from "@/lib/db/users";
 import { createEmailVerification } from "@/lib/auth-verification";
 import { safeLogger } from "@/lib/safe-logger";
+import { EmailSchema } from "@/lib/validators";
 
 export const runtime = "nodejs";
 
 const RegisterSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   password: z.string().min(8),
   fullName: z.string().min(1).max(200).optional(),
 });

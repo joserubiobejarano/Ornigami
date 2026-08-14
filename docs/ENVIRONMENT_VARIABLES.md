@@ -66,7 +66,7 @@ That means `EMAIL_FROM` should be just the mailbox address, for example:
 EMAIL_FROM=noreply@yourdomain.com
 ```
 
-Do not set `EMAIL_FROM` to a full display-name string like `LocalLift <noreply@yourdomain.com>`, or the final sender header will be malformed.
+Do not set `EMAIL_FROM` to a full display-name string like `Ornigami <noreply@yourdomain.com>`, or the final sender header will be malformed.
 
 ## Local `.env.local` example
 

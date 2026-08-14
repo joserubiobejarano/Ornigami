@@ -39,8 +39,6 @@ This is a route-level map of the current API surface.
 
 ## OpenAI
 
-- `POST /api/openai/generate`
-  - Legacy content generation.
 - `POST /api/openai/review-reply`
   - AI reply generation for reviews.
 
@@ -88,8 +86,6 @@ This is a route-level map of the current API surface.
 
 ## Public marketing and intake flows
 
-- `POST /api/audit/profile`
-  - Authenticated audit flow.
 - `POST /api/audit/free-profile`
   - Public audit flow.
 - `POST /api/leads`

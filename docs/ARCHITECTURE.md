@@ -23,6 +23,10 @@ Main folders:
 
 - `src/app`
 - `src/components`
+- `src/modules/review-replies/components`
+- `src/modules/review-replies/pages`
+- `src/modules/review-replies/services`
+- `src/modules/review-replies/types`
 - `src/modules/review-booster/components`
 - `src/modules/review-booster/pages`
 
@@ -85,6 +89,14 @@ It contains:
 - Review Booster database access helpers
 - shared Review Booster types
 
+### Feature module convention
+
+Agent-specific UI, API adapters, types, and business services belong under
+`src/modules/<agent>/{pages,components,services,types}`. App routes should stay
+thin: they select the canonical URL, compose the module page, and enforce
+framework-level concerns. Shared integrations such as Google, Stripe, and
+OpenAI remain in `src/lib` and are consumed by feature services.
+
 ## Core domain model
 
 ### Identity
@@ -146,8 +158,11 @@ High-level flow:
 
 Primary files:
 
-- `src/app/(dashboard)/reviews/page.tsx`
-- `src/app/(dashboard)/settings/page.tsx`
+- `src/modules/review-replies/pages/reviews-page.tsx`
+- `src/modules/review-replies/pages/settings-page.tsx`
+- `src/modules/review-replies/pages/connect-page.tsx`
+- `src/modules/review-replies/services/review-replies-api.service.ts`
+- `src/modules/review-replies/types/review.types.ts`
 - `src/app/api/google/**`
 - `src/app/api/openai/review-reply/route.ts`
 - `src/app/api/reviews/**`
@@ -194,7 +209,8 @@ Primary files:
 Current posture:
 
 - Route handlers authenticate requests with Auth.js or bearer checks.
-- Authorization is enforced in application code.
+- Authorization is enforced in application code, at both the route boundary
+  and business-scoped service boundary where the service accepts an actor id.
 - `requireActiveAgentAccess` is the main helper for agent-gated routes.
 - Cron routes are protected by `Authorization: Bearer <CRON_SECRET>`.
 - Secrets are expected through env vars.
@@ -205,13 +221,16 @@ Important limitation:
 
 ## Known architectural debt
 
-### Branding mismatch
+### Branding
 
-Architecture is stable, but naming is not. Expect both `Ornigami` and `LocalLift` in the same repo.
+Ornigami is the standardized product name. Historical internal identifiers are
+kept only where changing them would require a compatibility migration.
 
 ### Legacy surfaces
 
-The architecture still includes content and audit flows from an earlier product emphasis.
+The public Local SEO and free-audit marketing pages remain intentionally
+available, while the retired internal content/audit dashboard and generation
+API surface has been removed.
 
 ### Review Booster timing rule mismatch
 

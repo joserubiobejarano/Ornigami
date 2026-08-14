@@ -1,5 +1,6 @@
 import { PageHero } from "@/components/marketing/primitives";
 import { createPageMetadata } from "@/lib/seo";
+import { LEGAL_PROCESSOR_LIST } from "@/lib/legal-processors";
 
 export const metadata = createPageMetadata({ title: "Terms of service | Ornigami", description: "Read the terms that apply when you use Ornigami's review and local growth workflows.", path: "/terms" });
 
@@ -54,8 +55,8 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Third-Party Services and Availability</h2>
           <p>
-            Ornigami connects with third-party services such as Google, OpenAI, Stripe, Resend,
-            Sentry, and Neon. Their availability and terms may affect parts of the service. We work
+            Ornigami connects with third-party services such as {LEGAL_PROCESSOR_LIST}. Their
+            availability and terms may affect parts of the service. We work
             to keep Ornigami available and secure, but do not promise uninterrupted or error-free
             operation.
           </p>

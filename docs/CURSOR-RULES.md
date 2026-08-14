@@ -21,7 +21,8 @@ When making product or engineering decisions, optimize first for the clarity and
 
 ## Product consistency reminders
 
-- The repo still contains mixed `Ornigami` and `LocalLift` branding.
+- Use `Ornigami` for all new user-facing copy and documentation.
+- Preserve historical cookie, environment, database, and package identifiers unless a migration is explicitly planned.
 - The repo still contains mixed pricing models in UI copy.
 - Do not assume public-site messaging is fully aligned with billing behavior.
 

@@ -10,12 +10,13 @@ import {
   isCredentialsLoginRateLimited,
   recordCredentialsLoginFailure,
 } from "@/lib/auth-rate-limit";
+import { getRequiredEnv } from "@/lib/env";
 
 export const authConfig = {
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: getRequiredEnv("GOOGLE_CLIENT_ID"),
+      clientSecret: getRequiredEnv("GOOGLE_CLIENT_SECRET"),
     }),
     Credentials({
       id: "credentials",

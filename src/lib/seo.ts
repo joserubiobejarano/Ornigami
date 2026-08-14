@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { getOptionalEnv } from "@/lib/env";
 
-export const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com").replace(/\/$/, "");
+export const siteUrl = (getOptionalEnv("NEXT_PUBLIC_APP_URL") || "https://ornigami.com").replace(/\/$/, "");
 
 export function createPageMetadata({
   title,

@@ -12,6 +12,7 @@ import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { requireActiveAgentAccess } from "@/lib/api-security";
 import { getBusinessForUser } from "@/lib/db/businesses";
 import { safeLogger } from "@/lib/safe-logger";
+import { MAX_REVIEW_REPLY_BATCH, safeProcessingError } from "@/lib/review-reply-policy";
 import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
 import {
   generateReplyForReviewRow,
@@ -23,14 +24,6 @@ import {
 const BodySchema = z.object({
   locationName: z.string().min(1),
 });
-
-const MAX_BATCH = 40;
-
-function safeProcessingError(kind: "post" | "draft" | "generate"): string {
-  if (kind === "post") return "Could not post the reply to Google; it was kept as a draft.";
-  if (kind === "draft") return "Could not save the generated reply as a draft.";
-  return "Could not generate a reply for this review.";
-}
 
 export async function POST(req: NextRequest) {
   const isDemo = req.headers.get("x-demo") === "true";
@@ -83,7 +76,7 @@ export async function POST(req: NextRequest) {
       AND location_name = ${locationName}
       AND (status IS NULL OR lower(status) <> 'replied')
     ORDER BY review_update_time DESC NULLS LAST
-    LIMIT ${MAX_BATCH}
+    LIMIT ${MAX_REVIEW_REPLY_BATCH}
   `) as ReviewRowForReply[];
 
   const posted = 0;

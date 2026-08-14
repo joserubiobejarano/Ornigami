@@ -1,14 +1,5 @@
-export type Review = {
-  google_review_id: string;
-  reviewer_name?: string;
-  star_rating?: number | null;
-  comment?: string | null;
-  status: string;
-  review_update_time?: string | null;
-  isSample?: boolean;
-};
-
-export type ReviewApiRow = Review & { draft_reply?: string | null };
+export type { Review, ReviewApiRow } from "@/modules/review-replies/types/review.types";
+import type { Review } from "@/modules/review-replies/types/review.types";
 
 export type ReviewWorkflow = "unanswered" | "unsaved_draft" | "draft_saved" | "posted";
 
@@ -34,8 +25,7 @@ export function getReviewWorkflowDisplay(
       badge: {
         label: inTestContext ? "Posted (test mode)" : "Replied",
         variant: "secondary",
-        className:
-          "border-emerald-500/40 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100",
+        className: "border-accent-green/35 bg-accent-green/10 text-primary",
       },
     };
   }
@@ -45,7 +35,7 @@ export function getReviewWorkflowDisplay(
     return {
       workflow: "unanswered",
       badge: {
-        label: "Unanswered",
+        label: "Awaiting approval",
         variant: "outline",
         className: "text-foreground",
       },
@@ -59,8 +49,7 @@ export function getReviewWorkflowDisplay(
       badge: {
         label: "Draft saved",
         variant: "secondary",
-        className:
-          "border-sky-500/40 bg-sky-500/10 text-sky-950 dark:text-sky-100",
+        className: "border-navy/35 bg-tint-navy text-navy",
       },
     };
   }
@@ -70,8 +59,7 @@ export function getReviewWorkflowDisplay(
     badge: {
       label: "Unsaved draft",
       variant: "outline",
-      className:
-        "border-amber-500/55 bg-amber-500/10 text-amber-950 dark:text-amber-100",
+      className: "border-accent-marigold/35 bg-tint-butter text-primary",
     },
   };
 }

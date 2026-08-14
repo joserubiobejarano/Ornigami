@@ -21,11 +21,10 @@ Do next:
 
 ## Product alignment work
 
-### 2. Resolve brand and pricing drift
+### 2. Resolve pricing drift
 
 Do next:
 
-- Choose whether the product is officially `Ornigami`, `LocalLift`, or a transition with a clear rule.
 - Align homepage, pricing, billing page, and docs.
 - Decide whether pricing is single-plan, per-agent, or hybrid.
 

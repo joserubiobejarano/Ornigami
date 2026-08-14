@@ -87,23 +87,23 @@ export function DashboardUserMenu() {
           {userEmail ? <div className="truncate text-xs text-muted-foreground">{userEmail}</div> : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2.5 py-2">
-          <Link href="/settings">
+        <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-2.5 py-2">
+          <Link href="/dashboard/agents/review-replies/settings">
             <Settings className="size-4" />
-            User settings
+            Settings
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={toggleDarkMode} className="cursor-pointer rounded-md px-2.5 py-2">
+        <DropdownMenuItem onSelect={toggleDarkMode} className="cursor-pointer rounded-lg px-2.5 py-2">
           {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
           {darkMode ? "Use light mode" : "Use dark mode"}
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2.5 py-2">
+        <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-2.5 py-2">
           <Link href="/dashboard/billing">
             <CreditCard className="size-4" />
             Billing
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer rounded-md px-2.5 py-2">
+        <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-2.5 py-2">
           <Link href="/dashboard">
             <UserRound className="size-4" />
             Dashboard
@@ -112,7 +112,7 @@ export function DashboardUserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => void handleSignOut()}
-          className="cursor-pointer rounded-md px-2.5 py-2"
+          className="cursor-pointer rounded-lg px-2.5 py-2"
           variant="destructive"
         >
           <LogOut className="size-4" />

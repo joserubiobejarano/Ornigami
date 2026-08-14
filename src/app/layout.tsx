@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { ThemeSync } from "@/components/theme-sync";
 import { MotionProvider } from "@/components/motion-provider";
 import { JsonLd } from "@/components/seo/json-ld";
+import { getOptionalEnv } from "@/lib/env";
 import { Bricolage_Grotesque, Geist_Mono, Inter } from "next/font/google";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ const monoFont = Geist_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
+const siteUrl = getOptionalEnv("NEXT_PUBLIC_APP_URL") || "https://ornigami.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

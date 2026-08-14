@@ -1,4 +1,5 @@
 import { googleFetch } from "@/lib/google";
+import { DEFAULT_GOOGLE_REVIEWS_MAX_PAGES } from "@/lib/review-sync-policy";
 
 export type GoogleReviewRecord = {
   reviewId?: string;
@@ -17,7 +18,7 @@ type GoogleReviewsPage = {
 export async function fetchAllGoogleReviews(
   userId: string,
   locationName: string,
-  maxPages = 20
+  maxPages = DEFAULT_GOOGLE_REVIEWS_MAX_PAGES
 ): Promise<GoogleReviewRecord[]> {
   const reviews: GoogleReviewRecord[] = [];
   let pageToken: string | null = null;

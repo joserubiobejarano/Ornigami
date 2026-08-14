@@ -83,7 +83,7 @@ export default function ReviewBoosterSettingsPage() {
         const data = (await res.json()) as SettingsResponse;
         if (!res.ok) {
           setMessageKind("error");
-          setMessage(data?.error || "Failed to load settings.");
+          setMessage(data?.error || "We couldn't load your settings. Try again in a moment.");
           return;
         }
 
@@ -106,7 +106,7 @@ export default function ReviewBoosterSettingsPage() {
         setAutoGoogleReviewUrl(data.auto_google_review_url ?? null);
       } catch (error) {
         setMessageKind("error");
-        setMessage(error instanceof Error ? error.message : "Failed to load settings.");
+        setMessage(error instanceof Error ? error.message : "We couldn't load your settings. Try again in a moment.");
       } finally {
         setLoading(false);
       }
@@ -125,7 +125,7 @@ export default function ReviewBoosterSettingsPage() {
       if (!syncRes.ok) {
         setMessageKind("error");
         setMessage(
-          (syncData as { error?: string })?.error || "Failed to sync locations from Google."
+          (syncData as { error?: string })?.error || "We couldn't sync your locations. Try again in a moment."
         );
         return;
       }
@@ -134,7 +134,7 @@ export default function ReviewBoosterSettingsPage() {
       const settingsData = (await settingsRes.json()) as SettingsResponse;
       if (!settingsRes.ok) {
         setMessageKind("error");
-        setMessage((settingsData as { error?: string })?.error || "Failed to refresh settings.");
+        setMessage((settingsData as { error?: string })?.error || "We couldn't refresh your settings. Try again in a moment.");
         return;
       }
 
@@ -150,7 +150,7 @@ export default function ReviewBoosterSettingsPage() {
       setMessage("Google locations synced.");
     } catch (error) {
       setMessageKind("error");
-      setMessage(error instanceof Error ? error.message : "Failed to sync locations from Google.");
+      setMessage(error instanceof Error ? error.message : "We couldn't sync your locations. Try again in a moment.");
     } finally {
       setSyncingLocations(false);
     }
@@ -177,7 +177,7 @@ export default function ReviewBoosterSettingsPage() {
       const data = await res.json();
       if (!res.ok) {
         setMessageKind("error");
-        setMessage(data?.error || "Failed to save settings.");
+        setMessage(data?.error || "We couldn't save your changes. Try again in a moment.");
       } else {
         setGoogleConnected(Boolean((data as SettingsResponse).google_profile_connected));
         setGoogleLocations((data as SettingsResponse).google_profile_locations ?? []);
@@ -187,7 +187,7 @@ export default function ReviewBoosterSettingsPage() {
       }
     } catch (error) {
       setMessageKind("error");
-      setMessage(error instanceof Error ? error.message : "Failed to save settings.");
+      setMessage(error instanceof Error ? error.message : "We couldn't save your changes. Try again in a moment.");
     } finally {
       setSaving(false);
     }
@@ -197,7 +197,7 @@ export default function ReviewBoosterSettingsPage() {
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <FollowupsNav />
       <PageHeader title="Settings" backToOverview />
-      <form onSubmit={onSubmit} className="w-full space-y-4 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
+      <form onSubmit={onSubmit} className="w-full space-y-4 rounded-2xl border-[1.5px] border-border bg-card p-6 text-sm text-muted-foreground shadow-ink-sm">
         <label className="block space-y-1">
           <span className="font-medium text-primary">Business name</span>
           <Input
@@ -217,8 +217,8 @@ export default function ReviewBoosterSettingsPage() {
           />
         </label>
 
-        <section className="rounded-lg border border-border bg-surface p-4">
-          <p className="text-sm font-medium text-primary">Google Business Profile</p>
+        <section className="rounded-xl border-[1.5px] border-border bg-surface p-4">
+          <p className="text-sm font-medium text-primary">Google profile</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {googleConnected
               ? "Connected. We can auto-use your Google review URL."
@@ -243,7 +243,7 @@ export default function ReviewBoosterSettingsPage() {
                 }}
                 size="sm"
               >
-                Connect Google Business Profile
+                Connect Google
               </Button>
             )}
           </div>
@@ -327,13 +327,13 @@ export default function ReviewBoosterSettingsPage() {
             role="status"
             className={
               messageKind === "success"
-                ? "rounded-lg border border-accent-green/35 bg-accent-green/10 px-3 py-2 text-sm font-medium text-primary"
+                ? "rounded-xl border-[1.5px] border-accent-green/35 bg-accent-green/10 px-3 py-2 text-sm font-medium text-primary"
                 : messageKind === "error"
-                  ? "rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
-                  : "rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-primary"
+                  ? "rounded-xl border-[1.5px] border-destructive/35 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+                  : "rounded-xl border-[1.5px] border-border bg-surface px-3 py-2 text-sm font-medium text-primary"
             }
           >
-            {messageKind === "success" ? "Settings updated successfully. " : null}
+            {messageKind === "success" ? "Settings saved. " : null}
             {message}
           </div>
         ) : null}

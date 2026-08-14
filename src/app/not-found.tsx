@@ -1,17 +1,4 @@
 import Link from "next/link";
-import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 
-export default function NotFound() {
-  return (
-    <main className="flex min-h-[70vh] items-center justify-center px-6 py-20">
-      <div className="max-w-md text-center">
-        <BrandMark className="mx-auto h-12 w-12 text-accent-purple" />
-        <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">404</p>
-        <h1 className="mt-3 text-3xl font-semibold">That page is not here</h1>
-        <p className="mt-3 text-muted-foreground">The link may be outdated, or the page may have moved.</p>
-        <Button className="mt-7" asChild><Link href="/">Back to Ornigami</Link></Button>
-      </div>
-    </main>
-  );
-}
+export default function NotFound() { return <main className="flex min-h-[70vh] items-center justify-center px-6 py-20"><div className="max-w-md text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-tint-navy text-3xl" aria-hidden="true">◇</div><p className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">404</p><h1 className="mt-3 text-3xl font-extrabold text-primary">This page took a wrong fold.</h1><p className="mt-3 text-muted-foreground">The page you&apos;re after isn&apos;t here. Let&apos;s get you back.</p><div className="mt-7 flex justify-center gap-3"><Button variant="accent" asChild><Link href="/">Go home</Link></Button><Button variant="secondary" asChild><Link href="/pricing">See pricing</Link></Button></div></div></main>; }

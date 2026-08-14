@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { sql } from "@/lib/db/neon";
-import { getServerAppUrl } from "@/lib/env";
+import { getOptionalEnv, getServerAppUrl } from "@/lib/env";
 import {
   checkAndIncrementPublicDemoLimit,
   checkAndIncrementPublicDemoLimitDurable,
@@ -52,9 +52,9 @@ function normalizeOptional(value?: string | null): string | null {
 async function sendConfirmationEmail(recipientEmail: string, confirmationUrl: string) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${getRequiredResendApiKey()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: `Ornigami <${process.env.EMAIL_FROM}>`,
+      from: `Ornigami <${getRequiredEmailFrom()}>`,
       to: recipientEmail,
       subject: "Confirm your Ornigami demo email",
       text: `Confirm that you control this address to receive the sample demo email: ${confirmationUrl}`,
@@ -62,6 +62,18 @@ async function sendConfirmationEmail(recipientEmail: string, confirmationUrl: st
     }),
   });
   if (!response.ok) throw new Error(`Resend request failed (${response.status})`);
+}
+
+function getRequiredResendApiKey(): string {
+  const value = getOptionalEnv("RESEND_API_KEY");
+  if (!value) throw new Error("RESEND_API_KEY is not set");
+  return value;
+}
+
+function getRequiredEmailFrom(): string {
+  const value = getOptionalEnv("EMAIL_FROM");
+  if (!value) throw new Error("EMAIL_FROM is not set");
+  return value;
 }
 
 export async function POST(req: Request) {
@@ -88,7 +100,7 @@ export async function POST(req: Request) {
     if (!ipAllowed) return NextResponse.json({ error: "Too many demo attempts. Please try again tomorrow." }, { status: 429 });
   }
 
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) return NextResponse.json({ error: "Demo email sending is temporarily unavailable." }, { status: 503 });
+  if (!getOptionalEnv("RESEND_API_KEY") || !getOptionalEnv("EMAIL_FROM")) return NextResponse.json({ error: "Demo email sending is temporarily unavailable." }, { status: 503 });
 
   const confirmationToken = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(confirmationToken).digest("hex");

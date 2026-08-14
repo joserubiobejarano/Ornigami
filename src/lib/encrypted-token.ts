@@ -1,10 +1,11 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { getOptionalEnv } from "./env.ts";
 
 const PREFIX = "v1";
 
 function encryptionKey(): Buffer {
-  const configured = process.env.TOKEN_ENCRYPTION_KEY || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-  if (!configured && process.env.NODE_ENV === "production") {
+  const configured = getOptionalEnv("TOKEN_ENCRYPTION_KEY") || getOptionalEnv("AUTH_SECRET") || getOptionalEnv("NEXTAUTH_SECRET");
+  if (!configured && getOptionalEnv("NODE_ENV") === "production") {
     throw new Error("TOKEN_ENCRYPTION_KEY (or AUTH_SECRET) is required in production.");
   }
   return createHash("sha256").update(configured || "local-dev-token-encryption-key").digest();

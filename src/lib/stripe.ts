@@ -1,15 +1,13 @@
 import Stripe from "stripe";
+import { getRequiredEnv } from "@/lib/env";
 
 let stripeClient: Stripe | null = null;
 
 function getStripe(): Stripe {
   if (!stripeClient) {
-    const apiKey = process.env.STRIPE_SECRET_KEY;
-    if (!apiKey) {
-      throw new Error("Missing credentials. Please set the 'STRIPE_SECRET_KEY' environment variable.");
-    }
+    const apiKey = getRequiredEnv("STRIPE_SECRET_KEY");
     stripeClient = new Stripe(apiKey, {
-      apiVersion: "2025-10-29.clover",
+      apiVersion: "2026-07-29.dahlia",
     });
   }
   return stripeClient;

@@ -148,7 +148,7 @@ export async function POST(req: Request) {
         serviceName,
         visitedAt,
         source: "csv"
-      });
+      }, session.user.id);
       visitsInserted += 1;
     }
 

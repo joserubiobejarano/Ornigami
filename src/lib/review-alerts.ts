@@ -1,4 +1,5 @@
 import { safeLogger } from "@/lib/safe-logger";
+import { getOptionalEnv } from "@/lib/env";
 
 type NewReviewAlertReview = {
   reviewerName: string | null;
@@ -21,7 +22,10 @@ export async function sendNewReviewAlert(input: {
   reviews: NewReviewAlertReview[];
 }): Promise<void> {
   if (input.reviews.length === 0) return;
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+  const resendApiKey = getOptionalEnv("RESEND_API_KEY");
+  const emailFrom = getOptionalEnv("EMAIL_FROM");
+  const replyToEmail = getOptionalEnv("REPLY_TO_EMAIL");
+  if (!resendApiKey || !emailFrom) {
     safeLogger.warn("review.alert.skipped_missing_email_config", { count: input.reviews.length });
     return;
   }
@@ -43,16 +47,16 @@ export async function sendNewReviewAlert(input: {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${resendApiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `Ornigami <${process.env.EMAIL_FROM}>`,
+      from: `Ornigami <${emailFrom}>`,
       to: input.recipientEmail,
       subject,
       text: `${text}\n\nLocation: ${input.locationName}`,
       html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;"><h2>${escapeHtml(subject)}</h2><p>Location: ${escapeHtml(input.locationName)}</p><ul>${reviewLines}</ul></div>`,
-      reply_to: process.env.REPLY_TO_EMAIL || process.env.EMAIL_FROM,
+      reply_to: replyToEmail || emailFrom,
     }),
   });
 

@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db/neon";
-import { isPlanId } from "@/lib/billing/plans";
 import type { PlanId, PlanStatus } from "@/lib/plan";
+import { UserPlanViewRowSchema } from "@/lib/validators";
+import { normalizePlanIdValue } from "@/lib/plan-policy";
 
 export type UserPlanInfo = {
   planId: PlanId;
@@ -17,9 +18,8 @@ export async function getUserPlan(userId: string): Promise<PlanId> {
   return info.planId;
 }
 
-function normalizePlanId(value: unknown): PlanId {
-  if (value === "free") return "free";
-  return isPlanId(value) ? value : "free";
+export function normalizePlanId(value: unknown): PlanId {
+  return normalizePlanIdValue(value) as PlanId;
 }
 
 export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
@@ -30,9 +30,7 @@ export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
     LIMIT 1
   `;
 
-  const plan = rows[0] as
-    | Record<string, unknown>
-    | undefined;
+  const plan = rows[0] ? UserPlanViewRowSchema.parse(rows[0]) : undefined;
 
   const storedPlanStatus = plan?.plan_status as PlanStatus | undefined;
   const planStatus: PlanStatus =

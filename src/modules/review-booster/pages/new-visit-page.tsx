@@ -11,12 +11,15 @@ type NewVisitPayload = {
   customer_name: string;
   customer_email: string;
   service_name: string;
+  visited_at: string;
 };
 
+const today = new Date().toISOString().slice(0, 10);
 const initialState: NewVisitPayload = {
   customer_name: "",
   customer_email: "",
-  service_name: ""
+  service_name: "",
+  visited_at: today,
 };
 
 export default function ReviewBoosterNewVisitPage() {
@@ -38,18 +41,18 @@ export default function ReviewBoosterNewVisitPage() {
         body: JSON.stringify({
           ...form,
           customer_phone: "",
-          visited_at: new Date().toISOString()
+          visited_at: new Date(`${form.visited_at}T12:00:00`).toISOString()
         })
       });
       const data = await res.json();
       if (!res.ok) {
-        setMessage(data?.error || "Failed to create visit.");
+        setMessage(data?.error || "We couldn't save that visit. Try again in a moment.");
       } else {
-        setMessage("Visit created.");
+        setMessage("Visit saved.");
         setForm(initialState);
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to create visit.");
+      setMessage(error instanceof Error ? error.message : "We couldn't save that visit. Try again in a moment.");
     } finally {
       setSaving(false);
     }
@@ -58,10 +61,10 @@ export default function ReviewBoosterNewVisitPage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <FollowupsNav />
-      <PageHeader title="Add Completed Visit" backToOverview />
+      <PageHeader title="Add a visit" description="Add a recent customer visit so the follow-up workflow can begin." backToOverview />
       <form
         onSubmit={onSubmit}
-        className="w-full space-y-5 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm"
+        className="w-full space-y-5 rounded-2xl border-[1.5px] border-border bg-card p-6 text-sm text-muted-foreground shadow-ink-sm"
       >
         <label className="block space-y-1">
           <span className="font-medium text-primary">Customer name</span>
@@ -73,13 +76,23 @@ export default function ReviewBoosterNewVisitPage() {
         </label>
 
         <label className="block space-y-1">
-          <span className="font-medium text-primary">Customer email</span>
+            <span className="font-medium text-primary">Email or phone</span>
           <Input
             type="email"
             required
             value={form.customer_email}
             onChange={(e) => setForm((prev) => ({ ...prev, customer_email: e.target.value }))}
-            placeholder="jane@example.com"
+            placeholder="jane@example.com or 555 0100"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className="font-medium text-primary">Visit date</span>
+          <Input
+            type="date"
+            required
+            value={form.visited_at}
+            onChange={(e) => setForm((prev) => ({ ...prev, visited_at: e.target.value }))}
           />
         </label>
 
@@ -96,7 +109,7 @@ export default function ReviewBoosterNewVisitPage() {
           type="submit"
           disabled={saving}
         >
-          {saving ? "Saving..." : "Save Visit"}
+          {saving ? "Saving..." : "Save visit"}
         </Button>
         {message ? <p className="text-foreground">{message}</p> : null}
       </form>

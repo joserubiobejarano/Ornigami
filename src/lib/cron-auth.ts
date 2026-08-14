@@ -1,7 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
+import { getOptionalEnv } from "@/lib/env";
 
 export function isAuthorizedCronRequest(request: Request): boolean {
-  const secret = process.env.CRON_SECRET;
+  const secret = getOptionalEnv("CRON_SECRET");
   const received = request.headers.get("authorization") ?? "";
   const expected = secret ? `Bearer ${secret}` : "";
   const receivedBuffer = Buffer.from(received);

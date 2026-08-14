@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { PlanId, PlanStatus } from "@/lib/plan";
+import { safeLogger } from "@/lib/safe-logger";
 
 export type PlanInfo = {
   planId: PlanId;
@@ -59,7 +60,9 @@ export function useCurrentPlan(): {
           usageResetDate: plan.usageResetDate,
         });
       } catch (error) {
-        console.error("[useCurrentPlan] error:", error);
+        safeLogger.error("current_plan.failed", {
+          error: error instanceof Error ? error.message : "unknown",
+        });
         setPlanId("free");
         setPlanStatus("free");
       } finally {

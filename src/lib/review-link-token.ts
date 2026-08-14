@@ -1,10 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { getOptionalEnv, getServerAppUrl } from "./env.ts";
 
 export type ReviewLinkPayload = { businessId: string; visitId: string; reviewUrl: string };
 
 function secret(): string {
-  const value = process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-  if (!value && process.env.NODE_ENV === "production") throw new Error("A review link signing secret is required in production.");
+  const value = getOptionalEnv("REVIEW_BOOSTER_UNSUBSCRIBE_SECRET") || getOptionalEnv("AUTH_SECRET") || getOptionalEnv("NEXTAUTH_SECRET");
+  if (!value && getOptionalEnv("NODE_ENV") === "production") throw new Error("A review link signing secret is required in production.");
   return value || "review-booster-local-secret";
 }
 function encode(value: string): string { return Buffer.from(value, "utf8").toString("base64url"); }
@@ -33,6 +34,6 @@ export function verifyReviewLinkToken(token: string): ReviewLinkPayload | null {
 }
 
 export function buildReviewLinkUrl(payload: ReviewLinkPayload): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ornigami.com";
+  const baseUrl = getServerAppUrl() || "https://ornigami.com";
   return `${baseUrl.replace(/\/$/, "")}/r/${buildReviewLinkToken(payload)}`;
 }

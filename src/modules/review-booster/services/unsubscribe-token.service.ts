@@ -1,10 +1,10 @@
 import { buildCoreUnsubscribeToken, verifyCoreUnsubscribeToken, type UnsubscribeTokenPayload } from "@/modules/review-booster/services/unsubscribe-token.core";
 
-import { getServerAppUrl } from "@/lib/env";
+import { getOptionalEnv, getServerAppUrl } from "@/lib/env";
 
 function getUnsubscribeSecret(): string {
-  const value = process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-  if (!value && process.env.NODE_ENV === "production") throw new Error("A review unsubscribe signing secret is required in production.");
+  const value = getOptionalEnv("REVIEW_BOOSTER_UNSUBSCRIBE_SECRET") || getOptionalEnv("AUTH_SECRET") || getOptionalEnv("NEXTAUTH_SECRET");
+  if (!value && getOptionalEnv("NODE_ENV") === "production") throw new Error("A review unsubscribe signing secret is required in production.");
   return value || "review-booster-local-secret";
 }
 

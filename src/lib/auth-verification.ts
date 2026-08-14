@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { sql } from "@/lib/db/neon";
-import { getServerAppUrl } from "@/lib/env";
+import { getOptionalEnv, getServerAppUrl } from "@/lib/env";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -16,12 +16,14 @@ export async function createEmailVerification(email: string, userId: string): Pr
   `;
 
   const link = `${getServerAppUrl()}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) return link;
+  const resendApiKey = getOptionalEnv("RESEND_API_KEY");
+  const emailFrom = getOptionalEnv("EMAIL_FROM");
+  if (!resendApiKey || !emailFrom) return link;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: `Ornigami <${process.env.EMAIL_FROM}>`,
+      from: `Ornigami <${emailFrom}>`,
       to: email,
       subject: "Verify your Ornigami email",
       text: `Verify your email address by opening this link: ${link}`,

@@ -4,7 +4,7 @@ This document explains what the product is today, what this repository owns, and
 
 ## Product definition
 
-This repository contains the web application for Ornigami, also referred to in older code and docs as LocalLift.
+This repository contains the web application for Ornigami.
 
 Today the product is best understood as an agent hub for local-business reputation work.
 
@@ -137,7 +137,6 @@ What feels production-capable today:
 
 What still needs alignment or cleanup:
 
-- Mixed branding between Ornigami and LocalLift
 - Open product decisions around trial card collection, quota policy, and feature promises
 - Legacy content/audit surfaces that no longer match the core product direction
 - Automated tests and stronger observability

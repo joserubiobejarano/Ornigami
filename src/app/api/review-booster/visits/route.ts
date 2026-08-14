@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       serviceName,
       visitedAt,
       source: "manual"
-    });
+    }, session.user.id);
 
     return NextResponse.json(visit, { status: 201 });
   } catch (error) {

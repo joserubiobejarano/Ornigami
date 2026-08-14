@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import {
+  TRUSTED_TYPES_REPORT_ONLY_POLICY,
+  TRUSTED_TYPES_REPORTING_ENDPOINT,
+} from "./src/lib/security-headers";
 
 const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
 if (process.env.VERCEL_ENV === "production" && configuredAppUrl !== "https://ornigami.com") {
@@ -22,10 +26,10 @@ const nextConfig: NextConfig = {
 
     if (process.env.NODE_ENV === "production") {
       headers.unshift(
-        { key: "Reporting-Endpoints", value: 'csp-endpoint="/api/csp-report"' },
+        { key: "Reporting-Endpoints", value: TRUSTED_TYPES_REPORTING_ENDPOINT },
         {
           key: "Content-Security-Policy-Report-Only",
-          value: "require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint",
+          value: TRUSTED_TYPES_REPORT_ONLY_POLICY,
         }
       );
     }

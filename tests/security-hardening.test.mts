@@ -1,9 +1,28 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { decryptToken, encryptToken } from "../src/lib/encrypted-token.ts";
 import { getTrustedRequestIp } from "../src/lib/trusted-request-ip.ts";
+import {
+  CSP_REPORT_POLICY,
+  extractCspReports,
+  normalizeCspReport,
+} from "../src/lib/csp-report-policy.ts";
+import {
+  TRUSTED_TYPES_REPORT_ONLY_POLICY,
+  TRUSTED_TYPES_REPORTING_ENDPOINT,
+  buildContentSecurityPolicy,
+} from "../src/lib/security-headers.ts";
+import { SENTRY_OPTIONS } from "../src/lib/sentry-options.ts";
+import {
+  PRIVACY_CLEANUP_OPERATIONS,
+  PRIVACY_RETENTION_DAYS,
+  dateDaysAgo,
+} from "../src/lib/privacy-retention.ts";
+import {
+  LEGAL_PROCESSOR_LIST,
+  LEGAL_PROCESSORS,
+} from "../src/lib/legal-processors.ts";
 
 test("OAuth token encryption round-trips and does not expose plaintext", () => {
   const encrypted = encryptToken("refresh-token-value");
@@ -16,60 +35,75 @@ test("trusted IP extraction ignores the spoofable left-most forwarded hop", () =
   assert.equal(getTrustedRequestIp(headers), "trusted");
 });
 
-test("privacy retention windows are explicit and wired to cleanup", () => {
-  const retention = readFileSync("src/lib/privacy-retention.ts", "utf8");
-  const route = readFileSync("src/app/api/cron/privacy/route.ts", "utf8");
-  assert.match(retention, /leads: 90/);
-  assert.match(retention, /feedback: 365/);
-  assert.match(retention, /cronRuns: 30/);
-  assert.match(route, /followup_integration_events/);
-  assert.match(route, /cron_runs/);
+test("privacy retention policy exposes bounded windows and cleanup operations", () => {
+  assert.deepEqual(PRIVACY_RETENTION_DAYS, {
+    leads: 90,
+    feedback: 365,
+    publicDemoEvents: 90,
+    reviewLinkClicks: 365,
+    followupIntegrationEvents: 365,
+    cronRuns: 30,
+    rateLimitState: 2,
+  });
+  assert.equal(PRIVACY_CLEANUP_OPERATIONS.length, 10);
+  assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("followup_integration_events"));
+  assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("cron_runs"));
+  const now = Date.parse("2026-08-14T12:00:00.000Z");
+  assert.equal(dateDaysAgo(PRIVACY_RETENTION_DAYS.leads, now).toISOString(), "2026-05-16T12:00:00.000Z");
 });
 
-test("Sentry is configured not to send default PII", () => {
-  assert.match(readFileSync("sentry.client.config.ts", "utf8"), /sendDefaultPii: false/);
-  assert.match(readFileSync("sentry.server.config.ts", "utf8"), /sendDefaultPii: false/);
-  assert.match(readFileSync("sentry.edge.config.ts", "utf8"), /sendDefaultPii: false/);
+test("Sentry configuration disables default PII", () => {
+  assert.deepEqual(SENTRY_OPTIONS, { sendDefaultPii: false });
 });
 
-test("CSP nonces cover every Next.js HTML route", () => {
-  const proxy = readFileSync("src/proxy.ts", "utf8");
-  const layout = readFileSync("src/app/layout.tsx", "utf8");
-  const dashboardLayout = readFileSync("src/app/(dashboard)/layout.tsx", "utf8");
-  assert.match(proxy, /requestHeaders\.set\("Content-Security-Policy", buildContentSecurityPolicy\(nonce\)\)/);
-  assert.match(proxy, /script-src 'self'/);
-  assert.doesNotMatch(proxy, /script-src[^\n]*'unsafe-inline'/);
-  assert.match(proxy, /https:\/\/\*\.sentry\.io/);
-  assert.match(layout, /export const dynamic = "force-dynamic"/);
-  assert.match(dashboardLayout, /export const dynamic = "force-dynamic"/);
+test("CSP builder binds nonces and keeps script policy strict", () => {
+  const csp = buildContentSecurityPolicy("test-nonce");
+  assert.match(csp, /script-src 'self' 'nonce-test-nonce'/);
+  assert.doesNotMatch(csp, /script-src[^;]*'unsafe-inline'/);
+  assert.match(csp, /https:\/\/\*\.sentry\.io/);
+  assert.match(csp, /object-src 'none'/);
+  assert.equal(TRUSTED_TYPES_REPORTING_ENDPOINT, 'csp-endpoint="/api/csp-report"');
+  assert.match(TRUSTED_TYPES_REPORT_ONLY_POLICY, /require-trusted-types-for 'script'/);
 });
 
-test("published legal pages disclose LocalLift processors consistently", () => {
-  const privacy = readFileSync("src/app/privacy/page.tsx", "utf8");
-  const terms = readFileSync("src/app/terms/page.tsx", "utf8");
-
-  for (const provider of ["Google", "OpenAI", "Resend", "Stripe", "Sentry", "Neon"]) {
-    assert.match(privacy, new RegExp(provider));
-    assert.match(terms, new RegExp(provider));
-  }
-  assert.doesNotMatch(privacy, /Twilio/i);
-  assert.doesNotMatch(terms, /Twilio/i);
-  assert.match(privacy, /Leads and public demo\s+events are retained for 90 days/);
-  assert.match(privacy, /feedback, review-link clicks, and integration events for\s+365 days/);
-  assert.match(privacy, /cron history for 30 days/);
-  assert.match(privacy, /rate-limit state for 2 days/);
+test("legal processor disclosures use the approved provider list", () => {
+  assert.deepEqual(LEGAL_PROCESSORS, ["Google", "OpenAI", "Resend", "Stripe", "Sentry", "Neon"]);
+  assert.equal(LEGAL_PROCESSOR_LIST, "Google, OpenAI, Resend, Stripe, Sentry, Neon");
+  assert.doesNotMatch(LEGAL_PROCESSOR_LIST, /Twilio/i);
 });
 
-test("Trusted Types reporting is wired to a bounded, rate-limited endpoint", () => {
-  const config = readFileSync("next.config.ts", "utf8");
-  const route = readFileSync("src/app/api/csp-report/route.ts", "utf8");
+test("CSP reports are bounded, normalized, and safe to log", () => {
+  assert.equal(CSP_REPORT_POLICY.maxBodyBytes, 16_384);
+  assert.equal(CSP_REPORT_POLICY.maxReportsPerRequest, 5);
+  assert.equal(CSP_REPORT_POLICY.maxFieldLength, 500);
+  assert.equal(CSP_REPORT_POLICY.rateLimit, 30);
 
-  assert.match(config, /Reporting-Endpoints/);
-  assert.match(config, /csp-endpoint="\/api\/csp-report"/);
-  assert.match(config, /require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint/);
-  assert.match(route, /checkPublicWriteRateLimit/);
-  assert.match(route, /getTrustedRequestIp/);
-  assert.match(route, /safeLogger/);
-  assert.match(route, /MAX_BODY_BYTES/);
-  assert.match(route, /MAX_REPORTS_PER_REQUEST/);
+  const reports = extractCspReports(
+    Array.from({ length: 8 }, (_, index) => ({ body: { reportId: index } }))
+  );
+  assert.equal(reports.length, 5);
+  assert.deepEqual(extractCspReports({ "csp-report": { reportId: "legacy" } }), [{ reportId: "legacy" }]);
+  assert.deepEqual(extractCspReports(null), []);
+
+  assert.deepEqual(
+    normalizeCspReport({
+      documentURL: "https://example.com/path?secret=query",
+      blockedURL: "https://blocked.example/resource.js?secret=query",
+      sourceFile: "not-a-url",
+      effectiveDirective: " script-src ",
+      statusCode: 403,
+      lineNumber: Number.POSITIVE_INFINITY,
+    }),
+    {
+      documentPath: "https://example.com/path",
+      blockedUri: "https://blocked.example/resource.js",
+      sourcePath: "not-a-url",
+      effectiveDirective: "script-src",
+      violatedDirective: undefined,
+      disposition: undefined,
+      statusCode: 403,
+      lineNumber: undefined,
+      columnNumber: undefined,
+    }
+  );
 });

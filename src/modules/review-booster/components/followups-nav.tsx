@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/dashboard/agents/review-booster", label: "Overview" },
-  { href: "/dashboard/agents/review-booster/upload", label: "Upload CSV" },
-  { href: "/dashboard/agents/review-booster/new", label: "Add Visit" },
+  { href: "/dashboard/agents/review-booster/upload", label: "Upload visits" },
+  { href: "/dashboard/agents/review-booster/new", label: "Add a visit" },
   { href: "/dashboard/agents/review-booster/settings", label: "Settings" }
 ];
 
@@ -14,7 +14,7 @@ export function FollowupsNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="rounded-xl border border-border bg-card p-2 shadow-sm">
+    <nav className="rounded-2xl border-[1.5px] border-border bg-card p-2 shadow-ink-sm" aria-label="Review Booster">
       <ul className="flex flex-wrap gap-2">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
@@ -25,8 +25,8 @@ export function FollowupsNav() {
                 className={[
                   "inline-flex rounded-lg px-3 py-2 text-sm font-medium transition",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary hover:text-card-foreground"
+                    ? "bg-tint-mint text-primary shadow-ink-sm"
+                    : "text-muted-foreground hover:bg-surface hover:text-primary"
                 ].join(" ")}
               >
                 {item.label}

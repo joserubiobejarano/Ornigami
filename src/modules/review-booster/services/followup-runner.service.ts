@@ -12,8 +12,8 @@ import { sendWithResend } from "@/modules/review-booster/services/resend.provide
 import { buildReviewLinkUrl } from "@/lib/review-link-token";
 import { FollowupRunResult, FollowupVisit } from "@/modules/review-booster/types/followup.types";
 import { hasReachedMonthlyAllowance } from "@/modules/review-booster/services/fair-use";
-
-export const MAX_FOLLOWUPS_PER_RUN = 50;
+import { assertBusinessMember } from "@/modules/review-booster/services/review-booster-db.service";
+import { MAX_FOLLOWUPS_PER_RUN } from "@/lib/followup-run-policy";
 
 export type FollowupRunnerDependencies = {
   listEligibleVisits: () => Promise<FollowupVisit[]>;
@@ -144,8 +144,13 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
   };
 }
 
-export function createFollowupRunnerDependencies(businessId: string): FollowupRunnerDependencies {
-  // TODO: enforce caller/user permission checks for this businessId in route/action layer.
+export async function createFollowupRunnerDependencies(
+  businessId: string,
+  actorUserId?: string
+): Promise<FollowupRunnerDependencies> {
+  if (actorUserId) {
+    await assertBusinessMember(businessId, actorUserId);
+  }
   return {
     listEligibleVisits: () => listEligibleFollowupVisits(businessId),
     hasSentMessageForVisit,

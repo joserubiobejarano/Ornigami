@@ -76,5 +76,5 @@ export async function POST(
     WHERE id = ${invitation.id}
   `;
 
-  return NextResponse.redirect(new URL("/settings?team=accepted", req.url));
+  return NextResponse.redirect(new URL("/dashboard/agents/review-replies/settings?team=accepted", req.url));
 }
