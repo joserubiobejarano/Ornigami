@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { getAppBaseUrl } from "@/lib/app-base-url";
 import { getMiddlewareAccessState } from "@/lib/db/access";
 import { safeLogger } from "@/lib/safe-logger";
-import { getOptionalEnv } from "@/lib/env";
+import { shouldRedirectToGoogleConnect, shouldRedirectAfterAccessResolutionError } from "@/lib/disconnected-access-policy";
 import { buildContentSecurityPolicy } from "@/lib/security-headers";
 
 function isProtectedAppPage(pathname: string): boolean {
@@ -16,29 +16,6 @@ function isProtectedAppPage(pathname: string): boolean {
     "/connect",
   ];
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-}
-
-/** Paths that skip the GBP gate when ALLOW_DASHBOARD_WITHOUT_GBP is set (dev / preview). */
-function isGbpDevBypassPath(pathname: string): boolean {
-  const prefixes = ["/dashboard", "/reviews", "/settings"];
-  return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-}
-
-/** Logged-in app areas that require GBP before access (not /connect). */
-function needsGbpBeforeAccess(
-  pathname: string,
-  allowDevBypassWithoutGbp: boolean
-): boolean {
-  if (allowDevBypassWithoutGbp && isGbpDevBypassPath(pathname)) {
-    return false;
-  }
-  const prefixes = ["/dashboard", "/reviews", "/settings"];
-  return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-}
-
-function readAllowDashboardWithoutGbp(): boolean {
-  const v = getOptionalEnv("ALLOW_DASHBOARD_WITHOUT_GBP")?.trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
 }
 
 function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
@@ -118,7 +95,7 @@ const proxy = auth(async (req) => {
   }
 
   const userId = sessionUser?.id;
-  const allowDevBypassWithoutGbp = readAllowDashboardWithoutGbp();
+
 
   if (userId && (isProtectedAppPage(pathname) || pathname === "/connect" || pathname.startsWith("/connect/"))) {
     try {
@@ -134,25 +111,16 @@ const proxy = auth(async (req) => {
         ), nonce);
       }
 
-      const canUseBoosterWithoutGbp =
-        pathname === "/dashboard" ||
-        pathname === "/dashboard/billing" ||
-        pathname.startsWith("/dashboard/agents/review-booster");
-      const shouldCheckRepliesAccess =
-        needsGbpBeforeAccess(pathname, allowDevBypassWithoutGbp) || canUseBoosterWithoutGbp;
-      const effectiveRepliesAccess = shouldCheckRepliesAccess ? hasRepliesAccess : false;
-
-      if (
-        needsGbpBeforeAccess(pathname, allowDevBypassWithoutGbp) &&
-        !hasGbp &&
-        !(canUseBoosterWithoutGbp && !effectiveRepliesAccess)
-      ) {
+      if (shouldRedirectToGoogleConnect(pathname, { hasGbp, hasRepliesAccess })) {
         return withSecurityHeaders(NextResponse.redirect(new URL("/connect", getAppBaseUrl(req)), 302), nonce);
       }
     } catch (e) {
       safeLogger.error("middleware.gbp_check_failed", {
         error: e instanceof Error ? e.message : "unknown",
       });
+      if (shouldRedirectAfterAccessResolutionError(pathname)) {
+        return withSecurityHeaders(NextResponse.redirect(new URL("/connect", getAppBaseUrl(req)), 302), nonce);
+      }
     }
   }
 

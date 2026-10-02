@@ -1,10 +1,11 @@
 import { sql } from "@/lib/db/neon";
+import { BusinessAccessError, resolveBusinessContext } from "@/lib/business-context";
 import { ProfileUsageRowSchema } from "@/lib/validators";
 import { REVIEW_REPLY_SAFETY_LIMIT } from "@/lib/review-reply-policy";
 
 // Product promise: effectively unlimited reply drafting. This internal ceiling
 // only protects against runaway automation or abuse and is intentionally high.
-export async function checkReviewReplyUsage(userId: string, businessId: string) {
+async function checkReplyUsageForProfile(userId: string, businessId: string) {
   const rows = await sql`
     SELECT
       p.review_replies_used,
@@ -28,6 +29,7 @@ export async function checkReviewReplyUsage(userId: string, businessId: string) 
     review_replies_usage_period_start?: string | null;
     current_period_start?: string | null;
   } | undefined;
+  if (!row) return { allowed: false, used: 0, limit: REVIEW_REPLY_SAFETY_LIMIT };
   const limit = REVIEW_REPLY_SAFETY_LIMIT;
   const currentPeriodStart = row?.current_period_start ? new Date(row.current_period_start) : null;
   const storedPeriodStart = row?.review_replies_usage_period_start ? new Date(row.review_replies_usage_period_start) : null;
@@ -45,11 +47,38 @@ export async function checkReviewReplyUsage(userId: string, businessId: string) 
   return { allowed: used < limit, used, limit };
 }
 
+
+/** Legacy per-user check; migrate together with its paired increment. */
+export async function checkReviewReplyUsage(userId: string, businessId: string) {
+  return checkReplyUsageForProfile(userId, businessId);
+}
+
+/** Shared usage requires the same explicit business for both check and increment. */
+export async function checkBusinessReviewReplyUsage(actorUserId: string, businessId: string) {
+  if (!businessId) return { allowed: false, used: 0, limit: REVIEW_REPLY_SAFETY_LIMIT };
+  const context = await resolveBusinessContext(actorUserId, businessId);
+  if (!context) return { allowed: false, used: 0, limit: REVIEW_REPLY_SAFETY_LIMIT };
+  return checkReplyUsageForProfile(context.usageOwnerUserId, context.businessId);
+}
+
+/** Legacy per-user increment; never infer a different workspace's owner. */
 export async function incrementReviewReplyUsage(userId: string): Promise<void> {
   await sql`
     UPDATE public.profiles
     SET review_replies_used = COALESCE(review_replies_used, 0) + 1, updated_at = now()
     WHERE id = ${userId}
+  `;
+}
+
+/** Requires the exact business checked by the caller. */
+export async function incrementBusinessReviewReplyUsage(actorUserId: string, businessId: string): Promise<void> {
+  if (!businessId) throw new BusinessAccessError(403, "Business access denied.");
+  const context = await resolveBusinessContext(actorUserId, businessId);
+  if (!context) throw new BusinessAccessError(403, "Business access denied.");
+  await sql`
+    UPDATE public.profiles
+    SET review_replies_used = COALESCE(review_replies_used, 0) + 1, updated_at = now()
+    WHERE id = ${context.usageOwnerUserId}
   `;
 }
 
