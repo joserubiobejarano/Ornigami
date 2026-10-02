@@ -3,7 +3,10 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AcceptInvitationButton } from "@/components/team/accept-invitation-button";
 import { hashTeamInvitationToken } from "@/lib/team";
+import { authPageHref } from "@/lib/auth-return-path";
+import { invitationEmailMatches } from "@/lib/team-invitation-flow";
 import { sql } from "@/lib/db/neon";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +19,7 @@ export default async function TeamInvitationPage({ params }: { params: Promise<{
     FROM public.team_invitations i
     INNER JOIN public.businesses b ON b.id = i.business_id
     WHERE i.token_hash = ${hashTeamInvitationToken(token)}
-      AND i.accepted_at IS NULL
+      AND i.status = 'pending'
       AND i.expires_at > now()
     LIMIT 1
   `;
@@ -47,21 +50,19 @@ export default async function TeamInvitationPage({ params }: { params: Promise<{
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button asChild>
-                  <Link href={`/login?callbackUrl=${encodeURIComponent(invitationPath)}`}>Log in to accept</Link>
+                  <Link href={authPageHref("/login", invitationPath)}>Log in to accept</Link>
                 </Button>
                 <Button asChild variant="secondary">
-                  <Link href={`/signup?invite=${encodeURIComponent(token)}`}>Create an account</Link>
+                  <Link href={authPageHref("/signup", invitationPath)}>Create an account</Link>
                 </Button>
               </div>
             </>
-          ) : session.user.email?.toLowerCase() !== invitation.email.toLowerCase() ? (
+          ) : !invitationEmailMatches(invitation.email, session.user.email) ? (
             <p className="rounded-xl border-[1.5px] border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               This invitation is for {invitation.email}. Sign out and log in with that email to continue.
             </p>
           ) : (
-            <form action={`/api/team/invitations/${encodeURIComponent(token)}`} method="post">
-              <Button type="submit" variant="accent">Accept invitation</Button>
-            </form>
+            <AcceptInvitationButton token={token} />
           )}
         </CardContent>
       </Card>
