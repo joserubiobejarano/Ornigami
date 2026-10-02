@@ -3,11 +3,12 @@ import { ensureUserFromOAuth } from "@/lib/db/users";
 import { DbBusinessAgentRowSchema, DbBusinessRowSchema } from "@/lib/validators";
 import { isWithinPastDueGracePeriod as isWithinPastDueGracePeriodPolicy, PAST_DUE_GRACE_DAYS as PAST_DUE_GRACE_DAYS_POLICY } from "@/lib/business-access-policy";
 import { z } from "zod";
+import { hasActiveBusinessEntitlement } from "@/lib/business-access-policy";
 
 export type DbBusinessRow = z.infer<typeof DbBusinessRowSchema>;
 export type DbBusinessAgentRow = z.infer<typeof DbBusinessAgentRowSchema>;
 
-const ACTIVE_ACCESS_STATUSES = new Set(["active", "trialing"]);
+
 export const PAST_DUE_GRACE_DAYS = PAST_DUE_GRACE_DAYS_POLICY;
 export const isWithinPastDueGracePeriod = isWithinPastDueGracePeriodPolicy;
 
@@ -40,9 +41,10 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
       public.businesses.created_at,
       public.businesses.updated_at
     FROM public.businesses
-    LEFT JOIN public.business_members bm ON bm.business_id = public.businesses.id
-    WHERE public.businesses.owner_user_id = ${userId} OR bm.user_id = ${userId}
-    ORDER BY public.businesses.created_at ASC
+    INNER JOIN public.users actor ON actor.id = ${userId}
+    LEFT JOIN public.business_members bm ON bm.business_id = public.businesses.id AND bm.user_id = actor.id
+    WHERE public.businesses.owner_user_id = actor.id OR bm.user_id = actor.id
+    ORDER BY public.businesses.created_at ASC, public.businesses.id ASC
     LIMIT 1
   `;
   const row = rows[0] ? DbBusinessRowSchema.parse(rows[0]) : undefined;
@@ -69,7 +71,7 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
 
   const existing = await getBusinessForUser(resolvedUserId);
   if (existing) {
-    if (isPlaceholderBusinessName(existing.name, ownerUser?.email)) {
+    if (existing.owner_user_id === resolvedUserId && isPlaceholderBusinessName(existing.name, ownerUser?.email)) {
       await sql`
         UPDATE public.businesses
         SET name = '', updated_at = now()
@@ -77,7 +79,7 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
       `;
       existing.name = "";
     }
-    await ensureBusinessDefaults(existing.id, resolvedUserId);
+    await ensureBusinessDefaults(existing.id, existing.owner_user_id);
     return existing;
   }
 
@@ -146,12 +148,7 @@ export async function canAccessAgent(businessId: string, agentId: string): Promi
     return false;
   }
 
-  if (ACTIVE_ACCESS_STATUSES.has(statusRow.status)) return true;
-  if (statusRow.status === "past_due") {
-    return isWithinPastDueGracePeriod(statusRow.current_period_end);
-  }
-
-  return false;
+  return hasActiveBusinessEntitlement(statusRow.status, statusRow.current_period_end);
 }
 
 export async function upsertBusinessAgentStatus(

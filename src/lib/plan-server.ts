@@ -1,3 +1,6 @@
+import type { BusinessContext } from "@/lib/business-context";
+import { getBusinessAgentStatus } from "@/lib/db/businesses";
+import { hasActiveBusinessEntitlement } from "@/lib/business-access-policy";
 import { sql } from "@/lib/db/neon";
 import type { PlanId, PlanStatus } from "@/lib/plan";
 import { UserPlanViewRowSchema } from "@/lib/validators";
@@ -54,5 +57,43 @@ export async function getUserPlanInfo(userId: string): Promise<UserPlanInfo> {
     aiPostsUsed: Number(plan?.ai_posts_used ?? 0),
     auditsUsed: Number(plan?.audits_used ?? 0),
     usageResetDate: (plan?.usage_reset_date as string) || null,
+  };
+}
+
+export type BusinessPlanInfo = {
+  businessId: string;
+  billingOwnerUserId: string;
+  agentId: string;
+  planId: PlanId;
+  planStatus: PlanStatus;
+  hasAccess: boolean;
+  storedPlanId: PlanId;
+  billingPeriod: "monthly" | "annual" | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+};
+
+/** Business-scoped entitlement mirror; personal getUserPlanInfo remains unchanged. */
+export async function getBusinessPlanInfo(
+  context: BusinessContext,
+  agentId: string
+): Promise<BusinessPlanInfo> {
+  const agent = await getBusinessAgentStatus(context.businessId, agentId);
+  const status = agent?.status ?? "free";
+  const planStatus: PlanStatus = status === "active" || status === "trialing" || status === "past_due"
+    ? status
+    : status === "canceled" ? "canceled" : "free";
+  const hasAccess = hasActiveBusinessEntitlement(status, agent?.current_period_end);
+  return {
+    businessId: context.businessId,
+    billingOwnerUserId: context.billingOwnerUserId,
+    agentId,
+    planId: hasAccess ? normalizePlanId(agent?.plan_id) : "free",
+    storedPlanId: normalizePlanId(agent?.plan_id),
+    billingPeriod: agent?.billing_period === "annual" || agent?.billing_period === "monthly" ? agent.billing_period : null,
+    planStatus,
+    hasAccess,
+    currentPeriodStart: agent?.current_period_start ?? null,
+    currentPeriodEnd: agent?.current_period_end ?? null,
   };
 }

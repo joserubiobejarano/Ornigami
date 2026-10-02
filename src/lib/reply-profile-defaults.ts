@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/neon";
+import { resolveBusinessContext } from "@/lib/business-context";
 
 export type ProfileReplyRow = {
   business_name: string | null;
@@ -9,7 +10,7 @@ export type ProfileReplyRow = {
   auto_reply_all_reviews: boolean;
 };
 
-/** Load saved review-reply defaults from profiles. Returns null if row missing or query fails. */
+/** Load saved review-reply defaults from profiles. Returns null if the row is missing. */
 export async function getProfileReplyDefaults(
   userId: string
 ): Promise<ProfileReplyRow | null> {
@@ -28,4 +29,15 @@ export async function getProfileReplyDefaults(
   const data = rows[0] as ProfileReplyRow | undefined;
   if (!data) return null;
   return data;
+}
+
+
+/** Resolve shared reply policy through the selected business's canonical owner profile. */
+export async function getBusinessReplyDefaults(
+  actorUserId: string,
+  businessId: string
+): Promise<ProfileReplyRow | null> {
+  const context = await resolveBusinessContext(actorUserId, businessId);
+  if (!context) return null;
+  return getProfileReplyDefaults(context.replyPolicyOwnerUserId);
 }
