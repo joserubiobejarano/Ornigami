@@ -58,6 +58,7 @@ Apply all migrations in order, including the current tail:
 - [ ] `015_stripe_usage_periods.sql`
 - [ ] `016_remove_legacy_plan_taxonomy.sql`
 - [ ] `017_team_invitations.sql`
+- [ ] `020_account_recovery.sql` is verified on this deployment's target database before new auth code is activated. Reservation 018 is unused; 019 has not been authored yet. Existing JWTs without `authVersion` will require fresh sign-in.
 
 Do not mark these permanently complete in a reusable checklist; verify the target environment each time.
 

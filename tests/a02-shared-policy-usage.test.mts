@@ -49,12 +49,15 @@ test("missing owner profile fails closed and limit is shared", async () => {
   const db = fakeSql(() => []);
   const mod = loadTs<Usage>("src/lib/usage.ts", usageMocks(db, async () => context));
   assert.equal((await mod.checkBusinessReviewReplyUsage(actorId, businessId)).allowed, false);
+  await assert.rejects(mod.incrementBusinessReviewReplyUsage(actorId, businessId),
+    (error: unknown) => error instanceof BusinessAccessError && error.status === 403);
+  assert.match(db.calls[1].query, /RETURNING id/);
   const atCap = fakeSql(() => [{ review_replies_used: 2000, review_replies_usage_period_start: "2026-10-01T00:00:00Z", current_period_start: "2026-10-01T00:00:00Z" }]);
   const capped = loadTs<Usage>("src/lib/usage.ts", usageMocks(atCap, async () => context));
   assert.equal((await capped.checkBusinessReviewReplyUsage(actorId, businessId)).allowed, false);
 });
 test("period change resets shared owner counter and increment uses same selected context", async () => {
-  const db = fakeSql((query) => query.includes("SELECT") ? [{ review_replies_used: 2000, review_replies_usage_period_start: "2026-09-01T00:00:00Z", current_period_start: "2026-10-01T00:00:00Z" }] : []);
+  const db = fakeSql((query) => query.includes("SELECT") ? [{ review_replies_used: 2000, review_replies_usage_period_start: "2026-09-01T00:00:00Z", current_period_start: "2026-10-01T00:00:00Z" }] : query.includes("RETURNING id") ? [{ id: ownerId }] : []);
   const contexts: unknown[][] = [];
   const mod = loadTs<Usage>("src/lib/usage.ts", usageMocks(db, async (...args) => { contexts.push(args); return context; }));
   assert.equal((await mod.checkBusinessReviewReplyUsage(actorId, businessId)).used, 0);

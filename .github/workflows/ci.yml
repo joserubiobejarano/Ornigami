@@ -33,6 +33,8 @@ jobs:
       - run: npm run lint
       - run: npm run typegen
       - run: npx tsc --noEmit
+      - name: Locate PostgreSQL binaries for isolated SQL tests
+        run: echo "A04_PG_BIN=$(pg_config --bindir)" >> "$GITHUB_ENV"
       - run: npm test
       - run: npm run build
       - run: npm run test:build

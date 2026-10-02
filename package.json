@@ -8,7 +8,7 @@
         "analyze": "next experimental-analyze --output",
         "start": "next start",
         "lint": "eslint",
-        "test": "node --experimental-strip-types tests/first-phase.test.mts",
+        "test": "node scripts/test.mjs",
         "test:security": "node --experimental-strip-types tests/security-hardening.test.mts",
         "security:audit": "npm audit --audit-level=high",
         "typegen": "next typegen",

@@ -2,13 +2,13 @@
 
 This is the single living roadmap for Ornigami. The repository root is now `Ornigami-Agents`, containing the former LocalLift application directly. It combines product priorities, operational follow-ups, consolidation work, and external approvals; the agent work packages below partition this same backlog rather than creating another one.
 
-**Last review:** 2026-10-02. Two launch-readiness passes covered LocalLift and compared the standalone Follow-Up and Contactor repositories. LocalLift tests pass (`npm test` 16/16; `npm run test:security` 7/7); lint and TypeScript passed in the first pass. The default Turbopack production build failed locally in Bricolage Grotesque font processing; a diagnostic webpack build and the static CSP generation step passed. The production dependency audit still fails with one critical and three high-severity package findings.
+**Last integration review:** 2026-10-02. A01 (`8af0858`), A02 (`e105177`), A04 (`dfe092e`), and A18 (`57f3dcd`) plus their handoffs were independently reviewed with Luna agents and checked again by A00. Combined Node 22 validation passes all 63 discovered tests (including disposable PostgreSQL concurrency/token tests), lint with zero errors/four existing warnings, type generation, TypeScript, webpack production build, and anonymous auth/Google/billing/CSP smoke. Full and production dependency audits now report zero vulnerabilities. Target Linux CI is a pre-merge gate; real signed-in/provider acceptance remains A17 work.
 
 **Release decision:** Hold a broad paid launch until the engineering blockers below and the production acceptance checklist are complete. Review Booster can be piloted before Google API approval after the shared billing/delivery fixes. Review Replies also requires Google approval and corrections to the Google request paths.
 
 **Evidence boundaries:** Code findings below were checked against the current source; selected failures were reproduced with in-memory mocks, without sending emails, charging cards, or posting Google replies. Read-only checks confirmed a ready Vercel production deployment, successful public-page HTTP responses, and persisted cron health. The observed Booster run processed four businesses with zero recorded failures; the Replies run processed zero locations, which does not validate Google integration. Google Console status and complete real-provider acceptance tests remain unverified. Database observations refer to each checkout's configured database, not an assertion that every hosting environment uses the same credentials.
 
-**Post-consolidation verification:** all 23 tests, lint, TypeScript, roadmap-link validation, and Git whitespace checks passed from the new root. The 225 migration-reference files contain no nested Git repository, active `package.json`, or local environment file. Vercel project inspection from the new root resolves the same production project. The default build was not repeated for this layout-only change; E01/E12 remain open, including the previously reproduced font/build failure and dependency advisories.
+**Consolidation baseline evidence:** the original layout-only checks passed 23 tests and preserved 225 migration-reference files without nested Git/package/environment files. The subsequent A01 upgrade and integrated build now resolve the earlier dependency/font-build blockers. Migration `020_account_recovery.sql` was applied transactionally through PostgreSQL 17 `psql` to the database read from Vercel production configuration and its schema/constraints/index verified; 018 is unused and 019 is not authored yet. The eight existing users were preserved; no case-folded duplicate email groups or missing profiles were observed. Application rollout invalidates old JWTs lacking `authVersion`, so existing users must sign in again.
 
 ## Current strategic center
 
@@ -27,14 +27,7 @@ This is the single living roadmap for Ornigami. The repository root is now `Orni
 
 ## Launch-critical engineering work — open
 
-Priorities: **P0** means resolve before another public release; **P1** means resolve before selling the affected workflow. These entries include the first audit's findings and the deeper second review. Existing implementations are not considered complete merely because helper-level tests pass.
-
-### E01 · P0 · Patch vulnerable release dependencies
-
-- Evidence: `npm audit --omit=dev --json` on 2026-10-02 flags `next` as critical and `sharp`, `brace-expansion`, and `fast-uri` as high. The full audit also flags development dependencies. These are dependency advisories, not proof that every exploit condition is reachable in this app.
-- Work: update the framework and affected dependency tree/lockfile; the audit currently proposes Next.js `16.3.8`. Align the Next.js and `eslint-config-next` versions, then repeat audit, tests, lint, typecheck, and the actual release build.
-- Done when: no unresolved applicable high/critical release findings remain, CI passes on the release commit, and auth/CSP/Google/billing smoke tests pass after the upgrade.
-- Sources: [package manifest](../package.json), [Next.js upstream advisory](https://github.com/vercel/next.js/security/advisories/GHSA-vcvr-r3jv-pc5j).
+Priorities: **P0** means resolve before another public release; **P1** means resolve before selling the affected workflow. These entries track unresolved work after the initial audits and the A01/A02/A04/A18 integration review. Completed E01/E11/E12 implementation is recorded in the closed section; real-provider and target-release acceptance still belongs to the deployment checklist. Existing implementations are not considered complete merely because helper-level tests pass.
 
 ### E02 · P1 · Enforce owner-only billing and serialize checkout creation
 
@@ -45,7 +38,7 @@ Priorities: **P0** means resolve before another public release; **P1** means res
 
 ### E03 · P1 · Cancel external billing before account deletion and expire stale sessions
 
-- Evidence: `/api/privacy/delete` deletes the user and signs out the current browser without cancelling Stripe subscriptions. Cascades remove the local billing mapping, but Stripe can continue charging. Auth uses a 30-day JWT; `requireUser`/`resolveUser` only check the session, and email-based legacy resolution can recreate a deleted identity through `ensureUserFromOAuth`.
+- Evidence: `/api/privacy/delete` deletes the user and signs out the current browser without cancelling Stripe subscriptions. Cascades remove the local billing mapping, but Stripe can continue charging. The original audit also found stale JWT/email-fallback resurrection risks. A04 now validates live user/version state and rejects deleted, stale, and legacy JWTs; A02 strict context ignores email identity creation. The external cancellation/deletion orchestration and cleanup still need A11.
 - Work: implement a recoverable deletion sequence that cancels owner subscriptions before removing mappings, handles shared-workspace ownership, and prevents stale sessions or email fallbacks from silently resurrecting deleted accounts. Handle Google revocation/cleanup deliberately, including disconnect behavior.
 - Done when: deleting a paid owner stops future billing; simulated provider failure leaves recoverable state; a second device's old JWT cannot access or recreate the account; teammate deletion leaves the owner's workspace intact.
 - Sources: [privacy deletion](../src/app/api/privacy/delete/route.ts), [Auth.js configuration](../src/auth.ts), [API authorization](../src/lib/api-security.ts), [Google disconnect](../src/app/api/google/disconnect/route.ts).
@@ -79,7 +72,9 @@ Priorities: **P0** means resolve before another public release; **P1** means res
 - Done when: provider-contract mocks assert exact requests and token refresh/decryption; after approval, a real account can discover a location, sync reviews, derive a review URL, and post a controlled reply. Approval alone does not fix these code defects.
 - Sources: [Google client](../src/lib/google.ts), [location sync](../src/app/api/google/locations/sync/route.ts), [alternate location route](../src/app/api/google/locations/route.ts), [reply helper](../src/lib/review-reply-server.ts), [review sync](../src/lib/google-review-sync.ts), [official location API](https://developers.google.com/my-business/reference/businessinformation/rest/v1/accounts.locations/list), [official reply API](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/updateReply).
 
-### E08 · P1 · Use business entitlements and the shared Google connection for teammates
+### E08 · P1 · Adopt shared business context throughout paid workflows
+
+- Integration status: A02 foundation/helpers and disconnected navigation are delivered. Google routes, reply policy/usage consumers, plan API/UI, and sensitive mutations still need paired adoption by A03/A05/A08/A09/A13. Owner-keyed Google/profile storage remains shared across an owner's businesses; persisted per-business selected location is not delivered. See [A02 handoff](./tasks/A02-business-access.md).
 
 - Evidence: agent access is business-scoped, but Google routes, reply settings, usage, and middleware still use the acting user's plan/Google connection. An invited member's profile need not have the owner's paid plan or OAuth tokens. A middleware mock with Replies access but no personal GBP connection redirected both `/dashboard/billing` and `/dashboard/agents/review-booster` to `/connect` when the development bypass was unset.
 - Work: separate the actor from the business's integration/billing owner. Resolve shared entitlements, reply policy, usage, and Google connection through business context. Keep billing, team/account recovery, and Review Booster accessible when Google is disconnected, regardless of the Replies plan; avoid relying on a production development-bypass flag.
@@ -99,20 +94,6 @@ Priorities: **P0** means resolve before another public release; **P1** means res
 - Work: share one processing policy; distinguish new/AI-drafted/human-edited/approved/posted states; skip unchanged drafts and preserve human edits; make draft replacement atomic/versioned. Enforce the advertised 1–3-star approval requirement in every automated path. Decide whether scheduled automation should post approved safe replies and make UI/copy reflect that decision.
 - Done when: repeated cron/sync runs preserve a human-edited draft and do not consume generation usage again; unknown/low ratings never auto-post; scheduled and interactive behavior follow one documented policy.
 - Sources: [Replies cron](../src/app/api/cron/review-replies/route.ts), [pending processor](../src/app/api/google/reviews/process-pending/route.ts), [draft persistence](../src/lib/review-reply-server.ts), [Generate flow](../src/modules/review-replies/pages/reviews-page.tsx).
-
-### E11 · P1 · Complete verification and account recovery
-
-- Evidence: registration persists the user before sending verification. A failed email leaves an existing unverified account; another registration returns 409. Tokens expire after 24 hours, and there is no resend endpoint. Missing email credentials silently return a link internally, while registration still tells the user to check their inbox. Forgot password links to Contact. Registration lacks the database-backed public-write limits used elsewhere.
-- Work: provide rate-limited resend and secure password recovery (or an explicit supported manual recovery process for a pilot); fail clearly when production verification delivery is unavailable; preserve intended post-verification destinations. Add registration abuse controls and bounded password/input sizes.
-- Done when: failed/expired verification is recoverable without a database edit; recovery works without revealing account existence unnecessarily; email/Google signup and invitation return paths are tested.
-- Sources: [registration](../src/app/api/auth/register/route.ts), [verification](../src/lib/auth-verification.ts), [login](../src/app/(auth)/login/page.tsx), [signup](../src/app/(auth)/signup/page.tsx).
-
-### E12 · P1 · Make the supported release build reproducible
-
-- Evidence: the configured `npm run build` failed on this Windows checkout at Turbopack's Bricolage Grotesque font import; `next build --webpack` and `scripts/generate-static-csp-hashes.mjs` passed. Vercel's ready deployment and the last green quality/security runs are from August 14, before today's dependency audit findings. The local diagnostic result does not establish that Linux production builds fail.
-- Work: resolve the font/framework issue or explicitly select a verified build pipeline; run the full production command on a clean install and the target CI runtime. Preserve CSP generation and test nonce/hash behavior after any build change.
-- Done when: the committed build command succeeds locally and on CI for the exact release commit without an undocumented manual workaround.
-- Sources: [build script](../package.json), [fonts](../src/app/layout.tsx), [quality workflow](../.github/workflows/ci.yml), [CSP generation](../scripts/generate-static-csp-hashes.mjs).
 
 ## External launch blockers
 
@@ -263,7 +244,7 @@ Use **the application at the `Ornigami-Agents` repository root as the canonical 
 - [ ] One scheduler owns each send workflow; the migration cannot cause duplicate email/SMS/WhatsApp sends.
 - [ ] LocalLift passes the release checklist and the cutover/rollback procedure is tested.
 
-Only local layout/source preservation changed. No production database, billing subscription, provider endpoint, deployment, or remote repository was changed. The live app still needs the engineering fixes above and C02–C05 consolidation work.
+During the consolidation step only local layout/source preservation changed; no production service was changed then. The later integration review separately applied additive migration 020 as documented above. The live app still needs the engineering fixes above and C02–C05 consolidation work.
 
 ## Agent work packages and branch coordination
 
@@ -279,6 +260,8 @@ Every open roadmap item belongs to a package below. These are intended for separ
 6. Each package delivers a branch/PR with its problem, resulting behavior, migration/environment changes, meaningful validation, and rollback notes where applicable. Update its acceptance evidence; A00 reconciles the single roadmap during merge so agents do not all rewrite it. Do not commit secrets or generated builds, edit the preserved originals, send real customer messages, switch provider callbacks, or deploy as part of an ordinary implementation task.
 
 ### Work packages
+
+**Reviewed package status:** A01 dependency/build implementation, A02 context foundation, A04 account recovery, and A18 proposal documents are integrated. A02 does not close end-to-end E08 until its consumers migrate. A18 proposals are not approved policy; preserve existing behavior where owner decisions remain open. A00 completed the missing-profile usage fix, recovery layout handoff, full test discovery, and production migration 020. See [integration review](./tasks/A00_INTEGRATION_REVIEW.md).
 
 | ID / branch | Scope and owned files | Dependencies / reserved migration | Acceptance and handoff |
 | --- | --- | --- | --- |
@@ -305,13 +288,18 @@ Every open roadmap item belongs to a package below. These are intended for separ
 
 ### Suggested scheduling and merge order
 
-- **Start together after the baseline:** A01, A02, A04, A18; A15 inventory, A16 approval preparation, A17 test design, and A19 report assessment can also start independently. They must not share one checkout.
+- **Next implementation wave:** A03 (billing), A05 (team lifecycle), and A08 (Google integration) can start together from updated main. A15 inventory, A16 approval preparation, A17 test design, and A19 security/report assessment can run independently. Use isolated worktrees; all remaining work starts from the integrated main, not the old ff4d9b2 baseline.
 - **Once contracts merge:** A03 after A02; A05 after A02/A04; A08 after A02. A06 follows billing/context contracts. A14 can begin isolated lead scaffolding after product/context agreement, with no activation.
 - **Dependent workflow fixes:** A07 after A06; A09 after A08; A10 after A07; A11 after billing/auth/team work. A12 integrates cron/privacy behavior after their owners finish; A13 integrates UI/query changes after intake/draft contracts finish.
 - **Separate launch lanes:** the reputation release requires A01–A13/A19 as applicable and A17 acceptance; Replies additionally requires A16. Full lead consolidation additionally requires A14/A15 and its provider/pricing acceptance. External inventories and product decisions remain tracked even if they do not block the email-only pilot.
 - **Final integration:** A00 resolves shared-file/schema conflicts, updates this roadmap from merged evidence, and hands the exact release commit to A17. Preserve backups and source references until A15's recovery/cutover gates are satisfied. PR completion is not proof of deployed production completion.
 
 ## Closed items that should not be re-added as pending
+
+- **E01/A01:** dependencies patched/aligned; full and production audit zero; clean Node 22 install verified. See [A01 handoff](./tasks/A01_DEPENDENCIES_BUILD_CI.md). Signed-in provider acceptance remains A17.
+- **E12/A01:** the committed webpack build, CSP generation and production smoke pass on the integrated Node 22 checkout; CI runs typegen, all test suites, production build and smoke. Remote target-Linux CI must pass before merge; no undocumented local build workaround remains.
+- **E11/A04:** resend, secure reset, bounded registration, safe callbacks and versioned session revocation are implemented and regression-tested; migration 020 is verified on the configured production database. Auth recovery pages use the app layout. Live email/provider acceptance and durable email outbox decisions remain A10/A12/A17. See [A04 handoff](./ACCOUNT_RECOVERY_HANDOFF.md).
+- **A18:** product proposal documents and handoff are reviewed; new quota/trial/grace/downgrade/location/automation/lead policies still require owner decisions before behavioral changes. See [product contracts](./product-contracts/README.md).
 
 - Review Booster’s 23-hour-to-seven-day selection window is enforced in the database query.
 - Review Booster has per-run fair-use checks and retry/backoff rules. E05/E06 track the remaining concurrency, annual-window, and deferred-visit gaps; do not describe those checks as complete delivery guarantees.

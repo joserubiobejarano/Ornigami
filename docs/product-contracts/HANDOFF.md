@@ -43,6 +43,8 @@ This table is the reviewable submission to integration. Shared files are not edi
 
 No migration or environment variable is added by this branch. A00 allocates exact schema changes/migration numbers with package owners. Independent analysis does not mean dependent implementations have merged.
 
+Integration review clarification: A02 delivers actor/business/owner resolution and shared entitlement/usage helper contracts. Existing Google, plan/UI, settings, and reply-usage consumers still need adoption. A09 must migrate each usage check and increment together for the same explicit business. A02 defaults unselected context to the earliest accessible business and retains owner-keyed Google/profile storage; it does not implement persisted per-business location selection. A08/A00 still own that selection and provider-consumer migration. See [A02's handoff](../tasks/A02-business-access.md).
+
 ## Validation evidence
 
 On Windows, Node v24.11.1 and npm 11.6.2, in the isolated A18 worktree:

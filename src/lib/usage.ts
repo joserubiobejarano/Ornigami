@@ -75,11 +75,13 @@ export async function incrementBusinessReviewReplyUsage(actorUserId: string, bus
   if (!businessId) throw new BusinessAccessError(403, "Business access denied.");
   const context = await resolveBusinessContext(actorUserId, businessId);
   if (!context) throw new BusinessAccessError(403, "Business access denied.");
-  await sql`
+  const rows = await sql`
     UPDATE public.profiles
     SET review_replies_used = COALESCE(review_replies_used, 0) + 1, updated_at = now()
     WHERE id = ${context.usageOwnerUserId}
+    RETURNING id
   `;
+  if (!rows.length) throw new BusinessAccessError(403, "Reply usage profile unavailable.");
 }
 
 export async function checkUsageLimit(

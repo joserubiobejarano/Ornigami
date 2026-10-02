@@ -14,7 +14,10 @@ function isInAppRoute(pathname: string): boolean {
     pathname === "/settings" ||
     pathname === "/connect" ||
     pathname === "/login" ||
-    pathname === "/signup"
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/resend-verification" ||
+    pathname === "/reset-password"
   );
 }
 

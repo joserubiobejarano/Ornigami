@@ -23,5 +23,6 @@ This folder is the database source of truth. Apply every migration once, in nume
 | `015_stripe_usage_periods.sql` | Current billing-period start fields |
 | `016_remove_legacy_plan_taxonomy.sql` | Current plan constraints |
 | `017_team_invitations.sql` | Expiring Complete-plan workspace invitations |
+| `020_account_recovery.sql` | Session revocation version, auth callback destinations, and expiring single-use password-reset tokens |
 
-Do not maintain a parallel schema or skip a migration. See [docs/DATABASE.md](../docs/DATABASE.md) for the product-facing data model and behavior rules.
+Apply available migrations in numeric order; do not replay historical schemas or renumber applied files. Reservations 018 (A02, unused) and 019 (future A03) are not missing authored migrations; 020 is additive and does not depend on them. Apply 020 before deploying the new auth code, including to every target database used by that deployment. See [docs/DATABASE.md](../docs/DATABASE.md) for the product-facing data model and behavior rules.
