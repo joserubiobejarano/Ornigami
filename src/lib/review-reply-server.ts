@@ -7,6 +7,7 @@ import { parseGoogleStarRating } from "@/lib/google-review-rating";
 import { requireActiveAgentBusinessContext } from "@/lib/api-security";
 import { getSelectedGoogleLocation } from "@/lib/google-business";
 import { googleReviewReplyUrl, parseGoogleLocationName } from "@/lib/google-resources";
+import { claimReplyPost, finishReplyPost, type ReplyPostIntent } from "@/lib/review-draft-policy";
 
 export type ReviewRowForReply = {
   id: string | number;
@@ -35,107 +36,14 @@ export function buildReviewReplyInputFromRow(
   };
 }
 
-/** Replace any existing unposted draft for this review, then insert one row. */
-export async function saveReplyDraft(
-  businessId: string,
-  googleReviewId: string,
-  markdown: string
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const reviewRows = await sql`
-    SELECT id FROM public.reviews
-    WHERE business_id = ${businessId}
-      AND google_review_id = ${googleReviewId}
-    LIMIT 1
-  `;
-  const review = reviewRows[0] as { id: string | number } | undefined;
-  if (!review) {
-    return { ok: false, error: "Review not found" };
-  }
-
-  await sql`
-    DELETE FROM public.review_replies
-    WHERE business_id = ${businessId}
-      AND review_id = ${review.id}
-      AND posted = false
-  `;
-
-  await sql`
-    INSERT INTO public.review_replies (
-      user_id, business_id, review_id, draft_markdown, posted, posted_at
-    ) VALUES (
-      (SELECT owner_user_id FROM public.businesses WHERE id = ${businessId}),
-      ${businessId},
-      ${review.id},
-      ${markdown},
-      false,
-      NULL
-    )
-  `;
-
-  return { ok: true };
-}
-
-/**
- * Mark a reply as posted in the app DB only (no Google API).
- * Used for MVP auto-reply simulation after sync; mirrors the persist step of real posting.
- */
-export async function persistReplyPostedLocally(
-  businessId: string,
-  googleReviewId: string,
-  reply: string
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const reviewRows = await sql`
-    SELECT id FROM public.reviews
-    WHERE business_id = ${businessId}
-      AND google_review_id = ${googleReviewId}
-    LIMIT 1
-  `;
-
-  const review = reviewRows[0] as { id: string | number } | undefined;
-  if (!review) {
-    return { ok: false, error: "Review not found" };
-  }
-
-  await sql`
-    DELETE FROM public.review_replies
-    WHERE business_id = ${businessId}
-      AND review_id = ${review.id}
-      AND posted = false
-  `;
-
-  await sql`
-    INSERT INTO public.review_replies (
-      user_id, business_id, review_id, draft_markdown, posted, posted_at
-    ) VALUES (
-      (SELECT owner_user_id FROM public.businesses WHERE id = ${businessId}),
-      ${businessId},
-      ${review.id},
-      ${reply},
-      true,
-      ${new Date().toISOString()}
-    )
-  `;
-
-  await sql`
-    UPDATE public.reviews
-    SET
-      status = 'replied',
-      reply_comment = ${reply},
-      reply_update_time = ${new Date().toISOString()},
-      updated_at = now()
-    WHERE id = ${review.id}
-  `;
-
-  return { ok: true };
-}
-
 /** Post reply to Google GBP and persist posted state (same behavior as /api/google/replies). */
 export async function postReplyToGoogleAndPersist(
   actorUserId: string,
   businessId: string,
   googleReviewId: string,
   locationName: string,
-  reply: string
+  reply: string,
+  approved?: { intent: ReplyPostIntent; expectedVersion: number; expectedText: string }
 ): Promise<{ ok: true } | { ok: false; error: string; status?: number }> {
   const normalizedReply = reply.trim();
   if (!normalizedReply || Buffer.byteLength(normalizedReply, "utf8") > 4096) {
@@ -143,6 +51,12 @@ export async function postReplyToGoogleAndPersist(
   }
   if (!/^[A-Za-z0-9_-]+$/.test(googleReviewId)) {
     return { ok: false, error: "Invalid Google review ID", status: 400 };
+  }
+  if (!approved || approved.expectedText.trim() !== normalizedReply || !Number.isSafeInteger(approved.expectedVersion)) {
+    return { ok: false, error: "An approved saved draft version is required", status: 409 };
+  }
+  if (approved.expectedVersion < 1 || (approved.intent !== "manual" && approved.intent !== "automatic")) {
+    return { ok: false, error: "Invalid approved draft intent or version", status: 400 };
   }
   // Re-resolve explicit business membership here because legacy internal callers
   // (including process-pending) also reach this provider boundary.
@@ -163,6 +77,14 @@ export async function postReplyToGoogleAndPersist(
   const storedReview = storedReviews[0] as { id: string | number } | undefined;
   if (!storedReview) return { ok: false, error: "Review not found for the selected Google location", status: 404 };
 
+  const postClaim = await claimReplyPost(
+    context.businessId, googleReviewId, normalizedReply, approved.expectedVersion, approved.intent
+  );
+  if (!postClaim.ok) {
+    const status = postClaim.reason === "not-found" ? 404 : 409;
+    return { ok: false, error: "The saved reply is no longer approved for posting", status };
+  }
+
   const resource = parseGoogleLocationName(selected.location_name);
   const url = googleReviewReplyUrl(resource.accountName, resource.locationId, googleReviewId);
 
@@ -175,25 +97,31 @@ export async function postReplyToGoogleAndPersist(
     }, selected.connection_version);
   } catch (error) {
     if (error instanceof Error && error.name === "GoogleConnectionVersionError") {
+      await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, false);
       return { ok: false, error: "Google connection changed since location selection", status: 409 };
     }
+    // The request may have reached Google before the connection failed. Keep
+    // the post fence for reconciliation instead of risking an automatic retry.
     return { ok: false, error: "Google reply update failed", status: 502 };
   }
 
   if (!r.ok) {
     await r.body?.cancel().catch(() => undefined);
     const status = r.status === 429 ? 429 : r.status === 503 ? 503 : 502;
+    if (r.status >= 400 && r.status < 500) {
+      await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, false);
+    }
     return { ok: false, error: "Google reply update failed", status };
   }
   await r.body?.cancel().catch(() => undefined);
 
-  let persist: { ok: true } | { ok: false; error: string };
+  let persisted = false;
   try {
-    persist = await persistReplyPostedLocally(context.businessId, googleReviewId, normalizedReply);
+    persisted = await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, true);
   } catch {
-    persist = { ok: false, error: "Local persistence failed" };
+    persisted = false;
   }
-  if (!persist.ok) {
+  if (!persisted) {
     return {
       ok: false,
       error: "Google accepted the reply, but its local status could not be updated. Sync reviews before retrying.",

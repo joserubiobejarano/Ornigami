@@ -6,10 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatProductDate } from "@/lib/format-date";
 import {
+  canGenerateReplyDraft,
   getReviewWorkflowDisplay,
   shouldShowTestWorkflowActions,
   type Review,
 } from "@/components/reviews/review-workflow";
+import type { ReviewDraft } from "@/modules/review-replies/types/review.types";
 
 export type ReviewListProps = {
   reviews: Review[];
@@ -28,8 +30,11 @@ export type ReviewListProps = {
   onDraftChange: (reviewId: string, text: string) => void;
   onGenerate: (review: Review) => void;
   onPost: (review: Review) => void;
+  onSaveDraft?: (review: Review) => void;
   onSaveTestDraft: (review: Review) => void;
   onMarkPostedTest: (review: Review) => void;
+  draftConflicts?: Record<string, ReviewDraft | null | undefined>;
+  onReloadConflict?: (review: Review) => void;
   hasPaidAccess: boolean;
   /** Shown under handled reviews in test context (sample or demo). */
   testModeHandledResetHint?: string;
@@ -50,8 +55,11 @@ export function ReviewList({
   onDraftChange,
   onGenerate,
   onPost,
+  onSaveDraft,
   onSaveTestDraft,
   onMarkPostedTest,
+  draftConflicts = {},
+  onReloadConflict,
   hasPaidAccess,
   testModeHandledResetHint = DEFAULT_HANDLED_HINT,
 }: ReviewListProps) {
@@ -68,6 +76,8 @@ export function ReviewList({
         const isHandled = workflow === "posted";
         const showTestActions = shouldShowTestWorkflowActions(rv, isDemo);
         const showTestModeHandledNote = isHandled && (rv.isSample || isDemo);
+        const canGenerate = canGenerateReplyDraft(rv, draftText, savedDraftSnapshots);
+        const conflictDraft = draftConflicts[rv.google_review_id];
 
         const isExpanded =
           !isSampleMode || !collapsibleSampleCards || expandedId === rv.google_review_id;
@@ -179,7 +189,7 @@ export function ReviewList({
                 )}
                 {workflow === "draft_saved" && !isHandled && (
                   <span className="text-[10px] text-navy">
-                    Draft saved — edit anytime, or mark as posted when final
+                    Draft saved — edit anytime, then save your changes before posting
                   </span>
                 )}
               </div>
@@ -193,6 +203,16 @@ export function ReviewList({
                 readOnly={isHandled}
                 aria-readonly={isHandled}
               />
+              {conflictDraft !== undefined && (
+                <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-sm text-destructive">
+                  <span>Your edits are still here, but this draft changed elsewhere. Reload the saved version before trying again.</span>
+                  {onReloadConflict && (
+                    <Button type="button" size="sm" variant="outline" onClick={() => onReloadConflict(rv)}>
+                      {conflictDraft ? "Use saved draft" : "Reload saved state"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2 pt-0.5">
               <Button
@@ -200,15 +220,25 @@ export function ReviewList({
                 title={
                   !hasPaidAccess && !isDemo && !rv.isSample ? "Premium feature" : undefined
                 }
-                disabled={isHandled}
+                disabled={isHandled || !canGenerate}
               >
-                  {draftText.trim() ? "Regenerate" : "Generate reply"}
+                  Generate reply
               </Button>
               {showTestActions && (
                 <Button
                   size="default"
                   onClick={() => onSaveTestDraft(rv)}
                   disabled={isHandled || !draftText.trim()}
+                >
+                  Save draft
+                </Button>
+              )}
+              {!showTestActions && onSaveDraft && (
+                <Button
+                  size="default"
+                  variant="outline"
+                  onClick={() => onSaveDraft(rv)}
+                  disabled={isHandled || conflictDraft !== undefined || !draftText.trim() || savedDraftSnapshots[rv.google_review_id] === draftText}
                 >
                   Save draft
                 </Button>
@@ -224,10 +254,10 @@ export function ReviewList({
               ) : (
                 <Button
                   onClick={() => onPost(rv)}
-                  disabled={isHandled || !draftText.trim() || isDemo}
+                  disabled={isHandled || conflictDraft !== undefined || !draftText.trim() || isDemo}
                   title={isDemo ? "Posting disabled in demo mode" : undefined}
                 >
-                  Approve &amp; send
+                  Approve &amp; post
                 </Button>
               )}
             </div>

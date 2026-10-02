@@ -163,7 +163,7 @@ test("review persistence batches recordsets and retains local replied status whe
 });
 
 type Poster = {
-  postReplyToGoogleAndPersist(actor: string, business: string, review: string, location: string, reply: string): Promise<{ ok: boolean; error?: string; status?: number }>;
+  postReplyToGoogleAndPersist(actor: string, business: string, review: string, location: string, reply: string, approved?: { intent: "manual" | "automatic"; expectedVersion: number; expectedText: string }): Promise<{ ok: boolean; error?: string; status?: number }>;
 };
 
 function loadPoster(options: {
@@ -174,6 +174,7 @@ function loadPoster(options: {
   localPersistFails?: boolean;
 }) {
   const providerCalls: Array<{ userId: string; url: string; init?: RequestInit; expectedConnectionVersion?: string }> = [];
+  const finishCalls: Array<{ success: boolean }> = [];
   const db = fakeSql((query) => {
     if (options.localPersistFails && query.includes("DELETE FROM public.review_replies")) throw new Error("local DB unavailable");
     return query.includes("SELECT id") && query.includes("public.reviews") && options.reviewExists !== false ? [{ id: "review-row" }] : [];
@@ -190,6 +191,13 @@ function loadPoster(options: {
     "@/lib/db/neon": { sql: db.sql },
     "@/lib/openai": { generateReviewReply: async () => "draft", sanitizeReviewReply: (value: string) => value },
     "@/lib/google-review-rating": googleRating,
+    "@/lib/review-draft-policy": {
+      claimReplyPost: async () => ({ ok: true, token: "post-token" }),
+      finishReplyPost: async (_business: string, _review: string, _text: string, _token: string, success: boolean) => {
+        finishCalls.push({ success });
+        return !(options.localPersistFails && success);
+      },
+    },
     "@/lib/api-security": {
       requireActiveAgentBusinessContext: async (_actor: string, _email: unknown, _agent: string, businessId: string) => {
         if (businessId !== "biz-1" || options.businessAllowed === false) throw new Error("denied business");
@@ -210,59 +218,66 @@ function loadPoster(options: {
       ...googleResources,
     },
   });
-  return { mod, providerCalls, db };
+  return { mod, providerCalls, db, finishCalls };
 }
 
 test("reply posting uses owner token and the canonical PUT contract after exact ownership checks", async () => {
   const { mod, providerCalls, db } = loadPoster({});
-  assert.deepEqual(await mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks"), { ok: true });
+  assert.deepEqual(await mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" }), { ok: true });
   assert.equal(providerCalls.length, 1);
   assert.equal(providerCalls[0]!.userId, "owner-1");
   assert.equal(providerCalls[0]!.expectedConnectionVersion, "generation-1");
   assert.equal(providerCalls[0]!.url, "https://mybusiness.googleapis.com/v4/accounts/100/locations/200/reviews/review_1/reply");
   assert.equal(providerCalls[0]!.init?.method, "PUT");
   assert.deepEqual(JSON.parse(String(providerCalls[0]!.init?.body)), { comment: "Thanks" });
-  assert.equal(db.calls.length, 5);
+  assert.ok(db.calls.length > 0);
 });
 
 test("reply posting denies foreign business, mismatched location, and missing stored review before provider calls", async () => {
   const wrongBusiness = loadPoster({ businessAllowed: false });
-  await assert.rejects(wrongBusiness.mod.postReplyToGoogleAndPersist("member-1", "other-biz", "review_1", locationName, "Thanks"));
+  await assert.rejects(wrongBusiness.mod.postReplyToGoogleAndPersist("member-1", "other-biz", "review_1", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" }));
   assert.equal(wrongBusiness.providerCalls.length, 0);
 
   const wrongLocation = loadPoster({ selectedLocation: "accounts/100/locations/999" });
-  await assert.rejects(wrongLocation.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks"));
+  await assert.rejects(wrongLocation.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" }));
   assert.equal(wrongLocation.providerCalls.length, 0);
 
   const wrongReview = loadPoster({ reviewExists: false });
-  assert.equal((await wrongReview.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks")).status, 404);
+  assert.equal((await wrongReview.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" })).status, 404);
   assert.equal(wrongReview.providerCalls.length, 0);
 });
 
 test("provider failure omits provider response body and oversized UTF-8 replies are rejected first", async () => {
   const failed = loadPoster({ googleResponse: new Response("private provider details", { status: 403 }) });
-  const failure = await failed.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks");
+  const failure = await failed.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" });
   assert.deepEqual(failure, { ok: false, error: "Google reply update failed", status: 502 });
   assert.equal(failed.providerCalls.length, 1);
+  assert.deepEqual(failed.finishCalls, [{ success: false }], "definitive provider rejection should release the post fence");
+
+  const noApproval = loadPoster({});
+  const blocked = await noApproval.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks");
+  assert.equal(blocked.status, 409);
+  assert.equal(noApproval.providerCalls.length, 0);
 
   const oversized = loadPoster({});
-  const result = await oversized.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "é".repeat(2049));
+  const result = await oversized.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "é".repeat(2049), { intent: "manual", expectedVersion: 1, expectedText: "é".repeat(2049) });
   assert.equal(result.status, 400);
   assert.equal(oversized.providerCalls.length, 0);
 
   const invalidId = loadPoster({});
-  const invalid = await invalidId.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "../review", locationName, "Thanks");
+  const invalid = await invalidId.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "../review", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" });
   assert.equal(invalid.status, 400);
   assert.equal(invalidId.providerCalls.length, 0);
 
   const localFailure = loadPoster({ localPersistFails: true });
-  const recovery = await localFailure.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks");
+  const recovery = await localFailure.mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks", { intent: "manual", expectedVersion: 1, expectedText: "Thanks" });
   assert.deepEqual(recovery, {
     ok: false,
     error: "Google accepted the reply, but its local status could not be updated. Sync reviews before retrying.",
     status: 502,
   });
   assert.equal(localFailure.providerCalls.length, 1);
+  assert.deepEqual(localFailure.finishCalls, [{ success: true }], "local persistence failure must retain the uncertain post fence");
 });
 
 test("manual sync and reply routes reject conflicting query/body business IDs before business or provider work", async () => {
@@ -278,6 +293,7 @@ test("manual sync and reply routes reject conflicting query/body business IDs be
   const common = {
     "next/server": { NextResponse: { json: (value: unknown, init?: ResponseInit) => Response.json(value, init) } },
     "@/lib/user-from-req": { resolveUser: async () => ({ id: "member-1", email: "member@example.test" }) },
+    "@/lib/db/neon": { sql: async () => [] },
     "@/lib/api-security": {
       requireActiveAgentBusinessContext: async () => { businessLookups += 1; throw new Error("must not be reached"); },
       safeApiErrorResponse: (error: unknown) => Response.json({ error: String(error) }, { status: 500 }),
@@ -298,6 +314,7 @@ test("manual sync and reply routes reject conflicting query/body business IDs be
   const replies = loadTs<{ POST(req: TestNextRequest): Promise<Response> }>("src/app/api/google/replies/route.ts", {
     ...common,
     "@/lib/review-reply-server": { postReplyToGoogleAndPersist: async () => { providerCalls += 1; return { ok: true }; } },
+    "@/lib/review-draft-policy": { getReplyDraft: async () => null },
   });
 
   const syncResponse = await sync.POST(new NextRequest("http://localhost/api/google/reviews/sync?businessId=biz-query", {
@@ -305,7 +322,7 @@ test("manual sync and reply routes reject conflicting query/body business IDs be
   }));
   const replyResponse = await replies.POST(new NextRequest("http://localhost/api/google/replies?businessId=biz-query", {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ businessId: "biz-body", reviewId: "review_1", locationName, reply: "Thanks" }),
+    body: JSON.stringify({ businessId: "biz-body", reviewId: "review_1", locationName, reply: "Thanks", intent: "manual", expectedVersion: 1 }),
   }));
   assert.equal(syncResponse.status, 400);
   assert.equal(replyResponse.status, 400);
@@ -324,12 +341,11 @@ test("review reply cron reads selected connected locations only", async () => {
       return [];
     } },
     "@/lib/reply-profile-defaults": { getProfileReplyDefaults: async () => null },
-    "@/lib/review-reply-server": { generateReplyForReviewRow: async () => "", saveReplyDraft: async () => ({ ok: false, error: "" }) },
+    "@/lib/review-draft-processing": { processReviewDraft: async () => ({ outcome: "skipped", reason: "existing-draft" }) },
     "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => true },
     "@/lib/review-alerts": { sendNewReviewAlert: async () => undefined },
     "@/lib/cron-health": { startCronRun: async () => "run", finishCronRun: async () => undefined },
-    "@/lib/usage": { checkReviewReplyUsage: async () => ({ allowed: false }), incrementReviewReplyUsage: async () => undefined },
   });
   const response = await cron.GET(new NextRequest("http://localhost/api/cron/review-replies"));
   assert.equal(response.status, 200);

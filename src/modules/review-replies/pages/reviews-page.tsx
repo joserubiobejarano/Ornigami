@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   DashboardCallout,
@@ -14,9 +14,6 @@ import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 import { nativeSelectClassName } from "@/lib/form-controls";
-import { useCurrentPlan } from "@/lib/use-current-plan";
-import { isPaidUser, isTrialing } from "@/lib/plan";
-import { UpgradeBanner, PlanGateModal } from "@/components/PlanGate";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ReviewList } from "@/components/reviews/review-list";
@@ -24,31 +21,33 @@ import { readTextStream } from "@/lib/stream-client";
 import { useReviewInboxData } from "@/modules/review-replies/hooks/use-review-inbox-data";
 import { ReviewInboxSummary } from "@/modules/review-replies/components/review-inbox-summary";
 import type { Review } from "@/modules/review-replies/types/review.types";
-import { shouldShowTestWorkflowActions } from "@/components/reviews/review-workflow";
+import { hasDraftChangedSince, shouldShowTestWorkflowActions } from "@/components/reviews/review-workflow";
+import { DraftVersionConflictError, postReviewReply, saveReviewDraft } from "@/modules/review-replies/services/review-replies-api.service";
+import type { ReviewDraft } from "@/modules/review-replies/types/review.types";
 
 function ReviewsPageContent() {
-  const { planStatus, planInfo } = useCurrentPlan();
-  const hasPaidAccess = isPaidUser(planStatus) || isTrialing(planStatus);
-  const [showPlanGateModal, setShowPlanGateModal] = useState(false);
-
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [draftConflicts, setDraftConflicts] = useState<Record<string, ReviewDraft | null | undefined>>({});
   const {
+    businessId,
     locations,
     selectedLocation: selectedLoc,
     setSelectedLocation: setSelectedLoc,
     reviews,
     setReviews,
     drafts,
+    autoReplyAllReviews,
     setDrafts,
     savedDraftSnapshots,
     setSavedDraftSnapshots,
     loading,
     error,
     syncing,
-    autoReplyAllReviews,
     loadReviews,
     syncReviews,
-  } = useReviewInboxData(hasPaidAccess);
+  } = useReviewInboxData(true);
+  const draftsRef = useRef(drafts);
+  draftsRef.current = drafts;
 
   const NO_CONNECTED_MSG = "Connect your Google profile to load locations and reviews.";
 
@@ -57,6 +56,11 @@ function ReviewsPageContent() {
   }
 
   async function generate(review: Review) {
+    if (!review.isSample && !selectedLoc) {
+      toast.error("Select a location before generating a reply.");
+      return;
+    }
+    const localTextAtStart = draftsRef.current[review.google_review_id] ?? "";
     const body = review.isSample
       ? {
           businessName: "My Business",
@@ -79,82 +83,62 @@ function ReviewsPageContent() {
     const r = await fetch("/api/openai/review-reply", {
       method: "POST",
       headers,
-      body: JSON.stringify(body),
+      body: JSON.stringify(review.isSample ? body : {
+        ...body,
+        ...(businessId ? { businessId } : {}),
+        reviewId: review.google_review_id,
+        locationName: selectedLoc,
+      }),
     });
 
     if (!r.ok) {
-      const j = await r.json().catch(() => ({})) as { error?: string };
+      const j = await r.json().catch(() => ({})) as { error?: string; currentDraft?: ReviewDraft | null };
+      if (j.currentDraft !== undefined) {
+        setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: j.currentDraft ?? null }));
+      }
       const message = j?.error ?? `Generate failed (${r.status})`;
       toast.error(message);
       return;
     }
 
     let replyText = "";
-    if (r.headers.get("content-type")?.includes("text/event-stream")) {
+    let generatedDraft: ReviewDraft | undefined;
+    if (!review.isSample) {
+      const result = await r.json() as { draft?: ReviewDraft; reply?: string };
+      generatedDraft = result.draft;
+      replyText = generatedDraft?.reply ?? result.reply ?? "";
+      if (!replyText || !generatedDraft) {
+        toast.error("The generated draft could not be saved. Please try again.");
+        return;
+      }
+      const userEditedWhileGenerating = hasDraftChangedSince(draftsRef.current[review.google_review_id], localTextAtStart);
+      setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
+      setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
+        ? { ...item, draftState: generatedDraft!.state, draftVersion: generatedDraft!.version, draftUpdatedAt: generatedDraft!.updatedAt }
+        : item));
+      setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: undefined }));
+      if (userEditedWhileGenerating) {
+        toast.success("AI draft saved. Your edits are still here; save them before posting.");
+        return;
+      }
+    } else if (r.headers.get("content-type")?.includes("text/event-stream")) {
       await readTextStream(r, (text) => { replyText += text; }, (finalText) => { replyText = finalText; });
     } else {
       const j = await r.json() as { reply?: string; markdown?: string; text?: string };
       replyText = j.reply ?? j.markdown ?? j.text ?? "";
     }
-    setDrafts((d) => ({ ...d, [review.google_review_id]: replyText }));
+    if (!hasDraftChangedSince(draftsRef.current[review.google_review_id], localTextAtStart)) {
+      setDrafts((d) => ({ ...d, [review.google_review_id]: replyText }));
+    }
 
     if (review.isSample) {
-      toast.success(
-        "Reply generated. Review below, save as draft, then mark as posted (test mode) when final."
-      );
+      toast.success("Reply generated. Save it to keep your test draft.");
     } else {
       if (!selectedLoc) {
         toast.error("Select a location before saving or posting a reply.");
         return;
       }
-      try {
-        if (autoReplyAllReviews && hasPaidAccess) {
-          const pr = await fetch("/api/google/replies", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              reviewId: review.google_review_id,
-              locationName: selectedLoc,
-              reply: replyText,
-            }),
-          });
-          if (pr.ok) {
-            setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
-            await loadReviews();
-            toast.success("Reply generated and posted to Google.");
-          } else {
-            const dr = await fetch("/api/reviews/draft", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ reviewId: review.google_review_id, reply: replyText }),
-            });
-            if (dr.ok) {
-              setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
-            }
-            toast.success(
-              "Reply generated. We couldn't post to Google, so we saved it as a draft. Edit or post manually when ready."
-            );
-          }
-        } else {
-          const dr = await fetch("/api/reviews/draft", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reviewId: review.google_review_id, reply: replyText }),
-          });
-          if (!dr.ok) {
-            toast.error("We couldn't save this draft. Try again in a moment.");
-            return;
-          }
-          setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
-          toast.success(
-            autoReplyAllReviews && !hasPaidAccess
-              ? "Reply generated and saved as draft. Upgrade to post replies to Google automatically."
-              : "Reply generated and saved as draft."
-          );
-        }
-      } catch {
-        toast.error("We couldn't save or post this reply. Try again in a moment.");
-      }
+      toast.success("AI draft generated and saved. Review it, then edit or post when ready.");
     }
   }
 
@@ -165,22 +149,92 @@ function ReviewsPageContent() {
       return;
     }
 
-    const r = await fetch("/api/google/replies", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const localSnapshot = savedDraftSnapshots[review.google_review_id];
+    try {
+      let version = review.draftVersion ?? 0;
+      let postText = reply;
+      if (localSnapshot !== reply || version === 0) {
+        const saved = await saveReviewDraft({
+          ...(businessId ? { businessId } : {}),
+          reviewId: review.google_review_id,
+          reply,
+          expectedVersion: version,
+        });
+        version = saved.version;
+        postText = saved.reply ?? reply.trim();
+        setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: postText }));
+        if (!hasDraftChangedSince(draftsRef.current[review.google_review_id], reply)) {
+          setDrafts((previous) => ({ ...previous, [review.google_review_id]: postText }));
+        }
+        setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
+          ? { ...item, draftState: saved.state, draftVersion: saved.version, draftUpdatedAt: saved.updatedAt }
+          : item));
+      }
+      await postReviewReply({
+        ...(businessId ? { businessId } : {}),
         reviewId: review.google_review_id,
         locationName: selectedLoc,
-        reply,
-      }),
-    });
-
-    if (r.ok) {
+        reply: postText,
+        expectedVersion: version,
+      });
       await loadReviews();
-      toast.success("Reply posted successfully");
-    } else {
-      toast.error("We couldn't post this reply to Google. We'll keep it here so you can try again.");
+      toast.success("Reply posted to Google.");
+    } catch (cause) {
+      if (cause instanceof DraftVersionConflictError) {
+        setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: cause.currentDraft }));
+        toast.error("This draft changed elsewhere. Your edits are preserved; reload the saved draft before retrying.");
+      } else {
+        toast.error(cause instanceof Error ? cause.message : "We couldn't post this reply. Try again.");
+      }
     }
+  }
+
+  async function saveDraft(review: Review) {
+    const reply = drafts[review.google_review_id] ?? "";
+    if (!reply.trim()) {
+      toast.error("Write a reply before saving.");
+      return;
+    }
+    try {
+      const draft = await saveReviewDraft({
+        ...(businessId ? { businessId } : {}),
+        reviewId: review.google_review_id,
+        reply,
+        expectedVersion: review.draftVersion ?? 0,
+      });
+      const canonicalText = draft.reply ?? reply.trim();
+      setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: canonicalText }));
+      if (!hasDraftChangedSince(draftsRef.current[review.google_review_id], reply)) {
+        setDrafts((previous) => ({ ...previous, [review.google_review_id]: canonicalText }));
+      }
+      setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
+        ? { ...item, draftState: draft.state, draftVersion: draft.version, draftUpdatedAt: draft.updatedAt }
+        : item));
+      setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: undefined }));
+      toast.success("Your reply draft is saved.");
+    } catch (cause) {
+      if (cause instanceof DraftVersionConflictError) {
+        setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: cause.currentDraft }));
+        toast.error("This draft changed elsewhere. Your edits are preserved; reload the saved draft before retrying.");
+      } else {
+        toast.error(cause instanceof Error ? cause.message : "We couldn't save this draft. Try again.");
+      }
+    }
+  }
+
+  function reloadConflict(review: Review) {
+    const current = draftConflicts[review.google_review_id];
+    setDrafts((previous) => ({ ...previous, [review.google_review_id]: current?.reply ?? "" }));
+    setSavedDraftSnapshots((previous) => {
+      const next = { ...previous };
+      if (current?.reply) next[review.google_review_id] = current.reply;
+      else delete next[review.google_review_id];
+      return next;
+    });
+    setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
+      ? { ...item, draftState: current?.state ?? "new", draftVersion: current?.version ?? 0, draftUpdatedAt: current?.updatedAt ?? null }
+      : item));
+    setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: undefined }));
   }
 
   function saveTestDraft(review: Review) {
@@ -195,7 +249,7 @@ function ReviewsPageContent() {
       [review.google_review_id]: text,
     }));
     toast.success(
-      "Draft saved. Mark as posted (test mode) when this reply is final, or keep editing."
+        "Test draft saved. Keep editing or mark it as posted in this test session."
     );
   }
 
@@ -216,7 +270,7 @@ function ReviewsPageContent() {
       [review.google_review_id]: reply,
     }));
     toast.success(
-      "Marked as posted (test mode). This review is handled â€” no further action needed for this test session."
+      "Marked as posted (test mode). No further action is needed for this test session."
     );
   }
 
@@ -236,8 +290,8 @@ function ReviewsPageContent() {
     <DashboardPage width="md" className="space-y-8">
       <DashboardPageHeader
         kicker="Review inbox"
-        title="Approve replies and keep an eye on whatâ€™s new."
-        description="Your reviews land here with a draft ready. You decide what goes live."
+        title="Review replies and approve each post."
+        description="Generate creates a saved AI draft. Save keeps your edits. Approve & post publishes the reply you review."
       />
 
       <div className="space-y-3">
@@ -251,13 +305,13 @@ function ReviewsPageContent() {
             }
           >
             <p className="text-foreground">
-              Connect your Google profile to load your review inbox. You stay in control of what posts.
+              Connect Google and select a location in Google settings to load your review inbox. You stay in control of each reply you post.
             </p>
           </DashboardCallout>
         )}
 
         {isSampleMode && (
-          <DashboardCallout variant="neutral" title="Test mode â€” sample reviews">
+          <DashboardCallout variant="neutral" title="Test mode — sample reviews">
             <p className="text-foreground">
               Sample data only. In live mode, you decide what posts to Google.
             </p>
@@ -265,10 +319,6 @@ function ReviewsPageContent() {
               Sample reviews for internal testing. These are not live Google reviews.
             </p>
           </DashboardCallout>
-        )}
-
-        {planInfo && hasPaidAccess && (
-          <UpgradeBanner planStatus={planStatus} currentPeriodEnd={planInfo.currentPeriodEnd} />
         )}
 
         {error && isNoConnectedOnly && (
@@ -299,19 +349,17 @@ function ReviewsPageContent() {
         </select>
 
         <Button
-          onClick={() => {
-            if (!hasPaidAccess) {
-              setShowPlanGateModal(true);
-              return;
-            }
-            syncReviews();
-          }}
+          onClick={() => void syncReviews()}
           disabled={!selectedLoc || syncing || loading}
-          title={!hasPaidAccess ? "Premium feature" : undefined}
         >
-          {syncing ? "Syncing..." : "Sync reviews now"}
+          {syncing ? "Syncing…" : "Sync reviews now"}
         </Button>
       </div>
+      <p className="text-xs text-muted-foreground">
+        {autoReplyAllReviews
+          ? "Interactive sync may post eligible 4–5-star replies. Unknown and 1–3-star ratings always need your approval; scheduled runs save drafts only."
+          : "Sync creates drafts for review. Unknown and 1–3-star ratings always need your approval; scheduled runs save drafts only."}
+      </p>
 
       <ReviewInboxSummary
         reviews={reviews}
@@ -348,28 +396,17 @@ function ReviewsPageContent() {
           setDrafts((d) => ({ ...d, [reviewId]: text }))
         }
         onGenerate={(rv) => {
-          if (!hasPaidAccess && !rv.isSample) {
-            setShowPlanGateModal(true);
-            return;
-          }
           void generate(rv);
         }}
         onPost={(rv) => {
-          if (!hasPaidAccess) {
-            setShowPlanGateModal(true);
-            return;
-          }
           void post(rv);
         }}
+        onSaveDraft={(rv) => void saveDraft(rv)}
         onSaveTestDraft={saveTestDraft}
         onMarkPostedTest={markAsPostedTest}
-        hasPaidAccess={hasPaidAccess}
-      />
-
-      <PlanGateModal
-        open={showPlanGateModal}
-        onOpenChange={setShowPlanGateModal}
-        featureName="Review Replies"
+        hasPaidAccess
+        draftConflicts={draftConflicts}
+        onReloadConflict={reloadConflict}
       />
     </DashboardPage>
   );

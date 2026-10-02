@@ -67,3 +67,47 @@ export function getReviewWorkflowDisplay(
 export function shouldShowTestWorkflowActions(review: Review, isDemo: boolean): boolean {
   return Boolean(review.isSample || isDemo);
 }
+
+export function canGenerateReplyDraft(
+  review: Review,
+  draftText: string,
+  savedSnapshots: Record<string, string>
+): boolean {
+  if (review.status.toLowerCase() === "replied") return false;
+  if (review.draftState && review.draftState !== "new") return false;
+  return !draftText.trim() && !savedSnapshots[review.google_review_id];
+}
+
+export function requiresManualReplyApproval(rating: number | null | undefined): boolean {
+  return rating !== 4 && rating !== 5;
+}
+
+export function reconcileReviewDraft(input: {
+  hasLocalText: boolean;
+  localText?: string;
+  savedSnapshot?: string;
+  remoteText?: string | null;
+  remoteVersion?: number;
+  baseVersion?: number;
+}): { draftText?: string; savedSnapshot?: string; version: number; hasUnsavedLocalText: boolean } {
+  const hasUnsavedLocalText = input.hasLocalText && input.localText !== input.savedSnapshot;
+  if (hasUnsavedLocalText) {
+    return {
+      draftText: input.localText,
+      savedSnapshot: input.savedSnapshot,
+      version: input.baseVersion ?? 0,
+      hasUnsavedLocalText: true,
+    };
+  }
+  const remoteText = typeof input.remoteText === "string" && input.remoteText.trim() ? input.remoteText : undefined;
+  return {
+    draftText: remoteText,
+    savedSnapshot: remoteText,
+    version: input.remoteVersion ?? 0,
+    hasUnsavedLocalText: false,
+  };
+}
+
+export function hasDraftChangedSince(currentText: string | undefined, startingText: string): boolean {
+  return (currentText ?? "") !== startingText;
+}

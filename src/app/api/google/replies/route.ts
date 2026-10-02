@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireActiveAgentBusinessContext, safeApiErrorResponse } from "@/lib/api-security";
 import { resolveUser } from "@/lib/user-from-req";
 import { postReplyToGoogleAndPersist } from "@/lib/review-reply-server";
-import { BusinessGoogleError, resolveRequestedBusinessId } from "@/lib/google-business";
+import { BusinessGoogleError, getSelectedGoogleLocation, resolveRequestedBusinessId } from "@/lib/google-business";
+import { getReplyDraft } from "@/lib/review-draft-policy";
+import { sql } from "@/lib/db/neon";
 
 export async function POST(req: NextRequest) {
   if (req.headers.get("x-demo") === "true") {
@@ -27,6 +29,8 @@ export async function POST(req: NextRequest) {
     reviewId?: unknown;
     locationName?: unknown;
     reply?: unknown;
+    intent?: unknown;
+    expectedVersion?: unknown;
   };
   if (input.businessId !== undefined && (typeof input.businessId !== "string" || !input.businessId.trim())) {
     return NextResponse.json({ error: "businessId must be a non-empty string" }, { status: 400 });
@@ -35,6 +39,9 @@ export async function POST(req: NextRequest) {
     || typeof input.locationName !== "string" || !input.locationName.trim()
     || typeof input.reply !== "string" || !input.reply.trim()) {
     return NextResponse.json({ error: "reviewId, locationName, and reply are required" }, { status: 400 });
+  }
+  if (input.intent !== "manual" || !Number.isInteger(input.expectedVersion) || Number(input.expectedVersion) < 1) {
+    return NextResponse.json({ error: "Manual approval with expectedVersion is required" }, { status: 400 });
   }
   if (Buffer.byteLength(input.reply.trim(), "utf8") > 4096) {
     return NextResponse.json({ error: "reply must be at most 4096 UTF-8 bytes" }, { status: 400 });
@@ -49,10 +56,24 @@ export async function POST(req: NextRequest) {
     const context = await requireActiveAgentBusinessContext(
       user.id, email, "review_replies", requestedBusiness.businessId
     );
+    const reviewRows = await sql`
+      SELECT location_name FROM public.reviews
+      WHERE business_id = ${context.businessId} AND google_review_id = ${input.reviewId.trim()}
+      LIMIT 1
+    ` as { location_name: string }[];
+    const reviewLocation = reviewRows[0]?.location_name;
+    if (!reviewLocation) return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    if (reviewLocation !== input.locationName.trim()) return NextResponse.json({ error: "Google location access denied." }, { status: 403 });
+    await getSelectedGoogleLocation(context, reviewLocation);
     const result = await postReplyToGoogleAndPersist(
-      user.id, context.businessId, input.reviewId.trim(), input.locationName.trim(), input.reply.trim()
+      user.id, context.businessId, input.reviewId.trim(), input.locationName.trim(), input.reply.trim(), {
+        intent: "manual", expectedVersion: Number(input.expectedVersion), expectedText: input.reply.trim(),
+      }
     );
-    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status ?? 502 });
+    if (!result.ok) {
+      const currentDraft = await getReplyDraft(context.businessId, input.reviewId.trim()).catch(() => null);
+      return NextResponse.json({ error: result.error, currentDraft }, { status: result.status ?? 502 });
+    }
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof BusinessGoogleError) {
