@@ -36,6 +36,8 @@ const FollowupStatsRowSchema = z.object({
 });
 const ReviewBoosterUsageRowSchema = z.object({
   sent: z.coerce.number().optional(),
+  used: z.coerce.number().optional(),
+  reserved: z.coerce.number().optional(),
   plan_id: z.string().nullable().optional(),
 });
 const BusinessFollowupSettingsSchema = z.object({
@@ -123,6 +125,7 @@ export async function createFollowupVisit(
   const rows = await sql`
     INSERT INTO public.followup_visits (
       business_id, customer_name, customer_email, customer_phone, service_name, visited_at, source, external_id
+      , followup_status, last_error
     )
     VALUES (
       ${input.businessId},
@@ -132,11 +135,13 @@ export async function createFollowupVisit(
       ${input.serviceName ?? null},
       ${input.visitedAt},
       ${input.source ?? "manual"},
-      ${input.externalId ?? null}
+      ${input.externalId ?? null},
+      ${input.customerEmail?.trim() ? "pending" : "non_sendable"},
+      ${input.customerEmail?.trim() ? null : "A valid email address is required for follow-up delivery."}
     )
     RETURNING
       id, business_id, customer_name, customer_email, customer_phone, service_name,
-      visited_at, source, followup_status, followup_sent_at
+      visited_at, source, followup_status, followup_sent_at, last_error AS error_reason
   `;
   return FollowupVisitRowSchema.parse(rows[0]);
 }
@@ -186,36 +191,42 @@ export type ReviewOutcomeStats = {
 
 export type ReviewBoosterBillingPeriodUsage = {
   sent: number;
+  used: number;
+  reserved: number;
   allowance: number;
 };
 
 export async function getReviewBoosterBillingPeriodUsage(businessId: string): Promise<ReviewBoosterBillingPeriodUsage> {
   const rows = await sql`
-    SELECT
-      ba.plan_id,
-      (
-        SELECT count(*)::int
-        FROM public.followup_messages fm
-        WHERE fm.business_id = ${businessId}
-          AND lower(fm.status) = 'sent'
-          AND fm.sent_at >= COALESCE(
-            ba.current_period_start,
-            CASE
-              WHEN ba.current_period_end IS NOT NULL AND ba.billing_period = 'annual' THEN ba.current_period_end - INTERVAL '1 year'
-              WHEN ba.current_period_end IS NOT NULL THEN ba.current_period_end - INTERVAL '1 month'
-              ELSE ba.activated_at
-            END,
-            now()
-          )
-      ) AS sent
+    SELECT ba.plan_id,
+      coalesce((SELECT accepted_count FROM public.booster_quota_legacy_usage q
+        WHERE q.business_id=ba.business_id AND q.month_start=date_trunc('month',now() AT TIME ZONE 'UTC')::date),0)
+      + (SELECT count(*)::int FROM public.booster_followup_deliveries d
+        WHERE d.business_id=ba.business_id AND d.reservation_month=date_trunc('month',now() AT TIME ZONE 'UTC')::date
+          AND d.state IN ('claimed','prepared','sending','unknown','accepted','reconciliation_required')) AS used,
+      (SELECT count(*)::int FROM public.booster_followup_deliveries d
+        WHERE d.business_id=ba.business_id AND d.reservation_month=date_trunc('month',now() AT TIME ZONE 'UTC')::date
+          AND d.state IN ('claimed','prepared','sending','unknown','reconciliation_required')) AS reserved,
+      (SELECT count(*)::int FROM public.booster_followup_deliveries d
+        WHERE d.business_id=ba.business_id AND d.reservation_month=date_trunc('month',now() AT TIME ZONE 'UTC')::date
+          AND d.state='accepted')
+      + coalesce((SELECT accepted_count FROM public.booster_quota_legacy_usage q
+        WHERE q.business_id=ba.business_id AND q.month_start=date_trunc('month',now() AT TIME ZONE 'UTC')::date),0) AS sent
     FROM public.business_agents ba
-    WHERE ba.business_id = ${businessId}
-      AND ba.agent_id = 'review_booster'
+    WHERE ba.business_id=${businessId} AND ba.agent_id='review_booster'
     LIMIT 1
   `;
   const row = rows[0] ? ReviewBoosterUsageRowSchema.parse(rows[0]) : undefined;
-  const planId = row?.plan_id && isPlanId(row.plan_id) ? row.plan_id : "booster";
-  return { sent: Number(row?.sent ?? 0), allowance: PLANS[planId].monthlyRequestAllowance };
+  const planId = row?.plan_id && isPlanId(row.plan_id) ? row.plan_id : null;
+  const boosterEntitlement = planId === "booster" || planId === "complete";
+  const sent = Number(row?.sent ?? 0);
+  const reserved = Number(row?.reserved ?? 0);
+  return {
+    sent,
+    used: Number(row?.used ?? sent + reserved),
+    reserved,
+    allowance: boosterEntitlement ? PLANS[planId].monthlyRequestAllowance : 0,
+  };
 }
 export async function getReviewOutcomeStats(businessId: string): Promise<ReviewOutcomeStats> {
   const rows = await sql`
@@ -258,7 +269,7 @@ export async function getRecentVisits(businessId: string, limit = 50): Promise<F
       v.service_name,
       v.visited_at,
       v.source,
-      v.followup_status,
+      CASE WHEN d.state IN ('sending','unknown','reconciliation_required') THEN d.state ELSE v.followup_status END AS followup_status,
       v.followup_sent_at,
       v.attempt_count,
       v.next_attempt_at,
@@ -267,9 +278,10 @@ export async function getRecentVisits(businessId: string, limit = 50): Promise<F
       b.tone,
       b.language,
       b.email_from_name,
-      (SELECT fm.error_message FROM public.followup_messages fm WHERE fm.visit_id = v.id ORDER BY fm.created_at DESC LIMIT 1) AS error_reason
+      COALESCE(d.error_message,(SELECT fm.error_message FROM public.followup_messages fm WHERE fm.visit_id = v.id ORDER BY fm.created_at DESC LIMIT 1),v.last_error) AS error_reason
     FROM public.followup_visits v
     JOIN public.businesses b ON b.id = v.business_id
+    LEFT JOIN public.booster_followup_deliveries d ON d.business_id=v.business_id AND d.visit_id=v.id
     WHERE v.business_id = ${businessId}
     ORDER BY v.visited_at DESC
     LIMIT ${Math.max(1, Math.min(limit, 500))}
@@ -300,7 +312,7 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
       b.tone,
       b.language,
       b.email_from_name,
-      (SELECT fm.error_message FROM public.followup_messages fm WHERE fm.visit_id = v.id ORDER BY fm.created_at DESC LIMIT 1) AS error_reason
+      COALESCE((SELECT fm.error_message FROM public.followup_messages fm WHERE fm.visit_id = v.id ORDER BY fm.created_at DESC LIMIT 1),v.last_error) AS error_reason
     FROM public.followup_visits v
     JOIN public.businesses b ON b.id = v.business_id
     WHERE v.business_id = ${businessId}

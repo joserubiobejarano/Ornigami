@@ -1,4 +1,4 @@
-export type FollowupStatus = "pending" | "sent" | "failed" | "skipped";
+export type FollowupStatus = "pending" | "sent" | "failed" | "skipped" | "deferred_quota" | "expired" | "non_sendable" | "reconciliation_required";
 
 export type FollowupVisit = {
   id: string;
@@ -30,6 +30,8 @@ export type FollowupRunResult = {
   sent: number;
   failed: number;
   skipped: number;
+  unknown: number;
+  deferred: number;
 };
 
 export type FollowupStats = {
