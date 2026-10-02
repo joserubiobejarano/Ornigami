@@ -252,6 +252,37 @@ test("a 401 refresh reuses a newer token already saved by another worker", async
   assert.equal(retryAuthorization, "Bearer newer-worker-token");
 });
 
+test("a selected location never retries against a replacement connection generation", async () => {
+  let stored = token();
+  let apiCalls = 0;
+  let refreshCalls = 0;
+  const client = createGoogleClient({
+    getTokens: async () => stored,
+    saveTokens: async (_owner, next) => { stored = next; },
+    refresh: async () => { refreshCalls += 1; return { access_token: "unexpected", expires_in: 3600, token_type: "Bearer" }; },
+    fetcher: async () => {
+      apiCalls += 1;
+      stored = token({ connection_version: "generation-2", access_token: "replacement" });
+      return new Response(null, { status: 401 });
+    },
+    now: Date.now,
+    sleep: async () => {},
+    requestTimeoutMs: 1000,
+  });
+  await assert.rejects(
+    client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews", {}, "generation-1"),
+    (error: Error) => error.name === "GoogleConnectionVersionError"
+  );
+  assert.equal(apiCalls, 1);
+  assert.equal(refreshCalls, 0);
+
+  const staleAtStart = makeClient({ initial: token({ connection_version: "generation-2" }), fetcher: async () => assert.fail("provider must not be called") });
+  await assert.rejects(
+    staleAtStart.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews", {}, "generation-1"),
+    (error: Error) => error.name === "GoogleConnectionVersionError"
+  );
+});
+
 test("a disconnect or credential replacement during refresh never sends or saves stale tokens", async () => {
   let current: TestTokens | null = token({ expires_at: pastExpiry() });
   let saves = 0;

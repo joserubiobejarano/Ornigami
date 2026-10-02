@@ -172,8 +172,11 @@ export async function postReplyToGoogleAndPersist(
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ comment: normalizedReply }),
-    });
-  } catch {
+    }, selected.connection_version);
+  } catch (error) {
+    if (error instanceof Error && error.name === "GoogleConnectionVersionError") {
+      return { ok: false, error: "Google connection changed since location selection", status: 409 };
+    }
     return { ok: false, error: "Google reply update failed", status: 502 };
   }
 

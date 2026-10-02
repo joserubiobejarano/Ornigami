@@ -11,7 +11,7 @@ Existing EUR prices, 14-day/no-card trial entry, and reputation-only Complete re
 Owner choices remaining:
 
 - UTC calendar/full-month quotas, no rollover, cross-midnight reservation ownership, and business-shared Reply safety accounting.
-- One 14-day trial per business **and billing owner**; historical eligibility/retention exceptions. Trial preference was requested; no answer is recorded.
+- Trial-history privacy retention and deliberate support exceptions remain A11/owner decisions. One 14-day trial per business **and billing owner**, including unknown-history reconciliation, was explicitly approved on 2026-10-03 and implemented by A03.
 - Recovery-only payment policy, notice clock, scheduled downgrade timing, seats, and member read access after lapse/downgrade.
 - Shared selected location and captured-versus-held existing visit destinations after a switch.
 - Scheduled drafts-only versus separately approved scheduled posting; explicit high-rating opt-in and mandatory low/unknown-rating human approval.

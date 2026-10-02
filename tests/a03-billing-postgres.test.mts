@@ -172,6 +172,23 @@ test("A03 billing persistence is fenced, atomic, durable and migration-idempoten
 
     const goodApply = `SELECT public.apply_stripe_webhook_snapshot('evt-new','customer.subscription.updated','${owner}','${business}','cus_a03',${invalidAgents},'complete','annual','2026-10-02T00:00:00Z','${replacementFence}',
       '[{"agentId":"review_replies","status":"trialing","activatedAt":"2026-10-02T00:00:00Z"},{"agentId":"review_booster","status":"trialing","activatedAt":"2026-10-02T00:00:00Z"}]'::jsonb,NULL)`;
+    // A persisted customer must not let snapshots bypass team admission's mutex.
+    psql(`UPDATE businesses SET stripe_customer_id='cus_a03' WHERE id='${business}'`);
+    // NO KEY UPDATE permits downstream FK KEY SHARE checks, so only an
+    // explicit workspace mutation lock can explain the snapshot timeout.
+    const businessLock = psqlAsync(`BEGIN; SET application_name='a00-billing-business-lock';
+      SELECT id FROM businesses WHERE id='${business}' FOR NO KEY UPDATE; SELECT pg_sleep(2); COMMIT;`);
+    let lockReady = false;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      if (psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a00-billing-business-lock' AND wait_event='PgSleep'") === "1") {
+        lockReady = true; break;
+      }
+      await new Promise(resolveWait => setTimeout(resolveWait, 25));
+    }
+    assert.ok(lockReady, "business mutex fixture acquired its lock");
+    assert.throws(() => psql(`SET statement_timeout='150ms'; ${goodApply}`), "billing snapshots wait for team admission even with an existing customer mapping");
+    assert.equal(psql("SELECT count(*) FROM subscriptions WHERE id='sub-a03'"), "0", "timed-out snapshot rolls back completely");
+    await businessLock;
     psql(goodApply);
     assert.equal(psql("SELECT status FROM public.billing_webhook_events WHERE event_id='evt-new'"), "completed");
     assert.equal(psql(`SELECT count(*) FROM public.billing_trial_business_history WHERE business_id='${business}' AND state='consumed'`), "1");

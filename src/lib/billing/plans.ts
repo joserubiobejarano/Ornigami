@@ -46,7 +46,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
 export const PLAN_ORDER: PlanId[] = ["replies", "booster", "complete"];
 
 export function isPlanId(value: unknown): value is PlanId {
-  return typeof value === "string" && value in PLANS;
+  return typeof value === "string" && Object.hasOwn(PLANS, value);
 }
 
 export function agentsForPlan(planId: PlanId): AgentId[] {

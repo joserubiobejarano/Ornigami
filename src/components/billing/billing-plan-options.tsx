@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PLANS, PLAN_ORDER, effectiveMonthlyFromAnnual, formatAnnualSavings, formatPrice, type BillingPeriod, type PlanId } from "@/lib/billing/plans";
 
-export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan: PlanId | null; currentPeriod: BillingPeriod }) {
+export function BillingPlanOptions({ currentPlan, currentPeriod, trialEligible = false }: { currentPlan: PlanId | null; currentPeriod: BillingPeriod; trialEligible?: boolean }) {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(currentPeriod);
 
   return (
@@ -40,7 +40,7 @@ export function BillingPlanOptions({ currentPlan, currentPeriod }: { currentPlan
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm">{plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="font-semibold text-primary">✓</span><span>{feature}</span></li>)}</ul>
-                {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">Start free trial</Button></form> : isCurrentSelection ? <p className="text-sm font-medium text-accent-green">Current plan</p> : <ChangePlanButton planId={planId} billingPeriod={billingPeriod} />}
+                {!currentPlan ? <form action="/api/stripe/checkout" method="post"><input type="hidden" name="plan_id" value={planId} /><input type="hidden" name="billing_period" value={billingPeriod} /><Button type="submit" className="w-full">{trialEligible ? "Start free trial" : "Continue to checkout"}</Button></form> : isCurrentSelection ? <p className="text-sm font-medium text-accent-green">Current plan</p> : <ChangePlanButton planId={planId} billingPeriod={billingPeriod} />}
               </CardContent>
             </Card>
           );

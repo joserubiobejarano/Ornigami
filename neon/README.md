@@ -23,6 +23,10 @@ This folder is the database source of truth. Apply every migration once, in nume
 | `015_stripe_usage_periods.sql` | Current billing-period start fields |
 | `016_remove_legacy_plan_taxonomy.sql` | Current plan constraints |
 | `017_team_invitations.sql` | Expiring Complete-plan workspace invitations |
+| `019_billing_lifecycle.sql` | Durable customer/checkout intents, reconciliation leases/events, independent trial histories and atomic billing snapshots |
 | `020_account_recovery.sql` | Session revocation version, auth callback destinations, and expiring single-use password-reset tokens |
+| `021_workspace_invitations.sql` | Invitation status/revocation, expiry/reinvite, serialized seat admission and member cleanup |
+| `031_google_location_selection.sql` | Per-business selected location and OAuth/cache generations; no automatic selection or legacy backfill |
+| `032_workspace_bootstrap.sql` | Serialized first-workspace creation sharing the invitation user mutex |
 
-Apply available migrations in numeric order; do not replay historical schemas or renumber applied files. Reservations 018 (A02, unused) and 019 (future A03) are not missing authored migrations; 020 is additive and does not depend on them. Apply 020 before deploying the new auth code, including to every target database used by that deployment. See [docs/DATABASE.md](../docs/DATABASE.md) for the product-facing data model and behavior rules.
+Apply available migrations in numeric order; do not renumber applied files. 018 remains unused; 022–030 remain reserved for dependent packages. Deploy each schema before its consumers. Wave 2 applies 019, 021, 031 and 032 in one bounded transaction on the verified production target, after isolated PostgreSQL and Linux CI validation. Preserve conservative legacy trial history and pending billing intents. Google selections are explicit; never infer a selection from cached discovery. See [database behavior](../docs/DATABASE.md) and [integration evidence](../docs/tasks/A00_WAVE2_INTEGRATION_REVIEW.md).

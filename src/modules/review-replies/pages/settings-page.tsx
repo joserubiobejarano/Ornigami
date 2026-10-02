@@ -34,10 +34,13 @@ type GoogleLocation = {
   title: string | null;
   primaryCategory: string | null;
   isSuspended: boolean;
+  selected: boolean;
 };
 
 type ConnectionData = {
   connected: boolean;
+  canManage?: boolean;
+  selectionLocked?: boolean;
   locations?: GoogleLocation[];
 };
 
@@ -49,6 +52,7 @@ function SettingsPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [selectingLocation, setSelectingLocation] = useState<string | null>(null);
   const {
     isDemo,
     businessName,
@@ -148,6 +152,26 @@ function SettingsPageContent() {
 
   const handleConnectGoogle = () => {
     window.location.href = "/api/google/oauth/start";
+  };
+
+  const handleSelectLocation = async (locationId: string) => {
+    setSelectingLocation(locationId);
+    setError(null);
+    try {
+      const res = await fetch("/api/google/locations/selection", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locationId }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(readApiErrorMessage(body, "We couldn't select this location. Please try again."));
+      }
+      await fetchConnectionData();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Location selection failed.");
+    } finally {
+      setSelectingLocation(null);
+    }
   };
 
 
@@ -313,7 +337,7 @@ function SettingsPageContent() {
                 Profile.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button onClick={handleConnectGoogle}>Connect Google</Button>
+                <Button onClick={handleConnectGoogle} disabled={connectionData?.canManage !== true}>Connect Google</Button>
                 {error && (
                   <Button type="button" onClick={() => void fetchConnectionData()}>
                     Retry
@@ -325,11 +349,16 @@ function SettingsPageContent() {
 
           {!connLoading && gbpConnected && (
             <div className="space-y-4">
+              {connectionData?.selectionLocked && !locations.some((location) => location.selected) ? (
+                <p className="text-sm text-foreground">
+                  Your selected location is unavailable. Reconnect the Google account that manages it and sync locations again.
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleSyncLocations} disabled={isSyncing}>
                   {isSyncing ? "SyncingÃ¢â‚¬Â¦" : "Sync locations"}
                 </Button>
-                <Button onClick={handleDisconnect}>
+                <Button onClick={handleDisconnect} disabled={connectionData?.canManage !== true}>
                   Disconnect Google
                 </Button>
               </div>
@@ -359,6 +388,11 @@ function SettingsPageContent() {
                           >
                             {loc.isSuspended ? "Suspended" : "Active"}
                           </Badge>
+                          {loc.selected ? <Badge>Selected</Badge> : connectionData?.canManage && !connectionData.selectionLocked && !locations.some((location) => location.selected) ? (
+                            <Button size="sm" onClick={() => void handleSelectLocation(loc.id)} disabled={selectingLocation !== null}>
+                              {selectingLocation === loc.id ? "Selecting…" : "Use this location"}
+                            </Button>
+                          ) : null}
                         </div>
                       </li>
                     ))}

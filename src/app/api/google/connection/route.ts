@@ -17,10 +17,17 @@ export async function GET(req: NextRequest) {
       SELECT 1 AS connected FROM public.gbp_connections
       WHERE user_id = ${context.integrationOwnerUserId} LIMIT 1
     `;
-    if (!connections.length) return NextResponse.json({ connected: false, locations: [] });
+    const canManage = context.role === "owner";
+    if (!connections.length) return NextResponse.json({ connected: false, locations: [], canManage });
     const locations = await listBusinessGoogleLocations(context);
+    const selections = await sql`
+      SELECT 1 FROM public.business_google_locations
+      WHERE business_id = ${context.businessId} LIMIT 1
+    `;
     return NextResponse.json({
       connected: true,
+      canManage,
+      selectionLocked: selections.length > 0,
       locations: locations.map((location) => {
         const raw = location.raw ?? {};
         const primaryCategory =

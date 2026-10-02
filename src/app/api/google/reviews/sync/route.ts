@@ -44,7 +44,9 @@ export async function POST(req: NextRequest) {
       user.id, email, "review_replies", requestedBusiness.businessId
     );
     const location = await getSelectedGoogleLocation(context, input.locationName as string | undefined);
-    const reviews = await fetchAllGoogleReviews(context.integrationOwnerUserId, location.location_name);
+    const reviews = await fetchAllGoogleReviews(
+      context.integrationOwnerUserId, location.location_name, undefined, location.connection_version
+    );
     const result = await persistGoogleReviews(
       context.integrationOwnerUserId, context.businessId, location.location_name, reviews
     );
@@ -59,6 +61,9 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ imported: result.synced, new_reviews: result.newReviews.length });
   } catch (error) {
+    if (error instanceof Error && error.name === "GoogleConnectionVersionError") {
+      return NextResponse.json({ error: "Google connection changed since location selection. Retry the sync." }, { status: 409 });
+    }
     if (error instanceof BusinessGoogleError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

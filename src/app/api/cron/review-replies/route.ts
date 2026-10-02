@@ -13,11 +13,11 @@ import { sendNewReviewAlert } from "@/lib/review-alerts";
 import { finishCronRun, startCronRun } from "@/lib/cron-health";
 import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
 
-type LocationRow = { business_id: string; user_id: string; business_name: string; location_name: string };
+type LocationRow = { business_id: string; user_id: string; business_name: string; location_name: string; connection_version: string };
 type NewReview = { reviewerName: string | null; starRating: number | null; comment: string | null };
 
-async function syncLocation(userId: string, businessId: string, locationName: string): Promise<{ synced: number; newReviews: NewReview[] }> {
-  const reviews = await fetchAllGoogleReviews(userId, locationName);
+async function syncLocation(userId: string, businessId: string, locationName: string, connectionVersion: string): Promise<{ synced: number; newReviews: NewReview[] }> {
+  const reviews = await fetchAllGoogleReviews(userId, locationName, undefined, connectionVersion);
   return persistGoogleReviews(userId, businessId, locationName, reviews);
 }
 
@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
   const runId = await startCronRun("review_replies");
   try {
     const locations = (await sql`
-      SELECT DISTINCT b.id AS business_id, b.owner_user_id AS user_id, b.name AS business_name, l.location_name
+      SELECT DISTINCT b.id AS business_id, b.owner_user_id AS user_id, b.name AS business_name,
+        l.location_name, gc.connection_version
       FROM public.business_google_locations selected
       INNER JOIN public.businesses b ON b.id = selected.business_id
       INNER JOIN public.gbp_locations l ON l.id = selected.location_id
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     let failed = 0;
     for (const location of locations) {
       try {
-        const result = await syncLocation(location.user_id, location.business_id, location.location_name);
+        const result = await syncLocation(location.user_id, location.business_id, location.location_name, location.connection_version);
         synced += result.synced;
         if (result.newReviews.length > 0) {
           const ownerRows = await sql`

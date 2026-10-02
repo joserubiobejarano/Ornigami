@@ -45,7 +45,9 @@ export async function POST(req: NextRequest) {
       SELECT (SELECT count(*) FROM deleted) AS deleted_connections,
         (SELECT count(*) FROM invalidated) AS invalidated_locations
     `;
-    return NextResponse.json({ ok: true, scope: "owner_google_connection" });
+    const response = NextResponse.json({ ok: true, scope: "owner_google_connection" });
+    response.cookies.set("ll_gbp_oauth_state", "", { path: "/", maxAge: 0 });
+    return response;
   } catch (error) {
     if (error instanceof Error && "status" in error) return googleBusinessErrorResponse(error);
     safeLogger.error("google.disconnect.post.failed", { error: error instanceof Error ? error.message : "unknown" });

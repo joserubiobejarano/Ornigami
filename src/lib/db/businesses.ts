@@ -91,16 +91,15 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
     ? ""
     : ownerUser.business_name?.trim() || "";
 
-  const insertedRows = await sql`
-    INSERT INTO public.businesses (owner_user_id, name)
-    VALUES (${resolvedUserId}, ${businessName})
-    RETURNING
-      id, owner_user_id, name, business_type, city, country, website, phone,
-      google_review_url, rebooking_url, tone, language, email_from_name, created_at, updated_at
+  const createdRows = await sql`
+    SELECT * FROM public.ensure_workspace_for_user(${resolvedUserId}, ${businessName})
   `;
-  const created = DbBusinessRowSchema.parse(insertedRows[0]);
+  const created = createdRows[0] ? DbBusinessRowSchema.parse(createdRows[0]) : null;
+  if (!created) {
+    throw new Error("Could not resolve user in public.users for business creation.");
+  }
 
-  await ensureBusinessDefaults(created.id, resolvedUserId);
+  await ensureBusinessDefaults(created.id, created.owner_user_id);
   return created;
 }
 

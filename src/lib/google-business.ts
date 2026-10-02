@@ -12,6 +12,7 @@ export type SelectedGoogleLocation = {
   address: string | null;
   timezone: string | null;
   raw: Record<string, unknown> | null;
+  connection_version: string;
 };
 
 export class BusinessGoogleError extends Error {
@@ -61,7 +62,7 @@ export async function getSelectedGoogleLocation(
   try {
     rows = await sql`
       SELECT l.id, l.location_name, l.title, l.store_code, l.place_id,
-        l.address, l.timezone, l.raw
+        l.address, l.timezone, l.raw, l.connection_version
       FROM public.business_google_locations selection
       INNER JOIN public.gbp_connections c ON c.user_id = ${context.integrationOwnerUserId}
       INNER JOIN public.gbp_locations l ON l.id = selection.location_id
@@ -82,6 +83,9 @@ export async function getSelectedGoogleLocation(
   if (requestedName !== undefined && requestedName !== row.location_name) {
     throw new BusinessGoogleError(403, "Google location access denied.");
   }
+  if (typeof row.connection_version !== "string" || !UUID_RE.test(row.connection_version)) {
+    throw new BusinessGoogleError(409, "Google connection is unavailable; reconnect and sync again.");
+  }
   return {
     id: String(row.id),
     location_name: row.location_name,
@@ -91,6 +95,7 @@ export async function getSelectedGoogleLocation(
     address: typeof row.address === "string" ? row.address : null,
     timezone: typeof row.timezone === "string" ? row.timezone : null,
     raw: row.raw && typeof row.raw === "object" ? row.raw as Record<string, unknown> : null,
+    connection_version: row.connection_version,
   };
 }
 
@@ -99,7 +104,7 @@ export async function listBusinessGoogleLocations(context: BusinessContext): Pro
   try {
     const rows = await sql`
       SELECT l.id, l.location_name, l.title, l.store_code, l.place_id,
-        l.address, l.timezone, l.raw,
+        l.address, l.timezone, l.raw, l.connection_version,
         (selection.location_id = l.id) AS selected
       FROM public.gbp_locations l
       INNER JOIN public.gbp_connections c ON c.user_id = ${context.integrationOwnerUserId}
@@ -118,6 +123,7 @@ export async function listBusinessGoogleLocations(context: BusinessContext): Pro
       address: typeof row.address === "string" ? row.address : null,
       timezone: typeof row.timezone === "string" ? row.timezone : null,
       raw: row.raw && typeof row.raw === "object" ? row.raw as Record<string, unknown> : null,
+      connection_version: String(row.connection_version),
       selected: row.selected === true,
     }));
   } catch {

@@ -75,7 +75,7 @@ Exact fields/routes/migrations remain with implementation owners and A00 allocat
 
 ## Decisions awaiting owner approval
 
-Approve UTC/full-month/no-rollover quotas; one trial per business and billing owner; recovery-only grace; scheduled downgrade timing and seats; business-shared generation safety accounting; location-switch handling; and corrected customer promises. Trial preference was requested but no answer is recorded. New policy is therefore proposed, not approved.
+Approve UTC/full-month/no-rollover quotas; recovery-only grace; scheduled downgrade timing and seats; business-shared generation safety accounting; location-switch handling; and corrected customer promises. On 2026-10-03 the owner explicitly approved one 14-day trial per business and billing owner, with unknown legacy history requiring reconciliation. A03 implements that exception to proposal status. All other new policies remain proposed, not approved.
 
 ## Deterministic acceptance scenarios
 

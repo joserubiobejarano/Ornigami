@@ -9,7 +9,7 @@ A18 specification and integration handoff, reviewed against baseline ff4d9b2 on 
 
 Existing catalog prices remain EUR 39/month or EUR 360/year for Replies and Booster individually, and EUR 59/month or EUR 560/year for Complete. Complete includes the two reputation agents. Speed to Lead remains disabled/coming soon and has no approved price, trial, or included volume.
 
-All new target policies below are recommendations awaiting owner approval and implementation acceptance. Source-backed existing promises are identified separately. An unanswered preference question does not approve a policy.
+The owner explicitly approved one 14-day trial per business and billing owner on 2026-10-03, including reconciliation for unknown legacy history; A03 implements it. All other new target policies below remain recommendations awaiting owner approval and implementation acceptance. Source-backed existing promises are identified separately. An unanswered preference question does not approve a policy.
 
 For A09, recommend scheduled draft generation only, matching current cron behavior. Every path must preserve human-edited drafts; 1–3 star and unknown ratings require manual approval. Only known 4–5 star replies may auto-post through an explicit business-owner opt-in in supported interactive processing. Scheduled posting would require a separate approved policy. Generate, Save, and Post must describe their actual effects. Repeat processing of an unchanged saved draft must not regenerate, overwrite it, or consume another generation unit.
 

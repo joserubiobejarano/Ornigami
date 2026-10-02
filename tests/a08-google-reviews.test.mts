@@ -7,14 +7,14 @@ const { NextRequest } = createRequire(import.meta.url)("next/server") as typeof 
 type TestNextRequest = import("next/server").NextRequest;
 
 type ReviewFetcher = {
-  fetchAllGoogleReviews(userId: string, locationName: string, maxPages?: number): Promise<Array<{ reviewId: string }>>;
+  fetchAllGoogleReviews(userId: string, locationName: string, maxPages?: number, expectedConnectionVersion?: string): Promise<Array<{ reviewId: string }>>;
   GoogleReviewsSyncError: new(status: 429 | 502 | 503, retryAfter?: string | null) => Error & { status: 429 | 502 | 503 };
 };
 const locationName = "accounts/100/locations/200";
 const googleResources = loadTs<typeof import("../src/lib/google-resources.js")>("src/lib/google-resources.ts", {});
 const googleRating = loadTs<typeof import("../src/lib/google-review-rating.js")>("src/lib/google-review-rating.ts", {});
 
-function loadSync(fetch: (userId: string, url: string) => Promise<Response>) {
+function loadSync(fetch: (userId: string, url: string, init?: RequestInit, expectedConnectionVersion?: string) => Promise<Response>) {
   return loadTs<ReviewFetcher>("src/lib/google-review-sync.ts", {
     "@/lib/google": { googleFetch: fetch },
     "@/lib/google-resources": {
@@ -26,8 +26,10 @@ function loadSync(fetch: (userId: string, url: string) => Promise<Response>) {
 
 test("Google review pagination preserves canonical parent path and safely encodes the page token", async () => {
   const requests: string[] = [];
-  const mod = loadSync(async (_userId, url) => {
+  const versions: Array<string | undefined> = [];
+  const mod = loadSync(async (_userId, url, _init, version) => {
     requests.push(url);
+    versions.push(version);
     return new Response(JSON.stringify(requests.length === 1
       ? { reviews: [{ reviewId: "r_1" }], nextPageToken: "next token/+" }
       : { reviews: [{ reviewId: "r_2" }] }), { status: 200 });
@@ -35,6 +37,12 @@ test("Google review pagination preserves canonical parent path and safely encode
   assert.deepEqual((await mod.fetchAllGoogleReviews("owner", locationName)).map((review) => review.reviewId), ["r_1", "r_2"]);
   assert.equal(requests[0], "https://mybusiness.googleapis.com/v4/accounts/100/locations/200/reviews?pageSize=50");
   assert.equal(requests[1], "https://mybusiness.googleapis.com/v4/accounts/100/locations/200/reviews?pageSize=50&pageToken=next+token%2F%2B");
+  const pinned = loadSync(async (_userId, _url, _init, version) => {
+    versions.push(version);
+    return Response.json({ reviews: [] });
+  });
+  await pinned.fetchAllGoogleReviews("owner", locationName, undefined, "generation-1");
+  assert.equal(versions.at(-1), "generation-1");
 });
 
 test("Google review pagination rejects repeated tokens, duplicate IDs, malformed pages, and silent truncation", async () => {
@@ -88,7 +96,7 @@ test("manual sync maps malformed, repeated, truncated, and failed provider fetch
       },
       "@/lib/google-business": {
         ...helper,
-        getSelectedGoogleLocation: async () => ({ location_name: locationName }),
+        getSelectedGoogleLocation: async () => ({ location_name: locationName, connection_version: "generation-1" }),
       },
       "@/lib/google-review-sync": syncModule,
       "@/lib/google-review-persistence": { persistGoogleReviews: async () => { persistCalls += 1; return { synced: 0, newReviews: [] }; } },
@@ -165,7 +173,7 @@ function loadPoster(options: {
   googleResponse?: Response;
   localPersistFails?: boolean;
 }) {
-  const providerCalls: Array<{ userId: string; url: string; init?: RequestInit }> = [];
+  const providerCalls: Array<{ userId: string; url: string; init?: RequestInit; expectedConnectionVersion?: string }> = [];
   const db = fakeSql((query) => {
     if (options.localPersistFails && query.includes("DELETE FROM public.review_replies")) throw new Error("local DB unavailable");
     return query.includes("SELECT id") && query.includes("public.reviews") && options.reviewExists !== false ? [{ id: "review-row" }] : [];
@@ -175,8 +183,8 @@ function loadPoster(options: {
     business: { owner_user_id: "owner-1" }, role: "member",
   };
   const mod = loadTs<Poster>("src/lib/review-reply-server.ts", {
-    "@/lib/google": { googleFetch: async (userId: string, url: string, init?: RequestInit) => {
-      providerCalls.push({ userId, url, init });
+    "@/lib/google": { googleFetch: async (userId: string, url: string, init?: RequestInit, expectedConnectionVersion?: string) => {
+      providerCalls.push({ userId, url, init, expectedConnectionVersion });
       return options.googleResponse ?? new Response("{}", { status: 200 });
     } },
     "@/lib/db/neon": { sql: db.sql },
@@ -195,7 +203,7 @@ function loadPoster(options: {
           error.status = 403;
           throw error;
         }
-        return { location_name: options.selectedLocation ?? locationName };
+        return { location_name: options.selectedLocation ?? locationName, connection_version: "generation-1" };
       },
     },
     "@/lib/google-resources": {
@@ -210,6 +218,7 @@ test("reply posting uses owner token and the canonical PUT contract after exact 
   assert.deepEqual(await mod.postReplyToGoogleAndPersist("member-1", "biz-1", "review_1", locationName, "Thanks"), { ok: true });
   assert.equal(providerCalls.length, 1);
   assert.equal(providerCalls[0]!.userId, "owner-1");
+  assert.equal(providerCalls[0]!.expectedConnectionVersion, "generation-1");
   assert.equal(providerCalls[0]!.url, "https://mybusiness.googleapis.com/v4/accounts/100/locations/200/reviews/review_1/reply");
   assert.equal(providerCalls[0]!.init?.method, "PUT");
   assert.deepEqual(JSON.parse(String(providerCalls[0]!.init?.body)), { comment: "Thanks" });

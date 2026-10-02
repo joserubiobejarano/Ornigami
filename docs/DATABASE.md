@@ -56,3 +56,11 @@ Neon Postgres is the database. `neon/migrations` is the only schema source of tr
 - Keep `neon/README.md` and this file aligned with every new migration.
 - Do not create a second migration tree.
 - Application code, not RLS, owns authorization and business scoping.
+
+## Reviewed billing, team and Google contracts — 2026-10-03
+
+Migrations 019/021/031/032 extend the canonical Neon schema. Billing keeps immutable provider requests and keys in `billing_checkout_intents`/`billing_customer_provisioning`, a canonical `billing_owner_customers` mapping, owner/event reconciliation fences, and atomic subscription/business-agent/profile snapshots. Business agent plan/period fields and period bounds are authoritative for A06; the owner profile is a compatibility mirror. Independent business/owner trial histories consume eligibility only on authoritative trial start. Unknown legacy history requires operator reconciliation.
+
+`team_invitations.status` is pending/accepted/revoked, with expiry and revocation timestamps. Business-row locks serialize seat checks with billing snapshots; the persisted user mutex serializes acceptance across businesses and first-workspace creation via `ensure_workspace_for_user`. Complete reserves three seats including the owner and live pending invitations. Owner cleanup is permitted after lapse; new downgrade policy remains undecided.
+
+`business_google_locations` records one explicit selected cached location per business. Connections rotate `connection_version` on OAuth replacement, while refresh preserves it; each discovered cache row records its validating generation. Stale/disconnected rows are unavailable. No initial selection or canonical-review backfill is inferred. Provider review/post requests pin the selected generation. A11 owns export/deletion/retention coverage for all new lifecycle tables and remote Google revocation; A13/A18 own approved location-switch recovery.

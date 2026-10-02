@@ -387,7 +387,9 @@ BEGIN
   IF NOT FOUND OR lease_row.event_id <> p_event_id OR lease_row.fence <> p_fence OR lease_row.lease_until <= clock_timestamp() THEN
     RAISE EXCEPTION 'stale billing reconciliation fence' USING ERRCODE = '40001';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.businesses WHERE id = p_business_id AND owner_user_id = p_owner_user_id) THEN
+  -- Team admission uses this same mutex before checking Complete entitlement.
+  PERFORM 1 FROM public.businesses WHERE id = p_business_id AND owner_user_id = p_owner_user_id FOR UPDATE;
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'billing owner/business mapping conflict' USING ERRCODE = '23503';
   END IF;
   IF EXISTS(SELECT 1 FROM public.billing_owner_customers WHERE owner_user_id=p_owner_user_id AND stripe_customer_id<>p_customer_id)

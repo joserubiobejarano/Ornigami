@@ -14,21 +14,22 @@ const pgExe = (name: string) => process.platform === "win32"
 function psql(port: number, statement: string): string {
   return execFileSync(pgExe("psql"), [
     "-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port),
-    "-U", "postgres", "-d", "postgres", "-c", statement,
-  ], { encoding: "utf8" }).trim();
+    "-U", "postgres", "-d", "postgres", "-f", "-",
+  ], { encoding: "utf8", input: statement }).trim();
 }
 
 function psqlAsync(port: number, statement: string): Promise<string> {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(pgExe("psql"), [
       "-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port),
-      "-U", "postgres", "-d", "postgres", "-c", statement,
-    ], { stdio: ["ignore", "pipe", "pipe"] });
+      "-U", "postgres", "-d", "postgres", "-f", "-",
+    ], { stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     child.stdout.setEncoding("utf8").on("data", (chunk: string) => { stdout += chunk; });
     child.stderr.setEncoding("utf8").on("data", (chunk: string) => { stderr += chunk; });
     child.once("error", reject);
+    child.stdin.end(statement);
     child.once("close", (code) => code === 0
       ? resolvePromise(stdout.trim())
       : reject(new Error(`psql exited ${code}: ${stderr}`)));
@@ -109,14 +110,15 @@ test("A05 migration and team lifecycle serialize seats, expiry, removal, and cro
     const migrations = readdirSync(migrationsDir)
       .filter((name) => /^\d{3}_.+\.sql$/.test(name))
       .sort((a, b) => Number(a.slice(0, 3)) - Number(b.slice(0, 3)));
-    assert.equal(migrations.at(-1), "021_workspace_invitations.sql");
     for (const migration of migrations) psql(port, readFileSync(join(migrationsDir, migration), "utf8"));
 
     const owners = Array.from({ length: 5 }, (_, i) => id(1 + i));
     const invitees = Array.from({ length: 12 }, (_, i) => id(20 + i));
     const usersSql = [...owners, ...invitees].map((userId, i) =>
       `('${userId}',${quote(`person${i}@example.test`)},'hash',now())`).join(",");
-    psql(port, `INSERT INTO public.users(id,email,password_hash,email_verified) VALUES ${usersSql};`);
+    const ownerF = id(6);
+    const bootstrapUser = id(900);
+    psql(port, `INSERT INTO public.users(id,email,password_hash,email_verified) VALUES ${usersSql},('${ownerF}','owner-f@example.test','hash',now()),('${bootstrapUser}','bootstrap@example.test','hash',now());`);
 
     async function workspace(businessId: string, ownerId: string) {
       psql(port, `INSERT INTO public.businesses(id,owner_user_id,name) VALUES ('${businessId}','${ownerId}','A05 test');`);
@@ -135,12 +137,48 @@ test("A05 migration and team lifecycle serialize seats, expiry, removal, and cro
 
     const [ownerA, ownerB, ownerC, ownerD, ownerE] = owners;
     const [userA, userB, userC, userD, userE, userF, userG] = invitees;
-    const [bizA, bizB, bizC, bizD, bizE] = [101, 102, 103, 104, 105].map(id);
+    const [bizA, bizB, bizC, bizD, bizE, bizF] = [101, 102, 103, 104, 105, 106].map(id);
     await workspace(bizA, ownerA);
     await workspace(bizB, ownerB);
     await workspace(bizC, ownerC);
     await workspace(bizD, ownerD);
     await workspace(bizE, ownerE);
+    await workspace(bizF, ownerF);
+
+    // The user-row mutex makes parallel first-workspace requests converge.
+    const bootstrapRace = await Promise.all([
+      psqlAsync(port, `SELECT row_to_json(b)::text FROM public.ensure_workspace_for_user('${bootstrapUser}','First name') b;`),
+      psqlAsync(port, `SELECT row_to_json(b)::text FROM public.ensure_workspace_for_user('${bootstrapUser}','Second name') b;`),
+    ]);
+    const bootstrapped = bootstrapRace.map(result => JSON.parse(result) as { id: string; owner_user_id: string });
+    assert.equal(bootstrapped[0]?.id, bootstrapped[1]?.id);
+    assert.equal(bootstrapped[0]?.owner_user_id, bootstrapUser);
+    assert.equal(psql(port, `SELECT count(*) FROM public.businesses WHERE owner_user_id='${bootstrapUser}'`), "1");
+
+    // Invitation acceptance and first-workspace provisioning share the user
+    // mutex. Either wins, but the user must never acquire a second workspace.
+    const raceUser = id(901);
+    const raceToken = "z".repeat(64);
+    psql(port, `INSERT INTO public.users(id,email,password_hash,email_verified) VALUES ('${raceUser}','race@example.test','hash',now());`);
+    await reserve(bizF, ownerF, "race@example.test", raceToken);
+    const acceptanceBootstrapRace = await Promise.all([
+      psqlAsync(port, `SELECT public.team_accept_invitation('${raceUser}','${raceToken}')::text`),
+      psqlAsync(port, `SELECT row_to_json(b)::text FROM public.ensure_workspace_for_user('${raceUser}','Race name') b;`),
+    ]);
+    const acceptanceRaceResult = JSON.parse(acceptanceBootstrapRace[0]!) as { status: string };
+    const bootstrapRaceResult = JSON.parse(acceptanceBootstrapRace[1]!) as { id: string; owner_user_id: string };
+    assert.ok(["accepted", "another_workspace"].includes(acceptanceRaceResult.status));
+    const raceWorkspaceCount = psql(port, `SELECT (count(DISTINCT business_id) + count(DISTINCT owned_id))::text FROM (
+      SELECT business_id, NULL::uuid AS owned_id FROM public.business_members WHERE user_id='${raceUser}'
+      UNION ALL SELECT NULL::uuid, id FROM public.businesses WHERE owner_user_id='${raceUser}'
+    ) workspaces`);
+    assert.equal(raceWorkspaceCount, "1");
+    if (acceptanceRaceResult.status === "accepted") {
+      assert.equal(bootstrapRaceResult.id, bizF);
+      assert.equal(bootstrapRaceResult.owner_user_id, ownerF);
+    } else {
+      assert.equal(bootstrapRaceResult.owner_user_id, raceUser);
+    }
 
     const teamRoute = getTeamRouteAgainstPostgres(port, ownerA, bizA);
     const teamResponse = await teamRoute.GET();

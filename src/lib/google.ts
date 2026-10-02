@@ -53,6 +53,13 @@ type Tokens = {
 
 type TokenSnapshot = Pick<Tokens, "connection_version" | "stored_access_token" | "stored_refresh_token">;
 
+export class GoogleConnectionVersionError extends Error {
+  constructor() {
+    super("Google connection changed since location selection.");
+    this.name = "GoogleConnectionVersionError";
+  }
+}
+
 type TokenResponse = {
   access_token: string;
   refresh_token?: string;
@@ -316,14 +323,36 @@ function tokensFromRefresh(current: Tokens, received: GoogleOAuthTokens, now: nu
 export function createGoogleClient(dependencies: GoogleClientDependencies) {
   const refreshes = new Map<string, Promise<Tokens>>();
 
-  async function refreshOwner(ownerUserId: string, fallback: Tokens, force: boolean): Promise<Tokens> {
+  function assertExpectedConnectionVersion(tokens: Tokens, expectedConnectionVersion?: string): void {
+    if (expectedConnectionVersion !== undefined && tokens.connection_version !== expectedConnectionVersion) {
+      throw new GoogleConnectionVersionError();
+    }
+  }
+
+  async function refreshOwner(
+    ownerUserId: string,
+    fallback: Tokens,
+    force: boolean,
+    expectedConnectionVersion?: string
+  ): Promise<Tokens> {
     const active = refreshes.get(ownerUserId);
-    if (active) return active;
+    if (active) {
+      const refreshed = await active;
+      assertExpectedConnectionVersion(refreshed, expectedConnectionVersion);
+      return refreshed;
+    }
     const operation = (async () => {
       const latest = await dependencies.getTokens(ownerUserId);
-      if (!latest) throw new Error("No Google connection found.");
+      if (!latest) {
+        if (expectedConnectionVersion !== undefined) throw new GoogleConnectionVersionError();
+        throw new Error("No Google connection found.");
+      }
+      assertExpectedConnectionVersion(latest, expectedConnectionVersion);
       const latestIsFresh = !isExpired(latest.expires_at, dependencies.now());
-      if (latestIsFresh && (!force || latest.access_token !== fallback.access_token)) return latest;
+      if (latestIsFresh && (!force || latest.access_token !== fallback.access_token)) {
+        assertExpectedConnectionVersion(latest, expectedConnectionVersion);
+        return latest;
+      }
       let received: GoogleOAuthTokens;
       try {
         received = await dependencies.refresh(latest.refresh_token);
@@ -341,7 +370,10 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
         current.stored_refresh_token !== latest.stored_refresh_token ||
         current.access_token !== latest.access_token || current.refresh_token !== latest.refresh_token
       ) {
-        if (!isExpired(current.expires_at, dependencies.now())) return current;
+        if (!isExpired(current.expires_at, dependencies.now())) {
+          assertExpectedConnectionVersion(current, expectedConnectionVersion);
+          return current;
+        }
         throw new Error("Google credentials changed during refresh.");
       }
       const refreshed = tokensFromRefresh(latest, received, dependencies.now());
@@ -355,6 +387,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
       } catch {
         throw new Error("Google credentials changed or could not be saved.");
       }
+      assertExpectedConnectionVersion(refreshed, expectedConnectionVersion);
       return refreshed;
     })();
     refreshes.set(ownerUserId, operation);
@@ -365,23 +398,36 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     }
   }
 
-  async function freshTokens(ownerUserId: string): Promise<Tokens> {
+  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string): Promise<Tokens> {
     const tokens = await dependencies.getTokens(ownerUserId);
-    if (!tokens) throw new Error("No Google connection found.");
+    if (!tokens) {
+      if (expectedConnectionVersion !== undefined) throw new GoogleConnectionVersionError();
+      throw new Error("No Google connection found.");
+    }
+    assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
     if (!tokens.access_token || !tokens.refresh_token) throw new Error("Stored Google credentials are invalid.");
     if (!isExpired(tokens.expires_at, dependencies.now())) return tokens;
-    return refreshOwner(ownerUserId, tokens, false);
+    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion);
   }
 
-  async function googleFetch(ownerUserId: string, input: string | URL, options: RequestInit = {}): Promise<Response> {
+  async function googleFetch(
+    ownerUserId: string,
+    input: string | URL,
+    options: RequestInit = {},
+    expectedConnectionVersion?: string
+  ): Promise<Response> {
     const url = safeApiUrl(input);
     const method = (options.method ?? "GET").toUpperCase();
     const canReplay = retryableRequest(method, url, options.body);
-    let tokens = await freshTokens(ownerUserId);
+    let tokens: Tokens;
     let refreshedAfterUnauthorized = false;
     const maxAttempts = canReplay ? MAX_API_ATTEMPTS : 1;
 
     for (let attempt = 0; ; attempt += 1) {
+      // Re-read before every provider request, including retries after backoff.
+      // A selected location is pinned to the credential generation that authorized it.
+      tokens = await freshTokens(ownerUserId, expectedConnectionVersion);
+      assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
       const controller = new AbortController();
       const externalSignal = options.signal;
       const abortFromCaller = () => controller.abort(externalSignal?.reason);
@@ -416,7 +462,8 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
 
       if (response.status === 401 && canReplay && !refreshedAfterUnauthorized) {
         await response.body?.cancel().catch(() => undefined);
-        tokens = await refreshOwner(ownerUserId, tokens, true);
+        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion);
+        assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
         refreshedAfterUnauthorized = true;
         // The refresh is a credential renewal; start a fresh bounded retry window.
         attempt = -1;

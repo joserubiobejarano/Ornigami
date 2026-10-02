@@ -22,7 +22,7 @@ function isStatus(error: unknown, status: number): error is Error & { status: nu
 
 test("selected location lookup uses the integration owner and fails closed on missing/mismatched selection", async () => {
   const db = fakeSql((query) => query.includes("FROM public.business_google_locations")
-    ? [{ id: locationId, location_name: locationName, title: "Acme", connected: true }]
+    ? [{ id: locationId, location_name: locationName, title: "Acme", connected: true, connection_version: connectionVersion }]
     : []);
   const mod = loadTs<typeof import("../src/lib/google-business.ts")>("src/lib/google-business.ts", {
     "@/lib/db/neon": { sql: db.sql },
@@ -33,6 +33,7 @@ test("selected location lookup uses the integration owner and fails closed on mi
 
   const selected = await mod.getSelectedGoogleLocation(businessContext, locationName);
   assert.equal(selected.location_name, locationName);
+  assert.equal(selected.connection_version, connectionVersion);
   assert.deepEqual(db.calls[0].values, [owner, owner, businessId]);
   const callsAfterValidLookup = db.calls.length;
   await assert.rejects(mod.getSelectedGoogleLocation(businessContext, "accounts/a/locations/x?bad"), (e: unknown) => isStatus(e, 403));
@@ -66,6 +67,14 @@ test("selected location lookup uses the integration owner and fails closed on mi
   });
   await assert.rejects(stale.getSelectedGoogleLocation(businessContext), (e: unknown) => isStatus(e, 409));
   assert.match(staleDb.calls[0].query, /l\.connection_version = c\.connection_version/);
+
+  const malformed = loadTs<typeof import("../src/lib/google-business.ts")>("src/lib/google-business.ts", {
+    "@/lib/db/neon": { sql: fakeSql(() => [{ id: locationId, location_name: locationName, connection_version: null }]).sql },
+    "@/lib/business-context": { BusinessAccessError: class extends Error { status = 403; } },
+    "@/lib/google-discovery": { discoverGoogleLocations: async () => [] },
+    "@/lib/plan-server": { getBusinessPlanInfo: async () => ({ hasAccess: true }) },
+  });
+  await assert.rejects(malformed.getSelectedGoogleLocation(businessContext), (e: unknown) => isStatus(e, 409));
 });
 
 test("explicit business IDs reject empty, malformed body values, and conflicting query/body values", () => {
@@ -84,7 +93,7 @@ test("explicit business IDs reject empty, malformed body values, and conflicting
 
 test("member discovery listing is limited to the selected business location", async () => {
   const db = fakeSql((query) => query.includes("FROM public.gbp_locations l")
-    ? [{ id: locationId, location_name: locationName, title: "Acme", selected: true }]
+    ? [{ id: locationId, location_name: locationName, title: "Acme", selected: true, connection_version: connectionVersion }]
     : []);
   const mod = loadTs<typeof import("../src/lib/google-business.ts")>("src/lib/google-business.ts", {
     "@/lib/db/neon": { sql: db.sql },
@@ -148,13 +157,13 @@ test("a disconnected cached location stays unauthorized until a fresh discovery 
   let connected = false;
   const db = fakeSql((query) => {
     if (query.includes("FROM public.business_google_locations selection")) {
-      return connected ? [{ id: locationId, location_name: locationName, title: "Acme" }] : [];
+      return connected ? [{ id: locationId, location_name: locationName, title: "Acme", connection_version: connectionVersion }] : [];
     }
     if (query.includes("SELECT connection_version FROM public.gbp_connections")) return [{ connection_version: connectionVersion }];
     if (query.includes("SELECT id, location_name FROM public.gbp_locations")) return [{ id: locationId, location_name: locationName }];
     if (query.includes("INSERT INTO public.gbp_locations")) { connected = true; return [{ id: locationId }]; }
     if (query.includes("FROM public.gbp_locations l")) return connected
-      ? [{ id: locationId, location_name: locationName, title: "Acme", selected: true }]
+      ? [{ id: locationId, location_name: locationName, title: "Acme", selected: true, connection_version: connectionVersion }]
       : [];
     return [];
   });
@@ -461,10 +470,16 @@ test("empty-body disconnect remains compatible while a member cannot delete owne
 
 test("owner disconnect atomically removes the shared credential and invalidates every owner cache row", async () => {
   const db = fakeSql(() => []);
+  const cookieWrites: unknown[][] = [];
+  const jsonWithCookies = (value: unknown, init?: ResponseInit) => {
+    const response = Response.json(value, init);
+    Object.defineProperty(response, "cookies", { value: { set: (...args: unknown[]) => cookieWrites.push(args) } });
+    return response;
+  };
   const route = loadTs<typeof import("../src/app/api/google/disconnect/route.ts")>(
     "src/app/api/google/disconnect/route.ts",
     {
-      "next/server": { NextResponse: { json: Response.json } },
+      "next/server": { NextResponse: { json: jsonWithCookies } },
       "@/lib/user-from-req": { resolveUser: async () => ({ id: owner }) },
       "@/lib/db/neon": { sql: db.sql },
       "@/lib/safe-logger": { safeLogger: { error() {} } },
@@ -480,6 +495,7 @@ test("owner disconnect atomically removes the shared credential and invalidates 
   request.nextUrl = new URL(request.url);
   const response = await route.POST(request as never);
   assert.equal(response.status, 200);
+  assert.deepEqual(cookieWrites, [["ll_gbp_oauth_state", "", { path: "/", maxAge: 0 }]]);
   assert.match(db.calls[0].query, /WITH deleted AS \(\s*DELETE FROM public\.gbp_connections/);
   assert.match(db.calls[0].query, /UPDATE public\.gbp_locations SET connected = false/);
   assert.equal(db.calls[0].values.length, 2);

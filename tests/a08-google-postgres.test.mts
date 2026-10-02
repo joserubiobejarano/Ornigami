@@ -98,7 +98,8 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
       ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','locations/200','legacy_ambiguous','Old',5,'ambiguous legacy row','new',NULL),
       ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000007','locations/201','legacy_unique','Old',4,'unique legacy row','new',NULL),
       ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000009','locations/201','legacy_unselected','Old',4,'no business selection','new',NULL);`);
-    psql(readFileSync(join(root, "docs/tasks/A08-selected-location-schema.sql"), "utf8"));
+    psql(readFileSync(join(root, "neon/migrations/031_google_location_selection.sql"), "utf8"));
+    psql(readFileSync(join(root, "neon/migrations/031_google_location_selection.sql"), "utf8"));
     psql(`INSERT INTO public.business_google_locations(business_id,location_id) VALUES
       ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003'),
       ('00000000-0000-4000-8000-000000000007','00000000-0000-4000-8000-000000000006');`);
