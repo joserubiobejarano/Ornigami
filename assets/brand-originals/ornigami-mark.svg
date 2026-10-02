@@ -1,0 +1,13 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ornigami">
+  <defs>
+    <clipPath id="tile"><rect x="0" y="0" width="512" height="512" rx="116"/></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="512" height="512" fill="#123227"/>
+    <!-- folded top-right corner (origami fold signature) -->
+    <path d="M512 0 L512 128 L384 0 Z" fill="#0E211A"/>
+    <path d="M384 0 L512 128" stroke="#2E4A3E" stroke-width="4" fill="none"/>
+    <!-- O -->
+    <circle cx="256" cy="268" r="118" fill="none" stroke="#FBFAF6" stroke-width="58"/>
+  </g>
+</svg>

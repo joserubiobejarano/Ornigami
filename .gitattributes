@@ -1,0 +1,3 @@
+# Preserve imported reference bytes, including legacy line endings/whitespace.
+# New executable code belongs in src and follows the normal repository rules.
+migration-sources/** -text -whitespace

@@ -11,11 +11,13 @@ Ornigami is a Next.js application for local-business reputation workflows. Its c
 
 The app contains real end-to-end Review Replies and Review Booster code, email verification, privacy export/delete, Stripe billing, cron jobs, encrypted Google tokens, Sentry configuration, and automated tests.
 
-Review Replies still has an external launch dependency: Google Business Profile API access/quota and OAuth consent-screen publication/verification must be confirmed in Google Cloud Console. Review Booster can run with email delivery and a manually entered review URL.
+Review Replies still has an external launch dependency: the Google Business Profile API access request must be approved for the Cloud project, and the OAuth branding checks must be completed. The current project state and the post-approval onboarding sequence are recorded in [docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md](./docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md). Review Booster can run with email delivery and a manually entered review URL.
 
 `speed_to_lead` is registered as coming soon only. There is no current `/content` page; the legacy `/api/projects` surface remains for compatibility.
 
 ## Quick start
+
+The single project root is `Ornigami-Agents/`; run all commands there. The former `Agent-LocalLift` repository was promoted to this directory with its Git history and production Vercel linkage preserved. Follow-Up and Contactor source is retained under [migration-sources](./migration-sources/README.md) for remaining integration work, rather than as independent applications. Vercel continues to build the Git repository root (`.`).
 
 1. Install dependencies: `npm ci`
 2. Create `.env.local` from [docs/ENVIRONMENT_VARIABLES.md](./docs/ENVIRONMENT_VARIABLES.md).
@@ -39,7 +41,10 @@ Review Replies still has an external launch dependency: Google Business Profile 
 - [Environment variables](./docs/ENVIRONMENT_VARIABLES.md)
 - [API reference](./docs/API_REFERENCE.md)
 - [Deployment checklist](./docs/DEPLOYMENT_CHECKLIST.md)
+- [Google Business Profile runbook](./docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md)
 - [Roadmap and pending work](./docs/ROADMAP.md)
+- [Agent work packages and branch coordination](./docs/ROADMAP.md#agent-work-packages-and-branch-coordination)
+- [Preserved migration inputs](./migration-sources/README.md)
 - [Review Booster user guide](./docs/guides/ornigami-review-booster-user-guide.md)
 - [Review Booster module README](./src/modules/review-booster/README.md)
 - [Migration README](./neon/README.md)

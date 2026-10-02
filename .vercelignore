@@ -1,0 +1,3 @@
+# Retained migration inputs are not part of the deployed application.
+migration-sources/**
+assets/brand-originals/**

@@ -1,0 +1,4 @@
+customer_name,customer_email,customer_phone,service_name,visited_at
+Alice Johnson,alice@example.com,+15551234567,Haircut,2026-05-01T10:00:00Z
+Ben Carter,ben@example.com,,Dental Cleaning,2026-05-01T14:30:00Z
+Carla Smith,,+15559871234,Nail Service,2026-05-01T16:00:00Z

@@ -9,6 +9,7 @@ This document describes the application as implemented in the current codebase.
 - Neon Postgres via `@neondatabase/serverless`
 - Google Business Profile APIs, OpenAI, Stripe, Resend, and Sentry
 - One Vercel-hosted Next.js application; no separate worker service
+- Single repository root at `Ornigami-Agents`; feature modules share one app, identity model, dependency tree, and migration history. Former standalone source is retained in `migration-sources` as excluded migration reference, not runnable apps.
 - GitHub Actions invokes the Review Booster and Review Replies cron endpoints
 
 ## Layers

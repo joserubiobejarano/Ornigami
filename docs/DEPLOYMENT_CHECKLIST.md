@@ -16,7 +16,10 @@ This is the single deployment and operator document for the Vercel + Neon applic
 - [ ] GitHub repository is connected to the Vercel project.
 - [ ] Neon database is provisioned.
 - [ ] Google OAuth credentials exist in the project used by `GOOGLE_CLIENT_ID`.
-- [ ] Google Business Profile APIs are enabled, access/quota is approved, and the OAuth consent screen is published/verified as required. This remains an external blocker; see `ROADMAP.md`.
+- [ ] A real eligible client Business Profile is available and the applicant Google account has Manager access. Ornigami is online-only and must not create a profile solely for API access.
+- [ ] Google Business Profile API Basic Access is approved for project `local-lift-477812` / project number `1002660087913`; the current `0 QPM` state is recorded in `docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md`.
+- [ ] Google My Business API is visible and enabled for reviews/replies after approval.
+- [ ] OAuth branding and domain verification warnings are cleared as required.
 - [ ] Stripe products and six monthly/annual price IDs are created.
 - [ ] Resend sending domain/mailbox is verified.
 - [ ] OpenAI API access is available.
@@ -25,7 +28,7 @@ This is the single deployment and operator document for the Vercel + Neon applic
 ## 2. Vercel configuration
 
 - [ ] Framework preset is Next.js.
-- [ ] Root directory is the `Agent-LocalLift` repository root.
+- [ ] Root directory is the Ornigami Git repository root (`.`); locally this is `Ornigami-Agents`, with `package.json`, `src`, and `.git` directly inside it. Do not configure the removed `Agent-LocalLift` subdirectory or deploy `migration-sources`.
 - [ ] Build command is `npm run build`.
 - [ ] Install command is `npm install`.
 - [ ] Node.js version is compatible with Next.js 16.
@@ -67,10 +70,16 @@ Google Cloud Console must contain both authorized redirect URIs:
 
 Before onboarding real Review Replies customers:
 
+- [ ] Applicant account manages a verified, active Business Profile for at least 60 days and the profile has a live website.
+- [ ] Submit **Application for Basic API Access** through the [GBP API Support form](https://support.google.com/business/contact/api_default), using project number `1002660087913`.
+- [ ] Retain Google’s approval email or confirmation and record the approval date.
 - [ ] Confirm the `business.manage` scope is approved for the OAuth app.
-- [ ] Confirm the Business Profile APIs used by the app are enabled and quota is granted for the project behind `GOOGLE_CLIENT_ID`.
+- [ ] Confirm My Business Account Management API and My Business Business Information API quotas are non-zero; `0 QPM` means the project is not approved.
+- [ ] Confirm the Google My Business API used by the review sync/reply routes is enabled and has usable quota.
 - [ ] Confirm the consent screen is published and verification is complete if Google requires it.
-- [ ] Connect a real GBP account, sync a location, sync a review, save a draft, and post a controlled reply.
+- [ ] Client authorizes Ornigami through OAuth and has access to the specific profile being tested.
+- [ ] Sync a location, sync a review, save a draft, and post one controlled reply.
+- [ ] Confirm Review Replies cron can sync/draft successfully before enabling automatic posting.
 
 Review Booster can operate with email and a manually entered review URL while this external dependency remains unresolved.
 
@@ -117,6 +126,6 @@ npm run build
 
 ## Current caveats
 
-- Google Business Profile API access/quota and OAuth publication/verification are external dependencies, not code tasks.
+- Google Business Profile API access/quota, a real client profile, and OAuth branding/publication are external dependencies, not code tasks. Follow `GOOGLE_BUSINESS_PROFILE_RUNBOOK.md` for the current state and sequence.
 - Review Booster has a bounded per-run cap and plan allowance, but higher-volume delivery is still serial.
 - Public Local SEO/free-audit pages and the legacy project API remain available, although they are not the product center.

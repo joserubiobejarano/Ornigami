@@ -67,7 +67,7 @@ Review Booster can run with a manually entered review URL and does not require G
 
 ## Current maturity
 
-Code-level foundations are in place and local checks pass. The remaining launch-critical external work is Google API access/quota and OAuth publication/verification for Review Replies, plus real Stripe and production end-to-end QA. Operational hardening and higher-volume delivery remain follow-up work.
+Code-level foundations are in place, but the October review found launch-critical engineering gaps in dependencies, billing, account deletion/recovery, shared access, delivery concurrency/allowances, Google requests, and draft preservation. Google API access/quota and OAuth publication/verification remain external dependencies for Review Replies, alongside real Stripe and production end-to-end QA. See the roadmap for the release decision and acceptance criteria.
 
 ## One-sentence summary
 
