@@ -4,6 +4,9 @@ import type { ReviewReplyInput } from "@/lib/openai";
 import { generateReviewReply, sanitizeReviewReply } from "@/lib/openai";
 import type { ProfileReplyRow } from "@/lib/reply-profile-defaults";
 import { parseGoogleStarRating } from "@/lib/google-review-rating";
+import { requireActiveAgentBusinessContext } from "@/lib/api-security";
+import { getSelectedGoogleLocation } from "@/lib/google-business";
+import { googleReviewReplyUrl, parseGoogleLocationName } from "@/lib/google-resources";
 
 export type ReviewRowForReply = {
   id: string | number;
@@ -128,28 +131,71 @@ export async function persistReplyPostedLocally(
 
 /** Post reply to Google GBP and persist posted state (same behavior as /api/google/replies). */
 export async function postReplyToGoogleAndPersist(
-  userId: string,
+  actorUserId: string,
   businessId: string,
   googleReviewId: string,
   locationName: string,
   reply: string
 ): Promise<{ ok: true } | { ok: false; error: string; status?: number }> {
-  const url = `https://mybusiness.googleapis.com/v4/${encodeURIComponent(locationName)}/reviews/${encodeURIComponent(googleReviewId)}:updateReply`;
-
-  const r = await googleFetch(userId, url, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reply: { comment: reply } }),
-  });
-
-  if (!r.ok) {
-    const t = await r.text();
-    return { ok: false, error: t, status: r.status };
+  const normalizedReply = reply.trim();
+  if (!normalizedReply || Buffer.byteLength(normalizedReply, "utf8") > 4096) {
+    return { ok: false, error: "Reply must be between 1 and 4096 UTF-8 bytes", status: 400 };
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(googleReviewId)) {
+    return { ok: false, error: "Invalid Google review ID", status: 400 };
+  }
+  // Re-resolve explicit business membership here because legacy internal callers
+  // (including process-pending) also reach this provider boundary.
+  const context = await requireActiveAgentBusinessContext(actorUserId, null, "review_replies", businessId);
+  const selected = await getSelectedGoogleLocation(context, locationName);
+  if (selected.location_name !== locationName) {
+    return { ok: false, error: "Selected Google location changed", status: 409 };
   }
 
-  const persist = await persistReplyPostedLocally(businessId, googleReviewId, reply);
+  const storedReviews = await sql`
+    SELECT id
+    FROM public.reviews
+    WHERE business_id = ${context.businessId}
+      AND location_name = ${selected.location_name}
+      AND google_review_id = ${googleReviewId}
+    LIMIT 1
+  `;
+  const storedReview = storedReviews[0] as { id: string | number } | undefined;
+  if (!storedReview) return { ok: false, error: "Review not found for the selected Google location", status: 404 };
+
+  const resource = parseGoogleLocationName(selected.location_name);
+  const url = googleReviewReplyUrl(resource.accountName, resource.locationId, googleReviewId);
+
+  let r: Response;
+  try {
+    r = await googleFetch(context.integrationOwnerUserId, url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ comment: normalizedReply }),
+    });
+  } catch {
+    return { ok: false, error: "Google reply update failed", status: 502 };
+  }
+
+  if (!r.ok) {
+    await r.body?.cancel().catch(() => undefined);
+    const status = r.status === 429 ? 429 : r.status === 503 ? 503 : 502;
+    return { ok: false, error: "Google reply update failed", status };
+  }
+  await r.body?.cancel().catch(() => undefined);
+
+  let persist: { ok: true } | { ok: false; error: string };
+  try {
+    persist = await persistReplyPostedLocally(context.businessId, googleReviewId, normalizedReply);
+  } catch {
+    persist = { ok: false, error: "Local persistence failed" };
+  }
   if (!persist.ok) {
-    // Google accepted the reply but local row missing — still report success to match prior behavior
+    return {
+      ok: false,
+      error: "Google accepted the reply, but its local status could not be updated. Sync reviews before retrying.",
+      status: 502,
+    };
   }
 
   return { ok: true };

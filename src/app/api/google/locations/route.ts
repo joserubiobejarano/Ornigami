@@ -1,70 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-
-import { resolveUser } from "@/lib/user-from-req";
-
-import { googleFetch } from "@/lib/google";
-
-import { sql } from "@/lib/db/neon";
-import { getUserPlan } from "@/lib/plan-server";
-import { canUseGoogleConnection } from "@/lib/plan";
-import { safeLogger } from "@/lib/safe-logger";
-
 export const runtime = "nodejs";
 
-const LIST_URL =
-  "https://mybusinessbusinessinformation.googleapis.com/v1/locations?pageSize=100&readMask=name,title,storeCode,placeId";
+import { NextRequest, NextResponse } from "next/server";
+import { resolveUser } from "@/lib/user-from-req";
+import { safeLogger } from "@/lib/safe-logger";
+import { googleBusinessErrorResponse, requireGoogleBusinessContext, requireGoogleWorkflowEntitlement, syncBusinessGoogleLocations } from "@/lib/google-business";
 
 export async function GET(req: NextRequest) {
+  if (req.headers.get("x-demo") === "true") return NextResponse.json({ locations: [] });
   const user = await resolveUser(req);
-
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const plan = await getUserPlan(user.id);
-  if (!canUseGoogleConnection(plan)) {
-    return NextResponse.json({ error: "Google Business Profile access requires a paid plan" }, { status: 403 });
-  }
-
+  if (!user || user.demo) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   try {
-    const r = await googleFetch(user.id, LIST_URL);
-
-    if (!r.ok) {
-      return NextResponse.json({ error: "Google locations sync failed" }, { status: 502 });
-    }
-
-    const json = await r.json();
-
-    const upserts = (json.locations ?? []).map((loc: Record<string, unknown>) => ({
-      user_id: user.id,
-      location_name: loc.name as string,
-      title: (loc.title as string) ?? null,
-      store_code: (loc.storeCode as string) ?? null,
-      place_id: (loc.placeId as string) ?? null,
-      updated_at: new Date().toISOString(),
-    }));
-
-    for (const row of upserts) {
-      await sql`
-        INSERT INTO public.gbp_locations (
-          user_id, location_name, title, store_code, place_id, updated_at
-        ) VALUES (
-          ${row.user_id},
-          ${row.location_name},
-          ${row.title},
-          ${row.store_code},
-          ${row.place_id},
-          ${row.updated_at}
-        )
-        ON CONFLICT (user_id, location_name) DO UPDATE SET
-          title = EXCLUDED.title,
-          store_code = EXCLUDED.store_code,
-          place_id = EXCLUDED.place_id,
-          updated_at = EXCLUDED.updated_at
-      `;
-    }
-
-    return NextResponse.json({ locations: json.locations ?? [] });
-  } catch (e: unknown) {
-    safeLogger.error("google.locations.get.failed", { error: e instanceof Error ? e.message : "unknown" });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const context = await requireGoogleBusinessContext(user.id, req.nextUrl.searchParams.get("businessId"));
+    await requireGoogleWorkflowEntitlement(context);
+    const result = await syncBusinessGoogleLocations(context);
+    return NextResponse.json({ locations: result.locations.map(({ id, location_name, title, store_code, place_id, selected }) => ({
+      id, name: location_name, locationName: location_name, title, storeCode: store_code, placeId: place_id, selected,
+    })) });
+  } catch (error) {
+    if (error instanceof Error && "status" in error) return googleBusinessErrorResponse(error);
+    safeLogger.error("google.locations.get.failed", { error: error instanceof Error ? error.message : "unknown" });
+    return NextResponse.json({ error: "Google locations sync failed." }, { status: 502 });
   }
 }

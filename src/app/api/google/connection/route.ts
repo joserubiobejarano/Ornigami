@@ -1,66 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { resolveUser } from "@/lib/user-from-req";
 import { sql } from "@/lib/db/neon";
 import { safeLogger } from "@/lib/safe-logger";
+import { googleBusinessErrorResponse, listBusinessGoogleLocations, requireGoogleBusinessContext } from "@/lib/google-business";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const isDemo = req.headers.get("x-demo") === "true";
-
-  if (isDemo) {
-    return NextResponse.json({ connected: false });
-  }
-
+  if (req.headers.get("x-demo") === "true") return NextResponse.json({ connected: false, locations: [] });
   const user = await resolveUser(req);
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user || user.demo) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
   try {
-    const conn = await sql`
-      SELECT user_id FROM public.gbp_connections WHERE user_id = ${user.id} LIMIT 1
+    const context = await requireGoogleBusinessContext(user.id, req.nextUrl.searchParams.get("businessId"));
+    const connections = await sql`
+      SELECT 1 AS connected FROM public.gbp_connections
+      WHERE user_id = ${context.integrationOwnerUserId} LIMIT 1
     `;
-
-    if (!conn.length) {
-      return NextResponse.json({ connected: false });
-    }
-
-    const locations = await sql`
-      SELECT id, location_name, title, raw
-      FROM public.gbp_locations
-      WHERE user_id = ${user.id}
-      ORDER BY title NULLS LAST
-    `;
-
-    const transformedLocations = (locations as Record<string, unknown>[]).map((loc) => {
-      const raw = (loc.raw as Record<string, unknown>) || {};
-
-      const primaryCategory =
-        (raw.primaryCategory as { displayName?: string } | undefined)?.displayName ||
-        (raw.primaryCategoryId as string) ||
-        (raw.storefront as { primaryCategoryId?: string } | undefined)?.primaryCategoryId ||
-        null;
-
-      const isSuspended = raw.suspended === true || false;
-
-      return {
-        id: loc.id,
-        locationName: loc.location_name,
-        title: loc.title,
-        primaryCategory,
-        isSuspended,
-      };
-    });
-
+    if (!connections.length) return NextResponse.json({ connected: false, locations: [] });
+    const locations = await listBusinessGoogleLocations(context);
     return NextResponse.json({
       connected: true,
-      locations: transformedLocations,
+      locations: locations.map((location) => {
+        const raw = location.raw ?? {};
+        const primaryCategory =
+          (raw.categories as { primaryCategory?: { displayName?: string } } | undefined)?.primaryCategory?.displayName ||
+          (raw.primaryCategory as { displayName?: string } | undefined)?.displayName ||
+          (raw.primaryCategoryId as string) ||
+          (raw.storefront as { primaryCategoryId?: string } | undefined)?.primaryCategoryId || null;
+        return {
+          id: location.id,
+          locationName: location.location_name,
+          title: location.title,
+          primaryCategory,
+          isSuspended: raw.suspended === true,
+          selected: location.selected,
+        };
+      }),
     });
-  } catch (e: unknown) {
-    safeLogger.error("google.connection.get.failed", { error: e instanceof Error ? e.message : "unknown" });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error) {
+    if (error instanceof Error && "status" in error) return googleBusinessErrorResponse(error);
+    safeLogger.error("google.connection.get.failed", { error: error instanceof Error ? error.message : "unknown" });
+    return NextResponse.json({ error: "Google connection service is unavailable." }, { status: 500 });
   }
 }

@@ -21,13 +21,14 @@ export async function upsertGbpConnection(input: {
 }): Promise<void> {
   await sql`
     INSERT INTO public.gbp_connections (
-      user_id, access_token, refresh_token, expires_at, scope, updated_at
+      user_id, access_token, refresh_token, expires_at, scope, connection_version, updated_at
     ) VALUES (
       ${input.userId},
       ${encryptToken(input.accessToken)},
       ${encryptToken(input.refreshToken)},
       ${input.expiresAt},
       ${input.scope},
+      gen_random_uuid(),
       now()
     )
     ON CONFLICT (user_id) DO UPDATE SET
@@ -35,6 +36,7 @@ export async function upsertGbpConnection(input: {
       refresh_token = EXCLUDED.refresh_token,
       expires_at = EXCLUDED.expires_at,
       scope = EXCLUDED.scope,
+      connection_version = EXCLUDED.connection_version,
       updated_at = now()
   `;
 }
@@ -56,4 +58,36 @@ export async function updateGbpTokens(input: {
       updated_at = now()
     WHERE user_id = ${input.userId}
   `;
+}
+
+/**
+ * Persists a refresh or legacy-token upgrade only while the exact encrypted
+ * credentials and OAuth connection generation read by the caller are current.
+ * A false result means another refresh, reconnect, or disconnect won the race.
+ */
+export async function updateGbpTokensIfCurrent(input: {
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  scope: string | null;
+  expectedConnectionVersion: string;
+  expectedEncryptedAccessToken: string;
+  expectedEncryptedRefreshToken: string;
+}): Promise<boolean> {
+  const rows = await sql`
+    UPDATE public.gbp_connections
+    SET
+      access_token = ${encryptToken(input.accessToken)},
+      refresh_token = ${encryptToken(input.refreshToken)},
+      expires_at = ${input.expiresAt},
+      scope = ${input.scope},
+      updated_at = now()
+    WHERE user_id = ${input.userId}
+      AND connection_version = ${input.expectedConnectionVersion}
+      AND access_token = ${input.expectedEncryptedAccessToken}
+      AND refresh_token = ${input.expectedEncryptedRefreshToken}
+    RETURNING user_id
+  `;
+  return rows.length > 0;
 }
