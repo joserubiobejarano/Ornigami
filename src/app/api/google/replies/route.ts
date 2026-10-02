@@ -1,54 +1,63 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-
-import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
+import { requireActiveAgentBusinessContext, safeApiErrorResponse } from "@/lib/api-security";
 import { resolveUser } from "@/lib/user-from-req";
-import { getBusinessForUser } from "@/lib/db/businesses";
-
 import { postReplyToGoogleAndPersist } from "@/lib/review-reply-server";
-import { canUseReviewAutomation } from "@/lib/plan";
-import { getUserPlan } from "@/lib/plan-server";
+import { BusinessGoogleError, resolveRequestedBusinessId } from "@/lib/google-business";
 
 export async function POST(req: NextRequest) {
-  const isDemo = req.headers.get("x-demo") === "true";
-
-  if (isDemo) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  if (req.headers.get("x-demo") === "true") {
     return NextResponse.json({ ok: true });
   }
 
   const user = await resolveUser(req);
-
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const plan = await getUserPlan(user.id);
-  if (!canUseReviewAutomation(plan)) {
-    return NextResponse.json(
-      { error: "Posting replies to Google is only available on paid plans" },
-      { status: 403 }
-    );
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-
-  const { reviewId, locationName, reply } = await req.json();
-
-  if (!reviewId || !locationName || !reply) {
-    return NextResponse.json({ error: "reviewId, locationName, reply required" }, { status: 400 });
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
+  const input = body as {
+    businessId?: unknown;
+    reviewId?: unknown;
+    locationName?: unknown;
+    reply?: unknown;
+  };
+  if (input.businessId !== undefined && (typeof input.businessId !== "string" || !input.businessId.trim())) {
+    return NextResponse.json({ error: "businessId must be a non-empty string" }, { status: 400 });
+  }
+  if (typeof input.reviewId !== "string" || !input.reviewId.trim()
+    || typeof input.locationName !== "string" || !input.locationName.trim()
+    || typeof input.reply !== "string" || !input.reply.trim()) {
+    return NextResponse.json({ error: "reviewId, locationName, and reply are required" }, { status: 400 });
+  }
+  if (Buffer.byteLength(input.reply.trim(), "utf8") > 4096) {
+    return NextResponse.json({ error: "reply must be at most 4096 UTF-8 bytes" }, { status: 400 });
+  }
+  const requestedBusiness = resolveRequestedBusinessId(
+    req.nextUrl.searchParams.get("businessId"), input.businessId
+  );
+  if (!requestedBusiness.valid) return NextResponse.json({ error: "Conflicting or invalid businessId" }, { status: 400 });
 
   try {
     const email = "email" in user ? user.email : null;
-    await requireActiveAgentAccess(user.id, email, "review_replies");
-    const business = await getBusinessForUser(user.id);
-    if (!business) return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
-    const result = await postReplyToGoogleAndPersist(user.id, business.id, reviewId, locationName, reply);
-
-    if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status ?? 502 });
-    }
-
+    const context = await requireActiveAgentBusinessContext(
+      user.id, email, "review_replies", requestedBusiness.businessId
+    );
+    const result = await postReplyToGoogleAndPersist(
+      user.id, context.businessId, input.reviewId.trim(), input.locationName.trim(), input.reply.trim()
+    );
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status ?? 502 });
     return NextResponse.json({ ok: true });
-  } catch (e: unknown) {
-    return safeApiErrorResponse(e, "google.replies.post");
+  } catch (error) {
+    if (error instanceof BusinessGoogleError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    return safeApiErrorResponse(error, "google.replies.post");
   }
 }

@@ -3,11 +3,14 @@ import { getOptionalEnv } from "@/lib/env";
 
 type GoogleOAuthStatePayload = {
   uid: string;
+  bid: string;
+  oid: string;
   nonce: string;
   exp: number;
 };
 
 const STATE_TTL_SECONDS = 10 * 60;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function getSigningSecret(): string {
   const secret = getOptionalEnv("AUTH_SECRET") || getOptionalEnv("NEXTAUTH_SECRET");
@@ -27,9 +30,11 @@ function signPayload(encodedPayload: string): string {
   return crypto.createHmac("sha256", getSigningSecret()).update(encodedPayload).digest("base64url");
 }
 
-export function buildGoogleOAuthState(userId: string): string {
+export function buildGoogleOAuthState(userId: string, businessId: string, ownerUserId: string): string {
   const payload: GoogleOAuthStatePayload = {
     uid: userId,
+    bid: businessId,
+    oid: ownerUserId,
     nonce: crypto.randomBytes(16).toString("hex"),
     exp: Math.floor(Date.now() / 1000) + STATE_TTL_SECONDS,
   };
@@ -38,11 +43,15 @@ export function buildGoogleOAuthState(userId: string): string {
   return `${encodedPayload}.${signature}`;
 }
 
-export function parseGoogleOAuthState(rawState: string): { valid: boolean; userId?: string; reason?: string } {
-  const [encodedPayload, signature] = rawState.split(".");
-  if (!encodedPayload || !signature) {
+export function parseGoogleOAuthState(rawState: string): {
+  valid: boolean; userId?: string; businessId?: string; ownerUserId?: string; reason?: string;
+} {
+  const parts = rawState.split(".");
+  if (parts.length !== 2) {
     return { valid: false, reason: "missing_parts" };
   }
+  const [encodedPayload, signature] = parts;
+  if (!encodedPayload || !signature) return { valid: false, reason: "missing_parts" };
 
   const expected = signPayload(encodedPayload);
   const providedBuf = Buffer.from(signature);
@@ -52,14 +61,22 @@ export function parseGoogleOAuthState(rawState: string): { valid: boolean; userI
   }
 
   try {
-    const payload = JSON.parse(unbase64url(encodedPayload)) as GoogleOAuthStatePayload;
-    if (!payload.uid || !payload.exp) {
+    const decoded: unknown = JSON.parse(unbase64url(encodedPayload));
+    if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) {
       return { valid: false, reason: "bad_payload" };
     }
-    if (payload.exp < Math.floor(Date.now() / 1000)) {
+    const payload = decoded as GoogleOAuthStatePayload;
+    if (!UUID_RE.test(payload.uid) || !UUID_RE.test(payload.bid) || !UUID_RE.test(payload.oid) ||
+        typeof payload.nonce !== "string" || !/^[0-9a-f]{32}$/i.test(payload.nonce) ||
+        typeof payload.exp !== "number" || !Number.isSafeInteger(payload.exp)) {
+      return { valid: false, reason: "bad_payload" };
+    }
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp <= now) {
       return { valid: false, reason: "expired" };
     }
-    return { valid: true, userId: payload.uid };
+    if (payload.exp > now + STATE_TTL_SECONDS) return { valid: false, reason: "bad_payload" };
+    return { valid: true, userId: payload.uid, businessId: payload.bid, ownerUserId: payload.oid };
   } catch {
     return { valid: false, reason: "decode_failed" };
   }
