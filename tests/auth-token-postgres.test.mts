@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
 import { loadTs } from "./auth-test-harness.mts";
@@ -45,7 +45,16 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
   let started = false;
   try {
     execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
-    execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", join(dir, "postgres.log"), "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
+    // Packaged Linux builds can default sockets to a postgres-owned system
+    // directory. This isolated cluster is reached exclusively over loopback TCP.
+    appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
+    const logFile = join(dir, "postgres.log");
+    try {
+      execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
+    } catch (error) {
+      const diagnostic = existsSync(logFile) ? readFileSync(logFile, "utf8") : "No PostgreSQL startup log was created";
+      throw new Error(`Disposable PostgreSQL startup failed:\n${diagnostic}`, { cause: error });
+    }
     started = true;
     const migrationsDir = join(root, "neon/migrations");
     const migrations = readdirSync(migrationsDir)

@@ -14,6 +14,7 @@ Date: 2026-10-02. A00 independently reviewed four requested commits and their ha
 - `incrementBusinessReviewReplyUsage` now requires `UPDATE ... RETURNING id` to produce a row, otherwise throws a typed 403. The behavioral test verifies denial with a missing profile and successful owner-attributed increment. The Luna reviewer checked this fix and the merged auth/deleted-user paths again.
 - Recovery pages are included in `LayoutFrame`'s app-route classification, exactly as requested by A04. They no longer use the marketing header/footer whose auth links can lose their callback.
 - `npm test` explicitly discovers all `tests/*.test.mts` using a cross-platform Node runner. CI locates PostgreSQL binaries through `pg_config --bindir`, so the real SQL suite runs rather than being silently omitted. Its loopback cluster contains fixtures and never uses the live database.
+- The first target-Linux run exposed disposable PostgreSQL startup failure despite the binaries being present. The fixture now explicitly disables Unix sockets (all test clients use loopback TCP) to avoid packaged defaults pointing at a system-owned directory, and exposes its private fixture log if startup fails. Tests remain mandatory with zero skips.
 - The Neon migration map and deployment checklist now include 020 without renumbering reserved, unauthored 018/019. Preserved legacy schemas are not replayed.
 
 ## Combined validation
