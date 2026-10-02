@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/auth";
-import { canAccessAgent, getBusinessAgents, getBusinessForUser } from "@/lib/db/businesses";
+import { resolveBusinessContext } from "@/lib/business-context";
 import { sql } from "@/lib/db/neon";
 import { PLANS } from "@/lib/billing/plans";
+import {
+  cleanupFailedTeamInvitation,
+  hasCompleteTeamAccess,
+  isSameOriginMutation,
+  reserveTeamInvitation,
+  teamFailureResponse,
+  teamMutationError,
+} from "@/lib/team-lifecycle";
 import {
   createTeamInvitationToken,
   hashTeamInvitationToken,
@@ -17,67 +25,50 @@ import { safeLogger } from "@/lib/safe-logger";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const InviteSchema = z.object({
-  email: z.string().trim().email().max(320),
-});
-
-async function getTeamContext(userId: string) {
-  const business = await getBusinessForUser(userId);
-  if (!business) return null;
-
-  const membershipRows = await sql`
-    SELECT role
-    FROM public.business_members
-    WHERE business_id = ${business.id} AND user_id = ${userId}
-    LIMIT 1
-  `;
-  const membership = membershipRows[0] as { role: string } | undefined;
-  if (!membership) return null;
-
-  const agents = await getBusinessAgents(business.id);
-  const completePlan = agents.some(
-    (agent) => agent.plan_id === "complete" && ["active", "trialing", "past_due"].includes(agent.status),
-  );
-  const hasCompleteAccess = completePlan &&
-    await canAccessAgent(business.id, "review_replies") &&
-    await canAccessAgent(business.id, "review_booster");
-
-  return {
-    business,
-    role: membership.role,
-    hasCompleteAccess,
-    canManage: membership.role === "owner" && hasCompleteAccess,
-  };
-}
+const InviteSchema = z.object({ email: z.string().trim().email().max(320) });
 
 export async function GET() {
+  try { return await getTeam(); }
+  catch (error) { return teamFailureResponse(error, "team.get.failed"); }
+}
+
+async function getTeam() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const context = await getTeamContext(session.user.id);
+  const context = await resolveBusinessContext(session.user.id);
   if (!context) return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
 
-  const members = await sql`
-    SELECT bm.user_id, bm.role, bm.created_at, u.email, u.name
-    FROM public.business_members bm
-    INNER JOIN public.users u ON u.id = bm.user_id
-    WHERE bm.business_id = ${context.business.id}
-    ORDER BY CASE WHEN bm.role = 'owner' THEN 0 ELSE 1 END, bm.created_at ASC
-  `;
-  const pendingInvitations = await sql`
-    SELECT id, email, role, expires_at, created_at
-    FROM public.team_invitations
-    WHERE business_id = ${context.business.id}
-      AND accepted_at IS NULL
-      AND expires_at > now()
-    ORDER BY created_at DESC
-  `;
+  const [members, pendingInvitations, hasCompleteAccess] = await Promise.all([
+    sql`
+      SELECT * FROM (
+        SELECT b.owner_user_id AS user_id, 'owner' AS role, b.created_at, u.email, u.name
+        FROM public.businesses b
+        INNER JOIN public.users u ON u.id = b.owner_user_id
+        WHERE b.id = ${context.businessId}
+        UNION ALL
+        SELECT bm.user_id, 'member' AS role, bm.created_at, u.email, u.name
+        FROM public.business_members bm
+        INNER JOIN public.users u ON u.id = bm.user_id
+        WHERE bm.business_id = ${context.businessId} AND bm.user_id <> ${context.ownerUserId}
+      ) team_members
+      ORDER BY CASE WHEN role = 'owner' THEN 0 ELSE 1 END, created_at ASC
+    `,
+    sql`
+      SELECT id, email, role, status, expires_at, created_at
+      FROM public.team_invitations
+      WHERE business_id = ${context.businessId} AND status = 'pending' AND expires_at > now()
+      ORDER BY created_at DESC
+    `,
+    hasCompleteTeamAccess(context.businessId),
+  ]);
 
   return NextResponse.json({
     businessName: context.business.name,
     role: context.role,
-    hasCompleteAccess: context.hasCompleteAccess,
-    canManage: context.canManage,
+    hasCompleteAccess,
+    // Owner cleanup remains available after downgrade or expiry.
+    canManage: context.role === "owner",
     seatLimit: PLANS.complete.seats,
     members,
     pendingInvitations,
@@ -86,87 +77,43 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  try { return await createInvitation(req); }
+  catch (error) { return teamFailureResponse(error, "team.invitation.failed"); }
+}
+
+async function createInvitation(req: Request) {
+  if (!isSameOriginMutation(req)) return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const parsed = InviteSchema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+
+  const context = await resolveBusinessContext(session.user.id);
+  if (!context) return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
+  if (context.role !== "owner") {
+    return NextResponse.json({ error: "Only the workspace owner can invite teammates." }, { status: 403 });
   }
 
   const email = parsed.data.email.toLowerCase();
-  const context = await getTeamContext(session.user.id);
-  if (!context) return NextResponse.json({ error: "Business setup is incomplete." }, { status: 409 });
-  if (!context.canManage) {
-    return NextResponse.json(
-      { error: context.hasCompleteAccess ? "Only the workspace owner can invite teammates." : "Team access is available on the Complete plan." },
-      { status: 403 },
-    );
-  }
-
-  const existingMember = await sql`
-    SELECT 1
-    FROM public.business_members bm
-    INNER JOIN public.users u ON u.id = bm.user_id
-    WHERE bm.business_id = ${context.business.id} AND lower(u.email) = ${email}
-    LIMIT 1
-  `;
-  if (existingMember.length) {
-    return NextResponse.json({ error: "That person already has access to this workspace." }, { status: 409 });
-  }
-
-  const memberOfAnotherWorkspace = await sql`
-    SELECT 1
-    FROM public.business_members bm
-    INNER JOIN public.users u ON u.id = bm.user_id
-    WHERE bm.business_id <> ${context.business.id} AND lower(u.email) = ${email}
-    LIMIT 1
-  `;
-  if (memberOfAnotherWorkspace.length) {
-    return NextResponse.json({ error: "That email already belongs to another workspace." }, { status: 409 });
-  }
-
-  const existingInvitation = await sql`
-    SELECT 1
-    FROM public.team_invitations
-    WHERE business_id = ${context.business.id}
-      AND lower(email) = ${email}
-      AND accepted_at IS NULL
-      AND expires_at > now()
-    LIMIT 1
-  `;
-  if (existingInvitation.length) {
-    return NextResponse.json({ error: "An invitation is already pending for that email." }, { status: 409 });
-  }
-
-  const [memberCountRows, pendingCountRows] = await Promise.all([
-    sql`SELECT count(*)::int AS count FROM public.business_members WHERE business_id = ${context.business.id}`,
-    sql`SELECT count(*)::int AS count FROM public.team_invitations WHERE business_id = ${context.business.id} AND accepted_at IS NULL AND expires_at > now()`,
-  ]);
-  const memberCount = Number((memberCountRows[0] as { count?: number } | undefined)?.count ?? 0);
-  const pendingCount = Number((pendingCountRows[0] as { count?: number } | undefined)?.count ?? 0);
-  if (memberCount + pendingCount >= PLANS.complete.seats) {
-    return NextResponse.json({ error: `Complete includes up to ${PLANS.complete.seats} users, including you.` }, { status: 409 });
-  }
-
   const token = createTeamInvitationToken();
-  const invitationUrl = teamInvitationUrl(token);
-  const invitationRows = await sql`
-    INSERT INTO public.team_invitations (business_id, invited_by, email, role, token_hash, expires_at)
-    VALUES (
-      ${context.business.id},
-      ${session.user.id},
-      ${email},
-      'member',
-      ${hashTeamInvitationToken(token)},
-      now() + ${TEAM_INVITATION_DAYS} * INTERVAL '1 day'
-    )
-    RETURNING id
-  `;
-  const invitationId = (invitationRows[0] as { id: string } | undefined)?.id;
+  const tokenHash = hashTeamInvitationToken(token);
+  const reserved = await reserveTeamInvitation({
+    actorId: session.user.id,
+    businessId: context.businessId,
+    email,
+    tokenHash,
+    lifetimeDays: TEAM_INVITATION_DAYS,
+  });
+  if (reserved.status !== "reserved") {
+    const error = teamMutationError(reserved.status);
+    return NextResponse.json({ error: error.message }, { status: error.httpStatus });
+  }
 
+  const invitationId = String(reserved.invitationId);
+  const invitationUrl = teamInvitationUrl(token);
   try {
     const delivery = await sendTeamInvitationEmail({
       email,
@@ -176,9 +123,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ ok: true, sent: delivery.sent, invitationUrl: delivery.sent ? null : invitationUrl });
   } catch (error: unknown) {
-    if (invitationId) {
-      await sql`DELETE FROM public.team_invitations WHERE id = ${invitationId}`;
-    }
+    await cleanupFailedTeamInvitation(invitationId, tokenHash);
     safeLogger.error("team.invitation.send.failed", { error: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "The invitation could not be sent. Please try again." }, { status: 502 });
   }

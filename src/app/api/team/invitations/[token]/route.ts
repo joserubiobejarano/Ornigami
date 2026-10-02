@@ -1,80 +1,66 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { canAccessAgent } from "@/lib/db/businesses";
-import { sql } from "@/lib/db/neon";
-import { PLANS } from "@/lib/billing/plans";
+import { acceptTeamInvitation, isSameOriginMutation, isUuid, revokeTeamInvitation, teamFailureResponse, teamMutationError } from "@/lib/team-lifecycle";
 import { hashTeamInvitationToken } from "@/lib/team";
 
 export const runtime = "nodejs";
 
 export async function POST(
   req: Request,
+  context: { params: Promise<{ token: string }> },
+) {
+  try { return await acceptInvitation(req, context); }
+  catch (error) { return teamFailureResponse(error, "team.invitation.accept.failed"); }
+}
+
+async function acceptInvitation(
+  req: Request,
   { params }: { params: Promise<{ token: string }> },
 ) {
+  if (!isSameOriginMutation(req)) return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   const session = await auth();
-  if (!session?.user?.id || !session.user.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Log in with the invited email address first." }, { status: 401 });
   }
 
   const { token } = await params;
-  const invitationRows = await sql`
-    SELECT id, business_id, email
-    FROM public.team_invitations
-    WHERE token_hash = ${hashTeamInvitationToken(token)}
-      AND accepted_at IS NULL
-      AND expires_at > now()
-    LIMIT 1
-  `;
-  const invitation = invitationRows[0] as { id: string; business_id: string; email: string } | undefined;
-  if (!invitation) return NextResponse.json({ error: "This invitation is invalid or has expired." }, { status: 404 });
-  if (invitation.email.toLowerCase() !== session.user.email.toLowerCase()) {
-    return NextResponse.json({ error: "Log in with the invited email address to accept this invitation." }, { status: 403 });
+  const result = await acceptTeamInvitation(session.user.id, hashTeamInvitationToken(token));
+  if (result.status !== "accepted") {
+    const error = teamMutationError(result.status);
+    return NextResponse.json({ error: error.message }, { status: error.httpStatus });
   }
 
-  const memberOfAnotherWorkspace = await sql`
-    SELECT 1
-    FROM public.business_members
-    WHERE user_id = ${session.user.id} AND business_id <> ${invitation.business_id}
-    LIMIT 1
-  `;
-  if (memberOfAnotherWorkspace.length) {
-    return NextResponse.json({ error: "Your account already belongs to another workspace." }, { status: 409 });
+  const redirectTo = "/dashboard/agents/review-replies/settings?team=accepted";
+  if (req.headers.get("accept")?.toLowerCase().includes("application/json")) {
+    return NextResponse.json({ ok: true, redirectTo });
   }
+  return NextResponse.redirect(new URL(redirectTo, req.url), 303);
+}
 
-  const completeAgent = await sql`
-    SELECT 1
-    FROM public.business_agents
-    WHERE business_id = ${invitation.business_id}
-      AND plan_id = 'complete'
-      AND status IN ('active', 'trialing', 'past_due')
-    LIMIT 1
-  `;
-  const hasCompleteAccess = completeAgent.length > 0 &&
-    await canAccessAgent(invitation.business_id, "review_replies") &&
-    await canAccessAgent(invitation.business_id, "review_booster");
-  if (!hasCompleteAccess) return NextResponse.json({ error: "This workspace no longer has an active Complete plan." }, { status: 403 });
+/** The existing token segment also accepts invitation UUIDs for owner revocation. */
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ token: string }> },
+) {
+  try { return await revokeInvitation(req, context); }
+  catch (error) { return teamFailureResponse(error, "team.invitation.revoke.failed"); }
+}
 
-  const memberCountRows = await sql`
-    SELECT count(*)::int AS count
-    FROM public.business_members
-    WHERE business_id = ${invitation.business_id}
-  `;
-  const memberCount = Number((memberCountRows[0] as { count?: number } | undefined)?.count ?? 0);
-  if (memberCount >= PLANS.complete.seats) {
-    return NextResponse.json({ error: "This workspace has reached its 3-user limit." }, { status: 409 });
+async function revokeInvitation(
+  req: Request,
+  { params }: { params: Promise<{ token: string }> },
+) {
+  if (!isSameOriginMutation(req)) return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { token: invitationId } = await params;
+  if (!isUuid(invitationId)) return NextResponse.json({ error: "Invitation not found." }, { status: 404 });
+
+  const result = await revokeTeamInvitation(session.user.id, invitationId);
+  if (result.status !== "revoked") {
+    const error = teamMutationError(result.status);
+    return NextResponse.json({ error: error.message }, { status: error.httpStatus });
   }
-
-  await sql`
-    INSERT INTO public.business_members (business_id, user_id, role)
-    VALUES (${invitation.business_id}, ${session.user.id}, 'member')
-    ON CONFLICT (business_id, user_id) DO NOTHING
-  `;
-  await sql`
-    UPDATE public.team_invitations
-    SET accepted_at = now()
-    WHERE id = ${invitation.id}
-  `;
-
-  return NextResponse.redirect(new URL("/dashboard/agents/review-replies/settings?team=accepted", req.url));
+  return NextResponse.json({ ok: true });
 }
