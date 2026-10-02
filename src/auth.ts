@@ -4,13 +4,17 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 
-import { ensureUserFromOAuth, findUserByEmail } from "@/lib/db/users";
+import { ensureUserFromOAuth, findUserByEmail, findUserById } from "@/lib/db/users";
 import {
   clearCredentialsLoginFailures,
   isCredentialsLoginRateLimited,
   recordCredentialsLoginFailure,
 } from "@/lib/auth-rate-limit";
 import { getRequiredEnv } from "@/lib/env";
+import { isValidAuthPassword } from "@/lib/auth-password-policy";
+import { sanitizeAuthReturnPath } from "@/lib/auth-return-path";
+import { getTrustedRequestIp } from "@/lib/trusted-request-ip";
+import { EmailSchema } from "@/lib/validators";
 
 export const authConfig = {
   providers: [
@@ -26,33 +30,29 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, request) {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
-        if (!email || !password) return null;
-
-        const forwarded = request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
-        const ipAddress = request.headers.get("x-real-ip") ?? forwarded ?? null;
+        const parsedEmail = EmailSchema.safeParse(credentials?.email);
+        const password = credentials?.password;
+        if (!parsedEmail.success || typeof password !== "string" || !isValidAuthPassword(password)) return null;
+        const email = parsedEmail.data.toLowerCase();
+        const ipAddress = getTrustedRequestIp(request.headers);
         if (await isCredentialsLoginRateLimited(email, ipAddress)) return null;
-
         const user = await findUserByEmail(email);
         if (!user?.password_hash || !user.email_verified) {
           await recordCredentialsLoginFailure(email, ipAddress);
           return null;
         }
-
         const ok = await compare(password, user.password_hash);
         if (!ok) {
           await recordCredentialsLoginFailure(email, ipAddress);
           return null;
         }
-
         await clearCredentialsLoginFailures(email, ipAddress);
-
         return {
           id: user.id,
           email: user.email,
           name: user.name ?? undefined,
           image: user.image ?? undefined,
+          authVersion: user.auth_version,
         };
       },
     }),
@@ -67,25 +67,56 @@ export const authConfig = {
     async jwt({ token, user, account }) {
       if (user) {
         if (account?.type === "oauth" && account.provider === "google") {
-          if (user.email) {
+          if (!user.email) return null;
+          try {
             const row = await ensureUserFromOAuth({
               email: user.email,
               name: user.name ?? null,
               image: user.image ?? null,
             });
             token.sub = row.id;
+            token.authVersion = row.auth_version;
+          } catch {
+            return null;
           }
-        } else if (user.id) {
-          token.sub = user.id as string;
+        } else if (user.id && typeof user.authVersion === "number") {
+          token.sub = user.id;
+          token.authVersion = user.authVersion;
+        } else {
+          return null;
         }
+      }
+      if (!token.sub || typeof token.authVersion !== "number") return null;
+      try {
+        const current = await findUserById(token.sub);
+        if (!current || current.auth_version !== token.authVersion) return null;
+      } catch {
+        return null;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
+      if (!session.user || !token.sub || typeof token.authVersion !== "number") {
+        throw new Error("Cannot create a session from an invalid authentication token");
       }
+      session.user.id = token.sub;
+      session.user.authVersion = token.authVersion;
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      try {
+        if (url.includes("\\") || /[\u0000-\u001f\u007f]/.test(url) || url.startsWith("//")) {
+          return new URL("/dashboard", baseUrl).href;
+        }
+        const parsed = new URL(url, baseUrl);
+        if (parsed.origin !== new URL(baseUrl).origin || parsed.pathname.startsWith("//")) {
+          return new URL("/dashboard", baseUrl).href;
+        }
+        const safePath = sanitizeAuthReturnPath(`${parsed.pathname}${parsed.search}${parsed.hash}`);
+        return new URL(safePath, baseUrl).href;
+      } catch {
+        return new URL("/dashboard", baseUrl).href;
+      }
     },
   },
   pages: {
