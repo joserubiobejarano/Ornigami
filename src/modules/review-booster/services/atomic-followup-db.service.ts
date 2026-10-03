@@ -117,7 +117,17 @@ export async function finalizeAtomicFollowupAccepted(input: {
   const rows = await sql`SELECT public.finish_booster_delivery_accepted(
     ${input.deliveryId}::uuid,${input.fence}::uuid,${input.providerMessageId},
     ${input.subject},${input.body},${input.provider ?? "resend"}) AS changed`;
-  return objectRow(rows[0]).changed === true;
+  if (objectRow(rows[0]).changed === true) return true;
+  // A verified webhook may have settled this delivery while the provider call
+  // was returning. Treat that same acceptance as success for runner accounting,
+  // while a different provider ID remains a stale finalizer.
+  const settled = await sql`SELECT d.state,d.provider_message_id,
+      EXISTS (SELECT 1 FROM public.booster_delivery_events e
+        WHERE e.delivery_id=d.id AND e.provider_message_id=${input.providerMessageId}) AS confirmed_by_event
+    FROM public.booster_followup_deliveries d WHERE d.id=${input.deliveryId}::uuid`;
+  const settledRow = objectRow(settled[0]);
+  return settledRow.state === "accepted" && settledRow.provider_message_id === input.providerMessageId
+    && settledRow.confirmed_by_event === true;
 }
 
 /** Only definite rejection before any prior provider attempt may release quota. */
