@@ -65,6 +65,7 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
         status text,reply_comment text,reply_update_time timestamptz,star_rating integer,updated_at timestamptz DEFAULT now(), UNIQUE(business_id,google_review_id));
       CREATE TABLE public.projects(user_id uuid,created_at timestamptz DEFAULT now());
       CREATE TABLE public.leads(created_at timestamptz DEFAULT now());
+      CREATE TABLE public.followup_visits(id bigserial PRIMARY KEY,business_id uuid NOT NULL,followup_status text NOT NULL);
       CREATE TABLE public.review_replies(id bigserial PRIMARY KEY,user_id uuid NOT NULL REFERENCES public.users(id),
         business_id uuid NOT NULL,review_id bigint NOT NULL REFERENCES public.reviews(id) ON DELETE CASCADE,
         draft_markdown text NOT NULL,posted boolean NOT NULL DEFAULT false,posted_at timestamptz,

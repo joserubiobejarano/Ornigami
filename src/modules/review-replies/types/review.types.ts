@@ -9,6 +9,7 @@ export type Review = {
   draftState?: ReviewDraftState;
   draftVersion?: number;
   draftUpdatedAt?: string | null;
+  postRecoveryStatus?: "posting" | "reconciliation_required" | null;
 };
 
 export type ReviewDraftState = "new" | "ai_drafted" | "human_edited" | "approved" | "posted";
@@ -28,6 +29,16 @@ export type ReviewApiRow = Review & {
   draftState?: ReviewDraftState;
   draftVersion?: number;
   draftUpdatedAt?: string | null;
+};
+
+export type ReviewPage = {
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+export type ReviewPageResult = {
+  items: ReviewApiRow[];
+  page: ReviewPage;
 };
 
 export type ReviewLocation = {

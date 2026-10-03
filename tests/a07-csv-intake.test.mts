@@ -111,6 +111,8 @@ test("manual visit route rejects wrong-type contact fields even when a phone is 
       requireActiveAgentAccess: async () => ({ id: id(702) }),
       safeApiErrorResponse: () => Response.json({ error: "failed" }, { status: 500 }),
     },
+    "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: undefined }) },
+    "@/lib/dashboard-pagination": { parseDashboardPageSize: () => 50 },
     "@/lib/team-lifecycle": { isSameOriginMutation: () => true },
     "@/modules/review-booster/services/intake-input.service": loadSameRealmTs("src/modules/review-booster/services/intake-input.service.ts", {}),
     "@/modules/review-booster/services/review-booster-db.service": { createFollowupVisit: async () => { writes += 1; return {}; } },

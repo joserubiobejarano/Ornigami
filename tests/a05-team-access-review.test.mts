@@ -73,6 +73,7 @@ test("a removed member cannot resolve the explicit original workspace or pass Bo
       "@/lib/api-security": { HttpError: class extends Error { status: number; constructor(status: number, message: string) { super(message); this.status = status; } } },
       "@/lib/billing/plans": { PLANS: {}, isPlanId: () => false },
       "@/lib/followup-retry-policy": { MAX_FOLLOWUP_ATTEMPTS: 3 },
+      "@/lib/dashboard-pagination": {},
     },
   );
   await booster.assertBusinessMember(businessId, memberId);

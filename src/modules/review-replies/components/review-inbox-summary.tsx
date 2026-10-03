@@ -44,9 +44,9 @@ export function ReviewInboxSummary({
       className="flex flex-wrap items-center gap-2 rounded-xl border-[1.5px] border-border bg-surface px-3 py-2.5 text-xs text-primary shadow-ink-sm"
       aria-live="polite"
     >
-      <span className="font-semibold text-primary">Summary</span>
+      <span className="font-semibold text-primary">This page</span>
       <Badge variant="outline" className="font-normal tabular-nums">
-        Loaded {summary.total}
+        Reviews {summary.total}
       </Badge>
       <Badge variant="outline" className="font-normal tabular-nums">
         Awaiting approval {summary.unanswered}

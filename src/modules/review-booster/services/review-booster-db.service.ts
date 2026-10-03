@@ -3,6 +3,7 @@ import { HttpError } from "@/lib/api-security";
 import { PLANS, isPlanId } from "@/lib/billing/plans";
 import { FollowupStats, FollowupVisit } from "@/modules/review-booster/types/followup.types";
 import { MAX_FOLLOWUP_ATTEMPTS } from "@/lib/followup-retry-policy";
+import { createDashboardPage, decodeDashboardCursor, DEFAULT_DASHBOARD_PAGE_SIZE, parseDashboardPageSize } from "@/lib/dashboard-pagination";
 import { z } from "zod";
 
 const DbDateSchema = z.union([z.string(), z.date()]);
@@ -242,16 +243,13 @@ export async function getReviewBoosterBillingPeriodUsage(businessId: string): Pr
 export async function getReviewOutcomeStats(businessId: string): Promise<ReviewOutcomeStats> {
   const rows = await sql`
     SELECT
-      count(DISTINCT v.id) FILTER (WHERE lower(v.followup_status) = 'sent')::int AS requests_sent,
-      count(DISTINCT r.id)::int AS reviews_synced,
-      count(DISTINCT rr.id) FILTER (WHERE rr.posted = true)::int AS replies_posted,
-      count(DISTINCT c.id)::int AS link_clicks
-    FROM public.businesses b
-    LEFT JOIN public.followup_visits v ON v.business_id = b.id
-    LEFT JOIN public.reviews r ON r.business_id = b.id
-    LEFT JOIN public.review_replies rr ON rr.review_id = r.id
-    LEFT JOIN public.review_link_clicks c ON c.business_id = b.id
-    WHERE b.id = ${businessId}
+      (SELECT count(*)::int FROM public.followup_visits v
+        WHERE v.business_id = ${businessId} AND lower(v.followup_status) = 'sent') AS requests_sent,
+      (SELECT count(*)::int FROM public.reviews r WHERE r.business_id = ${businessId}) AS reviews_synced,
+      (SELECT count(*)::int FROM public.review_replies rr
+        WHERE rr.business_id = ${businessId} AND rr.posted = true) AS replies_posted,
+      (SELECT count(*)::int FROM public.review_link_clicks c
+        WHERE c.business_id = ${businessId}) AS link_clicks
   `;
   const row = rows[0] as {
     requests_sent?: number;
@@ -267,6 +265,28 @@ export async function getReviewOutcomeStats(businessId: string): Promise<ReviewO
   };
 }
 export async function getRecentVisits(businessId: string, limit = 50): Promise<FollowupVisit[]> {
+  return (await getRecentVisitsPage(businessId, { limit })).items;
+}
+
+export type RecentVisitsPageOptions = { limit?: number; cursor?: string | null };
+
+export async function getRecentVisitsPage(
+  businessId: string,
+  options: RecentVisitsPageOptions = {}
+): Promise<{ items: FollowupVisit[]; page: { nextCursor: string | null; hasMore: boolean } }> {
+  const requestedLimit = options.limit ?? DEFAULT_DASHBOARD_PAGE_SIZE;
+  const limit = parseDashboardPageSize(String(requestedLimit));
+  if (limit === null) throw new Error("Invalid page size.");
+  const scope = JSON.stringify(["review-booster-visits", businessId]);
+  let cursor: ReturnType<typeof decodeDashboardCursor>;
+  try {
+    cursor = decodeDashboardCursor(options.cursor ?? null, scope, {
+      idType: "uuid",
+      timestampNullable: false,
+    });
+  } catch {
+    throw new HttpError(400, "Invalid pagination cursor.");
+  }
   const rows = await sql`
     SELECT
       v.id,
@@ -279,6 +299,7 @@ export async function getRecentVisits(businessId: string, limit = 50): Promise<F
       v.customer_phone,
       v.service_name,
       v.visited_at,
+      v.visited_at::text AS cursor_timestamp,
       v.source,
       CASE WHEN d.state IN ('sending','unknown','reconciliation_required') THEN d.state ELSE v.followup_status END AS followup_status,
       v.followup_sent_at,
@@ -294,10 +315,18 @@ export async function getRecentVisits(businessId: string, limit = 50): Promise<F
     JOIN public.businesses b ON b.id = v.business_id
     LEFT JOIN public.booster_followup_deliveries d ON d.business_id=v.business_id AND d.visit_id=v.id
     WHERE v.business_id = ${businessId}
-    ORDER BY v.visited_at DESC
-    LIMIT ${Math.max(1, Math.min(limit, 500))}
+      AND (v.visited_at, v.id) <
+        (${cursor === null ? "+infinity" : cursor.timestamp ?? "-infinity"}::timestamptz,
+          ${cursor?.id ?? "ffffffff-ffff-ffff-ffff-ffffffffffff"}::uuid)
+    ORDER BY v.visited_at DESC, v.id DESC
+    LIMIT ${limit + 1}
   `;
-  return rows.map((row) => FollowupVisitRowSchema.parse(row));
+  const page = createDashboardPage(rows.map((row) => ({
+    ...FollowupVisitRowSchema.parse(row),
+    cursorId: String(row.id),
+    cursorTimestamp: String(row.cursor_timestamp),
+  })), limit, scope);
+  return { items: page.items.map((row) => FollowupVisitRowSchema.parse(row)), page: page.page };
 }
 
 export async function listEligibleFollowupVisits(businessId: string): Promise<FollowupVisit[]> {
@@ -340,7 +369,8 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
         WHERE u.business_id = v.business_id
           AND u.customer_email_normalized = lower(v.customer_email)
       )
-    ORDER BY v.visited_at ASC
+    ORDER BY v.visited_at ASC, v.id ASC
+    LIMIT 500
   `;
   return rows.map((row) => FollowupVisitRowSchema.parse(row));
 }

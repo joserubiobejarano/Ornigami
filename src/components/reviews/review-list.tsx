@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { DashboardCallout } from "@/components/dashboard/callout";
 import { cn } from "@/lib/utils";
 import { formatProductDate } from "@/lib/format-date";
 import {
@@ -35,6 +36,10 @@ export type ReviewListProps = {
   onMarkPostedTest: (review: Review) => void;
   draftConflicts?: Record<string, ReviewDraft | null | undefined>;
   onReloadConflict?: (review: Review) => void;
+  onRefreshPostStatus?: () => void;
+  postingReviewId?: string | null;
+  savingReviewId?: string | null;
+  generatingReviewId?: string | null;
   hasPaidAccess: boolean;
   /** Shown under handled reviews in test context (sample or demo). */
   testModeHandledResetHint?: string;
@@ -42,6 +47,17 @@ export type ReviewListProps = {
 
 const DEFAULT_HANDLED_HINT =
   'Handled for this demo — reply area is locked. Use "Load sample reviews" or refresh to reset.';
+
+function ReviewRating({ rating }: { rating?: number | null }) {
+  if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return <span className="text-xs text-muted-foreground">Unrated</span>;
+  }
+  return (
+    <span aria-label={`${rating} out of 5 stars`} className="font-medium text-primary">
+      <span aria-hidden="true" className="text-accent-marigold">★</span> {rating}
+    </span>
+  );
+}
 
 export function ReviewList({
   reviews,
@@ -60,6 +76,10 @@ export function ReviewList({
   onMarkPostedTest,
   draftConflicts = {},
   onReloadConflict,
+  onRefreshPostStatus,
+  postingReviewId,
+  savingReviewId,
+  generatingReviewId,
   hasPaidAccess,
   testModeHandledResetHint = DEFAULT_HANDLED_HINT,
 }: ReviewListProps) {
@@ -74,6 +94,11 @@ export function ReviewList({
           isDemo
         );
         const isHandled = workflow === "posted";
+        const recoveryLocked = Boolean(rv.postRecoveryStatus);
+        const postInProgress = postingReviewId === rv.google_review_id;
+        const saveInProgress = savingReviewId === rv.google_review_id;
+        const generateInProgress = generatingReviewId === rv.google_review_id;
+        const replyIsSaved = savedDraftSnapshots[rv.google_review_id] === draftText && (rv.draftVersion ?? 0) > 0;
         const showTestActions = shouldShowTestWorkflowActions(rv, isDemo);
         const showTestModeHandledNote = isHandled && (rv.isSample || isDemo);
         const canGenerate = canGenerateReplyDraft(rv, draftText, savedDraftSnapshots);
@@ -101,9 +126,7 @@ export function ReviewList({
                     <span className="font-medium text-foreground">
                       {rv.reviewer_name ?? "Anonymous"}
                     </span>
-                    <span className="text-foreground">
-                      {typeof rv.star_rating === "number" ? `${rv.star_rating}*` : ","}
-                    </span>
+                    <ReviewRating rating={rv.star_rating} />
                     {rv.review_update_time && (
                       <span className="text-foreground text-xs">
                         {formatProductDate(rv.review_update_time)}
@@ -137,9 +160,7 @@ export function ReviewList({
                   <span className="font-medium text-foreground">
                     {rv.reviewer_name ?? "Anonymous"}
                   </span>
-                  <span className="text-foreground">
-                    {typeof rv.star_rating === "number" ? `${rv.star_rating}*` : ","}
-                  </span>
+                  <ReviewRating rating={rv.star_rating} />
                   {rv.review_update_time && (
                     <span className="text-foreground">
                       {formatProductDate(rv.review_update_time)}
@@ -179,30 +200,40 @@ export function ReviewList({
                 )}
               </div>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <label className="text-xs font-semibold text-primary">Suggested reply</label>
-                {workflow === "unsaved_draft" && !isHandled && (
-                  <span className="text-[10px] text-accent-marigold">
-                    Not saved yet — click Save draft to pin this version
-                  </span>
-                )}
-                {workflow === "draft_saved" && !isHandled && (
-                  <span className="text-[10px] text-navy">
-                    Draft saved — edit anytime, then save your changes before posting
-                  </span>
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor={`review-reply-${encodeURIComponent(rv.google_review_id)}`} className="text-xs font-semibold text-primary">{isHandled ? "Posted reply" : "Reply draft"}</label>
+                {draftText.trim() && !replyIsSaved && !recoveryLocked && !isHandled && (
+                  <span className="text-xs text-muted-foreground">Save changes before posting.</span>
                 )}
               </div>
               <Textarea
+                id={`review-reply-${encodeURIComponent(rv.google_review_id)}`}
                 value={draftText}
                 onChange={(e) => onDraftChange(rv.google_review_id, e.target.value)}
                 placeholder={
                   showTestActions ? "Edit your reply (test mode)" : "Your reply will be posted to Google"
                 }
                 className="min-h-[80px] resize-y"
-                readOnly={isHandled}
-                aria-readonly={isHandled}
+                readOnly={isHandled || recoveryLocked || postInProgress}
+                aria-readonly={isHandled || recoveryLocked || postInProgress}
+                aria-label={`${isHandled ? "Posted reply" : "Reply draft"} for ${rv.reviewer_name || "anonymous reviewer"}`}
               />
+              {rv.postRecoveryStatus && (
+                <DashboardCallout
+                  variant="warning"
+                  role="status"
+                  aria-live="polite"
+                  title={rv.postRecoveryStatus === "posting" ? "Checking reply status" : "Post status unconfirmed"}
+                  action={onRefreshPostStatus ? (
+                    <Button type="button" size="sm" variant="outline" onClick={onRefreshPostStatus}>
+                      Refresh saved status
+                    </Button>
+                  ) : undefined}
+                >
+                  <p>Your draft is safe. Don&apos;t post again until Google&apos;s result is confirmed.</p>
+                </DashboardCallout>
+              )}
               {conflictDraft !== undefined && (
                 <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-sm text-destructive">
                   <span>Your edits are still here, but this draft changed elsewhere. Reload the saved version before trying again.</span>
@@ -214,21 +245,21 @@ export function ReviewList({
                 </div>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-0.5">
-              <Button
+            {!isHandled && !recoveryLocked && <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              {(canGenerate || generateInProgress) && <Button
                 onClick={() => onGenerate(rv)}
                 title={
                   !hasPaidAccess && !isDemo && !rv.isSample ? "Premium feature" : undefined
                 }
-                disabled={isHandled || !canGenerate}
+                disabled={isHandled || recoveryLocked || postInProgress || generateInProgress || !canGenerate}
               >
-                  Generate reply
-              </Button>
+                  {generateInProgress ? "Generating…" : "Generate AI draft"}
+              </Button>}
               {showTestActions && (
                 <Button
                   size="default"
                   onClick={() => onSaveTestDraft(rv)}
-                  disabled={isHandled || !draftText.trim()}
+                  disabled={isHandled || recoveryLocked || postInProgress || saveInProgress || !draftText.trim()}
                 >
                   Save draft
                 </Button>
@@ -238,29 +269,29 @@ export function ReviewList({
                   size="default"
                   variant="outline"
                   onClick={() => onSaveDraft(rv)}
-                  disabled={isHandled || conflictDraft !== undefined || !draftText.trim() || savedDraftSnapshots[rv.google_review_id] === draftText}
+                  disabled={isHandled || recoveryLocked || postInProgress || saveInProgress || conflictDraft !== undefined || !draftText.trim() || savedDraftSnapshots[rv.google_review_id] === draftText}
                 >
-                  Save draft
+                  {saveInProgress ? "Saving…" : "Save draft"}
                 </Button>
               )}
               {showTestActions ? (
                 <Button
                   size="default"
                   onClick={() => onMarkPostedTest(rv)}
-                  disabled={isHandled || !draftText.trim()}
+                  disabled={isHandled || recoveryLocked || postInProgress || !draftText.trim()}
                 >
                   Mark as posted (test mode)
                 </Button>
               ) : (
                 <Button
                   onClick={() => onPost(rv)}
-                  disabled={isHandled || conflictDraft !== undefined || !draftText.trim() || isDemo}
+                  disabled={isHandled || recoveryLocked || conflictDraft !== undefined || !replyIsSaved || isDemo || Boolean(postingReviewId)}
                   title={isDemo ? "Posting disabled in demo mode" : undefined}
                 >
-                  Approve &amp; post
+                  {postingReviewId === rv.google_review_id ? "Posting…" : "Post saved reply"}
                 </Button>
               )}
-            </div>
+            </div>}
           </div>
         );
       })}

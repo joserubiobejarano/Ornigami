@@ -11,20 +11,21 @@ import { ReviewRepliesAgentNav } from "@/components/dashboard/review-replies-age
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { getDashboardMetrics } from "@/lib/dashboard-metrics";
-import { getUserPlanInfo } from "@/lib/plan-server";
-import { isPaidUser, isTrialing } from "@/lib/plan";
+import { getDashboardAgentAccess } from "@/lib/dashboard-access";
+import { userHasGbpConnection } from "@/lib/db/gbp";
 import { auth } from "@/auth";
 import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
-import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
 import { safeLogger } from "@/lib/safe-logger";
 
 export async function ReviewRepliesDashboardPage() {
   const cookieStore = await cookies();
   const isDemo = cookieStore.get("ll_demo")?.value === "true";
 
-  let planInfo = null;
-  let hasPaidAccess = false;
+  let entitlement: Awaited<ReturnType<typeof getDashboardAgentAccess>>["entitlement"] | null = null;
+  let workspaceOwner = false;
+  let googleConnected = false;
   let shouldShowActivation = false;
+  let accessError = false;
 
   if (!isDemo) {
     const session = await auth();
@@ -32,15 +33,15 @@ export async function ReviewRepliesDashboardPage() {
 
     if (user?.id) {
       try {
-        const business = await getOrCreateBusinessForUser(user.id);
-        const hasAgentAccess = await canAccessAgent(business.id, "review_replies");
-        if (!hasAgentAccess) {
+        const access = await getDashboardAgentAccess(user.id, "review_replies");
+        entitlement = access.entitlement;
+        workspaceOwner = access.context.role === "owner";
+        googleConnected = await userHasGbpConnection(access.context.integrationOwnerUserId);
+        if (!access.entitlement.hasAccess) {
           shouldShowActivation = true;
-        } else {
-          planInfo = await getUserPlanInfo(user.id);
-          hasPaidAccess = isPaidUser(planInfo.planStatus) || isTrialing(planInfo.planStatus);
         }
       } catch (e) {
+        accessError = true;
         safeLogger.error("review_replies_dashboard.plan_failed", {
           error: e instanceof Error ? e.message : "unknown",
         });
@@ -48,7 +49,7 @@ export async function ReviewRepliesDashboardPage() {
     }
   }
 
-  if (shouldShowActivation) {
+  if (shouldShowActivation || accessError) {
     return (
       <DashboardPage width="md">
         <ReviewRepliesAgentNav />
@@ -57,11 +58,12 @@ export async function ReviewRepliesDashboardPage() {
           title="A thoughtful reply, without the inbox sprawl."
           description="See what’s new, what’s drafted, and what still needs your approval."
         />
-        <AgentActivationPlaceholder
+        {accessError ? <DashboardCallout variant="error"><p>We couldn&apos;t verify this workspace. Refresh the page to try again.</p></DashboardCallout> : <AgentActivationPlaceholder
           agentId="review_replies"
           agentName="Review Replies"
           description="Reply drafting and one-click posting for Google reviews."
-        />
+          canManageBilling={workspaceOwner}
+        />}
       </DashboardPage>
     );
   }
@@ -79,9 +81,16 @@ export async function ReviewRepliesDashboardPage() {
         description="See what’s new, what’s drafted, and what still needs your approval."
       />
 
-      {planInfo && hasPaidAccess && !isDemo && (
-        <UpgradeBanner planStatus={planInfo.planStatus} currentPeriodEnd={planInfo.currentPeriodEnd} />
+      {entitlement && workspaceOwner && !isDemo && (
+        <UpgradeBanner planStatus={entitlement.planStatus} currentPeriodEnd={entitlement.currentPeriodEnd} />
       )}
+
+      {!isDemo && !googleConnected ? (
+        <DashboardCallout variant="warning" title="Google profile disconnected">
+          <p>{workspaceOwner ? "Reconnect Google Business Profile to sync reviews and manage replies." : "Ask the workspace owner to reconnect Google Business Profile to resume syncing."}</p>
+          {workspaceOwner ? <Link href="/connect" className="mt-2 inline-block text-sm font-medium underline underline-offset-4">Connect Google</Link> : null}
+        </DashboardCallout>
+      ) : null}
 
       {showError && (
         <DashboardCallout variant="error">

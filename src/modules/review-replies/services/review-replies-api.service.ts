@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { ReviewApiRow, ReviewDraft, ReviewLocation } from "@/modules/review-replies/types/review.types";
+import type { ReviewDraft, ReviewLocation, ReviewPageResult } from "@/modules/review-replies/types/review.types";
 
 const LocationSchema = z.object({
   locationName: z.string(),
@@ -20,6 +20,12 @@ const ReviewApiRowSchema = z.object({
   draftState: z.enum(["new", "ai_drafted", "human_edited", "approved", "posted"]).optional(),
   draftVersion: z.number().int().nonnegative().optional(),
   draftUpdatedAt: z.string().nullable().optional(),
+  postRecoveryStatus: z.enum(["posting", "reconciliation_required"]).nullable().optional(),
+});
+
+const ReviewPageSchema = z.object({
+  items: z.array(ReviewApiRowSchema).optional(),
+  page: z.object({ nextCursor: z.string().nullable(), hasMore: z.boolean() }).optional(),
 });
 
 const DraftSchema = z.object({
@@ -113,12 +119,23 @@ export async function fetchReviewLocations(businessId?: string): Promise<ReviewL
   }));
 }
 
-export async function fetchReviews(locationName: string, businessId?: string): Promise<ReviewApiRow[]> {
-  const query = new URLSearchParams({ loc: locationName });
+export async function fetchReviews(locationName: string, businessId?: string, cursor?: string | null): Promise<ReviewPageResult> {
+  const query = new URLSearchParams({ loc: locationName, limit: "50" });
   if (businessId) query.set("businessId", businessId);
+  if (cursor) query.set("cursor", cursor);
   const response = await fetch(`/api/reviews?${query.toString()}`);
-  const body = await readJson(response, z.object({ items: z.array(ReviewApiRowSchema).optional() }));
-  return (body.items ?? []) as ReviewApiRow[];
+  const body = await readJson(response, ReviewPageSchema);
+  return {
+    items: body.items ?? [],
+    page: body.page ?? { nextCursor: null, hasMore: false },
+  };
+}
+
+export class ReplyPostError extends Error {
+  constructor(message: string, readonly outcomeUncertain: boolean, readonly currentDraft?: ReviewDraft | null) {
+    super(message);
+    this.name = "ReplyPostError";
+  }
 }
 
 export async function saveReviewDraft(input: {
@@ -156,24 +173,30 @@ export async function postReviewReply(input: {
   reply: string;
   expectedVersion: number;
 }): Promise<ReviewDraft | null> {
-  const response = await fetch("/api/google/replies", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...input, intent: "manual" }),
-  });
+  let response: Response;
+  try {
+    response = await fetch("/api/google/replies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...input, intent: "manual" }),
+    });
+  } catch {
+    throw new ReplyPostError("We couldn't confirm whether Google received this reply.", true);
+  }
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    if (response.status === 409) {
-      const parsed = z.object({ error: z.string().optional(), currentDraft: DraftSchema.nullable().optional() }).safeParse(body);
-      throw new DraftVersionConflictError(
-        parsed.success ? parsed.data.error ?? "This draft changed in another session." : "This draft changed in another session.",
-        parsed.success ? parsed.data.currentDraft ?? null : null
-      );
-    }
-    throw new Error(body && typeof body === "object" && "error" in body && typeof body.error === "string"
+    const message = body && typeof body === "object" && "error" in body && typeof body.error === "string"
       ? body.error
-      : "We couldn't post this reply to Google. Try again in a moment.");
+      : "We couldn't post this reply to Google.";
+    const conflictBody = response.status === 409
+      ? z.object({ currentDraft: DraftSchema.nullable().optional() }).safeParse(body)
+      : null;
+    const currentDraft = conflictBody?.success ? conflictBody.data.currentDraft : undefined;
+    throw new ReplyPostError(message, response.status === 408 || response.status === 409 || response.status >= 500, currentDraft);
   }
-  const parsed = z.object({ ok: z.boolean().optional(), draft: DraftSchema.optional() }).safeParse(body);
-  return parsed.success ? parsed.data.draft ?? null : null;
+  const parsed = z.object({ ok: z.literal(true), draft: DraftSchema.optional() }).safeParse(body);
+  if (!parsed.success) {
+    throw new ReplyPostError("We couldn't confirm whether Google received this reply.", true);
+  }
+  return parsed.data.draft ?? null;
 }
