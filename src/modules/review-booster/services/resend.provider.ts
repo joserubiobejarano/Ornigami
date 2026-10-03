@@ -1,4 +1,5 @@
 import { buildUnsubscribeUrl } from "@/modules/review-booster/services/unsubscribe-token.service";
+import { isSafeBookingUrl, isSafeGoogleReviewUrl, isSafeSenderName } from "@/modules/review-booster/services/settings-link-validation";
 import { getOptionalEnv, getRequiredEnv } from "@/lib/env";
 
 export type ResendEmailPayload = {
@@ -46,6 +47,7 @@ type PrepareEmailInput = {
   subject: string;
   body: string;
   google_review_url: string;
+  rebooking_url?: string | null;
   review_link_url?: string | null;
   reply_to_email?: string | null;
   language?: string | null;
@@ -55,13 +57,13 @@ type PrepareEmailInput = {
   delivery_id?: string;
 };
 
-const copy: Record<string, { cta: string; unsubscribe: string; description: string }> = {
-  en: { cta: "Leave your review", unsubscribe: "Unsubscribe", description: "Don't want future follow-up emails?" },
-  es: { cta: "Deja tu opinión", unsubscribe: "Darse de baja", description: "¿No quieres recibir más correos de seguimiento?" },
-  fr: { cta: "Laisser un avis", unsubscribe: "Se désabonner", description: "Vous ne souhaitez plus recevoir d'e-mails de suivi ?" },
-  de: { cta: "Bewertung abgeben", unsubscribe: "Abmelden", description: "Möchten Sie keine weiteren Folgenachrichten erhalten?" },
-  it: { cta: "Lascia una recensione", unsubscribe: "Annulla l'iscrizione", description: "Non vuoi più ricevere email di follow-up?" },
-  pt: { cta: "Deixe sua avaliação", unsubscribe: "Cancelar inscrição", description: "Não quer receber mais emails de acompanhamento?" },
+const copy: Record<string, { cta: string; bookAgain: string; unsubscribe: string; description: string }> = {
+  en: { cta: "Leave your review", bookAgain: "Book again", unsubscribe: "Unsubscribe", description: "Don't want future follow-up emails?" },
+  es: { cta: "Deja tu opinión", bookAgain: "Reserva de nuevo", unsubscribe: "Darse de baja", description: "¿No quieres recibir más correos de seguimiento?" },
+  fr: { cta: "Laisser un avis", bookAgain: "Réserver à nouveau", unsubscribe: "Se désabonner", description: "Vous ne souhaitez plus recevoir d'e-mails de suivi ?" },
+  de: { cta: "Bewertung abgeben", bookAgain: "Erneut buchen", unsubscribe: "Abmelden", description: "Möchten Sie keine weiteren Folgenachrichten erhalten?" },
+  it: { cta: "Lascia una recensione", bookAgain: "Prenota di nuovo", unsubscribe: "Annulla l'iscrizione", description: "Non vuoi più ricevere email di follow-up?" },
+  pt: { cta: "Deixe sua avaliação", bookAgain: "Agende novamente", unsubscribe: "Cancelar inscrição", description: "Não quer receber mais emails de acompanhamento?" },
 };
 
 function languageCode(language?: string | null): string {
@@ -76,38 +78,56 @@ function escapeHtml(value: string): string {
 
 function safeHttpUrl(value: string): string {
   try {
+    if (/[\u0000-\u001f\u007f-\u009f]/.test(value)) throw new Error("control character");
     const url = new URL(value);
     const localHost = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
-    if (url.username || url.password || (url.protocol !== "https:" && !(url.protocol === "http:" && localHost))) {
-      throw new Error("unsafe URL");
-    }
+    if (url.username || url.password || (url.protocol !== "https:" && !(url.protocol === "http:" && localHost))) throw new Error("unsafe URL");
     return value;
   } catch {
     throw new ResendDeliveryError("Invalid email link URL", "definite_rejection");
   }
 }
 
+function senderHeaderName(value: string): string {
+  if (typeof value !== "string" || !value.trim() || value.length > 120 || /[\u0000-\u001f\u007f-\u009f]/.test(value)) {
+    throw new ResendDeliveryError("Invalid sender display name", "definite_rejection");
+  }
+  return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+}
+
 /** Builds the complete provider request before delivery so callers can persist this exact JSON for replay. */
 export async function prepareResendPayload(input: PrepareEmailInput): Promise<ResendEmailPayload> {
   const emailFrom = getRequiredEnv("EMAIL_FROM");
   const replyToEmail = getOptionalEnv("REPLY_TO_EMAIL");
+  if (!isSafeGoogleReviewUrl(input.google_review_url)) {
+    throw new ResendDeliveryError("Invalid Google review destination", "definite_rejection");
+  }
   const reviewLinkUrl = safeHttpUrl((input.review_link_url || input.google_review_url || "").trim());
+  const rebookingUrl = input.rebooking_url && isSafeBookingUrl(input.rebooking_url.trim())
+    ? input.rebooking_url.trim()
+    : null;
   const unsubscribeUrl = input.business_id
     ? safeHttpUrl(await buildUnsubscribeUrl({ businessId: input.business_id, customerEmail: input.customer_email }))
     : null;
   const localized = copy[languageCode(input.language)];
   const cta = input.cta_label || localized.cta;
+  const bookAgain = localized.bookAgain;
   const unsubscribe = input.unsubscribe_label || localized.unsubscribe;
   const unsubscribeDescription = input.unsubscribe_description || localized.description;
   const safeBody = escapeHtml(input.body).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>");
-  const html = `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;"><p>${safeBody}</p><p style="margin-top: 16px;"><a href="${escapeHtml(reviewLinkUrl)}" style="display:inline-block;background:#6d28d9;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">${escapeHtml(cta)}</a></p>${unsubscribeUrl ? `<p style="margin-top: 18px; font-size: 12px; color: #64748b;">${escapeHtml(unsubscribeDescription)} <a href="${escapeHtml(unsubscribeUrl)}" style="color:#334155;">${escapeHtml(unsubscribe)}</a>.</p>` : ""}</div>`;
+  const htmlBooking = rebookingUrl ? `<p style="margin-top: 12px;"><a href="${escapeHtml(rebookingUrl)}" style="color:#5b21b6;">${escapeHtml(bookAgain)}</a></p>` : "";
+  const html = `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;"><p>${safeBody}</p><p style="margin-top: 16px;"><a href="${escapeHtml(reviewLinkUrl)}" style="display:inline-block;background:#6d28d6;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">${escapeHtml(cta)}</a></p>${htmlBooking}${unsubscribeUrl ? `<p style="margin-top: 18px; font-size: 12px; color: #64748b;">${escapeHtml(unsubscribeDescription)} <a href="${escapeHtml(unsubscribeUrl)}" style="color:#334155;">${escapeHtml(unsubscribe)}</a>.</p>` : ""}</div>`;
+  const textBooking = rebookingUrl ? `\n\n${bookAgain}: ${rebookingUrl}` : "";
   const textUnsubscribe = unsubscribeUrl ? `\n\n${unsubscribeDescription} ${unsubscribe}: ${unsubscribeUrl}` : "";
+  const senderName = input.email_from_name && isSafeSenderName(input.email_from_name)
+    ? input.email_from_name
+    : input.business_name;
   const payload: ResendEmailPayload = {
-    from: `${input.email_from_name || input.business_name} <${emailFrom}>`,
+    from: `${senderHeaderName(senderName)} <${emailFrom}>`,
     to: input.customer_email,
     reply_to: input.reply_to_email || replyToEmail || emailFrom,
     subject: input.subject,
-    text: `${input.body}\n\n${cta}: ${reviewLinkUrl}${textUnsubscribe}`,
+    text: `${input.body}\n\n${cta}: ${reviewLinkUrl}${textBooking}${textUnsubscribe}`,
     html,
     ...(unsubscribeUrl ? { headers: { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
     ...(input.delivery_id ? { tags: [{ name: "ornigami_delivery_id", value: input.delivery_id }] } : {}),

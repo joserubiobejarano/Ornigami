@@ -1,6 +1,7 @@
 import type { FollowupRunResult } from "@/modules/review-booster/types/followup.types";
 import type { AtomicBeginSend, AtomicFollowupCandidate, AtomicFollowupClaim, FrozenFollowupPayload } from "@/modules/review-booster/services/atomic-followup-db.service";
 import { MAX_FOLLOWUPS_PER_RUN } from "@/lib/followup-run-policy";
+import { isSafeGoogleReviewUrl } from "@/modules/review-booster/services/settings-link-validation";
 
 export type FollowupRunnerDependencies = {
   listCandidates: (limit: number) => Promise<AtomicFollowupCandidate[]>;
@@ -61,6 +62,7 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
     } else {
       try {
         if (!visit.businessName.trim()) throw new Error("Add your business name in Review Booster settings before sending follow-ups.");
+        if (!isSafeGoogleReviewUrl(visit.googleReviewUrl)) throw new Error("Correct the Google review link in Review Booster settings before sending follow-ups.");
         subject = deps.buildSubject(visit.businessName, visit.language);
         body = await deps.generateBody(visit);
         payload = await deps.preparePayload(visit, subject, body, claim.deliveryId);
@@ -170,6 +172,7 @@ export async function createFollowupRunnerDependencies(businessId: string, actor
       body,
       google_review_url: visit.googleReviewUrl,
       review_link_url: reviewLinks.buildReviewLinkUrl({ businessId: visit.businessId, visitId: visit.visitId, reviewUrl: visit.googleReviewUrl }),
+      rebooking_url: visit.rebookingUrl,
       language: visit.language,
     })),
     persistPayload: (deliveryId, fence, payload, reviewUrl) => db.persistAtomicFollowupPayload({ deliveryId, fence, payload, reviewUrl }),

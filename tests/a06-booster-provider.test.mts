@@ -4,6 +4,7 @@ import { loadTs } from "./a02-test-support.mts";
 
 let emailFrom = "mail.example.com";
 let replyTo = "reply@example.com";
+const linkValidation = loadTs("src/modules/review-booster/services/settings-link-validation.ts", {});
 const provider = loadTs<{
   prepareResendPayload: (input: Record<string, unknown>) => Promise<Record<string, unknown>>;
   sendPreparedWithResend: (payload: Record<string, unknown>, key: string) => Promise<string>;
@@ -11,13 +12,14 @@ const provider = loadTs<{
 }>("src/modules/review-booster/services/resend.provider.ts", {
   "@/lib/env": { getRequiredEnv: (name: string) => name === "EMAIL_FROM" ? emailFrom : "test-key", getOptionalEnv: () => replyTo },
   "@/modules/review-booster/services/unsubscribe-token.service": { buildUnsubscribeUrl: () => "https://app.example/unsubscribe?token=abc" },
+  "@/modules/review-booster/services/settings-link-validation": linkValidation,
 });
 
 test("prepared payload localizes CTA and unsubscribe and safely escapes links/body", async () => {
   for (const language of ["en", "es", "fr", "de", "it", "pt", "pt-BR"]) {
     const payload = await provider.prepareResendPayload({
       business_id: "b1", business_name: "Shop", customer_email: "customer@example.com", subject: "Thanks",
-      body: '<script>alert("x")</script>', google_review_url: "https://reviews.example/path?a=1&b=2", language,
+      body: '<script>alert("x")</script>', google_review_url: "https://search.google.com/local/writereview?placeid=fixture-place", review_link_url: "https://reviews.example/path?a=1&b=2", language,
     });
     assert.equal(typeof payload.text, "string");
     assert.match(String(payload.html), /&lt;script&gt;/);
@@ -27,12 +29,12 @@ test("prepared payload localizes CTA and unsubscribe and safely escapes links/bo
     assert.ok(payload.headers);
     assert.equal(Object.isFrozen(payload), true);
     assert.equal(Object.isFrozen(payload.headers), true);
-    assert.ok(String(payload.html).includes(({ en: "Leave your review", es: "Deja tu opinión", fr: "Laisser un avis", de: "Bewertung abgeben", it: "Lascia una recensione", pt: "Deixe sua avaliação", "pt-BR": "Deixe sua avaliação" } as Record<string, string>)[language]));
+      assert.ok(String(payload.html).includes(({ en: "Leave your review", es: "Deja tu opinión", fr: "Laisser un avis", de: "Bewertung abgeben", it: "Lascia una recensione", pt: "Deixe sua avaliação", "pt-BR": "Deixe sua avaliação" } as Record<string, string>)[language]));
   }
 });
 
 test("sender uses the frozen payload and idempotency header and requires provider ID", async () => {
-  const payload = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "customer@example.com", subject: "s", body: "b", google_review_url: "https://reviews.example", language: "en" });
+  const payload = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "customer@example.com", subject: "s", body: "b", google_review_url: "https://search.google.com/local/writereview?placeid=fixture-place", language: "en" });
   const originalFetch = globalThis.fetch;
   let requestBody = "";
   let requestHeaders: Headers | undefined;
@@ -49,7 +51,7 @@ test("sender uses the frozen payload and idempotency header and requires provide
 });
 
 test("a replay sends the prepared payload unchanged after environment settings change", async () => {
-  const payload = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "customer@example.com", subject: "s", body: "b", google_review_url: "https://reviews.example", delivery_id: "delivery-123" });
+  const payload = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "customer@example.com", subject: "s", body: "b", google_review_url: "https://search.google.com/local/writereview?placeid=fixture-place", delivery_id: "delivery-123" });
   assert.deepEqual(payload.tags, [{ name: "ornigami_delivery_id", value: "delivery-123" }]);
   const serialized = JSON.stringify(payload);
   emailFrom = "changed.example.com";
@@ -67,7 +69,7 @@ test("a replay sends the prepared payload unchanged after environment settings c
       { body: serialized, key: "stable-replay-key" },
       { body: serialized, key: "stable-replay-key" },
     ]);
-    assert.equal((payload as { from: string }).from, "Shop <mail.example.com>");
+    assert.equal((payload as { from: string }).from, '"Shop" <mail.example.com>');
     assert.equal((payload as { reply_to: string }).reply_to, "reply@example.com");
   } finally {
     globalThis.fetch = originalFetch;
@@ -95,11 +97,11 @@ test("409, 5xx, transport failures, and malformed success are ambiguous; clear 4
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("invalid review URL fails before transport", async () => {
+test("invalid review URL fails before transport while local tracked links remain available in development", async () => {
   await assert.rejects(provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "javascript:alert(1)" }));
   await assert.rejects(provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "http://reviews.example/path" }));
   await assert.rejects(provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "https://user:password@reviews.example/path" }));
-  const local = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "http://localhost:3000/review" });
+  const local = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "https://search.google.com/local/writereview?placeid=fixture-place", review_link_url: "http://localhost:3000/review" });
   assert.match(String(local.text), /http:\/\/localhost:3000\/review/);
 });
 

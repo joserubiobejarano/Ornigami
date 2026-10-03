@@ -9,6 +9,8 @@ This module owns the Review Booster feature logic: completed visits, CSV import,
 - `/dashboard/agents/review-booster/upload`
 - `/dashboard/agents/review-booster/settings`
 - `/api/review-booster/settings`
+- `/api/review-booster/booking-credentials` (owner credential management)
+- `/api/webhooks/booking` (scoped, signed generic completed-event intake)
 - `/api/review-booster/visits`
 - `/api/review-booster/upload`
 - `/api/review-booster/run-now`
@@ -23,9 +25,10 @@ Settings are stored on `businesses`. Visits and messages are stored in `followup
 
 ## Current behavior
 
-- CSV files must be CSV, at most 1 MB and 500 rows, with `customer_name`, `customer_email`, `service_received` or `service_name`, and `visited_at`.
-- Duplicate CSV rows are skipped.
-- A Google review URL is derived from synced GBP locations when possible; a manual URL is the fallback.
+- CSV files must be CSV, at most 1 MB and 500 data rows, with `customer_email` and `visited_at`. Customer name and `service_received`/`service_name` are optional.
+- CSV insertion is conflict-aware: overlapping imports return inserted/duplicate/row-error counts, using the existing business/email/service/timestamp unique index. Equivalent timestamp offsets normalize to UTC; date-only input means midnight UTC. Offset-free datetimes and malformed files are rejected.
+- Importing/recording a visit sends no email itself, but eligible visits enter the existing manual/scheduled queue. Phone-only manual/booking visits are explicitly non-sendable; there is no SMS workflow.
+- The canonical selected Google location provides the automatic review URL; a valid manually configured direct Google review URL takes precedence. The Booster settings page links to the shared Google location-selection control.
 - Eligible visits are 23 hours to seven days old, pending or retryable failures, unsent, subscribed, and within the active plan allowance.
 - Failed sends persist reasons and use bounded retry backoff.
 - The runner applies a bounded per-run batch limit.
@@ -37,3 +40,13 @@ Migration `neon/migrations/022_booster_delivery_quotas.sql` adds durable per-vis
 The runner prepares the complete Resend JSON and persists it before provider I/O. Recovery uses the same JSON and key, and retries must use the original Resend sending account. Payloads include the stable delivery ID as the `ornigami_delivery_id` Resend tag for future signed-webhook correlation. The API secret is transport-only; sender, recipient, reply-to, subject, text, HTML, headers, and tags are frozen before delivery. The provider accepts prepared payloads through `sendPreparedWithResend`; it returns only a confirmed message ID and classifies transport, timeout, 5xx, 409, and malformed success responses as unknown. The key window is 24 hours, so attempts older than 23 hours require reconciliation. Unknown outcomes retain quota and are never automatically re-keyed. An unsubscribe committed before the pre-send database boundary blocks the send; an email already in provider I/O cannot be recalled. No new runtime dependency or environment setting is required.
 
 See [A06 delivery and quota handoff](../../../docs/tasks/A06_BOOSTER_DELIVERY_QUOTAS.md) for integration requirements, verification, and unresolved operator/UI decisions. This worktree does not update shared routes or domain models, deployment configuration, or the roadmap.
+
+## A07 intake and settings handoff
+
+Migration `023_booking_intake.sql` adds scoped encrypted/revocable booking credentials and atomic completed-event/visit admission. Booking clients sign the exact raw JSON body with their business credential and a bounded timestamp; caller-selected business IDs and legacy global Basic Auth are rejected. Generic source labels do not establish native provider connectors. The intake creates visits for the existing A06 sender, with no new scheduler.
+
+Business members read shared settings through the canonical owner and selected Google location. The Booster owner can select an unselected Google location from Booster settings through A08's existing owner-only selection route, including for Booster-only businesses. Once selected, the location is pinned and shown read-only; changing it is not offered. A Booster settings save never includes a location selection. Omitted sender/rebooking values survive saves, and explicit empty/null values clear them. Sender names affect display only, with the address controlled by `EMAIL_FROM`.
+
+Google review URLs use exact HTTPS destination rules: `search.google.com/local/writereview?placeid=…`, `g.page/{slug}/review`, and `g.page/r/{id}/review`. General Maps/profile/share URLs are not accepted as review destinations. Optional booking links use distinct public HTTPS rules, with no URL fetching. Invalid legacy values remain available for correction while blocked from new link rendering/preparation. A valid booking URL adds a localized "Book again" link in the same email. A06 freezes that link and sender together with the full payload; subsequent retries reuse the original JSON/key.
+
+The package handoff and final test evidence are in [A07 intake/CSV/settings](../../../docs/tasks/A07_BOOKING_INTAKE_CSV_SETTINGS.md). Required shared tracked-link, privacy, documentation and release changes are submitted in [A07 shared integration](../../../docs/tasks/A07_SHARED_INTEGRATION.md), rather than editing shared routes/configuration or the roadmap here.
