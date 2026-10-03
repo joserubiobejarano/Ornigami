@@ -55,7 +55,7 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
     appendFileSync(join(dataDir,"postgresql.conf"), "\nunix_socket_directories = ''\n");
     execFileSync(pgExe("pg_ctl"), ["-D",dataDir,"-l",join(dir,"postgres.log"),"-o",`-h 127.0.0.1 -p ${port} -F`,"-w","start"], { stdio: "ignore" });
     started = true;
-    psql(`CREATE TABLE public.users(id uuid PRIMARY KEY);
+    psql(`CREATE TABLE public.users(id uuid PRIMARY KEY,privacy_deletion_requested_at timestamptz);
       CREATE TABLE public.profiles(id uuid PRIMARY KEY REFERENCES public.users(id), review_replies_used integer DEFAULT 0,
         review_replies_usage_period_start timestamptz, auto_reply_all_reviews boolean DEFAULT false, updated_at timestamptz DEFAULT now());
       CREATE TABLE public.businesses(id uuid PRIMARY KEY, owner_user_id uuid NOT NULL REFERENCES public.users(id));
@@ -79,12 +79,16 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
         VALUES ('${owner}','${business}','legacy','new',3),('${owner}','${business}','fresh','new',5),('${owner}','${business}','late','new',5),
           ('${owner}','${business}','post','new',2),('${owner}','${business}','generated','new',5),('${owner}','${business}','unknown','new',NULL),
           ('${owner}','${business}','lease','new',5),
-          ('${owner}','${business}','missing-period','new',4),('${owner}','${business}','wrapper','new',NULL);
+          ('${owner}','${business}','missing-period','new',4),('${owner}','${business}','wrapper','new',NULL),
+          ('${owner}','${business}','freeze-post','new',5),('${owner}','${business}','freeze-post-null','new',5),
+          ('${owner}','${business}','freeze-generation','new',5);
       INSERT INTO public.review_replies(user_id,business_id,review_id,draft_markdown,posted)
         SELECT '${owner}','${business}',id,'keep human words',false FROM public.reviews WHERE google_review_id='legacy';`);
     const migration = join(root,"neon/migrations/024_review_draft_policy.sql");
     psqlFile(migration);
     psqlFile(migration);
+    psqlFile(join(root,"docs/tasks/A11_ACTIVATION_REPLIES.sql"));
+    psqlFile(join(root,"docs/tasks/A11_ACTIVATION_REPLIES.sql"));
 
     assert.equal(psql(`SELECT state||':'||version||':'||(SELECT draft_markdown FROM public.review_replies WHERE id=s.reply_id)
       FROM public.review_reply_draft_state s JOIN public.reviews r ON r.id=s.review_id WHERE r.google_review_id='legacy'`), "human_edited:1:keep human words");
@@ -290,6 +294,47 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
     assert.equal(dashboard.draftsCount,productionDraftIds.length,"the production dashboard query returns the current actionable draft rows, excluding historical, posted, and in-flight rows");
     assert.equal(psql(`SELECT public.a09_finish_reply_usage((SELECT id FROM public.review_reply_usage_reservations WHERE request_id='${lateRequest}'),true)`), "f");
     assert.equal(psql(`SELECT review_replies_used||':'||review_replies_reserved FROM public.profiles WHERE id='${owner}'`), "11:3");
+
+    // A teammate's actor id may reserve and save while both actor and owner
+    // are active; freeze serializes against native writes and claims.
+    const freezeToken=uuid();
+    assert.equal(psql(`SELECT ok FROM public.a09_claim_reply_generation('${business}','freeze-generation','${freezeToken}')`),"t");
+    const freezeReservation=uuid();
+    assert.equal(psql(`SELECT ok FROM public.a09_reserve_reply_usage('${actor}','${business}','${freezeReservation}',
+      (SELECT id FROM public.reviews WHERE google_review_id='freeze-generation'),'${freezeToken}',1)`),"t");
+    const postDraft=psql(`SELECT reply_id FROM public.a09_save_human_reply_draft('${business}','freeze-post','known safe text',0)`);
+    assert.ok(postDraft);
+    const postToken=uuid();
+    assert.equal(psql(`SELECT ok FROM public.a09_claim_reply_post('${business}','freeze-post','known safe text',1,'manual','${postToken}')`),"t");
+    psql(`SELECT a09_save_human_reply_draft('${business}','freeze-post-null','null-check text',0);`);
+    const nullPostToken=uuid();
+    assert.equal(psql(`SELECT ok FROM public.a09_claim_reply_post('${business}','freeze-post-null','null-check text',1,'manual','${nullPostToken}')`),"t");
+    const freezeStart=psqlAsync(`BEGIN;
+      SELECT pg_advisory_xact_lock(hashtextextended('billing-customer:${owner}',0));
+      SELECT pg_advisory_xact_lock(hashtextextended('billing-checkout-owner:${owner}',0));
+      UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';
+      SELECT pg_sleep(0.5);
+      COMMIT;`);
+    await new Promise((resolvePromise)=>setTimeout(resolvePromise,100));
+    const finishAccepted=psqlAsync(`SELECT public.a09_finish_reply_post('${business}','freeze-post','known safe text','${postToken}',true)`);
+    assert.equal(await finishAccepted,"t",
+      "accepted Google result racing deletion freeze is durably receipted");
+    await freezeStart;
+    assert.equal(psql(`SELECT public.a09_finish_reply_post('${business}','freeze-post-null','null-check text','${nullPostToken}',NULL::boolean)`),"f",
+      "null provider outcome is rejected after freeze without consuming its native claim");
+    assert.equal(psql(`SELECT posting_token::text FROM public.review_reply_draft_state
+      WHERE review_id=(SELECT id FROM public.reviews WHERE google_review_id='freeze-post-null')`),nullPostToken);
+    assert.equal(psql(`SELECT ok||':'||reason FROM public.a09_claim_reply_generation('${business}','freeze-post','${uuid()}')`),"false:frozen");
+    assert.equal(psql(`SELECT ok||':'||reason FROM public.a09_reserve_reply_usage('${actor}','${business}','${uuid()}')`),"false:frozen");
+    assert.equal(psql(`SELECT ok||':'||reason FROM public.a09_save_generated_reply('${business}','freeze-generation','model output',
+      '${freezeToken}',1,(SELECT id FROM public.review_reply_usage_reservations WHERE request_id='${freezeReservation}'))`),"false:frozen");
+    assert.equal(psql(`SELECT public.a09_finish_reply_usage((SELECT id FROM public.review_reply_usage_reservations WHERE request_id='${freezeReservation}'),false)`),"t",
+      "frozen work may release an uncommitted quota reservation");
+    assert.equal(psql(`SELECT outcome||':'||(review_id=(SELECT id FROM public.reviews WHERE google_review_id='freeze-post'))
+      FROM public.privacy_reply_post_outcomes WHERE claim_token='${postToken}'`),"accepted:true");
+    assert.equal(psql(`SELECT status||':'||COALESCE(reply_comment,'none') FROM public.reviews WHERE google_review_id='freeze-post'`),"new:none",
+      "frozen provider receipt does not write reply content into ordinary review data");
+    assert.equal(psql(`SELECT posting_token IS NULL FROM public.review_reply_draft_state WHERE review_id=(SELECT id FROM public.reviews WHERE google_review_id='freeze-post')`),"t");
 
   } finally {
     if (started) execFileSync(pgExe("pg_ctl"), ["-D",dataDir,"-m","immediate","-w","stop"], { stdio: "ignore" });

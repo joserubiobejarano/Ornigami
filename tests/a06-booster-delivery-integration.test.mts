@@ -54,6 +54,7 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
 
     psql(`CREATE TABLE public.users(id uuid PRIMARY KEY);
       INSERT INTO public.users VALUES ('${ids.owner}');
+      ALTER TABLE public.users ADD COLUMN privacy_deletion_requested_at timestamptz;
       CREATE TABLE public.profiles(id uuid PRIMARY KEY);
       INSERT INTO public.profiles VALUES ('${ids.owner}');`);
     for (const migration of ["003_business_foundation.sql", "004_review_booster_tables.sql", "007_review_booster_unsubscribes.sql", "008_pricing_plans.sql", "009_review_booster_error_reason.sql", "010_review_booster_retries.sql", "015_stripe_usage_periods.sql"]) {
@@ -81,6 +82,7 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
         SELECT id,business_id,'email','old','sent','sent',followup_sent_at FROM public.followup_visits
         WHERE business_id='${ids.businessQuota}' AND followup_sent_at IS NOT NULL;`);
     psql(readFileSync(join(root, "neon/migrations/022_booster_delivery_quotas.sql"), "utf8"));
+    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
 
     const sql = async (strings: TemplateStringsArray, ...values: unknown[]) => sqlRows(renderSql(strings, values));
     const db = loadTs<Record<string, (...args: never[]) => unknown>>("src/modules/review-booster/services/atomic-followup-db.service.ts", {
@@ -124,6 +126,10 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
         generateFollowupEmailBody: async (input: Record<string, unknown>) => `Thanks for visiting ${input.business_name} on ${input.visited_at}.`,
       },
       "@/lib/review-link-token": { buildReviewLinkUrl: ({ reviewUrl }: { reviewUrl: string }) => `https://tracked.example/go?url=${encodeURIComponent(reviewUrl)}` },
+      "@/lib/account-lifecycle": {
+        beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "generation-token" }),
+        finishAccountLifecycleOperation: async () => true,
+      },
       "@/lib/followup-run-policy": { MAX_FOLLOWUPS_PER_RUN: 50 },
       "@/modules/review-booster/services/review-booster-db.service": { assertBusinessMember: async () => undefined },
     });

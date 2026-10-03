@@ -34,12 +34,22 @@ export async function POST(req: NextRequest) {
     const context = await requireGoogleBusinessContext(user.id, requested.businessId);
     assertGoogleBusinessOwner(context);
     await sql`
-      WITH deleted AS (
+      WITH business_locks AS MATERIALIZED (
+        SELECT id,owner_user_id FROM public.businesses WHERE owner_user_id=${context.ownerUserId}::uuid
+        ORDER BY id FOR UPDATE
+      ), lifecycle_user AS MATERIALIZED (
+        SELECT u.id FROM public.users u WHERE u.id=${context.integrationOwnerUserId}::uuid
+          AND u.privacy_deletion_requested_at IS NULL
+          AND EXISTS (SELECT 1 FROM business_locks b WHERE b.owner_user_id=u.id)
+        FOR UPDATE OF u
+      ), deleted AS (
         DELETE FROM public.gbp_connections WHERE user_id = ${context.integrationOwnerUserId}
+          AND EXISTS (SELECT 1 FROM lifecycle_user u WHERE u.id=gbp_connections.user_id)
         RETURNING user_id
       ), invalidated AS (
         UPDATE public.gbp_locations SET connected = false, updated_at = now()
         WHERE user_id = ${context.integrationOwnerUserId}
+          AND EXISTS (SELECT 1 FROM lifecycle_user u WHERE u.id=gbp_locations.user_id)
         RETURNING id
       )
       SELECT (SELECT count(*) FROM deleted) AS deleted_connections,

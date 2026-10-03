@@ -11,7 +11,7 @@ const sameOrigin = loadTs<{ isSameOriginMutation(request: Request): boolean }>("
 
 type Processing = {
   processReviewDraft(input: {
-    actorUserId: string; businessId: string; locationName: string;
+    ownerUserId: string; actorUserId: string; businessId: string; locationName: string;
     row: { id: number; google_review_id: string; comment: string; star_rating: unknown };
     profile: { auto_reply_all_reviews: boolean } | null;
     source: "scheduled" | "individual" | "interactive_batch";
@@ -25,7 +25,7 @@ function loadProcessing(overrides: {
   save?: (...args: unknown[]) => Promise<unknown>;
   post?: (...args: unknown[]) => Promise<unknown>;
 } = {}) {
-  const calls: { posts: unknown[][]; generated: number; saves: number } = { posts: [], generated: 0, saves: 0 };
+  const calls: { posts: unknown[][]; generated: number; saves: number; lifecycle: unknown[][] } = { posts: [], generated: 0, saves: 0, lifecycle: [] };
   const mod = loadTs<Processing>("src/lib/review-draft-processing.ts", {
     "@/lib/review-reply-server": {
       generateReplyForReviewRow: async (...args: unknown[]) => { calls.generated += 1; return overrides.generate ? overrides.generate(...args) : "Thanks for your feedback."; },
@@ -39,12 +39,16 @@ function loadProcessing(overrides: {
       releaseReplyGenerationClaim: async () => undefined,
     },
     "@/lib/google-review-rating": { parseGoogleStarRating: (value: unknown) => ({ ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 } as Record<string, number>)[String(value)] ?? null },
+    "@/lib/account-lifecycle": {
+      beginAccountLifecycleOperation: async (...args: unknown[]) => { calls.lifecycle.push(args); return { result: "claimed", token: "lifecycle-token" }; },
+      finishAccountLifecycleOperation: async () => true,
+    },
   });
   return { mod, calls };
 }
 
 const input = (rating: unknown, source: "scheduled" | "individual" | "interactive_batch" = "interactive_batch") => ({
-  actorUserId: "member-1", businessId: "business-1", locationName: "accounts/10/locations/20",
+  ownerUserId: "owner-1", actorUserId: "member-1", businessId: "business-1", locationName: "accounts/10/locations/20",
   row: { id: 1, google_review_id: "review-1", comment: "Helpful review", star_rating: rating },
   profile: { auto_reply_all_reviews: true }, source,
 });
@@ -55,6 +59,8 @@ test("interactive batch can auto-post only known high ratings under owner opt-in
     const result = await mod.processReviewDraft(input(rating));
     assert.deepEqual(result, { outcome: "saved", draft: { replyId: 2, reviewId: "review-1", reply: "Thanks for your feedback.", state: "ai_drafted", version: 1, updatedAt: null }, posted: true });
     assert.equal(calls.posts.length, 1);
+    assert.equal((calls.lifecycle[0]?.[0] as { userId: string; actorUserId: string }).userId, "owner-1");
+    assert.equal((calls.lifecycle[0]?.[0] as { userId: string; actorUserId: string }).actorUserId, "member-1");
     assert.deepEqual(calls.posts[0]?.[5], { intent: "automatic", expectedVersion: 1, expectedText: "Thanks for your feedback." });
   }
 });

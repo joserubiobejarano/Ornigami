@@ -12,13 +12,26 @@ import { safeLogger } from "@/lib/safe-logger";
 import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { sendNewReviewAlert } from "@/lib/review-alerts";
 import { finishCronRun, startCronRun } from "@/lib/cron-health";
+import { randomUUID } from "node:crypto";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
 
 type LocationRow = { business_id: string; user_id: string; business_name: string; location_name: string; connection_version: string };
 type NewReview = { reviewerName: string | null; starRating: number | null; comment: string | null };
 
 async function syncLocation(userId: string, businessId: string, locationName: string, connectionVersion: string): Promise<{ synced: number; newReviews: NewReview[] }> {
-  const reviews = await fetchAllGoogleReviews(userId, locationName, undefined, connectionVersion);
-  return persistGoogleReviews(userId, businessId, locationName, reviews);
+  const lifecycle = await beginAccountLifecycleOperation({
+    userId, businessId, kind: "google_review_sync", idempotencyKey: randomUUID(), leaseMs: 90000,
+  });
+  if (lifecycle.result !== "claimed" || !lifecycle.token) throw new Error("Google sync blocked by account lifecycle");
+  try {
+    const reviews = await fetchAllGoogleReviews(userId, locationName, undefined, connectionVersion, { businessId });
+    const result = await persistGoogleReviews(userId, businessId, locationName, reviews);
+    if (!await finishAccountLifecycleOperation(lifecycle.token, "done")) throw new Error("Google sync lifecycle lease expired");
+    return result;
+  } catch (error) {
+    await finishAccountLifecycleOperation(lifecycle.token, "uncertain").catch(() => false);
+    throw error;
+  }
 }
 
 async function draftPending(userId: string, businessId: string, locationName: string): Promise<{ drafted: number; failed: number }> {
@@ -40,7 +53,7 @@ async function draftPending(userId: string, businessId: string, locationName: st
   let failed = 0;
   for (const row of rows) {
     const result = await processReviewDraft({
-      actorUserId: userId, businessId, locationName, row, profile, source: "scheduled",
+      ownerUserId: userId, actorUserId: userId, businessId, locationName, row, profile, source: "scheduled",
     });
     if (result.outcome === "limit") break;
     if (result.outcome === "failed") {
@@ -61,12 +74,14 @@ export async function GET(request: NextRequest) {
         l.location_name, gc.connection_version
       FROM public.business_google_locations selected
       INNER JOIN public.businesses b ON b.id = selected.business_id
+      INNER JOIN public.users owner ON owner.id=b.owner_user_id
       INNER JOIN public.gbp_locations l ON l.id = selected.location_id
         AND l.user_id = b.owner_user_id AND l.connected IS TRUE
       INNER JOIN public.gbp_connections gc ON gc.user_id = b.owner_user_id
         AND l.connection_version = gc.connection_version
       INNER JOIN public.business_agents ba ON ba.business_id = b.id
       WHERE ba.agent_id = 'review_replies' AND lower(ba.status) IN ('active', 'trialing')
+        AND owner.privacy_deletion_requested_at IS NULL
     `) as LocationRow[];
     let synced = 0;
     let drafted = 0;
@@ -84,7 +99,8 @@ export async function GET(request: NextRequest) {
           `;
           const owner = ownerRows[0] as { email?: string } | undefined;
           if (owner?.email) {
-            await sendNewReviewAlert({ recipientEmail: owner.email, businessName: location.business_name || "your business", locationName: location.location_name, reviews: result.newReviews });
+            await sendNewReviewAlert({ ownerUserId: location.user_id, businessId: location.business_id, recipientEmail: owner.email,
+              businessName: location.business_name || "your business", locationName: location.location_name, reviews: result.newReviews });
           }
         }
         const draftResult = await draftPending(location.user_id, location.business_id, location.location_name);

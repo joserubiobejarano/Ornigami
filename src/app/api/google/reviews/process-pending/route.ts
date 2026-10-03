@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     for (const row of rows) {
       if (!(row.comment ?? "").trim()) { skipped += 1; skippedNoComment += 1; continue; }
       const result = await processReviewDraft({
-        actorUserId: user.id, businessId: context.businessId, locationName: selected.location_name,
+        ownerUserId: context.integrationOwnerUserId, actorUserId: user.id, businessId: context.businessId, locationName: selected.location_name,
         row, profile, source: "interactive_batch",
       });
       if (result.outcome === "limit") { safetyLimitReached = true; break; }

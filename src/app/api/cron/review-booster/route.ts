@@ -20,9 +20,12 @@ type ActiveBusinessRow = {
 async function listActiveReviewBoosterBusinesses(): Promise<string[]> {
   const rows = await sql`
     SELECT business_id
-    FROM public.business_agents
+    FROM public.business_agents ba
+    JOIN public.businesses b ON b.id=ba.business_id
+    JOIN public.users owner ON owner.id=b.owner_user_id
     WHERE agent_id = 'review_booster'
       AND lower(status) IN ('active', 'trialing')
+      AND owner.privacy_deletion_requested_at IS NULL
   `;
   return (rows as ActiveBusinessRow[]).map((row) => row.business_id);
 }

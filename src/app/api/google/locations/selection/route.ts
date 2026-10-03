@@ -65,7 +65,9 @@ export async function POST(req: NextRequest) {
     // Selection is owner-authorized and must still be visible in a fresh provider discovery.
     let liveLocations;
     try {
-      liveLocations = await discoverGoogleLocations(context.integrationOwnerUserId);
+      liveLocations = await discoverGoogleLocations(context.integrationOwnerUserId, {
+        actorUserId: user.id, businessId: context.businessId,
+      });
     } catch {
       return NextResponse.json({ error: "Google location verification failed." }, { status: 502 });
     }
@@ -86,18 +88,34 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       await sql`
+        WITH business_lock AS MATERIALIZED (
+          SELECT id,owner_user_id FROM public.businesses WHERE id=${context.businessId}::uuid
+            AND owner_user_id=${context.ownerUserId}::uuid FOR UPDATE
+        ), lifecycle_user AS MATERIALIZED (
+          SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
+            WHERE u.privacy_deletion_requested_at IS NULL FOR UPDATE OF u
+        )
         UPDATE public.business_google_locations selection SET updated_at = now()
-        FROM public.gbp_locations l, public.gbp_connections c
+        FROM public.gbp_locations l, public.gbp_connections c, business_lock b, lifecycle_user u
         WHERE selection.business_id = ${context.businessId} AND selection.location_id = ${local.id}
+          AND b.id=selection.business_id AND u.id=b.owner_user_id
           AND l.id = selection.location_id AND l.user_id = ${context.integrationOwnerUserId}
           AND l.connected IS TRUE AND l.connection_version = ${local.connection_version}
           AND c.user_id = ${context.integrationOwnerUserId} AND c.connection_version = ${local.connection_version}
       `;
     } else {
       await sql`
+        WITH business_lock AS MATERIALIZED (
+          SELECT id,owner_user_id FROM public.businesses WHERE id=${context.businessId}::uuid
+            AND owner_user_id=${context.ownerUserId}::uuid FOR UPDATE
+        ), lifecycle_user AS MATERIALIZED (
+          SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
+            WHERE u.privacy_deletion_requested_at IS NULL FOR UPDATE OF u
+        )
         INSERT INTO public.business_google_locations (business_id, location_id)
-        SELECT ${context.businessId}, l.id
-        FROM public.gbp_locations l
+        SELECT b.id, l.id
+        FROM business_lock b JOIN lifecycle_user u ON u.id=b.owner_user_id
+        JOIN public.gbp_locations l ON true
         INNER JOIN public.gbp_connections c ON c.user_id = ${context.integrationOwnerUserId}
           AND c.connection_version = ${local.connection_version}
         WHERE l.id = ${local.id} AND l.user_id = ${context.integrationOwnerUserId}

@@ -1,5 +1,7 @@
 import { safeLogger } from "@/lib/safe-logger";
 import { getOptionalEnv } from "@/lib/env";
+import { randomUUID } from "node:crypto";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
 
 type NewReviewAlertReview = {
   reviewerName: string | null;
@@ -16,6 +18,9 @@ function escapeHtml(value: string): string {
 }
 
 export async function sendNewReviewAlert(input: {
+  ownerUserId: string;
+  actorUserId?: string;
+  businessId: string;
   recipientEmail: string;
   businessName: string;
   locationName: string;
@@ -29,6 +34,12 @@ export async function sendNewReviewAlert(input: {
     safeLogger.warn("review.alert.skipped_missing_email_config", { count: input.reviews.length });
     return;
   }
+
+  const operation = await beginAccountLifecycleOperation({
+    userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,
+    kind: "resend_review_alert", idempotencyKey: randomUUID(), leaseMs: 25_000,
+  });
+  if (operation.result !== "claimed" || !operation.token) return;
 
   const subject = input.reviews.length === 1
     ? `New Google review for ${input.businessName}`
@@ -44,7 +55,9 @@ export async function sendNewReviewAlert(input: {
     return `${review.reviewerName || "A customer"} — ${rating}\n${review.comment || "No written comment"}`;
   }).join("\n\n");
 
-  const response = await fetch("https://api.resend.com/emails", {
+  let response: Response;
+  try {
+    response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendApiKey}`,
@@ -58,10 +71,19 @@ export async function sendNewReviewAlert(input: {
       html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;"><h2>${escapeHtml(subject)}</h2><p>Location: ${escapeHtml(input.locationName)}</p><ul>${reviewLines}</ul></div>`,
       reply_to: replyToEmail || emailFrom,
     }),
-  });
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    await finishAccountLifecycleOperation(operation.token, "uncertain").catch(() => false);
+    return;
+  }
 
   if (!response.ok) {
-    const message = await response.text();
-    safeLogger.warn("review.alert.send_failed", { status: response.status, message });
+    await response.body?.cancel().catch(() => undefined);
+    await finishAccountLifecycleOperation(operation.token, response.status >= 400 && response.status < 500 ? "failed" : "uncertain");
+    safeLogger.warn("review.alert.send_failed", { status: response.status });
+    return;
   }
+  await response.body?.cancel().catch(() => undefined);
+  await finishAccountLifecycleOperation(operation.token, "done");
 }

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
@@ -7,6 +8,7 @@ import { isCheckoutBillingPeriod, isCheckoutPlanId } from "@/lib/billing/checkou
 import { stripePriceId } from "@/lib/billing/plans";
 import { stripe } from "@/lib/stripe";
 import { safeLogger } from "@/lib/safe-logger";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/billing/persistence";
 
 export async function POST(request: Request) {
   try {
@@ -76,20 +78,36 @@ export async function POST(request: Request) {
     if (!item) return NextResponse.json({ error: "Subscription has no billable item" }, { status: 409 });
     if (subscription.items.data.length !== 1) return NextResponse.json({ error: "Multiple subscription items require reconciliation" }, { status: 409 });
 
-    await stripe.subscriptions.update(subscription.id, {
-      items: [{ id: item.id, price: targetPriceId }],
-      proration_behavior: "always_invoice",
-      metadata: {
-        ...subscription.metadata,
-        user_id: context.ownerUserId,
-        owner_user_id: context.ownerUserId,
-        business_id: context.businessId,
-        plan_id: body.plan_id,
-        billing_period: billingPeriod,
-      },
+    const requestKey = randomUUID();
+    const operation = await beginAccountLifecycleOperation({
+      userId: context.ownerUserId, actorUserId: session.user.id, businessId: context.businessId,
+      kind: "stripe_subscription_update", idempotencyKey: requestKey,
     });
-
-    return NextResponse.json({ ok: true, plan_id: body.plan_id, billing_period: billingPeriod });
+    if (operation.kind !== "claimed" || !operation.token) {
+      return NextResponse.json({ error: operation.kind === "frozen" ? "Account deletion is in progress" : "Billing change requires reconciliation" }, { status: operation.kind === "frozen" ? 409 : 503 });
+    }
+    let outcome: "done" | "uncertain" = "uncertain";
+    try {
+      await stripe.subscriptions.update(subscription.id, {
+        items: [{ id: item.id, price: targetPriceId }],
+        proration_behavior: "always_invoice",
+        metadata: {
+          ...subscription.metadata,
+          user_id: context.ownerUserId,
+          owner_user_id: context.ownerUserId,
+          business_id: context.businessId,
+          plan_id: body.plan_id,
+          billing_period: billingPeriod,
+        },
+      }, { idempotencyKey: requestKey, timeout: 20_000, maxNetworkRetries: 0 });
+      outcome = "done";
+      return NextResponse.json({ ok: true, plan_id: body.plan_id, billing_period: billingPeriod });
+    } finally {
+      if (!(await finishAccountLifecycleOperation({ token: operation.token, outcome }))) {
+        safeLogger.warn("stripe.change_plan.lifecycle_lease_finish_failed", { token: operation.token });
+        if (outcome === "done") throw new Error("Billing change outcome requires reconciliation");
+      }
+    }
   } catch (error: unknown) {
     if (error instanceof BusinessAccessError) return NextResponse.json({ error: error.message }, { status: error.status });
     safeLogger.error("stripe.change_plan.failed", { error: error instanceof Error ? error.message : "unknown" });

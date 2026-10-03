@@ -1,10 +1,15 @@
-import { decryptToken } from "./encrypted-token.ts";
+import { decryptToken, encryptToken } from "./encrypted-token.ts";
+import { randomUUID } from "node:crypto";
 import { getRequiredEnv, getServerAppUrl } from "./env.ts";
 
 const GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const TOKEN_SKEW_MS = 120_000;
 const TOKEN_TIMEOUT_MS = 10_000;
+// Bound the complete logical request, including token reads/refresh and retry
+// backoff, so it cannot outlive the posting lease merely because each HTTP
+// attempt has its own timeout.
+const GOOGLE_OPERATION_DEADLINE_MS = 40_000;
 const API_TIMEOUT_MS = 12_000;
 const MAX_API_ATTEMPTS = 3;
 const MAX_RETRY_DELAY_MS = 2_000;
@@ -67,6 +72,17 @@ type TokenResponse = {
   scope?: string;
   token_type: string;
 };
+export type GoogleLifecycleContext = { actorUserId?: string; businessId?: string };
+
+class GoogleTokenResponseError extends Error {
+  readonly knownRefreshToken?: string;
+  readonly knownAccessToken?: string;
+  constructor(message: string, knownRefreshToken?: string, knownAccessToken?: string) {
+    super(message);
+    this.knownRefreshToken = knownRefreshToken;
+    this.knownAccessToken = knownAccessToken;
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -75,6 +91,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseTokenResponse(value: unknown, requireRefreshToken: boolean): TokenResponse {
   if (!isRecord(value)) throw new Error("Google returned an invalid token response.");
   const { access_token, refresh_token, expires_in, token_type, scope } = value;
+  const knownRefreshToken = typeof refresh_token === "string" && refresh_token.length > 0 && refresh_token.length <= 16_384
+    ? refresh_token : undefined;
+  const knownAccessToken = typeof access_token === "string" && access_token.length > 0 && access_token.length <= 16_384
+    ? access_token : undefined;
   if (
     typeof access_token !== "string" || access_token.length === 0 || access_token.length > 16_384 ||
     typeof expires_in !== "number" || !Number.isFinite(expires_in) || expires_in <= 0 || expires_in > 31_536_000 ||
@@ -83,7 +103,7 @@ function parseTokenResponse(value: unknown, requireRefreshToken: boolean): Token
     (scope !== undefined && typeof scope !== "string") ||
     (requireRefreshToken && typeof refresh_token !== "string")
   ) {
-    throw new Error("Google returned an invalid token response.");
+    throw new GoogleTokenResponseError("Google returned an invalid token response.", knownRefreshToken, knownAccessToken);
   }
   return {
     access_token,
@@ -240,6 +260,9 @@ type GoogleClientDependencies = {
   now: () => number;
   sleep: (ms: number) => Promise<void>;
   requestTimeoutMs: number;
+  admitRefresh?: (ownerUserId: string, tokens: Tokens, context?: GoogleLifecycleContext) => Promise<string | null>;
+  finishRefresh?: (token: string, outcome: "done" | "uncertain" | "failed") => Promise<boolean>;
+  resolveRefreshAfterSaveFailure?: (token: string, ownerUserId: string, tokens: GoogleOAuthTokens, snapshot?: TokenSnapshot) => Promise<void>;
 };
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -333,7 +356,8 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     ownerUserId: string,
     fallback: Tokens,
     force: boolean,
-    expectedConnectionVersion?: string
+    expectedConnectionVersion?: string,
+    lifecycleContext?: GoogleLifecycleContext
   ): Promise<Tokens> {
     const active = refreshes.get(ownerUserId);
     if (active) {
@@ -353,17 +377,54 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
         assertExpectedConnectionVersion(latest, expectedConnectionVersion);
         return latest;
       }
+      const lifecycleToken = await dependencies.admitRefresh?.(ownerUserId, latest, lifecycleContext);
+      if (dependencies.admitRefresh && !lifecycleToken) throw new Error("Google refresh blocked by account lifecycle.");
       let received: GoogleOAuthTokens;
       try {
         received = await dependencies.refresh(latest.refresh_token);
       } catch (error) {
+        if (lifecycleToken) {
+          const knownRefreshToken = error && typeof error === "object" && "knownRefreshToken" in error
+            && typeof (error as { knownRefreshToken?: unknown }).knownRefreshToken === "string"
+            ? (error as { knownRefreshToken: string }).knownRefreshToken : undefined;
+          const knownAccessToken = error && typeof error === "object" && "knownAccessToken" in error
+            && typeof (error as { knownAccessToken?: unknown }).knownAccessToken === "string"
+            ? (error as { knownAccessToken: string }).knownAccessToken : undefined;
+          const evidenceToken = knownRefreshToken ?? knownAccessToken;
+          if (evidenceToken && dependencies.resolveRefreshAfterSaveFailure) {
+            await dependencies.resolveRefreshAfterSaveFailure(lifecycleToken, ownerUserId, {
+              ...(knownRefreshToken ? { refresh_token: knownRefreshToken } : {}),
+              ...(knownAccessToken ? { access_token: knownAccessToken } : {}),
+            } as GoogleOAuthTokens, {
+              connection_version: latest.connection_version,
+              stored_access_token: latest.stored_access_token,
+              stored_refresh_token: latest.stored_refresh_token,
+            }).catch(() => undefined);
+          } else {
+            await dependencies.finishRefresh?.(lifecycleToken, "uncertain").catch(() => false);
+          }
+        }
         if (error instanceof Error && /^Google (token request failed|returned an invalid token response|refresh token is missing)/.test(error.message)) throw error;
         throw new Error("Google credentials could not be refreshed.");
       }
+      const preserveAndCompensate = async () => {
+        if (lifecycleToken && dependencies.resolveRefreshAfterSaveFailure) {
+          await dependencies.resolveRefreshAfterSaveFailure(lifecycleToken, ownerUserId, received, {
+            connection_version: latest.connection_version,
+            stored_access_token: latest.stored_access_token,
+            stored_refresh_token: latest.stored_refresh_token,
+          }).catch(() => undefined);
+        } else if (lifecycleToken) {
+          await dependencies.finishRefresh?.(lifecycleToken, "uncertain").catch(() => false);
+        }
+      };
       // A disconnect or replacement can race the provider call. Do not keep using a
       // token after the row disappears, or overwrite a newer credential set.
       const current = await dependencies.getTokens(ownerUserId);
-      if (!current) throw new Error("No Google connection found.");
+      if (!current) {
+        await preserveAndCompensate();
+        throw new Error("No Google connection found.");
+      }
       if (
         current.connection_version !== latest.connection_version ||
         current.stored_access_token !== latest.stored_access_token ||
@@ -371,9 +432,11 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
         current.access_token !== latest.access_token || current.refresh_token !== latest.refresh_token
       ) {
         if (!isExpired(current.expires_at, dependencies.now())) {
+          await preserveAndCompensate();
           assertExpectedConnectionVersion(current, expectedConnectionVersion);
           return current;
         }
+        await preserveAndCompensate();
         throw new Error("Google credentials changed during refresh.");
       }
       const refreshed = tokensFromRefresh(latest, received, dependencies.now());
@@ -385,7 +448,11 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
         });
         if (saved === false) throw new Error("credentials changed");
       } catch {
+        await preserveAndCompensate();
         throw new Error("Google credentials changed or could not be saved.");
+      }
+      if (lifecycleToken && await dependencies.finishRefresh?.(lifecycleToken, "done") !== true) {
+        throw new Error("Google refresh lifecycle lease expired.");
       }
       assertExpectedConnectionVersion(refreshed, expectedConnectionVersion);
       return refreshed;
@@ -398,7 +465,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     }
   }
 
-  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string): Promise<Tokens> {
+  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string, lifecycleContext?: GoogleLifecycleContext): Promise<Tokens> {
     const tokens = await dependencies.getTokens(ownerUserId);
     if (!tokens) {
       if (expectedConnectionVersion !== undefined) throw new GoogleConnectionVersionError();
@@ -407,27 +474,32 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
     if (!tokens.access_token || !tokens.refresh_token) throw new Error("Stored Google credentials are invalid.");
     if (!isExpired(tokens.expires_at, dependencies.now())) return tokens;
-    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion);
+    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion, lifecycleContext);
   }
 
   async function googleFetch(
     ownerUserId: string,
     input: string | URL,
     options: RequestInit = {},
-    expectedConnectionVersion?: string
+    expectedConnectionVersion?: string,
+    lifecycleContext?: GoogleLifecycleContext
   ): Promise<Response> {
     const url = safeApiUrl(input);
     const method = (options.method ?? "GET").toUpperCase();
     const canReplay = retryableRequest(method, url, options.body);
+    const deadline = dependencies.now() + GOOGLE_OPERATION_DEADLINE_MS;
     let tokens: Tokens;
     let refreshedAfterUnauthorized = false;
     const maxAttempts = canReplay ? MAX_API_ATTEMPTS : 1;
 
     for (let attempt = 0; ; attempt += 1) {
+      if (dependencies.now() >= deadline || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
       // Re-read before every provider request, including retries after backoff.
       // A selected location is pinned to the credential generation that authorized it.
-      tokens = await freshTokens(ownerUserId, expectedConnectionVersion);
+      tokens = await freshTokens(ownerUserId, expectedConnectionVersion, lifecycleContext);
       assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
+      const remainingMs = deadline - dependencies.now();
+      if (remainingMs <= 0 || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
       const controller = new AbortController();
       const externalSignal = options.signal;
       const abortFromCaller = () => controller.abort(externalSignal?.reason);
@@ -435,7 +507,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
       const timeout = setTimeout(() => {
         timedOut = true;
         controller.abort();
-      }, dependencies.requestTimeoutMs);
+      }, Math.min(dependencies.requestTimeoutMs, remainingMs));
       const cleanup = () => {
         clearTimeout(timeout);
         externalSignal?.removeEventListener("abort", abortFromCaller);
@@ -462,8 +534,9 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
 
       if (response.status === 401 && canReplay && !refreshedAfterUnauthorized) {
         await response.body?.cancel().catch(() => undefined);
-        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion);
+        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion, lifecycleContext);
         assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
+        if (dependencies.now() >= deadline || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
         refreshedAfterUnauthorized = true;
         // The refresh is a credential renewal; start a fresh bounded retry window.
         attempt = -1;
@@ -472,6 +545,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
       if ((response.status === 429 || response.status === 503) && attempt + 1 < maxAttempts) {
         const delay = retryDelay(response, attempt, dependencies.now());
         if (delay === null) return response;
+        if (delay >= deadline - dependencies.now()) return response;
         await response.body?.cancel().catch(() => undefined);
         await dependencies.sleep(delay);
         continue;
@@ -503,6 +577,52 @@ const googleClient = createGoogleClient({
   now: Date.now,
   sleep: defaultSleep,
   requestTimeoutMs: API_TIMEOUT_MS,
+  admitRefresh: async (ownerUserId, tokens, context) => {
+    const { beginAccountLifecycleOperation } = await import("./account-lifecycle.ts");
+    const result = await beginAccountLifecycleOperation({
+      userId: ownerUserId,
+      actorUserId: context?.actorUserId,
+      businessId: context?.businessId,
+      kind: "google_refresh",
+      idempotencyKey: `${tokens.connection_version}:${randomUUID()}`,
+      leaseMs: 30_000,
+    });
+    return result.result === "claimed" ? result.token : null;
+  },
+  finishRefresh: async (token, outcome) => {
+    const { finishAccountLifecycleOperation } = await import("./account-lifecycle.ts");
+    return finishAccountLifecycleOperation(token, outcome);
+  },
+  resolveRefreshAfterSaveFailure: async (token, ownerUserId, received, snapshot) => {
+    const evidence = received.refresh_token ?? received.access_token;
+    const { sql } = await import("@/lib/db/neon");
+    await sql`UPDATE public.account_lifecycle_operations SET encrypted_provider_evidence=${encryptToken(evidence)},updated_at=now()
+      WHERE token=${token}::uuid AND status IN ('active','uncertain')`;
+    let revoked = false;
+    try {
+      const response = await fetch("https://oauth2.googleapis.com/revoke", {
+        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ token: evidence }), signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS),
+      });
+      revoked = response.status === 200;
+    } catch { /* Persisted encrypted evidence keeps deletion pending. */ }
+    let durableProof = !snapshot;
+    if (revoked && snapshot) {
+      try {
+        await sql`INSERT INTO public.privacy_google_revocation_evidence
+          (operation_id,user_id,connection_version,encrypted_refresh_token,encrypted_revoked_token,acknowledged_at)
+          VALUES (${token}::uuid,${ownerUserId}::uuid,${snapshot.connection_version}::uuid,
+            ${snapshot.stored_refresh_token},${encryptToken(evidence)},now()) ON CONFLICT (operation_id) DO NOTHING`;
+        const proof = await sql`SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence
+          WHERE operation_id=${token}::uuid AND user_id=${ownerUserId}::uuid`;
+        const row = proof[0] as { connection_version?: string; encrypted_refresh_token?: string } | undefined;
+        durableProof = row?.connection_version === snapshot.connection_version
+          && row.encrypted_refresh_token === snapshot.stored_refresh_token;
+      } catch { durableProof = false; }
+    }
+    const { finishAccountLifecycleOperation } = await import("./account-lifecycle.ts");
+    await finishAccountLifecycleOperation(token, revoked && durableProof ? "failed" : "uncertain");
+  },
 });
 
 export const refreshIfNeeded = googleClient.refreshIfNeeded;

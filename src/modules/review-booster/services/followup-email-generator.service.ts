@@ -14,7 +14,14 @@ type EmailInput = {
 };
 
 const openaiApiKey = getOptionalEnv("OPENAI_API_KEY");
-const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey, timeout: 20_000, maxRetries: 0 }) : null;
+
+function isUnknownOpenAiOutcome(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; status?: unknown };
+  return candidate.name === "APIConnectionError" || candidate.name === "APIConnectionTimeoutError" ||
+    (typeof candidate.status === "number" && candidate.status >= 500);
+}
 
 const languageNames: Record<string, string> = { en: "English", es: "Spanish", fr: "French", de: "German", it: "Italian", pt: "Portuguese" };
 function languageCode(language?: string | null): string {
@@ -105,7 +112,12 @@ Return only the email body.`;
     const response = await openai.responses.create({ model: "gpt-4.1-mini", input: prompt });
     const body = normalizeEmailBodyPunctuation((response.output_text || "").trim());
     return body || buildFallbackEmailBody(input);
-  } catch {
+  } catch (error) {
+    if (isUnknownOpenAiOutcome(error)) {
+      const unknown = new Error("OpenAI follow-up generation outcome is unknown.");
+      unknown.name = "BoosterGenerationOutcomeUnknown";
+      throw unknown;
+    }
     return buildFallbackEmailBody(input);
   }
 }

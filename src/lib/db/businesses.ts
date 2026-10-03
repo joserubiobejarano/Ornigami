@@ -1,5 +1,4 @@
 import { sql } from "@/lib/db/neon";
-import { ensureUserFromOAuth } from "@/lib/db/users";
 import { DbBusinessAgentRowSchema, DbBusinessRowSchema } from "@/lib/validators";
 import { isWithinPastDueGracePeriod as isWithinPastDueGracePeriodPolicy, PAST_DUE_GRACE_DAYS as PAST_DUE_GRACE_DAYS_POLICY } from "@/lib/business-access-policy";
 import { z } from "zod";
@@ -42,8 +41,11 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
       public.businesses.updated_at
     FROM public.businesses
     INNER JOIN public.users actor ON actor.id = ${userId}
+    INNER JOIN public.users owner ON owner.id = public.businesses.owner_user_id
     LEFT JOIN public.business_members bm ON bm.business_id = public.businesses.id AND bm.user_id = actor.id
-    WHERE public.businesses.owner_user_id = actor.id OR bm.user_id = actor.id
+    WHERE actor.privacy_deletion_requested_at IS NULL
+      AND owner.privacy_deletion_requested_at IS NULL
+      AND (public.businesses.owner_user_id = actor.id OR bm.user_id = actor.id)
     ORDER BY public.businesses.created_at ASC, public.businesses.id ASC
     LIMIT 1
   `;
@@ -52,16 +54,7 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow 
 }
 
 export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusinessRow> {
-  let ownerUser = await resolveOwnerUser(userId);
-
-  if (!ownerUser?.id && userId.includes("@")) {
-    await ensureUserFromOAuth({
-      email: userId,
-      name: null,
-      image: null,
-    });
-    ownerUser = await resolveOwnerUser(userId);
-  }
+  const ownerUser = await resolveOwnerUser(userId);
 
   const resolvedUserId = ownerUser?.id ?? userId;
 
@@ -71,15 +64,17 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
 
   const existing = await getBusinessForUser(resolvedUserId);
   if (existing) {
+    const defaults = await sql`SELECT public.privacy_ensure_business_defaults(
+      ${existing.id}, ${resolvedUserId}, ${existing.owner_user_id}, ${
+        existing.owner_user_id === resolvedUserId && isPlaceholderBusinessName(existing.name, ownerUser?.email)
+      }
+    ) AS allowed`;
+    if ((defaults[0] as { allowed?: boolean } | undefined)?.allowed !== true) {
+      throw new Error("Workspace is unavailable.");
+    }
     if (existing.owner_user_id === resolvedUserId && isPlaceholderBusinessName(existing.name, ownerUser?.email)) {
-      await sql`
-        UPDATE public.businesses
-        SET name = '', updated_at = now()
-        WHERE id = ${existing.id}
-      `;
       existing.name = "";
     }
-    await ensureBusinessDefaults(existing.id, existing.owner_user_id);
     return existing;
   }
 
@@ -99,7 +94,12 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
     throw new Error("Could not resolve user in public.users for business creation.");
   }
 
-  await ensureBusinessDefaults(created.id, created.owner_user_id);
+  const defaults = await sql`SELECT public.privacy_ensure_business_defaults(
+    ${created.id}, ${resolvedUserId}, ${created.owner_user_id}, false
+  ) AS allowed`;
+  if ((defaults[0] as { allowed?: boolean } | undefined)?.allowed !== true) {
+    throw new Error("Workspace is unavailable.");
+  }
   return created;
 }
 
@@ -181,33 +181,6 @@ export async function upsertBusinessAgentStatus(
   return DbBusinessAgentRowSchema.parse(rows[0]);
 }
 
-async function ensureBusinessDefaults(businessId: string, userId: string): Promise<void> {
-  await sql`
-    INSERT INTO public.business_members (business_id, user_id, role)
-    VALUES (${businessId}, ${userId}, 'owner')
-    ON CONFLICT (business_id, user_id) DO NOTHING
-  `;
-
-  await ensureDefaultBusinessAgents(businessId);
-}
-
-export async function ensureDefaultBusinessAgents(businessId: string): Promise<void> {
-  const defaults: ReadonlyArray<{ agentId: string; status: string }> = [
-    { agentId: "review_replies", status: "inactive" },
-    { agentId: "review_booster", status: "inactive" },
-    { agentId: "speed_to_lead", status: "inactive" },
-  ];
-
-  await sql`
-    INSERT INTO public.business_agents (business_id, agent_id, status, activated_at, deactivated_at)
-    VALUES
-      (${businessId}, ${defaults[0].agentId}, ${defaults[0].status}, NULL, now()),
-      (${businessId}, ${defaults[1].agentId}, ${defaults[1].status}, NULL, now()),
-      (${businessId}, ${defaults[2].agentId}, ${defaults[2].status}, NULL, now())
-    ON CONFLICT (business_id, agent_id) DO NOTHING
-  `;
-}
-
 async function resolveOwnerUser(userId: string): Promise<{
   id: string | null;
   email: string | null;
@@ -221,6 +194,7 @@ async function resolveOwnerUser(userId: string): Promise<{
       FROM public.users u
       LEFT JOIN public.profiles p ON p.id = u.id
       WHERE lower(u.email) = lower(${userId})
+        AND u.privacy_deletion_requested_at IS NULL
       LIMIT 1
     `;
     const byEmail = byEmailRows[0] as
@@ -238,6 +212,7 @@ async function resolveOwnerUser(userId: string): Promise<{
     FROM public.users u
     LEFT JOIN public.profiles p ON p.id = u.id
     WHERE u.id = ${userId}
+      AND u.privacy_deletion_requested_at IS NULL
     LIMIT 1
   `;
   const byId = byIdRows[0] as

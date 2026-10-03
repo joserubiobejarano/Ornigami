@@ -67,21 +67,22 @@ test("selected-business denial never falls back; invalid actors and IDs never qu
 test("business lookup seeds canonical owner membership and does not edit teammate placeholder name", async () => {
   const placeholder = { ...business, name: "member@example.com" };
   const db = fakeSql((query) => {
+    if (query.includes("privacy_ensure_business_defaults")) return [{ allowed: true }];
     if (query.includes("FROM public.users u")) return [{ id: member, email: "member@example.com", business_name: null }];
     if (query.includes("FROM public.businesses") && query.includes("INNER JOIN public.users actor")) return [placeholder];
     return [];
   });
   const mod = loadTs<BusinessModule>("src/lib/db/businesses.ts", {
     "@/lib/db/neon": { sql: db.sql },
-    "@/lib/db/users": { ensureUserFromOAuth: async () => { throw new Error("must not recreate"); } },
     "@/lib/validators": validators,
     "@/lib/business-access-policy": { isWithinPastDueGracePeriod, PAST_DUE_GRACE_DAYS: 7, hasActiveBusinessEntitlement },
   });
   await mod.getOrCreateBusinessForUser(member);
-  const insert = db.calls.find(call => call.query.includes("INSERT INTO public.business_members"));
-  assert.ok(insert);
-  assert.deepEqual(insert.values, [businessId, owner]);
-  assert.equal(db.calls.some(call => call.query.includes("UPDATE public.businesses")), false);
+  const guardedDefaults = db.calls.find(call => call.query.includes("privacy_ensure_business_defaults"));
+  assert.ok(guardedDefaults);
+  assert.deepEqual(guardedDefaults.values, [businessId, member, owner, false]);
+  assert.equal(db.calls.some(call => call.query.includes("UPDATE public.businesses")), false,
+    "placeholder cleanup is inside the guarded SQL function");
 });
 test("active member uses shared entitlement and wrapper preserves actor plus additive context", async () => {
   const db = fakeSql(() => [{ ...business, actor_role: "member" }]);

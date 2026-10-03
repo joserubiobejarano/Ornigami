@@ -127,7 +127,7 @@ test("complete discovery marks stale owner cache rows disconnected", async () =>
   assert.equal(providerOwner, owner);
   assert.deepEqual(result, { locations: [], imported: 0 });
   const staleUpdate = db.calls.find((call) => call.query.includes("SET connected = false"));
-  assert.deepEqual(staleUpdate?.values, [staleId, owner, connectionVersion]);
+  assert.deepEqual(staleUpdate?.values.slice(-3), [staleId, owner, connectionVersion]);
 });
 
 test("provider discovery failures are sanitized as HTTP 502", async () => {
@@ -496,16 +496,16 @@ test("owner disconnect atomically removes the shared credential and invalidates 
   const response = await route.POST(request as never);
   assert.equal(response.status, 200);
   assert.deepEqual(cookieWrites, [["ll_gbp_oauth_state", "", { path: "/", maxAge: 0 }]]);
-  assert.match(db.calls[0].query, /WITH deleted AS \(\s*DELETE FROM public\.gbp_connections/);
+  assert.match(db.calls[0].query, /WITH business_locks AS MATERIALIZED[\s\S]*lifecycle_user AS MATERIALIZED[\s\S]*deleted AS \(\s*DELETE FROM public\.gbp_connections/);
   assert.match(db.calls[0].query, /UPDATE public\.gbp_locations SET connected = false/);
-  assert.equal(db.calls[0].values.length, 2);
-  assert.deepEqual(db.calls[0].values, [owner, owner]);
+  assert.equal(db.calls[0].values.length, 4);
+  assert.deepEqual(db.calls[0].values, [owner, owner, owner, owner]);
 });
 
 test("OAuth callback rechecks live ownership before token exchange", async () => {
   const state = loadTs<typeof import("../src/lib/google-oauth-state.ts")>("src/lib/google-oauth-state.ts", {
     "@/lib/env": { getOptionalEnv: () => undefined },
-    "node:crypto": { default: await import("node:crypto") },
+      "node:crypto": { ...(await import("node:crypto")), default: await import("node:crypto") },
   });
   const signed = state.buildGoogleOAuthState(actor, businessId, owner);
   let exchangeCalls = 0;
@@ -522,6 +522,7 @@ test("OAuth callback rechecks live ownership before token exchange", async () =>
       "@/lib/google": { exchangeCodeForTokens: async () => { exchangeCalls++; return {}; } },
       "@/lib/db/gbp": { upsertGbpConnection: async () => {} },
       "@/lib/db/neon": { sql: fakeSql(() => []).sql },
+      "@/lib/encrypted-token": { encryptToken: (value: string) => `encrypted:${value}` },
       "@/lib/env": { getServerAppUrl: () => "https://app.test" },
       "@/lib/google-oauth-state": state,
       "@/lib/user-from-req": { resolveUser: async () => ({ id: actor }) },
@@ -550,7 +551,7 @@ test("OAuth reconnect invalidates the old owner cache before replacing credentia
   const crypto = await import("node:crypto");
   const state = loadTs<typeof import("../src/lib/google-oauth-state.ts")>("src/lib/google-oauth-state.ts", {
     "@/lib/env": { getOptionalEnv: () => undefined },
-    "node:crypto": { default: crypto },
+      "node:crypto": { ...crypto, default: crypto },
   });
   const signed = state.buildGoogleOAuthState(actor, businessId, owner);
   const events: string[] = [];
@@ -565,8 +566,17 @@ test("OAuth reconnect invalidates the old owner cache before replacing credentia
     {
       "next/server": { NextResponse: { redirect } },
       "@/lib/google": { exchangeCodeForTokens: async () => ({ access_token: "access", refresh_token: "refresh", expires_in: 3600, token_type: "Bearer" }) },
-      "@/lib/db/gbp": { upsertGbpConnection: async (input: { userId: string }) => { assert.equal(input.userId, owner); events.push("save"); } },
-      "@/lib/db/neon": { sql: db.sql },
+      "@/lib/db/gbp": { upsertGbpConnection: async (input: { userId: string }) => { assert.equal(input.userId, owner); events.push("invalidate", "save"); return { connectionVersion: "generation-1", encryptedRefreshToken: "encrypted:refresh" }; } },
+      "@/lib/encrypted-token": { encryptToken: (value: string) => `encrypted:${value}` },
+      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        const query = strings.join(" ");
+        if (query.includes("begin_account_lifecycle_operation")) return [{ result: "claimed", token: "lifecycle-token" }];
+        if (query.includes("finish_account_lifecycle_operation")) return [{ changed: true }];
+        if (query.includes("FROM public.gbp_connections") && query.includes("refresh_token")) return [{ connection_version: "generation-1", refresh_token: "encrypted:refresh" }];
+        if (query.includes("SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence")) return [{ connection_version: "generation-1", encrypted_refresh_token: "encrypted:refresh" }];
+        if (query.includes("UPDATE public.account_lifecycle_operations")) return [];
+        return db.sql(strings, ...values);
+      } },
       "@/lib/env": { getServerAppUrl: () => "https://app.test" },
       "@/lib/google-oauth-state": state,
       "@/lib/user-from-req": { resolveUser: async () => ({ id: actor }) },

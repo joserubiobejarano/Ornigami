@@ -54,3 +54,20 @@ test("a rejected OpenAI generation returns the localized deterministic fallback"
   assert.match(body, /^Hola Sam,/);
   assert.match(body, /gracias/i);
 });
+
+test("ambiguous OpenAI timeout and server outcomes remain explicitly unknown", async () => {
+  for (const failure of [
+    Object.assign(new Error("timed out"), { name: "APIConnectionTimeoutError" }),
+    Object.assign(new Error("server error"), { status: 503 }),
+  ]) {
+    class FailingOpenAI { responses = { create: async () => { throw failure; } }; }
+    const withFailure = loadTs<{
+      generateFollowupEmailBody: (input: Record<string, unknown>) => Promise<string>;
+    }>("src/modules/review-booster/services/followup-email-generator.service.ts", {
+      "@/lib/env": { getOptionalEnv: () => "unit-test-key" },
+      openai: { __esModule: true, default: FailingOpenAI },
+    });
+    await assert.rejects(withFailure.generateFollowupEmailBody({ business_name: "Acme" }), (error: unknown) =>
+      error instanceof Error && error.name === "BoosterGenerationOutcomeUnknown");
+  }
+});

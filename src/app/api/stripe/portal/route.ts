@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
@@ -6,6 +7,7 @@ import { BusinessAccessError, requireBusinessOwner } from "@/lib/business-contex
 import { sql } from "@/lib/db/neon";
 import { stripe } from "@/lib/stripe";
 import { safeLogger } from "@/lib/safe-logger";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/billing/persistence";
 
 export async function POST(request: Request) {
   try {
@@ -37,12 +39,29 @@ export async function POST(request: Request) {
     if (customer.metadata.owner_user_id && customer.metadata.owner_user_id !== context.ownerUserId) {
       return NextResponse.json({ error: "Billing customer ownership requires reconciliation" }, { status: 409 });
     }
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: customer.id,
-      return_url: `${appUrl}/dashboard/billing`,
+    const requestKey = randomUUID();
+    const operation = await beginAccountLifecycleOperation({
+      userId: context.ownerUserId, actorUserId: session.user.id, businessId: context.businessId,
+      kind: "stripe_portal_session_create", idempotencyKey: requestKey,
     });
-    if (!portal.url) return NextResponse.json({ error: "Stripe portal URL missing" }, { status: 502 });
-    return NextResponse.redirect(portal.url, { status: 303 });
+    if (operation.kind !== "claimed" || !operation.token) {
+      return NextResponse.json({ error: operation.kind === "frozen" ? "Account deletion is in progress" : "Billing portal requires reconciliation" }, { status: operation.kind === "frozen" ? 409 : 503 });
+    }
+    let outcome: "done" | "uncertain" = "uncertain";
+    try {
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: customer.id,
+        return_url: `${appUrl}/dashboard/billing`,
+      }, { idempotencyKey: requestKey, timeout: 20_000, maxNetworkRetries: 0 });
+      outcome = "done";
+      if (!portal.url) return NextResponse.json({ error: "Stripe portal URL missing" }, { status: 502 });
+      return NextResponse.redirect(portal.url, { status: 303 });
+    } finally {
+      if (!(await finishAccountLifecycleOperation({ token: operation.token, outcome }))) {
+        safeLogger.warn("stripe.portal.lifecycle_lease_finish_failed", { token: operation.token });
+        if (outcome === "done") throw new Error("Billing portal session outcome requires reconciliation");
+      }
+    }
   } catch (error: unknown) {
     if (error instanceof BusinessAccessError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

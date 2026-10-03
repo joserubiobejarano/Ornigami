@@ -53,6 +53,7 @@ export const authConfig = {
           name: user.name ?? undefined,
           image: user.image ?? undefined,
           authVersion: user.auth_version,
+          privacyDeletionPending: user.privacy_deletion_requested_at != null,
         };
       },
     }),
@@ -76,6 +77,7 @@ export const authConfig = {
             });
             token.sub = row.id;
             token.authVersion = row.auth_version;
+            token.privacyDeletionPending = row.privacy_deletion_requested_at != null;
           } catch {
             return null;
           }
@@ -90,6 +92,7 @@ export const authConfig = {
       try {
         const current = await findUserById(token.sub);
         if (!current || current.auth_version !== token.authVersion) return null;
+        token.privacyDeletionPending = current.privacy_deletion_requested_at != null;
       } catch {
         return null;
       }
@@ -98,6 +101,19 @@ export const authConfig = {
     async session({ session, token }) {
       if (!session.user || !token.sub || typeof token.authVersion !== "number") {
         throw new Error("Cannot create a session from an invalid authentication token");
+      }
+      if (token.privacyDeletionPending === true) {
+        // Keep the JWT subject internal so this account can resume its pending
+        // deletion. Normal route guards receive no usable user id or PII.
+        const restrictedUser = session.user as unknown as Record<string, unknown>;
+        delete restrictedUser.id;
+        delete restrictedUser.email;
+        delete restrictedUser.name;
+        delete restrictedUser.image;
+        delete restrictedUser.authVersion;
+        session.deletionUserId = token.sub;
+        session.accountLifecycle = "deleting";
+        return session;
       }
       session.user.id = token.sub;
       session.user.authVersion = token.authVersion;

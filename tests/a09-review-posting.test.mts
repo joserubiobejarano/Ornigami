@@ -30,6 +30,10 @@ function loadPoster(outcome: "success" | "throw" | 400 | 429 | 503) {
       claimReplyPost: async () => { calls.claims += 1; return { ok: true, token: "post-token" }; },
       finishReplyPost: async (_business: string, _review: string, _text: string, _token: string, success: boolean) => { calls.finishes.push(success); return true; },
     },
+    "@/lib/account-lifecycle": {
+      beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "lifecycle-token" }),
+      finishAccountLifecycleOperation: async () => true,
+    },
   });
   return { mod, calls };
 }

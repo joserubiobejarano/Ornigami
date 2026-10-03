@@ -74,6 +74,8 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
         VALUES('${legacyVisit}','${legacyBusiness}','sent',now());`);
     psql(readFileSync(join(migrationsDir, "022_booster_delivery_quotas.sql"), "utf8"));
     for (const migration of migrations.filter((name) => Number(name.slice(0, 3)) > 22)) psql(readFileSync(join(migrationsDir, migration), "utf8"));
+    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_LIFECYCLE.sql"), "utf8"));
+    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
 
     const owner = id(900);
     const biz = id(901);
@@ -255,7 +257,62 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
     // message mirror into the legacy baseline and charge it twice.
     const beforeReplay = Number(psql(`SELECT usage FROM public.booster_monthly_quota('${recoveryBiz}')`));
     psql(readFileSync(join(migrationsDir, "022_booster_delivery_quotas.sql"), "utf8"));
+    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
     assert.equal(Number(psql(`SELECT usage FROM public.booster_monthly_quota('${recoveryBiz}')`)), beforeReplay);
+
+    const lifecycle = loadTs<typeof import("../src/lib/account-lifecycle.js")>("src/lib/account-lifecycle.ts", { overrides: { "@/lib/db/neon": { sql } } });
+    const generationLease = await lifecycle.beginAccountLifecycleOperation({ userId: owner, businessId: biz, kind: "booster_generation", idempotencyKey: "delivery-lease:attempt-1", leaseMs: 45_000 });
+    assert.equal(generationLease.result, "claimed", "active owner receives a fenced generation lease");
+    assert.ok(generationLease.token);
+    assert.equal(await lifecycle.finishAccountLifecycleOperation(generationLease.token!, "done"), true);
+
+    // A11 freezes candidate PII reads, delivery claims and provider admission.
+    const freezeBiz = id(951);
+    const frozenVisit = id(950);
+    psql(`INSERT INTO public.businesses(id,owner_user_id,name,google_review_url) VALUES('${freezeBiz}','${owner}','Freeze Test','https://example.test/reviews');
+      INSERT INTO public.business_agents(business_id,agent_id,plan_id,status) VALUES('${freezeBiz}','review_booster','booster','active');
+      INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status)
+        VALUES('${frozenVisit}','${freezeBiz}','frozen@example.test',now()-interval '1 day','pending');`);
+    const lateOwner = id(960), lateBiz = id(961), lateVisit = id(962), lateActor = id(963);
+    psql(`INSERT INTO public.users(id,email) VALUES('${lateOwner}','late-freeze@example.test'),('${lateActor}','late-actor@example.test');
+      INSERT INTO public.businesses(id,owner_user_id,name,google_review_url) VALUES('${lateBiz}','${lateOwner}','Late Freeze','https://example.test/reviews');
+      INSERT INTO public.business_agents(business_id,agent_id,plan_id,status) VALUES('${lateBiz}','review_booster','booster','active');
+      INSERT INTO public.business_members(business_id,user_id,role) VALUES('${lateBiz}','${lateActor}','member');
+      INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status)
+        VALUES('${lateVisit}','${lateBiz}','late@example.test',now()-interval '1 day','pending');`);
+    const lateClaim = await db.claimAtomicFollowupDelivery({ businessId: lateBiz, visitId: lateVisit });
+    assert.equal(lateClaim.kind, "claimed");
+    assert.ok(await db.persistAtomicFollowupPayload({
+      deliveryId: lateClaim.deliveryId!, fence: lateClaim.fence!,
+      payload: { from: "Studio <sender@example.test>", to: "late@example.test", reply_to: "sender@example.test", subject: "sensitive subject", text: "sensitive body", html: "<p>sensitive body</p>" },
+      reviewUrl: "https://example.test/reviews",
+    }));
+    const lateSend = await db.beginAtomicFollowupSend({ deliveryId: lateClaim.deliveryId!, fence: lateClaim.fence!, actorUserId: lateActor });
+    assert.equal(lateSend.kind, "send");
+    psql(`UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${lateActor}';`);
+    assert.equal(psql(`SELECT count(*) FROM public.booster_followup_deliveries d JOIN public.businesses b ON b.id=d.business_id
+      WHERE (b.owner_user_id='${lateActor}' OR d.actor_user_id='${lateActor}') AND d.state IN ('sending','unknown','reconciliation_required')`), "1",
+      "member deletion sees the admitted native send through durable actor attribution");
+    assert.equal(await db.finalizeAtomicFollowupAccepted({ deliveryId: lateClaim.deliveryId!, fence: null as unknown as string, providerMessageId: "wrong-fence", subject: "sensitive subject", body: "sensitive body" }), false, "NULL cannot finalize a fenced accepted send");
+    assert.equal(await db.markAtomicFollowupUnknown({ deliveryId: lateClaim.deliveryId!, fence: null as unknown as string, error: "must not close" }), false, "NULL cannot mark an admitted send unknown");
+    assert.ok(await db.finalizeAtomicFollowupAccepted({ deliveryId: lateClaim.deliveryId!, fence: lateClaim.fence!, providerMessageId: "resend-known", subject: "sensitive subject", body: "sensitive body" }));
+    assert.equal(psql(`SELECT count(*) FROM public.followup_messages WHERE visit_id='${lateVisit}'`), "0", "post-freeze acceptance does not create PII message history");
+    assert.equal(psql(`SELECT state||'|'||(provider_payload IS NULL)::text||'|'||provider_message_id FROM public.booster_followup_deliveries WHERE id='${lateClaim.deliveryId}'`), "accepted|true|resend-known");
+
+    const preFreezeClaim = await db.claimAtomicFollowupDelivery({ businessId: freezeBiz, visitId: frozenVisit });
+    assert.equal(preFreezeClaim.kind, "claimed");
+    assert.ok(await db.persistAtomicFollowupPayload({
+      deliveryId: preFreezeClaim.deliveryId!, fence: preFreezeClaim.fence!,
+      payload: { from: "Studio <sender@example.test>", to: "frozen@example.test", reply_to: "sender@example.test", subject: "s", text: "t", html: "h" },
+      reviewUrl: "https://example.test/reviews",
+    }));
+    psql(`UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';`);
+    assert.equal((await db.listAtomicFollowupCandidates({ businessId: freezeBiz })).length, 0, "candidate PII is not returned after owner freeze");
+    assert.equal((await db.claimAtomicFollowupDelivery({ businessId: freezeBiz, visitId: frozenVisit })).kind, "ineligible", "no quota reservation is admitted after freeze");
+    assert.equal(await db.releaseAtomicFollowupDelivery({ deliveryId: preFreezeClaim.deliveryId!, fence: null as unknown as string, outcome: "generation_failed" }), false, "NULL cannot release a frozen delivery fence");
+    assert.equal((await db.beginAtomicFollowupSend({ deliveryId: preFreezeClaim.deliveryId!, fence: preFreezeClaim.fence! })).kind, "actor_denied", "Resend admission is denied after owner freeze");
+    assert.equal(psql(`SELECT count(*) FROM public.booster_followup_deliveries WHERE visit_id='${frozenVisit}' AND state='prepared'`), "1", "denied send leaves the frozen durable payload for privacy cleanup");
+    assert.equal((await lifecycle.beginAccountLifecycleOperation({ userId: owner, businessId: freezeBiz, kind: "booster_generation:test", idempotencyKey: "frozen", leaseMs: 45_000 })).result, "frozen");
   } finally {
     if (started) {
       try { execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-m", "fast", "-w", "stop"], { stdio: "ignore" }); } catch { /* isolated test server is already stopped */ }

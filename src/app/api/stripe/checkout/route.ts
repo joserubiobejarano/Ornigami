@@ -12,6 +12,8 @@ import { TRIAL_CHECKOUT_POLICY, isCheckoutBillingPeriod, isCheckoutPlanId } from
 import {
   claimCheckoutIntent, expireCheckoutIntent, finalizeCheckoutIntent, markCheckoutIntentCompleted,
   markCheckoutIntentUncertain, claimOwnerCustomerProvisioning, finalizeOwnerCustomerProvisioning,
+  beginBillingCustomerProviderCall, finishBillingCustomerProviderCall, recordBillingCustomerProviderResult,
+  beginBillingCheckoutProviderCall, finishBillingCheckoutProviderCall,
   getTrialEligibility,
 } from "@/lib/billing/persistence";
 import { safeLogger } from "@/lib/safe-logger";
@@ -44,12 +46,8 @@ function sessionCustomerId(session: Stripe.Checkout.Session): string | null {
 }
 
 async function setBusinessCustomer(businessId: string, customerId: string): Promise<void> {
-  const changed = await sql`
-    UPDATE public.businesses SET stripe_customer_id = ${customerId}
-    WHERE id = ${businessId} AND (stripe_customer_id IS NULL OR stripe_customer_id = ${customerId})
-    RETURNING id
-  `;
-  if (!changed.length) throw new Error("Business customer mapping changed during checkout");
+  const rows = await sql`SELECT public.set_billing_business_customer(${businessId}::uuid,${customerId}) AS changed`;
+  if ((rows[0] as { changed?: boolean } | undefined)?.changed !== true) throw new Error("Business customer mapping changed during checkout");
 }
 
 async function findSessionsForIntent(customerId: string, token: string): Promise<Stripe.Checkout.Session[]> {
@@ -105,9 +103,6 @@ async function reconcileExistingSession(input: {
 }
 
 async function getOwnerCustomer(ownerUserId: string, businessId: string): Promise<string> {
-  const ownerRows = await sql`SELECT email FROM public.users WHERE id = ${ownerUserId} LIMIT 1`;
-  const owner = ownerRows[0] as { email: string } | undefined;
-  if (!owner?.email) throw new Error("Canonical billing owner email is unavailable");
   const mappings = await sql`
     SELECT b.stripe_customer_id AS business_customer_id,
            c.stripe_customer_id AS owner_customer_id
@@ -141,44 +136,92 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
     if (customer.metadata.owner_user_id && customer.metadata.owner_user_id !== ownerUserId) {
       throw new Error("Stripe customer owner mapping is inconsistent");
     }
+    if (claim.fence && customer.metadata.billing_customer_provisioning_key !== claim.idempotencyKey) {
+      throw new Error("Stripe customer provisioning token is inconsistent");
+    }
+    if (claim.fence && !(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: customer.id }))) {
+      throw new Error("Stripe customer provisioning requires reconciliation");
+    }
     await setBusinessCustomer(businessId, customer.id);
     return customer.id;
   }
   if (claim.kind === "busy") throw new Error("Stripe customer creation is in progress");
   if (claim.kind === "uncertain") {
-    const found = await stripe.customers.search({ query: `metadata['owner_user_id']:'${ownerUserId}'`, limit: 10 });
-    if (found.data.length > 1) throw new Error("Multiple Stripe customers require reconciliation");
     if (!claim.fence) throw new Error("Stripe customer provisioning lease is unavailable");
-    if (found.data.length === 1) {
-      if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: found.data[0].id }))) {
-        throw new Error("Stripe customer provisioning lease expired");
+    if (!(await beginBillingCustomerProviderCall({ ownerUserId, fence: claim.fence }))) {
+      throw new Error("Stripe customer recovery is blocked by account lifecycle state");
+    }
+    let recoveryOutcome: "done" | "uncertain" = "uncertain";
+    let recoveredCustomerId: string | null = null;
+    try {
+      const found = await stripe.customers.search(
+        { query: `metadata['billing_customer_provisioning_key']:'${claim.idempotencyKey ?? ""}'`, limit: 10 },
+        { timeout: 20_000, maxNetworkRetries: 0 },
+      );
+      if (found.data.length > 1) throw new Error("Multiple Stripe customers require reconciliation");
+      if (found.data.length === 1) {
+        if (found.data[0].metadata.billing_customer_provisioning_key !== claim.idempotencyKey || found.data[0].metadata.owner_user_id !== ownerUserId) {
+          throw new Error("Stripe customer provisioning token is inconsistent");
+        }
+        if (!(await recordBillingCustomerProviderResult({ ownerUserId, fence: claim.fence, customerId: found.data[0].id }))) {
+          throw new Error("Stripe customer provider result could not be recorded");
+        }
+        recoveryOutcome = "done";
+        recoveredCustomerId = found.data[0].id;
+      } else {
+        // An empty eventually consistent search is not proof of absence. Only retry
+        // the same key while Stripe's documented idempotency window remains open.
+        const ageMs = claim.createdAt ? Date.now() - new Date(claim.createdAt).getTime() : Number.POSITIVE_INFINITY;
+        if (ageMs >= 23 * 60 * 60 * 1000 || !claim.idempotencyKey || !claim.email) {
+          throw new Error("Stripe customer creation requires reconciliation");
+        }
       }
-      await setBusinessCustomer(businessId, found.data[0].id);
-      return found.data[0].id;
+    } finally {
+      if (!(await finishBillingCustomerProviderCall({ ownerUserId, fence: claim.fence, outcome: recoveryOutcome }))) {
+        throw new Error("Stripe customer recovery lease requires reconciliation");
+      }
     }
-    const ageMs = claim.createdAt ? Date.now() - new Date(claim.createdAt).getTime() : Number.POSITIVE_INFINITY;
-    if (ageMs >= 24 * 60 * 60 * 1000 || !claim.idempotencyKey || !claim.email) {
-      throw new Error("Stripe customer creation requires reconciliation");
+    if (recoveredCustomerId) {
+      if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: recoveredCustomerId }))) {
+        throw new Error("Stripe customer provisioning requires reconciliation");
+      }
+      await setBusinessCustomer(businessId, recoveredCustomerId);
+      return recoveredCustomerId;
     }
-    const customer = await stripe.customers.create({ email: claim.email, metadata: { owner_user_id: ownerUserId } }, { idempotencyKey: claim.idempotencyKey });
-    if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: customer.id }))) {
-      throw new Error("Stripe customer provisioning lease expired");
-    }
-    await setBusinessCustomer(businessId, customer.id);
-    return customer.id;
+    const createdCustomerId = await createOwnerStripeCustomer({ ownerUserId, fence: claim.fence, email: claim.email!, idempotencyKey: claim.idempotencyKey! });
+    if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: createdCustomerId }))) throw new Error("Stripe customer provisioning requires reconciliation");
+    await setBusinessCustomer(businessId, createdCustomerId);
+    return createdCustomerId;
   }
   if (claim.kind !== "claimed" || !claim.fence || !claim.idempotencyKey || !claim.email || !claim.createdAt) {
     throw new Error("Stripe customer mapping requires reconciliation");
   }
-  const customer = await stripe.customers.create({
-    email: claim.email,
-    metadata: { owner_user_id: ownerUserId },
-  }, { idempotencyKey: claim.idempotencyKey });
-  if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: customer.id }))) {
-    throw new Error("Stripe customer provisioning lease expired");
+  const createdCustomerId = await createOwnerStripeCustomer({ ownerUserId, fence: claim.fence, email: claim.email, idempotencyKey: claim.idempotencyKey });
+  if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: createdCustomerId }))) throw new Error("Stripe customer provisioning requires reconciliation");
+  await setBusinessCustomer(businessId, createdCustomerId);
+  return createdCustomerId;
+}
+
+async function createOwnerStripeCustomer(input: { ownerUserId: string; fence: string; email: string; idempotencyKey: string }): Promise<string> {
+  if (!(await beginBillingCustomerProviderCall({ ownerUserId: input.ownerUserId, fence: input.fence }))) {
+    throw new Error("Stripe customer creation is blocked by account lifecycle state");
   }
-  await setBusinessCustomer(businessId, customer.id);
-  return customer.id;
+  let outcome: "done" | "uncertain" = "uncertain";
+  try {
+    const customer = await stripe.customers.create({
+      email: input.email,
+      metadata: { owner_user_id: input.ownerUserId, billing_customer_provisioning_key: input.idempotencyKey },
+    }, { idempotencyKey: input.idempotencyKey, timeout: 20_000, maxNetworkRetries: 0 });
+    if (!(await recordBillingCustomerProviderResult({ ownerUserId: input.ownerUserId, fence: input.fence, customerId: customer.id }))) {
+      throw new Error("Stripe customer provider result could not be recorded");
+    }
+    outcome = "done";
+    return customer.id;
+  } finally {
+    if (!(await finishBillingCustomerProviderCall({ ownerUserId: input.ownerUserId, fence: input.fence, outcome }))) {
+      throw new Error("Stripe customer provider lease requires reconciliation");
+    }
+  }
 }
 
 export async function POST(request: Request) {
@@ -331,11 +374,16 @@ export async function POST(request: Request) {
       }
     }
 
+    if (!(await beginBillingCheckoutProviderCall({ intentId: claim.intentId, fence: claim.fence }))) {
+      return recoverable("Checkout creation is blocked by account lifecycle state", 409);
+    }
+    let providerOutcome: "done" | "uncertain" = "uncertain";
     try {
       const checkout = await stripe.checkout.sessions.create(
         (claim.stripePayload as unknown as Stripe.Checkout.SessionCreateParams),
-        { idempotencyKey: claim.idempotencyKey! }
+        { idempotencyKey: claim.idempotencyKey!, timeout: 20_000, maxNetworkRetries: 0 }
       );
+      providerOutcome = "done";
       if (!checkout.url) return recoverable("Stripe checkout URL is unavailable");
       const saved = await finalizeCheckoutIntent({ intentId: claim.intentId!, fence: claim.fence!, sessionId: checkout.id, url: checkout.url });
       if (!saved) return recoverable("Checkout session was created and is being reconciled");
@@ -344,6 +392,10 @@ export async function POST(request: Request) {
       await markCheckoutIntentUncertain({ intentId: claim.intentId!, fence: claim.fence! });
       safeLogger.warn("stripe.checkout.provider_outcome_uncertain", { error: error instanceof Error ? error.message : "unknown" });
       return recoverable("Checkout status is being reconciled");
+    } finally {
+      if (!(await finishBillingCheckoutProviderCall({ intentId: claim.intentId, fence: claim.fence, outcome: providerOutcome }))) {
+        safeLogger.warn("stripe.checkout.provider_lease_finish_failed", { intentId: claim.intentId });
+      }
     }
   } catch (error: unknown) {
     if (error instanceof BusinessAccessError) return NextResponse.json({ error: error.message }, { status: error.status });

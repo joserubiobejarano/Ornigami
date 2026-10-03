@@ -6,14 +6,18 @@ declare module "next-auth" {
       id: string;
       authVersion: number;
     };
+    deletionUserId?: string;
+    accountLifecycle?: "deleting";
   }
   interface User {
     authVersion?: number;
+    privacyDeletionPending?: boolean;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     authVersion?: number;
+    privacyDeletionPending?: boolean;
   }
 }

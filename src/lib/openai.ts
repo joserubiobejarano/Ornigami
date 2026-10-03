@@ -113,7 +113,7 @@ export async function generateReviewReply(input: ReviewReplyInput): Promise<stri
       { role: "system", content: REVIEW_REPLY_SYSTEM },
       { role: "user", content: user },
     ],
-  });
+  }, { timeout: OPENAI_REQUEST_TIMEOUT_MS, maxRetries: 0 });
   const raw = res.choices[0]?.message?.content?.trim() ?? "";
   return sanitizeReviewReply(raw);
 }
@@ -124,7 +124,7 @@ export async function streamReviewReply(input: ReviewReplyInput) {
     model: OPENAI_MODEL,
     messages: [{ role: "system", content: REVIEW_REPLY_SYSTEM }, { role: "user", content: user }],
     stream: true,
-  });
+  }, { timeout: OPENAI_REQUEST_TIMEOUT_MS, maxRetries: 0 });
 }
 
 export type ProfileAuditInput = {

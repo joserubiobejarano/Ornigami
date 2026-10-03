@@ -74,7 +74,15 @@ export async function persistGoogleReviews(
   for (let offset = 0; offset < rows.length; offset += UPSERT_BATCH_SIZE) {
     const batch = rows.slice(offset, offset + UPSERT_BATCH_SIZE);
     const returned = (await sql`
-      WITH incoming AS (
+      WITH business_lock AS MATERIALIZED (
+        SELECT id,owner_user_id FROM public.businesses
+        WHERE id=${businessId}::uuid AND owner_user_id=${ownerUserId}::uuid
+        FOR UPDATE
+      ), lifecycle_user AS MATERIALIZED (
+        SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
+        WHERE u.privacy_deletion_requested_at IS NULL
+        FOR UPDATE OF u
+      ), incoming AS (
         SELECT * FROM jsonb_to_recordset(${JSON.stringify(batch)}::jsonb) AS item(
           user_id uuid, business_id uuid, location_name text, google_review_id text,
           reviewer_name text, star_rating integer, comment text, review_update_time timestamptz,
@@ -88,6 +96,8 @@ export async function persistGoogleReviews(
       SELECT user_id, business_id, location_name, google_review_id, reviewer_name, star_rating, comment,
         review_update_time, language_code, reply_comment, reply_update_time, status, now()
       FROM incoming
+      JOIN business_lock ON business_lock.id=incoming.business_id
+      JOIN lifecycle_user ON lifecycle_user.id=incoming.user_id
       ON CONFLICT (business_id, google_review_id) DO UPDATE SET
         reviewer_name = EXCLUDED.reviewer_name,
         star_rating = EXCLUDED.star_rating,

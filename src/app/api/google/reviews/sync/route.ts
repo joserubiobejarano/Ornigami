@@ -8,6 +8,8 @@ import { getSelectedGoogleLocation, resolveRequestedBusinessId, BusinessGoogleEr
 import { fetchAllGoogleReviews, GoogleReviewsSyncError } from "@/lib/google-review-sync";
 import { persistGoogleReviews } from "@/lib/google-review-persistence";
 import { sendNewReviewAlert } from "@/lib/review-alerts";
+import { randomUUID } from "node:crypto";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
 
 export async function POST(req: NextRequest) {
   if (req.headers.get("x-demo") === "true") {
@@ -44,15 +46,29 @@ export async function POST(req: NextRequest) {
       user.id, email, "review_replies", requestedBusiness.businessId
     );
     const location = await getSelectedGoogleLocation(context, input.locationName as string | undefined);
-    const reviews = await fetchAllGoogleReviews(
-      context.integrationOwnerUserId, location.location_name, undefined, location.connection_version
-    );
-    const result = await persistGoogleReviews(
-      context.integrationOwnerUserId, context.businessId, location.location_name, reviews
-    );
+    const lifecycle = await beginAccountLifecycleOperation({
+      userId: context.integrationOwnerUserId, actorUserId: user.id, businessId: context.businessId,
+      kind: "google_review_sync", idempotencyKey: randomUUID(), leaseMs: 90000,
+    });
+    if (lifecycle.result !== "claimed" || !lifecycle.token) return NextResponse.json({ error: "Account lifecycle prevents Google sync" }, { status: 409 });
+    let result: Awaited<ReturnType<typeof persistGoogleReviews>>;
+    try {
+      const reviews = await fetchAllGoogleReviews(
+        context.integrationOwnerUserId, location.location_name, undefined, location.connection_version,
+        { actorUserId: user.id, businessId: context.businessId }
+      );
+      result = await persistGoogleReviews(context.integrationOwnerUserId, context.businessId, location.location_name, reviews);
+    } catch (error) {
+      await finishAccountLifecycleOperation(lifecycle.token, "uncertain").catch(() => false);
+      throw error;
+    }
+    if (!await finishAccountLifecycleOperation(lifecycle.token, "done")) throw new Error("Google sync lifecycle lease expired");
 
     if (result.newReviews.length > 0 && email) {
       await sendNewReviewAlert({
+        ownerUserId: context.integrationOwnerUserId,
+        actorUserId: user.id,
+        businessId: context.businessId,
         recipientEmail: email,
         businessName: context.business.name || "your business",
         locationName: location.location_name,

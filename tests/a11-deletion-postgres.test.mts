@@ -69,6 +69,7 @@ test("A11 migration freezes, fences, resumes and atomically finalizes account de
     }
     const migration = join(migrationsDir, "026_privacy_account_lifecycle.sql");
     psqlFile(migration);
+    psqlFile(join(root, "docs/tasks/A11_ACTIVATION_BILLING.sql"));
 
     const owner = "00000000-0000-4000-8000-000000000011";
     const member = "00000000-0000-4000-8000-000000000012";
@@ -254,6 +255,74 @@ test("A11 migration freezes, fences, resumes and atomically finalizes account de
       DELETE FROM billing_customer_provisioning WHERE owner_user_id='${customerOwner}';`);
     assert.equal(psql(`SELECT privacy_finalize_account_deletion('${customerOperation}','${customerClaim}')`), "complete",
       "the same durable operation resumes after customer provisioning is reconciled");
+
+    const customerClaimRaceOwner = "00000000-0000-4000-8000-000000000022";
+    psql(`INSERT INTO users(id,email) VALUES('${customerClaimRaceOwner}','customer-claim-race@example.test');`);
+    const customerClaimRace = await Promise.all([
+      psqlAsync(`SELECT kind||'|'||COALESCE(idempotency_key,'') FROM claim_billing_customer_provisioning('${customerClaimRaceOwner}')`),
+      psqlAsync(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${customerClaimRaceOwner}',false)`),
+    ]);
+    assert.match(customerClaimRace[0]!, /^(claimed|missing_owner)\|/,
+      "customer claim either commits before freeze with its durable row or observes the freeze marker");
+    assert.match(customerClaimRace[1]!, /^frozen\|/);
+    assert.equal(psql(`SELECT kind FROM claim_billing_customer_provisioning('${customerClaimRaceOwner}')`), "missing_owner",
+      "customer provisioning cannot be newly claimed after freeze commits");
+
+    const checkoutClaimRaceOwner = "00000000-0000-4000-8000-000000000023";
+    const checkoutClaimRaceBusiness = "00000000-0000-4000-8000-000000000033";
+    psql(`INSERT INTO users(id,email) VALUES('${checkoutClaimRaceOwner}','checkout-claim-race@example.test');
+      INSERT INTO businesses(id,owner_user_id,name) VALUES('${checkoutClaimRaceBusiness}','${checkoutClaimRaceOwner}','Checkout claim race');
+      INSERT INTO business_agents(business_id,agent_id,status) VALUES('${checkoutClaimRaceBusiness}','review_replies','inactive'),('${checkoutClaimRaceBusiness}','review_booster','inactive');`);
+    const checkoutClaimRace = await Promise.all([
+      psqlAsync(`SELECT kind||'|'||COALESCE(intent_id::text,'') FROM claim_billing_checkout_intent(
+        '${checkoutClaimRaceBusiness}','${checkoutClaimRaceOwner}','complete','monthly','cus-race','race-hash',
+        '{"mode":"subscription","metadata":{"billing_intent_token":"race-token"}}'::jsonb,false)`),
+      psqlAsync(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${checkoutClaimRaceOwner}',false)`),
+    ]);
+    assert.match(checkoutClaimRace[0]!, /^(claimed|blocked)\|/,
+      "checkout claim either commits before freeze with a durable intent or observes the freeze marker");
+    assert.match(checkoutClaimRace[1]!, /^frozen\|/);
+    assert.equal(psql(`SELECT kind FROM claim_billing_checkout_intent(
+      '${checkoutClaimRaceBusiness}','${checkoutClaimRaceOwner}','complete','monthly','cus-race','later-hash',
+      '{"mode":"subscription","metadata":{"billing_intent_token":"later-token"}}'::jsonb,false)`), "blocked",
+      "checkout intent claims cannot start after freeze commits");
+
+    const lateCustomerOwner = "00000000-0000-4000-8000-000000000024";
+    psql(`INSERT INTO users(id,email) VALUES('${lateCustomerOwner}','late-customer-result@example.test');
+      INSERT INTO billing_customer_provisioning(owner_user_id,owner_email,idempotency_key)
+        VALUES('${lateCustomerOwner}','late-customer-result@example.test','late-customer-key');`);
+    const lateCustomerFence = psql(`SELECT fence FROM billing_customer_provisioning WHERE owner_user_id='${lateCustomerOwner}'`);
+    assert.equal(psql(`SELECT begin_billing_customer_provider_call('${lateCustomerOwner}','${lateCustomerFence}')`), "t");
+    psql(`SELECT privacy_begin_account_deletion('${lateCustomerOwner}',false)`);
+    assert.equal(psql(`SELECT record_billing_customer_provider_result('${lateCustomerOwner}','${lateCustomerFence}','cus-late-result')`), "t",
+      "a known response from the admitted provider call remains durable after freeze");
+    assert.equal(psql(`SELECT finish_billing_customer_provider_call('${lateCustomerOwner}','${lateCustomerFence}','done')`), "t");
+    assert.equal(psql(`SELECT provider_customer_id||'|'||provider_create_state||'|'||(provider_create_lease_until IS NULL)::text
+      FROM billing_customer_provisioning WHERE owner_user_id='${lateCustomerOwner}'`), "cus-late-result|done|true",
+      "deletion recovery can read the exact customer ID after the provider lease drains");
+
+    const frozenWebhookOwner = "00000000-0000-4000-8000-000000000021";
+    const frozenWebhookBusiness = "00000000-0000-4000-8000-000000000031";
+    psql(`INSERT INTO users(id,email) VALUES('${frozenWebhookOwner}','late-webhook@example.test');
+      INSERT INTO businesses(id,owner_user_id,name) VALUES('${frozenWebhookBusiness}','${frozenWebhookOwner}','Late webhook');`);
+    const nullFenceOwner = "00000000-0000-4000-8000-000000000090";
+    const nullFenceBusiness = "00000000-0000-4000-8000-000000000091";
+    psql(`INSERT INTO users(id,email) VALUES('${nullFenceOwner}','null-fence@example.test');
+      INSERT INTO businesses(id,owner_user_id,name) VALUES('${nullFenceBusiness}','${nullFenceOwner}','Null fence');
+      SELECT kind FROM claim_billing_reconciliation_lease('${nullFenceOwner}','evt-null-fence','customer.subscription.updated',60000);`);
+    assert.throws(() => psql(`SELECT apply_stripe_webhook_snapshot('evt-null-fence','customer.subscription.updated','${nullFenceOwner}',
+      '${nullFenceBusiness}','cus-a11','{"id":"sub-null-fence","status":"active","priceId":"price-test"}'::jsonb,
+      'replies','monthly',NULL,NULL::uuid)`), /stale billing reconciliation fence/,
+      "NULL cannot satisfy the webhook lease fence");
+    assert.equal(psql(`SELECT count(*) FROM subscriptions WHERE id='sub-null-fence'`), "0");
+    const webhookFence = psql(`SELECT fence FROM claim_billing_reconciliation_lease('${frozenWebhookOwner}','evt-frozen','customer.subscription.updated',60000)`);
+    psql(`SELECT privacy_begin_account_deletion('${frozenWebhookOwner}',false)`);
+    psql(`SELECT apply_stripe_webhook_snapshot('evt-frozen','customer.subscription.updated','${frozenWebhookOwner}',
+      '${frozenWebhookBusiness}','cus-late','{}'::jsonb,'replies','monthly',NULL,'${webhookFence}')`);
+    assert.equal(psql(`SELECT status FROM billing_webhook_events WHERE event_id='evt-frozen'`), "ignored",
+      "late subscription events are acknowledged without restoring frozen account billing state");
+    assert.equal(psql(`SELECT count(*) FROM billing_owner_customers WHERE owner_user_id='${frozenWebhookOwner}'`), "0");
+    assert.equal(psql(`SELECT count(*) FROM business_agents WHERE business_id='${frozenWebhookBusiness}' AND status<>'inactive'`), "0");
 
     const raceOwner = "00000000-0000-4000-8000-000000000019";
     psql(`INSERT INTO users(id,email) VALUES('${raceOwner}','customer-race@example.test');

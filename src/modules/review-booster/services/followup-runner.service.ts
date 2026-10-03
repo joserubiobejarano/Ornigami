@@ -136,30 +136,57 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
 export type FollowupRunnerOverrides = Partial<Pick<FollowupRunnerDependencies, "generateBody" | "preparePayload" | "sendPrepared" | "classifySendError" | "buildSubject">>;
 
 export async function createFollowupRunnerDependencies(businessId: string, actorUserId?: string, overrides: FollowupRunnerOverrides = {}): Promise<FollowupRunnerDependencies> {
-  const [db, provider, generator, reviewLinks] = await Promise.all([
+  const [db, provider, generator, reviewLinks, lifecycle] = await Promise.all([
     import("@/modules/review-booster/services/atomic-followup-db.service"),
     import("@/modules/review-booster/services/resend.provider"),
     import("@/modules/review-booster/services/followup-email-generator.service"),
     import("@/lib/review-link-token"),
+    import("@/lib/account-lifecycle"),
   ]);
   const access = await import("@/modules/review-booster/services/review-booster-db.service");
   if (actorUserId) await access.assertBusinessMember(businessId, actorUserId);
+  const generateBody = overrides.generateBody ?? ((visit: AtomicFollowupCandidate) => generator.generateFollowupEmailBody({
+    business_name: visit.businessName,
+    business_type: visit.businessType,
+    city: visit.city,
+    customer_name: visit.customerName,
+    service_name: visit.serviceName,
+    google_review_url: visit.googleReviewUrl,
+    tone_setting: visit.tone,
+    language: visit.language,
+    visited_at: visit.visitedAt,
+  }));
 
   return {
     listCandidates: (limit) => db.listAtomicFollowupCandidates({ businessId, limit }),
     claim: (visitId) => db.claimAtomicFollowupDelivery({ businessId, visitId }),
     buildSubject: overrides.buildSubject ?? generator.buildSubject,
-    generateBody: overrides.generateBody ?? ((visit) => generator.generateFollowupEmailBody({
-      business_name: visit.businessName,
-      business_type: visit.businessType,
-      city: visit.city,
-      customer_name: visit.customerName,
-      service_name: visit.serviceName,
-      google_review_url: visit.googleReviewUrl,
-      tone_setting: visit.tone,
-      language: visit.language,
-      visited_at: visit.visitedAt,
-    })),
+    generateBody: async (visit) => {
+      const ownerUserId = await db.getBoosterBusinessOwnerId(visit.businessId);
+      if (!ownerUserId) throw new Error("Review Booster workspace owner is unavailable.");
+      const admission = await lifecycle.beginAccountLifecycleOperation({
+        userId: ownerUserId,
+        actorUserId: actorUserId ?? null,
+        businessId: visit.businessId,
+        kind: "booster_generation",
+        idempotencyKey: `${visit.deliveryId}:${globalThis.crypto.randomUUID()}`,
+        leaseMs: 45_000,
+      });
+      if (admission.result !== "claimed" || !admission.token) {
+        throw new Error(`Account lifecycle did not admit Booster content generation (${admission.result}).`);
+      }
+      try {
+        const body = await generateBody(visit);
+        if (!await lifecycle.finishAccountLifecycleOperation(admission.token, "done")) {
+          throw new Error("Booster generation lease expired before its result was finalized.");
+        }
+        return body;
+      } catch (error) {
+        const unknown = error instanceof Error && error.name === "BoosterGenerationOutcomeUnknown";
+        await lifecycle.finishAccountLifecycleOperation(admission.token, unknown ? "uncertain" : "failed");
+        throw error;
+      }
+    },
     preparePayload: overrides.preparePayload ?? ((visit, subject, body, deliveryId) => provider.prepareResendPayload({
       delivery_id: deliveryId,
       business_id: visit.businessId,
@@ -172,7 +199,7 @@ export async function createFollowupRunnerDependencies(businessId: string, actor
       review_link_url: reviewLinks.buildReviewLinkUrl({ businessId: visit.businessId, visitId: visit.visitId, reviewUrl: visit.googleReviewUrl }),
       language: visit.language,
     })),
-    persistPayload: (deliveryId, fence, payload, reviewUrl) => db.persistAtomicFollowupPayload({ deliveryId, fence, payload, reviewUrl }),
+    persistPayload: (deliveryId, fence, payload, reviewUrl) => db.persistAtomicFollowupPayload({ deliveryId, fence, payload, reviewUrl, actorUserId }),
     beginSend: (deliveryId, fence) => db.beginAtomicFollowupSend({ deliveryId, fence, actorUserId }),
     sendPrepared: overrides.sendPrepared ?? provider.sendPreparedWithResend,
     classifySendError: overrides.classifySendError ?? provider.classifyResendFailure,

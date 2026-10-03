@@ -217,7 +217,11 @@ test("mail helper requires production HTTPS config and handles Resend rejection"
   const helper = loadTs<typeof import("../src/lib/auth-verification.js")>("src/lib/auth-verification.ts", {
     env: { NODE_ENV: "production" },
     overrides: {
-      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => { statements.push(strings.reduce((q, part, i) => q + part + (i < values.length ? `'${String(values[i]).replaceAll("'", "''")}'` : ""), "")); return []; } },
+      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        const statement = strings.reduce((q, part, i) => q + part + (i < values.length ? `'${String(values[i]).replaceAll("'", "''")}'` : ""), "");
+        statements.push(statement);
+        return statement.includes("auth_create_email_verification_token") ? [{ created: true }] : [];
+      } },
       "@/lib/env": { getOptionalEnv: (name: string) => env[name], getServerAppUrl: () => "https://app.example" },
     },
     fetch: async (input, init) => {
@@ -307,7 +311,8 @@ test("expired reset helper preserves its stored callback while the atomic consum
       "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
         const query = strings.reduce((text, part, i) => text + part + (i < values.length ? String(values[i]) : ""), "");
         statements.push(query);
-        return query.trimStart().startsWith("SELECT") ? [{ callback_url: "/team/invite/abc" }] : [];
+        if (query.includes("auth_consume_password_reset_token")) return [];
+        return query.includes("FROM public.password_reset_tokens") ? [{ callback_url: "/team/invite/abc" }] : [];
       } },
       "@/lib/env": { getOptionalEnv: () => undefined, getServerAppUrl: () => "https://app.example" },
     },
@@ -317,7 +322,6 @@ test("expired reset helper preserves its stored callback while the atomic consum
   assert.equal(statements.length, 2);
   assert.match(statements[0]!, /^\s*SELECT/i);
   assert.match(statements[0]!, /password_reset_tokens/i);
-  assert.match(statements[1]!, /^\s*WITH/i);
-  assert.match(statements[1]!, /DELETE\s+FROM\s+public\.password_reset_tokens/i);
-  assert.match(statements[1]!, /expires_at\s*>\s*now\(\)/i);
+  assert.match(statements[1]!, /^\s*SELECT\s+\*\s+FROM\s+public\.auth_consume_password_reset_token/i);
+  assert.match(statements[1]!, /auth_consume_password_reset_token\(/i);
 });

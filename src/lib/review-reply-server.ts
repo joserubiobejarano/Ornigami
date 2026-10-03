@@ -8,6 +8,7 @@ import { requireActiveAgentBusinessContext } from "@/lib/api-security";
 import { getSelectedGoogleLocation } from "@/lib/google-business";
 import { googleReviewReplyUrl, parseGoogleLocationName } from "@/lib/google-resources";
 import { claimReplyPost, finishReplyPost, type ReplyPostIntent } from "@/lib/review-draft-policy";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
 
 export type ReviewRowForReply = {
   id: string | number;
@@ -85,6 +86,20 @@ export async function postReplyToGoogleAndPersist(
     return { ok: false, error: "The saved reply is no longer approved for posting", status };
   }
 
+  const lifecycle = await beginAccountLifecycleOperation({
+    userId: context.integrationOwnerUserId,
+    actorUserId,
+    businessId: context.businessId,
+    kind: "google_reply_post",
+    idempotencyKey: postClaim.token,
+    leaseMs: 55000,
+  });
+  if (lifecycle.result !== "claimed" || !lifecycle.token) {
+    await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, false).catch(() => false);
+    return { ok: false, error: "Account lifecycle prevents posting this reply", status: 409 };
+  }
+  const operationToken = lifecycle.token;
+
   const resource = parseGoogleLocationName(selected.location_name);
   const url = googleReviewReplyUrl(resource.accountName, resource.locationId, googleReviewId);
 
@@ -94,14 +109,16 @@ export async function postReplyToGoogleAndPersist(
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ comment: normalizedReply }),
-    }, selected.connection_version);
+    }, selected.connection_version, { actorUserId, businessId });
   } catch (error) {
     if (error instanceof Error && error.name === "GoogleConnectionVersionError") {
       await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, false);
+      await finishAccountLifecycleOperation(operationToken, "failed");
       return { ok: false, error: "Google connection changed since location selection", status: 409 };
     }
     // The request may have reached Google before the connection failed. Keep
     // the post fence for reconciliation instead of risking an automatic retry.
+    await finishAccountLifecycleOperation(operationToken, "uncertain").catch(() => false);
     return { ok: false, error: "Google reply update failed", status: 502 };
   }
 
@@ -110,6 +127,9 @@ export async function postReplyToGoogleAndPersist(
     const status = r.status === 429 ? 429 : r.status === 503 ? 503 : 502;
     if (r.status >= 400 && r.status < 500) {
       await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, false);
+      await finishAccountLifecycleOperation(operationToken, "failed");
+    } else {
+      await finishAccountLifecycleOperation(operationToken, "uncertain").catch(() => false);
     }
     return { ok: false, error: "Google reply update failed", status };
   }
@@ -122,11 +142,16 @@ export async function postReplyToGoogleAndPersist(
     persisted = false;
   }
   if (!persisted) {
+    await finishAccountLifecycleOperation(operationToken, "uncertain").catch(() => false);
     return {
       ok: false,
       error: "Google accepted the reply, but its local status could not be updated. Sync reviews before retrying.",
       status: 502,
     };
+  }
+
+  if (!await finishAccountLifecycleOperation(operationToken, "done")) {
+    return { ok: false, error: "Reply status was saved, but deletion reconciliation is required", status: 502 };
   }
 
   return { ok: true };

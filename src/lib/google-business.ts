@@ -132,7 +132,7 @@ export async function listBusinessGoogleLocations(context: BusinessContext): Pro
 }
 
 /** Refreshes the canonical owner's cached discoveries, then returns this business's selection state. */
-export async function syncBusinessGoogleLocations(context: BusinessContext): Promise<{ locations: LocationRow[]; imported: number }> {
+async function syncBusinessGoogleLocationsImpl(context: BusinessContext): Promise<{ locations: LocationRow[]; imported: number }> {
   try {
     await sql`SELECT 1 FROM public.business_google_locations WHERE business_id = ${context.businessId} LIMIT 1`;
   } catch {
@@ -144,7 +144,9 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
   }
   let discovered;
   try {
-    discovered = await discoverGoogleLocations(context.integrationOwnerUserId);
+    discovered = await discoverGoogleLocations(context.integrationOwnerUserId, {
+      actorUserId: context.actorUserId, businessId: context.businessId,
+    });
   } catch {
     throw new BusinessGoogleError(502, "Google location discovery failed.");
   }
@@ -161,6 +163,14 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
   const liveNames = new Set(validDiscovered.map((location) => location.locationName));
   for (const location of validDiscovered) {
     const savedRows = await sql`
+      WITH business_lock AS MATERIALIZED (
+        SELECT id,owner_user_id FROM public.businesses
+        WHERE id=${context.businessId}::uuid AND owner_user_id=${context.integrationOwnerUserId}::uuid
+        FOR UPDATE
+      ), lifecycle_user AS MATERIALIZED (
+        SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
+        WHERE u.privacy_deletion_requested_at IS NULL FOR UPDATE OF u
+      )
       INSERT INTO public.gbp_locations (
         user_id, location_name, title, address, store_code, place_id, raw, connected, connection_version, updated_at
       ) SELECT
@@ -169,6 +179,8 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
         ${location.storeCode}, ${location.placeId}, ${location.raw as unknown}, true,
         gc.connection_version, now()
       FROM public.gbp_connections gc
+      JOIN lifecycle_user lu ON lu.id=gc.user_id
+      JOIN business_lock ON true
       WHERE gc.user_id = ${context.integrationOwnerUserId}
         AND gc.connection_version = ${connectionVersion}
       ON CONFLICT (user_id, location_name) DO UPDATE SET
@@ -187,9 +199,19 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
   for (const stale of existingRows) {
     if (!liveNames.has(stale.location_name)) {
       await sql`
+        WITH business_lock AS MATERIALIZED (
+          SELECT id FROM public.businesses
+          WHERE id=${context.businessId}::uuid AND owner_user_id=${context.integrationOwnerUserId}::uuid
+          FOR UPDATE
+        ), lifecycle_user AS MATERIALIZED (
+          SELECT u.id FROM public.users u WHERE u.id=${context.integrationOwnerUserId}::uuid
+            AND u.privacy_deletion_requested_at IS NULL AND EXISTS (SELECT 1 FROM business_lock)
+          FOR UPDATE OF u
+        )
         UPDATE public.gbp_locations SET connected = false, updated_at = now()
         WHERE id = ${stale.id} AND user_id = ${context.integrationOwnerUserId}
           AND connection_version = ${connectionVersion}
+          AND EXISTS (SELECT 1 FROM lifecycle_user)
       `;
     }
   }
@@ -198,6 +220,28 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
     locations: visibleLocations,
     imported: context.role === "owner" ? validDiscovered.length : visibleLocations.length,
   };
+}
+
+export async function syncBusinessGoogleLocations(context: BusinessContext): Promise<{ locations: LocationRow[]; imported: number }> {
+  const { randomUUID } = await import("node:crypto");
+  const { beginAccountLifecycleOperation, finishAccountLifecycleOperation } = await import("@/lib/account-lifecycle");
+  const operation = await beginAccountLifecycleOperation({
+    userId: context.integrationOwnerUserId, actorUserId: context.actorUserId,
+    businessId: context.businessId, kind: "google_location_sync", idempotencyKey: randomUUID(), leaseMs: 90000,
+  });
+  if (operation.result !== "claimed" || !operation.token) {
+    throw new BusinessGoogleError(409, "Account lifecycle prevents Google location sync.");
+  }
+  try {
+    const result = await syncBusinessGoogleLocationsImpl(context);
+    if (!await finishAccountLifecycleOperation(operation.token, "done")) {
+      throw new BusinessGoogleError(409, "Google location sync needs lifecycle reconciliation.");
+    }
+    return result;
+  } catch (error) {
+    await finishAccountLifecycleOperation(operation.token, "uncertain").catch(() => false);
+    throw error;
+  }
 }
 
 /** Resolve owner/member access using the selected workspace contract. */

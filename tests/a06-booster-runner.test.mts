@@ -206,6 +206,9 @@ test("production adapter tags the frozen payload with delivery ID and rechecks m
   let beginActor = "";
   let taggedDelivery = "";
   let providerCalls = 0;
+  let lifecycleAdmission: "claimed" | "frozen" = "claimed";
+  let lifecycleStarts = 0;
+  let lifecycleFinishes = 0;
   const factoryModule = loadTs<{
     createFollowupRunnerDependencies: (businessId: string, actorUserId?: string, overrides?: Partial<Deps>) => Promise<Deps>;
     runEligibleFollowups: (deps: Deps) => Promise<FollowupRunOutcome>;
@@ -215,6 +218,7 @@ test("production adapter tags the frozen payload with delivery ID and rechecks m
       "@/lib/followup-run-policy": { MAX_FOLLOWUPS_PER_RUN: 50 },
       "@/modules/review-booster/services/atomic-followup-db.service": {
         listAtomicFollowupCandidates: async () => [visit()],
+        getBoosterBusinessOwnerId: async () => "owner-1",
         claimAtomicFollowupDelivery: async () => ({ kind: "claimed", deliveryId: "delivery-9", fence: "fence-9", payload: null, idempotencyKey: "key-9", firstAttemptAt: null }),
         persistAtomicFollowupPayload: async () => true,
         beginAtomicFollowupSend: async (input: { actorUserId?: string }) => { beginActor = input.actorUserId ?? ""; return { kind: "actor_denied" }; },
@@ -232,6 +236,10 @@ test("production adapter tags the frozen payload with delivery ID and rechecks m
         buildSubject: () => "default subject", generateFollowupEmailBody: async () => "default body",
       },
       "@/lib/review-link-token": { buildReviewLinkUrl: () => "https://example.com/review" },
+      "@/lib/account-lifecycle": {
+        beginAccountLifecycleOperation: async () => { lifecycleStarts += 1; return { result: lifecycleAdmission, token: lifecycleAdmission === "claimed" ? "generation-token" : null }; },
+        finishAccountLifecycleOperation: async () => { lifecycleFinishes += 1; return true; },
+      },
       "@/modules/review-booster/services/review-booster-db.service": { assertBusinessMember: async (businessId: string, userId: string) => { accessCheck = `${businessId}:${userId}`; } },
     },
   );
@@ -241,6 +249,16 @@ test("production adapter tags the frozen payload with delivery ID and rechecks m
   });
   assert.equal(accessCheck, "business-1:user-1");
   assert.equal(await deps.generateBody(visit()), "injected body");
+  assert.equal(lifecycleStarts, 1, "generation passes the account lifecycle admission gate");
+  assert.equal(lifecycleFinishes, 1, "successful generation releases its durable lease");
+  lifecycleAdmission = "frozen";
+  let deniedGeneratorCalls = 0;
+  const deniedDeps = await factoryModule.createFollowupRunnerDependencies("business-1", "user-1", {
+    generateBody: async () => { deniedGeneratorCalls += 1; return "should not run"; },
+  });
+  await assert.rejects(deniedDeps.generateBody(visit()), /did not admit Booster content generation/);
+  assert.equal(deniedGeneratorCalls, 0, "frozen owner is denied before external generation");
+  lifecycleAdmission = "claimed";
   const result = await factoryModule.runEligibleFollowups(deps);
   assert.equal(result.skipped, 1);
   assert.equal(beginActor, "user-1");

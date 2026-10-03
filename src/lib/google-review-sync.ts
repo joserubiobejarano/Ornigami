@@ -1,4 +1,4 @@
-import { googleFetch } from "@/lib/google";
+import { googleFetch, type GoogleLifecycleContext } from "@/lib/google";
 import { googleReviewsUrl, parseGoogleLocationName } from "@/lib/google-resources";
 import { DEFAULT_GOOGLE_REVIEWS_MAX_PAGES } from "@/lib/review-sync-policy";
 
@@ -29,6 +29,7 @@ export class GoogleReviewsSyncError extends Error {
 
 const REVIEW_ID = /^[A-Za-z0-9_-]+$/;
 const PAGE_SIZE = 50;
+const SYNC_DEADLINE_MS = 35_000;
 
 function validateGoogleReview(review: unknown): GoogleReviewRecord {
   if (!review || typeof review !== "object" || Array.isArray(review)) {
@@ -61,7 +62,8 @@ export async function fetchAllGoogleReviews(
   userId: string,
   locationName: string,
   maxPages = DEFAULT_GOOGLE_REVIEWS_MAX_PAGES,
-  expectedConnectionVersion?: string
+  expectedConnectionVersion?: string,
+  lifecycleContext?: GoogleLifecycleContext
 ): Promise<GoogleReviewRecord[]> {
   const { accountName, locationId } = parseGoogleLocationName(locationName);
   if (!Number.isFinite(maxPages)) throw new Error("Invalid Google reviews page limit");
@@ -70,13 +72,16 @@ export async function fetchAllGoogleReviews(
   const seenTokens = new Set<string>();
   const seenReviewIds = new Set<string>();
   let pageToken: string | undefined;
+  const deadline = Date.now() + SYNC_DEADLINE_MS;
 
   for (let page = 0; page < pageLimit; page += 1) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new GoogleReviewsSyncError(502, null, "Google review sync exceeded its operation deadline");
     const query = new URLSearchParams({ pageSize: String(PAGE_SIZE) });
     if (pageToken) query.set("pageToken", pageToken);
     let response: Response;
     try {
-      response = await googleFetch(userId, googleReviewsUrl(accountName, locationId, query), {}, expectedConnectionVersion);
+      response = await googleFetch(userId, googleReviewsUrl(accountName, locationId, query), { signal: AbortSignal.timeout(remaining) }, expectedConnectionVersion, lifecycleContext);
     } catch (error) {
       if (error instanceof Error && error.name === "GoogleConnectionVersionError") throw error;
       throw new GoogleReviewsSyncError(502);

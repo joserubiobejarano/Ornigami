@@ -250,7 +250,7 @@ export async function POST(req: Request) {
       }
       await getSelectedGoogleLocation(context, row.location_name);
       const result = await processReviewDraft({
-        actorUserId: user.id, businessId: context.businessId, locationName: row.location_name,
+        ownerUserId: context.integrationOwnerUserId, actorUserId: user.id, businessId: context.businessId, locationName: row.location_name,
         row, profile: saved, source: "individual",
       });
       if (result.outcome === "limit") return NextResponse.json({ error: "Reply generation is temporarily paused after reaching the current safety threshold." }, { status: 429 });

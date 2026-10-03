@@ -1,4 +1,5 @@
 import { googleFetch } from "./google.ts";
+import type { GoogleLifecycleContext } from "./google.ts";
 import { parseGoogleAccountName, parseGoogleLocationName } from "./google-resources.ts";
 
 const ACCOUNT_API = "https://mybusinessaccountmanagement.googleapis.com/v1/accounts";
@@ -8,6 +9,7 @@ const LOCATION_PAGE_SIZE = 100;
 const MAX_PAGES_PER_COLLECTION = 100;
 // Caps an entire discovery, including all accounts and locations, at 200 provider requests.
 const MAX_DISCOVERY_REQUESTS = 200;
+const DISCOVERY_DEADLINE_MS = 35_000;
 const LOCATION_READ_MASK = "name,title,storeCode,storefrontAddress,metadata,categories";
 
 export type GoogleLocationRecord = {
@@ -37,8 +39,8 @@ function readPage(value: unknown, itemsKey: string, message: string): Page {
   return { items: rawItems as Record<string, unknown>[], nextPageToken: typeof token === "string" ? token : null };
 }
 
-async function readGoogleJson(ownerUserId: string, url: string, fetchGoogle: typeof googleFetch): Promise<unknown> {
-  const response = await fetchGoogle(ownerUserId, url);
+async function readGoogleJson(ownerUserId: string, url: string, fetchGoogle: typeof googleFetch, context?: GoogleLifecycleContext): Promise<unknown> {
+  const response = await fetchGoogle(ownerUserId, url, {}, undefined, context);
   if (!response.ok) {
     await response.body?.cancel().catch(() => undefined);
     throw new Error(`Google location discovery failed (${response.status}).`);
@@ -57,7 +59,8 @@ async function collectPages(
   pageSize: number,
   extra: Record<string, string> | undefined,
   fetchGoogle: typeof googleFetch,
-  budget: { remaining: number }
+  budget: { remaining: number },
+  context?: GoogleLifecycleContext
 ): Promise<Record<string, unknown>[]> {
   const items: Record<string, unknown>[] = [];
   const seenTokens = new Set<string>();
@@ -69,7 +72,7 @@ async function collectPages(
     url.searchParams.set("pageSize", String(pageSize));
     for (const [key, value] of Object.entries(extra ?? {})) url.searchParams.set(key, value);
     if (pageToken) url.searchParams.set("pageToken", pageToken);
-    const page = readPage(await readGoogleJson(ownerUserId, url.toString(), fetchGoogle), itemsKey, "Google returned an incomplete discovery page.");
+    const page = readPage(await readGoogleJson(ownerUserId, url.toString(), fetchGoogle, context), itemsKey, "Google returned an incomplete discovery page.");
     items.push(...page.items);
     if (!page.nextPageToken) return items;
     if (seenTokens.has(page.nextPageToken)) throw new Error("Google returned a repeated pagination token.");
@@ -80,9 +83,12 @@ async function collectPages(
 }
 
 export function createGoogleLocationDiscovery(fetchGoogle: typeof googleFetch) {
-  return async function discoverGoogleLocations(ownerUserId: string): Promise<GoogleLocationRecord[]> {
+  return async function discoverGoogleLocations(ownerUserId: string, context?: GoogleLifecycleContext): Promise<GoogleLocationRecord[]> {
     const budget = { remaining: MAX_DISCOVERY_REQUESTS };
-    const accountRecords = await collectPages(ownerUserId, ACCOUNT_API, "accounts", ACCOUNT_PAGE_SIZE, undefined, fetchGoogle, budget);
+    const overallSignal = AbortSignal.timeout(DISCOVERY_DEADLINE_MS);
+    const boundedFetch: typeof googleFetch = (userId, url, options = {}, expectedConnectionVersion) =>
+      fetchGoogle(userId, url, { ...options, signal: overallSignal }, expectedConnectionVersion, context);
+    const accountRecords = await collectPages(ownerUserId, ACCOUNT_API, "accounts", ACCOUNT_PAGE_SIZE, undefined, boundedFetch, budget, context);
     const locations: GoogleLocationRecord[] = [];
     const seenAccounts = new Set<string>();
     const seenLocations = new Set<string>();
@@ -95,7 +101,7 @@ export function createGoogleLocationDiscovery(fetchGoogle: typeof googleFetch) {
       const locationBase = `${BUSINESS_INFORMATION_API}/accounts/${encodeURIComponent(accountId)}/locations`;
       const locationRecords = await collectPages(ownerUserId, locationBase, "locations", LOCATION_PAGE_SIZE, {
         readMask: LOCATION_READ_MASK,
-      }, fetchGoogle, budget);
+      }, boundedFetch, budget, context);
 
       for (const location of locationRecords) {
         if (typeof location.name !== "string") throw new Error("Google returned an invalid location resource.");

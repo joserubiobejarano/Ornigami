@@ -420,6 +420,76 @@ test("bounded retries honor Retry-After, retry only safe calls, and do not repla
   assert.equal(sleeps.at(-1), 1000);
 });
 
+test("a malformed refresh response with a known rotated credential is durably compensated", async () => {
+  const starting = token({ expires_at: pastExpiry() });
+  let evidence = "";
+  let apiCalls = 0;
+  let finishOutcome = "";
+  const client = createGoogleClient({
+    getTokens: async () => starting,
+    saveTokens: async () => assert.fail("malformed provider result must not be saved"),
+    refresh: async () => { throw Object.assign(new Error("invalid response"), { knownRefreshToken: "rotated-known-token" }); },
+    fetcher: async () => { apiCalls += 1; return Response.json({}); },
+    admitRefresh: async () => "lifecycle-token",
+    finishRefresh: async (_token, outcome) => { finishOutcome = outcome; return true; },
+    resolveRefreshAfterSaveFailure: async (_token, _owner, received) => {
+      evidence = received.refresh_token ?? "";
+      finishOutcome = "failed";
+    },
+    now: Date.now,
+    sleep: async () => {},
+    requestTimeoutMs: 1000,
+  });
+  await assert.rejects(client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews"));
+  assert.equal(evidence, "rotated-known-token");
+  assert.equal(finishOutcome, "failed", "the compensation callback owns authoritative lease completion");
+  assert.equal(apiCalls, 0);
+});
+
+test("a malformed refresh response with only a known access token is still compensated", async () => {
+  const starting = token({ expires_at: pastExpiry() });
+  let evidence = "";
+  const client = createGoogleClient({
+    getTokens: async () => starting,
+    saveTokens: async () => assert.fail("malformed provider result must not be saved"),
+    refresh: async () => { throw Object.assign(new Error("invalid response"), { knownAccessToken: "access-only-known-token" }); },
+    fetcher: async () => { assert.fail("Google API calls must stop on malformed refresh"); },
+    admitRefresh: async () => "lifecycle-token",
+    finishRefresh: async () => true,
+    resolveRefreshAfterSaveFailure: async (_token, _owner, received) => { evidence = received.access_token ?? ""; },
+    now: Date.now,
+    sleep: async () => {},
+    requestTimeoutMs: 1000,
+  });
+  await assert.rejects(client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews"));
+  assert.equal(evidence, "access-only-known-token");
+});
+
+test("a 503/429 retry window followed by 401 cannot restart beyond the absolute request deadline", async () => {
+  let clock = Date.now();
+  let requests = 0;
+  let refreshes = 0;
+  const client = makeClient({
+    timeout: 12_000,
+    now: () => clock,
+    fetcher: async () => {
+      requests += 1;
+      clock += 12_000;
+      return new Response(null, { status: requests === 3 ? 401 : requests === 2 ? 429 : 503 });
+    },
+    sleep: async (ms) => { clock += ms; },
+    refresh: async () => {
+      refreshes += 1;
+      clock += 5_000;
+      return { access_token: "access-after-401", expires_in: 3600, token_type: "Bearer" };
+    },
+  });
+  await assert.rejects(client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews"), /deadline exceeded/);
+  assert.equal(requests, 3, "the 401 refresh must not reset the bounded retry window");
+  assert.equal(refreshes, 1);
+  assert.ok(clock - Date.now() < 45_000);
+});
+
 test("unrepeatable bodies and non-review PUT operations are never automatically replayed", async () => {
   let calls = 0;
   const client = makeClient({ fetcher: async () => { calls += 1; return new Response(null, { status: 503 }); } });

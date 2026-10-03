@@ -29,6 +29,9 @@ function args(port: number, statement: string) {
 function psql(port: number, statement: string): string {
   return execFileSync(pgExe("psql"), args(port, statement), { encoding: "utf8" }).trim();
 }
+function psqlFile(port: number, filename: string): string {
+  return execFileSync(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", filename], { encoding: "utf8" }).trim();
+}
 async function psqlAsync(port: number, statement: string): Promise<string> {
   const result = await execFileP(pgExe("psql"), args(port, statement), { encoding: "utf8" });
   return result.stdout.trim();
@@ -63,6 +66,10 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
     assert.equal(migrations.length, 18);
     for (const migration of migrations) psql(port, readFileSync(join(migrationsDir, migration), "utf8"));
     psql(port, readFileSync(join(migrationsDir, "020_account_recovery.sql"), "utf8"));
+    for (const migration of ["019_billing_lifecycle.sql", "021_workspace_invitations.sql", "032_workspace_bootstrap.sql", "026_privacy_account_lifecycle.sql"]) {
+      psqlFile(port, join(migrationsDir, migration));
+    }
+    psqlFile(port, join(root, "docs/tasks/A11_ACTIVATION_AUTH_TEAM.sql"));
     psql(port, `INSERT INTO public.users(id,email,password_hash) VALUES ('00000000-0000-0000-0000-000000000001','reset@example.com','old-hash'), ('00000000-0000-0000-0000-000000000002','verify@example.com','old-hash');`);
 
     // Replay the actual user/profile insert concurrently: only one signup wins.
@@ -99,10 +106,15 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
     const statements: string[] = [];
     const emails: Array<{ text: string }> = [];
     let verificationReads = 0;
+    let secondResetToken = "";
+    let verificationToken = "";
     const sql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
       const statement = formatSql(strings, values);
       statements.push(statement);
       if (!statement.trimStart().startsWith("SELECT")) return [];
+      if (statement.includes("public.auth_create_password_reset_token") || statement.includes("public.auth_create_email_verification_token")) return [{ created: true }];
+      if (statement.includes("public.auth_consume_password_reset_token")) return statement.includes(tokenHash(secondResetToken)) ? [{ callback_url: "/billing" }] : [];
+      if (statement.includes("public.auth_consume_email_verification_token")) return statement.includes(tokenHash(verificationToken)) ? [{ callback_url: "/team" }] : [];
       if (statement.includes("public.password_reset_tokens")) {
         const callbackUrl = psql(port, statement);
         return callbackUrl ? [{ callback_url: callbackUrl }] : [];
@@ -138,6 +150,7 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
     const secondInsert = statements.at(-1)!;
     const secondToken = emails.at(-1)!.text.match(/token=([A-Za-z0-9_-]{43})/)?.[1];
     assert.ok(secondToken);
+    secondResetToken = secondToken;
     assert.notEqual(firstToken, secondToken);
     psql(port, firstInsert);
     psql(port, secondInsert);
@@ -166,6 +179,7 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
     const verifyInsert = statements.at(-1)!;
     const verifyToken = emails.at(-1)!.text.match(/token=([A-Za-z0-9_-]{43})/)?.[1];
     assert.ok(verifyToken);
+    verificationToken = verifyToken;
     psql(port, verifyInsert);
     await helper.verifyEmailToken(verifyToken);
     const verifySql = statements.at(-1)!;

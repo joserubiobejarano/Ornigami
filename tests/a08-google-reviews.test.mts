@@ -138,7 +138,8 @@ test("review persistence batches recordsets and retains local replied status whe
   const sql = async (parts: TemplateStringsArray, ...values: unknown[]) => {
     const query = parts.reduce((out, part, index) => out + part + (index < values.length ? `$${index + 1}` : ""), "");
     statements.push({ query, values });
-    const rows = JSON.parse(String(values[0])) as Array<Record<string, unknown>>;
+    const jsonValue = values.find((value) => typeof value === "string" && String(value).startsWith("["));
+    const rows = JSON.parse(String(jsonValue)) as Array<Record<string, unknown>>;
     upsertCount += 1;
     return rows.map((row, index) => ({
       google_review_id: row.google_review_id,
@@ -162,9 +163,10 @@ test("review persistence batches recordsets and retains local replied status whe
   assert.match(statements[0]!.query, /jsonb_to_recordset/);
   assert.match(statements[0]!.query, /lower\(COALESCE\(public\.reviews\.status, ''\)\) = 'replied'/);
   assert.match(statements[0]!.query, /WHERE public\.reviews\.location_name = EXCLUDED\.location_name/);
-  assert.equal((JSON.parse(String(statements[0]!.values[0])) as unknown[]).length, 250);
-  assert.equal((JSON.parse(String(statements[1]!.values[0])) as unknown[]).length, 1);
-  assert.equal((JSON.parse(String(statements[0]!.values[0])) as Array<{ user_id: string }>)[0]!.user_id, "owner-id");
+  const getBatch = (statement: { values: unknown[] }) => JSON.parse(String(statement.values.find((value) => typeof value === "string" && String(value).startsWith("[")))) as Array<Record<string, unknown>>;
+  assert.equal(getBatch(statements[0]!).length, 250);
+  assert.equal(getBatch(statements[1]!).length, 1);
+  assert.equal(getBatch(statements[0]!)[0]!.user_id, "owner-id");
 });
 
 type Poster = {
@@ -202,6 +204,10 @@ function loadPoster(options: {
         finishCalls.push({ success });
         return !(options.localPersistFails && success);
       },
+    },
+    "@/lib/account-lifecycle": {
+      beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "lifecycle-token" }),
+      finishAccountLifecycleOperation: async () => true,
     },
     "@/lib/api-security": {
       requireActiveAgentBusinessContext: async (_actor: string, _email: unknown, _agent: string, businessId: string) => {

@@ -27,6 +27,10 @@ function withSecurityHeaders(response: NextResponse, nonce: string): NextRespons
 const proxy = auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
+  const isRestrictedDeletionSession =
+    req.auth?.accountLifecycle === "deleting" &&
+    typeof req.auth.deletionUserId === "string" &&
+    !sessionUser?.id;
 
   const nonce = randomBytes(16).toString("base64url");
   const requestHeaders = new Headers(req.headers);
@@ -34,6 +38,26 @@ const proxy = auth(async (req) => {
   // Next.js reads the request CSP to apply the nonce to streamed inline
   // hydration scripts. The response CSP alone is too late for those scripts.
   requestHeaders.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
+
+  if (isRestrictedDeletionSession) {
+    // Only Auth.js session/sign-in plumbing and the recovery screen remain
+    // reachable while deletion is pending.
+    const isAuthJsEndpoint = /^\/api\/auth\/(?:csrf|providers|session|signin(?:\/.*)?|callback(?:\/.*)?|signout|error|verify-request)$/.test(pathname);
+    if (isAuthJsEndpoint) return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
+    if (pathname.startsWith("/api/")) {
+      if (pathname === "/api/privacy/delete" && req.method === "POST") {
+        return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
+      }
+      return withSecurityHeaders(NextResponse.json({ error: "Restricted account session" }, { status: 403 }), nonce);
+    }
+    if (pathname === "/account/deletion") {
+      return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
+    }
+    if (pathname === "/login" || pathname.startsWith("/login/") || pathname === "/signup" || pathname.startsWith("/signup/")) {
+      return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
+    }
+    return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
+  }
 
   if (pathname === "/demo/review-replies") {
     return withSecurityHeaders(

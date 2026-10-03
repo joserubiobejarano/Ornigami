@@ -66,18 +66,21 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
     }
     started = true;
     psql(`CREATE TABLE public.businesses (id uuid PRIMARY KEY, owner_user_id uuid NOT NULL);
+    CREATE TABLE public.users (id uuid PRIMARY KEY, privacy_deletion_requested_at timestamptz);
     CREATE TABLE public.gbp_connections (
       user_id uuid PRIMARY KEY, access_token text, refresh_token text, expires_at timestamptz, scope text,
       connection_version uuid NOT NULL DEFAULT gen_random_uuid(), updated_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE public.gbp_locations (
       id uuid PRIMARY KEY, user_id uuid NOT NULL, location_name text NOT NULL,
-      title text, connected boolean NOT NULL DEFAULT true, connection_version uuid
+      title text, connected boolean NOT NULL DEFAULT true, connection_version uuid, updated_at timestamptz
     );
     INSERT INTO public.businesses(id,owner_user_id) VALUES
       ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001'),
       ('00000000-0000-4000-8000-000000000007','00000000-0000-4000-8000-000000000001'),
-      ('00000000-0000-4000-8000-000000000009','00000000-0000-4000-8000-000000000001');
+      ('00000000-0000-4000-8000-000000000009','00000000-0000-4000-8000-000000000001'),
+      ('00000000-0000-4000-8000-000000000023','00000000-0000-4000-8000-000000000013');
+    INSERT INTO public.users(id) VALUES ('00000000-0000-4000-8000-000000000001'),('00000000-0000-4000-8000-000000000013');
     INSERT INTO public.gbp_connections(user_id,connection_version) VALUES
       ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000010');
     INSERT INTO public.gbp_locations(id,user_id,location_name,connected,connection_version) VALUES
@@ -169,6 +172,42 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
     assert.equal(statements.length, statementCountBeforeForeignReview + 1, "location mismatch is rejected by the preflight batch query");
     assert.equal(psql("SELECT location_name || '|' || comment FROM public.reviews WHERE google_review_id='foreign_location'"), "accounts/100/locations/999|foreign");
 
+    const tokenSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const statement = renderSql(strings, values);
+      const output = psql(statement);
+      if (!output) return [];
+      return output.split(/\r?\n/).map((line) => {
+        const columns = line.split("|");
+        if (statement.includes("RETURNING user_id,connection_version,refresh_token")) {
+          return { user_id: columns[0], connection_version: columns[1], refresh_token: columns[2] };
+        }
+        return { user_id: columns[0] };
+      });
+    };
+    const gbpDb = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
+      "@/lib/db/neon": { sql: tokenSql },
+      "@/lib/encrypted-token": { encryptToken: (value: string) => `encrypted:${value}` },
+    });
+    const frozenOwner = "00000000-0000-4000-8000-000000000013";
+    psql(`INSERT INTO public.gbp_connections(user_id,access_token,refresh_token,expires_at,scope) VALUES ('${frozenOwner}','encrypted:access-v1','encrypted:refresh-v1',now()+interval '1 hour','business.manage');`);
+    await gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-v1", refreshToken: "refresh-v1", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" });
+    psql(`UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${frozenOwner}'`);
+    await assert.rejects(gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-v2", refreshToken: "refresh-v2", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" }), /account lifecycle/);
+    assert.equal(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${frozenOwner}'`), "encrypted:refresh-v1");
+    psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${frozenOwner}';`);
+    const freezeTransaction = psqlAsync(`BEGIN; SET application_name='a11_freeze_lock'; SELECT id FROM public.businesses WHERE id='00000000-0000-4000-8000-000000000023' FOR UPDATE; SELECT pg_sleep(0.25); UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${frozenOwner}'; COMMIT;`);
+    for (let attempt = 0; attempt < 100 && psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND query LIKE '%pg_sleep%'") !== "1"; attempt += 1) {
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
+    }
+    assert.equal(psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND query LIKE '%pg_sleep%'"), "1", "freeze transaction acquired its business lock before the writer starts");
+    await assert.rejects(gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-race", refreshToken: "refresh-race", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" }), /account lifecycle/);
+    await freezeTransaction;
+    assert.equal(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${frozenOwner}'`), "encrypted:refresh-v1", "a writer queued behind freeze cannot replace the credential");
+    await assert.rejects(persistence.persistGoogleReviews(frozenOwner, "00000000-0000-4000-8000-000000000023", "accounts/100/locations/200", [
+      { reviewId: "must_not_write_after_freeze", starRating: "FOUR", comment: "frozen" },
+    ]));
+    assert.equal(psql("SELECT count(*) FROM public.reviews WHERE google_review_id='must_not_write_after_freeze'"), "0");
+
     const ownerContext = { businessId: "00000000-0000-4000-8000-000000000009", integrationOwnerUserId: "00000000-0000-4000-8000-000000000001", role: "owner", actorUserId: "00000000-0000-4000-8000-000000000001", ownerUserId: "00000000-0000-4000-8000-000000000001" };
     const helper = loadTs<Record<string, unknown>>("src/lib/google-business.ts", {
       "@/lib/db/neon": { sql: async () => [] },
@@ -177,14 +216,17 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
       "@/lib/plan-server": { getBusinessPlanInfo: async () => ({ plan: "complete", agents: ["review_replies"] }) },
     });
     const inserts: string[] = [];
+    const routeQueries: string[] = [];
     let selectionReadCount = 0;
     let pendingLocationId: unknown = null;
     const routeSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
       const statement = renderSql(strings, values);
+      routeQueries.push(statement);
       if (statement.includes("INSERT INTO public.business_google_locations")) {
         inserts.push(statement);
-        pendingLocationId = values[3];
-        return [];
+        pendingLocationId = statement.match(/WHERE l\.id = '([^']+)'/)?.[1] ?? null;
+        const output = psql(statement);
+        return output ? [{ location_id: output }] : [];
       }
       if (statement.includes("SELECT connection_version FROM public.gbp_connections")) {
         const output = psql(statement);
@@ -222,35 +264,101 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
       "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
       "@/lib/google-business": ownershipHelper,
     });
-    for (const locationId of ["00000000-0000-4000-8000-000000000003", "00000000-0000-4000-8000-000000000004"]) {
+    assert.equal(psql("SELECT l.connection_version=c.connection_version FROM public.gbp_locations l JOIN public.gbp_connections c ON c.user_id=l.user_id WHERE l.id='00000000-0000-4000-8000-000000000003'"), "t");
+    for (const [index, locationId] of ["00000000-0000-4000-8000-000000000003", "00000000-0000-4000-8000-000000000004"].entries()) {
       const response = await selectionRoute.POST(new NextRequest("http://localhost/api/google/locations/selection", {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ locationId }),
       }));
-      assert.equal(response.status, 200);
+      assert.equal(response.status, index === 0 ? 200 : 409, `${await response.clone().text()}\n${routeQueries.join("\n---\n")}`);
     }
-    assert.equal(inserts.length, 2);
-    await Promise.all(inserts.map((statement) => psqlAsync(`BEGIN; SELECT pg_sleep(0.15); ${statement}; COMMIT;`)));
+    assert.equal(inserts.length, 1);
     assert.equal(psql("SELECT count(*) FROM public.business_google_locations WHERE business_id='00000000-0000-4000-8000-000000000009'"), "1");
     const chosenLocation = psql("SELECT location_id FROM public.business_google_locations WHERE business_id='00000000-0000-4000-8000-000000000009'");
     assert.ok(["00000000-0000-4000-8000-000000000003", "00000000-0000-4000-8000-000000000004"].includes(chosenLocation), chosenLocation);
     assert.match(psqlError(`INSERT INTO public.business_google_locations (business_id, location_id) VALUES ('00000000-0000-4000-8000-000000000009','00000000-0000-4000-8000-000000000005') ON CONFLICT (business_id) DO NOTHING;`), /Selected Google location must belong to the business owner/);
 
     const versionBeforeOauth = psql("SELECT connection_version FROM public.gbp_connections WHERE user_id='00000000-0000-4000-8000-000000000001'");
-    const tokenSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
-      const output = psql(renderSql(strings, values));
-      return output ? output.split(/\r?\n/).map((line) => ({ user_id: line.trim() })) : [];
-    };
-    const gbpDb = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
+    assert.equal(psql("SELECT l.connection_version=c.connection_version FROM public.gbp_locations l JOIN public.gbp_connections c ON c.user_id=l.user_id WHERE l.id='00000000-0000-4000-8000-000000000003'"), "t");
+    const gbpDbAfterSelection = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
       "@/lib/db/neon": { sql: tokenSql },
       "@/lib/encrypted-token": { encryptToken: (token: string) => `encrypted:${token}` },
     });
-    await gbpDb.upsertGbpConnection({
+    const previousEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY;
+    process.env.TOKEN_ENCRYPTION_KEY = "a08-disposable-oauth-roundtrip-key";
+    const encryption = await import("../src/lib/encrypted-token.ts");
+    let actualPersisted: { connectionVersion: string; encryptedRefreshToken: string } | null = null;
+    const actualGbpDb = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
+      "@/lib/db/neon": { sql: tokenSql },
+      "@/lib/encrypted-token": encryption,
+    });
+    const crypto = await import("node:crypto");
+    const oauthState = loadTs<typeof import("../src/lib/google-oauth-state.js")>("src/lib/google-oauth-state.ts", {
+      "@/lib/env": { getOptionalEnv: () => undefined },
+      "node:crypto": { ...crypto, default: crypto },
+    });
+    const oauthUser = "00000000-0000-4000-8000-000000000001";
+    const oauthBusiness = "00000000-0000-4000-8000-000000000002";
+    const signedState = oauthState.buildGoogleOAuthState(oauthUser, oauthBusiness, oauthUser);
+    const nextResponse = { redirect: (url: string | URL) => {
+      const response = Response.redirect(url);
+      (response as Response & { cookies: { set: () => void } }).cookies = { set() {} };
+      return response;
+    } };
+    const callbackSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const query = strings.join(" ");
+      if (query.includes("begin_account_lifecycle_operation")) return [{ result: "claimed", token: "00000000-0000-4000-8000-000000000098" }];
+      if (query.includes("finish_account_lifecycle_operation")) return [{ changed: true }];
+      if (query.includes("UPDATE public.account_lifecycle_operations")) return [];
+      return tokenSql(strings, ...values);
+    };
+    const callback = loadTs<{ GET(request: Request): Promise<Response> }>("src/app/api/google/oauth/callback/route.ts", {
+      "next/server": { NextResponse: nextResponse },
+      "@/lib/google": { exchangeCodeForTokens: async () => ({ access_token: "real-access", refresh_token: "real-refresh", expires_in: 3600, token_type: "Bearer" }) },
+      "@/lib/db/gbp": { upsertGbpConnection: async (input: Parameters<typeof actualGbpDb.upsertGbpConnection>[0]) => {
+        actualPersisted = await actualGbpDb.upsertGbpConnection(input);
+        return actualPersisted;
+      } },
+      "@/lib/db/neon": { sql: callbackSql },
+      "@/lib/encrypted-token": encryption,
+      "@/lib/env": { getServerAppUrl: () => "https://app.test" },
+      "@/lib/google-oauth-state": oauthState,
+      "@/lib/user-from-req": { resolveUser: async () => ({ id: oauthUser }) },
+      "@/lib/google-business": {
+        assertGoogleBusinessOwner: () => {},
+        requireGoogleBusinessContext: async () => ({ actorUserId: oauthUser, businessId: oauthBusiness,
+          integrationOwnerUserId: oauthUser, business: { id: oauthBusiness, owner_user_id: oauthUser }, role: "owner" }),
+        requireGoogleWorkflowEntitlement: async () => {},
+      },
+      "@/lib/safe-logger": { safeLogger: { error() {} } },
+      "@/lib/business-context": {},
+    });
+    const previousFetch = globalThis.fetch;
+    let revokeCalls = 0;
+    globalThis.fetch = async () => { revokeCalls += 1; return new Response(null, { status: 200 }); };
+    try {
+      const callbackRequest = new Request(`https://app.test/api/google/oauth/callback?code=real-code&state=${encodeURIComponent(signedState)}`, {
+        headers: { cookie: `ll_gbp_oauth_state=${encodeURIComponent(signedState)}` },
+      });
+      assert.equal((await callback.GET(callbackRequest)).status, 302);
+      assert.equal(revokeCalls, 0, "a successfully saved OAuth grant must not enter compensation");
+      const persisted = actualPersisted as { connectionVersion: string; encryptedRefreshToken: string } | null;
+      assert.ok(persisted);
+      assert.equal(encryption.decryptToken(persisted.encryptedRefreshToken).value, "real-refresh");
+      assert.notEqual(persisted.encryptedRefreshToken, encryption.encryptToken("real-refresh"), "AES-GCM uses a fresh nonce per encryption");
+      assert.equal(psql(`SELECT connection_version FROM public.gbp_connections WHERE user_id='${oauthUser}'`), persisted.connectionVersion);
+      assert.equal(encryption.decryptToken(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${oauthUser}'`)).value, "real-refresh");
+    } finally {
+      globalThis.fetch = previousFetch;
+      if (previousEncryptionKey === undefined) delete process.env.TOKEN_ENCRYPTION_KEY;
+      else process.env.TOKEN_ENCRYPTION_KEY = previousEncryptionKey;
+    }
+    await gbpDbAfterSelection.upsertGbpConnection({
       userId: "00000000-0000-4000-8000-000000000001", accessToken: "access-two", refreshToken: "refresh-two",
       expiresAt: "2030-01-01T00:00:00.000Z", scope: "business.manage",
     });
     const versionAfterOauth = psql("SELECT connection_version FROM public.gbp_connections WHERE user_id='00000000-0000-4000-8000-000000000001'");
     assert.notEqual(versionAfterOauth, versionBeforeOauth, "OAuth replacement rotates the credential generation");
-    await gbpDb.updateGbpTokens({
+    await gbpDbAfterSelection.updateGbpTokens({
       userId: "00000000-0000-4000-8000-000000000001", accessToken: "refreshed-access", refreshToken: "refresh-two",
       expiresAt: "2030-01-01T00:01:00.000Z", scope: "business.manage",
     });
@@ -264,7 +372,7 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
 
     const staleSnapshot = { version: versionAfterOauth, access: "encrypted:access-two", refresh: "encrypted:refresh-two" };
     const userId = "00000000-0000-4000-8000-000000000001";
-    const staleSameGeneration = await gbpDb.updateGbpTokensIfCurrent({
+    const staleSameGeneration = await gbpDbAfterSelection.updateGbpTokensIfCurrent({
       userId, accessToken: "stale-access", refreshToken: "stale-refresh", expiresAt: "2030-01-01T00:02:00.000Z",
       scope: "business.manage", expectedConnectionVersion: staleSnapshot.version,
       expectedEncryptedAccessToken: staleSnapshot.access, expectedEncryptedRefreshToken: staleSnapshot.refresh,
@@ -273,7 +381,7 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
     assert.equal(psql("SELECT access_token || '|' || refresh_token FROM public.gbp_connections WHERE user_id='00000000-0000-4000-8000-000000000001'"),
       "encrypted:refreshed-access|encrypted:refresh-two");
     const currentVersion = psql("SELECT connection_version FROM public.gbp_connections WHERE user_id='00000000-0000-4000-8000-000000000001'");
-    const casWon = await gbpDb.updateGbpTokensIfCurrent({
+    const casWon = await gbpDbAfterSelection.updateGbpTokensIfCurrent({
       userId, accessToken: "cas-access", refreshToken: "cas-refresh", expiresAt: "2030-01-01T00:03:00.000Z",
       scope: "business.manage", expectedConnectionVersion: currentVersion,
       expectedEncryptedAccessToken: "encrypted:refreshed-access", expectedEncryptedRefreshToken: "encrypted:refresh-two",
@@ -284,13 +392,13 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
       access: "encrypted:cas-access",
       refresh: "encrypted:cas-refresh",
     };
-    await gbpDb.upsertGbpConnection({
+    await gbpDbAfterSelection.upsertGbpConnection({
       userId, accessToken: "reconnected-access", refreshToken: "reconnected-refresh",
       expiresAt: "2030-01-02T00:00:00.000Z", scope: "business.manage",
     });
     const replacementVersion = psql("SELECT connection_version FROM public.gbp_connections WHERE user_id='00000000-0000-4000-8000-000000000001'");
     assert.notEqual(replacementVersion, refreshedSnapshot.version);
-    const staleGeneration = await gbpDb.updateGbpTokensIfCurrent({
+    const staleGeneration = await gbpDbAfterSelection.updateGbpTokensIfCurrent({
       userId, accessToken: "old-generation-access", refreshToken: "old-generation-refresh",
       expiresAt: "2030-01-03T00:00:00.000Z", scope: "business.manage",
       expectedConnectionVersion: refreshedSnapshot.version,

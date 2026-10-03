@@ -40,8 +40,11 @@ export async function resolveBusinessContext(
           CASE WHEN b.owner_user_id = actor.id THEN 'owner' ELSE 'member' END AS actor_role
         FROM public.users actor
         INNER JOIN public.businesses b ON b.id = ${businessId}
+        INNER JOIN public.users owner ON owner.id = b.owner_user_id
         LEFT JOIN public.business_members bm ON bm.business_id = b.id AND bm.user_id = actor.id
         WHERE actor.id = ${actorUserId}
+          AND actor.privacy_deletion_requested_at IS NULL
+          AND owner.privacy_deletion_requested_at IS NULL
           AND (b.owner_user_id = actor.id OR bm.user_id = actor.id)
         LIMIT 1
       `
@@ -55,7 +58,10 @@ export async function resolveBusinessContext(
           SELECT 1 FROM public.business_members bm
           WHERE bm.business_id = b.id AND bm.user_id = actor.id
         ))
+        INNER JOIN public.users owner ON owner.id = b.owner_user_id
         WHERE actor.id = ${actorUserId}
+          AND actor.privacy_deletion_requested_at IS NULL
+          AND owner.privacy_deletion_requested_at IS NULL
         ORDER BY b.created_at ASC, b.id ASC
         LIMIT 1
       `;

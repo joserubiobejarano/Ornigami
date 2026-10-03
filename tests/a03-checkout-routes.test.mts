@@ -18,8 +18,13 @@ function routeHarness(options: {
   activeSubscription?: Record<string, unknown>;
   noBusiness?: boolean;
   existingIntentAgeMs?: number;
+  checkoutLeaseAdmitted?: boolean;
+  lifecycleAdmission?: "claimed" | "frozen" | "busy" | "uncertain";
+  provisionCustomer?: boolean;
+  customerLeaseAdmitted?: boolean;
 } = {}) {
   const db = fakeSql(query => {
+    if (query.includes("set_billing_business_customer")) return [{ changed: true }];
     if (query.includes("SELECT email FROM public.users")) return [{ email: "owner@example.test" }];
     if (query.includes("AS business_customer_id")) return [options.mapping ?? { business_customer_id: customerId, owner_customer_id: customerId }];
     if (query.includes("FROM public.business_agents") && query.includes("lower(status) IN")) {
@@ -35,9 +40,10 @@ function routeHarness(options: {
     intent: PersistedIntent | null; created: Array<Record<string, unknown>>; trialEligibility: string;
     failFinalizeOnce: boolean; ownerContextCalls: number; businessRequests: Array<string | undefined>;
     customerRetrievals: number; portalCreations: number;
+    customerCreations: number;
   } = {
     intent: null, created: [], trialEligibility: options.eligibility ?? "eligible", failFinalizeOnce: false,
-    ownerContextCalls: 0, businessRequests: [], customerRetrievals: 0, portalCreations: 0,
+    ownerContextCalls: 0, businessRequests: [], customerRetrievals: 0, portalCreations: 0, customerCreations: 0,
   };
   let nextSessionId = 0;
   let nextIntentId = 0;
@@ -51,9 +57,12 @@ function routeHarness(options: {
   const stripe = {
     customers: {
       retrieve: async (id: string) => { state.customerRetrievals += 1; return { id, deleted: false, metadata: { owner_user_id: ownerId } }; },
+      create: async (input: { metadata: Record<string, string> }) => { state.customerCreations += 1; return { id: "cus_created", deleted: false, metadata: input.metadata }; },
+      search: async () => ({ data: [] }),
     },
     subscriptions: {
       retrieve: async (id: string) => ({ id, status: "canceled", ...(options.activeSubscription ?? {}) }),
+      update: async () => ({}),
       list: () => options.providerSubscription ? subscriptionsIterable : emptyAsyncIterable,
     },
     checkout: { sessions: {
@@ -69,7 +78,7 @@ function routeHarness(options: {
         if (existing) return existing;
         nextSessionId += 1;
         const session = {
-          id: `cs_${nextSessionId}`, url: `https://checkout.test/${nextSessionId}`, status: "open", customer: customerId,
+          id: `cs_${nextSessionId}`, url: `https://checkout.test/${nextSessionId}`, status: "open", customer: String(payload.customer ?? customerId),
           metadata: (payload.metadata ?? {}) as Record<string, string>,
         };
         state.created.push(payload);
@@ -114,8 +123,11 @@ function routeHarness(options: {
     },
     "@/lib/billing/persistence": {
       getTrialEligibility: async () => state.trialEligibility,
-      claimOwnerCustomerProvisioning: async () => ({ kind: "mapped", customerId, email: "owner@example.test", idempotencyKey: null, fence: null, status: null }),
+      claimOwnerCustomerProvisioning: async () => options.provisionCustomer
+        ? ({ kind: "claimed", customerId: null, email: "owner@example.test", idempotencyKey: "customer-key", fence: "customer-fence", status: "pending", createdAt: new Date().toISOString() })
+        : ({ kind: "mapped", customerId, email: "owner@example.test", idempotencyKey: null, fence: null, status: null }),
       finalizeOwnerCustomerProvisioning: async () => true,
+      recordBillingCustomerProviderResult: async () => true,
       claimCheckoutIntent: async (input: { requestHash: string; stripePayload: Record<string, unknown>; planId: string }) => {
         if (!state.intent && options.existingIntentAgeMs !== undefined) {
           nextIntentId += 1;
@@ -142,6 +154,12 @@ function routeHarness(options: {
       markCheckoutIntentUncertain: async () => true,
       markCheckoutIntentCompleted: async () => true,
       expireCheckoutIntent: async () => { if (state.intent) state.intent.status = "expired"; return true; },
+      beginBillingCustomerProviderCall: async () => options.customerLeaseAdmitted !== false,
+      finishBillingCustomerProviderCall: async () => true,
+      beginBillingCheckoutProviderCall: async () => options.checkoutLeaseAdmitted !== false,
+      finishBillingCheckoutProviderCall: async () => true,
+      beginAccountLifecycleOperation: async () => ({ kind: options.lifecycleAdmission ?? "claimed", token: "lifecycle-token", leaseUntil: null }),
+      finishAccountLifecycleOperation: async () => true,
     },
     "@/lib/safe-logger": { safeLogger: { warn() {}, error() {} } },
   };
@@ -201,6 +219,26 @@ test("unresolved checkout older than Stripe idempotency retention remains blocke
   const response = await h.checkout.POST(checkoutRequest());
   assert.equal(response.status, 409);
   assert.equal(h.state.created.length, 0, "an old unknown key is never posted again");
+});
+
+test("checkout provider call is denied after deletion freeze without creating a session", async () => {
+  const h = routeHarness({ checkoutLeaseAdmitted: false });
+  assert.equal((await h.checkout.POST(checkoutRequest())).status, 409);
+  assert.equal(h.state.created.length, 0);
+});
+
+test("owner customer creation is fenced before provider I/O and mapping writes", async () => {
+  const h = routeHarness({ provisionCustomer: true, mapping: { business_customer_id: null, owner_customer_id: null } });
+  assert.equal((await h.checkout.POST(checkoutRequest())).status, 303);
+  assert.equal(h.state.customerCreations, 1);
+  assert.equal(h.state.created.length, 1);
+});
+
+test("frozen owner cannot create a Stripe customer", async () => {
+  const h = routeHarness({ provisionCustomer: true, customerLeaseAdmitted: false, mapping: { business_customer_id: null, owner_customer_id: null } });
+  assert.equal((await h.checkout.POST(checkoutRequest())).status, 503);
+  assert.equal(h.state.customerCreations, 0);
+  assert.equal(h.state.created.length, 0);
 });
 
 test("existing open session with a failed persistence finalize returns retriable error", async () => {
@@ -280,6 +318,15 @@ test("portal rejects conflicting business and canonical owner customer mappings"
   const h = routeHarness({ mapping: { business_customer_id: "cus_other", owner_customer_id: customerId } });
   const response = await h.portal.POST(new Request("https://app.test/api/stripe/portal", { method: "POST" }));
   assert.equal(response.status, 409);
+});
+
+test("frozen owner cannot create a Stripe portal capability or change plan", async () => {
+  const h = routeHarness({ lifecycleAdmission: "frozen" });
+  assert.equal((await h.portal.POST(new Request("https://app.test/api/stripe/portal", { method: "POST" }))).status, 409);
+  assert.equal((await h.changePlan.POST(new Request("https://app.test/api/stripe/change-plan", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan_id: "complete" }),
+  }))).status, 409);
+  assert.equal(h.state.portalCreations, 0);
 });
 
 test("plan changes reject subscriptions attached to another Stripe customer", async () => {

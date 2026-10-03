@@ -71,6 +71,12 @@ export async function listAtomicFollowupCandidates(input: { businessId: string; 
   });
 }
 
+/** Resolves the canonical owner identity for the lifecycle gate; callers never select owner PII. */
+export async function getBoosterBusinessOwnerId(businessId: string): Promise<string | null> {
+  const rows = await sql`SELECT owner_user_id FROM public.businesses WHERE id=${businessId}::uuid`;
+  return str(objectRow(rows[0]).owner_user_id);
+}
+
 export async function claimAtomicFollowupDelivery(input: { businessId: string; visitId: string }): Promise<AtomicFollowupClaim> {
   const rows = await sql`SELECT public.claim_booster_delivery(${input.businessId}::uuid, ${input.visitId}::uuid) AS result`;
   const row = objectRow(rows[0]);
@@ -86,10 +92,10 @@ export async function claimAtomicFollowupDelivery(input: { businessId: string; v
 }
 
 export async function persistAtomicFollowupPayload(input: {
-  deliveryId: string; fence: string; payload: FrozenFollowupPayload; reviewUrl: string;
+  deliveryId: string; fence: string; payload: FrozenFollowupPayload; reviewUrl: string; actorUserId?: string;
 }): Promise<boolean> {
   const rows = await sql`SELECT public.prepare_booster_delivery(
-    ${input.deliveryId}::uuid,${input.fence}::uuid,${JSON.stringify(input.payload)}::jsonb,${input.reviewUrl}) AS changed`;
+    ${input.deliveryId}::uuid,${input.fence}::uuid,${JSON.stringify(input.payload)}::jsonb,${input.reviewUrl},${input.actorUserId ?? null}::uuid) AS changed`;
   return objectRow(rows[0]).changed === true;
 }
 

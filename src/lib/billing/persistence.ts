@@ -102,6 +102,48 @@ export async function finalizeOwnerCustomerProvisioning(input: { ownerUserId: st
   return row?.changed === true;
 }
 
+export async function recordBillingCustomerProviderResult(input: { ownerUserId: string; fence: string; customerId: string }): Promise<boolean> {
+  const row = await one<DbRow>(getSql()`SELECT public.record_billing_customer_provider_result(
+    ${input.ownerUserId}::uuid, ${input.fence}::uuid, ${input.customerId}) AS recorded`);
+  return row?.recorded === true;
+}
+
+export async function beginBillingCustomerProviderCall(input: { ownerUserId: string; fence: string }): Promise<boolean> {
+  const row = await one<DbRow>(getSql()`SELECT public.begin_billing_customer_provider_call(${input.ownerUserId}::uuid, ${input.fence}::uuid) AS admitted`);
+  return row?.admitted === true;
+}
+export async function finishBillingCustomerProviderCall(input: { ownerUserId: string; fence: string; outcome: "done" | "uncertain" }): Promise<boolean> {
+  const row = await one<DbRow>(getSql()`SELECT public.finish_billing_customer_provider_call(${input.ownerUserId}::uuid, ${input.fence}::uuid, ${input.outcome}) AS finished`);
+  return row?.finished === true;
+}
+export async function beginBillingCheckoutProviderCall(input: { intentId: string; fence: string }): Promise<boolean> {
+  const row = await one<DbRow>(getSql()`SELECT public.begin_billing_checkout_provider_call(${input.intentId}::uuid, ${input.fence}::uuid) AS admitted`);
+  return row?.admitted === true;
+}
+export async function finishBillingCheckoutProviderCall(input: { intentId: string; fence: string; outcome: "done" | "uncertain" }): Promise<boolean> {
+  const row = await one<DbRow>(getSql()`SELECT public.finish_billing_checkout_provider_call(${input.intentId}::uuid, ${input.fence}::uuid, ${input.outcome}) AS finished`);
+  return row?.finished === true;
+}
+
+export type AccountLifecycleOperation = { kind: "claimed" | "frozen" | "busy" | "uncertain"; token: string | null; leaseUntil: string | null };
+export async function beginAccountLifecycleOperation(input: {
+  userId: string; actorUserId?: string | null; businessId?: string | null; kind: string; idempotencyKey: string; leaseMs?: number;
+}): Promise<AccountLifecycleOperation> {
+  const row = await one<DbRow>(getSql()`SELECT * FROM public.begin_account_lifecycle_operation(
+    ${input.userId}::uuid, ${input.actorUserId ?? null}::uuid, ${input.businessId ?? null}::uuid,
+    ${input.kind}, ${input.idempotencyKey}, ${input.leaseMs ?? 60000})`);
+  const result = String(row?.result ?? "uncertain");
+  return {
+    kind: result === "claimed" || result === "frozen" || result === "busy" ? result : "uncertain",
+    token: row?.token == null ? null : String(row.token),
+    leaseUntil: row?.lease_until == null ? null : String(row.lease_until),
+  };
+}
+export async function finishAccountLifecycleOperation(input: { token: string; outcome: "done" | "uncertain" | "failed" }): Promise<boolean> {
+  const row = await one<DbRow>(getSql()`SELECT public.finish_account_lifecycle_operation(${input.token}::uuid, ${input.outcome}) AS finished`);
+  return row?.finished === true;
+}
+
 export type TrialEligibility = "eligible" | "used" | "legacy_unknown" | "reserved";
 export async function getTrialEligibility(input: { businessId: string; ownerUserId: string }): Promise<TrialEligibility> {
   const row = await one<DbRow>(getSql()`SELECT public.get_billing_trial_eligibility(${input.businessId}::uuid, ${input.ownerUserId}::uuid) AS state`);

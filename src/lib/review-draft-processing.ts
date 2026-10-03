@@ -6,6 +6,8 @@ import {
   type ReplyDraftRecord,
 } from "@/lib/review-draft-policy";
 import { parseGoogleStarRating } from "@/lib/google-review-rating";
+import { randomUUID } from "node:crypto";
+import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
 
 export type DraftProcessingSource = "scheduled" | "individual" | "interactive_batch";
 export type DraftProcessingResult =
@@ -24,7 +26,7 @@ export function isSafeAutoReplyRating(value: unknown): boolean {
 }
 
 /** One policy path for scheduled and interactive review drafting. */
-export async function processReviewDraft(input: {
+async function processReviewDraftInner(input: {
   actorUserId: string;
   businessId: string;
   locationName: string;
@@ -80,4 +82,29 @@ export async function processReviewDraft(input: {
   }
   if (!posted.ok) return { outcome: "failed", stage: "post", draft: saved.draft };
   return { outcome: "saved", draft: saved.draft, posted: true };
+}
+
+export async function processReviewDraft(input: {
+  ownerUserId: string;
+  actorUserId: string;
+  businessId: string;
+  locationName: string;
+  row: ReviewRowForReply;
+  profile: ProfileReplyRow | null;
+  source: DraftProcessingSource;
+}): Promise<DraftProcessingResult> {
+  const lifecycle = await beginAccountLifecycleOperation({
+    userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,
+    kind: "openai_reply_draft", idempotencyKey: randomUUID(), leaseMs: 90000,
+  });
+  if (lifecycle.result !== "claimed" || !lifecycle.token) return { outcome: "skipped", reason: "busy" };
+  let result: DraftProcessingResult;
+  try {
+    result = await processReviewDraftInner(input);
+  } catch (error) {
+    await finishAccountLifecycleOperation(lifecycle.token, "uncertain").catch(() => false);
+    throw error;
+  }
+  if (!await finishAccountLifecycleOperation(lifecycle.token, "done")) return { outcome: "failed", stage: "save" };
+  return result;
 }

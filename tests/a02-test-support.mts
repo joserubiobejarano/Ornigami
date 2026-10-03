@@ -27,6 +27,10 @@ export function loadTs<T>(relative: string, mocks: Record<string, unknown>): T {
   const nativeRequire = createRequire(filename);
   const localRequire = (id: string): unknown => {
     if (Object.hasOwn(mocks, id)) return mocks[id];
+    if (id === "@/lib/account-lifecycle") return {
+      beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "11111111-1111-4111-8111-111111111111" }),
+      finishAccountLifecycleOperation: async () => true,
+    };
     if (id.startsWith("@/")) throw new Error(`Unmocked application dependency: ${id}`);
     return nativeRequire(id);
   };
