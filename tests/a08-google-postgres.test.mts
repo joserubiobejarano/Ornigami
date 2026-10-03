@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFile, execFileSync } from "node:child_process";
+import { execFile, execFileSync, spawn } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
@@ -27,6 +27,24 @@ async function psqlAsync(statement: string): Promise<string> {
   const args = ["-X", "-q", "-A", "-t", "-F", "|", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-c", statement];
   const result = await execFileAsync(pgExe("psql"), args, { encoding: "utf8" });
   return result.stdout.trim();
+}
+function openPsqlSession() {
+  const args = ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", "-"];
+  const child = spawn(pgExe("psql"), args, { stdio: ["pipe", "pipe", "pipe"] });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk) => { stdout += chunk; });
+  child.stderr.setEncoding("utf8").on("data", (chunk) => { stderr += chunk; });
+  const closed = new Promise<void>((resolveClose, rejectClose) => {
+    child.once("error", rejectClose);
+    child.once("close", (code) => code === 0 ? resolveClose() : rejectClose(new Error(`psql exited ${code}: ${stderr}`)));
+  });
+  void closed.catch(() => undefined);
+  return {
+    write: (statement: string) => child.stdin.write(statement),
+    end: () => { child.stdin.end(); return closed; },
+    output: () => stdout,
+  };
 }
 function psqlError(statement: string): string {
   const args = ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-c", statement];
@@ -174,9 +192,13 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
     assert.equal(statements.length, statementCountBeforeForeignReview + 1, "location mismatch is rejected by the preflight batch query");
     assert.equal(psql("SELECT location_name || '|' || comment FROM public.reviews WHERE google_review_id='foreign_location'"), "accounts/100/locations/999|foreign");
 
+    let nextSqlApplicationName: string | null = null;
     const tokenSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
       const statement = renderSql(strings, values);
-      const output = psql(statement);
+      const taggedStatement = nextSqlApplicationName
+        ? `SET application_name='${nextSqlApplicationName}'; ${statement}`
+        : statement;
+      const output = await psqlAsync(taggedStatement);
       if (!output) return [];
       return output.split(/\r?\n/).map((line) => {
         const columns = line.split("|");
@@ -197,13 +219,60 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
     await assert.rejects(gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-v2", refreshToken: "refresh-v2", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" }), /account lifecycle/);
     assert.equal(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${frozenOwner}'`), "encrypted:refresh-v1");
     psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${frozenOwner}';`);
-    const freezeTransaction = psqlAsync(`BEGIN; SET application_name='a11_freeze_lock'; SELECT id FROM public.businesses WHERE id='00000000-0000-4000-8000-000000000023' FOR UPDATE; SELECT pg_sleep(0.25); UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${frozenOwner}'; COMMIT;`);
-    for (let attempt = 0; attempt < 100 && psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND query LIKE '%pg_sleep%'") !== "1"; attempt += 1) {
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
+    psql("CREATE TABLE public.a11_test_freeze_gate (id integer PRIMARY KEY); INSERT INTO public.a11_test_freeze_gate VALUES (1);");
+    const gate = openPsqlSession();
+    let gateReleased = false;
+    let freezeTransaction: Promise<string> | undefined;
+    let writerRejection: Promise<void> | undefined;
+    const releaseGate = async (commit: boolean) => {
+      if (gateReleased) return;
+      gateReleased = true;
+      gate.write(commit ? "COMMIT;\n" : "ROLLBACK;\n");
+      await gate.end();
+    };
+    try {
+      gate.write("BEGIN; UPDATE public.a11_test_freeze_gate SET id=id WHERE id=1; SELECT 'gate-held';\n");
+      const gateReadyBy = Date.now() + 15_000;
+      while (!gate.output().includes("gate-held") && Date.now() < gateReadyBy) await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+      assert.ok(gate.output().includes("gate-held"), "test gate transaction holds its row lock before freeze begins");
+      freezeTransaction = psqlAsync(`BEGIN; SET application_name='a11_freeze_lock'; SELECT id FROM public.businesses WHERE id='00000000-0000-4000-8000-000000000023' FOR UPDATE; UPDATE public.a11_test_freeze_gate SET id=id WHERE id=1; UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${frozenOwner}'; COMMIT;`);
+      void freezeTransaction.catch(() => undefined);
+      const freezeLockObservedBy = Date.now() + 15_000;
+      let freezeLockObserved = false;
+      while (Date.now() < freezeLockObservedBy) {
+        if (psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND state='active' AND wait_event_type='Lock' AND query LIKE '%a11_test_freeze_gate%'") === "1") {
+          freezeLockObserved = true;
+          break;
+        }
+        await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+      }
+      let writerQueued = false;
+      if (freezeLockObserved) {
+        nextSqlApplicationName = "a11_google_writer";
+        const queuedWriter = gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-race", refreshToken: "refresh-race", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" });
+        nextSqlApplicationName = null;
+        writerRejection = assert.rejects(queuedWriter, /account lifecycle/);
+        void writerRejection.catch(() => undefined);
+        const writerQueueDeadline = Date.now() + 15_000;
+        while (Date.now() < writerQueueDeadline) {
+          if (psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_google_writer' AND state='active' AND wait_event_type='Lock'") === "1") {
+            writerQueued = true;
+            break;
+          }
+          await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+        }
+      }
+      await releaseGate(true);
+      await freezeTransaction;
+      assert.equal(freezeLockObserved, true, "freeze transaction holds the business lock while queued at the test gate");
+      assert.equal(writerQueued, true, "Google credential writer is waiting behind the freeze transaction");
+      await writerRejection;
+    } catch (error) {
+      await releaseGate(false).catch(() => undefined);
+      await freezeTransaction?.catch(() => undefined);
+      await writerRejection?.catch(() => undefined);
+      throw error;
     }
-    assert.equal(psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND query LIKE '%pg_sleep%'"), "1", "freeze transaction acquired its business lock before the writer starts");
-    await assert.rejects(gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-race", refreshToken: "refresh-race", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" }), /account lifecycle/);
-    await freezeTransaction;
     assert.equal(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${frozenOwner}'`), "encrypted:refresh-v1", "a writer queued behind freeze cannot replace the credential");
     await assert.rejects(persistence.persistGoogleReviews(frozenOwner, "00000000-0000-4000-8000-000000000023", "accounts/100/locations/200", [
       { reviewId: "must_not_write_after_freeze", starRating: "FOUR", comment: "frozen" },
