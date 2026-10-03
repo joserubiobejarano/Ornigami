@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { checkGoogleReadiness } from "../scripts/a16-google-readiness.mjs";
+import { createActionURL } from "../node_modules/@auth/core/lib/utils/env.js";
 
 const clientId = "fixture.apps.googleusercontent.com";
 const baseEnv = {
@@ -78,6 +79,32 @@ test("accepts the pinned Auth.js /api/auth base path while deriving the Business
     ]);
     assert.equal(result.callbacks[0].purpose, "authjs_google_sign_in_expected_registration");
     assert.equal(result.callbacks[1].purpose, "business_profile_oauth_runtime_redirect");
+  }
+});
+
+test("an explicitly empty AUTH_URL shadows NEXTAUTH_URL instead of using its origin", () => {
+  const runtimeUrl = createActionURL("callback", "https", new Headers({ host: "inferred.example.test" }),
+    { AUTH_URL: "", NEXTAUTH_URL: "https://ornigami.com" }, { basePath: "/api/auth" });
+  assert.equal(runtimeUrl.origin, "https://inferred.example.test", "the installed Auth.js runtime uses request inference");
+  const result = checkGoogleReadiness({
+    env: { ...baseEnv, AUTH_URL: "", NEXTAUTH_URL: "https://ornigami.com" }, environment: "production",
+  });
+  assert.equal(result.localConfigStatus, "review");
+  assert.equal(result.checks.find((check) => check.id === "auth_url_alignment")?.status, "warn");
+  assert.match(result.checks.find((check) => check.id === "nextauth_url_alignment")?.detail ?? "", /shadowed/);
+  assert.equal(result.overallStatus, "provider-unverified");
+});
+
+test("explicitly blank runtime secrets cannot be reported ready through another fallback", () => {
+  for (const key of ["AUTH_SECRET", "NEXTAUTH_SECRET", "TOKEN_ENCRYPTION_KEY"]) {
+    for (const value of ["", "   "]) {
+      const result = checkGoogleReadiness({
+        env: { ...baseEnv, NEXTAUTH_SECRET: "valid-legacy-secret", [key]: value }, environment: "production",
+      });
+      assert.equal(result.localConfigStatus, "blocked", key);
+      assert.equal(result.checks.find((check) => check.id === `${key.toLowerCase()}_blank`)?.status, "fail", key);
+      assert.equal(result.secretValuesIncluded, false);
+    }
   }
 });
 

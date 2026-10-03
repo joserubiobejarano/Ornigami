@@ -24,6 +24,8 @@ The Business Profile callback is produced by `getGoogleGbpOAuthRedirectUri()` fr
 
 OAuth state signing uses `AUTH_SECRET` with `NEXTAUTH_SECRET` fallback. Token encryption uses `TOKEN_ENCRYPTION_KEY`, then `AUTH_SECRET`, then `NEXTAUTH_SECRET`. The runtime hashes the configured encryption string into its AES key, so the checker verifies presence/fallback only and prints none of these values.
 
+A00 integration correction: explicitly configured blank secrets fail the checker instead of being treated as omitted aliases. Empty runtime environment values can be rejected by the application's schema; whitespace-only values are also unsuitable secrets. An explicitly empty `AUTH_URL` is retained as a review finding because the installed Auth.js nullish precedence shadows `NEXTAUTH_URL` and uses request inference. The regression verifies that behavior against the installed runtime helper. The tool remains offline.
+
 ## Evidence boundaries and current known state
 
 The checker can establish only local variable presence/shape, production-origin alignment, runtime callback derivation, and the hard-coded `business.manage` request. A registered URI, API approval, quota, API availability, branding/domain verification, account eligibility, or live workflow requires direct provider/account evidence. The checker intentionally reports each such gate as `unverified` on every run. It does not treat repository documentation, a configured client ID, or a mock test as approval evidence.

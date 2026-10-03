@@ -7,8 +7,8 @@ This file documents environment values recognized by `src/lib/env.ts` and the de
 - `DATABASE_URL` — Neon Postgres connection string; required for data access.
 - `AUTH_SECRET` — Auth.js and signing/encryption secret; required in production.
 - `NEXTAUTH_SECRET` — compatibility fallback for older helpers.
-- `NEXT_PUBLIC_APP_URL` — canonical application URL. Production must be `https://ornigami.com`.
-- `AUTH_URL` — optional Auth.js deployment hint; keep aligned with the public app URL if configured.
+- `NEXT_PUBLIC_APP_URL` — canonical application URL and Business Profile callback source via `getServerAppUrl()`. Production must be `https://ornigami.com`; it does not configure Auth.js's own base URL.
+- `AUTH_URL`, `NEXTAUTH_URL` — Auth.js uses `AUTH_URL ?? NEXTAUTH_URL` before request-origin inference; keep the effective origin aligned with the public app, with `/api/auth` as the valid base path. An explicitly empty `AUTH_URL` shadows the legacy alias and causes request inference; remove unused values rather than configuring blanks. The offline [A16 checker](../scripts/a16-google-readiness.mjs) reports local shape/alignment only, not provider approval or actual deployed forwarding behavior.
 - `AUTH_TRUST_HOST` — optional Auth.js proxy setting where required by the hosting setup.
 
 ## Integrations

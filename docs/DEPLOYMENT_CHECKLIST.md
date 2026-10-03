@@ -73,16 +73,18 @@ Google Cloud Console must contain both authorized redirect URIs:
 
 Before onboarding real Review Replies customers:
 
-- [ ] Applicant account manages a verified, active Business Profile for at least 60 days and the profile has a live website.
+- [ ] Applicant currently manages a profile that has been verified and active for at least 60 days, with its business website listed. A16 reports no qualifying profile supplied; keep profile-dependent submission/live checks blocked until access and consent are available.
 - [ ] Submit **Application for Basic API Access** through the [GBP API Support form](https://support.google.com/business/contact/api_default), using project number `1002660087913`.
 - [ ] Retain Google’s approval email or confirmation and record the approval date.
 - [ ] Confirm the `business.manage` scope is approved for the OAuth app.
 - [ ] Confirm My Business Account Management API and My Business Business Information API quotas are non-zero; `0 QPM` means the project is not approved.
 - [ ] Confirm the Google My Business API used by the review sync/reply routes is enabled and has usable quota.
 - [ ] Confirm the consent screen is published and verification is complete if Google requires it.
+- [ ] Resolve the A16-recorded `ornigami.com` branding ownership issue using a verified/delegated Search Console Owner associated with this Cloud project as Owner/Editor; follow the recorded 24-hour wait before retrying. Full/Restricted Search Console users are insufficient. Recheck dated Console evidence before action.
+- [ ] Run `node scripts/a16-google-readiness.mjs --json --environment production` with values from the intended secret source. A local pass never closes API approval, quota, registration, branding or profile gates; see [A16 handoff](./tasks/A16_GOOGLE_LAUNCH_HANDOFF.md).
 - [ ] Client authorizes Ornigami through OAuth and has access to the specific profile being tested.
 - [ ] Sync a location, sync a review, save a draft, and post one controlled reply.
-- [ ] Confirm Review Replies cron can sync/draft successfully before enabling automatic posting.
+- [ ] Confirm Review Replies scheduled processing syncs/drafts, preserves human edits and does not post automatically under the current contract.
 
 Review Booster can operate with email and a manually entered review URL while this external dependency remains unresolved.
 
@@ -94,6 +96,7 @@ Review Booster can operate with email and a manually entered review URL while th
 - [ ] Verify the Resend sending mailbox/domain.
 - [ ] Keep `EMAIL_FROM` as a bare mailbox address, for example `noreply@yourdomain.com`.
 - [ ] Register `/api/webhooks/resend` for supported sent/delivered/delayed/bounced/complained/failed/suppressed events. Configure signing secret privately, verify an owned test delivery end to end, and confirm signed replay/out-of-order feedback and suppression without resending uncertain requests.
+- [ ] Complete actual endpoint/secret provisioning and isolated ingress acceptance using [A10 signing acceptance](./tasks/A10_RESEND_SIGNING_ACCEPTANCE.md). Wave 7 read-only production inventory found zero webhook endpoints and no signing secret; local synthetic/PostgreSQL tests do not close this row.
 - [ ] Controlled Resend GET must return exact frozen body/tag/recipient binding and use an authorized retrieval key in the original sending account before manual reconciliation activation. 202/unresolved retains quota. A lookup miss never authorizes replay.
 - [ ] Approve global suppression/event/correlation retention and other mail-category policy; preserve do-not-send evidence through workspace cleanup. Customer-specific sender domains remain future work.
 

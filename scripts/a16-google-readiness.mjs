@@ -35,7 +35,8 @@ function runtimeAppBaseUrl(env) {
 }
 
 function configuredUrl(value) {
-  if (typeof value !== "string" || !value.trim()) return { present: false, url: null };
+  if (value === undefined || value === null) return { present: false, url: null };
+  if (typeof value !== "string" || !value.trim()) return { present: true, url: null };
   try {
     const raw = value.trim();
     if (!AUTH_BASE_SHAPE.test(raw)) return { present: true, url: null };
@@ -59,6 +60,7 @@ function nonEmpty(value) {
  * Inspect local OAuth configuration without network access or secret output.
  * `environment` is local, preview, or production. Result statuses never claim
  * Google approval or provider acceptance.
+ * @param {{ env?: Record<string, string | undefined>, environment?: "local" | "preview" | "production" }} [options]
  */
 export function checkGoogleReadiness({ env = process.env, environment = "local" } = {}) {
   if (!["local", "preview", "production"].includes(environment)) {
@@ -67,6 +69,12 @@ export function checkGoogleReadiness({ env = process.env, environment = "local" 
 
   const checks = [];
   const add = (id, status, evidenceType, detail) => checks.push({ id, status, evidenceType, detail });
+  for (const key of ["AUTH_SECRET", "NEXTAUTH_SECRET", "TOKEN_ENCRYPTION_KEY"]) {
+    if (typeof env[key] === "string" && !env[key].trim()) {
+      add(`${key.toLowerCase()}_blank`, "fail", "local-config+runtime-source",
+        `${key} is explicitly configured but blank. Remove an unused value or supply a non-empty secret; configured empty values are not safe runtime fallbacks.`);
+    }
+  }
   const baseUrl = runtimeAppBaseUrl(env);
   const appUrlRaw = nonEmpty(env.NEXT_PUBLIC_APP_URL);
   const clientIdPresent = nonEmpty(env.GOOGLE_CLIENT_ID);
