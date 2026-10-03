@@ -49,6 +49,7 @@ function loadRoute(config: {
           state.beginConfirmedValues.push(_confirmed);
           return { result: config.beginResult ?? "frozen", operationId: operation, accountRole: config.role ?? "member" };
         },
+        assertAccountLifecycleDrained: async () => undefined,
         getFrozenDeletionOperation: async () => {
           state.frozenLookups += 1;
           return config.frozenOperation === undefined ? operation : config.frozenOperation;
@@ -115,6 +116,7 @@ test("A11 owner team confirmation is required before any freeze or provider call
   const { loaded, state } = loadRoute({ role: "owner", beginResult: "team_confirmation_required" });
   const response = await loaded.POST(request({ confirmation: "DELETE MY DATA", confirmSharedWorkspaceData: false }));
   assert.equal(response.status, 409);
+  assert.equal((await response.json()).confirmationRequired, true);
   assert.equal(state.beginCalls, 1);
   assert.equal(state.reconcileCalls, 0);
   assert.equal(state.revokeCalls, 0);

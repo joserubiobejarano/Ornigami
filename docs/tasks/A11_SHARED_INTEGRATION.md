@@ -1,5 +1,12 @@
 Subject: A11 shared integration contract for deletion freeze, recovery, and provider drain
 
+Historical foundation contract: the executable activation follow-up is now
+documented in [A11_DELETION_ACTIVATION_CONTRACTS.md](./A11_DELETION_ACTIVATION_CONTRACTS.md).
+That handoff starts from integrated baseline `fec3fc2`, supplies reviewed shared
+patches and additive SQL, and records composed test evidence. The older baseline
+and line references below are preserved as design history. Activation remains
+closed pending integration and policy/provider acceptance.
+
 This is a review proposal for A00 and A03/A04/A05/A08 integration. It is not an
 applied source patch. The current checkout is based on a513887. Product source
 files remain owned by their package owners. Apply only after the migration 026

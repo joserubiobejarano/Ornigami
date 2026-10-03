@@ -1,0 +1,419 @@
+diff --git a/src/app/api/stripe/change-plan/route.ts b/src/app/api/stripe/change-plan/route.ts
+index 5400431..cfe2715 100644
+--- a/src/app/api/stripe/change-plan/route.ts
++++ b/src/app/api/stripe/change-plan/route.ts
+@@ -0,0 +1 @@
++import { randomUUID } from "node:crypto";
+@@ -9,0 +11 @@ import { safeLogger } from "@/lib/safe-logger";
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/billing/persistence";
+@@ -79,11 +81,4 @@ export async function POST(request: Request) {
+-    await stripe.subscriptions.update(subscription.id, {
+-      items: [{ id: item.id, price: targetPriceId }],
+-      proration_behavior: "always_invoice",
+-      metadata: {
+-        ...subscription.metadata,
+-        user_id: context.ownerUserId,
+-        owner_user_id: context.ownerUserId,
+-        business_id: context.businessId,
+-        plan_id: body.plan_id,
+-        billing_period: billingPeriod,
+-      },
++    const requestKey = randomUUID();
++    const operation = await beginAccountLifecycleOperation({
++      userId: context.ownerUserId, actorUserId: session.user.id, businessId: context.businessId,
++      kind: "stripe_subscription_update", idempotencyKey: requestKey,
+@@ -91,2 +86,25 @@ export async function POST(request: Request) {
+-
+-    return NextResponse.json({ ok: true, plan_id: body.plan_id, billing_period: billingPeriod });
++    if (operation.kind !== "claimed" || !operation.token) {
++      return NextResponse.json({ error: operation.kind === "frozen" ? "Account deletion is in progress" : "Billing change requires reconciliation" }, { status: operation.kind === "frozen" ? 409 : 503 });
++    }
++    let outcome: "done" | "uncertain" = "uncertain";
++    try {
++      await stripe.subscriptions.update(subscription.id, {
++        items: [{ id: item.id, price: targetPriceId }],
++        proration_behavior: "always_invoice",
++        metadata: {
++          ...subscription.metadata,
++          user_id: context.ownerUserId,
++          owner_user_id: context.ownerUserId,
++          business_id: context.businessId,
++          plan_id: body.plan_id,
++          billing_period: billingPeriod,
++        },
++      }, { idempotencyKey: requestKey, timeout: 20_000, maxNetworkRetries: 0 });
++      outcome = "done";
++      return NextResponse.json({ ok: true, plan_id: body.plan_id, billing_period: billingPeriod });
++    } finally {
++      if (!(await finishAccountLifecycleOperation({ token: operation.token, outcome }))) {
++        safeLogger.warn("stripe.change_plan.lifecycle_lease_finish_failed", { token: operation.token });
++        if (outcome === "done") throw new Error("Billing change outcome requires reconciliation");
++      }
++    }
+diff --git a/src/app/api/stripe/checkout/route.ts b/src/app/api/stripe/checkout/route.ts
+index 421f414..535e42e 100644
+--- a/src/app/api/stripe/checkout/route.ts
++++ b/src/app/api/stripe/checkout/route.ts
+@@ -14,0 +15,2 @@ import {
++  beginBillingCustomerProviderCall, finishBillingCustomerProviderCall, recordBillingCustomerProviderResult,
++  beginBillingCheckoutProviderCall, finishBillingCheckoutProviderCall,
+@@ -47,6 +49,2 @@ async function setBusinessCustomer(businessId: string, customerId: string): Prom
+-  const changed = await sql`
+-    UPDATE public.businesses SET stripe_customer_id = ${customerId}
+-    WHERE id = ${businessId} AND (stripe_customer_id IS NULL OR stripe_customer_id = ${customerId})
+-    RETURNING id
+-  `;
+-  if (!changed.length) throw new Error("Business customer mapping changed during checkout");
++  const rows = await sql`SELECT public.set_billing_business_customer(${businessId}::uuid,${customerId}) AS changed`;
++  if ((rows[0] as { changed?: boolean } | undefined)?.changed !== true) throw new Error("Business customer mapping changed during checkout");
+@@ -108,3 +105,0 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-  const ownerRows = await sql`SELECT email FROM public.users WHERE id = ${ownerUserId} LIMIT 1`;
+-  const owner = ownerRows[0] as { email: string } | undefined;
+-  if (!owner?.email) throw new Error("Canonical billing owner email is unavailable");
+@@ -143,0 +139,6 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
++    if (claim.fence && customer.metadata.billing_customer_provisioning_key !== claim.idempotencyKey) {
++      throw new Error("Stripe customer provisioning token is inconsistent");
++    }
++    if (claim.fence && !(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: customer.id }))) {
++      throw new Error("Stripe customer provisioning requires reconciliation");
++    }
+@@ -149,2 +149,0 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-    const found = await stripe.customers.search({ query: `metadata['owner_user_id']:'${ownerUserId}'`, limit: 10 });
+-    if (found.data.length > 1) throw new Error("Multiple Stripe customers require reconciliation");
+@@ -152,6 +151,2 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-    if (found.data.length === 1) {
+-      if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: found.data[0].id }))) {
+-        throw new Error("Stripe customer provisioning lease expired");
+-      }
+-      await setBusinessCustomer(businessId, found.data[0].id);
+-      return found.data[0].id;
++    if (!(await beginBillingCustomerProviderCall({ ownerUserId, fence: claim.fence }))) {
++      throw new Error("Stripe customer recovery is blocked by account lifecycle state");
+@@ -159,3 +154,29 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-    const ageMs = claim.createdAt ? Date.now() - new Date(claim.createdAt).getTime() : Number.POSITIVE_INFINITY;
+-    if (ageMs >= 24 * 60 * 60 * 1000 || !claim.idempotencyKey || !claim.email) {
+-      throw new Error("Stripe customer creation requires reconciliation");
++    let recoveryOutcome: "done" | "uncertain" = "uncertain";
++    let recoveredCustomerId: string | null = null;
++    try {
++      const found = await stripe.customers.search(
++        { query: `metadata['billing_customer_provisioning_key']:'${claim.idempotencyKey ?? ""}'`, limit: 10 },
++        { timeout: 20_000, maxNetworkRetries: 0 },
++      );
++      if (found.data.length > 1) throw new Error("Multiple Stripe customers require reconciliation");
++      if (found.data.length === 1) {
++        if (found.data[0].metadata.billing_customer_provisioning_key !== claim.idempotencyKey || found.data[0].metadata.owner_user_id !== ownerUserId) {
++          throw new Error("Stripe customer provisioning token is inconsistent");
++        }
++        if (!(await recordBillingCustomerProviderResult({ ownerUserId, fence: claim.fence, customerId: found.data[0].id }))) {
++          throw new Error("Stripe customer provider result could not be recorded");
++        }
++        recoveryOutcome = "done";
++        recoveredCustomerId = found.data[0].id;
++      } else {
++        // An empty eventually consistent search is not proof of absence. Only retry
++        // the same key while Stripe's documented idempotency window remains open.
++        const ageMs = claim.createdAt ? Date.now() - new Date(claim.createdAt).getTime() : Number.POSITIVE_INFINITY;
++        if (ageMs >= 23 * 60 * 60 * 1000 || !claim.idempotencyKey || !claim.email) {
++          throw new Error("Stripe customer creation requires reconciliation");
++        }
++      }
++    } finally {
++      if (!(await finishBillingCustomerProviderCall({ ownerUserId, fence: claim.fence, outcome: recoveryOutcome }))) {
++        throw new Error("Stripe customer recovery lease requires reconciliation");
++      }
+@@ -163,3 +184,6 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-    const customer = await stripe.customers.create({ email: claim.email, metadata: { owner_user_id: ownerUserId } }, { idempotencyKey: claim.idempotencyKey });
+-    if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: customer.id }))) {
+-      throw new Error("Stripe customer provisioning lease expired");
++    if (recoveredCustomerId) {
++      if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: recoveredCustomerId }))) {
++        throw new Error("Stripe customer provisioning requires reconciliation");
++      }
++      await setBusinessCustomer(businessId, recoveredCustomerId);
++      return recoveredCustomerId;
+@@ -167,2 +191,4 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-    await setBusinessCustomer(businessId, customer.id);
+-    return customer.id;
++    const createdCustomerId = await createOwnerStripeCustomer({ ownerUserId, fence: claim.fence, email: claim.email!, idempotencyKey: claim.idempotencyKey! });
++    if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: createdCustomerId }))) throw new Error("Stripe customer provisioning requires reconciliation");
++    await setBusinessCustomer(businessId, createdCustomerId);
++    return createdCustomerId;
+@@ -173,6 +199,25 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-  const customer = await stripe.customers.create({
+-    email: claim.email,
+-    metadata: { owner_user_id: ownerUserId },
+-  }, { idempotencyKey: claim.idempotencyKey });
+-  if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: customer.id }))) {
+-    throw new Error("Stripe customer provisioning lease expired");
++  const createdCustomerId = await createOwnerStripeCustomer({ ownerUserId, fence: claim.fence, email: claim.email, idempotencyKey: claim.idempotencyKey });
++  if (!(await finalizeOwnerCustomerProvisioning({ ownerUserId, fence: claim.fence, customerId: createdCustomerId }))) throw new Error("Stripe customer provisioning requires reconciliation");
++  await setBusinessCustomer(businessId, createdCustomerId);
++  return createdCustomerId;
++}
++
++async function createOwnerStripeCustomer(input: { ownerUserId: string; fence: string; email: string; idempotencyKey: string }): Promise<string> {
++  if (!(await beginBillingCustomerProviderCall({ ownerUserId: input.ownerUserId, fence: input.fence }))) {
++    throw new Error("Stripe customer creation is blocked by account lifecycle state");
++  }
++  let outcome: "done" | "uncertain" = "uncertain";
++  try {
++    const customer = await stripe.customers.create({
++      email: input.email,
++      metadata: { owner_user_id: input.ownerUserId, billing_customer_provisioning_key: input.idempotencyKey },
++    }, { idempotencyKey: input.idempotencyKey, timeout: 20_000, maxNetworkRetries: 0 });
++    if (!(await recordBillingCustomerProviderResult({ ownerUserId: input.ownerUserId, fence: input.fence, customerId: customer.id }))) {
++      throw new Error("Stripe customer provider result could not be recorded");
++    }
++    outcome = "done";
++    return customer.id;
++  } finally {
++    if (!(await finishBillingCustomerProviderCall({ ownerUserId: input.ownerUserId, fence: input.fence, outcome }))) {
++      throw new Error("Stripe customer provider lease requires reconciliation");
++    }
+@@ -180,2 +224,0 @@ async function getOwnerCustomer(ownerUserId: string, businessId: string): Promis
+-  await setBusinessCustomer(businessId, customer.id);
+-  return customer.id;
+@@ -333,0 +377,4 @@ export async function POST(request: Request) {
++    if (!(await beginBillingCheckoutProviderCall({ intentId: claim.intentId, fence: claim.fence }))) {
++      return recoverable("Checkout creation is blocked by account lifecycle state", 409);
++    }
++    let providerOutcome: "done" | "uncertain" = "uncertain";
+@@ -337 +384 @@ export async function POST(request: Request) {
+-        { idempotencyKey: claim.idempotencyKey! }
++        { idempotencyKey: claim.idempotencyKey!, timeout: 20_000, maxNetworkRetries: 0 }
+@@ -338,0 +386 @@ export async function POST(request: Request) {
++      providerOutcome = "done";
+@@ -346,0 +395,4 @@ export async function POST(request: Request) {
++    } finally {
++      if (!(await finishBillingCheckoutProviderCall({ intentId: claim.intentId, fence: claim.fence, outcome: providerOutcome }))) {
++        safeLogger.warn("stripe.checkout.provider_lease_finish_failed", { intentId: claim.intentId });
++      }
+diff --git a/src/app/api/stripe/portal/route.ts b/src/app/api/stripe/portal/route.ts
+index d9f2496..65551a7 100644
+--- a/src/app/api/stripe/portal/route.ts
++++ b/src/app/api/stripe/portal/route.ts
+@@ -0,0 +1 @@
++import { randomUUID } from "node:crypto";
+@@ -8,0 +10 @@ import { safeLogger } from "@/lib/safe-logger";
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/billing/persistence";
+@@ -40,3 +42,4 @@ export async function POST(request: Request) {
+-    const portal = await stripe.billingPortal.sessions.create({
+-      customer: customer.id,
+-      return_url: `${appUrl}/dashboard/billing`,
++    const requestKey = randomUUID();
++    const operation = await beginAccountLifecycleOperation({
++      userId: context.ownerUserId, actorUserId: session.user.id, businessId: context.businessId,
++      kind: "stripe_portal_session_create", idempotencyKey: requestKey,
+@@ -44,2 +47,18 @@ export async function POST(request: Request) {
+-    if (!portal.url) return NextResponse.json({ error: "Stripe portal URL missing" }, { status: 502 });
+-    return NextResponse.redirect(portal.url, { status: 303 });
++    if (operation.kind !== "claimed" || !operation.token) {
++      return NextResponse.json({ error: operation.kind === "frozen" ? "Account deletion is in progress" : "Billing portal requires reconciliation" }, { status: operation.kind === "frozen" ? 409 : 503 });
++    }
++    let outcome: "done" | "uncertain" = "uncertain";
++    try {
++      const portal = await stripe.billingPortal.sessions.create({
++        customer: customer.id,
++        return_url: `${appUrl}/dashboard/billing`,
++      }, { idempotencyKey: requestKey, timeout: 20_000, maxNetworkRetries: 0 });
++      outcome = "done";
++      if (!portal.url) return NextResponse.json({ error: "Stripe portal URL missing" }, { status: 502 });
++      return NextResponse.redirect(portal.url, { status: 303 });
++    } finally {
++      if (!(await finishAccountLifecycleOperation({ token: operation.token, outcome }))) {
++        safeLogger.warn("stripe.portal.lifecycle_lease_finish_failed", { token: operation.token });
++        if (outcome === "done") throw new Error("Billing portal session outcome requires reconciliation");
++      }
++    }
+diff --git a/src/lib/billing/persistence.ts b/src/lib/billing/persistence.ts
+index d9f04fd..4cba125 100644
+--- a/src/lib/billing/persistence.ts
++++ b/src/lib/billing/persistence.ts
+@@ -104,0 +105,42 @@ export async function finalizeOwnerCustomerProvisioning(input: { ownerUserId: st
++export async function recordBillingCustomerProviderResult(input: { ownerUserId: string; fence: string; customerId: string }): Promise<boolean> {
++  const row = await one<DbRow>(getSql()`SELECT public.record_billing_customer_provider_result(
++    ${input.ownerUserId}::uuid, ${input.fence}::uuid, ${input.customerId}) AS recorded`);
++  return row?.recorded === true;
++}
++
++export async function beginBillingCustomerProviderCall(input: { ownerUserId: string; fence: string }): Promise<boolean> {
++  const row = await one<DbRow>(getSql()`SELECT public.begin_billing_customer_provider_call(${input.ownerUserId}::uuid, ${input.fence}::uuid) AS admitted`);
++  return row?.admitted === true;
++}
++export async function finishBillingCustomerProviderCall(input: { ownerUserId: string; fence: string; outcome: "done" | "uncertain" }): Promise<boolean> {
++  const row = await one<DbRow>(getSql()`SELECT public.finish_billing_customer_provider_call(${input.ownerUserId}::uuid, ${input.fence}::uuid, ${input.outcome}) AS finished`);
++  return row?.finished === true;
++}
++export async function beginBillingCheckoutProviderCall(input: { intentId: string; fence: string }): Promise<boolean> {
++  const row = await one<DbRow>(getSql()`SELECT public.begin_billing_checkout_provider_call(${input.intentId}::uuid, ${input.fence}::uuid) AS admitted`);
++  return row?.admitted === true;
++}
++export async function finishBillingCheckoutProviderCall(input: { intentId: string; fence: string; outcome: "done" | "uncertain" }): Promise<boolean> {
++  const row = await one<DbRow>(getSql()`SELECT public.finish_billing_checkout_provider_call(${input.intentId}::uuid, ${input.fence}::uuid, ${input.outcome}) AS finished`);
++  return row?.finished === true;
++}
++
++export type AccountLifecycleOperation = { kind: "claimed" | "frozen" | "busy" | "uncertain"; token: string | null; leaseUntil: string | null };
++export async function beginAccountLifecycleOperation(input: {
++  userId: string; actorUserId?: string | null; businessId?: string | null; kind: string; idempotencyKey: string; leaseMs?: number;
++}): Promise<AccountLifecycleOperation> {
++  const row = await one<DbRow>(getSql()`SELECT * FROM public.begin_account_lifecycle_operation(
++    ${input.userId}::uuid, ${input.actorUserId ?? null}::uuid, ${input.businessId ?? null}::uuid,
++    ${input.kind}, ${input.idempotencyKey}, ${input.leaseMs ?? 60000})`);
++  const result = String(row?.result ?? "uncertain");
++  return {
++    kind: result === "claimed" || result === "frozen" || result === "busy" ? result : "uncertain",
++    token: row?.token == null ? null : String(row.token),
++    leaseUntil: row?.lease_until == null ? null : String(row.lease_until),
++  };
++}
++export async function finishAccountLifecycleOperation(input: { token: string; outcome: "done" | "uncertain" | "failed" }): Promise<boolean> {
++  const row = await one<DbRow>(getSql()`SELECT public.finish_account_lifecycle_operation(${input.token}::uuid, ${input.outcome}) AS finished`);
++  return row?.finished === true;
++}
++
+diff --git a/tests/a03-checkout-routes.test.mts b/tests/a03-checkout-routes.test.mts
+index 738e611..43d21f9 100644
+--- a/tests/a03-checkout-routes.test.mts
++++ b/tests/a03-checkout-routes.test.mts
+@@ -20,0 +21,4 @@ function routeHarness(options: {
++  checkoutLeaseAdmitted?: boolean;
++  lifecycleAdmission?: "claimed" | "frozen" | "busy" | "uncertain";
++  provisionCustomer?: boolean;
++  customerLeaseAdmitted?: boolean;
+@@ -22,0 +27 @@ function routeHarness(options: {
++    if (query.includes("set_billing_business_customer")) return [{ changed: true }];
+@@ -37,0 +43 @@ function routeHarness(options: {
++    customerCreations: number;
+@@ -40 +46 @@ function routeHarness(options: {
+-    ownerContextCalls: 0, businessRequests: [], customerRetrievals: 0, portalCreations: 0,
++    ownerContextCalls: 0, businessRequests: [], customerRetrievals: 0, portalCreations: 0, customerCreations: 0,
+@@ -53,0 +60,2 @@ function routeHarness(options: {
++      create: async (input: { metadata: Record<string, string> }) => { state.customerCreations += 1; return { id: "cus_created", deleted: false, metadata: input.metadata }; },
++      search: async () => ({ data: [] }),
+@@ -56,0 +65 @@ function routeHarness(options: {
++      update: async () => ({}),
+@@ -72 +81 @@ function routeHarness(options: {
+-          id: `cs_${nextSessionId}`, url: `https://checkout.test/${nextSessionId}`, status: "open", customer: customerId,
++          id: `cs_${nextSessionId}`, url: `https://checkout.test/${nextSessionId}`, status: "open", customer: String(payload.customer ?? customerId),
+@@ -117 +126,3 @@ function routeHarness(options: {
+-      claimOwnerCustomerProvisioning: async () => ({ kind: "mapped", customerId, email: "owner@example.test", idempotencyKey: null, fence: null, status: null }),
++      claimOwnerCustomerProvisioning: async () => options.provisionCustomer
++        ? ({ kind: "claimed", customerId: null, email: "owner@example.test", idempotencyKey: "customer-key", fence: "customer-fence", status: "pending", createdAt: new Date().toISOString() })
++        : ({ kind: "mapped", customerId, email: "owner@example.test", idempotencyKey: null, fence: null, status: null }),
+@@ -118,0 +130 @@ function routeHarness(options: {
++      recordBillingCustomerProviderResult: async () => true,
+@@ -144,0 +157,6 @@ function routeHarness(options: {
++      beginBillingCustomerProviderCall: async () => options.customerLeaseAdmitted !== false,
++      finishBillingCustomerProviderCall: async () => true,
++      beginBillingCheckoutProviderCall: async () => options.checkoutLeaseAdmitted !== false,
++      finishBillingCheckoutProviderCall: async () => true,
++      beginAccountLifecycleOperation: async () => ({ kind: options.lifecycleAdmission ?? "claimed", token: "lifecycle-token", leaseUntil: null }),
++      finishAccountLifecycleOperation: async () => true,
+@@ -205,0 +224,20 @@ test("unresolved checkout older than Stripe idempotency retention remains blocke
++test("checkout provider call is denied after deletion freeze without creating a session", async () => {
++  const h = routeHarness({ checkoutLeaseAdmitted: false });
++  assert.equal((await h.checkout.POST(checkoutRequest())).status, 409);
++  assert.equal(h.state.created.length, 0);
++});
++
++test("owner customer creation is fenced before provider I/O and mapping writes", async () => {
++  const h = routeHarness({ provisionCustomer: true, mapping: { business_customer_id: null, owner_customer_id: null } });
++  assert.equal((await h.checkout.POST(checkoutRequest())).status, 303);
++  assert.equal(h.state.customerCreations, 1);
++  assert.equal(h.state.created.length, 1);
++});
++
++test("frozen owner cannot create a Stripe customer", async () => {
++  const h = routeHarness({ provisionCustomer: true, customerLeaseAdmitted: false, mapping: { business_customer_id: null, owner_customer_id: null } });
++  assert.equal((await h.checkout.POST(checkoutRequest())).status, 503);
++  assert.equal(h.state.customerCreations, 0);
++  assert.equal(h.state.created.length, 0);
++});
++
+@@ -284,0 +323,9 @@ test("portal rejects conflicting business and canonical owner customer mappings"
++test("frozen owner cannot create a Stripe portal capability or change plan", async () => {
++  const h = routeHarness({ lifecycleAdmission: "frozen" });
++  assert.equal((await h.portal.POST(new Request("https://app.test/api/stripe/portal", { method: "POST" }))).status, 409);
++  assert.equal((await h.changePlan.POST(new Request("https://app.test/api/stripe/change-plan", {
++    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan_id: "complete" }),
++  }))).status, 409);
++  assert.equal(h.state.portalCreations, 0);
++});
++
+diff --git a/tests/a11-deletion-postgres.test.mts b/tests/a11-deletion-postgres.test.mts
+index b892e4e..db24601 100644
+--- a/tests/a11-deletion-postgres.test.mts
++++ b/tests/a11-deletion-postgres.test.mts
+@@ -71,0 +72 @@ test("A11 migration freezes, fences, resumes and atomically finalizes account de
++    psqlFile(join(root, "docs/tasks/A11_ACTIVATION_BILLING.sql"));
+@@ -257,0 +259,68 @@ test("A11 migration freezes, fences, resumes and atomically finalizes account de
++    const customerClaimRaceOwner = "00000000-0000-4000-8000-000000000022";
++    psql(`INSERT INTO users(id,email) VALUES('${customerClaimRaceOwner}','customer-claim-race@example.test');`);
++    const customerClaimRace = await Promise.all([
++      psqlAsync(`SELECT kind||'|'||COALESCE(idempotency_key,'') FROM claim_billing_customer_provisioning('${customerClaimRaceOwner}')`),
++      psqlAsync(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${customerClaimRaceOwner}',false)`),
++    ]);
++    assert.match(customerClaimRace[0]!, /^(claimed|missing_owner)\|/,
++      "customer claim either commits before freeze with its durable row or observes the freeze marker");
++    assert.match(customerClaimRace[1]!, /^frozen\|/);
++    assert.equal(psql(`SELECT kind FROM claim_billing_customer_provisioning('${customerClaimRaceOwner}')`), "missing_owner",
++      "customer provisioning cannot be newly claimed after freeze commits");
++
++    const checkoutClaimRaceOwner = "00000000-0000-4000-8000-000000000023";
++    const checkoutClaimRaceBusiness = "00000000-0000-4000-8000-000000000033";
++    psql(`INSERT INTO users(id,email) VALUES('${checkoutClaimRaceOwner}','checkout-claim-race@example.test');
++      INSERT INTO businesses(id,owner_user_id,name) VALUES('${checkoutClaimRaceBusiness}','${checkoutClaimRaceOwner}','Checkout claim race');
++      INSERT INTO business_agents(business_id,agent_id,status) VALUES('${checkoutClaimRaceBusiness}','review_replies','inactive'),('${checkoutClaimRaceBusiness}','review_booster','inactive');`);
++    const checkoutClaimRace = await Promise.all([
++      psqlAsync(`SELECT kind||'|'||COALESCE(intent_id::text,'') FROM claim_billing_checkout_intent(
++        '${checkoutClaimRaceBusiness}','${checkoutClaimRaceOwner}','complete','monthly','cus-race','race-hash',
++        '{"mode":"subscription","metadata":{"billing_intent_token":"race-token"}}'::jsonb,false)`),
++      psqlAsync(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${checkoutClaimRaceOwner}',false)`),
++    ]);
++    assert.match(checkoutClaimRace[0]!, /^(claimed|blocked)\|/,
++      "checkout claim either commits before freeze with a durable intent or observes the freeze marker");
++    assert.match(checkoutClaimRace[1]!, /^frozen\|/);
++    assert.equal(psql(`SELECT kind FROM claim_billing_checkout_intent(
++      '${checkoutClaimRaceBusiness}','${checkoutClaimRaceOwner}','complete','monthly','cus-race','later-hash',
++      '{"mode":"subscription","metadata":{"billing_intent_token":"later-token"}}'::jsonb,false)`), "blocked",
++      "checkout intent claims cannot start after freeze commits");
++
++    const lateCustomerOwner = "00000000-0000-4000-8000-000000000024";
++    psql(`INSERT INTO users(id,email) VALUES('${lateCustomerOwner}','late-customer-result@example.test');
++      INSERT INTO billing_customer_provisioning(owner_user_id,owner_email,idempotency_key)
++        VALUES('${lateCustomerOwner}','late-customer-result@example.test','late-customer-key');`);
++    const lateCustomerFence = psql(`SELECT fence FROM billing_customer_provisioning WHERE owner_user_id='${lateCustomerOwner}'`);
++    assert.equal(psql(`SELECT begin_billing_customer_provider_call('${lateCustomerOwner}','${lateCustomerFence}')`), "t");
++    psql(`SELECT privacy_begin_account_deletion('${lateCustomerOwner}',false)`);
++    assert.equal(psql(`SELECT record_billing_customer_provider_result('${lateCustomerOwner}','${lateCustomerFence}','cus-late-result')`), "t",
++      "a known response from the admitted provider call remains durable after freeze");
++    assert.equal(psql(`SELECT finish_billing_customer_provider_call('${lateCustomerOwner}','${lateCustomerFence}','done')`), "t");
++    assert.equal(psql(`SELECT provider_customer_id||'|'||provider_create_state||'|'||(provider_create_lease_until IS NULL)::text
++      FROM billing_customer_provisioning WHERE owner_user_id='${lateCustomerOwner}'`), "cus-late-result|done|true",
++      "deletion recovery can read the exact customer ID after the provider lease drains");
++
++    const frozenWebhookOwner = "00000000-0000-4000-8000-000000000021";
++    const frozenWebhookBusiness = "00000000-0000-4000-8000-000000000031";
++    psql(`INSERT INTO users(id,email) VALUES('${frozenWebhookOwner}','late-webhook@example.test');
++      INSERT INTO businesses(id,owner_user_id,name) VALUES('${frozenWebhookBusiness}','${frozenWebhookOwner}','Late webhook');`);
++    const nullFenceOwner = "00000000-0000-4000-8000-000000000090";
++    const nullFenceBusiness = "00000000-0000-4000-8000-000000000091";
++    psql(`INSERT INTO users(id,email) VALUES('${nullFenceOwner}','null-fence@example.test');
++      INSERT INTO businesses(id,owner_user_id,name) VALUES('${nullFenceBusiness}','${nullFenceOwner}','Null fence');
++      SELECT kind FROM claim_billing_reconciliation_lease('${nullFenceOwner}','evt-null-fence','customer.subscription.updated',60000);`);
++    assert.throws(() => psql(`SELECT apply_stripe_webhook_snapshot('evt-null-fence','customer.subscription.updated','${nullFenceOwner}',
++      '${nullFenceBusiness}','cus-a11','{"id":"sub-null-fence","status":"active","priceId":"price-test"}'::jsonb,
++      'replies','monthly',NULL,NULL::uuid)`), /stale billing reconciliation fence/,
++      "NULL cannot satisfy the webhook lease fence");
++    assert.equal(psql(`SELECT count(*) FROM subscriptions WHERE id='sub-null-fence'`), "0");
++    const webhookFence = psql(`SELECT fence FROM claim_billing_reconciliation_lease('${frozenWebhookOwner}','evt-frozen','customer.subscription.updated',60000)`);
++    psql(`SELECT privacy_begin_account_deletion('${frozenWebhookOwner}',false)`);
++    psql(`SELECT apply_stripe_webhook_snapshot('evt-frozen','customer.subscription.updated','${frozenWebhookOwner}',
++      '${frozenWebhookBusiness}','cus-late','{}'::jsonb,'replies','monthly',NULL,'${webhookFence}')`);
++    assert.equal(psql(`SELECT status FROM billing_webhook_events WHERE event_id='evt-frozen'`), "ignored",
++      "late subscription events are acknowledged without restoring frozen account billing state");
++    assert.equal(psql(`SELECT count(*) FROM billing_owner_customers WHERE owner_user_id='${frozenWebhookOwner}'`), "0");
++    assert.equal(psql(`SELECT count(*) FROM business_agents WHERE business_id='${frozenWebhookBusiness}' AND status<>'inactive'`), "0");
++

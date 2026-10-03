@@ -29,6 +29,7 @@ function makeProvider(rows: {
   agentSubscriptions?: unknown[];
 }, state: { sessions?: FakeSession[]; subscriptions?: FakeSubscription[]; canceled?: string[]; expired?: string[] }, mappedOwner = owner, customerMetadata?: Record<string, string>) {
   const reads: string[] = [];
+  const deletedCustomers = new Set<string>();
   const sql = async (strings: TemplateStringsArray) => {
     const query = strings.join(" ");
     reads.push(query);
@@ -40,6 +41,8 @@ function makeProvider(rows: {
     if (query.includes("FROM public.business_agents ba")) return rows.agentSubscriptions ?? [];
     if (query.includes("finish_billing_checkout_intent")) return [{ changed: true }];
     if (query.includes("UPDATE public.billing_checkout_intents")) return [{ id: "intent" }];
+    if (query.includes("INSERT INTO public.privacy_stripe_customer_erasure_evidence")) return [{ operation_id: "op" }];
+    if (query.includes("UPDATE public.privacy_stripe_customer_erasure_evidence")) return [{ operation_id: "op" }];
     throw new Error(`Unexpected SQL: ${query}`);
   };
   const asyncValues = <T,>(items: T[]): AsyncIterable<T> => ({
@@ -47,7 +50,10 @@ function makeProvider(rows: {
   });
   const stripe = {
     customers: {
-      retrieve: async (id: string) => ({ id, deleted: false, metadata: customerMetadata ?? { owner_user_id: mappedOwner } }),
+      retrieve: async (id: string) => deletedCustomers.has(id)
+        ? ({ id, deleted: true } as const)
+        : ({ id, deleted: false, metadata: customerMetadata ?? { owner_user_id: mappedOwner } }),
+      del: async (id: string) => { deletedCustomers.add(id); return { id, deleted: true as const }; },
     },
     checkout: { sessions: {
       list: () => asyncValues(state.sessions ?? []),
@@ -259,17 +265,77 @@ test("A11 resolves a durable session id even when exhaustive list omitted it", a
   stripe.checkout.sessions.retrieve = customer;
 });
 
+test("A11 recovers a lost Stripe customer-delete response from its tombstone after terminal intents", async () => {
+  const operation = "00000000-0000-4000-8000-000000000032";
+  const intents = ["completed", "expired"].map((status, index) => ({
+    id: `00000000-0000-4000-8000-00000000004${index}`,
+    business_id: business, customer_id: "cus-owner", status,
+    stripe_session_id: `cs-${status}`, provider_intent_token: `intent-${status}`,
+    provider_create_state: "done", provider_create_lease_until: null,
+    provider_create_finished_at: new Date().toISOString(), fence: "00000000-0000-4000-8000-000000000099",
+  }));
+  let evidenceStatus = "started";
+  const loaded = loadTs<{ reconcileOwnerStripeForDeletion(input: {
+    stripe: never; ownerUserId: string; operationId: string; assertFence: () => Promise<void>; cancelMapped: () => Promise<string[]>;
+  }): Promise<void> }>("src/lib/privacy-deletion-providers.ts", { overrides: {
+    "@/lib/db/neon": { sql: async (strings: TemplateStringsArray) => {
+      const query = strings.join(" ");
+      if (query.includes("FROM public.billing_owner_customers")) return [{ stripe_customer_id: "cus-owner" }];
+      if (query.includes("FROM public.businesses WHERE owner_user_id")) return [{ id: business }];
+      if (query.includes("FROM public.billing_checkout_intents")) return intents;
+      if (query.includes("FROM public.billing_customer_provisioning")) return [];
+      if (query.includes("FROM public.subscriptions WHERE user_id")) return [];
+      if (query.includes("FROM public.business_agents ba")) return [];
+      if (query.includes("SELECT status FROM public.privacy_stripe_customer_erasure_evidence")) return [{ status: evidenceStatus }];
+      if (query.includes("UPDATE public.privacy_stripe_customer_erasure_evidence")) { evidenceStatus = "complete"; return []; }
+      if (query.includes("DELETE FROM public.billing_customer_provisioning")) return [];
+      throw new Error(`Unexpected SQL: ${query}`);
+    } },
+    "@/lib/encrypted-token": { decryptToken: (value: string) => ({ value, legacy: false }) },
+  } });
+  const stripe = {
+    customers: { retrieve: async (id: string) => ({ id, deleted: true }) },
+    checkout: { sessions: { list: () => { throw new Error("deleted customer must not be enumerated after durable drain evidence"); } } },
+    subscriptions: { list: () => { throw new Error("deleted customer subscriptions must not be re-enumerated"); } },
+  } as never;
+  await loaded.reconcileOwnerStripeForDeletion({
+    stripe, ownerUserId: owner, operationId: operation, assertFence: async () => undefined, cancelMapped: async () => [],
+  });
+  assert.equal(evidenceStatus, "complete");
+});
+
+test("A11 refuses a deleted Stripe tombstone returned for a different customer ID", async () => {
+  const state = { sessions: [] as FakeSession[], subscriptions: [] as FakeSubscription[] };
+  const { loaded, stripe } = makeProvider({}, state);
+  stripe.customers.retrieve = async () => ({ id: "cus-someone-else", deleted: true });
+  await assert.rejects(loaded.reconcileOwnerStripeForDeletion({
+    stripe: stripe as never, ownerUserId: owner, operationId: "00000000-0000-4000-8000-000000000036",
+    assertFence: async () => undefined, cancelMapped: async () => [],
+  }), /billing_customer_identity_mismatch/);
+});
+
 test("A11 confirms Google's actor-owned grant revocation and fails closed on provider 400", async () => {
   const actor = "00000000-0000-4000-8000-000000000012";
   let sqlActor = "";
-  const loaded = loadTs<{ revokeActorGoogleGrant(userId: string, fetcher?: typeof fetch): Promise<void> }>(
+  let evidenceWritten = false;
+  const operation = "00000000-0000-4000-8000-000000000032";
+  const loaded = loadTs<{ revokeActorGoogleGrant(userId: string, operationId: string, fetcher?: typeof fetch): Promise<void> }>(
     "src/lib/privacy-deletion-providers.ts",
     {
       overrides: {
         "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
-          sqlActor = String(values[0]);
-          assert.match(strings.join(" "), /FROM public\.gbp_connections WHERE user_id=/);
-          return [{ refresh_token: "stored-token" }];
+          const query = strings.join(" ");
+          if (query.includes("FROM public.gbp_connections")) {
+            sqlActor = String(values[0]);
+            return [{ refresh_token: "stored-token", connection_version: "00000000-0000-4000-8000-000000000099" }];
+          }
+          if (query.includes("SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence")) {
+            return evidenceWritten ? [{ connection_version: "00000000-0000-4000-8000-000000000099", encrypted_refresh_token: "stored-token" }] : [];
+          }
+          if (query.includes("SELECT operation_id FROM public.privacy_google_revocation_evidence")) return [];
+          if (query.includes("INSERT INTO public.privacy_google_revocation_evidence")) { evidenceWritten = true; return [{ operation_id: operation }]; }
+          if (query.includes("DELETE FROM public.gbp_connections")) return [{ user_id: actor }];
+          throw new Error(`Unexpected SQL: ${query}`);
         } },
         "@/lib/encrypted-token": { decryptToken: (value: string) => ({ value: `plain:${value}`, legacy: false }) },
       },
@@ -277,7 +343,7 @@ test("A11 confirms Google's actor-owned grant revocation and fails closed on pro
   );
   let requestUrl = "";
   let requestBody = "";
-  await loaded.revokeActorGoogleGrant(actor, async (input, init) => {
+  await loaded.revokeActorGoogleGrant(actor, operation, async (input, init) => {
     requestUrl = String(input);
     requestBody = String(init?.body);
     assert.ok(init?.signal);
@@ -286,6 +352,35 @@ test("A11 confirms Google's actor-owned grant revocation and fails closed on pro
   assert.equal(sqlActor, actor);
   assert.equal(requestUrl, "https://oauth2.googleapis.com/revoke");
   assert.equal(new URLSearchParams(requestBody).get("token"), "plain:stored-token");
-  await assert.rejects(loaded.revokeActorGoogleGrant(actor, async () => new Response(null, { status: 400 })), /google_revocation_unconfirmed/);
-  await assert.rejects(loaded.revokeActorGoogleGrant(actor, async () => new Response(null, { status: 204 })), /google_revocation_unconfirmed/);
+  evidenceWritten = false;
+  await assert.rejects(loaded.revokeActorGoogleGrant(actor, "00000000-0000-4000-8000-000000000033", async () => new Response(null, { status: 400 })), /google_revocation_unconfirmed/);
+  evidenceWritten = false;
+  await assert.rejects(loaded.revokeActorGoogleGrant(actor, "00000000-0000-4000-8000-000000000034", async () => new Response(null, { status: 204 })), /google_revocation_unconfirmed/);
+});
+
+test("A11 reuses an acknowledged Google revoke only for the exact stored generation and token", async () => {
+  const actor = "00000000-0000-4000-8000-000000000012";
+  const version = "00000000-0000-4000-8000-000000000099";
+  let evidenceWritten = false;
+  const loaded = loadTs<{ revokeActorGoogleGrant(userId: string, operationId: string, fetcher?: typeof fetch): Promise<void> }>(
+    "src/lib/privacy-deletion-providers.ts",
+    { overrides: {
+      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray) => {
+        const query = strings.join(" ");
+        if (query.includes("FROM public.gbp_connections")) return [{ refresh_token: "stored-token", connection_version: version }];
+        if (query.includes("SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence")) return evidenceWritten ? [{ connection_version: version, encrypted_refresh_token: "stored-token" }] : [];
+        if (query.includes("SELECT operation_id FROM public.privacy_google_revocation_evidence")) return [{ operation_id: "prior-ack" }];
+        if (query.includes("INSERT INTO public.privacy_google_revocation_evidence")) { evidenceWritten = true; return [{ operation_id: "op" }]; }
+        if (query.includes("DELETE FROM public.gbp_connections")) return [{ user_id: actor }];
+        throw new Error(`Unexpected SQL: ${query}`);
+      } },
+      "@/lib/encrypted-token": { decryptToken: (value: string) => ({ value: `plain:${value}`, legacy: false }) },
+    } },
+  );
+  let providerCalls = 0;
+  await loaded.revokeActorGoogleGrant(actor, "00000000-0000-4000-8000-000000000035", async () => {
+    providerCalls++;
+    return new Response(null, { status: 400 });
+  });
+  assert.equal(providerCalls, 0);
 });

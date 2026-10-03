@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth, signOut } from "@/auth";
 import {
   beginAccountDeletion,
+  assertAccountLifecycleDrained,
   claimAccountDeletion,
   finalizeAccountDeletion,
   getFrozenDeletionOperation,
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
       return json({ error: "No frozen deletion request can be resumed." }, 403);
     }
     if (begin.result === "team_confirmation_required") {
-      return json({ error: "Confirm that deleting this account will also delete its workspace and team data." }, 409);
+      return json({ error: "Confirm that deleting this account will also delete its workspace and team data.", confirmationRequired: true }, 409);
     }
     if (begin.result === "not_found") return json({ error: "Account not found." }, 401);
     if (!begin.operationId) throw new Error("privacy_deletion_operation_unavailable");
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
     if (claim.actorUserId !== actorUserId) return json({ error: "The deletion request could not be resumed." }, 403);
 
     try {
+      await assertAccountLifecycleDrained(claim.actorUserId);
       await reconcileOwnerStripeForDeletion({
         stripe,
         ownerUserId: claim.actorUserId,
@@ -143,7 +145,7 @@ export async function POST(request: Request) {
       const currentSteps = await getAccountDeletionSteps(begin.operationId);
       if (!currentSteps.google) {
         await renewAccountDeletionLease(begin.operationId, claim.fence);
-        await revokeActorGoogleGrant(claim.actorUserId);
+        await revokeActorGoogleGrant(claim.actorUserId, begin.operationId);
         await renewAccountDeletionLease(begin.operationId, claim.fence);
         await recordAccountDeletionStep(begin.operationId, claim.fence, "google");
       }

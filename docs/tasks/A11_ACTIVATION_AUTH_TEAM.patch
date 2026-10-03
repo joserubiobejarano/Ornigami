@@ -1,0 +1,1083 @@
+diff --git a/src/app/account/deletion/deletion-form.tsx b/src/app/account/deletion/deletion-form.tsx
+new file mode 100644
+index 0000000..4942ecb
+--- /dev/null
++++ b/src/app/account/deletion/deletion-form.tsx
+@@ -0,0 +1,118 @@
++"use client";
++
++import { useState } from "react";
++import { signOut } from "next-auth/react";
++
++const CONFIRMATION = "DELETE MY DATA";
++
++type DeletionResponse = {
++  ok?: boolean;
++  error?: string;
++  confirmationRequired?: boolean;
++  recoverable?: boolean;
++};
++
++export default function AccountDeletionForm({ initialState }: { initialState: "none" | "pending" | "confirmation" | "complete" }) {
++  const [confirmation, setConfirmation] = useState(initialState === "none" ? "" : CONFIRMATION);
++  const [confirmWorkspace, setConfirmWorkspace] = useState(false);
++  const [workspacePrompt, setWorkspacePrompt] = useState(initialState === "confirmation");
++  const [pending, setPending] = useState(initialState === "pending" || initialState === "confirmation");
++  const [busy, setBusy] = useState(false);
++  const [message, setMessage] = useState<string | null>(null);
++  const complete = initialState === "complete";
++  const [supportRequired, setSupportRequired] = useState(false);
++
++  async function finishLocally() {
++    await signOut({ redirect: false }).catch(() => {});
++    window.location.replace("/");
++  }
++
++  async function submitDeletion() {
++    setBusy(true);
++    setMessage(null);
++    try {
++      const response = await fetch("/api/privacy/delete", {
++        method: "POST",
++        headers: { "Content-Type": "application/json" },
++        body: JSON.stringify({
++          confirmation: CONFIRMATION,
++          confirmSharedWorkspaceData: confirmWorkspace,
++        }),
++      });
++      const body = await response.json().catch(() => ({})) as DeletionResponse;
++
++      if (response.ok && body.ok === true) {
++        await finishLocally();
++        return;
++      }
++      if (body.confirmationRequired) {
++        setWorkspacePrompt(true);
++        setPending(false);
++        setMessage(body.error ?? "This will also delete your workspace and team data. Confirm to continue.");
++        return;
++      }
++      if (response.status === 401) {
++        setPending(false);
++        setSupportRequired(true);
++        setMessage("Your session ended before we could confirm the result. Contact privacy@ornigami.com so we can verify the request safely.");
++        return;
++      }
++      if (response.status === 202 || (response.status === 409 && !body.confirmationRequired) || body.recoverable) {
++        setPending(true);
++        setMessage("Deletion is still processing. Retry here to check progress and continue the same request.");
++        return;
++      }
++      setMessage(body.error ?? "Deletion could not be completed. You can retry this request.");
++    } catch {
++      setPending(true);
++      setMessage("We could not confirm the result. Retry to resume the same deletion request.");
++    } finally {
++      setBusy(false);
++    }
++  }
++
++  if (complete) {
++    return <main className="mx-auto max-w-xl px-6 py-16" aria-live="polite">
++      <h1 className="text-3xl font-semibold">Account deleted</h1>
++      <p className="mt-4 text-muted-foreground">Your account deletion is complete. You can close this page.</p>
++      <button type="button" onClick={() => void finishLocally()} className="mt-6 rounded-md border px-4 py-2">Sign out</button>
++    </main>;
++  }
++
++  return <main className="mx-auto max-w-xl px-6 py-16" aria-live="polite">
++    <h1 className="text-3xl font-semibold">Delete your account</h1>
++    <p className="mt-4 text-muted-foreground">
++      This request removes your account data after billing and connected services have been handled.
++      If work is still in progress, you can return here and retry safely.
++    </p>
++    <label className="mt-8 block text-sm font-medium" htmlFor="deletion-confirmation">
++      Type <span className="font-mono">{CONFIRMATION}</span> to continue
++    </label>
++    <input
++      id="deletion-confirmation"
++      autoComplete="off"
++      value={confirmation}
++      onChange={(event) => setConfirmation(event.target.value)}
++      disabled={pending || busy}
++      className="mt-2 w-full rounded-md border bg-background px-3 py-2"
++    />
++    {workspacePrompt && <label className="mt-5 flex gap-3 text-sm">
++      <input
++        type="checkbox"
++        checked={confirmWorkspace}
++        onChange={(event) => setConfirmWorkspace(event.target.checked)}
++        disabled={busy}
++      />
++      <span>I understand this also deletes my workspace and its team data. Teammate accounts remain.</span>
++    </label>}
++    {message && <p className="mt-5 rounded-md border p-3 text-sm" role="status">{message}</p>}
++      <button
++      type="button"
++      onClick={() => submitDeletion()}
++      disabled={busy || supportRequired || confirmation !== CONFIRMATION || (workspacePrompt && !confirmWorkspace)}
++      className="mt-6 rounded-md bg-destructive px-4 py-2 font-medium text-destructive-foreground disabled:opacity-50"
++    >
++      {busy ? "Checking deletion status…" : pending ? "Retry deletion" : "Delete account"}
++    </button>
++  </main>;
++}
+diff --git a/src/app/account/deletion/page.tsx b/src/app/account/deletion/page.tsx
+new file mode 100644
+index 0000000..11b9bb6
+--- /dev/null
++++ b/src/app/account/deletion/page.tsx
+@@ -0,0 +1,16 @@
++import { redirect } from "next/navigation";
++
++import { auth } from "@/auth";
++import AccountDeletionForm from "./deletion-form";
++import { getAccountDeletionUiState } from "@/lib/account-deletion-recovery";
++
++export const dynamic = "force-dynamic";
++
++export default async function AccountDeletionPage() {
++  const session = await auth();
++  const userId = session?.user?.id || session?.deletionUserId;
++  if (!userId) redirect("/login?callbackUrl=%2Faccount%2Fdeletion");
++
++  const initialState = await getAccountDeletionUiState(userId);
++  return <AccountDeletionForm initialState={initialState} />;
++}
+diff --git a/src/app/api/auth/[...nextauth]/route.ts b/src/app/api/auth/[...nextauth]/route.ts
+index 86c9f3d..86dbffd 100644
+--- a/src/app/api/auth/[...nextauth]/route.ts
++++ b/src/app/api/auth/[...nextauth]/route.ts
+@@ -3 +3,65 @@ import { handlers } from "@/auth";
+-export const { GET, POST } = handlers;
++const SESSION_PATH = "/api/auth/session";
++
++function isSessionRequest(request: Request): boolean {
++  const pathname = new URL(request.url).pathname;
++  return pathname === SESSION_PATH || pathname === `${SESSION_PATH}/`;
++}
++
++function isRecord(value: unknown): value is Record<string, unknown> {
++  return typeof value === "object" && value !== null && !Array.isArray(value);
++}
++
++function jsonResponseLike(response: Response, value: unknown): Response {
++  const headers = new Headers(response.headers);
++  headers.set("content-type", "application/json; charset=utf-8");
++  headers.delete("content-length");
++  headers.delete("content-encoding");
++  headers.delete("transfer-encoding");
++  return new Response(JSON.stringify(value), {
++    status: response.status,
++    statusText: response.statusText,
++    headers,
++  });
++}
++
++/**
++ * Auth.js needs the deletion subject in its trusted server-side session so the
++ * recovery endpoint can resume. Its client session endpoint must not expose it.
++ */
++function wrapAuthHandler(handler: (request: Request) => Promise<Response>) {
++  return async (request: Request): Promise<Response> => {
++    const response = await handler(request);
++    if (!isSessionRequest(request)) return response;
++    if (response.body === null) return response;
++
++    let payload: unknown;
++    try {
++      payload = await response.clone().json();
++    } catch {
++      // A malformed session response cannot safely be forwarded to a client.
++      return jsonResponseLike(response, null);
++    }
++
++    if (payload === null) return response;
++    if (!isRecord(payload)) return jsonResponseLike(response, null);
++
++    const hasDeletionSubject = Object.hasOwn(payload, "deletionUserId");
++    const hasLifecycleMarker = Object.hasOwn(payload, "accountLifecycle");
++    const isDeleting = payload.accountLifecycle === "deleting";
++    const invalidLifecycle = hasLifecycleMarker && payload.accountLifecycle !== "active" && !isDeleting;
++
++    if (hasDeletionSubject || isDeleting || invalidLifecycle) {
++      // Whitelist only the non-identifying recovery marker and expiry. Do not
++      // forward unexpected fields from a malformed restricted projection.
++      const safePayload: Record<string, unknown> = { user: {} };
++      if (isDeleting) safePayload.accountLifecycle = "deleting";
++      if (typeof payload.expires === "string") safePayload.expires = payload.expires;
++      return jsonResponseLike(response, safePayload);
++    }
++
++    return response;
++  };
++}
++
++export const GET = wrapAuthHandler(handlers.GET as (request: Request) => Promise<Response>);
++export const POST = wrapAuthHandler(handlers.POST as (request: Request) => Promise<Response>);
+diff --git a/src/auth.ts b/src/auth.ts
+index 90cf021..ff1df1a 100644
+--- a/src/auth.ts
++++ b/src/auth.ts
+@@ -55,0 +56 @@ export const authConfig = {
++          privacyDeletionPending: user.privacy_deletion_requested_at != null,
+@@ -78,0 +80 @@ export const authConfig = {
++            token.privacyDeletionPending = row.privacy_deletion_requested_at != null;
+@@ -92,0 +95 @@ export const authConfig = {
++        token.privacyDeletionPending = current.privacy_deletion_requested_at != null;
+@@ -101,0 +105,13 @@ export const authConfig = {
++      if (token.privacyDeletionPending === true) {
++        // Keep the JWT subject internal so this account can resume its pending
++        // deletion. Normal route guards receive no usable user id or PII.
++        const restrictedUser = session.user as unknown as Record<string, unknown>;
++        delete restrictedUser.id;
++        delete restrictedUser.email;
++        delete restrictedUser.name;
++        delete restrictedUser.image;
++        delete restrictedUser.authVersion;
++        session.deletionUserId = token.sub;
++        session.accountLifecycle = "deleting";
++        return session;
++      }
+diff --git a/src/lib/account-deletion-recovery.ts b/src/lib/account-deletion-recovery.ts
+new file mode 100644
+index 0000000..705b639
+--- /dev/null
++++ b/src/lib/account-deletion-recovery.ts
+@@ -0,0 +1,19 @@
++import { sql } from "@/lib/db/neon";
++
++export type AccountDeletionUiState = "none" | "pending" | "confirmation" | "complete";
++
++/** Status only: this projection never returns operation ids, provider state, or account data. */
++export async function getAccountDeletionUiState(actorUserId: string): Promise<AccountDeletionUiState> {
++  const rows = await sql`SELECT d.status,
++    d.account_role='owner' AND NOT d.shared_workspace_confirmed AND EXISTS (
++      SELECT 1 FROM public.businesses b WHERE b.owner_user_id=d.actor_user_id AND (
++        EXISTS (SELECT 1 FROM public.business_members bm WHERE bm.business_id=b.id AND bm.user_id<>d.actor_user_id)
++        OR EXISTS (SELECT 1 FROM public.team_invitations i WHERE i.business_id=b.id AND i.status='pending' AND i.expires_at>now())
++      )
++    ) AS confirmation_required
++    FROM public.privacy_account_deletion_operations d WHERE d.actor_user_id=${actorUserId}::uuid LIMIT 1`;
++  const status = rows[0] as { status?: string; confirmation_required?: boolean } | undefined;
++  return status?.status === "complete" ? "complete"
++    : status?.status === "frozen" ? (status.confirmation_required ? "confirmation" : "pending")
++      : "none";
++}
+diff --git a/src/lib/auth-verification.ts b/src/lib/auth-verification.ts
+index 9d72124..742ad08 100644
+--- a/src/lib/auth-verification.ts
++++ b/src/lib/auth-verification.ts
+@@ -41,6 +41,6 @@ export async function createEmailVerification(email: string, userId: string, cal
+-  await sql`
+-    INSERT INTO public.email_verification_tokens (user_id, token_hash, expires_at, callback_url)
+-    VALUES (${userId}, ${hashToken(token)}, now() + interval '24 hours', ${callbackUrl})
+-    ON CONFLICT (user_id) DO UPDATE SET token_hash = EXCLUDED.token_hash,
+-      expires_at = EXCLUDED.expires_at, callback_url = EXCLUDED.callback_url, created_at = now()
+-  `;
++  const inserted = await sql`SELECT public.auth_create_email_verification_token(
++    ${userId}, ${hashToken(token)}, ${callbackUrl}
++  ) AS created`;
++  if ((inserted[0] as { created?: boolean } | undefined)?.created !== true) {
++    throw new Error("auth_token_creation_denied");
++  }
+@@ -53,6 +53,6 @@ export async function createPasswordReset(email: string, userId: string, callbac
+-  await sql`
+-    INSERT INTO public.password_reset_tokens (user_id, token_hash, expires_at, callback_url)
+-    VALUES (${userId}, ${hashToken(token)}, now() + interval '1 hour', ${callbackUrl})
+-    ON CONFLICT (user_id) DO UPDATE SET token_hash = EXCLUDED.token_hash,
+-      expires_at = EXCLUDED.expires_at, callback_url = EXCLUDED.callback_url, created_at = now()
+-  `;
++  const inserted = await sql`SELECT public.auth_create_password_reset_token(
++    ${userId}, ${hashToken(token)}, ${callbackUrl}
++  ) AS created`;
++  if ((inserted[0] as { created?: boolean } | undefined)?.created !== true) {
++    throw new Error("auth_token_creation_denied");
++  }
+@@ -72,10 +72 @@ export async function verifyEmailToken(token: string): Promise<{ ok: boolean; ca
+-  const rows = await sql`
+-    WITH consumed AS (
+-      DELETE FROM public.email_verification_tokens
+-      WHERE token_hash = ${tokenHash} AND expires_at > now()
+-      RETURNING user_id, callback_url
+-    ), updated AS (
+-      UPDATE public.users u SET email_verified = now(), updated_at = now()
+-      FROM consumed c WHERE u.id = c.user_id RETURNING c.callback_url
+-    ) SELECT callback_url FROM updated
+-  `;
++  const rows = await sql`SELECT * FROM public.auth_consume_email_verification_token(${tokenHash})`;
+@@ -96,11 +87 @@ export async function consumePasswordReset(token: string, passwordHash: string):
+-  const rows = await sql`
+-    WITH consumed AS (
+-      DELETE FROM public.password_reset_tokens t USING public.users u
+-      WHERE t.user_id = u.id AND t.token_hash = ${tokenHash} AND t.expires_at > now()
+-        AND u.password_hash IS NOT NULL
+-      RETURNING t.user_id, t.callback_url
+-    ), updated AS (
+-      UPDATE public.users u SET password_hash = ${passwordHash}, auth_version = u.auth_version + 1, updated_at = now()
+-      FROM consumed c WHERE u.id = c.user_id RETURNING c.callback_url
+-    ) SELECT callback_url FROM updated
+-  `;
++  const rows = await sql`SELECT * FROM public.auth_consume_password_reset_token(${tokenHash}, ${passwordHash})`;
+diff --git a/src/lib/business-context.ts b/src/lib/business-context.ts
+index e95343b..e811c7a 100644
+--- a/src/lib/business-context.ts
++++ b/src/lib/business-context.ts
+@@ -42,0 +43 @@ export async function resolveBusinessContext(
++        INNER JOIN public.users owner ON owner.id = b.owner_user_id
+@@ -44,0 +46,2 @@ export async function resolveBusinessContext(
++          AND actor.privacy_deletion_requested_at IS NULL
++          AND owner.privacy_deletion_requested_at IS NULL
+@@ -57,0 +61 @@ export async function resolveBusinessContext(
++        INNER JOIN public.users owner ON owner.id = b.owner_user_id
+@@ -58,0 +63,2 @@ export async function resolveBusinessContext(
++          AND actor.privacy_deletion_requested_at IS NULL
++          AND owner.privacy_deletion_requested_at IS NULL
+diff --git a/src/lib/db/businesses.ts b/src/lib/db/businesses.ts
+index b3e818a..a3029e8 100644
+--- a/src/lib/db/businesses.ts
++++ b/src/lib/db/businesses.ts
+@@ -2 +1,0 @@ import { sql } from "@/lib/db/neon";
+-import { ensureUserFromOAuth } from "@/lib/db/users";
+@@ -44,0 +44 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow
++    INNER JOIN public.users owner ON owner.id = public.businesses.owner_user_id
+@@ -46 +46,3 @@ export async function getBusinessForUser(userId: string): Promise<DbBusinessRow
+-    WHERE public.businesses.owner_user_id = actor.id OR bm.user_id = actor.id
++    WHERE actor.privacy_deletion_requested_at IS NULL
++      AND owner.privacy_deletion_requested_at IS NULL
++      AND (public.businesses.owner_user_id = actor.id OR bm.user_id = actor.id)
+@@ -55,10 +57 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
+-  let ownerUser = await resolveOwnerUser(userId);
+-
+-  if (!ownerUser?.id && userId.includes("@")) {
+-    await ensureUserFromOAuth({
+-      email: userId,
+-      name: null,
+-      image: null,
+-    });
+-    ownerUser = await resolveOwnerUser(userId);
+-  }
++  const ownerUser = await resolveOwnerUser(userId);
+@@ -73,0 +67,8 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
++    const defaults = await sql`SELECT public.privacy_ensure_business_defaults(
++      ${existing.id}, ${resolvedUserId}, ${existing.owner_user_id}, ${
++        existing.owner_user_id === resolvedUserId && isPlaceholderBusinessName(existing.name, ownerUser?.email)
++      }
++    ) AS allowed`;
++    if ((defaults[0] as { allowed?: boolean } | undefined)?.allowed !== true) {
++      throw new Error("Workspace is unavailable.");
++    }
+@@ -75,5 +75,0 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
+-      await sql`
+-        UPDATE public.businesses
+-        SET name = '', updated_at = now()
+-        WHERE id = ${existing.id}
+-      `;
+@@ -82 +77,0 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
+-    await ensureBusinessDefaults(existing.id, existing.owner_user_id);
+@@ -102 +97,6 @@ export async function getOrCreateBusinessForUser(userId: string): Promise<DbBusi
+-  await ensureBusinessDefaults(created.id, created.owner_user_id);
++  const defaults = await sql`SELECT public.privacy_ensure_business_defaults(
++    ${created.id}, ${resolvedUserId}, ${created.owner_user_id}, false
++  ) AS allowed`;
++  if ((defaults[0] as { allowed?: boolean } | undefined)?.allowed !== true) {
++    throw new Error("Workspace is unavailable.");
++  }
+@@ -184,27 +183,0 @@ export async function upsertBusinessAgentStatus(
+-async function ensureBusinessDefaults(businessId: string, userId: string): Promise<void> {
+-  await sql`
+-    INSERT INTO public.business_members (business_id, user_id, role)
+-    VALUES (${businessId}, ${userId}, 'owner')
+-    ON CONFLICT (business_id, user_id) DO NOTHING
+-  `;
+-
+-  await ensureDefaultBusinessAgents(businessId);
+-}
+-
+-export async function ensureDefaultBusinessAgents(businessId: string): Promise<void> {
+-  const defaults: ReadonlyArray<{ agentId: string; status: string }> = [
+-    { agentId: "review_replies", status: "inactive" },
+-    { agentId: "review_booster", status: "inactive" },
+-    { agentId: "speed_to_lead", status: "inactive" },
+-  ];
+-
+-  await sql`
+-    INSERT INTO public.business_agents (business_id, agent_id, status, activated_at, deactivated_at)
+-    VALUES
+-      (${businessId}, ${defaults[0].agentId}, ${defaults[0].status}, NULL, now()),
+-      (${businessId}, ${defaults[1].agentId}, ${defaults[1].status}, NULL, now()),
+-      (${businessId}, ${defaults[2].agentId}, ${defaults[2].status}, NULL, now())
+-    ON CONFLICT (business_id, agent_id) DO NOTHING
+-  `;
+-}
+-
+@@ -223,0 +197 @@ async function resolveOwnerUser(userId: string): Promise<{
++        AND u.privacy_deletion_requested_at IS NULL
+@@ -240,0 +215 @@ async function resolveOwnerUser(userId: string): Promise<{
++      AND u.privacy_deletion_requested_at IS NULL
+diff --git a/src/lib/db/users.ts b/src/lib/db/users.ts
+index e95e985..cddecc8 100644
+--- a/src/lib/db/users.ts
++++ b/src/lib/db/users.ts
+@@ -10,0 +11 @@ export type DbUserRow = {
++  privacy_deletion_requested_at?: string | null;
+@@ -15 +16,2 @@ export async function findUserByEmail(email: string): Promise<DbUserRow | null>
+-    SELECT id, auth_version, email, name, password_hash, image, email_verified
++    SELECT id, auth_version, email, name, password_hash, image, email_verified,
++      privacy_deletion_requested_at
+@@ -24 +26 @@ export async function findUserByEmail(email: string): Promise<DbUserRow | null>
+-export async function findUserById(id: string): Promise<Pick<DbUserRow, "id" | "auth_version"> | null> {
++export async function findUserById(id: string): Promise<Pick<DbUserRow, "id" | "auth_version" | "privacy_deletion_requested_at"> | null> {
+@@ -26 +28 @@ export async function findUserById(id: string): Promise<Pick<DbUserRow, "id" | "
+-    SELECT id, auth_version
++    SELECT id, auth_version, privacy_deletion_requested_at
+@@ -31 +33 @@ export async function findUserById(id: string): Promise<Pick<DbUserRow, "id" | "
+-  const row = rows[0] as { id: string; auth_version: number } | undefined;
++  const row = rows[0] as { id: string; auth_version: number; privacy_deletion_requested_at: string | null } | undefined;
+@@ -40 +42 @@ export async function ensureUserFromOAuth(input: {
+-}): Promise<{ id: string; auth_version: number }> {
++}): Promise<{ id: string; auth_version: number; privacy_deletion_requested_at: string | null }> {
+@@ -42,14 +44,27 @@ export async function ensureUserFromOAuth(input: {
+-    INSERT INTO public.users (email, name, image, email_verified)
+-    VALUES (${input.email}, ${input.name}, ${input.image}, now())
+-    ON CONFLICT (email) DO UPDATE SET
+-      name = COALESCE(EXCLUDED.name, public.users.name),
+-      image = COALESCE(EXCLUDED.image, public.users.image),
+-      email_verified = COALESCE(public.users.email_verified, EXCLUDED.email_verified),
+-      updated_at = now()
+-    RETURNING id, auth_version
+-  `;
+-  const { id, auth_version } = rows[0] as { id: string; auth_version: number };
+-  await sql`
+-    INSERT INTO public.profiles (id, full_name)
+-    VALUES (${id}, ${input.name})
+-    ON CONFLICT (id) DO NOTHING
++    WITH oauth_user AS (
++      INSERT INTO public.users (email, name, image, email_verified)
++      VALUES (${input.email}, ${input.name}, ${input.image}, now())
++      ON CONFLICT (email) DO UPDATE SET
++        name = COALESCE(EXCLUDED.name, public.users.name),
++        image = COALESCE(EXCLUDED.image, public.users.image),
++        email_verified = COALESCE(public.users.email_verified, EXCLUDED.email_verified),
++        updated_at = now()
++      WHERE public.users.privacy_deletion_requested_at IS NULL
++      RETURNING id, auth_version, privacy_deletion_requested_at
++    ), profile AS (
++      INSERT INTO public.profiles (id, full_name)
++      SELECT id, ${input.name} FROM oauth_user
++      ON CONFLICT (id) DO NOTHING
++      RETURNING id
++    ), deleting_user AS (
++      SELECT id, auth_version, privacy_deletion_requested_at
++      FROM public.users
++      WHERE lower(email) = lower(${input.email})
++        AND privacy_deletion_requested_at IS NOT NULL
++        AND NOT EXISTS (SELECT 1 FROM oauth_user)
++      LIMIT 1
++    )
++    SELECT id, auth_version, privacy_deletion_requested_at FROM oauth_user
++    UNION ALL
++    SELECT id, auth_version, privacy_deletion_requested_at FROM deleting_user
++    LIMIT 1
+@@ -57 +72,3 @@ export async function ensureUserFromOAuth(input: {
+-  return { id, auth_version };
++  const row = rows[0] as { id: string; auth_version: number; privacy_deletion_requested_at: string | null } | undefined;
++  if (!row) throw new Error("oauth_user_unavailable");
++  return row;
+diff --git a/src/proxy.ts b/src/proxy.ts
+index 492ac52..6edcd36 100644
+--- a/src/proxy.ts
++++ b/src/proxy.ts
+@@ -29,0 +30,4 @@ const proxy = auth(async (req) => {
++  const isRestrictedDeletionSession =
++    req.auth?.accountLifecycle === "deleting" &&
++    typeof req.auth.deletionUserId === "string" &&
++    !sessionUser?.id;
+@@ -37,0 +42,20 @@ const proxy = auth(async (req) => {
++  if (isRestrictedDeletionSession) {
++    // Only Auth.js session/sign-in plumbing and the recovery screen remain
++    // reachable while deletion is pending.
++    const isAuthJsEndpoint = /^\/api\/auth\/(?:csrf|providers|session|signin(?:\/.*)?|callback(?:\/.*)?|signout|error|verify-request)$/.test(pathname);
++    if (isAuthJsEndpoint) return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
++    if (pathname.startsWith("/api/")) {
++      if (pathname === "/api/privacy/delete" && req.method === "POST") {
++        return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
++      }
++      return withSecurityHeaders(NextResponse.json({ error: "Restricted account session" }, { status: 403 }), nonce);
++    }
++    if (pathname === "/account/deletion") {
++      return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
++    }
++    if (pathname === "/login" || pathname.startsWith("/login/") || pathname === "/signup" || pathname.startsWith("/signup/")) {
++      return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
++    }
++    return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
++  }
++
+diff --git a/src/types/next-auth.d.ts b/src/types/next-auth.d.ts
+index fc11fba..19a1a07 100644
+--- a/src/types/next-auth.d.ts
++++ b/src/types/next-auth.d.ts
+@@ -8,0 +9,2 @@ declare module "next-auth" {
++    deletionUserId?: string;
++    accountLifecycle?: "deleting";
+@@ -11,0 +14 @@ declare module "next-auth" {
++    privacyDeletionPending?: boolean;
+@@ -17,0 +21 @@ declare module "next-auth/jwt" {
++    privacyDeletionPending?: boolean;
+diff --git a/tests/a02-business-context.test.mts b/tests/a02-business-context.test.mts
+index e3e7758..08769dd 100644
+--- a/tests/a02-business-context.test.mts
++++ b/tests/a02-business-context.test.mts
+@@ -69,0 +70 @@ test("business lookup seeds canonical owner membership and does not edit teammat
++    if (query.includes("privacy_ensure_business_defaults")) return [{ allowed: true }];
+@@ -76 +76,0 @@ test("business lookup seeds canonical owner membership and does not edit teammat
+-    "@/lib/db/users": { ensureUserFromOAuth: async () => { throw new Error("must not recreate"); } },
+@@ -81,4 +81,5 @@ test("business lookup seeds canonical owner membership and does not edit teammat
+-  const insert = db.calls.find(call => call.query.includes("INSERT INTO public.business_members"));
+-  assert.ok(insert);
+-  assert.deepEqual(insert.values, [businessId, owner]);
+-  assert.equal(db.calls.some(call => call.query.includes("UPDATE public.businesses")), false);
++  const guardedDefaults = db.calls.find(call => call.query.includes("privacy_ensure_business_defaults"));
++  assert.ok(guardedDefaults);
++  assert.deepEqual(guardedDefaults.values, [businessId, member, owner, false]);
++  assert.equal(db.calls.some(call => call.query.includes("UPDATE public.businesses")), false,
++    "placeholder cleanup is inside the guarded SQL function");
+diff --git a/tests/a11-activation-auth-team-postgres.test.mts b/tests/a11-activation-auth-team-postgres.test.mts
+new file mode 100644
+index 0000000..df981a8
+--- /dev/null
++++ b/tests/a11-activation-auth-team-postgres.test.mts
+@@ -0,0 +1,147 @@
++import assert from "node:assert/strict";
++import { execFileSync, spawn } from "node:child_process";
++import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
++import { join, resolve, sep } from "node:path";
++import { createServer } from "node:net";
++import test from "node:test";
++import { loadTs } from "./auth-test-harness.mts";
++
++const root = process.cwd();
++const binDir = process.env.A11_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.PG_BIN;
++const pgExe = (name: string) => process.platform === "win32" ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`) : binDir ? join(binDir, name) : name;
++let port = 0;
++function psql(statement: string): string {
++  return execFileSync(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-c", statement], { encoding: "utf8" }).trim();
++}
++function psqlAsync(statement: string): Promise<string> {
++  return new Promise((resolvePromise, reject) => {
++    const child = spawn(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-c", statement], { stdio: ["ignore", "pipe", "pipe"] });
++    let stdout = ""; let stderr = "";
++    child.stdout.setEncoding("utf8").on("data", (chunk: string) => { stdout += chunk; });
++    child.stderr.setEncoding("utf8").on("data", (chunk: string) => { stderr += chunk; });
++    child.once("error", reject);
++    child.once("close", (code) => code === 0 ? resolvePromise(stdout.trim()) : reject(new Error(stderr)));
++  });
++}
++function psqlFile(filename: string): string {
++  return execFileSync(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", filename], { encoding: "utf8" }).trim();
++}
++function sqlString(value: unknown): string { return `'${String(value).replaceAll("'", "''")}'`; }
++function dbAdapter() {
++  return async (strings: TemplateStringsArray, ...values: unknown[]) => {
++    const query = strings.reduce((out, part, index) => out + part + (index < values.length ? sqlString(values[index]) : ""), "");
++    if (/^\s*WITH\b/i.test(query)) {
++      const output = psql(query);
++      if (!output) return [];
++      const [id, auth_version, privacy_deletion_requested_at] = output.split("|");
++      return [{ id, auth_version: Number(auth_version), privacy_deletion_requested_at }];
++    }
++    const output = psql(`SELECT row_to_json(activation_query)::text FROM (${query}) activation_query`);
++    return output ? output.split(/\r?\n/).map((line) => JSON.parse(line) as Record<string, unknown>) : [];
++  };
++}
++async function waitForRaceTransaction(): Promise<void> {
++  const deadline = Date.now() + 10_000;
++  while (Date.now() < deadline) {
++    if (psql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE query LIKE '%race-token%' AND state='active' AND wait_event='PgSleep')") === "t") return;
++    await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
++  }
++  throw new Error("Timed out waiting for the team write to hold its admission locks");
++}
++
++test("A11 auth token and team admission SQL guard freeze races in disposable PostgreSQL", async () => {
++  const portServer = createServer();
++  await new Promise<void>((resolvePort, rejectPort) => {
++    portServer.once("error", rejectPort);
++    portServer.listen(0, "127.0.0.1", () => { port = (portServer.address() as { port: number }).port; portServer.close((error) => error ? rejectPort(error) : resolvePort()); });
++  });
++  const testRoot = resolve(root, ".next"); mkdirSync(testRoot, { recursive: true });
++  const dir = mkdtempSync(join(testRoot, "a11-auth-team-pg-"));
++  assert.ok(resolve(dir).startsWith(`${testRoot}${sep}`));
++  const dataDir = join(dir, "data"); let started = false;
++  try {
++    execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
++    appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
++    execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", join(dir, "postgres.log"), "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
++    started = true;
++    const migrationsDir = join(root, "neon/migrations");
++    for (const file of readdirSync(migrationsDir).filter((name) => /^(?:00[1-9]|01[0-7])_.*\.sql$/.test(name)).sort()) psql(readFileSync(join(migrationsDir, file), "utf8"));
++    for (const file of ["019_billing_lifecycle.sql", "020_account_recovery.sql", "021_workspace_invitations.sql", "031_google_location_selection.sql", "032_workspace_bootstrap.sql", "026_privacy_account_lifecycle.sql"]) psqlFile(join(migrationsDir, file));
++    psqlFile(join(root, "docs/tasks/A11_ACTIVATION_AUTH_TEAM.sql"));
++
++    const owner = "00000000-0000-4000-8000-000000000101";
++    const member = "00000000-0000-4000-8000-000000000102";
++    const biz = "00000000-0000-4000-8000-000000000201";
++    psql(`INSERT INTO users(id,email,password_hash) VALUES ('${owner}','owner@example.test','hash'),('${member}','member@example.test','hash');
++      INSERT INTO businesses(id,owner_user_id,name) VALUES ('${biz}','${owner}','workspace');
++      INSERT INTO business_members(business_id,user_id,role) VALUES ('${biz}','${member}','member');
++      INSERT INTO email_verification_tokens(user_id,token_hash,expires_at,callback_url) VALUES ('${owner}','verify-hash',now()+interval '1 day','/dashboard');
++      INSERT INTO password_reset_tokens(user_id,token_hash,expires_at,callback_url) VALUES ('${owner}','reset-hash',now()+interval '1 day','/reset-password');`);
++
++    const slowInvitation = psqlAsync(`BEGIN;
++      INSERT INTO team_invitations(business_id,invited_by,email,role,token_hash,expires_at)
++        VALUES ('${biz}','${owner}','new@example.test','member','race-token',now()+interval '1 day');
++      SELECT pg_sleep(1.2);
++      COMMIT;
++      SELECT 'committed';`);
++    await waitForRaceTransaction();
++    const freezeResult = psql(`SELECT result FROM privacy_begin_account_deletion('${owner}',false)`);
++    assert.equal(await slowInvitation, "committed");
++    assert.equal(freezeResult, "team_confirmation_required",
++      "freeze observes the committed invitation before account freeze, with no lock cycle");
++    assert.equal(psql(`SELECT privacy_deletion_requested_at IS NULL FROM users WHERE id='${owner}'`), "t");
++    assert.equal(psql(`SELECT team_cleanup_invitation((SELECT id FROM team_invitations WHERE token_hash='race-token'),'race-token')`),"t",
++      "email delivery failure cleanup succeeds while owner and inviter remain active");
++    assert.equal(psql(`SELECT public.auth_create_email_verification_token('${owner}','new-verify','/x')`), "t");
++    assert.equal(psql(`SELECT public.auth_create_password_reset_token('${owner}','new-reset','/x')`), "t");
++
++    psql(`INSERT INTO team_invitations(business_id,invited_by,email,role,token_hash,expires_at)
++      VALUES ('${biz}','${owner}','cleanup-frozen@example.test','member','cleanup-frozen-token',now()+interval '1 day');`);
++
++    const begin = psql(`SELECT operation_id::text FROM privacy_begin_account_deletion('${owner}',true)`);
++    assert.ok(begin);
++    let cleanupError="";
++    try { psql(`SELECT team_cleanup_invitation((SELECT id FROM team_invitations WHERE token_hash='cleanup-frozen-token'),'cleanup-frozen-token')`); }
++    catch(error) { cleanupError=String(error); }
++    assert.match(cleanupError,/privacy_account_frozen/,"cleanup cannot mutate a frozen owner's invitation outside the finalizer");
++    assert.equal(psql(`SELECT count(*) FROM public.auth_consume_email_verification_token('new-verify')`), "0");
++    assert.equal(psql(`SELECT count(*) FROM public.auth_consume_password_reset_token('new-reset','replacement-hash')`), "0");
++    assert.equal(psql(`SELECT public.auth_create_email_verification_token('${owner}','blocked-verify','/x')`), "f");
++    assert.equal(psql(`SELECT public.auth_create_password_reset_token('${owner}','blocked-reset','/x')`), "f");
++    assert.equal(psql(`SELECT password_hash FROM users WHERE id='${owner}'`), "hash", "frozen reset token cannot change credentials");
++
++    const oauthFrozen = "00000000-0000-4000-8000-000000000103";
++    psql(`INSERT INTO users(id,email,name) VALUES('${oauthFrozen}','oauth-frozen@example.test','Original name');
++      INSERT INTO profiles(id,full_name) VALUES('${oauthFrozen}','Original profile');
++      UPDATE users SET privacy_deletion_requested_at=now() WHERE id='${oauthFrozen}';`);
++    const userApi = loadTs<typeof import("../src/lib/db/users.js")>("src/lib/db/users.ts", { overrides: { "@/lib/db/neon": { sql: dbAdapter() } } });
++    const oauthResult = await userApi.ensureUserFromOAuth({ email: "oauth-frozen@example.test", name: "Provider changed name", image: "provider-image" });
++    assert.equal(oauthResult.id, oauthFrozen);
++    assert.ok(oauthResult.privacy_deletion_requested_at, "OAuth reconnect identifies the restricted account");
++    assert.equal(psql(`SELECT name FROM users WHERE id='${oauthFrozen}'`), "Original name", "OAuth reauthentication cannot update the frozen profile");
++    assert.equal(psql(`SELECT full_name FROM profiles WHERE id='${oauthFrozen}'`), "Original profile");
++
++    const contextApi = loadTs<typeof import("../src/lib/business-context.js")>("src/lib/business-context.ts", { overrides: { "@/lib/db/neon": { sql: dbAdapter() } } });
++    assert.equal(await contextApi.resolveBusinessContext(member, biz), null, "selected business context hides a frozen owner from a surviving member");
++    assert.equal(await contextApi.resolveBusinessContext(member), null, "default business context also hides a frozen owner");
++    const businessApi = loadTs<typeof import("../src/lib/db/businesses.js")>("src/lib/db/businesses.ts", { overrides: { "@/lib/db/neon": { sql: dbAdapter() } } });
++    assert.equal(await businessApi.getBusinessForUser(member), null, "direct business lookup denies frozen-owner workspaces");
++    await assert.rejects(businessApi.getOrCreateBusinessForUser(member), /Could not resolve user/,
++      "a member of a frozen workspace cannot be bootstrapped into a new workspace by an email or membership fallback");
++
++    let insertionError = "";
++    try { psql(`INSERT INTO team_invitations(business_id,invited_by,email,role,token_hash,expires_at) VALUES ('${biz}','${owner}','blocked@example.test','member','blocked-token',now()+interval '1 day')`); }
++    catch (error) { insertionError = String(error); }
++    assert.match(insertionError, /privacy_account_frozen/);
++
++    const memberOperation = psql(`SELECT operation_id::text FROM privacy_begin_account_deletion('${member}',false)`);
++    assert.ok(memberOperation);
++    let memberError = "";
++    try { psql(`INSERT INTO business_members(business_id,user_id,role) VALUES ('${biz}','${member}','member') ON CONFLICT DO NOTHING`); }
++    catch (error) { memberError = String(error); }
++    assert.match(memberError, /privacy_account_frozen/, "a deleting member cannot be re-admitted to an active owner workspace");
++  } finally {
++    if (started) execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-m", "immediate", "-w", "stop"], { stdio: "ignore" });
++    rmSync(dir, { recursive: true, force: true });
++  }
++});
+diff --git a/tests/a11-auth-client-session.test.mts b/tests/a11-auth-client-session.test.mts
+new file mode 100644
+index 0000000..5513b08
+--- /dev/null
++++ b/tests/a11-auth-client-session.test.mts
+@@ -0,0 +1,89 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { loadTs } from "./auth-test-harness.mts";
++
++function loadRoute(responder: (request: Request) => Promise<Response>) {
++  return loadTs<{
++    GET(request: Request): Promise<Response>;
++    POST(request: Request): Promise<Response>;
++  }>("src/app/api/auth/[...nextauth]/route.ts", {
++    overrides: { "@/auth": { handlers: { GET: responder, POST: responder } } },
++  });
++}
++
++test("Auth.js client session responses hide restricted identifiers for GET and POST", async () => {
++  const restricted = JSON.stringify({
++    user: { id: "user-uuid", email: "private@example.test", name: "Private Name", image: "https://example.test/avatar" },
++    deletionUserId: "user-uuid",
++    accountLifecycle: "deleting",
++    expires: "2030-01-01T00:00:00.000Z",
++  });
++  const headers = new Headers({ "content-type": "application/json", "x-auth-marker": "preserved" });
++  headers.append("set-cookie", "auth.session=rotated; Path=/; HttpOnly");
++  headers.append("set-cookie", "auth.csrf=rotated; Path=/; SameSite=Lax");
++  const route = loadRoute(async () => new Response(restricted, { status: 200, headers }));
++
++  for (const [method, pathname] of [["GET", "/api/auth/session"], ["POST", "/api/auth/session/"]] as const) {
++    const response = await route[method](new Request(`https://app.example${pathname}`));
++    assert.equal(response.status, 200);
++    assert.equal(response.headers.get("x-auth-marker"), "preserved");
++    const getSetCookie = (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
++    assert.deepEqual(getSetCookie?.call(response.headers), [
++      "auth.session=rotated; Path=/; HttpOnly",
++      "auth.csrf=rotated; Path=/; SameSite=Lax",
++    ]);
++    assert.deepEqual(await response.json(), {
++      user: {},
++      accountLifecycle: "deleting",
++      expires: "2030-01-01T00:00:00.000Z",
++    });
++  }
++});
++
++test("bodyless session statuses pass through without constructing an invalid response", async () => {
++  const route = loadRoute(async () => new Response(null, { status: 204, headers: { "x-auth-marker": "bodyless" } }));
++  const response = await route.GET(new Request("https://app.example/api/auth/session"));
++  assert.equal(response.status, 204);
++  assert.equal(response.body, null);
++  assert.equal(response.headers.get("x-auth-marker"), "bodyless");
++});
++
++test("active session responses remain byte-for-byte unchanged", async () => {
++  const body = JSON.stringify({ user: { id: "active-id", email: "active@example.test", name: "Active" }, expires: "2030-01-01T00:00:00.000Z" });
++  const route = loadRoute(async () => new Response(body, { status: 207, headers: { "content-type": "application/json", "x-auth-marker": "active" } }));
++  const response = await route.GET(new Request("https://app.example/api/auth/session?update=1"));
++  assert.equal(response.status, 207);
++  assert.equal(response.headers.get("x-auth-marker"), "active");
++  assert.equal(await response.text(), body);
++});
++
++test("anonymous Auth.js session responses remain JSON null for GET and POST", async () => {
++  const route = loadRoute(async () => new Response("null", { status: 200, headers: { "content-type": "application/json" } }));
++  for (const method of ["GET", "POST"] as const) {
++    const response = await route[method](new Request("https://app.example/api/auth/session", { method }));
++    assert.equal(await response.text(), "null");
++  }
++});
++
++test("unexpected or malformed session projections fail closed", async () => {
++  const cases = [
++    { body: JSON.stringify({ user: { id: "leaked", email: "private@example.test" }, deletionUserId: 42, extra: "private" }), expected: { user: {} } },
++    { body: "not-json-with-private-user-id", expected: null },
++  ];
++  for (const { body, expected } of cases) {
++    const route = loadRoute(async () => new Response(body, { status: 200, headers: { "content-type": "application/json", "x-auth-marker": "preserved" } }));
++    const response = await route.GET(new Request("https://app.example/api/auth/session"));
++    assert.deepEqual(await response.json(), expected);
++    assert.equal(response.headers.get("x-auth-marker"), "preserved");
++  }
++});
++
++test("non-session Auth.js actions such as sign-out are passed through unchanged", async () => {
++  const body = "csrf=ok";
++  const route = loadRoute(async () => new Response(body, { status: 303, headers: { location: "https://app.example/login", "set-cookie": "auth.session=; Max-Age=0; Path=/" } }));
++  const response = await route.POST(new Request("https://app.example/api/auth/signout", { method: "POST" }));
++  assert.equal(response.status, 303);
++  assert.equal(response.headers.get("location"), "https://app.example/login");
++  assert.equal(response.headers.get("set-cookie"), "auth.session=; Max-Age=0; Path=/");
++  assert.equal(await response.text(), body);
++});
+diff --git a/tests/a11-auth-restricted-session-contract.test.mts b/tests/a11-auth-restricted-session-contract.test.mts
+new file mode 100644
+index 0000000..fc169b8
+--- /dev/null
++++ b/tests/a11-auth-restricted-session-contract.test.mts
+@@ -0,0 +1,59 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { loadTs } from "./auth-test-harness.mts";
++
++test("frozen credentials and OAuth reauthentication yield a PII-free recovery session", async () => {
++  let frozen = false;
++  let deleted = false;
++  let lookupFails = false;
++  const loaded = loadTs<{ authConfig: { providers: unknown[]; callbacks: {
++    jwt(input: never): Promise<Record<string, unknown> | null>;
++    session(input: never): Promise<Record<string, unknown>>;
++  } } }>("src/auth.ts", { overrides: {
++    "next-auth": { __esModule: true, default: () => ({ handlers: {}, auth: () => undefined, signIn: () => undefined, signOut: () => undefined }) },
++    "next-auth/providers/google": { __esModule: true, default: () => ({ id: "google", type: "oauth" }) },
++    "next-auth/providers/credentials": { __esModule: true, default: (config: unknown) => config },
++    "bcryptjs": { compare: async () => true },
++    "@/lib/db/users": {
++      findUserByEmail: async () => ({ id: "user-1", auth_version: 2, email: "person@example.test", name: "Private Name", password_hash: "hash", image: "private-image", email_verified: "now", privacy_deletion_requested_at: frozen ? "now" : null }),
++      findUserById: async (id: string) => {
++        if (lookupFails) throw new Error("offline");
++        if (deleted && id === "user-1") return null;
++        if (id !== "user-1") return null;
++        return { id, auth_version: 2, privacy_deletion_requested_at: frozen ? "now" : null };
++      },
++      ensureUserFromOAuth: async () => ({ id: "user-1", auth_version: 2, privacy_deletion_requested_at: frozen ? "now" : null }),
++    },
++    "@/lib/auth-rate-limit": { clearCredentialsLoginFailures: async () => {}, isCredentialsLoginRateLimited: async () => false, recordCredentialsLoginFailure: async () => {} },
++    "@/lib/trusted-request-ip": { getTrustedRequestIp: () => "203.0.113.7" },
++    "@/lib/env": { getRequiredEnv: (name: string) => name },
++  } });
++
++  const jwt = loaded.authConfig.callbacks.jwt;
++  const session = loaded.authConfig.callbacks.session;
++  frozen = true;
++  const credentialProvider = loaded.authConfig.providers[1] as { authorize(input: unknown, request: { headers: Headers }): Promise<Record<string, unknown> | null> };
++  const credentialUser = await credentialProvider.authorize({ email: "person@example.test", password: "Strong-password-123!" }, { headers: new Headers() });
++  assert.equal(credentialUser?.privacyDeletionPending, true, "correct frozen credentials may authenticate only into the restricted session");
++  const credentials = await jwt({
++    token: {},
++    user: { ...credentialUser, authVersion: 2 },
++    account: null,
++  } as never);
++  assert.equal(credentials?.privacyDeletionPending, true);
++  const restricted = await session({
++    session: { user: { id: "user-1", email: "person@example.test", name: "Private Name", image: "private-image", authVersion: 2 } },
++    token: credentials,
++  } as never);
++  assert.deepEqual(restricted, { user: {}, deletionUserId: "user-1", accountLifecycle: "deleting" });
++
++  const oauth = await jwt({ token: {}, user: { email: "person@example.test", name: "Changed Name" }, account: { type: "oauth", provider: "google" } } as never);
++  assert.deepEqual(oauth, { sub: "user-1", authVersion: 2, privacyDeletionPending: true });
++  assert.equal(await jwt({ token: credentials, user: undefined, account: null } as never).then((v) => v?.privacyDeletionPending), true);
++
++  deleted = true;
++  assert.equal(await jwt({ token: credentials, user: undefined, account: null } as never), null,
++    "the final user deletion invalidates the old JWT; completion after a lost final response needs a separate reviewed receipt contract");
++  lookupFails = true;
++  assert.equal(await jwt({ token: credentials, user: undefined, account: null } as never), null, "database errors fail closed");
++});
+diff --git a/tests/a11-deletion-recovery-ui.test.mts b/tests/a11-deletion-recovery-ui.test.mts
+new file mode 100644
+index 0000000..d22d733
+--- /dev/null
++++ b/tests/a11-deletion-recovery-ui.test.mts
+@@ -0,0 +1,132 @@
++import assert from "node:assert/strict";
++import { readFileSync } from "node:fs";
++import { createRequire } from "node:module";
++import { resolve } from "node:path";
++import test from "node:test";
++import vm from "node:vm";
++import ts from "typescript";
++
++type VNode = { type: unknown; props: Record<string, unknown> };
++function loadForm(onSignOut: () => Promise<void> = async () => {}) {
++  const file = resolve("src/app/account/deletion/deletion-form.tsx");
++  const compiled = ts.transpileModule(readFileSync(file, "utf8"), {
++    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
++    fileName: file,
++  }).outputText;
++  const hookState: unknown[] = [];
++  let hookIndex = 0;
++  const React = { useState(initial: unknown) {
++    const index = hookIndex++;
++    if (!(index in hookState)) hookState[index] = initial;
++    return [hookState[index], (value: unknown) => { hookState[index] = value; }] as const;
++  } };
++  const jsx = (type: unknown, props: Record<string, unknown>) => ({ type, props });
++  const moduleState: { exports: Record<string, unknown> } = { exports: {} };
++  const nativeRequire = createRequire(file);
++  const requireForModule = ((id: string) => id === "react" ? React
++      : id === "react/jsx-runtime" ? { jsx, jsxs: jsx, Fragment: "fragment" }
++      : id === "next-auth/react" ? { signOut: onSignOut }
++        : nativeRequire(id)) as NodeJS.Require;
++  const execute = vm.runInThisContext(`(function(require,module,exports){${compiled}\n})`, { filename: file }) as
++    (require: NodeJS.Require, module: { exports: Record<string, unknown> }, exports: Record<string, unknown>) => void;
++  execute(requireForModule, moduleState, moduleState.exports);
++  const component = moduleState.exports.default as (props: { initialState: "none" | "pending" | "confirmation" | "complete" }) => VNode;
++  return (initialState: "none" | "pending" | "confirmation" | "complete") => {
++    hookIndex = 0;
++    return component({ initialState });
++  };
++}
++function nodes(node: unknown): VNode[] {
++  if (Array.isArray(node)) return node.flatMap(nodes);
++  if (!node || typeof node !== "object") return [];
++  const current = node as VNode;
++  return [current, ...nodes(current.props.children)];
++}
++function text(node: unknown): string {
++  if (Array.isArray(node)) return node.map(text).join("");
++  if (typeof node === "string" || typeof node === "number") return String(node);
++  if (!node || typeof node !== "object") return "";
++  return text((node as VNode).props.children);
++}
++function control(tree: VNode, tag: string, predicate: (props: Record<string, unknown>) => boolean): VNode {
++  const result = nodes(tree).find((node) => node.type === tag && predicate(node.props));
++  assert.ok(result, `expected ${tag} control`);
++  return result;
++}
++
++test("deletion recovery reload is actionable and keeps 202/409/503/network/200 states safe", async () => {
++  const originalFetch = globalThis.fetch;
++  let signOuts = 0;
++  let navigated = "";
++  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
++  const runResponse = async (initialState: "none" | "pending" | "confirmation", response: Response | Error) => {
++    const Form = loadForm();
++    const fetchImpl = async () => { if (response instanceof Error) throw response; return response; };
++    globalThis.fetch = fetchImpl as typeof fetch;
++    let tree = Form(initialState);
++    if (initialState === "none") {
++      const input = control(tree, "input", (props) => props.id === "deletion-confirmation");
++      (input.props.onChange as (event: unknown) => void)({ target: { value: "DELETE MY DATA" } });
++      tree = Form(initialState);
++    }
++    const activeButton = control(tree, "button", () => true);
++    assert.equal(activeButton.props.disabled, false, "pending page reload keeps retry button enabled");
++    await (activeButton.props.onClick as () => Promise<void>)();
++    tree = Form(initialState);
++    return { tree };
++  };
++
++  try {
++    const pendingPage = loadForm()("pending");
++    const retry = control(pendingPage, "button", () => true);
++    assert.match(text(retry.props.children), /Retry deletion/);
++    assert.equal(retry.props.disabled, false, "server-proven frozen operation pre-fills the explicit retry phrase");
++
++    const accepted = await runResponse("pending", Response.json({ ok: false, recoverable: true }, { status: 202 }));
++    assert.match(text(accepted.tree), /still processing/);
++    assert.match(text(control(accepted.tree, "button", () => true).props.children), /Retry deletion/);
++
++    let confirmationResponses = 0;
++    globalThis.fetch = (async () => ++confirmationResponses === 1
++      ? Response.json({ error: "Confirm workspace deletion", confirmationRequired: true }, { status: 409 })
++      : Response.json({ ok: false, recoverable: true }, { status: 202 })) as typeof fetch;
++    const Form = loadForm(); let tree = Form("none");
++    const confirmationInput = control(tree, "input", (props) => props.id === "deletion-confirmation");
++    (confirmationInput.props.onChange as (event: unknown) => void)({ target: { value: "DELETE MY DATA" } });
++    tree = Form("none");
++    await (control(tree, "button", () => true).props.onClick as () => Promise<void>)();
++    tree = Form("none");
++    assert.match(text(tree), /workspace and its team data/);
++    const checkbox = control(tree, "input", (props) => props.type === "checkbox");
++    (checkbox.props.onChange as (event: unknown) => void)({ target: { checked: true } });
++    tree = Form("none");
++    assert.equal(control(tree, "button", () => true).props.disabled, false);
++    await (control(tree, "button", () => true).props.onClick as () => Promise<void>)();
++    tree = Form("none");
++    assert.match(text(tree), /still processing/);
++
++    const unavailable = await runResponse("pending", Response.json({ error: "temporarily unavailable" }, { status: 503 }));
++    assert.match(text(unavailable.tree), /temporarily unavailable/);
++    assert.match(text(control(unavailable.tree, "button", () => true).props.children), /Retry deletion/);
++
++    const lost = await runResponse("pending", new Error("connection lost"));
++    assert.match(text(lost.tree), /could not confirm the result/);
++    assert.match(text(control(lost.tree, "button", () => true).props.children), /Retry deletion/);
++
++    const expired = await runResponse("pending", Response.json({ error: "Unauthorized" }, { status: 401 }));
++    assert.match(text(expired.tree), /session ended before we could confirm/);
++    assert.equal(control(expired.tree, "button", () => true).props.disabled, true,
++      "a missing-user session cannot retry or silently start a new account");
++
++    globalThis.fetch = (async () => Response.json({ ok: true }, { status: 200 })) as typeof fetch;
++    Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { replace: (path: string) => { navigated = path; } } } });
++    const successForm = loadForm(async () => { signOuts++; }); const completedTree = successForm("pending");
++    await (control(completedTree, "button", () => true).props.onClick as () => Promise<void>)();
++    assert.equal(signOuts, 1, "confirmed deletion signs out Auth.js");
++    assert.equal(navigated, "/", "confirmed deletion signs out before leaving the recovery view");
++  } finally {
++    globalThis.fetch = originalFetch;
++    if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
++    else Reflect.deleteProperty(globalThis, "window");
++  }
++});
+diff --git a/tests/a11-restricted-proxy-contract.test.mts b/tests/a11-restricted-proxy-contract.test.mts
+new file mode 100644
+index 0000000..d9818f2
+--- /dev/null
++++ b/tests/a11-restricted-proxy-contract.test.mts
+@@ -0,0 +1,36 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { loadTs } from "./auth-test-harness.mts";
++
++class FakeNextResponse extends Response {
++  static next() { return new FakeNextResponse("next"); }
++  static redirect(url: URL, status = 307) { return new FakeNextResponse(null, { status, headers: { Location: url.href } }); }
++  static rewrite(url: URL) { return new FakeNextResponse(url.href); }
++  static json(value: unknown, init?: ResponseInit) { return new FakeNextResponse(JSON.stringify(value), { ...init, headers: { "Content-Type": "application/json", ...(init?.headers as Record<string, string> | undefined) } }); }
++}
++
++test("restricted session reaches recovery, deletion retry, and Auth.js only", async () => {
++  const loaded = loadTs<{ proxy: (request: unknown) => Promise<Response> }>("src/proxy.ts", { overrides: {
++    "next/server": { NextResponse: FakeNextResponse },
++    "@/auth": { auth: (handler: (request: unknown) => Promise<Response>) => handler },
++    "@/lib/app-base-url": { getAppBaseUrl: (request: { nextUrl: URL }) => request.nextUrl.origin },
++    "@/lib/db/access": { getMiddlewareAccessState: async () => ({ hasGbp: false, hasRepliesAccess: false }) },
++    "@/lib/safe-logger": { safeLogger: { error: () => {} } },
++    "@/lib/disconnected-access-policy": { shouldRedirectToGoogleConnect: () => false, shouldRedirectAfterAccessResolutionError: () => false },
++    "@/lib/security-headers": { buildContentSecurityPolicy: () => "default-src 'self'" },
++  } });
++  const request = (path: string, method = "GET") => ({
++    url: `https://app.example.test${path}`, method, nextUrl: new URL(`https://app.example.test${path}`),
++    headers: new Headers(), cookies: { get: () => undefined },
++    auth: { user: {}, deletionUserId: "user-1", accountLifecycle: "deleting" },
++  });
++  assert.equal((await loaded.proxy(request("/account/deletion"))).status, 200);
++  assert.equal((await loaded.proxy(request("/api/privacy/delete", "POST"))).status, 200);
++  assert.equal((await loaded.proxy(request("/api/auth/signin/google", "POST"))).status, 200);
++  assert.equal((await loaded.proxy(request("/api/auth/signout", "POST"))).status, 200);
++  for (const path of ["/dashboard", "/api/privacy/export", "/api/team", "/api/google/oauth/callback", "/api/stripe/checkout", "/api/auth/register", "/demo/review-booster"]) {
++    const response = await loaded.proxy(request(path));
++    assert.ok(response.status === 403 || response.status === 302, `${path} denied with ${response.status}`);
++  }
++  assert.equal((await loaded.proxy(request("/api/privacy/delete", "GET"))).status, 403);
++});
+diff --git a/tests/auth-account-recovery.test.mts b/tests/auth-account-recovery.test.mts
+index a0aad23..6593139 100644
+--- a/tests/auth-account-recovery.test.mts
++++ b/tests/auth-account-recovery.test.mts
+@@ -220 +220,5 @@ test("mail helper requires production HTTPS config and handles Resend rejection"
+-      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => { statements.push(strings.reduce((q, part, i) => q + part + (i < values.length ? `'${String(values[i]).replaceAll("'", "''")}'` : ""), "")); return []; } },
++      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
++        const statement = strings.reduce((q, part, i) => q + part + (i < values.length ? `'${String(values[i]).replaceAll("'", "''")}'` : ""), "");
++        statements.push(statement);
++        return statement.includes("auth_create_email_verification_token") ? [{ created: true }] : [];
++      } },
+@@ -310 +314,2 @@ test("expired reset helper preserves its stored callback while the atomic consum
+-        return query.trimStart().startsWith("SELECT") ? [{ callback_url: "/team/invite/abc" }] : [];
++        if (query.includes("auth_consume_password_reset_token")) return [];
++        return query.includes("FROM public.password_reset_tokens") ? [{ callback_url: "/team/invite/abc" }] : [];
+@@ -320,3 +325,2 @@ test("expired reset helper preserves its stored callback while the atomic consum
+-  assert.match(statements[1]!, /^\s*WITH/i);
+-  assert.match(statements[1]!, /DELETE\s+FROM\s+public\.password_reset_tokens/i);
+-  assert.match(statements[1]!, /expires_at\s*>\s*now\(\)/i);
++  assert.match(statements[1]!, /^\s*SELECT\s+\*\s+FROM\s+public\.auth_consume_password_reset_token/i);
++  assert.match(statements[1]!, /auth_consume_password_reset_token\(/i);
+diff --git a/tests/auth-token-postgres.test.mts b/tests/auth-token-postgres.test.mts
+index 75a3fa6..313d91a 100644
+--- a/tests/auth-token-postgres.test.mts
++++ b/tests/auth-token-postgres.test.mts
+@@ -31,0 +32,3 @@ function psql(port: number, statement: string): string {
++function psqlFile(port: number, filename: string): string {
++  return execFileSync(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", filename], { encoding: "utf8" }).trim();
++}
+@@ -65,0 +69,4 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
++    for (const migration of ["019_billing_lifecycle.sql", "021_workspace_invitations.sql", "032_workspace_bootstrap.sql", "026_privacy_account_lifecycle.sql"]) {
++      psqlFile(port, join(migrationsDir, migration));
++    }
++    psqlFile(port, join(root, "docs/tasks/A11_ACTIVATION_AUTH_TEAM.sql"));
+@@ -101,0 +109,2 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
++    let secondResetToken = "";
++    let verificationToken = "";
+@@ -105,0 +115,3 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
++      if (statement.includes("public.auth_create_password_reset_token") || statement.includes("public.auth_create_email_verification_token")) return [{ created: true }];
++      if (statement.includes("public.auth_consume_password_reset_token")) return statement.includes(tokenHash(secondResetToken)) ? [{ callback_url: "/billing" }] : [];
++      if (statement.includes("public.auth_consume_email_verification_token")) return statement.includes(tokenHash(verificationToken)) ? [{ callback_url: "/team" }] : [];
+@@ -140,0 +153 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
++    secondResetToken = secondToken;
+@@ -168,0 +182 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
++    verificationToken = verifyToken;

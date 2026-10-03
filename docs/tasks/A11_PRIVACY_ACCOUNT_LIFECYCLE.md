@@ -1,5 +1,10 @@
 # A11 privacy account lifecycle handoff
 
+Activation follow-up: see [A11_DELETION_ACTIVATION_CONTRACTS.md](./A11_DELETION_ACTIVATION_CONTRACTS.md)
+for the reviewed provider proof/drain changes, shared source patches, additive
+SQL and composed validation. The foundation description below remains useful
+as implementation history; the follow-up does not enable or deploy deletion.
+
 Status: isolated implementation ready for root review; shared guards remain a
 mandatory integration gate. `PRIVACY_ACCOUNT_DELETION_ENABLED` must remain unset
 or anything other than `true` until the gates below are integrated, tested, and
