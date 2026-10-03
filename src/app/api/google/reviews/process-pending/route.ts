@@ -14,6 +14,7 @@ import {
 } from "@/lib/review-reply-server";
 import { processReviewDraft } from "@/lib/review-draft-processing";
 import { safeLogger } from "@/lib/safe-logger";
+import { isSameOriginMutation } from "@/lib/team-lifecycle";
 
 const BodySchema = z.object({ businessId: z.string().optional(), locationName: z.string().min(1) });
 
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   if (req.headers.get("x-demo") === "true") {
     return NextResponse.json({ processed: 0, drafted: 0, skipped: 0, skippedNoComment: 0, errors: [] });
   }
+  if (!isSameOriginMutation(req)) return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   const user = await resolveUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let raw: unknown;

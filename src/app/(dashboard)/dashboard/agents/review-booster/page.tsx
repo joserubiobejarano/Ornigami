@@ -56,7 +56,12 @@ export default async function ReviewBoosterPage() {
     { label: "Skipped", value: stats.skipped },
   ];
 
-  const usagePercent = monthlyUsage.allowance > 0 ? Math.round((monthlyUsage.sent / monthlyUsage.allowance) * 100) : 0;
+  const usagePercent = monthlyUsage.allowance > 0 ? Math.round((monthlyUsage.used / monthlyUsage.allowance) * 100) : 0;
+  const nextUtcMonth = new Date();
+  nextUtcMonth.setUTCDate(1);
+  nextUtcMonth.setUTCHours(0, 0, 0, 0);
+  nextUtcMonth.setUTCMonth(nextUtcMonth.getUTCMonth() + 1);
+  const utcResetDate = nextUtcMonth.toISOString().slice(0, 10);
 
   const outcomeCards = [
     { label: "Requests sent", value: outcomes.requestsSent },
@@ -87,9 +92,15 @@ export default async function ReviewBoosterPage() {
       {usagePercent >= 80 && (
         <section className={`rounded-2xl border-[1.5px] p-4 text-sm ${usagePercent >= 100 ? "border-destructive/35 bg-destructive/10 text-destructive" : "border-accent-marigold/35 bg-accent-marigold/10 text-primary"}`}>
           {usagePercent >= 100
-            ? `Your monthly review request allowance is full (${monthlyUsage.sent}/${monthlyUsage.allowance}). New eligible visits will wait until next month.`
-            : `You've used ${monthlyUsage.sent} of ${monthlyUsage.allowance} review requests this month.`}
+            ? `Your monthly review request allowance is full (${monthlyUsage.used}/${monthlyUsage.allowance} used). New eligible visits will wait until the UTC reset on ${utcResetDate}.`
+            : `You've used ${monthlyUsage.used} of ${monthlyUsage.allowance} review requests this month.`}
+          <p className="mt-2 text-xs">Usage includes accepted sends and reserved deliveries. Unknown deliveries keep their reservation until reconciled.</p>
+          <p className="mt-1 text-xs">Visits waiting for quota can only send before they reach seven days old.</p>
         </section>
+      )}
+
+      {monthlyUsage.allowance > 0 && usagePercent < 80 && (
+        <p className="text-xs text-muted-foreground">Monthly usage: {monthlyUsage.used} of {monthlyUsage.allowance} (including {monthlyUsage.reserved} reserved). Resets at 00:00 UTC on {utcResetDate}. Unknown deliveries keep their reservation until reconciled.</p>
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -118,8 +129,8 @@ export default async function ReviewBoosterPage() {
 
       <div className="rounded-2xl border-[1.5px] border-border bg-card p-4 shadow-ink-sm">
         <RunFollowupsButton
-          disabled={stats.pending === 0 || !business.name.trim()}
-          disabledReason={!business.name.trim() ? "Add your business name in Settings before sending follow-ups." : stats.pending === 0 ? "There are no eligible visits to send right now." : undefined}
+          disabled={!business.name.trim()}
+          disabledReason={!business.name.trim() ? "Add your business name in Settings before sending follow-ups." : undefined}
         />
       </div>
 
@@ -155,6 +166,11 @@ export default async function ReviewBoosterPage() {
                     <td className="px-4 py-3 text-card-foreground capitalize">{visit.source || "-"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={visit.followup_status || "pending"} />
+                      {visit.followup_status === "deferred_quota" && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Waiting for quota; eligibility expires {new Date(new Date(visit.visited_at).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().replace("T", " ").slice(0, 16)} UTC.
+                        </p>
+                      )}
                     </td>
                     <td className="max-w-xs px-4 py-3 text-card-foreground">{visit.error_reason || "-"}</td>
                   </tr>

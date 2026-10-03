@@ -5,6 +5,7 @@ import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
 import { resolveRequestedBusinessId } from "@/lib/google-business";
 import { sql } from "@/lib/db/neon";
 import { resolveUser } from "@/lib/user-from-req";
+import { isSameOriginMutation } from "@/lib/team-lifecycle";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,6 +66,7 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
   if (req.headers.get("x-demo") === "true") return NextResponse.json({ error: "Not available in demo mode" }, { status: 403 });
+  if (!isSameOriginMutation(req)) return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   const user = await resolveUser(req);
   if (!user || isDemoUser(user)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let body: unknown;

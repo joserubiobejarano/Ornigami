@@ -7,10 +7,14 @@ import { postReplyToGoogleAndPersist } from "@/lib/review-reply-server";
 import { BusinessGoogleError, getSelectedGoogleLocation, resolveRequestedBusinessId } from "@/lib/google-business";
 import { getReplyDraft } from "@/lib/review-draft-policy";
 import { sql } from "@/lib/db/neon";
+import { isSameOriginMutation } from "@/lib/team-lifecycle";
 
 export async function POST(req: NextRequest) {
   if (req.headers.get("x-demo") === "true") {
     return NextResponse.json({ ok: true });
+  }
+  if (!isSameOriginMutation(req)) {
+    return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   }
 
   const user = await resolveUser(req);

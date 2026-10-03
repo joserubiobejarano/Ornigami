@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
     let totalSent = 0;
     let totalFailed = 0;
     let totalSkipped = 0;
+    let totalUnknown = 0;
+    let totalDeferred = 0;
 
     for (const businessId of businessIds) {
       try {
@@ -46,11 +48,15 @@ export async function GET(request: NextRequest) {
         totalSent += runResult.sent;
         totalFailed += runResult.failed;
         totalSkipped += runResult.skipped;
+        totalUnknown += runResult.unknown;
+        totalDeferred += runResult.deferred;
         const periodUsage = await getReviewBoosterBillingPeriodUsage(businessId);
-        if (periodUsage.sent >= periodUsage.allowance && runResult.skipped > 0) {
+        if (periodUsage.allowance > 0 && periodUsage.used >= periodUsage.allowance && (runResult.skipped > 0 || runResult.deferred > 0)) {
           safeLogger.warn("cron.review_booster.fair_use_limit", {
             businessId,
+            used: periodUsage.used,
             sent: periodUsage.sent,
+            reserved: periodUsage.reserved,
             allowance: periodUsage.allowance,
             skipped: runResult.skipped,
           });
@@ -62,7 +68,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    await finishCronRun({ runId, status: "succeeded", processedCount: businessIds.length, failedCount: totalFailed });
+    await finishCronRun({
+      runId,
+      status: totalFailed > 0 || totalUnknown > 0 ? "failed" : "succeeded",
+      processedCount: businessIds.length,
+      // Expected quota deferrals remain separate from delivery failures.
+      failedCount: totalFailed + totalUnknown,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -70,6 +82,8 @@ export async function GET(request: NextRequest) {
       total_sent: totalSent,
       total_failed: totalFailed,
       total_skipped: totalSkipped,
+      total_unknown: totalUnknown,
+      total_deferred: totalDeferred,
     });
   } catch (error) {
     await finishCronRun({ runId, status: "failed", processedCount: 0, failedCount: 1, errorMessage: error instanceof Error ? error.message : "unknown" });

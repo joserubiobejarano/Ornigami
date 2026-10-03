@@ -3,6 +3,11 @@ import test from "node:test";
 import { loadTs } from "./a02-test-support.mts";
 import { createRequire } from "node:module";
 const { NextRequest } = createRequire(import.meta.url)("next/server") as typeof import("next/server");
+const sameOrigin = loadTs<{ isSameOriginMutation(request: Request): boolean }>("src/lib/team-lifecycle.ts", {
+  "@/lib/db/neon": { sql: async () => [] },
+  "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+  "@/lib/safe-logger": { safeLogger: { warn: () => undefined, error: () => undefined } },
+});
 
 type Processing = {
   processReviewDraft(input: {
@@ -95,6 +100,7 @@ test("interactive batch removes saved drafts and blank comments before the batch
   const sqlStatements: string[] = [];
   const route = loadTs<{ POST(req: import("next/server").NextRequest): Promise<Response> }>("src/app/api/google/reviews/process-pending/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
     "@/lib/user-from-req": { resolveUser: async () => ({ id: "owner-1", email: "owner@example.test" }) },
     "@/lib/api-security": { requireActiveAgentBusinessContext: async () => ({ businessId: "business-1", role: "owner" }), safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
     "@/lib/reply-profile-defaults": { getBusinessReplyDefaults: async () => null },
@@ -109,7 +115,7 @@ test("interactive batch removes saved drafts and blank comments before the batch
     "@/lib/safe-logger": { safeLogger: { warn: () => undefined } },
   });
   const request = new NextRequest("http://localhost/api/google/reviews/process-pending", {
-    method: "POST", headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", locationName: "accounts/10/locations/20" }),
   });
   const response = await route.POST(request);
@@ -124,6 +130,7 @@ test("shared settings reject a member's attempt to enable auto-replies", async (
   let updates = 0;
   const route = loadTs<{ PUT(req: Request): Promise<Response> }>("src/app/api/settings/reply/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
     "@/lib/api-security": { requireActiveAgentBusinessContext: async () => ({ businessId: "business-1", role: "member", replyPolicyOwnerUserId: "owner-1" }), safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
     "@/lib/reply-profile-defaults": { getProfileReplyDefaults: async () => ({ auto_reply_all_reviews: false }) },
     "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: "business-1" }) },
@@ -131,7 +138,7 @@ test("shared settings reject a member's attempt to enable auto-replies", async (
     "@/lib/user-from-req": { resolveUser: async () => ({ id: "member-1", email: "member@example.test" }) },
   });
   const request = new Request("http://localhost/api/settings/reply", {
-    method: "PUT", headers: { "content-type": "application/json" },
+    method: "PUT", headers: { "content-type": "application/json", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", autoReplyAllReviews: true }),
   });
   const response = await route.PUT(request);
@@ -142,6 +149,7 @@ test("shared settings reject a member's attempt to enable auto-replies", async (
 function loadOpenAiRoute(stream: AsyncIterable<{ choices: Array<{ delta: { content: string } }> }>, counts: { commits: number; releases: number; defaults: unknown[][]; reservations: unknown[][] }) {
   return loadTs<{ POST(req: Request): Promise<Response> }>("src/app/api/openai/review-reply/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
     "@/lib/api-security": {
       requireActiveAgentBusinessContext: async (actor: string, _email: string, _agent: string, businessId: string) => ({
         actorUserId: actor, businessId, role: "member", replyPolicyOwnerUserId: "owner-1", usageOwnerUserId: "owner-1",
@@ -168,7 +176,7 @@ test("sample streaming generation uses owner context and commits one completed n
   const stream = { async *[Symbol.asyncIterator]() { yield { choices: [{ delta: { content: "A helpful reply." } }] }; } };
   const route = loadOpenAiRoute(stream, counts);
   const response = await route.POST(new Request("http://localhost/api/openai/review-reply", {
-    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true" },
+    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", rating: 5, text: "Nice service" }),
   }));
   const text = await response.text();
@@ -184,7 +192,7 @@ test("sample streaming failures, empty output, and cancellation release without 
   const errorCounts = { commits: 0, releases: 0, defaults: [] as unknown[][], reservations: [] as unknown[][] };
   const failing = { async *[Symbol.asyncIterator]() { yield { choices: [{ delta: { content: "partial" } }] }; throw new Error("private provider details"); } };
   const failResponse = await loadOpenAiRoute(failing, errorCounts).POST(new Request("http://localhost/api/openai/review-reply", {
-    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true" },
+    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", rating: 2, text: "A complaint" }),
   }));
   const failureText = await failResponse.text();
@@ -196,7 +204,7 @@ test("sample streaming failures, empty output, and cancellation release without 
   const emptyCounts = { commits: 0, releases: 0, defaults: [] as unknown[][], reservations: [] as unknown[][] };
   const empty = { async *[Symbol.asyncIterator]() { } };
   const emptyResponse = await loadOpenAiRoute(empty, emptyCounts).POST(new Request("http://localhost/api/openai/review-reply", {
-    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true" },
+    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", rating: 2, text: "A complaint" }),
   }));
   await emptyResponse.text();
@@ -206,7 +214,7 @@ test("sample streaming failures, empty output, and cancellation release without 
   const cancelCounts = { commits: 0, releases: 0, defaults: [] as unknown[][], reservations: [] as unknown[][] };
   const slow = { async *[Symbol.asyncIterator]() { yield { choices: [{ delta: { content: "partial" } }] }; await new Promise((resolve) => setTimeout(resolve, 25)); yield { choices: [{ delta: { content: "tail" } }] }; } };
   const cancelResponse = await loadOpenAiRoute(slow, cancelCounts).POST(new Request("http://localhost/api/openai/review-reply", {
-    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true" },
+    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", rating: 2, text: "A complaint" }),
   }));
   const reader = cancelResponse.body!.getReader();
@@ -234,7 +242,7 @@ test("sample streaming failures, empty output, and cancellation release without 
     },
   };
   const teardownResponse = await loadOpenAiRoute(brokenTeardown, teardownCounts).POST(new Request("http://localhost/api/openai/review-reply", {
-    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true" },
+    method: "POST", headers: { "content-type": "application/json", "x-sample-review": "true", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", rating: 2, text: "A complaint" }),
   }));
   const teardownReader = teardownResponse.body!.getReader();
@@ -249,6 +257,7 @@ test("review generation pins the selected location and refuses a nonselected req
   let contextBusiness: string | undefined;
   const route = loadTs<{ POST(req: Request): Promise<Response> }>("src/app/api/openai/review-reply/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
     "@/lib/api-security": { requireActiveAgentBusinessContext: async (_actor: string, _email: string, _agent: string, business: string) => { contextBusiness = business; return { businessId: business, role: "member" }; }, safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
     "@/lib/openai": { sanitizeReviewReply: (text: string) => text, streamReviewReply: async () => ({ async *[Symbol.asyncIterator]() { } }) },
     "@/lib/reply-profile-defaults": { getBusinessReplyDefaults: async (actor: string, business: string) => { assert.equal(actor, "member-1"); assert.equal(business, "business-1"); return null; } },
@@ -259,7 +268,7 @@ test("review generation pins the selected location and refuses a nonselected req
     "@/lib/review-draft-processing": { processReviewDraft: async () => { generationCalls += 1; return { outcome: "saved", posted: false, draft: { version: 1 } }; } },
   });
   const response = await route.POST(new Request("http://localhost/api/openai/review-reply", {
-    method: "POST", headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", reviewId: "review-1", locationName: "accounts/10/locations/999" }),
   }));
   assert.equal(response.status, 403);
@@ -275,13 +284,95 @@ test("manual Post requires an explicit intent, version, and exact reply text", a
     "@/lib/api-security": { requireActiveAgentBusinessContext: async () => ({ businessId: "business-1" }), safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
     "@/lib/review-reply-server": { postReplyToGoogleAndPersist: async () => { providerCalls += 1; return { ok: true }; } },
     "@/lib/review-draft-policy": { getReplyDraft: async () => null },
+    "@/lib/team-lifecycle": sameOrigin,
     "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: "business-1" }), BusinessGoogleError: class extends Error { status = 403; }, getSelectedGoogleLocation: async () => ({ location_name: "accounts/10/locations/20" }) },
     "@/lib/db/neon": { sql: async () => [{ location_name: "accounts/10/locations/20" }] },
   });
   const response = await route.POST(new NextRequest("http://localhost/api/google/replies", {
-    method: "POST", headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "business-1", reviewId: "review-1", locationName: "accounts/10/locations/20", reply: "Thanks" }),
   }));
   assert.equal(response.status, 400);
   assert.equal(providerCalls, 0);
+});
+
+test("manual Post rejects cross-origin requests before invoking Google posting", async () => {
+  let providerCalls = 0;
+  const route = loadTs<{ POST(req: import("next/server").NextRequest): Promise<Response> }>("src/app/api/google/replies/route.ts", {
+    "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
+    "@/lib/user-from-req": { resolveUser: async () => ({ id: "member-1" }) },
+    "@/lib/api-security": { requireActiveAgentBusinessContext: async () => ({ businessId: "business-1" }), safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
+    "@/lib/review-reply-server": { postReplyToGoogleAndPersist: async () => { providerCalls += 1; return { ok: true }; } },
+    "@/lib/review-draft-policy": { getReplyDraft: async () => null },
+    "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: "business-1" }), BusinessGoogleError: class extends Error { status = 403; }, getSelectedGoogleLocation: async () => ({ location_name: "accounts/10/locations/20" }) },
+    "@/lib/db/neon": { sql: async () => [{ location_name: "accounts/10/locations/20" }] },
+  });
+  const response = await route.POST(new NextRequest("http://localhost/api/google/replies", {
+    method: "POST", headers: { "content-type": "application/json", origin: "https://attacker.example" },
+    body: JSON.stringify({ businessId: "business-1", reviewId: "review-1", locationName: "accounts/10/locations/20", reply: "Thanks", intent: "manual", expectedVersion: 1 }),
+  }));
+  assert.equal(response.status, 403);
+  assert.equal(providerCalls, 0);
+});
+
+test("same-site sibling origins cannot save drafts, change opt-in, batch-process, or generate replies", async () => {
+  const headers = { "content-type": "application/json", origin: "https://evil.example", "sec-fetch-site": "same-site" };
+
+  let draftCalls = 0;
+  const draftRoute = loadTs<{ POST(req: import("next/server").NextRequest): Promise<Response> }>("src/app/api/reviews/draft/route.ts", {
+    "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
+    "@/lib/user-from-req": { resolveUser: async () => { draftCalls++; return { id: "member-1" }; } },
+    "@/lib/api-security": { requireActiveAgentBusinessContext: async () => { draftCalls++; return { businessId: "business-1" }; }, safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
+    "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: "business-1" }), BusinessGoogleError: class extends Error { status = 403; }, getSelectedGoogleLocation: async () => ({ location_name: "accounts/10/locations/20" }) },
+    "@/lib/db/neon": { sql: async () => { draftCalls++; return []; } },
+    "@/lib/review-draft-policy": { getReplyDraft: async () => null, saveHumanReplyDraft: async () => { draftCalls++; return { ok: true }; } },
+  });
+  const draftResponse = await draftRoute.POST(new NextRequest("https://app.example/api/reviews/draft", { method: "POST", headers, body: JSON.stringify({ reviewId: "review-1", reply: "Forged text", expectedVersion: 1 }) }));
+  assert.equal(draftResponse.status, 403);
+  assert.equal(draftCalls, 0);
+
+  let settingCalls = 0;
+  const settingsRoute = loadTs<{ PUT(req: Request): Promise<Response> }>("src/app/api/settings/reply/route.ts", {
+    "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
+    "@/lib/user-from-req": { resolveUser: async () => { settingCalls++; return { id: "owner-1" }; } },
+    "@/lib/api-security": { requireActiveAgentBusinessContext: async () => { settingCalls++; return { businessId: "business-1", role: "owner" }; }, safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
+    "@/lib/reply-profile-defaults": { getProfileReplyDefaults: async () => null },
+    "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: "business-1" }) },
+    "@/lib/db/neon": { sql: async () => { settingCalls++; return [{ id: "owner-1" }]; } },
+  });
+  const settingsResponse = await settingsRoute.PUT(new Request("https://app.example/api/settings/reply", { method: "PUT", headers, body: JSON.stringify({ autoReplyAllReviews: true }) }));
+  assert.equal(settingsResponse.status, 403);
+  assert.equal(settingCalls, 0);
+
+  let processingCalls = 0;
+  const processRoute = loadTs<{ POST(req: import("next/server").NextRequest): Promise<Response> }>("src/app/api/google/reviews/process-pending/route.ts", {
+    "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
+    "@/lib/user-from-req": { resolveUser: async () => { processingCalls++; return { id: "owner-1" }; } },
+    "@/lib/api-security": { requireActiveAgentBusinessContext: async () => { processingCalls++; return { businessId: "business-1" }; }, safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
+    "@/lib/google-business": { resolveRequestedBusinessId: () => ({ valid: true, businessId: "business-1" }), getSelectedGoogleLocation: async () => ({ location_name: "accounts/10/locations/20" }) },
+    "@/lib/reply-profile-defaults": { getBusinessReplyDefaults: async () => null },
+    "@/lib/db/neon": { sql: async () => { processingCalls++; return []; } },
+    "@/lib/review-reply-policy": { MAX_REVIEW_REPLY_BATCH: 40, safeProcessingError: () => "error" },
+    "@/lib/review-reply-server": {},
+    "@/lib/review-draft-processing": { processReviewDraft: async () => { processingCalls++; return { outcome: "saved" }; } },
+    "@/lib/safe-logger": { safeLogger: { warn: () => undefined } },
+  });
+  const processResponse = await processRoute.POST(new NextRequest("https://app.example/api/google/reviews/process-pending", { method: "POST", headers, body: JSON.stringify({ locationName: "accounts/10/locations/20" }) }));
+  assert.equal(processResponse.status, 403);
+  assert.equal(processingCalls, 0);
+
+  const generationCounts = { commits: 0, releases: 0, defaults: [] as unknown[][], reservations: [] as unknown[][] };
+  let streamStarts = 0;
+  const generationRoute = loadOpenAiRoute({ async *[Symbol.asyncIterator]() { streamStarts++; } }, generationCounts);
+  const generationResponse = await generationRoute.POST(new Request("https://app.example/api/openai/review-reply", {
+    method: "POST", headers, body: JSON.stringify({ businessId: "business-1", rating: 5, text: "Review" }),
+  }));
+  assert.equal(generationResponse.status, 403);
+  assert.deepEqual(generationCounts.defaults, []);
+  assert.deepEqual(generationCounts.reservations, []);
+  assert.equal(streamStarts, 0);
 });

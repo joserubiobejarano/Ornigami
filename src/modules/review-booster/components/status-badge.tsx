@@ -4,7 +4,12 @@ const statusClasses: Record<string, string> = {
   pending: "bg-accent-marigold/10 text-primary border-accent-marigold/35",
   sent: "bg-accent-green/10 text-primary border-accent-green/35",
   failed: "bg-destructive/10 text-destructive border-destructive/35",
-  skipped: "bg-surface text-muted-foreground border-border"
+  skipped: "bg-surface text-muted-foreground border-border",
+  deferred_quota: "bg-accent-marigold/10 text-primary border-accent-marigold/35",
+  unknown: "bg-accent-marigold/10 text-primary border-accent-marigold/35",
+  reconciliation_required: "bg-destructive/10 text-destructive border-destructive/35",
+  expired: "bg-surface text-muted-foreground border-border",
+  non_sendable: "bg-surface text-muted-foreground border-border",
 };
 
 const statusLabels: Record<string, string> = {
@@ -12,6 +17,11 @@ const statusLabels: Record<string, string> = {
   sent: "Sent",
   failed: "Couldn't send",
   skipped: "Skipped",
+  deferred_quota: "Waiting for quota",
+  unknown: "Delivery status unknown",
+  reconciliation_required: "Needs review",
+  expired: "Expired",
+  non_sendable: "Not sendable",
 };
 
 export function StatusBadge({ status }: { status: Status }) {

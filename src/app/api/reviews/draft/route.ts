@@ -8,6 +8,7 @@ import { requireActiveAgentBusinessContext, safeApiErrorResponse } from "@/lib/a
 import { BusinessGoogleError, resolveRequestedBusinessId, getSelectedGoogleLocation } from "@/lib/google-business";
 import { sql } from "@/lib/db/neon";
 import { getReplyDraft, saveHumanReplyDraft } from "@/lib/review-draft-policy";
+import { isSameOriginMutation } from "@/lib/team-lifecycle";
 
 const BodySchema = z.object({
   businessId: z.string().optional(),
@@ -18,6 +19,7 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   if (req.headers.get("x-demo") === "true") return NextResponse.json({ ok: true });
+  if (!isSameOriginMutation(req)) return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   const user = await resolveUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let raw: unknown;

@@ -12,6 +12,7 @@ import { sql } from "@/lib/db/neon";
 import { processReviewDraft } from "@/lib/review-draft-processing";
 import type { ReviewRowForReply } from "@/lib/review-reply-server";
 import { randomUUID } from "node:crypto";
+import { isSameOriginMutation } from "@/lib/team-lifecycle";
 
 /** Core review fields; at least one of text/reviewText required for generation. */
 const RequestSchema = z
@@ -209,6 +210,10 @@ export async function POST(req: Request) {
     return new Response(`data: ${JSON.stringify(mockReply)}\n\nevent: final\ndata: ${JSON.stringify(mockReply)}\n\ndata: [DONE]\n\n`, {
       headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform" },
     });
+  }
+
+  if (!isSameOriginMutation(req)) {
+    return NextResponse.json({ error: "Cross-origin request rejected." }, { status: 403 });
   }
 
   const user = await resolveUser(req);

@@ -83,3 +83,8 @@ Draft states are `new`, `ai_drafted`, `human_edited`, `approved`, and `posted`. 
 - Verify manual and eligible interactive posting against an approved Google test account. This branch only validates local/mock behavior.
 - An uncertain Google post outcome (timeout, 5xx, or local persistence failure after Google may have accepted the reply) deliberately leaves the posting fence held to prevent duplicate publication. There is no UI reconciliation or administrative fence-release path in this scope; define and implement a safe reconciliation procedure before operating this case.
 - Optional A12 operational follow-up: review the existing missing Sentry `global-error` boundary and deprecated client config warning found during build review.
+# A00 integration addendum — 2026-10-03
+
+The schema proposal is promoted to canonical `neon/migrations/024_review_draft_policy.sql`; persistence tests apply the numbered file, including idempotent replay. Automatic posting locks the business-agent row before the owner profile, matching A03 billing reconciliation. Mutation routes enforce same-origin browser requests before paid generation, draft writes, automation opt-in or provider posting. Dashboard counts use the one current actionable draft rather than historical unposted versions. A11 workspace exports include safe draft/reservation projections without fences, actor identifiers or request tokens.
+
+The existing owner-profile billing-period/2,000 generation protection remains in force. A06's UTC quota contract applies to Booster sends; it does not approve a new Reply ceiling. Ambiguous Google post outcomes remain fenced for authoritative reconciliation and A13 recovery UI; elapsed time alone must never authorize another post.

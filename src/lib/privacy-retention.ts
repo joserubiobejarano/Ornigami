@@ -41,8 +41,12 @@ export const PUBLIC_DEMO_CHALLENGE_EXPIRY_GRACE_DAYS = 1;
 export const PRIVACY_PRESERVED_HISTORY_CLASSES = [
   "followup_visits",
   "followup_messages",
+  "booster_followup_deliveries",
+  "booster_quota_legacy_usage",
   "reviews",
   "review_replies",
+  "review_reply_draft_state",
+  "review_reply_usage_reservations",
   "billing_checkout_intents",
   "billing_customer_provisioning",
   "billing_reconciliation_leases",

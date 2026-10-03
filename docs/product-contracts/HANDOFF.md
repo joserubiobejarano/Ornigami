@@ -4,13 +4,13 @@ Branch: docs/product-contracts. Baseline: ff4d9b2. Integration owner: A00.
 
 ## Result and decision status
 
-Five task-specific documents define reputation billing/usage, retained legacy behavior, disabled future lead scope, and shared implementation handoffs. New policies are **proposed pending owner approval**, with observed behavior separately recorded. No policy was approved merely because an optional question went unanswered.
+Five task-specific documents define reputation billing/usage, retained legacy behavior, disabled future lead scope, and shared implementation handoffs. New policies are **proposed pending owner approval**, with observed behavior separately recorded. The one-time trial and A06 Booster quota policy are explicitly approved; other policies remain proposals. No policy is approved by an unanswered question.
 
 Existing EUR prices, 14-day/no-card trial entry, and reputation-only Complete remain unchanged. Rebooking/sender fields are retained compatibility requirements, currently not working end to end; no feature is silently retired. QR and broader agency work are explicitly deferred. Speed to Lead stays disabled and unpriced.
 
 Owner choices remaining:
 
-- UTC calendar/full-month quotas, no rollover, cross-midnight reservation ownership, and business-shared Reply safety accounting.
+- Business-shared UTC Reply safety accounting remains proposed. A06 Booster UTC/full-month quotas, no rollover, accepted/unknown accounting and seven-day deferral are approved; see the billing contract approval record.
 - Trial-history privacy retention and deliberate support exceptions remain A11/owner decisions. One 14-day trial per business **and billing owner**, including unknown-history reconciliation, was explicitly approved on 2026-10-03 and implemented by A03.
 - Recovery-only payment policy, notice clock, scheduled downgrade timing, seats, and member read access after lapse/downgrade.
 - Shared selected location and captured-versus-held existing visit destinations after a switch.

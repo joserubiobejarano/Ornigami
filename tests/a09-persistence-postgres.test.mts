@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, execFile } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
+import { createServer } from "node:net";
 import test from "node:test";
 import { promisify } from "node:util";
 import { loadTs } from "./a02-test-support.mts";
@@ -11,7 +12,19 @@ const binDir = process.env.A09_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.P
 const pgExe = (name: string) => process.platform === "win32"
   ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
   : binDir ? join(binDir, name) : name;
-const port = 55409;
+let port = 0;
+async function availablePort(): Promise<number> {
+  const server = createServer();
+  await new Promise<void>((resolvePromise, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolvePromise());
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("No loopback port available");
+  const selectedPort = address.port;
+  await new Promise<void>((resolvePromise, reject) => server.close((error) => error ? reject(error) : resolvePromise()));
+  return selectedPort;
+}
 const execFileAsync = promisify(execFile);
 function psql(query: string): string {
   return execFileSync(pgExe("psql"), ["-X","-q","-A","-t","-F","|","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p",String(port),"-U","postgres","-d","postgres","-c",query], { encoding: "utf8" }).trim();
@@ -30,6 +43,7 @@ const actor = "00000000-0000-4000-8000-000000000004";
 const uuid = () => `00000000-0000-4000-8000-${Math.floor(Math.random()*1e12).toString().padStart(12,"0")}`;
 
 test("A09 schema functions preserve human drafts and serialize saves, generation, usage and posting", async () => {
+  port = await availablePort();
   const testRoot = resolve(root, ".next");
   mkdirSync(testRoot, { recursive: true });
   const dir = mkdtempSync(join(testRoot, "a09-review-pg-"));
@@ -49,6 +63,8 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
         current_period_start timestamptz, current_period_end timestamptz, activated_at timestamptz);
       CREATE TABLE public.reviews(id bigserial PRIMARY KEY,user_id uuid,business_id uuid NOT NULL,google_review_id text NOT NULL,
         status text,reply_comment text,reply_update_time timestamptz,star_rating integer,updated_at timestamptz DEFAULT now(), UNIQUE(business_id,google_review_id));
+      CREATE TABLE public.projects(user_id uuid,created_at timestamptz DEFAULT now());
+      CREATE TABLE public.leads(created_at timestamptz DEFAULT now());
       CREATE TABLE public.review_replies(id bigserial PRIMARY KEY,user_id uuid NOT NULL REFERENCES public.users(id),
         business_id uuid NOT NULL,review_id bigint NOT NULL REFERENCES public.reviews(id) ON DELETE CASCADE,
         draft_markdown text NOT NULL,posted boolean NOT NULL DEFAULT false,posted_at timestamptz,
@@ -66,7 +82,7 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
           ('${owner}','${business}','missing-period','new',4),('${owner}','${business}','wrapper','new',NULL);
       INSERT INTO public.review_replies(user_id,business_id,review_id,draft_markdown,posted)
         SELECT '${owner}','${business}',id,'keep human words',false FROM public.reviews WHERE google_review_id='legacy';`);
-    const migration = join(root,"docs/tasks/A09-draft-schema.sql");
+    const migration = join(root,"neon/migrations/024_review_draft_policy.sql");
     psqlFile(migration);
     psqlFile(migration);
 
@@ -157,9 +173,41 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
     assert.equal(psql(`SELECT ok||':'||COALESCE(reason,'') FROM public.a09_claim_reply_post('${business}','generated','AI draft',1,'automatic','${uuid()}')`),"false:approval-required","missing entitlement fails closed");
     psql(`INSERT INTO public.business_agents(business_id,agent_id,status,billing_period,current_period_start,current_period_end,activated_at)
       VALUES ('${business}','review_replies','active','monthly','2026-02-01T00:00:00Z','2026-03-01T00:00:00Z','2026-01-01T00:00:00Z');`);
-    assert.equal(psql(`SELECT ok||':'||COALESCE(reason,'') FROM public.a09_claim_reply_post('${business}','generated','AI draft',1,'automatic','${uuid()}')`),"true:");
-    const autoToken=psql(`SELECT posting_token FROM public.review_reply_draft_state WHERE review_id='${generatedId}'`);
-    assert.equal(psql(`SELECT public.a09_finish_reply_post('${business}','generated','AI draft','${autoToken}',true)`),"t");
+    // Stripe snapshot processing locks business_agents before profiles. Hold that
+    // first lock, then exercise the actual automatic-claim path while it waits.
+    // A profile-first claim would hold FOR SHARE on profiles while waiting here,
+    // making the snapshot's subsequent profile update form a deadlock cycle.
+    const billingLocks = psqlAsync(`SET application_name='a09-billing-lock-probe';
+      BEGIN;
+      UPDATE public.business_agents SET activated_at=activated_at WHERE business_id='${business}' AND agent_id='review_replies';
+      SELECT pg_sleep(2);
+      UPDATE public.profiles SET updated_at=updated_at WHERE id='${owner}';
+      COMMIT;`);
+    let billingSleeping = false;
+    for (let attempt=0; attempt<200; attempt++) {
+      if (psql(`SELECT count(*) FROM pg_stat_activity WHERE application_name='a09-billing-lock-probe' AND wait_event='PgSleep'`) === "1") {
+        billingSleeping = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    assert.equal(billingSleeping, true, "billing lock holder should have acquired the entitlement row");
+    const automaticClaim = psqlAsync(`SET application_name='a09-auto-claim-lock-probe';
+      SELECT ok||':'||COALESCE(reason,'') FROM public.a09_claim_reply_post('${business}','generated','AI draft',1,'automatic','${uuid()}');`);
+    let claimWaitingForLock = false;
+    for (let attempt=0; attempt<200; attempt++) {
+      if (psql(`SELECT count(*) FROM pg_stat_activity WHERE application_name='a09-auto-claim-lock-probe' AND wait_event_type='Lock'`) === "1") {
+        claimWaitingForLock = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    assert.equal(claimWaitingForLock, true, "automatic claim should wait on the entitlement row before reading owner settings");
+    const [billingResult, claimResult] = await Promise.all([billingLocks, automaticClaim]);
+    assert.equal(billingResult, "");
+    assert.equal(claimResult, "true:", "billing snapshot can update owner settings and release the automatic claim without a lock cycle");
+    const racedToken=psql(`SELECT posting_token FROM public.review_reply_draft_state WHERE review_id='${generatedId}'`);
+    assert.equal(psql(`SELECT public.a09_finish_reply_post('${business}','generated','AI draft','${racedToken}',true)`),"t");
     assert.equal(psql(`SELECT state||':'||status FROM public.review_reply_draft_state s JOIN public.reviews r ON r.id=s.review_id WHERE r.google_review_id='generated'`),"posted:replied");
     assert.equal(psql(`SELECT ok||':'||COALESCE(reason,'') FROM public.a09_claim_reply_post('${business}','fresh','human wins',1,'automatic','${uuid()}')`),"false:conflict","human-edited high-rating draft still requires manual posting");
     assert.equal(psql(`SELECT ok FROM public.a09_claim_reply_post('${business}','fresh','human wins',1,'manual','${uuid()}')`),"t");
@@ -221,6 +269,25 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
     const genericReservation=await policy.reserveReviewReplyUsage(actor,business,uuid());
     assert.equal(genericReservation.ok,true);
     if(genericReservation.ok){assert.equal(await policy.commitReviewReplyUsage(genericReservation.reservationId),true);}
+    let productionDraftIds: string[] = [];
+    const metrics=loadTs<typeof import("../src/lib/dashboard-metrics.js")>("src/lib/dashboard-metrics.ts",{
+      "@/auth":{auth:async()=>({user:{id:owner}})},
+      "@/lib/db/businesses":{getBusinessForUser:async()=>({id:business})},
+      "@/lib/safe-logger":{safeLogger:{error:()=>undefined}},
+      "@/lib/db/neon":{sql:(strings:TemplateStringsArray,...values:unknown[])=>{
+        const query=render(strings,values);
+        if (/FROM public\.review_reply_draft_state d/.test(query)) {
+          const idQuery=query.replace("SELECT count(*)::int AS c", "SELECT r.google_review_id AS review_id");
+          const idJson=psql(`SELECT COALESCE(json_agg(row_to_json(a)),'[]'::json)::text FROM (${idQuery}) a`);
+          productionDraftIds=(JSON.parse(idJson) as Array<{ review_id: string }>).map((row)=>row.review_id).sort();
+        }
+        const json=psql(`SELECT COALESCE(json_agg(row_to_json(a)),'[]'::json)::text FROM (${query}) a`);
+        return Promise.resolve(JSON.parse(json) as unknown[]);
+      }},
+    });
+    const dashboard=await metrics.getDashboardMetrics();
+    assert.deepEqual(productionDraftIds,["legacy", "unknown", "wrapper"]);
+    assert.equal(dashboard.draftsCount,productionDraftIds.length,"the production dashboard query returns the current actionable draft rows, excluding historical, posted, and in-flight rows");
     assert.equal(psql(`SELECT public.a09_finish_reply_usage((SELECT id FROM public.review_reply_usage_reservations WHERE request_id='${lateRequest}'),true)`), "f");
     assert.equal(psql(`SELECT review_replies_used||':'||review_replies_reserved FROM public.profiles WHERE id='${owner}'`), "11:3");
 

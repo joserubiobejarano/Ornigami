@@ -97,6 +97,10 @@ test("409, 5xx, transport failures, and malformed success are ambiguous; clear 4
 
 test("invalid review URL fails before transport", async () => {
   await assert.rejects(provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "javascript:alert(1)" }));
+  await assert.rejects(provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "http://reviews.example/path" }));
+  await assert.rejects(provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "https://user:password@reviews.example/path" }));
+  const local = await provider.prepareResendPayload({ business_name: "Shop", customer_email: "a@example.com", subject: "s", body: "b", google_review_url: "http://localhost:3000/review" });
+  assert.match(String(local.text), /http:\/\/localhost:3000\/review/);
 });
 
 test("timeout signal bounds a stalled response body read", async () => {

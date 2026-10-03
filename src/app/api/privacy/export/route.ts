@@ -129,6 +129,21 @@ export async function GET(request: Request) {
                 'created_at', rr.created_at, 'updated_at', rr.updated_at
               )) FROM public.review_replies rr WHERE rr.business_id = b.id
             ), '[]'::jsonb),
+            'replyDraftState', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'review_id', s.review_id, 'reply_id', s.reply_id, 'state', s.state,
+                'version', s.version, 'updated_at', s.updated_at
+              ) ORDER BY s.review_id)
+              FROM public.review_reply_draft_state s WHERE s.business_id = b.id
+            ), '[]'::jsonb),
+            'replyUsageReservations', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'review_id', u.review_id, 'usage_period_start', u.usage_period_start,
+                'state', u.state, 'created_at', u.created_at, 'expires_at', u.expires_at,
+                'finalized_at', u.finalized_at
+              ) ORDER BY u.created_at, u.usage_period_start)
+              FROM public.review_reply_usage_reservations u WHERE u.business_id = b.id
+            ), '[]'::jsonb),
             'visits', COALESCE((
               SELECT jsonb_agg(jsonb_build_object(
                 'id', v.id, 'customer_name', v.customer_name, 'customer_email', v.customer_email,
@@ -143,6 +158,20 @@ export async function GET(request: Request) {
                 'body', m.body, 'provider', m.provider, 'status', m.status,
                 'sent_at', m.sent_at, 'created_at', m.created_at
               )) FROM public.followup_messages m WHERE m.business_id = b.id
+            ), '[]'::jsonb),
+            'boosterDeliveries', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'visit_id', d.visit_id, 'state', d.state, 'first_attempt_at', d.first_attempt_at,
+                'send_attempt_count', d.send_attempt_count, 'reservation_month', d.reservation_month,
+                'created_at', d.created_at, 'updated_at', d.updated_at, 'accepted_at', d.accepted_at
+              ) ORDER BY d.created_at, d.visit_id)
+              FROM public.booster_followup_deliveries d WHERE d.business_id = b.id
+            ), '[]'::jsonb),
+            'boosterQuotaLegacyUsage', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'month_start_utc', q.month_start, 'accepted_count', q.accepted_count
+              ) ORDER BY q.month_start)
+              FROM public.booster_quota_legacy_usage q WHERE q.business_id = b.id
             ), '[]'::jsonb),
             'clicks', COALESCE((
               SELECT jsonb_agg(jsonb_build_object(

@@ -1,5 +1,5 @@
--- Proposed A09 migration 024. Apply only after review; this file is not wired
--- into or applied by this branch. Existing reply rows are retained verbatim.
+-- A00 reviewed A09 migration 024: draft versions, posting fences and usage.
+-- Existing reply rows are retained verbatim.
 
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS review_replies_reserved INTEGER NOT NULL DEFAULT 0

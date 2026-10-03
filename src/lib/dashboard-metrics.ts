@@ -24,7 +24,7 @@ export type DashboardMetrics = {
   /** Replies generated this month; placeholder if not tracked */
   repliesGeneratedThisMonth: number;
   /**
-   * Unposted rows in `review_replies` (posted = false). In-browser drafts on Reviews are not included until persisted.
+   * Current saved drafts; historical versions and in-browser unsaved edits are excluded.
    */
   draftsCount: number;
   /** Replies posted to Google this month */
@@ -97,9 +97,16 @@ export async function getDashboardMetrics(isDemo: boolean = false): Promise<Dash
         AND (status IS NULL OR lower(status) <> 'replied')
     `;
     const [draftsRow] = await sql`
-      SELECT count(*)::int AS c FROM public.review_replies
-      WHERE business_id = ${business.id}
-        AND posted = false
+      SELECT count(*)::int AS c FROM public.review_reply_draft_state d
+      JOIN public.reviews r ON r.id = d.review_id AND r.business_id = d.business_id
+      JOIN public.review_replies rr ON rr.id = d.reply_id
+        AND rr.review_id = r.id AND rr.business_id = d.business_id
+      WHERE d.business_id = ${business.id}
+        AND d.state IN ('ai_drafted', 'human_edited', 'approved')
+        AND d.posting_token IS NULL
+        AND rr.posted IS FALSE
+        AND lower(COALESCE(r.status, '')) <> 'replied'
+        AND r.reply_comment IS NULL
     `;
     const [reviewsCountRow] = await sql`
       SELECT count(*)::int AS c FROM public.reviews

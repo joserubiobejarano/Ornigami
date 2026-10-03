@@ -31,7 +31,7 @@ test("retention cleanup is bounded, per-table observable, and continues after a 
   assert.ok(queries.every(({ values }) => values.includes(1000)));
   assert.ok(events.includes("privacy.retention.operation_failed"));
   assert.ok(events.includes("privacy.retention.completed"));
-  assert.ok(!queries.some(({ query }) => /followup_visits|followup_messages|public\.reviews|review_replies|followup_unsubscribes|billing_trial_(owner|business)_history|privacy_account_deletion_operations/.test(query)));
+  assert.ok(!queries.some(({ query }) => /followup_visits|followup_messages|booster_followup_deliveries|booster_quota_legacy_usage|public\.reviews|review_replies|review_reply_draft_state|review_reply_usage_reservations|followup_unsubscribes|billing_trial_(owner|business)_history|privacy_account_deletion_operations/.test(query)));
 });
 
 test("retention policy keeps the approved windows and names preserved histories explicitly", () => {
@@ -47,6 +47,8 @@ test("retention policy keeps the approved windows and names preserved histories 
   });
   for (const history of [
     "followup_visits", "followup_messages", "reviews", "review_replies",
+    "booster_followup_deliveries", "booster_quota_legacy_usage",
+    "review_reply_draft_state", "review_reply_usage_reservations",
     "billing_checkout_intents", "billing_webhook_events", "billing_trial_owner_history",
     "billing_trial_business_history", "team_invitations", "unsubscribe_suppressions",
     "billing_trial_reservations", "billing_customer_provisioning", "billing_reconciliation_leases",

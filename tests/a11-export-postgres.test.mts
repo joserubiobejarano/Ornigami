@@ -67,7 +67,11 @@ type WorkspaceExport = {
     business: { id: string };
     reviews: Array<{ comment: string }>;
     replies: Array<{ draft_markdown: string }>;
+    replyDraftState: Array<{ review_id: number; reply_id: number | null; state: string; version: number }>;
+    replyUsageReservations: Array<{ review_id: number | null; state: string; usage_period_start: string }>;
     messages: Array<{ body: string }>;
+    boosterDeliveries: Array<{ visit_id: string; state: string; send_attempt_count: number; reservation_month: string | null }>;
+    boosterQuotaLegacyUsage: Array<{ month_start_utc: string; accepted_count: number }>;
     clicks: Array<{ user_agent: string }>;
     unsubscribeSuppressions: Array<{ customer_email: string }>;
     settings: { googleConnection: { access_token?: unknown } | null };
@@ -147,6 +151,25 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
         VALUES ('50000000-0000-4000-8000-000000000001','${businessA}','Customer','customer@example.test',now());
       INSERT INTO public.followup_messages(business_id,visit_id,subject,body,status,provider_message_id)
         VALUES ('${businessA}','50000000-0000-4000-8000-000000000001','Subject','Message body','sent','provider-message');
+      INSERT INTO public.booster_quota_legacy_usage(business_id,month_start,accepted_count)
+        VALUES ('${businessA}','2026-09-01',4);
+      INSERT INTO public.booster_followup_deliveries(
+        business_id,visit_id,state,provider_payload,review_url_snapshot,idempotency_key,lease_token,
+        first_attempt_at,send_attempt_count,reservation_month,provider_message_id,error_message,accepted_at
+      ) VALUES (
+        '${businessA}','50000000-0000-4000-8000-000000000001','accepted','{"payload_secret":"delivery-payload-secret"}',
+        'https://reviews.example/snapshot-secret','delivery-idempotency-secret',
+        '60000000-0000-4000-8000-000000000001',now() - interval '1 day',2,'2026-10-01',
+        'provider-message-secret','provider-error-secret',now()
+      );
+      INSERT INTO public.review_reply_draft_state(review_id,business_id,reply_id,state,version,posting_token,posting_lease_until)
+        SELECT r.id,'${businessA}',rr.id,'approved',3,'70000000-0000-4000-8000-000000000001',now() + interval '1 minute'
+        FROM public.reviews r JOIN public.review_replies rr ON rr.review_id=r.id
+        WHERE r.google_review_id='review-a';
+      INSERT INTO public.review_reply_usage_reservations(
+        request_id,actor_user_id,owner_user_id,business_id,review_id,usage_period_start,state
+      ) SELECT '80000000-0000-4000-8000-000000000001','${memberId}','${ownerId}','${businessA}',r.id,
+        '2026-10-01','reserved' FROM public.reviews r WHERE r.google_review_id='review-a';
       INSERT INTO public.review_link_clicks(business_id,visit_id,user_agent)
         VALUES ('${businessA}','50000000-0000-4000-8000-000000000001','Customer browser');
       INSERT INTO public.followup_unsubscribes(business_id,customer_email,reason)
@@ -211,14 +234,20 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
     assert.ok(ownerWorkspace);
     assert.equal(ownerWorkspace.reviews[0].comment, "Customer review body");
     assert.equal(ownerWorkspace.replies[0].draft_markdown, "Owner reply");
+    assert.equal(ownerWorkspace.replyDraftState[0].state, "approved");
+    assert.equal(ownerWorkspace.replyDraftState[0].version, 3);
+    assert.deepEqual(ownerWorkspace.replyUsageReservations.map((item) => item.state), ["reserved"]);
     assert.equal(ownerWorkspace.messages[0].body, "Message body");
+    assert.equal(ownerWorkspace.boosterDeliveries[0].state, "accepted");
+    assert.equal(ownerWorkspace.boosterDeliveries[0].send_attempt_count, 2);
+    assert.deepEqual(ownerWorkspace.boosterQuotaLegacyUsage, [{ month_start_utc: "2026-09-01", accepted_count: 4 }]);
     assert.equal(ownerWorkspace.clicks[0].user_agent, "Customer browser");
     assert.equal(ownerWorkspace.unsubscribeSuppressions[0].customer_email, "suppressed@example.test");
     assert.ok(ownerWorkspace.settings.googleConnection);
     assert.equal(ownerWorkspace.settings.googleConnection.access_token, undefined);
     assert.equal(ownerWorkspace.invitations[0].revoked_at !== null, true);
     const workspaceText = JSON.stringify(allWorkspaces);
-    for (const secret of ["access-secret", "refresh-secret", "invite-secret", "checkout-secret", "idempotency-secret", "customer-key-secret", "raw-secret", "provider-message", "member@example.test", "Teammate"]) {
+    for (const secret of ["access-secret", "refresh-secret", "invite-secret", "checkout-secret", "idempotency-secret", "customer-key-secret", "raw-secret", "provider-message", "member@example.test", "Teammate", "delivery-payload-secret", "reviews.example/snapshot-secret", "delivery-idempotency-secret", "60000000-0000-4000-8000-000000000001", "provider-message-secret", "provider-error-secret", "70000000-0000-4000-8000-000000000001", "80000000-0000-4000-8000-000000000001", memberId]) {
       assert.equal(workspaceText.includes(secret), false, `workspace export leaked ${secret}`);
     }
 

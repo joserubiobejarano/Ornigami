@@ -77,7 +77,10 @@ function escapeHtml(value: string): string {
 function safeHttpUrl(value: string): string {
   try {
     const url = new URL(value);
-    if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("unsafe scheme");
+    const localHost = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+    if (url.username || url.password || (url.protocol !== "https:" && !(url.protocol === "http:" && localHost))) {
+      throw new Error("unsafe URL");
+    }
     return value;
   } catch {
     throw new ResendDeliveryError("Invalid email link URL", "definite_rejection");

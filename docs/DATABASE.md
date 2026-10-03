@@ -22,6 +22,17 @@ Neon Postgres is the database. `neon/migrations` is the only schema source of tr
 16. `016_remove_legacy_plan_taxonomy.sql` — current plan constraints (`free`, `replies`, `booster`, `complete`)
 17. `017_team_invitations.sql` — expiring Complete-plan workspace invitations
 
+18. `019_billing_lifecycle.sql` — durable customer/checkout and trial/reconciliation histories
+19. `020_account_recovery.sql` — session version and single-use recovery tokens
+20. `021_workspace_invitations.sql` — atomic invitation/seat lifecycle
+21. `022_booster_delivery_quotas.sql` — durable Booster delivery and UTC monthly quota ledger
+22. `024_review_draft_policy.sql` — current draft/version/posting state and generation reservations
+23. `026_privacy_account_lifecycle.sql` — gated deletion operations and provider-call leases
+24. `031_google_location_selection.sql` — explicit selected location and connection generations
+25. `032_workspace_bootstrap.sql` — serialized workspace admission
+
+Unused reservations remain unused. Existing deployments receive additive 022/024/026 without replaying or renumbering earlier applied files.
+
 ## Main schema areas
 
 - Identity: `users`, `profiles`, `email_verification_tokens`
@@ -64,3 +75,11 @@ Migrations 019/021/031/032 extend the canonical Neon schema. Billing keeps immut
 `team_invitations.status` is pending/accepted/revoked, with expiry and revocation timestamps. Business-row locks serialize seat checks with billing snapshots; the persisted user mutex serializes acceptance across businesses and first-workspace creation via `ensure_workspace_for_user`. Complete reserves three seats including the owner and live pending invitations. Owner cleanup is permitted after lapse; new downgrade policy remains undecided.
 
 `business_google_locations` records one explicit selected cached location per business. Connections rotate `connection_version` on OAuth replacement, while refresh preserves it; each discovered cache row records its validating generation. Stale/disconnected rows are unavailable. No initial selection or canonical-review backfill is inferred. Provider review/post requests pin the selected generation. A11 owns export/deletion/retention coverage for all new lifecycle tables and remote Google revocation; A13/A18 own approved location-switch recovery.
+
+## Reviewed delivery, draft and privacy contracts — wave 3
+
+Booster captures immutable provider payloads and stable idempotency keys in `booster_followup_deliveries`. Claims reserve quota under the business mutex; accepted and unresolved outcomes occupy their reserved UTC month. Frozen legacy usage is separate in `booster_quota_legacy_usage`. Unknown outcomes stop replay after the conservative 23-hour cutoff and require authoritative reconciliation; never release an unknown reservation or substitute a new key automatically. Routine visit/history deletion must preserve usage and suppression.
+
+`review_reply_draft_state` selects the one current version; historical `review_replies` remain append-only. Generation leases and `review_reply_usage_reservations` protect owner-shared accounting. This preserves the existing Reply profile billing-period/2,000 safety ceiling; it does not approve or implement A18’s proposed UTC Reply ceiling. Post uncertainty keeps its fence until authoritative Google reconciliation; never clear the fence merely because its timestamp expired.
+
+Privacy workspace exports include safe delivery/baseline/draft/reservation metadata, excluding provider payloads, keys, leases, errors and credential secrets. Migration 026 is foundation only: `PRIVACY_ACCOUNT_DELETION_ENABLED` must remain unset or false. Before enabling, complete shared auth/business/billing/team/Google/job freezes and drains, Stripe customer data handling, final Google-generation verification, recovery UI, and approved identifier-retention policy. The ordinary deletion route returns 503 without freezing users while gated. See [A11 shared integration](./tasks/A11_SHARED_INTEGRATION.md) and the single [roadmap](./ROADMAP.md).

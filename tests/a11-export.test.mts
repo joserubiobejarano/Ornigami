@@ -63,8 +63,12 @@ test("workspace export requires the owner query and returns only workspace-scope
       business: { id: businessId, name: "Owner workspace" },
       reviews: [{ google_review_id: "review-a" }],
       replies: [{ posted: true }],
+      replyDraftState: [{ state: "approved", version: 3 }],
+      replyUsageReservations: [{ state: "committed", usage_period_start: "2026-10-01T00:00:00Z" }],
       visits: [{ customer_email: "customer@example.test" }],
       messages: [{ status: "sent" }],
+      boosterDeliveries: [{ state: "accepted", reservation_month: "2026-10-01" }],
+      boosterQuotaLegacyUsage: [{ month_start_utc: "2026-09-01", accepted_count: 4 }],
       clicks: [{ clicked_at: "2026-01-01T00:00:00Z" }],
       unsubscribeSuppressions: [{ customer_email: "customer@example.test" }],
       invitations: [{ status: "revoked", revoked_at: "2026-01-01T00:00:00Z" }],
@@ -78,11 +82,14 @@ test("workspace export requires the owner query and returns only workspace-scope
   assert.equal(state.values[1], businessId);
   assert.match(state.query, /INNER JOIN actor a ON a\.id = b\.owner_user_id/);
   assert.match(state.query, /privacy_deletion_requested_at IS NULL/);
-  for (const table of ["reviews", "review_replies", "followup_visits", "followup_messages", "review_link_clicks", "followup_unsubscribes", "team_invitations"]) {
+  for (const table of ["reviews", "review_replies", "review_reply_draft_state", "review_reply_usage_reservations", "followup_visits", "followup_messages", "booster_followup_deliveries", "booster_quota_legacy_usage", "review_link_clicks", "followup_unsubscribes", "team_invitations"]) {
     assert.match(state.query, new RegExp(`FROM public\\.${table} \\w+ WHERE \\w+\\.business_id = b\\.id`));
   }
   assert.doesNotMatch(state.query, /token_hash|stripe_payload|idempotency_key|raw_payload|access_token|refresh_token/);
   assert.doesNotMatch(state.query, /'user_id'|'invited_by'|'email', i\.email/);
+  for (const sensitive of ["provider_payload", "idempotency_key", "lease_token", "provider_message_id", "error_message", "generation_token", "generation_fence", "posting_token", "posting_lease_until", "request_id", "actor_user_id"]) {
+    assert.doesNotMatch(state.query, new RegExp(`'${sensitive}'`));
+  }
 });
 
 test("member workspace and unowned business requests are denied, while invalid scope fails before SQL", async () => {

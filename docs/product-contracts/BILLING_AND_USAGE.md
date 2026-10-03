@@ -37,7 +37,7 @@ These findings are local source evidence, consistent with [E02/E06/E09](../ROADM
 
 ## Recommended target policy
 
-Every numbered rule is proposed for owner approval.
+Rules 2–4 for Booster and the one-time trial in rule 6 are approved as recorded below. Other new policies remain proposals.
 
 1. **One selected GBP location per business.** Replies and Booster share a business-owned stable account/location identity. Discovery does not activate locations. Switching selection does not reset quota or silently redirect existing visits: keep their captured destination or hold them for owner review. Invalid/cross-business selections fail rather than selecting another location. A manual Booster review link remains usable without GBP connection, with validated destination and explicit one-business/location scope.
 
@@ -75,7 +75,7 @@ Exact fields/routes/migrations remain with implementation owners and A00 allocat
 
 ## Decisions awaiting owner approval
 
-Approve UTC/full-month/no-rollover quotas; recovery-only grace; scheduled downgrade timing and seats; business-shared generation safety accounting; location-switch handling; and corrected customer promises. On 2026-10-03 the owner explicitly approved one 14-day trial per business and billing owner, with unknown legacy history requiring reconciliation. A03 implements that exception to proposal status. All other new policies remain proposed, not approved.
+Decide recovery-only grace; scheduled downgrade timing and seats; business-shared generation safety accounting; location-switch handling; and corrected customer promises. On 2026-10-03 the owner explicitly approved one 14-day trial per business and billing owner, with unknown legacy history requiring reconciliation. A03 implements that exception to proposal status. The owner explicitly approved the A06 policy in the A06 chat on 2026-10-03 (2026-10-02 23:09:49 UTC): full UTC calendar-month Booster quotas of 500/1,500, independent of annual invoices, no proration/rollover, usage preserved through trial conversion/upgrades, accepted sends consuming quota, unknown outcomes retaining reservations, and exhaustion deferring only within the existing seven-day eligibility window. This approval applies to Booster; the proposed UTC Reply ceiling and other new policies remain unapproved.
 
 ## Deterministic acceptance scenarios
 

@@ -5,6 +5,11 @@ import { fakeSql, loadTs } from "./a02-test-support.mts";
 
 const { NextRequest } = createRequire(import.meta.url)("next/server") as typeof import("next/server");
 type TestNextRequest = import("next/server").NextRequest;
+const sameOrigin = loadTs<{ isSameOriginMutation(request: Request): boolean }>("src/lib/team-lifecycle.ts", {
+  "@/lib/db/neon": { sql: async () => [] },
+  "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+  "@/lib/safe-logger": { safeLogger: { warn: () => undefined, error: () => undefined } },
+});
 
 type ReviewFetcher = {
   fetchAllGoogleReviews(userId: string, locationName: string, maxPages?: number, expectedConnectionVersion?: string): Promise<Array<{ reviewId: string }>>;
@@ -292,6 +297,7 @@ test("manual sync and reply routes reject conflicting query/body business IDs be
   let providerCalls = 0;
   const common = {
     "next/server": { NextResponse: { json: (value: unknown, init?: ResponseInit) => Response.json(value, init) } },
+    "@/lib/team-lifecycle": sameOrigin,
     "@/lib/user-from-req": { resolveUser: async () => ({ id: "member-1", email: "member@example.test" }) },
     "@/lib/db/neon": { sql: async () => [] },
     "@/lib/api-security": {
@@ -321,7 +327,7 @@ test("manual sync and reply routes reject conflicting query/body business IDs be
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ businessId: "biz-body" }),
   }));
   const replyResponse = await replies.POST(new NextRequest("http://localhost/api/google/replies?businessId=biz-query", {
-    method: "POST", headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json", origin: "http://localhost" },
     body: JSON.stringify({ businessId: "biz-body", reviewId: "review_1", locationName, reply: "Thanks", intent: "manual", expectedVersion: 1 }),
   }));
   assert.equal(syncResponse.status, 400);

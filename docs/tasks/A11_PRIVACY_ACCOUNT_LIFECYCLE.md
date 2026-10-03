@@ -40,8 +40,13 @@ any live database.
 * `GET /api/privacy/export` returns personal or canonical-owner workspace data
   in one statement snapshot, denies frozen/stale accounts, and excludes
   credentials, bearer tokens, invitation secrets, provider payloads, and
-  teammate identity. The retention helper processes bounded batches and reports
-  partial failures; the A12 cron route has a separate apply patch.
+  teammate identity. Workspace projections include safe A06 Booster delivery
+  state and UTC quota baseline plus A09 reply-draft state and usage-reservation
+  summaries, while omitting the new projections' provider payloads and IDs,
+  fencing/idempotency/generation/posting tokens, provider errors, and actor IDs.
+  The retention helper preserves those histories through account/workspace
+  deletion. It processes bounded batches and reports partial failures; the A12
+  cron route has a separate apply patch.
 * Owner deletion with explicit shared-workspace confirmation deletes that
   owner’s business container and dependent workspace content. Surviving teammate
   user/profile rows, unrelated businesses, and authored attribution remain.
@@ -210,6 +215,32 @@ live database, provider, or network-backed test was used.
 
 Enablement remains blocked until all shared gates are implemented and their
 race tests pass. Keep the feature gate closed through review and handoff.
+
+## Unresolved pre-enable review findings
+
+The following four findings remain open; this handoff does not claim they are
+fixed by the export/retention integration:
+
+1. **Google reconnect after revocation:** A08 callback/refresh writes need a
+   lifecycle fence, and finalization must recheck that the actor's Google grant
+   was not replaced after revocation. Without that fence, deleting the local
+   credential can leave a newly issued remote grant active.
+2. **Stripe customer personal data:** the current cleanup drains checkout
+   sessions and subscriptions but retains the Stripe Customer object. Decide
+   whether to delete/scrub it after reconciliation or document the lawful
+   retention basis and user-facing notice.
+3. **Verification/password reset during freeze:** the restricted-auth proposal
+   must prevent verification and reset token creation/consumption from
+   mutating a deleting user. Password-reset consumption currently changes the
+   password and increments `auth_version`; verification can still update the
+   frozen user row.
+4. **UUID retention:** trial anti-abuse history and the deletion ledger retain
+   actor UUIDs without an approved purpose/retention period. These values are
+   linkable pseudonyms, not anonymous data; set and document the policy before
+   enabling deletion.
+
+The deletion feature gate remains closed until these findings, all shared
+integration gates, and their race tests are resolved.
 
 ## Rollback and incident guidance
 
