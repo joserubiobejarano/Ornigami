@@ -203,7 +203,8 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
         VALUES ('${businessA}','50000000-0000-4000-8000-000000000001',now() - interval '400 days');
       INSERT INTO public.followup_integration_events(business_id,source,event_type,created_at)
         VALUES ('${businessA}','old','old',now() - interval '400 days');
-      INSERT INTO public.cron_runs(job_name,started_at) VALUES ('old-run',now() - interval '35 days');`);
+      INSERT INTO public.cron_runs(job_name,started_at,finished_at,status) VALUES ('old-run',now() - interval '35 days',now() - interval '34 days','succeeded');
+      INSERT INTO public.cron_runs(job_name,started_at) VALUES ('active-old-run',now() - interval '35 days');`);
 
     const ownerRoute = routeFor(ownerId);
     const personalResponse = await ownerRoute.GET(new Request("https://app.example/api/privacy/export"));
@@ -298,8 +299,9 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
       ["password_reset_tokens", "expires_at < now()"],
       ["review_link_clicks", "clicked_at < now() - interval '365 days'"],
       ["followup_integration_events", "created_at < now() - interval '365 days'"],
-      ["cron_runs", "started_at < now() - interval '30 days'"],
+      ["cron_runs", "status <> 'running' AND finished_at IS NOT NULL AND started_at < now() - interval '30 days'"],
     ] as const) assert.equal(psql(`SELECT count(*) FROM public.${table} WHERE ${predicate}`), "0", `${table} expired rows remain`);
+    assert.equal(psql("SELECT count(*) FROM public.cron_runs WHERE job_name='active-old-run' AND status='running'"), "1", "active cron runs remain available for health diagnosis");
     assert.equal(psql("SELECT count(*) FROM public.followup_visits"), "1");
     assert.equal(psql("SELECT count(*) FROM public.followup_messages"), "1");
     assert.equal(psql("SELECT count(*) FROM public.reviews"), "1");

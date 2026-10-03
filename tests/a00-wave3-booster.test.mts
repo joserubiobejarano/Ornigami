@@ -37,15 +37,19 @@ function loadTsx<T>(relative: string, mocks: Record<string, unknown>): T {
 test("Review Booster cron reports unknown/deferred and accounts for reserved quota", async () => {
   const logs: Array<{ event: string; values: Record<string, unknown> }> = [];
   let health: Record<string, unknown> | undefined;
+  const businessId = "11111111-1111-4111-8111-111111111111";
   const cron = loadTs<{ GET(request: unknown): Promise<Response> }>("src/app/api/cron/review-booster/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
-    "@/lib/db/neon": { sql: async () => [{ business_id: "business-1" }] },
+    "@/lib/db/neon": { sql: async () => [{ business_id: businessId }] },
     "@/lib/safe-logger": { safeLogger: { warn: (event: string, values: Record<string, unknown>) => logs.push({ event, values }), error() {} } },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => true },
     "@/lib/cron-health": {
-      startCronRun: async () => "run-1",
-      finishCronRun: async (value: Record<string, unknown>) => { health = value; },
+      acquireCronJobRun: async () => ({ runId: "run-1", fence: 1, cursor: null, deadlineAt: new Date(Date.now() + 60_000), batchLimit: 20, budgetMs: 45_000 }),
+      checkpointCronJobRun: async () => undefined,
+      finishCronJobRun: async (value: Record<string, unknown>) => { health = value; },
+      CronLeaseBusyError: class extends Error { retryAfterSeconds = 10; },
     },
+    "@/lib/cron-budget": { providerWindow: () => 8_000 },
     "@/modules/review-booster/services/review-booster-db.service": {
       getReviewBoosterBillingPeriodUsage: async () => ({ sent: 499, used: 500, reserved: 1, allowance: 500 }),
     },
@@ -56,13 +60,14 @@ test("Review Booster cron reports unknown/deferred and accounts for reserved quo
   });
   const response = await cron.GET({} as never);
   const body = await response.json() as Record<string, unknown>;
+  assert.equal(response.status, 500);
   assert.equal(body.total_unknown, 1);
   assert.equal(body.total_deferred, 1);
   assert.equal(body.total_sent, 0);
   assert.equal(logs[0]?.event, "cron.review_booster.fair_use_limit");
   assert.equal(logs[0]?.values.used, 500);
   assert.equal(logs[0]?.values.sent, 499);
-  assert.equal(health?.status, "failed", "unresolved delivery outcomes are visible to cron health");
+  assert.equal(health?.status, "partial", "unresolved delivery outcomes are visible to cron health");
   assert.equal(health?.failedCount, 1, "unknown outcomes count as failures; expected quota deferrals do not");
 });
 

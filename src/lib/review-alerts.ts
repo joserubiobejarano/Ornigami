@@ -20,6 +20,8 @@ export async function sendNewReviewAlert(input: {
   businessName: string;
   locationName: string;
   reviews: NewReviewAlertReview[];
+  signal?: AbortSignal;
+  required?: boolean;
 }): Promise<void> {
   if (input.reviews.length === 0) return;
   const resendApiKey = getOptionalEnv("RESEND_API_KEY");
@@ -27,6 +29,7 @@ export async function sendNewReviewAlert(input: {
   const replyToEmail = getOptionalEnv("REPLY_TO_EMAIL");
   if (!resendApiKey || !emailFrom) {
     safeLogger.warn("review.alert.skipped_missing_email_config", { count: input.reviews.length });
+    if (input.required) throw new Error("Review alert email configuration is unavailable");
     return;
   }
 
@@ -44,24 +47,32 @@ export async function sendNewReviewAlert(input: {
     return `${review.reviewerName || "A customer"} — ${rating}\n${review.comment || "No written comment"}`;
   }).join("\n\n");
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: `Ornigami <${emailFrom}>`,
-      to: input.recipientEmail,
-      subject,
-      text: `${text}\n\nLocation: ${input.locationName}`,
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;"><h2>${escapeHtml(subject)}</h2><p>Location: ${escapeHtml(input.locationName)}</p><ul>${reviewLines}</ul></div>`,
-      reply_to: replyToEmail || emailFrom,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: `Ornigami <${emailFrom}>`,
+        to: input.recipientEmail,
+        subject,
+        text: `${text}\n\nLocation: ${input.locationName}`,
+        html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;"><h2>${escapeHtml(subject)}</h2><p>Location: ${escapeHtml(input.locationName)}</p><ul>${reviewLines}</ul></div>`,
+        reply_to: replyToEmail || emailFrom,
+      }),
+      signal: input.signal ? AbortSignal.any([input.signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000),
+    });
+  } catch {
+    throw new Error("Review alert provider request failed or timed out");
+  }
 
   if (!response.ok) {
-    const message = await response.text();
-    safeLogger.warn("review.alert.send_failed", { status: response.status, message });
+    await response.body?.cancel().catch(() => undefined);
+    safeLogger.warn("review.alert.send_failed", { status: response.status });
+    throw new Error("Review alert provider rejected the request");
   }
+  await response.body?.cancel().catch(() => undefined);
 }

@@ -351,11 +351,17 @@ test("review reply cron reads selected connected locations only", async () => {
     "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => true },
     "@/lib/review-alerts": { sendNewReviewAlert: async () => undefined },
-    "@/lib/cron-health": { startCronRun: async () => "run", finishCronRun: async () => undefined },
+    "@/lib/cron-health": {
+      acquireCronJobRun: async () => ({ runId: "run", fence: 1, cursor: null, deadlineAt: new Date(Date.now() + 60_000), batchLimit: 20, budgetMs: 45_000 }),
+      checkpointCronJobRun: async () => undefined,
+      finishCronJobRun: async () => undefined,
+      CronLeaseBusyError: class extends Error { retryAfterSeconds = 10; },
+    },
+    "@/lib/cron-budget": { providerWindow: () => 8_000 },
   });
   const response = await cron.GET(new NextRequest("http://localhost/api/cron/review-replies"));
   assert.equal(response.status, 200);
-  assert.equal(statements.length, 1);
+  assert.equal(statements.length, 2);
   assert.match(statements[0]!, /public\.business_google_locations selected/);
   assert.match(statements[0]!, /l\.connected IS TRUE/);
   assert.match(statements[0]!, /l\.connection_version = gc\.connection_version/);

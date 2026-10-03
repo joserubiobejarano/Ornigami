@@ -134,10 +134,11 @@ export async function postReplyToGoogleAndPersist(
 
 export async function generateReplyForReviewRow(
   review: ReviewRowForReply,
-  profile: ProfileReplyRow | null
+  profile: ProfileReplyRow | null,
+  options: { timeoutMs?: number } = {}
 ): Promise<string> {
   const input = buildReviewReplyInputFromRow(review, profile);
-  const raw = await generateReviewReply(input);
+  const raw = await generateReviewReply(input, options);
   return sanitizeReviewReply(raw);
 }
 

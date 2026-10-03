@@ -422,14 +422,30 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     let tokens: Tokens;
     let refreshedAfterUnauthorized = false;
     const maxAttempts = canReplay ? MAX_API_ATTEMPTS : 1;
+    const externalSignal = options.signal;
+    const throwIfCancelled = () => {
+      if (externalSignal?.aborted) throw new Error("Google API request was cancelled.");
+    };
+    const cancellableDelay = async (delayMs: number) => {
+      throwIfCancelled();
+      if (!externalSignal) return dependencies.sleep(delayMs);
+      const signal = externalSignal;
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(done, delayMs);
+        const onAbort = () => { clearTimeout(timer); signal.removeEventListener("abort", onAbort); reject(new Error("Google API request was cancelled.")); };
+        function done() { signal.removeEventListener("abort", onAbort); resolve(); }
+        signal.addEventListener("abort", onAbort, { once: true });
+      });
+    };
 
     for (let attempt = 0; ; attempt += 1) {
       // Re-read before every provider request, including retries after backoff.
       // A selected location is pinned to the credential generation that authorized it.
+      throwIfCancelled();
       tokens = await freshTokens(ownerUserId, expectedConnectionVersion);
+      throwIfCancelled();
       assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
       const controller = new AbortController();
-      const externalSignal = options.signal;
       const abortFromCaller = () => controller.abort(externalSignal?.reason);
       let timedOut = false;
       const timeout = setTimeout(() => {
@@ -473,7 +489,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
         const delay = retryDelay(response, attempt, dependencies.now());
         if (delay === null) return response;
         await response.body?.cancel().catch(() => undefined);
-        await dependencies.sleep(delay);
+        await cancellableDelay(delay);
         continue;
       }
       return response;

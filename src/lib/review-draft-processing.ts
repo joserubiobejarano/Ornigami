@@ -31,6 +31,8 @@ export async function processReviewDraft(input: {
   row: ReviewRowForReply;
   profile: ProfileReplyRow | null;
   source: DraftProcessingSource;
+  /** Optional scheduled-work provider deadline; interactive callers keep defaults. */
+  providerTimeoutMs?: number;
 }): Promise<DraftProcessingResult> {
   const { actorUserId, businessId, locationName, row, profile, source } = input;
   if (!(row.comment ?? "").trim()) return { outcome: "skipped", reason: "empty" };
@@ -43,7 +45,7 @@ export async function processReviewDraft(input: {
   }
   let reply: string;
   try {
-    reply = (await generateReplyForReviewRow(row, profile)).trim();
+    reply = (await generateReplyForReviewRow(row, profile, { timeoutMs: input.providerTimeoutMs })).trim();
   } catch {
     await releaseReplyGenerationUsage(reservation.reservationId, claimed.claim).catch(() => undefined);
     return { outcome: "failed", stage: "generate" };

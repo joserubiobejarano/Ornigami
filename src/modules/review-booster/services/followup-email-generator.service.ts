@@ -83,7 +83,7 @@ export function buildFallbackEmailBody(input: EmailInput, now: Date = new Date()
   return [copy.greeting(customerName), "", copy.thank(input.business_name, service, timing), copy.ask, "", copy.signoff, input.business_name].join("\n");
 }
 
-export async function generateFollowupEmailBody(input: EmailInput) {
+export async function generateFollowupEmailBody(input: EmailInput, options: { timeoutMs?: number } = {}) {
   if (!openai) return buildFallbackEmailBody(input);
   const code = languageCode(input.language);
   const prompt = `You are a warm assistant for ${input.business_name}, a ${input.business_type || "local business"} in ${input.city || "their city"}.
@@ -102,7 +102,10 @@ Tone: ${input.tone_setting || "warm and friendly"}
 
 Return only the email body.`;
   try {
-    const response = await openai.responses.create({ model: "gpt-4.1-mini", input: prompt });
+    const response = await openai.responses.create(
+      { model: "gpt-4.1-mini", input: prompt },
+      options.timeoutMs ? { timeout: Math.max(1, Math.floor(options.timeoutMs)), maxRetries: 0 } : undefined,
+    );
     const body = normalizeEmailBodyPunctuation((response.output_text || "").trim());
     return body || buildFallbackEmailBody(input);
   } catch {
