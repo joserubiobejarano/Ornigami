@@ -79,10 +79,10 @@ test("CSP reports are bounded, normalized, and safe to log", () => {
   assert.equal(CSP_REPORT_POLICY.rateLimit, 30);
 
   const reports = extractCspReports(
-    Array.from({ length: 8 }, (_, index) => ({ body: { reportId: index } }))
+    Array.from({ length: 8 }, (_, index) => ({ body: { reportId: index, violatedDirective: "script-src" } }))
   );
   assert.equal(reports.length, 5);
-  assert.deepEqual(extractCspReports({ "csp-report": { reportId: "legacy" } }), [{ reportId: "legacy" }]);
+  assert.deepEqual(extractCspReports({ "csp-report": { "violated-directive": "script-src" } }), [{ "violated-directive": "script-src" }]);
   assert.deepEqual(extractCspReports(null), []);
 
   assert.deepEqual(
@@ -95,9 +95,9 @@ test("CSP reports are bounded, normalized, and safe to log", () => {
       lineNumber: Number.POSITIVE_INFINITY,
     }),
     {
-      documentPath: "https://example.com/path",
-      blockedUri: "https://blocked.example/resource.js",
-      sourcePath: "not-a-url",
+      documentScheme: "https",
+      blockedScheme: "https",
+      sourceScheme: "unparseable",
       effectiveDirective: "script-src",
       violatedDirective: undefined,
       disposition: undefined,
