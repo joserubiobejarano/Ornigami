@@ -1,0 +1,343 @@
+diff --git a/src/auth.ts b/src/auth.ts
+index 90cf021..0f4a56b 100644
+--- a/src/auth.ts
++++ b/src/auth.ts
+@@ -90,6 +90,7 @@ export const authConfig = {
+       try {
+         const current = await findUserById(token.sub);
+         if (!current || current.auth_version !== token.authVersion) return null;
++        token.privacyDeletionPending = current.privacy_deletion_requested_at != null;
+       } catch {
+         return null;
+       }
+@@ -99,6 +100,19 @@ export const authConfig = {
+       if (!session.user || !token.sub || typeof token.authVersion !== "number") {
+         throw new Error("Cannot create a session from an invalid authentication token");
+       }
++      if (token.privacyDeletionPending === true) {
++        // Keep the JWT subject internal so this account can resume its pending
++        // deletion. Normal route guards receive no usable user id or PII.
++        const restrictedUser = session.user as unknown as Record<string, unknown>;
++        delete restrictedUser.id;
++        delete restrictedUser.email;
++        delete restrictedUser.name;
++        delete restrictedUser.image;
++        delete restrictedUser.authVersion;
++        session.deletionUserId = token.sub;
++        session.accountLifecycle = "deleting";
++        return session;
++      }
+       session.user.id = token.sub;
+       session.user.authVersion = token.authVersion;
+       return session;
+diff --git a/src/lib/db/users.ts b/src/lib/db/users.ts
+index e95e985..cddecc8 100644
+--- a/src/lib/db/users.ts
++++ b/src/lib/db/users.ts
+@@ -8,11 +8,13 @@ export type DbUserRow = {
+   password_hash: string | null;
+   image: string | null;
+   email_verified: string | null;
++  privacy_deletion_requested_at?: string | null;
+ };
+ 
+ export async function findUserByEmail(email: string): Promise<DbUserRow | null> {
+   const rows = await sql`
+-    SELECT id, auth_version, email, name, password_hash, image, email_verified
++    SELECT id, auth_version, email, name, password_hash, image, email_verified,
++      privacy_deletion_requested_at
+     FROM public.users
+     WHERE lower(email) = lower(${email})
+     LIMIT 1
+@@ -21,14 +23,14 @@ export async function findUserByEmail(email: string): Promise<DbUserRow | null>
+   return row ?? null;
+ }
+ 
+-export async function findUserById(id: string): Promise<Pick<DbUserRow, "id" | "auth_version"> | null> {
++export async function findUserById(id: string): Promise<Pick<DbUserRow, "id" | "auth_version" | "privacy_deletion_requested_at"> | null> {
+   const rows = await sql`
+-    SELECT id, auth_version
++    SELECT id, auth_version, privacy_deletion_requested_at
+     FROM public.users
+     WHERE id = ${id}
+     LIMIT 1
+   `;
+-  const row = rows[0] as { id: string; auth_version: number } | undefined;
++  const row = rows[0] as { id: string; auth_version: number; privacy_deletion_requested_at: string | null } | undefined;
+   return row ?? null;
+ }
+ 
+@@ -37,24 +39,39 @@ export async function ensureUserFromOAuth(input: {
+   email: string;
+   name: string | null;
+   image: string | null;
+-}): Promise<{ id: string; auth_version: number }> {
++}): Promise<{ id: string; auth_version: number; privacy_deletion_requested_at: string | null }> {
+   const rows = await sql`
+-    INSERT INTO public.users (email, name, image, email_verified)
+-    VALUES (${input.email}, ${input.name}, ${input.image}, now())
+-    ON CONFLICT (email) DO UPDATE SET
+-      name = COALESCE(EXCLUDED.name, public.users.name),
+-      image = COALESCE(EXCLUDED.image, public.users.image),
+-      email_verified = COALESCE(public.users.email_verified, EXCLUDED.email_verified),
+-      updated_at = now()
+-    RETURNING id, auth_version
+-  `;
+-  const { id, auth_version } = rows[0] as { id: string; auth_version: number };
+-  await sql`
+-    INSERT INTO public.profiles (id, full_name)
+-    VALUES (${id}, ${input.name})
+-    ON CONFLICT (id) DO NOTHING
++    WITH oauth_user AS (
++      INSERT INTO public.users (email, name, image, email_verified)
++      VALUES (${input.email}, ${input.name}, ${input.image}, now())
++      ON CONFLICT (email) DO UPDATE SET
++        name = COALESCE(EXCLUDED.name, public.users.name),
++        image = COALESCE(EXCLUDED.image, public.users.image),
++        email_verified = COALESCE(public.users.email_verified, EXCLUDED.email_verified),
++        updated_at = now()
++      WHERE public.users.privacy_deletion_requested_at IS NULL
++      RETURNING id, auth_version, privacy_deletion_requested_at
++    ), profile AS (
++      INSERT INTO public.profiles (id, full_name)
++      SELECT id, ${input.name} FROM oauth_user
++      ON CONFLICT (id) DO NOTHING
++      RETURNING id
++    ), deleting_user AS (
++      SELECT id, auth_version, privacy_deletion_requested_at
++      FROM public.users
++      WHERE lower(email) = lower(${input.email})
++        AND privacy_deletion_requested_at IS NOT NULL
++        AND NOT EXISTS (SELECT 1 FROM oauth_user)
++      LIMIT 1
++    )
++    SELECT id, auth_version, privacy_deletion_requested_at FROM oauth_user
++    UNION ALL
++    SELECT id, auth_version, privacy_deletion_requested_at FROM deleting_user
++    LIMIT 1
+   `;
+-  return { id, auth_version };
++  const row = rows[0] as { id: string; auth_version: number; privacy_deletion_requested_at: string | null } | undefined;
++  if (!row) throw new Error("oauth_user_unavailable");
++  return row;
+ }
+ 
+ export async function createUserWithPassword(input: {
+diff --git a/src/proxy.ts b/src/proxy.ts
+index 492ac52..e073119 100644
+--- a/src/proxy.ts
++++ b/src/proxy.ts
+@@ -27,6 +27,10 @@ function withSecurityHeaders(response: NextResponse, nonce: string): NextRespons
+ const proxy = auth(async (req) => {
+   const { pathname } = req.nextUrl;
+   const sessionUser = req.auth?.user;
++  const isRestrictedDeletionSession =
++    req.auth?.accountLifecycle === "deleting" &&
++    typeof req.auth.deletionUserId === "string" &&
++    !sessionUser?.id;
+ 
+   const nonce = randomBytes(16).toString("base64url");
+   const requestHeaders = new Headers(req.headers);
+@@ -79,6 +83,30 @@ const proxy = auth(async (req) => {
+     }), nonce);
+   }
+ 
++  if (isRestrictedDeletionSession) {
++    // Auth.js owns sign-in/session/sign-out and must remain available so a
++    // frozen account can reauthenticate into the restricted session. All
++    // application APIs remain denied except the dedicated deletion retry.
++    if (pathname.startsWith("/api/auth/")) {
++      return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
++    }
++    if (pathname.startsWith("/api/")) {
++      if (pathname === "/api/privacy/delete" && req.method === "POST") {
++        return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
++      }
++      return withSecurityHeaders(NextResponse.json({ error: "Restricted account session" }, { status: 403 }), nonce);
++    }
++    if (pathname === "/account/deletion") {
++      return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), nonce);
++    }
++    if (pathname === "/login" || pathname.startsWith("/login/") || pathname === "/signup" || pathname.startsWith("/signup/")) {
++      return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
++    }
++    if (isProtectedAppPage(pathname)) {
++      return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
++    }
++  }
++
+   const isAuthPage =
+     pathname.startsWith("/login") || pathname.startsWith("/signup");
+ 
+diff --git a/src/types/next-auth.d.ts b/src/types/next-auth.d.ts
+index fc11fba..435e202 100644
+--- a/src/types/next-auth.d.ts
++++ b/src/types/next-auth.d.ts
+@@ -6,6 +6,8 @@ declare module "next-auth" {
+       id: string;
+       authVersion: number;
+     };
++    deletionUserId?: string;
++    accountLifecycle?: "deleting";
+   }
+   interface User {
+     authVersion?: number;
+@@ -15,5 +17,6 @@ declare module "next-auth" {
+ declare module "next-auth/jwt" {
+   interface JWT {
+     authVersion?: number;
++    privacyDeletionPending?: boolean;
+   }
+ }
+diff --git a/tests/a11-auth-restricted-session-contract.test.mts b/tests/a11-auth-restricted-session-contract.test.mts
+new file mode 100644
+index 0000000..ab8ea46
+--- /dev/null
++++ b/tests/a11-auth-restricted-session-contract.test.mts
+@@ -0,0 +1,83 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { loadTs } from "./auth-test-harness.mts";
++
++test("pending deletion keeps a resumable JWT but exposes only a restricted session", async () => {
++  let pending = false;
++  let lookupFails = false;
++  let deleted = false;
++  let currentVersion = 4;
++  const loaded = loadTs<{ authConfig: { callbacks: {
++    jwt(input: never): Promise<Record<string, unknown> | null>;
++    session(input: never): Promise<Record<string, unknown>>;
++  } } }>("src/auth.ts", {
++    overrides: {
++      "next-auth": { __esModule: true, default: () => ({ handlers: {}, auth: () => undefined, signIn: () => undefined, signOut: () => undefined }) },
++      "next-auth/providers/google": { __esModule: true, default: () => ({ id: "google", type: "oauth" }) },
++      "next-auth/providers/credentials": { __esModule: true, default: () => ({ id: "credentials", type: "credentials" }) },
++      "@/lib/db/users": {
++        findUserByEmail: async () => null,
++        findUserById: async (id: string) => {
++          if (lookupFails) throw new Error("database unavailable");
++          return id === "u1" && !deleted ? {
++            id,
++            auth_version: currentVersion,
++            privacy_deletion_requested_at: pending ? "2026-10-03T00:00:00.000Z" : null,
++          } : null;
++        },
++        ensureUserFromOAuth: async () => ({
++          id: "u1", auth_version: currentVersion,
++          privacy_deletion_requested_at: pending ? "2026-10-03T00:00:00.000Z" : null,
++        }),
++      },
++      "@/lib/auth-rate-limit": { clearCredentialsLoginFailures: async () => undefined, isCredentialsLoginRateLimited: async () => false, recordCredentialsLoginFailure: async () => undefined },
++      "@/lib/env": { getRequiredEnv: (name: string) => name },
++    },
++  });
++
++  const jwt = loaded.authConfig.callbacks.jwt;
++  const session = loaded.authConfig.callbacks.session;
++  const token = await jwt({
++    token: {},
++    user: { id: "u1", email: "person@example.com", name: "Person", authVersion: 4 },
++    account: null,
++  } as never);
++  assert.deepEqual(token, { sub: "u1", authVersion: 4, privacyDeletionPending: false });
++
++  pending = true;
++  const refreshed = await jwt({ token, user: undefined, account: null } as never);
++  assert.deepEqual(refreshed, { sub: "u1", authVersion: 4, privacyDeletionPending: true });
++  const restricted = await session({
++    session: { user: { id: "u1", email: "person@example.com", name: "Person", image: "image-url", authVersion: 4 } },
++    token: refreshed,
++  } as never);
++  assert.deepEqual(restricted, {
++    user: {},
++    deletionUserId: "u1",
++    accountLifecycle: "deleting",
++  });
++
++  const retried = await jwt({ token: refreshed, user: undefined, account: null } as never);
++  assert.deepEqual(retried, refreshed, "the same restricted session remains usable for deletion retry");
++
++  const oauthReauth = await jwt({
++    token: {},
++    user: { id: "google-id", email: "person@example.com", name: "New provider name" },
++    account: { type: "oauth", provider: "google" },
++  } as never);
++  assert.deepEqual(oauthReauth, { sub: "u1", authVersion: 4, privacyDeletionPending: true },
++    "OAuth reauthentication of a frozen account produces only a restricted token");
++
++  currentVersion = 5;
++  assert.equal(await jwt({ token: refreshed, user: undefined, account: null } as never), null,
++    "a stale auth version cannot recover the frozen account");
++  currentVersion = 4;
++  deleted = true;
++  assert.equal(await jwt({ token: refreshed, user: undefined, account: null } as never), null,
++    "the old token stops working after final row deletion");
++  deleted = false;
++
++  lookupFails = true;
++  assert.equal(await jwt({ token: refreshed, user: undefined, account: null } as never), null,
++    "a lookup failure fails closed instead of granting restricted access");
++});
+diff --git a/tests/a11-restricted-proxy-contract.test.mts b/tests/a11-restricted-proxy-contract.test.mts
+new file mode 100644
+index 0000000..08b9573
+--- /dev/null
++++ b/tests/a11-restricted-proxy-contract.test.mts
+@@ -0,0 +1,57 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { loadTs } from "./auth-test-harness.mts";
++
++class FakeNextResponse extends Response {
++  static next() { return new FakeNextResponse("next"); }
++  static redirect(url: URL, status = 307) {
++    return new FakeNextResponse(null, { status, headers: { Location: url.href } });
++  }
++  static rewrite(url: URL) { return new FakeNextResponse(url.href); }
++  static json(value: unknown, init?: ResponseInit) {
++    return new FakeNextResponse(JSON.stringify(value), {
++      ...init,
++      headers: { "Content-Type": "application/json", ...(init?.headers as Record<string, string> | undefined) },
++    });
++  }
++}
++
++test("restricted deletion session reaches only recovery, retry, and Auth.js", async () => {
++  const loaded = loadTs<{ proxy: (request: unknown) => Promise<Response> }>("src/proxy.ts", {
++    overrides: {
++      "next/server": { NextResponse: FakeNextResponse },
++      "@/auth": { auth: (handler: (request: unknown) => Promise<Response>) => handler },
++      "@/lib/app-base-url": { getAppBaseUrl: (request: { nextUrl: URL }) => request.nextUrl.origin },
++      "@/lib/db/access": { getMiddlewareAccessState: async () => ({ hasGbp: false, hasRepliesAccess: false }) },
++      "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
++      "@/lib/disconnected-access-policy": {
++        shouldRedirectToGoogleConnect: () => false,
++        shouldRedirectAfterAccessResolutionError: () => false,
++      },
++      "@/lib/security-headers": { buildContentSecurityPolicy: () => "default-src 'self'" },
++    },
++  });
++
++  const request = (path: string, method = "GET") => ({
++    url: `https://example.test${path}`,
++    method,
++    nextUrl: new URL(`https://example.test${path}`),
++    headers: new Headers(),
++    cookies: { get: () => undefined },
++    auth: { user: {}, deletionUserId: "u1", accountLifecycle: "deleting" },
++  });
++
++  const dashboard = await loaded.proxy(request("/dashboard"));
++  assert.equal(dashboard.status, 302);
++  assert.equal(dashboard.headers.get("location"), "https://example.test/account/deletion");
++
++  const billing = await loaded.proxy(request("/api/stripe/checkout", "POST"));
++  assert.equal(billing.status, 403);
++  const exportApi = await loaded.proxy(request("/api/privacy/export"));
++  assert.equal(exportApi.status, 403);
++
++  assert.equal((await loaded.proxy(request("/api/privacy/delete", "POST"))).status, 200);
++  assert.equal((await loaded.proxy(request("/api/privacy/delete", "GET"))).status, 403);
++  assert.equal((await loaded.proxy(request("/api/auth/signout", "POST"))).status, 200);
++  assert.equal((await loaded.proxy(request("/account/deletion"))).status, 200);
++});
