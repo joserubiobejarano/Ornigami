@@ -2,6 +2,9 @@ export type DisconnectedAccessState = { hasGbp: boolean; hasRepliesAccess: boole
 
 /** Recovery and settings stay reachable when the shared Google connection is absent. */
 export function isGoogleDependentRepliesPath(pathname: string): boolean {
+  // These read-only shells show connection recovery and independently authorize
+  // every data read. A missing connection must not intercept their error UI.
+  if (["/reviews", "/dashboard/agents/review-replies", "/dashboard/agents/review-replies/reviews"].includes(pathname)) return false;
   if (pathname === "/reviews" || pathname.startsWith("/reviews/")) return true;
   const root = "/dashboard/agents/review-replies";
   if (pathname !== root && !pathname.startsWith(`${root}/`)) return false;

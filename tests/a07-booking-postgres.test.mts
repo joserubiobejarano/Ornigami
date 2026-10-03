@@ -47,6 +47,19 @@ function psqlAsync(statement: string): Promise<string> {
     child.on("close", (code) => code === 0 ? resolveOutput(output.trim()) : reject(new Error(error || `psql exited ${code}`)));
   });
 }
+function openPsqlSession() {
+  const child = spawn(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", "-"], { stdio: ["pipe", "pipe", "pipe"] });
+  let output = "";
+  let error = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk: string) => { output += chunk; });
+  child.stderr.setEncoding("utf8").on("data", (chunk: string) => { error += chunk; });
+  const done = new Promise<void>((resolveDone, reject) => {
+    child.once("error", reject);
+    child.once("close", (code) => code === 0 ? resolveDone() : reject(new Error(error || `psql exited ${code}`)));
+  });
+  void done.catch(() => undefined);
+  return { write: (statement: string) => child.stdin.write(statement), end: () => { child.stdin.end(); return done; }, output: () => output };
+}
 function event(credential: string, externalId: string, source = "calendar", email: string | null = "test@example.com"): string {
   return `SELECT public.admit_booster_booking_event('${credential}','${source}','booking.completed','${externalId}','Test',${email == null ? "NULL" : `'${email}'`},${email == null ? "'+34 600 123 456'" : "NULL"},'Consultation',now()-interval '2 days')`;
 }
@@ -96,15 +109,40 @@ test("booking SQL atomically deduplicates event and visit, fences entitlement/re
     assert.equal(psql(event(ids.credential, "evt-unsupported").replace("booking.completed", "booking.cancelled")), "invalid");
     assert.equal(psql(event(ids.credential, "evt-unsupported")), "created", "unsupported events cannot consume the completion idempotency key");
 
-    const revokeOverlap = psqlAsync(`BEGIN; SELECT public.revoke_booster_booking_credential('${ids.activeBusiness}','${ids.owner}','${createdCredential}'); SELECT pg_advisory_xact_lock(71023); SELECT pg_sleep(0.5); COMMIT;`);
-    const readinessDeadline = Date.now() + 4_000;
-    while (Date.now() < readinessDeadline && psql("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND objid=71023::oid AND granted)") !== "t") {
-      await new Promise((resolveWait) => setTimeout(resolveWait, 30));
+    const revoke = openPsqlSession();
+    let released = false;
+    let blockedAdmission: Promise<string> | undefined;
+    const releaseRevoke = async (commit: boolean) => {
+      if (released) return;
+      released = true;
+      revoke.write(commit ? "COMMIT;\n" : "ROLLBACK;\n");
+      await revoke.end();
+    };
+    try {
+      revoke.write(`BEGIN; SELECT public.revoke_booster_booking_credential('${ids.activeBusiness}','${ids.owner}','${createdCredential}');\n\\echo A07_REVOKE_LOCKED\n`);
+      const readinessDeadline = Date.now() + 15_000;
+      while (Date.now() < readinessDeadline && !revoke.output().includes("A07_REVOKE_LOCKED")) {
+        await new Promise((resolveWait) => setTimeout(resolveWait, 25));
+      }
+      assert.ok(revoke.output().includes("A07_REVOKE_LOCKED"), "revocation holds its credential lock until the writer is observed blocked");
+      blockedAdmission = psqlAsync(`SET application_name='a07_booking_writer'; ${event(createdCredential, "evt-revoke-race", "calendar-race")}`);
+      void blockedAdmission.catch(() => undefined);
+      let writerBlocked = false;
+      const writerDeadline = Date.now() + 15_000;
+      while (Date.now() < writerDeadline) {
+        if (psql("SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE application_name='a07_booking_writer' AND state='active' AND wait_event_type='Lock')") === "t") {
+          writerBlocked = true;
+          break;
+        }
+        await new Promise((resolveWait) => setTimeout(resolveWait, 25));
+      }
+      assert.equal(writerBlocked, true, "booking admission actually waits behind revocation before commit");
+      await releaseRevoke(true);
+      assert.equal(await blockedAdmission, "unauthorized", "admission observes committed revocation");
+    } finally {
+      await releaseRevoke(false);
+      await blockedAdmission?.catch(() => undefined);
     }
-    assert.equal(psql("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype='advisory' AND objid=71023::oid AND granted)"), "t", "revocation transaction reached the synchronization barrier");
-    const blockedAdmission = psqlAsync(event(createdCredential, "evt-revoke-race", "calendar-race"));
-    await revokeOverlap;
-    assert.equal(await blockedAdmission, "unauthorized", "admission waits for the credential row lock and observes revocation");
     assert.equal(psql(`SELECT count(*) FROM public.followup_integration_events WHERE external_id='evt-revoke-race'`), "0");
 
     psql(`SELECT public.revoke_booster_booking_credential('${ids.activeBusiness}','${ids.owner}','${ids.credential}');`);

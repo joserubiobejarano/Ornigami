@@ -1,5 +1,6 @@
 import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
 import { requireUser } from "@/lib/auth";
+import { getOptionalEnv } from "@/lib/env";
 import { getDashboardAgentAccess } from "@/lib/dashboard-access";
 import { BoosterDashboard } from "@/modules/review-booster/components/booster-dashboard";
 import {
@@ -38,6 +39,7 @@ export default async function ReviewBoosterPage() {
       outcomes={outcomes}
       monthlyUsage={monthlyUsage}
       recentVisitsPage={recentVisitsPage}
+      reconciliationEnabled={context.role === "owner" && getOptionalEnv("RESEND_RECONCILIATION_ENABLED") === "true"}
     />
   );
 }

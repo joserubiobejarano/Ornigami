@@ -18,6 +18,8 @@ This file documents environment values recognized by `src/lib/env.ts` and the de
 - `STRIPE_SECRET_KEY` — checkout, portal, plan changes, and webhook processing.
 - `STRIPE_WEBHOOK_SECRET` — signature verification for `/api/stripe/webhook`.
 - `RESEND_API_KEY` — Review Booster, demo, verification, alert, and team-invitation email delivery.
+- `RESEND_WEBHOOK_SECRET` — endpoint-specific raw-body Svix signing secret for `/api/webhooks/resend`; absent configuration returns 503. Register only the supported delivery event types and verify a controlled webhook before launch.
+- `RESEND_RECONCILIATION_ENABLED` — default false/unset. Set exactly `true` only after controlled retrieval/body/tag/key-permission and owner/member UI acceptance. This enables positive-evidence owner lookup, never resend or quota release. Frozen-account operator recovery remains an A11 gate.
 - `EMAIL_FROM` — verified bare sender mailbox, for example `noreply@yourdomain.com`.
 - `REPLY_TO_EMAIL` — optional reply-to mailbox.
 

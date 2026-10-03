@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { safeApiErrorResponse } from "@/lib/api-security";
 import { requireBusinessOwner } from "@/lib/business-context";
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
+import { getOptionalEnv } from "@/lib/env";
 import { readBoundedReconciliationRequestBody } from "@/modules/review-booster/services/reconciliation-request-body.service";
 import { reconcileBoosterDelivery } from "@/modules/review-booster/services/resend-reconciliation.service";
 
@@ -70,6 +71,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ del
 
   try {
     const context = await requireBusinessOwner(session.user.id, body.businessId);
+    if (getOptionalEnv("RESEND_RECONCILIATION_ENABLED") !== "true") {
+      return NextResponse.json({ error: "Delivery reconciliation is awaiting provider verification." }, { status: 503 });
+    }
     const result = await reconcileBoosterDelivery({
       businessId: context.businessId,
       deliveryId,

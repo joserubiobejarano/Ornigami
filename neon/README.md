@@ -29,8 +29,10 @@ This folder is the database source of truth. Apply every migration once, in nume
 | `022_booster_delivery_quotas.sql` | Durable frozen email requests, fenced replay, atomic UTC monthly reservations and legacy usage baseline |
 | `023_booking_intake.sql` | Scoped encrypted booking credentials, atomic authenticated event/visit admission |
 | `024_review_draft_policy.sql` | Current draft/version state, generation/post fences and owner-shared usage reservations |
+| `025_email_delivery_events.sql` | Signed provider event evidence, accepted/delivered outcomes and global Booster suppression |
 | `026_privacy_account_lifecycle.sql` | Default-closed deletion foundation, provider leases, freeze marker and durable recovery operations |
 | `027_cron_operations.sql` | Fenced job leases, job/unit cursors, sanitized outcomes and deduplicated schedule alerts |
+| `028_dashboard_pagination.sql` | Business/location-scoped keyset and dashboard aggregate indexes |
 | `031_google_location_selection.sql` | Per-business selected location and OAuth/cache generations; no automatic selection or legacy backfill |
 | `032_workspace_bootstrap.sql` | Serialized first-workspace creation sharing the invitation user mutex |
 | `033_account_lifecycle_auth_team.sql` | Atomic auth/token/team/workspace freeze guards |
@@ -40,4 +42,4 @@ This folder is the database source of truth. Apply every migration once, in nume
 | `037_account_lifecycle_finalization.sql` | Generic external-operation leases, provider evidence and guarded finalization |
 | `038_booster_intake_lifecycle.sql` | Atomic frozen-owner/member manual and CSV admission |
 
-Apply available migrations in numeric order; do not renumber applied files. 018 remains unused; 025/028–030 remain reserved. Wave 4 adds 023/027/033–038 to the existing production schema in one bounded transaction after isolated SQL and exact Linux CI validation. Fresh databases apply all available files in numeric order. Deletion stays disabled until retention/provider/operator activation gates are complete. Deploy schema before consumers and pause/drain review schedules during cutover. Preserve conservative legacy trial history, pending billing intents, unknown delivery/post fences and suppression. Google selections remain explicit. See [database behavior](../docs/DATABASE.md) and [wave 4 evidence](../docs/tasks/A00_WAVE4_INTEGRATION_REVIEW.md).
+Apply available migrations in numeric order; do not renumber applied files. 018 remains unused; 029–030 remain reserved. Wave 4 added 023/027/033–038; wave 5 adds 025/028 after isolated SQL and exact Linux CI validation. On an existing 036 schema, 025 replaces the inner `begin_booster_delivery_send_a06` while preserving the lifecycle wrapper; fresh numeric application is tested separately. Check provider-ID duplicates before the unique index. Migration 028 creates ordinary indexes; inspect target table volume and use a bounded rollout window. Deletion stays disabled until retention/provider/operator gates are complete. Deploy schema before consumers and pause/drain review schedules during cutover. Preserve conservative legacy trial history, pending billing intents, unknown delivery/post fences and suppression. Google selections remain explicit. See [database behavior](../docs/DATABASE.md) and [wave 5 review](../docs/tasks/A00_WAVE5_INTEGRATION_REVIEW.md).

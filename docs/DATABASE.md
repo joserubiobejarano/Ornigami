@@ -31,7 +31,9 @@ Neon Postgres is the database. `neon/migrations` is the only schema source of tr
 24. `031_google_location_selection.sql` — explicit selected location and connection generations
 25. `032_workspace_bootstrap.sql` — serialized workspace admission
 
-Wave 4 adds 023 booking intake, 027 cron operations, and 033–038 lifecycle guards/finalization/manual-CSV admission. See the canonical [migration map](../neon/README.md). 018 remains unused and 025/028–030 remain reserved. Existing deployments receive only missing reviewed files without renumbering earlier applied migrations.
+Wave 4 adds 023 booking intake, 027 cron operations, and 033–038 lifecycle guards/finalization/manual-CSV admission. Wave 5 adds 025 provider delivery events/suppression and 028 dashboard indexes. See the canonical [migration map](../neon/README.md). 018 remains unused and 029–030 remain reserved. Existing deployments receive only missing reviewed files without renumbering earlier applied migrations.
+
+Delivery status is independent of send acceptance: a bounce, complaint or later provider failure never releases accepted quota or makes a replacement send eligible. Event history stores linkable recipient hashes; global suppression retains the normalized address to block Booster sends across businesses. Correlation remains after delivery-row cleanup so late verified feedback can still suppress. These retained identifiers require an explicit retention decision; no TTL or deletion purge is invented. Workspace export projects associated status/event/correlation metadata and associated-address suppression reason/time, excluding provider/event identifiers, payloads and hashes. Other mail categories require a separate suppression policy. Owner manual lookup reconciliation remains default-closed behind `RESEND_RECONCILIATION_ENABLED` until provider configuration and controlled acceptance are verified.
 
 ## Main schema areas
 

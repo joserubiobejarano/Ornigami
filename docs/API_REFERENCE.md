@@ -16,11 +16,11 @@ This is the route-level map of the current LocalLift application. Protected rout
 - `GET|POST /api/team` — lists workspace members or creates an owner-only Complete-plan invitation.
 - `POST /api/team/invitations/[token]` — accepts a team invitation for the invited email.
 - `GET /api/privacy/export` — exports the authenticated user’s account data.
-- `POST /api/privacy/delete` — permanently deletes the authenticated user after confirmation.
+- `POST /api/privacy/delete` — default-disabled account-lifecycle orchestration; returns 503 before freeze/provider work until separately approved activation gates close.
 
 ## Review Replies and Google Business Profile
 
-- `GET|POST /api/reviews` — review list and create workflows.
+- `GET /api/reviews` — canonical business/selected-location review list; bounded `limit` (default 50, maximum 100) and scoped opaque `cursor`, with `{ items, page: { nextCursor, hasMore } }`. Retained posting fences project `postRecoveryStatus`; refresh never clears them.
 - `POST /api/reviews/draft` — saves a review reply draft.
 - `GET|PUT /api/settings/reply` — review reply defaults and auto-reply setting.
 - `POST /api/openai/review-reply` — generates an AI reply.
@@ -38,13 +38,15 @@ This is the route-level map of the current LocalLift application. Protected rout
 ## Review Booster
 
 - `GET|POST /api/review-booster/settings` — reads or writes business-level settings.
-- `POST /api/review-booster/visits` — creates a manual completed-visit record.
+- `GET|POST /api/review-booster/visits` — reads a business-scoped cursor page or creates a manual completed-visit record. Visit rows include safe delivery ID/status/time metadata; provider acceptance is distinct from delivery.
 - `POST /api/review-booster/upload` — imports visits from CSV.
 - `POST /api/review-booster/run-now` — runs eligible follow-ups for the current business.
 - `GET|POST /api/review-booster/unsubscribe` — processes a public unsubscribe link.
 - `GET /r/[token]` — validates the signed destination against direct Google review URL rules before recording a click/rendering navigation; unsafe historical tokens return 404.
 - `GET|POST|DELETE /api/review-booster/booking-credentials` — owner-only credential metadata/create/revoke; encrypted scoped secret is revealed once on creation, never in later reads or export.
 - `POST /api/webhooks/booking` — bounded raw-body HMAC and timestamp authentication using a scoped credential. Business comes from the credential; event/visit creation is atomic and deduplicated. Source labels are generic; `csv` is reserved for imports. See [A07 protocol](./tasks/A07_BOOKING_INTAKE_CSV_SETTINGS.md).
+- `POST /api/webhooks/resend` — bounded raw-body Svix-authenticated delivery feedback with durable event idempotency and cross-workspace Booster suppression. Missing secret returns 503; bad signature 401; invalid input 400; oversized body 413; tagged unmatched/conflicting evidence 503 for provider retry. See [A10 protocol](./tasks/A10_EMAIL_DELIVERY_EVENTS.md).
+- `POST /api/review-booster/deliveries/[deliveryId]/reconcile` — same-origin canonical owner-only positive provider lookup. Default-disabled (503) pending controlled acceptance, including while entitlement has lapsed; lifecycle freeze denies ordinary owner access. Body identifies business and optionally exact Resend UUID. 200 confirms durable evidence, 202 remains unresolved with quota/frozen key preserved, 409 rejects mismatched or ineligible evidence. No send/re-key/release operation exists.
 
 ## Scheduled jobs and health
 

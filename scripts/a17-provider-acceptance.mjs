@@ -88,7 +88,7 @@ function assertStatus(result, status, name) {
 function containsCredentialField(value) {
   if (!value || typeof value !== "object") return false;
   for (const [key, child] of Object.entries(value)) {
-    if (/(access|refresh|id)_token|client_secret|api_?key|authorization/i.test(key)) return true;
+    if (/(access|refresh|id)[_-]?token|client[_-]?secret|api[_-]?key|authorization/i.test(key)) return true;
     if (containsCredentialField(child)) return true;
   }
   return false;
@@ -148,6 +148,7 @@ export async function runReadOnlyApplicationChecks({ origin, businessId, locatio
   assertStatus(ownerReviews, 200, "owner selected-location reviews");
   assertStatus(memberReviews, 200, "member selected-location reviews");
   for (const [actor, result] of [["owner", ownerReviews], ["member", memberReviews]]) {
+    if (containsCredentialField(result.body)) throw new Error("credential-shaped field in selected-location reviews");
     if (result.body.businessId !== businessId || result.body.locationName !== locationName || !Array.isArray(result.body.items) ||
         result.body.items.length === 0 || result.body.items.some((item) => typeof item?.google_review_id !== "string")) {
       throw new Error(`${actor} review list did not remain within the selected workspace location`);
@@ -186,7 +187,7 @@ export function buildEvidence({ commit, targetName, applicationChecks = [], prer
       sentry: { status: "blocked-event-smoke-not-authorized", readAccessProbe: "recorded-separately-if-run" },
     },
     overallStatus: "blocked",
-    error: error ? String(error).slice(0, 240) : null,
+    error: error ? "application_check_failed" : null,
     prerequisites: prerequisiteChecks,
     note: "Read-only application checks do not establish live provider acceptance.",
   };
@@ -231,5 +232,5 @@ async function main() {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
-  main().catch((error) => { process.stderr.write(`A17 acceptance harness failed closed: ${String(error).slice(0, 240)}\n`); process.exitCode = 1; });
+  main().catch(() => { process.stderr.write("A17 acceptance harness failed closed; inspect local configuration privately.\n"); process.exitCode = 1; });
 }

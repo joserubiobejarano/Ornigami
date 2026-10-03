@@ -55,6 +55,7 @@ function ReviewsPageContent() {
     error,
     syncing,
     loadReviews,
+    loadLocations,
     loadFirstReviews,
     loadNextReviews,
     loadPreviousReviews,
@@ -377,7 +378,7 @@ function ReviewsPageContent() {
       />
 
       <div className="space-y-3">
-        {!hasRealLocations && !loading && (
+        {!hasRealLocations && !loading && !error && (
           <DashboardCallout
             variant="neutral"
             action={isOwner ? (
@@ -408,7 +409,7 @@ function ReviewsPageContent() {
           </DashboardCallout>
         )}
         {error && !isNoConnectedOnly && (
-          <DashboardCallout variant="error" action={selectedLoc ? <Button type="button" size="sm" variant="outline" onClick={() => void loadReviews()} disabled={loading || pageLoading}>Retry</Button> : undefined}>
+          <DashboardCallout variant="error" action={<Button type="button" size="sm" variant="outline" onClick={() => void (selectedLoc ? loadReviews() : loadLocations())} disabled={loading || pageLoading}>Retry</Button>}>
             <p role="alert">{error}</p>
           </DashboardCallout>
         )}

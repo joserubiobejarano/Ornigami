@@ -193,6 +193,7 @@ export async function lookupResendEmail(providerMessageId: string, timeoutMs = L
       method: "GET",
       headers: { Authorization: `Bearer ${apiKey}` },
       cache: "no-store",
+      redirect: "error",
       signal: controller.signal,
     });
     if (response.status === 404) return null;

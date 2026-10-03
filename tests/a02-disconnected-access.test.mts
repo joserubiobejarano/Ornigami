@@ -53,14 +53,14 @@ test("connected member uses shared state; request and response retain same nonce
   assert.equal(res.headers.get("Content-Security-Policy"), res.requestHeaders?.get("Content-Security-Policy"));
   assert.match(res.requestHeaders?.get("x-nonce") ?? "", /^[A-Za-z0-9_-]+$/);
 });
-test("entitled disconnected actors redirect only Google workflows", async () => {
+test("entitled disconnected actors reach inbox recovery while other Google workflows redirect", async () => {
   const { proxy } = loadProxy({ hasGbp: false, hasRepliesAccess: true });
   for (const userId of ["owner", "member"]) {
-    for (const path of ["/reviews", "/reviews/new", "/dashboard/agents/review-replies", "/dashboard/agents/review-replies/reviews"]) {
+    for (const path of ["/reviews/new", "/dashboard/agents/review-replies/new"]) {
       const res = await proxy(request(path, { userId }));
       assert.equal(res.url?.pathname, "/connect", path);
     }
-    for (const path of ["/dashboard", "/dashboard/billing", "/dashboard/team", "/settings", "/connect", "/dashboard/agents/review-booster", "/dashboard/agents/review-booster/settings", "/dashboard/agents/review-replies/settings", "/dashboard/agents/review-replies/google-connection"]) {
+    for (const path of ["/reviews", "/dashboard/agents/review-replies", "/dashboard/agents/review-replies/reviews", "/dashboard", "/dashboard/billing", "/dashboard/team", "/settings", "/connect", "/dashboard/agents/review-booster", "/dashboard/agents/review-booster/settings", "/dashboard/agents/review-replies/settings", "/dashboard/agents/review-replies/google-connection"]) {
       assert.equal((await proxy(request(path, { userId }))).kind, "next", path);
     }
   }
@@ -75,8 +75,8 @@ test("inactive Replies reaches activation and connected connect redirects to das
 });
 test("access outages fail closed on Google pages and preserve recovery without connect loop", async () => {
   const { proxy } = loadProxy(new Error("db unavailable"));
-  assert.equal((await proxy(request("/reviews", { userId: "owner" }))).url?.pathname, "/connect");
-  for (const path of ["/connect", "/settings", "/dashboard/billing", "/dashboard/agents/review-booster", "/dashboard/agents/review-replies/google-connection"]) {
+  assert.equal((await proxy(request("/reviews/new", { userId: "owner" }))).url?.pathname, "/connect");
+  for (const path of ["/reviews", "/dashboard/agents/review-replies", "/dashboard/agents/review-replies/reviews", "/connect", "/settings", "/dashboard/billing", "/dashboard/agents/review-booster", "/dashboard/agents/review-replies/google-connection"]) {
     assert.equal((await proxy(request(path, { userId: "owner" }))).kind, "next", path);
   }
 });

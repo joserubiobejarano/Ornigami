@@ -53,6 +53,7 @@ type ReviewInboxData = {
   autoReplyAllReviews: boolean;
   isOwner: boolean;
   loadReviews: (locationName?: string) => Promise<void>;
+  loadLocations: () => Promise<void>;
   loadFirstReviews: () => Promise<void>;
   loadNextReviews: () => Promise<void>;
   loadPreviousReviews: () => Promise<void>;
@@ -412,6 +413,7 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
     autoReplyAllReviews,
     isOwner,
     loadReviews,
+    loadLocations,
     loadFirstReviews,
     loadNextReviews,
     loadPreviousReviews,

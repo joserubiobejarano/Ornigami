@@ -47,7 +47,8 @@ Configure the variables in [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md
 - [ ] `CRON_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`
 - [ ] `TOKEN_ENCRYPTION_KEY` or an intentionally managed `AUTH_SECRET` fallback
 - [ ] `REPLY_TO_EMAIL` and `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET` if used
-- [ ] `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` where applicable
+- [ ] `NEXT_PUBLIC_SENTRY_DSN` for runtime capture; `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` for applicable build upload/provider inspection
+- [ ] `RESEND_WEBHOOK_SECRET` from the registered delivery endpoint; `RESEND_RECONCILIATION_ENABLED` remains false/unset until controlled lookup acceptance
 
 ## 4. Database migrations
 
@@ -58,7 +59,8 @@ Apply all migrations in order, including the current tail:
 - [ ] `015_stripe_usage_periods.sql`
 - [ ] `016_remove_legacy_plan_taxonomy.sql`
 - [ ] `017_team_invitations.sql`
-- [ ] `020_account_recovery.sql` is verified on this deployment's target database before new auth code is activated. Reservation 018 is unused; 019 has not been authored yet. Existing JWTs without `authVersion` will require fresh sign-in.
+- [ ] Canonical remaining files: `019` billing, `020` recovery, `021` invitations, `022` Booster quotas, `023` booking, `024` drafts, `025` delivery feedback, `026` lifecycle, `027` cron, `028` dashboard indexes, and `031`–`038` selection/bootstrap/lifecycle guards. Use exact filenames in [migration map](../neon/README.md). 018 is unused; 029–030 remain reserved. Existing JWTs without `authVersion` require fresh sign-in.
+- [ ] Before incremental 025: verify no duplicate provider IDs; after applying it to an existing 036 schema verify the lifecycle wrapper still calls `begin_booster_delivery_send_a06` and its inner body checks global suppression. Inspect target volume before ordinary 028 index creation. Fresh numeric and incremental orders need isolated PostgreSQL checks.
 
 Do not mark these permanently complete in a reusable checklist; verify the target environment each time.
 
@@ -91,6 +93,9 @@ Review Booster can operate with email and a manually entered review URL while th
 - [ ] Test plan changes, duplicate webhook replay, trial behavior, and payment failure state updates.
 - [ ] Verify the Resend sending mailbox/domain.
 - [ ] Keep `EMAIL_FROM` as a bare mailbox address, for example `noreply@yourdomain.com`.
+- [ ] Register `/api/webhooks/resend` for supported sent/delivered/delayed/bounced/complained/failed/suppressed events. Configure signing secret privately, verify an owned test delivery end to end, and confirm signed replay/out-of-order feedback and suppression without resending uncertain requests.
+- [ ] Controlled Resend GET must return exact frozen body/tag/recipient binding and use an authorized retrieval key in the original sending account before manual reconciliation activation. 202/unresolved retains quota. A lookup miss never authorizes replay.
+- [ ] Approve global suppression/event/correlation retention and other mail-category policy; preserve do-not-send evidence through workspace cleanup. Customer-specific sender domains remain future work.
 
 ## 7. Scheduled jobs
 
@@ -100,7 +105,7 @@ Review Booster can operate with email and a manually entered review URL while th
 - [ ] Confirm `/api/cron/health` shows persisted `cron_runs` records.
 - [ ] Verify the existing Vercel privacy schedule at 03:00 UTC daily, bounded cleanup and sanitized per-table health.
 - [ ] Verify independent hourly GitHub cron health monitoring and Sentry transport/missed-schedule alert recovery. Expected budget continuation is 202, lease busy is 409, actionable failure is 500/503; do not interpret all non-200 outcomes as the same failure.
-- [ ] Apply reviewed 023/027/033–038 schema before its consumers; pause/drain both review schedules through migration/deployment and restore after exact Ready verification.
+- [ ] Apply missing reviewed schema before consumers, including 025/028 in wave 5; pause/drain both review schedules through migration/deployment and restore after exact Ready verification.
 
 ## 8. Pre-deploy verification
 
@@ -130,6 +135,9 @@ npm run build
 - [ ] Sentry receives a controlled test error, then the test is removed or clearly identified.
 
 ## Current caveats
+
+- Acceptance has separate evidence labels: isolated tests, authenticated browser, provider test mode, production smoke, external approval. Exact Linux CI and public anonymous smoke do not establish paid owner/member browser or full provider acceptance. See [A17 matrix](./tasks/A17_ACCEPTANCE_MATRIX.md).
+- A17's historical direct-send sender override did not change deployment configuration. A00's fresh wave 5 read-only production check found the configured `reviews.ornigami.com` sender domain verified/sending-enabled and the controlled email lookup returned tags/body; the webhook secret was absent. No new message was sent. Register/configure and exercise the webhook before marking delivery acceptance passed.
 
 - Google Business Profile API access/quota, a real client profile, and OAuth branding/publication are external dependencies, not code tasks. Follow `GOOGLE_BUSINESS_PROFILE_RUNBOOK.md` for the current state and sequence.
 - Review Booster has a bounded per-run cap and plan allowance, but higher-volume delivery is still serial.

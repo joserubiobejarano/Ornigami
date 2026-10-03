@@ -109,14 +109,17 @@ test("Review Booster cron reports unknown/deferred and accounts for reserved quo
 
 test("Review Booster quota UI uses reserved usage, explains UTC reset and per-visit expiry", async () => {
   let used = 500;
+  let actorRole = "owner";
+  let reconciliationFlag = "true";
   const uiMocks = {
     "next/link": { default: "a" },
     "@/components/ui/button": { Button: "button" },
     "@/components/dashboard/agent-activation-placeholder": { AgentActivationPlaceholder: "section" },
     "@/lib/auth": { requireUser: async () => ({ user: { id: "user-1", email: "owner@example.com" } }) },
     "@/lib/dashboard-access": { getDashboardAgentAccess: async () => ({
-      context: { business: { id: "business-1", name: "Shop" }, role: "owner" }, entitlement: { hasAccess: true },
+      context: { business: { id: "business-1", name: "Shop" }, role: actorRole }, entitlement: { hasAccess: true },
     }) },
+    "@/lib/env": { getOptionalEnv: () => reconciliationFlag },
     "@/lib/format-date": { formatProductDate: (value: string | Date) => String(value) },
     "@/modules/review-booster/components/followups-nav": { FollowupsNav: "nav" },
     "@/modules/review-booster/components/run-followups-button": { RunFollowupsButton: "run-followups" },
@@ -157,6 +160,14 @@ test("Review Booster quota UI uses reserved usage, explains UTC reset and per-vi
   };
   const visitsProps = findVisits(tree)?.props;
   assert.ok(visitsProps, "dashboard renders the bounded RecentVisitsTable component");
+  assert.equal(visitsProps?.reconciliationEnabled, true, "provider status checks are enabled only when the server gate is true for an owner");
+  actorRole = "member";
+  const memberTree = await pageModule.default();
+  assert.equal(findVisits(memberTree)?.props.reconciliationEnabled, false, "members never receive the reconciliation affordance");
+  actorRole = "owner";
+  reconciliationFlag = "false";
+  const disabledTree = await pageModule.default();
+  assert.equal(findVisits(disabledTree)?.props.reconciliationEnabled, false, "the UI remains closed when provider verification is disabled");
   const react: Record<string, unknown> = {};
   const table = loadTsx<{ RecentVisitsTable(props: Record<string, unknown>): unknown }>("src/modules/review-booster/components/recent-visits-table.tsx", {
     react,
@@ -193,6 +204,14 @@ test("Review Booster badges give distinct labels to durable delivery states", ()
     "react/jsx-runtime": { jsx: renderNode, jsxs: renderNode, Fragment: "fragment" },
   });
   for (const [status, label] of [
+    ["accepted", "Accepted by provider"],
+    ["sent", "Accepted by provider"],
+    ["delayed", "Delivery delayed"],
+    ["delivered", "Delivered"],
+    ["bounced", "Bounced"],
+    ["complained", "Complaint received"],
+    ["suppressed", "Suppressed"],
+    ["provider_failed", "Provider delivery failed"],
     ["deferred_quota", "Waiting for quota"],
     ["unknown", "Delivery status unknown"],
     ["reconciliation_required", "Needs review"],
@@ -202,4 +221,83 @@ test("Review Booster badges give distinct labels to durable delivery states", ()
     const badge = badges.StatusBadge({ status }) as { props: { children: string } };
     assert.equal(badge.props.children, label);
   }
+});
+
+test("delivery recovery checks only the existing provider email and refreshes metadata only after positive evidence", async () => {
+  const react: Record<string, unknown> = {};
+  const table = loadTsx<{ RecentVisitsTable(props: Record<string, unknown>): unknown }>("src/modules/review-booster/components/recent-visits-table.tsx", {
+    react,
+    "next/link": { default: "a" },
+    "@/components/ui/button": { Button: "button" },
+    "@/lib/format-date": { formatProductDate: String },
+    "@/lib/followup-retry-policy": { MAX_FOLLOWUP_ATTEMPTS: 3 },
+    "@/modules/review-booster/components/status-badge": { StatusBadge: "badge" },
+    "react/jsx-runtime": { jsx: renderNode, jsxs: renderNode, Fragment: "fragment" },
+  });
+  const walk = (value: unknown): Array<{ type: string; props: Record<string, unknown> }> => {
+    if (Array.isArray(value)) return value.flatMap(walk);
+    if (!value || typeof value !== "object" || !("props" in value)) return [];
+    const node = value as { type: string; props: Record<string, unknown> };
+    return [node, ...walk(node.props.children)];
+  };
+  const visit = {
+    id: "visit-unknown", business_id: "business-1", delivery_id: "40000000-0000-4000-8000-000000000001",
+    delivery_status: "pending", delivery_status_at: null, followup_status: "reconciliation_required",
+    visited_at: "2026-10-01T12:00:00.000Z", customer_name: "A customer",
+  };
+  const props = { businessId: "business-1", initialVisits: [visit], initialPage: { nextCursor: null, hasMore: false }, reconciliationEnabled: true };
+  const allowedTree = walk(renderClientWithHooks(table.RecentVisitsTable, props, react));
+  assert.ok(allowedTree.some((node) => node.type === "input" && node.props.id === "provider-message-visit-unknown"));
+  const checkButton = allowedTree.find((node) => node.type === "button" && node.props.children === "Check provider status");
+  assert.ok(checkButton, "unresolved owner rows expose a provider-status check");
+
+  const savedFetch = globalThis.fetch;
+  try {
+    const calls: Array<{ url: string; method: string; body?: string }> = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ url, method: init?.method ?? "GET", body: typeof init?.body === "string" ? init.body : undefined });
+      return Response.json({ status: "unresolved", reason: "provider_not_found" }, { status: 202 });
+    }) as typeof fetch;
+    (checkButton!.props.onClick as () => void)();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(calls.length, 1, "202 leaves the existing row and page data untouched");
+    assert.equal(calls[0]?.method, "POST");
+    assert.equal(calls[0]?.url, "/api/review-booster/deliveries/40000000-0000-4000-8000-000000000001/reconcile");
+    assert.deepEqual(JSON.parse(calls[0]!.body!), { businessId: "business-1" }, "provider ID is optional when already stored");
+
+    let malformedCalls = 0;
+    globalThis.fetch = (async () => { malformedCalls += 1; return Response.json({}); }) as typeof fetch;
+    (checkButton!.props.onClick as () => void)();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(malformedCalls, 1, "a malformed success cannot claim provider evidence or refresh as resolved");
+
+    const successCalls: Array<{ url: string; method: string }> = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      successCalls.push({ url, method });
+      if (method === "POST") return Response.json({ status: "resolved", deliveryState: "accepted", deliveryStatus: "delivered" });
+      return Response.json({ items: [{ ...visit, followup_status: "sent", delivery_status: "delivered" }], page: { nextCursor: null, hasMore: false } });
+    }) as typeof fetch;
+    (checkButton!.props.onClick as () => void)();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual(successCalls.map((call) => call.method), ["POST", "GET"], "positive evidence refreshes the page projection without sending another email");
+    assert.match(successCalls[1]!.url, /businessId=business-1/);
+  } finally {
+    globalThis.fetch = savedFetch;
+  }
+
+  const closedTree = walk(renderClientWithHooks(table.RecentVisitsTable, { ...props, reconciliationEnabled: false }, {}));
+  assert.equal(closedTree.some((node) => node.type === "input" && node.props.id === "provider-message-visit-unknown"), false);
+  assert.equal(closedTree.some((node) => node.type === "button" && node.props.children === "Check provider status"), false);
+
+  const terminalTree = walk(renderClientWithHooks(table.RecentVisitsTable, {
+    ...props,
+    initialVisits: [{ ...visit, id: "visit-terminal", followup_status: "sent", delivery_status: "bounced" }],
+  }, {}));
+  assert.equal(terminalTree.some((node) => node.type === "button" && node.props.children === "Check provider status"), false, "terminal provider outcomes do not offer a resend/reconciliation action");
+  assert.ok(terminalTree.some((node) => node.type === "p" && String(node.props.children).includes("will not be sent again automatically")));
+  const terminalBadge = terminalTree.find((node) => node.type === "badge");
+  assert.equal(terminalBadge?.props.status, "bounced");
 });

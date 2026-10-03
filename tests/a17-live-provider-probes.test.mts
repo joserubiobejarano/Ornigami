@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
@@ -34,7 +35,9 @@ test("controlled Resend send freezes one allowlisted recipient, payload hash and
   const root = join(process.cwd(), ".next", "a17-provider-evidence");
   const runId = "a1700000-0000-4000-8000-000000000001";
   const evidencePath = join(root, `resend-${runId}.json`);
+  const claimPath = evidencePath + ".attempt-claim";
   rmSync(evidencePath, { force: true });
+  rmSync(claimPath, { force: true });
   let calls = 0;
   let sent: { url: string; init: RequestInit } | undefined;
   try {
@@ -60,7 +63,76 @@ test("controlled Resend send freezes one allowlisted recipient, payload hash and
     assert.equal(state.payloadSha256, result.payloadSha256);
     assert.equal(state.idempotencyKey, `a17-controlled-${runId}`);
     assert.equal(state.providerMessageId, "re_test_message_123");
-  } finally { rmSync(evidencePath, { force: true }); }
+  } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
+});
+
+function writePreparedResendState(runId: string, evidencePath: string) {
+  const recipient = "joserubiobejarano@gmail.com";
+  const payload = {
+    from: "Ornigami controlled test <acceptance@example.test>", to: recipient,
+    subject: "Ornigami controlled Resend test", text: "fixture", html: "<p>fixture</p>",
+    tags: [{ name: "ornigami_delivery_id", value: runId }],
+  };
+  const payloadSha256 = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+  writeFileSync(evidencePath, JSON.stringify({
+    schema: "ornigami.a17.resend-evidence.v1", runId, recipient,
+    createdAt: new Date().toISOString(), payload, payloadSha256,
+    idempotencyKey: "a17-controlled-" + runId, status: "prepared", attemptCount: 0,
+  }) + "\n");
+}
+
+test("concurrent Resend invocations admit only one provider request for a run", { timeout: 5_000 }, async () => {
+  const root = join(process.cwd(), ".next", "a17-provider-evidence");
+  const runId = "a1700000-0000-4000-8000-000000000005";
+  const evidencePath = join(root, "resend-" + runId + ".json");
+  const claimPath = evidencePath + ".attempt-claim";
+  rmSync(evidencePath, { force: true });
+  rmSync(claimPath, { force: true });
+  writePreparedResendState(runId, evidencePath);
+  let calls = 0;
+  let claimArrivals = 0;
+  let releaseClaims!: () => void;
+  const bothValidatedPreparedState = new Promise<void>((resolve) => { releaseClaims = resolve; });
+  const beforeAttemptClaim = async () => {
+    claimArrivals += 1;
+    if (claimArrivals === 2) releaseClaims();
+    await bothValidatedPreparedState;
+  };
+  const fetcher = async () => {
+    calls += 1;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    return Response.json({ id: "re_concurrent_message" });
+  };
+  try {
+    const results = await Promise.allSettled([
+      runControlledResend({ env, runId, stateRoot: root, fetcher, beforeAttemptClaim }),
+      runControlledResend({ env, runId, stateRoot: root, fetcher, beforeAttemptClaim }),
+    ]);
+    assert.equal(claimArrivals, 2, "both callers validated the same prepared state before either claim");
+    assert.equal(calls, 1, "the same run cannot issue two provider requests");
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.equal(readFileSync(claimPath, "utf8").includes(runId), true, "the permanent exclusive claim records the run");
+  } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
+});
+
+test("an orphan or corrupt Resend attempt claim fails closed without provider I/O", async () => {
+  const root = join(process.cwd(), ".next", "a17-provider-evidence");
+  const runId = "a1700000-0000-4000-8000-000000000006";
+  const evidencePath = join(root, "resend-" + runId + ".json");
+  const claimPath = evidencePath + ".attempt-claim";
+  rmSync(evidencePath, { force: true });
+  rmSync(claimPath, { force: true });
+  writePreparedResendState(runId, evidencePath);
+  writeFileSync(claimPath, "interrupted-or-corrupt-claim\n");
+  let calls = 0;
+  try {
+    await assert.rejects(runControlledResend({
+      env, runId, stateRoot: root,
+      fetcher: async () => { calls += 1; return Response.json({ id: "must-not-send" }); },
+    }), /attempt claim already exists/);
+    assert.equal(calls, 0);
+    assert.equal(readFileSync(claimPath, "utf8"), "interrupted-or-corrupt-claim\n", "a stale claim is preserved for operator reconciliation");
+  } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
 });
 
 test("controlled Resend rejects recipients outside the named allowlist without transport", async () => {
@@ -77,7 +149,9 @@ test("ambiguous Resend result is recorded unknown and cannot be upgraded to deli
   const root = join(process.cwd(), ".next", "a17-provider-evidence");
   const runId = "a1700000-0000-4000-8000-000000000003";
   const evidencePath = join(root, `resend-${runId}.json`);
+  const claimPath = evidencePath + ".attempt-claim";
   rmSync(evidencePath, { force: true });
+  rmSync(claimPath, { force: true });
   let calls = 0;
   try {
     const result = await runControlledResend({
@@ -90,7 +164,7 @@ test("ambiguous Resend result is recorded unknown and cannot be upgraded to deli
     assert.equal(state.failureClass, "unknown");
     await assert.rejects(runControlledResend({ env, runId, stateRoot: root, fetcher: async () => { calls += 1; return Response.json({ id: "should-not-send" }); } }), /no provider request made/);
     assert.equal(calls, 1, "an unknown outcome is never resent automatically");
-  } finally { rmSync(evidencePath, { force: true }); }
+  } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
 });
 
 test("Resend domain read probe is read-only, bounded to the configured sender domain, and refuses redirects", async () => {

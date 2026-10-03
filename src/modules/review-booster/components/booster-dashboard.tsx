@@ -11,9 +11,10 @@ type BoosterDashboardProps = {
   outcomes: ReviewOutcomeStats;
   monthlyUsage: ReviewBoosterBillingPeriodUsage;
   recentVisitsPage: { items: FollowupVisit[]; page: { nextCursor: string | null; hasMore: boolean } };
+  reconciliationEnabled?: boolean;
 };
 
-export function BoosterDashboard({ business, stats, outcomes, monthlyUsage, recentVisitsPage }: BoosterDashboardProps) {
+export function BoosterDashboard({ business, stats, outcomes, monthlyUsage, recentVisitsPage, reconciliationEnabled = false }: BoosterDashboardProps) {
   const usagePercent = monthlyUsage.allowance > 0 ? (monthlyUsage.used / monthlyUsage.allowance) * 100 : 0;
   const nextUtcMonth = new Date();
   nextUtcMonth.setUTCDate(1);
@@ -22,12 +23,12 @@ export function BoosterDashboard({ business, stats, outcomes, monthlyUsage, rece
   const utcResetDate = nextUtcMonth.toISOString().slice(0, 10);
   const statCards = [
     { label: "Scheduled", value: stats.pending },
-    { label: "Sent", value: stats.sent },
+    { label: "Accepted by provider", value: stats.sent },
     { label: "Couldn't send", value: stats.failed },
     { label: "Skipped", value: stats.skipped },
   ];
   const outcomeCards = [
-    { label: "Requests sent", value: outcomes.requestsSent },
+    { label: "Requests accepted by provider", value: outcomes.requestsSent },
     { label: "Reviews synced", value: outcomes.reviewsSynced },
     { label: "Replies posted", value: outcomes.repliesPosted },
     { label: "Review link clicks", value: outcomes.linkClicks },
@@ -89,6 +90,7 @@ export function BoosterDashboard({ business, stats, outcomes, monthlyUsage, rece
         businessId={business.id}
         initialVisits={recentVisitsPage.items}
         initialPage={recentVisitsPage.page}
+        reconciliationEnabled={reconciliationEnabled}
       />
 
       <details className="rounded-2xl border-[1.5px] border-border bg-card p-4 shadow-ink-sm sm:p-5">

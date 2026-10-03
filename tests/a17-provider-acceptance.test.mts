@@ -10,7 +10,7 @@ import {
 const businessId = "10000000-0000-4000-8000-000000000001";
 const locationName = "accounts/123/locations/456";
 
-function appFetcher({ leakToken = false, memberLocations = [{ id: "selected", selected: true }], noGoogle = false } = {}) {
+function appFetcher({ leakToken = false, credentialField = "access_token", memberLocations = [{ id: "selected", selected: true }], noGoogle = false } = {}) {
   return async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input));
     const isMember = new Headers(init?.headers).get("cookie")?.includes("member-session") || false;
@@ -22,7 +22,7 @@ function appFetcher({ leakToken = false, memberLocations = [{ id: "selected", se
         can_manage_settings: !isMember,
         selected_location_id: noGoogle ? null : "selected",
         google_profile_locations: noGoogle ? [] : isMember ? memberLocations : [{ id: "selected", selected: true }, { id: "other", selected: false }],
-        ...(leakToken ? { access_token: "never-output" } : {}),
+        ...(leakToken ? { nested: [{ [credentialField]: "never-output" }] } : {}),
       };
     } else {
       body = { businessId, locationName, items: [{ google_review_id: "review-a" }] };
@@ -46,9 +46,9 @@ test("A17 read-only checks fail closed on member location leakage and credential
     ownerCookie: "authjs.session-token=owner-session", memberCookie: "authjs.session-token=member-session",
     fetcher: appFetcher({ memberLocations: [{ id: "selected", selected: true }, { id: "other", selected: false }] }),
   }), /member Google discovery/);
-  await assert.rejects(runReadOnlyApplicationChecks({
+  for (const credentialField of ["access_token", "accessToken", "refreshToken", "idToken", "clientSecret", "apiKey", "authorization"]) await assert.rejects(runReadOnlyApplicationChecks({
     origin: "http://127.0.0.1:3000", businessId, locationName,
-    ownerCookie: "authjs.session-token=owner-session", memberCookie: "authjs.session-token=member-session", fetcher: appFetcher({ leakToken: true }),
+    ownerCookie: "authjs.session-token=owner-session", memberCookie: "authjs.session-token=member-session", fetcher: appFetcher({ leakToken: true, credentialField }),
   }), /credential-shaped field/);
 });
 
@@ -93,4 +93,21 @@ test("read-only application checks cannot produce full provider acceptance evide
   assert.equal(evidence.providers.resend.status, "blocked-cross-workflow-acceptance");
   assert.equal(evidence.providers.google.status, "blocked-no-controlled-business-profile");
   assert.equal(evidence.overallStatus, "blocked");
+  const failed = buildEvidence({ commit: "a".repeat(40), error: new Error("accessToken=private-provider-secret") });
+  assert.equal(failed.applicationStatus, "failed");
+  assert.equal(failed.error, "application_check_failed");
+  assert.equal(JSON.stringify(failed).includes("private-provider-secret"), false);
+});
+
+test("credential fields in nested review responses also fail acceptance", async () => {
+  const fetcher = appFetcher();
+  await assert.rejects(runReadOnlyApplicationChecks({
+    origin: "http://127.0.0.1:3000", businessId, locationName,
+    ownerCookie: "authjs.session-token=owner-session", memberCookie: "authjs.session-token=member-session",
+    fetcher: async (input, init) => {
+      const response = await fetcher(input, init);
+      if (new URL(String(input)).pathname !== "/api/reviews") return response;
+      return Response.json({ ...await response.json(), nested: [{ refreshToken: "never-output" }] });
+    },
+  }), /credential-shaped field/);
 });

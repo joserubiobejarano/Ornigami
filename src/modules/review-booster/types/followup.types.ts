@@ -13,6 +13,10 @@ export type FollowupVisit = {
   visited_at: string | Date;
   source?: string | null;
   followup_status: FollowupStatus | string;
+  /** Durable Resend delivery projection. `sent` means provider accepted the email, not delivered. */
+  delivery_id?: string | null;
+  delivery_status?: "pending" | "sent" | "delayed" | "delivered" | "failed" | "suppressed" | "bounced" | "complained" | string | null;
+  delivery_status_at?: string | Date | null;
   followup_sent_at?: string | Date | null;
   google_review_url?: string | null;
   rebooking_url?: string | null;

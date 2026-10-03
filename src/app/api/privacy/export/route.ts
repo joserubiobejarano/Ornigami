@@ -163,9 +163,37 @@ export async function GET(request: Request) {
               SELECT jsonb_agg(jsonb_build_object(
                 'visit_id', d.visit_id, 'state', d.state, 'first_attempt_at', d.first_attempt_at,
                 'send_attempt_count', d.send_attempt_count, 'reservation_month', d.reservation_month,
-                'created_at', d.created_at, 'updated_at', d.updated_at, 'accepted_at', d.accepted_at
+                'created_at', d.created_at, 'updated_at', d.updated_at, 'accepted_at', d.accepted_at,
+                'delivery_status', d.delivery_status, 'delivery_status_at', d.delivery_status_at
               ) ORDER BY d.created_at, d.visit_id)
               FROM public.booster_followup_deliveries d WHERE d.business_id = b.id
+            ), '[]'::jsonb),
+            'boosterDeliveryEvents', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'delivery_id', d.id, 'event_type', e.event_type, 'event_created_at', e.event_created_at,
+                'evidence_source', e.evidence_source, 'received_at', e.received_at
+              ) ORDER BY e.event_created_at, e.event_id)
+              FROM public.booster_delivery_events e
+              INNER JOIN public.booster_followup_deliveries d ON d.id = e.delivery_id
+              WHERE d.business_id = b.id
+            ), '[]'::jsonb),
+            'boosterDeliveryCorrelations', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'delivery_id', d.id, 'linked_at', c.linked_at
+              ) ORDER BY c.linked_at, d.id)
+              FROM public.booster_delivery_provider_correlations c
+              INNER JOIN public.booster_followup_deliveries d ON d.id = c.delivery_id
+              WHERE d.business_id = b.id
+            ), '[]'::jsonb),
+            'boosterDeliverySuppressions', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'email', s.email_normalized, 'reason', s.reason, 'created_at', s.created_at
+              ) ORDER BY s.email_normalized)
+              FROM public.booster_delivery_suppressions s
+              WHERE EXISTS (
+                SELECT 1 FROM public.followup_visits v
+                WHERE v.business_id = b.id AND lower(trim(v.customer_email)) = s.email_normalized
+              )
             ), '[]'::jsonb),
             'boosterQuotaLegacyUsage', COALESCE((
               SELECT jsonb_agg(jsonb_build_object(

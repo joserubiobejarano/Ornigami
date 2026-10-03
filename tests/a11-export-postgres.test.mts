@@ -70,7 +70,10 @@ type WorkspaceExport = {
     replyDraftState: Array<{ review_id: number; reply_id: number | null; state: string; version: number }>;
     replyUsageReservations: Array<{ review_id: number | null; state: string; usage_period_start: string }>;
     messages: Array<{ body: string }>;
-    boosterDeliveries: Array<{ visit_id: string; state: string; send_attempt_count: number; reservation_month: string | null }>;
+    boosterDeliveries: Array<{ visit_id: string; state: string; send_attempt_count: number; reservation_month: string | null; delivery_status: string; delivery_status_at: string }>;
+    boosterDeliveryEvents: Array<{ delivery_id: string; event_type: string; evidence_source: string }>;
+    boosterDeliveryCorrelations: Array<{ delivery_id: string; linked_at: string }>;
+    boosterDeliverySuppressions: Array<{ email: string; reason: string }>;
     boosterQuotaLegacyUsage: Array<{ month_start_utc: string; accepted_count: number }>;
     clicks: Array<{ user_agent: string }>;
     unsubscribeSuppressions: Array<{ customer_email: string }>;
@@ -159,11 +162,22 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
         business_id,visit_id,state,provider_payload,review_url_snapshot,idempotency_key,lease_token,
         first_attempt_at,send_attempt_count,reservation_month,provider_message_id,error_message,accepted_at
       ) VALUES (
-        '${businessA}','50000000-0000-4000-8000-000000000001','accepted','{"payload_secret":"delivery-payload-secret"}',
+        '${businessA}','50000000-0000-4000-8000-000000000001','accepted','{"to":"customer@example.test","payload_secret":"delivery-payload-secret"}',
         'https://reviews.example/snapshot-secret','delivery-idempotency-secret',
         '60000000-0000-4000-8000-000000000001',now() - interval '1 day',2,'2026-10-01',
         'provider-message-secret','provider-error-secret',now()
       );
+      UPDATE public.booster_followup_deliveries SET delivery_status='delivered',delivery_status_at='2026-10-02T00:00:00Z'
+        WHERE provider_message_id='provider-message-secret';
+      INSERT INTO public.booster_delivery_events(event_id,event_type,event_created_at,provider_message_id,delivery_id,recipients,evidence_source,event_data)
+        SELECT 'event-id-private','email.delivered','2026-10-02T00:00:00Z','provider-message-secret',d.id,
+          '["sha256:private-recipient-fingerprint"]'::jsonb,'webhook','{"provider_message_id":"provider-message-secret","event_id":"event-id-private"}'::jsonb
+        FROM public.booster_followup_deliveries d WHERE d.provider_message_id='provider-message-secret';
+      INSERT INTO public.booster_delivery_suppressions(email_normalized,reason,provider_message_id,event_id) VALUES
+        ('customer@example.test','bounce','provider-message-secret','event-id-private'),
+        ('unrelated@example.test','complaint','foreign-provider-id','foreign-event-id');
+      INSERT INTO public.booster_delivery_provider_correlations(provider_message_id,delivery_id,recipient_sha256)
+        VALUES ('foreign-provider-id','40000000-0000-4000-8000-000000000099',repeat('f',64));
       INSERT INTO public.review_reply_draft_state(review_id,business_id,reply_id,state,version,posting_token,posting_lease_until)
         SELECT r.id,'${businessA}',rr.id,'approved',3,'70000000-0000-4000-8000-000000000001',now() + interval '1 minute'
         FROM public.reviews r JOIN public.review_replies rr ON rr.review_id=r.id
@@ -247,6 +261,18 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
     assert.equal(ownerWorkspace.messages[0].body, "Message body");
     assert.equal(ownerWorkspace.boosterDeliveries[0].state, "accepted");
     assert.equal(ownerWorkspace.boosterDeliveries[0].send_attempt_count, 2);
+    assert.equal(ownerWorkspace.boosterDeliveries[0].delivery_status, "delivered");
+    assert.ok(ownerWorkspace.boosterDeliveries[0].delivery_status_at);
+    assert.deepEqual(ownerWorkspace.boosterDeliveryEvents.map(({ event_type, evidence_source }) => ({ event_type, evidence_source })), [
+      { event_type: "email.delivered", evidence_source: "webhook" },
+    ]);
+    assert.ok(ownerWorkspace.boosterDeliveryEvents[0].delivery_id);
+    assert.equal(ownerWorkspace.boosterDeliveryCorrelations.length, 1);
+    assert.equal(ownerWorkspace.boosterDeliveryCorrelations[0].delivery_id, ownerWorkspace.boosterDeliveryEvents[0].delivery_id);
+    assert.ok(ownerWorkspace.boosterDeliveryCorrelations[0].linked_at);
+    assert.deepEqual(ownerWorkspace.boosterDeliverySuppressions.map(({ email, reason }) => ({ email, reason })), [
+      { email: "customer@example.test", reason: "bounce" },
+    ]);
     assert.deepEqual(ownerWorkspace.boosterQuotaLegacyUsage, [{ month_start_utc: "2026-09-01", accepted_count: 4 }]);
     assert.equal(ownerWorkspace.clicks[0].user_agent, "Customer browser");
     assert.equal(ownerWorkspace.unsubscribeSuppressions[0].customer_email, "suppressed@example.test");
@@ -262,7 +288,7 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
     assert.equal(ownerWorkspace.settings.googleConnection.access_token, undefined);
     assert.equal(ownerWorkspace.invitations[0].revoked_at !== null, true);
     const workspaceText = JSON.stringify(allWorkspaces);
-    for (const secret of ["access-secret", "refresh-secret", "invite-secret", "checkout-secret", "idempotency-secret", "customer-key-secret", "raw-secret", "provider-message", "member@example.test", "Teammate", "delivery-payload-secret", "reviews.example/snapshot-secret", "delivery-idempotency-secret", "60000000-0000-4000-8000-000000000001", "provider-message-secret", "provider-error-secret", "70000000-0000-4000-8000-000000000001", "80000000-0000-4000-8000-000000000001", "encrypted-booking-secret", memberId]) {
+    for (const secret of ["access-secret", "refresh-secret", "invite-secret", "checkout-secret", "idempotency-secret", "customer-key-secret", "raw-secret", "provider-message", "member@example.test", "Teammate", "delivery-payload-secret", "reviews.example/snapshot-secret", "delivery-idempotency-secret", "60000000-0000-4000-8000-000000000001", "provider-message-secret", "provider-error-secret", "event-id-private", "foreign-provider-id", "foreign-event-id", "private-recipient-fingerprint", "unrelated@example.test", "70000000-0000-4000-8000-000000000001", "80000000-0000-4000-8000-000000000001", "encrypted-booking-secret", memberId]) {
       assert.equal(workspaceText.includes(secret), false, `workspace export leaked ${secret}`);
     }
 

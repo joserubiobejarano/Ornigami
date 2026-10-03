@@ -12,6 +12,8 @@ const ServerEnvSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(1).optional(),
   CRON_SECRET: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_WEBHOOK_SECRET: z.string().min(1).optional(),
+  RESEND_RECONCILIATION_ENABLED: z.string().optional(),
   EMAIL_FROM: z.string().email().optional(),
   REPLY_TO_EMAIL: z.string().email().optional(),
   TOKEN_ENCRYPTION_KEY: z.string().min(1).optional(),

@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync, mkdirSync, lstatSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, lstatSync, openSync, writeSync, fsyncSync, closeSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
@@ -91,6 +91,24 @@ function writeState(path, state, exclusive = false) {
   writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`, { encoding: "utf8", mode: 0o600, flag: exclusive ? "wx" : "w" });
 }
 
+/** Permanently claim a run before provider I/O; an orphan or corrupt claim still blocks replay. */
+function claimResendAttempt(path, runId, payloadSha256) {
+  const claimPath = `${path}.attempt-claim`;
+  let descriptor;
+  try {
+    descriptor = openSync(claimPath, "wx", 0o600);
+  } catch (error) {
+    if (error?.code === "EEXIST") throw new Error("an attempt claim already exists; inspect provider evidence, no request repeated");
+    throw new Error("could not create exclusive attempt claim; no provider request made");
+  }
+  try {
+    writeSync(descriptor, `${JSON.stringify({ schema: "ornigami.a17.resend-attempt-claim.v1", runId, payloadSha256 })}\n`);
+    fsyncSync(descriptor);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
 function validateFrozenPayload(payload, recipient, sender, runId) {
   if (!payload || payload.to !== recipient || Object.hasOwn(payload, "cc") || Object.hasOwn(payload, "bcc") ||
       typeof payload.from !== "string" || !payload.from.toLowerCase().endsWith(`<${sender.toLowerCase()}>`) ||
@@ -115,7 +133,7 @@ function ensureLocalEvidenceDirectory() {
   return evidencePath;
 }
 
-export async function runControlledResend({ env, runId, recipient = DEFAULT_RESEND_RECIPIENT, stateRoot = join(process.cwd(), ".next", "a17-provider-evidence"), fetcher = fetch, now = Date.now }) {
+export async function runControlledResend({ env, runId, recipient = DEFAULT_RESEND_RECIPIENT, stateRoot = join(process.cwd(), ".next", "a17-provider-evidence"), fetcher = fetch, now = Date.now, beforeAttemptClaim = async () => {} }) {
   if (!runIdValid(runId)) throw new Error("a caller-supplied UUID run id is required");
   if (!RESEND_RECIPIENT_ALLOWLIST.has(recipient)) throw new Error("recipient is outside the controlled test mailbox allowlist");
   validateResendEnv(env);
@@ -175,6 +193,10 @@ export async function runControlledResend({ env, runId, recipient = DEFAULT_RESE
   }
 
   if (state.attemptCount >= 1) throw new Error("an earlier attempt may have reached Resend; inspect provider evidence, no request repeated");
+  // This exclusive, permanent claim serializes separate processes. If the process
+  // crashes after claiming, the run remains terminal even if state still says prepared.
+  await beforeAttemptClaim();
+  claimResendAttempt(statePath, state.runId, state.payloadSha256);
   state.status = "pending";
   state.attemptCount += 1;
   writeState(statePath, state);

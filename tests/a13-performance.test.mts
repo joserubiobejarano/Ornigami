@@ -56,7 +56,7 @@ test("A13 pagination indexes seek into large business/location datasets and inde
         followup_sent_at timestamptz, attempt_count int, next_attempt_at timestamptz, last_error text);
       CREATE TABLE public.businesses(id uuid NOT NULL, name text, business_type text, city text, google_review_url text,
         rebooking_url text, tone text, language text, email_from_name text);
-      CREATE TABLE public.booster_followup_deliveries(business_id uuid NOT NULL, visit_id uuid NOT NULL, state text, error_message text);
+      CREATE TABLE public.booster_followup_deliveries(id uuid NOT NULL, business_id uuid NOT NULL, visit_id uuid NOT NULL, state text, delivery_status text, delivery_status_at timestamptz, error_message text);
       CREATE TABLE public.followup_messages(visit_id uuid NOT NULL, error_message text, created_at timestamptz);
       CREATE TABLE public.review_replies(id bigint NOT NULL, business_id uuid NOT NULL, review_id bigint NOT NULL, posted boolean NOT NULL, draft_markdown text);
       CREATE TABLE public.review_reply_draft_state(review_id bigint NOT NULL, business_id uuid NOT NULL, reply_id bigint,
@@ -121,6 +121,9 @@ test("A13 pagination indexes seek into large business/location datasets and inde
         ('30000000-0000-4000-8000-000000000002','${businessA}','2026-01-03 04:05:06.123456+00','Visit two','sent'),
         ('30000000-0000-4000-8000-000000000003','${businessA}','2026-01-02 04:05:06.000001+00','Visit three','sent'),
         ('30000000-0000-4000-8000-000000000004','${businessB}','2026-01-04 00:00:00+00','Other visit','sent');
+      INSERT INTO public.booster_followup_deliveries(id,business_id,visit_id,state,delivery_status,delivery_status_at)
+      VALUES ('40000000-0000-4000-8000-000000000001','${businessA}','30000000-0000-4000-8000-000000000001','unknown','pending',NULL),
+        ('40000000-0000-4000-8000-000000000002','${businessA}','30000000-0000-4000-8000-000000000002','accepted','delivered','2026-01-03 05:00:00+00');
     `);
     const sql = sqlExecutor();
     const reviewDb = loadSameRealmTs<typeof import("../src/app/api/reviews/route.js")>("src/app/api/reviews/route.ts", {
@@ -176,6 +179,10 @@ test("A13 pagination indexes seek into large business/location datasets and inde
       });
     const firstVisits = await boosterDb.getRecentVisitsPage(businessA, { limit: 2 });
     assert.deepEqual(firstVisits.items.map((visit) => visit.id), ["30000000-0000-4000-8000-000000000002", "30000000-0000-4000-8000-000000000001"]);
+    assert.equal(firstVisits.items[0]?.delivery_id, "40000000-0000-4000-8000-000000000002");
+    assert.equal(firstVisits.items[0]?.delivery_status, "delivered");
+    assert.equal(new Date(firstVisits.items[0]!.delivery_status_at!).toISOString(), "2026-01-03T05:00:00.000Z");
+    assert.equal(firstVisits.items[1]?.delivery_status, "pending", "unknown sends retain their durable delivery projection and quota state");
     assert.equal(firstVisits.page.hasMore, true);
     const secondVisits = await boosterDb.getRecentVisitsPage(businessA, { limit: 2, cursor: firstVisits.page.nextCursor });
     assert.deepEqual(secondVisits.items.map((visit) => visit.id), ["30000000-0000-4000-8000-000000000003"]);

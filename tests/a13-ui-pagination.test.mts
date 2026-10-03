@@ -29,6 +29,7 @@ type Inbox = {
   hasMore: boolean;
   error: string | null;
   loadReviews(location?: string): Promise<void>;
+  loadLocations(): Promise<void>;
   loadFirstReviews(): Promise<void>;
   loadNextReviews(): Promise<void>;
   loadPreviousReviews(): Promise<void>;
@@ -36,6 +37,10 @@ type Inbox = {
 
 function createHarness(
   fetchPage: (location: string, cursor: string | null) => Promise<PageResponse>,
+  fetchLocations = async () => [
+    { name: "loc-a", locationName: "loc-a", selected: true },
+    { name: "loc-b", locationName: "loc-b", selected: true },
+  ],
 ) {
   const slots: unknown[] = [];
   const setters: Array<((update: unknown) => void) | undefined> = [];
@@ -92,10 +97,7 @@ function createHarness(
       sonner: { toast: { success() {}, error() {}, warning() {} } },
       "@/modules/review-replies/services/review-replies-api.service": {
         fetchReplySettings: async () => ({ businessId: "business-1", role: "owner" }),
-        fetchReviewLocations: async () => [
-          { name: "loc-a", locationName: "loc-a", selected: true },
-          { name: "loc-b", locationName: "loc-b", selected: true },
-        ],
+        fetchReviewLocations: fetchLocations,
         fetchReviews: (location: string, _businessId?: string, cursor?: string | null) => fetchPage(location, cursor ?? null),
       },
       "@/components/reviews/review-workflow": workflow,
@@ -149,6 +151,24 @@ function review(id: string, version: number, reply: string) {
     draft_reply: reply,
   };
 }
+
+test("a failed location read can be retried without connecting Google or posting a reply", async () => {
+  let calls = 0;
+  const harness = createHarness(async () => ({
+    items: [review("recovered", 1, "Saved")], page: { nextCursor: null, hasMore: false },
+  }), async () => {
+    if (++calls === 1) throw new Error("Temporary location read failure");
+    return [{ name: "loc-a", locationName: "loc-a", selected: true }];
+  });
+  await harness.settle();
+  assert.equal(harness.current.error, "Temporary location read failure");
+  assert.equal(harness.current.selectedLocation, "");
+  await harness.act((inbox) => inbox.loadLocations());
+  assert.equal(calls, 2);
+  assert.equal(harness.current.error, null);
+  assert.equal(harness.current.selectedLocation, "loc-a");
+  assert.deepEqual(harness.current.reviews.map((item) => item.google_review_id), ["recovered"]);
+});
 
 test("bounded pages preserve an unsaved human edit and its original version while navigating away and back", async () => {
   const calls: Array<{ location: string; cursor: string | null }> = [];

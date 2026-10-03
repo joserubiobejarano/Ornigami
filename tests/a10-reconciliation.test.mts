@@ -180,12 +180,13 @@ const routeBusiness = "00000000-0000-4000-8000-000000000041";
 const boundedBody = loadTs<{
   readBoundedReconciliationRequestBody(request: Request, maxBytes?: number, timeoutMs?: number): Promise<string>;
 }>("src/modules/review-booster/services/reconciliation-request-body.service.ts", {});
-function loadRoute(config: { owner?: boolean; originAllowed?: boolean; result?: Record<string, unknown> } = {}) {
+function loadRoute(config: { owner?: boolean; originAllowed?: boolean; enabled?: boolean; result?: Record<string, unknown> } = {}) {
   const state = { ownerChecks: 0, reconcileCalls: 0 };
   const route = loadTs<{
     POST(request: Request, context: { params: Promise<{ deliveryId: string }> }): Promise<Response>;
   }>("src/app/api/review-booster/deliveries/[deliveryId]/reconcile/route.ts", {
     "@/auth": { auth: async () => ({ user: { id: actor, email: "owner@example.com" } }) },
+    "@/lib/env": { getOptionalEnv: () => config.enabled === false ? undefined : "true" },
     "@/lib/api-security": { safeApiErrorResponse: (error: unknown) => Response.json({ error: String(error) }, { status: Number((error as { status?: unknown }).status ?? 500) }) },
     "@/lib/business-context": { requireBusinessOwner: async (_actor: string, businessId: string) => {
       state.ownerChecks += 1;
@@ -220,6 +221,14 @@ test("A10 route permits owner reconciliation independent of active entitlement a
   assert.equal((await response.json() as { status: string }).status, "resolved");
   assert.equal(state.ownerChecks, 1);
   assert.equal(state.reconcileCalls, 1);
+});
+
+test("owner reconciliation remains closed before controlled provider verification", async () => {
+  const { route, state } = loadRoute({ owner: true, enabled: false });
+  const response = await route.POST(routeRequest({ businessId: routeBusiness }), { params: Promise.resolve({ deliveryId: routeDelivery }) });
+  assert.equal(response.status, 503);
+  assert.equal(state.ownerChecks, 1);
+  assert.equal(state.reconcileCalls, 0, "the disabled route makes no provider lookup or evidence mutation");
 });
 
 test("A10 route denies members, cross-tenant owners, bad origins, malformed input, and oversized chunked requests", async () => {

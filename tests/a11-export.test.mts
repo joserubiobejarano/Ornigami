@@ -67,7 +67,10 @@ test("workspace export requires the owner query and returns only workspace-scope
       replyUsageReservations: [{ state: "committed", usage_period_start: "2026-10-01T00:00:00Z" }],
       visits: [{ customer_email: "customer@example.test" }],
       messages: [{ status: "sent" }],
-      boosterDeliveries: [{ state: "accepted", reservation_month: "2026-10-01" }],
+      boosterDeliveries: [{ state: "accepted", reservation_month: "2026-10-01", delivery_status: "delivered", delivery_status_at: "2026-10-02T00:00:00Z" }],
+      boosterDeliveryEvents: [{ event_type: "email.delivered", evidence_source: "webhook" }],
+      boosterDeliveryCorrelations: [{ linked_at: "2026-10-02T00:00:00Z" }],
+      boosterDeliverySuppressions: [{ email: "customer@example.test", reason: "bounce" }],
       boosterQuotaLegacyUsage: [{ month_start_utc: "2026-09-01", accepted_count: 4 }],
       clicks: [{ clicked_at: "2026-01-01T00:00:00Z" }],
       unsubscribeSuppressions: [{ customer_email: "customer@example.test" }],
@@ -97,6 +100,12 @@ test("workspace export requires the owner query and returns only workspace-scope
   assert.doesNotMatch(state.query, /'claim_token'|'actor_user_id'/);
   assert.doesNotMatch(state.query, /token_hash|stripe_payload|idempotency_key|raw_payload|access_token|refresh_token/);
   assert.doesNotMatch(state.query, /'user_id'|'invited_by'|'email', i\.email/);
+  assert.match(state.query, /'delivery_status', d\.delivery_status/);
+  assert.match(state.query, /'delivery_status_at', d\.delivery_status_at/);
+  assert.match(state.query, /FROM public\.booster_delivery_events e\s+INNER JOIN public\.booster_followup_deliveries d ON d\.id = e\.delivery_id\s+WHERE d\.business_id = b\.id/);
+  assert.match(state.query, /FROM public\.booster_delivery_provider_correlations c\s+INNER JOIN public\.booster_followup_deliveries d ON d\.id = c\.delivery_id\s+WHERE d\.business_id = b\.id/);
+  assert.match(state.query, /FROM public\.booster_delivery_suppressions s\s+WHERE EXISTS \(\s+SELECT 1 FROM public\.followup_visits v\s+WHERE v\.business_id = b\.id AND lower\(trim\(v\.customer_email\)\) = s\.email_normalized/);
+  assert.doesNotMatch(state.query, /'provider_message_id'|'event_id'|'recipient_sha256'|'event_data'/);
   for (const sensitive of ["provider_payload", "idempotency_key", "lease_token", "provider_message_id", "error_message", "generation_token", "generation_fence", "posting_token", "posting_lease_until", "request_id", "actor_user_id"]) {
     assert.doesNotMatch(state.query, new RegExp(`'${sensitive}'`));
   }

@@ -52,13 +52,15 @@ The registry contains:
 
 User-facing access treats `active` and `trialing` as usable. Complete-plan team access also considers `past_due` while the billing state is being resolved.
 
+Signed-in dashboard access resolves the canonical workspace and its owner's entitlement for both owners and members. Billing, trial activation, connection changes and delivery reconciliation remain owner-only. Lifecycle freezes deny ordinary data/provider work. Disconnected Reply overview/inbox shells stay reachable for recovery; server layouts and APIs independently authorize reads. Scoped keyset pages return at most 100 reviews/visits and independent aggregates avoid multiplicative joins. Retained ambiguous post fences block edits/generation/posting; GET refresh does not release them.
+
 ### Review Replies flow
 
 1. A business activates Review Replies.
 2. The user connects Google Business Profile through OAuth.
 3. Locations and reviews are synced into business-scoped tables.
 4. OpenAI generates reply drafts.
-5. A user saves, posts, or enables the configured auto-reply behavior.
+5. A user saves a versioned draft and approves its exact current text before posting. Low/unknown-rating reviews remain manual-only; configured automation never overrides retained human edits.
 6. The scheduled Review Replies job can sync and draft replies for active/trialing businesses.
 
 ### Review Booster flow
@@ -66,11 +68,14 @@ User-facing access treats `active` and `trialing` as usable. Complete-plan team 
 1. A business activates Review Booster.
 2. The user configures business, tone, language, and a Google review URL.
 3. The URL is manually entered or derived from a synced Google location.
-4. Visits arrive manually or through CSV import.
+4. Visits arrive manually, through conflict-aware CSV import, or via scoped signed booking intake.
 5. Manual or scheduled execution selects eligible visits.
-6. The service generates email copy, sends through Resend, records the message, and updates visit state.
+6. The service reserves the approved UTC calendar-month allowance (500/1,500), freezes its payload/idempotency key and submits through Resend. Acceptance consumes quota; uncertainty keeps its reservation.
+7. Verified signed delivery feedback separately records delivered/delayed/bounced/complained/failed/suppressed state. Global Booster suppression prevents later sends across businesses. Positive owner lookup reconciliation is default-closed pending provider acceptance; it never resends, re-keys or releases quota.
 
 Eligibility currently requires a pending visit or retryable failure, no previous sent message, a valid email and review URL, no business/customer unsubscribe, and `visited_at` between 23 hours and seven days ago. Retries use bounded exponential backoff and the plan’s monthly allowance is enforced.
+
+Cron runners have fenced leases, fair durable cursors and cooperative budgets with bounded provider/database calls. Continuation is 202, busy 409, actionable failure 500/503, settled empty work `no_work`. Daily privacy cleanup preserves histories with unapproved retention. Account deletion remains disabled until A11 retention/provider/operator activation gates close.
 
 ### Billing and team flow
 
