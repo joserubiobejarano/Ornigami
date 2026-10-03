@@ -9,7 +9,7 @@ export function buildContentSecurityPolicy(nonce: string): string {
   return [
     "default-src 'self'",
     "base-uri 'self'",
-    "form-action 'self' https://checkout.stripe.com https://billing.stripe.com https://accounts.google.com",
+    "form-action 'self' https://checkout.stripe.com https://billing.stripe.com",
     "frame-ancestors 'none'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https:",

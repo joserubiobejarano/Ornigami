@@ -86,9 +86,10 @@ try {
     const reportTo = response.headers.get("reporting-endpoints") ?? "";
     const formPolicy = csp.match(/(?:^|;\s*)form-action\s+([^;]+)/)?.[1] ?? "";
     assert.ok(formPolicy.startsWith("'self'"), `${path} lacks same-origin form-action`);
-    for (const host of ["https://checkout.stripe.com", "https://billing.stripe.com", "https://accounts.google.com"]) {
+    for (const host of ["https://checkout.stripe.com", "https://billing.stripe.com"]) {
       assert.ok(formPolicy.split(/\s+/).includes(host), `${path} form-action is missing ${host}`);
     }
+    assert.ok(!formPolicy.split(/\s+/).includes("https://accounts.google.com"), `${path} unexpectedly allows Google form submissions`);
     assert.match(csp, /(?:^|;\s*)object-src 'none'(?:;|$)/, `${path} allows embedded objects`);
     assert.match(csp, /(?:^|;\s*)base-uri 'self'(?:;|$)/, `${path} lacks base-uri restriction`);
     assert.match(tt, /require-trusted-types-for 'script'/, `${path} lacks report-only Trusted Types policy`);

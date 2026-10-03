@@ -30,13 +30,16 @@ test("runtime CSP keeps script execution nonce-bound and blocks form exfiltratio
     "'self'",
     "https://checkout.stripe.com",
     "https://billing.stripe.com",
-    "https://accounts.google.com",
   ]);
+  assert.ok(!policy.get("form-action")?.includes("https://accounts.google.com"));
   assert.deepEqual(policy.get("base-uri"), ["'self'"]);
   assert.deepEqual(policy.get("frame-ancestors"), ["'none'"]);
   assert.deepEqual(policy.get("object-src"), ["'none'"]);
   assert.ok(policy.get("script-src")?.includes("'nonce-c2VjdXJlLW5uY2U'"));
   assert.ok(policy.get("script-src")?.includes("https://js.stripe.com"));
+  assert.ok(policy.get("script-src")?.includes("https://www.google.com"));
+  assert.ok(policy.get("connect-src")?.includes("https://oauth2.googleapis.com"));
+  assert.ok(policy.get("frame-src")?.includes("https://www.google.com"));
   assert.ok(!policy.get("script-src")?.includes("'unsafe-inline'"));
   assert.ok(!policy.get("script-src")?.includes("'unsafe-eval'"));
   assert.ok(policy.get("style-src")?.includes("'unsafe-inline'"));

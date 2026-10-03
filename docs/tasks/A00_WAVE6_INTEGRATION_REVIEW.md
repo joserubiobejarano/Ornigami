@@ -1,0 +1,39 @@
+# A01 / A12 / A19 integration review — 2026-10-03
+
+A00 reviewed the supplied A01 `2e5e71d`, A12 `95e21c5` and A19 `56242f0`, their complete task handoffs and source against main `7801a43`. A01's supplied commit contains only the audit-policy change; its direct descendant `32a101a` contains the dependency remediation and handoff and is included as the complete delivery. Original commits are preserved in merge ancestry.
+
+Three independent Luna reviews were checked again by A00 against source, installed Next 16.3.8 documentation, real PostgreSQL and combined validation. A12/A19's narrow correction deliveries were inspected by A00; no customer mail, Google post, Stripe charge, destructive deletion or new controlled Sentry event was performed in integration review.
+
+## Findings and corrections
+
+- A01's locked lint consumers now use a small first-party synchronous `fast-glob` adapter over locked `tinyglobby`. The vulnerable `micromatch`/`braces` chain is absent. Actual consumer/API-drift tests preserve Next's link rule and TypeScript project matching; unsupported adapter calls fail closed. Next/ESLint versions and rules remain intact. Strict audit parsing validates metadata/count/status consistency. No advisory exception or expiry remains.
+- A12's public boundary helper and protected router instrumentation originally initialized separate Sentry clients. A shared memoized initializer now handles either load order and concurrent attempts, reuses an existing SDK client and retries a failed initialization on a later attempt. Ordinary public routes stay lazy; public tracing stays disabled. The inert legacy client-config placeholder was removed; `SENTRY_OPTIONS` is applied by the shared initializer. Tests load the actual application modules to cover both orders, concurrency and retry.
+- Cron transport success requires a matching finite 2xx SDK acknowledgement, not only capture/flush success. A00 additionally tested the installed SDK with an injected in-memory transport and polluted scope: outgoing data remains fixed/allowlisted and a matching acknowledgement resolves the recorded transport failure. The test has no HTTP transport. Existing migration 027's constrained error value is preserved.
+- A19's form allowlist included Google unnecessarily. The actual custom Google sign-in uses Auth.js fetch plus navigation, so Google was removed from `form-action` only. Self and observed Stripe Checkout/Billing destinations remain. Script/connect/frame policies retain their existing provider entries. Tests, smoke and handoff rationale now match the active implementation.
+- CSP report ingestion is bounded by bytes, chunks, read time, batch size and request rate. Diagnostics retain schemes and allowlisted directive/status/disposition fields, not URLs, hosts, paths or script text. Trusted Types stays report-only and inline-style allowances remain documented. Vercel's documented protected forwarding header is preferred; actual ingress/header and authenticated browser/provider acceptance remain A17 work.
+- Support review is a bounded, read-only operator CLI over existing feedback with private local artifacts and an explicit dedicated credential. It does not claim a staffed web inbox, assignment/status or support mail delivery. Contact copy and fixed error logging reflect actual persistence behavior.
+
+## Combined validation and release gates
+
+On Windows, isolated Node 22.23.3 clean install completed (654 packages); both full and production dependency audits report **zero findings**. The standard parallel `npm test` passes **449/449**, zero failures/skips, including real disposable PostgreSQL suites. Lint passes with zero errors and four existing navigation warnings. Type generation and TypeScript pass. Fixture-only webpack production build, static hash parity/nonce/hydration/auth smoke and A19's eight rendered routes plus 404 CSP smoke pass. No live credentials or provider transports were used in build/tests.
+
+Before main advances, A00 requires the exact corrected commit's Ubuntu/Node 22 quality and security workflows to pass. After the authorized main push, A00 verifies main CI, the exact Vercel production deployment's Ready state and `ornigami.com` alias, and public authentication/origin/disabled-feature/CSP boundaries. Sanitized exact-commit CI/deployment/smoke receipts are retained privately outside Git; the release result is reported to the user. These checks establish code deployment, not full launch acceptance.
+
+## Production and migration evidence
+
+Fresh Vercel CLI configuration and PostgreSQL CLI read-only inspection verified production identity at `2026-10-03T20:59:15.958Z`. Eight users/eight businesses remain; 025 delivery feedback/suppression, 028 dashboard indexes and the 036 lifecycle wrapper are present. **No new migration is required and no previous migration was reapplied.** Account deletion and manual delivery reconciliation remain disabled. Resend webhook signing configuration is still absent.
+
+The verified target has zero instrumented privacy runs/no state row and one active `never_run` alert with one `alert_transport_failed` attempt. Observe the already configured **October 4, 03:00 UTC / 05:00 Europe/Madrid** privacy opportunity, its durable checkpoint/terminal record and alert resolution. No manual cleanup or authenticated health evaluation was invoked to force evidence.
+
+The A12 author records one earlier controlled Sentry ingest/readback success. Workflow inspection returned 403; downstream recipient delivery remains unverified. Integration sends no additional event. Provision/verify the support operator's dedicated `SELECT public.feedback` credential and private artifact access. Browser boundary capture, actual Sentry operator notification and scheduled privacy execution are operational acceptance gates, not another A12 implementation package.
+
+## Next owners — completed packages stay closed
+
+1. **A15:** independent external legacy deployment/database/callback/embed/job inventory, recovery evidence and staged cutover planning. Do not switch callbacks or retire data as an ordinary inventory task.
+2. **A16:** Google API approval/quota, consent/domain/callback and eligible real-client access. Live posting needs a separately authorized controlled target.
+3. **A17:** remaining authenticated runtime/CSP/browser/Sentry/provider/pilot acceptance on current main; observe the existing privacy run. Stripe remains excluded until its prior skip instruction is changed. Coordinate **A10** for Resend signing configuration and controlled webhook/suppression/owner-lookup acceptance; configuration/readiness is distinct from authorization to send customer messages.
+4. **A00/operator:** provision the dedicated support read credential and authorized Sentry workflow inspection access; verify private artifact and notification destination contracts.
+5. **A18:** obtain explicit unresolved retention, Reply/downgrade/location/operator policy decisions. **A11** follows only approved retention/recovery/deletion activation contracts. Keep activation gates closed meanwhile.
+6. **A14:** optional future lead module after its product/provider/pricing decisions; it is not a dependency of the current reputation pilot. A13 target performance measurement belongs in A17 acceptance, not a rewrite of integrated UI.
+
+Do not restart broad A01, A12 or A19 packages. Their current implementations are reviewed and corrected; remaining target acceptance is recorded in the single [roadmap](../ROADMAP.md) and existing A17 matrix.

@@ -88,14 +88,15 @@ Stripe checkout creates a subscription with `business_id`, `user_id`, `plan_id`,
 - Google tokens are encrypted at rest and legacy plaintext tokens are upgraded when read.
 - OAuth state, unsubscribe links, and review-link redirects are signed.
 - Cron endpoints require `CRON_SECRET`.
-- CSP uses dynamic nonces for protected pages and static hashes for static marketing pages; Trusted Types remains report-only pending production observation.
+- Rendered pages use request-specific CSP nonces, including public pages. Generated static hashes are parity-checked build artifacts, not runtime policy inputs. Native form destinations are limited to self and Stripe Checkout/Billing. Trusted Types remains report-only; bounded reports retain scheme-only diagnostics pending target browser observation.
+- Route/global recovery boundaries capture fixed sanitized Sentry events through the same lazy browser client as protected router instrumentation. Public traces are disabled. Cron alert transport failures clear only after the matching event receives a 2xx SDK transport acknowledgement.
+- Support messages persist in `public.feedback`. A bounded operator CLI uses a separately provisioned read-only credential and private local artifacts; an online staff inbox and support email delivery are not implemented.
 - Privacy export/delete routes and scheduled retention cleanup are implemented.
 
 ## Current architectural debt and external dependencies
 
 - Google Business Profile API quota/access approval and OAuth consent-screen publication/verification are external launch blockers for real Review Replies customers; see `ROADMAP.md`.
-- Google fetches do not yet implement explicit 429/backoff handling.
-- Review sync still performs one upsert per review rather than a batched upsert.
+- Google retries and batched review persistence are implemented; actual approved-profile/provider acceptance remains an external release gate.
 - Review Booster sends are serial within a run; the per-run cap and plan allowance are bounded, but higher-volume throughput needs future work.
 - Some legacy user-resolution fallbacks use email when older sessions do not match the canonical user id.
 - Public Local SEO/free-audit pages and the legacy project API remain available as supporting surfaces.

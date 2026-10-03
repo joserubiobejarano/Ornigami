@@ -104,6 +104,10 @@ Review Booster can operate with email and a manually entered review URL while th
 - [ ] Confirm Review Replies cron returns success and processes active/trialing businesses.
 - [ ] Confirm `/api/cron/health` shows persisted `cron_runs` records.
 - [ ] Verify the existing Vercel privacy schedule at 03:00 UTC daily, bounded cleanup and sanitized per-table health.
+- [ ] Observe the first instrumented privacy run/checkpoint after the existing October 4, 2026 03:00 UTC / 05:00 Europe/Madrid opportunity on the identity-verified production database. Verify alert resolution without manually invoking cleanup or health evaluation to manufacture evidence.
+- [ ] Verify actual route/global boundary capture and downstream Sentry notification recipients. Controlled ingest/readback and offline SDK acknowledgement tests do not prove operator notification delivery.
+- [ ] Provision/verify the support operator's `SUPPORT_DATABASE_URL`, `SELECT public.feedback` permission, target identity and private artifact access. Follow the bounded [support workflow](./tasks/A12_SUPPORT_VISIBILITY.md).
+- [ ] Verify authenticated browser nonce/CSP behavior, Stripe form redirects and trusted ingress headers; collect Trusted Types reports before considering enforcement. A19's local smoke is not provider acceptance.
 - [ ] Verify independent hourly GitHub cron health monitoring and Sentry transport/missed-schedule alert recovery. Expected budget continuation is 202, lease busy is 409, actionable failure is 500/503; do not interpret all non-200 outcomes as the same failure.
 - [ ] Apply missing reviewed schema before consumers, including 025/028 in wave 5; pause/drain both review schedules through migration/deployment and restore after exact Ready verification.
 

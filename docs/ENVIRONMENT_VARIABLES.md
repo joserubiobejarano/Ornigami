@@ -43,6 +43,7 @@ The old `STRIPE_PRICE_STARTER`, `STRIPE_REVIEW_REPLIES_PRICE_ID`, and `STRIPE_RE
 - `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET` — preferred signing secret for unsubscribe and review-link tokens; auth secrets are fallbacks.
 - `ALLOW_DASHBOARD_WITHOUT_GBP` — optional development/preview behavior flag.
 - `NEXT_PUBLIC_SENTRY_DSN` — Sentry runtime transport used by instrumentation and cron alerts; a missing/failed transport is recorded and retried. `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` configure build/upload integration where enabled.
+- `SUPPORT_DATABASE_URL` — operator-only PostgreSQL credential limited to `SELECT` on `public.feedback`, supplied explicitly to `scripts/support-inbox.mjs` through the approved secret mechanism. It has no application `DATABASE_URL` fallback and is not a new application deployment secret. Verify the target and private artifact access before use; see [support workflow](./tasks/A12_SUPPORT_VISIBILITY.md).
 - `NODE_ENV` — standard `development`, `test`, or `production` mode.
 
 ## Local example

@@ -1,39 +1,16 @@
 "use client";
 
-import { SENTRY_OPTIONS } from "@/lib/sentry-options";
+import { getOrInitializeSentryClient } from "@/lib/sentry-client";
 
 type ErrorBoundary = "route" | "global";
 
 const reportedErrors = new WeakSet<object>();
-let sentryClientPromise: Promise<typeof import("@sentry/nextjs")> | undefined;
 
 function safeDigest(error: Error & { digest?: string }): string | undefined {
   const digest = error.digest;
   return typeof digest === "string" && /^\d{1,20}$/.test(digest)
     ? digest
     : undefined;
-}
-
-async function loadSentry() {
-  sentryClientPromise ??= import("@sentry/nextjs").then((Sentry) => {
-    // instrumentation-client only initializes Sentry on protected routes. The
-    // boundary may also render on a public route, so initialize with the same
-    // PII default only when no client has already been configured.
-    if (!Sentry.getClient()) {
-      const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
-      if (dsn) {
-        Sentry.init({
-          dsn,
-          enabled: true,
-          tracesSampleRate: 0,
-          ...SENTRY_OPTIONS,
-        });
-      }
-    }
-    return Sentry;
-  });
-
-  return sentryClientPromise;
 }
 
 /** Report only a fixed exception and allowlisted metadata; never pass the source error to Sentry. */
@@ -45,8 +22,8 @@ export async function captureBoundaryError(
   reportedErrors.add(error);
 
   try {
-    const Sentry = await loadSentry();
-    if (!Sentry.getClient()) return;
+    const Sentry = await getOrInitializeSentryClient();
+    if (!Sentry?.getClient()) return;
 
     const digest = safeDigest(error);
     const safeError = new Error(`Ornigami ${boundary} error boundary caught an error`);

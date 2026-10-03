@@ -10,6 +10,7 @@ import vm from "node:vm";
 import { loadTs } from "./a02-test-support.mts";
 
 type ErrorVisibility = typeof import("../src/lib/error-visibility.ts");
+const expectPublicSamplingDisabled = () => 0;
 
 function loadTsx<T>(relative: string, mocks: Record<string, unknown>): T {
   const filename = resolve(relative);
@@ -44,7 +45,7 @@ test("boundary capture sends only a fixed error and safe correlation metadata", 
       assert.deepEqual(options, {
         dsn: "https://public@example.test/1",
         enabled: true,
-        tracesSampleRate: 0,
+        tracesSampler: expectPublicSamplingDisabled,
         sendDefaultPii: false,
       });
       client = {};
@@ -78,8 +79,18 @@ test("boundary capture sends only a fixed error and safe correlation metadata", 
     },
   };
   const { captureBoundaryError } = loadTs<ErrorVisibility>("src/lib/error-visibility.ts", {
-    "@sentry/nextjs": sentry,
-    "@/lib/sentry-options": { SENTRY_OPTIONS: { sendDefaultPii: false } },
+    "@/lib/sentry-client": {
+      getOrInitializeSentryClient: async () => {
+        if (!process.env.NEXT_PUBLIC_SENTRY_DSN) return null;
+        if (!client) sentry.init({
+          dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+          enabled: true,
+          tracesSampler: expectPublicSamplingDisabled,
+          sendDefaultPii: false,
+        });
+        return sentry;
+      },
+    },
   });
 
   try {
@@ -118,8 +129,7 @@ test("boundary capture sends only a fixed error and safe correlation metadata", 
 
 test("fallback copy provides recovery and support without claiming an alert was sent", () => {
   const { ERROR_FALLBACK_COPY } = loadTs<ErrorVisibility>("src/lib/error-visibility.ts", {
-    "@sentry/nextjs": {},
-    "@/lib/sentry-options": { SENTRY_OPTIONS: { sendDefaultPii: false } },
+    "@/lib/sentry-client": { getOrInitializeSentryClient: async () => null },
   });
 
   assert.match(ERROR_FALLBACK_COPY.message, /Try loading it again/);
@@ -128,23 +138,15 @@ test("fallback copy provides recovery and support without claiming an alert was 
   assert.doesNotMatch(Object.values(ERROR_FALLBACK_COPY).join(" "), /notified|we've been told|we will reply/i);
 });
 
-test("invalid correlation data and missing DSN do not start a Sentry client", async () => {
+test("invalid correlation data is safely ignored when telemetry has no client", async () => {
   const originalDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
   delete process.env.NEXT_PUBLIC_SENTRY_DSN;
-  let initialized = false;
-  const sentry = {
-    getClient: () => undefined,
-    init: () => { initialized = true; },
-    captureException: () => assert.fail("capture should not run without a configured client"),
-  };
   const { captureBoundaryError } = loadTs<ErrorVisibility>("src/lib/error-visibility.ts", {
-    "@sentry/nextjs": sentry,
-    "@/lib/sentry-options": { SENTRY_OPTIONS: { sendDefaultPii: false } },
+    "@/lib/sentry-client": { getOrInitializeSentryClient: async () => null },
   });
 
   try {
     await captureBoundaryError(Object.assign(new Error("private"), { digest: "email@example.com" }), "route");
-    assert.equal(initialized, false);
   } finally {
     if (originalDsn !== undefined) process.env.NEXT_PUBLIC_SENTRY_DSN = originalDsn;
   }
@@ -152,8 +154,7 @@ test("invalid correlation data and missing DSN do not start a Sentry client", as
 
 test("rendered root fallback includes document tags and its real retry and contact actions", () => {
   const copy = loadTs<ErrorVisibility>("src/lib/error-visibility.ts", {
-    "@sentry/nextjs": {},
-    "@/lib/sentry-options": { SENTRY_OPTIONS: { sendDefaultPii: false } },
+    "@/lib/sentry-client": { getOrInitializeSentryClient: async () => null },
   }).ERROR_FALLBACK_COPY;
   let retries = 0;
   const retry = () => { retries += 1; };

@@ -1,6 +1,6 @@
 # A12 error and support visibility handoff
 
-Status: isolated implementation proposal for integration review. Branch `fix/a12-error-support-alerts` is based on `7801a43` in `C:\Users\joser\Desktop\Projects\Ornigami\Ornigami-A12-error-support-alerts`. The implementation changes task-specific code and documentation only. It does not update `docs/ROADMAP.md`, shared deployment configuration, or a shared schema. The dependency manifests, roadmap, deployment settings, and schedules remain unchanged.
+Original delivery: isolated implementation proposal on `fix/a12-error-support-alerts`, based on `7801a43` in `C:\Users\joser\Desktop\Projects\Ornigami\Ornigami-A12-error-support-alerts`. Its dependency manifests, shared schema, deployment settings and schedules were unchanged. A00 subsequently reviewed `95e21c5` with A01/A19, corrected shared browser initialization, and reconciled the roadmap; see [wave 6 integration evidence](./A00_WAVE6_INTEGRATION_REVIEW.md). The validation below remains the author's historical receipt; the combined candidate passes 449 tests.
 
 ## Work packages
 
@@ -11,11 +11,11 @@ Status: isolated implementation proposal for integration review. Branch `fix/a12
 ## Integration dependencies and proposals
 
 - The runtime DSN is `NEXT_PUBLIC_SENTRY_DSN`, already present in the target environment. No new runtime variable, package dependency, shared setting, or migration is required by the error boundary. `SENTRY_OPTIONS` remains the source for the PII default.
-- `instrumentation-client.ts` currently initializes the browser SDK only on protected paths. Error boundaries lazily initialize from the existing DSN when no SDK client exists, covering public paths. A shared Sentry browser initializer is a proposed integration improvement to avoid a narrow race with an in-flight protected-route initialization; no shared instrumentation file was changed here.
+- `instrumentation-client.ts` and error boundaries use the shared browser initializer in `src/lib/sentry-client.ts`. Public routes stay lazy, protected route transitions reuse the same client, and tracing samples only protected production paths. The inert legacy `sentry.client.config.ts` placeholder was removed; its options are applied by the shared initializer.
 - The support CLI requires an operator-provisioned PostgreSQL credential limited to `SELECT` on `public.feedback`, delivered through the approved secret mechanism as `SUPPORT_DATABASE_URL`. The CLI intentionally does not fall back to `DATABASE_URL`. Confirm the reported host/database before each review. No application deployment secret is added by this branch.
 - The support workflow stores messages for review and creates a local private artifact. It does not provide online staff access, assignment/status, automatic polling, or email delivery. Define an access model and shared storage contract before expanding it into a web inbox. Decide separately whether future follow-up email needs an approved durable outbox.
 - The controlled Sentry probe's ingest/readback receipt proves event acceptance and visibility through the project API. The legacy project issue-rules request returned 404; the current organization workflow endpoint returned 403, so no rule/action/recipient state was verified. The available token needs authorized workflow access such as `alerts:read` or `org:read` (or another documented sufficient scope) before that read-only check can be repeated. Ingest/readback do not prove that downstream operator notifications fired.
-- Build reports the existing `sentry.client.config.ts` deprecation. A shared Sentry bootstrap cleanup is an integration-owned proposal; this branch did not change shared instrumentation/configuration.
+- The shared initializer removes the duplicate-client race between public boundary capture and protected-route instrumentation while retaining the existing protected-route transition callback.
 
 ## Unresolved acceptance
 
