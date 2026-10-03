@@ -4,9 +4,10 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readd
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
 import { loadTs } from "./auth-test-harness.mts";
+import { availablePostgresTestPort } from "./postgres-test-port.mts";
 
 const root = process.cwd();
-const port = 55406;
+let port = 0;
 const binDir = process.env.A06_PG_BIN ?? process.env.A08_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.PG_BIN;
 const pgExe = (name: string) => process.platform === "win32"
   ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
@@ -52,6 +53,7 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
     execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
     appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
     const logFile = join(dir, "postgres.log");
+    port = await availablePostgresTestPort();
     try {
       execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
     } catch (error) {

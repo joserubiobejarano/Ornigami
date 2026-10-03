@@ -4,6 +4,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readd
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
 import { loadTs } from "./auth-test-harness.mts";
+import { availablePostgresTestPort } from "./postgres-test-port.mts";
 
 const root = process.cwd();
 const binDir = process.env.A05_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.PG_BIN;
@@ -87,7 +88,6 @@ function getTeamRouteAgainstPostgres(port: number, ownerId: string, businessId: 
 }
 
 test("A05 migration and team lifecycle serialize seats, expiry, removal, and cross-workspace acceptance", async () => {
-  const port = 55405;
   const nextDir = resolve(root, ".next");
   mkdirSync(nextDir, { recursive: true });
   const dir = mkdtempSync(join(nextDir, "a05-team-pg-"));
@@ -97,6 +97,7 @@ test("A05 migration and team lifecycle serialize seats, expiry, removal, and cro
   let started = false;
   try {
     execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
+    const port = await availablePostgresTestPort();
     appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
     const logFile = join(dir, "postgres.log");
     try {

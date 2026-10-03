@@ -6,6 +6,7 @@ import test from "node:test";
 import { createRequire } from "node:module";
 import { promisify } from "node:util";
 import { loadTs } from "./a02-test-support.mts";
+import { availablePostgresTestPort } from "./postgres-test-port.mts";
 
 const { NextRequest } = createRequire(import.meta.url)("next/server") as typeof import("next/server");
 type TestNextRequest = import("next/server").NextRequest;
@@ -16,7 +17,7 @@ const binDir = process.env.A08_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.P
 const pgExe = (name: string) => process.platform === "win32"
   ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
   : binDir ? join(binDir, name) : name;
-const port = 55408;
+let port = 0;
 function psql(statement: string): string {
   const args = ["-X", "-q", "-A", "-t", "-F", "|", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-c", statement];
   return execFileSync(pgExe("psql"), args, { encoding: "utf8" }).trim();
@@ -57,6 +58,7 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
   try {
     execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
     appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
+    port = await availablePostgresTestPort();
     const logFile = join(dir, "postgres.log");
     try {
       execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });

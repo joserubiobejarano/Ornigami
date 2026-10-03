@@ -3,6 +3,7 @@ import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "no
 import { execFileSync, spawn } from "node:child_process";
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
+import { availablePostgresTestPort } from "./postgres-test-port.mts";
 
 const root = process.cwd();
 const testRoot = resolve(root, ".next");
@@ -12,7 +13,7 @@ const pgExe = (name: string) => {
   if (pgBin) return join(pgBin, binary);
   return process.platform === "win32" ? join("C:/Program Files/PostgreSQL/17/bin", binary) : binary;
 };
-const port = 55427;
+let port = 0;
 const binariesAvailable = ["initdb", "pg_ctl", "psql"].every((name) => {
   try {
     execFileSync(pgExe(name), ["--version"], { stdio: "ignore" });
@@ -59,6 +60,7 @@ test("booking SQL atomically deduplicates event and visit, fences entitlement/re
   try {
     execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
     appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
+    port = await availablePostgresTestPort();
     execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", join(dir, "postgres.log"), "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
     started = true;
     psql("CREATE TABLE public.users(id uuid PRIMARY KEY, privacy_deletion_requested_at timestamptz);");
