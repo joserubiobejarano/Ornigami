@@ -7,65 +7,99 @@ export type ParsedCsvRow = {
   source?: string;
 };
 
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
-    const next = line[i + 1];
-    if (char === '"' && inQuotes && next === '"') {
-      current += '"';
-      i += 1;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
+export class CsvParseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CsvParseError";
   }
-  if (inQuotes) throw new Error("CSV contains an unterminated quoted field");
-  result.push(current.trim());
-  return result;
+}
+
+function parseCsvRecord(record: string, recordNumber: number): string[] {
+  const fields: string[] = [];
+  let value = "";
+  let quoted = false;
+  let closedQuote = false;
+
+  for (let i = 0; i < record.length; i += 1) {
+    const char = record[i]!;
+    if (quoted) {
+      if (char === '"' && record[i + 1] === '"') {
+        value += '"';
+        i += 1;
+      } else if (char === '"') {
+        quoted = false;
+        closedQuote = true;
+      } else {
+        value += char;
+      }
+      continue;
+    }
+    if (char === ",") {
+      fields.push(value.trim());
+      value = "";
+      closedQuote = false;
+      continue;
+    }
+    if (char === '"') {
+      if (value.trim() || closedQuote) throw new CsvParseError(`CSV record ${recordNumber} has an unexpected quote`);
+      value = "";
+      quoted = true;
+      continue;
+    }
+    if (closedQuote) {
+      if (!/\s/.test(char)) throw new CsvParseError(`CSV record ${recordNumber} has characters after a closing quote`);
+      continue;
+    }
+    value += char;
+  }
+  if (quoted) throw new CsvParseError(`CSV record ${recordNumber} has an unterminated quoted field`);
+  fields.push(value.trim());
+  return fields;
 }
 
 function splitCsvRecords(text: string): string[] {
   const records: string[] = [];
   let current = "";
-  let inQuotes = false;
+  let quoted = false;
   for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-    const next = text[i + 1];
-    if (char === '"' && inQuotes && next === '"') {
+    const char = text[i]!;
+    if (char === '"' && quoted && text[i + 1] === '"') {
       current += '""';
       i += 1;
       continue;
     }
-    if (char === '"') inQuotes = !inQuotes;
-    if ((char === "\n" || char === "\r") && !inQuotes) {
-      if (char === "\r" && next === "\n") i += 1;
-      if (current.trim().length > 0) records.push(current);
+    if (char === '"') quoted = !quoted;
+    if (!quoted && (char === "\n" || char === "\r")) {
+      if (char === "\r" && text[i + 1] === "\n") i += 1;
+      if (current.trim()) records.push(current);
       current = "";
-      continue;
+    } else {
+      current += char;
     }
-    current += char;
   }
-  if (inQuotes) throw new Error("CSV contains an unterminated quoted field");
-  if (current.trim().length > 0) records.push(current);
+  if (quoted) throw new CsvParseError("CSV contains an unterminated quoted field");
+  if (current.trim()) records.push(current);
   return records;
 }
 
 export function parseCsv(text: string): ParsedCsvRow[] {
+  if (typeof text !== "string") throw new CsvParseError("CSV content must be text");
   const records = splitCsvRecords(text.replace(/^\uFEFF/, ""));
-  if (records.length === 0) return [];
-  const headers = parseCsvLine(records[0]).map((header) => header.trim().toLowerCase());
-  return records.slice(1).map((record) => {
-    const values = parseCsvLine(record);
+  if (records.length === 0) throw new CsvParseError("CSV is empty");
+  const headers = parseCsvRecord(records[0]!, 1).map((header) => header.toLowerCase());
+  if (headers.some((header) => !header)) throw new CsvParseError("CSV headers cannot be empty");
+  if (new Set(headers).size !== headers.length) throw new CsvParseError("CSV contains duplicate column names");
+  if (!headers.includes("visited_at")) throw new CsvParseError("CSV must include a visited_at column");
+  if (!headers.includes("customer_email")) throw new CsvParseError("CSV must include a customer_email column");
+
+  return records.slice(1).map((record, index) => {
+    const rowNumber = index + 2;
+    const values = parseCsvRecord(record, rowNumber);
+    if (values.length !== headers.length) {
+      throw new CsvParseError(`CSV record ${rowNumber} has ${values.length} fields; expected ${headers.length}`);
+    }
     const row: Record<string, string> = {};
-    headers.forEach((header, index) => { row[header] = values[index] ?? ""; });
+    headers.forEach((header, headerIndex) => { row[header] = values[headerIndex] ?? ""; });
     return row as ParsedCsvRow;
   });
 }

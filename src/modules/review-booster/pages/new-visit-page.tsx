@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 type NewVisitPayload = {
   customer_name: string;
   customer_email: string;
+  customer_phone: string;
   service_name: string;
   visited_at: string;
 };
@@ -18,6 +19,7 @@ const today = new Date().toISOString().slice(0, 10);
 const initialState: NewVisitPayload = {
   customer_name: "",
   customer_email: "",
+  customer_phone: "",
   service_name: "",
   visited_at: today,
 };
@@ -40,8 +42,7 @@ export default function ReviewBoosterNewVisitPage() {
         },
         body: JSON.stringify({
           ...form,
-          customer_phone: "",
-          visited_at: new Date(`${form.visited_at}T12:00:00`).toISOString()
+          visited_at: form.visited_at
         })
       });
       const data = await res.json();
@@ -61,7 +62,7 @@ export default function ReviewBoosterNewVisitPage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <FollowupsNav />
-      <PageHeader title="Add a visit" description="Add a recent customer visit so the follow-up workflow can begin." backToOverview />
+      <PageHeader title="Add a visit" description="Record a recent customer visit. Visits with an email may be sent by scheduled runs when timing, settings, and allowance permit." backToOverview />
       <form
         onSubmit={onSubmit}
         className="w-full space-y-5 rounded-2xl border-[1.5px] border-border bg-card p-6 text-sm text-muted-foreground shadow-ink-sm"
@@ -76,14 +77,24 @@ export default function ReviewBoosterNewVisitPage() {
         </label>
 
         <label className="block space-y-1">
-            <span className="font-medium text-primary">Email or phone</span>
+            <span className="font-medium text-primary">Email (optional if you add a phone)</span>
           <Input
             type="email"
-            required
             value={form.customer_email}
             onChange={(e) => setForm((prev) => ({ ...prev, customer_email: e.target.value }))}
-            placeholder="jane@example.com or 555 0100"
+            placeholder="jane@example.com"
           />
+        </label>
+
+        <label className="block space-y-1">
+          <span className="font-medium text-primary">Phone (optional if you add an email)</span>
+          <Input
+            type="tel"
+            value={form.customer_phone}
+            onChange={(e) => setForm((prev) => ({ ...prev, customer_phone: e.target.value }))}
+            placeholder="+34 600 000 000"
+          />
+          <span className="block text-xs">Phone-only visits are saved as non-sendable records. Review Booster does not send SMS. Visits with an email may be sent by scheduled runs when eligible.</span>
         </label>
 
         <label className="block space-y-1">
@@ -111,6 +122,7 @@ export default function ReviewBoosterNewVisitPage() {
         >
           {saving ? "Saving..." : "Save visit"}
         </Button>
+        <p className="text-xs">Visit dates use UTC. Phone numbers are stored for your records; follow-up messages are sent by email only. Saving a visit does not send email immediately. Scheduled runs may send eligible visits when timing, settings, and allowance permit.</p>
         {message ? <p className="text-foreground">{message}</p> : null}
       </form>
     </div>

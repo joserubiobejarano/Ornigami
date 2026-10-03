@@ -12,6 +12,8 @@ type SettingsPayload = {
   business_name: string;
   business_type: string;
   google_review_url: string;
+  rebooking_url: string;
+  email_from_name: string;
   tone: string;
   language: string;
   selected_location_id: string;
@@ -21,6 +23,8 @@ const initialState: SettingsPayload = {
   business_name: "",
   business_type: "",
   google_review_url: "",
+  rebooking_url: "",
+  email_from_name: "",
   tone: "warm and friendly",
   language: "en",
   selected_location_id: ""
@@ -31,11 +35,16 @@ type GoogleProfileLocation = {
   title: string | null;
   review_url: string | null;
   primary_category: string | null;
+  selected?: boolean;
 };
 
 type SettingsResponse = {
   error?: string;
   name?: string | null;
+  id?: string;
+  businessId?: string;
+  business_role?: "owner" | "member";
+  can_manage_settings?: boolean;
   business_type?: string | null;
   google_review_url?: string | null;
   tone?: string | null;
@@ -44,6 +53,11 @@ type SettingsResponse = {
   google_profile_locations?: GoogleProfileLocation[];
   auto_google_review_url?: string | null;
   effective_google_review_url?: string | null;
+  rebooking_url?: string | null;
+  email_from_name?: string | null;
+  selected_location_id?: string | null;
+  rebooking_url_valid?: boolean;
+  google_review_url_valid?: boolean;
 };
 
 const TONE_OPTIONS = [
@@ -72,6 +86,12 @@ export default function ReviewBoosterSettingsPage() {
   const [googleLocations, setGoogleLocations] = useState<GoogleProfileLocation[]>([]);
   const [autoGoogleReviewUrl, setAutoGoogleReviewUrl] = useState<string | null>(null);
   const [syncingLocations, setSyncingLocations] = useState(false);
+  const [businessId, setBusinessId] = useState("");
+  const [canManageSettings, setCanManageSettings] = useState(false);
+  const [invalidLegacyReviewUrl, setInvalidLegacyReviewUrl] = useState(false);
+  const [invalidLegacyBookingUrl, setInvalidLegacyBookingUrl] = useState(false);
+  const [locationToSelect, setLocationToSelect] = useState("");
+  const [selectingLocation, setSelectingLocation] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -87,7 +107,6 @@ export default function ReviewBoosterSettingsPage() {
           return;
         }
 
-        const firstGoogleLocationId = data.google_profile_locations?.[0]?.id ?? "";
         const tone = data?.tone ?? initialState.tone;
         const language = data?.language ?? initialState.language;
 
@@ -95,13 +114,19 @@ export default function ReviewBoosterSettingsPage() {
           business_name: data?.name ?? "",
           business_type: data?.business_type ?? "",
           google_review_url: data?.google_review_url ?? "",
+          rebooking_url: data?.rebooking_url ?? "",
+          email_from_name: data?.email_from_name ?? "",
           tone: TONE_OPTIONS.some((option) => option.value === tone) ? tone : initialState.tone,
           language: LANGUAGE_OPTIONS.some((option) => option.value === language)
             ? language
             : initialState.language,
-          selected_location_id: firstGoogleLocationId
+          selected_location_id: data.selected_location_id ?? ""
         });
         setGoogleConnected(Boolean(data.google_profile_connected));
+        setBusinessId(data.businessId ?? data.id ?? "");
+        setCanManageSettings(data.can_manage_settings === true);
+        setInvalidLegacyReviewUrl(data.google_review_url_valid === false);
+        setInvalidLegacyBookingUrl(data.rebooking_url_valid === false);
         setGoogleLocations(data.google_profile_locations ?? []);
         setAutoGoogleReviewUrl(data.auto_google_review_url ?? null);
       } catch (error) {
@@ -120,7 +145,11 @@ export default function ReviewBoosterSettingsPage() {
     setMessage("");
     setMessageKind("info");
     try {
-      const syncRes = await fetch("/api/google/locations/sync", { method: "POST" });
+      const syncRes = await fetch("/api/google/locations/sync", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(businessId ? { businessId } : {}),
+      });
       const syncData = await syncRes.json().catch(() => ({}));
       if (!syncRes.ok) {
         setMessageKind("error");
@@ -130,7 +159,7 @@ export default function ReviewBoosterSettingsPage() {
         return;
       }
 
-      const settingsRes = await fetch("/api/review-booster/settings");
+      const settingsRes = await fetch(`/api/review-booster/settings${businessId ? `?businessId=${encodeURIComponent(businessId)}` : ""}`);
       const settingsData = (await settingsRes.json()) as SettingsResponse;
       if (!settingsRes.ok) {
         setMessageKind("error");
@@ -142,10 +171,9 @@ export default function ReviewBoosterSettingsPage() {
       setGoogleConnected(Boolean(settingsData.google_profile_connected));
       setGoogleLocations(refreshedLocations);
       setAutoGoogleReviewUrl(settingsData.auto_google_review_url ?? null);
-      setForm((prev) => ({
-        ...prev,
-        selected_location_id: refreshedLocations[0]?.id ?? ""
-      }));
+      setInvalidLegacyReviewUrl(settingsData.google_review_url_valid === false);
+      setInvalidLegacyBookingUrl(settingsData.rebooking_url_valid === false);
+      setForm((prev) => ({ ...prev, selected_location_id: settingsData.selected_location_id ?? "" }));
       setMessageKind("success");
       setMessage("Google locations synced.");
     } catch (error) {
@@ -153,6 +181,45 @@ export default function ReviewBoosterSettingsPage() {
       setMessage(error instanceof Error ? error.message : "We couldn't sync your locations. Try again in a moment.");
     } finally {
       setSyncingLocations(false);
+    }
+  }
+
+  async function selectGoogleLocation() {
+    if (!businessId || !locationToSelect || selectingLocation || form.selected_location_id || googleLocations.some((location) => location.selected)) return;
+    setSelectingLocation(true);
+    setMessage("");
+    setMessageKind("info");
+    try {
+      const response = await fetch("/api/google/locations/selection", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ businessId, locationId: locationToSelect }),
+      });
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        setMessageKind("error");
+        setMessage(result.error || "We couldn't select this Google location. Try again.");
+        return;
+      }
+      const settingsRes = await fetch(`/api/review-booster/settings?businessId=${encodeURIComponent(businessId)}`);
+      const data = await settingsRes.json() as SettingsResponse;
+      if (!settingsRes.ok) {
+        setMessageKind("error");
+        setMessage(data.error || "The selected location could not be loaded.");
+        return;
+      }
+      setForm((prev) => ({ ...prev, selected_location_id: data.selected_location_id ?? "" }));
+      setGoogleConnected(Boolean(data.google_profile_connected));
+      setGoogleLocations(data.google_profile_locations ?? []);
+      setAutoGoogleReviewUrl(data.auto_google_review_url ?? null);
+      setLocationToSelect("");
+      setMessageKind("success");
+      setMessage("Google location selected. Save settings to use its review link.");
+    } catch (error) {
+      setMessageKind("error");
+      setMessage(error instanceof Error ? error.message : "We couldn't select this Google location. Try again.");
+    } finally {
+      setSelectingLocation(false);
     }
   }
 
@@ -169,9 +236,14 @@ export default function ReviewBoosterSettingsPage() {
           "content-type": "application/json"
         },
         body: JSON.stringify({
-          ...form,
+          business_name: form.business_name,
+          business_type: form.business_type,
+          tone: form.tone,
+          language: form.language,
           google_review_url: form.google_review_url.trim(),
-          selected_location_id: form.selected_location_id || null
+          rebooking_url: form.rebooking_url.trim(),
+          email_from_name: form.email_from_name.trim(),
+          businessId: businessId || undefined
         })
       });
       const data = await res.json();
@@ -182,6 +254,16 @@ export default function ReviewBoosterSettingsPage() {
         setGoogleConnected(Boolean((data as SettingsResponse).google_profile_connected));
         setGoogleLocations((data as SettingsResponse).google_profile_locations ?? []);
         setAutoGoogleReviewUrl((data as SettingsResponse).auto_google_review_url ?? null);
+        setBusinessId((data as SettingsResponse).businessId ?? (data as SettingsResponse).id ?? businessId);
+        setInvalidLegacyReviewUrl((data as SettingsResponse).google_review_url_valid === false);
+        setInvalidLegacyBookingUrl((data as SettingsResponse).rebooking_url_valid === false);
+        setForm((prev) => ({
+          ...prev,
+          google_review_url: (data as SettingsResponse).google_review_url ?? "",
+          rebooking_url: (data as SettingsResponse).rebooking_url ?? "",
+          email_from_name: (data as SettingsResponse).email_from_name ?? "",
+          selected_location_id: (data as SettingsResponse).selected_location_id ?? "",
+        }));
         setMessageKind("success");
         setMessage("Settings saved.");
       }
@@ -193,11 +275,17 @@ export default function ReviewBoosterSettingsPage() {
     }
   }
 
+  const pinnedGoogleLocation = googleLocations.find((location) => location.selected) ??
+    googleLocations.find((location) => location.id === form.selected_location_id);
+  const hasPinnedGoogleLocation = Boolean(form.selected_location_id || pinnedGoogleLocation);
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <FollowupsNav />
       <PageHeader title="Settings" backToOverview />
       <form onSubmit={onSubmit} className="w-full space-y-4 rounded-2xl border-[1.5px] border-border bg-card p-6 text-sm text-muted-foreground shadow-ink-sm">
+        {!canManageSettings && !loading ? <p role="status">Only the business owner can change Review Booster settings.</p> : null}
+        <fieldset disabled={!canManageSettings} className="space-y-4">
         <label className="block space-y-1">
           <span className="font-medium text-primary">Business name</span>
           <Input
@@ -225,7 +313,7 @@ export default function ReviewBoosterSettingsPage() {
               : "Not connected. Connect it to auto-load your review URL."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {googleConnected ? (
+            {canManageSettings && googleConnected ? (
               <Button
                 type="button"
                 onClick={() => void syncLocations()}
@@ -235,7 +323,7 @@ export default function ReviewBoosterSettingsPage() {
               >
                 {syncingLocations ? "Syncing..." : "Sync locations"}
               </Button>
-            ) : (
+            ) : canManageSettings ? (
               <Button
                 type="button"
                 onClick={() => {
@@ -245,41 +333,76 @@ export default function ReviewBoosterSettingsPage() {
               >
                 Connect Google
               </Button>
-            )}
+            ) : null}
           </div>
-          {googleLocations.length > 0 ? (
-            <label className="mt-3 block space-y-1">
-              <span className="text-xs font-medium text-primary">Connected location</span>
-              <select
-                value={form.selected_location_id}
-                onChange={(e) => setForm((prev) => ({ ...prev, selected_location_id: e.target.value }))}
-                className={nativeSelectClassName}
-              >
-                {googleLocations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.title || "Untitled location"}
-                    {location.primary_category ? ` - ${location.primary_category}` : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+          {hasPinnedGoogleLocation ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Selected location: {pinnedGoogleLocation?.title ?? "Google location"}. This selection is pinned for this business.
+            </p>
+          ) : googleLocations.length > 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">No Google location is selected for this business.</p>
+          ) : null}
+          {canManageSettings && !hasPinnedGoogleLocation && googleLocations.length > 0 ? (
+            <div className="mt-3 flex flex-wrap items-end gap-2">
+              <label className="block min-w-56 flex-1 space-y-1">
+                <span className="text-xs font-medium text-primary">Choose the business location</span>
+                <select
+                  value={locationToSelect}
+                  onChange={(event) => setLocationToSelect(event.target.value)}
+                  disabled={selectingLocation}
+                  className={nativeSelectClassName}
+                >
+                  <option value="">Select a location</option>
+                  {googleLocations.filter((location) => !location.selected).map((location) => (
+                    <option key={location.id} value={location.id}>{location.title || "Untitled location"}</option>
+                  ))}
+                </select>
+              </label>
+              <Button type="button" variant="secondary" size="sm" disabled={!locationToSelect || selectingLocation} onClick={() => void selectGoogleLocation()}>
+                {selectingLocation ? "Selecting…" : "Use this location"}
+              </Button>
+            </div>
           ) : null}
           {autoGoogleReviewUrl ? (
             <p className="mt-2 text-xs text-muted-foreground">
-              Auto-detected review URL available. Manual URL below will be used only as fallback.
+              Auto-detected review URL available. A valid manual URL below takes precedence.
             </p>
           ) : null}
         </section>
 
         <label className="block space-y-1">
-          <span className="font-medium text-primary">Google review URL (manual fallback)</span>
+          <span className="font-medium text-primary">Google review URL (manual override)</span>
           <p className="text-xs text-muted-foreground">
             Use the direct Google Maps &quot;Write a review&quot; link (the popup review form link). This removes friction and usually converts better than a generic profile link.
           </p>
+          {invalidLegacyReviewUrl ? <p role="alert" className="text-xs text-destructive">This saved link is unsafe and cannot be used in a follow-up email. Replace it with a direct Google review link.</p> : null}
           <Input
             value={form.google_review_url}
             onChange={(e) => setForm((prev) => ({ ...prev, google_review_url: e.target.value }))}
             placeholder="https://..."
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className="font-medium text-primary">Booking URL (optional)</span>
+          <p className="text-xs text-muted-foreground">When set, customers also see a “Book again” link in the same follow-up email.</p>
+          {invalidLegacyBookingUrl ? <p role="alert" className="text-xs text-destructive">This saved link is unsafe and will be omitted from emails. Replace it with a public HTTPS booking link or clear it.</p> : null}
+          <Input
+            type="url"
+            value={form.rebooking_url}
+            onChange={(e) => setForm((prev) => ({ ...prev, rebooking_url: e.target.value }))}
+            placeholder="https://your-booking-site.example/"
+          />
+        </label>
+
+        <label className="block space-y-1">
+          <span className="font-medium text-primary">Email sender name (optional)</span>
+          <p className="text-xs text-muted-foreground">This changes the display name only. The sending address remains managed by Ornigami.</p>
+          <Input
+            maxLength={120}
+            value={form.email_from_name}
+            onChange={(e) => setForm((prev) => ({ ...prev, email_from_name: e.target.value }))}
+            placeholder="Your Business Name"
           />
         </label>
 
@@ -316,12 +439,13 @@ export default function ReviewBoosterSettingsPage() {
         <div className="flex items-center gap-3">
           <Button
             type="submit"
-            disabled={loading || saving}
+            disabled={loading || saving || selectingLocation}
           >
             {saving ? "Saving..." : "Save settings"}
           </Button>
           {loading ? <span>Loading settings...</span> : null}
         </div>
+        </fieldset>
         {message ? (
           <div
             role="status"

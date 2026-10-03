@@ -108,13 +108,70 @@ export type FollowupIntegrationEventInput = {
 export async function assertBusinessMember(businessId: string, actorUserId: string): Promise<void> {
   const rows = await sql`
     SELECT 1
-    FROM public.business_members
-    WHERE business_id = ${businessId} AND user_id = ${actorUserId}
+    FROM public.businesses b
+    WHERE b.id = ${businessId}
+      AND (b.owner_user_id = ${actorUserId} OR EXISTS (
+        SELECT 1 FROM public.business_members bm
+        WHERE bm.business_id = b.id AND bm.user_id = ${actorUserId}
+      ))
     LIMIT 1
   `;
   if (!rows.length) {
     throw new Error("Business access denied.");
   }
+}
+
+/** Inserts a CSV visit atomically against the legacy expression index. A null result means a duplicate. */
+export async function createCsvFollowupVisit(
+  input: CreateFollowupVisitInput,
+  actorUserId: string
+): Promise<FollowupVisit | null> {
+  await assertBusinessMember(input.businessId, actorUserId);
+  const rows = await sql`
+    INSERT INTO public.followup_visits (
+      business_id, customer_name, customer_email, customer_phone, service_name, visited_at, source,
+      followup_status, last_error
+    )
+    SELECT b.id, ${input.customerName ?? null}, ${input.customerEmail ?? null}, ${input.customerPhone ?? null},
+      ${input.serviceName ?? null}, ${input.visitedAt}, 'csv',
+      ${input.customerEmail?.trim() ? "pending" : "non_sendable"},
+      ${input.customerEmail?.trim() ? null : "A valid email address is required for follow-up delivery."}
+    FROM public.businesses b
+    WHERE b.id = ${input.businessId}
+      AND (b.owner_user_id = ${actorUserId} OR EXISTS (
+        SELECT 1 FROM public.business_members bm WHERE bm.business_id = b.id AND bm.user_id = ${actorUserId}
+      ))
+      AND EXISTS (
+        SELECT 1 FROM public.business_agents ba
+        WHERE ba.business_id = b.id AND ba.agent_id = 'review_booster'
+          AND (ba.status IN ('active', 'trialing') OR (ba.status = 'past_due' AND ba.current_period_end >= now() - interval '7 days'))
+      )
+    ON CONFLICT (business_id, (lower(customer_email)), (coalesce(service_name, '')), visited_at)
+      WHERE source = 'csv' AND customer_email IS NOT NULL
+    DO NOTHING
+    RETURNING id, business_id, customer_name, customer_email, customer_phone, service_name,
+      visited_at, source, followup_status, followup_sent_at, last_error AS error_reason
+  `;
+  if (rows[0]) return FollowupVisitRowSchema.parse(rows[0]);
+  const duplicate = await sql`
+    SELECT 1 FROM public.followup_visits v
+    JOIN public.businesses b ON b.id = v.business_id
+    WHERE v.business_id = ${input.businessId} AND v.source = 'csv'
+      AND lower(customer_email) = lower(${input.customerEmail})
+      AND coalesce(v.service_name, '') = coalesce(${input.serviceName ?? null}, '')
+      AND v.visited_at = ${input.visitedAt}
+      AND (b.owner_user_id = ${actorUserId} OR EXISTS (
+        SELECT 1 FROM public.business_members bm WHERE bm.business_id = b.id AND bm.user_id = ${actorUserId}
+      ))
+      AND EXISTS (
+        SELECT 1 FROM public.business_agents ba
+        WHERE ba.business_id = b.id AND ba.agent_id = 'review_booster'
+          AND (ba.status IN ('active', 'trialing') OR (ba.status = 'past_due' AND ba.current_period_end >= now() - interval '7 days'))
+      )
+    LIMIT 1
+  `;
+  if (duplicate.length) return null;
+  throw new Error("Business access or Review Booster entitlement changed before the visit was saved.");
 }
 
 export async function createFollowupVisit(
@@ -127,22 +184,25 @@ export async function createFollowupVisit(
       business_id, customer_name, customer_email, customer_phone, service_name, visited_at, source, external_id
       , followup_status, last_error
     )
-    VALUES (
-      ${input.businessId},
-      ${input.customerName ?? null},
-      ${input.customerEmail ?? null},
-      ${input.customerPhone ?? null},
-      ${input.serviceName ?? null},
-      ${input.visitedAt},
-      ${input.source ?? "manual"},
-      ${input.externalId ?? null},
+    SELECT b.id, ${input.customerName ?? null}, ${input.customerEmail ?? null}, ${input.customerPhone ?? null},
+      ${input.serviceName ?? null}, ${input.visitedAt}, ${input.source ?? "manual"}, ${input.externalId ?? null},
       ${input.customerEmail?.trim() ? "pending" : "non_sendable"},
       ${input.customerEmail?.trim() ? null : "A valid email address is required for follow-up delivery."}
-    )
+    FROM public.businesses b
+    WHERE b.id = ${input.businessId}
+      AND (b.owner_user_id = ${actorUserId} OR EXISTS (
+        SELECT 1 FROM public.business_members bm WHERE bm.business_id = b.id AND bm.user_id = ${actorUserId}
+      ))
+      AND EXISTS (
+        SELECT 1 FROM public.business_agents ba
+        WHERE ba.business_id = b.id AND ba.agent_id = 'review_booster'
+          AND (ba.status IN ('active', 'trialing') OR (ba.status = 'past_due' AND ba.current_period_end >= now() - interval '7 days'))
+      )
     RETURNING
       id, business_id, customer_name, customer_email, customer_phone, service_name,
       visited_at, source, followup_status, followup_sent_at, last_error AS error_reason
   `;
+  if (!rows[0]) throw new Error("Business access or Review Booster entitlement changed before the visit was saved.");
   return FollowupVisitRowSchema.parse(rows[0]);
 }
 

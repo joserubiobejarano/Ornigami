@@ -10,14 +10,17 @@ type Deps = FollowupRunnerDependencies;
 
 const runner = loadTs<{ runEligibleFollowups: (deps: Deps) => Promise<FollowupRunOutcome> }>(
   "src/modules/review-booster/services/followup-runner.service.ts",
-  { "@/lib/followup-run-policy": { MAX_FOLLOWUPS_PER_RUN: 50 } },
+  {
+    "@/lib/followup-run-policy": { MAX_FOLLOWUPS_PER_RUN: 50 },
+    "@/modules/review-booster/services/settings-link-validation": loadTs("src/modules/review-booster/services/settings-link-validation.ts", {}),
+  },
 );
 
 function visit(id = "visit-1"): Visit {
   return {
     visitId: id, businessId: "business-1", customerName: "Ada", customerEmail: "ada@example.com",
     visitedAt: "2026-10-01T10:00:00.000Z", serviceName: "Consultation", businessName: "Studio",
-    businessType: "Salon", city: "Madrid", googleReviewUrl: "https://example.com/review", rebookingUrl: null,
+    businessType: "Salon", city: "Madrid", googleReviewUrl: "https://search.google.com/local/writereview?placeid=fixture-place", rebookingUrl: null,
     tone: "warm", language: "es", emailFromName: "Studio", deliveryId: null, deliveryState: null,
     payload: null, idempotencyKey: null, firstAttemptAt: null,
   };
@@ -216,6 +219,7 @@ test("production adapter tags the frozen payload with delivery ID and rechecks m
     "src/modules/review-booster/services/followup-runner.service.ts",
     {
       "@/lib/followup-run-policy": { MAX_FOLLOWUPS_PER_RUN: 50 },
+      "@/modules/review-booster/services/settings-link-validation": loadTs("src/modules/review-booster/services/settings-link-validation.ts", {}),
       "@/modules/review-booster/services/atomic-followup-db.service": {
         listAtomicFollowupCandidates: async () => [visit()],
         getBoosterBusinessOwnerId: async () => "owner-1",

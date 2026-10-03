@@ -62,9 +62,9 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
     }
     psql(`ALTER TABLE public.business_agents ADD COLUMN IF NOT EXISTS current_period_end timestamptz;
       INSERT INTO public.businesses(id,owner_user_id,name,google_review_url,language) VALUES
-        ('${ids.businessQuota}','${ids.owner}','Quota Studio','https://reviews.example/quota','en'),
-        ('${ids.businessReplay}','${ids.owner}','Replay Studio','https://reviews.example/replay','es'),
-        ('${ids.businessClaim}','${ids.owner}','Claim Studio','https://reviews.example/claim','fr');
+        ('${ids.businessQuota}','${ids.owner}','Quota Studio','https://search.google.com/local/writereview?placeid=quota-fixture','en'),
+        ('${ids.businessReplay}','${ids.owner}','Replay Studio','https://search.google.com/local/writereview?placeid=replay-fixture','es'),
+        ('${ids.businessClaim}','${ids.owner}','Claim Studio','https://search.google.com/local/writereview?placeid=claim-fixture','fr');
       INSERT INTO public.business_members(business_id,user_id,role) VALUES
         ('${ids.businessQuota}','${ids.owner}','owner'),('${ids.businessReplay}','${ids.owner}','owner'),('${ids.businessClaim}','${ids.owner}','owner');
       INSERT INTO public.business_agents(business_id,agent_id,status,plan_id,billing_period,current_period_start,current_period_end)
@@ -131,6 +131,7 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
         finishAccountLifecycleOperation: async () => true,
       },
       "@/lib/followup-run-policy": { MAX_FOLLOWUPS_PER_RUN: 50 },
+      "@/modules/review-booster/services/settings-link-validation": loadTs("src/modules/review-booster/services/settings-link-validation.ts", {}),
       "@/modules/review-booster/services/review-booster-db.service": { assertBusinessMember: async () => undefined },
     });
     const makeDeps = (businessId: string) => runner.createFollowupRunnerDependencies(businessId, ids.owner);

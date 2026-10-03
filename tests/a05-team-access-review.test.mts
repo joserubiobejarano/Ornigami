@@ -77,7 +77,12 @@ test("a removed member cannot resolve the explicit original workspace or pass Bo
   await booster.assertBusinessMember(businessId, memberId);
   memberPresent = false;
   await assert.rejects(booster.assertBusinessMember(businessId, memberId), /Business access denied/);
-  assert.deepEqual(boosterDb.calls.map((call) => call.values), [[businessId, memberId], [businessId, memberId]]);
+  assert.equal(boosterDb.calls.length, 2);
+  for (const call of boosterDb.calls) {
+    assert.equal(call.values[0], businessId);
+    assert.ok(call.values.length >= 2);
+    assert.ok(call.values.slice(1).every((value) => value === memberId));
+  }
 });
 
 test("invitation revocation route uses the authenticated actor and propagates canonical owner denial", async () => {

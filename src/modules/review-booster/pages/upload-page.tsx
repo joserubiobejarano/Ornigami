@@ -73,7 +73,7 @@ export default function ReviewBoosterUploadPage() {
         setStatusKind("error");
       } else {
         setResult(data);
-        setMessage(`${data.visits_inserted ?? 0} visits ready. Nothing sends until you confirm.`);
+        setMessage(`${data.visits_inserted ?? 0} visits added to the email queue. Scheduled runs may send eligible visits automatically.`);
         setStatusKind("success");
       }
     } catch (error) {
@@ -89,7 +89,7 @@ export default function ReviewBoosterUploadPage() {
       <FollowupsNav />
       <PageHeader
         title="Upload visits"
-        description="Add a CSV with names and contact details. We’ll show you a preview before anything sends."
+        description="Import recent customer visits with email addresses into the email queue. Scheduled runs may send eligible visits automatically."
         backToOverview
       >
         <Button
@@ -105,12 +105,12 @@ export default function ReviewBoosterUploadPage() {
         <h2 className="text-3xl font-semibold text-primary">Upload visits</h2>
         <ol className="mt-4 space-y-2 text-foreground">
           <li>1. Download the template.</li>
-          <li>2. Add names and contact details.</li>
+          <li>2. Add names, email addresses, services, and visit dates.</li>
           <li>3. Choose your CSV file.</li>
-          <li>4. Review the visits before anything sends.</li>
+          <li>4. Check imported visits and settings so scheduled email follow-up is ready.</li>
         </ol>
         <p className="mt-4 text-muted-foreground">
-          Nothing sends until you confirm.
+          Importing itself sends no email. Scheduled runs may send eligible visits when timing, settings, and allowance permit.
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
           For better review conversion, make sure Settings uses the direct Google Maps &quot;Write a review&quot; link.
@@ -123,9 +123,9 @@ export default function ReviewBoosterUploadPage() {
           customer_name, customer_email, service_received, visited_at
         </p>
         <p className="mt-3 rounded-xl border-[1.5px] border-accent-marigold/35 bg-accent-marigold/10 px-3 py-2 text-sm text-primary">
-          Example row: Jane Doe, jane@example.com, Teeth cleaning, 2026-05-25
-          <span className="ml-1 text-muted-foreground">(Use date format: YYYY-MM-DD)</span>
+          Use YYYY-MM-DD dates interpreted as midnight UTC, or ISO timestamps that end in Z or include an explicit UTC offset.
         </p>
+        <p className="mt-3 text-sm text-muted-foreground">CSV follow-up requires an email address. To keep a phone-only visit for your records, use Add a visit; Review Booster sends email only and does not send SMS.</p>
       </section>
 
       <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border-[1.5px] border-border bg-card p-6 text-sm text-muted-foreground shadow-ink-sm">
@@ -220,9 +220,9 @@ export default function ReviewBoosterUploadPage() {
               </span>
               <p className="text-sm font-semibold">{result.visits_inserted} visits ready</p>
             </div>
-            <p>Nothing sends until you confirm.</p>
+            <p>Importing itself sends no email. Scheduled runs may send eligible visits when timing, settings, and allowance permit.</p>
             <p>Rows checked: {result.rows_processed}</p>
-            <p>Skipped: {result.rows_skipped + result.duplicates_skipped}</p>
+            <p>Skipped: {result.rows_skipped} (including {result.duplicates_skipped} duplicates)</p>
             {result.errors.length > 0 ? (
               <ul className="list-disc rounded-xl border-[1.5px] border-accent-marigold/35 bg-accent-marigold/10 p-3 pl-8 text-primary">
                 {result.errors.map((err, idx) => (
