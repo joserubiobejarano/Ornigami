@@ -108,7 +108,8 @@ test("Review Booster cron reports unknown/deferred and accounts for reserved quo
 });
 
 test("Review Booster quota UI uses reserved usage, explains UTC reset and per-visit expiry", async () => {
-  const pageModule = loadTsx<{ default(): Promise<unknown> }>("src/app/(dashboard)/dashboard/agents/review-booster/page.tsx", {
+  let used = 500;
+  const uiMocks = {
     "next/link": { default: "a" },
     "@/components/ui/button": { Button: "button" },
     "@/components/dashboard/agent-activation-placeholder": { AgentActivationPlaceholder: "section" },
@@ -128,9 +129,19 @@ test("Review Booster quota UI uses reserved usage, explains UTC reset and per-vi
         visited_at: "2026-10-01T12:00:00.000Z", source: "manual", followup_status: "deferred_quota", error_reason: null,
       }], page: { nextCursor: null, hasMore: false } }),
       getReviewOutcomeStats: async () => ({ requestsSent: 10, reviewsSynced: 0, repliesPosted: 0, linkClicks: 0 }),
-      getReviewBoosterBillingPeriodUsage: async () => ({ sent: 499, used: 500, reserved: 1, allowance: 500 }),
+      getReviewBoosterBillingPeriodUsage: async () => ({ sent: used - 1, used, reserved: 1, allowance: 500 }),
     },
+    "@/components/dashboard": { DashboardCallout: "callout", DashboardPage: "page", DashboardPageHeader: "header" },
     "react/jsx-runtime": { jsx: renderNode, jsxs: renderNode, Fragment: "fragment" },
+  };
+  const ui = loadTsx<{ BoosterDashboard(props: Record<string, unknown>): unknown }>("src/modules/review-booster/components/booster-dashboard.tsx", uiMocks);
+  const pageModule = loadTsx<{ default(): Promise<unknown> }>("src/app/(dashboard)/dashboard/agents/review-booster/page.tsx", {
+    ...uiMocks,
+    "@/modules/review-booster/components/booster-dashboard": ui,
+    "react/jsx-runtime": {
+      jsx: (type: unknown, props: Record<string, unknown>) => typeof type === "function" ? (type as (props: Record<string, unknown>) => unknown)(props) : renderNode(type, props),
+      jsxs: renderNode,
+    },
   });
   const tree = await pageModule.default();
   const text = textContent(tree);
@@ -171,6 +182,10 @@ test("Review Booster quota UI uses reserved usage, explains UTC reset and per-vi
     return findRun(node.props?.children);
   };
   assert.equal(findRun(tree)?.props.disabled, false, "deferred-only queues can be retried manually after the UTC reset; SQL enforces eligibility");
+  used = 499;
+  const almostFull = textContent(await pageModule.default());
+  assert.match(almostFull, /499 of 500 requests used/);
+  assert.doesNotMatch(almostFull, /Eligible visits wait until/, "one remaining request must not be rounded up to a full allowance");
 });
 
 test("Review Booster badges give distinct labels to durable delivery states", () => {

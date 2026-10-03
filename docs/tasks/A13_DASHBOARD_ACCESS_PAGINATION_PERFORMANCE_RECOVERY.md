@@ -1,6 +1,6 @@
 # A13 dashboard access, pagination, performance, and recovery
 
-Status: implementation and peer review complete; tested and ready for integration with one known standard-runner test failure documented below. Root-owned type generation, typecheck, lint, build, production-smoke, and the full sequential test run passed. This task branch is based on `e5a9c0f` in `C:/Users/joser/Desktop/Projects/Ornigami-Worktrees/A13-dashboard-usability-performance` (`fix/dashboard-usability-performance`). Do not deploy or merge from this worktree.
+Status: implementation, peer review and root visual refinement complete; tested and ready for integration with one known standard-runner test failure documented below. Root-owned type generation, typecheck, lint, build, production-smoke, and the full sequential test run passed. This task branch is based on `e5a9c0f` in `C:/Users/joser/Desktop/Projects/Ornigami-Worktrees/A13-dashboard-usability-performance` (`fix/dashboard-usability-performance`). Do not deploy or merge from this worktree.
 
 ## Scope
 
@@ -16,7 +16,7 @@ The summary metrics distinguish UTC-month reply totals from all-time sent follow
 
 Pagination uses bounded opaque cursors for reviews and Booster visits. Previous/next recovery preserves the current page when a request fails; posting uncertainty remains reserved for reconciliation. The pagination implementation adds migration 028 and bounded route contracts. Apply the migration before serving those query paths and choose a rollout window based on target table size. The UI implementation is covered by the A13 interaction and responsive review.
 
-For local access and metric verification, run `node --experimental-strip-types --test tests/a13-dashboard-access.test.mts tests/a09-persistence-postgres.test.mts` with the repository's supported Node 22 runtime and PostgreSQL test prerequisites. The temporary `/a13-fixture` route uses synthetic member/review/visit data and intercepted fetch calls only; it is local browser-review tooling, not a supported product route.
+For local access and metric verification, run `node --experimental-strip-types --test tests/a13-dashboard-access.test.mts tests/a09-persistence-postgres.test.mts` with the repository's supported Node 22 runtime and PostgreSQL test prerequisites. Temporary browser fixtures used synthetic member/review/visit data and intercepted fetch calls only. They were removed after review and are not supported product routes.
 
 ## Verification evidence
 
@@ -37,13 +37,17 @@ For local access and metric verification, run `node --experimental-strip-types -
 - [x] An earlier parallel full-suite attempt completed 353 tests with 348 passing and five failures: one legacy UI mock was corrected, and four PostgreSQL timing-barrier failures occurred under concurrent load. The explicit sequential run above is green.
 - [x] These checks used synthetic/local fixtures only; no environment files, provider credentials, live databases, or deployment targets were changed.
 
+## Visual quality refinement
+
+The root-owned follow-up review simplified repeated instructions, recovery actions, metrics and visit rows, matched the landing-page styling, and fixed mobile agent navigation and the 499/500 quota display boundary. The latest refinement passed 18 focused tests, typecheck, lint, production build and smoke checks. [Visual review evidence and integration boundaries](./A13_VISUAL_REVIEW.md) records the responsive, theme and keyboard checks and distinguishes them from the earlier full-suite evidence above.
+
 ## Unresolved integration decisions
 
 - Shared `src/lib/disconnected-access-policy.ts` and `src/proxy.ts` currently redirect paid disconnected Reply inbox/overview requests before the new recovery UI can render. A02/shared integration must decide how to let authorized read-only inbox/overview pages show disconnected/error states while preserving owner-only Google changes and provider API authorization. See the access proposal.
 - Migration 028 adds regular indexes. The integration owner should choose a rollout window appropriate for the target data volume and decide whether deployment needs a concurrent-index procedure; ordinary index creation can hold write locks.
 - Clearing an uncertain external post still requires an authoritative provider reconciliation path; that work is outside this branch's ownership.
 - Review the A08 PostgreSQL test synchronization barrier and the standard runner's parallel resource bounds through their owning integration/CI work. A deterministic A08 option is a persistent `psql` session that emits `LOCK_HELD` after `SELECT ... FOR UPDATE`, keeps the transaction open behind a controlled barrier until the writer is confirmed blocked, then allows freeze/commit; bounded test concurrency is an alternative for isolating resource contention. The parallel-load explanation is plausible but unproven. No runner or shared CI configuration change was made in A13.
-- Browser review used a temporary public fixture route with synthetic identities/data, mocked client fetch responses, and no auth/provider/database calls. Its marketing chrome and delayed development compile/hydration are not representative of a production authenticated session. The route files were removed after review.
+- Browser review used temporary public fixture routes with synthetic identities/data and mocked client API responses. The visual refinement rendered the production components and hid marketing chrome with fixture-only CSS. These fixtures do not verify a production authenticated session or provider/database integration, and the route files were removed before the final build.
 - No dependencies, shared deployment configuration, or database models were added or changed. Migration 028 adds indexes; the Review Replies read projection uses a local TypeScript type.
 - No cross-owner review blockers remain. The standard-runner A08 failure above is the known test limitation; root owns the combined commit and handoff hash.
 - Linux CI parity, provider-backed behavior, production Core Web Vitals, and Lighthouse measurements remain unverified; they require their respective authorized environments and traffic.

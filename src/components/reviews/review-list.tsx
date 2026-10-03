@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { DashboardCallout } from "@/components/dashboard/callout";
 import { cn } from "@/lib/utils";
 import { formatProductDate } from "@/lib/format-date";
 import {
@@ -46,6 +47,17 @@ export type ReviewListProps = {
 
 const DEFAULT_HANDLED_HINT =
   'Handled for this demo — reply area is locked. Use "Load sample reviews" or refresh to reset.';
+
+function ReviewRating({ rating }: { rating?: number | null }) {
+  if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return <span className="text-xs text-muted-foreground">Unrated</span>;
+  }
+  return (
+    <span aria-label={`${rating} out of 5 stars`} className="font-medium text-primary">
+      <span aria-hidden="true" className="text-accent-marigold">★</span> {rating}
+    </span>
+  );
+}
 
 export function ReviewList({
   reviews,
@@ -114,9 +126,7 @@ export function ReviewList({
                     <span className="font-medium text-foreground">
                       {rv.reviewer_name ?? "Anonymous"}
                     </span>
-                    <span className="text-foreground">
-                      {typeof rv.star_rating === "number" ? `${rv.star_rating}*` : ","}
-                    </span>
+                    <ReviewRating rating={rv.star_rating} />
                     {rv.review_update_time && (
                       <span className="text-foreground text-xs">
                         {formatProductDate(rv.review_update_time)}
@@ -150,9 +160,7 @@ export function ReviewList({
                   <span className="font-medium text-foreground">
                     {rv.reviewer_name ?? "Anonymous"}
                   </span>
-                  <span className="text-foreground">
-                    {typeof rv.star_rating === "number" ? `${rv.star_rating}*` : ","}
-                  </span>
+                  <ReviewRating rating={rv.star_rating} />
                   {rv.review_update_time && (
                     <span className="text-foreground">
                       {formatProductDate(rv.review_update_time)}
@@ -194,19 +202,9 @@ export function ReviewList({
             </div>
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                <label htmlFor={`review-reply-${encodeURIComponent(rv.google_review_id)}`} className="text-xs font-semibold text-primary">Reply draft</label>
-                {workflow === "unsaved_draft" && !isHandled && (
-                  <span className="text-[10px] text-accent-marigold">
-                    Not saved yet — click Save draft to pin this version
-                  </span>
-                )}
-                {workflow === "draft_saved" && !isHandled && (
-                  <span className="text-[10px] text-navy">
-                    Draft saved — edit anytime, then save your changes before posting
-                  </span>
-                )}
-                {!showTestActions && draftText.trim() && !replyIsSaved && !recoveryLocked && !isHandled && (
-                  <span className="text-[10px] text-accent-marigold">Save this exact text before posting</span>
+                <label htmlFor={`review-reply-${encodeURIComponent(rv.google_review_id)}`} className="text-xs font-semibold text-primary">{isHandled ? "Posted reply" : "Reply draft"}</label>
+                {draftText.trim() && !replyIsSaved && !recoveryLocked && !isHandled && (
+                  <span className="text-xs text-muted-foreground">Save changes before posting.</span>
                 )}
               </div>
               <Textarea
@@ -219,25 +217,22 @@ export function ReviewList({
                 className="min-h-[80px] resize-y"
                 readOnly={isHandled || recoveryLocked || postInProgress}
                 aria-readonly={isHandled || recoveryLocked || postInProgress}
-                aria-label={`Reply draft for ${rv.reviewer_name || "anonymous reviewer"}`}
+                aria-label={`${isHandled ? "Posted reply" : "Reply draft"} for ${rv.reviewer_name || "anonymous reviewer"}`}
               />
               {rv.postRecoveryStatus && (
-                <div role="status" aria-live="polite" className="rounded-lg border border-accent-marigold/40 bg-accent-marigold/10 p-3 text-sm text-primary">
-                  <p className="font-medium">
-                    {rv.postRecoveryStatus === "posting" ? "Reply post is still being checked." : "Reply needs reconciliation."}
-                  </p>
-                  <p className="mt-1">
-                    {rv.postRecoveryStatus === "posting"
-                      ? "The saved post operation is still active. Keep this draft and wait for its status to update."
-                      : "Google’s result is uncertain. This draft is preserved, and posting stays locked until the durable operation is reconciled."}
-                  </p>
-                  <p className="mt-1 text-xs">Do not post this reply again. Refresh the saved status before taking another action.</p>
-                  {onRefreshPostStatus && (
-                    <Button type="button" size="sm" variant="outline" className="mt-3" onClick={onRefreshPostStatus}>
+                <DashboardCallout
+                  variant="warning"
+                  role="status"
+                  aria-live="polite"
+                  title={rv.postRecoveryStatus === "posting" ? "Checking reply status" : "Post status unconfirmed"}
+                  action={onRefreshPostStatus ? (
+                    <Button type="button" size="sm" variant="outline" onClick={onRefreshPostStatus}>
                       Refresh saved status
                     </Button>
-                  )}
-                </div>
+                  ) : undefined}
+                >
+                  <p>Your draft is safe. Don&apos;t post again until Google&apos;s result is confirmed.</p>
+                </DashboardCallout>
               )}
               {conflictDraft !== undefined && (
                 <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-sm text-destructive">
@@ -250,16 +245,16 @@ export function ReviewList({
                 </div>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-0.5">
-              <Button
+            {!isHandled && !recoveryLocked && <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              {(canGenerate || generateInProgress) && <Button
                 onClick={() => onGenerate(rv)}
                 title={
                   !hasPaidAccess && !isDemo && !rv.isSample ? "Premium feature" : undefined
                 }
                 disabled={isHandled || recoveryLocked || postInProgress || generateInProgress || !canGenerate}
               >
-                  Generate AI draft
-              </Button>
+                  {generateInProgress ? "Generating…" : "Generate AI draft"}
+              </Button>}
               {showTestActions && (
                 <Button
                   size="default"
@@ -293,10 +288,10 @@ export function ReviewList({
                   disabled={isHandled || recoveryLocked || conflictDraft !== undefined || !replyIsSaved || isDemo || Boolean(postingReviewId)}
                   title={isDemo ? "Posting disabled in demo mode" : undefined}
                 >
-                  {postingReviewId === rv.google_review_id ? "Posting…" : "Post saved reply to Google"}
+                  {postingReviewId === rv.google_review_id ? "Posting…" : "Post saved reply"}
                 </Button>
               )}
-            </div>
+            </div>}
           </div>
         );
       })}

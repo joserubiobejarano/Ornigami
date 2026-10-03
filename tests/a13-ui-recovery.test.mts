@@ -28,6 +28,50 @@ function loadTsx<T>(relative: string, mocks: Record<string, unknown>): T {
 const reply = "Human reply";
 const review = { google_review_id: "review-1", comment: "A review", star_rating: 5, status: "new", draftVersion: 2, draftUpdatedAt: null };
 
+test("recovery cards offer a read-only refresh while editable drafts still require saving before posting", () => {
+  const list = loadTsx<{ ReviewList(props: Record<string, unknown>): unknown }>("src/components/reviews/review-list.tsx", {
+    "react/jsx-runtime": { jsx: (type: unknown, props: object) => ({ type, props }), jsxs: (type: unknown, props: object) => ({ type, props }) },
+    "@/components/ui/button": { Button: "button" },
+    "@/components/ui/badge": { Badge: "badge" },
+    "@/components/ui/textarea": { Textarea: "textarea" },
+    "@/components/dashboard/callout": { DashboardCallout: "callout" },
+    "@/lib/utils": { cn: (...parts: unknown[]) => parts.filter(Boolean).join(" ") },
+    "@/lib/format-date": { formatProductDate: String },
+    "@/components/reviews/review-workflow": loadTs("src/components/reviews/review-workflow.ts", {}),
+  });
+  const nodes = (value: unknown): Array<{ type: string; props: Record<string, unknown> }> => {
+    if (Array.isArray(value)) return value.flatMap(nodes);
+    if (!value || typeof value !== "object" || !("props" in value)) return [];
+    const node = value as { type: string; props: Record<string, unknown> };
+    return [node, ...nodes(node.props.children), ...nodes(node.props.action)];
+  };
+  const refresh = () => {};
+  const props = {
+    drafts: { "review-1": reply }, savedDraftSnapshots: { "review-1": reply },
+    isDemo: false, isSampleMode: false, expandedId: null, hasPaidAccess: true,
+    onSaveDraft() {}, onRefreshPostStatus: refresh,
+  };
+  for (const postRecoveryStatus of ["posting", "reconciliation_required"]) {
+    const rendered = nodes(list.ReviewList({ ...props, reviews: [{ ...review, postRecoveryStatus }] }));
+    assert.equal(rendered.find((node) => node.type === "textarea")?.props.readOnly, true);
+    const buttons = rendered.filter((node) => node.type === "button");
+    assert.equal(buttons.length, 1, "recovery exposes only the safe status refresh action");
+    assert.equal(buttons[0].props.onClick, refresh);
+    assert.equal(rendered.find((node) => node.type === "callout")?.props.role, "status");
+  }
+  const posted = nodes(list.ReviewList({ ...props, reviews: [{ ...review, status: "replied" }] }));
+  assert.equal(posted.find((node) => node.type === "textarea")?.props.readOnly, true);
+  assert.equal(posted.filter((node) => node.type === "button").length, 0);
+  const dirty = nodes(list.ReviewList({ ...props, reviews: [review], drafts: { "review-1": "Unsaved edits" } }));
+  assert.equal(dirty.find((node) => node.type === "textarea")?.props.readOnly, false);
+  assert.equal(dirty.find((node) => node.type === "button" && node.props.children === "Post saved reply")?.props.disabled, true);
+  const saved = nodes(list.ReviewList({ ...props, reviews: [review] }));
+  assert.equal(saved.find((node) => node.type === "button" && node.props.children === "Post saved reply")?.props.disabled, false);
+  assert.equal(saved.some((node) => node.type === "button" && node.props.children === "Generate AI draft"), false, "a saved draft does not offer unavailable generation");
+  const unanswered = nodes(list.ReviewList({ ...props, reviews: [{ ...review, draftVersion: 0 }], drafts: {}, savedDraftSnapshots: {} }));
+  assert.equal(unanswered.find((node) => node.type === "button" && node.props.children === "Generate AI draft")?.props.disabled, false);
+});
+
 test("manual post only accepts explicit success and never retries uncertain results", async () => {
   const api = loadTs<{ ReplyPostError: new (...args: never[]) => Error & { outcomeUncertain: boolean }; postReviewReply(input: object): Promise<unknown> }>(
     "src/modules/review-replies/services/review-replies-api.service.ts", {},

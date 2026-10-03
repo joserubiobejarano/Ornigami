@@ -21,7 +21,7 @@ function utcDateTime(value: string | Date): string {
 function VisitStatusGuidance({ visit, now }: { visit: FollowupVisit; now: number | null }) {
   const status = visit.followup_status.toLowerCase();
   if (["sending", "unknown", "reconciliation_required"].includes(status)) {
-    return <p className="mt-1 max-w-sm text-xs text-primary">Delivery status is being reconciled. Its request remains reserved while the existing operation is checked. Don&apos;t create a duplicate request for this visit.</p>;
+    return <p className="mt-1 max-w-xs text-xs text-primary">Status is being checked. Don&apos;t create a duplicate request.</p>;
   }
   if (status === "failed") {
     if ((visit.attempt_count ?? 0) >= MAX_FOLLOWUP_ATTEMPTS) {
@@ -125,8 +125,8 @@ export function RecentVisitsTable({
     <section className="overflow-hidden rounded-2xl border-[1.5px] border-border bg-card shadow-ink-sm">
       <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-card-foreground">Recent visits</h2>
-          <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">{loading ? "Loading visits…" : `${visits.length} visits on this page`}</p>
+          <h2 className="text-lg font-bold text-card-foreground">Recent visits</h2>
+          <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">{loading ? "Loading visits…" : `${visits.length} ${visits.length === 1 ? "visit" : "visits"} on this page`}</p>
         </div>
         {(visits.length > 0 || pageIndex > 0) && (
           <nav className="flex w-full gap-2 sm:w-auto" aria-label="Visit pages">
@@ -148,12 +148,22 @@ export function RecentVisitsTable({
         >
           <table className="min-w-full text-sm">
             <thead className="border-b border-border bg-surface text-left text-primary"><tr>
-              <th scope="col" className="px-4 py-3 font-semibold">Customer</th><th scope="col" className="px-4 py-3 font-semibold">Email</th><th scope="col" className="px-4 py-3 font-semibold">Service</th><th scope="col" className="px-4 py-3 font-semibold">Visit date</th><th scope="col" className="px-4 py-3 font-semibold">Source</th><th scope="col" className="px-4 py-3 font-semibold">Status</th><th scope="col" className="px-4 py-3 font-semibold">Why it didn&apos;t send</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Customer</th><th scope="col" className="px-4 py-3 font-semibold">Service</th><th scope="col" className="px-4 py-3 font-semibold">Visit date</th><th scope="col" className="px-4 py-3 font-semibold">Status</th>
             </tr></thead>
             <tbody>{visits.map((visit) => (
               <tr key={visit.id} className="border-b border-border last:border-b-0">
-                <td className="px-4 py-3 text-card-foreground">{visit.customer_name || "-"}</td><td className="px-4 py-3 text-card-foreground">{visit.customer_email || "-"}</td><td className="px-4 py-3 text-card-foreground">{visit.service_name || "-"}</td><td className="px-4 py-3 text-card-foreground">{formatProductDate(visit.visited_at)}</td><td className="px-4 py-3 text-card-foreground capitalize">{visit.source || "-"}</td>
-                <td className="min-w-52 px-4 py-3 align-top"><StatusBadge status={visit.followup_status || "pending"} /><VisitStatusGuidance visit={visit} now={now} /></td><td className="max-w-xs px-4 py-3 text-card-foreground">{visit.error_reason || "-"}</td>
+                <td className="px-4 py-3 align-top text-card-foreground"><p className="font-medium">{visit.customer_name || "Anonymous"}</p><p className="mt-1 text-xs text-muted-foreground">{visit.customer_email || "No email"}</p></td>
+                <td className="px-4 py-3 align-top text-card-foreground">{visit.service_name || "-"}</td>
+                <td className="whitespace-nowrap px-4 py-3 align-top text-card-foreground">{formatProductDate(visit.visited_at)}</td>
+                <td className="min-w-52 px-4 py-3 align-top">
+                  <StatusBadge status={visit.followup_status || "pending"} />
+                  <VisitStatusGuidance visit={visit} now={now} />
+                  {(visit.source || visit.error_reason) && <details className="mt-2 max-w-xs text-xs text-muted-foreground">
+                    <summary className="w-fit cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Details for ${visit.customer_name || "anonymous customer"}`}>Details</summary>
+                    {visit.error_reason && <p className="mt-1 break-words">{visit.error_reason}</p>}
+                    {visit.source && <p className="mt-1 capitalize">Source: {visit.source}</p>}
+                  </details>}
+                </td>
               </tr>
             ))}</tbody>
           </table>

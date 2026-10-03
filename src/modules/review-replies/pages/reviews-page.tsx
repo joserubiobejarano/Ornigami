@@ -372,8 +372,8 @@ function ReviewsPageContent() {
     <DashboardPage width="md" className="space-y-8">
       <DashboardPageHeader
         kicker="Review inbox"
-        title="Review replies and approve each post."
-        description="Generate AI draft creates a saved suggestion. Save draft stores your edits. Post saved reply publishes the saved text to Google."
+        title="Your review inbox."
+        description="Draft, edit and approve replies in your own voice."
       />
 
       <div className="space-y-3">
@@ -388,8 +388,8 @@ function ReviewsPageContent() {
           >
             <p className="text-foreground">
               {isOwner
-                ? "Connect Google and select a location in Google settings to load your review inbox. You stay in control of each reply you post."
-                : "Ask the workspace owner to connect Google and select a location. You stay in control of each reply you post."}
+                ? "Connect Google and select a location to load your reviews."
+                : "Ask the workspace owner to connect Google and select a location."}
             </p>
           </DashboardCallout>
         )}
@@ -397,15 +397,12 @@ function ReviewsPageContent() {
         {isSampleMode && (
           <DashboardCallout variant="neutral" title="Test mode — sample reviews">
             <p className="text-foreground">
-              Sample data only. In live mode, you decide what posts to Google.
-            </p>
-            <p className="text-foreground mt-2">
-              Sample reviews for internal testing. These are not live Google reviews.
+              Sample reviews only. Test actions never post to Google.
             </p>
           </DashboardCallout>
         )}
 
-        {error && isNoConnectedOnly && (
+        {error && isNoConnectedOnly && hasRealLocations && (
           <DashboardCallout variant="neutral">
             <p className="text-foreground">{error}</p>
           </DashboardCallout>
@@ -417,34 +414,42 @@ function ReviewsPageContent() {
         )}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <select
-          className={cn(nativeSelectClassName, "min-w-[200px] sm:min-w-[220px] sm:max-w-md sm:flex-1")}
-          aria-label="Select a Google review location"
-          value={selectedLoc}
-          onChange={(e) => setSelectedLoc(e.target.value)}
-          disabled={loading}
-        >
-          <option value="">Select a location</option>
-          {displayLocations.map((l) => (
-            <option key={l.name} value={l.name}>
-              {l.title || l.name}
-            </option>
-          ))}
-        </select>
+      {hasRealLocations && (
+        <div className="space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select
+              className={cn(nativeSelectClassName, "min-w-[200px] sm:min-w-[220px] sm:max-w-md sm:flex-1")}
+              aria-label="Select a Google review location"
+              value={selectedLoc}
+              onChange={(e) => setSelectedLoc(e.target.value)}
+              disabled={loading}
+            >
+              <option value="">Select a location</option>
+              {displayLocations.map((l) => (
+                <option key={l.name} value={l.name}>
+                  {l.title || l.name}
+                </option>
+              ))}
+            </select>
 
-        <Button
-          onClick={() => void syncReviews()}
-          disabled={!selectedLoc || syncing || loading}
-        >
-          {syncing ? "Syncing…" : "Sync reviews now"}
-        </Button>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        {autoReplyAllReviews
-          ? "Interactive sync may post eligible 4–5-star replies. Unknown and 1–3-star ratings always need your approval; scheduled runs save drafts only."
-          : "Sync creates drafts for review. Unknown and 1–3-star ratings always need your approval; scheduled runs save drafts only."}
-      </p>
+            <Button
+              onClick={() => void syncReviews()}
+              disabled={!selectedLoc || syncing || loading}
+            >
+              {syncing ? "Syncing…" : "Sync reviews now"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {autoReplyAllReviews
+              ? "Interactive sync may post eligible 4–5-star replies. Unknown and 1–3-star ratings always need your approval; scheduled runs save drafts only."
+              : "Sync saves drafts. You choose what posts to Google."}
+          </p>
+          <details className="text-sm text-muted-foreground">
+            <summary className="w-fit cursor-pointer rounded font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">How replies work</summary>
+            <p className="mt-2 max-w-2xl leading-relaxed">Generate AI draft saves a suggestion. Save draft stores your edits. Post saved reply publishes that exact saved text to Google. Unknown and 1–3-star ratings need your approval; scheduled runs save drafts only.</p>
+          </details>
+        </div>
+      )}
 
       <ReviewInboxSummary
         reviews={reviews}
@@ -462,11 +467,7 @@ function ReviewsPageContent() {
         <DashboardEmptyState
           title="No reviews yet"
           description="No reviews were returned for this selected location. Sync the location to check for recent reviews."
-        >
-          <Button type="button" onClick={() => void syncReviews()} disabled={syncing || loading}>
-            {syncing ? "Syncing reviews…" : "Sync reviews"}
-          </Button>
-        </DashboardEmptyState>
+        />
       )}
 
       <ReviewList
@@ -475,7 +476,7 @@ function ReviewsPageContent() {
         savedDraftSnapshots={savedDraftSnapshots}
         isDemo={false}
         isSampleMode={isSampleMode}
-         expandedId={expandedReviewId}
+        expandedId={expandedReviewId}
         onExpandedIdChange={setExpandedId}
         onDraftChange={(reviewId, text) =>
           setDrafts((d) => ({ ...d, [reviewId]: text }))
@@ -503,7 +504,7 @@ function ReviewsPageContent() {
       {(reviews.length > 0 || hasPrevious) && (
         <nav className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="Review pages">
           <p className="text-sm text-muted-foreground" aria-live="polite">
-            {pageLoading ? "Loading reviews…" : `${reviews.length} reviews on this page`}
+            {pageLoading ? "Loading reviews…" : `${reviews.length} ${reviews.length === 1 ? "review" : "reviews"} on this page`}
           </p>
           <div className="flex w-full gap-2 sm:w-auto">
             <Button type="button" variant="outline" className="flex-1 sm:flex-none" onClick={() => void loadPreviousReviews()} disabled={!hasPrevious || pageLoading || loading}>

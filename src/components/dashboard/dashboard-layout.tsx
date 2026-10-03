@@ -6,6 +6,7 @@ import { ReactNode, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardCallout, DashboardTopNav } from "@/components/dashboard";
 import { DashboardUserMenu } from "@/components/dashboard/user-menu";
+import { DashboardAgentMenu } from "@/components/dashboard/top-nav";
 import { Button } from "@/components/ui/button";
 
 function readDemoCookie(): boolean {
@@ -31,9 +32,10 @@ export function DashboardLayoutClient({ children, canManageBilling = false }: { 
               <Image src="/logo-paper.svg" alt="Ornigami" width={180} height={72} className="hidden h-9 w-[132px] object-contain object-left dark:block" />
             </Link>
             <div className="col-span-2 row-start-2 min-w-0 overflow-x-auto lg:col-span-1 lg:col-start-2 lg:row-start-1">
-              <DashboardTopNav canManageBilling={canManageBilling} className="w-max min-w-full justify-start lg:w-full lg:justify-center" />
+              <DashboardTopNav canManageBilling={canManageBilling} className="w-full justify-start lg:justify-center" />
             </div>
-            <div className="col-start-2 row-start-1 justify-self-end lg:col-start-3">
+            <div className="col-start-2 row-start-1 flex items-center gap-2 justify-self-end lg:col-start-3">
+              <DashboardAgentMenu compact className="lg:hidden" />
               <DashboardUserMenu canManageBilling={canManageBilling} />
             </div>
           </div>

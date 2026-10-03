@@ -15,7 +15,7 @@ export function FollowupsNav() {
 
   return (
     <nav className="rounded-2xl border-[1.5px] border-border bg-card p-2 shadow-ink-sm" aria-label="Review Booster">
-      <ul className="flex flex-wrap gap-2">
+      <ul className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap sm:gap-2">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
           return (
