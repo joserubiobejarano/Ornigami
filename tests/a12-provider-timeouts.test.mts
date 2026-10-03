@@ -83,6 +83,37 @@ test("an already expired scheduled Google provider window starts no fetch", asyn
   assert.equal(calls, 0);
 });
 
+test("Google refresh starts no provider work when its window expires during credential read or lifecycle admission", async () => {
+  const mod = loadTs<{ createGoogleClient(dependencies: Record<string, unknown>): {
+    googleFetch(userId: string, url: string, options?: RequestInit): Promise<Response>;
+  } }>("src/lib/google.ts", {
+    "./encrypted-token.ts": { decryptToken: (value: string) => ({ value, legacy: false }) },
+    "./env.ts": { getRequiredEnv: () => "test-value", getServerAppUrl: () => "https://local.test" },
+  });
+  for (const expireAt of ["read", "admission"]) {
+    const controller = new AbortController();
+    let refreshCalls = 0;
+    let fetchCalls = 0;
+    const settled: string[] = [];
+    const client = mod.createGoogleClient({
+      getTokens: async () => {
+        if (expireAt === "read") controller.abort();
+        return { ...validTokens(), expires_at: new Date(0).toISOString() };
+      },
+      admitRefresh: async () => { controller.abort(); return "refresh-lease"; },
+      finishRefresh: async (_token: string, outcome: string) => { settled.push(outcome); return true; },
+      saveTokens: async () => { throw new Error("unexpected token save"); },
+      refresh: async () => { refreshCalls += 1; throw new Error("unexpected provider refresh"); },
+      fetcher: async () => { fetchCalls += 1; return Response.json({}); },
+      now: Date.now, sleep: async () => undefined, requestTimeoutMs: 25,
+    });
+    await assert.rejects(client.googleFetch("user-1", googleUrl, { signal: controller.signal }), /cancelled/);
+    assert.equal(refreshCalls, 0);
+    assert.equal(fetchCalls, 0);
+    assert.deepEqual(settled, expireAt === "admission" ? ["failed"] : []);
+  }
+});
+
 test("scheduled and manual review drafting use one bounded SDK attempt", async () => {
   const constructors: Array<Record<string, unknown>> = [];
   const calls: Array<unknown[] | undefined> = [];

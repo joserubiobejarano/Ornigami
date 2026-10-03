@@ -357,16 +357,20 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     fallback: Tokens,
     force: boolean,
     expectedConnectionVersion?: string,
-    lifecycleContext?: GoogleLifecycleContext
+    lifecycleContext?: GoogleLifecycleContext,
+    assertProviderWindow?: () => void
   ): Promise<Tokens> {
+    assertProviderWindow?.();
     const active = refreshes.get(ownerUserId);
     if (active) {
       const refreshed = await active;
+      assertProviderWindow?.();
       assertExpectedConnectionVersion(refreshed, expectedConnectionVersion);
       return refreshed;
     }
     const operation = (async () => {
       const latest = await dependencies.getTokens(ownerUserId);
+      assertProviderWindow?.();
       if (!latest) {
         if (expectedConnectionVersion !== undefined) throw new GoogleConnectionVersionError();
         throw new Error("No Google connection found.");
@@ -379,6 +383,14 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
       }
       const lifecycleToken = await dependencies.admitRefresh?.(ownerUserId, latest, lifecycleContext);
       if (dependencies.admitRefresh && !lifecycleToken) throw new Error("Google refresh blocked by account lifecycle.");
+      try {
+        assertProviderWindow?.();
+      } catch (error) {
+        // Admission can itself await storage. No provider request has started,
+        // so cancellation here is a known failure, rather than an unknown effect.
+        if (lifecycleToken) await dependencies.finishRefresh?.(lifecycleToken, "failed").catch(() => false);
+        throw error;
+      }
       let received: GoogleOAuthTokens;
       try {
         received = await dependencies.refresh(latest.refresh_token);
@@ -465,8 +477,9 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     }
   }
 
-  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string, lifecycleContext?: GoogleLifecycleContext): Promise<Tokens> {
+  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string, lifecycleContext?: GoogleLifecycleContext, assertProviderWindow?: () => void): Promise<Tokens> {
     const tokens = await dependencies.getTokens(ownerUserId);
+    assertProviderWindow?.();
     if (!tokens) {
       if (expectedConnectionVersion !== undefined) throw new GoogleConnectionVersionError();
       throw new Error("No Google connection found.");
@@ -474,7 +487,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
     if (!tokens.access_token || !tokens.refresh_token) throw new Error("Stored Google credentials are invalid.");
     if (!isExpired(tokens.expires_at, dependencies.now())) return tokens;
-    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion, lifecycleContext);
+    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion, lifecycleContext, assertProviderWindow);
   }
 
   async function googleFetch(
@@ -495,6 +508,10 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
     const throwIfCancelled = () => {
       if (externalSignal?.aborted) throw new Error("Google API request was cancelled.");
     };
+    const assertProviderWindow = () => {
+      throwIfCancelled();
+      if (dependencies.now() >= deadline) throw new Error("Google API request deadline exceeded.");
+    };
     const cancellableDelay = async (delayMs: number) => {
       throwIfCancelled();
       if (!externalSignal) return dependencies.sleep(delayMs);
@@ -513,7 +530,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
       // Re-read before every provider request, including retries after backoff.
       // A selected location is pinned to the credential generation that authorized it.
       throwIfCancelled();
-      tokens = await freshTokens(ownerUserId, expectedConnectionVersion, lifecycleContext);
+      tokens = await freshTokens(ownerUserId, expectedConnectionVersion, lifecycleContext, assertProviderWindow);
       throwIfCancelled();
       assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
       const remainingMs = deadline - dependencies.now();
@@ -551,7 +568,7 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
 
       if (response.status === 401 && canReplay && !refreshedAfterUnauthorized) {
         await response.body?.cancel().catch(() => undefined);
-        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion, lifecycleContext);
+        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion, lifecycleContext, assertProviderWindow);
         assertExpectedConnectionVersion(tokens, expectedConnectionVersion);
         if (dependencies.now() >= deadline || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
         refreshedAfterUnauthorized = true;
