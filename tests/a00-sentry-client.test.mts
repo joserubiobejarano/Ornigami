@@ -118,17 +118,72 @@ test("public boundary then protected router transition share one client and keep
     assert.equal(harness.initCalls, 1);
     assert.equal((harness.initOptions[0].tracesSampler as () => number)(), 0);
 
+    const clientOptions = harness.initOptions[0];
+    const beforeSend = clientOptions.beforeSend as (event: Record<string, unknown>) => Record<string, unknown> | null;
+    const beforeBreadcrumb = clientOptions.beforeBreadcrumb as (breadcrumb: Record<string, unknown>) => Record<string, unknown> | null;
+    const beforeSendTransaction = clientOptions.beforeSendTransaction as (event: Record<string, unknown>) => Record<string, unknown> | null;
+    const protectedOnlyIntegrations = clientOptions.integrations as (integrations: Array<{ name: string }>) => Array<{ name: string }>;
+    const ordinaryPublicError = { exception: { values: [{ value: "public runtime secret" }] }, request: { url: "/public?email=private" } };
+    assert.equal(beforeSend(ordinaryPublicError), null, "ordinary public exceptions are discarded");
+    assert.equal(beforeBreadcrumb({ message: "public navigation with private data" }), null);
+    assert.equal(beforeSendTransaction({ transaction: "/" }), null);
+    assert.deepEqual(protectedOnlyIntegrations([{ name: "GlobalHandlers" }, { name: "BrowserSession" }]), [{ name: "GlobalHandlers" }]);
+
+    const fixedBoundary = "Ornigami route error boundary caught an error";
+    const pollutedBoundaryEvent = {
+      event_id: "safe-event-id",
+      timestamp: 123,
+      platform: "javascript",
+      sdk: { name: "sentry.javascript.browser" },
+      release: "release",
+      environment: "production",
+      message: "private source message",
+      exception: { values: [
+        { type: "Error", value: fixedBoundary, stacktrace: { frames: [{ filename: "secret-path" }] } },
+        { type: "Error", value: "another private exception" },
+      ] },
+      tags: { error_boundary: "route", error_digest: "123456", tenant: "private@example.test" },
+      fingerprint: ["attacker-controlled"],
+      user: { email: "private@example.test" },
+      request: { url: "https://private.example/?token=secret" },
+      breadcrumbs: [{ message: "private breadcrumb" }],
+      contexts: { private: { token: "secret" } },
+      extra: { raw: "private" },
+    };
+    const sanitizedBoundary = beforeSend(pollutedBoundaryEvent);
+    assert.ok(sanitizedBoundary);
+    assert.deepEqual(sanitizedBoundary.exception, { values: [{ type: "Error", value: fixedBoundary }] });
+    assert.deepEqual(sanitizedBoundary.tags, { error_boundary: "route", error_digest: "123456" });
+    assert.deepEqual(sanitizedBoundary.fingerprint, ["ornigami-error-boundary", "route", "123456"]);
+    assert.equal("request" in sanitizedBoundary, false);
+    assert.equal("user" in sanitizedBoundary, false);
+    assert.equal("breadcrumbs" in sanitizedBoundary, false);
+    assert.equal("contexts" in sanitizedBoundary, false);
+    assert.equal("extra" in sanitizedBoundary, false);
+    assert.doesNotMatch(JSON.stringify(sanitizedBoundary), /private|secret|attacker-controlled|secret-path/);
+    assert.equal(beforeSend({ tags: { error_boundary: "route" }, exception: { values: [{ value: "not the fixed boundary" }] } }), null);
+
     const instrumentation = harness.load("instrumentation-client.ts") as {
       onRouterTransitionStart: (href: string, navigationType: string) => void;
     };
     harness.location.pathname = "/dashboard";
     harness.location.href = "https://ornigami.test/dashboard";
     assert.equal((harness.initOptions[0].tracesSampler as () => number)(), 0.1);
+    assert.equal(beforeSend(ordinaryPublicError), ordinaryPublicError, "protected exceptions keep existing SDK behavior");
+    const protectedBreadcrumb = { message: "protected breadcrumb" };
+    assert.equal(beforeBreadcrumb(protectedBreadcrumb), protectedBreadcrumb);
+    const protectedTransaction = { transaction: "/dashboard" };
+    assert.equal(beforeSendTransaction(protectedTransaction), protectedTransaction);
     instrumentation.onRouterTransitionStart("/dashboard", "push");
     await Promise.resolve();
 
     assert.equal(harness.initCalls, 1, "router instrumentation reuses the boundary-created client");
     assert.equal(JSON.stringify(harness.transitions), JSON.stringify([["/dashboard", "push"]]));
+
+    harness.location.pathname = "/contact";
+    assert.equal(beforeSend(ordinaryPublicError), null, "automatic errors are suppressed again after returning to public routes");
+    assert.equal(beforeBreadcrumb(protectedBreadcrumb), null);
+    assert.equal(beforeSendTransaction(protectedTransaction), null);
   } finally {
     harness.restore();
   }
