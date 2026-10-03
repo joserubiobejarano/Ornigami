@@ -14,7 +14,10 @@ type DeletionStripe = {
     retrieve: (id: string, params?: Stripe.SubscriptionRetrieveParams, options?: Stripe.RequestOptions) => Promise<Stripe.Subscription>;
     cancel: (id: string, params?: Stripe.SubscriptionCancelParams, options?: Stripe.RequestOptions) => Promise<Stripe.Subscription>;
   };
-  customers: { retrieve: (id: string, params?: Stripe.CustomerRetrieveParams, options?: Stripe.RequestOptions) => Promise<Stripe.Customer | Stripe.DeletedCustomer> };
+  customers: {
+    retrieve: (id: string, params?: Stripe.CustomerRetrieveParams, options?: Stripe.RequestOptions) => Promise<Stripe.Customer | Stripe.DeletedCustomer>;
+    del: (id: string, params?: Stripe.CustomerDeleteParams, options?: Stripe.RequestOptions) => Promise<Stripe.DeletedCustomer>;
+  };
 };
 
 const STRIPE_TIMEOUT = 10_000;
@@ -81,7 +84,7 @@ export async function reconcileOwnerStripeForDeletion(input: {
                provider_create_state,provider_create_lease_until,provider_create_finished_at,fence
         FROM public.billing_checkout_intents WHERE owner_user_id=${input.ownerUserId}
           AND status IN ('pending','uncertain','completed') ORDER BY created_at,id`,
-    sql`SELECT owner_email FROM public.billing_customer_provisioning WHERE owner_user_id=${input.ownerUserId}`,
+    sql`SELECT owner_email,provider_customer_id,provider_create_state,provider_create_lease_until FROM public.billing_customer_provisioning WHERE owner_user_id=${input.ownerUserId}`,
   ]);
   const businessIds = new Set((businessRows as Array<{ id: string }>).map((row) => row.id));
   const customerIds = new Set((mappingRows as Array<{ stripe_customer_id: string }>).map((row) => row.stripe_customer_id));
@@ -105,11 +108,13 @@ export async function reconcileOwnerStripeForDeletion(input: {
     }
   }
 
-  if (provisioningRows.length) {
-    // Stripe customer search is eventually consistent and cannot prove that
-    // an uncommitted customer does not exist. Keep deletion frozen for A03
-    // customer-provisioning reconciliation instead of guessing from absence.
-    throw new Error("billing_customer_provisioning_unresolved");
+  for (const provisioning of provisioningRows as Array<{ provider_customer_id?: string | null; provider_create_state?: string; provider_create_lease_until?: string | null }>) {
+    if (provisioning.provider_create_state !== "done" || provisioning.provider_create_lease_until || !provisioning.provider_customer_id) {
+      // Customer Search is eventually consistent and an empty result cannot
+      // establish that a customer create did not succeed.
+      throw new Error("billing_customer_provisioning_unresolved");
+    }
+    customerIds.add(provisioning.provider_customer_id);
   }
   for (const intent of intents) customerIds.add(intent.customer_id);
   const legacyRows = await sql`SELECT id FROM public.subscriptions WHERE user_id=${input.ownerUserId}`;
@@ -140,10 +145,20 @@ export async function reconcileOwnerStripeForDeletion(input: {
   if (customerIds.size > 1) throw new Error("billing_customer_mapping_conflict");
   const sessionsByCustomer = new Map<string, Stripe.Checkout.Session[]>();
   const mappedSubscriptions = new Set(legacyMappedSubscriptionIds);
+  const erasedCustomers = new Set<string>();
   for (const customerId of customerIds) {
     const customer = await input.stripe.customers.retrieve(customerId, {}, { timeout: STRIPE_TIMEOUT, maxNetworkRetries: 0 });
+    if (customer.id !== customerId) throw new Error("billing_customer_identity_mismatch");
     if (customer.deleted) {
-      throw new Error("billing_customer_mapping_unresolved");
+      const evidence = await sql`SELECT status FROM public.privacy_stripe_customer_erasure_evidence
+        WHERE operation_id=${input.operationId}::uuid AND customer_id=${customerId}`;
+      const status = (evidence[0] as { status?: string } | undefined)?.status;
+      if (status !== "started" && status !== "complete") throw new Error("billing_customer_mapping_unresolved");
+      erasedCustomers.add(customerId);
+      sessionsByCustomer.set(customerId, []);
+      await sql`UPDATE public.privacy_stripe_customer_erasure_evidence SET status='complete',updated_at=now()
+        WHERE operation_id=${input.operationId}::uuid AND customer_id=${customerId} AND status='started'`;
+      continue;
     }
     assertOwnerMetadata(customer, input.ownerUserId, businessIds);
     const sessions: Stripe.Checkout.Session[] = [];
@@ -160,6 +175,13 @@ export async function reconcileOwnerStripeForDeletion(input: {
   }
 
   for (const intent of intents) {
+    if (erasedCustomers.has(intent.customer_id)) {
+      if (intent.provider_create_state !== "done" || !intent.provider_create_finished_at
+        || !intent.stripe_session_id || !["completed", "expired"].includes(intent.status)) {
+        throw new Error("billing_intent_state_unresolved_after_customer_erasure");
+      }
+      continue;
+    }
     if (!intent.provider_intent_token) throw new Error("billing_intent_token_missing");
     const sessions = sessionsByCustomer.get(intent.customer_id) ?? [];
     let matches = sessions.filter((session) => session.metadata?.billing_intent_token === intent.provider_intent_token);
@@ -218,6 +240,7 @@ export async function reconcileOwnerStripeForDeletion(input: {
     if (canceled.status !== "canceled") throw new Error("legacy_subscription_cancellation_unconfirmed");
   }
   for (const customerId of customerIds) {
+    if (erasedCustomers.has(customerId)) continue;
     for await (const subscription of input.stripe.subscriptions.list(
       { customer: customerId, status: "all", limit: 100 }, { timeout: STRIPE_TIMEOUT, maxNetworkRetries: 0 },
     )) {
@@ -244,6 +267,11 @@ export async function reconcileOwnerStripeForDeletion(input: {
   // Every unresolved durable intent must map to one provider session; final SQL
   // rechecks that its row did not change after this reconciliation timestamp.
   for (const customerId of customerIds) {
+    if (erasedCustomers.has(customerId)) {
+      await sql`DELETE FROM public.billing_customer_provisioning WHERE owner_user_id=${input.ownerUserId}::uuid
+        AND provider_customer_id=${customerId} AND provider_create_state='done' AND provider_create_lease_until IS NULL`;
+      continue;
+    }
     for await (const session of input.stripe.checkout.sessions.list(
       { customer: customerId, limit: 100 }, { timeout: STRIPE_TIMEOUT, maxNetworkRetries: 0 },
     )) {
@@ -268,6 +296,7 @@ export async function reconcileOwnerStripeForDeletion(input: {
   }
 
   for (const intent of intents) {
+    if (erasedCustomers.has(intent.customer_id) && intent.provider_create_state === "done") continue;
     const session = (sessionsByCustomer.get(intent.customer_id) ?? [])
       .find((item) => item.metadata?.billing_intent_token === intent.provider_intent_token);
     if (!session || (session.status !== "complete" && session.status !== "expired")) {
@@ -291,20 +320,80 @@ export async function reconcileOwnerStripeForDeletion(input: {
       RETURNING id`;
     if (!marked.length) throw new Error("billing_checkout_provider_state_changed");
   }
+
+  // Delete only after the exhaustive session/subscription drain above. A
+  // durable started marker plus Stripe's deleted-customer tombstone recovers
+  // a lost DELETE response without repeating or guessing the provider action.
+  for (const customerId of customerIds) {
+    if (erasedCustomers.has(customerId)) continue;
+    await checkpoint(true);
+    await sql`INSERT INTO public.privacy_stripe_customer_erasure_evidence(operation_id,customer_id,status)
+      VALUES (${input.operationId}::uuid,${customerId},'started')
+      ON CONFLICT (operation_id,customer_id) DO NOTHING`;
+    const erased = await input.stripe.customers.del(customerId, {}, { timeout: STRIPE_TIMEOUT, maxNetworkRetries: 0 });
+    await checkpoint(true);
+    if (erased.id !== customerId || erased.deleted !== true) throw new Error("billing_customer_erasure_unconfirmed");
+    const confirmed = await input.stripe.customers.retrieve(customerId, {}, { timeout: STRIPE_TIMEOUT, maxNetworkRetries: 0 });
+    if (confirmed.id !== customerId || !confirmed.deleted) throw new Error("billing_customer_erasure_unconfirmed");
+    await sql`UPDATE public.privacy_stripe_customer_erasure_evidence SET status='complete',updated_at=now()
+      WHERE operation_id=${input.operationId}::uuid AND customer_id=${customerId} AND status IN ('started','complete')`;
+    await sql`DELETE FROM public.billing_customer_provisioning WHERE owner_user_id=${input.ownerUserId}::uuid
+      AND provider_customer_id=${customerId} AND provider_create_state='done' AND provider_create_lease_until IS NULL`;
+  }
 }
 
-export async function revokeActorGoogleGrant(userId: string, fetcher: typeof fetch = fetch): Promise<void> {
-  const rows = await sql`SELECT refresh_token FROM public.gbp_connections WHERE user_id=${userId}`;
+export async function revokeActorGoogleGrant(userId: string, operationId: string, fetcher: typeof fetch = fetch): Promise<void> {
+  const rows = await sql`SELECT refresh_token,connection_version FROM public.gbp_connections WHERE user_id=${userId}`;
   if (!rows.length) return;
-  const encrypted = (rows[0] as { refresh_token?: unknown }).refresh_token;
+  const snapshot = rows[0] as { refresh_token?: unknown; connection_version?: string };
+  const encrypted = snapshot.refresh_token;
   if (typeof encrypted !== "string" || !encrypted) throw new Error("google_refresh_token_missing");
+  if (!snapshot.connection_version) throw new Error("google_connection_generation_missing");
   const token = decryptToken(encrypted).value;
   if (!token) throw new Error("google_refresh_token_invalid");
-  const response = await fetcher("https://oauth2.googleapis.com/revoke", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ token }),
-    signal: AbortSignal.timeout(REVOCATION_TIMEOUT),
-  });
-  if (response.status !== 200) throw new Error("google_revocation_unconfirmed");
+  const prior = await sql`SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence
+    WHERE operation_id=${operationId}::uuid AND user_id=${userId}::uuid`;
+  let acknowledged = false;
+  if (prior.length) {
+    const evidence = prior[0] as { connection_version: string; encrypted_refresh_token: string };
+    if (evidence.connection_version !== snapshot.connection_version || evidence.encrypted_refresh_token !== encrypted) {
+      throw new Error("google_connection_replaced_during_revocation");
+    }
+    acknowledged = true;
+  } else {
+    const sharedProof = await sql`SELECT operation_id FROM public.privacy_google_revocation_evidence
+      WHERE user_id=${userId}::uuid AND connection_version=${snapshot.connection_version}::uuid
+        AND encrypted_refresh_token=${encrypted} AND acknowledged_at IS NOT NULL LIMIT 1`;
+    if (sharedProof.length) acknowledged = true;
+    else {
+      const response = await fetcher("https://oauth2.googleapis.com/revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ token }),
+        signal: AbortSignal.timeout(REVOCATION_TIMEOUT),
+      });
+      if (response.status !== 200) throw new Error("google_revocation_unconfirmed");
+      acknowledged = true;
+    }
+  }
+  if (!acknowledged) throw new Error("google_revocation_unconfirmed");
+  // Preserve encrypted proof before deleting the only credential copy. If this
+  // write or the CAS delete fails, retry remains safe and finalization stays shut.
+  await sql`INSERT INTO public.privacy_google_revocation_evidence
+    (operation_id,user_id,connection_version,encrypted_refresh_token,acknowledged_at)
+    VALUES (${operationId}::uuid,${userId}::uuid,${snapshot.connection_version},${encrypted},now())
+    ON CONFLICT (operation_id) DO NOTHING`;
+  const verified = await sql`SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence
+    WHERE operation_id=${operationId}::uuid AND user_id=${userId}::uuid`;
+  const stored = verified[0] as { connection_version?: string; encrypted_refresh_token?: string } | undefined;
+  if (stored?.connection_version !== snapshot.connection_version || stored.encrypted_refresh_token !== encrypted) {
+    throw new Error("google_revocation_evidence_conflict");
+  }
+  const removed = await sql`DELETE FROM public.gbp_connections
+    WHERE user_id=${userId}::uuid AND connection_version=${snapshot.connection_version}
+      AND refresh_token=${encrypted} RETURNING user_id`;
+  if (!removed.length) {
+    const current = await sql`SELECT 1 FROM public.gbp_connections WHERE user_id=${userId}::uuid`;
+    if (current.length) throw new Error("google_connection_replaced_during_revocation");
+  }
 }

@@ -1,0 +1,1331 @@
+diff --git a/src/app/api/cron/review-booster/route.ts b/src/app/api/cron/review-booster/route.ts
+index 362408e..5317edf 100644
+--- a/src/app/api/cron/review-booster/route.ts
++++ b/src/app/api/cron/review-booster/route.ts
+@@ -23 +23,3 @@ async function listActiveReviewBoosterBusinesses(): Promise<string[]> {
+-    FROM public.business_agents
++    FROM public.business_agents ba
++    JOIN public.businesses b ON b.id=ba.business_id
++    JOIN public.users owner ON owner.id=b.owner_user_id
+@@ -25,0 +28 @@ async function listActiveReviewBoosterBusinesses(): Promise<string[]> {
++      AND owner.privacy_deletion_requested_at IS NULL
+diff --git a/src/app/api/cron/review-replies/route.ts b/src/app/api/cron/review-replies/route.ts
+index daa9722..e1d0fa0 100644
+--- a/src/app/api/cron/review-replies/route.ts
++++ b/src/app/api/cron/review-replies/route.ts
+@@ -14,0 +15,2 @@ import { finishCronRun, startCronRun } from "@/lib/cron-health";
++import { randomUUID } from "node:crypto";
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+@@ -20,2 +22,13 @@ async function syncLocation(userId: string, businessId: string, locationName: st
+-  const reviews = await fetchAllGoogleReviews(userId, locationName, undefined, connectionVersion);
+-  return persistGoogleReviews(userId, businessId, locationName, reviews);
++  const lifecycle = await beginAccountLifecycleOperation({
++    userId, businessId, kind: "google_review_sync", idempotencyKey: randomUUID(), leaseMs: 90000,
++  });
++  if (lifecycle.result !== "claimed" || !lifecycle.token) throw new Error("Google sync blocked by account lifecycle");
++  try {
++    const reviews = await fetchAllGoogleReviews(userId, locationName, undefined, connectionVersion, { businessId });
++    const result = await persistGoogleReviews(userId, businessId, locationName, reviews);
++    if (!await finishAccountLifecycleOperation(lifecycle.token, "done")) throw new Error("Google sync lifecycle lease expired");
++    return result;
++  } catch (error) {
++    await finishAccountLifecycleOperation(lifecycle.token, "uncertain").catch(() => false);
++    throw error;
++  }
+@@ -43 +56 @@ async function draftPending(userId: string, businessId: string, locationName: st
+-      actorUserId: userId, businessId, locationName, row, profile, source: "scheduled",
++      ownerUserId: userId, actorUserId: userId, businessId, locationName, row, profile, source: "scheduled",
+@@ -63,0 +77 @@ export async function GET(request: NextRequest) {
++      INNER JOIN public.users owner ON owner.id=b.owner_user_id
+@@ -69,0 +84 @@ export async function GET(request: NextRequest) {
++        AND owner.privacy_deletion_requested_at IS NULL
+@@ -87 +102,2 @@ export async function GET(request: NextRequest) {
+-            await sendNewReviewAlert({ recipientEmail: owner.email, businessName: location.business_name || "your business", locationName: location.location_name, reviews: result.newReviews });
++            await sendNewReviewAlert({ ownerUserId: location.user_id, businessId: location.business_id, recipientEmail: owner.email,
++              businessName: location.business_name || "your business", locationName: location.location_name, reviews: result.newReviews });
+diff --git a/src/app/api/google/disconnect/route.ts b/src/app/api/google/disconnect/route.ts
+index 08a7f43..32516a4 100644
+--- a/src/app/api/google/disconnect/route.ts
++++ b/src/app/api/google/disconnect/route.ts
+@@ -37 +37,9 @@ export async function POST(req: NextRequest) {
+-      WITH deleted AS (
++      WITH business_locks AS MATERIALIZED (
++        SELECT id,owner_user_id FROM public.businesses WHERE owner_user_id=${context.ownerUserId}::uuid
++        ORDER BY id FOR UPDATE
++      ), lifecycle_user AS MATERIALIZED (
++        SELECT u.id FROM public.users u WHERE u.id=${context.integrationOwnerUserId}::uuid
++          AND u.privacy_deletion_requested_at IS NULL
++          AND EXISTS (SELECT 1 FROM business_locks b WHERE b.owner_user_id=u.id)
++        FOR UPDATE OF u
++      ), deleted AS (
+@@ -38,0 +47 @@ export async function POST(req: NextRequest) {
++          AND EXISTS (SELECT 1 FROM lifecycle_user u WHERE u.id=gbp_connections.user_id)
+@@ -42,0 +52 @@ export async function POST(req: NextRequest) {
++          AND EXISTS (SELECT 1 FROM lifecycle_user u WHERE u.id=gbp_locations.user_id)
+diff --git a/src/app/api/google/locations/selection/route.ts b/src/app/api/google/locations/selection/route.ts
+index d7ae9c0..a9709d0 100644
+--- a/src/app/api/google/locations/selection/route.ts
++++ b/src/app/api/google/locations/selection/route.ts
+@@ -68 +68,3 @@ export async function POST(req: NextRequest) {
+-      liveLocations = await discoverGoogleLocations(context.integrationOwnerUserId);
++      liveLocations = await discoverGoogleLocations(context.integrationOwnerUserId, {
++        actorUserId: user.id, businessId: context.businessId,
++      });
+@@ -88,0 +91,7 @@ export async function POST(req: NextRequest) {
++        WITH business_lock AS MATERIALIZED (
++          SELECT id,owner_user_id FROM public.businesses WHERE id=${context.businessId}::uuid
++            AND owner_user_id=${context.ownerUserId}::uuid FOR UPDATE
++        ), lifecycle_user AS MATERIALIZED (
++          SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
++            WHERE u.privacy_deletion_requested_at IS NULL FOR UPDATE OF u
++        )
+@@ -90 +99 @@ export async function POST(req: NextRequest) {
+-        FROM public.gbp_locations l, public.gbp_connections c
++        FROM public.gbp_locations l, public.gbp_connections c, business_lock b, lifecycle_user u
+@@ -91,0 +101 @@ export async function POST(req: NextRequest) {
++          AND b.id=selection.business_id AND u.id=b.owner_user_id
+@@ -97,0 +108,7 @@ export async function POST(req: NextRequest) {
++        WITH business_lock AS MATERIALIZED (
++          SELECT id,owner_user_id FROM public.businesses WHERE id=${context.businessId}::uuid
++            AND owner_user_id=${context.ownerUserId}::uuid FOR UPDATE
++        ), lifecycle_user AS MATERIALIZED (
++          SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
++            WHERE u.privacy_deletion_requested_at IS NULL FOR UPDATE OF u
++        )
+@@ -99,2 +116,3 @@ export async function POST(req: NextRequest) {
+-        SELECT ${context.businessId}, l.id
+-        FROM public.gbp_locations l
++        SELECT b.id, l.id
++        FROM business_lock b JOIN lifecycle_user u ON u.id=b.owner_user_id
++        JOIN public.gbp_locations l ON true
+diff --git a/src/app/api/google/oauth/callback/route.ts b/src/app/api/google/oauth/callback/route.ts
+index 6ea3bcb..acb17d0 100644
+--- a/src/app/api/google/oauth/callback/route.ts
++++ b/src/app/api/google/oauth/callback/route.ts
+@@ -3,0 +4 @@ import { NextResponse } from "next/server";
++import { createHash } from "node:crypto";
+@@ -11,0 +13 @@ import { safeLogger } from "@/lib/safe-logger";
++import { decryptToken, encryptToken } from "@/lib/encrypted-token";
+@@ -39,0 +42 @@ export async function GET(req: Request) {
++
+@@ -66,0 +70,8 @@ export async function GET(req: Request) {
++  const operationRows = await sql`SELECT * FROM public.begin_account_lifecycle_operation(
++    ${parsedState.ownerUserId}::uuid,${user.id}::uuid,${parsedState.businessId}::uuid,
++    'google_oauth_exchange',${createHash("sha256").update(`${state}\u0000${code}`).digest("hex")},30000)`;
++  const lifecycleOperation = operationRows[0] as { result?: string; token?: string } | undefined;
++  if (lifecycleOperation?.result !== "claimed" || !lifecycleOperation.token) {
++    return redirectWithGoogleError("connection_failed");
++  }
++  const operationToken = lifecycleOperation.token;
+@@ -76 +87,23 @@ export async function GET(req: Request) {
+-  } catch {
++  } catch (error) {
++    const knownRefreshToken = error && typeof error === "object" && "knownRefreshToken" in error
++      && typeof (error as { knownRefreshToken?: unknown }).knownRefreshToken === "string"
++      ? (error as { knownRefreshToken: string }).knownRefreshToken : null;
++    const knownAccessToken = error && typeof error === "object" && "knownAccessToken" in error
++      && typeof (error as { knownAccessToken?: unknown }).knownAccessToken === "string"
++      ? (error as { knownAccessToken: string }).knownAccessToken : null;
++    const evidenceToken = knownRefreshToken ?? knownAccessToken;
++    if (evidenceToken) {
++      await sql`UPDATE public.account_lifecycle_operations SET encrypted_provider_evidence=${encryptToken(evidenceToken)},updated_at=now()
++        WHERE token=${operationToken}::uuid AND status IN ('active','uncertain')`;
++      let compensated = false;
++      try {
++        const response = await fetch("https://oauth2.googleapis.com/revoke", {
++          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
++          body: new URLSearchParams({ token: evidenceToken }), signal: AbortSignal.timeout(10_000),
++        });
++        compensated = response.status === 200;
++      } catch { /* Durable encrypted evidence remains pending for reconciliation. */ }
++      await sql`SELECT public.finish_account_lifecycle_operation(${operationToken}::uuid,${compensated ? "failed" : "uncertain"})`;
++    } else {
++      await sql`SELECT public.finish_account_lifecycle_operation(${operationToken}::uuid,'uncertain')`;
++    }
+@@ -81,0 +115 @@ export async function GET(req: Request) {
++    await sql`SELECT public.finish_account_lifecycle_operation(${operationToken}::uuid,'uncertain')`;
+@@ -84 +118 @@ export async function GET(req: Request) {
+-
++  let persistedSnapshot: { connectionVersion: string; encryptedRefreshToken: string } | null = null;
+@@ -88 +122 @@ export async function GET(req: Request) {
+-    if (latestContext.integrationOwnerUserId !== parsedState.ownerUserId) return redirectWithGoogleError("connection_failed");
++    if (latestContext.integrationOwnerUserId !== parsedState.ownerUserId) throw new Error("google_oauth_owner_changed");
+@@ -90,7 +124,4 @@ export async function GET(req: Request) {
+-    // An OAuth reconnect may identify a different Google account. Invalidate the prior
+-    // owner cache before replacing credentials; a complete fresh discovery revalidates rows.
+-    await sql`
+-      UPDATE public.gbp_locations SET connected = false, updated_at = now()
+-      WHERE user_id = ${parsedState.ownerUserId}
+-    `;
+-    await upsertGbpConnection({
++    // Reconnect cache invalidation and credential replacement share one
++    // business→user locked SQL statement. The returned ciphertext is the
++    // exact randomized encryption persisted by PostgreSQL's upsert.
++    persistedSnapshot = await upsertGbpConnection({
+@@ -102,0 +134,3 @@ export async function GET(req: Request) {
++    if (!persistedSnapshot.connectionVersion || !persistedSnapshot.encryptedRefreshToken) throw new Error("google_oauth_connection_not_persisted");
++    const finished = await sql`SELECT public.finish_account_lifecycle_operation(${operationToken}::uuid,'done') AS changed`;
++    if ((finished[0] as { changed?: boolean } | undefined)?.changed !== true) throw new Error("google_oauth_operation_lease_lost");
+@@ -103,0 +138,43 @@ export async function GET(req: Request) {
++    // The code exchange returned a fresh credential, but freeze may have won
++    // before local persistence. Keep encrypted evidence until compensation is
++    // acknowledged; unknown outcomes remain lifecycle-blocking.
++    let savedSnapshot = persistedSnapshot;
++    let lookupCertain = false;
++    if (!savedSnapshot) {
++      try {
++        const savedRows = await sql`SELECT connection_version,refresh_token FROM public.gbp_connections
++          WHERE user_id=${parsedState.ownerUserId}::uuid LIMIT 1`;
++        const row = savedRows[0] as { connection_version?: string; refresh_token?: string } | undefined;
++        lookupCertain = true;
++        if (row?.connection_version && row.refresh_token && decryptToken(row.refresh_token).value === refreshToken) {
++          savedSnapshot = { connectionVersion: row.connection_version, encryptedRefreshToken: row.refresh_token };
++        }
++      } catch { /* A lost write response with unreadable state remains uncertain. */ }
++    }
++    const evidenceCiphertext = savedSnapshot?.encryptedRefreshToken ?? encryptToken(refreshToken);
++    await sql`UPDATE public.account_lifecycle_operations
++      SET encrypted_provider_evidence=${evidenceCiphertext},updated_at=now()
++      WHERE token=${operationToken}::uuid AND status IN ('active','uncertain')`;
++    let compensated = false;
++    try {
++      const response = await fetch("https://oauth2.googleapis.com/revoke", {
++        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
++        body: new URLSearchParams({ token: refreshToken }), signal: AbortSignal.timeout(10_000),
++      });
++      compensated = response.status === 200;
++    } catch { /* Keep uncertain evidence for operator reconciliation. */ }
++    let durableProof = lookupCertain && !savedSnapshot;
++    if (compensated && savedSnapshot) {
++      try {
++        await sql`INSERT INTO public.privacy_google_revocation_evidence
++          (operation_id,user_id,connection_version,encrypted_refresh_token,encrypted_revoked_token,acknowledged_at)
++          VALUES (${operationToken}::uuid,${parsedState.ownerUserId}::uuid,${savedSnapshot.connectionVersion}::uuid,
++            ${savedSnapshot.encryptedRefreshToken},${encryptToken(refreshToken)},now()) ON CONFLICT (operation_id) DO NOTHING`;
++        const proof = await sql`SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence
++          WHERE operation_id=${operationToken}::uuid AND user_id=${parsedState.ownerUserId}::uuid`;
++        const row = proof[0] as { connection_version?: string; encrypted_refresh_token?: string } | undefined;
++        durableProof = row?.connection_version === savedSnapshot.connectionVersion
++          && row.encrypted_refresh_token === savedSnapshot.encryptedRefreshToken;
++      } catch { durableProof = false; }
++    }
++    await sql`SELECT public.finish_account_lifecycle_operation(${operationToken}::uuid,${compensated && durableProof ? "failed" : "uncertain"})`;
+diff --git a/src/app/api/google/reviews/process-pending/route.ts b/src/app/api/google/reviews/process-pending/route.ts
+index c77a67c..2be715f 100644
+--- a/src/app/api/google/reviews/process-pending/route.ts
++++ b/src/app/api/google/reviews/process-pending/route.ts
+@@ -63 +63 @@ export async function POST(req: NextRequest) {
+-        actorUserId: user.id, businessId: context.businessId, locationName: selected.location_name,
++        ownerUserId: context.integrationOwnerUserId, actorUserId: user.id, businessId: context.businessId, locationName: selected.location_name,
+diff --git a/src/app/api/google/reviews/sync/route.ts b/src/app/api/google/reviews/sync/route.ts
+index 762071a..aa4dd7c 100644
+--- a/src/app/api/google/reviews/sync/route.ts
++++ b/src/app/api/google/reviews/sync/route.ts
+@@ -10,0 +11,2 @@ import { sendNewReviewAlert } from "@/lib/review-alerts";
++import { randomUUID } from "node:crypto";
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+@@ -47,6 +49,17 @@ export async function POST(req: NextRequest) {
+-    const reviews = await fetchAllGoogleReviews(
+-      context.integrationOwnerUserId, location.location_name, undefined, location.connection_version
+-    );
+-    const result = await persistGoogleReviews(
+-      context.integrationOwnerUserId, context.businessId, location.location_name, reviews
+-    );
++    const lifecycle = await beginAccountLifecycleOperation({
++      userId: context.integrationOwnerUserId, actorUserId: user.id, businessId: context.businessId,
++      kind: "google_review_sync", idempotencyKey: randomUUID(), leaseMs: 90000,
++    });
++    if (lifecycle.result !== "claimed" || !lifecycle.token) return NextResponse.json({ error: "Account lifecycle prevents Google sync" }, { status: 409 });
++    let result: Awaited<ReturnType<typeof persistGoogleReviews>>;
++    try {
++      const reviews = await fetchAllGoogleReviews(
++        context.integrationOwnerUserId, location.location_name, undefined, location.connection_version,
++        { actorUserId: user.id, businessId: context.businessId }
++      );
++      result = await persistGoogleReviews(context.integrationOwnerUserId, context.businessId, location.location_name, reviews);
++    } catch (error) {
++      await finishAccountLifecycleOperation(lifecycle.token, "uncertain").catch(() => false);
++      throw error;
++    }
++    if (!await finishAccountLifecycleOperation(lifecycle.token, "done")) throw new Error("Google sync lifecycle lease expired");
+@@ -55,0 +69,3 @@ export async function POST(req: NextRequest) {
++        ownerUserId: context.integrationOwnerUserId,
++        actorUserId: user.id,
++        businessId: context.businessId,
+diff --git a/src/app/api/openai/review-reply/route.ts b/src/app/api/openai/review-reply/route.ts
+index 4a8475e..3c68696 100644
+--- a/src/app/api/openai/review-reply/route.ts
++++ b/src/app/api/openai/review-reply/route.ts
+@@ -253 +253 @@ export async function POST(req: Request) {
+-        actorUserId: user.id, businessId: context.businessId, locationName: row.location_name,
++        ownerUserId: context.integrationOwnerUserId, actorUserId: user.id, businessId: context.businessId, locationName: row.location_name,
+diff --git a/src/lib/account-lifecycle.ts b/src/lib/account-lifecycle.ts
+new file mode 100644
+index 0000000..66a2188
+--- /dev/null
++++ b/src/lib/account-lifecycle.ts
+@@ -0,0 +1,27 @@
++import { sql } from "@/lib/db/neon";
++
++export type LifecycleAdmission = { result: "claimed" | "busy" | "frozen" | "uncertain" | "done"; token: string | null };
++
++export async function beginAccountLifecycleOperation(input: {
++  userId: string;
++  actorUserId?: string | null;
++  businessId?: string | null;
++  kind: string;
++  idempotencyKey: string;
++  leaseMs?: number;
++}): Promise<LifecycleAdmission> {
++  const rows = await sql`SELECT * FROM public.begin_account_lifecycle_operation(
++    ${input.userId}::uuid,${input.actorUserId ?? null}::uuid,${input.businessId ?? null}::uuid,
++    ${input.kind},${input.idempotencyKey},${input.leaseMs ?? 30000})`;
++  const row = rows[0] as { result?: string; token?: string | null } | undefined;
++  const result = row?.result;
++  return {
++    result: result === "claimed" || result === "busy" || result === "frozen" || result === "uncertain" || result === "done" ? result : "frozen",
++    token: row?.token ?? null,
++  };
++}
++
++export async function finishAccountLifecycleOperation(token: string, outcome: "done" | "uncertain" | "failed"): Promise<boolean> {
++  const rows = await sql`SELECT public.finish_account_lifecycle_operation(${token}::uuid,${outcome}) AS changed`;
++  return (rows[0] as { changed?: boolean } | undefined)?.changed === true;
++}
+diff --git a/src/lib/db/gbp.ts b/src/lib/db/gbp.ts
+index f5691d4..9ef888b 100644
+--- a/src/lib/db/gbp.ts
++++ b/src/lib/db/gbp.ts
+@@ -21,2 +21,13 @@ export async function upsertGbpConnection(input: {
+-}): Promise<void> {
+-  await sql`
++}): Promise<{ connectionVersion: string; encryptedRefreshToken: string }> {
++  const rows = await sql`
++    WITH business_locks AS MATERIALIZED (
++      SELECT id FROM public.businesses WHERE owner_user_id=${input.userId}::uuid ORDER BY id FOR UPDATE
++    ), lifecycle_user AS MATERIALIZED (
++      SELECT u.id FROM public.users u WHERE u.id=${input.userId}::uuid
++        AND u.privacy_deletion_requested_at IS NULL AND EXISTS (SELECT 1 FROM business_locks)
++      FOR UPDATE OF u
++    ), cache_invalidation AS MATERIALIZED (
++      UPDATE public.gbp_locations SET connected=false,updated_at=now()
++      WHERE user_id=${input.userId}::uuid AND EXISTS (SELECT 1 FROM lifecycle_user)
++      RETURNING user_id
++    )
+@@ -25 +36 @@ export async function upsertGbpConnection(input: {
+-    ) VALUES (
++    ) SELECT
+@@ -33 +44 @@ export async function upsertGbpConnection(input: {
+-    )
++    FROM lifecycle_user CROSS JOIN (SELECT count(*) FROM cache_invalidation) invalidated
+@@ -40,0 +52,3 @@ export async function upsertGbpConnection(input: {
++    WHERE EXISTS (SELECT 1 FROM public.users lifecycle_user WHERE lifecycle_user.id=EXCLUDED.user_id
++      AND lifecycle_user.privacy_deletion_requested_at IS NULL)
++    RETURNING user_id,connection_version,refresh_token
+@@ -41,0 +56,4 @@ export async function upsertGbpConnection(input: {
++  if (!rows.length) throw new Error("Google connection blocked by account lifecycle");
++  const row = rows[0] as { connection_version?: string; refresh_token?: string };
++  if (!row.connection_version || !row.refresh_token) throw new Error("Google connection persistence snapshot missing");
++  return { connectionVersion: row.connection_version, encryptedRefreshToken: row.refresh_token };
+@@ -51 +69,8 @@ export async function updateGbpTokens(input: {
+-  await sql`
++  const rows = await sql`
++    WITH business_locks AS MATERIALIZED (
++      SELECT id FROM public.businesses WHERE owner_user_id=${input.userId}::uuid ORDER BY id FOR UPDATE
++    ), lifecycle_user AS MATERIALIZED (
++      SELECT u.id FROM public.users u WHERE u.id=${input.userId}::uuid
++        AND u.privacy_deletion_requested_at IS NULL AND EXISTS (SELECT 1 FROM business_locks)
++      FOR UPDATE OF u
++    )
+@@ -59 +84,2 @@ export async function updateGbpTokens(input: {
+-    WHERE user_id = ${input.userId}
++    WHERE user_id = ${input.userId}::uuid AND EXISTS (SELECT 1 FROM lifecycle_user)
++    RETURNING user_id
+@@ -60,0 +87 @@ export async function updateGbpTokens(input: {
++  if (!rows.length) throw new Error("Google token update blocked by account lifecycle");
+@@ -78,0 +106,7 @@ export async function updateGbpTokensIfCurrent(input: {
++    WITH business_locks AS MATERIALIZED (
++      SELECT id FROM public.businesses WHERE owner_user_id=${input.userId}::uuid ORDER BY id FOR UPDATE
++    ), lifecycle_user AS MATERIALIZED (
++      SELECT u.id FROM public.users u WHERE u.id=${input.userId}::uuid
++        AND u.privacy_deletion_requested_at IS NULL AND EXISTS (SELECT 1 FROM business_locks)
++      FOR UPDATE OF u
++    )
+@@ -89,0 +124 @@ export async function updateGbpTokensIfCurrent(input: {
++      AND EXISTS (SELECT 1 FROM lifecycle_user)
+diff --git a/src/lib/google-business.ts b/src/lib/google-business.ts
+index fdfee7b..b75a560 100644
+--- a/src/lib/google-business.ts
++++ b/src/lib/google-business.ts
+@@ -135 +135 @@ export async function listBusinessGoogleLocations(context: BusinessContext): Pro
+-export async function syncBusinessGoogleLocations(context: BusinessContext): Promise<{ locations: LocationRow[]; imported: number }> {
++async function syncBusinessGoogleLocationsImpl(context: BusinessContext): Promise<{ locations: LocationRow[]; imported: number }> {
+@@ -147 +147,3 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
+-    discovered = await discoverGoogleLocations(context.integrationOwnerUserId);
++    discovered = await discoverGoogleLocations(context.integrationOwnerUserId, {
++      actorUserId: context.actorUserId, businessId: context.businessId,
++    });
+@@ -163,0 +166,8 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
++      WITH business_lock AS MATERIALIZED (
++        SELECT id,owner_user_id FROM public.businesses
++        WHERE id=${context.businessId}::uuid AND owner_user_id=${context.integrationOwnerUserId}::uuid
++        FOR UPDATE
++      ), lifecycle_user AS MATERIALIZED (
++        SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
++        WHERE u.privacy_deletion_requested_at IS NULL FOR UPDATE OF u
++      )
+@@ -171,0 +182,2 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
++      JOIN lifecycle_user lu ON lu.id=gc.user_id
++      JOIN business_lock ON true
+@@ -189,0 +202,9 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
++        WITH business_lock AS MATERIALIZED (
++          SELECT id FROM public.businesses
++          WHERE id=${context.businessId}::uuid AND owner_user_id=${context.integrationOwnerUserId}::uuid
++          FOR UPDATE
++        ), lifecycle_user AS MATERIALIZED (
++          SELECT u.id FROM public.users u WHERE u.id=${context.integrationOwnerUserId}::uuid
++            AND u.privacy_deletion_requested_at IS NULL AND EXISTS (SELECT 1 FROM business_lock)
++          FOR UPDATE OF u
++        )
+@@ -192,0 +214 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
++          AND EXISTS (SELECT 1 FROM lifecycle_user)
+@@ -202,0 +225,22 @@ export async function syncBusinessGoogleLocations(context: BusinessContext): Pro
++export async function syncBusinessGoogleLocations(context: BusinessContext): Promise<{ locations: LocationRow[]; imported: number }> {
++  const { randomUUID } = await import("node:crypto");
++  const { beginAccountLifecycleOperation, finishAccountLifecycleOperation } = await import("@/lib/account-lifecycle");
++  const operation = await beginAccountLifecycleOperation({
++    userId: context.integrationOwnerUserId, actorUserId: context.actorUserId,
++    businessId: context.businessId, kind: "google_location_sync", idempotencyKey: randomUUID(), leaseMs: 90000,
++  });
++  if (operation.result !== "claimed" || !operation.token) {
++    throw new BusinessGoogleError(409, "Account lifecycle prevents Google location sync.");
++  }
++  try {
++    const result = await syncBusinessGoogleLocationsImpl(context);
++    if (!await finishAccountLifecycleOperation(operation.token, "done")) {
++      throw new BusinessGoogleError(409, "Google location sync needs lifecycle reconciliation.");
++    }
++    return result;
++  } catch (error) {
++    await finishAccountLifecycleOperation(operation.token, "uncertain").catch(() => false);
++    throw error;
++  }
++}
++
+diff --git a/src/lib/google-discovery.ts b/src/lib/google-discovery.ts
+index cb1c02c..e348cb6 100644
+--- a/src/lib/google-discovery.ts
++++ b/src/lib/google-discovery.ts
+@@ -1,0 +2 @@ import { googleFetch } from "./google.ts";
++import type { GoogleLifecycleContext } from "./google.ts";
+@@ -10,0 +12 @@ const MAX_DISCOVERY_REQUESTS = 200;
++const DISCOVERY_DEADLINE_MS = 35_000;
+@@ -40,2 +42,2 @@ function readPage(value: unknown, itemsKey: string, message: string): Page {
+-async function readGoogleJson(ownerUserId: string, url: string, fetchGoogle: typeof googleFetch): Promise<unknown> {
+-  const response = await fetchGoogle(ownerUserId, url);
++async function readGoogleJson(ownerUserId: string, url: string, fetchGoogle: typeof googleFetch, context?: GoogleLifecycleContext): Promise<unknown> {
++  const response = await fetchGoogle(ownerUserId, url, {}, undefined, context);
+@@ -60 +62,2 @@ async function collectPages(
+-  budget: { remaining: number }
++  budget: { remaining: number },
++  context?: GoogleLifecycleContext
+@@ -72 +75 @@ async function collectPages(
+-    const page = readPage(await readGoogleJson(ownerUserId, url.toString(), fetchGoogle), itemsKey, "Google returned an incomplete discovery page.");
++    const page = readPage(await readGoogleJson(ownerUserId, url.toString(), fetchGoogle, context), itemsKey, "Google returned an incomplete discovery page.");
+@@ -83 +86 @@ export function createGoogleLocationDiscovery(fetchGoogle: typeof googleFetch) {
+-  return async function discoverGoogleLocations(ownerUserId: string): Promise<GoogleLocationRecord[]> {
++  return async function discoverGoogleLocations(ownerUserId: string, context?: GoogleLifecycleContext): Promise<GoogleLocationRecord[]> {
+@@ -85 +88,4 @@ export function createGoogleLocationDiscovery(fetchGoogle: typeof googleFetch) {
+-    const accountRecords = await collectPages(ownerUserId, ACCOUNT_API, "accounts", ACCOUNT_PAGE_SIZE, undefined, fetchGoogle, budget);
++    const overallSignal = AbortSignal.timeout(DISCOVERY_DEADLINE_MS);
++    const boundedFetch: typeof googleFetch = (userId, url, options = {}, expectedConnectionVersion) =>
++      fetchGoogle(userId, url, { ...options, signal: overallSignal }, expectedConnectionVersion, context);
++    const accountRecords = await collectPages(ownerUserId, ACCOUNT_API, "accounts", ACCOUNT_PAGE_SIZE, undefined, boundedFetch, budget, context);
+@@ -98 +104 @@ export function createGoogleLocationDiscovery(fetchGoogle: typeof googleFetch) {
+-      }, fetchGoogle, budget);
++      }, boundedFetch, budget, context);
+diff --git a/src/lib/google-review-persistence.ts b/src/lib/google-review-persistence.ts
+index 01a0089..fff2119 100644
+--- a/src/lib/google-review-persistence.ts
++++ b/src/lib/google-review-persistence.ts
+@@ -77 +77,9 @@ export async function persistGoogleReviews(
+-      WITH incoming AS (
++      WITH business_lock AS MATERIALIZED (
++        SELECT id,owner_user_id FROM public.businesses
++        WHERE id=${businessId}::uuid AND owner_user_id=${ownerUserId}::uuid
++        FOR UPDATE
++      ), lifecycle_user AS MATERIALIZED (
++        SELECT u.id FROM public.users u JOIN business_lock b ON b.owner_user_id=u.id
++        WHERE u.privacy_deletion_requested_at IS NULL
++        FOR UPDATE OF u
++      ), incoming AS (
+@@ -90,0 +99,2 @@ export async function persistGoogleReviews(
++      JOIN business_lock ON business_lock.id=incoming.business_id
++      JOIN lifecycle_user ON lifecycle_user.id=incoming.user_id
+diff --git a/src/lib/google-review-sync.ts b/src/lib/google-review-sync.ts
+index d42610b..20780f0 100644
+--- a/src/lib/google-review-sync.ts
++++ b/src/lib/google-review-sync.ts
+@@ -1 +1 @@
+-import { googleFetch } from "@/lib/google";
++import { googleFetch, type GoogleLifecycleContext } from "@/lib/google";
+@@ -31,0 +32 @@ const PAGE_SIZE = 50;
++const SYNC_DEADLINE_MS = 35_000;
+@@ -64 +65,2 @@ export async function fetchAllGoogleReviews(
+-  expectedConnectionVersion?: string
++  expectedConnectionVersion?: string,
++  lifecycleContext?: GoogleLifecycleContext
+@@ -72,0 +75 @@ export async function fetchAllGoogleReviews(
++  const deadline = Date.now() + SYNC_DEADLINE_MS;
+@@ -74,0 +78,2 @@ export async function fetchAllGoogleReviews(
++    const remaining = deadline - Date.now();
++    if (remaining <= 0) throw new GoogleReviewsSyncError(502, null, "Google review sync exceeded its operation deadline");
+@@ -79 +84 @@ export async function fetchAllGoogleReviews(
+-      response = await googleFetch(userId, googleReviewsUrl(accountName, locationId, query), {}, expectedConnectionVersion);
++      response = await googleFetch(userId, googleReviewsUrl(accountName, locationId, query), { signal: AbortSignal.timeout(remaining) }, expectedConnectionVersion, lifecycleContext);
+diff --git a/src/lib/google.ts b/src/lib/google.ts
+index 6aaa6d6..2a71116 100644
+--- a/src/lib/google.ts
++++ b/src/lib/google.ts
+@@ -1 +1,2 @@
+-import { decryptToken } from "./encrypted-token.ts";
++import { decryptToken, encryptToken } from "./encrypted-token.ts";
++import { randomUUID } from "node:crypto";
+@@ -7,0 +9,4 @@ const TOKEN_TIMEOUT_MS = 10_000;
++// Bound the complete logical request, including token reads/refresh and retry
++// backoff, so it cannot outlive the posting lease merely because each HTTP
++// attempt has its own timeout.
++const GOOGLE_OPERATION_DEADLINE_MS = 40_000;
+@@ -69,0 +75,11 @@ type TokenResponse = {
++export type GoogleLifecycleContext = { actorUserId?: string; businessId?: string };
++
++class GoogleTokenResponseError extends Error {
++  readonly knownRefreshToken?: string;
++  readonly knownAccessToken?: string;
++  constructor(message: string, knownRefreshToken?: string, knownAccessToken?: string) {
++    super(message);
++    this.knownRefreshToken = knownRefreshToken;
++    this.knownAccessToken = knownAccessToken;
++  }
++}
+@@ -77,0 +94,4 @@ function parseTokenResponse(value: unknown, requireRefreshToken: boolean): Token
++  const knownRefreshToken = typeof refresh_token === "string" && refresh_token.length > 0 && refresh_token.length <= 16_384
++    ? refresh_token : undefined;
++  const knownAccessToken = typeof access_token === "string" && access_token.length > 0 && access_token.length <= 16_384
++    ? access_token : undefined;
+@@ -86 +106 @@ function parseTokenResponse(value: unknown, requireRefreshToken: boolean): Token
+-    throw new Error("Google returned an invalid token response.");
++    throw new GoogleTokenResponseError("Google returned an invalid token response.", knownRefreshToken, knownAccessToken);
+@@ -242,0 +263,3 @@ type GoogleClientDependencies = {
++  admitRefresh?: (ownerUserId: string, tokens: Tokens, context?: GoogleLifecycleContext) => Promise<string | null>;
++  finishRefresh?: (token: string, outcome: "done" | "uncertain" | "failed") => Promise<boolean>;
++  resolveRefreshAfterSaveFailure?: (token: string, ownerUserId: string, tokens: GoogleOAuthTokens, snapshot?: TokenSnapshot) => Promise<void>;
+@@ -336 +359,2 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-    expectedConnectionVersion?: string
++    expectedConnectionVersion?: string,
++    lifecycleContext?: GoogleLifecycleContext
+@@ -355,0 +380,2 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++      const lifecycleToken = await dependencies.admitRefresh?.(ownerUserId, latest, lifecycleContext);
++      if (dependencies.admitRefresh && !lifecycleToken) throw new Error("Google refresh blocked by account lifecycle.");
+@@ -359,0 +386,21 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++        if (lifecycleToken) {
++          const knownRefreshToken = error && typeof error === "object" && "knownRefreshToken" in error
++            && typeof (error as { knownRefreshToken?: unknown }).knownRefreshToken === "string"
++            ? (error as { knownRefreshToken: string }).knownRefreshToken : undefined;
++          const knownAccessToken = error && typeof error === "object" && "knownAccessToken" in error
++            && typeof (error as { knownAccessToken?: unknown }).knownAccessToken === "string"
++            ? (error as { knownAccessToken: string }).knownAccessToken : undefined;
++          const evidenceToken = knownRefreshToken ?? knownAccessToken;
++          if (evidenceToken && dependencies.resolveRefreshAfterSaveFailure) {
++            await dependencies.resolveRefreshAfterSaveFailure(lifecycleToken, ownerUserId, {
++              ...(knownRefreshToken ? { refresh_token: knownRefreshToken } : {}),
++              ...(knownAccessToken ? { access_token: knownAccessToken } : {}),
++            } as GoogleOAuthTokens, {
++              connection_version: latest.connection_version,
++              stored_access_token: latest.stored_access_token,
++              stored_refresh_token: latest.stored_refresh_token,
++            }).catch(() => undefined);
++          } else {
++            await dependencies.finishRefresh?.(lifecycleToken, "uncertain").catch(() => false);
++          }
++        }
+@@ -362,0 +410,11 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++      const preserveAndCompensate = async () => {
++        if (lifecycleToken && dependencies.resolveRefreshAfterSaveFailure) {
++          await dependencies.resolveRefreshAfterSaveFailure(lifecycleToken, ownerUserId, received, {
++            connection_version: latest.connection_version,
++            stored_access_token: latest.stored_access_token,
++            stored_refresh_token: latest.stored_refresh_token,
++          }).catch(() => undefined);
++        } else if (lifecycleToken) {
++          await dependencies.finishRefresh?.(lifecycleToken, "uncertain").catch(() => false);
++        }
++      };
+@@ -366 +424,4 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-      if (!current) throw new Error("No Google connection found.");
++      if (!current) {
++        await preserveAndCompensate();
++        throw new Error("No Google connection found.");
++      }
+@@ -373,0 +435 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++          await preserveAndCompensate();
+@@ -376,0 +439 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++        await preserveAndCompensate();
+@@ -387,0 +451 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++        await preserveAndCompensate();
+@@ -389,0 +454,3 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++      if (lifecycleToken && await dependencies.finishRefresh?.(lifecycleToken, "done") !== true) {
++        throw new Error("Google refresh lifecycle lease expired.");
++      }
+@@ -401 +468 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string): Promise<Tokens> {
++  async function freshTokens(ownerUserId: string, expectedConnectionVersion?: string, lifecycleContext?: GoogleLifecycleContext): Promise<Tokens> {
+@@ -410 +477 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion);
++    return refreshOwner(ownerUserId, tokens, false, expectedConnectionVersion, lifecycleContext);
+@@ -417 +484,2 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-    expectedConnectionVersion?: string
++    expectedConnectionVersion?: string,
++    lifecycleContext?: GoogleLifecycleContext
+@@ -421,0 +490 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++    const deadline = dependencies.now() + GOOGLE_OPERATION_DEADLINE_MS;
+@@ -426,0 +496 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++      if (dependencies.now() >= deadline || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
+@@ -429 +499 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-      tokens = await freshTokens(ownerUserId, expectedConnectionVersion);
++      tokens = await freshTokens(ownerUserId, expectedConnectionVersion, lifecycleContext);
+@@ -430,0 +501,2 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++      const remainingMs = deadline - dependencies.now();
++      if (remainingMs <= 0 || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
+@@ -438 +510 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-      }, dependencies.requestTimeoutMs);
++      }, Math.min(dependencies.requestTimeoutMs, remainingMs));
+@@ -465 +537 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
+-        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion);
++        tokens = await refreshOwner(ownerUserId, tokens, true, expectedConnectionVersion, lifecycleContext);
+@@ -466,0 +539 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++        if (dependencies.now() >= deadline || options.signal?.aborted) throw new Error("Google API request deadline exceeded.");
+@@ -474,0 +548 @@ export function createGoogleClient(dependencies: GoogleClientDependencies) {
++        if (delay >= deadline - dependencies.now()) return response;
+@@ -505,0 +580,46 @@ const googleClient = createGoogleClient({
++  admitRefresh: async (ownerUserId, tokens, context) => {
++    const { beginAccountLifecycleOperation } = await import("./account-lifecycle.ts");
++    const result = await beginAccountLifecycleOperation({
++      userId: ownerUserId,
++      actorUserId: context?.actorUserId,
++      businessId: context?.businessId,
++      kind: "google_refresh",
++      idempotencyKey: `${tokens.connection_version}:${randomUUID()}`,
++      leaseMs: 30_000,
++    });
++    return result.result === "claimed" ? result.token : null;
++  },
++  finishRefresh: async (token, outcome) => {
++    const { finishAccountLifecycleOperation } = await import("./account-lifecycle.ts");
++    return finishAccountLifecycleOperation(token, outcome);
++  },
++  resolveRefreshAfterSaveFailure: async (token, ownerUserId, received, snapshot) => {
++    const evidence = received.refresh_token ?? received.access_token;
++    const { sql } = await import("@/lib/db/neon");
++    await sql`UPDATE public.account_lifecycle_operations SET encrypted_provider_evidence=${encryptToken(evidence)},updated_at=now()
++      WHERE token=${token}::uuid AND status IN ('active','uncertain')`;
++    let revoked = false;
++    try {
++      const response = await fetch("https://oauth2.googleapis.com/revoke", {
++        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
++        body: new URLSearchParams({ token: evidence }), signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS),
++      });
++      revoked = response.status === 200;
++    } catch { /* Persisted encrypted evidence keeps deletion pending. */ }
++    let durableProof = !snapshot;
++    if (revoked && snapshot) {
++      try {
++        await sql`INSERT INTO public.privacy_google_revocation_evidence
++          (operation_id,user_id,connection_version,encrypted_refresh_token,encrypted_revoked_token,acknowledged_at)
++          VALUES (${token}::uuid,${ownerUserId}::uuid,${snapshot.connection_version}::uuid,
++            ${snapshot.stored_refresh_token},${encryptToken(evidence)},now()) ON CONFLICT (operation_id) DO NOTHING`;
++        const proof = await sql`SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence
++          WHERE operation_id=${token}::uuid AND user_id=${ownerUserId}::uuid`;
++        const row = proof[0] as { connection_version?: string; encrypted_refresh_token?: string } | undefined;
++        durableProof = row?.connection_version === snapshot.connection_version
++          && row.encrypted_refresh_token === snapshot.stored_refresh_token;
++      } catch { durableProof = false; }
++    }
++    const { finishAccountLifecycleOperation } = await import("./account-lifecycle.ts");
++    await finishAccountLifecycleOperation(token, revoked && durableProof ? "failed" : "uncertain");
++  },
+diff --git a/src/lib/openai.ts b/src/lib/openai.ts
+index daa6f2e..e58c4b0 100644
+--- a/src/lib/openai.ts
++++ b/src/lib/openai.ts
+@@ -116 +116 @@ export async function generateReviewReply(input: ReviewReplyInput): Promise<stri
+-  });
++  }, { timeout: OPENAI_REQUEST_TIMEOUT_MS, maxRetries: 0 });
+@@ -127 +127 @@ export async function streamReviewReply(input: ReviewReplyInput) {
+-  });
++  }, { timeout: OPENAI_REQUEST_TIMEOUT_MS, maxRetries: 0 });
+diff --git a/src/lib/review-alerts.ts b/src/lib/review-alerts.ts
+index b282385..2a341d5 100644
+--- a/src/lib/review-alerts.ts
++++ b/src/lib/review-alerts.ts
+@@ -2,0 +3,2 @@ import { getOptionalEnv } from "@/lib/env";
++import { randomUUID } from "node:crypto";
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+@@ -18,0 +21,3 @@ export async function sendNewReviewAlert(input: {
++  ownerUserId: string;
++  actorUserId?: string;
++  businessId: string;
+@@ -32,0 +38,6 @@ export async function sendNewReviewAlert(input: {
++  const operation = await beginAccountLifecycleOperation({
++    userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,
++    kind: "resend_review_alert", idempotencyKey: randomUUID(), leaseMs: 25_000,
++  });
++  if (operation.result !== "claimed" || !operation.token) return;
++
+@@ -47 +58,3 @@ export async function sendNewReviewAlert(input: {
+-  const response = await fetch("https://api.resend.com/emails", {
++  let response: Response;
++  try {
++    response = await fetch("https://api.resend.com/emails", {
+@@ -61 +74,6 @@ export async function sendNewReviewAlert(input: {
+-  });
++      signal: AbortSignal.timeout(15_000),
++    });
++  } catch {
++    await finishAccountLifecycleOperation(operation.token, "uncertain").catch(() => false);
++    return;
++  }
+@@ -64,2 +82,4 @@ export async function sendNewReviewAlert(input: {
+-    const message = await response.text();
+-    safeLogger.warn("review.alert.send_failed", { status: response.status, message });
++    await response.body?.cancel().catch(() => undefined);
++    await finishAccountLifecycleOperation(operation.token, response.status >= 400 && response.status < 500 ? "failed" : "uncertain");
++    safeLogger.warn("review.alert.send_failed", { status: response.status });
++    return;
+@@ -66,0 +87,2 @@ export async function sendNewReviewAlert(input: {
++  await response.body?.cancel().catch(() => undefined);
++  await finishAccountLifecycleOperation(operation.token, "done");
+diff --git a/src/lib/review-draft-processing.ts b/src/lib/review-draft-processing.ts
+index 3aff723..ebe2445 100644
+--- a/src/lib/review-draft-processing.ts
++++ b/src/lib/review-draft-processing.ts
+@@ -8,0 +9,2 @@ import { parseGoogleStarRating } from "@/lib/google-review-rating";
++import { randomUUID } from "node:crypto";
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+@@ -27 +29 @@ export function isSafeAutoReplyRating(value: unknown): boolean {
+-export async function processReviewDraft(input: {
++async function processReviewDraftInner(input: {
+@@ -83,0 +86,25 @@ export async function processReviewDraft(input: {
++
++export async function processReviewDraft(input: {
++  ownerUserId: string;
++  actorUserId: string;
++  businessId: string;
++  locationName: string;
++  row: ReviewRowForReply;
++  profile: ProfileReplyRow | null;
++  source: DraftProcessingSource;
++}): Promise<DraftProcessingResult> {
++  const lifecycle = await beginAccountLifecycleOperation({
++    userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,
++    kind: "openai_reply_draft", idempotencyKey: randomUUID(), leaseMs: 90000,
++  });
++  if (lifecycle.result !== "claimed" || !lifecycle.token) return { outcome: "skipped", reason: "busy" };
++  let result: DraftProcessingResult;
++  try {
++    result = await processReviewDraftInner(input);
++  } catch (error) {
++    await finishAccountLifecycleOperation(lifecycle.token, "uncertain").catch(() => false);
++    throw error;
++  }
++  if (!await finishAccountLifecycleOperation(lifecycle.token, "done")) return { outcome: "failed", stage: "save" };
++  return result;
++}
+diff --git a/src/lib/review-reply-server.ts b/src/lib/review-reply-server.ts
+index c48ad59..63830bd 100644
+--- a/src/lib/review-reply-server.ts
++++ b/src/lib/review-reply-server.ts
+@@ -10,0 +11 @@ import { claimReplyPost, finishReplyPost, type ReplyPostIntent } from "@/lib/rev
++import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+@@ -87,0 +89,14 @@ export async function postReplyToGoogleAndPersist(
++  const lifecycle = await beginAccountLifecycleOperation({
++    userId: context.integrationOwnerUserId,
++    actorUserId,
++    businessId: context.businessId,
++    kind: "google_reply_post",
++    idempotencyKey: postClaim.token,
++    leaseMs: 55000,
++  });
++  if (lifecycle.result !== "claimed" || !lifecycle.token) {
++    await finishReplyPost(context.businessId, googleReviewId, normalizedReply, postClaim.token, false).catch(() => false);
++    return { ok: false, error: "Account lifecycle prevents posting this reply", status: 409 };
++  }
++  const operationToken = lifecycle.token;
++
+@@ -97 +112 @@ export async function postReplyToGoogleAndPersist(
+-    }, selected.connection_version);
++    }, selected.connection_version, { actorUserId, businessId });
+@@ -100,0 +116 @@ export async function postReplyToGoogleAndPersist(
++      await finishAccountLifecycleOperation(operationToken, "failed");
+@@ -104,0 +121 @@ export async function postReplyToGoogleAndPersist(
++    await finishAccountLifecycleOperation(operationToken, "uncertain").catch(() => false);
+@@ -112,0 +130,3 @@ export async function postReplyToGoogleAndPersist(
++      await finishAccountLifecycleOperation(operationToken, "failed");
++    } else {
++      await finishAccountLifecycleOperation(operationToken, "uncertain").catch(() => false);
+@@ -124,0 +145 @@ export async function postReplyToGoogleAndPersist(
++    await finishAccountLifecycleOperation(operationToken, "uncertain").catch(() => false);
+@@ -131,0 +153,4 @@ export async function postReplyToGoogleAndPersist(
++  if (!await finishAccountLifecycleOperation(operationToken, "done")) {
++    return { ok: false, error: "Reply status was saved, but deletion reconciliation is required", status: 502 };
++  }
++
+diff --git a/tests/a02-test-support.mts b/tests/a02-test-support.mts
+index b160edf..0a22cad 100644
+--- a/tests/a02-test-support.mts
++++ b/tests/a02-test-support.mts
+@@ -29,0 +30,4 @@ export function loadTs<T>(relative: string, mocks: Record<string, unknown>): T {
++    if (id === "@/lib/account-lifecycle") return {
++      beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "11111111-1111-4111-8111-111111111111" }),
++      finishAccountLifecycleOperation: async () => true,
++    };
+diff --git a/tests/a08-google-client.test.mts b/tests/a08-google-client.test.mts
+index cc2f18d..d0c8380 100644
+--- a/tests/a08-google-client.test.mts
++++ b/tests/a08-google-client.test.mts
+@@ -422,0 +423,70 @@ test("bounded retries honor Retry-After, retry only safe calls, and do not repla
++test("a malformed refresh response with a known rotated credential is durably compensated", async () => {
++  const starting = token({ expires_at: pastExpiry() });
++  let evidence = "";
++  let apiCalls = 0;
++  let finishOutcome = "";
++  const client = createGoogleClient({
++    getTokens: async () => starting,
++    saveTokens: async () => assert.fail("malformed provider result must not be saved"),
++    refresh: async () => { throw Object.assign(new Error("invalid response"), { knownRefreshToken: "rotated-known-token" }); },
++    fetcher: async () => { apiCalls += 1; return Response.json({}); },
++    admitRefresh: async () => "lifecycle-token",
++    finishRefresh: async (_token, outcome) => { finishOutcome = outcome; return true; },
++    resolveRefreshAfterSaveFailure: async (_token, _owner, received) => {
++      evidence = received.refresh_token ?? "";
++      finishOutcome = "failed";
++    },
++    now: Date.now,
++    sleep: async () => {},
++    requestTimeoutMs: 1000,
++  });
++  await assert.rejects(client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews"));
++  assert.equal(evidence, "rotated-known-token");
++  assert.equal(finishOutcome, "failed", "the compensation callback owns authoritative lease completion");
++  assert.equal(apiCalls, 0);
++});
++
++test("a malformed refresh response with only a known access token is still compensated", async () => {
++  const starting = token({ expires_at: pastExpiry() });
++  let evidence = "";
++  const client = createGoogleClient({
++    getTokens: async () => starting,
++    saveTokens: async () => assert.fail("malformed provider result must not be saved"),
++    refresh: async () => { throw Object.assign(new Error("invalid response"), { knownAccessToken: "access-only-known-token" }); },
++    fetcher: async () => { assert.fail("Google API calls must stop on malformed refresh"); },
++    admitRefresh: async () => "lifecycle-token",
++    finishRefresh: async () => true,
++    resolveRefreshAfterSaveFailure: async (_token, _owner, received) => { evidence = received.access_token ?? ""; },
++    now: Date.now,
++    sleep: async () => {},
++    requestTimeoutMs: 1000,
++  });
++  await assert.rejects(client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews"));
++  assert.equal(evidence, "access-only-known-token");
++});
++
++test("a 503/429 retry window followed by 401 cannot restart beyond the absolute request deadline", async () => {
++  let clock = Date.now();
++  let requests = 0;
++  let refreshes = 0;
++  const client = makeClient({
++    timeout: 12_000,
++    now: () => clock,
++    fetcher: async () => {
++      requests += 1;
++      clock += 12_000;
++      return new Response(null, { status: requests === 3 ? 401 : requests === 2 ? 429 : 503 });
++    },
++    sleep: async (ms) => { clock += ms; },
++    refresh: async () => {
++      refreshes += 1;
++      clock += 5_000;
++      return { access_token: "access-after-401", expires_in: 3600, token_type: "Bearer" };
++    },
++  });
++  await assert.rejects(client.googleFetch("owner", "https://mybusiness.googleapis.com/v4/accounts/A/locations/L/reviews"), /deadline exceeded/);
++  assert.equal(requests, 3, "the 401 refresh must not reset the bounded retry window");
++  assert.equal(refreshes, 1);
++  assert.ok(clock - Date.now() < 45_000);
++});
++
+diff --git a/tests/a08-google-connection-version.test.mts b/tests/a08-google-connection-version.test.mts
+index 3ffcb59..b6fe75d 100644
+--- a/tests/a08-google-connection-version.test.mts
++++ b/tests/a08-google-connection-version.test.mts
+@@ -9 +9,6 @@ test("OAuth upserts generate and replace the version while ordinary refresh SQL
+-  const db = fakeSql(() => resultRows);
++  const db = fakeSql((query) => {
++    if (query.includes("INSERT INTO public.gbp_connections")) return [{ user_id: "11111111-1111-4111-8111-111111111111", connection_version: "version", refresh_token: "persisted-refresh" }];
++    if (query.includes("UPDATE public.gbp_connections") && query.includes("connection_version")) return resultRows;
++    if (query.includes("UPDATE public.gbp_connections")) return [{ user_id: "11111111-1111-4111-8111-111111111111" }];
++    return resultRows;
++  });
+@@ -25,0 +31,3 @@ test("OAuth upserts generate and replace the version while ordinary refresh SQL
++  const encryptedValue = (call: typeof oauthUpsert, plain: string) => call.values.find((value) => {
++    try { return decryptToken(String(value)).value === plain; } catch { return false; }
++  });
+@@ -32,3 +40,3 @@ test("OAuth upserts generate and replace the version while ordinary refresh SQL
+-  assert.deepEqual(decryptToken(String(firstUpsert.values[1])).value, input.accessToken);
+-  assert.deepEqual(decryptToken(String(firstUpsert.values[2])).value, input.refreshToken);
+-  assert.deepEqual(decryptToken(String(oauthUpsert.values[1])).value, "replacement-access");
++  assert.equal(encryptedValue(firstUpsert, input.accessToken) !== undefined, true);
++  assert.equal(encryptedValue(firstUpsert, input.refreshToken) !== undefined, true);
++  assert.equal(encryptedValue(oauthUpsert, "replacement-access") !== undefined, true);
+@@ -42,2 +50,2 @@ test("OAuth upserts generate and replace the version while ordinary refresh SQL
+-  assert.deepEqual(decryptToken(String(tokenRefresh.values[0])).value, "rotated-access");
+-  assert.deepEqual(decryptToken(String(tokenRefresh.values[1])).value, "rotated-refresh");
++  assert.equal(encryptedValue(tokenRefresh, "rotated-access") !== undefined, true);
++  assert.equal(encryptedValue(tokenRefresh, "rotated-refresh") !== undefined, true);
+@@ -48,2 +56,2 @@ test("OAuth upserts generate and replace the version while ordinary refresh SQL
+-    expectedEncryptedAccessToken: String(oauthUpsert.values[1]),
+-    expectedEncryptedRefreshToken: String(oauthUpsert.values[2]),
++    expectedEncryptedAccessToken: String(encryptedValue(oauthUpsert, "replacement-access")),
++    expectedEncryptedRefreshToken: String(encryptedValue(oauthUpsert, input.refreshToken)),
+@@ -65,2 +73,2 @@ test("OAuth upserts generate and replace the version while ordinary refresh SQL
+-  assert.deepEqual(decryptToken(String(conditionalWrite.values[0])).value, "cas-access");
+-  assert.deepEqual(decryptToken(String(conditionalWrite.values[1])).value, "cas-refresh");
++  assert.equal(encryptedValue(conditionalWrite, "cas-access") !== undefined, true);
++  assert.equal(encryptedValue(conditionalWrite, "cas-refresh") !== undefined, true);
+diff --git a/tests/a08-google-ownership.test.mts b/tests/a08-google-ownership.test.mts
+index 093d19a..9cb2526 100644
+--- a/tests/a08-google-ownership.test.mts
++++ b/tests/a08-google-ownership.test.mts
+@@ -130 +130 @@ test("complete discovery marks stale owner cache rows disconnected", async () =>
+-  assert.deepEqual(staleUpdate?.values, [staleId, owner, connectionVersion]);
++  assert.deepEqual(staleUpdate?.values.slice(-3), [staleId, owner, connectionVersion]);
+@@ -499 +499 @@ test("owner disconnect atomically removes the shared credential and invalidates
+-  assert.match(db.calls[0].query, /WITH deleted AS \(\s*DELETE FROM public\.gbp_connections/);
++  assert.match(db.calls[0].query, /WITH business_locks AS MATERIALIZED[\s\S]*lifecycle_user AS MATERIALIZED[\s\S]*deleted AS \(\s*DELETE FROM public\.gbp_connections/);
+@@ -501,2 +501,2 @@ test("owner disconnect atomically removes the shared credential and invalidates
+-  assert.equal(db.calls[0].values.length, 2);
+-  assert.deepEqual(db.calls[0].values, [owner, owner]);
++  assert.equal(db.calls[0].values.length, 4);
++  assert.deepEqual(db.calls[0].values, [owner, owner, owner, owner]);
+@@ -508 +508 @@ test("OAuth callback rechecks live ownership before token exchange", async () =>
+-    "node:crypto": { default: await import("node:crypto") },
++      "node:crypto": { ...(await import("node:crypto")), default: await import("node:crypto") },
+@@ -524,0 +525 @@ test("OAuth callback rechecks live ownership before token exchange", async () =>
++      "@/lib/encrypted-token": { encryptToken: (value: string) => `encrypted:${value}` },
+@@ -553 +554 @@ test("OAuth reconnect invalidates the old owner cache before replacing credentia
+-    "node:crypto": { default: crypto },
++      "node:crypto": { ...crypto, default: crypto },
+@@ -568,2 +569,11 @@ test("OAuth reconnect invalidates the old owner cache before replacing credentia
+-      "@/lib/db/gbp": { upsertGbpConnection: async (input: { userId: string }) => { assert.equal(input.userId, owner); events.push("save"); } },
+-      "@/lib/db/neon": { sql: db.sql },
++      "@/lib/db/gbp": { upsertGbpConnection: async (input: { userId: string }) => { assert.equal(input.userId, owner); events.push("invalidate", "save"); return { connectionVersion: "generation-1", encryptedRefreshToken: "encrypted:refresh" }; } },
++      "@/lib/encrypted-token": { encryptToken: (value: string) => `encrypted:${value}` },
++      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
++        const query = strings.join(" ");
++        if (query.includes("begin_account_lifecycle_operation")) return [{ result: "claimed", token: "lifecycle-token" }];
++        if (query.includes("finish_account_lifecycle_operation")) return [{ changed: true }];
++        if (query.includes("FROM public.gbp_connections") && query.includes("refresh_token")) return [{ connection_version: "generation-1", refresh_token: "encrypted:refresh" }];
++        if (query.includes("SELECT connection_version,encrypted_refresh_token FROM public.privacy_google_revocation_evidence")) return [{ connection_version: "generation-1", encrypted_refresh_token: "encrypted:refresh" }];
++        if (query.includes("UPDATE public.account_lifecycle_operations")) return [];
++        return db.sql(strings, ...values);
++      } },
+diff --git a/tests/a08-google-postgres.test.mts b/tests/a08-google-postgres.test.mts
+index 3f26682..522d656 100644
+--- a/tests/a08-google-postgres.test.mts
++++ b/tests/a08-google-postgres.test.mts
+@@ -68,0 +69 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
++    CREATE TABLE public.users (id uuid PRIMARY KEY, privacy_deletion_requested_at timestamptz);
+@@ -75 +76 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-      title text, connected boolean NOT NULL DEFAULT true, connection_version uuid
++      title text, connected boolean NOT NULL DEFAULT true, connection_version uuid, updated_at timestamptz
+@@ -80 +81,3 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-      ('00000000-0000-4000-8000-000000000009','00000000-0000-4000-8000-000000000001');
++      ('00000000-0000-4000-8000-000000000009','00000000-0000-4000-8000-000000000001'),
++      ('00000000-0000-4000-8000-000000000023','00000000-0000-4000-8000-000000000013');
++    INSERT INTO public.users(id) VALUES ('00000000-0000-4000-8000-000000000001'),('00000000-0000-4000-8000-000000000013');
+@@ -171,0 +175,36 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
++    const tokenSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
++      const statement = renderSql(strings, values);
++      const output = psql(statement);
++      if (!output) return [];
++      return output.split(/\r?\n/).map((line) => {
++        const columns = line.split("|");
++        if (statement.includes("RETURNING user_id,connection_version,refresh_token")) {
++          return { user_id: columns[0], connection_version: columns[1], refresh_token: columns[2] };
++        }
++        return { user_id: columns[0] };
++      });
++    };
++    const gbpDb = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
++      "@/lib/db/neon": { sql: tokenSql },
++      "@/lib/encrypted-token": { encryptToken: (value: string) => `encrypted:${value}` },
++    });
++    const frozenOwner = "00000000-0000-4000-8000-000000000013";
++    psql(`INSERT INTO public.gbp_connections(user_id,access_token,refresh_token,expires_at,scope) VALUES ('${frozenOwner}','encrypted:access-v1','encrypted:refresh-v1',now()+interval '1 hour','business.manage');`);
++    await gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-v1", refreshToken: "refresh-v1", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" });
++    psql(`UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${frozenOwner}'`);
++    await assert.rejects(gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-v2", refreshToken: "refresh-v2", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" }), /account lifecycle/);
++    assert.equal(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${frozenOwner}'`), "encrypted:refresh-v1");
++    psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${frozenOwner}';`);
++    const freezeTransaction = psqlAsync(`BEGIN; SET application_name='a11_freeze_lock'; SELECT id FROM public.businesses WHERE id='00000000-0000-4000-8000-000000000023' FOR UPDATE; SELECT pg_sleep(0.25); UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${frozenOwner}'; COMMIT;`);
++    for (let attempt = 0; attempt < 100 && psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND query LIKE '%pg_sleep%'") !== "1"; attempt += 1) {
++      await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
++    }
++    assert.equal(psql("SELECT count(*) FROM pg_stat_activity WHERE application_name='a11_freeze_lock' AND query LIKE '%pg_sleep%'"), "1", "freeze transaction acquired its business lock before the writer starts");
++    await assert.rejects(gbpDb.upsertGbpConnection({ userId: frozenOwner, accessToken: "access-race", refreshToken: "refresh-race", expiresAt: new Date(Date.now() + 3600_000).toISOString(), scope: "business.manage" }), /account lifecycle/);
++    await freezeTransaction;
++    assert.equal(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${frozenOwner}'`), "encrypted:refresh-v1", "a writer queued behind freeze cannot replace the credential");
++    await assert.rejects(persistence.persistGoogleReviews(frozenOwner, "00000000-0000-4000-8000-000000000023", "accounts/100/locations/200", [
++      { reviewId: "must_not_write_after_freeze", starRating: "FOUR", comment: "frozen" },
++    ]));
++    assert.equal(psql("SELECT count(*) FROM public.reviews WHERE google_review_id='must_not_write_after_freeze'"), "0");
++
+@@ -179,0 +219 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
++    const routeQueries: string[] = [];
+@@ -183,0 +224 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
++      routeQueries.push(statement);
+@@ -186,2 +227,3 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-        pendingLocationId = values[3];
+-        return [];
++        pendingLocationId = statement.match(/WHERE l\.id = '([^']+)'/)?.[1] ?? null;
++        const output = psql(statement);
++        return output ? [{ location_id: output }] : [];
+@@ -225 +267,2 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    for (const locationId of ["00000000-0000-4000-8000-000000000003", "00000000-0000-4000-8000-000000000004"]) {
++    assert.equal(psql("SELECT l.connection_version=c.connection_version FROM public.gbp_locations l JOIN public.gbp_connections c ON c.user_id=l.user_id WHERE l.id='00000000-0000-4000-8000-000000000003'"), "t");
++    for (const [index, locationId] of ["00000000-0000-4000-8000-000000000003", "00000000-0000-4000-8000-000000000004"].entries()) {
+@@ -229 +272 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-      assert.equal(response.status, 200);
++      assert.equal(response.status, index === 0 ? 200 : 409, `${await response.clone().text()}\n${routeQueries.join("\n---\n")}`);
+@@ -231,2 +274 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    assert.equal(inserts.length, 2);
+-    await Promise.all(inserts.map((statement) => psqlAsync(`BEGIN; SELECT pg_sleep(0.15); ${statement}; COMMIT;`)));
++    assert.equal(inserts.length, 1);
+@@ -239,5 +281,2 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    const tokenSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+-      const output = psql(renderSql(strings, values));
+-      return output ? output.split(/\r?\n/).map((line) => ({ user_id: line.trim() })) : [];
+-    };
+-    const gbpDb = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
++    assert.equal(psql("SELECT l.connection_version=c.connection_version FROM public.gbp_locations l JOIN public.gbp_connections c ON c.user_id=l.user_id WHERE l.id='00000000-0000-4000-8000-000000000003'"), "t");
++    const gbpDbAfterSelection = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
+@@ -247 +286,70 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    await gbpDb.upsertGbpConnection({
++    const previousEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY;
++    process.env.TOKEN_ENCRYPTION_KEY = "a08-disposable-oauth-roundtrip-key";
++    const encryption = await import("../src/lib/encrypted-token.ts");
++    let actualPersisted: { connectionVersion: string; encryptedRefreshToken: string } | null = null;
++    const actualGbpDb = loadTs<typeof import("../src/lib/db/gbp.js")>("src/lib/db/gbp.ts", {
++      "@/lib/db/neon": { sql: tokenSql },
++      "@/lib/encrypted-token": encryption,
++    });
++    const crypto = await import("node:crypto");
++    const oauthState = loadTs<typeof import("../src/lib/google-oauth-state.js")>("src/lib/google-oauth-state.ts", {
++      "@/lib/env": { getOptionalEnv: () => undefined },
++      "node:crypto": { ...crypto, default: crypto },
++    });
++    const oauthUser = "00000000-0000-4000-8000-000000000001";
++    const oauthBusiness = "00000000-0000-4000-8000-000000000002";
++    const signedState = oauthState.buildGoogleOAuthState(oauthUser, oauthBusiness, oauthUser);
++    const nextResponse = { redirect: (url: string | URL) => {
++      const response = Response.redirect(url);
++      (response as Response & { cookies: { set: () => void } }).cookies = { set() {} };
++      return response;
++    } };
++    const callbackSql = async (strings: TemplateStringsArray, ...values: unknown[]) => {
++      const query = strings.join(" ");
++      if (query.includes("begin_account_lifecycle_operation")) return [{ result: "claimed", token: "00000000-0000-4000-8000-000000000098" }];
++      if (query.includes("finish_account_lifecycle_operation")) return [{ changed: true }];
++      if (query.includes("UPDATE public.account_lifecycle_operations")) return [];
++      return tokenSql(strings, ...values);
++    };
++    const callback = loadTs<{ GET(request: Request): Promise<Response> }>("src/app/api/google/oauth/callback/route.ts", {
++      "next/server": { NextResponse: nextResponse },
++      "@/lib/google": { exchangeCodeForTokens: async () => ({ access_token: "real-access", refresh_token: "real-refresh", expires_in: 3600, token_type: "Bearer" }) },
++      "@/lib/db/gbp": { upsertGbpConnection: async (input: Parameters<typeof actualGbpDb.upsertGbpConnection>[0]) => {
++        actualPersisted = await actualGbpDb.upsertGbpConnection(input);
++        return actualPersisted;
++      } },
++      "@/lib/db/neon": { sql: callbackSql },
++      "@/lib/encrypted-token": encryption,
++      "@/lib/env": { getServerAppUrl: () => "https://app.test" },
++      "@/lib/google-oauth-state": oauthState,
++      "@/lib/user-from-req": { resolveUser: async () => ({ id: oauthUser }) },
++      "@/lib/google-business": {
++        assertGoogleBusinessOwner: () => {},
++        requireGoogleBusinessContext: async () => ({ actorUserId: oauthUser, businessId: oauthBusiness,
++          integrationOwnerUserId: oauthUser, business: { id: oauthBusiness, owner_user_id: oauthUser }, role: "owner" }),
++        requireGoogleWorkflowEntitlement: async () => {},
++      },
++      "@/lib/safe-logger": { safeLogger: { error() {} } },
++      "@/lib/business-context": {},
++    });
++    const previousFetch = globalThis.fetch;
++    let revokeCalls = 0;
++    globalThis.fetch = async () => { revokeCalls += 1; return new Response(null, { status: 200 }); };
++    try {
++      const callbackRequest = new Request(`https://app.test/api/google/oauth/callback?code=real-code&state=${encodeURIComponent(signedState)}`, {
++        headers: { cookie: `ll_gbp_oauth_state=${encodeURIComponent(signedState)}` },
++      });
++      assert.equal((await callback.GET(callbackRequest)).status, 302);
++      assert.equal(revokeCalls, 0, "a successfully saved OAuth grant must not enter compensation");
++      const persisted = actualPersisted as { connectionVersion: string; encryptedRefreshToken: string } | null;
++      assert.ok(persisted);
++      assert.equal(encryption.decryptToken(persisted.encryptedRefreshToken).value, "real-refresh");
++      assert.notEqual(persisted.encryptedRefreshToken, encryption.encryptToken("real-refresh"), "AES-GCM uses a fresh nonce per encryption");
++      assert.equal(psql(`SELECT connection_version FROM public.gbp_connections WHERE user_id='${oauthUser}'`), persisted.connectionVersion);
++      assert.equal(encryption.decryptToken(psql(`SELECT refresh_token FROM public.gbp_connections WHERE user_id='${oauthUser}'`)).value, "real-refresh");
++    } finally {
++      globalThis.fetch = previousFetch;
++      if (previousEncryptionKey === undefined) delete process.env.TOKEN_ENCRYPTION_KEY;
++      else process.env.TOKEN_ENCRYPTION_KEY = previousEncryptionKey;
++    }
++    await gbpDbAfterSelection.upsertGbpConnection({
+@@ -253 +361 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    await gbpDb.updateGbpTokens({
++    await gbpDbAfterSelection.updateGbpTokens({
+@@ -267 +375 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    const staleSameGeneration = await gbpDb.updateGbpTokensIfCurrent({
++    const staleSameGeneration = await gbpDbAfterSelection.updateGbpTokensIfCurrent({
+@@ -276 +384 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    const casWon = await gbpDb.updateGbpTokensIfCurrent({
++    const casWon = await gbpDbAfterSelection.updateGbpTokensIfCurrent({
+@@ -287 +395 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    await gbpDb.upsertGbpConnection({
++    await gbpDbAfterSelection.upsertGbpConnection({
+@@ -293 +401 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
+-    const staleGeneration = await gbpDb.updateGbpTokensIfCurrent({
++    const staleGeneration = await gbpDbAfterSelection.updateGbpTokensIfCurrent({
+diff --git a/tests/a08-google-reviews.test.mts b/tests/a08-google-reviews.test.mts
+index 825d015..5126a6e 100644
+--- a/tests/a08-google-reviews.test.mts
++++ b/tests/a08-google-reviews.test.mts
+@@ -141 +141,2 @@ test("review persistence batches recordsets and retains local replied status whe
+-    const rows = JSON.parse(String(values[0])) as Array<Record<string, unknown>>;
++    const jsonValue = values.find((value) => typeof value === "string" && String(value).startsWith("["));
++    const rows = JSON.parse(String(jsonValue)) as Array<Record<string, unknown>>;
+@@ -165,3 +166,4 @@ test("review persistence batches recordsets and retains local replied status whe
+-  assert.equal((JSON.parse(String(statements[0]!.values[0])) as unknown[]).length, 250);
+-  assert.equal((JSON.parse(String(statements[1]!.values[0])) as unknown[]).length, 1);
+-  assert.equal((JSON.parse(String(statements[0]!.values[0])) as Array<{ user_id: string }>)[0]!.user_id, "owner-id");
++  const getBatch = (statement: { values: unknown[] }) => JSON.parse(String(statement.values.find((value) => typeof value === "string" && String(value).startsWith("[")))) as Array<Record<string, unknown>>;
++  assert.equal(getBatch(statements[0]!).length, 250);
++  assert.equal(getBatch(statements[1]!).length, 1);
++  assert.equal(getBatch(statements[0]!)[0]!.user_id, "owner-id");
+@@ -205,0 +208,4 @@ function loadPoster(options: {
++    "@/lib/account-lifecycle": {
++      beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "lifecycle-token" }),
++      finishAccountLifecycleOperation: async () => true,
++    },
+diff --git a/tests/a09-review-posting.test.mts b/tests/a09-review-posting.test.mts
+index da641ec..7b47b14 100644
+--- a/tests/a09-review-posting.test.mts
++++ b/tests/a09-review-posting.test.mts
+@@ -32,0 +33,4 @@ function loadPoster(outcome: "success" | "throw" | 400 | 429 | 503) {
++    "@/lib/account-lifecycle": {
++      beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "lifecycle-token" }),
++      finishAccountLifecycleOperation: async () => true,
++    },
+diff --git a/tests/a09-routes-processing.test.mts b/tests/a09-routes-processing.test.mts
+index 4510ca6..44fdee2 100644
+--- a/tests/a09-routes-processing.test.mts
++++ b/tests/a09-routes-processing.test.mts
+@@ -14 +14 @@ type Processing = {
+-    actorUserId: string; businessId: string; locationName: string;
++    ownerUserId: string; actorUserId: string; businessId: string; locationName: string;
+@@ -28 +28 @@ function loadProcessing(overrides: {
+-  const calls: { posts: unknown[][]; generated: number; saves: number } = { posts: [], generated: 0, saves: 0 };
++  const calls: { posts: unknown[][]; generated: number; saves: number; lifecycle: unknown[][] } = { posts: [], generated: 0, saves: 0, lifecycle: [] };
+@@ -41,0 +42,4 @@ function loadProcessing(overrides: {
++    "@/lib/account-lifecycle": {
++      beginAccountLifecycleOperation: async (...args: unknown[]) => { calls.lifecycle.push(args); return { result: "claimed", token: "lifecycle-token" }; },
++      finishAccountLifecycleOperation: async () => true,
++    },
+@@ -47 +51 @@ const input = (rating: unknown, source: "scheduled" | "individual" | "interactiv
+-  actorUserId: "member-1", businessId: "business-1", locationName: "accounts/10/locations/20",
++  ownerUserId: "owner-1", actorUserId: "member-1", businessId: "business-1", locationName: "accounts/10/locations/20",
+@@ -57,0 +62,2 @@ test("interactive batch can auto-post only known high ratings under owner opt-in
++    assert.equal((calls.lifecycle[0]?.[0] as { userId: string; actorUserId: string }).userId, "owner-1");
++    assert.equal((calls.lifecycle[0]?.[0] as { userId: string; actorUserId: string }).actorUserId, "member-1");
+diff --git a/tests/a11-lifecycle-ops-postgres.test.mts b/tests/a11-lifecycle-ops-postgres.test.mts
+new file mode 100644
+index 0000000..e520bd6
+--- /dev/null
++++ b/tests/a11-lifecycle-ops-postgres.test.mts
+@@ -0,0 +1,107 @@
++import assert from "node:assert/strict";
++import { execFileSync } from "node:child_process";
++import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
++import { join, resolve, sep } from "node:path";
++import { createServer } from "node:net";
++import test from "node:test";
++
++const root = process.cwd();
++const binDir = process.env.A11_PG_BIN ?? process.env.PG_BIN;
++const pgExe = (name: string) => process.platform === "win32"
++  ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
++  : binDir ? join(binDir, name) : name;
++
++test("A11 lifecycle lease drains before deletion and SQL proposal is replay safe", async () => {
++  const server = createServer();
++  const port = await new Promise<number>((resolvePort, reject) => {
++    server.once("error", reject);
++    server.listen(0, "127.0.0.1", () => {
++      const value = (server.address() as { port: number }).port;
++      server.close((error) => error ? reject(error) : resolvePort(value));
++    });
++  });
++  const testRoot = resolve(root, ".next");
++  mkdirSync(testRoot, { recursive: true });
++  const dir = mkdtempSync(join(testRoot, "a11-lifecycle-pg-"));
++  assert.ok(resolve(dir).startsWith(`${testRoot}${sep}`));
++  const dataDir = join(dir, "data");
++  let started = false;
++  const args = (sql: string) => ["-X","-q","-A","-t","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p",String(port),"-U","postgres","-d","postgres","-c",sql];
++  const psql = (sql: string) => execFileSync(pgExe("psql"), args(sql), { encoding: "utf8" }).trim();
++  const psqlFile = (filename: string) => execFileSync(pgExe("psql"), ["-X","-q","-A","-t","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p",String(port),"-U","postgres","-d","postgres","-f",filename], { encoding: "utf8" }).trim();
++  try {
++    execFileSync(pgExe("initdb"), ["-D",dataDir,"-U","postgres","-A","trust","--no-locale","--encoding=UTF8"], { stdio: "ignore" });
++    appendFileSync(join(dataDir,"postgresql.conf"),"\nunix_socket_directories = ''\n");
++    const log = join(dir,"postgres.log");
++    try { execFileSync(pgExe("pg_ctl"),["-D",dataDir,"-l",log,"-o",`-h 127.0.0.1 -p ${port} -F`,"-w","start"],{stdio:"ignore"}); }
++    catch (error) { throw new Error(existsSync(log) ? readFileSync(log,"utf8") : "PostgreSQL failed to start",{cause:error}); }
++    started = true;
++    const migrations = join(root,"neon/migrations");
++    for (const name of readdirSync(migrations).filter((entry) => /^(?:00[1-9]|01[0-7])_.*\.sql$/.test(entry)).sort()) psqlFile(join(migrations,name));
++    for (const name of ["019_billing_lifecycle.sql","020_account_recovery.sql","021_workspace_invitations.sql","022_booster_delivery_quotas.sql","024_review_draft_policy.sql","031_google_location_selection.sql","032_workspace_bootstrap.sql","026_privacy_account_lifecycle.sql"]) psqlFile(join(migrations,name));
++    const proposal = join(root,"docs/tasks/A11_ACTIVATION_LIFECYCLE.sql");
++    psqlFile(proposal);
++    psqlFile(proposal);
++    const proposalPath = (name: string, sibling: string) => {
++      const local = join(root,"docs/tasks",name);
++      const fallback = resolve(root,"..",sibling,"docs/tasks",name);
++      const candidate = existsSync(local) ? local : fallback;
++      assert.ok(existsSync(candidate), `Missing composed SQL proposal ${name}`);
++      return candidate;
++    };
++    psqlFile(proposalPath("A11_ACTIVATION_AUTH_TEAM.sql","Ornigami-A11-activation-auth"));
++    psqlFile(proposalPath("A11_ACTIVATION_REPLIES.sql","Ornigami-A11-activation-auth"));
++    psqlFile(proposalPath("A11_ACTIVATION_BILLING.sql","Ornigami-A11-activation-billing"));
++    const owner = "00000000-0000-4000-8000-000000000011";
++    const other = "00000000-0000-4000-8000-000000000012";
++    const business = "00000000-0000-4000-8000-000000000021";
++    const otherBusiness = "00000000-0000-4000-8000-000000000022";
++    psql(`INSERT INTO users(id,email) VALUES ('${owner}','owner@example.test'),('${other}','other@example.test'),('00000000-0000-4000-8000-000000000013','member@example.test'); INSERT INTO businesses(id,owner_user_id,name) VALUES ('${business}','${owner}','Owner business'),('${otherBusiness}','${other}','Other business'); INSERT INTO business_members(business_id,user_id,role) VALUES ('${otherBusiness}','00000000-0000-4000-8000-000000000013','member');`);
++    psql(`INSERT INTO reviews(user_id,business_id,location_name,google_review_id,comment,status) VALUES ('${owner}','${business}','accounts/A/locations/L','review-post-drain','review','new'); INSERT INTO review_reply_draft_state(review_id,business_id,posting_token,posting_lease_until) SELECT id,'${business}',gen_random_uuid(),now()+interval '30 seconds' FROM reviews WHERE google_review_id='review-post-drain';`);
++    const uncertainToken = psql(`SELECT token::text FROM begin_account_lifecycle_operation('${other}',NULL,'${otherBusiness}','test_external','uncertain-1',1000)`);
++    assert.ok(uncertainToken);
++    psql("SELECT pg_sleep(1.1)");
++    assert.equal(psql(`SELECT privacy_account_lifecycle_drained('${other}')`),"f");
++    assert.equal(psql(`SELECT result FROM begin_account_lifecycle_operation('${other}',NULL,'${otherBusiness}','test_external','uncertain-2',30000)`),"uncertain");
++    assert.equal(psql(`SELECT status FROM account_lifecycle_operations WHERE token='${uncertainToken}'`),"uncertain");
++    const lease = psql(`SELECT result||'|'||token::text FROM begin_account_lifecycle_operation('${owner}',NULL,'${business}','test_external','operation-1',30000)`);
++    const [leaseResult, token] = lease.split("|");
++    assert.equal(leaseResult,"claimed");
++    psql(`UPDATE account_lifecycle_operations SET encrypted_provider_evidence='encrypted-compensation-token' WHERE token='${token}';`);
++    const begin = psql(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${owner}',true)`);
++    const [beginResult, operation] = begin.split("|");
++    assert.equal(beginResult,"frozen");
++    assert.equal(psql(`SELECT result FROM begin_account_lifecycle_operation('${owner}',NULL,'${business}','test_external','operation-2',30000)`),"frozen");
++    const claim = psql(`SELECT result||'|'||fence::text FROM privacy_claim_account_deletion('${operation}',300000)`);
++    const [, fence] = claim.split("|");
++    assert.equal(psql(`SELECT privacy_finalize_account_deletion('${operation}',NULL)`),"stale_fence");
++    assert.equal(psql(`SELECT privacy_finalize_account_deletion('${operation}',gen_random_uuid())`),"stale_fence");
++    psql(`SELECT privacy_record_account_deletion_step('${operation}','${fence}','billing'); SELECT privacy_record_account_deletion_step('${operation}','${fence}','google');`);
++    assert.equal(psql(`SELECT privacy_finalize_account_deletion('${operation}','${fence}')`),"account_lifecycle_operations_unresolved");
++    assert.equal(psql(`SELECT finish_account_lifecycle_operation('${token}','done')`),"t");
++    assert.equal(psql(`SELECT encrypted_provider_evidence IS NULL FROM account_lifecycle_operations WHERE token='${token}'`),"t");
++    psql(`INSERT INTO privacy_google_revocation_evidence(operation_id,user_id,connection_version,encrypted_refresh_token,acknowledged_at) VALUES ('${operation}','${owner}',gen_random_uuid(),'encrypted-evidence',now());`);
++    assert.equal(psql(`SELECT privacy_account_lifecycle_drained('${owner}')`),"f");
++    assert.equal(psql(`SELECT privacy_finalize_account_deletion('${operation}','${fence}')`),"account_lifecycle_operations_unresolved");
++    psql(`INSERT INTO privacy_reply_post_outcomes(claim_token,business_id,review_id,outcome) SELECT posting_token,'${business}',review_id,'accepted' FROM review_reply_draft_state WHERE business_id='${business}' AND posting_token IS NOT NULL; UPDATE review_reply_draft_state SET posting_token=NULL,posting_lease_until=NULL WHERE business_id='${business}';`);
++    assert.equal(psql(`SELECT privacy_finalize_account_deletion('${operation}','${fence}')`),"complete");
++    assert.equal(psql(`SELECT count(*) FROM privacy_google_revocation_evidence WHERE operation_id='${operation}'`),"0");
++    assert.equal(psql(`SELECT encrypted_provider_evidence FROM account_lifecycle_operations WHERE token='${token}'`),"");
++    assert.equal(psql(`SELECT count(*) FROM privacy_reply_post_outcomes WHERE business_id='${business}'`),"0");
++    const member = "00000000-0000-4000-8000-000000000013";
++    psql(`INSERT INTO team_invitations(business_id,invited_by,email,token_hash,expires_at) VALUES ('${otherBusiness}','${member}','invite@example.test','member-invite-token',now()+interval '1 day');`);
++    const memberStart = psql(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${member}',false)`);
++    const [memberStartResult,memberOperation] = memberStart.split("|");
++    assert.equal(memberStartResult,"frozen");
++    const memberClaim = psql(`SELECT result||'|'||fence::text FROM privacy_claim_account_deletion('${memberOperation}',300000)`);
++    const [,memberFence] = memberClaim.split("|");
++    psql(`SELECT privacy_record_account_deletion_step('${memberOperation}','${memberFence}','billing'); SELECT privacy_record_account_deletion_step('${memberOperation}','${memberFence}','google');`);
++    assert.equal(psql(`SELECT privacy_finalize_account_deletion('${memberOperation}','${memberFence}')`),"complete");
++    assert.equal(psql(`SELECT count(*) FROM users WHERE id='${member}'`),"0");
++    assert.equal(psql(`SELECT count(*) FROM users WHERE id='${other}'`),"1");
++    assert.equal(psql(`SELECT invited_by||'|'||status FROM team_invitations WHERE token_hash='member-invite-token'`),`${other}|revoked`);
++  } finally {
++    if (started) execFileSync(pgExe("pg_ctl"),["-D",dataDir,"-m","immediate","-w","stop"],{stdio:"ignore"});
++    rmSync(dir,{recursive:true,force:true});
++  }
++});
+diff --git a/tests/a11-review-alert.test.mts b/tests/a11-review-alert.test.mts
+new file mode 100644
+index 0000000..38522b0
+--- /dev/null
++++ b/tests/a11-review-alert.test.mts
+@@ -0,0 +1,53 @@
++import assert from "node:assert/strict";
++import test from "node:test";
++import { loadTs } from "./a02-test-support.mts";
++
++const base = { ownerUserId: "owner", actorUserId: "member", businessId: "business", recipientEmail: "owner@example.test",
++  businessName: "Shop", locationName: "accounts/A/locations/L", reviews: [{ reviewerName: "R", starRating: 5, comment: "Review" }] };
++
++test("review alert holds a lifecycle lease and settles known delivery outcomes without logging response bodies", async () => {
++  const originalFetch = globalThis.fetch;
++  const finished: string[] = [];
++  let status = 202;
++  globalThis.fetch = async () => new Response("private provider text", { status });
++  try {
++    const mod = loadTs<{ sendNewReviewAlert(input: typeof base): Promise<void> }>("src/lib/review-alerts.ts", {
++      "@/lib/env": { getOptionalEnv: (name: string) => name === "RESEND_API_KEY" ? "test-key" : "test@example.test" },
++      "@/lib/safe-logger": { safeLogger: { warn: () => undefined } },
++      "@/lib/account-lifecycle": {
++        beginAccountLifecycleOperation: async (input: { kind: string; actorUserId?: string; businessId: string; leaseMs: number }) => {
++          assert.equal(input.kind, "resend_review_alert");
++          assert.equal(input.actorUserId, "member");
++          assert.equal(input.businessId, "business");
++          assert.equal(input.leaseMs, 25_000);
++          return { result: "claimed", token: "attempt" };
++        },
++        finishAccountLifecycleOperation: async (_token: string, outcome: string) => { finished.push(outcome); return true; },
++      },
++    });
++    await mod.sendNewReviewAlert(base);
++    assert.deepEqual(finished, ["done"]);
++    status = 503;
++    await mod.sendNewReviewAlert(base);
++    assert.deepEqual(finished, ["done", "uncertain"]);
++  } finally {
++    globalThis.fetch = originalFetch;
++  }
++});
++
++test("review alert does not send after lifecycle admission is denied", async () => {
++  const originalFetch = globalThis.fetch;
++  let calls = 0;
++  globalThis.fetch = async () => { calls += 1; return Response.json({}); };
++  try {
++    const mod = loadTs<{ sendNewReviewAlert(input: typeof base): Promise<void> }>("src/lib/review-alerts.ts", {
++      "@/lib/env": { getOptionalEnv: () => "set" },
++      "@/lib/safe-logger": { safeLogger: { warn: () => undefined } },
++      "@/lib/account-lifecycle": { beginAccountLifecycleOperation: async () => ({ result: "frozen", token: null }) },
++    });
++    await mod.sendNewReviewAlert(base);
++    assert.equal(calls, 0);
++  } finally {
++    globalThis.fetch = originalFetch;
++  }
++});

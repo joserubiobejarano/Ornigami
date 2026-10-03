@@ -1,0 +1,105 @@
+{
+  "baseline": "fec3fc2",
+  "delivery_branch": "fix/deletion-activation-contracts",
+  "composed_review_branch": "review/a11-activation-contracts-20261003",
+  "composed_review_commit": "ece9c371e5ce0c267f732404283c80d42fd12a0f",
+  "author_branch_heads": {
+    "auth_team": "78bad78f1d19a458c7e16b85df7ab2c129f411ea",
+    "billing_booster_client_projection": "bd201e65d009d75ff15e3c67554e0b1548db0bb8",
+    "google_jobs_privacy": "b28bfc9e68f227d7c714d688ffe29d4db5c2cf61"
+  },
+  "patch_apply_required_flags": [
+    "--unidiff-zero"
+  ],
+  "sql_tested_order": [
+    "A11_ACTIVATION_AUTH_TEAM.sql",
+    "A11_ACTIVATION_BILLING.sql",
+    "A11_ACTIVATION_REPLIES.sql",
+    "A11_ACTIVATION_BOOSTER.sql",
+    "A11_ACTIVATION_LIFECYCLE.sql"
+  ],
+  "artifacts": [
+    {
+      "path": "docs/tasks/A11_ACTIVATION_AUTH_TEAM.patch",
+      "sha256": "9c1a87cc3b10866c189cc4f3072b331f59b3c480e793572dae7f998355fdce47",
+      "files": 19
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_BILLING.patch",
+      "sha256": "4c02a9e4af568478349a39544d15242e66a43f8bd8b84a014053c0694c254e89",
+      "files": 6
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_BOOSTER.patch",
+      "sha256": "28400ae40877a593cb07ade358dafa4cc2f6723f9f527a7e1abadf2a293ebcca",
+      "files": 7
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_GOOGLE_JOBS.patch",
+      "sha256": "93bc555fe5655f0153740468556094081136be10ddb589dd98613f7ff0c311fa",
+      "files": 29
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_REPLIES.patch",
+      "sha256": "1b04324f1c2d76172f48fe1622a0246becfa459724f234bbb507034fc5455270",
+      "files": 1
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_AUTH_TEAM.sql",
+      "sha256": "19c80c58c40c65bf13bad35d67051f732b971c4f8abbb4577341e5c11c90f825"
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_BILLING.sql",
+      "sha256": "783bcaa8bf184b1ff4d62d6d498b6c5732ae65b2f9255a1495e78f110e3c5ad2"
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_BOOSTER.sql",
+      "sha256": "be6f32d8865c45596c03dd3aee53989503d167fc5bb6f44e6438c2c65ffaeb10"
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_LIFECYCLE.sql",
+      "sha256": "46c495db894c73eed1ed16a62ea7bd6dd84a0368bf288805a63c6b9f537a5676"
+    },
+    {
+      "path": "docs/tasks/A11_ACTIVATION_REPLIES.sql",
+      "sha256": "96cd7a2ba7b29dd01927845c23c3599b7115e458886f4c4d35e53c21d3f5d06e"
+    }
+  ],
+  "validation": {
+    "runtime": "Node 22.23.3",
+    "os": "Windows",
+    "database": "disposable PostgreSQL 17",
+    "composed_tests": {
+      "pass": 275,
+      "fail": 0,
+      "skip": 0
+    },
+    "delivery_tests": {
+      "pass": 254,
+      "fail": 0,
+      "skip": 0
+    },
+    "composed_lint": {
+      "errors": 0,
+      "existing_warnings": 4
+    },
+    "delivery_changed_file_lint": "pass",
+    "typegen_and_typescript": "pass in composed and delivery checkouts",
+    "composed_build": "pass, webpack, CI fixture credentials, gate false",
+    "composed_production_smoke": "pass, localhost only",
+    "patch_round_trip": "all five apply clean; resulting src/tests git blobs equal composed_review_commit",
+    "source_and_delivery_diff_check": "pass",
+    "live_provider_acceptance": "not run",
+    "linux_ci": "not run"
+  },
+  "guardrails": {
+    "roadmap_changed": false,
+    "historical_migrations_changed": false,
+    "shared_deployment_config_changed": false,
+    "package_or_lock_changed": false,
+    "environment_files_changed": false,
+    "deployed": false,
+    "merged_into_main": false,
+    "deletion_gate_default_closed": true
+  }
+}

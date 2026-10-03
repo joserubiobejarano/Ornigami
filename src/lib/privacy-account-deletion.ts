@@ -44,6 +44,14 @@ export async function getAccountDeletionSteps(operationId: string) {
   return { billing: row.billing_complete === true, google: row.google_complete === true };
 }
 
+/** Fail closed while a pre-freeze external operation may still complete. */
+export async function assertAccountLifecycleDrained(actorUserId: string): Promise<void> {
+  const rows = await sql`SELECT public.privacy_account_lifecycle_drained(${actorUserId}::uuid) AS drained`;
+  if ((rows[0] as { drained?: boolean } | undefined)?.drained !== true) {
+    throw new Error("account_lifecycle_operations_unresolved");
+  }
+}
+
 export async function recordAccountDeletionStep(operationId: string, fence: string, step: "billing" | "google"): Promise<void> {
   const rows = await sql`SELECT public.privacy_record_account_deletion_step(${operationId}::uuid,${fence}::uuid,${step}) AS changed`;
   if ((rows[0] as { changed?: boolean } | undefined)?.changed !== true) throw new Error("privacy_deletion_stale_fence");
