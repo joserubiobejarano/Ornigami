@@ -1,0 +1,11 @@
+{
+  "name": "fast-glob",
+  "version": "0.0.0-ornigami.1",
+  "private": true,
+  "description": "Narrow fast-glob adapter for the Next.js ESLint plugin and TypeScript-ESTree callers",
+  "main": "index.cjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "tinyglobby": "0.2.15"
+  }
+}
