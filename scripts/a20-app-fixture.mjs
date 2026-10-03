@@ -286,9 +286,14 @@ function buildAndStart(appPort) {
   const preloadUrl = pathToFileURL(preload).href;
   const nodeArgs = ["--import", preloadUrl];
   const nextBin = join(ROOT, "node_modules", "next", "dist", "bin", "next");
+  const buildEnv = {
+    ...env,
+    NEXT_FONT_GOOGLE_MOCKED_RESPONSES: join(ROOT, "scripts", "a20-google-font-mocks.cjs"),
+    SENTRY_TEST_OUT_DIR: join(FIXTURE, "sentry-telemetry"),
+  };
   const logFd = openOutputLog();
   try {
-    run(process.execPath, [...nodeArgs, nextBin, "build", "--webpack"], { env, stdio: ["ignore", logFd, logFd], timeout: 600_000, maxBuffer: 20 * 1024 * 1024 });
+    run(process.execPath, [...nodeArgs, nextBin, "build", "--webpack"], { env: buildEnv, stdio: ["ignore", logFd, logFd], timeout: 600_000, maxBuffer: 20 * 1024 * 1024 });
     run(process.execPath, [...nodeArgs, join(ROOT, "scripts", "generate-static-csp-hashes.mjs")], { env, stdio: ["ignore", logFd, logFd] });
   } finally { closeLog(logFd); }
   const buildId = readFileSync(join(ROOT, ".next", "BUILD_ID"), "utf8").trim();
