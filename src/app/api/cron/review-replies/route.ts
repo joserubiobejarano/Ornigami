@@ -6,12 +6,12 @@ import { fetchAllGoogleReviews } from "@/lib/google-review-sync";
 import { persistGoogleReviews } from "@/lib/google-review-persistence";
 import { sql } from "@/lib/db/neon";
 import { getProfileReplyDefaults } from "@/lib/reply-profile-defaults";
-import { generateReplyForReviewRow, saveReplyDraft, type ReviewRowForReply } from "@/lib/review-reply-server";
+import type { ReviewRowForReply } from "@/lib/review-reply-server";
+import { processReviewDraft } from "@/lib/review-draft-processing";
 import { safeLogger } from "@/lib/safe-logger";
 import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { sendNewReviewAlert } from "@/lib/review-alerts";
 import { finishCronRun, startCronRun } from "@/lib/cron-health";
-import { checkReviewReplyUsage, incrementReviewReplyUsage } from "@/lib/usage";
 
 type LocationRow = { business_id: string; user_id: string; business_name: string; location_name: string; connection_version: string };
 type NewReview = { reviewerName: string | null; starRating: number | null; comment: string | null };
@@ -21,27 +21,34 @@ async function syncLocation(userId: string, businessId: string, locationName: st
   return persistGoogleReviews(userId, businessId, locationName, reviews);
 }
 
-async function draftPending(userId: string, businessId: string, locationName: string): Promise<number> {
+async function draftPending(userId: string, businessId: string, locationName: string): Promise<{ drafted: number; failed: number }> {
   const profile = await getProfileReplyDefaults(userId);
   const rows = (await sql`
-    SELECT id, google_review_id, comment, star_rating
-    FROM public.reviews
-    WHERE business_id = ${businessId} AND location_name = ${locationName}
-      AND (status IS NULL OR lower(status) <> 'replied') AND comment IS NOT NULL
+    SELECT r.id, r.google_review_id, r.comment, r.star_rating
+    FROM public.reviews r
+    WHERE r.business_id = ${businessId} AND r.location_name = ${locationName}
+      AND (r.status IS NULL OR lower(r.status) <> 'replied') AND NULLIF(BTRIM(r.comment), '') IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM public.review_replies rr
+        WHERE rr.review_id = r.id AND rr.business_id = r.business_id
+          AND rr.posted IS FALSE
+      )
     ORDER BY review_update_time DESC NULLS LAST
     LIMIT 40
   `) as ReviewRowForReply[];
   let drafted = 0;
+  let failed = 0;
   for (const row of rows) {
-    const usage = await checkReviewReplyUsage(userId, businessId);
-    if (!usage.allowed) break;
-    const reply = await generateReplyForReviewRow(row, profile);
-    if (!reply.trim()) continue;
-    await incrementReviewReplyUsage(userId);
-    const result = await saveReplyDraft(businessId, row.google_review_id, reply);
-    if (result.ok) drafted += 1;
+    const result = await processReviewDraft({
+      actorUserId: userId, businessId, locationName, row, profile, source: "scheduled",
+    });
+    if (result.outcome === "limit") break;
+    if (result.outcome === "failed") {
+      failed += 1;
+      safeLogger.warn("cron.review_replies.draft_failed", { reviewId: row.google_review_id, stage: result.stage });
+    } else if (result.outcome === "saved") drafted += 1;
   }
-  return drafted;
+  return { drafted, failed };
 }
 
 export async function GET(request: NextRequest) {
@@ -80,7 +87,9 @@ export async function GET(request: NextRequest) {
             await sendNewReviewAlert({ recipientEmail: owner.email, businessName: location.business_name || "your business", locationName: location.location_name, reviews: result.newReviews });
           }
         }
-        drafted += await draftPending(location.user_id, location.business_id, location.location_name);
+        const draftResult = await draftPending(location.user_id, location.business_id, location.location_name);
+        drafted += draftResult.drafted;
+        failed += draftResult.failed;
       } catch (error) {
         failed += 1;
         safeLogger.error("cron.review_replies.location_failed", { userId: location.user_id, locationName: location.location_name, error: error instanceof Error ? error.message : "unknown" });

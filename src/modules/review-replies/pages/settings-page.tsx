@@ -55,6 +55,9 @@ function SettingsPageContent() {
   const [selectingLocation, setSelectingLocation] = useState<string | null>(null);
   const {
     isDemo,
+    businessId,
+    readOnly,
+    canManageAutoReply,
     businessName,
     setBusinessName,
     tone,
@@ -87,7 +90,8 @@ function SettingsPageContent() {
     setConnLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/google/connection");
+      const connectionQuery = businessId ? `?businessId=${encodeURIComponent(businessId)}` : "";
+      const res = await fetch(`/api/google/connection${connectionQuery}`);
       if (!res.ok) throw new Error("We couldn't load your Google connection. Try again in a moment.");
       const data = await res.json();
       setConnectionData(data);
@@ -97,7 +101,7 @@ function SettingsPageContent() {
     } finally {
       setConnLoading(false);
     }
-  }, []);
+  }, [businessId]);
 
   useEffect(() => {
     if (isDemo) {
@@ -122,7 +126,11 @@ function SettingsPageContent() {
     setIsSyncing(true);
     setError(null);
     try {
-      const res = await fetch("/api/google/locations/sync", { method: "POST" });
+      const res = await fetch("/api/google/locations/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(businessId ? { businessId } : {}),
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(readApiErrorMessage(body, "Location sync failed. Please try again."));
@@ -139,7 +147,11 @@ function SettingsPageContent() {
     if (!window.confirm("Disconnect Google? Review syncing and posting will stop until you reconnect.")) return;
     setError(null);
     try {
-      const res = await fetch("/api/google/disconnect", { method: "POST" });
+      const res = await fetch("/api/google/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(businessId ? { businessId } : {}),
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(readApiErrorMessage(body, "We couldn't disconnect Google. Try again in a moment."));
@@ -160,7 +172,7 @@ function SettingsPageContent() {
     try {
       const res = await fetch("/api/google/locations/selection", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locationId }),
+        body: JSON.stringify({ ...(businessId ? { businessId } : {}), locationId }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -223,7 +235,7 @@ function SettingsPageContent() {
         <CardHeader>
             <CardTitle>Your reply tone</CardTitle>
           <CardDescription>
-            Set the context Ornigami uses for reply drafts. Optional fields can be left blank.
+            These details shape AI drafts. Every generated reply is saved for review before it can be posted.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -236,6 +248,11 @@ function SettingsPageContent() {
             <div className="space-y-3"><Skeleton className="h-4 w-32" /><Skeleton className="h-9 w-full" /><Skeleton className="h-4 w-24" /><Skeleton className="h-9 w-full" /></div>
           ) : (
             <>
+              {readOnly && (
+                <DashboardCallout variant="neutral">
+                  <p>Reply settings are read-only for your workspace role. Ask the workspace owner to change them.</p>
+                </DashboardCallout>
+              )}
               <FormField label="Business name" htmlFor="settings-business-name">
                 <Input
                   id="settings-business-name"
@@ -243,6 +260,7 @@ function SettingsPageContent() {
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder="Your business name"
                   autoComplete="organization"
+                  readOnly={readOnly}
                 />
               </FormField>
               <FormField label="Tone" htmlFor="settings-tone">
@@ -251,6 +269,7 @@ function SettingsPageContent() {
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
                   className={nativeSelectClassName}
+                  disabled={readOnly}
                 >
                   {TONE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -269,6 +288,7 @@ function SettingsPageContent() {
                   onChange={(e) => setOwnerName(e.target.value)}
                   placeholder="e.g. Jamie or The Downtown Team"
                   autoComplete="name"
+                  readOnly={readOnly}
                 />
               </FormField>
               <FormField
@@ -280,15 +300,16 @@ function SettingsPageContent() {
                   value={contactPreference}
                   onChange={(e) => setContactPreference(e.target.value)}
                   placeholder='e.g. "Call the store directly" or "Email us directly"'
+                  readOnly={readOnly}
                 />
               </FormField>
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Button
                   type="button"
                   onClick={() => void saveReplySettings()}
-                  disabled={saveState === "saving"}
+                  disabled={saveState === "saving" || readOnly}
                 >
-                  {saveState === "saving" ? "SavingÃ¢â‚¬Â¦" : "Save changes"}
+                  {saveState === "saving" ? "Saving…" : "Save changes"}
                 </Button>
                 {saveState === "saved" && (
                   <Badge variant="secondary" className="font-normal text-foreground">
@@ -311,7 +332,7 @@ function SettingsPageContent() {
               </CardTitle>
               <CardDescription>
                 {connLoading
-                  ? "Loading connectionÃ¢â‚¬Â¦"
+                  ? "Loading connection…"
                   : gbpConnected
                     ? `Locations synced: ${locations.length}`
                     : "Connect to sync locations and reviews."}
@@ -356,7 +377,7 @@ function SettingsPageContent() {
               ) : null}
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleSyncLocations} disabled={isSyncing}>
-                  {isSyncing ? "SyncingÃ¢â‚¬Â¦" : "Sync locations"}
+                  {isSyncing ? "Syncing…" : "Sync locations"}
                 </Button>
                 <Button onClick={handleDisconnect} disabled={connectionData?.canManage !== true}>
                   Disconnect Google
@@ -412,7 +433,7 @@ function SettingsPageContent() {
         <CardHeader>
           <CardTitle>Auto-post trusted replies</CardTitle>
           <CardDescription>
-            When on, Ornigami can post replies for the cases you allow. You can turn this off anytime.
+            With owner approval enabled, interactive sync may post replies to known 4–5-star reviews. Unknown and 1–3-star reviews always require manual approval. Scheduled runs save drafts only.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -421,17 +442,20 @@ function SettingsPageContent() {
               <p className="text-sm font-medium text-foreground">Automatic posting</p>
               <p className="text-xs text-foreground">
                 {autoReplyAllReviews
-                  ? "ON Ã¢â‚¬â€ replies publish to GBP when generated or after sync."
-                  : "OFF Ã¢â‚¬â€ replies are stored as drafts only."}
+                  ? "ON — eligible replies may post after interactive sync. Generate always saves a draft; scheduled runs save drafts only."
+                  : "OFF — replies are saved as drafts until you approve and post them."}
               </p>
             </div>
             <Switch
               checked={autoReplyAllReviews}
               onCheckedChange={(v) => void persistAutoReply(v)}
-              disabled={autoReplySaving || settingsLoading}
+              disabled={autoReplySaving || settingsLoading || !canManageAutoReply}
               aria-label="Auto-post trusted replies"
             />
           </div>
+          {!canManageAutoReply && (
+            <p className="mt-2 text-xs text-muted-foreground">Only the workspace owner can change this setting.</p>
+          )}
         </CardContent>
       </Card>
 
@@ -449,7 +473,7 @@ export default function SettingsPage() {
     <Suspense
       fallback={
         <DashboardPage width="md">
-          <p className="text-sm text-muted-foreground">Loading settingsÃ¢â‚¬Â¦</p>
+          <p className="text-sm text-muted-foreground">Loading settings…</p>
         </DashboardPage>
       }
     >

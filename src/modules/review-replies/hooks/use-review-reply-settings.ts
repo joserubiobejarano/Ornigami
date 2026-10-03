@@ -38,6 +38,9 @@ export function useReviewReplySettings() {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [autoReplyAllReviews, setAutoReplyAllReviews] = useState(false);
   const [autoReplySaving, setAutoReplySaving] = useState(false);
+  const [businessId, setBusinessId] = useState<string>();
+  const [readOnly, setReadOnly] = useState(false);
+  const [canManageAutoReply, setCanManageAutoReply] = useState(false);
 
   useEffect(() => {
     const isDemoMode = readDemoCookie();
@@ -56,6 +59,9 @@ export function useReviewReplySettings() {
         return;
       }
       setBusinessName(settings.businessName ?? "");
+      setBusinessId(settings.businessId);
+      setReadOnly(Boolean(settings.readOnly) || settings.role === "member");
+      setCanManageAutoReply(Boolean(settings.canManageAutoReply ?? settings.isOwner ?? settings.role === "owner"));
       setTone(
         settings.tone && TONE_OPTIONS.includes(settings.tone as (typeof TONE_OPTIONS)[number])
           ? settings.tone
@@ -78,6 +84,7 @@ export function useReviewReplySettings() {
   }, []);
 
   const settingsPayload = {
+    ...(businessId ? { businessId } : {}),
     businessName,
     tone,
     ownerName,
@@ -86,6 +93,7 @@ export function useReviewReplySettings() {
   };
 
   async function saveReplySettings() {
+    if (readOnly) return;
     setSaveState("saving");
     setSettingsError(null);
     try {
@@ -101,14 +109,15 @@ export function useReviewReplySettings() {
   }
 
   async function persistAutoReply(next: boolean) {
+    if (!canManageAutoReply) return;
     setAutoReplySaving(true);
     try {
-      await updateReplySettings({ ...settingsPayload, autoReplyAllReviews: next });
+      await updateReplySettings({ ...(businessId ? { businessId } : {}), autoReplyAllReviews: next });
       setAutoReplyAllReviews(next);
       toast.success(
         next
-          ? "Auto-post on — trusted replies can post to Google after sync."
-          : "Auto-post off — replies are saved as drafts."
+          ? "Auto-post on — eligible 4–5-star replies can post after interactive processing. Scheduled runs save drafts only."
+          : "Auto-post off — replies are saved as drafts for your approval."
       );
     } catch (cause: unknown) {
       toast.error(cause instanceof Error ? cause.message : "Something went wrong. Try again in a moment.");
@@ -119,6 +128,9 @@ export function useReviewReplySettings() {
 
   return {
     isDemo,
+    businessId,
+    readOnly,
+    canManageAutoReply,
     businessName,
     setBusinessName,
     tone,
