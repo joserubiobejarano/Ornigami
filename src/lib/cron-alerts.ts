@@ -31,30 +31,62 @@ async function deliver(alert: AlertRow): Promise<void> {
     return;
   }
 
+  let transportError = "alert_transport_failed";
   try {
-    await Sentry.withScope((scope) => {
-      scope.clearBreadcrumbs();
-      scope.clearAttachments();
-      scope.setUser(null);
-      scope.setLevel("error");
-      scope.setTag("subsystem", "cron");
-      scope.setTag("job", alert.job_name);
-      scope.setTag("reason", alert.reason);
-      scope.addEventProcessor((event) => ({
-        event_id: event.event_id,
-        timestamp: event.timestamp,
-        sdk: event.sdk,
-        message: `Scheduled job ${alert.job_name} needs attention (${alert.reason}).`,
-        level: "error",
-        platform: "javascript",
-        tags: { subsystem: "cron", job: alert.job_name, reason: alert.reason },
-      }));
-      Sentry.captureMessage(`Scheduled job ${alert.job_name} needs attention (${alert.reason}).`, "error");
+    const client = Sentry.getClient();
+    if (!client) {
+      transportError = "alert_sentry_client_missing";
+      throw new Error("sentry_client_missing");
+    }
+
+    let eventId: string | undefined;
+    let responseStatus: number | undefined;
+    const unsubscribe = client.on("afterSendEvent", (event, response) => {
+      if (event.event_id !== eventId) return;
+      responseStatus = response.statusCode;
     });
-    if (!await Sentry.flush(2_000)) throw new Error("transport_flush_timeout");
+    try {
+      await Sentry.withScope((scope) => {
+        scope.clearBreadcrumbs();
+        scope.clearAttachments();
+        scope.setUser(null);
+        scope.setLevel("error");
+        scope.setTag("subsystem", "cron");
+        scope.setTag("job", alert.job_name);
+        scope.setTag("reason", alert.reason);
+        scope.addEventProcessor((event) => ({
+          event_id: event.event_id,
+          timestamp: event.timestamp,
+          sdk: event.sdk,
+          message: `Scheduled job ${alert.job_name} needs attention (${alert.reason}).`,
+          level: "error",
+          platform: "javascript",
+          tags: { subsystem: "cron", job: alert.job_name, reason: alert.reason },
+        }));
+        eventId = Sentry.captureMessage(`Scheduled job ${alert.job_name} needs attention (${alert.reason}).`, "error");
+      });
+      if (!eventId) {
+        transportError = "alert_event_not_captured";
+        throw new Error("sentry_event_not_captured");
+      }
+      if (!await Sentry.flush(2_000)) {
+        transportError = "alert_transport_timeout";
+        throw new Error("sentry_transport_timeout");
+      }
+      if (responseStatus === undefined) {
+        transportError = "alert_transport_unconfirmed";
+        throw new Error("sentry_transport_unconfirmed");
+      }
+      if (typeof responseStatus !== "number" || !Number.isFinite(responseStatus) || responseStatus < 200 || responseStatus >= 300) {
+        transportError = "alert_transport_rejected";
+        throw new Error("sentry_transport_rejected");
+      }
+    } finally {
+      unsubscribe();
+    }
     await sql`UPDATE public.cron_alert_state SET transport_failures = 0, last_transport_error = NULL WHERE alert_key = ${alert.alert_key}`;
   } catch {
-    safeLogger.error("cron.alerts.transport_failed", { jobName: alert.job_name, reason: alert.reason, errorCode: "alert_transport_failed" });
+    safeLogger.error("cron.alerts.transport_failed", { jobName: alert.job_name, reason: alert.reason, errorCode: transportError });
     try {
       await sql`UPDATE public.cron_alert_state SET transport_failures = transport_failures + 1,
         last_transport_error = 'alert_transport_failed', last_sent_at = clock_timestamp() - interval '25 minutes'
