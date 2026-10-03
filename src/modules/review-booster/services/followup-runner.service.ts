@@ -1,183 +1,183 @@
-import { buildSubject, generateFollowupEmailBody } from "@/modules/review-booster/services/followup-email-generator.service";
-import {
-  createFollowupMessage,
-  hasSentMessageForVisit,
-  listEligibleFollowupVisits,
-  markVisitFailed,
-  markVisitSent,
-  markVisitSkipped,
-  getReviewBoosterBillingPeriodUsage
-} from "@/modules/review-booster/services/review-booster-db.service";
-import { sendWithResend } from "@/modules/review-booster/services/resend.provider";
-import { buildReviewLinkUrl } from "@/lib/review-link-token";
-import { FollowupRunResult, FollowupVisit } from "@/modules/review-booster/types/followup.types";
-import { hasReachedMonthlyAllowance } from "@/modules/review-booster/services/fair-use";
-import { assertBusinessMember } from "@/modules/review-booster/services/review-booster-db.service";
+import type { FollowupRunResult } from "@/modules/review-booster/types/followup.types";
+import type { AtomicBeginSend, AtomicFollowupCandidate, AtomicFollowupClaim, FrozenFollowupPayload } from "@/modules/review-booster/services/atomic-followup-db.service";
 import { MAX_FOLLOWUPS_PER_RUN } from "@/lib/followup-run-policy";
 
 export type FollowupRunnerDependencies = {
-  listEligibleVisits: () => Promise<FollowupVisit[]>;
-  hasSentMessageForVisit: (visitId: string) => Promise<boolean>;
-  markVisitSent: (visitId: string) => Promise<void>;
-  markVisitFailed: (visitId: string, errorMessage: string) => Promise<void>;
-  markVisitSkipped: (visitId: string, reason: string) => Promise<void>;
-  recordSentMessage: (input: {
-    visitId: string;
-    businessId: string;
-    subject: string;
-    body: string;
-    providerMessageId: string | null;
-  }) => Promise<void>;
-  recordFailedMessage: (input: {
-    visitId: string;
-    businessId: string;
-    subject: string;
-    body: string;
-    errorMessage: string;
-  }) => Promise<void>;
-  getMonthlyUsage: () => Promise<{ sent: number; allowance: number }>;
+  listCandidates: (limit: number) => Promise<AtomicFollowupCandidate[]>;
+  claim: (visitId: string) => Promise<AtomicFollowupClaim>;
+  buildSubject: (businessName: string, language: string | null) => string;
+  generateBody: (visit: AtomicFollowupCandidate) => Promise<string>;
+  preparePayload: (visit: AtomicFollowupCandidate, subject: string, body: string, deliveryId: string) => Promise<FrozenFollowupPayload>;
+  persistPayload: (deliveryId: string, fence: string, payload: FrozenFollowupPayload, reviewUrl: string) => Promise<boolean>;
+  beginSend: (deliveryId: string, fence: string) => Promise<AtomicBeginSend>;
+  sendPrepared: (payload: FrozenFollowupPayload, idempotencyKey: string) => Promise<string>;
+  classifySendError: (error: unknown) => "definite_rejection" | "ambiguous";
+  finalizeAccepted: (input: { deliveryId: string; fence: string; providerMessageId: string; subject: string; body: string }) => Promise<boolean>;
+  release: (input: { deliveryId: string; fence: string; outcome: "rejected" | "generation_failed"; error: string }) => Promise<boolean>;
+  markUnknown: (input: { deliveryId: string; fence: string; error: string }) => Promise<boolean>;
 };
 
-export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Promise<FollowupRunResult> {
-  const eligibleVisits = await deps.listEligibleVisits();
-  const visits = eligibleVisits.slice(0, MAX_FOLLOWUPS_PER_RUN);
+export type FollowupRunOutcome = FollowupRunResult;
+
+export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Promise<FollowupRunOutcome> {
+  // The database performs a fair, deterministic oldest-first selection capped at 50.
+  const visits = await deps.listCandidates(MAX_FOLLOWUPS_PER_RUN);
   let sent = 0;
   let failed = 0;
   let skipped = 0;
-  const monthlyUsage = await deps.getMonthlyUsage();
+  let unknown = 0;
+  let deferred = 0;
 
-  for (const visit of visits) {
-    if (hasReachedMonthlyAllowance(monthlyUsage.sent, sent, monthlyUsage.allowance)) {
-      await deps.markVisitSkipped(visit.id, "fair_use_limit");
+  for (const visit of visits.slice(0, MAX_FOLLOWUPS_PER_RUN)) {
+    // Claim one at a time so a run that stops early does not reserve a whole batch.
+    const claim = await deps.claim(visit.visitId);
+    if (["busy", "existing", "ineligible", "expired", "non_sendable"].includes(claim.kind)) {
       skipped += 1;
       continue;
     }
-
-    const alreadySent = await deps.hasSentMessageForVisit(visit.id);
-    if (alreadySent) {
-      skipped += 1;
+    if (claim.kind === "quota_exhausted" || claim.kind === "reconciliation_required") {
+      deferred += 1;
       continue;
     }
-
-    if (!visit.business_name?.trim()) {
-      const missingBusinessName = "Add your business name in Review Booster settings before sending follow-ups.";
-      await deps.markVisitFailed(visit.id, missingBusinessName);
-      await deps.recordFailedMessage({
-        visitId: visit.id,
-        businessId: visit.business_id,
-        subject: "Follow-up not sent",
-        body: "",
-        errorMessage: missingBusinessName,
-      });
-      failed += 1;
-      continue;
+    if (!claim.deliveryId || !claim.fence || !claim.idempotencyKey) {
+      // An incomplete claim is a database contract failure; never attempt provider I/O.
+      throw new Error("Atomic follow-up claim returned incomplete delivery fencing data.");
     }
 
-    if (!visit.google_review_url) {
-      skipped += 1;
-      const missingUrlError = "Missing google_review_url";
-      await deps.markVisitFailed(visit.id, missingUrlError);
-      await deps.recordFailedMessage({
-        visitId: visit.id,
-        businessId: visit.business_id,
-        subject: buildSubject(visit.business_name, visit.language),
-        body: "",
-        errorMessage: missingUrlError
-      });
+    let payload: FrozenFollowupPayload;
+    let subject: string;
+    let body: string;
+    if (claim.kind === "recovery" && claim.payload) {
+      // Never rebuild content for a prior attempt: Resend requires the exact body and key.
+      payload = claim.payload;
+      subject = payload.subject;
+      body = payload.text;
+    } else if (claim.kind === "recovery" && claim.firstAttemptAt !== null) {
+      // Missing frozen content after a provider attempt cannot be reconstructed safely.
+      const changed = await deps.markUnknown({ deliveryId: claim.deliveryId, fence: claim.fence, error: "Recovery delivery has no frozen payload after an earlier attempt." });
+      if (changed) unknown += 1;
+      else skipped += 1;
       continue;
+    } else {
+      try {
+        if (!visit.businessName.trim()) throw new Error("Add your business name in Review Booster settings before sending follow-ups.");
+        subject = deps.buildSubject(visit.businessName, visit.language);
+        body = await deps.generateBody(visit);
+        payload = await deps.preparePayload(visit, subject, body, claim.deliveryId);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const changed = await deps.release({ deliveryId: claim.deliveryId, fence: claim.fence, outcome: "generation_failed", error: errorMessage });
+        if (changed) failed += 1;
+        else skipped += 1;
+        continue;
+      }
+
+      // Persisting the exact JSON must succeed before begin-send or any network call.
+      // A DB failure propagates and leaves the reservation fenced for safe recovery.
+      const persisted = await deps.persistPayload(claim.deliveryId, claim.fence, payload, visit.googleReviewUrl);
+      if (!persisted) {
+        skipped += 1;
+        continue;
+      }
     }
 
-    const subject = buildSubject(visit.business_name, visit.language);
-    const body = await generateFollowupEmailBody({
-      business_name: visit.business_name,
-      business_type: visit.business_type,
-      city: visit.city,
-      customer_name: visit.customer_name,
-      service_name: visit.service_name,
-      google_review_url: visit.google_review_url,
-      tone_setting: visit.tone,
-      language: visit.language
-    });
+    // This atomic boundary rechecks current access, suppression, visit age, destination,
+    // active plan and quota immediately before allowing provider I/O.
+    const begin = await deps.beginSend(claim.deliveryId, claim.fence);
+    if (begin.kind !== "send") {
+      if (begin.kind === "quota_exhausted") deferred += 1;
+      else skipped += 1;
+      continue;
+    }
+    // Final message history uses the content sent by the provider, including the
+    // localized CTA and unsubscribe text captured in the frozen payload.
+    subject = begin.payload.subject;
+    body = begin.payload.text;
 
+    let providerMessageId: string;
     try {
-      const reviewLinkUrl = buildReviewLinkUrl({ businessId: visit.business_id, visitId: visit.id, reviewUrl: visit.google_review_url });
-      const providerMessageId = await sendWithResend({
-        business_id: visit.business_id,
-        email_from_name: visit.email_from_name,
-        business_name: visit.business_name,
-        customer_email: String(visit.customer_email || ""),
-        subject,
-        body,
-        google_review_url: visit.google_review_url,
-        review_link_url: reviewLinkUrl
-      });
-
-      await deps.recordSentMessage({
-        visitId: visit.id,
-        businessId: visit.business_id,
-        subject,
-        body,
-        providerMessageId
-      });
-      await deps.markVisitSent(visit.id);
-      sent += 1;
+      providerMessageId = await deps.sendPrepared(begin.payload, begin.idempotencyKey);
     } catch (error) {
-      const errorMessage = String(error);
-      await deps.recordFailedMessage({
-        visitId: visit.id,
-        businessId: visit.business_id,
-        subject,
-        body,
-        errorMessage
-      });
-      await deps.markVisitFailed(visit.id, errorMessage);
-      failed += 1;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const kind = deps.classifySendError(error);
+      // firstAttemptAt on the claim means an earlier provider call may have succeeded.
+      // Even a later 4xx cannot establish that the earlier call was rejected.
+      if (kind === "definite_rejection" && claim.firstAttemptAt === null) {
+        const released = await deps.release({ deliveryId: claim.deliveryId, fence: claim.fence, outcome: "rejected", error: errorMessage });
+        if (released) failed += 1;
+        else skipped += 1;
+      } else {
+        const recorded = await deps.markUnknown({ deliveryId: claim.deliveryId, fence: claim.fence, error: errorMessage });
+        if (recorded) unknown += 1;
+        else skipped += 1;
+      }
+      continue;
+    }
+
+    // Keep this outside the provider catch: a database failure after provider acceptance
+    // is an unknown accepted outcome, never a provider rejection or a fresh-send trigger.
+    const finalized = await deps.finalizeAccepted({
+      deliveryId: claim.deliveryId,
+      fence: claim.fence,
+      providerMessageId,
+      subject,
+      body,
+    });
+    if (finalized) sent += 1;
+    else {
+      await deps.markUnknown({ deliveryId: claim.deliveryId, fence: claim.fence, error: "Provider accepted the email but finalization was fenced." });
+      unknown += 1;
     }
   }
 
-  return {
-    ok: true,
-    scanned: visits.length,
-    sent,
-    failed,
-    skipped
-  };
+  return { ok: true, scanned: visits.length, sent, failed, skipped, unknown, deferred };
 }
 
-export async function createFollowupRunnerDependencies(
-  businessId: string,
-  actorUserId?: string
-): Promise<FollowupRunnerDependencies> {
-  if (actorUserId) {
-    await assertBusinessMember(businessId, actorUserId);
-  }
+export type FollowupRunnerOverrides = Partial<Pick<FollowupRunnerDependencies, "generateBody" | "preparePayload" | "sendPrepared" | "classifySendError" | "buildSubject">>;
+
+export async function createFollowupRunnerDependencies(businessId: string, actorUserId?: string, overrides: FollowupRunnerOverrides = {}): Promise<FollowupRunnerDependencies> {
+  const [db, provider, generator, reviewLinks] = await Promise.all([
+    import("@/modules/review-booster/services/atomic-followup-db.service"),
+    import("@/modules/review-booster/services/resend.provider"),
+    import("@/modules/review-booster/services/followup-email-generator.service"),
+    import("@/lib/review-link-token"),
+  ]);
+  const access = await import("@/modules/review-booster/services/review-booster-db.service");
+  if (actorUserId) await access.assertBusinessMember(businessId, actorUserId);
+
   return {
-    listEligibleVisits: () => listEligibleFollowupVisits(businessId),
-    hasSentMessageForVisit,
-    markVisitSent,
-    markVisitFailed,
-    markVisitSkipped,
-    getMonthlyUsage: () => getReviewBoosterBillingPeriodUsage(businessId),
-    recordSentMessage: async (input) => {
-      await createFollowupMessage({
-        visitId: input.visitId,
-        businessId: input.businessId,
-        subject: input.subject,
-        body: input.body,
-        providerMessageId: input.providerMessageId,
-        status: "sent",
-        sentAt: new Date().toISOString()
-      });
-    },
-    recordFailedMessage: async (input) => {
-      await createFollowupMessage({
-        visitId: input.visitId,
-        businessId: input.businessId,
-        subject: input.subject,
-        body: input.body,
-        status: "failed",
-        errorMessage: input.errorMessage
-      });
-    }
+    listCandidates: (limit) => db.listAtomicFollowupCandidates({ businessId, limit }),
+    claim: (visitId) => db.claimAtomicFollowupDelivery({ businessId, visitId }),
+    buildSubject: overrides.buildSubject ?? generator.buildSubject,
+    generateBody: overrides.generateBody ?? ((visit) => generator.generateFollowupEmailBody({
+      business_name: visit.businessName,
+      business_type: visit.businessType,
+      city: visit.city,
+      customer_name: visit.customerName,
+      service_name: visit.serviceName,
+      google_review_url: visit.googleReviewUrl,
+      tone_setting: visit.tone,
+      language: visit.language,
+      visited_at: visit.visitedAt,
+    })),
+    preparePayload: overrides.preparePayload ?? ((visit, subject, body, deliveryId) => provider.prepareResendPayload({
+      delivery_id: deliveryId,
+      business_id: visit.businessId,
+      email_from_name: visit.emailFromName,
+      business_name: visit.businessName,
+      customer_email: visit.customerEmail,
+      subject,
+      body,
+      google_review_url: visit.googleReviewUrl,
+      review_link_url: reviewLinks.buildReviewLinkUrl({ businessId: visit.businessId, visitId: visit.visitId, reviewUrl: visit.googleReviewUrl }),
+      language: visit.language,
+    })),
+    persistPayload: (deliveryId, fence, payload, reviewUrl) => db.persistAtomicFollowupPayload({ deliveryId, fence, payload, reviewUrl }),
+    beginSend: (deliveryId, fence) => db.beginAtomicFollowupSend({ deliveryId, fence, actorUserId }),
+    sendPrepared: overrides.sendPrepared ?? provider.sendPreparedWithResend,
+    classifySendError: overrides.classifySendError ?? provider.classifyResendFailure,
+    finalizeAccepted: (input) => db.finalizeAtomicFollowupAccepted({ ...input, provider: "resend" }),
+    release: (input) => db.releaseAtomicFollowupDelivery(input),
+    markUnknown: (input) => db.markAtomicFollowupUnknown(input),
   };
 }

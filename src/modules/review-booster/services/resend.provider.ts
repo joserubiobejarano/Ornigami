@@ -1,7 +1,44 @@
 import { buildUnsubscribeUrl } from "@/modules/review-booster/services/unsubscribe-token.service";
 import { getOptionalEnv, getRequiredEnv } from "@/lib/env";
 
-type SendEmailInput = {
+export type ResendEmailPayload = {
+  from: string;
+  to: string | string[];
+  reply_to: string;
+  subject: string;
+  text: string;
+  html: string;
+  headers?: Record<string, string>;
+  tags?: Array<{ name: string; value: string }>;
+};
+
+export type DeliveryFailureKind = "definite_rejection" | "ambiguous";
+
+export class ResendDeliveryError extends Error {
+  readonly kind: DeliveryFailureKind;
+  readonly status?: number;
+  constructor(message: string, kind: DeliveryFailureKind, status?: number) {
+    super(message);
+    this.name = "ResendDeliveryError";
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
+export function isResendDeliveryError(error: unknown): error is ResendDeliveryError {
+  if (error instanceof ResendDeliveryError) return true;
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; kind?: unknown; status?: unknown };
+  return candidate.name === "ResendDeliveryError" &&
+    (candidate.kind === "definite_rejection" || candidate.kind === "ambiguous") &&
+    (candidate.status === undefined || typeof candidate.status === "number");
+}
+
+export function classifyResendFailure(error: unknown): DeliveryFailureKind {
+  return isResendDeliveryError(error) ? error.kind : "ambiguous";
+}
+
+type PrepareEmailInput = {
   business_id?: string | null;
   email_from_name?: string | null;
   business_name: string;
@@ -11,86 +48,123 @@ type SendEmailInput = {
   google_review_url: string;
   review_link_url?: string | null;
   reply_to_email?: string | null;
+  language?: string | null;
+  cta_label?: string;
+  unsubscribe_label?: string;
+  unsubscribe_description?: string;
+  delivery_id?: string;
 };
 
-type ResendSendResponse = {
-  id?: string;
-  message?: string;
-  name?: string;
-  statusCode?: number;
+const copy: Record<string, { cta: string; unsubscribe: string; description: string }> = {
+  en: { cta: "Leave your review", unsubscribe: "Unsubscribe", description: "Don't want future follow-up emails?" },
+  es: { cta: "Deja tu opinión", unsubscribe: "Darse de baja", description: "¿No quieres recibir más correos de seguimiento?" },
+  fr: { cta: "Laisser un avis", unsubscribe: "Se désabonner", description: "Vous ne souhaitez plus recevoir d'e-mails de suivi ?" },
+  de: { cta: "Bewertung abgeben", unsubscribe: "Abmelden", description: "Möchten Sie keine weiteren Folgenachrichten erhalten?" },
+  it: { cta: "Lascia una recensione", unsubscribe: "Annulla l'iscrizione", description: "Non vuoi più ricevere email di follow-up?" },
+  pt: { cta: "Deixe sua avaliação", unsubscribe: "Cancelar inscrição", description: "Não quer receber mais emails de acompanhamento?" },
 };
 
-export async function sendWithResend(input: SendEmailInput) {
-  const resendApiKey = getRequiredEnv("RESEND_API_KEY");
+function languageCode(language?: string | null): string {
+  const normalized = (language || "en").trim().replaceAll("_", "-").split("-")[0].toLowerCase();
+  return copy[normalized] ? normalized : "en";
+}
+
+function escapeHtml(value: string): string {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+
+function safeHttpUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("unsafe scheme");
+    return value;
+  } catch {
+    throw new ResendDeliveryError("Invalid email link URL", "definite_rejection");
+  }
+}
+
+/** Builds the complete provider request before delivery so callers can persist this exact JSON for replay. */
+export async function prepareResendPayload(input: PrepareEmailInput): Promise<ResendEmailPayload> {
   const emailFrom = getRequiredEnv("EMAIL_FROM");
   const replyToEmail = getOptionalEnv("REPLY_TO_EMAIL");
-
-  const fromName = input.email_from_name || input.business_name;
-  const from = `${fromName} <${emailFrom}>`;
-  const safeBody = input.body
-    .split("&")
-    .join("&amp;")
-    .split("<")
-    .join("&lt;")
-    .split(">")
-    .join("&gt;");
-  const reviewLinkUrl = (input.review_link_url || input.google_review_url || "").trim();
-  if (!reviewLinkUrl) {
-    throw new Error("Missing google review URL");
-  }
+  const reviewLinkUrl = safeHttpUrl((input.review_link_url || input.google_review_url || "").trim());
   const unsubscribeUrl = input.business_id
-    ? buildUnsubscribeUrl({
-        businessId: input.business_id,
-        customerEmail: input.customer_email,
-      })
+    ? safeHttpUrl(await buildUnsubscribeUrl({ businessId: input.business_id, customerEmail: input.customer_email }))
     : null;
+  const localized = copy[languageCode(input.language)];
+  const cta = input.cta_label || localized.cta;
+  const unsubscribe = input.unsubscribe_label || localized.unsubscribe;
+  const unsubscribeDescription = input.unsubscribe_description || localized.description;
+  const safeBody = escapeHtml(input.body).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>");
+  const html = `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;"><p>${safeBody}</p><p style="margin-top: 16px;"><a href="${escapeHtml(reviewLinkUrl)}" style="display:inline-block;background:#6d28d9;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">${escapeHtml(cta)}</a></p>${unsubscribeUrl ? `<p style="margin-top: 18px; font-size: 12px; color: #64748b;">${escapeHtml(unsubscribeDescription)} <a href="${escapeHtml(unsubscribeUrl)}" style="color:#334155;">${escapeHtml(unsubscribe)}</a>.</p>` : ""}</div>`;
+  const textUnsubscribe = unsubscribeUrl ? `\n\n${unsubscribeDescription} ${unsubscribe}: ${unsubscribeUrl}` : "";
+  const payload: ResendEmailPayload = {
+    from: `${input.email_from_name || input.business_name} <${emailFrom}>`,
+    to: input.customer_email,
+    reply_to: input.reply_to_email || replyToEmail || emailFrom,
+    subject: input.subject,
+    text: `${input.body}\n\n${cta}: ${reviewLinkUrl}${textUnsubscribe}`,
+    html,
+    ...(unsubscribeUrl ? { headers: { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
+    ...(input.delivery_id ? { tags: [{ name: "ornigami_delivery_id", value: input.delivery_id }] } : {}),
+  };
+  if (payload.headers) Object.freeze(payload.headers);
+  return Object.freeze(payload);
+}
 
-  const bodyHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
-      <p>${safeBody.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>")}</p>
-      <p style="margin-top: 16px;">
-        <a href="${reviewLinkUrl}" style="display:inline-block;background:#6d28d9;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:600;">
-          Leave your review
-        </a>
-      </p>
-      ${
-        unsubscribeUrl
-          ? `<p style="margin-top: 18px; font-size: 12px; color: #64748b;">Don't want future follow-up emails? <a href="${unsubscribeUrl}" style="color:#334155;">Unsubscribe</a>.</p>`
-          : ""
-      }
-    </div>
-  `.trim();
-
-  const textUnsubscribe = unsubscribeUrl
-    ? `\n\nDon't want future follow-up emails? Unsubscribe: ${unsubscribeUrl}`
-    : "";
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from,
-      to: input.customer_email,
-      subject: input.subject,
-      text: `${input.body}\n\nLeave your review: ${reviewLinkUrl}${textUnsubscribe}`,
-      html: bodyHtml,
-      reply_to: input.reply_to_email || replyToEmail || emailFrom,
-      ...(unsubscribeUrl ? {
-        headers: {
-          "List-Unsubscribe": `<${unsubscribeUrl}>`,
-          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
-        }
-      } : {})
-    })
-  });
-
-  const data = (await response.json()) as ResendSendResponse;
-  if (!response.ok) {
-    throw new Error(data.message || `Resend request failed (${response.status})`);
+/** Sends only the caller's frozen JSON payload; it never rebuilds email content. */
+export async function sendPreparedWithResend(payload: ResendEmailPayload, idempotencyKey: string): Promise<string> {
+  if (!idempotencyKey || idempotencyKey.length > 256) {
+    throw new ResendDeliveryError("Invalid Resend idempotency key", "definite_rejection");
   }
+  let apiKey: string;
+  try {
+    apiKey = getRequiredEnv("RESEND_API_KEY");
+  } catch (error) {
+    throw new ResendDeliveryError(error instanceof Error ? error.message : "Missing Resend API key", "definite_rejection");
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
+  let response: Response;
+  try {
+    response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    clearTimeout(timer);
+    throw new ResendDeliveryError(error instanceof Error ? error.message : "Resend transport failed", "ambiguous");
+  }
+  try {
+    let data: unknown;
+    try { data = await response.json(); } catch {
+      throw new ResendDeliveryError("Resend returned an unreadable response", response.ok || response.status >= 500 || response.status === 409 ? "ambiguous" : "definite_rejection", response.status);
+    }
+    const record = data && typeof data === "object" ? data as { id?: unknown; message?: unknown } : {};
+    if (!response.ok) {
+      const kind = response.status === 409 || response.status >= 500 || response.status < 400
+        ? "ambiguous"
+        : "definite_rejection";
+      throw new ResendDeliveryError(typeof record.message === "string" ? record.message : `Resend request failed (${response.status})`, kind, response.status);
+    }
+    if (typeof record.id !== "string" || !record.id.trim()) {
+      throw new ResendDeliveryError("Resend accepted the request but returned no message ID", "ambiguous", response.status);
+    }
+    return record.id;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-  return data.id || null;
+/** Compatibility entry point; durable/retryable delivery must use prepare + sendPrepared separately. */
+export async function sendWithResend(input: PrepareEmailInput): Promise<string> {
+  const payload = await prepareResendPayload(input);
+  return sendPreparedWithResend(payload, crypto.randomUUID());
 }
