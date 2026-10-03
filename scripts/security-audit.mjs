@@ -3,87 +3,119 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const ALLOWED_ADVISORY_URL = "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm";
-export const EXCEPTION_EXPIRES_AT = "2026-10-10T00:00:00Z";
-
-const SEVERITIES = new Set(["info", "low", "moderate", "high", "critical"]);
+const SEVERITIES = ["info", "low", "moderate", "high", "critical"];
 
 function fail(message) {
-  return { ok: false, errors: [message], allowed: [], productionCounts: null };
+  return { ok: false, errors: [message], fullCounts: null, productionCounts: null };
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function parseAudit(report, label) {
-  if (!report || typeof report !== "object" || Array.isArray(report)) return `${label} report is not an object`;
-  if (report.error) return `${label} audit reported an error: ${report.error.summary ?? report.error.code ?? "unknown error"}`;
-  if (!report.vulnerabilities || typeof report.vulnerabilities !== "object" || Array.isArray(report.vulnerabilities)) {
-    return `${label} audit report has no vulnerabilities map`;
+  if (!isRecord(report)) return { error: `${label} report is not an object` };
+  if (report.auditReportVersion !== 2) {
+    return { error: `${label} audit report has an unsupported or missing report version` };
   }
-  return null;
-}
+  if (report.error !== undefined) {
+    const detail = isRecord(report.error)
+      ? report.error.summary ?? report.error.code ?? "unknown error"
+      : "malformed error details";
+    return { error: `${label} audit reported an error: ${detail}` };
+  }
+  if (!isRecord(report.vulnerabilities)) {
+    return { error: `${label} audit report has no vulnerabilities map` };
+  }
+  if (!isRecord(report.metadata) || !isRecord(report.metadata.vulnerabilities)) {
+    return { error: `${label} audit report has no vulnerabilities metadata` };
+  }
 
-function severityCounts(report) {
-  const counts = { info: 0, low: 0, moderate: 0, high: 0, critical: 0 };
-  for (const vulnerability of Object.values(report.vulnerabilities)) {
-    if (!vulnerability || typeof vulnerability !== "object" || !SEVERITIES.has(vulnerability.severity)) return null;
+  const counts = Object.fromEntries(SEVERITIES.map((severity) => [severity, 0]));
+  for (const [name, vulnerability] of Object.entries(report.vulnerabilities)) {
+    if (!name || !isRecord(vulnerability) || !SEVERITIES.includes(vulnerability.severity)) {
+      return { error: `${label} audit contains a malformed vulnerability entry` };
+    }
     counts[vulnerability.severity] += 1;
   }
-  return counts;
-}
 
-function ancestryIsOnlyAllowedAdvisory(name, vulnerabilities) {
-  const visiting = new Set();
-  const visited = new Map();
-  function visit(packageName) {
-    if (visiting.has(packageName)) return false;
-    if (visited.has(packageName)) return visited.get(packageName);
-    const item = vulnerabilities[packageName];
-    if (!item || typeof item !== "object" || !Array.isArray(item.via) || item.via.length === 0) return false;
-    visiting.add(packageName);
-    let valid = true;
-    for (const via of item.via) {
-      if (typeof via === "string") {
-        if (!visit(via)) { valid = false; break; }
-      } else if (!via || typeof via !== "object" || via.url !== ALLOWED_ADVISORY_URL) {
-        valid = false;
-        break;
-      }
+  const metadataCounts = report.metadata.vulnerabilities;
+  for (const severity of SEVERITIES) {
+    const count = metadataCounts[severity];
+    if (!Number.isSafeInteger(count) || count < 0) {
+      return { error: `${label} audit metadata has a malformed ${severity} count` };
     }
-    visiting.delete(packageName);
-    visited.set(packageName, valid);
-    return valid;
+    if (count !== counts[severity]) {
+      return { error: `${label} audit metadata ${severity} count does not match its vulnerability entries` };
+    }
   }
-  return visit(name);
+  const total = metadataCounts.total;
+  const entryTotal = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  if (!Number.isSafeInteger(total) || total < 0 || total !== entryTotal) {
+    return { error: `${label} audit metadata total does not match its vulnerability entries` };
+  }
+
+  return { counts, total };
 }
 
 /** Pure, fail-closed policy evaluation for full and production npm audit JSON reports. */
-export function evaluateAuditReports(fullReport, productionReport, now = new Date()) {
-  const fullError = parseAudit(fullReport, "Full");
-  if (fullError) return fail(fullError);
-  const productionError = parseAudit(productionReport, "Production");
-  if (productionError) return fail(productionError);
-  const instant = now instanceof Date ? now.getTime() : Date.parse(now);
-  const expires = Date.parse(EXCEPTION_EXPIRES_AT);
-  if (Object.keys(fullReport.vulnerabilities).length > 0 && (!Number.isFinite(instant) || instant >= expires)) {
-    return fail("Temporary advisory exception is expired or evaluation time is invalid");
+export function evaluateAuditReports(fullReport, productionReport) {
+  const full = parseAudit(fullReport, "Full");
+  if (full.error) return fail(full.error);
+  const production = parseAudit(productionReport, "Production");
+  if (production.error) return fail(production.error);
+
+  if (full.total > 0) {
+    return fail(`Full audit contains ${full.total} vulnerabilities; all full-audit findings must be remediated`);
+  }
+  if (production.counts.high > 0 || production.counts.critical > 0) {
+    return fail("Production audit contains high or critical vulnerabilities");
   }
 
-  const fullCounts = severityCounts(fullReport);
-  const productionCounts = severityCounts(productionReport);
-  if (!fullCounts || !productionCounts) return fail("Audit report contains an unknown or malformed vulnerability severity");
-  const prodMetadata = productionReport.metadata?.vulnerabilities;
-  if (prodMetadata && ["high", "critical"].some((level) => Number(prodMetadata[level]) > 0)) {
-    return fail("Production audit metadata reports high or critical vulnerabilities");
-  }
-  if (productionCounts.high > 0 || productionCounts.critical > 0) return fail("Production audit contains high or critical vulnerabilities");
+  return {
+    ok: true,
+    errors: [],
+    fullCounts: full.counts,
+    productionCounts: production.counts,
+  };
+}
 
-  const allowed = [];
-  for (const [name, vulnerability] of Object.entries(fullReport.vulnerabilities)) {
-    if (!ancestryIsOnlyAllowedAdvisory(name, fullReport.vulnerabilities)) {
-      return fail(`Full audit vulnerability ${name} does not resolve exclusively to the temporary allowed advisory`);
+/** Check npm's documented exit status against the parsed findings before applying policy. */
+export function evaluateAuditResults(fullResult, productionResult) {
+  for (const [label, result] of [["Full", fullResult], ["Production", productionResult]]) {
+    if (!isRecord(result)) return fail(`${label} npm audit result is malformed`);
+    if (result.error) return fail(result.error);
+    if (![0, 1].includes(result.status)) {
+      return fail(`${label} npm audit exited with an unexpected status; inspect network, registry, and npm output`);
     }
-    allowed.push({ name, severity: vulnerability.severity });
   }
-  return { ok: true, errors: [], allowed, fullCounts, productionCounts };
+
+  const result = evaluateAuditReports(fullResult.report, productionResult.report);
+  if (!result.ok) return result;
+
+  const fullHasFindings = Object.values(result.fullCounts).some((count) => count > 0);
+  const productionHasFindings = Object.values(result.productionCounts).some((count) => count > 0);
+  if ((fullResult.status === 1) !== fullHasFindings) {
+    return fail("Full npm audit exit status does not match its reported findings");
+  }
+  if ((productionResult.status === 1) !== productionHasFindings) {
+    return fail("Production npm audit exit status does not match its reported findings");
+  }
+
+  return result;
+}
+
+/** Convert npm's JSON stdout into an audit result, keeping malformed output fail-closed. */
+export function parseAuditOutput(stdout, status, stderr = "") {
+  let report;
+  try {
+    report = JSON.parse(stdout);
+  } catch {
+    return {
+      error: `Could not parse npm audit JSON (exit ${status ?? "unknown"}): ${stderr.trim() || "empty output"}`,
+    };
+  }
+  return { report, status, stderr };
 }
 
 function npmCommand() {
@@ -101,10 +133,7 @@ function runAudit(omitDev) {
   const args = [...npm.prefix, "audit", "--json", ...(omitDev ? ["--omit=dev"] : [])];
   const result = spawnSync(npm.command, args, { encoding: "utf8", shell: false, maxBuffer: 16 * 1024 * 1024 });
   if (result.error) return { error: `Could not run npm audit: ${result.error.message}` };
-  let report;
-  try { report = JSON.parse(result.stdout); }
-  catch { return { error: `Could not parse npm audit JSON (exit ${result.status ?? "unknown"}): ${result.stderr?.trim() || "empty output"}` }; }
-  return { report, status: result.status, stderr: result.stderr };
+  return parseAuditOutput(result.stdout, result.status, result.stderr ?? "");
 }
 
 export function runSecurityAudit() {
@@ -112,16 +141,7 @@ export function runSecurityAudit() {
   if (full.error) return fail(full.error);
   const production = runAudit(true);
   if (production.error) return fail(production.error);
-  if (![0, 1].includes(full.status) || ![0, 1].includes(production.status)) {
-    return fail("npm audit exited with an unexpected status; inspect network, registry, and npm output");
-  }
-  const result = evaluateAuditReports(full.report, production.report);
-  if (!result.ok) return result;
-  // npm exits 1 for findings at any severity; production policy only rejects high/critical.
-  if ((full.status === 1 && result.allowed.length === 0) || (production.status === 1 && Object.keys(production.report.vulnerabilities).length === 0)) {
-    return fail("npm audit exited unsuccessfully without reported findings; inspect network, registry, and npm output");
-  }
-  return result;
+  return evaluateAuditResults(full, production);
 }
 
 function main() {
@@ -131,8 +151,7 @@ function main() {
     process.exitCode = 1;
     return;
   }
-  console.log(`Full dependency audit: ${JSON.stringify(result.fullCounts)}; allowed advisory-chain records: ${result.allowed.length}.`);
-  if (result.allowed.length) console.log(`Temporary exception: ${ALLOWED_ADVISORY_URL} (expires ${EXCEPTION_EXPIRES_AT}); records: ${result.allowed.map((item) => `${item.name}:${item.severity}`).join(", ")}`);
+  console.log(`Full dependency audit: ${JSON.stringify(result.fullCounts)}; findings: 0.`);
   console.log(`Production dependency audit: ${JSON.stringify(result.productionCounts)}; high/critical findings: 0.`);
 }
 
