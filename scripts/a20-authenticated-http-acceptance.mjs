@@ -106,10 +106,12 @@ async function request(session, method, route, body) {
   const url = new URL(route, base);
   const headers = { cookie: session.jar.header(), accept: "application/json" };
   const init = { method, redirect: "manual", headers };
-  if (body !== undefined) {
-    headers["content-type"] = "application/json";
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
     headers.origin = base.origin;
     headers.referer = new URL("/dashboard", base).href;
+  }
+  if (body !== undefined) {
+    headers["content-type"] = "application/json";
     init.body = JSON.stringify(body);
   }
   return boundedFetch(url, init);
@@ -143,8 +145,10 @@ function result(role, receipts) {
     path,
     status: response.status,
     authorizedBoundary: response.status === 403 && boundaryError,
+    scopedNotFound: response.status === 404 && response.scopedNotFound === true,
   }));
-  const failed = receipts.filter(({ response, boundaryError }) => response.status !== 403 || !boundaryError);
+  const failed = receipts.filter(({ response, boundaryError }) =>
+    !(response.status === 403 && boundaryError) && !(response.status === 404 && response.scopedNotFound === true));
   const safe = { suite: "A20 authenticated API boundary", actorRole: role, receipts: summarized, denied: failed.length === 0 };
   console.log(JSON.stringify(safe));
   if (failed.length) process.exitCode = 1;
@@ -173,7 +177,6 @@ function protectedMutations(businessId) {
       reply: "A20 synthetic unauthorized draft probe.",
       expectedVersion: 1,
     }],
-    ["POST", "/api/team", { email: "probe@a20.example.test" }],
     ["POST", "/api/google/disconnect", { businessId }],
     ["POST", `/api/stripe/portal?business_id=${encodeURIComponent(businessId)}`],
   ];
@@ -190,19 +193,59 @@ async function outsiderProbe() {
     ["GET", `/api/google/connection?businessId=${encodeURIComponent(businessId)}`],
     ["GET", `/api/google/oauth/start?businessId=${encodeURIComponent(businessId)}`],
     ...protectedMutations(businessId),
+    ["DELETE", `/api/team/members/${encodeURIComponent(credentials.actors.member.id)}`, undefined, true],
   ];
   const receipts = [];
-  for (const [method, route, body] of routeSet) {
+  for (const [method, route, body, scopedNotFoundExpected] of routeSet) {
     const response = await request(session, method, route, body);
     const errorBody = await response.clone().json().catch(() => ({}));
     const boundaryError = /business|workspace|member|owner|access|agent|authorized/i.test(String(errorBody.error ?? ""));
-    receipts.push({ method, path: new URL(route, base).pathname, response, boundaryError });
+    const scopedNotFound = scopedNotFoundExpected === true && response.status === 404 && errorBody.error === "Member not found.";
+    receipts.push({ method, path: new URL(route, base).pathname, response: Object.assign(response, { scopedNotFound }), boundaryError });
   }
   result("outsider", receipts);
   const after = fixtureSnapshot();
   const unchanged = equalSnapshot(before, after);
   console.log(JSON.stringify({ suite: "A20 outsider denied writes", fixtureUnchanged: unchanged }));
   if (!unchanged) process.exitCode = 1;
+}
+
+async function securityProbe() {
+  const session = await authenticate("owner");
+  const pages = ["/dashboard", "/dashboard/agents/review-replies/reviews"];
+  const receipts = [];
+  for (const route of pages) {
+    const response = await boundedFetch(new URL(route, base), {
+      headers: { cookie: session.jar.header(), accept: "text/html" },
+      redirect: "manual",
+    });
+    const html = await response.text();
+    const enforced = response.headers.get("content-security-policy") ?? "";
+    const reportOnly = response.headers.get("content-security-policy-report-only") ?? "";
+    const nonce = enforced.match(/\bnonce-([^'\s;]+)/)?.[1] ?? "";
+    const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+      .filter(([, attrs, body]) => !/\bsrc\s*=/i.test(attrs) && body.trim() && !/\btype\s*=\s*["'](?:application\/json|application\/ld\+json|importmap)["']/i.test(attrs));
+    const nonces = inlineScripts.map(([, attrs]) => attrs.match(/\bnonce\s*=\s*(["'])(.*?)\1/i)?.[2] ?? "");
+    receipts.push({
+      route,
+      status: response.status,
+      nonce,
+      inlineScriptCount: inlineScripts.length,
+      inlineNoncesMatch: Boolean(nonce) && inlineScripts.length > 0 && nonces.every((value) => value === nonce),
+      reportOnlyTrustedTypes: /require-trusted-types-for\s+'script'/i.test(reportOnly) && /trusted-types/i.test(reportOnly),
+      trustedTypesEnforced: /require-trusted-types-for\s+'script'/i.test(enforced),
+      enforcedCspPresent: Boolean(enforced),
+      authShellRendered: html.includes("Dashboard") || html.includes("review inbox"),
+    });
+  }
+  const success = receipts.length === 2 && receipts.every((r) => r.status === 200 && r.inlineNoncesMatch &&
+    r.reportOnlyTrustedTypes && !r.trustedTypesEnforced && r.enforcedCspPresent && r.authShellRendered);
+  const rotating = Boolean(receipts[0]?.nonce && receipts[1]?.nonce && receipts[0].nonce !== receipts[1].nonce);
+  const safe = receipts.map(({ route, status, inlineScriptCount, inlineNoncesMatch, reportOnlyTrustedTypes, trustedTypesEnforced, enforcedCspPresent, authShellRendered }) => ({
+    route, status, inlineScriptCount, inlineNoncesMatch, reportOnlyTrustedTypes, trustedTypesEnforced, enforcedCspPresent, authShellRendered,
+  }));
+  console.log(JSON.stringify({ suite: "A20 signed-in CSP and hydration", actorRole: "owner", rotatingNonce: rotating, pages: safe, pass: success && rotating }));
+  if (!success || !rotating) process.exitCode = 1;
 }
 
 async function removedMemberProbe() {
@@ -218,8 +261,36 @@ async function removedMemberProbe() {
   if (!teamBefore.ok || teamState.role !== "member" || teamState.canManage !== false) {
     throw new Error("member team access response did not enforce read-only role controls");
   }
+  const replySettingsBefore = await request(session, "GET", `/api/settings/reply?businessId=${encodeURIComponent(credentials.business.id)}`);
+  const replySettingsState = await replySettingsBefore.clone().json().catch(() => ({}));
+  if (!replySettingsBefore.ok || replySettingsState.role !== "member" || replySettingsState.isOwner !== false || replySettingsState.canManageAutoReply !== false) {
+    throw new Error("member Reply settings response did not enforce owner-only controls");
+  }
+  const googleConnectionBefore = await request(session, "GET", `/api/google/connection?businessId=${encodeURIComponent(credentials.business.id)}`);
+  const googleState = await googleConnectionBefore.clone().json().catch(() => ({}));
+  if (!googleConnectionBefore.ok || googleState.canManage !== false) throw new Error("member Google connection response exposed owner controls");
   const billingBefore = await request(session, "POST", `/api/stripe/portal?business_id=${encodeURIComponent(credentials.business.id)}`);
   if (billingBefore.status !== 403) throw new Error(`member billing portal unexpectedly returned ${billingBefore.status}`);
+  const beforeOwnerMutations = fixtureSnapshot();
+  const ownerMutations = [
+    ["POST", "/api/review-booster/settings", { businessId: credentials.business.id, business_name: "A20 unauthorized mutation probe" }],
+    ["PUT", "/api/settings/reply", { businessId: credentials.business.id, businessName: "A20 unauthorized mutation probe" }],
+    ["POST", "/api/team", { email: "probe@a20.example.test" }],
+    ["DELETE", `/api/team/members/${encodeURIComponent(credentials.actors.owner.id)}`],
+    ["POST", "/api/google/disconnect", { businessId: credentials.business.id }],
+  ];
+  const ownerControlReceipts = [];
+  for (const [method, route, body] of ownerMutations) {
+    const response = await request(session, method, route, body);
+    const errorBody = await response.clone().json().catch(() => ({}));
+    const boundaryError = /business|workspace|member|owner|access|authorized/i.test(String(errorBody.error ?? ""));
+    ownerControlReceipts.push({ method, path: new URL(route, base).pathname, response, boundaryError });
+  }
+  result("member-owner-controls", ownerControlReceipts);
+  const afterOwnerMutations = fixtureSnapshot();
+  const ownerControlsUnchanged = equalSnapshot(beforeOwnerMutations, afterOwnerMutations);
+  console.log(JSON.stringify({ suite: "A20 member owner controls", fixtureUnchanged: ownerControlsUnchanged }));
+  if (!ownerControlsUnchanged) process.exitCode = 1;
   console.log(JSON.stringify({ suite: "A20 member session prepared", actorRole: "member", beforeRemovalStatus: before.status }));
   console.log("Remove the fixture member through the owner UI, then press Enter here to probe the same persisted Auth.js session.");
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -252,5 +323,6 @@ async function removedMemberProbe() {
 
 const action = process.argv[2];
 if (action === "outsider") await outsiderProbe();
+else if (action === "security") await securityProbe();
 else if (action === "member-removal") await removedMemberProbe();
-else throw new Error("usage: node scripts/a20-authenticated-http-acceptance.mjs <outsider|member-removal>");
+else throw new Error("usage: node scripts/a20-authenticated-http-acceptance.mjs <outsider|security|member-removal>");

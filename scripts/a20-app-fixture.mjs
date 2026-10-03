@@ -6,7 +6,7 @@ import {
   realpathSync, rmSync, statSync, writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { baseA20ChildEnv, isExpectedA20App, resolveFixturePath, validateA20Marker } from "./a20-app-fixture-core.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -283,7 +283,8 @@ function buildAndStart(appPort) {
   const preload = join(ROOT, "scripts", "a20-preload.mjs");
   if (!existsSync(preload)) throw new Error("A20 bridge/preload must be integrated before building the app");
   const env = { ...childBaseEnv(appPort, preload), PORT: String(appPort), A20_DATABASE_URL: runtimeDatabaseUrl };
-  const nodeArgs = ["--import", preload];
+  const preloadUrl = pathToFileURL(preload).href;
+  const nodeArgs = ["--import", preloadUrl];
   const nextBin = join(ROOT, "node_modules", "next", "dist", "bin", "next");
   const logFd = openOutputLog();
   try {

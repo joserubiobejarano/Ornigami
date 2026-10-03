@@ -1,4 +1,5 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 
 export function resolveFixturePath(fixtureRoot, targetPath) {
   const root = resolve(fixtureRoot);
@@ -21,10 +22,12 @@ export function validateA20Marker(marker, expected) {
 
 export function isExpectedA20App(commandLine, { preload, nextBin }) {
   const normalized = commandLine?.toLowerCase();
+  const preloadPath = preload.toLowerCase();
+  const preloadUrl = pathToFileURL(preload).href.toLowerCase();
   return Boolean(normalized && /(?:^|[\\/\s])node(?:\.exe)?(?:["\s]|$)/.test(normalized)
     && normalized.includes("next")
     && normalized.includes("start")
-    && normalized.includes(preload.toLowerCase())
+    && (normalized.includes(preloadPath) || normalized.includes(preloadUrl))
     && normalized.includes(nextBin.toLowerCase()));
 }
 
@@ -33,7 +36,7 @@ export function baseA20ChildEnv(inherited, { appPort, preload }) {
   for (const key of ["PATH", "SystemRoot", "ComSpec", "TEMP", "TMP", "WINDIR"]) {
     if (inherited[key]) env[key] = inherited[key];
   }
-  const normalizedPreload = preload.replaceAll("\\", "/");
+  const normalizedPreload = pathToFileURL(preload).href;
   return {
     ...env,
     NODE_ENV: "production",

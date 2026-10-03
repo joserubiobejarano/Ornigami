@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { baseA20ChildEnv, isExpectedA20App, resolveFixturePath, validateA20Marker } from "../scripts/a20-app-fixture-core.mjs";
 
 test("fixture cleanup path guard rejects the root, its parent and prefix lookalikes", () => {
@@ -21,21 +22,24 @@ test("fixture marker guard requires task, state, target database and canonical p
 });
 
 test("shutdown only recognizes a recorded A20 Next process with this preload and binary", () => {
-  const paths = { preload: "C:/work/scripts/a20-preload.mjs", nextBin: "C:/work/node_modules/next/dist/bin/next" };
-  assert.equal(isExpectedA20App(`node --import ${paths.preload} ${paths.nextBin} start -H 127.0.0.1`, paths), true);
+  const root = resolve("fixture-test");
+  const paths = { preload: join(root, "scripts", "a20-preload.mjs"), nextBin: join(root, "node_modules", "next", "dist", "bin", "next") };
+  const preloadUrl = pathToFileURL(paths.preload).href;
+  assert.equal(isExpectedA20App(`node.exe --import ${preloadUrl} ${paths.nextBin} start -H 127.0.0.1`, paths), true);
   assert.equal(isExpectedA20App(`node ${paths.nextBin} start`, paths), false);
   assert.equal(isExpectedA20App(`unrelated.exe --import ${paths.preload} ${paths.nextBin} start`, paths), false);
 });
 
 test("app child environment drops inherited production, proxy, PostgreSQL and Node options", () => {
+  const preload = join(resolve("work"), "scripts", "a20-preload.mjs");
   const env = baseA20ChildEnv({
     PATH: "safe-path", SystemRoot: "C:/Windows", DATABASE_URL: "postgres://production",
     HTTP_PROXY: "http://proxy.invalid", NODE_OPTIONS: "--require=secret.js", PGSERVICEFILE: "production-service",
     RESEND_API_KEY: "real-provider-key", AUTH_SECRET: "real-auth-secret",
-  }, { appPort: 43021, preload: "C:\\work\\scripts\\a20-preload.mjs" });
+  }, { appPort: 43021, preload });
   assert.equal(env.PATH, "safe-path");
   assert.equal(env.PORT, "43021");
   assert.equal(env.NEXT_PUBLIC_APP_URL, "http://127.0.0.1:43021");
-  assert.equal(env.NODE_OPTIONS, '--import="C:/work/scripts/a20-preload.mjs"');
+  assert.equal(env.NODE_OPTIONS, `--import="${pathToFileURL(preload).href}"`);
   for (const key of ["DATABASE_URL", "HTTP_PROXY", "PGSERVICEFILE", "RESEND_API_KEY", "AUTH_SECRET"]) assert.equal(env[key], undefined);
 });
