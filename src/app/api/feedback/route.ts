@@ -41,8 +41,10 @@ export async function POST(req: Request) {
     `;
 
     return NextResponse.json({ ok: true });
-  } catch (e: unknown) {
-    safeLogger.error("feedback.post.failed", { error: e instanceof Error ? e.message : "unknown" });
+  } catch {
+    // Request bodies can contain contact details or other private text. Keep
+    // operational logs useful without copying an exception that may embed data.
+    safeLogger.error("feedback.post.failed", { error: "internal_error" });
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
