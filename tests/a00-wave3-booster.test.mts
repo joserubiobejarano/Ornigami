@@ -24,7 +24,11 @@ function renderClientWithHooks<TProps extends object>(component: (props: TProps)
   react.useState = (initial: unknown) => {
     const index = cursor++;
     if (!(index in states)) states[index] = typeof initial === "function" ? (initial as () => unknown)() : initial;
-    return [states[index], (next: unknown) => { states[index] = typeof next === "function" ? (next as (value: unknown) => unknown)(states[index]) : next; }];
+    return [states[index], (next: unknown) => {
+      states[index] = typeof next === "function" ? (next as (value: unknown) => unknown)(states[index]) : next;
+      const observer = react.__onStateChange;
+      if (typeof observer === "function") (observer as (value: unknown, index: number) => void)(states[index], index);
+    }];
   };
   react.useRef = (initial: unknown) => {
     const index = cursor++;
@@ -225,6 +229,8 @@ test("Review Booster badges give distinct labels to durable delivery states", ()
 
 test("delivery recovery checks only the existing provider email and refreshes metadata only after positive evidence", async () => {
   const react: Record<string, unknown> = {};
+  const stateChanges: unknown[] = [];
+  react.__onStateChange = (value: unknown) => stateChanges.push(value);
   const table = loadTsx<{ RecentVisitsTable(props: Record<string, unknown>): unknown }>("src/modules/review-booster/components/recent-visits-table.tsx", {
     react,
     "next/link": { default: "a" },
@@ -284,6 +290,17 @@ test("delivery recovery checks only the existing provider email and refreshes me
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.deepEqual(successCalls.map((call) => call.method), ["POST", "GET"], "positive evidence refreshes the page projection without sending another email");
     assert.match(successCalls[1]!.url, /businessId=business-1/);
+
+    stateChanges.length = 0;
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === "POST") return Response.json({ status: "resolved", deliveryState: "accepted", deliveryStatus: "delivered" });
+      throw new TypeError("offline after reconciliation");
+    }) as typeof fetch;
+    (checkButton!.props.onClick as () => void)();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const messages = stateChanges.filter((value) => value && typeof value === "object" && "visit-unknown" in value).at(-1) as Record<string, string> | undefined;
+    assert.match(messages?.["visit-unknown"] ?? "", /Provider status was recorded, but visit details could not refresh/);
+    assert.doesNotMatch(messages?.["visit-unknown"] ?? "", /reservation remains in place/);
   } finally {
     globalThis.fetch = savedFetch;
   }

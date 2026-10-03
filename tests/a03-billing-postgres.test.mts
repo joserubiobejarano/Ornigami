@@ -276,6 +276,7 @@ test("A03 billing persistence is fenced, atomic, durable and migration-idempoten
   } finally {
     if (started) execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-m", "immediate", "-w", "stop"], { stdio: "ignore" });
     const resolvedDir = resolve(dir);
-    if (resolvedDir.startsWith(safePrefix)) rmSync(resolvedDir, { recursive: true, force: true });
+    // Windows can retain a short-lived file handle after pg_ctl confirms exit.
+    if (resolvedDir.startsWith(safePrefix)) rmSync(resolvedDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });

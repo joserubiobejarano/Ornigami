@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync, execFile } from "node:child_process";
+import { execFileSync, execFile, spawn } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import { createServer } from "node:net";
@@ -35,6 +35,19 @@ function psqlFile(path: string): string {
 async function psqlAsync(query: string): Promise<string> {
   const result = await execFileAsync(pgExe("psql"), ["-X","-q","-A","-t","-F","|","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p",String(port),"-U","postgres","-d","postgres","-c",query], { encoding: "utf8" });
   return result.stdout.trim();
+}
+function openPsqlSession() {
+  const child = spawn(pgExe("psql"), ["-X","-q","-A","-t","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p",String(port),"-U","postgres","-d","postgres","-f","-"], { stdio: ["pipe","pipe","pipe"] });
+  let output = "";
+  let error = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk: string) => { output += chunk; });
+  child.stderr.setEncoding("utf8").on("data", (chunk: string) => { error += chunk; });
+  const done = new Promise<void>((resolveDone, reject) => {
+    child.once("error", reject);
+    child.once("close", (code) => code === 0 ? resolveDone() : reject(new Error(error || `psql exited ${code}`)));
+  });
+  void done.catch(() => undefined);
+  return { write: (statement: string) => child.stdin.write(statement), end: () => { child.stdin.end(); return done; }, output: () => output };
 }
 const q = (v: string) => `'${v.replaceAll("'", "''")}'`;
 const owner = "00000000-0000-4000-8000-000000000001";
@@ -310,17 +323,42 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
     psql(`SELECT a09_save_human_reply_draft('${business}','freeze-post-null','null-check text',0);`);
     const nullPostToken=uuid();
     assert.equal(psql(`SELECT ok FROM public.a09_claim_reply_post('${business}','freeze-post-null','null-check text',1,'manual','${nullPostToken}')`),"t");
-    const freezeStart=psqlAsync(`BEGIN;
-      SELECT pg_advisory_xact_lock(hashtextextended('billing-customer:${owner}',0));
-      SELECT pg_advisory_xact_lock(hashtextextended('billing-checkout-owner:${owner}',0));
-      UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';
-      SELECT pg_sleep(0.5);
-      COMMIT;`);
-    await new Promise((resolvePromise)=>setTimeout(resolvePromise,100));
-    const finishAccepted=psqlAsync(`SELECT public.a09_finish_reply_post('${business}','freeze-post','known safe text','${postToken}',true)`);
-    assert.equal(await finishAccepted,"t",
-      "accepted Google result racing deletion freeze is durably receipted");
-    await freezeStart;
+    const freezeStart=openPsqlSession();
+    let freezeReleased=false;
+    let finishAccepted: Promise<string> | undefined;
+    const releaseFreeze=async(commit:boolean)=>{
+      if(freezeReleased)return;
+      freezeReleased=true;
+      freezeStart.write(commit?"COMMIT;\n":"ROLLBACK;\n");
+      await freezeStart.end();
+    };
+    try {
+      freezeStart.write(`BEGIN;
+        SELECT pg_advisory_xact_lock(hashtextextended('billing-customer:${owner}',0));
+        SELECT pg_advisory_xact_lock(hashtextextended('billing-checkout-owner:${owner}',0));
+        UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';
+        \\echo A09_FREEZE_HELD\n`);
+      const freezeReadyDeadline=Date.now()+15_000;
+      while(Date.now()<freezeReadyDeadline&&!freezeStart.output().includes("A09_FREEZE_HELD")) await new Promise((resolvePromise)=>setTimeout(resolvePromise,25));
+      assert.ok(freezeStart.output().includes("A09_FREEZE_HELD"),"freeze transaction holds the owner row before the accepted writer starts");
+
+      finishAccepted=psqlAsync(`SET application_name='a09_accepted_post_writer';
+        SELECT public.a09_finish_reply_post('${business}','freeze-post','known safe text','${postToken}',true)`);
+      void finishAccepted.catch(()=>undefined);
+      let writerBlocked=false;
+      const writerDeadline=Date.now()+15_000;
+      while(Date.now()<writerDeadline){
+        if(psql(`SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='a09_accepted_post_writer'
+          AND state='active' AND wait_event_type='Lock')`)==="t") {writerBlocked=true;break;}
+        await new Promise((resolvePromise)=>setTimeout(resolvePromise,25));
+      }
+      assert.equal(writerBlocked,true,"accepted-result writer is blocked by the uncommitted deletion freeze");
+      await releaseFreeze(true);
+      assert.equal(await finishAccepted,"t","accepted Google result racing deletion freeze is durably receipted");
+    } finally {
+      await releaseFreeze(false);
+      await finishAccepted?.catch(()=>undefined);
+    }
     assert.equal(psql(`SELECT public.a09_finish_reply_post('${business}','freeze-post-null','null-check text','${nullPostToken}',NULL::boolean)`),"f",
       "null provider outcome is rejected after freeze without consuming its native claim");
     assert.equal(psql(`SELECT posting_token::text FROM public.review_reply_draft_state

@@ -139,6 +139,7 @@ export function RecentVisitsTable({
   async function checkProviderStatus(visit: FollowupVisit) {
     if (!reconciliationEnabled || !visit.delivery_id || loading || navigationRef.current || reconciliationRef.current) return;
     reconciliationRef.current = true;
+    let providerStatusRecorded = false;
     setReconcilingId(visit.delivery_id);
     setReconciliationMessages((current) => ({ ...current, [visit.id]: "Checking the existing provider email. No new email will be sent." }));
     try {
@@ -170,6 +171,7 @@ export function RecentVisitsTable({
         setReconciliationMessages((current) => ({ ...current, [visit.id]: "Provider status could not be confirmed. The reservation remains in place; do not create a duplicate request." }));
         return;
       }
+      providerStatusRecorded = true;
 
       // Re-read the bounded page to show the durable webhook/reconciliation projection.
       const cursor = pageCursors[pageIndex] ?? null;
@@ -190,7 +192,9 @@ export function RecentVisitsTable({
     } catch {
       setReconciliationMessages((current) => ({
         ...current,
-        [visit.id]: "Provider status could not be confirmed. The reservation remains in place; do not retry or create another request.",
+        [visit.id]: providerStatusRecorded
+          ? "Provider status was recorded, but visit details could not refresh. Reload the dashboard to view the latest status. No new email was sent."
+          : "Provider status could not be confirmed. The reservation remains in place; do not retry or create another request.",
       }));
     } finally {
       reconciliationRef.current = false;

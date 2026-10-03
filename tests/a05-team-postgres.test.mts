@@ -37,6 +37,27 @@ function psqlAsync(port: number, statement: string): Promise<string> {
   });
 }
 
+function openPsqlSession(port: number) {
+  const child = spawn(pgExe("psql"), [
+    "-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port),
+    "-U", "postgres", "-d", "postgres", "-f", "-",
+  ], { stdio: ["pipe", "pipe", "pipe"] });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk: string) => { stdout += chunk; });
+  child.stderr.setEncoding("utf8").on("data", (chunk: string) => { stderr += chunk; });
+  const done = new Promise<void>((resolvePromise, reject) => {
+    child.once("error", reject);
+    child.once("close", (code) => code === 0 ? resolvePromise() : reject(new Error(stderr || `psql exited ${code}`)));
+  });
+  void done.catch(() => undefined);
+  return {
+    write: (statement: string) => child.stdin.write(statement),
+    end: () => { child.stdin.end(); return done; },
+    output: () => stdout,
+  };
+}
+
 function json(port: number, query: string): Record<string, unknown> {
   return JSON.parse(psql(port, query)) as Record<string, unknown>;
 }
@@ -238,34 +259,66 @@ test("A05 migration and team lifecycle serialize seats, expiry, removal, and cro
     const acceptedId = psql(port, `SELECT id FROM public.team_invitations WHERE business_id='${bizC}' AND token_hash='${acceptTokenA}'`);
     assert.equal(psql(port, `SELECT public.team_cleanup_invitation('${acceptedId}','${acceptTokenA}')`), "f");
 
-    // A lock wait that crosses the stored deadline cannot use transaction-start now().
+    // Start acceptance in a transaction before expiry, prove it is blocked behind
+    // the business lock, then release only after the stored deadline has passed.
     const expiringToken = "7".repeat(64);
     await reserve(bizE, ownerE, "person11@example.test", expiringToken);
-    psql(port, `UPDATE public.team_invitations SET expires_at=clock_timestamp()+interval '2 seconds' WHERE token_hash='${expiringToken}';`);
-    const heldBusiness = psqlAsync(port, `BEGIN; SELECT id FROM public.businesses WHERE id='${bizE}' FOR UPDATE; SELECT pg_sleep(3); COMMIT;`);
-    let lockHolderFound = false;
-    for (let attempt = 0; attempt < 20; attempt++) {
-      if (psql(port, `SELECT count(*) FROM pg_stat_activity WHERE pid<>pg_backend_pid() AND wait_event='PgSleep' AND query LIKE '%pg_sleep(3)%'`) === "1") {
-        lockHolderFound = true;
-        break;
+    const heldBusiness = openPsqlSession(port);
+    let holderReleased = false;
+    let duringExpiry: Promise<string> | undefined;
+    const releaseHolder = async (commit: boolean) => {
+      if (holderReleased) return;
+      holderReleased = true;
+      heldBusiness.write(commit ? "COMMIT;\n" : "ROLLBACK;\n");
+      await heldBusiness.end();
+    };
+    try {
+      heldBusiness.write(`BEGIN; SELECT id FROM public.businesses WHERE id='${bizE}' FOR UPDATE;
+        \\echo A05_EXPIRY_LOCK_HELD\n`);
+      const readinessDeadline = Date.now() + 15_000;
+      while (Date.now() < readinessDeadline && !heldBusiness.output().includes("A05_EXPIRY_LOCK_HELD")) await delay(25);
+      assert.ok(heldBusiness.output().includes("A05_EXPIRY_LOCK_HELD"), "business mutex is held before acceptance begins");
+
+      duringExpiry = psqlAsync(port, `SET application_name='a05_expiring_accept'; BEGIN;
+        SELECT (now()<expires_at)::text FROM public.team_invitations WHERE token_hash='${expiringToken}';
+        SELECT public.team_accept_invitation('${userG}','${expiringToken}')::text; COMMIT;`);
+      void duringExpiry.catch(() => undefined);
+      const acceptanceDeadline = Date.now() + 15_000;
+      let acceptWaitFound = false;
+      while (Date.now() < acceptanceDeadline) {
+        const waiting = psql(port, `SELECT count(*) FROM pg_stat_activity a
+          JOIN public.team_invitations i ON i.token_hash='${expiringToken}'
+          WHERE a.application_name='a05_expiring_accept' AND a.state='active'
+            AND a.wait_event_type='Lock' AND a.xact_start<i.expires_at`);
+        if (waiting === "1") { acceptWaitFound = true; break; }
+        await delay(25);
       }
-      await delay(25);
+      assert.equal(acceptWaitFound, true, "acceptance transaction began before expiry and waits behind the business lock");
+      const acceptanceStart = new Date(psql(port, `SELECT xact_start::text FROM pg_stat_activity
+        WHERE application_name='a05_expiring_accept' AND state='active' AND wait_event_type='Lock'`)).getTime();
+      assert.ok(Number.isFinite(acceptanceStart), "blocked acceptance exposes its transaction start");
+      heldBusiness.write(`UPDATE public.team_invitations SET expires_at=(
+          SELECT xact_start + (clock_timestamp()-xact_start)/2 FROM pg_stat_activity
+          WHERE application_name='a05_expiring_accept' AND state='active' AND wait_event_type='Lock'
+        ) WHERE token_hash='${expiringToken}' RETURNING expires_at::text;
+        SELECT ((i.expires_at>a.xact_start AND i.expires_at<clock_timestamp())::text)||'|'||i.expires_at::text
+          FROM public.team_invitations i CROSS JOIN pg_stat_activity a
+          WHERE i.token_hash='${expiringToken}' AND a.application_name='a05_expiring_accept';
+        \\echo A05_DEADLINE_SET\n`);
+      const deadlineSet = Date.now() + 15_000;
+      while (Date.now() < deadlineSet && !heldBusiness.output().includes("A05_DEADLINE_SET")) await delay(25);
+      assert.ok(heldBusiness.output().includes("A05_DEADLINE_SET"), "holder set the deadline after acceptance began");
+      assert.ok(heldBusiness.output().includes("true|"), "stored deadline is after PostgreSQL transaction start and before clock_timestamp()");
+      await releaseHolder(true);
+      assert.equal(psql(port, `SELECT (expires_at<clock_timestamp())::text FROM public.team_invitations WHERE token_hash='${expiringToken}'`), "true",
+        "committed deadline is already expired at lock release");
+      const acceptedOutput = (await duringExpiry).split(/\r?\n/);
+      assert.equal(acceptedOutput[0], "true", "transaction-start now() was still before expiry");
+      assert.equal((JSON.parse(acceptedOutput[1]) as { status: string }).status, "invalid", "post-lock clock_timestamp() rejects the expired invitation");
+    } finally {
+      await releaseHolder(false);
+      await duringExpiry?.catch(() => undefined);
     }
-    assert.ok(lockHolderFound, "business row lock holder started before the acceptance request");
-    const duringExpiry = psqlAsync(port, `SELECT public.team_accept_invitation('${userG}','${expiringToken}')::text`);
-    let acceptWaitFound = false;
-    for (let attempt = 0; attempt < 40; attempt++) {
-      const waiting = psql(port, `SELECT count(*) FROM pg_stat_activity WHERE pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE '%team_accept_invitation%'`);
-      if (waiting === "1") {
-        acceptWaitFound = true;
-        break;
-      }
-      await delay(50);
-    }
-    assert.ok(acceptWaitFound, "acceptance queued on the business mutex before the expiry deadline");
-    assert.equal(psql(port, `SELECT (expires_at>clock_timestamp())::text FROM public.team_invitations WHERE token_hash='${expiringToken}'`), "true");
-    await heldBusiness;
-    assert.equal((JSON.parse(await duringExpiry) as { status: string }).status, "invalid");
 
     // Old overbooked data cannot turn a pending invitation into an extra member.
     const legacy = [userA, userB, userC, userD];
