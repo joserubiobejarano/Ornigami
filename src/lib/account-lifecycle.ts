@@ -1,6 +1,6 @@
 import { sql } from "@/lib/db/neon";
 
-export type LifecycleAdmission = { result: "claimed" | "busy" | "frozen" | "uncertain" | "done"; token: string | null };
+export type LifecycleAdmission = { result: "claimed" | "busy" | "frozen" | "uncertain" | "done" | "failed"; token: string | null };
 
 export async function beginAccountLifecycleOperation(input: {
   userId: string;
@@ -16,7 +16,7 @@ export async function beginAccountLifecycleOperation(input: {
   const row = rows[0] as { result?: string; token?: string | null } | undefined;
   const result = row?.result;
   return {
-    result: result === "claimed" || result === "busy" || result === "frozen" || result === "uncertain" || result === "done" ? result : "frozen",
+    result: result === "claimed" || result === "busy" || result === "frozen" || result === "uncertain" || result === "done" || result === "failed" ? result : "frozen",
     token: row?.token ?? null,
   };
 }

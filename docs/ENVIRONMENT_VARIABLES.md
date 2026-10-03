@@ -40,7 +40,7 @@ The old `STRIPE_PRICE_STARTER`, `STRIPE_REVIEW_REPLIES_PRICE_ID`, and `STRIPE_RE
 - `TOKEN_ENCRYPTION_KEY` — preferred production key for encrypted Google tokens; `AUTH_SECRET` is the fallback.
 - `REVIEW_BOOSTER_UNSUBSCRIBE_SECRET` — preferred signing secret for unsubscribe and review-link tokens; auth secrets are fallbacks.
 - `ALLOW_DASHBOARD_WITHOUT_GBP` — optional development/preview behavior flag.
-- `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` — Sentry runtime/build configuration where enabled.
+- `NEXT_PUBLIC_SENTRY_DSN` — Sentry runtime transport used by instrumentation and cron alerts; a missing/failed transport is recorded and retried. `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` configure build/upload integration where enabled.
 - `NODE_ENV` — standard `development`, `test`, or `production` mode.
 
 ## Local example

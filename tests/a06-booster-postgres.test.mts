@@ -93,6 +93,7 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
     const reviewDb = loadTs<typeof import("../src/modules/review-booster/services/review-booster-db.service.js")>(
       "src/modules/review-booster/services/review-booster-db.service.ts", {
         overrides: {
+          "@/lib/api-security": { HttpError: class extends Error { status: number; constructor(status: number, message: string) { super(message); this.status = status; } } },
           "@/lib/db/neon": { sql },
           "@/lib/billing/plans": { PLANS: { booster: { monthlyRequestAllowance: 500 }, complete: { monthlyRequestAllowance: 1500 } }, isPlanId: (value: unknown) => value === "booster" || value === "complete" },
           "@/lib/followup-retry-policy": { MAX_FOLLOWUP_ATTEMPTS: 3 },
@@ -319,6 +320,6 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
     }
     const resolved = resolve(dir);
     assert.ok(resolved.startsWith(`${nextDir}${sep}`), "test cleanup remains inside the isolated .next directory");
-    rmSync(resolved, { recursive: true, force: true });
+    rmSync(resolved, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });

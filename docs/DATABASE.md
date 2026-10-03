@@ -31,7 +31,7 @@ Neon Postgres is the database. `neon/migrations` is the only schema source of tr
 24. `031_google_location_selection.sql` — explicit selected location and connection generations
 25. `032_workspace_bootstrap.sql` — serialized workspace admission
 
-Unused reservations remain unused. Existing deployments receive additive 022/024/026 without replaying or renumbering earlier applied files.
+Wave 4 adds 023 booking intake, 027 cron operations, and 033–038 lifecycle guards/finalization/manual-CSV admission. See the canonical [migration map](../neon/README.md). 018 remains unused and 025/028–030 remain reserved. Existing deployments receive only missing reviewed files without renumbering earlier applied migrations.
 
 ## Main schema areas
 
@@ -82,4 +82,6 @@ Booster captures immutable provider payloads and stable idempotency keys in `boo
 
 `review_reply_draft_state` selects the one current version; historical `review_replies` remain append-only. Generation leases and `review_reply_usage_reservations` protect owner-shared accounting. This preserves the existing Reply profile billing-period/2,000 safety ceiling; it does not approve or implement A18’s proposed UTC Reply ceiling. Post uncertainty keeps its fence until authoritative Google reconciliation; never clear the fence merely because its timestamp expired.
 
-Privacy workspace exports include safe delivery/baseline/draft/reservation metadata, excluding provider payloads, keys, leases, errors and credential secrets. Migration 026 is foundation only: `PRIVACY_ACCOUNT_DELETION_ENABLED` must remain unset or false. Before enabling, complete shared auth/business/billing/team/Google/job freezes and drains, Stripe customer data handling, final Google-generation verification, recovery UI, and approved identifier-retention policy. The ordinary deletion route returns 503 without freezing users while gated. See [A11 shared integration](./tasks/A11_SHARED_INTEGRATION.md) and the single [roadmap](./ROADMAP.md).
+Privacy workspace exports include safe delivery/baseline/draft/reservation/booking-credential/post-outcome metadata, excluding provider payloads, keys, leases, errors and credential secrets. Wave 4 implements shared freezes/drains, restricted recovery, Stripe customer-erasure and Google-generation evidence; `PRIVACY_ACCOUNT_DELETION_ENABLED` remains unset/false pending approved identifier/evidence retention and controlled provider/operator acceptance. The route returns 503 before freezing users while gated. Generic expired leases become uncertain; a failed same-key operation stays failed and needs an explicit new attempt/key. See [wave 4 review](./tasks/A00_WAVE4_INTEGRATION_REVIEW.md) and the single [roadmap](./ROADMAP.md).
+
+Cron state is persisted in `cron_job_state`/`cron_unit_state`, with per-run fences and bounded cooperative work. `cron_alert_state` deduplicates actionable failures and missed schedules; only fixed health codes/counts reach monitoring. SQL executes in a transaction with a local statement timeout and client request abort. Routine privacy cleanup rotates bounded table batches and preserves unresolved operation/billing/usage/suppression history. The daily Vercel privacy schedule and hourly independent health monitor are separate from account deletion.

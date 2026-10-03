@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { sql } from "@/lib/db/neon";
 import { verifyReviewLinkToken } from "@/lib/review-link-token";
+import { isSafeGoogleReviewUrl } from "@/modules/review-booster/services/settings-link-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,9 @@ export async function GET(
 ) {
   const { token } = await context.params;
   const payload = verifyReviewLinkToken(token);
-  if (!payload) return new NextResponse("This link isn't active anymore.", { status: 404 });
+  if (!payload || !isSafeGoogleReviewUrl(payload.reviewUrl)) {
+    return new NextResponse("This link isn't active anymore.", { status: 404 });
+  }
 
   await sql`
     INSERT INTO public.review_link_clicks (business_id, visit_id, user_agent)

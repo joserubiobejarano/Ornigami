@@ -10,7 +10,7 @@
         "lint": "eslint",
         "test": "node scripts/test.mjs",
         "test:security": "node --experimental-strip-types tests/security-hardening.test.mts",
-        "security:audit": "npm audit --audit-level=high",
+        "security:audit": "node scripts/security-audit.mjs",
         "typegen": "next typegen",
         "test:build": "node scripts/production-smoke.mjs"
     },

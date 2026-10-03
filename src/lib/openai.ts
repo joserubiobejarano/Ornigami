@@ -105,7 +105,7 @@ export function sanitizeReviewReply(reply: string): string {
   return out;
 }
 
-export async function generateReviewReply(input: ReviewReplyInput): Promise<string> {
+export async function generateReviewReply(input: ReviewReplyInput, options: { timeoutMs?: number } = {}): Promise<string> {
   const user = buildReviewReplyUserMessage(input);
   const res = await getClient().chat.completions.create({
     model: OPENAI_MODEL,
@@ -113,7 +113,7 @@ export async function generateReviewReply(input: ReviewReplyInput): Promise<stri
       { role: "system", content: REVIEW_REPLY_SYSTEM },
       { role: "user", content: user },
     ],
-  }, { timeout: OPENAI_REQUEST_TIMEOUT_MS, maxRetries: 0 });
+  }, { timeout: Math.min(OPENAI_REQUEST_TIMEOUT_MS, Math.max(1, Math.floor(options.timeoutMs ?? OPENAI_REQUEST_TIMEOUT_MS))), maxRetries: 0 });
   const raw = res.choices[0]?.message?.content?.trim() ?? "";
   return sanitizeReviewReply(raw);
 }

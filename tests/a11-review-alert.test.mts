@@ -28,7 +28,7 @@ test("review alert holds a lifecycle lease and settles known delivery outcomes w
     await mod.sendNewReviewAlert(base);
     assert.deepEqual(finished, ["done"]);
     status = 503;
-    await mod.sendNewReviewAlert(base);
+    await assert.rejects(mod.sendNewReviewAlert(base), /provider rejected/);
     assert.deepEqual(finished, ["done", "uncertain"]);
   } finally {
     globalThis.fetch = originalFetch;

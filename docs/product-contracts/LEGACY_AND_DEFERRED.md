@@ -1,8 +1,16 @@
 # Legacy capabilities and deferred boundaries
 
-**Status: source-backed preservation requirements and proposed target policy.** New validation/UI/send rules below require owner approval and package acceptance. They do not establish deployed features or migrated data.
+**Status: A07 retained-settings/intake contract implemented and reviewed in wave 4; strategic/deferred choices remain proposals.** A07's handoff records delegated implementation of optional rebooking/sender settings. See [wave 4 review](../tasks/A00_WAVE4_INTEGRATION_REVIEW.md) and [A07 handoff](../tasks/A07_BOOKING_INTAKE_CSV_SETTINGS.md) for accepted behavior and validation. This does not establish migrated legacy customers or native booking connectors.
 
-## Verified current behavior
+## Current integrated behavior
+
+Settings omission preserves existing values; explicit null/empty clears only the supplied setting. Rebooking is an optional secondary CTA in the same request email, with no extra sequence/unit. Sender customization changes display name only; EMAIL_FROM stays server-controlled. Direct Google review destinations accept `search.google.com/local/writereview?placeid=...`, `g.page/{id}/review` and `g.page/r/{id}/review`; general Maps/share links are not accepted. Public HTTPS booking URLs use separate rules. Invalid legacy values remain stored for correction but are blocked from rendering/sending; old signed tracked links receive the same validation before click accounting. Frozen provider payloads/keys remain immutable.
+
+Generic `/api/webhooks/booking` now uses scoped encrypted credentials, raw-body HMAC/timestamp verification and atomic event/visit admission. The credential determines business; `csv` is reserved. Manual/CSV intake is conflict-aware and freeze-fenced; phone-only records are explicitly non-sendable. This supplies no SMS or native Square/OpenTable/Fresha integration.
+
+## Historical pre-A07 baseline
+
+The following baseline motivated the preservation requirements. Its original implementation gaps are superseded by the integrated behavior above; preserved standalone sources remain migration inputs.
 
 ### Rebooking and sender customization
 
@@ -28,7 +36,7 @@ Booster settings expose connected locations and can select/fall back to the firs
 
 The tracked /r/[token] redirect is part of Booster, not a QR creation/management product.
 
-## Proposed target contract
+## Preservation contract and deferred proposals
 
 ### Retain optional settings without silent erasure
 
@@ -42,7 +50,7 @@ Sender name is display customization only. Proposed maximum: 120 characters; rej
 
 Proposed maximum URL length: 500 characters. Require parsed absolute HTTPS URLs; reject malformed input, userinfo/credentials, control characters, and unsafe schemes. Normalize and escape links for HTML attributes and plaintext; use safe external-link rendering.
 
-Google review links need an exact approved host/path allowlist. Proposed initial candidates for A07/A08 validation: search.google.com/local/writereview with a placeid; g.page/{id}/review; and supported Maps review destinations on www.google.com/maps or maps.google.com. Do not accept every path on a Google host or use a substring/suffix check permitting lookalike hosts. Exact supported path/query/short-link variants remain an integration decision verified with known review links. Provider-derived metadata must receive the same destination validation.
+Google review links use the exact integrated host/path allowlist above. The former proposed Maps candidates were not adopted. Do not accept every path on a Google host or use a substring/suffix check permitting lookalike hosts. Provider-derived metadata receives the same validation.
 
 Rebooking may point to the business's HTTPS booking service on a non-Google host; Google-host restrictions do not apply. It must not become an arbitrary redirect parameter. Any short-link resolution/fetching added later requires redirect/destination validation and protection against private-network destinations; no new URL-fetch feature is proposed here.
 
@@ -80,6 +88,6 @@ Future acceptance cases: unrelated saves preserve both fields; null clears only 
 
 ## Dependencies and open decisions
 
-No dependency or schema change is made here. New validation/provider/UI changes belong to named owners; A00 coordinates migrations. Owner must approve retained CTA behavior, exact URL variants, strategic audit prominence, and any future retirement. A15 must verify deployed reliance and old webhook transitions. Audit/lead retention and project notice timing remain unresolved.
+The retained CTA/validation behavior is implemented under A07's delegated decision and reviewed by A00. Strategic audit prominence and any future retirement still need owner decisions. A15 must verify deployed reliance and old webhook transitions; no legacy database/customer cutover follows from the new intake route. Audit/lead retention and project notice timing remain unresolved.
 
 The roadmap records inaccessible Follow-Up database credentials. Lack of inspected records does not establish absence of customers/data. No preserved originals, legacy runtime, deployment, database, or backup is changed.

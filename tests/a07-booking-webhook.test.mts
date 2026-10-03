@@ -17,6 +17,7 @@ test("booking HMAC binds the exact raw body and rejects stale timestamps", () =>
 test("booking payload rejects caller-selected tenancy, unsupported events, and invalid completed visits", () => {
   const bookingService = loadBookingModule();
   assert.equal(bookingService.validateBookingEvent({ business_id: "attacker-controlled", source: "calendar", event_type: "booking.completed", external_id: "evt-1", visited_at: "2026-02-28", customer_email: "a@example.com" }), null);
+  assert.equal(bookingService.validateBookingEvent({ source: "CSV", event_type: "booking.completed", external_id: "evt-1", visited_at: "2026-02-28", customer_email: "a@example.com" }), null, "CSV is reserved for the CSV importer regardless of case");
   assert.equal(bookingService.validateBookingEvent({ source: "calendar", event_type: "booking.cancelled", external_id: "evt-1", visited_at: "2026-02-28", customer_email: "a@example.com" }), null);
   assert.equal(bookingService.validateBookingEvent({ source: "calendar", event_type: "booking.completed", external_id: "evt-1", visited_at: "2026-02-30T12:00:00Z", customer_email: "a@example.com" }), null);
   assert.equal(bookingService.validateBookingEvent({ source: "calendar", event_type: "booking.completed", external_id: "evt-1", visited_at: "2026-02-28T12:00:00Z" }), null);
@@ -80,4 +81,32 @@ test("booking webhook enforces request byte cap before admission", async () => {
   }));
   assert.equal(response.status, 413);
   assert.equal(admitted, false);
+});
+
+test("booking webhook rejects the reserved CSV source before event admission", async () => {
+  const secret = "credential-secret";
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const rawBody = JSON.stringify({ source: "CsV", event_type: "booking.completed", external_id: "ext-42", customer_email: "jane@example.com", visited_at: "2026-09-20T10:00:00Z" });
+  let credentialReads = 0;
+  let admitted = 0;
+  const bookingService = loadBookingModule();
+  const route = routeRequest({
+    getBookingCredential: async (id: string) => { credentialReads++; return { id, business_id: "20000000-0000-4000-8000-000000000001", secret }; },
+    verifyBookingSignature: bookingService.verifyBookingSignature,
+    validateBookingEvent: bookingService.validateBookingEvent,
+    admitBookingEvent: async () => { admitted++; return "created"; },
+  });
+  const response = await route.POST(new Request("https://app.example/api/webhooks/booking", {
+    method: "POST",
+    headers: {
+      "x-booking-key-id": "10000000-0000-4000-8000-000000000001",
+      "x-booking-timestamp": timestamp,
+      "x-booking-signature": bookingSignature(secret, timestamp, rawBody),
+      "content-type": "application/json",
+    },
+    body: rawBody,
+  }));
+  assert.equal(response.status, 400);
+  assert.equal(credentialReads, 1);
+  assert.equal(admitted, 0);
 });

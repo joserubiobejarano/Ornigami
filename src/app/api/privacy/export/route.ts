@@ -184,6 +184,20 @@ export async function GET(request: Request) {
                 'external_id', e.external_id, 'processed_at', e.processed_at, 'created_at', e.created_at
               )) FROM public.followup_integration_events e WHERE e.business_id = b.id
             ), '[]'::jsonb),
+            'bookingCredentials', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'id', c.id, 'label', c.label, 'created_at', c.created_at,
+                'last_used_at', c.last_used_at, 'revoked_at', c.revoked_at
+              ) ORDER BY c.created_at, c.id)
+              FROM public.booster_booking_credentials c WHERE c.business_id = b.id
+            ), '[]'::jsonb),
+            'replyPostOutcomes', COALESCE((
+              SELECT jsonb_agg(jsonb_build_object(
+                'business_id', o.business_id, 'review_id', o.review_id,
+                'outcome', o.outcome, 'recorded_at', o.recorded_at
+              ) ORDER BY o.recorded_at, o.review_id)
+              FROM public.privacy_reply_post_outcomes o WHERE o.business_id = b.id
+            ), '[]'::jsonb),
             'unsubscribeSuppressions', COALESCE((
               SELECT jsonb_agg(jsonb_build_object(
                 'customer_email', u.customer_email, 'reason', u.reason,

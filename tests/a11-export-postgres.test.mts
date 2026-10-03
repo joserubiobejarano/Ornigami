@@ -74,6 +74,8 @@ type WorkspaceExport = {
     boosterQuotaLegacyUsage: Array<{ month_start_utc: string; accepted_count: number }>;
     clicks: Array<{ user_agent: string }>;
     unsubscribeSuppressions: Array<{ customer_email: string }>;
+    bookingCredentials: Array<{ id: string; label: string; created_at: string; last_used_at: string | null; revoked_at: string | null; encrypted_secret?: unknown }>;
+    replyPostOutcomes: Array<{ business_id: string; review_id: number; outcome: string; recorded_at: string; claim_token?: unknown; actor_user_id?: unknown }>;
     settings: { googleConnection: { access_token?: unknown } | null };
     invitations: Array<{ revoked_at: string | null }>;
   }>;
@@ -175,7 +177,11 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
       INSERT INTO public.followup_unsubscribes(business_id,customer_email,reason)
         VALUES ('${businessA}','suppressed@example.test','requested');
       INSERT INTO public.followup_integration_events(business_id,source,event_type,raw_payload)
-        VALUES ('${businessA}','csv','imported','{"api_key":"raw-secret"}');`);
+        VALUES ('${businessA}','csv','imported','{"api_key":"raw-secret"}');
+      INSERT INTO public.booster_booking_credentials(id,business_id,label,encrypted_secret,last_used_at,revoked_at)
+        VALUES ('90000000-0000-4000-8000-000000000001','${businessA}','Calendar','encrypted-booking-secret',now(),'2026-10-01');
+      INSERT INTO public.privacy_reply_post_outcomes(claim_token,business_id,review_id,outcome,recorded_at)
+        SELECT '91000000-0000-4000-8000-000000000001','${businessA}',id,'accepted','2026-10-02' FROM public.reviews WHERE google_review_id='review-a';`);
     psql(`INSERT INTO public.gbp_connections(user_id,provider,access_token,refresh_token,expires_at,scope)
         VALUES ('${ownerId}','google','access-secret','refresh-secret',now() + interval '1 hour','business.manage');
       INSERT INTO public.gbp_locations(user_id,location_name,title,raw,connection_version)
@@ -203,7 +209,8 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
         VALUES ('${businessA}','50000000-0000-4000-8000-000000000001',now() - interval '400 days');
       INSERT INTO public.followup_integration_events(business_id,source,event_type,created_at)
         VALUES ('${businessA}','old','old',now() - interval '400 days');
-      INSERT INTO public.cron_runs(job_name,started_at) VALUES ('old-run',now() - interval '35 days');`);
+      INSERT INTO public.cron_runs(job_name,started_at,finished_at,status) VALUES ('old-run',now() - interval '35 days',now() - interval '34 days','succeeded');
+      INSERT INTO public.cron_runs(job_name,started_at) VALUES ('active-old-run',now() - interval '35 days');`);
 
     const ownerRoute = routeFor(ownerId);
     const personalResponse = await ownerRoute.GET(new Request("https://app.example/api/privacy/export"));
@@ -243,11 +250,19 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
     assert.deepEqual(ownerWorkspace.boosterQuotaLegacyUsage, [{ month_start_utc: "2026-09-01", accepted_count: 4 }]);
     assert.equal(ownerWorkspace.clicks[0].user_agent, "Customer browser");
     assert.equal(ownerWorkspace.unsubscribeSuppressions[0].customer_email, "suppressed@example.test");
+    assert.equal(ownerWorkspace.bookingCredentials[0]?.label, "Calendar");
+    assert.ok(ownerWorkspace.bookingCredentials[0]?.created_at);
+    assert.ok(ownerWorkspace.bookingCredentials[0]?.last_used_at);
+    assert.equal(ownerWorkspace.bookingCredentials[0]?.encrypted_secret, undefined);
+    assert.equal(ownerWorkspace.replyPostOutcomes[0]?.business_id, businessA);
+    assert.equal(ownerWorkspace.replyPostOutcomes[0]?.outcome, "accepted");
+    assert.equal(ownerWorkspace.replyPostOutcomes[0]?.claim_token, undefined);
+    assert.equal(ownerWorkspace.replyPostOutcomes[0]?.actor_user_id, undefined);
     assert.ok(ownerWorkspace.settings.googleConnection);
     assert.equal(ownerWorkspace.settings.googleConnection.access_token, undefined);
     assert.equal(ownerWorkspace.invitations[0].revoked_at !== null, true);
     const workspaceText = JSON.stringify(allWorkspaces);
-    for (const secret of ["access-secret", "refresh-secret", "invite-secret", "checkout-secret", "idempotency-secret", "customer-key-secret", "raw-secret", "provider-message", "member@example.test", "Teammate", "delivery-payload-secret", "reviews.example/snapshot-secret", "delivery-idempotency-secret", "60000000-0000-4000-8000-000000000001", "provider-message-secret", "provider-error-secret", "70000000-0000-4000-8000-000000000001", "80000000-0000-4000-8000-000000000001", memberId]) {
+    for (const secret of ["access-secret", "refresh-secret", "invite-secret", "checkout-secret", "idempotency-secret", "customer-key-secret", "raw-secret", "provider-message", "member@example.test", "Teammate", "delivery-payload-secret", "reviews.example/snapshot-secret", "delivery-idempotency-secret", "60000000-0000-4000-8000-000000000001", "provider-message-secret", "provider-error-secret", "70000000-0000-4000-8000-000000000001", "80000000-0000-4000-8000-000000000001", "encrypted-booking-secret", memberId]) {
       assert.equal(workspaceText.includes(secret), false, `workspace export leaked ${secret}`);
     }
 
@@ -298,8 +313,9 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
       ["password_reset_tokens", "expires_at < now()"],
       ["review_link_clicks", "clicked_at < now() - interval '365 days'"],
       ["followup_integration_events", "created_at < now() - interval '365 days'"],
-      ["cron_runs", "started_at < now() - interval '30 days'"],
+      ["cron_runs", "status <> 'running' AND finished_at IS NOT NULL AND started_at < now() - interval '30 days'"],
     ] as const) assert.equal(psql(`SELECT count(*) FROM public.${table} WHERE ${predicate}`), "0", `${table} expired rows remain`);
+    assert.equal(psql("SELECT count(*) FROM public.cron_runs WHERE job_name='active-old-run' AND status='running'"), "1", "active cron runs remain available for health diagnosis");
     assert.equal(psql("SELECT count(*) FROM public.followup_visits"), "1");
     assert.equal(psql("SELECT count(*) FROM public.followup_messages"), "1");
     assert.equal(psql("SELECT count(*) FROM public.reviews"), "1");

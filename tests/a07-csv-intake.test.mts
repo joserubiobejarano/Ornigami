@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
+import { createServer } from "node:net";
 import test from "node:test";
 
 import { loadTs as loadSameRealmTs } from "./a02-test-support.mts";
@@ -123,7 +124,7 @@ test("manual visit route rejects wrong-type contact fields even when a phone is 
   assert.equal(writes, 0);
 });
 
-const port = 55447;
+let port = 0;
 const binDir = process.env.A07_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.A08_PG_BIN ?? process.env.A06_PG_BIN ?? process.env.PG_BIN ?? "C:/Program Files/PostgreSQL/17/bin";
 const pgExe = (name: string) => process.platform === "win32" ? join(binDir, `${name}.exe`) : join(binDir, name);
 const quote = (value: unknown) => value == null ? "NULL" : `'${String(value).replaceAll("'", "''")}'`;
@@ -145,6 +146,38 @@ function psqlAsync(statement: string): Promise<string> {
     child.stdin.end(statement);
     child.once("close", (code) => code === 0 ? resolvePromise(stdout.trim()) : reject(new Error(`psql exited ${code}: ${stderr}`)));
   });
+}
+
+async function availablePort(): Promise<number> {
+  const server = createServer();
+  await new Promise<void>((resolvePromise, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolvePromise());
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("No loopback port available");
+  const selected = address.port;
+  await new Promise<void>((resolvePromise, reject) => server.close((error) => error ? reject(error) : resolvePromise()));
+  return selected;
+}
+
+function startPsql(statement: string) {
+  const child = spawn(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", "-"], { stdio: ["pipe", "pipe", "pipe"] });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk) => { stdout += chunk; });
+  child.stderr.setEncoding("utf8").on("data", (chunk) => { stderr += chunk; });
+  const done = new Promise<void>((resolvePromise, reject) => child.once("close", (code) => code === 0 ? resolvePromise() : reject(new Error(`PostgreSQL transaction exited ${code}: ${stderr}`))));
+  child.stdin.end(statement);
+  return { child, output: () => stdout, errors: () => stderr, done };
+}
+
+async function waitForOutput(readOutput: () => string, needle: string, timeoutMs = 5000) {
+  const started = Date.now();
+  while (!readOutput().includes(needle)) {
+    if (Date.now() - started > timeoutMs) throw new Error(`Timed out waiting for PostgreSQL output: ${needle}`);
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 10));
+  }
 }
 
 function sqlExecutor() {
@@ -190,6 +223,7 @@ function uploadRequest(csv: string, origin = "http://app.test") {
 }
 
 test("CSV insertion uses the partial unique index outcome and enforces persisted member and entitlement", async () => {
+  port = await availablePort();
   const nextDir = resolve(process.cwd(), ".next");
   mkdirSync(nextDir, { recursive: true });
   const dir = mkdtempSync(join(nextDir, "a07-booking-pg-"));
@@ -208,7 +242,7 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
     started = true;
     const migrationsDir = join(process.cwd(), "neon/migrations");
     const migrations = readdirSync(migrationsDir).filter((name) => /^\d{3}_.+\.sql$/.test(name)).sort((a, b) => Number(a.slice(0, 3)) - Number(b.slice(0, 3)));
-    for (const migration of migrations.filter((name) => Number(name.slice(0, 3)) < 22)) psql(readFileSync(join(migrationsDir, migration), "utf8"));
+    for (const migration of migrations) psql(readFileSync(join(migrationsDir, migration), "utf8"));
 
     const owner = id(700); const member = id(701); const biz = id(702);
     psql(`INSERT INTO public.users(id,email) VALUES('${owner}','a07-owner@example.test'),('${member}','a07-member@example.test');
@@ -219,6 +253,7 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
         overrides: {
           "@/lib/db/neon": { sql: sqlExecutor() },
           "@/lib/billing/plans": { PLANS: { booster: { monthlyRequestAllowance: 500 }, complete: { monthlyRequestAllowance: 1500 } }, isPlanId: (value: unknown) => value === "booster" || value === "complete" },
+          "@/lib/api-security": { HttpError: class HttpError extends Error { status: number; constructor(status: number, message: string) { super(message); this.status = status; } } },
           "@/lib/followup-retry-policy": { MAX_FOLLOWUP_ATTEMPTS: 3 },
         },
       });
@@ -272,6 +307,31 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
     assert.equal(phoneOnly.customer_email, null);
     psql(`UPDATE public.business_agents SET status='inactive' WHERE business_id='${biz}' AND agent_id='review_booster';`);
     await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, customerPhone: "+34 600 000 000", source: "manual" }, owner));
+    psql(`UPDATE public.business_agents SET status='active' WHERE business_id='${biz}' AND agent_id='review_booster';
+      UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';`);
+    await assert.rejects(reviewDb.createCsvFollowupVisit({ ...input, customerEmail: "frozen-owner@example.test" }, owner), (error: unknown) => (error as { status?: number }).status === 403);
+    await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, customerPhone: "+34 600 000 001", source: "manual" }, owner), (error: unknown) => (error as { status?: number }).status === 403);
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}'`), "5");
+    psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${owner}';`);
+
+    const freeze = startPsql(`BEGIN;
+      SELECT id FROM public.businesses WHERE id='${biz}' FOR UPDATE;
+      UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';
+      \\echo A07_FREEZE_LOCKED
+      SELECT pg_sleep(0.5);
+      COMMIT;`);
+    try {
+      await waitForOutput(freeze.output, "A07_FREEZE_LOCKED");
+      await assert.rejects(
+        reviewDb.createCsvFollowupVisit({ ...input, customerEmail: "freeze-race@example.test" }, owner),
+        (error: unknown) => (error as { status?: number }).status === 403,
+      );
+      await freeze.done;
+      assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND customer_email='freeze-race@example.test'`), "0");
+    } finally {
+      if (freeze.child.exitCode === null) freeze.child.kill();
+      psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${owner}';`);
+    }
     assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}'`), "5");
   } finally {
     if (started) {

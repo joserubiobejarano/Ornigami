@@ -47,6 +47,7 @@ export const PRIVACY_PRESERVED_HISTORY_CLASSES = [
   "review_replies",
   "review_reply_draft_state",
   "review_reply_usage_reservations",
+  "privacy_reply_post_outcomes",
   "billing_checkout_intents",
   "billing_customer_provisioning",
   "billing_reconciliation_leases",
@@ -59,6 +60,7 @@ export const PRIVACY_PRESERVED_HISTORY_CLASSES = [
   "billing_trial_business_history",
   "billing_trial_owner_history",
   "team_invitations",
+  "booster_booking_credentials",
   "unsubscribe_suppressions",
   "privacy_account_deletion_operations",
 ] as const;

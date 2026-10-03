@@ -98,7 +98,9 @@ Review Booster can operate with email and a manually entered review URL while th
 - [ ] Confirm Review Booster cron returns success and processes active/trialing businesses.
 - [ ] Confirm Review Replies cron returns success and processes active/trialing businesses.
 - [ ] Confirm `/api/cron/health` shows persisted `cron_runs` records.
-- [ ] Confirm the privacy cleanup job is scheduled if retention cleanup is required in production.
+- [ ] Verify the existing Vercel privacy schedule at 03:00 UTC daily, bounded cleanup and sanitized per-table health.
+- [ ] Verify independent hourly GitHub cron health monitoring and Sentry transport/missed-schedule alert recovery. Expected budget continuation is 202, lease busy is 409, actionable failure is 500/503; do not interpret all non-200 outcomes as the same failure.
+- [ ] Apply reviewed 023/027/033–038 schema before its consumers; pause/drain both review schedules through migration/deployment and restore after exact Ready verification.
 
 ## 8. Pre-deploy verification
 
@@ -107,8 +109,10 @@ Run from the repository root:
 ```bash
 npm ci
 npm run lint
+npm run typegen
 npx tsc --noEmit
 npm test
+npm run security:audit
 npm run test:security
 npm run build
 ```
@@ -121,7 +125,7 @@ npm run build
 - [ ] Review Booster settings, manual visit entry, CSV upload, run-now, unsubscribe, and tracked review-link redirect work.
 - [ ] Review Replies Google connection and controlled sync/post flow work, if Google approval is complete.
 - [ ] Team invitation works on Complete.
-- [ ] Privacy export/delete works with a test account.
+- [ ] Privacy export works for owner/member test accounts with secret-free projections. Keep production deletion disabled until E03 retention/provider/operator gates are complete; destructive acceptance needs an explicitly authorized isolated target.
 - [ ] Stripe webhook updates plan and agent state.
 - [ ] Sentry receives a controlled test error, then the test is removed or clearly identified.
 

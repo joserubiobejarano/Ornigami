@@ -50,6 +50,7 @@ export function validateBookingEvent(value: unknown): BookingEvent | null {
   const payload = value as Record<string, unknown>;
   if ("business_id" in payload || "businessId" in payload) return null;
   if (typeof payload.source !== "string" || !SOURCE_RE.test(payload.source)) return null;
+  if (payload.source.toLowerCase() === "csv") return null;
   if (typeof payload.event_type !== "string" || !/^[a-z][a-z0-9._-]{0,79}$/i.test(payload.event_type)) return null;
   if (typeof payload.external_id !== "string" || !payload.external_id.trim() || payload.external_id.length > 200) return null;
   const optionalText = (key: string, max: number): string | null | undefined => {

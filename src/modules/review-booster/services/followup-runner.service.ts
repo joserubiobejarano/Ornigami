@@ -18,9 +18,18 @@ export type FollowupRunnerDependencies = {
   markUnknown: (input: { deliveryId: string; fence: string; error: string }) => Promise<boolean>;
 };
 
-export type FollowupRunOutcome = FollowupRunResult;
+export type FollowupRunOutcome = FollowupRunResult & { interrupted?: boolean; candidateBatchFull?: boolean };
 
-export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Promise<FollowupRunOutcome> {
+export type FollowupRunnerOptions = {
+  /** Checked before claiming each candidate. Returning false leaves it eligible for a later run. */
+  shouldContinue?: () => boolean;
+  /** Checked after freezing the delivery but before begin-send; false leaves a safe recovery claim. */
+  shouldBeginSend?: () => boolean;
+  /** Called after a candidate reaches a settled outcome (including skips and deferrals). */
+  onCandidateComplete?: (visit: AtomicFollowupCandidate, outcome: Pick<FollowupRunResult, "failed" | "unknown" | "sent" | "skipped" | "deferred">) => Promise<void>;
+};
+
+export async function runEligibleFollowups(deps: FollowupRunnerDependencies, options: FollowupRunnerOptions = {}): Promise<FollowupRunOutcome> {
   // The database performs a fair, deterministic oldest-first selection capped at 50.
   const visits = await deps.listCandidates(MAX_FOLLOWUPS_PER_RUN);
   let sent = 0;
@@ -28,16 +37,23 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
   let skipped = 0;
   let unknown = 0;
   let deferred = 0;
+  let processed = 0;
+  let interrupted = false;
 
   for (const visit of visits.slice(0, MAX_FOLLOWUPS_PER_RUN)) {
+    if (options.shouldContinue && !options.shouldContinue()) { interrupted = true; break; }
     // Claim one at a time so a run that stops early does not reserve a whole batch.
     const claim = await deps.claim(visit.visitId);
     if (["busy", "existing", "ineligible", "expired", "non_sendable"].includes(claim.kind)) {
       skipped += 1;
+      processed += 1;
+      await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
       continue;
     }
     if (claim.kind === "quota_exhausted" || claim.kind === "reconciliation_required") {
       deferred += 1;
+      processed += 1;
+      await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
       continue;
     }
     if (!claim.deliveryId || !claim.fence || !claim.idempotencyKey) {
@@ -58,6 +74,8 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       const changed = await deps.markUnknown({ deliveryId: claim.deliveryId, fence: claim.fence, error: "Recovery delivery has no frozen payload after an earlier attempt." });
       if (changed) unknown += 1;
       else skipped += 1;
+      processed += 1;
+      await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
       continue;
     } else {
       try {
@@ -71,6 +89,8 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
         const changed = await deps.release({ deliveryId: claim.deliveryId, fence: claim.fence, outcome: "generation_failed", error: errorMessage });
         if (changed) failed += 1;
         else skipped += 1;
+        processed += 1;
+        await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
         continue;
       }
 
@@ -79,16 +99,21 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       const persisted = await deps.persistPayload(claim.deliveryId, claim.fence, payload, visit.googleReviewUrl);
       if (!persisted) {
         skipped += 1;
+        processed += 1;
+        await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
         continue;
       }
     }
 
+    if (options.shouldBeginSend && !options.shouldBeginSend()) { interrupted = true; break; }
     // This atomic boundary rechecks current access, suppression, visit age, destination,
     // active plan and quota immediately before allowing provider I/O.
     const begin = await deps.beginSend(claim.deliveryId, claim.fence);
     if (begin.kind !== "send") {
       if (begin.kind === "quota_exhausted") deferred += 1;
       else skipped += 1;
+      processed += 1;
+      await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
       continue;
     }
     // Final message history uses the content sent by the provider, including the
@@ -113,6 +138,8 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
         if (recorded) unknown += 1;
         else skipped += 1;
       }
+      processed += 1;
+      await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
       continue;
     }
 
@@ -130,9 +157,12 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies): Pr
       await deps.markUnknown({ deliveryId: claim.deliveryId, fence: claim.fence, error: "Provider accepted the email but finalization was fenced." });
       unknown += 1;
     }
+    processed += 1;
+    await options.onCandidateComplete?.(visit, { failed, unknown, sent, skipped, deferred });
   }
 
-  return { ok: true, scanned: visits.length, sent, failed, skipped, unknown, deferred };
+  return { ok: true, scanned: processed, sent, failed, skipped, unknown, deferred,
+    interrupted, candidateBatchFull: visits.length >= MAX_FOLLOWUPS_PER_RUN };
 }
 
 export type FollowupRunnerOverrides = Partial<Pick<FollowupRunnerDependencies, "generateBody" | "preparePayload" | "sendPrepared" | "classifySendError" | "buildSubject">>;

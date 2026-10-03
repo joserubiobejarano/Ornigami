@@ -72,6 +72,8 @@ test("workspace export requires the owner query and returns only workspace-scope
       clicks: [{ clicked_at: "2026-01-01T00:00:00Z" }],
       unsubscribeSuppressions: [{ customer_email: "customer@example.test" }],
       invitations: [{ status: "revoked", revoked_at: "2026-01-01T00:00:00Z" }],
+      bookingCredentials: [{ id: "credential-1", label: "Calendar", created_at: "2026-01-01T00:00:00Z", last_used_at: null, revoked_at: null }],
+      replyPostOutcomes: [{ business_id: businessId, review_id: 12, outcome: "accepted", recorded_at: "2026-01-01T00:00:00Z" }],
     }],
   };
   const { route, state } = harness({ result: [{ export_data: fixture }] });
@@ -85,6 +87,14 @@ test("workspace export requires the owner query and returns only workspace-scope
   for (const table of ["reviews", "review_replies", "review_reply_draft_state", "review_reply_usage_reservations", "followup_visits", "followup_messages", "booster_followup_deliveries", "booster_quota_legacy_usage", "review_link_clicks", "followup_unsubscribes", "team_invitations"]) {
     assert.match(state.query, new RegExp(`FROM public\\.${table} \\w+ WHERE \\w+\\.business_id = b\\.id`));
   }
+  assert.match(state.query, /'bookingCredentials'/);
+  assert.match(state.query, /'label', c\.label/);
+  assert.doesNotMatch(state.query, /'encrypted_secret'/);
+  assert.match(state.query, /'replyPostOutcomes'/);
+  assert.match(state.query, /'outcome', o\.outcome/);
+  assert.match(state.query, /'business_id', o\.business_id/);
+  assert.match(state.query, /FROM public\.privacy_reply_post_outcomes o WHERE o\.business_id = b\.id/);
+  assert.doesNotMatch(state.query, /'claim_token'|'actor_user_id'/);
   assert.doesNotMatch(state.query, /token_hash|stripe_payload|idempotency_key|raw_payload|access_token|refresh_token/);
   assert.doesNotMatch(state.query, /'user_id'|'invited_by'|'email', i\.email/);
   for (const sensitive of ["provider_payload", "idempotency_key", "lease_token", "provider_message_id", "error_message", "generation_token", "generation_fence", "posting_token", "posting_lease_until", "request_id", "actor_user_id"]) {

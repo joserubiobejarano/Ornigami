@@ -13,13 +13,19 @@ export type PrivacyCleanupOperation = {
   table: typeof PRIVACY_CLEANUP_TABLES[number];
   deleted: number;
   failed: boolean;
+  fullBatch: boolean;
 };
+
+export type PrivacyCleanupStatus = "succeeded" | "partial" | "failed" | "no_work";
 
 export type PrivacyCleanupResult = {
   attempted: number;
   deleted: number;
   failed: number;
   batchSize: number;
+  status: PrivacyCleanupStatus;
+  nextCursor: number;
+  backlog: boolean;
   operations: PrivacyCleanupOperation[];
 };
 
@@ -88,7 +94,7 @@ async function deleteExpiredBatch(table: typeof PRIVACY_CLEANUP_TABLES[number], 
         SELECT count(*)::int AS deleted FROM deleted`;
       break;
     case "cron_runs":
-      rows = await sql`WITH candidates AS (SELECT ctid FROM public.cron_runs WHERE started_at < ${cronRunsCutoff} ORDER BY started_at LIMIT ${batchSize}),
+      rows = await sql`WITH candidates AS (SELECT ctid FROM public.cron_runs WHERE status <> 'running' AND finished_at IS NOT NULL AND started_at < ${cronRunsCutoff} ORDER BY started_at LIMIT ${batchSize}),
         deleted AS (DELETE FROM public.cron_runs WHERE ctid IN (SELECT ctid FROM candidates) RETURNING 1)
         SELECT count(*)::int AS deleted FROM deleted`;
       break;
@@ -101,31 +107,66 @@ async function deleteExpiredBatch(table: typeof PRIVACY_CLEANUP_TABLES[number], 
  * commits atomically and can be retried; failures are retained per table for
  * the cron health record and the next invocation resumes from remaining rows.
  */
-export async function runPrivacyRetentionCleanup(input: { batchSize?: number; now?: Date } = {}): Promise<PrivacyCleanupResult> {
+export async function runPrivacyRetentionCleanup(input: {
+  batchSize?: number;
+  maxOperations?: number;
+  cursor?: unknown;
+  deadlineAt?: Date;
+  now?: Date;
+  checkpoint?: (cursor: number, processedCount: number) => Promise<void>;
+} = {}): Promise<PrivacyCleanupResult> {
   const requestedBatch = input.batchSize ?? PRIVACY_CLEANUP_BATCH_SIZE;
   const batchSize = Number.isFinite(requestedBatch)
     ? Math.max(1, Math.min(Math.trunc(requestedBatch), PRIVACY_CLEANUP_MAX_BATCH_SIZE))
     : PRIVACY_CLEANUP_BATCH_SIZE;
   const now = input.now ?? new Date();
+  const startCursor = typeof input.cursor === "number" && Number.isInteger(input.cursor)
+    ? ((input.cursor % PRIVACY_CLEANUP_TABLES.length) + PRIVACY_CLEANUP_TABLES.length) % PRIVACY_CLEANUP_TABLES.length
+    : 0;
+  const maxOperations = Number.isFinite(input.maxOperations)
+    ? Math.max(1, Math.min(Math.trunc(input.maxOperations!), PRIVACY_CLEANUP_TABLES.length))
+    : PRIVACY_CLEANUP_TABLES.length;
   const operations: PrivacyCleanupOperation[] = [];
 
-  for (const table of PRIVACY_CLEANUP_TABLES) {
+  let nextCursor = startCursor;
+  let backlog = false;
+  for (let offset = 0; offset < PRIVACY_CLEANUP_TABLES.length; offset += 1) {
+    if (operations.length >= maxOperations || (input.deadlineAt && Date.now() >= input.deadlineAt.getTime())) {
+      backlog = true;
+      break;
+    }
+    const index = (startCursor + offset) % PRIVACY_CLEANUP_TABLES.length;
+    const table = PRIVACY_CLEANUP_TABLES[index]!;
     try {
-      operations.push({ table, deleted: await deleteExpiredBatch(table, batchSize, now), failed: false });
-    } catch (error) {
-      operations.push({ table, deleted: 0, failed: true });
+      const deleted = await deleteExpiredBatch(table, batchSize, now);
+      operations.push({ table, deleted, failed: false, fullBatch: deleted >= batchSize });
+    } catch {
+      operations.push({ table, deleted: 0, failed: true, fullBatch: false });
       safeLogger.error("privacy.retention.operation_failed", {
         table,
-        error: error instanceof Error ? error.name : "unknown",
+        error: "operation_failed",
       });
     }
+    nextCursor = (index + 1) % PRIVACY_CLEANUP_TABLES.length;
+    await input.checkpoint?.(nextCursor, operations.reduce((total, operation) => total + operation.deleted, 0));
+    if (operations.at(-1)?.fullBatch) backlog = true;
+    if (input.deadlineAt && Date.now() >= input.deadlineAt.getTime()) backlog = true;
   }
 
+  if (operations.length < PRIVACY_CLEANUP_TABLES.length && operations.length >= maxOperations) backlog = true;
+  const deleted = operations.reduce((total, operation) => total + operation.deleted, 0);
+  const failed = operations.filter((operation) => operation.failed).length;
+  const status: PrivacyCleanupStatus = failed > 0
+    ? (deleted > 0 || operations.some((operation) => !operation.failed) ? "partial" : "failed")
+    : backlog ? "partial" : deleted === 0 ? "no_work" : "succeeded";
   const result = {
     attempted: operations.length,
-    deleted: operations.reduce((total, operation) => total + operation.deleted, 0),
-    failed: operations.filter((operation) => operation.failed).length,
+    deleted,
+    failed,
     batchSize,
+    status,
+    nextCursor,
+    backlog,
     operations,
   };
   safeLogger.info("privacy.retention.completed", {

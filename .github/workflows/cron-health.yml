@@ -1,0 +1,23 @@
+name: Cron health monitor
+
+on:
+  schedule:
+    - cron: "15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check authenticated cron health endpoint
+        shell: bash
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --connect-timeout 10 --max-time 30 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_BASE_URL%/}/api/cron/health" \
+            | jq --exit-status '.healthy == true' >/dev/null

@@ -27,9 +27,17 @@ This folder is the database source of truth. Apply every migration once, in nume
 | `020_account_recovery.sql` | Session revocation version, auth callback destinations, and expiring single-use password-reset tokens |
 | `021_workspace_invitations.sql` | Invitation status/revocation, expiry/reinvite, serialized seat admission and member cleanup |
 | `022_booster_delivery_quotas.sql` | Durable frozen email requests, fenced replay, atomic UTC monthly reservations and legacy usage baseline |
+| `023_booking_intake.sql` | Scoped encrypted booking credentials, atomic authenticated event/visit admission |
 | `024_review_draft_policy.sql` | Current draft/version state, generation/post fences and owner-shared usage reservations |
 | `026_privacy_account_lifecycle.sql` | Default-closed deletion foundation, provider leases, freeze marker and durable recovery operations |
+| `027_cron_operations.sql` | Fenced job leases, job/unit cursors, sanitized outcomes and deduplicated schedule alerts |
 | `031_google_location_selection.sql` | Per-business selected location and OAuth/cache generations; no automatic selection or legacy backfill |
 | `032_workspace_bootstrap.sql` | Serialized first-workspace creation sharing the invitation user mutex |
+| `033_account_lifecycle_auth_team.sql` | Atomic auth/token/team/workspace freeze guards |
+| `034_account_lifecycle_billing.sql` | Billing admission/provider leases and frozen-owner webhook exclusion |
+| `035_account_lifecycle_replies.sql` | Frozen generation/post guards and safe post-outcome evidence |
+| `036_account_lifecycle_booster.sql` | Owner/actor-attributed delivery admission and drains |
+| `037_account_lifecycle_finalization.sql` | Generic external-operation leases, provider evidence and guarded finalization |
+| `038_booster_intake_lifecycle.sql` | Atomic frozen-owner/member manual and CSV admission |
 
-Apply available migrations in numeric order; do not renumber applied files. 018 remains unused; 023/025/027–030 remain reserved for dependent packages. Wave 3 adds 022/024/026 after previously applied 031/032; do not renumber applied files. Fresh databases apply all available files in numeric order. Deletion stays disabled until shared freeze/drain/recovery/provider and retention gates are completed. Deploy each schema before its consumers. Wave 2 applies 019, 021, 031 and 032 in one bounded transaction on the verified production target, after isolated PostgreSQL and Linux CI validation. Preserve conservative legacy trial history and pending billing intents. Google selections are explicit; never infer a selection from cached discovery. See [database behavior](../docs/DATABASE.md) and [integration evidence](../docs/tasks/A00_WAVE2_INTEGRATION_REVIEW.md).
+Apply available migrations in numeric order; do not renumber applied files. 018 remains unused; 025/028–030 remain reserved. Wave 4 adds 023/027/033–038 to the existing production schema in one bounded transaction after isolated SQL and exact Linux CI validation. Fresh databases apply all available files in numeric order. Deletion stays disabled until retention/provider/operator activation gates are complete. Deploy schema before consumers and pause/drain review schedules during cutover. Preserve conservative legacy trial history, pending billing intents, unknown delivery/post fences and suppression. Google selections remain explicit. See [database behavior](../docs/DATABASE.md) and [wave 4 evidence](../docs/tasks/A00_WAVE4_INTEGRATION_REVIEW.md).

@@ -63,7 +63,8 @@ export async function fetchAllGoogleReviews(
   locationName: string,
   maxPages = DEFAULT_GOOGLE_REVIEWS_MAX_PAGES,
   expectedConnectionVersion?: string,
-  lifecycleContext?: GoogleLifecycleContext
+  lifecycleContext?: GoogleLifecycleContext,
+  signal?: AbortSignal
 ): Promise<GoogleReviewRecord[]> {
   const { accountName, locationId } = parseGoogleLocationName(locationName);
   if (!Number.isFinite(maxPages)) throw new Error("Invalid Google reviews page limit");
@@ -81,7 +82,9 @@ export async function fetchAllGoogleReviews(
     if (pageToken) query.set("pageToken", pageToken);
     let response: Response;
     try {
-      response = await googleFetch(userId, googleReviewsUrl(accountName, locationId, query), { signal: AbortSignal.timeout(remaining) }, expectedConnectionVersion, lifecycleContext);
+      response = await googleFetch(userId, googleReviewsUrl(accountName, locationId, query), {
+        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(remaining)]) : AbortSignal.timeout(remaining),
+      }, expectedConnectionVersion, lifecycleContext);
     } catch (error) {
       if (error instanceof Error && error.name === "GoogleConnectionVersionError") throw error;
       throw new GoogleReviewsSyncError(502);

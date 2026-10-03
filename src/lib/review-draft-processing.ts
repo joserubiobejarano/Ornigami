@@ -25,6 +25,15 @@ export function isSafeAutoReplyRating(value: unknown): boolean {
   return parsed === 4 || parsed === 5;
 }
 
+/** A failed request can still have been processed when transport or server
+ * failure obscures whether OpenAI accepted it. Keep that outcome blocking. */
+function isUnknownOpenAIOutcome(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; status?: unknown };
+  if (candidate.name === "APIConnectionError" || candidate.name === "APIConnectionTimeoutError") return true;
+  return typeof candidate.status === "number" && (candidate.status === 408 || candidate.status >= 500);
+}
+
 /** One policy path for scheduled and interactive review drafting. */
 async function processReviewDraftInner(input: {
   actorUserId: string;
@@ -33,6 +42,8 @@ async function processReviewDraftInner(input: {
   row: ReviewRowForReply;
   profile: ProfileReplyRow | null;
   source: DraftProcessingSource;
+  /** Optional scheduled-work provider deadline; interactive callers keep defaults. */
+  providerTimeoutMs?: number;
 }): Promise<DraftProcessingResult> {
   const { actorUserId, businessId, locationName, row, profile, source } = input;
   if (!(row.comment ?? "").trim()) return { outcome: "skipped", reason: "empty" };
@@ -45,9 +56,10 @@ async function processReviewDraftInner(input: {
   }
   let reply: string;
   try {
-    reply = (await generateReplyForReviewRow(row, profile)).trim();
-  } catch {
+    reply = (await generateReplyForReviewRow(row, profile, { timeoutMs: input.providerTimeoutMs })).trim();
+  } catch (error) {
     await releaseReplyGenerationUsage(reservation.reservationId, claimed.claim).catch(() => undefined);
+    if (isUnknownOpenAIOutcome(error)) throw error;
     return { outcome: "failed", stage: "generate" };
   }
   if (!reply) {
@@ -92,6 +104,7 @@ export async function processReviewDraft(input: {
   row: ReviewRowForReply;
   profile: ProfileReplyRow | null;
   source: DraftProcessingSource;
+  providerTimeoutMs?: number;
 }): Promise<DraftProcessingResult> {
   const lifecycle = await beginAccountLifecycleOperation({
     userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,

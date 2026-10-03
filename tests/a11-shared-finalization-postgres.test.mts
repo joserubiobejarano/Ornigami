@@ -6,12 +6,12 @@ import { createServer } from "node:net";
 import test from "node:test";
 
 const root = process.cwd();
-const binDir = process.env.A11_PG_BIN ?? process.env.PG_BIN;
+const binDir = process.env.A11_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.PG_BIN;
 const pgExe = (name: string) => process.platform === "win32"
   ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
   : binDir ? join(binDir, name) : name;
 
-test("A11 composed proposals replay and finalization preserves survivor data while purging owned evidence", async () => {
+test("A11 canonical lifecycle migrations replay and finalization preserves survivor data while purging owned evidence", async () => {
   const server = createServer();
   const port = await new Promise<number>((resolvePort, reject) => {
     server.once("error", reject);
@@ -29,13 +29,6 @@ test("A11 composed proposals replay and finalization preserves survivor data whi
   const args = (sql: string) => ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-c", sql];
   const psql = (sql: string) => execFileSync(pgExe("psql"), args(sql), { encoding: "utf8" }).trim();
   const psqlFile = (filename: string) => execFileSync(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", filename], { encoding: "utf8" }).trim();
-  const proposal = (name: string, sibling: string) => {
-    const local = join(root, "docs/tasks", name);
-    const fallback = resolve(root, "..", sibling, "docs/tasks", name);
-    const path = existsSync(local) ? local : fallback;
-    assert.ok(existsSync(path), `Missing composed SQL proposal ${name}`);
-    return path;
-  };
   try {
     execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
     appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
@@ -45,18 +38,9 @@ test("A11 composed proposals replay and finalization preserves survivor data whi
     started = true;
 
     const migrations = join(root, "neon/migrations");
-    for (const name of readdirSync(migrations).filter((entry) => /^(?:00[1-9]|01[0-7])_.*\.sql$/.test(entry)).sort()) psqlFile(join(migrations, name));
-    for (const name of ["019_billing_lifecycle.sql", "020_account_recovery.sql", "021_workspace_invitations.sql", "022_booster_delivery_quotas.sql", "024_review_draft_policy.sql", "031_google_location_selection.sql", "032_workspace_bootstrap.sql", "026_privacy_account_lifecycle.sql"]) psqlFile(join(migrations, name));
-
-    const proposals = [
-      proposal("A11_ACTIVATION_AUTH_TEAM.sql", "Ornigami-A11-activation-auth"),
-      proposal("A11_ACTIVATION_BILLING.sql", "Ornigami-A11-activation-billing"),
-      proposal("A11_ACTIVATION_REPLIES.sql", "Ornigami-A11-activation-auth"),
-      proposal("A11_ACTIVATION_BOOSTER.sql", "Ornigami-A11-activation-review"),
-      proposal("A11_ACTIVATION_LIFECYCLE.sql", "Ornigami-A11-activation-google"),
-    ];
-    for (const sql of proposals) psqlFile(sql);
-    for (const sql of proposals) psqlFile(sql);
+    for (const name of readdirSync(migrations).filter((entry) => /^\d{3}_.*\.sql$/.test(entry)).sort()) psqlFile(join(migrations, name));
+    const lifecycleMigrations = readdirSync(migrations).filter((entry) => /^03[3-8]_.*\.sql$/.test(entry)).sort();
+    for (const name of lifecycleMigrations) psqlFile(join(migrations, name));
     assert.equal(psql("SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='booster_followup_deliveries' AND column_name='actor_user_id'"), "1", "latest Booster proposal supplies actor attribution used by lifecycle drain");
 
     const owner = "10000000-0000-4000-8000-000000000001";

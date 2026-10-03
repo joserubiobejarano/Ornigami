@@ -6,12 +6,12 @@ import { createServer } from "node:net";
 import test from "node:test";
 
 const root = process.cwd();
-const binDir = process.env.A11_PG_BIN ?? process.env.PG_BIN;
+const binDir = process.env.A11_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.PG_BIN;
 const pgExe = (name: string) => process.platform === "win32"
   ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
   : binDir ? join(binDir, name) : name;
 
-test("A11 lifecycle lease drains before deletion and SQL proposal is replay safe", async () => {
+test("A11 lifecycle lease drains before deletion and numbered migrations replay safely", async () => {
   const server = createServer();
   const port = await new Promise<number>((resolvePort, reject) => {
     server.once("error", reject);
@@ -37,21 +37,9 @@ test("A11 lifecycle lease drains before deletion and SQL proposal is replay safe
     catch (error) { throw new Error(existsSync(log) ? readFileSync(log,"utf8") : "PostgreSQL failed to start",{cause:error}); }
     started = true;
     const migrations = join(root,"neon/migrations");
-    for (const name of readdirSync(migrations).filter((entry) => /^(?:00[1-9]|01[0-7])_.*\.sql$/.test(entry)).sort()) psqlFile(join(migrations,name));
-    for (const name of ["019_billing_lifecycle.sql","020_account_recovery.sql","021_workspace_invitations.sql","022_booster_delivery_quotas.sql","024_review_draft_policy.sql","031_google_location_selection.sql","032_workspace_bootstrap.sql","026_privacy_account_lifecycle.sql"]) psqlFile(join(migrations,name));
-    const proposal = join(root,"docs/tasks/A11_ACTIVATION_LIFECYCLE.sql");
-    psqlFile(proposal);
-    psqlFile(proposal);
-    const proposalPath = (name: string, sibling: string) => {
-      const local = join(root,"docs/tasks",name);
-      const fallback = resolve(root,"..",sibling,"docs/tasks",name);
-      const candidate = existsSync(local) ? local : fallback;
-      assert.ok(existsSync(candidate), `Missing composed SQL proposal ${name}`);
-      return candidate;
-    };
-    psqlFile(proposalPath("A11_ACTIVATION_AUTH_TEAM.sql","Ornigami-A11-activation-auth"));
-    psqlFile(proposalPath("A11_ACTIVATION_REPLIES.sql","Ornigami-A11-activation-auth"));
-    psqlFile(proposalPath("A11_ACTIVATION_BILLING.sql","Ornigami-A11-activation-billing"));
+    for (const name of readdirSync(migrations).filter((entry) => /^\d+_.*\.sql$/.test(entry)).sort()) {
+      psqlFile(join(migrations,name));
+    }
     const owner = "00000000-0000-4000-8000-000000000011";
     const other = "00000000-0000-4000-8000-000000000012";
     const business = "00000000-0000-4000-8000-000000000021";
@@ -68,6 +56,18 @@ test("A11 lifecycle lease drains before deletion and SQL proposal is replay safe
     const [leaseResult, token] = lease.split("|");
     assert.equal(leaseResult,"claimed");
     psql(`UPDATE account_lifecycle_operations SET encrypted_provider_evidence='encrypted-compensation-token' WHERE token='${token}';`);
+    const failedClaim = psql(`SELECT result||'|'||token::text FROM begin_account_lifecycle_operation('${owner}',NULL,'${business}','test_failed','known-failure-key',30000)`);
+    const [failedStart, failedToken] = failedClaim.split("|");
+    assert.equal(failedStart,"claimed");
+    assert.ok(failedToken);
+    assert.equal(psql(`SELECT finish_account_lifecycle_operation('${failedToken}','failed')`),"t");
+    assert.equal(psql(`SELECT result||'|'||token::text FROM begin_account_lifecycle_operation('${owner}',NULL,'${business}','test_failed','known-failure-key',30000)`),`failed|${failedToken}`,
+      "a known failed key stays explicitly failed and is not reported as success or retried");
+    const freshAttempt = psql(`SELECT result||'|'||token::text FROM begin_account_lifecycle_operation('${owner}',NULL,'${business}','test_failed','new-explicit-attempt',30000)`);
+    assert.match(freshAttempt,/^claimed\|[0-9a-f-]{36}$/,
+      "a retry requires an explicit new operation key");
+    const freshToken = freshAttempt.split("|")[1]!;
+    assert.equal(psql(`SELECT finish_account_lifecycle_operation('${freshToken}','failed')`),"t");
     const begin = psql(`SELECT result||'|'||operation_id::text FROM privacy_begin_account_deletion('${owner}',true)`);
     const [beginResult, operation] = begin.split("|");
     assert.equal(beginResult,"frozen");

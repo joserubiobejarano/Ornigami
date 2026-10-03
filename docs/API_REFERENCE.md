@@ -42,15 +42,19 @@ This is the route-level map of the current LocalLift application. Protected rout
 - `POST /api/review-booster/upload` — imports visits from CSV.
 - `POST /api/review-booster/run-now` — runs eligible follow-ups for the current business.
 - `GET|POST /api/review-booster/unsubscribe` — processes a public unsubscribe link.
-- `GET /r/[token]` — records a review-link click and redirects to the configured Google URL.
+- `GET /r/[token]` — validates the signed destination against direct Google review URL rules before recording a click/rendering navigation; unsafe historical tokens return 404.
+- `GET|POST|DELETE /api/review-booster/booking-credentials` — owner-only credential metadata/create/revoke; encrypted scoped secret is revealed once on creation, never in later reads or export.
+- `POST /api/webhooks/booking` — bounded raw-body HMAC and timestamp authentication using a scoped credential. Business comes from the credential; event/visit creation is atomic and deduplicated. Source labels are generic; `csv` is reserved for imports. See [A07 protocol](./tasks/A07_BOOKING_INTAKE_CSV_SETTINGS.md).
 
 ## Scheduled jobs and health
 
 - `GET /api/cron/review-booster` — processes Review Booster businesses in `active` or `trialing` state.
 - `GET /api/cron/review-replies` — syncs Google reviews and drafts replies for active/trialing businesses.
-- `GET /api/cron/health` — returns the latest persisted status for each scheduled job.
+- `GET /api/cron/health` — authenticated persisted summaries and sanitized alert status; excludes durable cursor contents and raw errors. Independent hourly monitoring checks `healthy`.
 - `GET /api/cron/privacy` — applies retention cleanup for operational and public-write records.
 - `POST /api/csp-report` — accepts bounded Content Security Policy reports.
+
+Cron workers return 202 for expected resumable continuation, 409 with Retry-After for a live lease, 500 for actionable work failures and 503 when health state cannot be trusted. Work is cooperatively budgeted at 45 seconds with bounded provider/SQL calls and fenced durable checkpoints; empty settled sweeps report no_work. Privacy retention already runs daily at 03:00 UTC through Vercel.
 
 ## Billing
 

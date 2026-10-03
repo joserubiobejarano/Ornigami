@@ -53,6 +53,8 @@ test("retention policy keeps the approved windows and names preserved histories 
     "billing_trial_business_history", "team_invitations", "unsubscribe_suppressions",
     "billing_trial_reservations", "billing_customer_provisioning", "billing_reconciliation_leases",
     "privacy_account_deletion_operations",
+    "booster_booking_credentials",
+    "privacy_reply_post_outcomes",
   ]) assert.ok(policy.PRIVACY_PRESERVED_HISTORY_CLASSES.includes(history as never));
   assert.equal(policy.PRIVACY_CLEANUP_OPERATIONS.length, 10);
   assert.equal(policy.PRIVACY_CLEANUP_TABLES.length, 11);
