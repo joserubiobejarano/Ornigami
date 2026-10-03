@@ -4,6 +4,7 @@ import { execFile, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
+import { createServer } from "node:net";
 import test from "node:test";
 import { loadTs } from "./auth-test-harness.mts";
 
@@ -38,7 +39,7 @@ async function psqlAsync(port: number, statement: string): Promise<string> {
 }
 
 test("production token SQL rotates tokens and atomically consumes one valid token", async () => {
-  const port = 55404;
+  let port = 0;
   const testRoot = resolve(root, ".next");
   mkdirSync(testRoot, { recursive: true });
   const dir = mkdtempSync(join(testRoot, "a04-tests-pg-"));
@@ -51,6 +52,16 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
     // Packaged Linux builds can default sockets to a postgres-owned system
     // directory. This isolated cluster is reached exclusively over loopback TCP.
     appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
+    // Select just before startup: a fixed port inside Linux's ephemeral range
+    // can be occupied by another fixture's client connection during parallel tests.
+    const portServer = createServer();
+    port = await new Promise<number>((resolvePort, rejectPort) => {
+      portServer.once("error", rejectPort);
+      portServer.listen(0, "127.0.0.1", () => {
+        const selected = (portServer.address() as { port: number }).port;
+        portServer.close((error) => error ? rejectPort(error) : resolvePort(selected));
+      });
+    });
     const logFile = join(dir, "postgres.log");
     try {
       execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
