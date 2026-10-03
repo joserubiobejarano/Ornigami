@@ -43,7 +43,7 @@ function getInitials(name?: string | null, email?: string | null): string {
   return source.slice(0, 2).toUpperCase();
 }
 
-export function DashboardUserMenu() {
+export function DashboardUserMenu({ canManageBilling = false }: { canManageBilling?: boolean }) {
   const { data } = useSession();
   const userName = data?.user?.name ?? "Account";
   const userEmail = data?.user?.email ?? "";
@@ -97,12 +97,12 @@ export function DashboardUserMenu() {
           {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
           {darkMode ? "Use light mode" : "Use dark mode"}
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-2.5 py-2">
+        {canManageBilling ? <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-2.5 py-2">
           <Link href="/dashboard/billing">
             <CreditCard className="size-4" />
             Billing
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> : null}
         <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-2.5 py-2">
           <Link href="/dashboard">
             <UserRound className="size-4" />

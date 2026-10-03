@@ -1,29 +1,18 @@
 import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
 import { requireUser } from "@/lib/auth";
-import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
+import { getDashboardAgentAccess } from "@/lib/dashboard-access";
 import ReviewBoosterUploadPagePlaceholder from "@/modules/review-booster/pages/upload-page";
 
 export default async function ReviewBoosterUploadPage() {
   const session = await requireUser();
-  let business;
-  try {
-    business = await getOrCreateBusinessForUser(session.user.id);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Could not resolve user in public.users") && session.user.email) {
-      business = await getOrCreateBusinessForUser(session.user.email);
-    } else {
-      throw error;
-    }
-  }
-
-  const hasAccess = await canAccessAgent(business.id, "review_booster");
-  if (!hasAccess) {
+  const { context, entitlement } = await getDashboardAgentAccess(session.user.id, "review_booster");
+  if (!entitlement.hasAccess) {
     return (
       <AgentActivationPlaceholder
         agentId="review_booster"
         agentName="Review Booster"
         description="Post-visit review request automations."
+        canManageBilling={context.role === "owner"}
       />
     );
   }

@@ -1,50 +1,34 @@
-import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
 import { AgentActivationPlaceholder } from "@/components/dashboard/agent-activation-placeholder";
 import { requireUser } from "@/lib/auth";
-import { canAccessAgent, getOrCreateBusinessForUser } from "@/lib/db/businesses";
-import { formatProductDate } from "@/lib/format-date";
+import { getDashboardAgentAccess } from "@/lib/dashboard-access";
 import { FollowupsNav } from "@/modules/review-booster/components/followups-nav";
 import { RunFollowupsButton } from "@/modules/review-booster/components/run-followups-button";
-import { StatusBadge } from "@/modules/review-booster/components/status-badge";
+import { RecentVisitsTable } from "@/modules/review-booster/components/recent-visits-table";
 import {
   getFollowupStats,
-  getRecentVisits,
+  getRecentVisitsPage,
   getReviewOutcomeStats,
   getReviewBoosterBillingPeriodUsage,
 } from "@/modules/review-booster/services/review-booster-db.service";
 
 export default async function ReviewBoosterPage() {
   const session = await requireUser();
-  let business;
-  try {
-    business = await getOrCreateBusinessForUser(session.user.id);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (
-      message.includes("Could not resolve user in public.users") &&
-      session.user.email
-    ) {
-      business = await getOrCreateBusinessForUser(session.user.email);
-    } else {
-      throw error;
-    }
-  }
-  const hasAccess = await canAccessAgent(business.id, "review_booster");
-  if (!hasAccess) {
+  const { context, entitlement } = await getDashboardAgentAccess(session.user.id, "review_booster");
+  const business = context.business;
+  if (!entitlement.hasAccess) {
     return (
       <AgentActivationPlaceholder
         agentId="review_booster"
         agentName="Review Booster"
         description="Post-visit review request automations."
+        canManageBilling={context.role === "owner"}
       />
     );
   }
 
-  const [stats, recentVisits, outcomes, monthlyUsage] = await Promise.all([
+  const [stats, recentVisitsPage, outcomes, monthlyUsage] = await Promise.all([
     getFollowupStats(business.id),
-    getRecentVisits(business.id, 20),
+    getRecentVisitsPage(business.id, { limit: 50 }),
     getReviewOutcomeStats(business.id),
     getReviewBoosterBillingPeriodUsage(business.id),
   ]);
@@ -134,52 +118,12 @@ export default async function ReviewBoosterPage() {
         />
       </div>
 
-      <section className="overflow-hidden rounded-2xl border-[1.5px] border-border bg-card shadow-ink-sm">
-        <div className="border-b border-border px-4 py-4">
-          <h2 className="text-2xl font-semibold text-card-foreground">Recent visits</h2>
-        </div>
-        {recentVisits.length === 0 ? (
-          <div className="px-4 py-6"><p className="text-sm text-muted-foreground">No visits yet for this business.</p><Button asChild className="mt-3"><Link href="/dashboard/agents/review-booster/new">Add your first visit</Link></Button></div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="border-b border-border bg-surface text-left text-primary">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Customer</th>
-                  <th className="px-4 py-3 font-semibold">Email</th>
-                  <th className="px-4 py-3 font-semibold">Service</th>
-                  <th className="px-4 py-3 font-semibold">Visit date</th>
-                  <th className="px-4 py-3 font-semibold">Source</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">Why it didn&apos;t send</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentVisits.map((visit) => (
-                  <tr key={visit.id} className="border-b border-border last:border-b-0">
-                    <td className="px-4 py-3 text-card-foreground">{visit.customer_name || "-"}</td>
-                    <td className="px-4 py-3 text-card-foreground">{visit.customer_email || "-"}</td>
-                    <td className="px-4 py-3 text-card-foreground">{visit.service_name || "-"}</td>
-                    <td className="px-4 py-3 text-card-foreground">
-                      {formatProductDate(visit.visited_at)}
-                    </td>
-                    <td className="px-4 py-3 text-card-foreground capitalize">{visit.source || "-"}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={visit.followup_status || "pending"} />
-                      {visit.followup_status === "deferred_quota" && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Waiting for quota; eligibility expires {new Date(new Date(visit.visited_at).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().replace("T", " ").slice(0, 16)} UTC.
-                        </p>
-                      )}
-                    </td>
-                    <td className="max-w-xs px-4 py-3 text-card-foreground">{visit.error_reason || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <RecentVisitsTable
+        key={business.id}
+        businessId={business.id}
+        initialVisits={recentVisitsPage.items}
+        initialPage={recentVisitsPage.page}
+      />
     </div>
   );
 }

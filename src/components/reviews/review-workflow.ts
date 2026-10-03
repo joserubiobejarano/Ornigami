@@ -16,7 +16,7 @@ export function getReviewWorkflowDisplay(
   isDemo: boolean
 ): { workflow: ReviewWorkflow; badge: WorkflowBadgeConfig } {
   const id = review.google_review_id;
-  const isPosted = review.status.toLowerCase() === "replied";
+  const isPosted = review.status.toLowerCase() === "replied" || review.draftState === "posted";
   const inTestContext = Boolean(review.isSample || isDemo);
 
   if (isPosted) {
@@ -73,7 +73,7 @@ export function canGenerateReplyDraft(
   draftText: string,
   savedSnapshots: Record<string, string>
 ): boolean {
-  if (review.status.toLowerCase() === "replied") return false;
+  if (review.status.toLowerCase() === "replied" || review.draftState === "posted" || review.postRecoveryStatus) return false;
   if (review.draftState && review.draftState !== "new") return false;
   return !draftText.trim() && !savedSnapshots[review.google_review_id];
 }

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export function DashboardTopNav({ className }: { className?: string }) {
+export function DashboardTopNav({ className, canManageBilling = false }: { className?: string; canManageBilling?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const activeAgents = useMemo(() => AGENT_REGISTRY.filter((agent) => agent.status === "active"), []);
@@ -19,19 +19,19 @@ export function DashboardTopNav({ className }: { className?: string }) {
   const navigationItems = [
     { href: "/dashboard/agents/review-replies/reviews", label: "Reviews" },
     { href: "/dashboard/agents/review-replies/settings", label: "Settings" },
-    { href: "/dashboard/billing", label: "Billing" },
+    ...(canManageBilling ? [{ href: "/dashboard/billing", label: "Billing" }] : []),
   ];
 
   return (
-    <nav className={cn("flex min-w-max flex-wrap items-center justify-center gap-1 rounded-2xl border-[1.5px] border-border bg-card px-2 py-2 shadow-ink-sm", className)} aria-label="Dashboard">
-      <Link href="/dashboard" className={cn("rounded-xl px-3 py-2 text-sm font-medium transition-colors", pathname === "/dashboard" ? "bg-tint-butter text-primary" : "text-muted-foreground hover:bg-surface hover:text-primary")}>Dashboard</Link>
+    <nav className={cn("flex min-w-full flex-nowrap items-center justify-start gap-1 rounded-2xl border-[1.5px] border-border bg-card px-2 py-2 shadow-ink-sm", className)} aria-label="Dashboard">
+      <Link href="/dashboard" className={cn("whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors", pathname === "/dashboard" ? "bg-tint-butter text-primary" : "text-muted-foreground hover:bg-surface hover:text-primary")}>Dashboard</Link>
       {navigationItems.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-        return <Link key={item.href} href={item.href} className={cn("rounded-xl px-3 py-2 text-sm font-medium transition-colors", active ? "bg-tint-navy text-primary" : "text-muted-foreground hover:bg-surface hover:text-primary")}>{item.label}</Link>;
+        return <Link key={item.href} href={item.href} className={cn("whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors", active ? "bg-tint-navy text-primary" : "text-muted-foreground hover:bg-surface hover:text-primary")}>{item.label}</Link>;
       })}
       <DropdownMenu>
         <DropdownMenuTrigger asChild id="dashboard-agent-menu-trigger">
-          <Button variant="outline" className="h-10 min-w-52 justify-between rounded-xl px-3 text-sm font-medium">
+          <Button variant="outline" className="h-10 min-w-52 shrink-0 justify-between rounded-xl px-3 text-sm font-medium">
             <span>{selectedAgent?.name ?? "Select an agent"}</span>
             <ChevronsUpDown className="size-4 opacity-70" />
           </Button>

@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-security";
+import { resolveRequestedBusinessId } from "@/lib/google-business";
+import { parseDashboardPageSize } from "@/lib/dashboard-pagination";
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
-import { createFollowupVisit } from "@/modules/review-booster/services/review-booster-db.service";
+import { createFollowupVisit, getRecentVisitsPage } from "@/modules/review-booster/services/review-booster-db.service";
 import { isValidCustomerEmail, isValidCustomerPhone, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
 
 export const runtime = "nodejs";
@@ -12,6 +14,26 @@ export const dynamic = "force-dynamic";
 function optionalString(value: unknown): string | null {
   if (typeof value !== "string") return null;
   return value.trim() || null;
+}
+
+export async function GET(req: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const url = new URL(req.url);
+  const requested = resolveRequestedBusinessId(url.searchParams.get("businessId"), undefined);
+  if (!requested.valid) return NextResponse.json({ error: "Conflicting or invalid businessId" }, { status: 400 });
+  const limit = parseDashboardPageSize(url.searchParams.get("limit"));
+  if (limit === null) return NextResponse.json({ error: "limit must be a positive integer" }, { status: 400 });
+  try {
+    const business = await requireActiveAgentAccess(session.user.id, session.user.email, "review_booster", requested.businessId);
+    const result = await getRecentVisitsPage(business.id, {
+      limit,
+      cursor: url.searchParams.get("cursor"),
+    });
+    return NextResponse.json({ ...result, businessId: business.id });
+  } catch (error) {
+    return safeApiErrorResponse(error, "review_booster.visits.get");
+  }
 }
 
 export async function POST(req: Request) {

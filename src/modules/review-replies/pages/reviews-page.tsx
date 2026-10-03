@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   DashboardCallout,
@@ -22,11 +22,17 @@ import { useReviewInboxData } from "@/modules/review-replies/hooks/use-review-in
 import { ReviewInboxSummary } from "@/modules/review-replies/components/review-inbox-summary";
 import type { Review } from "@/modules/review-replies/types/review.types";
 import { hasDraftChangedSince, shouldShowTestWorkflowActions } from "@/components/reviews/review-workflow";
-import { DraftVersionConflictError, postReviewReply, saveReviewDraft } from "@/modules/review-replies/services/review-replies-api.service";
+import { DraftVersionConflictError, ReplyPostError, postReviewReply, saveReviewDraft } from "@/modules/review-replies/services/review-replies-api.service";
 import type { ReviewDraft } from "@/modules/review-replies/types/review.types";
 
 function ReviewsPageContent() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [postingReviewId, setPostingReviewId] = useState<string | null>(null);
+  const [generatingReviewId, setGeneratingReviewId] = useState<string | null>(null);
+  const [savingReviewId, setSavingReviewId] = useState<string | null>(null);
+  const postingReviewIdsRef = useRef(new Set<string>());
+  const generatingReviewIdsRef = useRef(new Set<string>());
+  const savingReviewIdsRef = useRef(new Set<string>());
   const [draftConflicts, setDraftConflicts] = useState<Record<string, ReviewDraft | null | undefined>>({});
   const {
     businessId,
@@ -40,14 +46,25 @@ function ReviewsPageContent() {
     setDrafts,
     savedDraftSnapshots,
     setSavedDraftSnapshots,
+    rememberDraftMetadata,
+    isOwner,
     loading,
+    pageLoading,
+    hasPrevious,
+    hasMore,
     error,
     syncing,
     loadReviews,
+    loadFirstReviews,
+    loadNextReviews,
+    loadPreviousReviews,
     syncReviews,
   } = useReviewInboxData(true);
   const draftsRef = useRef(drafts);
   draftsRef.current = drafts;
+  const activeScopeRef = useRef(JSON.stringify([businessId ?? null, selectedLoc]));
+  activeScopeRef.current = JSON.stringify([businessId ?? null, selectedLoc]);
+  useEffect(() => setDraftConflicts({}), [businessId, selectedLoc]);
 
   const NO_CONNECTED_MSG = "Connect your Google profile to load locations and reviews.";
 
@@ -60,6 +77,12 @@ function ReviewsPageContent() {
       toast.error("Select a location before generating a reply.");
       return;
     }
+    const operationScope = JSON.stringify([businessId ?? null, selectedLoc]);
+    const scopeIsCurrent = () => operationScope === activeScopeRef.current;
+    if (generatingReviewIdsRef.current.size > 0) return;
+    generatingReviewIdsRef.current.add(review.google_review_id);
+    setGeneratingReviewId(review.google_review_id);
+    try {
     const localTextAtStart = draftsRef.current[review.google_review_id] ?? "";
     const body = review.isSample
       ? {
@@ -90,9 +113,16 @@ function ReviewsPageContent() {
         locationName: selectedLoc,
       }),
     });
-
     if (!r.ok) {
+      if (!scopeIsCurrent()) {
+        toast.info("Generation failed for the previous location. Return there before taking further action.");
+        return;
+      }
       const j = await r.json().catch(() => ({})) as { error?: string; currentDraft?: ReviewDraft | null };
+      if (!scopeIsCurrent()) {
+        toast.info("Generation failed for the previous location. Return there before taking further action.");
+        return;
+      }
       if (j.currentDraft !== undefined) {
         setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: j.currentDraft ?? null }));
       }
@@ -111,6 +141,11 @@ function ReviewsPageContent() {
         toast.error("The generated draft could not be saved. Please try again.");
         return;
       }
+      rememberDraftMetadata(review.google_review_id, { draftState: generatedDraft.state, draftVersion: generatedDraft.version, draftUpdatedAt: generatedDraft.updatedAt }, { businessId, location: selectedLoc }, replyText);
+      if (!scopeIsCurrent()) {
+        toast.info("Generation finished for the previous location. Return there and refresh its inbox to review the saved draft.");
+        return;
+      }
       const userEditedWhileGenerating = hasDraftChangedSince(draftsRef.current[review.google_review_id], localTextAtStart);
       setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: replyText }));
       setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
@@ -127,6 +162,10 @@ function ReviewsPageContent() {
       const j = await r.json() as { reply?: string; markdown?: string; text?: string };
       replyText = j.reply ?? j.markdown ?? j.text ?? "";
     }
+    if (!scopeIsCurrent()) {
+      toast.info("Generation finished for the previous location. Return there and refresh its inbox to review the saved draft.");
+      return;
+    }
     if (!hasDraftChangedSince(draftsRef.current[review.google_review_id], localTextAtStart)) {
       setDrafts((d) => ({ ...d, [review.google_review_id]: replyText }));
     }
@@ -140,6 +179,14 @@ function ReviewsPageContent() {
       }
       toast.success("AI draft generated and saved. Review it, then edit or post when ready.");
     }
+    } catch {
+      toast.error(scopeIsCurrent()
+        ? "We couldn't generate a reply. Your current text is preserved; retry when the connection is available."
+        : "Generation did not finish in the current view. Return to the original location and refresh its inbox.");
+    } finally {
+      generatingReviewIdsRef.current.delete(review.google_review_id);
+      setGeneratingReviewId(null);
+    }
   }
 
   async function post(review: Review) {
@@ -148,44 +195,59 @@ function ReviewsPageContent() {
       toast.error("Write or generate a reply before posting.");
       return;
     }
-
     const localSnapshot = savedDraftSnapshots[review.google_review_id];
+    const version = review.draftVersion ?? 0;
+    if (localSnapshot !== reply || version <= 0) {
+      toast.error("Save this exact reply draft before posting it to Google.");
+      return;
+    }
+    if (postingReviewIdsRef.current.size > 0) return;
+    postingReviewIdsRef.current.add(review.google_review_id);
+    setPostingReviewId(review.google_review_id);
+    const operationScope = JSON.stringify([businessId ?? null, selectedLoc]);
+    const scopeIsCurrent = () => operationScope === activeScopeRef.current;
     try {
-      let version = review.draftVersion ?? 0;
-      let postText = reply;
-      if (localSnapshot !== reply || version === 0) {
-        const saved = await saveReviewDraft({
-          ...(businessId ? { businessId } : {}),
-          reviewId: review.google_review_id,
-          reply,
-          expectedVersion: version,
-        });
-        version = saved.version;
-        postText = saved.reply ?? reply.trim();
-        setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: postText }));
-        if (!hasDraftChangedSince(draftsRef.current[review.google_review_id], reply)) {
-          setDrafts((previous) => ({ ...previous, [review.google_review_id]: postText }));
-        }
-        setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
-          ? { ...item, draftState: saved.state, draftVersion: saved.version, draftUpdatedAt: saved.updatedAt }
-          : item));
-      }
       await postReviewReply({
         ...(businessId ? { businessId } : {}),
         reviewId: review.google_review_id,
         locationName: selectedLoc,
-        reply: postText,
+        reply,
         expectedVersion: version,
       });
+      rememberDraftMetadata(review.google_review_id, { draftState: "posted", draftVersion: version, draftUpdatedAt: review.draftUpdatedAt }, { businessId, location: selectedLoc });
+      if (!scopeIsCurrent()) {
+        toast.info("Posting finished for the previous location. Return there and refresh its inbox to check the saved status.");
+        return;
+      }
+      setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
+        ? { ...item, status: "replied", draftState: "posted", postRecoveryStatus: null }
+        : item));
       await loadReviews();
       toast.success("Reply posted to Google.");
     } catch (cause) {
-      if (cause instanceof DraftVersionConflictError) {
+      if (!scopeIsCurrent()) {
+        toast.info("Posting could not be confirmed for the previous location. Return there and refresh its saved status.");
+      } else if (cause instanceof DraftVersionConflictError) {
         setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: cause.currentDraft }));
         toast.error("This draft changed elsewhere. Your edits are preserved; reload the saved draft before retrying.");
       } else {
-        toast.error(cause instanceof Error ? cause.message : "We couldn't post this reply. Try again.");
+        if (!scopeIsCurrent()) {
+          toast.info("Posting could not be confirmed for the previous location. Return there and refresh its saved status.");
+        } else if (!(cause instanceof ReplyPostError) || cause.outcomeUncertain) {
+          if (cause instanceof ReplyPostError && cause.currentDraft !== undefined) {
+            setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: cause.currentDraft ?? null }));
+          }
+          setReviews((previous) => previous.map((item) => item.google_review_id === review.google_review_id
+            ? { ...item, postRecoveryStatus: "reconciliation_required" }
+            : item));
+          toast.error("The post result could not be confirmed. Refresh the saved status before taking any further action.");
+        } else {
+          toast.error(cause.message);
+        }
       }
+    } finally {
+      postingReviewIdsRef.current.delete(review.google_review_id);
+      setPostingReviewId(null);
     }
   }
 
@@ -195,6 +257,11 @@ function ReviewsPageContent() {
       toast.error("Write a reply before saving.");
       return;
     }
+    if (savingReviewIdsRef.current.size > 0) return;
+    savingReviewIdsRef.current.add(review.google_review_id);
+    setSavingReviewId(review.google_review_id);
+    const operationScope = JSON.stringify([businessId ?? null, selectedLoc]);
+    const scopeIsCurrent = () => operationScope === activeScopeRef.current;
     try {
       const draft = await saveReviewDraft({
         ...(businessId ? { businessId } : {}),
@@ -203,6 +270,11 @@ function ReviewsPageContent() {
         expectedVersion: review.draftVersion ?? 0,
       });
       const canonicalText = draft.reply ?? reply.trim();
+      rememberDraftMetadata(review.google_review_id, { draftState: draft.state, draftVersion: draft.version, draftUpdatedAt: draft.updatedAt }, { businessId, location: selectedLoc }, canonicalText);
+      if (!scopeIsCurrent()) {
+        toast.info("The draft was saved for the previous location. Return there and refresh its inbox to review it.");
+        return;
+      }
       setSavedDraftSnapshots((s) => ({ ...s, [review.google_review_id]: canonicalText }));
       if (!hasDraftChangedSince(draftsRef.current[review.google_review_id], reply)) {
         setDrafts((previous) => ({ ...previous, [review.google_review_id]: canonicalText }));
@@ -213,17 +285,27 @@ function ReviewsPageContent() {
       setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: undefined }));
       toast.success("Your reply draft is saved.");
     } catch (cause) {
-      if (cause instanceof DraftVersionConflictError) {
+      if (!scopeIsCurrent()) {
+        toast.info("The save could not be confirmed for the previous location. Return there and refresh its inbox.");
+      } else if (cause instanceof DraftVersionConflictError) {
         setDraftConflicts((previous) => ({ ...previous, [review.google_review_id]: cause.currentDraft }));
         toast.error("This draft changed elsewhere. Your edits are preserved; reload the saved draft before retrying.");
       } else {
         toast.error(cause instanceof Error ? cause.message : "We couldn't save this draft. Try again.");
       }
+    } finally {
+      savingReviewIdsRef.current.delete(review.google_review_id);
+      setSavingReviewId(null);
     }
   }
 
   function reloadConflict(review: Review) {
     const current = draftConflicts[review.google_review_id];
+    rememberDraftMetadata(review.google_review_id, {
+      draftState: current?.state ?? "new",
+      draftVersion: current?.version ?? 0,
+      draftUpdatedAt: current?.updatedAt ?? null,
+    }, { businessId, location: selectedLoc }, current?.reply ?? null);
     setDrafts((previous) => ({ ...previous, [review.google_review_id]: current?.reply ?? "" }));
     setSavedDraftSnapshots((previous) => {
       const next = { ...previous };
@@ -291,21 +373,23 @@ function ReviewsPageContent() {
       <DashboardPageHeader
         kicker="Review inbox"
         title="Review replies and approve each post."
-        description="Generate creates a saved AI draft. Save keeps your edits. Approve & post publishes the reply you review."
+        description="Generate AI draft creates a saved suggestion. Save draft stores your edits. Post saved reply publishes the saved text to Google."
       />
 
       <div className="space-y-3">
         {!hasRealLocations && !loading && (
           <DashboardCallout
             variant="neutral"
-            action={
+            action={isOwner ? (
               <Button type="button" size="sm" onClick={handleConnectGoogle}>
                 Connect Google
               </Button>
-            }
+            ) : undefined}
           >
             <p className="text-foreground">
-              Connect Google and select a location in Google settings to load your review inbox. You stay in control of each reply you post.
+              {isOwner
+                ? "Connect Google and select a location in Google settings to load your review inbox. You stay in control of each reply you post."
+                : "Ask the workspace owner to connect Google and select a location. You stay in control of each reply you post."}
             </p>
           </DashboardCallout>
         )}
@@ -327,8 +411,8 @@ function ReviewsPageContent() {
           </DashboardCallout>
         )}
         {error && !isNoConnectedOnly && (
-          <DashboardCallout variant="error">
-            <p>{error}</p>
+          <DashboardCallout variant="error" action={selectedLoc ? <Button type="button" size="sm" variant="outline" onClick={() => void loadReviews()} disabled={loading || pageLoading}>Retry</Button> : undefined}>
+            <p role="alert">{error}</p>
           </DashboardCallout>
         )}
       </div>
@@ -336,6 +420,7 @@ function ReviewsPageContent() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <select
           className={cn(nativeSelectClassName, "min-w-[200px] sm:min-w-[220px] sm:max-w-md sm:flex-1")}
+          aria-label="Select a Google review location"
           value={selectedLoc}
           onChange={(e) => setSelectedLoc(e.target.value)}
           disabled={loading}
@@ -373,13 +458,13 @@ function ReviewsPageContent() {
         </div>
       )}
 
-      {!loading && reviews.length === 0 && hasRealLocations && (
+      {!loading && !error && reviews.length === 0 && hasRealLocations && (
         <DashboardEmptyState
           title="No reviews yet"
-          description="No reviews yet. Once your Google profile is connected, new reviews land here with a draft ready."
+          description="No reviews were returned for this selected location. Sync the location to check for recent reviews."
         >
-          <Button type="button" onClick={handleConnectGoogle}>
-            Connect Google
+          <Button type="button" onClick={() => void syncReviews()} disabled={syncing || loading}>
+            {syncing ? "Syncing reviews…" : "Sync reviews"}
           </Button>
         </DashboardEmptyState>
       )}
@@ -406,8 +491,35 @@ function ReviewsPageContent() {
         onMarkPostedTest={markAsPostedTest}
         hasPaidAccess
         draftConflicts={draftConflicts}
+        postingReviewId={postingReviewId}
+        savingReviewId={savingReviewId}
+        generatingReviewId={generatingReviewId}
         onReloadConflict={reloadConflict}
+        onRefreshPostStatus={() => void loadReviews()}
       />
+      {reviews.length === 0 && hasPrevious && !pageLoading && (
+        <p className="text-sm text-muted-foreground">No reviews were returned for this page. The list may have changed; go back to the newest reviews.</p>
+      )}
+      {(reviews.length > 0 || hasPrevious) && (
+        <nav className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="Review pages">
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {pageLoading ? "Loading reviews…" : `${reviews.length} reviews on this page`}
+          </p>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button type="button" variant="outline" className="flex-1 sm:flex-none" onClick={() => void loadPreviousReviews()} disabled={!hasPrevious || pageLoading || loading}>
+              Previous
+            </Button>
+            <Button type="button" variant="outline" className="flex-1 sm:flex-none" onClick={() => void loadNextReviews()} disabled={!hasMore || pageLoading || loading}>
+              {pageLoading ? "Loading…" : "Next"}
+            </Button>
+            {hasPrevious && reviews.length === 0 && (
+              <Button type="button" variant="outline" className="flex-1 sm:flex-none" onClick={() => void loadFirstReviews()} disabled={pageLoading || loading}>
+                Newest reviews
+              </Button>
+            )}
+          </div>
+        </nav>
+      )}
     </DashboardPage>
   );
 }
