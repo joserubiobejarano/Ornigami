@@ -14,7 +14,19 @@ export function isSameOriginMutation(request: Request): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return fetchSite === "same-origin";
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    const target = new URL(request.url);
+    // NextRequest normalizes loopback IPs to localhost. Restore only the
+    // explicitly configured loopback origin with the same protocol and port;
+    // neither Origin nor forwarded headers can introduce another trusted host.
+    if (target.hostname === "localhost" && process.env.NEXT_PUBLIC_APP_URL) {
+      const configured = new URL(process.env.NEXT_PUBLIC_APP_URL);
+      if (["127.0.0.1", "[::1]"].includes(configured.hostname)
+          && configured.protocol === target.protocol && configured.port === target.port
+          && !configured.username && !configured.password) {
+        return new URL(origin).origin === configured.origin;
+      }
+    }
+    return new URL(origin).origin === target.origin;
   } catch {
     return false;
   }

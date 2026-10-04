@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.a20-fixture/
 
 # next.js
 /.next/
