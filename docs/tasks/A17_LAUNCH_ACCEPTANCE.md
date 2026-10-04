@@ -1,5 +1,7 @@
 # A17 launch acceptance
 
+**Latest operator evidence — wave 11, 2026-10-04:** [A00 review](./A00_WAVE11_INTEGRATION_REVIEW.md) closes the bounded live Resend application-to-signed-webhook proof and accepts A12's production-operations runbooks. Permanent deployed mail configuration/public CTA/inbox placement, production support credential delivery, current Sentry alert delivery and proposed child expiry execution remain open. Existing authenticated core/privacy observation evidence stays closed. Broad paid launch remains held; no new broad A17/A20 audit is assigned.
+
 **Operator evidence update — 2026-10-04:** [Wave 10](./A00_WAVE10_INTEGRATION_REVIEW.md) closes the successful production privacy checkpoint observation and verifies local synthetic HTTP ingress, child-only support access and one historical notification receipt. Broad paid launch remains held: live Resend/public endpoint, production support/current-rule evidence, unperformed release journeys and external/policy gates are not waived. No new broad A17/A20 rerun is assigned.
 
 Status: integrated A17 implementation and provider receipts are preserved below. [Wave 9 A20 integration](./A00_WAVE9_INTEGRATION_REVIEW.md) closes the isolated authenticated core-workflow gap; external provider, operational and other explicitly unperformed release journeys remain open. Historical candidate feasibility and browser evidence remain in [A17 integrated acceptance handoff](./A17_INTEGRATED_ACCEPTANCE_HANDOFF.md).

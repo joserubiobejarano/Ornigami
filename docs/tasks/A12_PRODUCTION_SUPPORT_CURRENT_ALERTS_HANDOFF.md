@@ -1,5 +1,7 @@
 # A12 production support and current alerts handoff
 
+**Integration review — wave 11:** [A00 review](./A00_WAVE11_INTEGRATION_REVIEW.md) accepts the runbooks/test path correction and passes combined suites 72/72 on Node 22.23.3. Fresh read-only Console observations confirm current alert/history and the child still at `Never`; workflow API remains 403. Production onboarding/current-rule delivery/lifecycle execution are pending. `SUPPORT_DATABASE_URL` is operator-only; no Vercel setting is required. The October 5 expiry remains a proposed action subject to the stated owner/consumer gates.
+
 Status: tooling review and isolated acceptance are complete. **Production support onboarding and current-alert delivery acceptance are pending.** No production database connection/query, support-role mutation, staff credential installation, Sentry notification send, provider change, deployment, or main-branch change was made in this task.
 
 ## Reviewed evidence
