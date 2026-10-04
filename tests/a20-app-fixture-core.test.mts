@@ -40,6 +40,6 @@ test("app child environment drops inherited production, proxy, PostgreSQL and No
   assert.equal(env.PATH, "safe-path");
   assert.equal(env.PORT, "43021");
   assert.equal(env.NEXT_PUBLIC_APP_URL, "http://127.0.0.1:43021");
-  assert.equal(env.NODE_OPTIONS, `--import="${pathToFileURL(preload).href}"`);
+  assert.equal(env.NODE_OPTIONS, `--import=${pathToFileURL(preload).href}`);
   for (const key of ["DATABASE_URL", "HTTP_PROXY", "PGSERVICEFILE", "RESEND_API_KEY", "AUTH_SECRET"]) assert.equal(env[key], undefined);
 });

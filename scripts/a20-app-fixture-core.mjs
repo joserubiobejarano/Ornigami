@@ -45,6 +45,6 @@ export function baseA20ChildEnv(inherited, { appPort, preload }) {
     NEXT_PUBLIC_APP_URL: `http://127.0.0.1:${appPort}`,
     AUTH_URL: `http://127.0.0.1:${appPort}`,
     NEXTAUTH_URL: `http://127.0.0.1:${appPort}`,
-    NODE_OPTIONS: `--import="${normalizedPreload}"`,
+    NODE_OPTIONS: `--import=${normalizedPreload}`,
   };
 }

@@ -293,8 +293,10 @@ function buildAndStart(appPort) {
   };
   const logFd = openOutputLog();
   try {
-    run(process.execPath, [...nodeArgs, nextBin, "build", "--webpack"], { env: buildEnv, stdio: ["ignore", logFd, logFd], timeout: 600_000, maxBuffer: 20 * 1024 * 1024 });
-    run(process.execPath, [...nodeArgs, join(ROOT, "scripts", "generate-static-csp-hashes.mjs")], { env, stdio: ["ignore", logFd, logFd] });
+    // Use NODE_OPTIONS alone during build: Next propagates it to workers, and
+    // also inherits process.execArgv. Passing --import both ways duplicates it.
+    run(process.execPath, [nextBin, "build", "--webpack"], { env: buildEnv, stdio: ["ignore", logFd, logFd], timeout: 600_000, maxBuffer: 20 * 1024 * 1024 });
+    run(process.execPath, [join(ROOT, "scripts", "generate-static-csp-hashes.mjs")], { env: buildEnv, stdio: ["ignore", logFd, logFd] });
   } finally { closeLog(logFd); }
   const buildId = readFileSync(join(ROOT, ".next", "BUILD_ID"), "utf8").trim();
   const buildHash = hashBuildTree(join(ROOT, ".next"));
@@ -302,9 +304,11 @@ function buildAndStart(appPort) {
   const buildTree = run("git", ["rev-parse", "HEAD^{tree}"]);
   const serverLog = openSync(join(FIXTURE, "server.log"), "a", 0o600);
   let server;
+  const serverEnv = { ...env };
+  delete serverEnv.NODE_OPTIONS;
   try {
     server = spawn(process.execPath, [...nodeArgs, nextBin, "start", "-H", "127.0.0.1", "-p", String(appPort)], {
-      cwd: ROOT, env, detached: true, windowsHide: true, stdio: ["ignore", serverLog, serverLog],
+      cwd: ROOT, env: serverEnv, detached: true, windowsHide: true, stdio: ["ignore", serverLog, serverLog],
     });
   } finally { closeSync(serverLog); }
   if (!server.pid) throw new Error("could not launch the loopback production server");
