@@ -1,5 +1,7 @@
 # A20 authenticated browser acceptance handoff
 
+**Integration addendum — 2026-10-04:** [A00 wave 9](./A00_WAVE9_INTEGRATION_REVIEW.md) identifies actual handler-side Next URL normalization and records the narrow correction plus fresh successful owner/member writes, conflict recovery, outsider authorization, removal of a member and rejection of its existing session. The original blocked rows and JSON below remain historical author evidence. A20's bounded core acceptance gap is closed on Windows; live providers, deployment evidence and Linux fixture lifecycle remain separate. The HTTP supplement additionally supports `writes` against its marked disposable fixture.
+
 This handoff records real owner, member, and unrelated-outsider journeys against a disposable local app and database. It complements [A20_AUTHENTICATED_BROWSER_ACCEPTANCE.md](./A20_AUTHENTICATED_BROWSER_ACCEPTANCE.md); it does not update the shared roadmap, claim provider approval, merge, or deploy.
 
 ## Candidate and isolated runtime

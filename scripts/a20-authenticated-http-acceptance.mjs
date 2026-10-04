@@ -1,4 +1,5 @@
 import { createInterface } from "node:readline";
+import assert from "node:assert/strict";
 import { readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -152,7 +153,10 @@ function errorClass(value) {
   if (safe === "Business access denied." || safe === "Business access denied") return "business-access-denied";
   if (safe === "Business or Google location access denied.") return "google-scope-denied";
   if (safe === "Cross-origin request rejected.") return "cross-origin-guard";
-  if (safe === "Member not found.") return "member-not-found";
+  if (safe === "Member not found." || safe === "This invitation or member could not be found.") return "member-not-found";
+  if (safe === "Agent access is inactive for this business.") return "agent-access-denied";
+  if (safe === "Only the workspace owner can manage teammates." || safe === "Only the workspace owner can remove teammates.") return "owner-only";
+  if (safe === "Only the workspace owner can invite teammates.") return "owner-only";
   if (safe === "Business owner access required." || /^(?:Only the business owner|Business owner only|Owner access required)/i.test(safe)) return "owner-only";
   if (/^(?:Business|Workspace) access denied\.?$/i.test(safe)) return "workspace-access-denied";
   if (/^Agent access denied\.?$/i.test(safe)) return "agent-access-denied";
@@ -224,7 +228,7 @@ async function outsiderProbe() {
     const safeErrorClass = errorClass(errorBody.error ?? errorBody.code);
     const boundaryError = ["business-access-denied", "google-scope-denied", "owner-only", "workspace-access-denied", "agent-access-denied"].includes(safeErrorClass);
     const csrfRejected = safeErrorClass === "cross-origin-guard";
-    const scopedNotFound = scopedNotFoundExpected === true && response.status === 404 && errorBody.error === "Member not found.";
+    const scopedNotFound = scopedNotFoundExpected === true && response.status === 404 && safeErrorClass === "member-not-found";
     receipts.push({ method, path: new URL(route, base).pathname, response: Object.assign(response, { scopedNotFound }), boundaryError, csrfRejected, safeErrorClass });
   }
   result("outsider", receipts);
@@ -354,8 +358,51 @@ async function removedMemberProbe() {
   if (!unchanged) process.exitCode = 1;
 }
 
+async function ownerWriteProbe() {
+  const session = await authenticate("owner");
+  const before = fixtureSnapshot();
+  const settings = await request(session, "POST", "/api/review-booster/settings", {
+    businessId: credentials.business.id, business_name: "A20 Verified Studio",
+  });
+  assert.equal(settings.status, 200, "owner settings must pass origin and authorization checks");
+  const readSettings = await request(session, "GET", "/api/review-booster/settings");
+  assert.equal(readSettings.status, 200);
+  assert.equal((await readSettings.json()).name, "A20 Verified Studio");
+  const visit = await request(session, "POST", "/api/review-booster/visits", {
+    customer_name: "A20 Synthetic Guest", customer_email: "probe@a20.example.test",
+    visited_at: new Date().toISOString(), service_name: "Synthetic intake",
+  });
+  assert.equal(visit.status, 201, "owner intake must persist in its workspace");
+  assert.equal((await visit.json()).business_id, credentials.business.id);
+  const reply = "A20 controlled server edit for conflict acceptance.";
+  const payload = { businessId: credentials.business.id, reviewId: credentials.review.googleReviewId,
+    reply, expectedVersion: before.draft.version };
+  const saved = await request(session, "POST", "/api/reviews/draft", payload);
+  assert.equal(saved.status, 200, "owner draft save must persist");
+  const afterSave = fixtureSnapshot();
+  assert.equal(afterSave.ownerVisits, before.ownerVisits + 1);
+  assert.equal(afterSave.draft.version, before.draft.version + 1);
+  assert.equal(afterSave.draft.sha256, createHash("sha256").update(reply).digest("hex"));
+  const stale = await request(session, "POST", "/api/reviews/draft", { ...payload, reply: "A20 stale edit must not overwrite." });
+  assert.equal(stale.status, 409);
+  assert.equal(equalSnapshot(afterSave, fixtureSnapshot()), true, "stale save leaves the fixture unchanged");
+  for (const [origin, site] of [["https://foreign.example.test", "same-origin"], [base.origin, "cross-site"]]) {
+    const denied = await boundedFetch(new URL("/api/review-booster/settings", base), {
+      method: "POST", headers: { cookie: session.jar.header(), origin, "sec-fetch-site": site,
+        "content-type": "application/json" },
+      body: JSON.stringify({ business_name: "A20 forbidden write" }), redirect: "manual",
+    });
+    assert.equal(denied.status, 403);
+    assert.equal(errorClass((await denied.json()).error), "cross-origin-guard");
+  }
+  assert.equal(equalSnapshot(afterSave, fixtureSnapshot()), true, "foreign-origin and cross-site probes make no writes");
+  console.log(JSON.stringify({ suite: "A20 authenticated owner persistence", settings: 200,
+    intake: 201, draftSave: 200, staleSave: 409, persisted: true, csrfDenials: 2, pass: true }));
+}
+
 const action = process.argv[2];
 if (action === "outsider") await outsiderProbe();
 else if (action === "security") await securityProbe();
 else if (action === "member-removal") await removedMemberProbe();
-else throw new Error("usage: node scripts/a20-authenticated-http-acceptance.mjs <outsider|security|member-removal>");
+else if (action === "writes") await ownerWriteProbe();
+else throw new Error("usage: node scripts/a20-authenticated-http-acceptance.mjs <outsider|security|member-removal|writes>");

@@ -1,6 +1,6 @@
 # A17 launch acceptance
 
-Status: integrated A17 implementation and provider receipts are preserved below; authenticated target journeys and external provider gates remain open. Current-candidate feasibility and browser evidence are tracked in [A17 integrated acceptance handoff](./A17_INTEGRATED_ACCEPTANCE_HANDOFF.md).
+Status: integrated A17 implementation and provider receipts are preserved below. [Wave 9 A20 integration](./A00_WAVE9_INTEGRATION_REVIEW.md) closes the isolated authenticated core-workflow gap; external provider, operational and other explicitly unperformed release journeys remain open. Historical candidate feasibility and browser evidence remain in [A17 integrated acceptance handoff](./A17_INTEGRATED_ACCEPTANCE_HANDOFF.md).
 
 Historical package evidence below was reviewed at `e5a9c0f` (2026-10-03), after A00 wave 4 integration. Current integrated candidate: `a98878ef2611322c54f67de61a018b7ecf8e3298` (A00 wave 7, 2026-10-04). Neither record approves pending commercial/privacy policies or treats a fixture as target/provider evidence.
 
@@ -21,7 +21,7 @@ Broad paid launch remains held until A10's isolated implementation is connected 
 | Package | Acceptance dependency / exit evidence |
 | --- | --- |
 | A10 delivery events and suppression | Integrated implementation and disposable-PostgreSQL/synthetic-signature tests are reviewed in [A00 wave 7](./A00_WAVE7_INTEGRATION_REVIEW.md). Remaining: configure the isolated Resend endpoint/signing secret, prove provider ingress and application ledger state, and complete controlled delivery/suppression acceptance. Keep manual reconciliation disabled until its separate gate closes. |
-| A13 shared layout, dashboard and copy | Integrated in the reviewed candidate; see [A13 access integration](./A13_ACCESS_SHARED_INTEGRATION.md) and [A13 UI integration](./A13_UI_SHARED_INTEGRATION.md). Remaining: authenticated owner/member/outsider browser acceptance against a disposable app database. |
+| A13 shared layout, dashboard and copy | Integrated; isolated core authenticated acceptance closed by [wave 9](./A00_WAVE9_INTEGRATION_REVIEW.md). Production performance/typography and provider-specific recovery evidence remain separate. |
 | A16 Google access | Obtain/record GBP Basic API access approval, usable non-zero quota, enabled review API, published/verified OAuth consent as required, correct redirect URIs, and an eligible real client profile with Manager access. This is an external gate, not a test fixture. |
 | A19 CSP assessment | Integrated hardening and local anonymous Chromium/smoke fixtures are documented in [A19 runtime assessment](./A19_CSP_RUNTIME_ASSESSMENT.md). Remaining: exact candidate browser acceptance as authorized, deployed headers and report-only Trusted Types review; assign and close actionable findings before marking target CSP acceptance. |
 | A11 privacy/account deletion | Routine privacy export/retention and health acceptance are in scope. Account deletion remains disabled until the A11 policy, retained-data disclosures, provider reconciliation and operator gates are resolved. Test that it stays disabled; do not run destructive production deletion. |
