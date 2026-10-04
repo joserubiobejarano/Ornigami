@@ -53,3 +53,16 @@ Decision: approve the completed bounded pilot record / amend / hold:
 ## Notice alignment check
 
 The October 4 follow-through found that the public privacy page advertised permanent deletion through the privacy API while production self-service deletion is disabled. The candidate corrects that specific claim: authenticated export is available, deletion requests use the existing published privacy contact and self-service deletion is temporarily unavailable. It introduces no retention period, provider-erasure promise or new legal conclusion. A published contact address is not evidence that its inbox is monitored; the owner must identify the actual request handler and confirm that privacy/support contacts reach that handler before invitations. Broader policy approval remains open.
+
+## Decisions to make after owner-access completion
+
+Owner access and the current-account [HTTP/navigation baseline](./A00_OWNER_ACCESS_AND_PERFORMANCE_2026-10-04.md) are complete. The owner requested this decision list after the technical task. Complete these items together; they are not instructions for another broad agent audit:
+
+1. Name the businesses/locations, maximum participants and pilot start/end dates.
+2. Choose the access/entitlement onboarding method and price/billing expectations. Stripe acceptance remains skipped; no free or paid entitlement is inferred.
+3. Confirm the support, monitoring and rollback owner, and the actual privacy/support request handler and functioning contact routing.
+4. Approve the review-request mail purpose and recipient permission basis, customer notice, retention periods and exceptions for delivery/correlation, suppression, trial-owner/lifecycle/provider identifiers and erasure receipts. Preserve unsubscribe protection; do not invent purge periods.
+5. Accept explicit pilot performance/volume limits using the bounded evidence, or require browser/load measurements before invitations. Current request timings do not establish browser CWV or load limits.
+6. Approve the completed bounded pilot record, amend it or keep it on hold. Invitations still require the technical entry gates, including fresh naturally scheduled independent health proof.
+
+A broad paid launch would additionally require explicitly reopening Stripe acceptance. Review Replies requires an eligible real client and provider approvals. Lead cutover and future A18 policies are not extra prerequisites silently added to this email-only pilot.

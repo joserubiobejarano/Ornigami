@@ -22,7 +22,7 @@ The bounded business-scoped visit read now projects `unsubscribed` for unsent pe
 
 ## Performance and release decision
 
-Production dashboard navigation reached login. A request for the owner to sign in is pending; no browser profile/session extraction or production test account is used. `node scripts/bundle-baseline.mjs` records the actual clean **Webpack** production artifacts (Node 24 locally, Next 16.3.8), separately from the experimental Turbopack analyzer. Reference inventories include ancestor/recovery entries plus the route entry and common runtime; they exclude unreferenced dynamic imports and are not the initial browser download or execution size. Gzip is computed independently per asset with Node defaults, not Vercel transfer measurement.
+The initial production dashboard navigation reached login. [Owner access and performance](./A00_OWNER_ACCESS_AND_PERFORMANCE_2026-10-04.md) supersedes that block: the existing account now has owner-authorized credentials access, four production pages were checked read-only and twelve authenticated HTTP samples were recorded. No duplicate/test production account or browser profile/session extraction was used. `node scripts/bundle-baseline.mjs` records the actual clean **Webpack** production artifacts (Node 24 locally, Next 16.3.8), separately from the experimental Turbopack analyzer. Reference inventories include ancestor/recovery entries plus the route entry and common runtime; they exclude unreferenced dynamic imports and are not the initial browser download or execution size. Gzip is computed independently per asset with Node defaults, not Vercel transfer measurement.
 
 | Route | Route entry bytes / gzip | Reference inventory bytes / gzip | Unique chunks |
 | --- | --- | --- | --- |
