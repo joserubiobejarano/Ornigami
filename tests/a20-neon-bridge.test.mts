@@ -13,7 +13,9 @@ test("A20 bridge accepts only loopback PostgreSQL targets with a20_ database nam
 });
 
 test("A20 bridge rejects remote Neon fallback and endpoint substitutions", () => {
-  assert.equal(A20_BRIDGE_INTERNALS.validateVirtualUrl("https://api.neon.tech/sql").hostname, "api.neon.tech");
+  const endpoint = A20_BRIDGE_INTERNALS.validateVirtualUrl("https://api.neon.tech/sql");
+  assert.ok(endpoint);
+  assert.equal(endpoint.hostname, "api.neon.tech");
   for (const endpoint of [
     "http://api.neon.tech/sql",
     "https://ep-real.neon.tech/sql",

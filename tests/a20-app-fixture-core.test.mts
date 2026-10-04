@@ -32,7 +32,7 @@ test("shutdown only recognizes a recorded A20 Next process with this preload and
 
 test("app child environment drops inherited production, proxy, PostgreSQL and Node options", () => {
   const preload = join(resolve("work"), "scripts", "a20-preload.mjs");
-  const env = baseA20ChildEnv({
+  const env: Record<string, string | undefined> = baseA20ChildEnv({
     PATH: "safe-path", SystemRoot: "C:/Windows", DATABASE_URL: "postgres://production",
     HTTP_PROXY: "http://proxy.invalid", NODE_OPTIONS: "--require=secret.js", PGSERVICEFILE: "production-service",
     RESEND_API_KEY: "real-provider-key", AUTH_SECRET: "real-auth-secret",
