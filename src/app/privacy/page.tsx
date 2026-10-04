@@ -7,7 +7,7 @@ export const metadata = createPageMetadata({ title: "Privacy policy | Ornigami",
 export default function PrivacyPage() {
   return (
     <main><PageHero eyebrow="Privacy" title="Privacy at Ornigami" intro="What we collect, why, and the control you have over it." /><article className="prose mx-auto max-w-[70ch] px-4 text-foreground md:px-6">
-        <p className="text-muted-foreground">Last updated: 12 August 2026</p>
+        <p className="text-muted-foreground">Last updated: 4 October 2026</p>
         
         <section>
           <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>
@@ -25,8 +25,9 @@ export default function PrivacyPage() {
             Account and business data is retained while your account is active. Leads and public demo
             events are retained for 90 days; feedback, review-link clicks, and integration events for
             365 days; cron history for 30 days; and rate-limit state for 2 days. Demo challenges and
-            verification records are removed after expiry. You may export or
-            permanently delete your account data through the privacy API or by contacting privacy@ornigami.com.
+            verification records are removed after expiry. You may export your account data
+            through the authenticated privacy API. To request deletion, contact privacy@ornigami.com.
+            Self-service account deletion is temporarily unavailable.
           </p>
           <p>
             We use {LEGAL_PROCESSOR_LIST} for the service workflows described here. Google for

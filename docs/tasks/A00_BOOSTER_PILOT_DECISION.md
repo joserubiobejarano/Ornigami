@@ -30,3 +30,26 @@ Stop the pilot on duplicate mail/quota consumption, cross-business access, unsub
 - Launch date and approval: **pending**.
 
 Approve or amend these concrete items before customer invitations. Completing another broad coding session cannot supply these business decisions.
+
+## Owner reply template
+
+Copy and complete this record; an unanswered item stays pending.
+
+```text
+Businesses / locations invited:
+Pilot start and end dates / maximum participants:
+Access / entitlement onboarding method:
+Price and billing expectations (Stripe acceptance is currently skipped):
+Support, monitoring and rollback owner:
+Purpose of review-request mail / recipient permission basis:
+Approved retention periods and exceptions for delivery events/correlation,
+  unsubscribe/suppression, trial-owner history, deletion/provider-operation
+  identifiers and provider erasure receipts:
+Approved privacy/support notice and request-handling process:
+Performance evidence/limits accepted for this bounded pilot:
+Decision: approve the completed bounded pilot record / amend / hold:
+```
+
+## Notice alignment check
+
+The October 4 follow-through found that the public privacy page advertised permanent deletion through the privacy API while production self-service deletion is disabled. The candidate corrects that specific claim: authenticated export is available, deletion requests use the existing published privacy contact and self-service deletion is temporarily unavailable. It introduces no retention period, provider-erasure promise or new legal conclusion. A published contact address is not evidence that its inbox is monitored; the owner must identify the actual request handler and confirm that privacy/support contacts reach that handler before invitations. Broader policy approval remains open.

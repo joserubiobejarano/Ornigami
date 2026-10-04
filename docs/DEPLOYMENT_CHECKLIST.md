@@ -2,13 +2,15 @@
 
 This is the single deployment and operator document for the Vercel + Neon application.
 
+This is a reusable checklist, not a fresh backlog. Dated acceptance and remaining release gates are in [the roadmap](./ROADMAP.md), [public release journeys](./tasks/A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md) and [remaining launch follow-ups](./tasks/A00_REMAINING_LAUNCH_FOLLOWUPS.md). Consume their receipts for the same unchanged scope; repeat checks only for changed targets/behavior or a reproducible failed criterion. Stripe acceptance remains skipped, Google remains externally gated and production deletion/manual provider reconciliation remain disabled.
+
 ## At a glance
 
 - Hosting: Vercel
 - Database: Neon Postgres
 - Auth: Auth.js
 - Integrations: Google Business Profile, OpenAI, Stripe, Resend, Sentry
-- Scheduled jobs: GitHub Actions calls the Review Booster hourly and Review Replies every four hours
+- Scheduled jobs: Vercel Pro calls Review Booster at `7 * * * *`, Review Replies at `11 */4 * * *` and privacy at `0 3 * * *` (UTC). GitHub runs the independent hourly health monitor at `15 * * * *`; application-job workflows retain deliberate manual recovery only.
 - There is no separate worker service.
 
 ## 1. Accounts and prerequisites
@@ -96,22 +98,24 @@ Review Booster can operate with email and a manually entered review URL while th
 - [ ] Verify the Resend sending mailbox/domain.
 - [ ] Keep `EMAIL_FROM` as a bare mailbox address, for example `noreply@yourdomain.com`.
 - [ ] Register `/api/webhooks/resend` for supported sent/delivered/delayed/bounced/complained/failed/suppressed events. Configure signing secret privately, verify an owned test delivery end to end, and confirm signed replay/out-of-order feedback and suppression without resending uncertain requests.
-- [ ] Complete actual endpoint/secret provisioning and isolated ingress acceptance using [A10 signing acceptance](./tasks/A10_RESEND_SIGNING_ACCEPTANCE.md). Wave 7 read-only production inventory found zero webhook endpoints and no signing secret; local synthetic/PostgreSQL tests do not close this row.
+- [ ] Verify permanent endpoint/secret configuration and isolated ingress acceptance from [production activation](./tasks/A00_PRODUCTION_ACTIVATION_2026-10-04.md) and [public journeys](./tasks/A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md). October 4 activation supersedes the historical wave 7 zero-endpoint inventory; do not register another endpoint or repeat app mail/link acceptance for the unchanged release. Preserve the distinction between production transport and disposable application-ledger evidence.
 - [ ] Controlled Resend GET must return exact frozen body/tag/recipient binding and use an authorized retrieval key in the original sending account before manual reconciliation activation. 202/unresolved retains quota. A lookup miss never authorizes replay.
 - [ ] Approve global suppression/event/correlation retention and other mail-category policy; preserve do-not-send evidence through workspace cleanup. Customer-specific sender domains remain future work.
 
 ## 7. Scheduled jobs
 
 - [ ] Confirm GitHub Actions secrets `APP_BASE_URL` and `CRON_SECRET`.
-- [ ] Confirm Review Booster cron returns success and processes active/trialing businesses.
-- [ ] Confirm Review Replies cron returns success and processes active/trialing businesses.
+- [ ] Verify the exact Ready production deployment has all three Vercel schedules enabled, matching `vercel.json`; GitHub Booster/Replies automatic schedules must be absent. Do not intentionally run both primary schedulers.
+- [ ] Observe a naturally scheduled Review Booster run and persisted success/no_work for eligible active/trialing businesses; correlate caller/deployment and result. A manual recovery is a separate receipt.
+- [ ] Observe a naturally scheduled Review Replies run and persisted success/no_work. An empty eligible set proves the schedule, not real Google sync/post acceptance.
 - [ ] Confirm `/api/cron/health` shows persisted `cron_runs` records.
 - [ ] Verify the existing Vercel privacy schedule at 03:00 UTC daily, bounded cleanup and sanitized per-table health.
-- [ ] Observe the first instrumented privacy run/checkpoint after the existing October 4, 2026 03:00 UTC / 05:00 Europe/Madrid opportunity on the identity-verified production database. Verify alert resolution without manually invoking cleanup or health evaluation to manufacture evidence.
+- [ ] Consume the completed [October 4 privacy checkpoint observation](./tasks/A17_OCT04_PRIVACY_CHECKPOINT.md) for this unchanged scope. Subsequent routine cadence observations are separate; do not manually invoke cleanup or health evaluation to re-prove the completed checkpoint.
 - [ ] Verify actual route/global boundary capture and downstream Sentry notification recipients. Controlled ingest/readback and offline SDK acknowledgement tests do not prove operator notification delivery.
 - [ ] Provision/verify the support operator's `SUPPORT_DATABASE_URL`, `SELECT public.feedback` permission, target identity and private artifact access. Follow the bounded [support workflow](./tasks/A12_SUPPORT_VISIBILITY.md).
 - [ ] Verify authenticated browser nonce/CSP behavior, Stripe form redirects and trusted ingress headers; collect Trusted Types reports before considering enforcement. A19's local smoke is not provider acceptance.
 - [ ] Verify independent hourly GitHub cron health monitoring and Sentry transport/missed-schedule alert recovery. Expected budget continuation is 202, lease busy is 409, actionable failure is 500/503; do not interpret all non-200 outcomes as the same failure.
+- [ ] Require a fresh scheduled health receipt after rollout. HTTP 200 alone is insufficient; the allowlisted diagnostic summary must be healthy. Preserve delayed/missing scheduler observations; neither manual dispatch nor a read-only healthy database snapshot is a scheduled-monitor pass.
 - [ ] Apply missing reviewed schema before consumers, including 025/028 in wave 5; pause/drain both review schedules through migration/deployment and restore after exact Ready verification.
 
 ## 8. Pre-deploy verification
@@ -144,7 +148,7 @@ npm run build
 ## Current caveats
 
 - Acceptance has separate evidence labels: isolated tests, authenticated browser, provider test mode, production smoke, external approval. Exact Linux CI and public anonymous smoke do not establish paid owner/member browser or full provider acceptance. See [A17 matrix](./tasks/A17_ACCEPTANCE_MATRIX.md).
-- A17's historical direct-send sender override did not change deployment configuration. A00's fresh wave 5 read-only production check found the configured `reviews.ornigami.com` sender domain verified/sending-enabled and the controlled email lookup returned tags/body; the webhook secret was absent. No new message was sent. Register/configure and exercise the webhook before marking delivery acceptance passed.
+- Historical wave 5 reads found no webhook secret. October 4 production activation subsequently installed the permanent signed endpoint and correlated a direct-provider operator self-mail with actual sent/delivered callbacks. Bounded public journeys separately correlated an actual application send, signed feedback, quota, public CTAs and suppression on a disposable deployment. These later receipts supersede the old configuration gap without claiming a production/customer application fixture.
 
 - Google Business Profile API access/quota, a real client profile, and OAuth branding/publication are external dependencies, not code tasks. Follow `GOOGLE_BUSINESS_PROFILE_RUNBOOK.md` for the current state and sequence.
 - Review Booster has a bounded per-run cap and plan allowance, but higher-volume delivery is still serial.
