@@ -1,7 +1,10 @@
-import { mkdir, open, readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { mkdir, open, readFile, realpath, lstat, chmod, unlink } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isIP } from "node:net";
+import { execFileSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { checkPrivateArtifact } from "./a12-support-access-verify.mjs";
 
 export const A10_RESEND_EVENTS = Object.freeze([
   "email.sent",
@@ -17,6 +20,11 @@ const API_URL = "https://api.resend.com/webhooks";
 const MAX_RESPONSE_BYTES = 16 * 1024;
 const REQUEST_TIMEOUT_MS = 10_000;
 const DEFAULT_STATE_DIR = ".env.a10-resend-endpoint";
+const PRODUCTION_ALIASES = new Set([
+  "ornigami.vercel.app", "locallift-indol.vercel.app",
+  "locallift-jose-rubios-projects-acf385c1.vercel.app",
+  "locallift-git-main-jose-rubios-projects-acf385c1.vercel.app",
+]);
 
 export function validateEndpointUrl(value) {
   let url;
@@ -27,7 +35,7 @@ export function validateEndpointUrl(value) {
       url.pathname !== "/api/webhooks/resend") {
     throw new Error("endpoint must be an isolated HTTPS /api/webhooks/resend URL without credentials, query, or fragment");
   }
-  if (normalizedHostname === "ornigami.com" || normalizedHostname.endsWith(".ornigami.com") || normalizedHostname === "ornigami.vercel.app") {
+  if (normalizedHostname === "ornigami.com" || normalizedHostname.endsWith(".ornigami.com") || PRODUCTION_ALIASES.has(normalizedHostname)) {
     throw new Error("production Ornigami hosts are not allowed");
   }
   if (normalizedHostname === "localhost" || normalizedHostname.endsWith(".localhost") || normalizedHostname.endsWith(".local") ||
@@ -96,6 +104,31 @@ async function writeExclusive(path, content) {
   finally { await handle.close(); }
 }
 
+async function secureStateDirectory(stateDir) {
+  const directory = resolve(stateDir);
+  const stat = await lstat(directory);
+  if (!stat.isDirectory() || stat.isSymbolicLink() || await realpath(directory) !== directory) {
+    throw new Error("endpoint state directory must be a real task-owned directory");
+  }
+  if (process.platform === "win32") {
+    try {
+      const identity = execFileSync("whoami.exe", ["/user", "/fo", "csv", "/nh"], {
+        encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
+      }).trim().match(/^\s*"[^"]+"\s*,\s*"(S-1-[0-9-]+)"\s*$/);
+      if (!identity) throw new Error();
+      execFileSync("icacls.exe", [directory, "/inheritance:r", "/grant:r", `*${identity[1]}:(OI)(CI)F`], {
+        stdio: ["ignore", "ignore", "pipe"], windowsHide: true,
+      });
+    } catch { throw new Error("endpoint state directory could not be secured"); }
+  } else await chmod(directory, 0o700);
+  const probe = join(directory, `.a10-access-${randomBytes(8).toString("hex")}`);
+  try {
+    await writeExclusive(probe, "");
+    await checkPrivateArtifact(probe);
+  } catch { throw new Error("endpoint state directory is not private to the current user"); }
+  finally { await unlink(probe).catch(() => undefined); }
+}
+
 /**
  * Creates one Resend webhook and stores its secret locally. The attempt file is
  * durable before the API call, so an uncertain result can never be retried by
@@ -119,6 +152,9 @@ export async function createA10Endpoint({ endpoint, apiKey, isolatedTarget, stat
     if (error?.code !== "ENOENT") throw error;
   }
 
+  // Windows ignores POSIX mode bits. Secure and verify the containing directory
+  // before any API request or generated signing secret can reach disk.
+  await secureStateDirectory(stateDir);
   const attempt = {
     status: "attempt_started",
     endpointHost: target.hostname,

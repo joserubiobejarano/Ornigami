@@ -1,5 +1,7 @@
 # A10 endpoint configuration and HTTP acceptance
 
+**Integration correction — 2026-10-04:** A00 adds rejection of the known stable LocalLift production aliases, rejects redirected state directories, and secures/verifies signing-secret storage for the current user on Windows as well as POSIX before making the create request. The tool now shares A12's private-artifact verifier. Other Vercel deployment hostnames still require independent isolated-target verification; the acknowledgement flag is not proof of isolation. The historical implementation receipts below remain separate from A00's Node 22 verification. No live endpoint or provider acceptance is claimed.
+
 Status: local synthetic HTTP ingress acceptance passed on the isolated A20 fixture. Resend endpoint creation, target-secret installation, public provider ingress, and controlled email delivery remain pending. This task does not change the shared roadmap, shared deployment configuration, or production, and it does not deploy.
 
 Base: `0cad6cd` in branch `task/a10-resend-endpoint-acceptance`, isolated worktree; evidence collected 2026-10-04. This document supplements [A10 signing acceptance](./A10_RESEND_SIGNING_ACCEPTANCE.md); it does not replace its local signature/PostgreSQL evidence or its provider acceptance contract.

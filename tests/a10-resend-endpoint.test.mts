@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, symlink, chmod } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { A10_RESEND_EVENTS, createA10Endpoint, getDryRunReport, parseArgs, validateEndpointUrl } from "../scripts/a10-resend-endpoint.mjs";
+import { checkPrivateArtifact } from "../scripts/a12-support-access-verify.mjs";
 
 const VALID_ENDPOINT = "https://acceptance.example.net/api/webhooks/resend";
 const API_KEY = `re_${"k".repeat(32)}`;
@@ -41,6 +43,9 @@ test("endpoint URL guard rejects production, non-HTTPS, nested paths, loopback, 
     "https://ornigami.com./api/webhooks/resend",
     "https://api.ornigami.com/api/webhooks/resend",
     "https://ornigami.vercel.app/api/webhooks/resend",
+    "https://locallift-indol.vercel.app/api/webhooks/resend",
+    "https://locallift-jose-rubios-projects-acf385c1.vercel.app/api/webhooks/resend",
+    "https://locallift-git-main-jose-rubios-projects-acf385c1.vercel.app./api/webhooks/resend",
     "http://acceptance.example.net/api/webhooks/resend",
     "https://acceptance.example.net/nested/api/webhooks/resend",
     "https://acceptance.example.net/api/webhooks/resend/",
@@ -103,6 +108,39 @@ test("mocked provider success stores only sanitized receipt and endpoint secret 
     assert.ok(!receipt.includes(SIGNING_SECRET));
     assert.ok(!receipt.includes(API_KEY));
     assert.equal(await readFile(join(stateDir, "webhook-secret.env"), "utf8"), `RESEND_WEBHOOK_SECRET=${SIGNING_SECRET}\n`);
+    assert.equal((await checkPrivateArtifact(join(stateDir, "webhook-secret.env"))).status, "private_artifact_verified");
+  });
+});
+
+test("a redirected state directory fails before provider mutation or secret storage", async () => {
+  await withState(async (stateDir) => {
+    const alias = join(stateDir, "redirected");
+    await symlink(stateDir, alias, process.platform === "win32" ? "junction" : "dir");
+    let calls = 0;
+    await assert.rejects(createA10Endpoint({ endpoint: VALID_ENDPOINT, apiKey: API_KEY, isolatedTarget: true,
+      stateDir: alias, fetcher: async () => { calls += 1; return successResponse(); } }), /real task-owned directory/);
+    assert.equal(calls, 0);
+    await assert.rejects(readFile(join(stateDir, "attempt.json")));
+    await assert.rejects(readFile(join(stateDir, "webhook-secret.env")));
+  });
+});
+
+test("broad state-directory access is secured or rejected before signing-secret exposure", async () => {
+  await withState(async (stateDir) => {
+    if (process.platform !== "win32") {
+      await chmod(stateDir, 0o755);
+      await createA10Endpoint({ endpoint: VALID_ENDPOINT, apiKey: API_KEY, isolatedTarget: true,
+        stateDir, fetcher: async () => successResponse() });
+      assert.equal((await checkPrivateArtifact(join(stateDir, "webhook-secret.env"))).access, "owner_only");
+      return;
+    }
+    execFileSync("icacls.exe", [stateDir, "/grant", "*S-1-1-0:(OI)(CI)F"], { stdio: "ignore", windowsHide: true });
+    let calls = 0;
+    await assert.rejects(createA10Endpoint({ endpoint: VALID_ENDPOINT, apiKey: API_KEY, isolatedTarget: true,
+      stateDir, fetcher: async () => { calls += 1; return successResponse(); } }), /not private/);
+    assert.equal(calls, 0);
+    await assert.rejects(readFile(join(stateDir, "attempt.json")));
+    await assert.rejects(readFile(join(stateDir, "webhook-secret.env")));
   });
 });
 
