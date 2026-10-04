@@ -1,5 +1,7 @@
 # A17 launch acceptance
 
+**Operator evidence update — 2026-10-04:** [Wave 10](./A00_WAVE10_INTEGRATION_REVIEW.md) closes the successful production privacy checkpoint observation and verifies local synthetic HTTP ingress, child-only support access and one historical notification receipt. Broad paid launch remains held: live Resend/public endpoint, production support/current-rule evidence, unperformed release journeys and external/policy gates are not waived. No new broad A17/A20 rerun is assigned.
+
 Status: integrated A17 implementation and provider receipts are preserved below. [Wave 9 A20 integration](./A00_WAVE9_INTEGRATION_REVIEW.md) closes the isolated authenticated core-workflow gap; external provider, operational and other explicitly unperformed release journeys remain open. Historical candidate feasibility and browser evidence remain in [A17 integrated acceptance handoff](./A17_INTEGRATED_ACCEPTANCE_HANDOFF.md).
 
 Historical package evidence below was reviewed at `e5a9c0f` (2026-10-03), after A00 wave 4 integration. Current integrated candidate: `a98878ef2611322c54f67de61a018b7ecf8e3298` (A00 wave 7, 2026-10-04). Neither record approves pending commercial/privacy policies or treats a fixture as target/provider evidence.

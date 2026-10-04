@@ -1,5 +1,7 @@
 # A17 October 4 privacy checkpoint observation
 
+**Integration addendum — 2026-10-04:** [Wave 10](./A00_WAVE10_INTEGRATION_REVIEW.md) freshly pulled current production Vercel configuration privately and independently confirmed the same checkpoint and resolved condition through read-only PostgreSQL CLI. The post-window observation is complete. Caller attribution and the historical transport-failure/delivery limitation remain unproved; no cron/health/cleanup was triggered. The observer test environment was corrected for the application TypeScript build.
+
 Observation time: 2026-10-04 11:26 UTC (13:26 Europe/Madrid). This read-only follow-up inspected the scheduled daily privacy checkpoint after the 2026-10-04 03:00 UTC / 05:00 Europe/Madrid opportunity. It did not call the cron route, health endpoint, alert evaluator, cleanup helper, or any provider mutation. Work is on isolated branch `task/a17-oct04-privacy-checkpoint`, based on `0cad6cdb9c59751d7b8dda47fb1a5fdd0a126e92`; no roadmap, shared deployment setting, merge, or deployment was changed.
 
 ## Verified observation
