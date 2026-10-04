@@ -67,7 +67,7 @@ test("PostgreSQL invocation clears inherited PG target overrides and has bounded
     return { pid: 1, output: [null, observation, ""], stdout: observation, stderr: "", status: 0, signal: null };
   };
   runReadOnlyQueryForTest(database, {
-    inheritedEnv: { PATH: "safe-path", PGHOSTADDR: "attacker", PGSERVICE: "wrong-target", PGOPTIONS: "-c default_transaction_read_only=off" },
+    inheritedEnv: { NODE_ENV: "test", PATH: "safe-path", PGHOSTADDR: "attacker", PGSERVICE: "wrong-target", PGOPTIONS: "-c default_transaction_read_only=off" },
     spawn: mockSpawn,
   });
 });

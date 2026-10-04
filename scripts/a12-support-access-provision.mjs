@@ -8,6 +8,8 @@ import { checkPrivateArtifact, parseSupportTarget, psqlEnvironment } from "./a12
 const SQL_FILE = fileURLToPath(new URL("../docs/tasks/A12_SUPPORT_ACCESS.sql", import.meta.url));
 const ROLE = "ornigami_support_reader";
 
+/** @typedef {(command: string, args: string[], options: import('node:child_process').ExecFileSyncOptionsWithStringEncoding & { env: NodeJS.ProcessEnv, input: string }) => string} SupportPsql */
+
 export function parseProvisionArgs(args) {
   const options = { mode: null, adminEnv: null, expectedHost: null, expectedDatabase: null, supportEnv: null };
   const names = new Map([["--admin-env", "adminEnv"], ["--expected-host", "expectedHost"], ["--expected-database", "expectedDatabase"], ["--support-env", "supportEnv"]]);
@@ -155,6 +157,7 @@ function safePsql(psql, target, env, sql) {
 
 function removeCredential(file) { try { unlinkSync(file); return true; } catch { return false; } }
 
+/** @param {{args?: string[], env?: NodeJS.ProcessEnv, psql?: SupportPsql, platform?: NodeJS.Platform}} [options] */
 export async function provisionSupportAccess({ args = process.argv.slice(2), env = process.env, psql = execFileSync, platform = process.platform } = {}) {
   const options = parseProvisionArgs(args);
   const target = readAdminConnection(options.adminEnv, options.expectedHost, options.expectedDatabase);

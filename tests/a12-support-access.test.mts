@@ -38,17 +38,18 @@ test("provision wrapper checks target/private destination, audits NOLOGIN, and h
   const artifactDir = resolve(artifact, "..");
   let invoked = false;
   try {
-    const dryRun = await provisionSupportAccess({ args: prefix, psql: () => { invoked = true; } });
+    const unexpectedPsql = () => { invoked = true; throw new Error("SQL must not run before these guards pass"); };
+    const dryRun = await provisionSupportAccess({ args: prefix, psql: unexpectedPsql });
     assert.equal(dryRun.status, "dry_run");
     assert.equal(invoked, false);
     await assert.rejects(() => provisionSupportAccess({
       args: ["--admin-env", privateEnv, "--expected-host", "wrong.example.neon.tech", "--expected-database", "neondb", "--support-env", join(dir, "support.env"), "--apply"],
-      psql: () => { invoked = true; },
+      psql: unexpectedPsql,
     }), /admin_target_identity_mismatch/);
     assert.equal(invoked, false);
     await assert.rejects(() => provisionSupportAccess({
       args: [...prefix, "--support-env", join(repo, ".next", "unsafe-support.env"), "--activate"],
-      psql: () => { invoked = true; },
+      psql: unexpectedPsql,
     }), /support_credential_destination_invalid/);
     assert.equal(invoked, false, "an in-checkout destination is rejected before any SQL is sent");
     const alias = join(artifactDir, "worktree-alias");
@@ -56,7 +57,7 @@ test("provision wrapper checks target/private destination, audits NOLOGIN, and h
     try {
       await assert.rejects(() => provisionSupportAccess({
         args: [...prefix, "--support-env", join(alias, "unsafe-support.env"), "--activate"],
-        psql: () => { invoked = true; },
+        psql: unexpectedPsql,
       }), /support_credential_destination_invalid/);
       assert.equal(invoked, false, "a canonical path redirected into the checkout is rejected before SQL");
     } finally { rmSync(alias, { recursive: true, force: true }); }
@@ -166,7 +167,7 @@ test("support SQL grants only feedback SELECT, verifier proves identity and priv
       platform: process.platform,
     });
     const supportUrl = `postgresql://ornigami_support_reader:synthetic@127.0.0.1:${port}/postgres?sslmode=disable`;
-    const env = { SUPPORT_DATABASE_URL: supportUrl, PGHOST: "wrong.host", PGUSER: "postgres", PGPASSWORD: "must-not-be-used" };
+    const env = { NODE_ENV: "test" as const, SUPPORT_DATABASE_URL: supportUrl, PGHOST: "wrong.host", PGUSER: "postgres", PGPASSWORD: "must-not-be-used" };
     const verified = await verifySupportAccess({
       args: ["--expected-host", "127.0.0.1", "--expected-database", "postgres", "--artifact", artifact], env,
     });
