@@ -1,8 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
-export default function ReviewBoosterError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+import { Button } from "@/components/ui/button";
+import { captureBoundaryError } from "@/lib/error-visibility";
+
+export default function ReviewBoosterError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  useEffect(() => {
+    void captureBoundaryError(error, "route");
+  }, [error]);
+
   return (
     <section className="mx-auto w-full max-w-3xl space-y-4 rounded-2xl border-[1.5px] border-destructive/35 bg-card p-6 shadow-ink-sm" role="alert">
       <h1 className="text-xl font-bold text-primary">Review Booster could not load</h1>

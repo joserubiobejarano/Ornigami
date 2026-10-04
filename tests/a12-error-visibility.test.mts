@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import test from "node:test";
-import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
+import { Children, createElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import vm from "node:vm";
@@ -193,5 +193,31 @@ test("rendered root fallback includes document tags and its real retry and conta
   const button = findButton(fallbackTree as ReactNode);
   assert.ok(button);
   button.props.onClick?.();
+  assert.equal(retries, 1);
+});
+
+test("Booster's nested boundary reports through the sanitized helper and keeps recovery usable", () => {
+  const source = Object.assign(new Error("private review text token=secret"), { digest: "123456" });
+  const captures: Array<[Error, string]> = [];
+  let retries = 0;
+  const boosterModule = loadTsx<{ default: (props: { error: Error; retry: () => void }) => ReactElement<{ children: ReactNode }> }>(
+    "src/app/(dashboard)/dashboard/agents/review-booster/error.tsx",
+    {
+      react: { useEffect: (effect: () => void) => effect() },
+      "@/lib/error-visibility": {
+        captureBoundaryError: async (error: Error, boundary: string) => { captures.push([error, boundary]); },
+      },
+      "@/components/ui/button": { Button: (props: { onClick: () => void; children: ReactNode }) => createElement("button", props) },
+    },
+  );
+  const tree = boosterModule.default({ error: source, retry: () => { retries += 1; } });
+  assert.deepEqual(captures, [[source, "route"]]);
+  const markup = renderToStaticMarkup(tree);
+  assert.match(markup, /Review Booster could not load/);
+  assert.match(markup, /Retry dashboard/);
+  assert.doesNotMatch(markup, /private review|token=secret|123456|notified/i);
+  const button = Children.toArray(tree.props.children).find(child => isValidElement<{ onClick?: () => void }>(child) && child.props.onClick);
+  assert.ok(isValidElement<{ onClick: () => void }>(button));
+  button.props.onClick();
   assert.equal(retries, 1);
 });
