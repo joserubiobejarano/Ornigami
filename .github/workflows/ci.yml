@@ -37,6 +37,13 @@ jobs:
         run: |
           a12_postgres17_bin=/usr/lib/postgresql/17/bin
           if [ ! -x "$a12_postgres17_bin/initdb" ]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc
+            a12_postgres17_codename=$( . /etc/os-release; printf '%s' "$VERSION_CODENAME" )
+            echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $a12_postgres17_codename-pgdg main" \
+              | sudo tee /etc/apt/sources.list.d/pgdg.list
             sudo apt-get update
             sudo apt-get install --no-install-recommends -y postgresql-17
           fi
