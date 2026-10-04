@@ -136,10 +136,3 @@ END
 $permission_check$;
 
 COMMIT;
-
--- Set the password interactively from the selected approved secret source while
--- the role is still NOLOGIN. psql's \password avoids SQL/history/log exposure.
-\password ornigami_support_reader
-
--- Only activate LOGIN after the password prompt completed successfully.
-ALTER ROLE ornigami_support_reader LOGIN;

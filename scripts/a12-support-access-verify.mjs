@@ -56,6 +56,7 @@ SELECT pg_catalog.json_build_object(
   'database', current_database(),
   'serverVersion', current_setting('server_version_num')::integer,
   'readOnlyTransaction', current_setting('transaction_read_only') = 'on',
+  'login', role.rolcanlogin,
   'superuser', role.rolsuper,
   'createRole', role.rolcreaterole,
   'createDatabase', role.rolcreatedb,
@@ -145,7 +146,7 @@ SELECT pg_catalog.json_build_object(
 ROLLBACK;`;
 }
 
-function psqlEnvironment(target, baseEnv) {
+export function psqlEnvironment(target, baseEnv) {
   const env = Object.create(null);
   for (const key of ["PATH", "Path", "SystemRoot", "WINDIR", "PATHEXT", "ComSpec", "TEMP", "TMP"]) if (baseEnv[key]) env[key] = baseEnv[key];
   Object.assign(env, { PGHOST: target.host, PGPORT: target.port, PGUSER: target.user, PGPASSWORD: target.password, PGDATABASE: target.database, PGSSLMODE: target.sslmode });
@@ -153,7 +154,7 @@ function psqlEnvironment(target, baseEnv) {
   return env;
 }
 
-async function checkPrivateArtifact(path, { platform = process.platform, uid = process.getuid?.(), execFile = execFileSync } = {}) {
+export async function checkPrivateArtifact(path, { platform = process.platform, uid = process.getuid?.(), execFile = execFileSync } = {}) {
   const file = resolve(path);
   const [fileStat, directoryStat] = await Promise.all([lstat(file), lstat(dirname(file))]);
   if (!fileStat.isFile() || fileStat.isSymbolicLink() || !directoryStat.isDirectory() || directoryStat.isSymbolicLink()) throw new Error("artifact_path_invalid");
@@ -198,7 +199,7 @@ export async function verifySupportAccess({ args = process.argv.slice(2), env = 
   try { proof = JSON.parse(raw); } catch { throw new Error("support_database_probe_invalid"); }
   const valid = proof.sessionUser === SUPPORT_ROLE && proof.currentUser === SUPPORT_ROLE &&
     proof.database === options.expectedDatabase && Number(proof.serverVersion) >= 170000 && proof.readOnlyTransaction === true &&
-    proof.superuser === false && proof.createRole === false && proof.createDatabase === false &&
+    proof.login === true && proof.superuser === false && proof.createRole === false && proof.createDatabase === false &&
     proof.replication === false && proof.bypassRls === false && proof.inherit === false &&
     Number(proof.memberships) === 0 && proof.publicSchemaUsage === true && proof.feedbackSelect === true && proof.feedbackHasMutation === false &&
     proof.feedbackColumnMutation === false && proof.feedbackRowSecurity === false &&

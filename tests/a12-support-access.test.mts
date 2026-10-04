@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { chmod } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
 import { availablePostgresTestPort } from "./postgres-test-port.mts";
 import { writePrivateInboxArtifact } from "../scripts/support-inbox.mjs";
 import { parseSupportTarget, verifySupportAccess } from "../scripts/a12-support-access-verify.mjs";
-import { provisionSupportAccess } from "../scripts/a12-support-access-provision.mjs";
+import { buildRoleAuditSql, provisionSupportAccess } from "../scripts/a12-support-access-provision.mjs";
 
 const repo = process.cwd();
 const binDir = process.env.A12_PG_BIN ?? process.env.PG_BIN;
@@ -22,34 +22,107 @@ test("support access verifier rejects ambiguous connection settings and wrong ta
   assert.throws(() => parseSupportTarget("postgresql://ornigami_support_reader:synthetic@db.example.test/ornigami?sslmode=require&sslmode=verify-full"), /support_connection_invalid/);
 });
 
-test("provision wrapper defaults to dry run, checks target identity, and sanitizes process failures", () => {
+test("provision wrapper checks target/private destination, audits NOLOGIN, and handles activation outcomes", async () => {
   const fixtureRoot = resolve(repo, ".next", "a12-support-access-fixtures");
   mkdirSync(fixtureRoot, { recursive: true });
   const dir = mkdtempSync(join(fixtureRoot, "provision-wrapper-"));
   const privateEnv = join(dir, "admin.env");
   writeFileSync(privateEnv, "DATABASE_URL=postgresql://fixture_admin:synthetic-secret@branch.example.neon.tech/neondb?sslmode=require\n", { mode: 0o600 });
   const prefix = ["--admin-env", privateEnv, "--expected-host", "branch.example.neon.tech", "--expected-database", "neondb"];
+  const roleProof = { roleExists: true, login: false, superuser: false, createRole: false, createDatabase: false, replication: false, bypassRls: false, inherit: false, memberships: 0, publicSchemaUsage: true, feedbackSelect: true, feedbackSelectGrantable: false, feedbackMutation: false, feedbackColumnMutation: false, feedbackRls: false, otherTableAccess: false, otherSequenceAccess: false, databaseCreate: false, databaseConnect: true, schemaCreate: false, securityDefinerExecute: false };
+  const artifact = await writePrivateInboxArtifact({
+    page: { records: [], hasMore: false, nextCursor: null }, target: { host: "127.0.0.1", database: "postgres" },
+    env: process.env, platform: process.platform,
+  });
+  const privateOutput = join(resolve(artifact, ".."), "support.env");
+  const artifactDir = resolve(artifact, "..");
   let invoked = false;
   try {
-    const dryRun = provisionSupportAccess({ args: prefix, psql: () => { invoked = true; } });
+    const dryRun = await provisionSupportAccess({ args: prefix, psql: () => { invoked = true; } });
     assert.equal(dryRun.status, "dry_run");
     assert.equal(invoked, false);
-    assert.throws(() => provisionSupportAccess({
-      args: ["--admin-env", privateEnv, "--expected-host", "wrong.example.neon.tech", "--expected-database", "neondb", "--apply"],
+    await assert.rejects(() => provisionSupportAccess({
+      args: ["--admin-env", privateEnv, "--expected-host", "wrong.example.neon.tech", "--expected-database", "neondb", "--support-env", join(dir, "support.env"), "--apply"],
       psql: () => { invoked = true; },
     }), /admin_target_identity_mismatch/);
     assert.equal(invoked, false);
-    assert.throws(() => provisionSupportAccess({
-      args: [...prefix, "--apply"],
-      psql: (_command: string, argv: string[], options: { env: NodeJS.ProcessEnv }) => {
+    await assert.rejects(() => provisionSupportAccess({
+      args: [...prefix, "--support-env", join(repo, ".next", "unsafe-support.env"), "--activate"],
+      psql: () => { invoked = true; },
+    }), /support_credential_destination_invalid/);
+    assert.equal(invoked, false, "an in-checkout destination is rejected before any SQL is sent");
+    const alias = join(artifactDir, "worktree-alias");
+    symlinkSync(repo, alias, process.platform === "win32" ? "junction" : "dir");
+    try {
+      await assert.rejects(() => provisionSupportAccess({
+        args: [...prefix, "--support-env", join(alias, "unsafe-support.env"), "--activate"],
+        psql: () => { invoked = true; },
+      }), /support_credential_destination_invalid/);
+      assert.equal(invoked, false, "a canonical path redirected into the checkout is rejected before SQL");
+    } finally { rmSync(alias, { recursive: true, force: true }); }
+
+    const rejectedOutput = join(artifactDir, "rejected.env");
+    let rejectedCalls = 0;
+    await assert.rejects(() => provisionSupportAccess({
+      args: [...prefix, "--support-env", rejectedOutput, "--activate"],
+      psql: () => { rejectedCalls += 1; return JSON.stringify({ ...roleProof, otherTableAccess: true }); },
+    }), /support_role_not_safe_to_activate/);
+    assert.equal(rejectedCalls, 1, "an out-of-scope permission stops before password activation");
+    assert.equal(existsSync(rejectedOutput), false, "no candidate credential is written for an unsafe role");
+
+    const seenSql: string[] = [];
+    const activation = await provisionSupportAccess({
+      args: [...prefix, "--support-env", privateOutput, "--activate"],
+      psql: (_command: string, argv: string[], options: { env: NodeJS.ProcessEnv; input: string }) => {
         invoked = true;
         assert.equal(argv.includes("synthetic-secret"), false);
         assert.equal(options.env.PGPASSWORD, "synthetic-secret");
-        throw new Error("raw password and private provider response");
+        seenSql.push(options.input);
+        if (options.input.includes("roleExists")) return JSON.stringify(roleProof);
+        if (options.input.includes("PASSWORD '") && options.input.includes("LOGIN")) {
+          assert.match(options.input, /PASSWORD '[A-Za-z0-9_-]{43}'/);
+          return "";
+        }
+        throw new Error("unexpected SQL operation");
       },
-    }), (error: Error) => error.message === "support_provisioning_failed; inspect the selected branch manually before retrying" && !error.message.includes("synthetic-secret"));
+    });
+    assert.equal(activation.status, "support_login_activated");
+    assert.equal(activation.credentialAccess, process.platform === "win32" ? "current_user_only" : "owner_only");
+    assert.equal(seenSql.length, 2);
+    assert.equal(seenSql.some((sql) => sql.includes("synthetic-secret")), false);
+    assert.match(readFileSync(privateOutput, "utf8"), /^SUPPORT_DATABASE_URL=postgresql:\/\/ornigami_support_reader:/);
+    assert.equal(readFileSync(privateOutput, "utf8").includes("\n"), true);
+
+    const failedOutput = join(artifactDir, "failed.env");
+    let failStep = 0;
+    await assert.rejects(() => provisionSupportAccess({
+      args: [...prefix, "--support-env", failedOutput, "--activate"],
+      psql: (_command: string, _argv: string[], options: { input: string }) => {
+        if (options.input.includes("roleExists")) return JSON.stringify(roleProof);
+        if (options.input.includes("PASSWORD '")) throw new Error("secret in suppressed diagnostic");
+        if (options.input.includes("SELECT json_build_object('login'")) {
+          failStep += 1;
+          return JSON.stringify({ login: false });
+        }
+        throw new Error("unexpected SQL operation");
+      },
+    }), /support_activation_failed/);
+    assert.equal(failStep, 2, "a failed activation is followed by a second NOLOGIN confirmation");
+    assert.equal(existsSync(failedOutput), false, "a confirmed NOLOGIN failure removes its candidate credential");
+
+    const unknownOutput = join(resolve(artifact, ".."), "uncertain.env");
+    await assert.rejects(() => provisionSupportAccess({
+      args: [...prefix, "--support-env", unknownOutput, "--activate"],
+      psql: (_command: string, _argv: string[], options: { input: string }) => {
+        if (options.input.includes("roleExists")) return JSON.stringify(roleProof);
+        throw new Error("secret and provider diagnostic must be hidden");
+      },
+    }), /support_activation_unknown/);
+    assert.equal(existsSync(unknownOutput), true, "an ambiguous outcome retains its private candidate credential");
+    rmSync(unknownOutput, { force: true });
     assert.equal(invoked, true);
   } finally {
+    rmSync(artifactDir, { recursive: true, force: true });
     rmSync(dir, { recursive: true, force: true });
   }
 });
@@ -79,7 +152,11 @@ test("support SQL grants only feedback SELECT, verifier proves identity and priv
     assert.match(transactionSql, /CREATE ROLE ornigami_support_reader\s+NOLOGIN NOINHERIT/);
     assert.ok(!transactionSql.includes("PASSWORD"), "committed SQL has no credential material");
     psql(transactionSql);
-    psql("ALTER ROLE ornigami_support_reader LOGIN");
+    const noLoginAudit = JSON.parse(psql(buildRoleAuditSql()));
+    assert.equal(noLoginAudit.roleExists, true);
+    assert.equal(noLoginAudit.login, false);
+    assert.equal(noLoginAudit.feedbackSelect, true);
+    psql("ALTER ROLE ornigami_support_reader PASSWORD 'SyntheticLocalOnlyPassword_71'; ALTER ROLE ornigami_support_reader LOGIN");
 
     const artifactBase = mkdtempSync(join(dir, "private-artifact-root-"));
     const artifact = await writePrivateInboxArtifact({
