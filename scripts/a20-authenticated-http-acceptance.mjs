@@ -87,9 +87,16 @@ async function authenticate(role) {
   });
   jar.absorb(signInResponse);
   if (!signInResponse.ok) throw new Error(`Auth.js credentials callback returned ${signInResponse.status}`);
-  const signInBody = await signInResponse.json().catch(() => ({}));
-  const redirect = typeof signInBody.url === "string" ? new URL(signInBody.url, base) : null;
-  if (!redirect || redirect.origin !== base.origin) throw new Error("Auth.js credentials callback did not return a local redirect");
+  const signInText = await signInResponse.text();
+  let signInBody = null;
+  try { signInBody = JSON.parse(signInText); } catch { /* Auth.js can return a plain redirect URL. */ }
+  const redirectValue = typeof signInBody === "string" ? signInBody
+    : typeof signInBody?.url === "string" ? signInBody.url
+    : signInResponse.headers.get("location");
+  const redirect = typeof redirectValue === "string" ? new URL(redirectValue, base) : null;
+  const localRedirect = redirect && redirect.protocol === "http:" &&
+    [base.hostname, "localhost"].includes(redirect.hostname) && redirect.port === base.port;
+  if (!localRedirect) throw new Error("Auth.js credentials callback did not return a loopback redirect on the fixture port");
 
   const sessionResponse = await boundedFetch(new URL("/api/auth/session", base), {
     headers: { cookie: jar.header() },
@@ -109,6 +116,7 @@ async function request(session, method, route, body) {
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
     headers.origin = base.origin;
     headers.referer = new URL("/dashboard", base).href;
+    headers["sec-fetch-site"] = "same-origin";
   }
   if (body !== undefined) {
     headers["content-type"] = "application/json";
@@ -139,13 +147,27 @@ function equalSnapshot(left, right) {
   return createHash("sha256").update(encode(left)).digest("hex") === createHash("sha256").update(encode(right)).digest("hex");
 }
 
+function errorClass(value) {
+  const safe = String(value ?? "");
+  if (safe === "Business access denied.") return "business-access-denied";
+  if (safe === "Business or Google location access denied.") return "google-scope-denied";
+  if (safe === "Cross-origin request rejected.") return "cross-origin-guard";
+  if (safe === "Member not found.") return "member-not-found";
+  if (/^(?:Only the business owner|Business owner only|Owner access required)/i.test(safe)) return "owner-only";
+  if (/^(?:Business|Workspace) access denied\.?$/i.test(safe)) return "workspace-access-denied";
+  if (/^Agent access denied\.?$/i.test(safe)) return "agent-access-denied";
+  return "unclassified";
+}
+
 function result(role, receipts) {
-  const summarized = receipts.map(({ method, path, response, boundaryError }) => ({
+  const summarized = receipts.map(({ method, path, response, boundaryError, csrfRejected, safeErrorClass }) => ({
     method,
     path,
     status: response.status,
     authorizedBoundary: response.status === 403 && boundaryError,
     scopedNotFound: response.status === 404 && response.scopedNotFound === true,
+    csrfRejected: response.status === 403 && csrfRejected === true,
+    errorClass: safeErrorClass,
   }));
   const failed = receipts.filter(({ response, boundaryError }) =>
     !(response.status === 403 && boundaryError) && !(response.status === 404 && response.scopedNotFound === true));
@@ -199,9 +221,11 @@ async function outsiderProbe() {
   for (const [method, route, body, scopedNotFoundExpected] of routeSet) {
     const response = await request(session, method, route, body);
     const errorBody = await response.clone().json().catch(() => ({}));
-    const boundaryError = /business|workspace|member|owner|access|agent|authorized/i.test(String(errorBody.error ?? ""));
+    const safeErrorClass = errorClass(errorBody.error ?? errorBody.code);
+    const boundaryError = ["business-access-denied", "google-scope-denied", "owner-only", "workspace-access-denied", "agent-access-denied"].includes(safeErrorClass);
+    const csrfRejected = safeErrorClass === "cross-origin-guard";
     const scopedNotFound = scopedNotFoundExpected === true && response.status === 404 && errorBody.error === "Member not found.";
-    receipts.push({ method, path: new URL(route, base).pathname, response: Object.assign(response, { scopedNotFound }), boundaryError });
+    receipts.push({ method, path: new URL(route, base).pathname, response: Object.assign(response, { scopedNotFound }), boundaryError, csrfRejected, safeErrorClass });
   }
   result("outsider", receipts);
   const after = fixtureSnapshot();
@@ -283,8 +307,9 @@ async function removedMemberProbe() {
   for (const [method, route, body] of ownerMutations) {
     const response = await request(session, method, route, body);
     const errorBody = await response.clone().json().catch(() => ({}));
-    const boundaryError = /business|workspace|member|owner|access|authorized/i.test(String(errorBody.error ?? ""));
-    ownerControlReceipts.push({ method, path: new URL(route, base).pathname, response, boundaryError });
+    const safeErrorClass = errorClass(errorBody.error ?? errorBody.code);
+    const boundaryError = ["business-access-denied", "google-scope-denied", "owner-only", "workspace-access-denied", "agent-access-denied"].includes(safeErrorClass);
+    ownerControlReceipts.push({ method, path: new URL(route, base).pathname, response, boundaryError, safeErrorClass });
   }
   result("member-owner-controls", ownerControlReceipts);
   const afterOwnerMutations = fixtureSnapshot();
@@ -311,8 +336,10 @@ async function removedMemberProbe() {
   ]) {
     const response = await request(session, method, route, body);
     const errorBody = await response.clone().json().catch(() => ({}));
-    const boundaryError = /business|workspace|member|owner|access|agent|authorized/i.test(String(errorBody.error ?? ""));
-    receipts.push({ method, path: new URL(route, base).pathname, response, boundaryError });
+    const safeErrorClass = errorClass(errorBody.error ?? errorBody.code);
+    const boundaryError = ["business-access-denied", "google-scope-denied", "owner-only", "workspace-access-denied", "agent-access-denied"].includes(safeErrorClass);
+    const csrfRejected = safeErrorClass === "cross-origin-guard";
+    receipts.push({ method, path: new URL(route, base).pathname, response, boundaryError, csrfRejected, safeErrorClass });
   }
   result("removed-member-existing-session", receipts);
   const after = fixtureSnapshot();
