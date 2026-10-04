@@ -10,6 +10,7 @@ import { syncBuiltinESMExports } from "node:module";
 import { installA20NeonBridge } from "./a20-neon-bridge.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const nativeFetch = globalThis.fetch;
 const fixtureRoot = path.join(repoRoot, ".a20-fixture");
 const markerPath = path.join(repoRoot, ".a20-fixture", "marker.json");
 const ledgerPath = path.resolve(process.env.A20_BLOCKED_NETWORK_LEDGER || path.join(fixtureRoot, "outbound-blocked.jsonl"));
@@ -18,8 +19,8 @@ if (relativeLedgerPath.startsWith("..") || path.isAbsolute(relativeLedgerPath)) 
 const allowedPort = Number(process.env.PORT || 3210);
 const allowedHosts = new Set(["127.0.0.1", "::1", "localhost"]);
 
-function logBlocked(kind, host, port, reason = "outside A20 loopback allowlist") {
-  const item = { at: new Date().toISOString(), kind, host: String(host || "unknown").slice(0, 100), port: Number(port) || null, reason };
+function logBlocked(kind, host, port, reason = "outside A20 loopback allowlist", protocol = "unknown:") {
+  const item = { at: new Date().toISOString(), kind, protocol: String(protocol).slice(0, 16), host: String(host || "unknown").slice(0, 100), port: Number(port) || null, reason };
   try { appendFileSync(ledgerPath, `${JSON.stringify(item)}\n`, { encoding: "utf8", mode: 0o600 }); }
   catch { throw new Error("A20 outbound guard could not record a blocked network attempt"); }
   const error = new Error(`A20 outbound network blocked (${kind} ${item.host}:${item.port ?? "?"})`);
@@ -49,18 +50,21 @@ function isAllowedAppEndpoint(target) {
 function guardTarget(kind, target, { isBridge = false } = {}) {
   if (isBridge) return;
   if (isAllowedAppEndpoint(target)) return;
-  logBlocked(kind, target.host, target.port);
+  logBlocked(kind, target.host, target.port, "outside A20 loopback allowlist", target.protocol);
 }
 
 function installFetchGuard() {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = function a20GuardedFetch(input, init) {
     const raw = input instanceof Request ? input.url : String(input);
+    // Data URLs contain their payload in the URL itself and make no network request.
+    // Keep this exact scheme exception narrow; file:, blob:, and remote schemes stay guarded.
+    try { if (new URL(raw).protocol === "data:") return nativeFetch.call(this, input, init); } catch {}
     let target;
     try { target = endpoint(raw); } catch { return originalFetch.call(this, input, init); }
     if (target.host === "api.neon.tech") {
       return Promise.resolve(originalFetch.call(this, input, init)).catch((error) => {
-        if (String(error?.message || "").startsWith("A20 Neon bridge refused request:")) logBlocked("neon.invalid", target.host, target.port);
+        if (String(error?.message || "").startsWith("A20 Neon bridge refused request:")) logBlocked("neon.invalid", target.host, target.port, "Neon bridge refused request", target.protocol);
         throw error;
       }); // prior wrapper performs exact bridge endpoint and connection identity validation
     }

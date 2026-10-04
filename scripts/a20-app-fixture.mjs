@@ -270,7 +270,7 @@ function hashBuildTree(buildDir) {
   walk(buildDir);
   return digest.digest("hex");
 }
-function buildAndStart(appPort) {
+function buildAndStart(appPort, keepAlive = false) {
   checkNoSharedEnvFiles();
   const marker = JSON.parse(readFileSync(MARKER, "utf8"));
   const resolvedFixture = realpathSync(FIXTURE);
@@ -312,9 +312,9 @@ function buildAndStart(appPort) {
     });
   } finally { closeSync(serverLog); }
   if (!server.pid) throw new Error("could not launch the loopback production server");
-  server.unref();
+  if (!keepAlive) server.unref();
   privateWrite(RUNTIME, { task: "A20", pid: server.pid, port: appPort, url: `http://127.0.0.1:${appPort}`, buildId, buildHash, buildTree, candidateCommit, baseCommit: BASE_COMMIT, startedAt: new Date().toISOString() });
-  return { serverPid: server.pid, url: `http://127.0.0.1:${appPort}`, buildId, buildHash, buildTree, candidateCommit };
+  return { serverProcess: server, serverPid: server.pid, url: `http://127.0.0.1:${appPort}`, buildId, buildHash, buildTree, candidateCommit };
 }
 function openOutputLog() {
   ensureWithinFixture(OUT);
@@ -322,17 +322,18 @@ function openOutputLog() {
 }
 function closeLog(fd) { closeSync(fd); }
 
-async function start() {
+async function start(keepAlive = false) {
   const setup = existsSync(MARKER) ? { reused: true } : await setupDatabase();
   if (existsSync(RUNTIME)) throw new Error("A20 server metadata already exists; stop this fixture before another start");
   const appPort = await availablePort();
-  const server = buildAndStart(appPort);
+  const server = buildAndStart(appPort, keepAlive);
   const credentials = JSON.parse(readFileSync(CREDENTIALS, "utf8"));
   credentials.url = server.url;
   privateWrite(CREDENTIALS, credentials);
   const status = await waitForHttp(server.url, server.serverPid);
-  const result = { ...setup, ...server, httpStatus: status, credentialsPath: CREDENTIALS, runtimePath: RUNTIME, markerPath: MARKER };
+  const result = { ...setup, serverPid: server.serverPid, url: server.url, buildId: server.buildId, buildHash: server.buildHash, buildTree: server.buildTree, candidateCommit: server.candidateCommit, httpStatus: status, credentialsPath: CREDENTIALS, runtimePath: RUNTIME, markerPath: MARKER };
   console.log(JSON.stringify(result, null, 2));
+  if (keepAlive && server.serverProcess.exitCode === null) await new Promise((resolveExit) => server.serverProcess.once("exit", resolveExit));
 }
 function validateRuntime() {
   if (!existsSync(RUNTIME)) return null;
@@ -347,12 +348,12 @@ function powershell(script) {
   return String(result.stdout ?? "").trim();
 }
 function appProcessCommandLine(pid) {
-  if (process.platform === "win32") return powershell(`$p = Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}'; if ($p) { $p.CommandLine }`);
+  if (process.platform === "win32") return powershell(`$ErrorActionPreference = 'Stop'; if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) { exit 2 }; try { $p = Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}' -ErrorAction Stop; if ($p) { $p.CommandLine }; exit 0 } catch { exit 3 }`);
   try { return readFileSync(`/proc/${pid}/cmdline`, "utf8").replaceAll("\0", " ").trim(); } catch { return ""; }
 }
 function appPortOwner(port) {
   let output;
-  if (process.platform === "win32") output = powershell(`$c = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; if ($c) { ($c | Select-Object -First 1 -ExpandProperty OwningProcess) }`);
+  if (process.platform === "win32") output = powershell(`$ErrorActionPreference = 'Stop'; if (-not (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue)) { exit 2 }; try { $listeners = Get-NetTCPConnection -State Listen -ErrorAction Stop; $c = $listeners | Where-Object { $_.LocalPort -eq ${port} }; if ($c) { ($c | Select-Object -First 1 -ExpandProperty OwningProcess) }; exit 0 } catch { exit 3 }`);
   else {
     const result = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"], { encoding: "utf8", windowsHide: true, env: pgEnv() });
     if (result.error || ![0, 1].includes(result.status)) throw new Error("could not verify A20 loopback port ownership (lsof required)");
@@ -462,7 +463,7 @@ function snapshot() {
 async function main() {
   const action = process.argv[2];
   if (action === "setup") { const result = await setupDatabase(); console.log(JSON.stringify(result)); return; }
-  if (action === "start") { await start(); return; }
+  if (action === "start") { await start(process.argv.includes("--serve")); return; }
   if (action === "stop") { console.log(stopServer() ? "A20 app server stopped." : "A20 app server was not running."); return; }
   if (action === "cleanup") { cleanup(); return; }
   if (action === "connect") { connectSyntheticLocation(); return; }
@@ -475,6 +476,6 @@ async function main() {
     console.log("No blocked outbound attempts recorded by A20 build/app processes.");
     return;
   }
-  die("usage: node scripts/a20-app-fixture.mjs <setup|start|connect|disconnect|snapshot|stop|cleanup|assert>");
+  die("usage: node scripts/a20-app-fixture.mjs <setup|start [--serve]|connect|disconnect|snapshot|stop|cleanup|assert>");
 }
 main().catch((error) => { die(error instanceof Error ? error.message : "unknown error"); });

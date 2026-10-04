@@ -7,6 +7,8 @@ import tls from "node:tls";
 const host = "provider-guard-probe.invalid";
 const blocked = (error) => error?.code === "A20_OUTBOUND_BLOCKED" || Boolean(error?.cause && blocked(error.cause));
 
+const localDataResponse = await fetch("data:text/plain,a20-local-data-probe");
+assert.equal(await localDataResponse.text(), "a20-local-data-probe", "data: fetches are local payloads and must not be logged as outbound");
 await assert.rejects(Promise.resolve().then(() => fetch(`https://${host}/send?private=receipt`)), blocked);
 assert.throws(() => http.request(`http://${host}/send`), blocked);
 assert.throws(() => https.get(`https://${host}/send`), blocked);
