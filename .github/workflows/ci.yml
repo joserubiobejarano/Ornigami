@@ -33,8 +33,16 @@ jobs:
       - run: npm run lint
       - run: npm run typegen
       - run: npx tsc --noEmit
-      - name: Locate PostgreSQL binaries for isolated SQL tests
-        run: echo "A04_PG_BIN=$(pg_config --bindir)" >> "$GITHUB_ENV"
+      - name: Provide PostgreSQL 17 binaries for isolated SQL tests
+        run: |
+          a12_postgres17_bin=/usr/lib/postgresql/17/bin
+          if [ ! -x "$a12_postgres17_bin/initdb" ]; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y postgresql-17
+          fi
+          "$a12_postgres17_bin/pg_config" --version
+          echo "A04_PG_BIN=$a12_postgres17_bin" >> "$GITHUB_ENV"
+          echo "$a12_postgres17_bin" >> "$GITHUB_PATH"
       - run: npm test
       - run: npm run build
       - run: npm run test:build
