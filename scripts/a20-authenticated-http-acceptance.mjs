@@ -294,7 +294,12 @@ async function removedMemberProbe() {
   const googleState = await googleConnectionBefore.clone().json().catch(() => ({}));
   if (!googleConnectionBefore.ok || googleState.canManage !== false) throw new Error("member Google connection response exposed owner controls");
   const billingBefore = await request(session, "POST", `/api/stripe/portal?business_id=${encodeURIComponent(credentials.business.id)}`);
-  if (billingBefore.status !== 403) throw new Error(`member billing portal unexpectedly returned ${billingBefore.status}`);
+  const billingError = await billingBefore.clone().json().catch(() => ({}));
+  const billingErrorClass = errorClass(billingError.error ?? billingError.code);
+  if (billingBefore.status !== 403 || billingErrorClass !== "business-access-denied") {
+    throw new Error(`member billing portal did not return the expected business boundary (${billingBefore.status}/${billingErrorClass})`);
+  }
+  console.log(JSON.stringify({ suite: "A20 member billing boundary", status: billingBefore.status, errorClass: billingErrorClass }));
   const beforeOwnerMutations = fixtureSnapshot();
   const ownerMutations = [
     ["POST", "/api/review-booster/settings", { businessId: credentials.business.id, business_name: "A20 unauthorized mutation probe" }],
@@ -309,7 +314,8 @@ async function removedMemberProbe() {
     const errorBody = await response.clone().json().catch(() => ({}));
     const safeErrorClass = errorClass(errorBody.error ?? errorBody.code);
     const boundaryError = ["business-access-denied", "google-scope-denied", "owner-only", "workspace-access-denied", "agent-access-denied"].includes(safeErrorClass);
-    ownerControlReceipts.push({ method, path: new URL(route, base).pathname, response, boundaryError, safeErrorClass });
+    const csrfRejected = safeErrorClass === "cross-origin-guard";
+    ownerControlReceipts.push({ method, path: new URL(route, base).pathname, response, boundaryError, csrfRejected, safeErrorClass });
   }
   result("member-owner-controls", ownerControlReceipts);
   const afterOwnerMutations = fixtureSnapshot();
