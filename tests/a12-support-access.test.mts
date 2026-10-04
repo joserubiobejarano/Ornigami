@@ -23,7 +23,7 @@ test("support access verifier rejects ambiguous connection settings and wrong ta
 });
 
 test("provision wrapper checks target/private destination, audits NOLOGIN, and handles activation outcomes", async () => {
-  const fixtureRoot = resolve(repo, ".next", "a12-support-access-fixtures");
+  const fixtureRoot = resolve(repo, ".next", "a12pg");
   mkdirSync(fixtureRoot, { recursive: true });
   const dir = mkdtempSync(join(fixtureRoot, "provision-wrapper-"));
   const privateEnv = join(dir, "admin.env");
@@ -130,7 +130,7 @@ test("provision wrapper checks target/private destination, audits NOLOGIN, and h
 
 test("support SQL grants only feedback SELECT, verifier proves identity and private artifact, and negative ACL cases fail closed", async () => {
   const port = await availablePostgresTestPort();
-  const fixtureRoot = resolve(repo, ".next", "a12-support-access-fixtures");
+  const fixtureRoot = resolve(repo, ".next", "a12pg");
   mkdirSync(fixtureRoot, { recursive: true });
   const dir = mkdtempSync(join(fixtureRoot, "local-pg-"));
   const safeRoot = `${resolve(fixtureRoot)}${sep}`;
