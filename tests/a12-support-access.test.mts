@@ -10,7 +10,7 @@ import { parseSupportTarget, verifySupportAccess } from "../scripts/a12-support-
 import { buildRoleAuditSql, provisionSupportAccess } from "../scripts/a12-support-access-provision.mjs";
 
 const repo = process.cwd();
-const binDir = process.env.A12_PG_BIN ?? process.env.PG_BIN;
+const binDir = process.env.A12_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.PG_BIN;
 const pgExe = (name: string) => process.platform === "win32"
   ? join(binDir ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
   : binDir ? join(binDir, name) : name;
