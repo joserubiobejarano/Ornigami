@@ -20,6 +20,9 @@ function utcDateTime(value: string | Date): string {
 
 function VisitStatusGuidance({ visit, now }: { visit: FollowupVisit; now: number | null }) {
   const status = visit.followup_status.toLowerCase();
+  if (status === "unsubscribed") {
+    return <p className="mt-1 max-w-xs text-xs text-muted-foreground">This customer unsubscribed from this business. No follow-up email will be sent for this visit.</p>;
+  }
   if (["sending", "unknown", "reconciliation_required"].includes(status)) {
     return <p className="mt-1 max-w-xs text-xs text-primary">Status is being checked. The quota reservation remains in place; don&apos;t retry or create a duplicate request.</p>;
   }

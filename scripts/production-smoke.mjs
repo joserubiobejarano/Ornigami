@@ -10,6 +10,7 @@ const dotenvFiles = [".env", ".env.local", ".env.production", ".env.production.l
 assert.ok(dotenvFiles.every((name) => !existsSync(join(root, name))), "Production smoke requires a clean worktree without dotenv files");
 
 const appOutput = join(root, ".next", "server", "app");
+assert.ok(existsSync(join(root, ".next", "server", "instrumentation.js")), "Server monitoring hook was not included in the production build");
 const hashFile = join(root, ".next", "static-csp-hashes.json");
 const expectedHashes = new Set();
 const staticScriptPattern = /<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi;

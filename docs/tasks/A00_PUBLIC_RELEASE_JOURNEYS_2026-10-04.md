@@ -1,5 +1,7 @@
 # Public release journeys — October 4, 2026
 
+**Subsequent follow-through:** [Remaining launch work](./A00_REMAINING_LAUNCH_FOLLOWUPS.md) closes the small unsubscribe display implementation below, records the actual Webpack inventory, and fixes a concrete production schedule/server monitoring defect. Natural post-rollout cron acceptance and owner pilot/performance/provider gates remain separate.
+
 This completes the bounded operator work following [production activation](./A00_PRODUCTION_ACTIVATION_2026-10-04.md). The user authorized continuing release checks and selected their existing operator mailbox as the only mail recipient. No broad implementation session was restarted. Stripe stays skipped; Google waits for a real eligible client and provider approvals.
 
 ## Isolated target and evidence boundaries

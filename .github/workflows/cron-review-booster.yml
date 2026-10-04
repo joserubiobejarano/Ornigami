@@ -1,8 +1,7 @@
 name: cron-review-booster
 
 on:
-  schedule:
-    - cron: "0 * * * *"
+  # Vercel owns the hourly schedule. Keep dispatch for deliberate recovery only.
   workflow_dispatch: {}
 
 jobs:

@@ -1,3 +1,7 @@
 {
-  "crons": [{ "path": "/api/cron/privacy", "schedule": "0 3 * * *" }]
+  "crons": [
+    { "path": "/api/cron/privacy", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/review-booster", "schedule": "7 * * * *" },
+    { "path": "/api/cron/review-replies", "schedule": "11 */4 * * *" }
+  ]
 }

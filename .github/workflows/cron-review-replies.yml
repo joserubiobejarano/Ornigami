@@ -1,8 +1,7 @@
 name: cron-review-replies
 
 on:
-  schedule:
-    - cron: "0 */4 * * *"
+  # Vercel owns the four-hour schedule. Keep dispatch for deliberate recovery only.
   workflow_dispatch: {}
 
 jobs:

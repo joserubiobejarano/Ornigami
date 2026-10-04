@@ -181,12 +181,15 @@ export async function findCsvVisitDuplicate(input: CsvVisitDuplicateInput): Prom
 export async function getFollowupStats(businessId: string): Promise<FollowupStats> {
   const rows = await sql`
     SELECT
-      count(*) FILTER (WHERE lower(followup_status) = 'pending')::int AS pending,
+      count(*) FILTER (WHERE lower(v.followup_status) = 'pending' AND NOT EXISTS (
+        SELECT 1 FROM public.followup_unsubscribes u
+        WHERE u.business_id = v.business_id AND u.customer_email_normalized = lower(v.customer_email)
+      ))::int AS pending,
       count(*) FILTER (WHERE lower(followup_status) = 'sent')::int AS sent,
       count(*) FILTER (WHERE lower(followup_status) = 'failed')::int AS failed,
       count(*) FILTER (WHERE lower(followup_status) = 'skipped')::int AS skipped
-    FROM public.followup_visits
-    WHERE business_id = ${businessId}
+    FROM public.followup_visits v
+    WHERE v.business_id = ${businessId}
   `;
   const row = rows[0] ? FollowupStatsRowSchema.parse(rows[0]) : undefined;
   return {
@@ -304,7 +307,13 @@ export async function getRecentVisitsPage(
       v.visited_at,
       v.visited_at::text AS cursor_timestamp,
       v.source,
-      CASE WHEN d.state IN ('sending','unknown','reconciliation_required') THEN d.state ELSE v.followup_status END AS followup_status,
+      CASE WHEN d.state IN ('sending','unknown','reconciliation_required') THEN d.state
+        WHEN v.followup_sent_at IS NULL AND (d.id IS NULL OR d.state = 'released')
+          AND lower(v.followup_status) IN ('pending','failed','deferred_quota','skipped') AND EXISTS (
+            SELECT 1 FROM public.followup_unsubscribes u
+            WHERE u.business_id = v.business_id AND u.customer_email_normalized = lower(v.customer_email)
+          ) THEN 'unsubscribed'
+        ELSE v.followup_status END AS followup_status,
       d.id AS delivery_id,
       d.delivery_status,
       d.delivery_status_at,

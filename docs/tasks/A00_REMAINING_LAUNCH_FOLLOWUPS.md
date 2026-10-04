@@ -1,0 +1,46 @@
+# Remaining launch follow-ups — October 4, 2026
+
+This is bounded follow-through from [public release journeys](./A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md), at the owner's request. Completed A10/A12/A17/A20 journeys are not reassigned. Stripe remains skipped; Google needs an eligible real client and provider approvals. No production fixture, payment, Google reply, unsubscribe or manual application cron is created by this task.
+
+## Production cron diagnosis and correction
+
+Scheduled GitHub monitor [37221231299](https://github.com/joserubiobejarano/Ornigami/actions/runs/37221231299), exact main `82e603b`, failed at October 4 17:37 UTC. Its authenticated endpoint returned HTTP 200; the failure was an unhealthy response rather than transport/auth failure. Bounded runtime logs reported `alert_sentry_client_missing`. A freshly pulled private production configuration independently pinned the canonical database; a bounded **READ ONLY** transaction at 18:36 UTC found:
+
+- Booster's latest run was `no_work` at 15:10 UTC, but no later run existed. The `missed_schedule` alert was active and its latest Sentry transport attempt failed.
+- Replies' last run was `no_work` at 13:48 UTC. Privacy's accepted 03:00 UTC success remained intact. Their old resolved alerts retain historical transport failures, not new active failures.
+- No active application job lease. No evaluator, cleanup, application cron or customer mutation was manually invoked during the diagnostic read.
+
+The server `instrumentation.ts` was at repository root despite using `src/app`. Installed Next 16.3.8 documentation requires instrumentation inside `src` for this layout. Moving it to `src/instrumentation.ts` initializes the Node/edge SDK at server startup. Removed a duplicated edge import. Server initialization now admits only fixed server-error messages and enumerated cron job/reason messages, stripping request URLs, source errors/stacks, user data, breadcrumbs, contexts and extras. Server tracing and automatic integrations are disabled; explicit request-error/cron capture remains. Browser telemetry retains its existing separately reviewed policy. The production smoke checks that the server instrumentation was actually built; mocks alone cannot establish that Next discovers a file.
+
+Vercel API verified team `team_ImIhBTUn2FAzpaDiocEM0aT4` has **active Pro**. Move Booster to Vercel `7 * * * *` and Replies to `11 */4 * * *`; keep existing privacy `0 3 * * *`. GitHub Booster/Replies workflows retain manual dispatch but lose automatic schedules to avoid two primary schedulers. Existing durable job leases/fences remain. The independent GitHub hourly health check remains, now with an allowlisted diagnostic summary instead of discarding its response. No plan upgrade or new vendor is introduced. These are scheduling/observability corrections; deployment alone does not prove subsequent naturally scheduled health success.
+
+GitHub documents that schedules can be delayed or dropped under load, especially at the start of an hour ([official schedule reference](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)). The observed multi-hour gaps are consistent with that limitation; internal GitHub causation cannot be established from our receipts. Vercel Pro supports sub-daily cron execution ([official usage reference](https://vercel.com/docs/cron-jobs/usage-and-pricing)).
+
+## Unsubscribe display correction
+
+The bounded business-scoped visit read now projects `unsubscribed` for unsent pending/failed/deferred/skipped visits with a matching business/email unsubscribe and no retained delivery claim. It preserves sending/unknown/reconciliation and accepted/delivered history. The table displays **Unsubscribed** with an explanation that no follow-up will be sent; Scheduled counts exclude matching unsubscribes. This is a read projection: no delivery/status/quota mutation, purge, migration or reconciliation activation. A real isolated PostgreSQL regression covers email case normalization, another business, another address, unchanged underlying pending state and preserved unknown/delivered history alongside the existing 120,000-row pagination fixture.
+
+## Performance and release decision
+
+Production dashboard navigation reached login. A request for the owner to sign in is pending; no browser profile/session extraction or production test account is used. `node scripts/bundle-baseline.mjs` records the actual clean **Webpack** production artifacts (Node 24 locally, Next 16.3.8), separately from the experimental Turbopack analyzer. Reference inventories include ancestor/recovery entries plus the route entry and common runtime; they exclude unreferenced dynamic imports and are not the initial browser download or execution size. Gzip is computed independently per asset with Node defaults, not Vercel transfer measurement.
+
+| Route | Route entry bytes / gzip | Reference inventory bytes / gzip | Unique chunks |
+| --- | --- | --- | --- |
+| `/dashboard` | 1,530 / 911 | 818,848 / 254,526 | 19 |
+| `/dashboard/agents/review-booster` | 19,910 / 5,902 | 843,625 / 262,702 | 21 |
+| `/settings` | 812 / 494 | 818,130 / 254,109 | 19 |
+| `/reviews` | 812 / 493 | 818,677 / 254,453 | 20 |
+
+The private JSON preserves chunk hashes and build ID for comparison. Authenticated CWV/Lighthouse, field p75, traffic/load SLO approval remain distinct and cannot be manufactured from unauthenticated login pages or small CLI timing samples.
+
+The [pilot decision sheet](./A00_BOOSTER_PILOT_DECISION.md) makes the remaining owner choices concrete. It is a proposal, not launch approval. Account deletion and uncertain-provider reconciliation stay disabled. The A12 child keeps its approved October 5 16:00 UTC expiry; a future scheduled expiry is not claimed as completed deletion.
+
+Sanitized private receipts/logs are under `C:/Users/joser/Desktop/Projects/Ornigami-Backups/2026-10-04-remaining-launch`. Fresh full configuration/runtime sources are owner-restricted in LocalAppData and removed after bounded verification. Validation, deployment and naturally scheduled observations are recorded below when available.
+
+## Validation and rollout receipts
+
+- Targeted regression checks: 11/11 passed. Local synthetic page plans used the existing business indexes (review 0.139 ms, visit 0.243 ms); local query execution is not hosted/browser acceptance.
+- Local full suite: 549/549 passed before the additional installed-SDK server regression; that added regression also passes. Lint: four existing navigation warnings, no errors. Type generation/TypeScript, clean Webpack production build and production smoke passed; full and production dependency audits have zero findings. The smoke independently confirms emitted server instrumentation, and the installed SDK regression confirms the actual initializer/filter preserves successful explicit server/cron capture while rejecting automatic/source payloads.
+- Exact candidate/main CI, production rollout and naturally scheduled cron receipts: pending at implementation time; consume the final task receipts before closing I02.
+
+Rollback is to remove only the two new Vercel application cron entries and restore the two GitHub schedules in a reviewed deployment if needed. Keep privacy unchanged. Do not run both primary schedules intentionally or relabel a dispatched recovery as a natural scheduled run. Preserve durable delivery/quota/lease state; no schema rollback is necessary.

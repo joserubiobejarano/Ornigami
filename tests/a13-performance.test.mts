@@ -58,6 +58,8 @@ test("A13 pagination indexes seek into large business/location datasets and inde
         rebooking_url text, tone text, language text, email_from_name text);
       CREATE TABLE public.booster_followup_deliveries(id uuid NOT NULL, business_id uuid NOT NULL, visit_id uuid NOT NULL, state text, delivery_status text, delivery_status_at timestamptz, error_message text);
       CREATE TABLE public.followup_messages(visit_id uuid NOT NULL, error_message text, created_at timestamptz);
+      CREATE TABLE public.followup_unsubscribes(business_id uuid NOT NULL, customer_email_normalized text NOT NULL,
+        PRIMARY KEY (business_id, customer_email_normalized));
       CREATE TABLE public.review_replies(id bigint NOT NULL, business_id uuid NOT NULL, review_id bigint NOT NULL, posted boolean NOT NULL, draft_markdown text);
       CREATE TABLE public.review_reply_draft_state(review_id bigint NOT NULL, business_id uuid NOT NULL, reply_id bigint,
         state text, version int, updated_at timestamptz, posting_token uuid, posting_lease_until timestamptz);
@@ -188,6 +190,25 @@ test("A13 pagination indexes seek into large business/location datasets and inde
     assert.deepEqual(secondVisits.items.map((visit) => visit.id), ["30000000-0000-4000-8000-000000000003"]);
     assert.equal(secondVisits.page.hasMore, false);
     await assert.rejects(boosterDb.getRecentVisitsPage(businessA, { cursor: firstReviewBody.page.nextCursor }), /Invalid pagination cursor/);
+
+    // A later visit to an unsubscribed address is admitted but cannot be sent.
+    // Project that fact without overwriting delivered/ambiguous provider history.
+    psql(`UPDATE public.followup_visits SET customer_email='PERSON@example.test'
+      WHERE business_id='${businessA}';
+      INSERT INTO public.followup_unsubscribes VALUES('${businessA}','person@example.test');
+      INSERT INTO public.followup_visits(id,business_id,visited_at,customer_email,followup_status)
+      VALUES ('30000000-0000-4000-8000-000000000005','${businessA}','2026-01-04 00:00:00+00','person@example.test','pending'),
+        ('30000000-0000-4000-8000-000000000006','${businessA}','2026-01-05 00:00:00+00','other@example.test','pending'),
+        ('30000000-0000-4000-8000-000000000007','${businessB}','2026-01-05 00:00:00+00','PERSON@example.test','pending');`);
+    const suppressionPage = await boosterDb.getRecentVisitsPage(businessA);
+    assert.equal(suppressionPage.items.find((v) => v.id.endsWith('000005'))?.followup_status, 'unsubscribed');
+    assert.equal(suppressionPage.items.find((v) => v.id.endsWith('000006'))?.followup_status, 'pending');
+    assert.equal(suppressionPage.items.find((v) => v.id.endsWith('000001'))?.followup_status, 'unknown');
+    assert.equal(suppressionPage.items.find((v) => v.id.endsWith('000002'))?.delivery_status, 'delivered');
+    const otherBusinessPage = await boosterDb.getRecentVisitsPage(businessB);
+    assert.equal(otherBusinessPage.items.find((v) => v.id.endsWith('000007'))?.followup_status, 'pending');
+    assert.equal((await boosterDb.getFollowupStats(businessA)).pending, 1);
+    assert.equal(psql(`SELECT followup_status FROM public.followup_visits WHERE id='30000000-0000-4000-8000-000000000005'`), 'pending', 'display projection never mutates the send ledger');
 
     const outcomeStats = await boosterDb.getReviewOutcomeStats(businessA);
     assert.deepEqual(outcomeStats, { requestsSent: 2, reviewsSynced: 5, repliesPosted: 0, linkClicks: 0 });
