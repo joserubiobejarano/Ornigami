@@ -1,0 +1,105 @@
+{
+  "schema": "ornigami.a10.live-resend-preflight-failure.v1",
+  "capturedAt": "2026-10-04T14:22:35.434Z",
+  "run": {
+    "status": "incomplete",
+    "runIntentStatus": "incomplete",
+    "liveDeliveryCount": 0,
+    "guardedProviderAttemptCount": 0,
+    "providerIoAttempted": false,
+    "providerMessageIdPresent": false,
+    "providerWebhookEventCount": 0
+  },
+  "publicWebhook": {
+    "probeHttpStatus": 401,
+    "applicationSignatureVerifierReached": true
+  },
+  "resendEndpoint": {
+    "webhookId": "0c5f88be-2520-4d20-95ca-82c7faf7558a",
+    "host": "billion-two-wishes-phase.trycloudflare.com",
+    "requestedEventCount": 7,
+    "deleted": true
+  },
+  "application": {
+    "stopped": true,
+    "quickTunnelClosed": true,
+    "taskWebhookSecretAndRecipientFilesRemoved": true
+  },
+  "syntheticDatabaseAtCapture": {
+    "identity": {
+      "database": "a20_browser_fixture",
+      "host": "127.0.0.1",
+      "port": 49970,
+      "databaseHostPortAndResolvedClusterPathMatchPrivateFixtureMarker": true
+    },
+    "ownerVisitCount": 1,
+    "visitId": "0791414a-ba36-4230-905a-65e508116e54",
+    "visitStatus": "pending",
+    "deliveryCount": 1,
+    "deliveryId": "29ec9bb9-465c-4362-a52f-afe986428c9e",
+    "deliveryVisitIdMatches": true,
+    "deliveryState": "unknown",
+    "applicationSendAttemptCount": 1,
+    "quotaUsage": 1,
+    "providerMessageIdPresent": false,
+    "providerEventCount": 0,
+    "suppressionCount": 0,
+    "lifecycleGenerationAdmissionStatuses": {
+      "done": 1
+    }
+  },
+  "taskGuardFailure": {
+    "errorClass": "Error",
+    "message": "A10 live Resend idempotency key does not match its delivery tag",
+    "stage": "inspectA10ResendRequest before durable attempt claim and native fetch",
+    "deliveryTagCount": 1,
+    "deliveryTagMatchesPersistedDeliveryId": true,
+    "persistedKeyMatchesApplicationFormat": true,
+    "persistedKeyFormat": "ornigami-booster-<UUID>",
+    "persistedKeyPrefixMatchesDeliveryTag": false,
+    "guardExpectedKeyFormat": "<delivery-UUID>:<UUID>"
+  },
+  "diagnosis": {
+    "cause": "The task-only outbound guard enforced an idempotency-key relation that differs from the application's persisted Resend delivery key format.",
+    "providerRequestWasBlockedBeforeNetworkIo": true,
+    "applicationUnknownStateIsNotEvidenceOfProviderAcceptance": true,
+    "sameDeliveryRetryAuthorized": false,
+    "requiredContinuation": "Correct and review the task-only guard, then use a newly initialized synthetic fixture. Preserve this unknown delivery as diagnostic evidence; do not retry it."
+  },
+  "readOnlyEvidence": {
+    "sources": [
+      "sanitized live-acceptance receipt",
+      "private run intent, webhook cleanup receipt, and provider-create receipt",
+      "read-only queries against the marker-verified local A20 PostgreSQL fixture",
+      "task guard control flow and application's idempotency-key construction"
+    ],
+    "providerSendLedgerDirectoryPresent": false,
+    "rawRecipientsPayloadsRecipientHashesAndSigningSecretsIncluded": false
+  },
+  "privateImmutableArchive": {
+    "directory": ".env.a10-live-resend/diagnostic-archive/20261004T142235Z",
+    "gitIgnoredAndOwnerOnly": true,
+    "files": [
+      {
+        "source": ".env.a10-live-resend/live-acceptance-receipt.json",
+        "archiveName": "live-acceptance-receipt.json",
+        "sha256": "d96883c622291ab3971c15ee4ac0b46a929cea1685f45538735329a8242b2775"
+      },
+      {
+        "source": ".env.a10-live-resend/run-intent.json",
+        "archiveName": "run-intent.json",
+        "sha256": "3bda076b812fd9e428a9c71f3c17d44363747897e38d1c9f3c4294ad000f6e47"
+      },
+      {
+        "source": ".env.a10-live-resend/webhook-cleanup-receipt.json",
+        "archiveName": "webhook-cleanup-receipt.json",
+        "sha256": "aab3f062456c82d0bf127b4ee3c3784a08b17806062591656f4672858362e1e1"
+      },
+      {
+        "source": ".env.a10-live-resend/provider-create/attempt.json",
+        "archiveName": "attempt.json",
+        "sha256": "b9a3f8c7c39570bb3dde93ad2cc1d045f5b14cc60548c0ecb3f5953ec5df7bd9"
+      }
+    ]
+  }
+}
