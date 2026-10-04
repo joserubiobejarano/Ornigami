@@ -126,7 +126,7 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
     psql(`INSERT INTO public.business_google_locations(business_id,location_id) VALUES
       ('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003'),
       ('00000000-0000-4000-8000-000000000007','00000000-0000-4000-8000-000000000006');`);
-    const backfillProposal = readFileSync(join(root, "docs/tasks/A08-canonical-resource-backfill.sql"), "utf8");
+    const backfillProposal = readFileSync(join(root, "tests/fixtures/contracts/A08-canonical-resource-backfill.sql"), "utf8");
     assert.match(backfillProposal.trimEnd(), /ROLLBACK;$/);
     const applyDisposableBackfill = backfillProposal.replace(/ROLLBACK;\s*$/, "COMMIT;");
     const candidates = psql(applyDisposableBackfill);

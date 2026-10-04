@@ -1,3 +1,5 @@
 # Retained migration inputs are not part of the deployed application.
 migration-sources/**
 assets/brand-originals/**
+# Local recovery/evidence must never enter a CLI deployment.
+.local/**

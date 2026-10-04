@@ -67,7 +67,7 @@ test("A11 auth token and team admission SQL guard freeze races in disposable Pos
     const migrationsDir = join(root, "neon/migrations");
     for (const file of readdirSync(migrationsDir).filter((name) => /^(?:00[1-9]|01[0-7])_.*\.sql$/.test(name)).sort()) psql(readFileSync(join(migrationsDir, file), "utf8"));
     for (const file of ["019_billing_lifecycle.sql", "020_account_recovery.sql", "021_workspace_invitations.sql", "031_google_location_selection.sql", "032_workspace_bootstrap.sql", "026_privacy_account_lifecycle.sql"]) psqlFile(join(migrationsDir, file));
-    psqlFile(join(root, "docs/tasks/A11_ACTIVATION_AUTH_TEAM.sql"));
+    psqlFile(join(root, "tests/fixtures/contracts/A11_ACTIVATION_AUTH_TEAM.sql"));
 
     const owner = "00000000-0000-4000-8000-000000000101";
     const member = "00000000-0000-4000-8000-000000000102";

@@ -5,7 +5,7 @@ import { dirname, parse, resolve, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkPrivateArtifact, parseSupportTarget, psqlEnvironment } from "./a12-support-access-verify.mjs";
 
-const SQL_FILE = fileURLToPath(new URL("../docs/tasks/A12_SUPPORT_ACCESS.sql", import.meta.url));
+const SQL_FILE = fileURLToPath(new URL("./sql/A12_SUPPORT_ACCESS.sql", import.meta.url));
 const ROLE = "ornigami_support_reader";
 
 /** @typedef {(command: string, args: string[], options: import('node:child_process').ExecFileSyncOptionsWithStringEncoding & { env: NodeJS.ProcessEnv, input: string }) => string} SupportPsql */

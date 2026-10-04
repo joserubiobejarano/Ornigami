@@ -76,8 +76,8 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
         VALUES('${legacyVisit}','${legacyBusiness}','sent',now());`);
     psql(readFileSync(join(migrationsDir, "022_booster_delivery_quotas.sql"), "utf8"));
     for (const migration of migrations.filter((name) => Number(name.slice(0, 3)) > 22)) psql(readFileSync(join(migrationsDir, migration), "utf8"));
-    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_LIFECYCLE.sql"), "utf8"));
-    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
+    psql(readFileSync(join(root, "tests/fixtures/contracts/A11_ACTIVATION_LIFECYCLE.sql"), "utf8"));
+    psql(readFileSync(join(root, "tests/fixtures/contracts/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
 
     const owner = id(900);
     const biz = id(901);
@@ -260,7 +260,7 @@ test("A06 delivery and quota SQL fences claims, month usage, recovery and suppre
     // message mirror into the legacy baseline and charge it twice.
     const beforeReplay = Number(psql(`SELECT usage FROM public.booster_monthly_quota('${recoveryBiz}')`));
     psql(readFileSync(join(migrationsDir, "022_booster_delivery_quotas.sql"), "utf8"));
-    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
+    psql(readFileSync(join(root, "tests/fixtures/contracts/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
     assert.equal(Number(psql(`SELECT usage FROM public.booster_monthly_quota('${recoveryBiz}')`)), beforeReplay);
 
     const lifecycle = loadTs<typeof import("../src/lib/account-lifecycle.js")>("src/lib/account-lifecycle.ts", { overrides: { "@/lib/db/neon": { sql } } });

@@ -82,7 +82,7 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
         SELECT id,business_id,'email','old','sent','sent',followup_sent_at FROM public.followup_visits
         WHERE business_id='${ids.businessQuota}' AND followup_sent_at IS NOT NULL;`);
     psql(readFileSync(join(root, "neon/migrations/022_booster_delivery_quotas.sql"), "utf8"));
-    psql(readFileSync(join(root, "docs/tasks/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
+    psql(readFileSync(join(root, "tests/fixtures/contracts/A11_ACTIVATION_BOOSTER.sql"), "utf8"));
 
     const sql = async (strings: TemplateStringsArray, ...values: unknown[]) => sqlRows(renderSql(strings, values));
     const db = loadTs<Record<string, (...args: never[]) => unknown>>("src/modules/review-booster/services/atomic-followup-db.service.ts", {

@@ -101,8 +101,8 @@ test("A09 schema functions preserve human drafts and serialize saves, generation
     const migration = join(root,"neon/migrations/024_review_draft_policy.sql");
     psqlFile(migration);
     psqlFile(migration);
-    psqlFile(join(root,"docs/tasks/A11_ACTIVATION_REPLIES.sql"));
-    psqlFile(join(root,"docs/tasks/A11_ACTIVATION_REPLIES.sql"));
+    psqlFile(join(root,"tests/fixtures/contracts/A11_ACTIVATION_REPLIES.sql"));
+    psqlFile(join(root,"tests/fixtures/contracts/A11_ACTIVATION_REPLIES.sql"));
 
     assert.equal(psql(`SELECT state||':'||version||':'||(SELECT draft_markdown FROM public.review_replies WHERE id=s.reply_id)
       FROM public.review_reply_draft_state s JOIN public.reviews r ON r.id=s.review_id WHERE r.google_review_id='legacy'`), "human_edited:1:keep human words");

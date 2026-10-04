@@ -1,58 +1,33 @@
 # Ornigami
 
-Ornigami is a Next.js application for local-business reputation workflows. Its current center is Google review operations:
+One Next.js application for local-business reputation workflows: Review Booster sends post-visit review requests; Review Replies syncs/drafts/responds to Google reviews; business billing and memberships share one workspace. Complete combines the reputation agents. Speed to Lead is disabled/coming soon; preserved legacy source is not an active second application.
 
-- **Review Replies** — connect Google Business Profile, sync reviews, generate AI replies, save drafts, and post replies.
-- **Review Booster** — record completed visits and send review-request emails through Resend.
-- **Billing and workspaces** — activate agents per business through Stripe; Complete adds up to three workspace users.
-- **Supporting surfaces** — public marketing, demos, legal/privacy, Local SEO, free-audit, lead, feedback, and legacy project APIs.
+## Project and current readiness
 
-## Current state
+The only working checkout is `Ornigami/Ornigami-Agents`. Run commands there. Vercel builds the repository root (`.`), and production linkage remains unchanged. Committed-history recovery, uncommitted proposals and the cleanup audit live in its owner-restricted, Git-ignored `.local/recovery`; never upload or commit that area. Previously created worktrees and external review-backup directories are removed. Git history retains the detailed original handoffs; the [release evidence](./docs/RELEASE_EVIDENCE.md#workspace-cleanup-and-recovery) records the loss of selected untracked local receipt copies during cleanup.
 
-The app contains real end-to-end Review Replies and Review Booster code, email verification, privacy export/delete, Stripe billing, cron jobs, encrypted Google tokens, Sentry configuration, and automated tests.
+The established **one 14-day trial per business and billing owner** remains. No card at entry; unknown history needs reconciliation; no payment method at expiry cancels. The temporary paid-only/no-new-trials proposal is cancelled. Retention/permission and performance targets need their narrow implementation/evidence, and Stripe/provider/operational gates remain in the [roadmap](./docs/ROADMAP.md). Review Booster can use a validated manual Google review URL; Replies/Complete sales still require Google approval and real-provider acceptance. Production self-service deletion and uncertain-provider reconciliation remain disabled.
 
-Review Replies still has an external launch dependency: the Google Business Profile API access request must be approved for the Cloud project, and the OAuth branding checks must be completed. The current project state and the post-approval onboarding sequence are recorded in [docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md](./docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md). Review Booster can run with email delivery and a manually entered review URL.
+## Develop and verify
 
-`speed_to_lead` is registered as coming soon only. There is no current `/content` page; the legacy `/api/projects` surface remains for compatibility.
+1. `npm ci`
+2. Configure `.env.local` using [operations](./docs/OPERATIONS.md); never print or commit credentials.
+3. Follow [technical migration guidance](./docs/TECHNICAL_REFERENCE.md) and the [migration ledger](./neon/README.md), against a verified isolated development target. Do not replay legacy initial migrations into production.
+4. `npm run dev`, then open `http://localhost:3000`.
 
-## Quick start
+Relevant checks are `npm run lint`, `npm run typegen`, `npx tsc --noEmit`, `npm test`, `npm run security:audit`, `npm run test:security`, `npm run build` and `npm run test:build`. Run checks appropriate to a changed criterion; consume existing unchanged-scope acceptance rather than repeating closed agent packages. A passing test is not live payment, Google approval, production erasure or natural scheduler proof.
 
-The single project root is `Ornigami-Agents/`; run all commands there. The former `Agent-LocalLift` repository was promoted to this directory with its Git history and production Vercel linkage preserved. Follow-Up and Contactor source is retained under [migration-sources](./migration-sources/README.md) for remaining integration work, rather than as independent applications. Vercel continues to build the Git repository root (`.`).
+## Documentation
 
-1. Install dependencies: `npm ci`
-2. Create `.env.local` from [docs/ENVIRONMENT_VARIABLES.md](./docs/ENVIRONMENT_VARIABLES.md).
-3. Apply migrations in `neon/migrations` in numeric order.
-4. Start development: `npm run dev`
-5. Open `http://localhost:3000`.
+The six active guides are:
 
-## Verification scripts
+- [Roadmap](./docs/ROADMAP.md): current backlog, release gates and branch coordination.
+- [Product contracts](./docs/PRODUCT_CONTRACTS.md): current/approved/proposed commercial, trial, quota and workflow rules.
+- [Operations](./docs/OPERATIONS.md): environment, deployment, support/privacy, Google/provider runbooks, scheduling, retention and rollback.
+- [Technical reference](./docs/TECHNICAL_REFERENCE.md): architecture, API families, schema and durable security/provider contracts.
+- [Release evidence](./docs/RELEASE_EVIDENCE.md): scoped accepted proofs, exact commits/targets and unresolved observations.
+- [User guide](./docs/USER_GUIDE.md): setup, CSV, send timing, statuses and safe recovery.
 
-- `npm run lint`
-- `npx tsc --noEmit`
-- `npm test`
-- `npm run test:security`
-- `npm run build`
+Source-specific migration inputs and original instruction/provenance files remain under [migration-sources](./migration-sources/README.md). The schema ledger and vendored adapter README remain alongside their implementation; they are not separate current roadmaps. `AGENTS.md` and `CLAUDE.md` are agent tooling instructions, not duplicate product guides.
 
-## Documentation index
-
-- [Project scope](./docs/PROJECT_SCOPE.md)
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Database](./docs/DATABASE.md)
-- [Environment variables](./docs/ENVIRONMENT_VARIABLES.md)
-- [API reference](./docs/API_REFERENCE.md)
-- [Deployment checklist](./docs/DEPLOYMENT_CHECKLIST.md)
-- [Google Business Profile runbook](./docs/GOOGLE_BUSINESS_PROFILE_RUNBOOK.md)
-- [Roadmap and pending work](./docs/ROADMAP.md)
-- [Agent work packages and branch coordination](./docs/ROADMAP.md#agent-work-packages-and-branch-coordination)
-- [Preserved migration inputs](./migration-sources/README.md)
-- [Review Booster user guide](./docs/guides/ornigami-review-booster-user-guide.md)
-- [Review Booster module README](./src/modules/review-booster/README.md)
-- [Migration README](./neon/README.md)
-
-## Suggested maintainer path
-
-1. Read [docs/PROJECT_SCOPE.md](./docs/PROJECT_SCOPE.md).
-2. Read [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
-3. Read the open external and engineering work in [docs/ROADMAP.md](./docs/ROADMAP.md).
-4. Inspect the dashboard, Review Booster module, Google routes, and Stripe webhook.
-5. Run the verification scripts before changing deployment state.
+Original pre-cleanup documents can be read with `git show 84334c7:docs/tasks/<file>` (or the relevant former docs path). The private recovery bundle also preserves local branches and detached review heads; the uncommitted-work archive preserves unfinished changes without claiming they were merged.

@@ -69,7 +69,7 @@ test("A11 migration freezes, fences, resumes and atomically finalizes account de
     }
     const migration = join(migrationsDir, "026_privacy_account_lifecycle.sql");
     psqlFile(migration);
-    psqlFile(join(root, "docs/tasks/A11_ACTIVATION_BILLING.sql"));
+    psqlFile(join(root, "tests/fixtures/contracts/A11_ACTIVATION_BILLING.sql"));
 
     const owner = "00000000-0000-4000-8000-000000000011";
     const member = "00000000-0000-4000-8000-000000000012";

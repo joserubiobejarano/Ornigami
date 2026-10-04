@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "migration-sources/**",
     ".a20-fixture/**",
+    ".local/**",
   ]),
 ]);
 

@@ -148,7 +148,7 @@ test("support SQL grants only feedback SELECT, verifier proves identity and priv
     execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", log, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
     started = true;
     psql("CREATE TABLE public.feedback(id integer PRIMARY KEY, message text NOT NULL); INSERT INTO public.feedback VALUES (1, 'synthetic support message'); CREATE TABLE public.private_table(secret text); CREATE SEQUENCE public.private_sequence;");
-    const provisioningFile = readFileSync(join(repo, "docs", "tasks", "A12_SUPPORT_ACCESS.sql"), "utf8");
+    const provisioningFile = readFileSync(join(repo, "scripts", "sql", "A12_SUPPORT_ACCESS.sql"), "utf8");
     const transactionSql = provisioningFile.split(/\r?\n\\password\b/)[0];
     assert.match(transactionSql, /CREATE ROLE ornigami_support_reader\s+NOLOGIN NOINHERIT/);
     assert.ok(!transactionSql.includes("PASSWORD"), "committed SQL has no credential material");

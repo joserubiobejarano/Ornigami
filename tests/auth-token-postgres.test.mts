@@ -80,7 +80,7 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
     for (const migration of ["019_billing_lifecycle.sql", "021_workspace_invitations.sql", "032_workspace_bootstrap.sql", "026_privacy_account_lifecycle.sql"]) {
       psqlFile(port, join(migrationsDir, migration));
     }
-    psqlFile(port, join(root, "docs/tasks/A11_ACTIVATION_AUTH_TEAM.sql"));
+    psqlFile(port, join(root, "tests/fixtures/contracts/A11_ACTIVATION_AUTH_TEAM.sql"));
     psql(port, `INSERT INTO public.users(id,email,password_hash) VALUES ('00000000-0000-0000-0000-000000000001','reset@example.com','old-hash'), ('00000000-0000-0000-0000-000000000002','verify@example.com','old-hash');`);
 
     // Replay the actual user/profile insert concurrently: only one signup wins.
