@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "task": "A20",
+  "appBaseCommit": "f0bb5e9e75a88bffcdbcce682e0b416566d3f02d",
+  "harnessCandidateCommit": "c9a28b3e73563905ccc2d03f3ac4d9fdf0cc2117",
+  "build": {
+    "buildId": "zpn52ryujUvSsOtniuz4i",
+    "buildHash": "b0f1be6af19b9ecf4da5f0c7b8a5f0868057b88c85dfd968819a6b3d163d48a1",
+    "candidateGitTree": "9bde060439dd0a0be6ca67b884224d3682ad2575",
+    "productionBuildLogSha256": "4760cff60bbc30676a53c09433ab2a2e3227f923bca11b1bb2fb5bb9cf2c77b7"
+  },
+  "runtime": {
+    "node": "v22.23.3",
+    "next": "16.3.8",
+    "postgres": "postgres (PostgreSQL) 17.9",
+    "platform": "Windows x64",
+    "appUrl": "http://127.0.0.1:61948",
+    "appPid": 32152,
+    "appPort": 61948,
+    "appHttpStatus": 200,
+    "listener": "127.0.0.1",
+    "database": "a20_browser_fixture",
+    "databaseHost": "127.0.0.1",
+    "databasePort": 61314
+  },
+  "database": {
+    "appliedMigrationCount": 35,
+    "firstMigration": "001_initial.sql",
+    "lastMigration": "038_booster_intake_lifecycle.sql",
+    "migrationNameListSha256": "5a2bfabbec269fe489f5fe5ece069ae7a1f88ce36f93221278a173efcc1c6081",
+    "publicTableCount": 56,
+    "migrations": [
+      "001_initial.sql",
+      "002_auto_reply_profiles.sql",
+      "003_business_foundation.sql",
+      "004_review_booster_tables.sql",
+      "005_business_agent_billing_fields.sql",
+      "006_public_demo_events.sql",
+      "007_review_booster_unsubscribes.sql",
+      "008_pricing_plans.sql",
+      "009_review_booster_error_reason.sql",
+      "010_review_booster_retries.sql",
+      "011_review_link_clicks.sql",
+      "012_cron_runs.sql",
+      "013_review_business_tenancy.sql",
+      "014_security_hardening.sql",
+      "015_stripe_usage_periods.sql",
+      "016_remove_legacy_plan_taxonomy.sql",
+      "017_team_invitations.sql",
+      "019_billing_lifecycle.sql",
+      "020_account_recovery.sql",
+      "021_workspace_invitations.sql",
+      "022_booster_delivery_quotas.sql",
+      "023_booking_intake.sql",
+      "024_review_draft_policy.sql",
+      "025_email_delivery_events.sql",
+      "026_privacy_account_lifecycle.sql",
+      "027_cron_operations.sql",
+      "028_dashboard_pagination.sql",
+      "031_google_location_selection.sql",
+      "032_workspace_bootstrap.sql",
+      "033_account_lifecycle_auth_team.sql",
+      "034_account_lifecycle_billing.sql",
+      "035_account_lifecycle_replies.sql",
+      "036_account_lifecycle_booster.sql",
+      "037_account_lifecycle_finalization.sql",
+      "038_booster_intake_lifecycle.sql"
+    ]
+  },
+  "seedSnapshot": {
+    "capturedAt": "2026-10-04T00:56:31.888106Z",
+    "values": {
+      "actors": 3,
+      "canonicalMembers": 2,
+      "outsiderBusinesses": 1,
+      "ownerVisits": 0,
+      "outsiderVisits": 0,
+      "ownerReviews": 1,
+      "outsiderReviews": 0,
+      "draft": {
+        "state": "human_edited",
+        "version": 1,
+        "sha256": "01d9f89d4edeff580e737b8b989470eb0d1daaa678ca34693b54049f40e9fea9"
+      },
+      "memberPresent": 1,
+      "pendingInvitations": 0,
+      "ownerBusinessSettingsSha256": "7c3511cb9641d22045b28e295743fdc2d8b7396ca39fa67fa20f3d1858d583dc",
+      "ownerProfileSettingsSha256": "6c39ffda30b195c817736ca1a8cabbdaef235a5594c6933d70d6366c8bb2c78b",
+      "ownerAgentEntitlementsSha256": "ff1bb596d325ace826ffeb7b954b5c54ac9418abab66f6d49143e8682a524c5c",
+      "ownerGbpConnections": 1,
+      "syntheticLocationConnected": true,
+      "syntheticLocationSelected": 1
+    }
+  },
+  "validation": {
+    "npmCi": "passed; 654 packages; zero audit vulnerabilities",
+    "node22Typecheck": "passed",
+    "a20FocusedEslint": "passed",
+    "fixtureCoreTests": "5 passed",
+    "neonBridgeTests": "3 passed",
+    "outboundAssert": "passed; no rows in active candidate ledger",
+    "finalFocusedTests": "14 passed, zero skipped; Node22 tsc --noEmit passed; all A20 ESLint passed"
+  },
+  "isolation": {
+    "envFilesLoaded": 0,
+    "fontMockSha256": "25de370feb240325dac466643fc82f2d1baeaf14e6eec7e97f92323956a2729f",
+    "sentryTelemetryLocalOnly": true,
+    "historicalBlockedAttemptCount": 17,
+    "historicalBlockedSummary": [
+      {
+        "key": "https|fonts.googleapis.com|443",
+        "count": 12
+      },
+      {
+        "key": "https|o1.ingest.sentry.io|80",
+        "count": 5
+      }
+    ],
+    "historicalBlockedLedgerSha256": "fe10d72e474f262b63268b205a21ecf62c686f52b81a3a636d3799995e152d0c",
+    "unclassifiedPriorLedgerSha256": "8c066f438977415d0967b54e511c023177a91f87a56762551535886b551baafb",
+    "unclassifiedPriorAttempt": "fetch host unknown port 80, no request escaped; scheme not recorded",
+    "bridgeContractLogSha256": "4846f66c42be976b0a70f88cfaca778174d974b57285cd89f6beac0953bf518c",
+    "activeOutboundBlockedRows": 0
+  },
+  "requestDiagnostics": {
+    "file": "private ignored .a20-fixture/incoming-request-diagnostics.jsonl",
+    "sha256": "c1479d83b4f392fdf6aa831531aeadb8cefb3811555ea63cfc098c98ea785f6f",
+    "entryCount": 15,
+    "mutationRequestCount": 14,
+    "capturedRoutes": [
+      {
+        "event": "startup-auth-url-origins",
+        "method": null,
+        "path": null,
+        "origin": null,
+        "secFetchSite": null,
+        "host": null,
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": null,
+        "authUrlOrigin": "http://127.0.0.1:61948",
+        "nextAuthUrlOrigin": "http://127.0.0.1:61948"
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/review-booster/settings",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/review-booster/visits",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/reviews/draft",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "DELETE",
+        "path": "/api/team/members/:id",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/review-booster/settings",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/team",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "DELETE",
+        "path": "/api/team/members/:id",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/reviews/draft",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/review-booster/visits",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "DELETE",
+        "path": "/api/team/members/:id",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/review-booster/settings",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/review-booster/settings",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "POST",
+        "path": "/api/team",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      },
+      {
+        "event": null,
+        "method": "DELETE",
+        "path": "/api/team/members/:id",
+        "origin": "http://127.0.0.1:61948",
+        "secFetchSite": "same-origin",
+        "host": "127.0.0.1:61948",
+        "xForwardedHost": null,
+        "xForwardedProto": null,
+        "requestUrlOrigin": null,
+        "nextInitUrlOrigin": "http://127.0.0.1:61948",
+        "authUrlOrigin": null,
+        "nextAuthUrlOrigin": null
+      }
+    ],
+    "interpretation": "nextInitUrlOrigin/requestUrlOrigin are NextInternalRequestMeta.initURL origins, not proof of the exact NextRequest.url consumed by isSameOriginMutation. Only allowlisted routes and selected non-secret headers/origins are recorded."
+  },
+  "cleanup": {
+    "status": "complete",
+    "appServer": {
+      "pid": 32152,
+      "port": 61948,
+      "commandLineMatchedWorktreeA20Next": true,
+      "listenerPidMatchedRecordedPid": true,
+      "processExited": true,
+      "listenerClosed": true,
+      "foregroundSessionExitCode": 0
+    },
+    "postgres": {
+      "pid": 36796,
+      "port": 61314,
+      "listenerPid": 36796,
+      "database": "a20_browser_fixture",
+      "host": "127.0.0.1",
+      "identityCheckedByCleanupGuard": true,
+      "shutdown": "identity-checked pg_ctl stop succeeded",
+      "listenerClosed": true,
+      "processExited": true
+    },
+    "fixtureRemoved": true,
+    "credentialsRemoved": true,
+    "runtimeMetadataRemoved": true,
+    "portsClosed": [
+      61948,
+      61314
+    ],
+    "postCleanupVerification": {
+      "fixtureDirectoryExists": false,
+      "appPid32152Present": false,
+      "appPortListenerCount": 0,
+      "postgresPid36796Present": false,
+      "postgresPortListenerCount": 0,
+      "credentialsFileExists": false,
+      "runtimeFileExists": false
+    }
+  },
+  "previousCandidate": {
+    "candidateCommit": "f4ea5941798df55798ec0efeb5480626b22e9c07",
+    "build": {
+      "buildId": "jeBy-PztSqhXjaAYJoe8c",
+      "buildHash": "1acb8d3fb91f09ebdc5d36c8367f8ff39e8e3425dff5489d8cfabf50bfccf7d0",
+      "productionBuildLogSha256": "aefa4a182e6bea8d0563e6e039335702a0d9a871cc3f941b3733464555040075",
+      "previousCleanBuildLogSha256": "dd8c00d5de03e21a3014192e3f8a08fde639f1a9bed482dd62bbc14654855449",
+      "candidateGitTree": "11fbdb3dbb799c325f258d68993747f3608ee8eb"
+    },
+    "runtime": {
+      "node": "v22.23.3",
+      "next": "16.3.8",
+      "postgres": "postgres (PostgreSQL) 17.9",
+      "appUrl": "http://127.0.0.1:58614",
+      "appPid": 30420,
+      "appPort": 58614,
+      "appHttpStatus": 200,
+      "listener": "127.0.0.1",
+      "database": "a20_browser_fixture",
+      "databaseHost": "127.0.0.1",
+      "databasePort": 61314,
+      "platform": "Windows x64"
+    },
+    "snapshot": {
+      "capturedAt": "2026-10-04T00:39:04.8357065Z",
+      "values": {
+        "actors": 3,
+        "canonicalMembers": 2,
+        "outsiderBusinesses": 1,
+        "ownerVisits": 0,
+        "outsiderVisits": 0,
+        "ownerReviews": 1,
+        "outsiderReviews": 0,
+        "draft": {
+          "state": "human_edited",
+          "version": 1,
+          "sha256": "01d9f89d4edeff580e737b8b989470eb0d1daaa678ca34693b54049f40e9fea9"
+        },
+        "memberPresent": 1,
+        "pendingInvitations": 0,
+        "ownerBusinessSettingsSha256": "7c3511cb9641d22045b28e295743fdc2d8b7396ca39fa67fa20f3d1858d583dc",
+        "ownerProfileSettingsSha256": "6c39ffda30b195c817736ca1a8cabbdaef235a5594c6933d70d6366c8bb2c78b",
+        "ownerAgentEntitlementsSha256": "ff1bb596d325ace826ffeb7b954b5c54ac9418abab66f6d49143e8682a524c5c",
+        "ownerGbpConnections": 1,
+        "syntheticLocationConnected": true,
+        "syntheticLocationSelected": 1
+      }
+    },
+    "requestDiagnostics": {
+      "file": "private ignored .a20-fixture/incoming-request-diagnostics.jsonl",
+      "capturedRoutes": [
+        {
+          "event": "startup-auth-url-origins",
+          "method": null,
+          "path": null,
+          "origin": null,
+          "secFetchSite": null,
+          "host": null,
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": null,
+          "authUrlOrigin": "http://127.0.0.1:58614",
+          "nextAuthUrlOrigin": "http://127.0.0.1:58614"
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/review-booster/settings",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/review-booster/settings",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/review-booster/visits",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/reviews/draft",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "DELETE",
+          "path": "/api/team/members/:id",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/reviews/draft",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/review-booster/settings",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/team",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "DELETE",
+          "path": "/api/team/members/:id",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "DELETE",
+          "path": "/api/team/members/:id",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        },
+        {
+          "event": null,
+          "method": "POST",
+          "path": "/api/review-booster/visits",
+          "origin": "http://127.0.0.1:58614",
+          "secFetchSite": "same-origin",
+          "host": "127.0.0.1:58614",
+          "xForwardedHost": null,
+          "xForwardedProto": null,
+          "requestUrlOrigin": "http://127.0.0.1:58614",
+          "authUrlOrigin": null,
+          "nextAuthUrlOrigin": null
+        }
+      ],
+      "interpretation": "requestUrlOrigin is NextInternalRequestMeta.initURL origin; it is not proof of the exact NextRequest.url consumed by isSameOriginMutation. Only allowlisted routes and selected non-secret headers/origins are recorded."
+    }
+  },
+  "bridgeContract": {
+    "summary": "Real PostgreSQL contract passed: installed driver batch/results, PostgreSQL parameter binding and OIDs, rollback, DML row counts, statement timeout, and request-abort checks.",
+    "privateReceiptSha256": "4846f66c42be976b0a70f88cfaca778174d974b57285cd89f6beac0953bf518c",
+    "originalReceiptSha256": "4846f66c42be976b0a70f88cfaca778174d974b57285cd89f6beac0953bf518c",
+    "hardeningReceiptSha256": "1b87ab9fd45f2d95c282e8909ef39110cf1c94039a37a860ef4478c5a332238b",
+    "receipts": [
+      {
+        "sha256": "4846f66c42be976b0a70f88cfaca778174d974b57285cd89f6beac0953bf518c",
+        "file": ".a20-fixture/a20-neon-bridge-contract.log"
+      },
+      {
+        "sha256": "1b87ab9fd45f2d95c282e8909ef39110cf1c94039a37a860ef4478c5a332238b",
+        "file": ".a20-fixture/a20-neon-bridge-contract-hardening.log"
+      }
+    ],
+    "hardeningReceiptNote": "Separate hardened preload/marker contract receipt; SHA-256 verified by root."
+  },
+  "seedContext": {
+    "ownerProfilePlan": {
+      "planType": "free",
+      "plan": "free",
+      "planStatus": "free"
+    },
+    "memberProfilePlan": {
+      "planType": "free",
+      "plan": "free",
+      "planStatus": "free"
+    },
+    "memberPersonalGbpConnections": 0,
+    "canonicalBusinessOwnerRole": "owner",
+    "canonicalMemberRole": "member",
+    "activeCompleteWorkspaceAgents": 2,
+    "outsiderBusinessActiveAgents": 0,
+    "interpretation": "Complete paid entitlements belong to the owner workspace business-agent records; they are distinct from owner/member personal profile plans. The member has no personal Google connection."
+  },
+  "postDisconnectSnapshot": {
+    "capturedAt": "2026-10-04T00:58:15.6008096Z",
+    "values": {
+      "actors": 3,
+      "canonicalMembers": 2,
+      "outsiderBusinesses": 1,
+      "ownerVisits": 0,
+      "outsiderVisits": 0,
+      "ownerReviews": 1,
+      "outsiderReviews": 0,
+      "draft": {
+        "state": "human_edited",
+        "version": 1,
+        "sha256": "01d9f89d4edeff580e737b8b989470eb0d1daaa678ca34693b54049f40e9fea9"
+      },
+      "memberPresent": 1,
+      "pendingInvitations": 0,
+      "ownerBusinessSettingsSha256": "7c3511cb9641d22045b28e295743fdc2d8b7396ca39fa67fa20f3d1858d583dc",
+      "ownerProfileSettingsSha256": "6c39ffda30b195c817736ca1a8cabbdaef235a5594c6933d70d6366c8bb2c78b",
+      "ownerAgentEntitlementsSha256": "ff1bb596d325ace826ffeb7b954b5c54ac9418abab66f6d49143e8682a524c5c",
+      "ownerGbpConnections": 0,
+      "syntheticLocationConnected": false,
+      "syntheticLocationSelected": 0
+    }
+  }
+}
