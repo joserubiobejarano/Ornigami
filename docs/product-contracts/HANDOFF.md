@@ -4,14 +4,14 @@ Branch: docs/product-contracts. Baseline: ff4d9b2. Integration owner: A00.
 
 ## Result and decision status
 
-Five task-specific documents define reputation billing/usage, retained legacy behavior, disabled future lead scope, and shared implementation handoffs. New policies are **proposed pending owner approval**, with observed behavior separately recorded. The one-time trial and A06 Booster quota policy are explicitly approved; other policies remain proposals. No policy is approved by an unanswered question.
+The specifications define reputation billing/usage, retained legacy behavior, disabled future lead scope and shared implementation handoffs. The October 4 [paid Booster launch decision](PAID_BOOSTER_LAUNCH.md) supersedes new-trial/commercial assumptions and adopts delegated privacy/performance defaults; enforcement and acceptance are still required. Unrelated new policies remain **proposed pending owner approval**, with observed behavior separately recorded. A06 Booster quotas remain approved. The historical one-time trial is superseded for new customers by paid-only onboarding; unrelated Reply/grace/downgrade policies remain proposals. No policy is approved by an unanswered question.
 
-Existing EUR prices, 14-day/no-card trial entry, and reputation-only Complete remain unchanged. Rebooking/sender fields are retained compatibility requirements, currently not working end to end; no feature is silently retired. QR and broader agency work are explicitly deferred. Speed to Lead stays disabled and unpriced.
+Existing EUR catalog prices and reputation-only Complete remain. New-customer 14-day/no-card trial entry must be removed under the October 4 decision; preserve already issued promises. Initial paid sales are Booster-only while Google is gated. Rebooking/sender fields are retained compatibility requirements, currently not working end to end; no feature is silently retired. QR and broader agency work are explicitly deferred. Speed to Lead stays disabled and unpriced.
 
 Owner choices remaining:
 
 - Business-shared UTC Reply safety accounting remains proposed. A06 Booster UTC/full-month quotas, no rollover, accepted/unknown accounting and seven-day deferral are approved; see the billing contract approval record.
-- Trial-history privacy retention and deliberate support exceptions remain A11/owner decisions. One 14-day trial per business **and billing owner**, including unknown-history reconciliation, was explicitly approved on 2026-10-03 and implemented by A03.
+- Trial/privacy retention defaults are now chosen in the paid launch policy. Retire legacy anti-abuse history only after disabling new-trial paths and resolving issued commitments. The October 3 one-time-trial implementation remains historical compatibility, not the new offer. No free support exception is inferred.
 - Recovery-only payment policy, notice clock, scheduled downgrade timing, seats, and member read access after lapse/downgrade.
 - Shared selected location and captured-versus-held existing visit destinations after a switch.
 - Scheduled drafts-only versus separately approved scheduled posting; explicit high-rating opt-in and mandatory low/unknown-rating human approval.

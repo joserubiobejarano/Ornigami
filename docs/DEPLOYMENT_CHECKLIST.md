@@ -2,7 +2,7 @@
 
 This is the single deployment and operator document for the Vercel + Neon application.
 
-This is a reusable checklist, not a fresh backlog. Dated acceptance and remaining release gates are in [the roadmap](./ROADMAP.md), [public release journeys](./tasks/A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md) and [remaining launch follow-ups](./tasks/A00_REMAINING_LAUNCH_FOLLOWUPS.md). Consume their receipts for the same unchanged scope; repeat checks only for changed targets/behavior or a reproducible failed criterion. Stripe acceptance remains skipped, Google remains externally gated and production deletion/manual provider reconciliation remain disabled.
+This is a reusable checklist, not a fresh backlog. Dated acceptance and remaining release gates are in [the roadmap](./ROADMAP.md), [public release journeys](./tasks/A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md) and [remaining launch follow-ups](./tasks/A00_REMAINING_LAUNCH_FOLLOWUPS.md). Consume their receipts for the same unchanged scope; repeat checks only for changed targets/behavior or a reproducible failed criterion. The October 4 [paid Booster launch decision](./product-contracts/PAID_BOOSTER_LAUNCH.md) supersedes the Stripe skip: paid-only checkout and narrow billing acceptance are required before paid onboarding. Google remains externally gated and production deletion/manual provider reconciliation remain disabled.
 
 ## At a glance
 
@@ -93,14 +93,14 @@ Review Booster can operate with email and a manually entered review URL while th
 ## 6. Stripe and email
 
 - [ ] Configure `/api/stripe/webhook` and subscribe it to the lifecycle events handled by the app.
-- [ ] Test checkout for Review Replies, Review Booster, and Complete in Stripe test mode.
-- [ ] Test plan changes, duplicate webhook replay, trial behavior, and payment failure state updates.
+- [ ] For the initial paid Booster offer, test monthly/annual paid checkout in an isolated Stripe test-mode target: no new trial/free entitlement and no activation from a success redirect alone. Preserve already issued commitments/open-session reconciliation. Replies/Complete sales remain outside this initial offer until their gates close.
+- [ ] Test paid activation, cancellation/portal changes, failed/replayed/out-of-order webhooks and preserved quota. Historical trial compatibility is distinct from forbidding new trials. A live charge needs an identified authorized payer/payment method.
 - [ ] Verify the Resend sending mailbox/domain.
 - [ ] Keep `EMAIL_FROM` as a bare mailbox address, for example `noreply@yourdomain.com`.
 - [ ] Register `/api/webhooks/resend` for supported sent/delivered/delayed/bounced/complained/failed/suppressed events. Configure signing secret privately, verify an owned test delivery end to end, and confirm signed replay/out-of-order feedback and suppression without resending uncertain requests.
 - [ ] Verify permanent endpoint/secret configuration and isolated ingress acceptance from [production activation](./tasks/A00_PRODUCTION_ACTIVATION_2026-10-04.md) and [public journeys](./tasks/A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md). October 4 activation supersedes the historical wave 7 zero-endpoint inventory; do not register another endpoint or repeat app mail/link acceptance for the unchanged release. Preserve the distinction between production transport and disposable application-ledger evidence.
 - [ ] Controlled Resend GET must return exact frozen body/tag/recipient binding and use an authorized retrieval key in the original sending account before manual reconciliation activation. 202/unresolved retains quota. A lookup miss never authorizes replay.
-- [ ] Approve global suppression/event/correlation retention and other mail-category policy; preserve do-not-send evidence through workspace cleanup. Customer-specific sender domains remain future work.
+- [ ] Implement the chosen [permission/retention defaults](./product-contracts/PAID_BOOSTER_LAUNCH.md), with disposable/dry-run proof: recipient permission across manual/CSV/webhook intake, safe terminal-record cleanup and preserved do-not-send/fence evidence. Align notices with deployed behavior; policy approval alone is not enforcement. Customer-specific sender domains remain future work.
 
 ## 7. Scheduled jobs
 

@@ -1,10 +1,12 @@
 # Billing and usage contract
 
-**Status: A18 draft for owner approval.** Verified source behavior and public promises are separate from recommended target policy. This specification does not implement enforcement.
+**Status: approved and proposed policies are distinguished below.** The October 4 [paid Booster launch policy](PAID_BOOSTER_LAUNCH.md) supersedes new-customer trials and the prior Stripe skip; delegated retention/performance defaults are decided but not yet enforced. Remaining Reply/grace/downgrade proposals stay unapproved. This specification does not implement enforcement.
 
 See [legacy and deferred scope](LEGACY_AND_DEFERRED.md) and [Speed to Lead](SPEED_TO_LEAD.md) for their separate contracts.
 
-## Verified promises and runtime behavior
+## Catalog and historical baseline observations
+
+Source observations in this section were recorded against the October 2 baseline; later integrated fixes and the October 4 paid-only decision supersede them. They are not instructions to repeat closed implementation work.
 
 The [catalog](../../src/lib/billing/plans.ts) sets these amounts and public limits:
 
@@ -37,7 +39,7 @@ These findings are local source evidence, consistent with [E02/E06/E09](../ROADM
 
 ## Recommended target policy
 
-Rules 2–4 for Booster and the one-time trial in rule 6 are approved as recorded below. Other new policies remain proposals.
+Rules 2–4 for Booster are approved. Rule 6 records the historical trial policy, now superseded for new customers by paid-only onboarding. Other new policies remain proposals except for the explicitly delegated defaults in the [paid launch policy](PAID_BOOSTER_LAUNCH.md).
 
 1. **One selected GBP location per business.** Replies and Booster share a business-owned stable account/location identity. Discovery does not activate locations. Switching selection does not reset quota or silently redirect existing visits: keep their captured destination or hold them for owner review. Invalid/cross-business selections fail rather than selecting another location. A manual Booster review link remains usable without GBP connection, with validated destination and explicit one-business/location scope.
 
@@ -49,7 +51,7 @@ Rules 2–4 for Booster and the one-time trial in rule 6 are approved as recorde
 
 5. **Business-shared Reply safety accounting.** Recommend 2,000 monthly generation units for Replies and Complete, separate from Booster sends. This is a technical protective ceiling, not a purchased send bucket. Failed generation, sync, posting an existing draft, human edits/saves, and repeated processing of unchanged drafts consume no generation unit. Use the same UTC windows and actor-independent ownership. Explain any protective pause and recovery path in the UI; do not advertise literally unlimited generation if a hard ceiling blocks legitimate use. Unlimited sync remains a separate promise. Owner approval is required for this safety policy and any public drafting claim affected by it.
 
-6. **One 14-day trial per business and billing owner.** Both durable histories must have no prior consumed trial. Consume eligibility only when Stripe authoritatively starts the trial; abandoned checkout does not consume it. Plan/period/owner changes, cancellation, and recheckout never reset consumed history. Unknown legacy history requires reconciliation rather than automatic eligibility. Support exceptions must be deliberate and recorded. A11 defines privacy-compatible evidence retention; this does not authorize retaining deleted personal data indefinitely. No card is required at trial entry; no payment method at expiry cancels, while paid continuation requires a valid method and successful billing. Conversion does not reset usage.
+6. **Historical trial policy — superseded for new customers on October 4.** New production subscriptions must be paid from activation; only the demo is free. Implement the [paid launch contract](PAID_BOOSTER_LAUNCH.md), preserve already issued trial commitments and disable new-trial checkout paths before onboarding. The previous approved behavior, retained for those existing commitments, was one 14-day trial per business and billing owner: Both durable histories must have no prior consumed trial. Consume eligibility only when Stripe authoritatively starts the trial; abandoned checkout does not consume it. Plan/period/owner changes, cancellation, and recheckout never reset consumed history. Unknown legacy history requires reconciliation rather than automatic eligibility. Support exceptions must be deliberate and recorded. A11 defines privacy-compatible evidence retention; this does not authorize retaining deleted personal data indefinitely. No card is required at trial entry; no payment method at expiry cancels, while paid continuation requires a valid method and successful billing. Conversion does not reset usage.
 
 7. **Recovery-only payment grace.** Keep billing repair/cancellation, account recovery, team administration, and data viewing/export available during payment trouble and afterward under valid identity/role rules. Paid generation/sends require authoritative active/trialing state. Recommend a seven-day recovery notification period beginning at the first authoritative payment failure; retries do not extend it. This is a notice period, not permission for paid work in past_due. Its end neither deletes data nor removes repair/read access. Owner must approve replacing current route-specific grace and the period_end-based helper.
 
@@ -75,7 +77,7 @@ Exact fields/routes/migrations remain with implementation owners and A00 allocat
 
 ## Decisions awaiting owner approval
 
-Decide recovery-only grace; scheduled downgrade timing and seats; business-shared generation safety accounting; location-switch handling; and corrected customer promises. On 2026-10-03 the owner explicitly approved one 14-day trial per business and billing owner, with unknown legacy history requiring reconciliation. A03 implements that exception to proposal status. The owner explicitly approved the A06 policy in the A06 chat on 2026-10-03 (2026-10-02 23:09:49 UTC): full UTC calendar-month Booster quotas of 500/1,500, independent of annual invoices, no proration/rollover, usage preserved through trial conversion/upgrades, accepted sends consuming quota, unknown outcomes retaining reservations, and exhaustion deferring only within the existing seven-day eligibility window. This approval applies to Booster; the proposed UTC Reply ceiling and other new policies remain unapproved.
+Decide recovery-only grace; scheduled downgrade timing and seats; business-shared generation safety accounting; location-switch handling; and corrected customer promises. On 2026-10-03 the owner explicitly approved one 14-day trial per business and billing owner, with unknown legacy history requiring reconciliation. A03 implemented that decision. The October 4 owner reply supersedes it for new customers with paid-only access; its new checkout/provider acceptance is still required. The owner explicitly approved the A06 policy in the A06 chat on 2026-10-03 (2026-10-02 23:09:49 UTC): full UTC calendar-month Booster quotas of 500/1,500, independent of annual invoices, no proration/rollover, usage preserved through trial conversion/upgrades, accepted sends consuming quota, unknown outcomes retaining reservations, and exhaustion deferring only within the existing seven-day eligibility window. This approval applies to Booster; the proposed UTC Reply ceiling and other new policies remain unapproved.
 
 ## Deterministic acceptance scenarios
 
@@ -86,7 +88,7 @@ Use a frozen clock. These are future implementation cases, not passing tests for
 - With 499 accepted/reserved Booster units, competing cron/manual attempts produce one final reservation. Generation failure/provider rejection frees it; an unknown provider result holds it; accepted send plus persistence failure/replay consumes exactly one.
 - Deferred age six days and 23 hours may send when capacity becomes available. Seven days plus one second expires permanently; an upgrade cannot revive it. A visit exactly seven days old must satisfy the chosen inclusive selection boundary and still be eligible at send time.
 - Upgrade at 450/500 yields 1,050 remaining Complete units. A downgrade with 700 already used blocks new sends under 500 until the next window. Removing Booster entitlement stops sends without deleting pending data.
-- A trial starts once from authoritative state, lasts 14 days, and cancellation/recheckout/plan switch do not restore it. Abandoned checkout consumes no trial. Unknown legacy history blocks automatic trial grant pending reconciliation. No payment method at expiry cancels with accurate UI.
+- Historical issued-trial compatibility only (new checkouts must not grant a trial): a trial starts once from authoritative state, lasts 14 days, and cancellation/recheckout/plan switch do not restore it. Abandoned checkout consumes no trial. Unknown legacy history blocks automatic trial grant pending reconciliation. No payment method at expiry cancels with accurate UI.
 - Payment failure leaves repair/read/export available while paid work stops outside active/trialing. Repeated failures do not slide the notice deadline; recovery restores access without clearing usage.
 - Two discovered GBP resources confer one selection. Both agents use it; cross-business selection fails. Existing visits keep their destination or are held for review after a switch.
 - Three total Complete seats may include pending reservations. Concurrent fourth invitations fail. Scheduled downgrade cannot apply with incompatible seats or silently remove members.
