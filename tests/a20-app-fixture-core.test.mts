@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { baseA20ChildEnv, isExpectedA20App, resolveFixturePath, validateA20Marker } from "../scripts/a20-app-fixture-core.mjs";
+import { baseA20ChildEnv, isExpectedA20App, resolveFixturePath, validateA20Marker, validateA20PostgresIdentity } from "../scripts/a20-app-fixture-core.mjs";
 
 test("fixture cleanup path guard rejects the root, its parent and prefix lookalikes", () => {
   const root = resolve("C:/work/Ornigami/.a20-fixture");
@@ -18,6 +18,15 @@ test("fixture marker guard requires task, state, target database and canonical p
   assert.doesNotThrow(() => validateA20Marker(marker, expected));
   for (const change of [{ state: "starting" }, { database: "production" }, { host: "203.0.113.1" }, { fixtureRoot: "C:/elsewhere" }, { clusterPath: "C:/work/.a20-fixture-other/db" }, { version: 2 }]) {
     assert.throws(() => validateA20Marker({ ...marker, ...change }, expected), /marker identity/);
+  }
+});
+
+test("cleanup accepts only a PostgreSQL server with the fixture database, loopback port, and cluster path", () => {
+  const expected = { database: "a20_browser_fixture", port: 54321, clusterPath: resolve("fixture-test", "postgres", "data") };
+  const identity = { database: expected.database, host: "127.0.0.1", port: expected.port, dataDirectory: expected.clusterPath };
+  assert.doesNotThrow(() => validateA20PostgresIdentity(identity, expected));
+  for (const change of [{ database: "app" }, { host: "203.0.113.1" }, { port: 55432 }, { dataDirectory: resolve("fixture-test-other", "data") }]) {
+    assert.throws(() => validateA20PostgresIdentity({ ...identity, ...change }, expected), /PostgreSQL server identity/);
   }
 });
 

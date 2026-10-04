@@ -7,7 +7,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { baseA20ChildEnv, isExpectedA20App, resolveFixturePath, validateA20Marker } from "./a20-app-fixture-core.mjs";
+import { baseA20ChildEnv, isExpectedA20App, resolveFixturePath, validateA20Marker, validateA20PostgresIdentity } from "./a20-app-fixture-core.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURE = resolve(ROOT, ".a20-fixture");
@@ -399,6 +399,10 @@ function cleanup() {
     try { stopServer(); } catch { throw new Error("server shutdown failed; fixture data preserved under .a20-fixture"); }
     const pgStatus = spawnSync(pgExe("pg_ctl"), ["-D", DATA, "status"], { encoding: "utf8", windowsHide: true, env: pgEnv() });
     if (pgStatus.status === 0) {
+      const port = Number(marker.port);
+      if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("PostgreSQL fixture port invalid; fixture data preserved");
+      const identity = JSON.parse(psql(port, `SELECT json_build_object('database',current_database(),'host',host(inet_server_addr()),'port',inet_server_port(),'dataDirectory',current_setting('data_directory'))::text;`, PG_DATABASE));
+      validateA20PostgresIdentity(identity, { database: PG_DATABASE, port, clusterPath: realpathSync(DATA) });
       try { run(pgExe("pg_ctl"), ["-D", DATA, "-m", "fast", "-w", "stop"], { stdio: "ignore" }); }
       catch { throw new Error("PostgreSQL shutdown failed; fixture data preserved under .a20-fixture"); }
     } else if (pgStatus.status !== 3) throw new Error("PostgreSQL status uncertain; fixture data preserved under .a20-fixture");

@@ -20,6 +20,14 @@ export function validateA20Marker(marker, expected) {
   }
 }
 
+export function validateA20PostgresIdentity(identity, expected) {
+  if (!identity || identity.database !== expected.database || identity.host !== "127.0.0.1"
+      || identity.port !== expected.port || typeof identity.dataDirectory !== "string"
+      || resolve(identity.dataDirectory) !== resolve(expected.clusterPath)) {
+    throw new Error("A20 PostgreSQL server identity failed");
+  }
+}
+
 export function isExpectedA20App(commandLine, { preload, nextBin }) {
   const normalized = commandLine?.toLowerCase();
   const preloadPath = preload.toLowerCase();
