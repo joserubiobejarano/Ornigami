@@ -8,6 +8,7 @@ import https from "node:https";
 import dns from "node:dns";
 import { syncBuiltinESMExports } from "node:module";
 import { installA20NeonBridge } from "./a20-neon-bridge.mjs";
+import { installA20RequestDiagnostics, recordA20AuthUrlOrigins } from "./a20-request-diagnostics.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const nativeFetch = globalThis.fetch;
@@ -138,6 +139,11 @@ export function installA20Preload() {
   installHttpGuard(https, "https");
   installSocketGuard();
   installDnsGuard();
+  if (process.env.A20_REQUEST_DIAGNOSTICS === "1") {
+    const diagnosticsPath = path.join(fixtureRoot, "incoming-request-diagnostics.jsonl");
+    recordA20AuthUrlOrigins(diagnosticsPath);
+    installA20RequestDiagnostics(http.Server.prototype, diagnosticsPath);
+  }
 }
 
 export function assertA20NoBlockedOutbound() {

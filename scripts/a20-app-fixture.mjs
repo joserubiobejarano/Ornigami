@@ -306,6 +306,7 @@ function buildAndStart(appPort, keepAlive = false) {
   let server;
   const serverEnv = { ...env };
   delete serverEnv.NODE_OPTIONS;
+  serverEnv.A20_REQUEST_DIAGNOSTICS = "1";
   try {
     server = spawn(process.execPath, [...nodeArgs, nextBin, "start", "-H", "127.0.0.1", "-p", String(appPort)], {
       cwd: ROOT, env: serverEnv, detached: true, windowsHide: true, stdio: ["ignore", serverLog, serverLog],
