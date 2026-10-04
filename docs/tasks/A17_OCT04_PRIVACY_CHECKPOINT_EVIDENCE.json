@@ -1,0 +1,92 @@
+{
+  "observedAt": "2026-10-04T11:26:12.865902Z",
+  "window": {
+    "scheduledAt": "2026-10-04T03:00:00Z",
+    "timezoneAtWindow": "Europe/Madrid",
+    "localScheduledAt": "2026-10-04T05:00:00+02:00"
+  },
+  "target": {
+    "productionIdentityVerified": true,
+    "fingerprint": "2f2b3d476ccfbc62744b7891beaa6934e7eb964224ed2682c20abc5d7574259f",
+    "transactionReadOnly": true,
+    "identitySourceReceiptCheckedAt": "2026-10-03T22:05:25.292Z",
+    "priorDeployment": {
+      "checkedAt": "2026-10-03T22:20:36.181Z",
+      "commit": "a98878ef2611322c54f67de61a018b7ecf8e3298",
+      "ready": true,
+      "productionAliasMatched": true
+    },
+    "priorReceiptDeletionEnabled": false,
+    "priorReceiptReconciliationEnabled": false,
+    "activationGatesRecheckedInSnapshot": false
+  },
+  "priorSnapshot": {
+    "observedAt": "2026-10-03T22:05:25.292Z",
+    "localTime": "2026-10-04T00:05:25.292+02:00",
+    "privacyRuns": 0,
+    "privacyStatePresent": false,
+    "activeNeverRunAlert": true,
+    "transportFailures": 1,
+    "lastTransportError": "alert_transport_failed"
+  },
+  "privacyState": {
+    "lastStartedAt": "2026-10-04T03:00:46.509034Z",
+    "lastFinishedAt": "2026-10-04T03:00:49.214880Z",
+    "lastSuccessAt": "2026-10-04T03:00:49.214880Z",
+    "lastStatus": "succeeded",
+    "checkpointAt": "2026-10-04T03:00:49.111599Z",
+    "heartbeatAt": "2026-10-04T03:00:49.111599Z",
+    "leaseActive": false,
+    "cursorPresent": false
+  },
+  "recentRuns": [
+    {
+      "startedAt": "2026-10-04T03:00:46.269704Z",
+      "finishedAt": "2026-10-04T03:00:49.214831Z",
+      "status": "succeeded",
+      "processedCount": 10,
+      "failedCount": 0,
+      "outcomeTables": 11,
+      "completedOutcomeTables": 11,
+      "failedOutcomeTables": 0
+    }
+  ],
+  "privacyAlerts": [
+    {
+      "reason": "never_run",
+      "active": false,
+      "firstSeenAt": "2026-10-03T09:34:36.118996Z",
+      "lastSeenAt": "2026-10-04T02:26:51.362452Z",
+      "lastSentAt": "2026-10-04T02:01:51.467997Z",
+      "resolvedAt": "2026-10-04T03:00:49.335128Z",
+      "transportFailures": 1,
+      "lastTransportError": "alert_transport_failed"
+    }
+  ],
+  "schedulerAttribution": {
+    "databaseInvocationSourceAvailable": false,
+    "vercelRequestLogsQueried": true,
+    "candidateDeployment": {
+      "receiptCheckedAt": "2026-10-04T01:52:14.7402523Z",
+      "commit": "0cad6cdb9c59751d7b8dda47fb1a5fdd0a126e92",
+      "ready": true,
+      "productionAliasMatchedAtReceipt": true,
+      "activeAtScheduledTimeProven": false
+    },
+    "vercelRequestLogWindow": {
+      "from": "2026-10-04T02:59:00Z",
+      "to": "2026-10-04T03:03:00Z"
+    },
+    "queriedAt": "2026-10-04T11:28:05Z",
+    "vercelRequestLogRows": 1,
+    "vercelPrivacyRouteLogRows": 0,
+    "scheduledOriginProven": false
+  },
+  "actionsPerformed": {
+    "cronRouteCalled": false,
+    "healthEndpointCalled": false,
+    "alertEvaluatorCalled": false,
+    "cleanupManuallyTriggered": false,
+    "providerMutationPerformed": false
+  }
+}
