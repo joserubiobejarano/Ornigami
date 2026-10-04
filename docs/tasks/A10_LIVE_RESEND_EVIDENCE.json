@@ -1,0 +1,77 @@
+{
+  "schema": "ornigami.a10.live-resend-evidence.v1",
+  "status": "live_delivery_and_bounce_verified",
+  "sourceReceipt": {
+    "path": ".env.a10-live-resend/live-acceptance-continuation-1.json",
+    "sha256": "9b50297cf6a11ed201c5d8f53de42a0cfe60ec570fd8fd75774bb62e286d007d",
+    "sourceReceiptTunnelStarted": false,
+    "sourceReceiptTunnelStartedMeaning": "The runner field records whether the tunnel process is still active after cleanup. False is post-close state, not evidence that no tunnel was started."
+  },
+  "scope": {
+    "continuationOf": "known_pre_provider_failure",
+    "oldAttemptNotRetried": true,
+    "recipientLabels": [
+      "owned-test-inbox",
+      "resend-bounce-test"
+    ],
+    "providerSendAttempts": 2,
+    "tunnelEverStarted": true,
+    "tunnelClosed": true,
+    "tunnelEvidence": "The trycloudflare endpoint accepted public HTTPS requests and the webhook proxy recorded signed callbacks. The runner exited successfully after tunnel.close(); its final tunnelStarted:false field means inactive after cleanup."
+  },
+  "publicWebhook": {
+    "unauthenticatedProbeStatus": 401,
+    "reachedApplicationSignatureVerifier": true,
+    "signedCallbackStatuses": [200, 200]
+  },
+  "deliveries": [
+    {
+      "recipientLabel": "owned-test-inbox",
+      "visitId": "c8898e90-b72f-48ba-ada9-d0c105080ec3",
+      "deliveryId": "7f526d83-7357-42c0-afd0-59bae4892f7e",
+      "providerMessageId": "01a10759-49a2-7d42-8ed9-2ee1099668c0",
+      "providerStatus": "delivered",
+      "applicationWebhookStatus": 200,
+      "applicationEventStatus": "delivered",
+      "runNowSent": 1,
+      "quotaUsage": 1,
+      "senderDomainMatch": true,
+      "providerTagMatch": true,
+      "ownedRecipientMatch": true,
+      "proxyReceivedAt": "2026-10-04T14:37:36.967Z"
+    },
+    {
+      "recipientLabel": "resend-bounce-test",
+      "visitId": "705bd4ef-aaa1-4476-b54e-722842235b37",
+      "deliveryId": "864eafd4-05b6-4cba-8836-abe684c60abc",
+      "providerMessageId": "01a10759-5afc-7bfe-8dde-7f4d8b5a5962",
+      "providerStatus": "bounced",
+      "applicationWebhookStatus": 200,
+      "applicationEventStatus": "bounced",
+      "runNowSent": 1,
+      "quotaUsage": 2,
+      "suppressionCreated": true,
+      "proxyReceivedAt": "2026-10-04T14:37:41.272Z"
+    }
+  ],
+  "crossBusinessSuppression": {
+    "visitStatus": "skipped",
+    "runNowSent": 0,
+    "runNowSkipped": 1,
+    "providerAttemptsBefore": 2,
+    "providerAttemptsAfter": 2,
+    "quotaUsage": 0,
+    "suppressionPresent": true
+  },
+  "cleanup": {
+    "webhookEndpointDeleted": true,
+    "appStopped": true,
+    "syntheticDatabaseRemoved": true,
+    "taskSigningSecretAndRecipientFileRemoved": true,
+    "noSharedDeploymentOrConfigurationChanged": true
+  },
+  "limits": [
+    "Resend's email lookup matched the authorized recipient, delivery tag and sender domain and reported delivered. The user reports the message is not visible in the inbox; mailbox placement remains unconfirmed.",
+    "The public surface was a temporary webhook-only tunnel into a loopback app and synthetic local database, not a generally interactive public preview."
+  ]
+}
