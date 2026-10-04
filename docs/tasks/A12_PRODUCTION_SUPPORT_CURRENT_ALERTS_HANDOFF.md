@@ -1,8 +1,10 @@
 # A12 production support and current alerts handoff
 
+**Operator completion — October 4:** [Production activation](./A00_PRODUCTION_ACTIVATION_2026-10-04.md) records Jose's production feedback-only credential onboarding and independent verifier pass, one current-editor Sentry email-action receipt, and saved child expiry for October 5 at 18:00 Madrid with child credential revoked/removed. Application-boundary capture/current high-priority trigger remains distinct from the editor's sample test. The original task's non-mutation statement and runbook below are historical; their owner/recipient/consumer decisions have now been supplied and acted on.
+
 **Integration review — wave 11:** [A00 review](./A00_WAVE11_INTEGRATION_REVIEW.md) accepts the runbooks/test path correction and passes combined suites 72/72 on Node 22.23.3. Fresh read-only Console observations confirm current alert/history and the child still at `Never`; workflow API remains 403. Production onboarding/current-rule delivery/lifecycle execution are pending. `SUPPORT_DATABASE_URL` is operator-only; no Vercel setting is required. The October 5 expiry remains a proposed action subject to the stated owner/consumer gates.
 
-Status: tooling review and isolated acceptance are complete. **Production support onboarding and current-alert delivery acceptance are pending.** No production database connection/query, support-role mutation, staff credential installation, Sentry notification send, provider change, deployment, or main-branch change was made in this task.
+Historical task status: tooling review and isolated acceptance were complete; production onboarding/current-alert operations were pending at submission. No production database connection/query, support-role mutation, staff credential installation, Sentry notification send, provider change, deployment, or main-branch change was made by the original A12 task. Subsequent root operations are recorded above.
 
 ## Reviewed evidence
 

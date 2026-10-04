@@ -1,5 +1,7 @@
 # A12 current Sentry alert routing review
 
+**Subsequent operator action — October 4:** [Activation receipt](./A00_PRODUCTION_ACTIVATION_2026-10-04.md) accepts one **Send Test Notification** from editor `746029` to the sole operator, independently received as sample issue `151266901` / event `66b03cc5fe9347999d2008a1675e7f01`. The test email uses rule `-1`; no historical mapping is inferred. This closes current editor email-action transport, while production application capture/high-priority trigger correlation remains open. No saved alert configuration or token scope changed. The read-only review below predates that authorized action.
+
 Status: current alert routing was inspected read-only in the signed-in Sentry UI on 2026-10-04, and the existing project/workflow probe was run in GET-only modes. The current alert is configured and has a history entry for the historical A12 issue. Its relationship to the independently verified historical email's rule identifier remains unproven; current-alert recipient delivery has not been verified.
 
 ## Evidence checked
