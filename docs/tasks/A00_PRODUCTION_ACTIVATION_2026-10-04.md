@@ -1,5 +1,7 @@
 # Production activation — October 4, 2026
 
+**Subsequent bounded completion:** [Public release journeys](./A00_PUBLIC_RELEASE_JOURNEYS_2026-10-04.md) closes the mail/public links/CSV/send overlap/frozen-owner and actual current Sentry trigger journeys listed as pending below. It uses a separate empty database/deployed preview, fixes a narrow Booster capture gap, and records real normalized browser CSP reports/request timings. Remaining are owner pilot/privacy/rollback decisions, authenticated CWV/bundle/load sign-off, a small suppressed-visit display follow-up and affected external/provider gates. This activation record retains its original production evidence boundary.
+
 The user authorized continuing the next operator steps, selected the existing signed-in operator mailbox as the only recipient, and confirmed that no external consumer uses the A12 temporary Neon branch. Jose owns the local support credential and branch disposition. This record supersedes the pending activation statements in wave 11; it does not reopen its completed coding or isolated acceptance packages.
 
 ## Completed and independently checked
