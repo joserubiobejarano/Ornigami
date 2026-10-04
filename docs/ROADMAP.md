@@ -14,7 +14,6 @@ The canonical project stays at `Ornigami/Ornigami-Agents`. Needed local recovery
 
 | Remaining criterion | Current state | Next work / owner |
 | --- | --- | --- |
-| Release build failure | Main `84334c7` Quality [37234809466](https://github.com/joserubiobejarano/Ornigami/actions/runs/37234809466) failed in `next/font` loader at build; lint/TypeScript/tests and Security passed. App code did not change from the preceding green `53b3e5a`; cause remains unproved. | A00 diagnoses that exact build failure and verifies the corrected/recovered release. No broad A01 dependency restart or claiming a rerun as a root-cause fix. |
 | Permission and retention enforcement | Product defaults chosen; current intake/retained histories do not establish their full enforcement. | A22 implements permission evidence across manual/CSV/webhook intake, minimization and guarded terminal cleanup/durable-key separation, accurate notices/processor terms and assisted-rights handling. Preserve one-time-trial evidence and do-not-send protection. |
 | Privacy/support delivery to Jose | Existing support reader/operator alerts accepted; published contact routing and the assisted privacy-request process need concrete verification. | A22/A00 verify actual routing to the operator and request-handling deadlines. Published addresses alone do not prove monitored inboxes. No new support dashboard requirement. |
 | Representative performance | Production owner login/four-page navigation, 12 HTTP samples, actual Webpack inventory and isolated large-data/core tests accepted. Ten-session read-load target is not yet measured. | A23 reuses isolated fixtures to prove p95 <=3 s without production load/customer/provider operations. Larger HTTP/mobile lab baseline before cohort expansion; field CWV follows real traffic. |
@@ -51,7 +50,7 @@ See [release evidence](./RELEASE_EVIDENCE.md) for exact commits, test scopes, re
 
 ## Work coordination
 
-A22 permission/retention and A23 measurement preparation can proceed independently; final A23 evidence targets the merged build. Billing verification retains the approved trial contract. A00 handles narrow build/operational integration and exact deployment review. **A21 paid-only checkout is cancelled.**
+A22 permission/retention and A23 measurement preparation can proceed independently; final A23 evidence targets the merged build. Billing verification retains the approved trial contract. A00 handles narrow operational integration and exact deployment review. Cleanup source `b2430e6` passed Quality and Security, including 550 tests, release build and production smoke. The prior `84334c7` font-loader failure is historical; its cause remains unproved, but no failing current build is established. **A21 paid-only checkout is cancelled.**
 
 Use a branch per changed criterion from current reviewed main. Each handoff names its commit, behavior, meaningful verification, migration/environment/rollback changes and evidence limits. Coordinate shared auth/usage/cron/provider files and request an unused migration number from A00; never renumber an applied migration. Keep one reviewed schema history and one primary scheduler. Do not edit the roadmap in competing branches. No ordinary implementation task implies real customer messages, live charges/replies, destructive production cleanup or deployment.
 
