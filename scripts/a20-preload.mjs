@@ -128,12 +128,12 @@ function installDnsGuard() {
   syncBuiltinESMExports();
 }
 
-export function installA20Preload() {
+export async function installA20Preload() {
   if (!existsSync(markerPath)) throw new Error("A20 fixture marker is required before preload");
   const marker = JSON.parse(readFileSync(markerPath, "utf8"));
   if (marker.task !== "A20" || marker.version !== 1 || marker.fixtureRoot !== path.resolve(repoRoot, ".a20-fixture")) throw new Error("A20 fixture marker identity is invalid");
   if (!process.env.DATABASE_URL || !process.env.A20_DATABASE_URL) throw new Error("A20 isolated database environment is required");
-  installA20NeonBridge();
+  await installA20NeonBridge();
   installFetchGuard();
   installHttpGuard(http, "http");
   installHttpGuard(https, "https");
@@ -155,4 +155,4 @@ export const A20_PRELOAD_INTERNALS = Object.freeze({ endpoint, isAllowedAppEndpo
 
 // Safe for --import in Next's build, worker, and runtime processes: it only reads its task marker
 // and installs guards; it never loads shared .env files or opens a network connection.
-installA20Preload();
+await installA20Preload();

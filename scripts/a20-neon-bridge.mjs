@@ -16,6 +16,14 @@ function openSocket(host, port) { const socket = new Socket(); rawSocketConnect.
 
 function fail(message) { throw new Error(`A20 Neon bridge refused request: ${message}`); }
 
+function sameResolvedPath(left, right) {
+  const resolvedLeft = path.resolve(left);
+  const resolvedRight = path.resolve(right);
+  return process.platform === "win32"
+    ? resolvedLeft.toLowerCase() === resolvedRight.toLowerCase()
+    : resolvedLeft === resolvedRight;
+}
+
 function safePgUrl(raw) {
   if (!raw) fail("A20_DATABASE_URL is required");
   let url;
@@ -51,16 +59,26 @@ async function validateFixture() {
   let marker;
   try { marker = JSON.parse(await readFile(markerPath, "utf8")); } catch { fail("fixture marker is missing or invalid"); }
   const fixtureRoot = path.resolve(repoRoot, ".a20-fixture");
+  const clusterPath = path.join(fixtureRoot, "postgres", "data");
   if (marker.task !== "A20" || marker.version !== 1 || marker.state !== "ready" || marker.database !== target.database ||
       marker.host !== target.host || marker.port !== target.port ||
-      path.resolve(marker.fixtureRoot ?? "") !== fixtureRoot ||
-      path.resolve(marker.clusterPath ?? "") !== path.join(fixtureRoot, "postgres", "data")) {
+      !sameResolvedPath(marker.fixtureRoot ?? "", fixtureRoot) ||
+      !sameResolvedPath(marker.clusterPath ?? "", clusterPath)) {
     fail("fixture marker does not match the selected local database");
   }
+  let actualFixtureRoot;
+  let actualClusterPath;
+  let markerFixtureRoot;
+  let markerClusterPath;
   try {
-    if (await realpath(marker.fixtureRoot) !== await realpath(fixtureRoot) ||
-        await realpath(marker.clusterPath) !== await realpath(path.join(fixtureRoot, "postgres", "data"))) fail("fixture marker path identity is invalid");
+    [actualFixtureRoot, actualClusterPath, markerFixtureRoot, markerClusterPath] = await Promise.all([
+      realpath(fixtureRoot), realpath(clusterPath), realpath(marker.fixtureRoot), realpath(marker.clusterPath),
+    ]);
   } catch { fail("fixture marker paths are missing"); }
+  if (!sameResolvedPath(actualFixtureRoot, fixtureRoot) || !sameResolvedPath(actualClusterPath, clusterPath) ||
+      !sameResolvedPath(markerFixtureRoot, fixtureRoot) || !sameResolvedPath(markerClusterPath, clusterPath)) {
+    fail("fixture marker path identity is invalid");
+  }
   return { target, appUrl };
 }
 
@@ -265,7 +283,8 @@ async function handleNeonRequest(url, init = {}) {
   }
 }
 
-export function installA20NeonBridge() {
+export async function installA20NeonBridge() {
+  await validateFixture();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async function a20Fetch(input, init) {
     const rawUrl = input instanceof Request ? input.url : String(input);
@@ -275,8 +294,6 @@ export function installA20NeonBridge() {
     if (["127.0.0.1", "::1", "localhost"].includes(url.hostname)) return originalFetch.call(this, input, init);
     fail("unexpected fetch endpoint; remote fallback is disabled");
   };
-  // Validate eagerly so an invalid marker or a production endpoint cannot silently survive startup.
-  void validateFixture().catch((error) => { process.nextTick(() => { throw error; }); });
 }
 
 export const A20_BRIDGE_INTERNALS = Object.freeze({ safePgUrl, validateVirtualUrl, safeError, validateFixture, handleNeonRequest });
