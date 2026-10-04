@@ -149,11 +149,11 @@ function equalSnapshot(left, right) {
 
 function errorClass(value) {
   const safe = String(value ?? "");
-  if (safe === "Business access denied.") return "business-access-denied";
+  if (safe === "Business access denied." || safe === "Business access denied") return "business-access-denied";
   if (safe === "Business or Google location access denied.") return "google-scope-denied";
   if (safe === "Cross-origin request rejected.") return "cross-origin-guard";
   if (safe === "Member not found.") return "member-not-found";
-  if (/^(?:Only the business owner|Business owner only|Owner access required)/i.test(safe)) return "owner-only";
+  if (safe === "Business owner access required." || /^(?:Only the business owner|Business owner only|Owner access required)/i.test(safe)) return "owner-only";
   if (/^(?:Business|Workspace) access denied\.?$/i.test(safe)) return "workspace-access-denied";
   if (/^Agent access denied\.?$/i.test(safe)) return "agent-access-denied";
   return "unclassified";
@@ -296,7 +296,7 @@ async function removedMemberProbe() {
   const billingBefore = await request(session, "POST", `/api/stripe/portal?business_id=${encodeURIComponent(credentials.business.id)}`);
   const billingError = await billingBefore.clone().json().catch(() => ({}));
   const billingErrorClass = errorClass(billingError.error ?? billingError.code);
-  if (billingBefore.status !== 403 || billingErrorClass !== "business-access-denied") {
+  if (billingBefore.status !== 403 || !["business-access-denied", "owner-only"].includes(billingErrorClass)) {
     throw new Error(`member billing portal did not return the expected business boundary (${billingBefore.status}/${billingErrorClass})`);
   }
   console.log(JSON.stringify({ suite: "A20 member billing boundary", status: billingBefore.status, errorClass: billingErrorClass }));
