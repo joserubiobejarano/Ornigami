@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { sanitizeIncomingRequest, sanitizeInternalRequestOrigin } from "../scripts/a20-request-diagnostics.mjs";
+import { sanitizeIncomingRequest, sanitizeNextInitUrlOrigin } from "../scripts/a20-request-diagnostics.mjs";
 
 test("A20 request diagnostics retain only origin decision metadata for approved writes", () => {
   const item = sanitizeIncomingRequest({
@@ -55,8 +55,8 @@ test("A20 request diagnostics reduce Next internal request metadata to origin on
       initURL: "http://localhost:60953/api/review-booster/settings?businessId=private&token=secret",
     },
   };
-  const origin = sanitizeInternalRequestOrigin(request);
+  const origin = sanitizeNextInitUrlOrigin(request);
   assert.equal(origin, "http://localhost:60953");
   assert.doesNotMatch(String(origin), /private|secret|businessId/);
-  assert.equal(sanitizeInternalRequestOrigin({}), null);
+  assert.equal(sanitizeNextInitUrlOrigin({}), null);
 });

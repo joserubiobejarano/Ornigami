@@ -59,7 +59,7 @@ export function sanitizeIncomingRequest(request) {
   };
 }
 
-export function sanitizeInternalRequestOrigin(request) {
+export function sanitizeNextInitUrlOrigin(request) {
   const meta = request?.[Symbol.for("NextInternalRequestMeta")];
   return safeOrigin(meta?.initURL);
 }
@@ -78,7 +78,7 @@ export function installA20RequestDiagnostics(serverPrototype, ledgerPath) {
           if (written) return;
           written = true;
           try {
-            appendFileSync(ledgerPath, `${JSON.stringify({ at: new Date().toISOString(), ...item, requestUrlOrigin: sanitizeInternalRequestOrigin(request) })}\n`, { encoding: "utf8", mode: 0o600 });
+            appendFileSync(ledgerPath, `${JSON.stringify({ at: new Date().toISOString(), ...item, nextInitUrlOrigin: sanitizeNextInitUrlOrigin(request) })}\n`, { encoding: "utf8", mode: 0o600 });
           } catch { /* Diagnostics must not alter request handling. */ }
         };
         if (response && typeof response.once === "function") {
