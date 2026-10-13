@@ -123,6 +123,7 @@ test("scheduled and manual review drafting use one bounded SDK attempt", async (
   }
   const openai = loadRouteTs<{ generateReviewReply(input: Record<string, unknown>, options?: { timeoutMs?: number }): Promise<string> }>("src/lib/openai.ts", { overrides: {
     openai: MockOpenAI,
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/env": { getRequiredEnv: () => "test-key" },
   } });
   const input = { businessName: "Test", city: "Madrid", rating: 5, text: "Great", tone: "warm" };
@@ -145,7 +146,7 @@ test("scheduled Booster generation sets one bounded SDK attempt and timeout fall
   }
   const generator = loadRouteTs<{ generateFollowupEmailBody(input: Record<string, unknown>, options?: { timeoutMs?: number }): Promise<string> }>(
     "src/modules/review-booster/services/followup-email-generator.service.ts",
-    { overrides: { openai: MockOpenAI, "@/lib/env": { getOptionalEnv: () => "test-key" } } },
+    { overrides: { openai: MockOpenAI, "@/lib/openai-feature": { isOpenAIEnabled: () => true }, "@/lib/env": { getOptionalEnv: () => "test-key" } } },
   );
   const input = { business_name: "Test Shop", city: "Madrid", google_review_url: "https://example.test/reviews" };
 
@@ -168,6 +169,7 @@ test("Replies cron does not start provider or customer notification work after d
   let finished: Record<string, unknown> | undefined;
   const route = loadRouteTs<{ GET(request: Request): Promise<Response> }>("src/app/api/cron/review-replies/route.ts", { overrides: {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/google-review-sync": { fetchAllGoogleReviews: async () => { googleCalls += 1; return []; } },
     "@/lib/google-review-persistence": { persistGoogleReviews: async () => ({ synced: 0, newReviews: [] }) },
     "@/lib/db/neon": { sql: async () => [{

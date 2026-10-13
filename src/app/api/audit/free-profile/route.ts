@@ -13,6 +13,7 @@ import {
   PUBLIC_AUDIT_PER_EMAIL_LIMIT,
   PUBLIC_AUDIT_PER_IP_LIMIT,
 } from "@/lib/audit-policy";
+import { isOpenAIEnabled, OPENAI_UNAVAILABLE_CODE, OPENAI_UNAVAILABLE_MESSAGE } from "@/lib/openai-feature";
 
 const FreeAuditSchema = z.object({
   businessQuery: z.string().trim().min(1).max(500),
@@ -22,6 +23,9 @@ const FreeAuditSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!isOpenAIEnabled()) {
+    return NextResponse.json({ ok: false, code: OPENAI_UNAVAILABLE_CODE, message: OPENAI_UNAVAILABLE_MESSAGE, error: OPENAI_UNAVAILABLE_MESSAGE }, { status: 503 });
+  }
   try {
     const body = await req.json();
     const parsed = FreeAuditSchema.safeParse(body);

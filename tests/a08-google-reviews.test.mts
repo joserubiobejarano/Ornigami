@@ -346,6 +346,7 @@ test("review reply cron reads selected connected locations only", async () => {
   const statements: string[] = [];
   const cron = loadTs<{ GET(request: TestNextRequest): Promise<Response> }>("src/app/api/cron/review-replies/route.ts", {
     "next/server": { NextResponse: { json: (value: unknown, init?: ResponseInit) => Response.json(value, init) } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/google-review-sync": { fetchAllGoogleReviews: async () => [] },
     "@/lib/google-review-persistence": { persistGoogleReviews: async () => ({ synced: 0, newReviews: [] }) },
     "@/lib/db/neon": { sql: async (parts: TemplateStringsArray, ...values: unknown[]) => {

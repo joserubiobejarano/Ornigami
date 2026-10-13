@@ -8,12 +8,13 @@ import {
 import { parseGoogleStarRating } from "@/lib/google-review-rating";
 import { randomUUID } from "node:crypto";
 import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+import { isOpenAIEnabled } from "@/lib/openai-feature";
 
 export type DraftProcessingSource = "scheduled" | "individual" | "interactive_batch";
 export type DraftProcessingResult =
   | { outcome: "saved"; draft: ReplyDraftRecord; posted: false }
   | { outcome: "saved"; draft: ReplyDraftRecord; posted: true }
-  | { outcome: "skipped"; reason: "existing-draft" | "busy" | "not-found" | "empty" | "conflict" }
+  | { outcome: "skipped"; reason: "existing-draft" | "busy" | "not-found" | "empty" | "conflict" | "ai-unavailable" }
   | { outcome: "limit" }
   | { outcome: "failed"; stage: "generate" | "save" | "post"; draft?: ReplyDraftRecord };
 
@@ -106,6 +107,7 @@ export async function processReviewDraft(input: {
   source: DraftProcessingSource;
   providerTimeoutMs?: number;
 }): Promise<DraftProcessingResult> {
+  if (!isOpenAIEnabled()) return { outcome: "skipped", reason: "ai-unavailable" };
   const lifecycle = await beginAccountLifecycleOperation({
     userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,
     kind: "openai_reply_draft", idempotencyKey: randomUUID(), leaseMs: 90000,
