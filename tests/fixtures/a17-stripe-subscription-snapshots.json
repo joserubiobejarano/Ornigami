@@ -1,0 +1,230 @@
+{
+  "schema": "ornigami.a17.stripe-webhook-fixtures.v1",
+  "providerMode": "stripe-test",
+  "sourceRunId": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+  "scenarios": [
+    {
+      "id": "successful-trial-conversion",
+      "status": "active",
+      "subscriptionSnapshot": {
+        "id": "sub_1UPv8iKBOOwWa94W4cjiYdgN",
+        "object": "subscription",
+        "customer": "cus_VQmio27tGVU1B3",
+        "status": "active",
+        "metadata": {
+          "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+          "a17_scenario": "conversion"
+        },
+        "start_date": 1791857305,
+        "trial_start": 1791857305,
+        "trial_end": 1793066905,
+        "items": {
+          "data": [
+            {
+              "current_period_start": 1793066905,
+              "current_period_end": 1795745305,
+              "price": {
+                "id": "price_1UPv8VKBOOwWa94W3Mao8qkP"
+              }
+            }
+          ]
+        }
+      },
+      "events": [
+        {
+          "id": "evt_1UPv8pKBOOwWa94WxGp1Trqx",
+          "type": "customer.subscription.updated",
+          "created": 1791857314,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8iKBOOwWa94W4cjiYdgN",
+              "object": "subscription",
+              "customer": "cus_VQmio27tGVU1B3",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "conversion"
+              },
+              "status": "active"
+            }
+          }
+        },
+        {
+          "id": "evt_1UPv8kKBOOwWa94WyH6m7r0d",
+          "type": "customer.subscription.created",
+          "created": 1791857309,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8iKBOOwWa94W4cjiYdgN",
+              "object": "subscription",
+              "customer": "cus_VQmio27tGVU1B3",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "conversion"
+              },
+              "status": "trialing"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "payment-failure",
+      "status": "past_due",
+      "subscriptionSnapshot": {
+        "id": "sub_1UPv8xKBOOwWa94WTdMV4HDJ",
+        "object": "subscription",
+        "customer": "cus_VQmipHEe8Pmbqx",
+        "status": "past_due",
+        "metadata": {
+          "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+          "a17_scenario": "payment-failure"
+        },
+        "start_date": 1791857321,
+        "trial_start": 1791857321,
+        "trial_end": 1793066921,
+        "items": {
+          "data": [
+            {
+              "current_period_start": 1793066921,
+              "current_period_end": 1795745321,
+              "price": {
+                "id": "price_1UPv8VKBOOwWa94W3Mao8qkP"
+              }
+            }
+          ]
+        }
+      },
+      "events": [
+        {
+          "id": "evt_1UPv99KBOOwWa94WEvtg6rhP",
+          "type": "customer.subscription.updated",
+          "created": 1791857335,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8xKBOOwWa94WTdMV4HDJ",
+              "object": "subscription",
+              "customer": "cus_VQmipHEe8Pmbqx",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "payment-failure"
+              },
+              "status": "past_due"
+            }
+          }
+        },
+        {
+          "id": "evt_1UPv94KBOOwWa94WeM35878t",
+          "type": "customer.subscription.updated",
+          "created": 1791857330,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8xKBOOwWa94WTdMV4HDJ",
+              "object": "subscription",
+              "customer": "cus_VQmipHEe8Pmbqx",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "payment-failure"
+              },
+              "status": "active"
+            }
+          }
+        },
+        {
+          "id": "evt_1UPv8zKBOOwWa94W8oBAV5AV",
+          "type": "customer.subscription.created",
+          "created": 1791857324,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8xKBOOwWa94WTdMV4HDJ",
+              "object": "subscription",
+              "customer": "cus_VQmipHEe8Pmbqx",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "payment-failure"
+              },
+              "status": "trialing"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "trial-without-payment-method-expires",
+      "status": "canceled",
+      "subscriptionSnapshot": {
+        "id": "sub_1UPv8ZKBOOwWa94WV7rKTNPh",
+        "object": "subscription",
+        "customer": "cus_VQmhCrX3fN8cjc",
+        "status": "canceled",
+        "metadata": {
+          "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+          "a17_scenario": "no-method-expiry"
+        },
+        "start_date": 1791857297,
+        "trial_start": 1791857297,
+        "trial_end": 1793066897,
+        "items": {
+          "data": [
+            {
+              "current_period_start": 1791857297,
+              "current_period_end": 1793066897,
+              "price": {
+                "id": "price_1UPv8VKBOOwWa94W3Mao8qkP"
+              }
+            }
+          ]
+        }
+      },
+      "events": [
+        {
+          "id": "evt_1UPv8eKBOOwWa94Ww4GuwxWo",
+          "type": "customer.subscription.deleted",
+          "created": 1791857304,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8ZKBOOwWa94WV7rKTNPh",
+              "object": "subscription",
+              "customer": "cus_VQmhCrX3fN8cjc",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "no-method-expiry"
+              },
+              "status": "canceled"
+            }
+          }
+        },
+        {
+          "id": "evt_1UPv8aKBOOwWa94W1aOKoqNg",
+          "type": "customer.subscription.created",
+          "created": 1791857300,
+          "api_version": null,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "sub_1UPv8ZKBOOwWa94WV7rKTNPh",
+              "object": "subscription",
+              "customer": "cus_VQmhCrX3fN8cjc",
+              "metadata": {
+                "a17_acceptance_run": "c77a75d8-e5f6-46b6-a652-eb4df907bdfe",
+                "a17_scenario": "no-method-expiry"
+              },
+              "status": "trialing"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -51,6 +51,15 @@ export default async function BillingPage() {
               <Badge className="border-[1.5px] border-accent-green/35 bg-accent-green/10 text-primary">{activeAgent?.status}</Badge>
             </div>
             <CardDescription>{formatPrice(currentPlan, period)} / {period === "annual" ? "year" : "month"}</CardDescription>
+            {activeAgent?.status === "trialing" ? (
+              <p className="text-sm text-muted-foreground">
+                Your 14-day trial is active. Add a valid payment method in Billing before it ends
+                to continue on this paid plan. Without one, your trial subscription cancels at expiry.
+                Manage billing to check your trial end date, payment method or cancellation.
+              </p>
+            ) : activeAgent?.status === "past_due" ? (
+              <p className="text-sm text-muted-foreground">Payment is overdue. Manage billing to update your payment method and resolve the overdue invoice.</p>
+            ) : null}
           </CardHeader>
           {context.role === "owner" ? <CardContent className="flex flex-wrap gap-3">
             <form action="/api/stripe/portal" method="post"><Button type="submit" variant="outline">Manage billing</Button></form>
@@ -60,7 +69,16 @@ export default async function BillingPage() {
       ) : null}
 
       {context.role === "owner" ? (
-        <BillingPlanOptions currentPlan={currentPlan} currentPeriod={period} trialEligible={trialEligibility === "eligible"} />
+        <>
+          {!currentPlan && trialEligibility !== "eligible" ? (
+            <p className="text-sm text-muted-foreground">
+              {trialEligibility === "used" ? "Your one-time trial has already been used. Checkout starts a paid subscription; cancelling or changing plans does not create another trial."
+                : trialEligibility === "reserved" ? "A checkout is already pending. Continue to checkout to resume it; a second trial cannot be started."
+                  : "A free trial is unavailable until your trial history is reconciled. Continue to checkout for a paid subscription, or contact support for help with trial eligibility."}
+            </p>
+          ) : null}
+          <BillingPlanOptions currentPlan={currentPlan} currentPeriod={period} trialEligible={trialEligibility === "eligible"} />
+        </>
       ) : <p className="text-sm text-muted-foreground">Only the workspace owner can manage billing.</p>}
     </DashboardPage>
   );

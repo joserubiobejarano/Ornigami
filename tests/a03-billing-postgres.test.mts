@@ -93,6 +93,8 @@ test("A03 billing persistence is fenced, atomic, durable and migration-idempoten
     psqlFile(migrationPath);
     assert.equal(psql(`SELECT public.get_billing_trial_eligibility('${lateBusiness}','${lateOwner}')`), "eligible",
       "replaying migration 019 does not reinterpret a newly provisioned customer as legacy unknown history");
+    psqlFile(join(migrationsDir, "022_booster_delivery_quotas.sql"));
+    psqlFile(join(migrationsDir, "039_billing_lease_duplicate_alias.sql"));
 
     const customerOwner = "00000000-0000-0000-0000-000000000035";
     const customerBusinessOne = "00000000-0000-0000-0000-000000000047";
@@ -200,6 +202,36 @@ test("A03 billing persistence is fenced, atomic, durable and migration-idempoten
     assert.equal(psql(`SELECT public.release_billing_reconciliation_lease('${owner}','evt-new','${stale}')`), "f");
     assert.equal(psql(`SELECT public.release_billing_reconciliation_lease('${owner}','evt-new','${replacementFence}')`), "t");
 
+    // Trial conversion changes entitlement state while preserving this month's
+    // accepted usage and the already-consumed trial history.
+    psql(`INSERT INTO public.booster_quota_legacy_usage(business_id,month_start,accepted_count)
+      VALUES('${business}','2026-10-01',7);`);
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "trial starts with existing workspace quota usage");
+    const conversionFence = psql(`SELECT fence FROM public.claim_billing_reconciliation_lease('${owner}','evt-trial-converted','customer.subscription.updated',60000)`);
+    psql(`SELECT public.apply_stripe_webhook_snapshot('evt-trial-converted','customer.subscription.updated','${owner}','${business}','cus_a03',
+      '{"id":"sub-a03","status":"active","priceId":"price-a03","currentPeriodStart":"2026-10-16T00:00:00Z","currentPeriodEnd":"2026-11-16T00:00:00Z","billingIntentToken":"intent-token-1"}'::jsonb,
+      'complete','annual',NULL,'${conversionFence}',
+      '[{"agentId":"review_replies","status":"active"},{"agentId":"review_booster","status":"active"}]'::jsonb,'sub-a03')`);
+    assert.equal(psql(`SELECT status||'|'||current_period_end::date::text FROM public.business_agents WHERE business_id='${business}' AND agent_id='review_booster'`), "active|2026-11-16",
+      "conversion adopts the paid subscription's authoritative item period");
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "conversion preserves accepted delivery quota usage");
+    assert.equal(psql(`SELECT count(*) FROM public.billing_trial_owner_history WHERE owner_user_id='${owner}' AND state='consumed'`), "1",
+      "conversion does not reset one-time trial history");
+    assert.equal(psql(`SELECT public.release_billing_reconciliation_lease('${owner}','evt-trial-converted','${conversionFence}')`), "t");
+
+    const paymentFailureFence = psql(`SELECT fence FROM public.claim_billing_reconciliation_lease('${owner}','evt-payment-failed','invoice.payment_failed',60000)`);
+    psql(`SELECT public.apply_stripe_webhook_snapshot('evt-payment-failed','invoice.payment_failed','${owner}','${business}','cus_a03',
+      '{"id":"sub-a03","status":"past_due","priceId":"price-a03","currentPeriodStart":"2026-10-16T00:00:00Z","currentPeriodEnd":"2026-11-16T00:00:00Z"}'::jsonb,
+      'complete','annual',NULL,'${paymentFailureFence}',
+      '[{"agentId":"review_replies","status":"past_due"},{"agentId":"review_booster","status":"past_due"}]'::jsonb,'sub-a03')`);
+    assert.equal(psql(`SELECT status||'|'||current_period_end::date::text FROM public.business_agents WHERE business_id='${business}' AND agent_id='review_booster'`), "past_due|2026-11-16",
+      "payment failure retains paid period end while applying the authoritative past-due state");
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "payment failure preserves accepted delivery quota usage");
+    assert.equal(psql(`SELECT public.release_billing_reconciliation_lease('${owner}','evt-payment-failed','${paymentFailureFence}')`), "t");
+
     const unprovenFence = psql(`SELECT fence FROM public.claim_billing_reconciliation_lease('${owner}','evt-unproven-replacement','customer.subscription.created',60000)`);
     const unprovenReplacement = `SELECT public.apply_stripe_webhook_snapshot('evt-unproven-replacement','customer.subscription.created','${owner}','${business}','cus_a03',
       '{"id":"sub-unproven","status":"active","priceId":"price-a03"}'::jsonb,'complete','annual',NULL,'${unprovenFence}',
@@ -214,6 +246,18 @@ test("A03 billing persistence is fenced, atomic, durable and migration-idempoten
       '[{"agentId":"review_replies","status":"canceled"},{"agentId":"review_booster","status":"canceled"}]'::jsonb,'sub-a03')`;
     psql(cancel);
     assert.equal(psql(`SELECT public.release_billing_reconciliation_lease('${owner}','evt-cancel','${cancelLease}')`), "t");
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "terminal cancellation preserves the month's accepted delivery usage");
+    assert.equal(psql(`SELECT kind FROM public.claim_billing_reconciliation_lease('${owner}','evt-cancel','customer.subscription.deleted',60000)`), "duplicate",
+      "replayed cancellation is classified as a duplicate after the completed snapshot");
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "duplicate cancellation replay preserves quota usage");
+    psqlFile(join(migrationsDir, "039_billing_lease_duplicate_alias.sql"));
+    psqlFile(join(migrationsDir, "039_billing_lease_duplicate_alias.sql"));
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "replaying the duplicate-lease migration preserves historical quota usage");
+    assert.equal(psql(`SELECT count(*) FROM public.billing_trial_owner_history WHERE owner_user_id='${owner}' AND state='consumed'`), "1",
+      "replaying the duplicate-lease migration preserves consumed trial history");
     assert.equal(psql(`SELECT status FROM public.billing_checkout_intents WHERE id='${intentId}'`), "retired",
       "authoritative cancellation retires the completed checkout intent");
     assert.equal(psql(`SELECT count(*) FROM public.billing_trial_owner_history WHERE owner_user_id='${owner}' AND state='consumed'`), "1",
@@ -230,6 +274,8 @@ test("A03 billing persistence is fenced, atomic, durable and migration-idempoten
     assert.equal(psql("SELECT status FROM subscriptions WHERE id='sub-a03'"), "canceled", "a proven terminal predecessor mirror is updated atomically");
     assert.equal(psql("SELECT status FROM subscriptions WHERE id='sub-replacement'"), "active");
     assert.equal(psql(`SELECT status FROM billing_checkout_intents WHERE id='${paidIntentId}'`), "completed");
+    assert.equal(psql(`SELECT usage::text FROM public.booster_monthly_quota('${business}','2026-10-01'::date)`), "7",
+      "paid subscription replacement preserves historical accepted delivery usage");
 
     const newOwner = "00000000-0000-0000-0000-000000000034";
     const ownerRenewedBusiness = "00000000-0000-0000-0000-000000000045";

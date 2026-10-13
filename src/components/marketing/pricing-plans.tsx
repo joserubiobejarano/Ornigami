@@ -81,7 +81,7 @@ export function PricingPlans() {
         })}
       </section>
       <p className="mx-auto max-w-4xl px-4 pb-16 text-center text-sm text-muted-foreground md:px-6">
-        Every plan includes the 14-day free trial. Change or cancel anytime.
+        Eligible businesses and billing owners can use one 14-day free trial across all plans. No card is required to start. Add a valid payment method before the trial ends to continue on your selected paid plan; without one, your trial subscription cancels at expiry. Cancelling or changing plans does not create another trial.
       </p>
     </>
   );
