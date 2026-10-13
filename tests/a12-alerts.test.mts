@@ -6,18 +6,21 @@ test("cron alert transport sends only fixed operational context and reports dura
   const originalDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
   process.env.NEXT_PUBLIC_SENTRY_DSN = "https://public@example.test/1";
   const queries: string[] = [];
+  const expectedJobArgs: unknown[][] = [];
   const logs: Array<{ event: string; meta: unknown }> = [];
   let outgoing: Record<string, unknown> | undefined;
   let afterSend: ((event: Record<string, unknown>, response: { statusCode?: number }) => void) | undefined;
   let unsubscribed = false;
   const service = loadTs<typeof import("../src/lib/cron-alerts.js")>("src/lib/cron-alerts.ts", { overrides: {
-    "@/lib/db/neon": { sql: async (strings: TemplateStringsArray) => {
+    "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
       const query = strings.join(" ");
       queries.push(query);
+      expectedJobArgs.push(values);
       if (query.includes("claim_cron_alerts")) return [{ alert_key: "review_replies:failed", job_name: "review_replies", reason: "failed" }];
       if (query.includes("count(*) FILTER")) return [{ active_count: 1, transport_failures: 0 }];
       return [];
     } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/safe-logger": { safeLogger: { error: (event: string, meta: unknown) => logs.push({ event, meta }) } },
     "@sentry/nextjs": {
       getClient: () => ({ on: (_hook: string, callback: typeof afterSend) => { afterSend = callback; return () => { unsubscribed = true; afterSend = undefined; }; } }),
@@ -45,6 +48,7 @@ test("cron alert transport sends only fixed operational context and reports dura
     const result = await service.evaluateCronAlerts();
     assert.deepEqual(JSON.parse(JSON.stringify(result)), { ok: true, activeCount: 1, transportFailures: 0 });
     assert.ok(queries[0]?.includes("claim_cron_alerts"));
+    assert.deepEqual(JSON.parse(JSON.stringify(expectedJobArgs[0])), [["review_booster", "privacy_retention", "review_replies"]]);
     assert.ok(outgoing);
     assert.deepEqual(Object.keys(outgoing!).sort(), ["event_id", "level", "message", "platform", "sdk", "tags", "timestamp"].sort());
     const text = JSON.stringify(outgoing);
@@ -57,6 +61,25 @@ test("cron alert transport sends only fixed operational context and reports dura
     if (originalDsn === undefined) delete process.env.NEXT_PUBLIC_SENTRY_DSN;
     else process.env.NEXT_PUBLIC_SENTRY_DSN = originalDsn;
   }
+});
+
+test("disabled OpenAI omits Replies from expected cadence without creating a run", async () => {
+  const expectedJobArgs: unknown[][] = [];
+  const service = loadTs<typeof import("../src/lib/cron-alerts.js")>("src/lib/cron-alerts.ts", { overrides: {
+    "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const query = strings.join(" ");
+      if (query.includes("claim_cron_alerts")) { expectedJobArgs.push(values); return []; }
+      if (query.includes("count(*) FILTER")) return [{ active_count: 0, transport_failures: 0 }];
+      return [];
+    } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => false },
+    "@/lib/safe-logger": { safeLogger: { error() {} } },
+    "@sentry/nextjs": {},
+  } });
+
+  const result = await service.evaluateCronAlerts();
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), { ok: true, activeCount: 0, transportFailures: 0 });
+  assert.deepEqual(JSON.parse(JSON.stringify(expectedJobArgs)), [[["review_booster", "privacy_retention"]]]);
 });
 
 test("flush without a successful per-event Sentry response stays a transport failure", async () => {
@@ -73,6 +96,7 @@ test("flush without a successful per-event Sentry response stays a transport fai
       if (query.includes("count(*) FILTER")) return [{ active_count: 1, transport_failures: 1 }];
       return [];
     } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/safe-logger": { safeLogger: { error: (event: string, meta: unknown) => logs.push({ event, meta }) } },
     "@sentry/nextjs": {
       getClient: () => ({ on: (_hook: string, callback: typeof afterSend) => { afterSend = callback; return () => { afterSend = undefined; }; } }),
@@ -105,6 +129,7 @@ test("missing Sentry SDK client is not counted as a delivered alert", async () =
       if (query.includes("count(*) FILTER")) return [{ active_count: 1, transport_failures: 1 }];
       return [];
     } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/safe-logger": { safeLogger: { error() {} } },
     "@sentry/nextjs": { getClient: () => undefined, withScope() {}, captureMessage() { return undefined; }, flush: async () => true },
   } });
@@ -134,6 +159,7 @@ test("flush true without this event's transport acknowledgement is not delivery"
       if (query.includes("count(*) FILTER")) return [{ active_count: 1, transport_failures: 1 }];
       return [];
     } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/safe-logger": { safeLogger: { error: (event: string, meta: unknown) => logs.push({ event, meta }) } },
     "@sentry/nextjs": {
       getClient: () => ({ on: (_hook: string, callback: typeof listener) => { listener = callback; return () => { listener = undefined; unsubscribed = true; }; } }),
@@ -167,6 +193,7 @@ test("missing alert transport is observable without exposing exception or custom
       if (query.includes("count(*) FILTER")) return [{ active_count: 1, transport_failures: 1 }];
       return [];
     } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/safe-logger": { safeLogger: { error: (event: string, meta: unknown) => logs.push({ event, meta }) } },
     "@sentry/nextjs": { withScope() { throw new Error("must not send"); }, captureMessage() { throw new Error("must not send"); }, flush: async () => false },
   } });

@@ -4,11 +4,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const manifestPath = path.join(root, "deploy/vps/schema-release-039-041.json");
+const manifestPath = path.join(root, "deploy/vps/schema-release-039-042.json");
 const expected = [
   "039_billing_lease_duplicate_alias.sql",
   "040_permission_evidence.sql",
   "041_guarded_retention.sql",
+  "042_cron_expected_jobs.sql",
 ];
 
 export async function verifySchemaRelease({ repoRoot = root, manifest = manifestPath } = {}) {
@@ -34,10 +35,10 @@ export async function verifySchemaRelease({ repoRoot = root, manifest = manifest
   }
 
   if (JSON.stringify(spec.migrations.map(({ file }) => file)) !== JSON.stringify(expected)) {
-    errors.push("manifest migration list must be exactly 039, 040, 041 in numeric order");
+    errors.push("manifest migration list must be exactly 039, 040, 041, 042 in numeric order");
   }
-  if (JSON.stringify(spec.applyOrder) !== JSON.stringify(["039", "040", "041"])) {
-    errors.push("applyOrder must be exactly 039, 040, 041");
+  if (JSON.stringify(spec.applyOrder) !== JSON.stringify(["039", "040", "041", "042"])) {
+    errors.push("applyOrder must be exactly 039, 040, 041, 042");
   }
   if (spec.hashAlgorithm !== "sha256-lf-utf8") {
     errors.push("hashAlgorithm must be sha256-lf-utf8");

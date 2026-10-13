@@ -182,7 +182,7 @@ async function setupDatabase() {
   const migrationsDir = join(ROOT, "neon", "migrations");
   const migrations = readdirSync(migrationsDir).filter((name) => /^\d{3}_.+\.sql$/.test(name))
     .sort((a, b) => Number(a.slice(0, 3)) - Number(b.slice(0, 3)));
-  if (!migrations.length || migrations.some((name) => Number(name.slice(0, 3)) > 41)) throw new Error("canonical migration set is missing or extends beyond reviewed migration 041");
+  if (!migrations.length || migrations.some((name) => Number(name.slice(0, 3)) > 42)) throw new Error("canonical migration set is missing or extends beyond reviewed migration 042");
   for (const migration of migrations) psql(port, readFileSync(join(migrationsDir, migration), "utf8"), PG_DATABASE);
   const bcrypt = await import("bcryptjs");
   const accounts = {};

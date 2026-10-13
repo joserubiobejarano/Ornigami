@@ -13,7 +13,7 @@ const pgExe = (name) => process.platform === "win32"
   ? path.join(pgBin ?? "C:/Program Files/PostgreSQL/17/bin", `${name}.exe`)
   : pgBin ? path.join(pgBin, name) : name;
 
-test("read-only catalog readiness query passes on schema after migrations 039–041", { timeout: 180_000 }, async (t) => {
+test("read-only catalog readiness query passes on schema after migrations 039–042", { timeout: 180_000 }, async (t) => {
   const tempRoot = tmpdir();
   const dir = mkdtempSync(path.join(tempRoot, "vps-schema-catalog-"));
   assert.ok(path.resolve(dir).startsWith(`${path.resolve(tempRoot)}${path.sep}`), "temporary cluster path must stay inside the OS temp directory");
@@ -36,10 +36,25 @@ test("read-only catalog readiness query passes on schema after migrations 039–
       .filter((name) => /^\d{3}_.+\.sql$/.test(name))
       .sort((a, b) => Number(a.slice(0, 3)) - Number(b.slice(0, 3)));
     for (const migration of migrations) psql(`SET client_min_messages=warning;\n${readFileSync(path.join(migrationDir, migration), "utf8")}`);
-    const checks = psql(readFileSync(path.join(root, "deploy/vps/schema-readiness.sql"), "utf8"))
-      .split(/\r?\n/).map((line) => line.split("|"));
+    const readinessQuery = readFileSync(path.join(root, "deploy/vps/schema-readiness.sql"), "utf8");
+    const checks = psql(readinessQuery).split(/\r?\n/).map((line) => line.split("|"));
     assert.ok(checks.length > 0, "catalog query should return check rows");
     for (const [name, ready] of checks) assert.equal(ready, "t", `${name} catalog contract failed`);
+
+    psql(`DO $test$
+      DECLARE definition TEXT; patched TEXT;
+      BEGIN
+        definition := pg_get_functiondef('public.claim_cron_alerts(text[])'::regprocedure);
+        patched := replace(definition,
+          'FROM expected e LEFT JOIN latest l USING (job_name)',
+          'FROM (VALUES (''review_booster''::text), (''review_replies''::text), (''privacy_retention''::text)) e(job_name) LEFT JOIN latest l USING (job_name)');
+        IF patched = definition THEN RAISE EXCEPTION 'could not create never_run expectation drift'; END IF;
+        EXECUTE patched;
+      END
+    $test$;`);
+    const driftedChecks = psql(readinessQuery).split(/\r?\n/).map((line) => line.split("|"));
+    const cronReadiness = driftedChecks.find(([name]) => name === "042 expected cron jobs and missed-cadence alerting");
+    assert.equal(cronReadiness?.[1], "f", "readiness must reject never_run checks that ignore configured expected jobs");
   } finally {
     if (started) {
       try { execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-m", "fast", "-w", "stop"], { stdio: "ignore" }); } catch {}

@@ -1,5 +1,5 @@
 {
-  "release": "vps-schema-039-041",
+  "release": "vps-schema-039-042",
   "previousMigration": "038_booster_intake_lifecycle.sql",
   "migrations": [
     {
@@ -13,16 +13,21 @@
     {
       "file": "041_guarded_retention.sql",
       "sha256": "ea59c2f72af61fc3a11748200303fcb8e4dbd636d3eda8e5c8ed700510fc9cee"
+    },
+    {
+      "file": "042_cron_expected_jobs.sql",
+      "sha256": "c4182adc4392db8b715a4cc83ca66e3b17b94cd809891f9115ad5e86ead57721"
     }
   ],
   "applyOrder": [
     "039",
     "040",
-    "041"
+    "041",
+    "042"
   ],
   "preconditions": [
     "Confirm the target schema has applied migration 038 and prior migrations in numeric order.",
-    "Pause and drain Review Booster intake and delivery jobs before applying 040–041.",
+    "Pause and drain Review Booster intake and delivery jobs before applying 040–042.",
     "Apply each migration once, in numeric order, before deploying matching application consumers."
   ],
   "rollback": {

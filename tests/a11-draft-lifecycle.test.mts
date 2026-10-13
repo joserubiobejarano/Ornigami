@@ -47,6 +47,7 @@ function loadProcessor(generate: () => Promise<string>) {
         return true;
       },
     },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
   });
   return { mod, calls };
 }

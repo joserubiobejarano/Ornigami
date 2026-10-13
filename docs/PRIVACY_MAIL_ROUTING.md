@@ -1,4 +1,4 @@
-# Privacy routing integration handoff
+# Mail routing plan and preservation checks
 
 Prepared 13 October 2026. **Plan only; live routing and delivery proof remain open.** The owner withdrew the earlier Zoho mailbox identification and reports no confirmed place to read `info@ornigami.com`. The owner chose to forward all three published addresses directly to the existing Gmail inbox. Its exact destination is in private `owner-clarifications.json`, outside Git.
 
@@ -54,4 +54,4 @@ Integration/operator steps:
 5. Verify each route independently. For privacy/support, hash the exact private evidence and use the existing `route-receipt` CLI with the actual observation time and result. Keep the info route's delivery evidence separately; the CLI only supports privacy/support. A failure leaves the route open. Do not treat a Settings screenshot, outbound transactional receipt or fabricated hash as arrival proof.
 6. Confirm inbox custody, daily rights-request monitoring, restricted access, secure response handling, and reviewed Gmail/forwarder trash/archive/backup expiry. Keep the assisted rights process and separate provider/retention gates in force.
 
-See [closure evidence](./PRIVACY_EVIDENCE_CLOSURE.md), the [provider review](./PRIVACY_PROVIDER_REVIEW.md) and the [retention inventory](./PRIVACY_RETENTION_INVENTORY.md). The owner completed the Free signup terms step; Free-plan DPA acceptance remains unresolved. No DNS change, forwarding rule, route probe, paid mailbox or deployment was performed in this task.
+See [closure evidence](./RELEASE_EVIDENCE.md), the [provider review](./PRIVACY_PROVIDER_REVIEW.md) and the [retention inventory](./PRIVACY_RETENTION_INVENTORY.md). The owner completed the Free signup terms step; Free-plan DPA acceptance remains unresolved. No DNS change, forwarding rule, route probe, paid mailbox or deployment was performed in this task.

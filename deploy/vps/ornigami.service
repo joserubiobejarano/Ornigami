@@ -20,11 +20,6 @@ TimeoutStopSec=45s
 KillSignal=SIGTERM
 UMask=0077
 
-StateDirectory=ornigami
-StateDirectoryMode=0750
-CacheDirectory=ornigami
-CacheDirectoryMode=0750
-
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true

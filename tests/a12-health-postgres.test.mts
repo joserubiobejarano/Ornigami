@@ -67,7 +67,37 @@ test("A12 lease, checkpoint, fence, status constraints, and privacy-safe health 
       finished_at TIMESTAMPTZ, status TEXT NOT NULL DEFAULT 'running' CHECK(status IN ('running','succeeded','failed')),
       processed_count INT NOT NULL DEFAULT 0, failed_count INT NOT NULL DEFAULT 0, error_message TEXT
     ); CREATE TABLE public.businesses (id UUID PRIMARY KEY); INSERT INTO public.businesses(id) VALUES ('20000000-0000-4000-8000-000000000001');`);
-    psql(`SET client_min_messages=warning;\n${readFileSync(join(root, "neon/migrations/027_cron_operations.sql"), "utf8")}`);
+    psql(`SET client_min_messages=warning;\n${readFileSync(join(root, "neon/migrations/027_cron_operations.sql"), "utf8")}\n${readFileSync(join(root, "neon/migrations/042_cron_expected_jobs.sql"), "utf8")}`);
+
+    const defaultNeverRun = psql("SELECT alert_key FROM public.claim_cron_alerts() ORDER BY alert_key");
+    assert.deepEqual(defaultNeverRun.split(/\r?\n/).sort(), [
+      "privacy_retention:never_run", "review_booster:never_run", "review_replies:never_run",
+    ], "the no-argument wrapper preserves all-job cadence expectations");
+    const disabledNeverRun = psql("SELECT alert_key FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention']::text[]) ORDER BY alert_key");
+    assert.equal(disabledNeverRun, "", "still-throttled required-job alerts are not resent");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_booster:never_run'"), "t");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='privacy_retention:never_run'"), "t");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_replies:never_run'"), "f",
+      "omitting a disabled job resolves only its cadence alert without fabricating a run");
+    assert.deepEqual(
+      psql("SELECT alert_key FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention','review_replies']::text[]) ORDER BY alert_key").split(/\r?\n/).sort(),
+      ["review_replies:never_run"],
+      "explicit enabled expectations include Replies cadence",
+    );
+
+    for (const invalidSet of [
+      "ARRAY['review_booster','unknown_job']::text[]",
+      "ARRAY['review_booster','review_replies']::text[]",
+      "ARRAY['review_booster','privacy_retention','review_replies','review_replies']::text[]",
+      "NULL::text[]",
+      "ARRAY['review_booster','privacy_retention',NULL]::text[]",
+    ]) {
+      psql(`DO $test$ DECLARE rejected BOOLEAN := FALSE; BEGIN
+        BEGIN PERFORM public.claim_cron_alerts(${invalidSet});
+        EXCEPTION WHEN SQLSTATE '22023' THEN rejected := TRUE; END;
+        IF NOT rejected THEN RAISE EXCEPTION 'invalid expected job set was accepted'; END IF;
+      END $test$;`);
+    }
 
     const health = loadTs<typeof import("../src/lib/cron-health.js")>("src/lib/cron-health.ts", { overrides: {
       "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
@@ -169,13 +199,42 @@ test("A12 lease, checkpoint, fence, status constraints, and privacy-safe health 
 
     psql("UPDATE public.cron_runs SET started_at=clock_timestamp()-interval '9 hours' WHERE job_name='review_replies' AND status='no_work'");
     assert.equal(psql("SELECT alert_key FROM public.claim_cron_alerts()"), "review_replies:missed_schedule", "two-cadence grace catches a missed schedule");
+    assert.equal(psql("SELECT alert_key FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention']::text[])"), "",
+      "disabled Replies cadence no longer claims missed-schedule alerts");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_replies:missed_schedule'"), "f",
+      "disabled cadence resolution does not create a synthetic success receipt");
     psql("UPDATE public.cron_runs SET started_at=clock_timestamp()+interval '30 seconds' WHERE job_name='review_replies' AND status='no_work'");
     assert.equal(psql("SELECT count(*) FROM public.claim_cron_alerts()"), "0", "a later scheduled run resolves missed schedule");
 
+    psql(`INSERT INTO public.cron_runs(job_name,status,error_message,started_at) VALUES
+      ('review_replies','failed','job_failed',clock_timestamp()+interval '1 minute');`);
+    psql("SELECT count(*) FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention']::text[])");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_replies:failed'"), "t",
+      "disabled cadence still exposes a real failed terminal run");
+    psql(`INSERT INTO public.cron_runs(job_name,status,error_message,started_at) VALUES
+      ('review_replies','partial','partial_failures',clock_timestamp()+interval '2 minutes');`);
+    psql("SELECT count(*) FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention']::text[])");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_replies:partial'"), "t",
+      "disabled cadence still exposes an actionable partial terminal run");
+
+    psql(`INSERT INTO public.cron_job_state(job_name,lease_owner_run_id,lease_until,deadline_at)
+      VALUES ('review_replies',gen_random_uuid(),clock_timestamp()-interval '1 minute',clock_timestamp()-interval '1 minute')
+      ON CONFLICT (job_name) DO UPDATE SET lease_owner_run_id=EXCLUDED.lease_owner_run_id,
+        lease_until=EXCLUDED.lease_until, deadline_at=EXCLUDED.deadline_at;`);
+    psql("SELECT count(*) FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention']::text[])");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_replies:stale_running'"), "t",
+      "disabled cadence still exposes an expired lease that may carry unresolved provider work");
+    psql("UPDATE public.cron_job_state SET lease_owner_run_id=NULL, lease_until=NULL, deadline_at=NULL WHERE job_name='review_replies'");
+    psql("SELECT count(*) FROM public.claim_cron_alerts(ARRAY['review_booster','privacy_retention']::text[])");
+    assert.equal(psql("SELECT active FROM public.cron_alert_state WHERE alert_key='review_replies:stale_running'"), "f",
+      "stale-lease alert resolves only after lease state is actually cleared");
+
     // Replay verifies fixed health codes and active dedup rows survive integration reruns.
-    psql(`SET client_min_messages=warning;\n${readFileSync(join(root, "neon/migrations/027_cron_operations.sql"), "utf8")}`);
+    psql(`SET client_min_messages=warning;\n${readFileSync(join(root, "neon/migrations/027_cron_operations.sql"), "utf8")}\n${readFileSync(join(root, "neon/migrations/042_cron_expected_jobs.sql"), "utf8")}`);
     assert.equal(psql("SELECT error_message FROM public.cron_runs WHERE id='" + privacy.runId + "'"), "partial_failures");
-    assert.equal(psql("SELECT count(*) FROM public.cron_alert_state WHERE active"), "1");
+    assert.equal(psql("SELECT count(*) FROM public.cron_alert_state WHERE active"), "2");
+    assert.equal(psql("SELECT count(*) FROM public.cron_alert_state WHERE active AND alert_key IN ('review_booster:failed','review_replies:partial')"), "2",
+      "integration reruns preserve actionable alerts for known failed/partial work");
     psql("INSERT INTO public.cron_unit_state(job_name,business_id,cursor) VALUES ('review_replies','20000000-0000-4000-8000-000000000001','{}')");
     psql("DELETE FROM public.businesses WHERE id='20000000-0000-4000-8000-000000000001'");
     assert.equal(psql("SELECT count(*) FROM public.cron_unit_state WHERE business_id='20000000-0000-4000-8000-000000000001'"), "0", "unit cursors cascade with workspace deletion");

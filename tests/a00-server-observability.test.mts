@@ -48,6 +48,7 @@ test("installed server SDK filters source data and acknowledges explicit request
     const hook = loadTs<typeof import('../src/instrumentation.ts')>('src/instrumentation.ts', { '@sentry/nextjs': Sentry });
     await hook.onRequestError(Object.assign(new Error('private request exception'), { digest:'67890' }));
     const alerts = loadTs<typeof import('../src/lib/cron-alerts.ts')>('src/lib/cron-alerts.ts', {
+      '@/lib/openai-feature': { isOpenAIEnabled: () => false },
       '@sentry/nextjs': Sentry, '@/lib/safe-logger': { safeLogger: { error: () => undefined } },
       '@/lib/db/neon': { sql: async (parts:TemplateStringsArray) => {
         const query=parts.join('?');

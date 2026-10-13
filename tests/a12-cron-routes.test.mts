@@ -138,6 +138,7 @@ function repliesRoute(options: { rows?: unknown[] | ((businessId: string, afterR
     } },
     "@/lib/reply-profile-defaults": { getProfileReplyDefaults: async () => null },
     "@/lib/review-draft-processing": { processReviewDraft: async (...args: unknown[]) => { draftCalls.push(args); return options.draft ? options.draft(...args) : { outcome: "saved", draft: {}, posted: false }; } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/safe-logger": { safeLogger: { error() {}, warn() {} } },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => true },
     "@/lib/review-alerts": { sendNewReviewAlert: async () => undefined },

@@ -1,6 +1,8 @@
-# VPS release preparation — 13 October 2026
+# VPS runtime and cutover reference
 
-This package prepares one Linux/systemd application host, Caddy TLS ingress and one primary scheduler. It does not provision a VPS, apply production SQL, deploy, retire Vercel or move Neon. Jose owns the eventual rollout and rollback. The integration session must review this branch before performing those actions.
+This is the reviewed Linux/systemd/Caddy reference for one application host and primary scheduler. Run its commands from the repository root. It does not provision a VPS, apply production SQL, deploy, retire Vercel or move Neon. Jose owns target rollout and rollback.
+
+The later owner-confirmed hosting plan is Contabo US East with Coolify, intended for November 2026; target access is not yet available. These units are not a tested Coolify deployment. Review and adapt service ownership, ingress/header trust, filesystem writes, secrets, scheduling and rollback to the actual control plane before installation. Keep one application supervisor/ingress and one automatic primary scheduler. See [VPS privacy/backup verification](../../docs/PRIVACY_VPS_VERIFICATION.md) for the pending actual-target evidence.
 
 ## Prepared runtime
 
@@ -23,7 +25,7 @@ sudo systemctl daemon-reload
 
 Preflight checks structural runtime prerequisites and configuration validation; it is not provider, environment-content, TLS-renewal or public-transport acceptance. Starting/enabling services is part of the separately authorized rollout. Inspect service failure/restart behavior, cache permissions, disk/memory headroom and graceful shutdown on the real host.
 
-## Schema 039–041
+## Schema 039–042
 
 Neon remains the database. `neon/migrations` is the sole migration history; previously applied files are unchanged. Verify the release manifest before migration:
 
@@ -35,11 +37,11 @@ This local check verifies ordered canonical SQL hashes, not applied database sta
 
 1. Pause enrollment, manual/CSV/booking Booster intake, all primary/recovery dispatches and retention mutation. A scheduler pause alone does not stop HTTP intake. At ingress use an operator-reviewed maintenance response while preserving signed provider callback handling, or stop public application traffic in a planned maintenance window. Drain or resolve live job, billing, delivery, reply and deletion/provider leases. Preserve uncertain operations and their fences; do not clear them to make rollout proceed.
 2. Capture a private pre-release backup/PITR restore point and prove a restore on an isolated database branch. Record branch IDs, restore point, permissions, expiry and restore duration. Avoid placing backup credentials or customer dumps in the worktree. The application-backup retention target in operations is not proof of vendor configuration.
-3. Apply 039, then 040, then 041 once, each with stop-on-error and an explicit transaction on the pinned target. Use an operator-configured private connection/service file, never a connection string pasted into shell history. For example, `psql -X --set ON_ERROR_STOP=1 --single-transaction --file neon/migrations/039_billing_lease_duplicate_alias.sql`, then the other two files. Set bounded lock/statement timeouts for the maintenance window. A transaction failure stops subsequent migrations; investigate and repair forward or use the verified restore procedure.
+3. Apply 039, then 040, then 041, then 042 once, each with stop-on-error and an explicit transaction on the pinned target. Use an operator-configured private connection/service file, never a connection string pasted into shell history. For example, `psql -X --set ON_ERROR_STOP=1 --single-transaction --file neon/migrations/039_billing_lease_duplicate_alias.sql`, then the other three files. Set bounded lock/statement timeouts for the maintenance window. A transaction failure stops subsequent migrations; investigate and repair forward or use the verified restore procedure.
 4. Run `psql -X --set ON_ERROR_STOP=1 --file deploy/vps/schema-readiness.sql` through the same private target connection. Every returned `ready` value must be true; SQL execution success alone is insufficient. The query inspects catalog definitions/signatures and emits only named booleans. Verify permission admission, the 025/036 lifecycle/suppression wrapper chain, terminal trigger bindings and 041 late-callback behavior on the target. Capture results privately; local manifest success alone cannot certify this. Validate schema behavior on a disposable restored branch before production.
 5. Select the matching application artifact, verify health and permitted intake, and resume intake only after permission behavior and signed callbacks pass. Historical bookings do not acquire consent by migration. Keep guarded retention disabled; a successful migration does not authorize minimization.
 
-039 repairs duplicate billing-event lease acknowledgement. 040 changes admission contracts and makes legacy visits without purpose-specific evidence send-ineligible. 041 adds terminal clocks, protective holds and hash-only correlation tombstones; actual cleanup remains separately gated and cannot be undone by changing flags.
+039 repairs duplicate billing-event lease acknowledgement. 040 changes admission contracts and makes legacy visits without purpose-specific evidence send-ineligible. 041 adds terminal clocks, protective holds and hash-only correlation tombstones; actual cleanup remains separately gated and cannot be undone by changing flags. 042 adds explicit expected cadence jobs; intentionally disabled paid AI excludes only Replies never-run/missed-cadence alerts, while all known failed/partial/stale-running operations remain visible. Match 042 with its application consumer before verifying health.
 
 ## One primary scheduler
 
@@ -48,34 +50,19 @@ Install the `ornigami-cron@.service` template and the three timer files in `/etc
 | Timer | UTC cadence |
 | --- | --- |
 | `ornigami-cron-review-booster.timer` | Minute 7 every hour |
-| `ornigami-cron-review-replies.timer` | Minute 11 every four hours |
+| `ornigami-cron-review-replies.timer` | Minute 11 every four hours, only when Replies/paid AI is explicitly enabled and its Google/provider gates close |
 | `ornigami-cron-privacy.timer` | 03:00 daily |
 
-Timers intentionally do not catch up missed executions after downtime. Review missed schedules rather than replaying provider work automatically. Keep timers disabled throughout preparation and schema maintenance. Before enabling them, disable the historical Vercel schedules on the actual old production target and verify no queued/running work remains. `vercel.json` is retained as historical configuration in this package; deploying that file to Vercel would still configure those schedules. GitHub Booster/Replies workflows remain manual recovery only. Retain the independent hourly GitHub health monitor and align its private origin/secret with the VPS after cutover.
+Timers intentionally do not catch up missed executions after downtime. Review missed schedules rather than replaying provider work automatically. Keep timers disabled throughout preparation and schema maintenance. At the free/AI-disabled launch, enable only Booster and privacy after acceptance; keep the Replies timer disabled because its endpoint rejects generation before a lease. Before enabling any selected primary timer, disable superseded historical schedules and verify no queued/running work remains. `vercel.json` is historical configuration; deploying it to Vercel would still configure its schedules. GitHub Booster/Replies workflows remain manual recovery only. Retain the independent hourly GitHub health monitor and align its private origin/secret with the VPS after cutover. Intentional disabled cadence must never suppress actual failed/partial/stale-running alerts or erase unresolved provider evidence.
 
 For an authorized cutover, validate installed units with `systemd-analyze verify`, inspect next occurrences with `systemd-analyze calendar`, then enable only the three reviewed timers. `systemctl list-timers --all` and `journalctl -u 'ornigami-cron@*'` supplement persisted cron health. Every manual recovery action must first coordinate with the primary scheduler and leases. A manual successful request is not a natural timer receipt.
 
 ## Target acceptance and rollback
 
-Before opening enrollment, record successful public HTTPS/certificate and redirect checks, rejection of unexpected hosts, inability to reach port 3000 externally, spoofed-IP/header behavior, authenticated session cookies and both Google callback origins. Verify Stripe and Resend signed callbacks on the exact deployment without creating duplicate endpoints or authorizing real charges/messages/replies. Verify private database access, health summaries and alert transport. Capture natural VPS receipts for all three cadences, paired with persisted outcomes, exact commit and service/timer identity. Confirm the independent health monitor reaches this origin. A 200 landing page alone proves neither database health nor scheduler/provider readiness.
+Before opening enrollment, record successful public HTTPS/certificate and redirect checks, rejection of unexpected hosts, inability to reach port 3000 externally, spoofed-IP/header behavior, authenticated session cookies and both Google callback origins. Verify Stripe and Resend signed callbacks on the exact deployment without creating duplicate endpoints or authorizing real charges/messages/replies. Verify private database access, health summaries and alert transport. Capture natural VPS receipts for each enabled cadence (Booster and privacy at the AI-disabled launch), paired with persisted outcomes, exact commit and service/timer identity. Confirm the independent health monitor reaches this origin. A 200 landing page alone proves neither database health nor scheduler/provider readiness.
 
-For rollback, stop the three timers, pause affected intake and drain live work. Close either retention flag to stop future guarded minimization; this does not recover disposed content. Preserve durable usage, idempotency, unknown fences, suppression, permission, lifecycle and tombstone evidence. Never reverse 039–041 by dropping tables/functions or relaxing permission gates.
+For rollback, stop the three timers, pause affected intake and drain live work. Close either retention flag to stop future guarded minimization; this does not recover disposed content. Preserve durable usage, idempotency, unknown fences, suppression, permission, lifecycle and tombstone evidence. Never reverse 039–042 by dropping tables/functions or relaxing permission gates.
 
-An application rollback is allowed only to a release already verified against the 040 admission contracts and 041 schema. A pre-040 application may call obsolete signatures and fail closed; if no compatible previous release exists, keep intake/jobs paused and forward-fix. With services stopped, atomically select the retained compatible release link, restore its reviewed configuration without changing durable keys, rerun preflight, start and verify the application, then enable exactly one scheduler after confirming no overlap. Keep Caddy on the same public origin. Record both commits and reason.
+An application rollback is allowed only to a release already verified against the 040 admission contracts, 041 retention schema and 042 alert interface. A pre-040 application may call obsolete signatures and fail closed; if no compatible previous release exists, keep intake/jobs paused and forward-fix. With services stopped, atomically select the retained compatible release link, restore its reviewed configuration without changing durable keys, rerun preflight, start and verify the application, then enable exactly one scheduler after confirming no overlap. Keep Caddy on the same public origin. Record both commits and reason.
 
 A database restore is an exceptional separately authorized recovery, not the routine application rollback. Restore first into isolation, reconcile all provider operations since the restore point, and reapply erasure/suppression/permission evidence before reopening traffic. Do not replay deliveries, charges or callbacks blindly. Restoring pre-040 data does not permit permissionless intake.
-
-## Review evidence
-
-Base commit: `3022643`. Review branch: `task/vps-release-preparation`, isolated worktree `Ornigami-VPS-Release`. Three Luna agents implemented bounded runtime, scheduler and schema packages; the coordinating agent reviewed the code and authored this runbook. A separate bounded review of runtime/runbook consistency found no further actionable issue.
-
-Verified on Windows, Node `24.11.1`, PostgreSQL 17:
-
-- `node --experimental-strip-types --test tests/vps-cron-dispatch.test.mjs tests/vps-preflight.test.mjs tests/vps-runtime-config.test.mjs tests/vps-schema-release.test.mjs tests/vps-schema-catalog-postgres.test.mjs`: **18 passed, zero failures/skips**. Covers header boundary contracts, environment permissions, missing cache/cron prerequisites, authenticated dispatch, rejected redirects/errors/prototype job names, sanitized failure messages and cross-platform CLI paths. The disposable PostgreSQL test applied the canonical migration history and every schema catalog check returned true.
-- `node scripts/vps-schema-release-check.mjs`: all three canonical LF-normalized hashes matched. Mutation/order/algorithm rejection and CRLF equivalence passed their focused tests.
-- Node syntax checks passed for dispatch and preflight scripts; `git diff --check` passed.
-- `npm run lint`: zero errors, four existing navigation warnings in Booster/Replies pages.
-
-Application source, dependencies, Next configuration and applied SQL files are unchanged; this package does not claim a new application build or repeat closed application acceptance. The new `.mjs` test suites are included by the existing test discovery and will run in Linux/Node 22 CI with its PostgreSQL binaries.
-
-No production operation is certified by local checks. This Windows workspace cannot execute systemd or Caddy; installed-unit validation, Linux build evidence and target-specific TLS, callbacks, backup restore and natural-job acceptance remain rollout gates. Secrets were not read or copied from another worktree. No merge, roadmap update or deployment was performed.

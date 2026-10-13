@@ -24,10 +24,13 @@ test("systemd serves Next only on loopback with the root-owned runtime env and a
   assert.match(unit, /Restart=on-failure/);
   assert.match(unit, /TimeoutStopSec=45s/);
   assert.match(unit, /ProtectSystem=strict/);
+  assert.match(unit, /^ReadWritePaths=\/opt\/ornigami\/current\/\.next\/cache$/m);
+  assert.doesNotMatch(unit, /^\s*(?:StateDirectory|CacheDirectory)=/m);
 });
 
 test("runtime example uses canonical HTTPS URL and leaves secrets unset", () => {
   assert.match(envExample, /^NEXT_PUBLIC_APP_URL=https:\/\/ornigami\.com$/m);
+  assert.match(envExample, /^OPENAI_ENABLED=false$/m);
   for (const name of ["DATABASE_URL", "AUTH_SECRET", "TOKEN_ENCRYPTION_KEY", "GOOGLE_CLIENT_SECRET", "CRON_SECRET"]) {
     assert.match(envExample, new RegExp(`^# ${name}=`, "m"));
     assert.doesNotMatch(envExample, new RegExp(`^${name}=$`, "m"));

@@ -6,6 +6,10 @@ import { resolve } from "node:path";
 import vm from "node:vm";
 import ts from "typescript";
 import { isPlanId } from "../src/lib/billing/plans.ts";
+import {
+  createConnectionRequestGuard,
+  createGoogleConnectionRequest,
+} from "../src/modules/review-replies/services/google-connection-request.ts";
 
 type Element = { type: unknown; props: Record<string, unknown> };
 function jsx(type: unknown, props: Record<string, unknown>) { return { type, props }; }
@@ -14,18 +18,34 @@ function componentHarness(relativePath: string, overrides: Record<string, unknow
   const nativeRequire = createRequire(import.meta.url);
   let cursor = 0;
   const state: unknown[] = [];
-  const effects: Array<() => void> = [];
+  const refs: Array<{ current: unknown }> = [];
+  const callbacks: Array<{ deps: unknown[]; value: unknown }> = [];
+  const effects: Array<{ deps: unknown[]; run: () => void | (() => void); cleanup?: () => void }> = [];
+  const pendingEffects = new Set<number>();
+  const sameDeps = (a: unknown[], b: unknown[]) => a.length === b.length && a.every((value, index) => Object.is(value, b[index]));
   const React = {
     useState<T>(initial: T | (() => T)): [T, (value: T | ((current: T) => T)) => void] {
       const index = cursor++;
       if (!(index in state)) state[index] = typeof initial === "function" ? (initial as () => T)() : initial;
       return [state[index] as T, (value) => { state[index] = typeof value === "function" ? (value as (current: T) => T)(state[index] as T) : value; }];
     },
-    useEffect(effect: () => void | (() => void)) {
+    useRef<T>(initial: T) {
       const index = cursor++;
-      if (!effects[index]) effects[index] = effect;
+      if (!refs[index]) refs[index] = { current: initial };
+      return refs[index] as { current: T };
     },
-    useCallback<T extends (...args: never[]) => unknown>(callback: T) { cursor++; return callback; },
+    useEffect(effect: () => void | (() => void), deps: unknown[] = []) {
+      const index = cursor++;
+      if (!effects[index] || !sameDeps(effects[index].deps, deps)) {
+        effects[index] = { deps, run: effect, cleanup: effects[index]?.cleanup };
+        pendingEffects.add(index);
+      }
+    },
+    useCallback<T extends (...args: never[]) => unknown>(callback: T, deps: unknown[] = []) {
+      const index = cursor++;
+      if (!callbacks[index] || !sameDeps(callbacks[index].deps, deps)) callbacks[index] = { deps, value: callback };
+      return callbacks[index].value as T;
+    },
     Suspense: "suspense",
   };
   const modules: Record<string, unknown> = {
@@ -38,7 +58,29 @@ function componentHarness(relativePath: string, overrides: Record<string, unknow
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
   }).outputText;
   const mod = { exports: {} as Record<string, unknown> };
-  const localRequire = (id: string) => Object.hasOwn(modules, id) ? modules[id] : nativeRequire(id);
+  const localRequire = (id: string) => {
+    if (Object.hasOwn(modules, id)) return modules[id];
+    if (id === "@/modules/review-replies/hooks/use-google-connection") {
+      const hookSource = readFileSync(resolve(process.cwd(), "src/modules/review-replies/hooks/use-google-connection.ts"), "utf8");
+      const hookCompiled = ts.transpileModule(hookSource, {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+      }).outputText;
+      const hookModule = { exports: {} as Record<string, unknown> };
+      const hookRequire = (dependency: string) => {
+        if (dependency === "react") return React;
+        if (dependency === "@/modules/review-replies/services/google-connection-request") {
+          return { createGoogleConnectionRequest, createConnectionRequestGuard };
+        }
+        throw new Error(`Unexpected connection hook dependency ${dependency}`);
+      };
+      const runHook = vm.runInNewContext(`(function(exports, require, module) { ${hookCompiled}\n})`, {
+        fetch: overrides.__fetch ?? fetch,
+      }) as (exports: object, require: typeof hookRequire, module: typeof hookModule) => void;
+      runHook(hookModule.exports, hookRequire, hookModule);
+      return hookModule.exports;
+    }
+    return nativeRequire(id);
+  };
   const execute = vm.runInNewContext(`(function(exports, require, module) { ${compiled}\n})`, {
     URL, URLSearchParams, Headers, Request, Response, TextEncoder, TextDecoder, Buffer, AbortSignal,
     ReadableStream, WritableStream, Blob, process, fetch: overrides.__fetch ?? fetch,
@@ -48,7 +90,15 @@ function componentHarness(relativePath: string, overrides: Record<string, unknow
   return {
     exports: mod.exports,
     render(component: () => unknown) { cursor = 0; return component(); },
-    runEffects() { for (const effect of effects) effect?.(); },
+    runEffects() {
+      for (const index of [...pendingEffects]) {
+        pendingEffects.delete(index);
+        const effect = effects[index];
+        if (!effect) continue;
+        effect.cleanup?.();
+        effect.cleanup = effect.run() || undefined;
+      }
+    },
   };
 }
 
@@ -128,10 +178,10 @@ function settingsHarness(connection: { connected: boolean; canManage: boolean; s
     "@/lib/form-controls": { nativeSelectClassName: "select" },
     "@/modules/review-replies/hooks/use-review-reply-settings": {
       TONE_OPTIONS: [],
-      useReviewReplySettings: () => ({ isDemo: false, businessName: "Workspace", setBusinessName() {}, tone: "warm", setTone() {}, ownerName: "Owner", setOwnerName() {}, contactPreference: "email", setContactPreference() {}, settingsLoading: false, settingsError: null, saveState: "idle", autoReplyAllReviews: false, autoReplySaving: false, saveReplySettings: async () => {}, persistAutoReply: async () => {} }),
+      useReviewReplySettings: () => ({ isDemo: false, businessId: "workspace-business", readOnly: !connection.canManage, canManageAutoReply: connection.canManage, businessName: "Workspace", setBusinessName() {}, tone: "warm", setTone() {}, ownerName: "Owner", setOwnerName() {}, contactPreference: "email", setContactPreference() {}, settingsLoading: false, settingsLoaded: true, settingsError: null, saveState: "idle", autoReplyAllReviews: false, autoReplySaving: false, saveReplySettings: async () => {}, persistAutoReply: async () => {} }),
     },
     __fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-      if (String(input) === "/api/google/connection") {
+      if (String(input).startsWith("/api/google/connection")) {
         connectionFetches++;
         return { ok: true, json: async () => structuredClone(connection) } as Response;
       }
@@ -171,7 +221,7 @@ test("Google settings let the owner select a location and refresh the selected s
   assert.ok(select);
   (select.props.onClick as () => void)();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.deepEqual(requestBody, { locationId: "location-uuid" });
+  assert.deepEqual(requestBody, { businessId: "workspace-business", locationId: "location-uuid" });
   assert.equal(connectionFetchCount(), 2, "successful selection refreshes the connection state");
   // Re-render with the server's updated response, as the state refresh would return it.
   tree = renderContent();

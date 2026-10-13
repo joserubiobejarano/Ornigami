@@ -1,14 +1,19 @@
 import * as Sentry from "@sentry/nextjs";
 import { sql } from "@/lib/db/neon";
+import { isOpenAIEnabled } from "@/lib/openai-feature";
 import { safeLogger } from "@/lib/safe-logger";
 
 type AlertRow = { alert_key: string; job_name: string; reason: string };
 export type CronAlertEvaluation = { ok: boolean; activeCount: number; transportFailures: number };
+const CORE_EXPECTED_JOBS = ["review_booster", "privacy_retention"] as const;
 
 /** Claim/resolution runs under a database advisory lock in one PL/pgSQL call. */
 export async function evaluateCronAlerts(): Promise<CronAlertEvaluation> {
   try {
-    const rows = await sql`SELECT alert_key, job_name, reason FROM public.claim_cron_alerts()` as AlertRow[];
+    const expectedJobs = isOpenAIEnabled()
+      ? [...CORE_EXPECTED_JOBS, "review_replies"]
+      : [...CORE_EXPECTED_JOBS];
+    const rows = await sql`SELECT alert_key, job_name, reason FROM public.claim_cron_alerts(${expectedJobs}::text[])` as AlertRow[];
     for (const row of rows) await deliver(row);
     const status = await sql`SELECT count(*) FILTER (WHERE active) AS active_count,
       count(*) FILTER (WHERE active AND transport_failures > 0) AS transport_failures

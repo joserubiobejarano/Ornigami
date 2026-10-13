@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { verifySchemaRelease } from "../scripts/vps-schema-release-check.mjs";
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const manifestPath = path.join(repository, "deploy/vps/schema-release-039-041.json");
+const manifestPath = path.join(repository, "deploy/vps/schema-release-039-042.json");
 
 async function removeTemp(temp) {
   const resolved = path.resolve(temp);
@@ -23,6 +23,7 @@ test("release manifest matches canonical migration hashes and numeric order", as
     "039_billing_lease_duplicate_alias.sql",
     "040_permission_evidence.sql",
     "041_guarded_retention.sql",
+    "042_cron_expected_jobs.sql",
   ]);
   assert.ok(result.migrations.every(({ sha256, valid }) => /^[a-f0-9]{64}$/.test(sha256) && valid));
 });
@@ -36,6 +37,7 @@ test("catalog readiness query checks release contracts without data mutation", a
     "040 claim and send permission fences",
     "041 enabled terminal timestamp triggers",
     "041 provider correlation and callback guards",
+    "042 expected cron jobs and missed-cadence alerting",
     "RETENTION_DISPOSED_CALLBACK_UNMATCHED_GUARD",
     "RETENTION_DISPOSED_CALLBACK_LOCKED_GUARD",
   ]) assert.ok(sql.includes(contract), `missing catalog contract: ${contract}`);
@@ -81,7 +83,7 @@ test("LF-based hashes accept a CRLF checkout", async (t) => {
 test("release check rejects malformed order and unsupported hash algorithms", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   manifest.migrations.reverse();
-  manifest.applyOrder = ["040", "039", "041"];
+  manifest.applyOrder = ["040", "039", "041", "042"];
   manifest.hashAlgorithm = "sha256-raw";
   const temp = await mkdtemp(path.join(os.tmpdir(), "vps-schema-manifest-"));
   try {

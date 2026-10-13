@@ -38,6 +38,7 @@ Migrations currently include these durable contracts (consult `neon/README.md` f
 | 033–038 | Lifecycle guards/finalization and manual/CSV admission. |
 | 039 | Qualifies billing-event lease predicates so completed webhook replays acknowledge duplicates without a PostgreSQL ambiguity error. |
 | 040–041 | Recipient permission evidence, preserved send wrappers, terminal retention clocks, holds and guarded minimization. See [operations](./OPERATIONS.md#retention-and-restoration) for deployment and activation boundaries. |
+| 042 | Explicit required/optional cadence jobs for cron alert evaluation. Disabled AI excludes Replies from never-run/missed-cadence only; actual failed/partial/stale-running alerts remain. Zero-argument SQL callers retain all-three behavior. |
 
 018 is unused; 029–030 are reserved. Wave 4 also adds 033–038. Do not renumber existing migrations. Apply only reviewed migrations in the documented numeric process. Business-row locks serialize seat checks and billing snapshots; persistent user mutexes serialize invite acceptance and first workspace creation. Complete allows three seats counting owner and unexpired pending invites.
 

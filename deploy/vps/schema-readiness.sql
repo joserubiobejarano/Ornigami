@@ -1,4 +1,4 @@
--- Read-only post-application verification for schema release 039–041.
+-- Read-only post-application verification for schema release 039–042.
 -- Run after applying migrations and before deploying/resuming consumers. This
 -- returns only check names and booleans; it does not expose row or customer data.
 WITH funcs AS (
@@ -22,7 +22,9 @@ WITH funcs AS (
     ('public.booster_retention_evidence_disposed(uuid,text)'),
     ('public.capture_booster_delivery_correlation()'),
     ('public.set_retention_terminal_timestamp()'),
-    ('public.apply_booster_delivery_event(jsonb)')
+    ('public.apply_booster_delivery_event(jsonb)'),
+    ('public.claim_cron_alerts(text[])'),
+    ('public.claim_cron_alerts()')
   ) AS expected(signature)
 ), defs AS (
   SELECT signature, oid, CASE WHEN oid IS NULL THEN '' ELSE pg_get_functiondef(oid) END AS definition
@@ -65,6 +67,18 @@ WITH funcs AS (
     EXISTS (SELECT 1 FROM defs WHERE signature LIKE 'public.capture_booster_delivery_correlation%' AND definition LIKE '%evidence_disposed_at%')
     AND EXISTS (SELECT 1 FROM defs WHERE signature LIKE 'public.booster_retention_evidence_disposed%' AND definition LIKE '%booster_disposed_provider_correlations%')
     AND EXISTS (SELECT 1 FROM defs WHERE signature LIKE 'public.apply_booster_delivery_event%' AND definition LIKE '%RETENTION_DISPOSED_CALLBACK_UNMATCHED_GUARD%' AND definition LIKE '%RETENTION_DISPOSED_CALLBACK_LOCKED_GUARD%')
+  UNION ALL SELECT '042 expected cron jobs and missed-cadence alerting',
+    EXISTS (SELECT 1 FROM defs WHERE signature='public.claim_cron_alerts(text[])'
+      AND definition LIKE '%expected_job_names @> ARRAY[''review_booster'', ''privacy_retention'']::TEXT[]%'
+      AND definition LIKE '%''review_replies'' = ANY(expected_job_names)%'
+      AND definition LIKE '%WHERE known.job_name = ANY(expected_job_names)%'
+      AND definition LIKE '%SELECT e.job_name, ''never_run''::text AS reason FROM expected e%'
+      AND definition LIKE '%SELECT e.job_name, ''missed_schedule''%'
+      AND definition LIKE '%SELECT s.job_name, ''stale_running'' FROM public.cron_job_state s%'
+      AND definition LIKE '%SELECT l.job_name, ''failed'' FROM latest_terminal l%'
+      AND definition LIKE '%SELECT l.job_name, ''partial'' FROM latest_terminal l%')
+    AND EXISTS (SELECT 1 FROM defs WHERE signature='public.claim_cron_alerts()'
+      AND definition LIKE '%public.claim_cron_alerts(ARRAY[''review_booster'', ''review_replies'', ''privacy_retention'']::TEXT[])%')
 )
 SELECT check_name, ready
 FROM checks

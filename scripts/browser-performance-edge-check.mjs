@@ -259,7 +259,7 @@ try {
   await oauthRetry.context.close();
 
   const summaryPath = path.join(outDir, "results.json");
-  const evidenceDir = path.join(root, "docs", "tasks");
+  const evidenceDir = path.join(root, ".local", "recovery");
   const evidencePath = path.join(evidenceDir, "browser-performance-edge-evidence.json");
   mkdirSync(evidenceDir, { recursive: true });
   writeFileSync(summaryPath, `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 });
