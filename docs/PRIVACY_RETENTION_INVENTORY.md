@@ -2,7 +2,7 @@
 
 Prepared 13 October 2026. Source inspection establishes implementation, not deployed activation or vendor retention. Jose owns the private account-specific evidence. See [onboarding operations](./PRIVACY_ONBOARDING.md) for the processing arrangement and assisted-request process.
 
-The [closure follow-up](./PRIVACY_EVIDENCE_CLOSURE.md) records authenticated account observations and their private hash manifest: Neon six-hour history in Frankfurt on Free, Vercel Hobby and its log-query/drain boundaries, Resend Free and incorporation-on-signup DPA, and Sentry Developer/EU storage with DPA acceptance still pending. These observations narrow the questions below; they do not establish every residual-copy expiry or vendor agreement's coverage of Ornigami LLC.
+The [closure follow-up](./PRIVACY_EVIDENCE_CLOSURE.md) records authenticated account observations and their private hash manifest: Neon six-hour history in Frankfurt on Free, Vercel Hobby and its log-query/drain boundaries, Resend's existing Free account and incorporation-on-signup DPA, and the dedicated Sentry Developer/EU company organization with completed DPA acceptance. These observations narrow the questions below; they do not establish every residual-copy expiry or company coverage for the remaining vendors and old resources.
 
 Further owner-directed review captures the open OpenAI Personal/Default project: Global residency, disabled training-sharing categories and API logging enabled per call. Responses storage remains a separate issue because the Booster request omits `store`. See the closure record for official feature-retention guidance and source references. The owner confirms vendor organizations are not contracted by Ornigami LLC; legal coverage needs regularization. No database backup/dump filenames were found in the bounded local inventory; unknown copies and the 35-day backup target remain open.
 
@@ -10,7 +10,7 @@ The later archive review found six SQL filenames within the two known recovery Z
 
 The [provider review](./PRIVACY_PROVIDER_REVIEW.md) adds authenticated Neon restore/snapshot metadata and the correct test-mode Stripe CLI identity, plus published Resend backup/storage commitments, Vercel build/runtime distinctions and Sentry's Developer lookback. These narrow the inventory; public commitments are not account erasure receipts, and the test Stripe record is not an LLC contract.
 
-The owner-approved dedicated Sentry company organization now has verified EU storage, Developer plan, no payment/billing details and optional product-improvement consent off. Its DPA review names Ornigami LLC; acceptance remains pending. No application data was connected. Existing J Projects records, payload controls and residual copies remain a separate review boundary; a new organization does not erase or re-contract old copies.
+The owner-approved dedicated Sentry company organization has verified EU storage, Developer plan, no payment/billing details and optional product-improvement consent off. Its DPA names Ornigami LLC and now displays version 5.1.0 signed 13 October 2026. No application data was connected. Existing J Projects records, payload controls and residual copies remain a separate review boundary; a new organization does not erase or re-contract old copies. Resend's additional paid-team option was declined; no new paid processing or retention setting was activated.
 
 ## Application and private records
 
