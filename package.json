@@ -12,7 +12,9 @@
         "test:security": "node --experimental-strip-types tests/security-hardening.test.mts",
         "security:audit": "node scripts/security-audit.mjs",
         "typegen": "next typegen",
-        "test:build": "node scripts/production-smoke.mjs"
+        "test:build": "node scripts/production-smoke.mjs",
+        "test:performance": "node scripts/a23-performance.mjs run",
+        "performance:a23:prepare": "node scripts/a23-performance.mjs prepare"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.0.2",
