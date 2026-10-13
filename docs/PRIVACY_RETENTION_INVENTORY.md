@@ -10,6 +10,8 @@ The later archive review found six SQL filenames within the two known recovery Z
 
 The [provider review](./PRIVACY_PROVIDER_REVIEW.md) adds authenticated Neon restore/snapshot metadata and the correct test-mode Stripe CLI identity, plus published Resend backup/storage commitments, Vercel build/runtime distinctions and Sentry's Developer lookback. These narrow the inventory; public commitments are not account erasure receipts, and the test Stripe record is not an LLC contract.
 
+The owner-approved dedicated Sentry company organization now has verified EU storage, Developer plan, no payment/billing details and optional product-improvement consent off. Its DPA review names Ornigami LLC; acceptance remains pending. No application data was connected. Existing J Projects records, payload controls and residual copies remain a separate review boundary; a new organization does not erase or re-contract old copies.
+
 ## Application and private records
 
 The approved policy is in [OPERATIONS](./OPERATIONS.md#retention-and-restoration). Implementation references: [policy constants](../src/lib/privacy-retention.ts), [cleanup queries](../src/lib/privacy-retention-cleanup.ts), [permission migration](../neon/migrations/040_permission_evidence.sql), [guarded retention migration](../neon/migrations/041_guarded_retention.sql), [cron route](../src/app/api/cron/privacy/route.ts).

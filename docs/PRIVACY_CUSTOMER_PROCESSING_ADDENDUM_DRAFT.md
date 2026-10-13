@@ -39,6 +39,8 @@ Underlying service order/version, effective date, workspace/business scope, auth
 
 ## Execution record — not completed
 
+The owner confirms this packet is being prepared for the first customer. Keep customer-specific execution fields blank until that customer is identified; obtain actual scope, completed operational/provider annexes and both parties' acceptance before processing their data. This draft's unsigned status is not evidence of a missing existing customer's agreement, and does not close vendor or operational prerequisites.
+
 Customer legal party/signatory/date: **pending**. Ornigami authorized acceptance/date: **pending**. Agreement/order version and both parties' acceptance evidence: **pending**. Completed schedule/security/provider annex hashes and transfer review: **pending**.
 
 Store accepted originals privately and hash their exact bytes. Do not fill a signature or acceptance date until the real event occurs. Customer-specific names, signatures, account IDs and private evidence references belong in the private execution copy. This reusable draft does not authorize enrollment or provider operations.

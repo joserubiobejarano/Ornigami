@@ -8,6 +8,8 @@ Owner clarification: vendor organizations are not currently contracted by Orniga
 
 The [customer addendum draft](./PRIVACY_CUSTOMER_PROCESSING_ADDENDUM_DRAFT.md) now prepares the proposed obligations and company-side fields for review. The [provider dossier](./PRIVACY_PROVIDER_REVIEW.md) records current agreement mechanisms/limitations and owner-authorized clarification inquiries sent on 13 October 2026; substantive answers remain pending. Both remain incomplete for execution; no first customer's identity, signature or operational annex is invented.
 
+The owner confirms Ornigami is preparing for its first customer. Prepare the reusable agreement and complete the actual operational/provider annexes now; obtain the real customer's identity, scope, instructions and acceptance before processing that customer's data. No nonexistent customer's signature is required to prepare the prelaunch packet. This clarification does not prove absence of personal data in existing systems or close vendor, routing or retention requirements.
+
 ## Routing recovery
 
 | Route | Existing evidence | Recovery outcome |
@@ -15,7 +17,7 @@ The [customer addendum draft](./PRIVACY_CUSTOMER_PROCESSING_ADDENDUM_DRAFT.md) n
 | `privacy@ornigami.com` to Jose's private workflow | Owner attestation on 13 October 2026; original test date unknown | No qualifying receipt recovered |
 | `support@ornigami.com` to Jose's private workflow | Same owner attestation | No qualifying receipt recovered |
 
-The search covered the new worktree's absent `.local` directory, the existing but empty `%LOCALAPPDATA%\Ornigami\privacy-rights` directory, sibling worktree `.local` file inventories, two recovery ZIP entry inventories and relevant Git history. Filename inventories cannot establish that unrelated files contain no receipt. The owner does not know the receipt location. No original timestamp or evidence hash is available. The October 4 Resend webhook/sender evidence proves a different transport path and cannot close these routes. No mailbox was configured and no message was sent during this task.
+The initial receipt-recovery search covered the new worktree's absent `.local` directory, the then-empty `%LOCALAPPDATA%\Ornigami\privacy-rights` directory, sibling worktree `.local` file inventories, two recovery ZIP entry inventories and relevant Git history. Filename inventories cannot establish that unrelated files contain no receipt. The owner does not know the original receipt location. No original route timestamp or evidence hash is available. The October 4 Resend webhook/sender evidence proves a different transport path and cannot close these routes. No mailbox or alias-delivery test was configured or executed during this task. Later owner-authorized provider support inquiries were sent from Gmail and preserved in the [provider dossier](./PRIVACY_PROVIDER_REVIEW.md); they do not prove delivery through these aliases.
 
 To recover a receipt, locate the original sender-side send evidence and recipient-side arrival evidence for each route. Privately establish destination, matching message correlation, actual observation time and delivery result. Preserve the original and hash its exact bytes with `Get-FileHash -Algorithm SHA256 -LiteralPath '<private receipt file>'`. Only then use the existing register:
 
