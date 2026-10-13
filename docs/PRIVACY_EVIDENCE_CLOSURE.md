@@ -12,6 +12,8 @@ The owner chose dedicated accounts owned by Ornigami LLC. The [company-account s
 
 The owner further confirms this is preparation for the **first customer**. The customer-agreement deliverable is therefore a complete reusable onboarding packet, with actual customer identity, scope and both parties' acceptance required before that customer's data is processed. A nonexistent customer's signature is not a current evidence requirement. This owner statement does not independently establish that deployed databases/logs contain no personal data. Vendor coverage, operational annexes, routing proof and retention evidence remain open.
 
+The owner subsequently completed the ImprovMX signup and requires **free tiers for every service**. Authenticated inspection verifies Free — Active, no domains configured and no payment receipts. Owner-reported company signup does not independently establish LLC identity or accepted Free-plan DPA coverage. Human clarification remains pending; no DNS, alias or delivery activation was performed. The [company packet](./PRIVACY_COMPANY_ACCOUNT_SETUP.md#free-tier-only-constraint) records the budget constraint and resulting Vercel agreement/OpenAI usage-cost dependencies. No paid subscription, trial, upgrade, overage or billable API usage is authorized.
+
 ## Contracting party
 
 The owner supplied the private LLC folder. The filed New Mexico formation packet identifies **Ornigami LLC**, effective 3 October 2026, with approval dated 7 October. Its filed principal/mailing and registered-agent address is **1209 Mountain Road Pl NE, Ste N, Albuquerque, NM 87110, United States**. This is an agent/mailing address, not evidence of physical US operations.

@@ -2,6 +2,10 @@
 
 Prepared 13 October 2026. The owner selected **dedicated accounts owned by Ornigami LLC**, rather than conversion of existing personal/shared vendor organizations. The owner subsequently gave specific authorization for Sentry terms acceptance and EU organization creation, completed as recorded below. Other company accounts remain to be established. No paid plan was purchased, resource migrated or application deployed. See the [provider review](./PRIVACY_PROVIDER_REVIEW.md) for the underlying observations and agreement limitations.
 
+## Free-tier-only constraint
+
+On 13 October 2026 the owner clarified that **every service must remain on a free tier**. This supersedes the earlier willingness to consider paid plans. Do not purchase subscriptions, activate paid trials or upgrades, enable paid overages, or incur billable API usage. Existing resources are not changed by this instruction; establish their actual cost exposure before integration. A service with no suitable free plan or free-plan processing agreement remains an unresolved dependency, requiring a free alternative or a separately approved scope change. In particular, Vercel's published Pro/Enterprise DPA limitation and OpenAI's API usage charges cannot be resolved by silently buying coverage or assuming a free account makes processing free.
+
 ## Prepared company inputs
 
 | Field | Prepared value / evidence boundary |
@@ -66,6 +70,8 @@ Next investigate a separately identified company Free account under the provider
 
 ## Free forwarding account preparation
 
-ImprovMX's public **Get Started Free** link opens its signup form with Email and Password fields and a Create Account action. The form says continuing accepts its linked [terms](https://improvmx.com/terms-of-service/) (redirecting to the terms dated 16 February 2025) and [privacy policy](https://improvmx.com/privacy-policy/). Both fields remain empty; nothing was submitted. The owner must create any new password privately and complete their own account-creation/terms step. Use the approved existing inbox as the initial reachable administrative contact, with company agency clearly established; do not use an unverified domain alias for activation.
+The owner reported completing the Free signup on behalf of Ornigami LLC after the preparation below. Authenticated inspection verifies **Free — Active**, one domain, 25 aliases/domain and 500 incoming emails/day; the receipts section has no payment receipts. The forwarding page shows **No domains found**. This establishes the staged Free account, not independently verified company identity, DPA acceptance or routing. Private `routing/improvmx-free-account-*` artifacts retain the account observations and owner statement. No new human reply appeared in the scoped inquiry search at this review. No domain, alias, DNS record or message processing was activated.
+
+Before owner signup, ImprovMX's public **Get Started Free** link opened its signup form with Email and Password fields and a Create Account action. The form says continuing accepts its linked [terms](https://improvmx.com/terms-of-service/) (redirecting to the terms dated 16 February 2025) and [privacy policy](https://improvmx.com/privacy-policy/). The agent left both fields empty and submitted nothing; the owner completed credential creation privately. The approved existing inbox was the prepared initial reachable administrative contact; an unverified domain alias is unsuitable for activation.
 
 The terms permit authorized business agency and limit users to one Free account; preserve any existing unrelated account/domain rather than creating duplicates. A signed-up Free account does not itself prove LLC DPA coverage, working aliases or delivery. Human clarification of the DPA/retention discrepancies is still pending. Keep domain/DNS activation gated until the company arrangement, provider selection and exact record changes are reviewed and authorized. No forwarding account, domain configuration or DNS change has been created by the agent. Private empty-form evidence is under `routing/improvmx-free-signup-prepared.*`.
