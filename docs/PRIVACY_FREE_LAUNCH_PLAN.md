@@ -30,6 +30,10 @@ Cloudflare Workers is a candidate to assess. Its [Self-Serve Agreement](https://
 
 Source compatibility review must cover authentication, database access, cryptography, Sentry, server rendering, streaming and the privacy/Booster/reply schedules. Vercel Cron definitions in [vercel.json](../vercel.json) need equivalent authenticated execution after any migration; proxy-origin/IP trust controls also require target-specific review. Before selection, validate the actual application under the free CPU/memory/request limits, confirm hard no-charge behavior and prepare migration/rollback against existing data. No hosting migration was performed.
 
+## Owner-selected future hosting
+
+The owner plans **Contabo US East + Coolify** as final hosting in November 2026. No VPS/dashboard exists for review yet. Netlify setup is on hold; the assessment below remains an unselected reference. No purchase, account acceptance, migration or deployment was performed for either hosting path. The [VPS verification packet](./PRIVACY_VPS_VERIFICATION.md) covers actual company contracting, data locations, backup classes, retention and isolated restore evidence. Free software does not establish a free VPS; this task authorizes no server purchase or paid backup add-on.
+
 ## Netlify Free commercial-hosting candidate
 
 Netlify's [Free-plan announcement](https://www.netlify.com/blog/introducing-netlify-free-plan/) expressly permits commercial projects. Use its [current credit-plan documentation](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/) for capacity rather than the announcement's older allowances: Free is US$0/month, 300 credits/month, with a hard limit and no recharge option. Its [plan comparison](https://www.netlify.com/pricing/personal-vs-free/) says projects pause when credits run out. This is a candidate for the owner's zero-budget constraint; availability under a hard cap still needs a workload assessment.
@@ -54,10 +58,10 @@ The three further provider inquiries are **unsent at the owner's request**. Cont
 | --- | --- | --- |
 | Contracting party | LLC formation and manager authority records retained privately | Actual company acceptance for each enabled vendor |
 | Customer | Preparing for first customer; reusable draft exists | Completed actual provider/security annexes now; customer-specific scope and acceptance before processing that customer |
-| Sentry | Company Developer/EU organization and DPA accepted | Actual project linkage and data-class retention; old organization remains separate |
+| Sentry | Company Developer/EU organization and DPA accepted; empty project staged with scrubbing/IP prevention on and minidumps disabled | Actual project linkage and data-class retention; old organization remains separate |
 | Neon | Approved company Free organization created with service-terms/MCSA DPA incorporation; no projects | Separate DPA execution-copy review if required, actual target region/history and migration review before connecting data |
 | ImprovMX | Owner completed signup; Free Active with no domains | Human Free-plan DPA/retention clarification, reviewed activation and original delivery receipts |
-| Resend | Existing account Free; paid extra-team option abandoned | Permitted company Free signup/acceptance using a reachable contact, actual sending/retention boundaries |
+| Resend | Existing personal account Free; paid option abandoned; separate signup reported but not verified | Owner asks to reuse existing account: establish LLC contracting/DPA coverage and workload boundaries before connection |
 | Receiving Gmail | Owner-selected existing inbox | Account custody, rights monitoring and actual retention handling; no Workspace DPA assumed |
 | Stripe | Existing ES individual test identity | Owner-led LLC eligibility/verification and actual agreement before enabling customer billing; no transaction initiated |
 | Backups/exports | Bounded inventory only; no verified application rotation | Actual destinations, access, expiry, legal exceptions and restore/erasure handling; do not claim the 35-day target is active |

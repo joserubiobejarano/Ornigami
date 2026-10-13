@@ -16,9 +16,17 @@ The privately captured Namecheap configuration uses BasicDNS and Custom MX. The 
 
 The root-domain inbound correction must preserve existing application A/CNAME records, verified sending subdomain MX/SPF/DKIM records and any other current records. Refresh the private DNS snapshot at execution time; other integration work may have changed records since this observation.
 
+## No-email constraint and received compatibility answer
+
+The owner now prohibits agent-sent emails, including route probes and further support replies. Continue with existing incoming receipts and provider replies only. If no original receipt is available, the owner must perform an independent delivery check after routing is actually configured; no token or successful observation may be fabricated. The latest authoritative query still returns no root MX answer.
+
+Namecheap's substantive reply arrived 13 October 2026 at 15:55 Europe/Madrid and confirms that built-in forwarding cannot coexist with Custom MX mode. It proposes FreeDNS enrollment and subdomain NS delegation as a workaround before enabling bare-domain forwarding. This is a separate DNS migration/delegation plan requiring complete existing sending-record preservation, authoritative checks and rollback review. It was not executed. The reply says messages pass through without being saved on forwarding servers; destination backup and queue/log/account/DPA boundaries remain unresolved. Body and sender/header observations are retained privately; no reply or account/PIN disclosure was made. See the [provider record](./PRIVACY_PROVIDER_REVIEW.md#namecheap-substantive-reply-received-no-outbound-follow-up).
+
 ## Provider and execution review
 
-The owner-authorized Namecheap compatibility/retention and ImprovMX Free-plan DPA/retention inquiries were sent on 13 October 2026. Namecheap's automated acknowledgment is retained privately; substantive answers remain pending. See the [provider dossier](./PRIVACY_PROVIDER_REVIEW.md#provider-support-inquiries-sent-answers-pending) for the exact sent texts and evidence boundaries. This correspondence does not establish delivery to the three published aliases.
+The owner-authorized Namecheap compatibility/retention and ImprovMX Free-plan DPA/retention inquiries were sent on 13 October 2026. Namecheap's substantive compatibility reply is recorded above; its unanswered DPA/retention details and ImprovMX's human clarification remain open. See the [provider dossier](./PRIVACY_PROVIDER_REVIEW.md#provider-support-inquiries-sent-answers-pending) for the sent texts and evidence boundaries. This correspondence does not establish delivery to the three published aliases.
+
+Fresh authoritative DNS inspection at **15:27 UTC on 13 October 2026** returned zero MX answers from `dns1.registrar-servers.com` (SOA serial 1791864068). A scoped Gmail search for incoming/delivered messages to all three aliases found no matching messages. Both observations are retained privately; neither proves absence of every historical message. No DNS activation or probe was performed. The owner requires no agent-sent emails.
 
 ImprovMX subsequently returned an AI-generated answer asserting Free-plan DPA coverage. Human confirmation is still needed to reconcile that with its paid-user DPA instructions and answer the remaining queue/backup/account-data questions. The owner authorized a human-clarification reply, sent at 13:11 Europe/Madrid; the answer remains pending. The owner subsequently completed signup on behalf of the company; authenticated inspection verifies Free — Active and no domains configured. Signup staging does not settle DPA coverage or prove routing. Every service must remain on a free tier. Provider-selection and activation prerequisites remain open.
 
