@@ -13,6 +13,7 @@ import { acquireCronJobRun, checkpointCronJobRun, CronLeaseBusyError, finishCron
 import { providerWindow } from "@/lib/cron-budget";
 import { randomUUID } from "node:crypto";
 import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+import { isOpenAIEnabled, OPENAI_UNAVAILABLE_CODE, OPENAI_UNAVAILABLE_MESSAGE } from "@/lib/openai-feature";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -156,6 +157,7 @@ async function persistRouteCheckpoint(input: { runId: string; fence: number; cur
 
 async function runCron(request: NextRequest) {
   if (!isAuthorizedCronRequest(request)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  if (!isOpenAIEnabled()) return jsonResponse({ ok: false, status: "unavailable", code: OPENAI_UNAVAILABLE_CODE, message: OPENAI_UNAVAILABLE_MESSAGE }, 503);
   let lease;
   try { lease = await acquireCronJobRun("review_replies", { budgetMs: BUDGET_MS, batchLimit: LOCATION_BATCH_LIMIT }); }
   catch (error) {

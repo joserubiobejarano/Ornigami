@@ -15,6 +15,7 @@ import {
 import { processReviewDraft } from "@/lib/review-draft-processing";
 import { safeLogger } from "@/lib/safe-logger";
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
+import { isOpenAIEnabled, OPENAI_UNAVAILABLE_CODE, OPENAI_UNAVAILABLE_MESSAGE } from "@/lib/openai-feature";
 
 const BodySchema = z.object({ businessId: z.string().optional(), locationName: z.string().min(1) });
 
@@ -35,6 +36,9 @@ export async function POST(req: NextRequest) {
   try {
     const email = "email" in user ? user.email : null;
     const context = await requireActiveAgentBusinessContext(user.id, email, "review_replies", requested.businessId);
+    if (!isOpenAIEnabled()) {
+      return NextResponse.json({ ok: false, code: OPENAI_UNAVAILABLE_CODE, message: OPENAI_UNAVAILABLE_MESSAGE, error: OPENAI_UNAVAILABLE_MESSAGE }, { status: 503 });
+    }
     const selected = await getSelectedGoogleLocation(context, parsed.data.locationName);
     const profile = await getBusinessReplyDefaults(user.id, context.businessId);
     const rows = await sql`

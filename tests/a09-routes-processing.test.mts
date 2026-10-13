@@ -27,6 +27,7 @@ function loadProcessing(overrides: {
 } = {}) {
   const calls: { posts: unknown[][]; generated: number; saves: number; lifecycle: unknown[][] } = { posts: [], generated: 0, saves: 0, lifecycle: [] };
   const mod = loadTs<Processing>("src/lib/review-draft-processing.ts", {
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     "@/lib/review-reply-server": {
       generateReplyForReviewRow: async (...args: unknown[]) => { calls.generated += 1; return overrides.generate ? overrides.generate(...args) : "Thanks for your feedback."; },
       postReplyToGoogleAndPersist: async (...args: unknown[]) => { calls.posts.push(args); return overrides.post ? overrides.post(...args) : { ok: true }; },
@@ -106,6 +107,7 @@ test("interactive batch removes saved drafts and blank comments before the batch
   const sqlStatements: string[] = [];
   const route = loadTs<{ POST(req: import("next/server").NextRequest): Promise<Response> }>("src/app/api/google/reviews/process-pending/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/team-lifecycle": sameOrigin,
     "@/lib/user-from-req": { resolveUser: async () => ({ id: "owner-1", email: "owner@example.test" }) },
     "@/lib/api-security": { requireActiveAgentBusinessContext: async () => ({ businessId: "business-1", role: "owner" }), safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
@@ -155,6 +157,7 @@ test("shared settings reject a member's attempt to enable auto-replies", async (
 function loadOpenAiRoute(stream: AsyncIterable<{ choices: Array<{ delta: { content: string } }> }>, counts: { commits: number; releases: number; defaults: unknown[][]; reservations: unknown[][] }) {
   return loadTs<{ POST(req: Request): Promise<Response> }>("src/app/api/openai/review-reply/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/team-lifecycle": sameOrigin,
     "@/lib/api-security": {
       requireActiveAgentBusinessContext: async (actor: string, _email: string, _agent: string, businessId: string) => ({
@@ -263,6 +266,7 @@ test("review generation pins the selected location and refuses a nonselected req
   let contextBusiness: string | undefined;
   const route = loadTs<{ POST(req: Request): Promise<Response> }>("src/app/api/openai/review-reply/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/team-lifecycle": sameOrigin,
     "@/lib/api-security": { requireActiveAgentBusinessContext: async (_actor: string, _email: string, _agent: string, business: string) => { contextBusiness = business; return { businessId: business, role: "member" }; }, safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },
     "@/lib/openai": { sanitizeReviewReply: (text: string) => text, streamReviewReply: async () => ({ async *[Symbol.asyncIterator]() { } }) },
@@ -356,6 +360,7 @@ test("same-site sibling origins cannot save drafts, change opt-in, batch-process
   let processingCalls = 0;
   const processRoute = loadTs<{ POST(req: import("next/server").NextRequest): Promise<Response> }>("src/app/api/google/reviews/process-pending/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => false, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/team-lifecycle": sameOrigin,
     "@/lib/user-from-req": { resolveUser: async () => { processingCalls++; return { id: "owner-1" }; } },
     "@/lib/api-security": { requireActiveAgentBusinessContext: async () => { processingCalls++; return { businessId: "business-1" }; }, safeApiErrorResponse: () => Response.json({ error: "error" }, { status: 500 }) },

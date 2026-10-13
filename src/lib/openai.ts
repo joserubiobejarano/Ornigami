@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { getRequiredEnv } from "@/lib/env";
+import { isOpenAIEnabled } from "@/lib/openai-feature";
 
 let client: OpenAI | null = null;
 
@@ -8,6 +9,7 @@ export const OPENAI_REQUEST_TIMEOUT_MS = 20_000;
 export const OPENAI_MAX_RETRIES = 2;
 
 function getClient(): OpenAI {
+  if (!isOpenAIEnabled()) throw new Error("OpenAI features are disabled.");
   if (!client) {
     const apiKey = getRequiredEnv("OPENAI_API_KEY");
     client = new OpenAI({

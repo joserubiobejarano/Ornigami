@@ -12,6 +12,8 @@ The [provider review](./PRIVACY_PROVIDER_REVIEW.md) adds authenticated Neon rest
 
 The owner-approved dedicated Sentry company organization has verified EU storage, Developer plan, no payment/billing details and optional product-improvement consent off. Its DPA names Ornigami LLC and now displays version 5.1.0 signed 13 October 2026. No application data was connected. Existing J Projects records, payload controls and residual copies remain a separate review boundary; a new organization does not erase or re-contract old copies. Resend's additional paid-team option was declined; no new paid processing or retention setting was activated.
 
+The owner approved deferring paid AI for launch. The prepared [server guard](../src/lib/openai-feature.ts) now defaults disabled; reply/audit generation reports unavailable and Booster uses static copy without model calls. This is verified source behavior pending integration deployment, not evidence that the previous deployment stopped processing or that historical OpenAI copies expired. See the [free launch plan](./PRIVACY_FREE_LAUNCH_PLAN.md).
+
 ## Application and private records
 
 The approved policy is in [OPERATIONS](./OPERATIONS.md#retention-and-restoration). Implementation references: [policy constants](../src/lib/privacy-retention.ts), [cleanup queries](../src/lib/privacy-retention-cleanup.ts), [permission migration](../neon/migrations/040_permission_evidence.sql), [guarded retention migration](../neon/migrations/041_guarded_retention.sql), [cron route](../src/app/api/cron/privacy/route.ts).
@@ -56,6 +58,8 @@ The public [provider list](../src/lib/legal-processors.ts) contains Google, Open
 Each account record needs: provider legal entity/service, exact account/target, enabled data classes, purpose/role, locations and transfer mechanism, accepted terms/DPA version/date, retention trigger/window, configurable versus mandatory copies, deletion/rights channel, subprocessor authorization, access owner, evidence timestamp/hash and next review. A public documentation URL describes a vendor offering; it does not prove the selected plan or settings. Keep account IDs/screenshots and recipient-linked evidence private.
 
 Server observability uses an allowlist sanitizer and drops transactions/breadcrumbs ([server config](../sentry.server.config.ts), [event sanitizer](../src/lib/sentry-server-events.ts)); browser telemetry follows a different protected-route policy ([client](../src/lib/sentry-client.ts)). Neither proves downstream metadata deletion or vendor retention. The existing [provider deletion code](../src/lib/privacy-deletion-providers.ts) contains Stripe reconciliation and Google revocation, but no live execution receipt. It does not cover every vendor copy and does not authorize activation of `/api/privacy/delete`.
+
+Current [Sentry backup guidance](https://www.sentry.help/en/articles/13965019-how-frequently-is-data-backed-up) states 30- or 90-day production event backup expiry from creation, depending on data type. [Source-map guidance](https://www.sentry.help/en/articles/13964397-what-is-the-retention-period-for-source-maps) uses 90 days of inactivity, reset by use/re-upload, followed by eligibility for deletion. These narrow the published inventory; exact data-class mapping, physical expiry and the actual configured targets remain open.
 
 ## Restore and erasure reconciliation
 

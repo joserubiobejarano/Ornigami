@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { getOptionalEnv } from "@/lib/env";
+import { isOpenAIEnabled } from "@/lib/openai-feature";
 
 type EmailInput = {
   business_name: string;
@@ -13,8 +14,16 @@ type EmailInput = {
   visited_at?: string | Date | null;
 };
 
-const openaiApiKey = getOptionalEnv("OPENAI_API_KEY");
-const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey, timeout: 20_000, maxRetries: 0 }) : null;
+let openai: OpenAI | null = null;
+
+function getOpenAIClientIfEnabled(): OpenAI | null {
+  if (!isOpenAIEnabled()) return null;
+  if (openai) return openai;
+  const apiKey = getOptionalEnv("OPENAI_API_KEY");
+  if (!apiKey) return null;
+  openai = new OpenAI({ apiKey, timeout: 20_000, maxRetries: 0 });
+  return openai;
+}
 
 function isUnknownOpenAiOutcome(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -91,7 +100,8 @@ export function buildFallbackEmailBody(input: EmailInput, now: Date = new Date()
 }
 
 export async function generateFollowupEmailBody(input: EmailInput, options: { timeoutMs?: number } = {}) {
-  if (!openai) return buildFallbackEmailBody(input);
+  const openaiClient = getOpenAIClientIfEnabled();
+  if (!openaiClient) return buildFallbackEmailBody(input);
   const code = languageCode(input.language);
   const prompt = `You are a warm assistant for ${input.business_name}, a ${input.business_type || "local business"} in ${input.city || "their city"}.
 Write a short, friendly follow-up email in ${languageNames[code]} to ${input.customer_name || "the customer"} who visited ${visitTimingPhrase(input.visited_at, new Date(), code) || "at an unspecified time"}.
@@ -110,7 +120,7 @@ Tone: ${input.tone_setting || "warm and friendly"}
 
 Return only the email body.`;
   try {
-    const response = await openai.responses.create(
+    const response = await openaiClient.responses.create(
       { model: "gpt-4.1-mini", input: prompt },
       options.timeoutMs ? { timeout: Math.max(1, Math.floor(options.timeoutMs)), maxRetries: 0 } : undefined,
     );

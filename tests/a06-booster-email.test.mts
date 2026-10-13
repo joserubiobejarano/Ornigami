@@ -8,6 +8,7 @@ const email = loadTs<{
   visitTimingPhrase: (visitedAt?: string | Date | null, now?: Date, language?: string | null) => string;
 }>("src/modules/review-booster/services/followup-email-generator.service.ts", {
   "@/lib/env": { getOptionalEnv: () => null },
+  "@/lib/openai-feature": { isOpenAIEnabled: () => false },
   openai: {},
 });
 
@@ -49,6 +50,7 @@ test("a rejected OpenAI generation returns the localized deterministic fallback"
     generateFollowupEmailBody: (input: Record<string, unknown>) => Promise<string>;
   }>("src/modules/review-booster/services/followup-email-generator.service.ts", {
     "@/lib/env": { getOptionalEnv: () => "unit-test-key" },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     openai: { __esModule: true, default: FailingOpenAI },
   });
   const body = await withFailure.generateFollowupEmailBody({ business_name: "Acme", customer_name: "Sam", language: "es" });
@@ -66,6 +68,7 @@ test("legacy service details are excluded from fallback text and OpenAI prompts"
     generateFollowupEmailBody: (input: Record<string, unknown>) => Promise<string>;
   }>("src/modules/review-booster/services/followup-email-generator.service.ts", {
     "@/lib/env": { getOptionalEnv: () => "unit-test-key" },
+    "@/lib/openai-feature": { isOpenAIEnabled: () => true },
     openai: { __esModule: true, default: CapturingOpenAI },
   });
   await withCapture.generateFollowupEmailBody({ business_name: "Acme", service_name: secretDetail, language: "en" });
@@ -83,6 +86,7 @@ test("ambiguous OpenAI timeout and server outcomes remain explicitly unknown", a
       generateFollowupEmailBody: (input: Record<string, unknown>) => Promise<string>;
     }>("src/modules/review-booster/services/followup-email-generator.service.ts", {
       "@/lib/env": { getOptionalEnv: () => "unit-test-key" },
+      "@/lib/openai-feature": { isOpenAIEnabled: () => true },
       openai: { __esModule: true, default: FailingOpenAI },
     });
     await assert.rejects(withFailure.generateFollowupEmailBody({ business_name: "Acme" }), (error: unknown) =>

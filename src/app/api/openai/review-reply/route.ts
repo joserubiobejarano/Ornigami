@@ -13,6 +13,7 @@ import { processReviewDraft } from "@/lib/review-draft-processing";
 import type { ReviewRowForReply } from "@/lib/review-reply-server";
 import { randomUUID } from "node:crypto";
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
+import { isOpenAIEnabled, OPENAI_UNAVAILABLE_CODE, OPENAI_UNAVAILABLE_MESSAGE } from "@/lib/openai-feature";
 
 /** Core review fields; at least one of text/reviewText required for generation. */
 const RequestSchema = z
@@ -234,6 +235,9 @@ export async function POST(req: Request) {
     const requested = resolveRequestedBusinessId(new URL(req.url).searchParams.get("businessId"), parsed.data.businessId);
     if (!requested.valid) return NextResponse.json({ error: "Conflicting or invalid businessId" }, { status: 400 });
     const context = await requireActiveAgentBusinessContext(user.id, email, "review_replies", requested.businessId);
+    if (!isOpenAIEnabled()) {
+      return NextResponse.json({ ok: false, code: OPENAI_UNAVAILABLE_CODE, message: OPENAI_UNAVAILABLE_MESSAGE, error: OPENAI_UNAVAILABLE_MESSAGE }, { status: 503 });
+    }
     const saved = await getBusinessReplyDefaults(user.id, context.businessId);
 
     if (parsed.data.reviewId) {
