@@ -2,6 +2,8 @@
 
 Prepared 13 October 2026 against base `0bcdd8f`. Jose owns privacy, support and onboarding evidence. This packet prepares the arrangement and operating process; customer enrollment remains gated by the missing private evidence below. Store signed agreements, requester details, messages, credentials and provider screenshots in the established private operator store, outside Git. Record only reviewed status and non-sensitive evidence references here.
 
+Follow-up against `3022643`: the [privacy evidence closure record](./PRIVACY_EVIDENCE_CLOSURE.md) identifies Ornigami LLC from the owner-supplied formation documents and completed operating-agreement fields. Customer acceptance remains missing; account observations establish some settings, with the full provider/backup review still open. The owner confirms no completed customer/vendor agreements; Resend's incorporation-on-signup statement requires separate account-party review. Use the existing `%LOCALAPPDATA%\Ornigami\privacy-rights` store and the task's private hash manifest for recovered artifacts.
+
 ## Routing recovery
 
 | Route | Existing evidence | Recovery outcome |
@@ -19,6 +21,8 @@ node scripts/privacy-rights-register.mjs route-receipt --route privacy --observe
 
 Repeat with `--route support` for its evidenced result. Use `failed` for an observed failure. A hash proves artifact identity, not delivery. Do not substitute the attestation date, a new test date or a synthetic hash. If the original is unavailable, Jose must decide how to obtain replacement delivery evidence; recovery remains open until that happens.
 
+The closure follow-up also searched the authenticated Gmail account with both aliases in `to:`/`deliveredto:` across `in:anywhere`, Resend sending records in its selected 15-day window, and its receiving view. No qualifying original was recovered. An authoritative root-domain query returned no MX answer; Namecheap shows Custom MX with only an outbound `send.reviews` feedback record and no root MX. Review/correct receiving configuration before a replacement test in the integration/operator session. DNS and outbound subdomain verification are not delivery receipts. See the closure record for scope and limitations.
+
 ## Customer processing arrangement prepared for review
 
 Proposed role allocation, subject to confirmation of the actual purposes:
@@ -35,7 +39,7 @@ Complete this processing schedule and attach it to the chosen agreement before s
 
 | Schedule field | Prepared entry / confirmation needed |
 | --- | --- |
-| Parties and signatures | Customer legal name/address/authorized signatory and Ornigami seller legal name/address/authorized signatory: **unconfirmed**. Jose is operational owner, not an established legal entity |
+| Parties and signatures | Ornigami LLC, New Mexico, United States; filed agent/principal/mailing address: 1209 Mountain Road Pl NE, Ste N, Albuquerque, NM 87110; manager/signatory identified by completed private agreement fields: Jose Miguel Rubio Bejarano. Agent address is not physical operations evidence. Customer legal name/address/signatory and both parties' processing-agreement acceptance: **unconfirmed** |
 | Service and instructions | Workspace-scoped Replies/Booster workflows selected in the customer order; document enabled channels, business IDs, authorized users and instruction-change approval |
 | Purpose and operations | Import/admission, scoped storage, permission checking, text generation, approved sending/reply publishing, delivery handling, support, export and minimization |
 | Individuals and data | Business users, review authors and review-request recipients; email/name, visit metadata, permission source/time/notice, review/draft text, delivery outcomes and suppression. Confirm exact enabled fields; no sensitive service details or recipient phone content in intake/generation |
@@ -80,8 +84,8 @@ See [PRIVACY_RETENTION_INVENTORY.md](./PRIVACY_RETENTION_INVENTORY.md) for sourc
 | Required evidence | Current status | Owner / next step |
 | --- | --- | --- |
 | Privacy and support delivery receipts | Missing after bounded recovery | Jose: locate original evidence or decide replacement evidence path |
-| Legal parties, role allocation and signed agreement/annexes | Review packet prepared; parties and acceptance unknown | Jose/customer: confirm and privately approve |
-| Vendor terms, transfer/location and actual retention | Inventory prepared; target settings unknown | Jose: capture exact-account evidence for enabled vendors |
+| Legal parties, role allocation and signed agreement/annexes | Ornigami LLC identified; customer party, final role review and processing acceptance remain open | Jose/customer: complete populated schedule and privately accept reviewed agreement |
+| Vendor terms, transfer/location and actual retention | Some account settings captured; vendor-party linkage, acceptance and complete expiry review remain open | Jose: complete account-specific agreement/retention records using closure evidence |
 | Assisted process and private evidence custody | Runbook prepared; CLI locally verified | Jose: review practice, daily checks, secure export delivery and private evidence expiry |
 | Application/schema retention rollout and guarded activation | Separate existing gate | Integration/operator: preserve reviewed rollout and disposable validation requirements |
 | Restore reapplication and provider erasure outcomes | Procedure prepared; execution unproved | Operator: obtain disposable restore evidence and case-specific provider receipts |
