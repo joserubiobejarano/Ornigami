@@ -34,6 +34,7 @@ export function useReviewReplySettings() {
   const [ownerName, setOwnerName] = useState("");
   const [contactPreference, setContactPreference] = useState("");
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [autoReplyAllReviews, setAutoReplyAllReviews] = useState(false);
@@ -70,6 +71,7 @@ export function useReviewReplySettings() {
       setOwnerName(settings.ownerName ?? "");
       setContactPreference(settings.contactPreference ?? "");
       setAutoReplyAllReviews(Boolean(settings.autoReplyAllReviews));
+      setSettingsLoaded(true);
       setSettingsLoading(false);
     }).catch(() => {
       if (!cancelled) {
@@ -140,6 +142,7 @@ export function useReviewReplySettings() {
     contactPreference,
     setContactPreference,
     settingsLoading,
+    settingsLoaded,
     settingsError,
     saveState,
     autoReplyAllReviews,

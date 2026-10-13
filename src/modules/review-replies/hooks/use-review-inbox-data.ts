@@ -246,25 +246,33 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
     return loadReviewPage(selectedLocation, cursor, "previous");
   }, [loadReviewPage, pageLoading, selectedLocation]);
 
-  const loadLocations = useCallback(async () => {
+  const readLocations = useCallback(async (scopeBusinessId?: string): Promise<boolean> => {
     const requestId = ++locationsRequestRef.current;
     setLoading(true);
     setError(null);
     try {
-      const allLocations = await fetchReviewLocations(businessId);
-      if (requestId !== locationsRequestRef.current) return;
+      // This endpoint resolves the caller's authorized default business scope.
+      // Settings and locations can load together; scoped review operations still
+      // wait for settings and send its explicit businessId.
+      const allLocations = await fetchReviewLocations(scopeBusinessId);
+      if (requestId !== locationsRequestRef.current) return true;
       const nextLocations = allLocations.filter((location) => location.selected === true);
       setLocations(nextLocations);
       setSelectedLocation((current) => current && nextLocations.some((item) => item.locationName === current)
         ? current
         : nextLocations[0]?.locationName || "");
+      return true;
     } catch (cause: unknown) {
-      if (requestId !== locationsRequestRef.current) return;
+      if (requestId !== locationsRequestRef.current) return true;
       setError(cause instanceof Error ? cause.message : "We couldn't load your locations. Try again in a moment.");
+      return false;
     } finally {
       if (requestId === locationsRequestRef.current) setLoading(false);
     }
-  }, [businessId]);
+  }, []);
+  const loadLocations = useCallback(async () => {
+    await readLocations(businessId);
+  }, [businessId, readLocations]);
 
   const syncReviews = useCallback(async () => {
     if (!selectedLocation) return;
@@ -328,27 +336,34 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
   }, [businessId, hasPaidAccess, loadReviews, selectedLocation]);
 
   useEffect(() => {
-    if (settingsReady) void loadLocations();
-  }, [loadLocations, settingsReady]);
-
-  useEffect(() => {
     let cancelled = false;
-    void fetchReplySettings().then((settings) => {
-      if (!cancelled) {
+    // Start both reads together. If locations fail before settings has created
+    // a first workspace, retry once with the now-known explicit business scope.
+    const initialLocations = readLocations();
+    const initialLocationsRequest = locationsRequestRef.current;
+    void (async () => {
+      try {
+        const settings = await fetchReplySettings();
+        if (cancelled) return;
         if (settings) {
           setBusinessId(settings.businessId);
           setAutoReplyAllReviews(Boolean(settings.autoReplyAllReviews));
           setIsOwner(Boolean(settings.isOwner || settings.role === "owner"));
         }
         setSettingsReady(true);
+        if (settings?.businessId && !(await initialLocations) && !cancelled &&
+          locationsRequestRef.current === initialLocationsRequest) {
+          await readLocations(settings.businessId);
+        }
+      } catch {
+        if (!cancelled) setSettingsReady(true);
       }
-    }).catch(() => {
-      if (!cancelled) setSettingsReady(true);
-    });
+    })();
     return () => {
       cancelled = true;
+      locationsRequestRef.current += 1;
     };
-  }, []);
+  }, [readLocations]);
 
   useEffect(() => {
     const previous = previousScopeRef.current;
@@ -381,15 +396,15 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
       setSavedDraftSnapshots(snapshotsRef.current);
       setReviews([]);
     }
-    if (selectedLocation) {
+    if (selectedLocation && settingsReady) {
       void loadReviews(selectedLocation);
-    } else {
+    } else if (!selectedLocation) {
       loadRequestRef.current += 1;
       setLoading(false);
       setPageLoading(false);
       setReviews([]);
     }
-  }, [businessId, loadReviews, selectedLocation]);
+  }, [businessId, loadReviews, selectedLocation, settingsReady]);
 
   return {
     businessId,
