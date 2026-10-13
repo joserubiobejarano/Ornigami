@@ -137,21 +137,33 @@ export async function runStripeAnnualAcceptance({ stripe, runId }) {
   let price = null;
   let failurePhase = null;
   let cleanupIncomplete = false;
+  let creationUncertain = false;
+  const createTracked = async (create) => {
+    creationUncertain = true;
+    const created = await create();
+    creationUncertain = false;
+    return created;
+  };
   const persist = (status, scenarios = []) => writeFileSync(evidencePath, `${JSON.stringify({
     schema: "ornigami.a17.stripe-annual-acceptance.v1", runId, status, providerMode: "stripe-test",
-    resources, scenarios, cleanupIncomplete,
+    resources, scenarios, cleanupIncomplete, creationUncertain,
   }, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
   let scenarios = [];
 
   try {
     failurePhase = "create annual test product and price";
-    product = testObject(await stripe.products.create({ name: `A17 synthetic annual ${runId}`, metadata: { a17_acceptance_run: runId } }), "product");
+    product = await createTracked(() => stripe.products.create(
+      { name: `A17 synthetic annual ${runId}`, metadata: { a17_acceptance_run: runId } },
+      { idempotencyKey: `a17annual-${runId}-product` },
+    ));
     resources.productId = product.id;
-    price = testObject(await stripe.prices.create({
+    testObject(product, "product");
+    price = await createTracked(() => stripe.prices.create({
       product: product.id, currency: "eur", unit_amount: 36000,
       recurring: { interval: "year", interval_count: 1 }, metadata: { a17_acceptance_run: runId },
-    }), "price");
+    }, { idempotencyKey: `a17annual-${runId}-price` }));
     resources.priceId = price.id;
+    testObject(price, "price");
     if (price.currency !== "eur" || price.unit_amount !== 36000 || price.recurring?.interval !== "year" || price.recurring?.interval_count !== 1) {
       throw new Error("synthetic price does not match EUR 360/year");
     }
@@ -159,24 +171,34 @@ export async function runStripeAnnualAcceptance({ stripe, runId }) {
 
     failurePhase = "create annual trial subscription";
     const now = Math.floor(Date.now() / 1000);
-    const clock = testObject(await stripe.testHelpers.testClocks.create({ frozen_time: now, name: `a17-${runId}-annual` }), "test clock");
+    const clock = await createTracked(() => stripe.testHelpers.testClocks.create(
+      { frozen_time: now, name: `a17-${runId}-annual` },
+      { idempotencyKey: `a17annual-${runId}-clock` },
+    ));
     resources.clockId = clock.id;
+    testObject(clock, "test clock");
     persist("running");
-    const customer = testObject(await stripe.customers.create({
+    const customer = await createTracked(() => stripe.customers.create({
       test_clock: clock.id, email: `a17-${runId}@example.test`, name: "A17 synthetic annual customer",
       metadata: { a17_acceptance_run: runId },
-    }), "customer");
+    }, { idempotencyKey: `a17annual-${runId}-customer` }));
     resources.customerId = customer.id;
-    const paymentMethod = testObject(await stripe.paymentMethods.create({ type: "card", card: { token: "tok_visa" } }), "payment method");
+    testObject(customer, "customer");
+    const paymentMethod = await createTracked(() => stripe.paymentMethods.create(
+      { type: "card", card: { token: "tok_visa" } },
+      { idempotencyKey: `a17annual-${runId}-payment-method` },
+    ));
     resources.paymentMethodId = paymentMethod.id;
+    testObject(paymentMethod, "payment method");
     testObject(await stripe.paymentMethods.attach(paymentMethod.id, { customer: customer.id }), "attached payment method");
     testObject(await stripe.customers.update(customer.id, { invoice_settings: { default_payment_method: paymentMethod.id } }), "customer invoice settings");
-    let subscription = testObject(await stripe.subscriptions.create({
+    let subscription = await createTracked(() => stripe.subscriptions.create({
       customer: customer.id, items: [{ price: price.id }], trial_period_days: 14,
       default_payment_method: paymentMethod.id,
       metadata: { a17_acceptance_run: runId }, expand: ["latest_invoice"],
-    }), "subscription");
+    }, { idempotencyKey: `a17annual-${runId}-subscription` }));
     resources.subscriptionId = subscription.id;
+    testObject(subscription, "subscription");
     if (subscription.status !== "trialing" || subscription.trial_end - subscription.trial_start !== 14 * DAY) {
       throw new Error("annual subscription did not start with an exact 14-day trial");
     }
@@ -237,6 +259,7 @@ export async function runStripeAnnualAcceptance({ stripe, runId }) {
     scenarios = [{ id: "annual-trial-conversion-and-renewal", status: "failed", phase: failurePhase }];
   } finally {
     ({ cleanupIncomplete } = await cleanupStripeAnnualResources({ stripe, resources, product, price }));
+    cleanupIncomplete ||= creationUncertain;
   }
 
   const passed = scenarios[0]?.status === "passed";

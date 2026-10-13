@@ -421,6 +421,55 @@ function latestCliEvent(eventType, afterOffset) {
   return matches.at(-1)?.[1] ?? null;
 }
 
+async function validateProviderSequenceSubscription(stripe, expected) {
+  const subscription = await stripe.subscriptions.retrieve(expected.subscriptionId);
+  const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
+  if (subscription.id !== expected.subscriptionId || subscription.livemode !== false || customerId !== expected.customerId ||
+      subscription.metadata?.owner_user_id !== expected.ownerUserId || subscription.metadata?.business_id !== expected.businessId ||
+      subscription.metadata?.plan_id !== "booster" || subscription.metadata?.billing_period !== "annual") {
+    throw new Error("provider delivery target did not match the isolated annual owner mapping");
+  }
+  const customer = await stripe.customers.retrieve(expected.customerId);
+  if (customer.id !== expected.customerId || customer.livemode !== false || customer.deleted ||
+      customer.metadata?.owner_user_id !== expected.ownerUserId) {
+    throw new Error("provider delivery customer did not match the isolated annual owner mapping");
+  }
+  if (subscription.items?.data?.length !== 1 || subscription.items.data[0].quantity !== 1) {
+    throw new Error("provider delivery target did not have exactly one annual Booster item");
+  }
+  const itemPrice = subscription.items.data[0].price;
+  const priceId = typeof itemPrice === "string" ? itemPrice : itemPrice?.id;
+  if (priceId !== expected.priceId) throw new Error("provider delivery target did not use the isolated annual catalog price");
+  const price = await stripe.prices.retrieve(priceId);
+  if (price.id !== expected.priceId || price.livemode !== false || price.active !== true ||
+      price.metadata?.a17_acceptance_run !== expected.runId || price.metadata?.plan !== "booster" ||
+      price.metadata?.period !== "annual" || price.recurring?.interval !== "year" || price.recurring?.interval_count !== 1 ||
+      price.currency !== "eur" || price.unit_amount !== 36000) {
+    throw new Error("provider delivery target catalog price was not owned by this annual acceptance run");
+  }
+  return subscription;
+}
+
+export async function updateOwnedProviderSequenceSubscription({ stripe, expected, probe }) {
+  const current = await validateProviderSequenceSubscription(stripe, expected);
+  if (current.status !== "trialing") throw new Error("isolated annual trial is not trialing before provider delivery probe");
+  const updated = await stripe.subscriptions.update(expected.subscriptionId, { metadata: { a17_serial_delivery_probe: probe } });
+  if (updated.livemode !== false || updated.id !== expected.subscriptionId || updated.status !== "trialing") {
+    throw new Error("isolated trial subscription changed unexpectedly during provider delivery probe");
+  }
+  return updated;
+}
+
+export async function cancelOwnedProviderSequenceSubscription({ stripe, expected }) {
+  const current = await validateProviderSequenceSubscription(stripe, expected);
+  if (current.status !== "trialing") throw new Error("isolated annual trial is not trialing before provider delivery cancellation");
+  const canceled = await stripe.subscriptions.cancel(expected.subscriptionId);
+  if (canceled.livemode !== false || canceled.id !== expected.subscriptionId || canceled.status !== "canceled") {
+    throw new Error("isolated test subscription cancellation was not confirmed");
+  }
+  return canceled;
+}
+
 async function waitForCliEvent(eventType, afterOffset, timeoutMs = 30_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -434,15 +483,25 @@ async function waitForCliEvent(eventType, afterOffset, timeoutMs = 30_000) {
 async function providerSequence() {
   const key = requireIsolatedTestMode();
   const handoff = JSON.parse(readFileSync(HANDOFF, "utf8"));
+  validateHandoff(handoff);
   const pg = pgIdentity();
   const q = (value) => `'${String(value).replaceAll("'", "''")}'`;
-  const subscriptionId = psql(pg, `SELECT stripe_subscription_id FROM public.business_agents WHERE business_id=${q(handoff.businessId)}::uuid AND agent_id='review_booster'`);
+  const mapping = JSON.parse(psql(pg, `SELECT json_build_object(
+    'subscriptionId',(SELECT stripe_subscription_id FROM public.business_agents WHERE business_id=${q(handoff.businessId)}::uuid AND agent_id='review_booster'),
+    'customerId',(SELECT stripe_customer_id FROM public.billing_owner_customers WHERE owner_user_id=${q(handoff.ownerUserId)}::uuid)
+  )::text`));
+  const subscriptionId = mapping.subscriptionId;
   if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionId)) throw new Error("annual trial subscription is not mapped in the isolated app database");
+  if (!/^cus_[A-Za-z0-9]+$/.test(mapping.customerId || "")) throw new Error("annual trial customer is not mapped in the isolated app database");
+  const expected = {
+    subscriptionId, customerId: mapping.customerId, ownerUserId: handoff.ownerUserId,
+    businessId: handoff.businessId, runId: handoff.runId, priceId: handoff.prices?.boosterAnnual,
+  };
+  if (!/^price_[A-Za-z0-9]+$/.test(expected.priceId || "")) throw new Error("annual Booster test price is missing from the isolated handoff");
   const { default: Stripe } = await import("stripe");
   const stripe = new Stripe(key, { apiVersion: "2026-07-29.dahlia", maxNetworkRetries: 0, timeout: 20_000 });
   const before = existsSync(CLI_LOG) ? readFileSync(CLI_LOG, "utf8").length : 0;
-  const updated = await stripe.subscriptions.update(subscriptionId, { metadata: { a17_serial_delivery_probe: `${handoff.runId}-${Date.now()}` } });
-  if (updated.livemode !== false || updated.id !== subscriptionId || updated.status !== "trialing") throw new Error("isolated trial subscription changed unexpectedly during provider delivery probe");
+  const updated = await updateOwnedProviderSequenceSubscription({ stripe, expected, probe: `${handoff.runId}-${Date.now()}` });
   const updateEventId = await waitForCliEvent("customer.subscription.updated", before);
   const updateDelivery = await waitForCliDelivery(updateEventId);
   const afterUpdate = await snapshot({ quiet: true, phase: "after-provider-update" });
@@ -451,8 +510,7 @@ async function providerSequence() {
     throw new Error("provider-origin subscription update did not preserve annual trial state and prior quota");
   }
   const beforeCancel = existsSync(CLI_LOG) ? readFileSync(CLI_LOG, "utf8").length : 0;
-  const canceled = await stripe.subscriptions.cancel(subscriptionId);
-  if (canceled.livemode !== false || canceled.id !== subscriptionId || canceled.status !== "canceled") throw new Error("isolated test subscription cancellation was not confirmed");
+  const canceled = await cancelOwnedProviderSequenceSubscription({ stripe, expected });
   const cancelEventId = await waitForCliEvent("customer.subscription.deleted", beforeCancel);
   const cancelDelivery = await waitForCliDelivery(cancelEventId);
   const afterCancel = await snapshot({ quiet: true, phase: "after-provider-cancel" });

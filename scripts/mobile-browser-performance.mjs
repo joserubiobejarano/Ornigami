@@ -8,7 +8,7 @@ import { maxClsSessionWindow, summarize, summarizeApiCalls } from "./mobile-brow
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = path.join(root, ".a20-fixture");
-const evidencePath = path.join(root, "docs", "tasks", "mobile-browser-performance-evidence.json");
+const evidencePath = path.join(root, ".local", "recovery", "mobile-browser-performance-evidence.json");
 const outputPath = process.env.MOBILE_BROWSER_PERFORMANCE_OUTPUT
   ? path.resolve(process.env.MOBILE_BROWSER_PERFORMANCE_OUTPUT) : evidencePath;
 const playwrightEntry = path.join(fixture, "mobile-performance-tools", "node_modules", "playwright", "index.mjs");

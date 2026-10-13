@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync, unlinkSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { addUtcCalendarMonths, cleanupStripeAnnualResources } from "../scripts/a17-stripe-annual-acceptance.mjs";
+import { addUtcCalendarMonths, cleanupStripeAnnualResources, runStripeAnnualAcceptance } from "../scripts/a17-stripe-annual-acceptance.mjs";
 
 const script = resolve("scripts/a17-stripe-annual-acceptance.mjs");
 const timestamp = (iso) => Math.floor(Date.parse(iso) / 1000);
@@ -45,4 +47,28 @@ test("cleanup reports an owned resource deactivation failure", async () => {
     price: null,
   });
   assert.deepEqual(result, { cleanupIncomplete: true });
+});
+
+test("ambiguous provider create failure cannot claim cleanup complete", async () => {
+  const runId = randomUUID();
+  const evidencePath = resolve(`.local/a17-stripe-evidence/annual-${runId}.json`);
+  const stripe = {
+    products: {
+      create: async (_params, options) => {
+        assert.equal(options.idempotencyKey, `a17annual-${runId}-product`);
+        // Simulate Stripe accepting the create while its response is lost.
+        throw new Error("simulated create response timeout");
+      },
+    },
+  };
+
+  try {
+    await assert.rejects(() => runStripeAnnualAcceptance({ stripe, runId }), /scenario-failed-and-cleanup-incomplete/);
+    const evidence = JSON.parse(readFileSync(evidencePath, "utf8"));
+    assert.equal(evidence.status, "scenario-failed-and-cleanup-incomplete");
+    assert.equal(evidence.creationUncertain, true);
+    assert.equal(evidence.cleanupIncomplete, true);
+  } finally {
+    try { unlinkSync(evidencePath); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+  }
 });
