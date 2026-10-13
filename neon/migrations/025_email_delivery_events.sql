@@ -52,8 +52,26 @@ CREATE INDEX IF NOT EXISTS idx_booster_delivery_events_provider_message
 
 CREATE OR REPLACE FUNCTION public.capture_booster_delivery_correlation()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
-DECLARE v_to JSONB; v_email TEXT; v_hash TEXT;
+DECLARE v_to JSONB; v_email TEXT; v_hash TEXT; v_disposal_allowed BOOLEAN := FALSE;
 BEGIN
+  IF TG_OP='UPDATE' AND OLD.recipient_sha256 IS NOT NULL AND NEW.recipient_sha256 IS NULL THEN
+    -- Validate an attempted clear before payload capture can silently restore it.
+    v_disposal_allowed := NEW.provider_payload IS NULL AND NEW.provider_message_id IS NULL
+      AND NEW.state=OLD.state AND NEW.state IN ('accepted','expired','non_sendable')
+      AND NEW.id=OLD.id AND NEW.business_id=OLD.business_id AND NEW.visit_id=OLD.visit_id
+      AND NEW.idempotency_key=OLD.idempotency_key AND NEW.reservation_month IS NOT DISTINCT FROM OLD.reservation_month
+      AND NEW.accepted_at IS NOT DISTINCT FROM OLD.accepted_at
+      AND to_jsonb(OLD)->>'evidence_disposed_at' IS NULL
+      AND to_jsonb(NEW)->>'evidence_disposed_at' IS NOT NULL
+      AND to_jsonb(OLD)->>'terminal_at' IS NOT NULL
+      AND to_jsonb(NEW)->>'terminal_at' IS NOT NULL
+      AND (to_jsonb(NEW)->>'terminal_at') IS NOT DISTINCT FROM (to_jsonb(OLD)->>'terminal_at')
+      AND (to_jsonb(NEW)->>'terminal_at')::timestamptz < now()-interval '365 days';
+    IF v_disposal_allowed IS NOT TRUE THEN
+      RAISE EXCEPTION 'booster delivery recipient fingerprint is immutable';
+    END IF;
+    RETURN NEW;
+  END IF;
   IF TG_OP <> 'DELETE' AND NEW.provider_payload IS NOT NULL THEN
     v_to := CASE WHEN jsonb_typeof(NEW.provider_payload->'to')='array'
       THEN NEW.provider_payload->'to' ELSE jsonb_build_array(NEW.provider_payload->>'to') END;
@@ -67,6 +85,8 @@ BEGIN
     END IF;
   END IF;
   IF TG_OP='UPDATE' AND OLD.recipient_sha256 IS NOT NULL AND NEW.recipient_sha256 IS DISTINCT FROM OLD.recipient_sha256 THEN
+    -- A later retention migration supplies these fields. JSON access keeps this
+    -- base migration valid before 041, while permitting only terminal disposal.
     RAISE EXCEPTION 'booster delivery recipient fingerprint is immutable';
   END IF;
   RETURN NEW;
@@ -144,6 +164,7 @@ DECLARE
   v_owner_id UUID;
   v_actor_id UUID;
   v_lifecycle_frozen BOOLEAN := FALSE;
+  v_retention_disposed BOOLEAN := FALSE;
   v_correlation public.booster_delivery_provider_correlations%ROWTYPE;
 BEGIN
   IF jsonb_typeof(p_event) <> 'object'
@@ -173,7 +194,16 @@ BEGIN
   IF NOT FOUND THEN
     IF v_source='provider_lookup' THEN RETURN jsonb_build_object('kind','conflict'); END IF;
     SELECT * INTO v_correlation FROM public.booster_delivery_provider_correlations WHERE provider_message_id=v_provider_id;
-    IF NOT FOUND THEN RETURN jsonb_build_object('kind','unmatched'); END IF;
+    IF NOT FOUND THEN
+      -- RETENTION_DISPOSED_CALLBACK_UNMATCHED_GUARD
+      -- A later retention migration adds a hash-only tombstone. Dynamic lookup
+      -- keeps this migration applicable before that helper exists.
+      IF to_regprocedure('public.booster_retention_evidence_disposed(uuid,text)') IS NOT NULL THEN
+        EXECUTE 'SELECT public.booster_retention_evidence_disposed($1,$2)' INTO v_retention_disposed USING v_delivery_id,v_provider_id;
+        IF v_retention_disposed THEN RETURN jsonb_build_object('kind','duplicate','deliveryId',v_delivery_id); END IF;
+      END IF;
+      RETURN jsonb_build_object('kind','unmatched');
+    END IF;
     v_recipient := lower(trim(v_recipients->>0));
     IF encode(sha256(convert_to(v_recipient,'UTF8')),'hex')<>v_correlation.recipient_sha256
        OR (p_event->>'deliveryId' IS NOT NULL AND (p_event->>'deliveryId')::uuid<>v_correlation.delivery_id) THEN
@@ -234,6 +264,11 @@ BEGIN
     AND u.privacy_deletion_requested_at IS NOT NULL) INTO v_lifecycle_frozen;
   SELECT * INTO ba FROM public.business_agents WHERE business_id=d.business_id AND agent_id='review_booster' FOR UPDATE;
   SELECT * INTO d FROM public.booster_followup_deliveries WHERE id=d.id FOR UPDATE;
+  -- RETENTION_DISPOSED_CALLBACK_LOCKED_GUARD
+  IF to_regprocedure('public.booster_retention_evidence_disposed(uuid,text)') IS NOT NULL THEN
+    EXECUTE 'SELECT public.booster_retention_evidence_disposed($1,$2)' INTO v_retention_disposed USING d.id,v_provider_id;
+    IF v_retention_disposed THEN RETURN jsonb_build_object('kind','duplicate','deliveryId',d.id); END IF;
+  END IF;
   SELECT * INTO v FROM public.followup_visits WHERE id=d.visit_id AND business_id=d.business_id FOR UPDATE;
   IF NOT FOUND THEN RETURN jsonb_build_object('kind','conflict','deliveryId',d.id); END IF;
 

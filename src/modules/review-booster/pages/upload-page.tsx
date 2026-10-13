@@ -29,8 +29,8 @@ export default function ReviewBoosterUploadPage() {
 
   function onDownloadTemplate() {
     const content = [
-      "customer_name,customer_email,service_received,visited_at",
-      "Jane Doe,jane@example.com,Teeth cleaning,2026-05-25"
+      "customer_name,customer_email,visited_at,permission_source,permission_at,permission_notice_version",
+      "Jane,jane@example.com,2026-05-25,booking-review-opt-in,2026-05-25T09:00:00Z,review-request-v1"
     ].join("\n");
     const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -105,7 +105,7 @@ export default function ReviewBoosterUploadPage() {
         <h2 className="text-3xl font-semibold text-primary">Upload visits</h2>
         <ol className="mt-4 space-y-2 text-foreground">
           <li>1. Download the template.</li>
-          <li>2. Add names, email addresses, services, and visit dates.</li>
+          <li>2. Add email addresses, visit dates, optional first names, and each customer&apos;s permission evidence.</li>
           <li>3. Choose your CSV file.</li>
           <li>4. Check imported visits and settings so scheduled email follow-up is ready.</li>
         </ol>
@@ -113,19 +113,19 @@ export default function ReviewBoosterUploadPage() {
           Importing itself sends no email. Scheduled runs may send eligible visits when timing, settings, and allowance permit.
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          For better review conversion, make sure Settings uses the direct Google Maps &quot;Write a review&quot; link.
+          Only import customers who agreed to receive a review request by email. Keep their original permission records. Do not include phone numbers, health information or treatment notes.
         </p>
       </section>
 
       <section className="rounded-2xl border-[1.5px] border-border bg-card p-6 shadow-ink-sm">
         <h2 className="text-sm font-semibold text-primary">Expected CSV columns</h2>
         <p className="mt-3 rounded-xl border-[1.5px] border-border bg-surface px-3 py-2 font-mono text-sm text-foreground">
-          customer_name, customer_email, service_received, visited_at
+          customer_name, customer_email, visited_at, permission_source, permission_at, permission_notice_version
         </p>
         <p className="mt-3 rounded-xl border-[1.5px] border-accent-marigold/35 bg-accent-marigold/10 px-3 py-2 text-sm text-primary">
           Use YYYY-MM-DD dates interpreted as midnight UTC, or ISO timestamps that end in Z or include an explicit UTC offset.
         </p>
-        <p className="mt-3 text-sm text-muted-foreground">CSV follow-up requires an email address. To keep a phone-only visit for your records, use Add a visit; Review Booster sends email only and does not send SMS.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Every row needs an email address, the source of permission for review requests, the actual permission timestamp with timezone, and the version of the notice the customer saw. Missing or invalid evidence is rejected. Existing unsubscribe protection still applies.</p>
       </section>
 
       <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border-[1.5px] border-border bg-card p-6 text-sm text-muted-foreground shadow-ink-sm">

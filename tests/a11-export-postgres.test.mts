@@ -33,6 +33,12 @@ function psql(statement: string): string {
   }).trim();
 }
 
+function psqlWithHeaders(statement: string): string {
+  return execFileSync(pgExe("psql"), ["-X", "-q", "-A", "--csv", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", "-"], {
+    encoding: "utf8", input: statement,
+  }).trim();
+}
+
 function quote(value: unknown): string {
   if (value === null || value === undefined) return "NULL";
   if (typeof value === "number") return String(value);
@@ -65,6 +71,7 @@ type PersonalExport = {
 type WorkspaceExport = {
   businesses: Array<{
     business: { id: string };
+    visits: Array<{ permission_source: string | null; permission_at: string | null; permission_notice_version: string | null; permission_recipient_email: string | null; permission_scope: string | null; permission_withdrawn_at: string | null }>;
     reviews: Array<{ comment: string }>;
     replies: Array<{ draft_markdown: string }>;
     replyDraftState: Array<{ review_id: number; reply_id: number | null; state: string; version: number }>;
@@ -152,8 +159,10 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
         VALUES ('${ownerId}','${businessA}','accounts/1/locations/1','review-a','Customer Name','Customer review body');
       INSERT INTO public.review_replies(user_id,business_id,review_id,draft_markdown,posted)
         SELECT '${ownerId}','${businessA}',id,'Owner reply','true' FROM public.reviews WHERE google_review_id='review-a';
-      INSERT INTO public.followup_visits(id,business_id,customer_name,customer_email,visited_at)
-        VALUES ('50000000-0000-4000-8000-000000000001','${businessA}','Customer','customer@example.test',now());
+      INSERT INTO public.followup_visits(id,business_id,customer_name,customer_email,visited_at,
+        permission_source,permission_at,permission_notice_version,permission_recipient_email,permission_scope)
+        VALUES ('50000000-0000-4000-8000-000000000001','${businessA}','Customer','customer@example.test',now(),
+          'in_person',now(),'review-request-v1','customer@example.test','review_request');
       INSERT INTO public.followup_messages(business_id,visit_id,subject,body,status,provider_message_id)
         VALUES ('${businessA}','50000000-0000-4000-8000-000000000001','Subject','Message body','sent','provider-message');
       INSERT INTO public.booster_quota_legacy_usage(business_id,month_start,accepted_count)
@@ -267,6 +276,22 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
       { event_type: "email.delivered", evidence_source: "webhook" },
     ]);
     assert.ok(ownerWorkspace.boosterDeliveryEvents[0].delivery_id);
+    assert.deepEqual({
+      permission_source: ownerWorkspace.visits[0].permission_source,
+      permission_at: ownerWorkspace.visits[0].permission_at,
+      permission_notice_version: ownerWorkspace.visits[0].permission_notice_version,
+      permission_recipient_email: ownerWorkspace.visits[0].permission_recipient_email,
+      permission_scope: ownerWorkspace.visits[0].permission_scope,
+      permission_withdrawn_at: ownerWorkspace.visits[0].permission_withdrawn_at,
+    }, {
+      permission_source: "in_person",
+      permission_at: ownerWorkspace.visits[0].permission_at,
+      permission_notice_version: "review-request-v1",
+      permission_recipient_email: "customer@example.test",
+      permission_scope: "review_request",
+      permission_withdrawn_at: null,
+    });
+    assert.ok(ownerWorkspace.visits[0].permission_at);
     assert.equal(ownerWorkspace.boosterDeliveryCorrelations.length, 1);
     assert.equal(ownerWorkspace.boosterDeliveryCorrelations[0].delivery_id, ownerWorkspace.boosterDeliveryEvents[0].delivery_id);
     assert.ok(ownerWorkspace.boosterDeliveryCorrelations[0].linked_at);
@@ -312,21 +337,29 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
     assert.equal((await ownerRoute.GET(new Request(`https://app.example/api/privacy/export?scope=workspace&businessId=${businessA}`))).status, 403);
     psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${ownerId}';`);
 
+    const priorRetentionEnabled = process.env.PRIVACY_RETENTION_ENABLED;
+    process.env.PRIVACY_RETENTION_ENABLED = "true";
     const cleanupService = loadTs<typeof import("../src/lib/privacy-retention-cleanup.js")>("src/lib/privacy-retention-cleanup.ts", { overrides: {
       "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
         const query = strings.reduce((output, part, index) => output + part + (index < values.length ? quote(values[index]) : ""), "");
-        const output = psql(`${query};`);
-        return [{ deleted: Number(output || 0) }];
+        const result = psqlWithHeaders(`${query};`);
+        if (!result) return [];
+        const [headerLine, valueLine] = result.split(/\r?\n/);
+        const headers = headerLine!.split(",");
+        const resultValues = valueLine!.split(",");
+        return [Object.fromEntries(headers.map((column, index) => [column, Number(resultValues[index] ?? 0)]))];
       } },
       "@/lib/safe-logger": { safeLogger: { error: () => {}, info: () => {} } },
     } });
+    if (priorRetentionEnabled === undefined) delete process.env.PRIVACY_RETENTION_ENABLED;
+    else process.env.PRIVACY_RETENTION_ENABLED = priorRetentionEnabled;
     const cleanupNow = new Date();
-    const firstCleanup = await cleanupService.runPrivacyRetentionCleanup({ batchSize: 1, now: cleanupNow });
+    const firstCleanup = await cleanupService.runPrivacyRetentionCleanup({ batchSize: 1, now: cleanupNow, apply: true });
     assert.equal(firstCleanup.failed, 0);
     assert.equal(firstCleanup.batchSize, 1);
     assert.equal(firstCleanup.operations.find((operation) => operation.table === "leads")?.deleted, 1);
     assert.equal(psql("SELECT count(*) FROM public.leads WHERE created_at < now() - interval '90 days'"), "1");
-    const resumedCleanup = await cleanupService.runPrivacyRetentionCleanup({ batchSize: 100, now: cleanupNow });
+    const resumedCleanup = await cleanupService.runPrivacyRetentionCleanup({ batchSize: 100, now: cleanupNow, apply: true });
     assert.equal(resumedCleanup.failed, 0);
     for (const [table, predicate] of [
       ["leads", "created_at < now() - interval '90 days'"],
@@ -337,8 +370,8 @@ test("A11 export SQL executes against PostgreSQL and enforces personal/workspace
       ["auth_login_attempts", "updated_at < now() - interval '2 days'"],
       ["email_verification_tokens", "expires_at < now()"],
       ["password_reset_tokens", "expires_at < now()"],
-      ["review_link_clicks", "clicked_at < now() - interval '365 days'"],
-      ["followup_integration_events", "created_at < now() - interval '365 days'"],
+      ["review_link_clicks", "clicked_at < now() - interval '90 days'"],
+      ["followup_integration_events", "created_at < now() - interval '90 days'"],
       ["cron_runs", "status <> 'running' AND finished_at IS NOT NULL AND started_at < now() - interval '30 days'"],
     ] as const) assert.equal(psql(`SELECT count(*) FROM public.${table} WHERE ${predicate}`), "0", `${table} expired rows remain`);
     assert.equal(psql("SELECT count(*) FROM public.cron_runs WHERE job_name='active-old-run' AND status='running'"), "1", "active cron runs remain available for health diagnosis");

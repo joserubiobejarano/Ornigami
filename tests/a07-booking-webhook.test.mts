@@ -21,21 +21,27 @@ test("booking payload rejects caller-selected tenancy, unsupported events, and i
   assert.equal(bookingService.validateBookingEvent({ source: "calendar", event_type: "booking.cancelled", external_id: "evt-1", visited_at: "2026-02-28", customer_email: "a@example.com" }), null);
   assert.equal(bookingService.validateBookingEvent({ source: "calendar", event_type: "booking.completed", external_id: "evt-1", visited_at: "2026-02-30T12:00:00Z", customer_email: "a@example.com" }), null);
   assert.equal(bookingService.validateBookingEvent({ source: "calendar", event_type: "booking.completed", external_id: "evt-1", visited_at: "2026-02-28T12:00:00Z" }), null);
+  assert.equal(bookingService.validateBookingEvent({
+    source: "calendar", event_type: "booking.completed", external_id: "evt-no-proof",
+    customer_email: "alex@example.com", visited_at: "2026-02-28T13:00:00+01:00",
+  }), null, "legacy webhook payloads without explicit permission evidence fail closed");
   const valid = bookingService.validateBookingEvent({
     source: "Calendar", event_type: "BOOKING.COMPLETED", external_id: " evt-1 ",
-    customer_phone: "+34 600 12 34 56", visited_at: "2026-02-28T13:00:00+01:00",
+    customer_email: "alex@example.com", visited_at: "2026-02-28T13:00:00+01:00",
+    permission_source: "checkout", permission_at: "2026-02-28T10:00:00Z", permission_notice_version: "booster-v1",
   });
   assert.deepEqual(valid, {
     source: "calendar", event_type: "booking.completed", external_id: "evt-1",
-    customer_name: undefined, customer_email: undefined, customer_phone: "+34 600 12 34 56",
-    service_name: undefined, visited_at: "2026-02-28T12:00:00.000Z",
+    customer_name: undefined, customer_email: "alex@example.com",
+    visited_at: "2026-02-28T12:00:00.000Z", permission_source: "checkout",
+    permission_at: "2026-02-28T10:00:00.000Z", permission_notice_version: "booster-v1",
   });
 });
 
 test("booking webhook authenticates before parsing and returns idempotent response", async () => {
   const secret = "credential-secret";
   const timestamp = String(Math.floor(Date.now() / 1000));
-  const rawBody = JSON.stringify({ source: "square", event_type: "booking.completed", external_id: "ext-42", customer_email: "jane@example.com", visited_at: "2026-09-20T10:00:00Z" });
+  const rawBody = JSON.stringify({ source: "square", event_type: "booking.completed", external_id: "ext-42", customer_email: "jane@example.com", visited_at: "2026-09-20T10:00:00Z", permission_source: "checkout", permission_at: "2026-09-20T09:00:00Z", permission_notice_version: "booster-v1" });
   let admitted = 0;
   let duplicate = false;
   const route = routeRequest({

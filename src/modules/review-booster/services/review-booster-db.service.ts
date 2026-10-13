@@ -61,11 +61,12 @@ export type CreateFollowupVisitInput = {
   businessId: string;
   customerName?: string | null;
   customerEmail?: string | null;
-  customerPhone?: string | null;
-  serviceName?: string | null;
   visitedAt: string | Date;
   source?: string | null;
   externalId?: string | null;
+  permissionSource?: string | null;
+  permissionAt?: string | Date | null;
+  permissionNoticeVersion?: string | null;
 };
 
 export type CreateFollowupMessageInput = {
@@ -134,8 +135,8 @@ export async function createCsvFollowupVisit(
   const rows = await sql`
     SELECT * FROM public.a11_admit_booster_followup_visit(
       ${input.businessId}::uuid, ${actorUserId}::uuid, 'csv',
-      ${input.customerName ?? null}, ${input.customerEmail ?? null}, ${input.customerPhone ?? null},
-      ${input.serviceName ?? null}, ${input.visitedAt}, ${input.externalId ?? null}
+      ${input.customerName ?? null}, ${input.customerEmail ?? null}, ${input.visitedAt}, ${input.externalId ?? null},
+      ${input.permissionSource ?? null}, ${input.permissionAt ?? null}::timestamptz, ${input.permissionNoticeVersion ?? null}
     )
   `;
   const row = rows[0] as (Record<string, unknown> & { admission_status?: string }) | undefined;
@@ -152,8 +153,8 @@ export async function createFollowupVisit(
   const rows = await sql`
     SELECT * FROM public.a11_admit_booster_followup_visit(
       ${input.businessId}::uuid, ${actorUserId}::uuid, ${input.source ?? "manual"},
-      ${input.customerName ?? null}, ${input.customerEmail ?? null}, ${input.customerPhone ?? null},
-      ${input.serviceName ?? null}, ${input.visitedAt}, ${input.externalId ?? null}
+      ${input.customerName ?? null}, ${input.customerEmail ?? null}, ${input.visitedAt}, ${input.externalId ?? null},
+      ${input.permissionSource ?? null}, ${input.permissionAt ?? null}::timestamptz, ${input.permissionNoticeVersion ?? null}
     )
   `;
   const row = rows[0] as (Record<string, unknown> & { admission_status?: string }) | undefined;
@@ -302,8 +303,8 @@ export async function getRecentVisitsPage(
       b.city,
       v.customer_name,
       v.customer_email,
-      v.customer_phone,
-      v.service_name,
+      NULL::text AS customer_phone,
+      NULL::text AS service_name,
       v.visited_at,
       v.visited_at::text AS cursor_timestamp,
       v.source,
@@ -354,8 +355,8 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
       b.city,
       v.customer_name,
       v.customer_email,
-      v.customer_phone,
-      v.service_name,
+      NULL::text AS customer_phone,
+      NULL::text AS service_name,
       v.visited_at,
       v.source,
       v.followup_status,
@@ -374,6 +375,12 @@ export async function listEligibleFollowupVisits(businessId: string): Promise<Fo
       AND (lower(v.followup_status) = 'pending' OR (lower(v.followup_status) = 'failed' AND coalesce(v.attempt_count, 0) < ${MAX_FOLLOWUP_ATTEMPTS} AND (v.next_attempt_at IS NULL OR v.next_attempt_at <= now())))
       AND v.followup_sent_at IS NULL
       AND v.customer_email IS NOT NULL
+      AND v.permission_source IS NOT NULL AND v.permission_at IS NOT NULL
+      AND v.permission_notice_version IS NOT NULL
+      AND v.permission_recipient_email = lower(trim(v.customer_email))
+      AND v.permission_at <= v.created_at
+      AND coalesce(v.permission_scope, '') = 'review_request'
+      AND v.permission_withdrawn_at IS NULL
       AND b.google_review_url IS NOT NULL
       AND length(trim(v.customer_email)) > 0
       AND v.visited_at <= now() - interval '23 hours'
@@ -410,6 +417,14 @@ export async function unsubscribeCustomerFromBusinessFollowups(input: {
       AND lower(customer_email) = lower(${email})
       AND lower(followup_status) = 'pending'
       AND followup_sent_at IS NULL
+  `;
+
+  await sql`
+    UPDATE public.followup_visits
+    SET permission_withdrawn_at = COALESCE(permission_withdrawn_at, now()), updated_at = now()
+    WHERE business_id = ${input.businessId}
+      AND lower(trim(COALESCE(permission_recipient_email, customer_email))) = lower(${email})
+      AND permission_source IS NOT NULL
   `;
 }
 

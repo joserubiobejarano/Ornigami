@@ -88,14 +88,18 @@ test("member intake reaches the owner-funded Booster send path and respects down
     const request = (email: string) => new Request("http://localhost/api/review-booster/visits", {
       method: "POST",
       headers: { "content-type": "application/json", origin: "http://localhost" },
-      body: JSON.stringify({ customer_name: "A17 Guest", customer_email: email, service_name: "Consultation", visited_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() }),
+      body: JSON.stringify({ customer_name: "A17 Guest", customer_email: email, visited_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), permission_source: "paper form", permission_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(), permission_notice_version: "booster-v1" }),
     });
 
     const intake = await route.POST(request("guest@example.test"));
     assert.equal(intake.status, 201, await intake.clone().text());
-    const visit = await intake.json() as { id: string; business_id: string; customer_email: string };
+    const visit = await intake.json() as { id: string; business_id: string; customer_email: string; customer_phone?: string | null; service_name?: string | null };
     assert.equal(visit.business_id, ids.business, "member intake is stored against the canonical shared workspace");
     assert.equal(visit.customer_email, "guest@example.test");
+    assert.equal(visit.customer_phone, null, "the review-request path does not return customer phone data");
+    assert.equal(visit.service_name, null, "the review-request path does not return service data");
+    assert.equal(psql(`SELECT customer_phone IS NULL AND service_name IS NULL FROM public.followup_visits WHERE id='${visit.id}'`), "t",
+      "the review-request path does not persist phone or service data");
 
     const atomicDb = loadTs<Record<string, (...args: never[]) => unknown>>("src/modules/review-booster/services/atomic-followup-db.service.ts", {
       "@/lib/db/neon": { sql },

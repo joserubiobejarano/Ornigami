@@ -3,8 +3,15 @@ export const PRIVACY_RETENTION_DAYS = {
   leads: 90,
   feedback: 365,
   publicDemoEvents: 90,
-  reviewLinkClicks: 365,
-  followupIntegrationEvents: 365,
+  reviewLinkClicks: 90,
+  followupIntegrationEvents: 90,
+  followupIntegrationEventKeys: 365,
+  contactContent: 90,
+  rawDeliveryDiagnostics: 30,
+  deliveryEvidence: 365,
+  permissionEvidence: 365,
+  resolvedOperationEvidence: 365,
+  terminatedWorkspace: 90,
   cronRuns: 30,
   rateLimitState: 2,
 } as const;
@@ -19,8 +26,19 @@ export const PRIVACY_CLEANUP_OPERATIONS = [
   "auth_login_attempts",
   "email_verification_tokens",
   "review_link_clicks",
-  "followup_integration_events",
+  "followup_integration_event_keys",
+  "followup_integration_event_details",
+  "booster_delivery_content",
+  "booster_delivery_diagnostics",
+  "booster_delivery_events",
+  "booster_delivery_provider_correlations",
   "cron_runs",
+  "followup_messages",
+  "followup_visit_diagnostics",
+  "followup_message_diagnostics",
+  "followup_message_evidence",
+  "followup_visits",
+  "privacy_account_deletion_operations",
 ] as const;
 
 export const PRIVACY_CLEANUP_TABLES = [
@@ -31,12 +49,29 @@ export const PRIVACY_CLEANUP_TABLES = [
 export const PRIVACY_CLEANUP_BATCH_SIZE = 250;
 export const PRIVACY_CLEANUP_MAX_BATCH_SIZE = 1000;
 export const PUBLIC_DEMO_CHALLENGE_EXPIRY_GRACE_DAYS = 1;
+/** Mutation needs deployment activation plus an explicit per-run choice. */
+export const PRIVACY_RETENTION_ENABLED = process.env.PRIVACY_RETENTION_ENABLED === "true";
+export const PRIVACY_RETENTION_DEFAULT_DRY_RUN = true;
+export const PRIVACY_GUARDED_CLEANUP_OPERATIONS = [
+  "review_link_clicks",
+  "followup_integration_event_details",
+  "followup_integration_event_keys",
+  "followup_messages",
+  "followup_message_diagnostics",
+  "followup_message_evidence",
+  "followup_visit_diagnostics",
+  "followup_visits",
+  "booster_delivery_content",
+  "booster_delivery_diagnostics",
+  "booster_delivery_events",
+  "booster_delivery_provider_correlations",
+  "privacy_account_deletion_operations",
+] as const;
 
 /**
- * Retention is deliberately undefined for these histories. They remain intact
- * until account/workspace deletion removes them or an approved product/legal
- * policy supplies a duration. Unsubscribe and trial anti-abuse records are
- * preserved even through ordinary retention cleanup.
+ * These durable ledgers and eligibility fences are not removed by routine
+ * content cleanup. Personal content may be scrubbed while keys and outcomes
+ * remain. Unsubscribe and trial anti-abuse evidence has no automatic expiry.
  */
 export const PRIVACY_PRESERVED_HISTORY_CLASSES = [
   "followup_visits",

@@ -148,6 +148,10 @@ export async function GET(request: Request) {
               SELECT jsonb_agg(jsonb_build_object(
                 'id', v.id, 'customer_name', v.customer_name, 'customer_email', v.customer_email,
                 'customer_phone', v.customer_phone, 'service_name', v.service_name, 'visited_at', v.visited_at,
+                'permission_source', v.permission_source, 'permission_at', v.permission_at,
+                'permission_notice_version', v.permission_notice_version,
+                'permission_recipient_email', v.permission_recipient_email,
+                'permission_scope', v.permission_scope, 'permission_withdrawn_at', v.permission_withdrawn_at,
                 'source', v.source, 'external_id', v.external_id, 'followup_status', v.followup_status,
                 'followup_sent_at', v.followup_sent_at, 'created_at', v.created_at, 'updated_at', v.updated_at
               )) FROM public.followup_visits v WHERE v.business_id = b.id

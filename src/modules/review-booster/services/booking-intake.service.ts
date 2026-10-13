@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { sql } from "@/lib/db/neon";
 import { decryptToken, encryptToken } from "@/lib/encrypted-token";
-import { isValidCustomerEmail, isValidCustomerPhone, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
+import { isValidCustomerEmail, normalizePermissionEvidence, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
 
 export const BOOKING_MAX_BODY_BYTES = 64 * 1024;
 export const BOOKING_MAX_CLOCK_SKEW_SECONDS = 5 * 60;
@@ -14,9 +14,10 @@ export type BookingEvent = {
   external_id: string;
   customer_name?: string | null;
   customer_email?: string | null;
-  customer_phone?: string | null;
-  service_name?: string | null;
   visited_at?: string | null;
+  permission_source: string;
+  permission_at: string;
+  permission_notice_version: string;
 };
 
 export type BookingCredential = { id: string; business_id: string; secret: string };
@@ -61,25 +62,30 @@ export function validateBookingEvent(value: unknown): BookingEvent | null {
   };
   const customerName = optionalText("customer_name", 120);
   const customerEmail = optionalText("customer_email", 254);
-  const customerPhone = optionalText("customer_phone", 32);
-  const serviceName = optionalText("service_name", 120);
   const rawVisitedAt = optionalText("visited_at", 64);
   const visitedAt = rawVisitedAt ? normalizeVisitedAt(rawVisitedAt) : rawVisitedAt;
-  if ([customerName, customerEmail, customerPhone, serviceName, rawVisitedAt].some((item, index) => item === undefined && payload[["customer_name", "customer_email", "customer_phone", "service_name", "visited_at"][index]] != null)) return null;
+  if ([customerName, customerEmail, rawVisitedAt].some((item, index) => item === undefined && payload[["customer_name", "customer_email", "visited_at"][index]] != null)) return null;
   if (rawVisitedAt && !visitedAt) return null;
   if (customerEmail && !isValidCustomerEmail(customerEmail)) return null;
-  if (customerPhone && !isValidCustomerPhone(customerPhone)) return null;
+  const permission = normalizePermissionEvidence({
+    source: payload.permission_source,
+    at: payload.permission_at,
+    noticeVersion: payload.permission_notice_version,
+    recipientEmail: customerEmail ?? null,
+  });
+  if (!permission) return null;
   const eventType = payload.event_type.toLowerCase();
-  if (!["appointment.completed", "booking.completed"].includes(eventType) || !visitedAt || (!customerEmail && !customerPhone)) return null;
+  if (!["appointment.completed", "booking.completed"].includes(eventType) || !visitedAt || !customerEmail) return null;
   return {
     source: payload.source.toLowerCase(),
     event_type: eventType,
     external_id: payload.external_id.trim(),
     customer_name: customerName,
     customer_email: customerEmail,
-    customer_phone: customerPhone,
-    service_name: serviceName,
     visited_at: visitedAt,
+    permission_source: permission.source,
+    permission_at: permission.at,
+    permission_notice_version: permission.noticeVersion,
   };
 }
 
@@ -99,8 +105,8 @@ export async function admitBookingEvent(credentialId: string, event: BookingEven
   const rows = await sql`
     SELECT public.admit_booster_booking_event(
       ${credentialId}::uuid, ${event.source}, ${event.event_type}, ${event.external_id},
-      ${event.customer_name ?? null}, ${event.customer_email ?? null}, ${event.customer_phone ?? null},
-      ${event.service_name ?? null}, ${event.visited_at ?? null}::timestamptz
+      ${event.customer_name ?? null}, ${event.customer_email ?? null}, ${event.visited_at ?? null}::timestamptz,
+      ${event.permission_source}, ${event.permission_at}::timestamptz, ${event.permission_notice_version}
     ) AS result
   `;
   const result = (rows[0] as { result?: unknown } | undefined)?.result;

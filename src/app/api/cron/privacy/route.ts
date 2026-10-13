@@ -33,10 +33,13 @@ async function runCron(request: Request) {
   let healthStoreUnavailable = false;
   let healthFinishAttempted = false;
   try {
+    const dryRun = new URL(request.url).searchParams.get("dryRun") === "true" ? true : undefined;
     const result = await runPrivacyRetentionCleanup({
       cursor: run.cursor,
       deadlineAt: run.deadlineAt,
       maxOperations: run.batchLimit,
+      apply: process.env.PRIVACY_RETENTION_ENABLED === "true" && process.env.PRIVACY_RETENTION_APPLY === "true",
+      dryRun,
       checkpoint: async (cursor, processedCount) => {
         knownProcessedCount = processedCount;
         try {
@@ -50,18 +53,20 @@ async function runCron(request: Request) {
     const errorCode = result.failed > 0
       ? (result.status === "failed" ? "job_failed" : "partial_failures")
       : result.backlog ? "budget_exhausted" : undefined;
-    knownProcessedCount = result.deleted;
+    knownProcessedCount = result.affected ?? result.deleted;
     try {
       healthFinishAttempted = true;
       await finishCronJobRun({
         runId: run.runId,
         fence: run.fence,
         status: result.failed > 0 && result.status === "partial" ? "partial" : result.status,
-        processedCount: result.deleted,
+        processedCount: result.affected ?? result.deleted,
         failedCount: result.failed,
         errorCode,
         outcomes: Object.fromEntries(result.operations.map((operation) => [operation.table, {
           deleted: operation.deleted,
+          changed: operation.changed,
+          candidates: operation.candidates,
           failed: operation.failed,
           complete: !operation.failed && !operation.fullBatch,
         }])),

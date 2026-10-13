@@ -1,10 +1,11 @@
 export type ParsedCsvRow = {
   customer_name?: string;
   customer_email?: string;
-  service_received?: string;
-  service_name?: string;
   visited_at?: string;
   source?: string;
+  permission_source?: string;
+  permission_at?: string;
+  permission_notice_version?: string;
 };
 
 export class CsvParseError extends Error {
@@ -99,7 +100,10 @@ export function parseCsv(text: string): ParsedCsvRow[] {
       throw new CsvParseError(`CSV record ${rowNumber} has ${values.length} fields; expected ${headers.length}`);
     }
     const row: Record<string, string> = {};
-    headers.forEach((header, headerIndex) => { row[header] = values[headerIndex] ?? ""; });
+    const intakeHeaders = new Set(["customer_name", "customer_email", "visited_at", "permission_source", "permission_at", "permission_notice_version"]);
+    headers.forEach((header, headerIndex) => {
+      if (intakeHeaders.has(header)) row[header] = values[headerIndex] ?? "";
+    });
     return row as ParsedCsvRow;
   });
 }

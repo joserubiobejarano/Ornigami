@@ -136,7 +136,7 @@ export async function finishCronJobRun(input: {
   runId: string; fence: number; status: Exclude<CronRunStatus, "running">;
   processedCount: number; failedCount: number; errorCode?: "job_failed" | "partial_failures" | "budget_exhausted" | "health_store_unavailable";
   clearCursor?: boolean;
-  outcomes?: Record<string, { deleted: number; failed: boolean; complete: boolean }>;
+  outcomes?: Record<string, { deleted: number; changed?: number; candidates?: number; failed: boolean; complete: boolean }>;
 }): Promise<void> {
   const rows = await sql`
     WITH owned AS MATERIALIZED (
@@ -171,12 +171,18 @@ export async function finishCronJobRun(input: {
   await evaluateCronAlerts();
 }
 
-function sanitizeOutcomes(value: Record<string, { deleted: number; failed: boolean; complete: boolean }> | undefined) {
+function sanitizeOutcomes(value: Record<string, { deleted: number; changed?: number; candidates?: number; failed: boolean; complete: boolean }> | undefined) {
   if (!value || typeof value !== "object") return {};
-  const output: Record<string, { deleted: number; failed: boolean; complete: boolean }> = {};
+  const output: Record<string, { deleted: number; changed: number; candidates: number; failed: boolean; complete: boolean }> = {};
   for (const [key, item] of Object.entries(value)) {
     if (!(PRIVACY_CLEANUP_TABLES as readonly string[]).includes(key) || !item || typeof item !== "object") continue;
-    output[key] = { deleted: Math.max(0, Math.floor(Number.isFinite(item.deleted) ? item.deleted : 0)), failed: Boolean(item.failed), complete: Boolean(item.complete) };
+    output[key] = {
+      deleted: Math.max(0, Math.floor(Number.isFinite(item.deleted) ? item.deleted : 0)),
+      changed: Math.max(0, Math.floor(Number.isFinite(item.changed) ? item.changed! : 0)),
+      candidates: Math.max(0, Math.floor(Number.isFinite(item.candidates) ? item.candidates! : 0)),
+      failed: Boolean(item.failed),
+      complete: Boolean(item.complete),
+    };
   }
   return output;
 }
