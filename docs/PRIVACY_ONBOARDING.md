@@ -4,6 +4,8 @@ Prepared 13 October 2026 against base `0bcdd8f`. Jose owns privacy, support and 
 
 Follow-up against `3022643`: the [privacy evidence closure record](./PRIVACY_EVIDENCE_CLOSURE.md) identifies Ornigami LLC from the owner-supplied formation documents and completed operating-agreement fields. Customer acceptance remains missing; account observations establish some settings, with the full provider/backup review still open. The owner confirms no completed customer/vendor agreements; Resend's incorporation-on-signup statement requires separate account-party review. Use the existing `%LOCALAPPDATA%\Ornigami\privacy-rights` store and the task's private hash manifest for recovered artifacts.
 
+Owner clarification: vendor organizations are not currently contracted by Ornigami LLC. The earlier Zoho identification was withdrawn; the owner has no confirmed place to read info and selected direct forwarding of info/privacy/support to the existing Gmail inbox. The [routing handoff](./PRIVACY_ROUTING_HANDOFF.md) prepares that change for integration, with live setup and proof still open. The open OpenAI Personal/Default project settings have been captured; their deployment linkage and LLC contracting remain unproved. Backup/export locations are unknown after a bounded local inventory, not confirmed absent.
+
 ## Routing recovery
 
 | Route | Existing evidence | Recovery outcome |
