@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assessSamples, nearestRankPercentile, summarizeSamples } from "../scripts/a23-performance-core.mjs";
+import { assessSamples, isLocalFixtureRedirect, nearestRankPercentile, summarizeSamples } from "../scripts/a23-performance-core.mjs";
 
 test("nearest-rank percentile uses ceil(p*n) and leaves its input untouched", () => {
   const values = [9, 1, 7, 2, 3, 8, 5, 4, 6, 10];
@@ -36,4 +36,16 @@ test("latency gate fails p95 violations, unexpected errors and inadequate sample
   const failed = Array.from({ length: 40 }, (_, index) => ({ durationMs: 10, ok: index !== 0 }));
   assert.equal(assessSamples(failed, { minimum: 40 }).pass, false);
   assert.equal(assessSamples(failed.slice(0, 39), { minimum: 40 }).pass, false);
+});
+
+test("Auth.js callback redirect accepts only the A20 loopback host and fixture port", () => {
+  const base = new URL("http://127.0.0.1:43127");
+  assert.equal(isLocalFixtureRedirect("http://127.0.0.1:43127/dashboard", base), true);
+  assert.equal(isLocalFixtureRedirect("http://localhost:43127/dashboard", base), true);
+  assert.equal(isLocalFixtureRedirect("/dashboard", base), true);
+  assert.equal(isLocalFixtureRedirect("http://localhost:43128/dashboard", base), false);
+  assert.equal(isLocalFixtureRedirect("https://localhost:43127/dashboard", base), false);
+  assert.equal(isLocalFixtureRedirect("http://example.com:43127/dashboard", base), false);
+  assert.equal(isLocalFixtureRedirect("http://user@localhost:43127/dashboard", base), false);
+  assert.equal(isLocalFixtureRedirect(undefined, base), false);
 });

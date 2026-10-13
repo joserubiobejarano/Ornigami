@@ -28,3 +28,14 @@ export function assessSamples(samples, { minimum = 30, latencyLimitMs = 3000 } =
   return { ...summary, slowCount: slow, errorCount: errors,
     pass: samples.length >= minimum && summary.p95Ms <= latencyLimitMs && errors === 0 };
 }
+
+export function isLocalFixtureRedirect(value, base) {
+  if (typeof value !== "string" || !base || typeof base.hostname !== "string" || typeof base.port !== "string") return false;
+  try {
+    const redirect = new URL(value, base);
+    return redirect.protocol === "http:" && !redirect.username && !redirect.password &&
+      [base.hostname, "localhost"].includes(redirect.hostname) && redirect.port === base.port;
+  } catch {
+    return false;
+  }
+}

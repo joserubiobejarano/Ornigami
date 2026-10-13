@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { assessSamples, summarizeSamples } from "./a23-performance-core.mjs";
+import { assessSamples, isLocalFixtureRedirect, summarizeSamples } from "./a23-performance-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureRoot = path.join(root, ".a20-fixture");
@@ -249,8 +249,7 @@ async function authenticate(base, credentials) {
     const parsed = JSON.parse(body);
     redirectValue = typeof parsed === "string" ? parsed : parsed?.url;
   } catch { redirectValue = signIn.headers.get("location"); }
-  const redirect = typeof redirectValue === "string" ? new URL(redirectValue, base) : null;
-  if (!redirect || redirect.origin !== base.origin || redirect.protocol !== "http:") throw new Error("Auth.js did not return a loopback redirect");
+  if (!isLocalFixtureRedirect(redirectValue, base)) throw new Error("Auth.js did not return a loopback redirect");
   const sessionResponse = await boundedFetch(new URL("/api/auth/session", base), { headers: { cookie: jar.header() }, redirect: "manual" });
   jar.absorb(sessionResponse);
   if (!sessionResponse.ok || sessionResponse.status >= 300 && sessionResponse.status < 400) throw new Error(`Auth.js session endpoint returned ${sessionResponse.status}`);
