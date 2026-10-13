@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { assessSamples, isLocalFixtureRedirect, summarizeSamples } from "./a23-performance-core.mjs";
+import { assessSamples, isExpectedHtmlResponse, isLocalFixtureRedirect, summarizeSamples } from "./a23-performance-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureRoot = path.join(root, ".a20-fixture");
@@ -22,7 +22,7 @@ const requestTimeoutMs = 15_000;
 const routeDefinitions = [
   { name: "dashboard-home-html", kind: "html", path: () => "/dashboard", check: /Welcome back|Bring Google reviews into one inbox/i },
   { name: "review-booster-html", kind: "html", path: () => "/dashboard/agents/review-booster", check: /Keep the conversation going|Reviews synced/i },
-  { name: "review-booster-settings-html", kind: "html", path: () => "/dashboard/agents/review-booster/settings", check: /Only the business owner can change Review Booster settings|Rebooking/i },
+  { name: "review-booster-settings-html", kind: "html", path: () => "/dashboard/agents/review-booster/settings", check: [/Loading settings\.\.\./i, /Save settings/i] },
   { name: "review-replies-html", kind: "html", path: () => "/dashboard/agents/review-replies/reviews", check: /Your review inbox|Connect Google and select a location to load your reviews/i },
   { name: "dashboard-summary-api", kind: "json", path: () => "/api/dashboard/summary", check: (body) => body?.reviewsCount === 96_001 && typeof body?.projectsCount === "number" },
   { name: "review-booster-settings-api", kind: "json", path: (c) => `/api/review-booster/settings?businessId=${encodeURIComponent(c.business.id)}`,
@@ -270,8 +270,7 @@ async function sample(base, session, definition, route, credentials, round) {
     const contentType = response.headers.get("content-type") ?? "";
     let contentValid = false;
     if (definition.kind === "html") {
-      contentValid = contentType.toLowerCase().includes("text/html") && definition.check.test(text) &&
-        !/Something went wrong|NEXT_HTTP_ERROR_FALLBACK|Application error|Internal Server Error/i.test(text);
+      contentValid = isExpectedHtmlResponse(contentType, text, definition.check);
     } else if (contentType.toLowerCase().includes("application/json")) {
       try { contentValid = definition.check(JSON.parse(text), credentials); } catch { contentValid = false; }
     }

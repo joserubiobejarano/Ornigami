@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assessSamples, isLocalFixtureRedirect, nearestRankPercentile, summarizeSamples } from "../scripts/a23-performance-core.mjs";
+import { assessSamples, isExpectedHtmlResponse, isLocalFixtureRedirect, nearestRankPercentile, summarizeSamples } from "../scripts/a23-performance-core.mjs";
 
 test("nearest-rank percentile uses ceil(p*n) and leaves its input untouched", () => {
   const values = [9, 1, 7, 2, 3, 8, 5, 4, 6, 10];
@@ -48,4 +48,12 @@ test("Auth.js callback redirect accepts only the A20 loopback host and fixture p
   assert.equal(isLocalFixtureRedirect("http://example.com:43127/dashboard", base), false);
   assert.equal(isLocalFixtureRedirect("http://user@localhost:43127/dashboard", base), false);
   assert.equal(isLocalFixtureRedirect(undefined, base), false);
+});
+
+test("HTML route validation accepts the settings SSR state and rejects fallback or incomplete content", () => {
+  const markers = [/Loading settings\.\.\./i, /Save settings/i];
+  assert.equal(isExpectedHtmlResponse("text/html; charset=utf-8", "<h1>Settings</h1><p>Loading settings...</p><button>Save settings</button>", markers), true);
+  assert.equal(isExpectedHtmlResponse("text/html", "<h1>Settings</h1><p>Loading settings...</p>", markers), false);
+  assert.equal(isExpectedHtmlResponse("text/html", "Something went wrong: <p>Loading settings...</p><button>Save settings</button>", markers), false);
+  assert.equal(isExpectedHtmlResponse("application/json", "<p>Loading settings...</p><button>Save settings</button>", markers), false);
 });

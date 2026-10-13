@@ -39,3 +39,10 @@ export function isLocalFixtureRedirect(value, base) {
     return false;
   }
 }
+
+export function isExpectedHtmlResponse(contentType, body, markers) {
+  if (typeof contentType !== "string" || !contentType.toLowerCase().includes("text/html") || typeof body !== "string") return false;
+  const expected = Array.isArray(markers) ? markers : [markers];
+  if (expected.length === 0 || expected.some((marker) => !(marker instanceof RegExp) || !marker.test(body))) return false;
+  return !/Something went wrong|NEXT_HTTP_ERROR_FALLBACK|Application error|Internal Server Error/i.test(body);
+}
