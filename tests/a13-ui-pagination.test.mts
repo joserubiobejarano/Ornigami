@@ -42,7 +42,7 @@ function createHarness(
     { name: "loc-a", locationName: "loc-a", selected: true },
     { name: "loc-b", locationName: "loc-b", selected: true },
   ],
-  fetchSettings = async () => ({ businessId: "business-1", role: "owner" }),
+  fetchSettings: () => Promise<{ businessId?: string; role?: string } | null> = async () => ({ businessId: "business-1", role: "owner" }),
 ) {
   const slots: unknown[] = [];
   const setters: Array<((update: unknown) => void) | undefined> = [];
@@ -195,6 +195,51 @@ test("a delayed location response waits for settings before the scoped review re
   await harness.settle();
   assert.deepEqual(reviewScopes, ["business-1"]);
   assert.deepEqual(harness.current.reviews.map((item) => item.google_review_id), ["delayed-location"]);
+});
+
+test("loading stays true through delayed settings, locations, and the first reviews page", async () => {
+  let resolveSettings!: (value: { businessId: string; role: "owner" }) => void;
+  const settings = new Promise<{ businessId: string; role: "owner" }>((resolve) => { resolveSettings = resolve; });
+  let resolveLocations!: (value: Array<{ name: string; locationName: string; selected: boolean }>) => void;
+  const locations = new Promise<Array<{ name: string; locationName: string; selected: boolean }>>((resolve) => { resolveLocations = resolve; });
+  let resolveReviews!: (value: PageResponse) => void;
+  const reviews = new Promise<PageResponse>((resolve) => { resolveReviews = resolve; });
+  const harness = createHarness(async () => reviews, () => locations, () => settings);
+
+  await harness.flush();
+  assert.equal(harness.current.loading, true, "pending settings and locations keep initial loading active");
+  resolveSettings({ businessId: "business-1", role: "owner" });
+  resolveLocations([{ name: "loc-a", locationName: "loc-a", selected: true }]);
+  await harness.flush();
+  assert.equal(harness.current.pageLoading, true, "the first scoped review request has started");
+  assert.equal(harness.current.loading, true, "the location response does not expose an empty inbox before reviews settle");
+  resolveReviews({ items: [], page: { nextCursor: null, hasMore: false } });
+  await harness.settle();
+  assert.equal(harness.current.loading, false);
+});
+
+test("initial loading settles on an empty location result or failed bootstrap", async () => {
+  const noLocations = createHarness(async () => ({ items: [], page: { nextCursor: null, hasMore: false } }), async () => []);
+  await noLocations.settle();
+  assert.equal(noLocations.current.selectedLocation, "");
+  assert.equal(noLocations.current.loading, false);
+
+  const failedBootstrap = createHarness(async () => ({ items: [], page: { nextCursor: null, hasMore: false } }), async () => {
+    throw new Error("Locations unavailable");
+  }, async () => { throw new Error("Settings unavailable"); });
+  await failedBootstrap.settle();
+  assert.equal(failedBootstrap.current.loading, false);
+  assert.equal(failedBootstrap.current.error, "Locations unavailable");
+
+  let resolveLocations!: (value: Array<{ name: string; locationName: string; selected: boolean }>) => void;
+  const delayedLocations = new Promise<Array<{ name: string; locationName: string; selected: boolean }>>((resolve) => { resolveLocations = resolve; });
+  const noSettingsScope = createHarness(async () => ({ items: [], page: { nextCursor: null, hasMore: false } }),
+    () => delayedLocations, async () => null);
+  await noSettingsScope.flush();
+  assert.equal(noSettingsScope.current.loading, true, "settings without a businessId still waits for the initial location response");
+  resolveLocations([]);
+  await noSettingsScope.settle();
+  assert.equal(noSettingsScope.current.loading, false);
 });
 
 test("a pending location response after unmount is ignored", async () => {

@@ -73,6 +73,8 @@ function mapSyncError(raw: unknown): string {
 export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
   const [businessId, setBusinessId] = useState<string>();
   const [settingsReady, setSettingsReady] = useState(false);
+  const [initialBootstrapReady, setInitialBootstrapReady] = useState(false);
+  const [initialLoadReady, setInitialLoadReady] = useState(false);
   const [locations, setLocations] = useState<ReviewLocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -223,6 +225,7 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
       if (requestId === loadRequestRef.current) {
         setLoading(false);
         setPageLoading(false);
+        setInitialLoadReady(true);
       }
     }
   }, [businessId]);
@@ -351,12 +354,18 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
           setIsOwner(Boolean(settings.isOwner || settings.role === "owner"));
         }
         setSettingsReady(true);
-        if (settings?.businessId && !(await initialLocations) && !cancelled &&
+        const locationsLoaded = await initialLocations;
+        if (settings?.businessId && !locationsLoaded && !cancelled &&
           locationsRequestRef.current === initialLocationsRequest) {
           await readLocations(settings.businessId);
         }
+        if (!cancelled) setInitialBootstrapReady(true);
       } catch {
-        if (!cancelled) setSettingsReady(true);
+        await initialLocations;
+        if (!cancelled) {
+          setSettingsReady(true);
+          setInitialBootstrapReady(true);
+        }
       }
     })();
     return () => {
@@ -406,6 +415,10 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
     }
   }, [businessId, loadReviews, selectedLocation, settingsReady]);
 
+  useEffect(() => {
+    if (!selectedLocation && settingsReady && initialBootstrapReady) setInitialLoadReady(true);
+  }, [initialBootstrapReady, selectedLocation, settingsReady]);
+
   return {
     businessId,
     locations,
@@ -418,7 +431,7 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
     savedDraftSnapshots,
     setSavedDraftSnapshots,
     rememberDraftMetadata,
-    loading,
+    loading: loading || !initialLoadReady,
     error,
     setError,
     syncing,
