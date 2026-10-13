@@ -79,7 +79,10 @@ function SettingsPageContent() {
   } = useGoogleConnection({ businessId, enabled: settingsLoaded && Boolean(businessId), isDemo });
   const connLoading = settingsLoading || connectionLoading;
   const connectionIssue = error || connectionError;
-  const fetchConnectionData = () => reloadConnection({ force: true });
+  const fetchConnectionData = () => {
+    setError(null);
+    return reloadConnection({ force: true });
+  };
 
   useEffect(() => {
     const googleStatus = searchParams.get("google");
