@@ -6,6 +6,8 @@ Follow-up against `3022643`: the [privacy evidence closure record](./PRIVACY_EVI
 
 Owner clarification: vendor organizations are not currently contracted by Ornigami LLC. The earlier Zoho identification was withdrawn; the owner has no confirmed place to read info and selected direct forwarding of info/privacy/support to the existing Gmail inbox. The [routing handoff](./PRIVACY_ROUTING_HANDOFF.md) prepares that change for integration, with live setup and proof still open. The open OpenAI Personal/Default project settings have been captured; their deployment linkage and LLC contracting remain unproved. Backup/export locations are unknown after a bounded local inventory, not confirmed absent.
 
+The [customer addendum draft](./PRIVACY_CUSTOMER_PROCESSING_ADDENDUM_DRAFT.md) now prepares the proposed obligations and company-side fields for review. The [provider dossier](./PRIVACY_PROVIDER_REVIEW.md) records current agreement mechanisms/limitations and unsent clarification requests. Both remain incomplete for execution; no first customer's identity, signature or operational annex is invented.
+
 ## Routing recovery
 
 | Route | Existing evidence | Recovery outcome |
