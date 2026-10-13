@@ -67,6 +67,8 @@ Use `node scripts/privacy-rights-register.mjs --help` for the private, owner-onl
 
 Before onboarding, establish the reviewed controller/processor arrangement, inventory provider/backup/PITR/log retention and document assisted rights handling. Source changes and published terms alone do not prove these operator arrangements.
 
+The [privacy and onboarding packet](./PRIVACY_ONBOARDING.md) records the 13 October receipt-recovery outcome, prepared customer processing schedule and assisted-request runbook. Its [retention inventory](./PRIVACY_RETENTION_INVENTORY.md) separates application cleanup from unverified provider, backup/PITR and log settings. Routing receipts were not recovered; contracting-party acceptance and account-specific retention evidence remain open before enrollment.
+
 ## Retention and restoration
 
 Permission/retention source is integrated, but schema deployment and guarded-cleanup activation require target-specific review. Apply 039–041 in numeric order with intake/schedules paused and live leases drained; schema must precede the matching application. Intake signatures change, so an old application cannot use the new contract. Verify the 025/036 lifecycle/suppression wrapper chain and 041 callback function patches on the exact target. Do not roll back to permissionless intake or remove durable keys.
