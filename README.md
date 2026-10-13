@@ -4,9 +4,9 @@ One Next.js application for local-business reputation workflows: Review Booster 
 
 ## Project and current readiness
 
-The only working checkout is `Ornigami/Ornigami-Agents`. Run commands there. Vercel builds the repository root (`.`), and production linkage remains unchanged. Committed-history recovery, uncommitted proposals and the cleanup audit live in its owner-restricted, Git-ignored `.local/recovery`; never upload or commit that area. Previously created worktrees and external review-backup directories are removed. Git history retains the detailed original handoffs; the [release evidence](./docs/RELEASE_EVIDENCE.md#workspace-cleanup-and-recovery) records the loss of selected untracked local receipt copies during cleanup.
+The canonical checkout is `Ornigami/Ornigami-Agents`. Run commands there; task worktrees are separate review targets. On October 13 the owner changed the hosting direction from Vercel to a VPS; VPS setup and rollout remain pending. Historical Vercel linkage/configuration does not establish VPS readiness or completed decommissioning. Committed-history recovery, uncommitted proposals and the cleanup audit live in the owner-restricted, Git-ignored `.local/recovery`; never upload or commit that area. Git history retains the detailed original handoffs; the [release evidence](./docs/RELEASE_EVIDENCE.md#workspace-cleanup-and-recovery) records the loss of selected untracked local receipt copies during cleanup.
 
-The established **one 14-day trial per business and billing owner** remains. No card at entry; unknown history needs reconciliation; no payment method at expiry cancels. The temporary paid-only/no-new-trials proposal is cancelled. Retention/permission and performance targets need their narrow implementation/evidence, and Stripe/provider/operational gates remain in the [roadmap](./docs/ROADMAP.md). Review Booster can use a validated manual Google review URL; Replies/Complete sales still require Google approval and real-provider acceptance. Production self-service deletion and uncertain-provider reconciliation remain disabled.
+The established **one 14-day trial per business and billing owner** remains. No card at entry; unknown history needs reconciliation; no payment method at expiry cancels. The temporary paid-only/no-new-trials proposal is cancelled. Permission/retention source, isolated read-load acceptance, local mobile measurements and monthly/annual sandbox billing journeys are integrated; target rollout and external onboarding evidence remain in the [roadmap](./docs/ROADMAP.md). Review Booster can use a validated manual Google review URL; Replies/Complete sales still require Google approval and real-provider acceptance. Production self-service deletion and uncertain-provider reconciliation remain disabled.
 
 ## Develop and verify
 
@@ -19,7 +19,7 @@ Relevant checks are `npm run lint`, `npm run typegen`, `npx tsc --noEmit`, `npm 
 
 ## Documentation
 
-The six active guides are:
+The current guides are:
 
 - [Roadmap](./docs/ROADMAP.md): current backlog, release gates and branch coordination.
 - [Product contracts](./docs/PRODUCT_CONTRACTS.md): current/approved/proposed commercial, trial, quota and workflow rules.
@@ -27,6 +27,7 @@ The six active guides are:
 - [Technical reference](./docs/TECHNICAL_REFERENCE.md): architecture, API families, schema and durable security/provider contracts.
 - [Release evidence](./docs/RELEASE_EVIDENCE.md): scoped accepted proofs, exact commits/targets and unresolved observations.
 - [User guide](./docs/USER_GUIDE.md): setup, CSV, send timing, statuses and safe recovery.
+- [Privacy onboarding](./docs/PRIVACY_ONBOARDING.md) and [retention inventory](./docs/PRIVACY_RETENTION_INVENTORY.md): durable operator preparation and outstanding external evidence.
 
 Source-specific migration inputs and original instruction/provenance files remain under [migration-sources](./migration-sources/README.md). The schema ledger and vendored adapter README remain alongside their implementation; they are not separate current roadmaps. `AGENTS.md` and `CLAUDE.md` are agent tooling instructions, not duplicate product guides.
 

@@ -86,4 +86,4 @@ See [PRIVACY_RETENTION_INVENTORY.md](./PRIVACY_RETENTION_INVENTORY.md) for sourc
 | Application/schema retention rollout and guarded activation | Separate existing gate | Integration/operator: preserve reviewed rollout and disposable validation requirements |
 | Restore reapplication and provider erasure outcomes | Procedure prepared; execution unproved | Operator: obtain disposable restore evidence and case-specific provider receipts |
 
-Task verification and commit handoff are in [PRIVACY_ONBOARDING_HANDOFF.md](./PRIVACY_ONBOARDING_HANDOFF.md). This packet does not authorize enrollment, activation, deployment or account deletion.
+Verification and historical task provenance are in [release evidence](./RELEASE_EVIDENCE.md). This packet does not authorize enrollment, activation, deployment or account deletion.
