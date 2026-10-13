@@ -1,6 +1,6 @@
 # Provider evidence and agreement preparation
 
-Reviewed 13 October 2026 against task source `3022643`. **Prepared, not accepted or activated.** Account observations, public provider policies and actual erasure receipts are different evidence. The owner states that existing vendor organizations are not contracted by Ornigami LLC. No provider agreement was accepted, account business identity changed, paid plan selected, message sent or production setting changed.
+Reviewed 13 October 2026 against task source `3022643`. **Prepared, not accepted or activated.** Account observations, public provider policies and actual erasure receipts are different evidence. The owner states that existing vendor organizations are not contracted by Ornigami LLC. No provider agreement was accepted, account business identity changed, paid plan selected or production setting changed. The two support inquiries below were sent with explicit owner authorization.
 
 ## Findings that narrow the open inventory
 
@@ -39,9 +39,11 @@ The [published GDPR page](https://www.improvmx.com/transparency/gdpr-compliance/
 
 See the [routing handoff](./PRIVACY_ROUTING_HANDOFF.md) for the prepared record additions and preserved-record checks. The personal destination remains only in the private mapping.
 
-## Prepared support questions — unsent
+## Provider support inquiries sent, answers pending
 
-These messages request information; they make no purchase, commitment or acceptance. Two matching drafts have been saved in the authenticated owner Gmail inbox and remain **unsent**. Sending them requires the owner's explicit authorization. No credentials, signatures, requester data, private project IDs or destination mapping are included in the bodies. Exact sender/body records and draft screenshots are private under `routing/`.
+The owner explicitly authorized sending both prepared inquiries. Both were sent from the authenticated owner Gmail inbox on **13 October 2026 at 12:56 Europe/Madrid**, as displayed by Gmail. Gmail confirmed each send; the Sent view, message bodies and exact recipient headers were verified and retained privately. Namecheap immediately returned an automated receipt acknowledgment; it contains no substantive compatibility or retention answer. No ImprovMX reply was visible in the inspected conversation. Both substantive answers remain pending.
+
+These messages request information; they make no purchase, commitment or acceptance. No credentials, signatures, requester data, private project IDs or destination mapping are included in the bodies. Original draft records remain unchanged. Send records, screenshots and Namecheap's acknowledgment are under private `routing/`, including `support-inquiries-send-record.json` and `support-inquiries-sent.*`, with exact-byte hashes in the manifest. This is evidence of support correspondence from Gmail, not delivery through any Ornigami alias or provider agreement acceptance. Sending further correspondence requires authorization for that correspondence.
 
 **Namecheap: `pesupport@namecheap.com`**, the [published Free Email Forwarding support address](https://www.namecheap.com/support/knowledgebase/article.aspx/227/5/how-can-i-request-support-via-email/)
 

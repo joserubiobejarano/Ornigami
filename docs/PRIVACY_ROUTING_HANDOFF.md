@@ -18,6 +18,8 @@ The root-domain inbound correction must preserve existing application A/CNAME re
 
 ## Provider and execution review
 
+The owner-authorized Namecheap compatibility/retention and ImprovMX Free-plan DPA/retention inquiries were sent on 13 October 2026. Namecheap's automated acknowledgment is retained privately; substantive answers remain pending. See the [provider dossier](./PRIVACY_PROVIDER_REVIEW.md#provider-support-inquiries-sent-answers-pending) for the exact sent texts and evidence boundaries. This correspondence does not establish delivery to the three published aliases.
+
 [Namecheap's forwarding guide](https://www.namecheap.com/support/knowledgebase/article.aspx/308/2214/how-to-set-up-free-email-forwarding/) describes forwarding on BasicDNS, automatic MX configuration on saving Email Forwarding mode and a required SPF record. It also says that forwarding cannot be used alongside another email service. The guide does not establish whether the existing sending-subdomain setup can safely coexist. Therefore **do not switch Custom MX to Email Forwarding until that compatibility and preservation are established**. The owner selected the destination, not a provider or a purchase.
 
 An additive **ImprovMX candidate** has now been prepared from its [official Namecheap guide](https://improvmx.com/guides/namecheap/). It keeps Custom MX mode and adds the root records below while preserving every existing subdomain and application record. This is a reviewable candidate, not an approved provider/account or an executed change:
