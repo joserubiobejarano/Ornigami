@@ -8,6 +8,7 @@ type Subscription = {
   customer: string;
   metadata: Record<string, string>;
   trial_start: number | null;
+  trial_end?: number | null;
   items: { data: Array<{ price: { id: string }; current_period_start: number; current_period_end: number }> };
 };
 type ApplyInput = Record<string, unknown>;
@@ -159,6 +160,19 @@ test("a trial is consumed from authoritative trial_start even when the retrieved
   await harness.reconcile(event("evt-canceled-trial", "customer.subscription.deleted"), async (id) => subscription({ id, status: "canceled", trial_start: 1_700_000_000 }));
   assert.notEqual(harness.applied[0].trialStart, null);
   assert.equal(harness.applied[0].trialStart, new Date(1_700_000_000 * 1000).toISOString());
+});
+
+test("trial dates and billing period dates come from their authoritative Stripe fields", async () => {
+  const harness = setup({ currentRows: [] });
+  const trialStart = 1_800_000_000;
+  const trialEnd = trialStart + 14 * 24 * 60 * 60;
+  const paidPeriodEnd = trialEnd + 30 * 24 * 60 * 60;
+  await harness.reconcile(event("evt-trial-period", "customer.subscription.updated", "sub-current"), async (id) =>
+    subscription({ id, status: "trialing", trial_start: trialStart, trial_end: trialEnd,
+      items: { data: [{ price: { id: "price-complete-monthly" }, current_period_start: trialStart, current_period_end: paidPeriodEnd }] } }));
+  assert.equal(harness.applied[0].trialStart, new Date(trialStart * 1000).toISOString());
+  assert.equal((harness.applied[0].subscription as { currentPeriodEnd: string }).currentPeriodEnd,
+    new Date(paidPeriodEnd * 1000).toISOString(), "period bounds follow the subscription item's billing period");
 });
 
 test("duplicate and in-flight event claims avoid fetching or acknowledging unfinished work", async () => {

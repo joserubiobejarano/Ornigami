@@ -182,12 +182,24 @@ function checkoutRequest(plan = "complete", selectedBusinessId?: string) {
   });
 }
 
+function checkoutPayload(h: ReturnType<typeof routeHarness>, index = 0) {
+  return h.state.created[index] as {
+    custom_text?: { submit?: { message?: string } };
+    subscription_data?: { trial_period_days?: number; trial_settings?: { end_behavior?: { missing_payment_method?: string } } };
+  };
+}
+
 test("owner checkout is idempotent across concurrent route requests", async () => {
   const h = routeHarness();
   const responses = await Promise.all([h.checkout.POST(checkoutRequest()), h.checkout.POST(checkoutRequest())]);
   assert.deepEqual(responses.map(response => response.status), [303, 303]);
   assert.equal(h.state.created.length, 1, "provider receives one session create for the stable intent key");
   assert.equal(h.state.intent?.sessionId, "cs_1");
+  const payload = checkoutPayload(h);
+  assert.equal(payload.subscription_data?.trial_period_days, 14);
+  assert.equal(payload.subscription_data?.trial_settings?.end_behavior?.missing_payment_method, "cancel");
+  assert.match(payload.custom_text?.submit?.message ?? "", /one-time 14-day trial/);
+  assert.match(payload.custom_text?.submit?.message ?? "", /without one, your trial subscription cancels at expiry/);
 });
 
 test("database failure after Stripe creates a session recovers that same session", async () => {
@@ -206,8 +218,9 @@ test("confirmed expired abandoned checkout can claim a fresh trial session", asy
   assert.equal((await h.checkout.POST(checkoutRequest())).status, 303);
   assert.equal(h.state.created.length, 2);
   assert.equal(h.state.intent?.key, "stable-key-2");
-  const payload = h.state.created[1] as { subscription_data?: Record<string, unknown> };
+  const payload = checkoutPayload(h, 1);
   assert.equal(payload.subscription_data?.trial_period_days, 14);
+  assert.match(payload.custom_text?.submit?.message ?? "", /one-time 14-day trial/);
   const firstMetadata = (h.state.created[0].metadata ?? {}) as Record<string, string>;
   const secondMetadata = (h.state.created[1].metadata ?? {}) as Record<string, string>;
   assert.notEqual(secondMetadata.billing_intent_token, firstMetadata.billing_intent_token);
@@ -292,11 +305,18 @@ test("a conflicting plan cannot replace the immutable pending checkout", async (
 });
 
 test("previously consumed or unknown legacy trial history starts a paid checkout without resetting trial", async () => {
-  const h = routeHarness({ eligibility: "used" });
-  const response = await h.checkout.POST(checkoutRequest());
-  assert.equal(response.status, 303);
-  const payload = h.state.created[0] as { subscription_data?: Record<string, unknown> };
-  assert.equal(payload.subscription_data?.trial_period_days, undefined);
+  for (const eligibility of ["used", "legacy_unknown"]) {
+    const h = routeHarness({ eligibility });
+    const response = await h.checkout.POST(checkoutRequest());
+    assert.equal(response.status, 303);
+    const payload = checkoutPayload(h);
+    assert.equal(payload.subscription_data?.trial_period_days, undefined);
+    assert.equal(payload.subscription_data?.trial_settings, undefined);
+    assert.match(payload.custom_text?.submit?.message ?? "", /No free trial is included in this checkout/);
+    assert.match(payload.custom_text?.submit?.message ?? "", /starts a paid subscription at the price and billing period shown/);
+    assert.match(payload.custom_text?.submit?.message ?? "", /does not create another trial/);
+    assert.doesNotMatch(payload.custom_text?.submit?.message ?? "", /trial starts when checkout completes/);
+  }
 });
 
 test("orphaned live Stripe subscription blocks a new checkout for reconciliation", async () => {

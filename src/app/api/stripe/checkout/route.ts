@@ -306,6 +306,13 @@ export async function POST(request: Request) {
       client_reference_id: context.ownerUserId,
       line_items: [{ price: priceId, quantity: 1 }],
       currency: "eur",
+      custom_text: {
+        submit: {
+          message: trialRequested
+            ? "Your one-time 14-day trial starts when checkout completes. No card is required to start. Add a valid payment method in Billing before it ends to continue on this paid plan; without one, your trial subscription cancels at expiry. Cancelling or changing plans does not create another trial."
+            : "No free trial is included in this checkout. This checkout starts a paid subscription at the price and billing period shown. Cancelling or changing plans does not create another trial.",
+        },
+      },
       subscription_data: {
         metadata,
         ...(trialRequested ? {

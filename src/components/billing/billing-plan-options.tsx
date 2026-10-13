@@ -22,6 +22,14 @@ export function BillingPlanOptions({ currentPlan, currentPeriod, trialEligible =
         <BillingPeriodToggle value={billingPeriod} onChange={setBillingPeriod} id="dashboard-billing-period-toggle" />
       </div>
 
+      {!currentPlan && trialEligible ? (
+        <p className="text-sm text-muted-foreground">
+          Your one-time 14-day trial starts when checkout completes. No card is required to start.
+          Add a valid payment method in Billing before it ends to continue on your selected paid plan;
+          without one, your trial subscription cancels at expiry. Cancelling or changing plans does not create another trial.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-3">
         {PLAN_ORDER.map((planId) => {
           const plan = PLANS[planId];
