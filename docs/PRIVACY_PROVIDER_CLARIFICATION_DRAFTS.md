@@ -1,6 +1,6 @@
 # Remaining provider clarification drafts
 
-Prepared 13 October 2026. **Unsent; awaiting specific owner authorization.** These information-only inquiries make no purchase, service change, data-deletion request or contractual commitment. No account identifiers, credentials, customer records, signatures or attachments are included. Sending from the approved existing Gmail inbox discloses that sender address to the recipients. Keep the original sent/received evidence privately; update status only after actual sending.
+Prepared 13 October 2026. **Unsent at the owner's request; do not send.** The owner chose to continue through public and accessible evidence instead of these three inquiries. No compose or send action was performed. The retained drafts are references only; sending would require renewed specific authorization. These information-only texts propose no purchase, service change, data-deletion request or contractual commitment. No account identifiers, credentials, customer records, signatures or attachments are included.
 
 The owner requires free tiers for all services. Dedicated Sentry and Neon company organizations exist without app data connected. Their creation does not regularize old shared/personal resources. These drafts supplement, rather than replace, the already sent Namecheap/ImprovMX inquiries.
 

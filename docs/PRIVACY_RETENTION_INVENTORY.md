@@ -61,6 +61,8 @@ Server observability uses an allowlist sanitizer and drops transactions/breadcru
 
 Current [Sentry backup guidance](https://www.sentry.help/en/articles/13965019-how-frequently-is-data-backed-up) states 30- or 90-day production event backup expiry from creation, depending on data type. [Source-map guidance](https://www.sentry.help/en/articles/13964397-what-is-the-retention-period-for-source-maps) uses 90 days of inactivity, reset by use/re-upload, followed by eligibility for deletion. These narrow the published inventory; exact data-class mapping, physical expiry and the actual configured targets remain open.
 
+Neon's published [project deletion](https://api-docs.neon.tech/reference/deleteproject) and [recovery](https://api-docs.neon.tech/reference/recoverproject) references establish seven-day project recovery, including restoration of connection strings and settings. Treat a deleted project as recoverable during that window, and keep restore side effects isolated. This is distinct from the observed six-hour branch history and is not proof of physical residual-copy expiry. No delete/recover action was performed.
+
 ## Restore and erasure reconciliation
 
 1. Record the incident, approved source snapshot/branch, restore cutoff, destination and operator. Keep restored data isolated with intake, schedules, sending and billing side effects paused.

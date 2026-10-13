@@ -30,6 +30,24 @@ Cloudflare Workers is a candidate to assess. Its [Self-Serve Agreement](https://
 
 Source compatibility review must cover authentication, database access, cryptography, Sentry, server rendering, streaming and the privacy/Booster/reply schedules. Vercel Cron definitions in [vercel.json](../vercel.json) need equivalent authenticated execution after any migration; proxy-origin/IP trust controls also require target-specific review. Before selection, validate the actual application under the free CPU/memory/request limits, confirm hard no-charge behavior and prepare migration/rollback against existing data. No hosting migration was performed.
 
+## Netlify Free commercial-hosting candidate
+
+Netlify's [Free-plan announcement](https://www.netlify.com/blog/introducing-netlify-free-plan/) expressly permits commercial projects. Use its [current credit-plan documentation](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/) for capacity rather than the announcement's older allowances: Free is US$0/month, 300 credits/month, with a hard limit and no recharge option. Its [plan comparison](https://www.netlify.com/pricing/personal-vs-free/) says projects pause when credits run out. This is a candidate for the owner's zero-budget constraint; availability under a hard cap still needs a workload assessment.
+
+The [Next.js guide](https://docs.netlify.com/build/frameworks/framework-setup-guides/nextjs/overview/) describes support for modern Next.js through its OpenNext adapter, including App Router, SSR, route handlers and streaming. This supports assessing the existing application without a framework rewrite, but does not prove this project's build, authentication, cron, database, privacy controls or response-stream behavior on Netlify. Do not connect Git or deploy while merely reviewing account options.
+
+The [Trust Center](https://www.netlify.com/trust-center/) supplied a 16-page DPA dated **9 June 2026**, retained privately as `public-review/netlify-dpa-reference.pdf`. It forms part of the applicable self-serve/enterprise agreement; section 2 covers processor/subprocessor roles, section 6 provides subprocessor handling, and section 14 includes SCC Modules Two/Three and UK transfer provisions. Section 12 addresses return/deletion without a fixed all-copy backup-expiry period. This is an unaccepted public reference, not an Ornigami agreement or evidence of account retention.
+
+The [HTML self-serve agreement](https://www.netlify.com/legal/self-serve-subscription-agreement/) displays September 2020, while the [public PDF](https://www.netlify.com/pdf/self-serve-subscription-agreement.pdf/) identifies October 2025. Both tie capacity-related fees to the applicable plan description; the current Free credit description specifies a hard limit. Review the exact document and Free-plan terms linked at actual signup, applicable Terms of Use, optional add-ons and no-charge controls before acceptance. Do not assume that a public DPA reference or plan description alone creates the company's contract.
+
+Netlify is an additional candidate for integration assessment, with no account, agreement acceptance, repository connection, resource migration or deployment performed. Actual log/cache/deploy/backup retention, subprocessors/regions and a tested migration/rollback remain required before connecting personal data. The known Vercel account stays separately inventoried.
+
+## Further forwarding alternative
+
+Cloudflare Email Routing remains a candidate, not a selected replacement. Its [official setup](https://developers.cloudflare.com/email-service/get-started/route-emails/) requires Cloudflare DNS and verified destinations, so using it would entail a separately reviewed DNS migration and preservation of existing application/sending records. Its [analytics documentation](https://developers.cloudflare.com/email-service/observability/metrics-analytics/) describes 31-day metrics retention with sender/recipient/subject/message identifiers; this is not a complete content/queue/backup erasure schedule. Review company acceptance, applicable service terms and remaining retention classes before any selection. The existing ImprovMX Free staging and owner-selected destination remain unchanged.
+
+The three further provider inquiries are **unsent at the owner's request**. Continue with public/accessibly retained evidence; unresolved eligibility, class-specific expiry and actual target observations remain open. Do not silently replace them with assumed defaults or send another inquiry.
+
 ## Evidence still required
 
 | Boundary | Current result | Required next evidence |
