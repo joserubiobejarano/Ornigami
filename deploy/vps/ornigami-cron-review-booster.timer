@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Ornigami review booster at minute 7 each hour (UTC)
+
+[Timer]
+Unit=ornigami-cron@review-booster.service
+OnCalendar=*-*-* *:07:00 UTC
+Persistent=false
+AccuracySec=1s
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

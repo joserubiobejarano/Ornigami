@@ -1,0 +1,18 @@
+www.ornigami.com {
+	redir https://ornigami.com{uri} permanent
+}
+
+ornigami.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000 {
+		# The app trusts this single local proxy. Overwrite, never extend, client values.
+		header_up X-Forwarded-For {http.request.remote.host}
+		header_up -X-Real-IP
+		header_up -X-Vercel-Forwarded-For
+		header_up -CF-Connecting-IP
+		header_up -Forwarded
+		header_up Host ornigami.com
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Host ornigami.com
+	}
+}

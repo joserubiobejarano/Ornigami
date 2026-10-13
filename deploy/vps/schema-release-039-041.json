@@ -1,0 +1,34 @@
+{
+  "release": "vps-schema-039-041",
+  "previousMigration": "038_booster_intake_lifecycle.sql",
+  "migrations": [
+    {
+      "file": "039_billing_lease_duplicate_alias.sql",
+      "sha256": "b63449111f5870ced619c4a1cdb178293398b5b90cd367a533cbb023f6809f57"
+    },
+    {
+      "file": "040_permission_evidence.sql",
+      "sha256": "a6848c8779c0e0592deef17791ee3a90743201605458f97d17821757b188f8cf"
+    },
+    {
+      "file": "041_guarded_retention.sql",
+      "sha256": "ea59c2f72af61fc3a11748200303fcb8e4dbd636d3eda8e5c8ed700510fc9cee"
+    }
+  ],
+  "applyOrder": [
+    "039",
+    "040",
+    "041"
+  ],
+  "preconditions": [
+    "Confirm the target schema has applied migration 038 and prior migrations in numeric order.",
+    "Pause and drain Review Booster intake and delivery jobs before applying 040–041.",
+    "Apply each migration once, in numeric order, before deploying matching application consumers."
+  ],
+  "rollback": {
+    "strategy": "Forward-fix preferred; do not automatically reverse schema after application code starts using it.",
+    "dataLoss": "Migration 040 preserves legacy rows as permission-incomplete; migration 041 backfills terminal timestamps only from recorded outcome timestamps and adds retention hold and provider-correlation evidence. Cleanup runbooks can irreversibly erase recipient payloads and delivery evidence; no cleanup is performed by these migrations.",
+    "recovery": "If application deployment fails after schema application, roll back the application only to a version compatible with the new schema, keep Booster jobs paused, preserve schema and evidence, then forward-fix. For a migration failure, stop at the failed migration and restore from a verified pre-release backup or repair forward; do not run later migrations."
+  },
+  "hashAlgorithm": "sha256-lf-utf8"
+}
