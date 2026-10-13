@@ -30,8 +30,9 @@ test("subjects, timing, and fallback copy cover supported locales and locale var
   for (const [locale, greeting] of [["en", "Hi there,"], ["es", "Hola,"], ["fr", "Bonjour,"], ["de", "Guten Tag,"], ["it", "Ciao,"], ["pt", "Olá,"]] as const) {
     const body = email.buildFallbackEmailBody({ business_name: "Acme", service_name: "haircut", language: locale }, now);
     assert.ok(body.startsWith(greeting));
-    assert.match(body, /haircut/);
+    assert.doesNotMatch(body, /haircut|service\.$/im);
     assert.doesNotMatch(body, /service\.$/m);
+    assert.doesNotMatch(body, /positive experience|good review|5-star|great experience/i);
   }
 });
 
@@ -53,6 +54,23 @@ test("a rejected OpenAI generation returns the localized deterministic fallback"
   const body = await withFailure.generateFollowupEmailBody({ business_name: "Acme", customer_name: "Sam", language: "es" });
   assert.match(body, /^Hola Sam,/);
   assert.match(body, /gracias/i);
+});
+
+test("legacy service details are excluded from fallback text and OpenAI prompts", async () => {
+  const secretDetail = "post-operative wound treatment";
+  const fallback = email.buildFallbackEmailBody({ business_name: "Acme", service_name: secretDetail, customer_name: "Sam", language: "en" });
+  assert.doesNotMatch(fallback, /post-operative wound treatment|positive|5-star/i);
+  let capturedPrompt = "";
+  class CapturingOpenAI { responses = { create: async (request: { input: string }) => { capturedPrompt = request.input; return { output_text: "You are welcome to share your experience in a Google review." }; } }; }
+  const withCapture = loadTs<{
+    generateFollowupEmailBody: (input: Record<string, unknown>) => Promise<string>;
+  }>("src/modules/review-booster/services/followup-email-generator.service.ts", {
+    "@/lib/env": { getOptionalEnv: () => "unit-test-key" },
+    openai: { __esModule: true, default: CapturingOpenAI },
+  });
+  await withCapture.generateFollowupEmailBody({ business_name: "Acme", service_name: secretDetail, language: "en" });
+  assert.doesNotMatch(capturedPrompt, /post-operative wound treatment|service_name/i);
+  assert.match(capturedPrompt, /regardless of satisfaction/i);
 });
 
 test("ambiguous OpenAI timeout and server outcomes remain explicitly unknown", async () => {

@@ -16,6 +16,7 @@ import {
 import { SENTRY_OPTIONS } from "../src/lib/sentry-options.ts";
 import {
   PRIVACY_CLEANUP_OPERATIONS,
+  PRIVACY_PRESERVED_HISTORY_CLASSES,
   PRIVACY_RETENTION_DAYS,
   dateDaysAgo,
 } from "../src/lib/privacy-retention.ts";
@@ -36,18 +37,26 @@ test("trusted IP extraction ignores the spoofable left-most forwarded hop", () =
 });
 
 test("privacy retention policy exposes bounded windows and cleanup operations", () => {
-  assert.deepEqual(PRIVACY_RETENTION_DAYS, {
-    leads: 90,
-    feedback: 365,
-    publicDemoEvents: 90,
-    reviewLinkClicks: 365,
-    followupIntegrationEvents: 365,
-    cronRuns: 30,
-    rateLimitState: 2,
-  });
-  assert.equal(PRIVACY_CLEANUP_OPERATIONS.length, 10);
-  assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("followup_integration_events"));
+  assert.equal(PRIVACY_RETENTION_DAYS.leads, 90);
+  assert.equal(PRIVACY_RETENTION_DAYS.feedback, 365);
+  assert.equal(PRIVACY_RETENTION_DAYS.publicDemoEvents, 90);
+  assert.equal(PRIVACY_RETENTION_DAYS.reviewLinkClicks, 90);
+  assert.equal(PRIVACY_RETENTION_DAYS.followupIntegrationEvents, 90);
+  assert.equal(PRIVACY_RETENTION_DAYS.followupIntegrationEventKeys, 365);
+  assert.equal(PRIVACY_RETENTION_DAYS.permissionEvidence, 365);
+  assert.equal(PRIVACY_RETENTION_DAYS.deliveryEvidence, 365);
+  assert.equal(PRIVACY_RETENTION_DAYS.cronRuns, 30);
+  assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("followup_integration_event_details"));
+  assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("followup_integration_event_keys"));
+  assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("followup_visits"));
   assert.ok(PRIVACY_CLEANUP_OPERATIONS.includes("cron_runs"));
+  assert.ok(PRIVACY_PRESERVED_HISTORY_CLASSES.includes("unsubscribe_suppressions"));
+  assert.ok(PRIVACY_PRESERVED_HISTORY_CLASSES.includes("billing_trial_business_history"));
+  assert.ok(PRIVACY_PRESERVED_HISTORY_CLASSES.includes("billing_trial_owner_history"));
+  const cleanupOperations = PRIVACY_CLEANUP_OPERATIONS as readonly string[];
+  assert.equal(cleanupOperations.includes("unsubscribe_suppressions"), false);
+  assert.equal(cleanupOperations.includes("billing_trial_business_history"), false);
+  assert.equal(cleanupOperations.includes("billing_trial_owner_history"), false);
   const now = Date.parse("2026-08-14T12:00:00.000Z");
   assert.equal(dateDaysAgo(PRIVACY_RETENTION_DAYS.leads, now).toISOString(), "2026-05-16T12:00:00.000Z");
 });

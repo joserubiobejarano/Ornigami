@@ -182,7 +182,7 @@ export async function createFollowupRunnerDependencies(businessId: string, actor
     business_type: visit.businessType,
     city: visit.city,
     customer_name: visit.customerName,
-    service_name: visit.serviceName,
+    service_name: null,
     google_review_url: visit.googleReviewUrl,
     tone_setting: visit.tone,
     language: visit.language,

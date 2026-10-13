@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { loadTs } from "./auth-test-harness.mts";
+import { PRIVACY_CLEANUP_TABLES } from "../src/lib/privacy-retention.ts";
 
 test("cleanup walks tables sequentially, rotates its durable cursor, and reports full batches as backlog", async () => {
   const queries: string[] = [];
@@ -10,20 +11,22 @@ test("cleanup walks tables sequentially, rotates its durable cursor, and reports
     "@/lib/safe-logger": { safeLogger: { error() {}, info() {} } },
   } });
   const checkpoints: Array<[number, number]> = [];
-  const first = await service.runPrivacyRetentionCleanup({ batchSize: 2, maxOperations: 3, cursor: 9,
+  const start = PRIVACY_CLEANUP_TABLES.length - 2;
+  const first = await service.runPrivacyRetentionCleanup({ batchSize: 2, maxOperations: 3, cursor: start,
     checkpoint: async (cursor, count) => { checkpoints.push([cursor, count]); } });
   assert.deepEqual(JSON.parse(JSON.stringify(first.operations.map((operation) => operation.table))), [
-    "cron_runs", "password_reset_tokens", "leads",
+    PRIVACY_CLEANUP_TABLES[start], PRIVACY_CLEANUP_TABLES[start + 1], "leads",
   ]);
   assert.equal(first.status, "partial");
   assert.equal(first.backlog, true);
   assert.equal(first.nextCursor, 1);
-  assert.deepEqual(checkpoints, [[10, 2], [0, 4], [1, 6]]);
-  await service.runPrivacyRetentionCleanup({ batchSize: 1, maxOperations: 1, cursor: 7 });
+  assert.deepEqual(checkpoints, [[start + 1, 2], [0, 4], [1, 6]]);
+  await service.runPrivacyRetentionCleanup({ batchSize: 1, maxOperations: 1, cursor: PRIVACY_CLEANUP_TABLES.indexOf("review_link_clicks") });
+  await service.runPrivacyRetentionCleanup({ batchSize: 1, maxOperations: 1, cursor: PRIVACY_CLEANUP_TABLES.indexOf("cron_runs") });
   assert.ok(queries.some((query) => query.includes("public.review_link_clicks") && query.includes("clicked_at")));
   assert.ok(queries.some((query) => query.includes("status <> 'running'") && query.includes("finished_at IS NOT NULL")));
   assert.ok(queries.every((query) => /LIMIT/i.test(query)));
-  assert.ok(!queries.some((query) => /cron_job_state|cron_alert|privacy_account_deletion_operations|unsubscribe_suppressions|review_reply_usage_reservations|booster_quota_legacy_usage/.test(query)));
+  assert.ok(!queries.some((query) => /cron_job_state|cron_alert|unsubscribe_suppressions|review_reply_usage_reservations|booster_quota_legacy_usage/.test(query)));
 });
 
 test("cleanup respects an elapsed deadline before beginning another table and leaves a resumable cursor", async () => {
@@ -87,8 +90,8 @@ test("privacy cron persists sanitized per-table health and returns partial when 
       await input.checkpoint(1, 4);
       return { attempted: 2, deleted: 4, failed: 1, batchSize: 2, status: "partial", nextCursor: 1, backlog: true,
         operations: [
-          { table: "leads", deleted: 4, failed: false, fullBatch: true },
-          { table: "feedback", deleted: 0, failed: true, fullBatch: false },
+          { table: "leads", deleted: 4, changed: 0, candidates: 4, failed: false, fullBatch: true },
+          { table: "feedback", deleted: 0, changed: 0, candidates: 0, failed: true, fullBatch: false },
         ] };
     } },
   } });
@@ -101,8 +104,8 @@ test("privacy cron persists sanitized per-table health and returns partial when 
   assert.equal(finish?.processedCount, 4);
   assert.equal(finish?.failedCount, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(finish?.outcomes)), {
-    leads: { deleted: 4, failed: false, complete: false },
-    feedback: { deleted: 0, failed: true, complete: false },
+    leads: { deleted: 4, changed: 0, candidates: 4, failed: false, complete: false },
+    feedback: { deleted: 0, changed: 0, candidates: 0, failed: true, complete: false },
   });
 });
 

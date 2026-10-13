@@ -5,7 +5,7 @@ import { requireActiveAgentAccess, safeApiErrorResponse } from "@/lib/api-securi
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
 import { CsvParseError, parseCsv } from "@/modules/review-booster/services/csv-parsing.service";
 import { createCsvFollowupVisit } from "@/modules/review-booster/services/review-booster-db.service";
-import { isValidCustomerEmail, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
+import { isValidCustomerEmail, normalizePermissionEvidence, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,12 +20,10 @@ function optionalString(value: unknown): string | null {
 function looksLikeTemplateExampleRow(input: {
   customerName: string | null;
   customerEmail: string | null;
-  serviceName: string | null;
   visitedAt: string | null;
 }): boolean {
-  return input.customerName?.toLowerCase() === "jane doe"
-    && input.customerEmail?.toLowerCase() === "jane@example.com"
-    && input.serviceName?.toLowerCase() === "teeth cleaning"
+  return ["jane doe", "jane"].includes(input.customerName?.toLowerCase() ?? "")
+    && ["jane@example.com", "jane@example.test"].includes(input.customerEmail?.toLowerCase() ?? "")
     && input.visitedAt === "2026-05-25";
 }
 
@@ -129,17 +127,21 @@ export async function POST(req: Request) {
       const row = rows[index]!;
       const customerName = optionalString(row.customer_name);
       const customerEmail = optionalString(row.customer_email)?.toLowerCase() ?? null;
-      const serviceName = optionalString(row.service_received) ?? optionalString(row.service_name);
       const rawVisitedAt = optionalString(row.visited_at);
+      const permission = normalizePermissionEvidence({
+        source: row.permission_source,
+        at: row.permission_at,
+        noticeVersion: row.permission_notice_version,
+        recipientEmail: customerEmail,
+      });
       if ((customerName && customerName.length > 120)
         || (customerEmail && customerEmail.length > 254)
-        || (serviceName && serviceName.length > 120)
         || (rawVisitedAt && rawVisitedAt.length > 40)) {
         rowsSkipped += 1;
-        errors.push({ row: rowNumber, message: "Name and service are limited to 120 characters, email to 254, and visit time to 40" });
+        errors.push({ row: rowNumber, message: "Name is limited to 120 characters, email to 254, and visit time to 40" });
         continue;
       }
-      if (looksLikeTemplateExampleRow({ customerName, customerEmail, serviceName, visitedAt: rawVisitedAt })) {
+      if (looksLikeTemplateExampleRow({ customerName, customerEmail, visitedAt: rawVisitedAt })) {
         rowsSkipped += 1;
         continue;
       }
@@ -159,16 +161,22 @@ export async function POST(req: Request) {
         errors.push({ row: rowNumber, message: "customer_email must be a valid email address" });
         continue;
       }
+      if (!permission) {
+        rowsSkipped += 1;
+        errors.push({ row: rowNumber, message: "permission_source, permission_at, and permission_notice_version are required and must be valid" });
+        continue;
+      }
 
       try {
         const visit = await createCsvFollowupVisit({
           businessId: business.id,
           customerName,
           customerEmail,
-          customerPhone: null,
-          serviceName,
           visitedAt,
           source: "csv",
+          permissionSource: permission.source,
+          permissionAt: permission.at,
+          permissionNoticeVersion: permission.noticeVersion,
         }, session.user.id);
         if (visit) visitsInserted += 1;
         else {

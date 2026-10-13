@@ -7,7 +7,7 @@ export const metadata = createPageMetadata({ title: "Terms of service | Ornigami
 export default function TermsPage() {
   return (
     <main><PageHero eyebrow="Terms" title="Terms of service" intro="The agreement between you and Ornigami, in plain terms." /><article className="prose mx-auto max-w-[70ch] px-4 text-foreground md:px-6">
-        <p className="text-muted-foreground">Last updated: 12 August 2026</p>
+        <p className="text-muted-foreground">Last updated: 13 October 2026</p>
         
         <section>
           <h2 className="text-2xl font-semibold mb-4">Acceptance of Terms</h2>
@@ -32,6 +32,20 @@ export default function TermsPage() {
             the information and content you submit may be used for the requested workflow. Do not
             use the service to send unlawful, deceptive, abusive, or unsolicited messages, or to
             interfere with the service or another person&apos;s account.
+          </p>
+          <p>
+            For customer review requests, obtain purpose-specific permission to use the recipient&apos;s
+            email and retain the original evidence and notice. Submit the permission source, time and
+            notice version for each visit. Do not import purchased or scraped lists, sensitive details
+            or recipients who withdrew permission. Importing a record cannot override unsubscribe
+            or suppression protection.
+          </p>
+          <p>
+            Before customer onboarding, the business and Ornigami must establish the applicable
+            data-processing arrangement, including documented instructions, confidentiality,
+            security, approved sub-processors, assistance with rights requests, and return or deletion
+            of data subject to documented obligations. A provider list or these general terms alone
+            does not establish that a customer-specific processing agreement has been completed.
           </p>
         </section>
 

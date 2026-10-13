@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { execFileSync, spawn } from "node:child_process";
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
@@ -61,7 +61,7 @@ function openPsqlSession() {
   return { write: (statement: string) => child.stdin.write(statement), end: () => { child.stdin.end(); return done; }, output: () => output };
 }
 function event(credential: string, externalId: string, source = "calendar", email: string | null = "test@example.com"): string {
-  return `SELECT public.admit_booster_booking_event('${credential}','${source}','booking.completed','${externalId}','Test',${email == null ? "NULL" : `'${email}'`},${email == null ? "'+34 600 123 456'" : "NULL"},'Consultation',now()-interval '2 days')`;
+  return `SELECT public.admit_booster_booking_event('${credential}','${source}','booking.completed','${externalId}','Test',${email == null ? "NULL" : `'${email}'`},now()-interval '2 days','booking form',now()-interval '3 days','booster-v1')`;
 }
 
 test("booking SQL atomically deduplicates event and visit, fences entitlement/revocation/freeze", { timeout: 120_000, skip: !binariesAvailable }, async () => {
@@ -76,11 +76,11 @@ test("booking SQL atomically deduplicates event and visit, fences entitlement/re
     port = await availablePostgresTestPort();
     execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", join(dir, "postgres.log"), "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
     started = true;
-    psql("CREATE TABLE public.users(id uuid PRIMARY KEY, privacy_deletion_requested_at timestamptz);");
-    psql(`INSERT INTO public.users(id) VALUES ('${ids.owner}');`);
-    for (const migration of ["003_business_foundation.sql", "004_review_booster_tables.sql", "008_pricing_plans.sql", "009_review_booster_error_reason.sql", "010_review_booster_retries.sql", "023_booking_intake.sql"]) {
-      psqlFile(readFileSync(join(root, "neon/migrations", migration), "utf8"));
+    const migrationsDir = join(root, "neon/migrations");
+    for (const migration of readdirSync(migrationsDir).filter((name) => /^\d{3}_.+\.sql$/.test(name)).sort((a, b) => Number(a.slice(0, 3)) - Number(b.slice(0, 3)))) {
+      psqlFile(readFileSync(join(migrationsDir, migration), "utf8"));
     }
+    psql(`INSERT INTO public.users(id,email) VALUES ('${ids.owner}','a07-booking-owner@example.test');`);
     psql(`INSERT INTO public.businesses(id,owner_user_id,name) VALUES
       ('${ids.activeBusiness}','${ids.owner}','Active'),('${ids.inactiveBusiness}','${ids.owner}','Inactive');
       INSERT INTO public.business_agents(business_id,agent_id,status,plan_id) VALUES
@@ -97,8 +97,8 @@ test("booking SQL atomically deduplicates event and visit, fences entitlement/re
     assert.equal(psql(`SELECT count(*) FROM public.followup_integration_events WHERE business_id='${ids.activeBusiness}' AND external_id='evt-race'`), "1");
     assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${ids.activeBusiness}' AND external_id='evt-race'`), "1");
 
-    assert.equal(psql(event(ids.credential, "evt-phone", "fresha", null)), "created");
-    assert.equal(psql(`SELECT followup_status FROM public.followup_visits WHERE business_id='${ids.activeBusiness}' AND external_id='evt-phone'`), "non_sendable");
+    assert.equal(psql(event(ids.credential, "evt-phone", "fresha", null)), "invalid", "phone-only events cannot enter Review Booster");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${ids.activeBusiness}' AND external_id='evt-phone'`), "0");
     psql(`UPDATE public.business_agents SET status='active',plan_id=NULL WHERE business_id='${ids.inactiveBusiness}' AND agent_id='review_booster';`);
     assert.equal(psql(event(ids.inactiveCredential, "evt-null-plan")), "inactive");
     assert.equal(psql(`SELECT count(*) FROM public.followup_integration_events WHERE external_id='evt-null-plan'`), "0");

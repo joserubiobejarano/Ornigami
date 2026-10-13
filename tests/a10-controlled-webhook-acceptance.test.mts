@@ -95,8 +95,8 @@ test("actual Resend POST + database adapter persist signed outcomes and enforce 
         from: "Studio <sender@example.test>", to: payloadAddress, reply_to: "sender@example.test",
         subject: `A10 ${item.type}`, text: `Controlled ${item.type}`, tags: [{ name: "ornigami_delivery_id", value: deliveryId }],
       }).replaceAll("'", "''");
-      psql(`INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status) VALUES
-          ('${visitId}','${businessId}','${payloadAddress}',now()-interval '2 days','pending');
+      psql(`INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status,permission_source,permission_at,permission_notice_version,permission_recipient_email,permission_scope) VALUES
+          ('${visitId}','${businessId}','${payloadAddress}',now()-interval '2 days','pending','booking form',now()-interval '3 days','booster-v1','${payloadAddress}','review_request');
         INSERT INTO public.booster_followup_deliveries(id,business_id,visit_id,state,provider_payload,review_url_snapshot,idempotency_key,lease_token,lease_until,first_attempt_at,send_attempt_count,reservation_month)
         VALUES ('${deliveryId}','${businessId}','${visitId}','${state}','${frozen}'::jsonb,'https://example.test/review','a10-${deliveryId}',gen_random_uuid(),${state === "unknown" ? "now()-interval '1 second'" : "now()+interval '5 minutes'"},now(),1,date_trunc('month',now() AT TIME ZONE 'UTC')::date);`);
     }
@@ -105,13 +105,14 @@ test("actual Resend POST + database adapter persist signed outcomes and enforce 
       from: "Studio <sender@example.test>", to: "suppress.me@example.test", reply_to: "sender@example.test", subject: "A10 later send",
       text: "Should be blocked", tags: [{ name: "ornigami_delivery_id", value: admissionDeliveryId }],
     }).replaceAll("'", "''");
-    psql(`INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status) VALUES
-        ('${admissionVisitId}','${ids.businessB}','suppress.me@example.test',now()-interval '2 days','pending');
+    psql(`INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status,permission_source,permission_at,permission_notice_version,permission_recipient_email,permission_scope) VALUES
+        ('${admissionVisitId}','${ids.businessB}','suppress.me@example.test',now()-interval '2 days','pending','booking form',now()-interval '3 days','booster-v1','suppress.me@example.test','review_request');
       INSERT INTO public.booster_followup_deliveries(id,business_id,visit_id,state,provider_payload,review_url_snapshot,idempotency_key,lease_token,lease_until,send_attempt_count)
         VALUES ('${admissionDeliveryId}','${ids.businessB}','${admissionVisitId}','prepared','${admissionPayload}'::jsonb,'https://example.test/review','a10-${admissionDeliveryId}',gen_random_uuid(),now()+interval '5 minutes',0);`);
     const initialUncertainSnapshot = psql(`SELECT provider_payload::text||'|'||idempotency_key||'|'||send_attempt_count FROM public.booster_followup_deliveries WHERE id='${targetDeliveryId}'`);
 
     let adapterSqlCalls = 0;
+    let adapterSqlFailure = "";
     const databaseAdapter = loadTs<{ applyBoosterDeliveryEvent: (event: Record<string, unknown>) => Promise<Record<string, unknown>> }>(
       "src/modules/review-booster/services/delivery-events-db.service.ts",
       {
@@ -121,7 +122,8 @@ test("actual Resend POST + database adapter persist signed outcomes and enforce 
             assert.match(query, /public\.apply_booster_delivery_event\(\$1::jsonb\)/);
             adapterSqlCalls++;
             const json = String(values[0]).replaceAll("'", "''");
-            return [{ result: JSON.parse(psql(`SELECT public.apply_booster_delivery_event('${json}'::jsonb)::text`)) }];
+            try { return [{ result: JSON.parse(psql(`SELECT public.apply_booster_delivery_event('${json}'::jsonb)::text`)) }]; }
+            catch (error) { adapterSqlFailure = String((error as { stderr?: string; message?: string }).stderr || (error as Error).message); throw error; }
           },
         },
       },
@@ -157,7 +159,7 @@ test("actual Resend POST + database adapter persist signed outcomes and enforce 
         const deliveryId = uuid(ids.deliveryPrefix, index + 1);
         const response = await route.POST(makeRequest(eventPayload(item.type, deliveryId, item.address, item.message), { id: `evt-a10-${index + 1}` }));
         responses.push(response.status);
-        assert.deepEqual(await response.json(), { ok: true, duplicate: false }, `${item.type} accepted by the actual exported route`);
+        assert.deepEqual(await response.json(), { ok: true, duplicate: false }, `${item.type} accepted by the actual exported route; SQL=${adapterSqlFailure}`);
       }
       assert.deepEqual(responses, [200, 200, 200, 200, 200, 200, 200]);
 

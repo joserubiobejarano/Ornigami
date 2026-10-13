@@ -79,7 +79,7 @@ test("CSV parser strips BOM and preserves multiline quoted fields", () => {
   const rows = parseCsv("\uFEFFcustomer_name,customer_email,service_name,visited_at\n\"Jane Doe\",jane@example.com,\"Deep clean\nwith notes\",2026-08-01");
   assert.equal(rows.length, 1);
   assert.equal(rows[0]?.customer_name, "Jane Doe");
-  assert.equal(rows[0]?.service_name, "Deep clean\nwith notes");
+  assert.equal("service_name" in rows[0]!, false, "sensitive service details are stripped from parsed intake rows");
 });
 
 test("unsubscribe tokens normalize email and reject tampering", () => {

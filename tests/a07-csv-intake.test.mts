@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { loadTs as loadSameRealmTs } from "./a02-test-support.mts";
 import { parseCsv, CsvParseError } from "../src/modules/review-booster/services/csv-parsing.service.ts";
-import { isValidCustomerPhone, normalizeVisitedAt } from "../src/modules/review-booster/services/intake-input.service.ts";
+import { isValidCustomerPhone, normalizePermissionAt, normalizePermissionEvidence, normalizeVisitedAt } from "../src/modules/review-booster/services/intake-input.service.ts";
 import { loadTs } from "./auth-test-harness.mts";
 
 test("CSV parsing rejects malformed records and maps quoted multiline fields", () => {
@@ -29,6 +29,14 @@ test("visit timestamps normalize equivalent instants and reject timezone ambigui
   assert.equal(isValidCustomerPhone("phone me"), false);
 });
 
+test("permission evidence requires a recipient, explicit historical time, source, and notice version", () => {
+  assert.equal(normalizePermissionAt("2026-05-25T24:00:00Z"), null);
+  assert.equal(normalizePermissionEvidence({ source: "web form", at: "2026-05-25T12:00:00Z", noticeVersion: "v1", recipientEmail: "A@example.test" })?.recipientEmail, "a@example.test");
+  assert.equal(normalizePermissionEvidence({ source: "web form", at: "2026-05-25T12:00:00Z", noticeVersion: "v1", recipientEmail: null }), null);
+  assert.equal(normalizePermissionEvidence({ source: "", at: "2026-05-25T12:00:00Z", noticeVersion: "v1", recipientEmail: "a@example.test" }), null);
+  assert.equal(normalizePermissionEvidence({ source: "web form", at: "2026-05-25T12:00:00Z", noticeVersion: "v1", recipientEmail: "a@example.test" }, Date.parse("2026-05-01T00:00:00Z")), null);
+});
+
 test("upload route returns row failures independently and permits retry", async () => {
   let first = true;
   let saved = 0;
@@ -40,9 +48,9 @@ test("upload route returns row failures independently and permits retry", async 
     },
   });
   const firstResponse = await route.POST(uploadRequest([
-    "customer_name,customer_email,service_received,visited_at",
-    "Alex,alex@example.test,Consultation,2026-05-25",
-    "Rae,rae@example.test,Consultation,2026-05-25",
+    "customer_name,customer_email,visited_at,permission_source,permission_at,permission_notice_version",
+    "Alex,alex@example.test,2026-05-25,checkout,2026-05-24T12:00:00Z,booster-v1",
+    "Rae,rae@example.test,2026-05-25,checkout,2026-05-24T12:00:00Z,booster-v1",
   ].join("\n")));
   assert.equal(firstResponse.status, 200);
   assert.deepEqual(await firstResponse.json(), {
@@ -54,8 +62,8 @@ test("upload route returns row failures independently and permits retry", async 
   });
 
   const retryResponse = await route.POST(uploadRequest([
-    "customer_name,customer_email,service_received,visited_at",
-    "Alex,alex@example.test,Consultation,2026-05-25",
+    "customer_name,customer_email,visited_at,permission_source,permission_at,permission_notice_version",
+    "Alex,alex@example.test,2026-05-25,checkout,2026-05-24T12:00:00Z,booster-v1",
   ].join("\n")));
   assert.equal(retryResponse.status, 200);
   assert.equal((await retryResponse.json() as { visits_inserted: number }).visits_inserted, 1);
@@ -76,6 +84,17 @@ test("upload route rejects malformed CSV, cross-origin, unauthenticated, and ina
   });
   assert.equal((await inactive.POST(uploadRequest("customer_email,visited_at\na@example.test,2026-05-25"))).status, 403);
   assert.equal(writes, 0);
+});
+
+test("upload route rejects missing permission evidence and template examples before persistence", async () => {
+  let writes = 0;
+  const route = uploadRoute({ createVisit: async () => { writes += 1; return {}; } });
+  const response = await route.POST(uploadRequest("customer_name,customer_email,visited_at\nJane,jane@example.com,2026-05-25\nAlex,alex@example.test,2026-05-25"));
+  assert.equal(response.status, 200);
+  assert.equal(writes, 0);
+  const body = await response.json() as { rows_skipped: number; errors: { row: number }[] };
+  assert.equal(body.rows_skipped, 2);
+  assert.deepEqual(body.errors.map((error) => error.row), [3]);
 });
 
 test("upload route bounds actual streamed multipart bytes and rejects oversized declared lengths before writes", async () => {
@@ -104,6 +123,7 @@ test("upload route bounds actual streamed multipart bytes and rejects oversized 
 
 test("manual visit route rejects wrong-type contact fields even when a phone is valid", async () => {
   let writes = 0;
+  let admitted: Record<string, unknown> | null = null;
   const route = loadSameRealmTs<{ POST: (request: Request) => Promise<Response> }>("src/app/api/review-booster/visits/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
     "@/auth": { auth: async () => ({ user: { id: id(700), email: "a07-owner@example.test" } }) },
@@ -115,7 +135,7 @@ test("manual visit route rejects wrong-type contact fields even when a phone is 
     "@/lib/dashboard-pagination": { parseDashboardPageSize: () => 50 },
     "@/lib/team-lifecycle": { isSameOriginMutation: () => true },
     "@/modules/review-booster/services/intake-input.service": loadSameRealmTs("src/modules/review-booster/services/intake-input.service.ts", {}),
-    "@/modules/review-booster/services/review-booster-db.service": { createFollowupVisit: async () => { writes += 1; return {}; } },
+    "@/modules/review-booster/services/review-booster-db.service": { createFollowupVisit: async (input: Record<string, unknown>) => { writes += 1; admitted = input; return { id: "visit" }; } },
   });
   const response = await route.POST(new Request("http://app.test/api/review-booster/visits", {
     method: "POST",
@@ -124,15 +144,38 @@ test("manual visit route rejects wrong-type contact fields even when a phone is 
   }));
   assert.equal(response.status, 400);
   assert.equal(writes, 0);
+
+  const valid = await route.POST(new Request("http://app.test/api/review-booster/visits", {
+    method: "POST",
+    headers: { origin: "http://app.test", "content-type": "application/json" },
+    body: JSON.stringify({ customer_name: "Alex", customer_email: "Alex@example.test", customer_phone: "+34 600 000 000", service_name: "Sensitive treatment", visited_at: "2026-05-25", permission_source: "paper form", permission_at: "2026-05-24T12:00:00Z", permission_notice_version: "booster-v1" }),
+  }));
+  assert.equal(valid.status, 201);
+  assert.equal(writes, 1);
+  assert.deepEqual(admitted, {
+    businessId: id(702), customerName: "Alex", customerEmail: "alex@example.test",
+    visitedAt: "2026-05-25T00:00:00.000Z", source: "manual",
+    permissionSource: "paper form", permissionAt: "2026-05-24T12:00:00.000Z",
+    permissionNoticeVersion: "booster-v1",
+  });
 });
 
 let port = 0;
 const binDir = process.env.A07_PG_BIN ?? process.env.A04_PG_BIN ?? process.env.A08_PG_BIN ?? process.env.A06_PG_BIN ?? process.env.PG_BIN ?? "C:/Program Files/PostgreSQL/17/bin";
 const pgExe = (name: string) => process.platform === "win32" ? join(binDir, `${name}.exe`) : join(binDir, name);
-const quote = (value: unknown) => value == null ? "NULL" : `'${String(value).replaceAll("'", "''")}'`;
+const quote = (value: unknown) => value == null ? "NULL"
+  : typeof value === "boolean" ? (value ? "TRUE" : "FALSE")
+    : typeof value === "object" && value !== null && "toISOString" in value && typeof value.toISOString === "function" ? `'${value.toISOString()}'::timestamptz`
+      : `'${String(value).replaceAll("'", "''")}'`;
 
 function psql(statement: string): string {
   return execFileSync(pgExe("psql"), ["-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", "-"], {
+    encoding: "utf8", input: statement,
+  }).trim();
+}
+
+function psqlCsv(statement: string): string {
+  return execFileSync(pgExe("psql"), ["-X", "-q", "--csv", "-v", "ON_ERROR_STOP=1", "-h", "127.0.0.1", "-p", String(port), "-U", "postgres", "-d", "postgres", "-f", "-"], {
     encoding: "utf8", input: statement,
   }).trim();
 }
@@ -185,6 +228,10 @@ async function waitForOutput(readOutput: () => string, needle: string, timeoutMs
 function sqlExecutor() {
   return async (strings: TemplateStringsArray, ...values: unknown[]) => {
     const query = strings.reduce((output, part, index) => output + part + (index < values.length ? quote(values[index]) : ""), "");
+    if (/^\s*(?:INSERT|UPDATE|DELETE)\b/i.test(query) && !/\bRETURNING\b/i.test(query)) {
+      await psqlAsync(`${query};`);
+      return [];
+    }
     const output = await psqlAsync(`WITH a07_query AS (${query}) SELECT row_to_json(a07_query)::text FROM a07_query;`);
     return output ? output.split(/\r?\n/).map((line) => JSON.parse(line) as Record<string, unknown>) : [];
   };
@@ -250,6 +297,36 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
     psql(`INSERT INTO public.users(id,email) VALUES('${owner}','a07-owner@example.test'),('${member}','a07-member@example.test');
       INSERT INTO public.businesses(id,owner_user_id,name) VALUES('${biz}','${owner}','A07 fixture');
       INSERT INTO public.business_agents(business_id,agent_id,plan_id,status) VALUES('${biz}','review_booster','booster','active');`);
+    const permissionedCandidate = id(703);
+    const legacyCandidate = id(704);
+    const uncertainLegacyCandidate = id(705);
+    const uncertainDelivery = id(706);
+    const legacyBatch = Array.from({ length: 50 }, (_, index) => {
+      const visitId = id(710 + index);
+      return `('${visitId}','${biz}','legacy-${index}@example.test',now()-interval '3 days','manual','pending')`;
+    }).join(",");
+    psql(`UPDATE public.businesses SET google_review_url='https://example.test/review' WHERE id='${biz}';
+      INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,source,followup_status,permission_source,permission_at,permission_notice_version,permission_recipient_email,permission_scope)
+        VALUES('${permissionedCandidate}','${biz}','candidate@example.test',now()-interval '2 days','manual','pending','paper form',now()-interval '3 days','booster-v1','candidate@example.test','review_request');
+      INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,source,followup_status)
+        VALUES('${legacyCandidate}','${biz}','legacy-no-proof@example.test',now()-interval '2 days','manual','pending'),
+          ('${uncertainLegacyCandidate}','${biz}','legacy-unknown@example.test',now()-interval '2 days','manual','pending');
+      INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,source,followup_status)
+        VALUES ${legacyBatch};
+      INSERT INTO public.booster_followup_deliveries(id,business_id,visit_id,state,idempotency_key,lease_token,lease_until,first_attempt_at,send_attempt_count)
+        VALUES('${uncertainDelivery}','${biz}','${uncertainLegacyCandidate}','unknown','a07-uncertain',gen_random_uuid(),now()-interval '1 second',now()-interval '1 hour',1);`);
+    assert.equal(psql(`SELECT string_agg(visit_id::text,',' ORDER BY visit_id) FROM public.list_booster_delivery_candidates('${biz}',50)`), `${permissionedCandidate},${uncertainLegacyCandidate}`,
+      "missing-evidence live visits stay out of generation while unknown operations remain visible for reconciliation");
+    assert.equal(psql(`SELECT (public.claim_booster_delivery('${biz}','${legacyCandidate}')->>'kind')`), "non_sendable");
+    assert.equal(psql(`SELECT count(*) FROM public.booster_followup_deliveries WHERE visit_id='${legacyCandidate}'`), "0",
+      "a legacy pending visit cannot reserve quota or acquire a delivery key");
+    assert.equal(psql(`SELECT (public.claim_booster_delivery('${biz}','${uncertainLegacyCandidate}')->>'kind')`), "reconciliation_required");
+    assert.equal(psql(`SELECT state FROM public.booster_followup_deliveries WHERE id='${uncertainDelivery}'`), "reconciliation_required",
+      "missing evidence never triggers a new attempt for an uncertain prior provider operation");
+    psql(`UPDATE public.followup_visits SET permission_withdrawn_at=now() WHERE id='${permissionedCandidate}';`);
+    assert.equal(psql(`SELECT public.booster_visit_has_review_permission('${permissionedCandidate}')`), "f",
+      "recipient withdrawal invalidates permission for all future sends");
+    assert.equal(psql(`SELECT public.claim_booster_delivery('${biz}','${permissionedCandidate}')->>'kind'`), "non_sendable");
     const reviewDb = loadTs<typeof import("../src/modules/review-booster/services/review-booster-db.service.js")>(
       "src/modules/review-booster/services/review-booster-db.service.ts", {
         overrides: {
@@ -260,19 +337,21 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
         },
       });
 
-    const input = { businessId: biz, customerEmail: "Jane@Example.test", serviceName: "Haircut", visitedAt: "2026-05-25T00:00:00.000Z" };
+    const input = { businessId: biz, customerEmail: "Jane@Example.test", visitedAt: "2026-05-25T00:00:00.000Z", permissionSource: "booking form", permissionAt: "2026-05-24T12:00:00Z", permissionNoticeVersion: "booster-v1" };
     const results = await Promise.all([
       reviewDb.createCsvFollowupVisit(input, owner),
       reviewDb.createCsvFollowupVisit({ ...input, customerEmail: "jane@example.test", visitedAt: "2026-05-24T19:00:00-05:00" }, owner),
     ]);
     assert.deepEqual(results.map((result) => result === null).sort(), [false, true]);
-    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}'`), "1");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND source='csv'`), "1");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND source='csv' AND (customer_phone IS NOT NULL OR service_name IS NOT NULL)`), "0",
+      "CSV intake does not persist phone or service details");
 
     const routed = uploadRoute({
       requireAccess: async () => ({ id: biz }),
       createVisit: reviewDb.createCsvFollowupVisit as CsvInserter,
     });
-    const parallelCsv = "customer_name,customer_email,service_received,visited_at\nParallel,parallel@example.test,Color,2026-05-26";
+    const parallelCsv = "customer_name,customer_email,visited_at,permission_source,permission_at,permission_notice_version\nParallel,parallel@example.test,2026-05-26,booking form,2026-05-24T12:00:00Z,booster-v1";
     const parallelResponses = await Promise.all([
       routed.POST(uploadRequest(parallelCsv)),
       routed.POST(uploadRequest(parallelCsv)),
@@ -283,7 +362,7 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
     assert.deepEqual(parallelResponses.map((response) => response.status), [200, 200]);
     assert.deepEqual(parallelBodies.map((body) => body.visits_inserted).sort(), [0, 1]);
     assert.deepEqual(parallelBodies.map((body) => body.duplicates_skipped).sort(), [0, 1]);
-    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}'`), "2");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND source='csv'`), "2");
 
     psql(`INSERT INTO public.business_members(business_id,user_id) VALUES('${biz}','${member}');`);
     assert.ok(await reviewDb.createCsvFollowupVisit({ ...input, customerEmail: "member@example.test" }, member));
@@ -295,7 +374,7 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
       },
       createVisit: reviewDb.createCsvFollowupVisit as CsvInserter,
     });
-    const memberCsv = "customer_name,customer_email,service_received,visited_at\nMember,member-route@example.test,Color,2026-05-27";
+    const memberCsv = "customer_name,customer_email,visited_at,permission_source,permission_at,permission_notice_version\nMember,member-route@example.test,2026-05-27,booking form,2026-05-24T12:00:00Z,booster-v1";
     const memberResponse = await memberRoute.POST(uploadRequest(memberCsv));
     assert.equal(memberResponse.status, 200);
     assert.equal((await memberResponse.json() as { visits_inserted: number }).visits_inserted, 1);
@@ -304,16 +383,14 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
     const removedMemberResponse = await memberRoute.POST(uploadRequest(memberCsv.replace("member-route@", "removed-member@")));
     assert.equal(removedMemberResponse.status, 200);
     assert.equal((await removedMemberResponse.json() as { visits_inserted: number }).visits_inserted, 0);
-    const phoneOnly = await reviewDb.createFollowupVisit({ ...input, customerEmail: null, customerPhone: "+34 600 000 000", source: "manual" }, owner);
-    assert.equal(phoneOnly.followup_status, "non_sendable");
-    assert.equal(phoneOnly.customer_email, null);
+    await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, source: "manual" }, owner));
     psql(`UPDATE public.business_agents SET status='inactive' WHERE business_id='${biz}' AND agent_id='review_booster';`);
-    await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, customerPhone: "+34 600 000 000", source: "manual" }, owner));
+    await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, source: "manual" }, owner));
     psql(`UPDATE public.business_agents SET status='active' WHERE business_id='${biz}' AND agent_id='review_booster';
       UPDATE public.users SET privacy_deletion_requested_at=now() WHERE id='${owner}';`);
     await assert.rejects(reviewDb.createCsvFollowupVisit({ ...input, customerEmail: "frozen-owner@example.test" }, owner), (error: unknown) => (error as { status?: number }).status === 403);
-    await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, customerPhone: "+34 600 000 001", source: "manual" }, owner), (error: unknown) => (error as { status?: number }).status === 403);
-    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}'`), "5");
+    await assert.rejects(reviewDb.createFollowupVisit({ ...input, customerEmail: null, source: "manual" }, owner), (error: unknown) => (error as { status?: number }).status === 403);
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND source='csv'`), "4");
     psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${owner}';`);
 
     const freeze = startPsql(`BEGIN;
@@ -334,7 +411,77 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
       if (freeze.child.exitCode === null) freeze.child.kill();
       psql(`UPDATE public.users SET privacy_deletion_requested_at=NULL WHERE id='${owner}';`);
     }
-    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}'`), "5");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND source='csv'`), "4");
+
+    const legacyCsvVisit = id(760);
+    const legacyCsvDelivery = id(761);
+    psql(`INSERT INTO public.followup_visits(id,business_id,customer_name,customer_email,service_name,visited_at,source,followup_status)
+        VALUES ('${legacyCsvVisit}','${biz}','Legacy','legacy-import@example.test','Legacy service','2026-05-30T00:00:00Z','csv','pending');
+      INSERT INTO public.booster_followup_deliveries(id,business_id,visit_id,state,idempotency_key,lease_token,first_attempt_at,send_attempt_count)
+        VALUES ('${legacyCsvDelivery}','${biz}','${legacyCsvVisit}','unknown','a07-legacy-csv-unknown',gen_random_uuid(),now()-interval '1 hour',1);`);
+    const quotaCountBeforeLegacyDuplicate = psql(`SELECT count(*) FROM public.booster_quota_legacy_usage WHERE business_id='${biz}'`);
+    const minimizedDuplicate = await reviewDb.createCsvFollowupVisit({
+      businessId: biz,
+      customerName: "Legacy",
+      customerEmail: "LEGACY-IMPORT@example.test",
+      visitedAt: "2026-05-30T00:00:00Z",
+      permissionSource: "paper form",
+      permissionAt: "2026-05-29T00:00:00Z",
+      permissionNoticeVersion: "booster-v1",
+    }, owner);
+    assert.equal(minimizedDuplicate, null, "a legacy service-bearing CSV row fences the minimized identity even with an unknown prior delivery");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE id='${legacyCsvVisit}'`), "1");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_visits WHERE business_id='${biz}' AND source='csv' AND lower(customer_email)='legacy-import@example.test' AND visited_at='2026-05-30T00:00:00Z'`), "1");
+    assert.equal(psql(`SELECT state FROM public.booster_followup_deliveries WHERE id='${legacyCsvDelivery}'`), "unknown");
+    assert.equal(psql(`SELECT count(*) FROM public.booster_followup_deliveries WHERE visit_id='${legacyCsvVisit}'`), "1");
+    assert.equal(psql(`SELECT count(*) FROM public.booster_quota_legacy_usage WHERE business_id='${biz}'`), quotaCountBeforeLegacyDuplicate,
+      "deduplicating an unresolved legacy import cannot allocate quota");
+
+    const scrubbedVisit = id(762);
+    psql(`INSERT INTO public.followup_visits(
+        id,business_id,customer_name,customer_email,visited_at,source,followup_status,followup_sent_at,terminal_at,
+        created_at,permission_source,permission_at,permission_notice_version,permission_recipient_email,permission_scope
+      ) VALUES (
+        '${scrubbedVisit}','${biz}',NULL,NULL,now()-interval '400 days','csv','sent',now()-interval '400 days',now()-interval '400 days',
+        now()-interval '400 days','paper form',now()-interval '400 days','booster-v1','scrubbed@example.test','review_request'
+      );`);
+    await reviewDb.unsubscribeCustomerFromBusinessFollowups({ businessId: biz, customerEmail: "SCRUBBED@example.test" });
+    assert.equal(psql(`SELECT permission_withdrawn_at IS NOT NULL FROM public.followup_visits WHERE id='${scrubbedVisit}'`), "t",
+      "unsubscribe records withdrawal against the retained recipient reference after contact scrub");
+    assert.equal(psql(`SELECT count(*) FROM public.followup_unsubscribes WHERE business_id='${biz}' AND customer_email_normalized='scrubbed@example.test'`), "1",
+      "the global unsubscribe suppression is still written");
+
+    const previousRetentionEnabled = process.env.PRIVACY_RETENTION_ENABLED;
+    process.env.PRIVACY_RETENTION_ENABLED = "true";
+    const retentionCleanup = loadTs<typeof import("../src/lib/privacy-retention-cleanup.js")>("src/lib/privacy-retention-cleanup.ts", { overrides: {
+      "@/lib/db/neon": { sql: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        const query = strings.reduce((output, part, index) => output + part + (index < values.length ? quote(values[index]) : ""), "");
+        const output = psqlCsv(`${query};`);
+        if (!output) return [];
+        const [headerLine, valueLine] = output.split(/\r?\n/);
+        const headers = headerLine!.split(",");
+        const resultValues = valueLine!.split(",");
+        return [Object.fromEntries(headers.map((column, index) => [column, Number(resultValues[index] ?? 0)]))];
+      } },
+      "@/lib/safe-logger": { safeLogger: { error: () => {}, info: () => {} } },
+    } });
+    if (previousRetentionEnabled === undefined) delete process.env.PRIVACY_RETENTION_ENABLED;
+    else process.env.PRIVACY_RETENTION_ENABLED = previousRetentionEnabled;
+    const followupVisitCursor = 19;
+    const beforeWithdrawalRetention = await retentionCleanup.runPrivacyRetentionCleanup({
+      cursor: followupVisitCursor, maxOperations: 1, batchSize: 10, apply: true,
+      now: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+    });
+    assert.equal(beforeWithdrawalRetention.operations[0]?.table, "followup_visits");
+    assert.equal(psql(`SELECT permission_source IS NOT NULL FROM public.followup_visits WHERE id='${scrubbedVisit}'`), "t",
+      "permission evidence remains for 365 days after the later withdrawal timestamp");
+    const afterWithdrawalRetention = await retentionCleanup.runPrivacyRetentionCleanup({
+      cursor: followupVisitCursor, maxOperations: 1, batchSize: 10, apply: true,
+      now: new Date(Date.now() + 400 * 24 * 60 * 60 * 1000),
+    });
+    assert.equal(afterWithdrawalRetention.operations[0]?.table, "followup_visits");
+    assert.equal(psql(`SELECT permission_source IS NULL AND permission_recipient_email IS NULL FROM public.followup_visits WHERE id='${scrubbedVisit}'`), "t",
+      "permission evidence becomes purgeable after 365 days from withdrawal");
   } finally {
     if (started) {
       try { execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-m", "immediate", "-w", "stop"], { stdio: "ignore" }); } catch { /* preserve test failure */ }

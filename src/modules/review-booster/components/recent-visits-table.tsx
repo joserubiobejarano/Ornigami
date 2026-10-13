@@ -232,12 +232,11 @@ export function RecentVisitsTable({
         >
           <table className="min-w-full text-sm">
             <thead className="border-b border-border bg-surface text-left text-primary"><tr>
-              <th scope="col" className="px-4 py-3 font-semibold">Customer</th><th scope="col" className="px-4 py-3 font-semibold">Service</th><th scope="col" className="px-4 py-3 font-semibold">Visit date</th><th scope="col" className="px-4 py-3 font-semibold">Status</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Customer</th><th scope="col" className="px-4 py-3 font-semibold">Visit date</th><th scope="col" className="px-4 py-3 font-semibold">Status</th>
             </tr></thead>
             <tbody>{visits.map((visit) => (
               <tr key={visit.id} className="border-b border-border last:border-b-0">
                 <td className="px-4 py-3 align-top text-card-foreground"><p className="font-medium">{visit.customer_name || "Anonymous"}</p><p className="mt-1 text-xs text-muted-foreground">{visit.customer_email || "No email"}</p></td>
-                <td className="px-4 py-3 align-top text-card-foreground">{visit.service_name || "-"}</td>
                 <td className="whitespace-nowrap px-4 py-3 align-top text-card-foreground">{formatProductDate(visit.visited_at)}</td>
                 <td className="min-w-52 px-4 py-3 align-top">
                   <StatusBadge status={

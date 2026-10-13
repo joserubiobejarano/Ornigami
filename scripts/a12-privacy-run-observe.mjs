@@ -55,7 +55,7 @@ export async function observePrivacyRun(databaseUrl, { sqlFactory, signal = Abor
   const transaction = readOnlyRows?.[0];
   if (transaction?.transaction_read_only !== "on") throw new Error("read_only_transaction_not_confirmed");
   const state = stateRows?.[0];
-  const knownOutcomes = ["leads", "feedback", "public_demo_events", "public_demo_email_challenges", "api_rate_limits", "auth_login_attempts", "email_verification_tokens", "review_link_clicks", "followup_integration_events", "cron_runs", "password_reset_tokens"];
+  const knownOutcomes = ["leads", "feedback", "public_demo_events", "public_demo_email_challenges", "api_rate_limits", "auth_login_attempts", "email_verification_tokens", "review_link_clicks", "followup_integration_event_keys", "followup_integration_event_details", "booster_delivery_content", "booster_delivery_diagnostics", "booster_delivery_events", "booster_delivery_provider_correlations", "cron_runs", "followup_messages", "followup_visit_diagnostics", "followup_message_diagnostics", "followup_message_evidence", "followup_visits", "privacy_account_deletion_operations", "password_reset_tokens"];
   const recentRuns = (runRows || []).map((row) => {
     const outcomes = row.outcomes && typeof row.outcomes === "object" ? row.outcomes : {};
     return {

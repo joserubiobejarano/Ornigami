@@ -6,7 +6,7 @@ import { resolveRequestedBusinessId } from "@/lib/google-business";
 import { parseDashboardPageSize } from "@/lib/dashboard-pagination";
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
 import { createFollowupVisit, getRecentVisitsPage } from "@/modules/review-booster/services/review-booster-db.service";
-import { isValidCustomerEmail, isValidCustomerPhone, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
+import { isValidCustomerEmail, normalizePermissionEvidence, normalizeVisitedAt } from "@/modules/review-booster/services/intake-input.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   }
 
   const payload = body as Record<string, unknown>;
-  for (const field of ["customer_name", "customer_email", "customer_phone", "service_name"]) {
+  for (const field of ["customer_name", "customer_email", "permission_source", "permission_at", "permission_notice_version"]) {
     if (payload[field] !== undefined && payload[field] !== null && typeof payload[field] !== "string") {
       return NextResponse.json({ error: `${field} must be a string` }, { status: 400 });
     }
@@ -61,17 +61,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "visited_at must be a string" }, { status: 400 });
   }
   const customerEmail = optionalString(payload.customer_email)?.toLowerCase() ?? null;
-  const customerPhone = optionalString(payload.customer_phone);
   const visitedAt = normalizeVisitedAt(payload.visited_at);
   const customerName = optionalString(payload.customer_name);
-  const serviceName = optionalString(payload.service_name);
 
   if (!visitedAt) return NextResponse.json({ error: "visited_at must be YYYY-MM-DD (UTC) or an ISO timestamp with Z/an explicit offset" }, { status: 400 });
-  if (!customerEmail && !customerPhone) return NextResponse.json({ error: "Enter an email address or phone number" }, { status: 400 });
+  if (!customerEmail) return NextResponse.json({ error: "A recipient email is required for review requests" }, { status: 400 });
   if (customerEmail && !isValidCustomerEmail(customerEmail)) return NextResponse.json({ error: "customer_email must be a valid email address of at most 254 characters" }, { status: 400 });
-  if (customerPhone && !isValidCustomerPhone(customerPhone)) return NextResponse.json({ error: "customer_phone must contain 5 to 32 characters and a valid phone format" }, { status: 400 });
   if (customerName && customerName.length > 120) return NextResponse.json({ error: "customer_name is too long" }, { status: 400 });
-  if (serviceName && serviceName.length > 120) return NextResponse.json({ error: "service_name is too long" }, { status: 400 });
+  const permission = normalizePermissionEvidence({
+    source: payload.permission_source,
+    at: payload.permission_at,
+    noticeVersion: payload.permission_notice_version,
+    recipientEmail: customerEmail,
+  });
+  if (!permission) return NextResponse.json({ error: "Valid recipient permission source, time, and notice version are required" }, { status: 400 });
 
   try {
     // Resolve canonical business and paid-agent access for owners and members.
@@ -80,10 +83,11 @@ export async function POST(req: Request) {
       businessId: business.id,
       customerName,
       customerEmail,
-      customerPhone,
-      serviceName,
       visitedAt,
       source: "manual",
+      permissionSource: permission.source,
+      permissionAt: permission.at,
+      permissionNoticeVersion: permission.noticeVersion,
     }, session.user.id);
     return NextResponse.json(visit, { status: 201 });
   } catch (error) {

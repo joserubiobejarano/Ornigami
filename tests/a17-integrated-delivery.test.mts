@@ -71,14 +71,18 @@ test("member intake, owner-funded sends, signed Resend delivery events, replay, 
     });
     const postVisit = async (email: string) => intake.POST(new Request("http://localhost/api/review-booster/visits", {
       method: "POST", headers: { "content-type": "application/json", origin: "http://localhost" },
-      body: JSON.stringify({ customer_name: "A17 Guest", customer_email: email, service_name: "Consultation", visited_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() }),
+      body: JSON.stringify({ customer_name: "A17 Guest", customer_email: email, visited_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), permission_source: "paper form", permission_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(), permission_notice_version: "booster-v1" }),
     }));
 
     for (const email of ["delivered@example.test", "bounce@example.test", "complaint@example.test", "unknown@example.test"]) {
       const response = await postVisit(email);
       assert.equal(response.status, 201, await response.clone().text());
-      const visit = await response.json() as { business_id: string };
+      const visit = await response.json() as { business_id: string; customer_email: string; customer_phone?: string | null; service_name?: string | null };
       assert.equal(visit.business_id, ids.business, "member intake stores the visit under the canonical owner workspace");
+      assert.equal(visit.customer_phone, null, "the review-request path does not return phone data");
+      assert.equal(visit.service_name, null, "the review-request path does not return service data");
+      assert.equal(psql(`SELECT customer_phone IS NULL AND service_name IS NULL FROM public.followup_visits WHERE customer_email='${email}'`), "t",
+        "the review-request path does not persist phone or service data");
     }
 
     const atomicDb = loadTs<Record<string, (...args: never[]) => unknown>>("src/modules/review-booster/services/atomic-followup-db.service.ts", { "@/lib/db/neon": { sql } });
@@ -185,6 +189,8 @@ test("member intake, owner-funded sends, signed Resend delivery events, replay, 
       assert.equal(psql(`SELECT delivery_status FROM public.booster_followup_deliveries WHERE id='${deliveryId}'`), kind === "email.bounced" ? "bounced" : "complained");
     }
     assert.equal(psql("SELECT string_agg(reason,',' ORDER BY reason) FROM public.booster_delivery_suppressions"), "bounce,complaint");
+    const existingSuppressedDeliveries = psql("SELECT count(*) FROM public.booster_followup_deliveries d JOIN public.followup_visits v ON v.id=d.visit_id WHERE v.customer_email IN ('bounce@example.test','complaint@example.test')");
+    assert.equal(existingSuppressedDeliveries, "2", "the initial accepted bounce and complaint sends remain in history");
 
     for (const email of ["bounce@example.test", "complaint@example.test"]) {
       const later = await postVisit(email);
@@ -193,7 +199,10 @@ test("member intake, owner-funded sends, signed Resend delivery events, replay, 
     const blocked = await runner.runEligibleFollowups(deps);
     assert.equal(blocked.sent, 0);
     assert.equal(providerCalls.length, 4, "bounce/complaint feedback prevents another provider HTTP request");
-    assert.equal(psql("SELECT count(*) FROM public.booster_followup_deliveries d JOIN public.followup_visits v ON v.id=d.visit_id WHERE v.customer_email IN ('bounce@example.test','complaint@example.test') AND d.state='non_sendable'"), "2");
+    assert.equal(psql("SELECT count(*) FROM public.booster_followup_deliveries d JOIN public.followup_visits v ON v.id=d.visit_id WHERE v.customer_email IN ('bounce@example.test','complaint@example.test')"), existingSuppressedDeliveries,
+      "the permission candidate gate creates no delivery reservation for later globally suppressed visits");
+    assert.equal(psql("SELECT count(*) FROM public.followup_visits WHERE customer_email IN ('bounce@example.test','complaint@example.test') AND followup_status='pending'"), "2",
+      "suppressed visits remain visible for operator handling without reserving quota");
     const quotaAfterEvents = await (atomicDb.getAtomicBoosterQuota as (input: { businessId: string }) => Promise<{ usage: number; allowance: number }>)( { businessId: ids.business });
     assert.equal(quotaAfterEvents.usage, 4, "delivery feedback and denied sends preserve the accepted/unknown reservations");
     assert.equal(psql(`SELECT count(*) FROM public.followup_messages WHERE visit_id=(SELECT visit_id FROM public.booster_followup_deliveries WHERE id='${deliveredId}') AND status='sent'`), "1");

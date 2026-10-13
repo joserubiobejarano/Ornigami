@@ -100,12 +100,16 @@ test("A10 delivery event database contract uses disposable PostgreSQL", { timeou
     const migrations = join(root,"neon/migrations");
     for (const name of readdirSync(migrations).filter((entry) => /^\d+_.*\.sql$/.test(entry)).sort()) psqlFile(join(migrations,name));
     psql("INSERT INTO public.users(id,email) VALUES ('" + id.owner + "','a10-owner@example.test'); INSERT INTO public.profiles(id) VALUES ('" + id.owner + "');");
-    // Applying 025 after 036 must update only the A06 base under the A11 wrapper.
+    // Reapplying 025 after 036/040 must replace only the A06 base under the
+    // permission (outer) and account-lifecycle (_a22) wrappers.
     psqlFile(join(migrations,"025_email_delivery_events.sql"));
     assert.equal(psql("SELECT to_regprocedure('public.begin_booster_delivery_send(uuid,uuid,uuid)') IS NOT NULL"),"t");
     assert.equal(psql("SELECT to_regprocedure('public.begin_booster_delivery_send_a06(uuid,uuid,uuid)') IS NOT NULL"),"t");
-    assert.equal(psql("SELECT pg_get_functiondef('public.begin_booster_delivery_send(uuid,uuid,uuid)'::regprocedure) LIKE '%begin_booster_delivery_send_a06%'"),"t",
-      "the existing account-lifecycle send wrapper survives migration reapplication");
+    assert.equal(psql("SELECT to_regprocedure('public.begin_booster_delivery_send_a22(uuid,uuid,uuid)') IS NOT NULL"),"t");
+    assert.equal(psql("SELECT pg_get_functiondef('public.begin_booster_delivery_send(uuid,uuid,uuid)'::regprocedure) LIKE '%begin_booster_delivery_send_a22%' AND pg_get_functiondef('public.begin_booster_delivery_send(uuid,uuid,uuid)'::regprocedure) LIKE '%booster_visit_has_review_permission%'"),"t",
+      "the outer permission gate survives 025 reapplication and delegates through A22");
+    assert.equal(psql("SELECT pg_get_functiondef('public.begin_booster_delivery_send_a22(uuid,uuid,uuid)'::regprocedure) LIKE '%begin_booster_delivery_send_a06%' AND pg_get_functiondef('public.begin_booster_delivery_send_a22(uuid,uuid,uuid)'::regprocedure) LIKE '%privacy_deletion_requested_at%'"),"t",
+      "the inner account-lifecycle wrapper retains its freeze fence and A06 delegation");
     psql("INSERT INTO public.businesses(id,owner_user_id,name,google_review_url) VALUES " +
       "('" + id.b1 + "','" + id.owner + "','A10 One','https://example.test/review')," +
       "('" + id.b2 + "','" + id.owner + "','A10 Two','https://example.test/review');" +
@@ -113,12 +117,12 @@ test("A10 delivery event database contract uses disposable PostgreSQL", { timeou
       "INSERT INTO public.business_agents(business_id,agent_id,status,plan_id,billing_period,current_period_start,current_period_end) VALUES " +
       "('" + id.b1 + "','review_booster','active','booster','monthly',now()-interval '1 day',now()+interval '29 days')," +
       "('" + id.b2 + "','review_booster','active','booster','monthly',now()-interval '1 day',now()+interval '29 days');" +
-      "INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status) VALUES " +
-      "('" + id.v1 + "','" + id.b1 + "','" + email + "',now()-interval '2 days','pending')," +
-      "('" + id.v2 + "','" + id.b2 + "','" + email + "',now()-interval '2 days','pending')," +
-      "('" + id.v3 + "','" + id.b1 + "','late@example.test',now()-interval '2 days','pending')," +
-      "('" + id.v4 + "','" + id.b2 + "','freeze@example.test',now()-interval '2 days','pending')," +
-      "('" + id.v5 + "','" + id.b1 + "','frozen-first@example.test',now()-interval '2 days','pending');");
+      "INSERT INTO public.followup_visits(id,business_id,customer_email,visited_at,followup_status,permission_source,permission_at,permission_notice_version,permission_recipient_email,permission_scope) VALUES " +
+      "('" + id.v1 + "','" + id.b1 + "','" + email + "',now()-interval '2 days','pending','web form',now()-interval '3 days','booster-v1','" + email + "','review_request')," +
+      "('" + id.v2 + "','" + id.b2 + "','" + email + "',now()-interval '2 days','pending','web form',now()-interval '3 days','booster-v1','" + email + "','review_request')," +
+      "('" + id.v3 + "','" + id.b1 + "','late@example.test',now()-interval '2 days','pending','web form',now()-interval '3 days','booster-v1','late@example.test','review_request')," +
+      "('" + id.v4 + "','" + id.b2 + "','freeze@example.test',now()-interval '2 days','pending','web form',now()-interval '3 days','booster-v1','freeze@example.test','review_request')," +
+      "('" + id.v5 + "','" + id.b1 + "','frozen-first@example.test',now()-interval '2 days','pending','web form',now()-interval '3 days','booster-v1','frozen-first@example.test','review_request');");
     const insertDelivery = (deliveryId: string, visitId: string, businessId: string, to: string, state: "sending" | "prepared") => {
       const frozen = JSON.stringify({ from:"Studio <sender@example.test>",to,reply_to:"sender@example.test",subject:"A10",text:"A10 body",html:"<p>A10 body</p>",tags:[{name:"ornigami_delivery_id",value:deliveryId}] }).replaceAll("'","''");
       psql("INSERT INTO public.booster_followup_deliveries(id,business_id,visit_id,state,provider_payload,review_url_snapshot,idempotency_key,lease_token,lease_until,first_attempt_at,send_attempt_count,reservation_month) VALUES " +
@@ -194,7 +198,7 @@ test("A10 delivery event database contract uses disposable PostgreSQL", { timeou
       "the frozen path retains only the minimal sent lifecycle mirror");
     const freezeFence = psql("SELECT lease_token::text FROM public.booster_followup_deliveries WHERE id='" + id.d4 + "'");
     assert.equal(JSON.parse(psql("SELECT public.begin_booster_delivery_send('" + id.d4 + "','" + freezeFence + "',NULL)::text")).kind,"actor_denied",
-      "the lifecycle wrapper still fences owner freeze after applying 025");
+      "the wrapper chain still fences owner freeze after applying 025");
   } finally {
     if (started) {
       try { execFileSync(pgExe("pg_ctl"),["-D",dataDir,"-m","immediate","-w","stop"],{stdio:"ignore"}); } catch { /* cleanup continues */ }
