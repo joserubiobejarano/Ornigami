@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -28,27 +28,11 @@ import {
   useReviewReplySettings,
 } from "@/modules/review-replies/hooks/use-review-reply-settings";
 
-type GoogleLocation = {
-  id: string;
-  locationName: string;
-  title: string | null;
-  primaryCategory: string | null;
-  isSuspended: boolean;
-  selected: boolean;
-};
-
-type ConnectionData = {
-  connected: boolean;
-  canManage?: boolean;
-  selectionLocked?: boolean;
-  locations?: GoogleLocation[];
-};
+import { useGoogleConnection } from "@/modules/review-replies/hooks/use-google-connection";
 
 function SettingsPageContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
-  const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
-  const [connLoading, setConnLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -67,6 +51,7 @@ function SettingsPageContent() {
     contactPreference,
     setContactPreference,
     settingsLoading,
+    settingsLoaded,
     settingsError,
     saveState,
     autoReplyAllReviews,
@@ -86,30 +71,18 @@ function SettingsPageContent() {
     return fallback;
   }
 
-  const fetchConnectionData = useCallback(async () => {
-    setConnLoading(true);
+  const {
+    connectionData,
+    connLoading: connectionLoading,
+    error: connectionError,
+    reload: reloadConnection,
+  } = useGoogleConnection({ businessId, enabled: settingsLoaded && Boolean(businessId), isDemo });
+  const connLoading = settingsLoading || connectionLoading;
+  const connectionIssue = error || connectionError;
+  const fetchConnectionData = () => {
     setError(null);
-    try {
-      const connectionQuery = businessId ? `?businessId=${encodeURIComponent(businessId)}` : "";
-      const res = await fetch(`/api/google/connection${connectionQuery}`);
-      if (!res.ok) throw new Error("We couldn't load your Google connection. Try again in a moment.");
-      const data = await res.json();
-      setConnectionData(data);
-    } catch (cause: unknown) {
-      setError(cause instanceof Error ? cause.message : "We couldn't load your Google connection. Try again in a moment.");
-      setConnectionData(null);
-    } finally {
-      setConnLoading(false);
-    }
-  }, [businessId]);
-
-  useEffect(() => {
-    if (isDemo) {
-      setConnLoading(false);
-      return;
-    }
-    void fetchConnectionData();
-  }, [fetchConnectionData, isDemo]);
+    return reloadConnection({ force: true });
+  };
 
   useEffect(() => {
     const googleStatus = searchParams.get("google");
@@ -233,92 +206,91 @@ function SettingsPageContent() {
 
       <Card className="border-[1.5px] border-border shadow-ink-sm">
         <CardHeader>
-            <CardTitle>Your reply tone</CardTitle>
+          <CardTitle>Your reply tone</CardTitle>
           <CardDescription>
             These details shape AI drafts. Every generated reply is saved for review before it can be posted.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6" aria-busy={settingsLoading}>
           {settingsError && (
             <DashboardCallout variant="error">
               <p>{settingsError}</p>
+              {!settingsLoaded && (
+                <Button type="button" className="mt-3" onClick={() => window.location.reload()}>
+                  Retry settings
+                </Button>
+              )}
             </DashboardCallout>
           )}
-          {settingsLoading ? (
-            <div className="space-y-3"><Skeleton className="h-4 w-32" /><Skeleton className="h-9 w-full" /><Skeleton className="h-4 w-24" /><Skeleton className="h-9 w-full" /></div>
-          ) : (
-            <>
-              {readOnly && (
-                <DashboardCallout variant="neutral">
-                  <p>Reply settings are read-only for your workspace role. Ask the workspace owner to change them.</p>
-                </DashboardCallout>
-              )}
-              <FormField label="Business name" htmlFor="settings-business-name">
-                <Input
-                  id="settings-business-name"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Your business name"
-                  autoComplete="organization"
-                  readOnly={readOnly}
-                />
-              </FormField>
-              <FormField label="Tone" htmlFor="settings-tone">
-                <select
-                  id="settings-tone"
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value)}
-                  className={nativeSelectClassName}
-                  disabled={readOnly}
-                >
-                  {TONE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField
-                label="Owner name or team name (optional)"
-                htmlFor="settings-owner"
-              >
-                <Input
-                  id="settings-owner"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                  placeholder="e.g. Jamie or The Downtown Team"
-                  autoComplete="name"
-                  readOnly={readOnly}
-                />
-              </FormField>
-              <FormField
-                label="Contact preference (optional)"
-                htmlFor="settings-contact"
-              >
-                <Input
-                  id="settings-contact"
-                  value={contactPreference}
-                  onChange={(e) => setContactPreference(e.target.value)}
-                  placeholder='e.g. "Call the store directly" or "Email us directly"'
-                  readOnly={readOnly}
-                />
-              </FormField>
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button
-                  type="button"
-                  onClick={() => void saveReplySettings()}
-                  disabled={saveState === "saving" || readOnly}
-                >
-                  {saveState === "saving" ? "Saving…" : "Save changes"}
-                </Button>
-                {saveState === "saved" && (
-                  <Badge variant="secondary" className="font-normal text-foreground">
-                    Saved
-                  </Badge>
-                )}
-              </div>
-            </>
+          {readOnly && (
+            <DashboardCallout variant="neutral">
+              <p>Reply settings are read-only for your workspace role. Ask the workspace owner to change them.</p>
+            </DashboardCallout>
           )}
+          <FormField label="Business name" htmlFor="settings-business-name">
+            <Input
+              id="settings-business-name"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="Your business name"
+              autoComplete="organization"
+              readOnly={!settingsLoaded || readOnly}
+            />
+          </FormField>
+          <FormField label="Tone" htmlFor="settings-tone">
+            <select
+              id="settings-tone"
+              value={tone}
+              onChange={(e) => setTone(e.target.value)}
+              className={nativeSelectClassName}
+              disabled={!settingsLoaded || readOnly}
+            >
+              {TONE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <FormField
+            label="Owner name or team name (optional)"
+            htmlFor="settings-owner"
+          >
+            <Input
+              id="settings-owner"
+              value={ownerName}
+              onChange={(e) => setOwnerName(e.target.value)}
+              placeholder="e.g. Jamie or The Downtown Team"
+              autoComplete="name"
+              readOnly={!settingsLoaded || readOnly}
+            />
+          </FormField>
+          <FormField
+            label="Contact preference (optional)"
+            htmlFor="settings-contact"
+          >
+            <Input
+              id="settings-contact"
+              value={contactPreference}
+              onChange={(e) => setContactPreference(e.target.value)}
+              placeholder='e.g. "Call the store directly" or "Email us directly"'
+              readOnly={!settingsLoaded || readOnly}
+            />
+          </FormField>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Button
+              type="button"
+              onClick={() => void saveReplySettings()}
+              disabled={!settingsLoaded || saveState === "saving" || readOnly}
+            >
+              {saveState === "saving" ? "Saving…" : "Save changes"}
+            </Button>
+            {saveState === "saved" && (
+              <Badge variant="secondary" className="font-normal text-foreground">
+                Saved
+              </Badge>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -340,10 +312,10 @@ function SettingsPageContent() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
+        <CardContent className="min-h-48 space-y-4" aria-busy={connLoading}>
+          {connectionIssue && (
             <DashboardCallout variant="error">
-              <p>{error}</p>
+              <p>{connectionIssue}</p>
             </DashboardCallout>
           )}
 
@@ -359,7 +331,7 @@ function SettingsPageContent() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleConnectGoogle} disabled={connectionData?.canManage !== true}>Connect Google</Button>
-                {error && (
+                {connectionIssue && (
                   <Button type="button" onClick={() => void fetchConnectionData()}>
                     Retry
                   </Button>
@@ -453,7 +425,7 @@ function SettingsPageContent() {
               aria-label="Auto-post trusted replies"
             />
           </div>
-          {!canManageAutoReply && (
+          {!settingsLoading && !canManageAutoReply && (
             <p className="mt-2 text-xs text-muted-foreground">Only the workspace owner can change this setting.</p>
           )}
         </CardContent>

@@ -1,0 +1,92 @@
+{
+  "suite": "read-only browser edge checks",
+  "generatedAt": "2026-10-13T04:35:24.763Z",
+  "runtimeCommit": "0b1bf0966ec0567acb3937fc452e7d5292eae8ee",
+  "runtimeTree": "4907c3678588fc612a17618769ab057ff14783b5",
+  "checks": {
+    "delayedSettings": {
+      "requestCounts": {
+        "settings": 1,
+        "connectionStartedAfterSettingsResponse": true,
+        "connection": 1
+      },
+      "geometry": {
+        "before": {
+          "name": {
+            "x": 41,
+            "y": 474,
+            "width": 330,
+            "height": 44
+          },
+          "tone": {
+            "x": 41,
+            "y": 570,
+            "width": 330,
+            "height": 44
+          },
+          "formCard": {
+            "x": 17,
+            "y": 446,
+            "width": 378,
+            "height": 436
+          },
+          "readonly": true,
+          "toneDisabled": true
+        },
+        "after": {
+          "name": {
+            "x": 41,
+            "y": 474,
+            "width": 330,
+            "height": 44
+          },
+          "tone": {
+            "x": 41,
+            "y": 570,
+            "width": 330,
+            "height": 44
+          },
+          "formCard": {
+            "x": 17,
+            "y": 446,
+            "width": 378,
+            "height": 436
+          },
+          "readonly": false,
+          "toneDisabled": false
+        },
+        "stableWithinHalfPixel": true
+      },
+      "cls": 0
+    },
+    "settingsFailureRetry": {
+      "attempts": 2,
+      "blockedControls": true,
+      "retryVisible": true,
+      "retryLoadedSettings": true
+    },
+    "disconnectedOwner": {
+      "connectButtonVisible": true,
+      "connectButtonEnabled": true
+    },
+    "member": {
+      "businessNameReadonly": true,
+      "toneDisabled": true,
+      "connectButtonEnabled": false
+    },
+    "multipleLocations": {
+      "bothSyntheticLocationsVisible": true,
+      "syncButtonVisible": true
+    },
+    "oauthErrorRetry": {
+      "requests": 2,
+      "staleErrorCleared": true,
+      "connectButtonVisible": true
+    }
+  },
+  "screenshots": {
+    "mobile": ".a20-fixture\\browser-edge-checks\\settings-mobile.png",
+    "desktop": ".a20-fixture\\browser-edge-checks\\settings-desktop.png"
+  },
+  "pass": true
+}
