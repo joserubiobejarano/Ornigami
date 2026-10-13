@@ -6,6 +6,8 @@ The [closure follow-up](./PRIVACY_EVIDENCE_CLOSURE.md) records authenticated acc
 
 Further owner-directed review captures the open OpenAI Personal/Default project: Global residency, disabled training-sharing categories and API logging enabled per call. Responses storage remains a separate issue because the Booster request omits `store`. See the closure record for official feature-retention guidance and source references. The owner confirms vendor organizations are not contracted by Ornigami LLC; legal coverage needs regularization. No database backup/dump filenames were found in the bounded local inventory; unknown copies and the 35-day backup target remain open.
 
+The later archive review found six SQL filenames within the two known recovery ZIPs. Statement-pattern counts suggest schema SQL with embedded inserts; no COPY blocks or pg_dump headers were detected. Values, other ZIP payloads and Git objects were not inspected, so data copies and archive expiry remain unresolved. See the [closure record](./PRIVACY_EVIDENCE_CLOSURE.md) and private archive inventories for exact scope. The owner selected [dedicated company accounts](./PRIVACY_COMPANY_ACCOUNT_SETUP.md); preparing those accounts does not resolve copies retained by the existing services or recovery archives.
+
 The [provider review](./PRIVACY_PROVIDER_REVIEW.md) adds authenticated Neon restore/snapshot metadata and the correct test-mode Stripe CLI identity, plus published Resend backup/storage commitments, Vercel build/runtime distinctions and Sentry's Developer lookback. These narrow the inventory; public commitments are not account erasure receipts, and the test Stripe record is not an LLC contract.
 
 ## Application and private records
