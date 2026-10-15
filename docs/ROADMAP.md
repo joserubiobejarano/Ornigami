@@ -12,7 +12,7 @@ On October 13 the owner selected a VPS hosting direction; the later confirmed pl
 
 The owner defers billable AI for launch and prohibits further agent-sent emails, including route probes/support replies. Keep `OPENAI_ENABLED` unset/false; Booster uses static copy and AI-dependent reply/audit features report unavailable. No extra free customer entitlement or change to the 14-day trial is implied. Received provider evidence can be reviewed; actual alias-delivery checks must be owner-performed after routing is configured.
 
-The canonical project stays at `Ornigami/Ornigami-Agents`. Needed local recovery/evidence is consolidated under its Git-ignored, owner-restricted `.local/recovery`; old working copies and duplicate generated artifacts are removed only after reviewed preservation. Active credentials remain in their established private operator store. Workspace cleanup does not delete cloud resources or production data.
+The canonical project is directly in `C:\Users\joser\Desktop\Projects\Ornigami` after the October 16 consolidation. Completed task worktrees are removed; branch history, private recovery archives and verified evidence are retained. Use the Git-ignored, owner-restricted `.local/recovery/INDEX.md` and consolidation manifest for former receipt paths. Active local configuration moves with the checkout; external operator credentials and rights records remain in their established private stores. Workspace cleanup does not delete cloud resources or production data. The six former privacy operator guides are combined in [Privacy operations](./PRIVACY.md); the unsigned customer-facing addendum remains separate.
 
 ## Before onboarding the first business
 

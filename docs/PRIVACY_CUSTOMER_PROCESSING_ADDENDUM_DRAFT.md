@@ -31,7 +31,7 @@ Underlying service order/version, effective date, workspace/business scope, auth
 | Data classes | Email/name, visit metadata, permission source/time/notice, review/draft text, delivery outcomes, correlation and suppression; confirm actual fields. Exclude sensitive service details and recipient phone content from intake/generation |
 | Duration and frequency | Service term and agreed handling/retention schedule; continuous service processing as enabled. Complete actual start/end and customer termination instruction |
 | Security annex | Attach actual-target measures and operating evidence; unresolved measures must close before enrollment |
-| Provider annex | Attach enabled services, actual legal customer/provider, roles, accepted DPA/terms, regions/transfers, subprocessors, retention and rights channel from the [provider review](./PRIVACY_PROVIDER_REVIEW.md) |
+| Provider annex | Attach enabled services, actual legal customer/provider, roles, accepted DPA/terms, regions/transfers, subprocessors, retention and rights channel from the [provider account evidence](./PRIVACY.md#accounts-and-agreement-evidence) |
 | Subprocessor authorization | **Select specific or general; complete notice/objection process and periods** |
 | Assistance contacts | Customer contact: **required**. Ornigami proposed contact: `privacy@ornigami.com`, Jose; route delivery remains an execution prerequisite |
 | Termination | **Complete return/delete choice, secure delivery, period, restricted exceptions and provider/backup outcome handling** |

@@ -2,7 +2,7 @@
 
 This is the reviewed Linux/systemd/Caddy reference for one application host and primary scheduler. Run its commands from the repository root. It does not provision a VPS, apply production SQL, deploy, retire Vercel or move Neon. Jose owns target rollout and rollback.
 
-The later owner-confirmed hosting plan is Contabo US East with Coolify, intended for November 2026; target access is not yet available. These units are not a tested Coolify deployment. Review and adapt service ownership, ingress/header trust, filesystem writes, secrets, scheduling and rollback to the actual control plane before installation. Keep one application supervisor/ingress and one automatic primary scheduler. See [VPS privacy/backup verification](../../docs/PRIVACY_VPS_VERIFICATION.md) for the pending actual-target evidence.
+The later owner-confirmed hosting plan is Contabo US East with Coolify, intended for November 2026; target access is not yet available. These units are not a tested Coolify deployment. Review and adapt service ownership, ingress/header trust, filesystem writes, secrets, scheduling and rollback to the actual control plane before installation. Keep one application supervisor/ingress and one automatic primary scheduler. See [VPS privacy/backup verification](../../docs/PRIVACY.md#planned-contabocoolify-verification) for the pending actual-target evidence.
 
 ## Prepared runtime
 
