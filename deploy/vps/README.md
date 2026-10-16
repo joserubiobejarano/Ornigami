@@ -1,5 +1,7 @@
 # VPS runtime and cutover reference
 
+For the existing shared host, use the [16 October Coolify preparation](../coolify/README.md) and its task-specific evidence. The Caddy/systemd installation below is historical reference; do not install duplicate ingress or app supervision. Its domain examples are not an accepted new public origin.
+
 This is the reviewed Linux/systemd/Caddy reference for one application host and primary scheduler. Run its commands from the repository root. It does not provision a VPS, apply production SQL, deploy, retire Vercel or move Neon. Jose owns target rollout and rollback.
 
 The later owner-confirmed hosting plan is Contabo US East with Coolify, intended for November 2026; target access is not yet available. These units are not a tested Coolify deployment. Review and adapt service ownership, ingress/header trust, filesystem writes, secrets, scheduling and rollback to the actual control plane before installation. Keep one application supervisor/ingress and one automatic primary scheduler. See [VPS privacy/backup verification](../../docs/PRIVACY.md#planned-contabocoolify-verification) for the pending actual-target evidence.

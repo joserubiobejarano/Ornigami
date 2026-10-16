@@ -1,0 +1,28 @@
+{
+  "timezone": "UTC",
+  "executionContext": "web-container",
+  "tasks": [
+    {
+      "name": "ornigami-review-booster",
+      "schedule": "7 * * * *",
+      "command": "node scripts/coolify-cron-dispatch.mjs review-booster",
+      "timeoutSeconds": 70,
+      "enabled": false
+    },
+    {
+      "name": "ornigami-review-replies",
+      "schedule": "11 */4 * * *",
+      "command": "node scripts/coolify-cron-dispatch.mjs review-replies",
+      "timeoutSeconds": 70,
+      "enabled": false,
+      "requiresExplicitAcceptance": "ORNIGAMI_COOLIFY_REPLIES_ACCEPTED=true"
+    },
+    {
+      "name": "ornigami-privacy",
+      "schedule": "0 3 * * *",
+      "command": "node scripts/coolify-cron-dispatch.mjs privacy",
+      "timeoutSeconds": 70,
+      "enabled": false
+    }
+  ]
+}

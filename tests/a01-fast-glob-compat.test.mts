@@ -8,7 +8,7 @@ const projectRoot = process.cwd();
 const nextRequire = createRequire(path.join(projectRoot, "node_modules/@next/eslint-plugin-next/dist/utils/get-root-dirs.js"));
 const estreeRequire = createRequire(path.join(projectRoot, "node_modules/@typescript-eslint/typescript-estree/dist/parseSettings/resolveProjectList.js"));
 const nextGlob = nextRequire("fast-glob");
-const estreeGlob = estreeRequire("fast-glob");
+const estreeGlob = estreeRequire("tinyglobby");
 
 function createFixture() {
   const fixtureParent = path.join(projectRoot, "build/a01-advisory-validation");
@@ -36,18 +36,20 @@ function createFixture() {
   return { root, dispose: () => rmSync(root, { recursive: true, force: true }) };
 }
 
-test("both locked consumers resolve the explicit local adapter API", () => {
-  assert.equal(nextGlob, estreeGlob);
+test("Next uses the local fast-glob adapter while TypeScript-ESTree uses tinyglobby", () => {
   assert.deepEqual(Object.keys(nextGlob).sort(), ["globSync", "sync"]);
+  assert.deepEqual(Object.keys(estreeGlob).sort(), ["convertPathToPattern", "escapePath", "glob", "globSync", "isDynamicPattern"]);
+  assert.notEqual(nextRequire.resolve("fast-glob"), estreeRequire.resolve("tinyglobby"));
 });
 
-test("locked consumers use only the adapter methods and options covered here", () => {
+test("locked consumers call only the methods and options covered here", () => {
   const nextSource = readFileSync(nextRequire.resolve("./get-root-dirs.js"), "utf8");
   const estreeSource = readFileSync(estreeRequire.resolve("./resolveProjectList.js"), "utf8");
   assert.deepEqual([...nextSource.matchAll(/\b_fastglob\.(\w+)/g)].map((match) => match[1]), ["globSync"]);
   assert.match(nextSource, /globSync\)\(rootDir\.replace\([\s\S]*?onlyDirectories:\s*true/);
-  assert.deepEqual([...estreeSource.matchAll(/\bfast_glob_1\.(\w+)/g)].map((match) => match[1]), ["sync"]);
-  assert.match(estreeSource, /sync\)\(pattern,\s*\{\s*cwd:\s*options\.tsconfigRootDir,\s*ignore:\s*projectFolderIgnoreList/);
+  assert.match(estreeSource, /require\(["']tinyglobby["']\)/);
+  assert.deepEqual([...estreeSource.matchAll(/\btinyglobby_1\.(\w+)/g)].map((match) => match[1]), ["isDynamicPattern", "isDynamicPattern", "globSync"]);
+  assert.match(estreeSource, /globSync\)\(pattern,\s*\{\s*cwd:\s*options\.tsconfigRootDir,\s*expandDirectories:\s*false,\s*ignore:\s*projectFolderIgnoreList/);
 });
 
 test("Next root directory glob preserves absolute paths and directory formatting", (t) => {
@@ -122,10 +124,10 @@ test("TypeScript project discovery excludes nested node_modules", (t) => {
   clearGlobResolutionCache();
 });
 
-test("positive fast-glob ignore patterns exclude matching project files", (t) => {
+test("tinyglobby positive ignore patterns exclude matching project files", (t) => {
   const fixture = createFixture();
   t.after(fixture.dispose);
-  const found = estreeGlob.sync("packages/*/tsconfig.json", {
+  const found = estreeGlob.globSync("packages/*/tsconfig.json", {
     cwd: fixture.root,
     ignore: ["packages/second/**"],
   });
@@ -149,18 +151,23 @@ test("TypeScript project discovery keeps configured pattern order and canonical 
   clearGlobResolutionCache();
 });
 
-test("TypeScript-ESTree's negated exclusion syntax remains an exclusion", (t) => {
+test("TypeScript-ESTree project discovery excludes nested node_modules", (t) => {
   const fixture = createFixture();
   t.after(fixture.dispose);
-  const nestedPattern = "**/tsconfig.json";
-  const found = estreeGlob.sync(nestedPattern, {
-    cwd: fixture.root,
-    ignore: ["!**/node_modules/**"],
+  const { clearGlobResolutionCache, resolveProjectList } = estreeRequire("./resolveProjectList");
+  clearGlobResolutionCache();
+  const result = resolveProjectList({
+    project: ["**/tsconfig.json"],
+    tsconfigRootDir: fixture.root,
+    singleRun: true,
   });
-  assert.deepEqual(found.sort(), ["packages/first/tsconfig.json", "packages/second/tsconfig.json"]);
+  assert.deepEqual([...result.values()], [
+    path.resolve(fixture.root, "packages/first/tsconfig.json"),
+    path.resolve(fixture.root, "packages/second/tsconfig.json"),
+  ]);
+  clearGlobResolutionCache();
 });
 
-test("unknown fast-glob options and malformed ignore lists fail instead of being dropped", () => {
+test("unknown fast-glob options fail instead of being dropped", () => {
   assert.throws(() => nextGlob.sync("src/*", { followSymbolicLinks: false }), /Unsupported fast-glob option/);
-  assert.throws(() => estreeGlob.sync("**/*.json", { ignore: "**/node_modules/**" }), /ignore to be a string array/);
 });

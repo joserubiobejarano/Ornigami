@@ -1,0 +1,27 @@
+# Optional Traefik routing overlay. Activate only after configuring the approved hostname
+# and attaching this service to the existing Coolify proxy network.
+services:
+  app:
+    networks:
+      - default
+      - coolify
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.ornigami.rule: "Host(`${ORNIGAMI_CANONICAL_HOST:?Set the approved canonical hostname}`)"
+      traefik.http.routers.ornigami.entrypoints: https
+      traefik.http.routers.ornigami.tls: "true"
+      traefik.http.routers.ornigami.tls.certresolver: letsencrypt
+      traefik.http.routers.ornigami.middlewares: ornigami-request-headers@docker
+      traefik.http.services.ornigami.loadbalancer.server.port: "3000"
+      traefik.http.middlewares.ornigami-request-headers.headers.customrequestheaders.X-Real-IP: ""
+      traefik.http.middlewares.ornigami-request-headers.headers.customrequestheaders.X-Vercel-Forwarded-For: ""
+      traefik.http.middlewares.ornigami-request-headers.headers.customrequestheaders.CF-Connecting-IP: ""
+      traefik.http.middlewares.ornigami-request-headers.headers.customrequestheaders.Forwarded: ""
+      traefik.http.middlewares.ornigami-request-headers.headers.customrequestheaders.X-Forwarded-Host: "${ORNIGAMI_CANONICAL_HOST:?Set the approved canonical hostname}"
+      traefik.http.middlewares.ornigami-request-headers.headers.customrequestheaders.X-Forwarded-Proto: https
+
+networks:
+  coolify:
+    external: true
+    name: coolify

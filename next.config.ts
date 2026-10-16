@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     sri: { algorithm: "sha256" },
+    ...(process.env.ORNIGAMI_CONTAINER_BUILD === "true" ? { cpus: 1 } : {}),
   },
   async headers() {
     const headers = [
