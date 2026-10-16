@@ -1,5 +1,7 @@
 # Framework prototype: single Linux trial and deployment holds
 
+Subsequent owner-authorized [bounded local repair](./LOCAL_PORTABLE_REPAIR.md) is complete at candidate `a069cd4d6232f57c72e1a8d7af2349bb707f0474`. It does not rerun or replace this failed trial, its partial artifact, or its custody limitations. No further external trial/publication is authorized.
+
 The owner authorized one trial of `fe71816993f5eb42d0565befb4354d478e48429a`, reversible Ornigami-only deployment holds, and one owner evidence-custody acknowledgment after verified durable download. This is experimental validation, not framework adoption or release approval. Maintainer, backup and security-review owners remain unassigned.
 
 ## Source and request

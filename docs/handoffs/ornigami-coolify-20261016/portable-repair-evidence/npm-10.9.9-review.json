@@ -1,0 +1,89 @@
+{
+  "source": "https://registry.npmjs.org/npm/10.9.9",
+  "observedAt": "2026-10-16T21:28:47.533Z",
+  "name": "npm",
+  "version": "10.9.9",
+  "engines": {
+    "node": "^18.17.0 || >=20.5.0"
+  },
+  "dist": {
+    "shasum": "a4f33aa2338c120fbf3769561b7ecc34dc3a4666",
+    "tarball": "https://registry.npmjs.org/npm/-/npm-10.9.9.tgz",
+    "fileCount": 2009,
+    "integrity": "sha512-1g+6jLQvaIuB4zwvHL7yrXuXcWZwDsCtBX8bbWDqbvJSSr9nPiDDWTHNgwXR27iIcTTW7v3A57hDW9RYv2W4Yg==",
+    "signatures": [
+      {
+        "sig": "MEQCIAkNGPKXdJSQnwBpZLRldiWMXoXdADpLkfYWbjWYYmEfAiBY4cDwHC90Oxmy4HHsQTaolUascSkQMv1e1ACLCJ0mBA==",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEUCIA7r6grBioPdvNLiwtUjrucC08H4akdw6mWcyHO0tx1RAiEA2FUkYGvlwlysPZY6cq92MDVgB2ckgxKA3ZGnshl5ebs=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "unpackedSize": 11694636
+  },
+  "sha256": "c80bd097147cce32e31010b791bab8c71a26a5e10668210ec9d2e7f4c7cea2a1",
+  "bundledPackageInventory": [
+    {
+      "path": "package/node_modules/@npmcli/metavuln-calculator/node_modules/pacote/package.json",
+      "name": "pacote",
+      "version": "20.0.1",
+      "engines": {
+        "node": "^18.17.0 || >=20.5.0"
+      }
+    },
+    {
+      "path": "package/node_modules/brace-expansion/package.json",
+      "name": "brace-expansion",
+      "version": "2.0.2",
+      "engines": null
+    },
+    {
+      "path": "package/node_modules/http-cache-semantics/package.json",
+      "name": "http-cache-semantics",
+      "version": "4.2.0",
+      "engines": null
+    },
+    {
+      "path": "package/node_modules/ip-address/package.json",
+      "name": "ip-address",
+      "version": "10.1.0",
+      "engines": {
+        "node": ">= 12"
+      }
+    },
+    {
+      "path": "package/node_modules/pacote/package.json",
+      "name": "pacote",
+      "version": "19.0.2",
+      "engines": {
+        "node": "^18.17.0 || >=20.5.0"
+      }
+    },
+    {
+      "path": "package/node_modules/picomatch/package.json",
+      "name": "picomatch",
+      "version": "4.0.3",
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    {
+      "path": "package/node_modules/sigstore/package.json",
+      "name": "sigstore",
+      "version": "3.1.0",
+      "engines": {
+        "node": "^18.17.0 || >=20.5.0"
+      }
+    },
+    {
+      "path": "package/package.json",
+      "name": "npm",
+      "version": "10.9.9",
+      "engines": {
+        "node": "^18.17.0 || >=20.5.0"
+      }
+    }
+  ]
+}

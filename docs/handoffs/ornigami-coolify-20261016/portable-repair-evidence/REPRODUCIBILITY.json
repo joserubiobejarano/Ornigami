@@ -1,0 +1,15 @@
+{
+  "sha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+  "bytes": 44857205,
+  "identicalArchives": true,
+  "builds": [
+    "I",
+    "J"
+  ],
+  "files": 8695,
+  "sourceMaps": 2745,
+  "sourceMapsRetained": true,
+  "environment": "Node 22.23.3 Windows amd64; frozen upstream lock/dependencies reused; separate generated dist seeded from the verified official archive before each build.",
+  "independentMachineOrLinuxReproduction": "untested",
+  "supersededH": "Excluded from final identity comparison; recipe changed while H ran, see H_SUPERSEDED.json."
+}

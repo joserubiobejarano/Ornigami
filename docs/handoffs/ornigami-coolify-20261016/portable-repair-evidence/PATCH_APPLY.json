@@ -1,0 +1,9 @@
+{
+  "upstream": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "patchSha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+  "patchedTree": "2683cc1fc4df83fbfe49df739e8a5a57801e2a58",
+  "independentTemporaryIndex": true,
+  "fullPatchCheck": "passed",
+  "configurationByteParity": "passed",
+  "workingSourceHeadUnchanged": true
+}

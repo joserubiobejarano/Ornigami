@@ -1,0 +1,3 @@
+{
+  "reason": "First portable source build completed, but recipe was edited during execution to add overlay equality and immutable recipe-byte checks. Do not use H for final provenance or reproducibility; retain its diagnostics. Final frozen recipe builds use I and J."
+}

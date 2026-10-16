@@ -1,5 +1,7 @@
 # Local framework prototype — local result and Linux follow-up
 
+Latest local repair: [portable `.2` candidate and bounded regression evidence](./LOCAL_PORTABLE_REPAIR.md), source `a069cd4d6232f57c72e1a8d7af2349bb707f0474`. Source emitters now normalize module specifiers before bundling. Package reproduction, cold installs, 34 distinct local focused tests, nine browser groups and the fresh exact-source app build/HTTP security checks pass. Actual Linux portability/scans/runtime/persistence remain untested; the original failed artifact and custody/completeness distinction are preserved. No new publication or trial is approved or performed.
+
 Latest follow-up: the owner-approved [single Linux trial](./FRAMEWORK_LINUX_TRIAL.md) of exact candidate `fe71816993f5eb42d0565befb4354d478e48429a` **failed**. Compilation/TypeScript passed, but generated Windows external-module specifiers failed Linux page collection. No image exists. Fresh base scan: 0 critical/54 high, threshold failed. Linux runtime/browser/restart/cache and final-image scanning remain untested. The exact partial artifact was downloaded and owner-acknowledged before cleanup; evidence-capture failure and recovered logs are documented. Vercel is held by app-specific Git disconnection. One trial/acknowledgment approval is consumed; no retry or production adoption is authorized.
 
 ## Historical local checkpoint

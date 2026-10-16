@@ -1,0 +1,349 @@
+{
+  "observedAt": "2026-10-16T21:31:42.732Z",
+  "advisories": {
+    "CVE-2026-102276": [
+      {
+        "ghsa_id": "GHSA-6j4f-fj2g-mc7p",
+        "cve_id": "CVE-2026-102276",
+        "html_url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+        "published_at": "2026-09-29T23:44:58Z",
+        "updated_at": "2026-09-29T23:44:59Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 4.0.0, < 5.0.10",
+            "first_patched_version": "5.0.10",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 3.0.0, < 3.0.7",
+            "first_patched_version": "3.0.7",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 2.0.0, < 2.1.5",
+            "first_patched_version": "2.1.5",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": "< 1.1.19",
+            "first_patched_version": "1.1.19",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-102278": [
+      {
+        "ghsa_id": "GHSA-qhr7-859c-m2p7",
+        "cve_id": "CVE-2026-102278",
+        "html_url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+        "published_at": "2026-09-29T23:45:17Z",
+        "updated_at": "2026-09-29T23:45:19Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 4.0.0, < 5.0.11",
+            "first_patched_version": "5.0.11",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 3.0.0, < 3.0.8",
+            "first_patched_version": "3.0.8",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 2.0.0, < 2.1.6",
+            "first_patched_version": "2.1.6",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": "< 1.1.20",
+            "first_patched_version": "1.1.20",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-13149": [
+      {
+        "ghsa_id": "GHSA-3jxr-9vmj-r5cp",
+        "cve_id": "CVE-2026-13149",
+        "html_url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp",
+        "published_at": "2026-07-20T20:51:09Z",
+        "updated_at": "2026-07-20T20:51:11Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 3.0.0, < 5.0.7",
+            "first_patched_version": "5.0.7",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": "< 1.1.16",
+            "first_patched_version": "1.1.16",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 2.0.0, < 2.1.2",
+            "first_patched_version": "2.1.2",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-14257": [
+      {
+        "ghsa_id": "GHSA-mh99-v99m-4gvg",
+        "cve_id": "CVE-2026-14257",
+        "html_url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+        "published_at": "2026-07-24T21:53:14Z",
+        "updated_at": "2026-07-31T19:37:57Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 4.0.0, < 5.0.8",
+            "first_patched_version": "5.0.8",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 3.0.0, < 3.0.3",
+            "first_patched_version": "3.0.3",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 2.0.0, < 2.1.3",
+            "first_patched_version": "2.1.3",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": "< 1.1.17",
+            "first_patched_version": "1.1.17",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-69152": [
+      {
+        "ghsa_id": "GHSA-rgw5-rvv9-x895",
+        "cve_id": "CVE-2026-69152",
+        "html_url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+        "published_at": "2026-08-03T16:35:32Z",
+        "updated_at": "2026-08-03T20:17:20Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": "< 1.1.18",
+            "first_patched_version": "1.1.18",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 2.0.0, < 2.1.4",
+            "first_patched_version": "2.1.4",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 3.0.0, < 3.0.6",
+            "first_patched_version": "3.0.6",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "brace-expansion"
+            },
+            "vulnerable_version_range": ">= 4.0.0, < 5.0.9",
+            "first_patched_version": "5.0.9",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-93748": [
+      {
+        "ghsa_id": "GHSA-ch52-4w7c-c8xp",
+        "cve_id": "CVE-2026-93748",
+        "html_url": "https://github.com/advisories/GHSA-ch52-4w7c-c8xp",
+        "published_at": "2026-09-18T18:31:44Z",
+        "updated_at": "2026-10-02T22:36:44Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "http-cache-semantics"
+            },
+            "vulnerable_version_range": "<= 4.2.0",
+            "first_patched_version": null,
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-69192": [
+      {
+        "ghsa_id": "GHSA-mwp4-54f8-5fhr",
+        "cve_id": "CVE-2026-69192",
+        "html_url": "https://github.com/advisories/GHSA-mwp4-54f8-5fhr",
+        "published_at": "2026-08-03T19:59:44Z",
+        "updated_at": "2026-08-03T19:59:46Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "ip-address"
+            },
+            "vulnerable_version_range": "<= 10.3.0",
+            "first_patched_version": "10.3.1",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-9496": [
+      {
+        "ghsa_id": "GHSA-w4pp-8pjf-rmxw",
+        "cve_id": "CVE-2026-9496",
+        "html_url": "https://github.com/advisories/GHSA-w4pp-8pjf-rmxw",
+        "published_at": "2026-05-26T13:30:54Z",
+        "updated_at": "2026-08-27T16:39:42Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "pacote"
+            },
+            "vulnerable_version_range": ">= 11.2.7, < 21.5.1",
+            "first_patched_version": "21.5.1",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-33671": [
+      {
+        "ghsa_id": "GHSA-c2c7-rcm5-vvqj",
+        "cve_id": "CVE-2026-33671",
+        "html_url": "https://github.com/advisories/GHSA-c2c7-rcm5-vvqj",
+        "published_at": "2026-03-25T21:12:07Z",
+        "updated_at": "2026-03-27T21:36:14Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "picomatch"
+            },
+            "vulnerable_version_range": ">= 4.0.0, < 4.0.4",
+            "first_patched_version": "4.0.4",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "picomatch"
+            },
+            "vulnerable_version_range": ">= 3.0.0, < 3.0.2",
+            "first_patched_version": "3.0.2",
+            "vulnerable_functions": []
+          },
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "picomatch"
+            },
+            "vulnerable_version_range": "< 2.3.2",
+            "first_patched_version": "2.3.2",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ],
+    "CVE-2026-48815": [
+      {
+        "ghsa_id": "GHSA-52v5-jr5w-gjxr",
+        "cve_id": "CVE-2026-48815",
+        "html_url": "https://github.com/advisories/GHSA-52v5-jr5w-gjxr",
+        "published_at": "2026-07-01T19:58:28Z",
+        "updated_at": "2026-07-01T19:58:29Z",
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "sigstore"
+            },
+            "vulnerable_version_range": "<= 4.1.0",
+            "first_patched_version": "4.1.1",
+            "vulnerable_functions": []
+          }
+        ]
+      }
+    ]
+  }
+}

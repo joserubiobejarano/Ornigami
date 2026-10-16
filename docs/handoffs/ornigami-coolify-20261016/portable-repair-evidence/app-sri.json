@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-16T21:39:27.532Z",
+  "sourceIdentity": {
+    "providedSha": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+    "verifiedSha": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+    "verified": true,
+    "clean": true,
+    "packageLock": {
+      "committedBlobSha": "acba7ecf1e6d320c94d2d435fbaa2dc5f9030fc7",
+      "rawSha256": "060925fca2813f36357b6ce2459485b0367e33be848ffc253977aca96dbbb350",
+      "rawMatchesCommittedBlob": true
+    }
+  },
+  "status": "passed",
+  "errors": [],
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "headers": {
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "content-security-policy-report-only": "require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint",
+        "reporting-endpoints": "csp-endpoint=\"/api/csp-report\""
+      },
+      "inlineExecutableCount": 2,
+      "sri": {
+        "totalScriptTags": 19,
+        "sameOriginCount": 15,
+        "externalCount": 0,
+        "issues": []
+      },
+      "errors": [],
+      "htmlBytes": 140938
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "headers": {
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "content-security-policy-report-only": "require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint",
+        "reporting-endpoints": "csp-endpoint=\"/api/csp-report\""
+      },
+      "inlineExecutableCount": 2,
+      "sri": {
+        "totalScriptTags": 19,
+        "sameOriginCount": 16,
+        "externalCount": 0,
+        "issues": []
+      },
+      "errors": [],
+      "htmlBytes": 21293
+    }
+  ],
+  "diagnostics": [
+    {
+      "command": "next",
+      "exitStatus": 0,
+      "signal": null,
+      "timedOut": false,
+      "outputTail": "▲ Next.js 16.4.2 (webpack) ✓ Running next.config.ts took 1229ms ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache - Experiments (use with caution):   · clientTraceMetadata   · cpus: 1   · sri   ✓ webpackMemoryOptimizations   Creating an optimized production build ... ✓ Compiled successfully in 43s   Running TypeScript ...   Finished TypeScript in 9.2s ...   Collecting page data using 1 worker ...   Generating static pages using 1 worker (0/24) ...   Generating static pages using 1 worker (6/24)    Generating static pages using 1 worker (12/24)    Generating static pages using 1 worker (18/24)  ✓ Generating static pages using 1 worker (24/24) in 3.3s   Finalizing page optimization ...   Collecting build traces ... Route (app) ┌ ƒ / ├ ƒ /_not-found ├ ƒ /about ├ ƒ /account/deletion ├ ƒ /api-public-demo-review-booster ├ ƒ /api/audit/free-profile ├ ƒ /api/auth/[...nextauth] ├ ƒ /api/auth/forgot-password ├ ƒ /api/auth/register ├ ƒ /api/auth/resend-verification ├ ƒ /api/auth/reset-password ├ ƒ /api/auth/signout ├ ƒ /api/auth/verify-email ├ ƒ /api/cron/health ├ ƒ /api/cron/privacy ├ ƒ /api/cron/review-booster ├ ƒ /api/cron/review-replies ├ ƒ /api/csp-report ├ ƒ /api/dashboard/summary ├ ƒ /api/feedback ├ ƒ /api/google/connection ├ ƒ /api/google/disconnect ├ ƒ /api/google/locations ├ ƒ /api/google/locations/list ├ ƒ /api/google/locations/selection ├ ƒ /api/google/locations/sync ├ ƒ /api/google/oauth/callback ├ ƒ /api/google/oauth/start ├ ƒ /api/google/replies ├ ƒ /api/google/reviews/process-pending ├ ƒ /api/google/reviews/sync ├ ƒ /api/leads ├ ƒ /api/openai/review-reply ├ ƒ /api/privacy/delete ├ ƒ /api/privacy/export ├ ƒ /api/projects ├ ƒ /api/projects/[id] ├ ƒ /api/review-booster/booking-credentials ├ ƒ /api/review-booster/deliveries/[deliveryId]/reconcile ├ ƒ /api/review-booster/run-now ├ ƒ /api/review-booster/settings ├ ƒ /api/review-booster/unsubscribe ├ ƒ /api/review-booster/upload ├ ƒ /api/review-booster/visits ├ ƒ /api/reviews ├ ƒ /api/reviews/draft ├ ƒ /api/settings/reply ├ ƒ /api/stripe/change-plan ├ ƒ /api/stripe/checkout ├ ƒ /api/stripe/portal ├ ƒ /api/stripe/webhook ├ ƒ /api/team ├ ƒ /api/team/invitations/[token] ├ ƒ /api/team/members/[userId] ├ ƒ /api/user/plan ├ ƒ /api/webhooks/booking ├ ƒ /api/webhooks/resend ├ ƒ /connect ├ ƒ /contact ├ ƒ /dashboard ├ ƒ /dashboard/agents/review-booster ├ ƒ /dashboard/agents/review-booster/new ├ ƒ /dashboard/agents/review-booster/settings ├ ƒ /dashboard/agents/review-booster/upload ├ ƒ /dashboard/agents/review-replies ├ ƒ /dashboard/agents/review-replies/google-connection ├ ƒ /dashboard/agents/review-replies/reviews ├ ƒ /dashboard/agents/review-replies/settings ├ ƒ /dashboard/billing ├ ƒ /demo ├ ƒ /demo-review-booster ├ ƒ /demo-review-replies ├ ƒ /feedback ├ ƒ /forgot-password ├ ƒ /free-audit ├ ƒ /legal ├ ƒ /local-seo ├ ƒ /login ├ ○ /opengraph-image ├ ƒ /pricing ├ ƒ /privacy ├ ƒ /r/[token] ├ ƒ /resend-verification ├ ƒ /reset-password ├ ƒ /review-booster ├ ƒ /review-replies ├ ƒ /reviews ├ ○ /robots.txt ├ ƒ /settings ├ ƒ /signup ├ ○ /sitemap.xml ├ ƒ /team/invite/[token] └ ƒ /terms ƒ Proxy (Middleware) ○  (Static)   prerendered as static content ƒ  (Dynamic)  server-rendered on demand "
+    },
+    {
+      "command": "generate-static-csp-hashes.mjs",
+      "exitStatus": 0,
+      "signal": null,
+      "timedOut": false,
+      "outputTail": "Generated 2 static CSP script hashes. "
+    }
+  ],
+  "sriTotals": {
+    "sameOriginScripts": 31,
+    "externalScriptsSkipped": 0,
+    "missingOrInvalid": 0
+  },
+  "nodeVersion": "v22.23.3",
+  "nodePlatform": "win32",
+  "nodeArchitecture": "x64",
+  "nextVersion": "16.4.2",
+  "buildDurationMs": 74067,
+  "buildId": "rPhfBwh5IYeFyhNyyuQOr",
+  "sourceMapCount": 143,
+  "staticCspHashCount": 2,
+  "nonceRotation": {
+    "checked": true,
+    "distinct": true
+  },
+  "finishedAt": "2026-10-16T21:40:44.493Z"
+}

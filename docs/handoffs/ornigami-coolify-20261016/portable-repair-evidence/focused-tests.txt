@@ -1,0 +1,208 @@
+TAP version 13
+# Subtest: official pinned npm archive has matching SHA-256/SHA-512 and supports target Node
+ok 1 - official pinned npm archive has matching SHA-256/SHA-512 and supports target Node
+  ---
+  duration_ms: 17.482
+  type: 'test'
+  ...
+# Subtest: remediation review accounts for every current base high finding without dropping paths
+ok 2 - remediation review accounts for every current base high finding without dropping paths
+  ---
+  duration_ms: 32.7524
+  type: 'test'
+  ...
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 3 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 674.9276
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 4 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 638.9429
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 5 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 521.1209
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 6 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 520.5009
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 7 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 373.3301
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 8 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.2288
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 9 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 286.776
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 10 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 281.7871
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 11 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 287.5354
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 12 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 297.036
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 13 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 128.1617
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 14 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 185.5783
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 15 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 311.361
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 16 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.3365
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 17 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 413.025
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 18 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 720.1081
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 19 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 23.1023
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 20 - wrong owner never posts a remote status
+  ---
+  duration_ms: 2.5752
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 21 - wrong source never posts a remote status
+  ---
+  duration_ms: 1.4186
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 22 - wrong run never posts a remote status
+  ---
+  duration_ms: 1.7033
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 23 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 3.2447
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 24 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 1.337
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable production external
+ok 25 - win32: actual source external handler emits portable production external
+  ---
+  duration_ms: 3.2721
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable worker SWC external
+ok 26 - win32: actual source external handler emits portable worker SWC external
+  ---
+  duration_ms: 1.0951
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable compiled dependency
+ok 27 - win32: actual source external handler emits portable compiled dependency
+  ---
+  duration_ms: 0.8484
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable server dependency
+ok 28 - win32: actual source external handler emits portable server dependency
+  ---
+  duration_ms: 0.7858
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable production external
+ok 29 - posix: actual source external handler emits portable production external
+  ---
+  duration_ms: 1.6476
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable worker SWC external
+ok 30 - posix: actual source external handler emits portable worker SWC external
+  ---
+  duration_ms: 0.7779
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable compiled dependency
+ok 31 - posix: actual source external handler emits portable compiled dependency
+  ---
+  duration_ms: 0.7364
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable server dependency
+ok 32 - posix: actual source external handler emits portable server dependency
+  ---
+  duration_ms: 0.7678
+  type: 'test'
+  ...
+# Subtest: package admission checks all four bundles/maps and rejects a Windows external
+ok 33 - package admission checks all four bundles/maps and rejects a Windows external
+  ---
+  duration_ms: 29.869
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5792.2145

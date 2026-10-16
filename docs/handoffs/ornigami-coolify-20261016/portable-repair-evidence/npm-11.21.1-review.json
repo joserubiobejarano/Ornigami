@@ -1,0 +1,83 @@
+{
+  "source": "https://registry.npmjs.org/npm/11.21.1",
+  "observedAt": "2026-10-16T21:28:48.121Z",
+  "name": "npm",
+  "version": "11.21.1",
+  "engines": {
+    "node": "^20.17.0 || >=22.9.0"
+  },
+  "dist": {
+    "shasum": "77c0bf80b262ae49293836d3c98fbea2ffd4490a",
+    "tarball": "https://registry.npmjs.org/npm/-/npm-11.21.1.tgz",
+    "fileCount": 1961,
+    "integrity": "sha512-YTzL6QBEJXyHcTu0JiUc7RKMp+mzlJtl7rGLmERaXUQeFHIMc9atdr6G9M9C8vDWbv40epoTQAzNL2/PtZVDhQ==",
+    "signatures": [
+      {
+        "sig": "MEUCIQDmeY0Nr8Smv3ktv2GaBCnbv6HYnY239btVI/QF6VWObAIgYHyG028sDBr4Ajlh5CoNyrDPVOY8AT0kLMhUT4tRH+8=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEQCIErOLf4IZ3OOpiB5EquAHrqO7XODqII0AFSg48CUGh+uAiA1hMWFsBkppnVfyA77sWPtnTyOc/P76LJZa3bHaUSojA==",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "unpackedSize": 13032050
+  },
+  "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+  "bundledPackageInventory": [
+    {
+      "path": "package/node_modules/brace-expansion/package.json",
+      "name": "brace-expansion",
+      "version": "5.0.12",
+      "engines": {
+        "node": "20 || >=22"
+      }
+    },
+    {
+      "path": "package/node_modules/http-cache-semantics/package.json",
+      "name": "http-cache-semantics",
+      "version": "4.3.0",
+      "engines": null
+    },
+    {
+      "path": "package/node_modules/ip-address/package.json",
+      "name": "ip-address",
+      "version": "10.7.2",
+      "engines": {
+        "node": ">= 12"
+      }
+    },
+    {
+      "path": "package/node_modules/pacote/package.json",
+      "name": "pacote",
+      "version": "21.5.1",
+      "engines": {
+        "node": "^20.17.0 || >=22.9.0"
+      }
+    },
+    {
+      "path": "package/node_modules/sigstore/package.json",
+      "name": "sigstore",
+      "version": "4.1.1",
+      "engines": {
+        "node": "^20.17.0 || >=22.9.0"
+      }
+    },
+    {
+      "path": "package/node_modules/tinyglobby/node_modules/picomatch/package.json",
+      "name": "picomatch",
+      "version": "4.0.4",
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    {
+      "path": "package/package.json",
+      "name": "npm",
+      "version": "11.21.1",
+      "engines": {
+        "node": "^20.17.0 || >=22.9.0"
+      }
+    }
+  ]
+}

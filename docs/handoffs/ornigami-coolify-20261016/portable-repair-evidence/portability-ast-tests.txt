@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: win32: actual source external handler emits portable production external
+ok 1 - win32: actual source external handler emits portable production external
+  ---
+  duration_ms: 2.8581
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable worker SWC external
+ok 2 - win32: actual source external handler emits portable worker SWC external
+  ---
+  duration_ms: 0.9231
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable compiled dependency
+ok 3 - win32: actual source external handler emits portable compiled dependency
+  ---
+  duration_ms: 0.7091
+  type: 'test'
+  ...
+# Subtest: win32: actual source external handler emits portable server dependency
+ok 4 - win32: actual source external handler emits portable server dependency
+  ---
+  duration_ms: 0.6772
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable production external
+ok 5 - posix: actual source external handler emits portable production external
+  ---
+  duration_ms: 1.8714
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable worker SWC external
+ok 6 - posix: actual source external handler emits portable worker SWC external
+  ---
+  duration_ms: 0.7674
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable compiled dependency
+ok 7 - posix: actual source external handler emits portable compiled dependency
+  ---
+  duration_ms: 0.5995
+  type: 'test'
+  ...
+# Subtest: posix: actual source external handler emits portable server dependency
+ok 8 - posix: actual source external handler emits portable server dependency
+  ---
+  duration_ms: 0.6668
+  type: 'test'
+  ...
+# Subtest: package admission checks all four bundles/maps and rejects a Windows external
+ok 9 - package admission checks all four bundles/maps and rejects a Windows external
+  ---
+  duration_ms: 20.0363
+  type: 'test'
+  ...
+# Subtest: AST audit of cold-installed production bundles rejects either quote style for nonportable imports
+ok 10 - AST audit of cold-installed production bundles rejects either quote style for nonportable imports
+  ---
+  duration_ms: 611.7241
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 730.1933

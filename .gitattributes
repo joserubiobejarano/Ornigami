@@ -16,3 +16,4 @@ scripts/framework-prototype/*.patch -text -whitespace
 tests/fixtures/framework-sri/** text eol=lf
 docs/handoffs/ornigami-coolify-20261016/framework-prototype-evidence/** -text -whitespace
 docs/handoffs/ornigami-coolify-20261016/external-trial-38964204005/** -text -whitespace
+docs/handoffs/ornigami-coolify-20261016/portable-repair-evidence/** -text -whitespace
