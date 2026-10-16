@@ -2,6 +2,8 @@
 
 This preparation follows the [failed runtime/advisory acceptance trial](./REPAIRED_TRIAL.md). Successful compilation of `a0f319c39a3bbc315e8e2a0d8ca4f854c7438838` remains historical evidence, not acceptance of this repaired candidate. No external run, branch push, GHCR publication, Contabo command, deployment, cron or provider operation is part of this repair. Previous evidence directories remain unchanged.
 
+Committed build candidate: **`27a81c30bc1f38464eea826fed4ff7e2da0744dd`** on `codex/ornigami-coolify-preparation-20261016`. Canonical lock SHA-256: `b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1`. Workflow blob: `6641e7b643337981f290764c1d522257e1797ba2`. The follow-up documentation commit records this identity without changing build inputs, workflow or the request file. Neither commit is pushed.
+
 ## Base and final-image advisory disposition
 
 The Docker stages retain Node 22.23.3 but move together from bookworm-slim to the official Linux amd64 `node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812`. [Registry identity receipt](../../../deploy/coolify/base-image-candidate.json) records its immutable manifest and official source annotation. This changes glibc/OS libraries and therefore requires a fresh image build, native sharp/HTTP checks and restart/persistence acceptance; it is not an accepted drop-in runtime yet.
@@ -65,6 +67,14 @@ The new candidate has no image ID, registry digest or measured resource result. 
 ## Proposed next trial — approval required, not queued
 
 After review, refresh all deployment integration protections before either push. Publish the correction with the existing request file unchanged, confirm no build/deployment starts, then create one separate request-only commit for the exact repaired source and canonical lock checksum. Candidate/request workflow blobs must match. Do not merge application changes to `main` to make `workflow_dispatch` available.
+
+Only after new approval, the proposed request file content is:
+
+```json
+{"sourceSha":"27a81c30bc1f38464eea826fed4ff7e2da0744dd","packageLockSha256":"b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1"}
+```
+
+This snippet has not been written to `.github/build-requests/ornigami.json`. The future single-parent request commit must change that file alone; verify its workflow blob is still `6641e7b643337981f290764c1d522257e1797ba2` before pushing it. Confirm one run at attempt 1 and preserve both earlier failed runs. This would be a diagnostic trial: the known SRI and unresolved advisory blockers mean successful compilation or later persistence probes cannot make it release acceptance.
 
 Use the same public standard `ubuntu-24.04` Linux amd64 runner, serial BuildKit, 8 GiB memory / zero additional swap / 3 CPU, Node heap 4096 MiB, source maps retained and no retry or paid fallback. Record source/lock/workflow/image identity, build exit status/time, cgroup peak/OOM/CPU counters and disk snapshots. Builds remain off Contabo. The image remains ephemeral unless a separately authorized retention/publication step is accepted.
 
