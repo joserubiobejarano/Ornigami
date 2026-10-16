@@ -31,4 +31,3 @@
           set -e
           printf '%s\n' "$result" > "$evidence/scope-exit-code.txt"
           exit "$result"
-

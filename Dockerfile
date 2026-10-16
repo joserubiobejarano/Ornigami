@@ -4,6 +4,7 @@ WORKDIR /app
 RUN mkdir -p /app && chown node:node /app
 COPY --chown=node:node package.json package-lock.json ./
 COPY --chown=node:node scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
+COPY --chown=node:node vendor/framework ./vendor/framework
 USER node
 RUN npm ci
 
@@ -33,6 +34,7 @@ WORKDIR /app
 RUN mkdir -p /app && chown node:node /app
 COPY --chown=node:node package.json package-lock.json ./
 COPY --chown=node:node scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
+COPY --chown=node:node vendor/framework ./vendor/framework
 USER node
 RUN npm ci --omit=dev
 
