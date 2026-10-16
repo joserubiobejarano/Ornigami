@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-16T20:43:58.0443359Z",
+  "id": "prj_b4ud7KOZHWQeV9YXbGD3c8XMmKIv",
+  "name": "locallift",
+  "link": null,
+  "rootDirectory": null,
+  "framework": "nextjs",
+  "nodeVersion": "22.x",
+  "productionDeploymentId": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+  "gitProviderOptions": {
+    "createDeployments": "enabled"
+  }
+}

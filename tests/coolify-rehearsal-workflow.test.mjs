@@ -75,6 +75,7 @@ case "$command_name" in
     case "$subcommand" in
       ls) ;;
       create) printf 'created builder\\n' ;;
+      build) printf 'build stdout fixture\\n'; printf 'build stderr fixture\\n' >&2; exit "\${FAKE_BUILD_EXIT:-17}" ;;
       *) printf 'unexpected fake buildx call: %s\\n' "$subcommand" >&2; exit 91 ;;
     esac
     ;;
@@ -225,6 +226,73 @@ test("success evidence capture hashes scan/runtime receipts and excludes the ima
     assert.ok(existsSync(join(evidence, "runtime", "runtime-http.json")));
   });
 });
+
+test("cold failure before runtime creates every directory and a complete skipped-stage manifest", () => {
+  withSandbox(root => {
+    const {env}=fakeEnvironment(root,{IMAGE_BUILD_OUTCOME:'failure',IMAGE_BUILD_EXIT_CODE:'17',RUNTIME_OUTCOME:'skipped',RUNTIME_EXIT_CODE:'',FINAL_SCAN_OUTCOME:'skipped',FRAMEWORK_BROWSER_OUTCOME:'skipped'});
+    assert.ok(!existsSync(env.ORNIGAMI_EVIDENCE_DIR));
+    const result=runShell(root,runBlock('evidence_capture'),env);
+    assert.equal(result.status,0,result.stderr);
+    const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
+    assert.equal(manifest.runtime_evidence_status,'not-run');
+    assert.equal(manifest.image_build_exit_code,'17');
+    assert.equal(manifest.framework_browser_outcome,'skipped');
+    for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
+    assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'build/workflow-status.txt')));
+    assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'browser/workflow-status.txt')));
+    assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner/pre-cleanup-usage.txt')));
+  });
+});
+
+test("cold attempted-runtime failure retains manifest and fails without structured assertions",()=>{
+  withSandbox(root=>{
+    const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'failure',RUNTIME_EXIT_CODE:'23'});
+    const result=runShell(root,runBlock('evidence_capture'),env);
+    assert.equal(result.status,1,result.stderr);
+    const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
+    assert.equal(manifest.runtime_evidence_status,'missing');
+    assert.equal(manifest.runtime_exit_code,'23');
+    assert.match(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runtime/runtime-evidence-status.txt'),'utf8'),/exit_code=23/);
+  });
+});
+
+test("failed build retains combined stdout/stderr and exact exit before runtime exists",()=>{
+  withSandbox(root=>{
+    const {env}=fakeEnvironment(root,{FAKE_BUILD_EXIT:'17',BUILDKIT_CONTAINER_ID:'owned-builder-id',BUILDKIT_CONTAINER_NAME:'ornigami-external-rehearsal'});
+    env.GITHUB_OUTPUT=join(root,'outputs.txt');
+    const result=runShell(root,runBlock('image_build'),env);
+    assert.equal(result.status,1,result.stderr);
+    const log=readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'build/stdout.log'),'utf8');
+    assert.match(log,/build stdout fixture/);assert.match(log,/build stderr fixture/);
+    assert.match(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'build/exit-code.txt'),'utf8'),/docker_exit_code=17\nlog_exit_code=0/);
+    assert.match(readFileSync(env.GITHUB_OUTPUT,'utf8'),/build_exit_code=17/);
+  });
+});
+
+function counters({oom=0,cpu=1,peak=1000000}={}) {
+  return `==memory.max==\n8589934592\n==memory.swap.max==\n0\n==memory.peak==\n${peak}\n==memory.events==\nlow 0\nhigh 0\nmax 0\noom ${oom}\noom_kill 0\noom_group_kill 0\n==cpu.max==\n300000 100000\n==cpu.stat==\nusage_usec ${cpu}\nuser_usec ${cpu}\nsystem_usec 0\n`;
+}
+test('resource gate runs after an available builder even when image build failed',()=>{
+  const step=workflow.slice(workflow.indexOf('      - name: Reject build-time OOM'),workflow.indexOf('      - name: Enforce pinned base'));
+  assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);
+  assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
+});
+for(const scenario of [{name:'valid counters after build failure',after:counters({cpu:2}),status:0},{name:'OOM after build failure',after:counters({oom:1,cpu:2}),status:1},{name:'reset CPU counters',after:counters({cpu:0}),status:1},{name:'missing counter sections',after:'==memory.max==\n8589934592\n',status:1}]) {
+  test(`resource assessment retains ${scenario.name}`,()=>withSandbox(root=>{
+    const {env,runnerTemp}=fakeEnvironment(root,{IMAGE_BUILD_OUTCOME:'failure',IMAGE_BUILD_EXIT_CODE:'17'});
+    writeFileSync(join(runnerTemp,'builder-before-build.txt'),counters());
+    writeFileSync(join(runnerTemp,'builder-after-build.txt'),scenario.after);
+    const result=runShell(root,runBlock('build_resources'),env);
+    assert.equal(result.status,scenario.status,result.stderr);
+    assert.match(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner/resource-exit-code.txt'),'utf8'),new RegExp(`assessment_exit_code=${scenario.status}`));
+  }));
+}
+test('missing after-build counters are an explicit resource failure',()=>withSandbox(root=>{
+  const {env}=fakeEnvironment(root);
+  const result=runShell(root,runBlock('build_resources'),env);
+  assert.equal(result.status,1);
+  assert.match(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner/resource-assessment.txt'),'utf8'),/missing-before-or-after/);
+}));
 
 test("builder creation refuses a pre-existing state volume before creating or claiming resources", () => {
   withSandbox((root) => {

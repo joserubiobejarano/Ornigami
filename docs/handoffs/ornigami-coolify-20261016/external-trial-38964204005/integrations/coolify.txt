@@ -1,0 +1,9 @@
+		12 button fictional-staging, Help: Switch environment
+			13 text fictional-staging
+		42 heading fictional-staging, Value: 1
+			43 text fictional-staging
+			45 text 0 resources  in Ornigami
+		46 link Description: Shared variables for fictional-staging, Value: 127.0.0.1:18000/shared-variables/environments/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is
+		47 link Description: Open settings for fictional-staging, Value: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/edit
+		49 heading No resources yet, Value: 2
+			50 text No resources yet

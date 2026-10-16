@@ -1,0 +1,5 @@
+# Evidence custody and completeness
+
+`evidence.zip` is the exact 118,012-byte uploaded artifact, durably downloaded and read back before the owner acknowledgment and runner cleanup. Its digest is bound by DOWNLOAD_RECEIPT.json and STATUS_ACK.json. `artifact/` contains its unchanged 13 files. **The runner capture step failed: the original artifact has no manifest.json.** SHA256SUMS.json is a later local inventory, not a runner-generated manifest.
+
+Full masked GitHub logs (`run-logs.zip`, `run.log`), final public run/job/artifact metadata and the visible job summary were recovered immediately after completion. The runner did not expose finished logs before cleanup. The recovered summary supplies disk/timing observations missing from the partial artifact. No missing runtime/final-image results are inferred. Credential-pattern screening of downloaded artifact and raw logs found no supported live-token patterns; no credential/session store was read. Original local helper responses remain under ignored .local/framework-external-fe718/.

@@ -1,5 +1,17 @@
 # syntax=docker/dockerfile:1.7
-FROM --platform=linux/amd64 node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 AS deps
+FROM --platform=linux/amd64 node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 AS build-base
+# Complete official npm distribution, checksum pinned; no transitive overrides.
+COPY vendor/build-tools/npm-11.21.1.tgz /tmp/ornigami-npm.tgz
+RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(crypto.createHash("sha256").update(fs.readFileSync("/tmp/ornigami-npm.tgz")).digest("hex")!=="dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b")throw new Error("npm archive checksum mismatch")' \
+    && mkdir /opt/ornigami-npm \
+    && tar -xzf /tmp/ornigami-npm.tgz --strip-components=1 -C /opt/ornigami-npm \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg /tmp/ornigami-npm.tgz \
+    && ln -s /opt/ornigami-npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s /opt/ornigami-npm/bin/npx-cli.js /usr/local/bin/npx \
+    && test "$(npm --version)" = "11.21.1"
+
+FROM build-base AS deps
 WORKDIR /app
 RUN mkdir -p /app && chown node:node /app
 COPY --chown=node:node package.json package-lock.json ./
@@ -29,7 +41,7 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
     NODE_ENV=production
 RUN test -n "$NEXT_PUBLIC_APP_URL" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? ""; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error("ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB"); for (const name of ["ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS", "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS", "ORNIGAMI_BUILD_WEBPACK_WORKER"]) if (!/^(true|false)$/.test(process.env[name] ?? "")) throw new Error(`${name} must be true or false`)' && npm run build
 
-FROM --platform=linux/amd64 node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 AS prod-deps
+FROM build-base AS prod-deps
 WORKDIR /app
 RUN mkdir -p /app && chown node:node /app
 COPY --chown=node:node package.json package-lock.json ./

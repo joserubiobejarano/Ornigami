@@ -26,7 +26,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           evidence_dir="$RUNNER_TEMP/ornigami-evidence"
-          install -d -m 700 "$evidence_dir"
+          install -d -m 700 "$evidence_dir" "$evidence_dir/build" "$evidence_dir/scans" "$evidence_dir/runner" "$evidence_dir/runtime" "$evidence_dir/browser"
           printf '%s\n' 'This artifact contains public rehearsal evidence only. It excludes the local image archive and credentials.' > "$evidence_dir/README.txt"
           printf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \
             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"
@@ -297,6 +297,8 @@ jobs:
           echo "build_start_epoch=$build_start_epoch" >> "$GITHUB_OUTPUT"
           echo "build_start_utc=$build_start_utc" >> "$GITHUB_OUTPUT"
           build_rc=0
+          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/build"
+          set +e
           timeout --signal=TERM --kill-after=30s 30m docker buildx build \
             --builder ornigami-external-rehearsal \
             --platform linux/amd64 \
@@ -308,7 +310,13 @@ jobs:
             --build-arg ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true \
             --build-arg ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false \
             --build-arg ORNIGAMI_BUILD_WEBPACK_WORKER=false \
-            "$RUNNER_TEMP/source" || build_rc=$?
+            "$RUNNER_TEMP/source" 2>&1 | tee "$ORNIGAMI_EVIDENCE_DIR/build/stdout.log"
+          pipeline_status=("${PIPESTATUS[@]}")
+          build_rc=${pipeline_status[0]}
+          tee_rc=${pipeline_status[1]}
+          set -e
+          printf 'docker_exit_code=%s\nlog_exit_code=%s\n' "$build_rc" "$tee_rc" > "$ORNIGAMI_EVIDENCE_DIR/build/exit-code.txt"
+          if [[ "$build_rc" -eq 0 && "$tee_rc" -ne 0 ]]; then build_rc=$tee_rc; fi
           build_end_epoch=$(date +%s)
           build_end_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           build_seconds=$((build_end_epoch - build_start_epoch))
@@ -408,7 +416,7 @@ jobs:
           tar -xJf "$node_archive" -C "$RUNNER_TEMP"
           node_dir="$RUNNER_TEMP/node-v22.23.3-linux-x64"
           git -C "$RUNNER_TEMP/source" rev-parse HEAD > "$evidence/source-sha.txt"
-          sha256sum "$RUNNER_TEMP/source/vendor/framework/next-16.4.2-ornigami-sri.1.tgz" > "$evidence/framework-package-sha256.txt"
+          sha256sum "$RUNNER_TEMP/source/vendor/framework/next-16.4.2-ornigami-sri.2.tgz" > "$evidence/framework-package-sha256.txt"
           command -v systemd-run >/dev/null
           command -v google-chrome >/dev/null || command -v chromium >/dev/null
           caller=$(id -un)
@@ -425,6 +433,7 @@ jobs:
           result=${PIPESTATUS[0]}
           set -e
           printf '%s\n' "$result" > "$evidence/scope-exit-code.txt"
+          echo "exit_code=$result" >> "$GITHUB_OUTPUT"
           exit "$result"
 
       - name: Scan local image archive for OS and language vulnerabilities
@@ -515,14 +524,20 @@ jobs:
 
       - name: Reject build-time OOM or invalid cgroup counters
         id: build_resources
-        if: ${{ always() && steps.image_build.outcome == 'success' && steps.image_build.outputs.build_exit_code != '' && steps.image_build.outputs.build_exit_code == '0' }}
+        if: ${{ always() && steps.buildkit.outcome == 'success' }}
         shell: bash
         run: |
           set -Eeuo pipefail
+          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/runner"
           before="$RUNNER_TEMP/builder-before-build.txt"
           after="$RUNNER_TEMP/builder-after-build.txt"
-          [[ -s "$before" && -s "$after" ]]
-          python3 - "$before" "$after" "$GITHUB_STEP_SUMMARY" <<'PY'
+          if [[ ! -s "$before" || ! -s "$after" ]]; then
+            printf 'status=missing-before-or-after-counters\n' > "$ORNIGAMI_EVIDENCE_DIR/runner/resource-assessment.txt"
+            printf 'assessment_exit_code=1\nlog_exit_code=0\n' > "$ORNIGAMI_EVIDENCE_DIR/runner/resource-exit-code.txt"
+            exit 1
+          fi
+          set +e
+          python3 - "$before" "$after" "$GITHUB_STEP_SUMMARY" <<'PY' 2>&1 | tee "$ORNIGAMI_EVIDENCE_DIR/runner/resource-assessment.txt"
           import pathlib, re, sys
           def values(path):
               text = pathlib.Path(path).read_text()
@@ -582,7 +597,12 @@ jobs:
               out.write(f"- Build-time cpu.stat deltas: `{cpu_deltas}`\n")
           if deltas["oom"] or deltas["oom_kill"] or deltas["oom_group_kill"]:
               raise SystemExit("Builder recorded a build-time OOM event; resource acceptance failed")
+          print(f"status=passed; peak_bytes={peak}; memory_events_delta={deltas}; cpu_stat_delta={cpu_deltas}")
           PY
+          pipeline_status=("${PIPESTATUS[@]}")
+          set -e
+          printf 'assessment_exit_code=%s\nlog_exit_code=%s\n' "${pipeline_status[0]}" "${pipeline_status[1]}" > "$ORNIGAMI_EVIDENCE_DIR/runner/resource-exit-code.txt"
+          [[ "${pipeline_status[0]}" -eq 0 && "${pipeline_status[1]}" -eq 0 ]]
 
       - name: Enforce pinned base image advisory threshold
         id: base_advisory_gate
@@ -610,6 +630,8 @@ jobs:
           RUNTIME_EXIT_CODE: ${{ steps.runtime_acceptance.outputs.runtime_exit_code }}
           FINAL_SCAN_OUTCOME: ${{ steps.final_scan.outcome }}
           RESOURCE_OUTCOME: ${{ steps.build_resources.outcome }}
+          FRAMEWORK_BROWSER_OUTCOME: ${{ steps.framework_browser.outcome }}
+          FRAMEWORK_BROWSER_EXIT_CODE: ${{ steps.framework_browser.outputs.exit_code }}
           BASE_GATE_OUTCOME: ${{ steps.base_advisory_gate.outcome }}
           OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
           OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
@@ -618,10 +640,11 @@ jobs:
           OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
         run: |
           set -Eeuo pipefail
-          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner"
+          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner" "$ORNIGAMI_EVIDENCE_DIR/runtime" "$ORNIGAMI_EVIDENCE_DIR/build" "$ORNIGAMI_EVIDENCE_DIR/browser"
           printf 'builder_name=%s\nbuilder_container_id=%s\nbuilder_state_volume=%s\nimage_tag=%s\nimage_id=%s\n' \
             "$OWNED_BUILDER_NAME" "$OWNED_BUILDER_CONTAINER_ID" "$OWNED_BUILDER_STATE_VOLUME" "$OWNED_IMAGE_TAG" "$OWNED_IMAGE_ID" \
             > "$ORNIGAMI_EVIDENCE_DIR/runner/owned-resources.txt"
+          printf 'workflow_outcome=%s\nworkflow_exit_code=%s\n' "$IMAGE_BUILD_OUTCOME" "$IMAGE_BUILD_EXIT_CODE" > "$ORNIGAMI_EVIDENCE_DIR/build/workflow-status.txt"
           runtime_evidence_missing=0
           for file in base-trivy.json trivy.json; do
             [[ -f "$RUNNER_TEMP/$file" ]] && cp -- "$RUNNER_TEMP/$file" "$ORNIGAMI_EVIDENCE_DIR/scans/$file"
@@ -655,6 +678,7 @@ jobs:
           else
             printf 'status=not-run\nruntime_step_outcome=skipped\n' > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"
           fi
+          printf 'workflow_outcome=%s\nworkflow_exit_code=%s\n' "${FRAMEWORK_BROWSER_OUTCOME:-unknown}" "${FRAMEWORK_BROWSER_EXIT_CODE:-}" > "$ORNIGAMI_EVIDENCE_DIR/browser/workflow-status.txt"
           if [[ -x "$RUNNER_TEMP/trivy" ]]; then
             "$RUNNER_TEMP/trivy" --version > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt" 2>&1 || printf '%s\n' 'Trivy version metadata unavailable.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"
           else
@@ -677,6 +701,8 @@ jobs:
           root = pathlib.Path(sys.argv[1])
           names = ("run_id", "run_attempt", "request_sha", "ref", "event", "source_sha", "expected_lock_sha256", "admission_outcome", "runner_preflight_outcome", "base_scan_outcome", "image_build_outcome", "image_build_exit_code", "runtime_outcome", "runtime_exit_code", "final_scan_outcome", "resource_outcome", "base_gate_outcome")
           metadata = dict(zip(names, sys.argv[2:]))
+          metadata["framework_browser_outcome"] = __import__("os").environ.get("FRAMEWORK_BROWSER_OUTCOME", "unknown")
+          metadata["framework_browser_exit_code"] = __import__("os").environ.get("FRAMEWORK_BROWSER_EXIT_CODE", "")
           metadata["runtime_evidence_status"] = (root / "runtime/runtime-evidence-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
           files = []
           for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):

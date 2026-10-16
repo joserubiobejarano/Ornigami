@@ -1,0 +1,12 @@
+{
+  "upstreamCommit": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "source": "packages/next/next-runtime.webpack-config.js",
+  "sourceBlob": "4ecef338f68f7e4447d3cd727fa506760eb17be3",
+  "canonicalSourceSha256": "9b33e00c1bdfba49a718507b93626e541067286e544d5eed292d83cebc7a1231",
+  "sourceLines": [
+    166,
+    177
+  ],
+  "observation": "Both external-handler branches insert host path.relative output into CommonJS external requests without converting separators. This source configuration is unchanged in the local upstream worktree. Static archive inspection and the Linux production require failure confirm the portability defect.",
+  "repair": "Normalize emitted module specifiers in reviewed source configuration; extend pinned patch and recipe provenance; regenerate all bundles/maps and rerun cold-package regressions. No implementation or rebuild performed after the trial."
+}

@@ -18,3 +18,4 @@ docs/handoffs/ornigami-coolify-20261016/framework-prototype-evidence/** -text -w
 
 vendor/framework/*.tgz -text
 package-lock.json text eol=lf
+docs/handoffs/ornigami-coolify-20261016/external-trial-38964204005/** -text -whitespace

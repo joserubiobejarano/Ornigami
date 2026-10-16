@@ -13,7 +13,7 @@
           tar -xJf "$node_archive" -C "$RUNNER_TEMP"
           node_dir="$RUNNER_TEMP/node-v22.23.3-linux-x64"
           git -C "$RUNNER_TEMP/source" rev-parse HEAD > "$evidence/source-sha.txt"
-          sha256sum "$RUNNER_TEMP/source/vendor/framework/next-16.4.2-ornigami-sri.1.tgz" > "$evidence/framework-package-sha256.txt"
+          sha256sum "$RUNNER_TEMP/source/vendor/framework/next-16.4.2-ornigami-sri.2.tgz" > "$evidence/framework-package-sha256.txt"
           command -v systemd-run >/dev/null
           command -v google-chrome >/dev/null || command -v chromium >/dev/null
           caller=$(id -un)
@@ -30,4 +30,5 @@
           result=${PIPESTATUS[0]}
           set -e
           printf '%s\n' "$result" > "$evidence/scope-exit-code.txt"
+          echo "exit_code=$result" >> "$GITHUB_OUTPUT"
           exit "$result"

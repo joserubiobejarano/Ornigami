@@ -1,0 +1,1 @@
+Base scan gate: CRITICAL=0 HIGH=54 (threshold: zero for both)

@@ -43,8 +43,11 @@ trap finish EXIT
 chrome=$(command -v google-chrome || command -v chromium || true)
 [[ -n "$chrome" && -x "$chrome" ]]
 mkdir -p "$work_dir/fixture" "$work_dir/packages" "$work_dir/tools" "$work_dir/home"
+mkdir -p "$work_dir/npm-tool"
+printf 'dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b  %s\n' "$source_dir/vendor/build-tools/npm-11.21.1.tgz" | sha256sum --check --status
+tar -xzf "$source_dir/vendor/build-tools/npm-11.21.1.tgz" --strip-components=1 -C "$work_dir/npm-tool"
 cp -a "$source_dir/tests/fixtures/framework-sri/." "$work_dir/fixture/"
-cp "$source_dir/vendor/framework/next-16.4.2-ornigami-sri.1.tgz" "$work_dir/packages/"
+cp "$source_dir/vendor/framework/next-16.4.2-ornigami-sri.2.tgz" "$work_dir/packages/"
 cp "$source_dir/scripts/framework-prototype/browser-tools/"package*.json "$work_dir/tools/"
 export PATH="$node_dir/bin:/usr/bin:/bin"
 export HOME="$work_dir/home" NPM_CONFIG_USERCONFIG="$work_dir/empty-npmrc" NPM_CONFIG_GLOBALCONFIG="$work_dir/empty-global-npmrc"
@@ -52,8 +55,9 @@ export HOME="$work_dir/home" NPM_CONFIG_USERCONFIG="$work_dir/empty-npmrc" NPM_C
 export NPM_CONFIG_CACHE="$work_dir/npm-cache" CI=true NODE_ENV=production NODE_OPTIONS=--max-old-space-size=4096
 export NEXT_TELEMETRY_DISABLED=1 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 ORNIGAMI_TEST_BROWSER_EXECUTABLE="$chrome"
 cd "$work_dir/fixture"
-"$node_dir/bin/node" "$node_dir/lib/node_modules/npm/bin/npm-cli.js" ci --ignore-scripts --no-audit --no-fund
+"$node_dir/bin/node" "$work_dir/npm-tool/bin/npm-cli.js" ci --ignore-scripts --no-audit --no-fund
+"$node_dir/bin/node" "$source_dir/scripts/framework-prototype/check-package-portability.mjs" "$work_dir/fixture/node_modules/next" > "$evidence_dir/package-portability.json"
 "$node_dir/bin/node" node_modules/next/dist/bin/next build --webpack
 cd "$work_dir/tools"
-"$node_dir/bin/node" "$node_dir/lib/node_modules/npm/bin/npm-cli.js" ci --ignore-scripts --no-audit --no-fund
+"$node_dir/bin/node" "$work_dir/npm-tool/bin/npm-cli.js" ci --ignore-scripts --no-audit --no-fund
 timeout --signal=TERM --kill-after=20s 300s "$node_dir/bin/node" "$source_dir/scripts/framework-prototype/browser-regressions.mjs" "$work_dir/fixture" "$work_dir/tools" "$evidence_dir/result"

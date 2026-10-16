@@ -1,3 +1,51 @@
+diff --git a/packages/next/next-runtime.webpack-config.js b/packages/next/next-runtime.webpack-config.js
+index 4ecef338..07d8da01 100644
+--- a/packages/next/next-runtime.webpack-config.js
++++ b/packages/next/next-runtime.webpack-config.js
+@@ -3,6 +3,10 @@ const path = require('path')
+ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+ const DevToolsIgnoreListPlugin = require('./webpack-plugins/devtools-ignore-list-plugin')
+ 
++// External requests are module specifiers, not host filesystem paths. Packages
++// built on Windows must remain consumable by Linux Node and bundlers.
++const portableModuleSpecifier = (request) => request.replace(/\\/g, '/')
++
+ function shouldIgnorePath(modulePath) {
+   // For consumers, everything will be considered 3rd party dependency if they use
+   // the bundles we produce here.
+@@ -140,12 +144,12 @@ module.exports = ({ dev, turbo, bundleType, experimental, ...rest }) => {
+           /next[/\\]dist[/\\]compiled[/\\](babel|webpack|source-map|semver|jest-worker|stacktrace-parser|@ampproject\/toolbox-optimizer)/
+         )
+       ) {
+-        callback(null, 'commonjs ' + request)
++        callback(null, 'commonjs ' + portableModuleSpecifier(request))
+         return
+       }
+ 
+       if (request.match(/(server\/image-optimizer|experimental\/testmode)/)) {
+-        callback(null, 'commonjs ' + request)
++        callback(null, 'commonjs ' + portableModuleSpecifier(request))
+         return
+       }
+ 
+@@ -167,7 +171,7 @@ module.exports = ({ dev, turbo, bundleType, experimental, ...rest }) => {
+           path.join(__dirname, '..'),
+           resolved.replace('esm' + path.sep, '')
+         )
+-        callback(null, `commonjs ${relative}`)
++        callback(null, `commonjs ${portableModuleSpecifier(relative)}`)
+         return
+       }
+ 
+@@ -178,7 +182,7 @@ module.exports = ({ dev, turbo, bundleType, experimental, ...rest }) => {
+           path.join(__dirname, '..'),
+           resolved.replace('esm' + path.sep, '')
+         )
+-        callback(null, `commonjs ${relative}`)
++        callback(null, `commonjs ${portableModuleSpecifier(relative)}`)
+       } else {
+         const regexMatch = Object.keys(externalsRegexMap).find((regex) =>
+           new RegExp(regex).test(request)
 diff --git a/packages/next/src/build/webpack/plugins/flight-manifest-plugin.ts b/packages/next/src/build/webpack/plugins/flight-manifest-plugin.ts
 index 23ae2238..083c01b8 100644
 --- a/packages/next/src/build/webpack/plugins/flight-manifest-plugin.ts

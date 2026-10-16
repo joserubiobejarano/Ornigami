@@ -1,0 +1,2286 @@
+			113 heading Runner preflight, Value: 3
+				114 text Runner preflight
+			115 content list
+				116 container
+					117 AXListMarker • 
+					118 text Online CPUs: 4 (minimum 4)
+				119 container
+					120 AXListMarker • 
+					121 text Total memory: 15989 MiB (minimum 14336 MiB)
+				122 container
+					123 AXListMarker • 
+					124 text Available memory before build: 14524 MiB (minimum 12288 MiB)
+				125 container
+					126 AXListMarker • 
+					127 text Free runner disk before build: 91955589120 bytes (minimum 10737418240)
+			128 heading Scanner verification, Value: 3
+				129 text Scanner verification
+			130 content list
+				131 container
+					132 AXListMarker • 
+					133 text Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:
+					134 link Description: https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt, Value: github.com/aquasecu…
+			135 heading Pinned base image advisory review gate, Value: 3
+				136 text Pinned base image advisory review gate
+			137 container
+				138 text Image:  node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+			139 container
+				140 text Docker image ID:  sha256:18fa0248c1b6b4303e9ed05abb383712863dad09356bb1dd454106ce83078c6e
+			141 table
+				142 row
+					143 cell
+						144 text Severity
+					145 cell
+						146 text Findings
+				147 row
+					148 cell
+						149 text CRITICAL
+					150 cell
+						151 text 0
+				152 row
+					153 cell
+						154 text HIGH
+					155 cell
+						156 text 54
+				157 row
+					158 cell
+						159 text MEDIUM
+					160 cell
+						161 text 67
+				162 row
+					163 cell
+						164 text LOW
+					165 cell
+						166 text 61
+				167 row
+					168 cell
+						169 text UNKNOWN
+					170 cell
+						171 text 3
+			172 text Base findings are recorded here. The HIGH/CRITICAL acceptance gate runs after runtime, final-image scan, and resource evidence collection.
+			173 table
+				174 row
+					175 cell
+						176 text Severity
+					177 cell
+						178 text Package
+					179 cell
+						180 text Installed
+					181 cell
+						182 text Fixed
+					183 cell
+						184 text Advisory
+					185 cell
+						186 text Primary URL
+				187 row
+					188 cell
+						189 text HIGH
+					190 cell
+						191 text brace-expansion
+					192 cell
+						193 text 2.0.2
+					194 cell
+						195 text 1.1.18, 2.1.4, 3.0.6, 5.0.9
+					196 cell
+						197 link Description: CVE-2026-69152, Value: github.com/advisori…
+					198 cell
+						199 link Description: https://avd.aquasec.com/nvd/cve-2026-69152, Value: avd.aquasec.com/nvd…
+				200 row
+					201 cell
+						202 text HIGH
+					203 cell
+						204 text brace-expansion
+					205 cell
+						206 text 2.0.2
+					207 cell
+						208 text 5.0.10, 3.0.7, 2.1.5, 1.1.19
+					209 cell
+						210 link Description: CVE-2026-102276, Value: github.com/advisori…
+					211 cell
+						212 link Description: https://avd.aquasec.com/nvd/cve-2026-102276, Value: avd.aquasec.com/nvd…
+				213 row
+					214 cell
+						215 text HIGH
+					216 cell
+						217 text brace-expansion
+					218 cell
+						219 text 2.0.2
+					220 cell
+						221 text 5.0.11, 3.0.8, 2.1.6, 1.1.20
+					222 cell
+						223 link Description: CVE-2026-102278, Value: github.com/advisori…
+					224 cell
+						225 link Description: https://avd.aquasec.com/nvd/cve-2026-102278, Value: avd.aquasec.com/nvd…
+				226 row
+					227 cell
+						228 text HIGH
+					229 cell
+						230 text brace-expansion
+					231 cell
+						232 text 2.0.2
+					233 cell
+						234 text 5.0.7, 1.1.16, 2.1.2
+					235 cell
+						236 link Description: CVE-2026-13149, Value: github.com/advisori…
+					237 cell
+						238 link Description: https://avd.aquasec.com/nvd/cve-2026-13149, Value: avd.aquasec.com/nvd…
+				239 row
+					240 cell
+						241 text HIGH
+					242 cell
+						243 text brace-expansion
+					244 cell
+						245 text 2.0.2
+					246 cell
+						247 text 5.0.8, 3.0.3, 2.1.3, 1.1.17
+					248 cell
+						249 link Description: CVE-2026-14257, Value: github.com/advisori…
+					250 cell
+						251 link Description: https://avd.aquasec.com/nvd/cve-2026-14257, Value: avd.aquasec.com/nvd…
+				252 row
+					253 cell
+						254 text HIGH
+					255 cell
+						256 text bsdutils
+					257 cell
+						258 text 1:2.41.5-0+deb13u1
+					259 cell
+						260 text CVE-2026-76642
+					261 cell
+						262 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				263 row
+					264 cell
+						265 text HIGH
+					266 cell
+						267 text bsdutils
+					268 cell
+						269 text 1:2.41.5-0+deb13u1
+					270 cell
+						271 text CVE-2026-78408
+					272 cell
+						273 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				274 row
+					275 cell
+						276 text HIGH
+					277 cell
+						278 text bsdutils
+					279 cell
+						280 text 1:2.41.5-0+deb13u1
+					281 cell
+						282 text CVE-2026-78409
+					283 cell
+						284 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				285 row
+					286 cell
+						287 text HIGH
+					288 cell
+						289 text bsdutils
+					290 cell
+						291 text 1:2.41.5-0+deb13u1
+					292 cell
+						293 text CVE-2026-78410
+					294 cell
+						295 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				296 row
+					297 cell
+						298 text HIGH
+					299 cell
+						300 text http-cache-semantics
+					301 cell
+						302 text 4.2.0
+					303 cell
+						304 link Description: CVE-2026-93748, Value: github.com/advisori…
+					305 cell
+						306 link Description: https://avd.aquasec.com/nvd/cve-2026-93748, Value: avd.aquasec.com/nvd…
+				307 row
+					308 cell
+						309 text HIGH
+					310 cell
+						311 text ip-address
+					312 cell
+						313 text 10.1.0
+					314 cell
+						315 text 10.3.1
+					316 cell
+						317 link Description: CVE-2026-69192, Value: github.com/advisori…
+					318 cell
+						319 link Description: https://avd.aquasec.com/nvd/cve-2026-69192, Value: avd.aquasec.com/nvd…
+				320 row
+					321 cell
+						322 text HIGH
+					323 cell
+						324 text libacl1
+					325 cell
+						326 text 2.3.2-2+b1
+					327 cell
+						328 link Description: CVE-2026-54369, Value: github.com/advisori…
+					329 cell
+						330 link Description: https://avd.aquasec.com/nvd/cve-2026-54369, Value: avd.aquasec.com/nvd…
+				331 row
+					332 cell
+						333 text HIGH
+					334 cell
+						335 text libblkid1
+					336 cell
+						337 text 2.41.5-0+deb13u1
+					338 cell
+						339 text CVE-2026-76642
+					340 cell
+						341 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				342 row
+					343 cell
+						344 text HIGH
+					345 cell
+						346 text libblkid1
+					347 cell
+						348 text 2.41.5-0+deb13u1
+					349 cell
+						350 text CVE-2026-78408
+					351 cell
+						352 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				353 row
+					354 cell
+						355 text HIGH
+					356 cell
+						357 text libblkid1
+					358 cell
+						359 text 2.41.5-0+deb13u1
+					360 cell
+						361 text CVE-2026-78409
+					362 cell
+						363 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				364 row
+					365 cell
+						366 text HIGH
+					367 cell
+						368 text libblkid1
+					369 cell
+						370 text 2.41.5-0+deb13u1
+					371 cell
+						372 text CVE-2026-78410
+					373 cell
+						374 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				375 row
+					376 cell
+						377 text HIGH
+					378 cell
+						379 text liblastlog2-2
+					380 cell
+						381 text 2.41.5-0+deb13u1
+					382 cell
+						383 text CVE-2026-76642
+					384 cell
+						385 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				386 row
+					387 cell
+						388 text HIGH
+					389 cell
+						390 text liblastlog2-2
+					391 cell
+						392 text 2.41.5-0+deb13u1
+					393 cell
+						394 text CVE-2026-78408
+					395 cell
+						396 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				397 row
+					398 cell
+						399 text HIGH
+					400 cell
+						401 text liblastlog2-2
+					402 cell
+						403 text 2.41.5-0+deb13u1
+					404 cell
+						405 text CVE-2026-78409
+					406 cell
+						407 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				408 row
+					409 cell
+						410 text HIGH
+					411 cell
+						412 text liblastlog2-2
+					413 cell
+						414 text 2.41.5-0+deb13u1
+					415 cell
+						416 text CVE-2026-78410
+					417 cell
+						418 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				419 row
+					420 cell
+						421 text HIGH
+					422 cell
+						423 text libmount1
+					424 cell
+						425 text 2.41.5-0+deb13u1
+					426 cell
+						427 text CVE-2026-76642
+					428 cell
+						429 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				430 row
+					431 cell
+						432 text HIGH
+					433 cell
+						434 text libmount1
+					435 cell
+						436 text 2.41.5-0+deb13u1
+					437 cell
+						438 text CVE-2026-78408
+					439 cell
+						440 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				441 row
+					442 cell
+						443 text HIGH
+					444 cell
+						445 text libmount1
+					446 cell
+						447 text 2.41.5-0+deb13u1
+					448 cell
+						449 text CVE-2026-78409
+					450 cell
+						451 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				452 row
+					453 cell
+						454 text HIGH
+					455 cell
+						456 text libmount1
+					457 cell
+						458 text 2.41.5-0+deb13u1
+					459 cell
+						460 text CVE-2026-78410
+					461 cell
+						462 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				463 row
+					464 cell
+						465 text HIGH
+					466 cell
+						467 text libsmartcols1
+					468 cell
+						469 text 2.41.5-0+deb13u1
+					470 cell
+						471 text CVE-2026-76642
+					472 cell
+						473 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				474 row
+					475 cell
+						476 text HIGH
+					477 cell
+						478 text libsmartcols1
+					479 cell
+						480 text 2.41.5-0+deb13u1
+					481 cell
+						482 text CVE-2026-78408
+					483 cell
+						484 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				485 row
+					486 cell
+						487 text HIGH
+					488 cell
+						489 text libsmartcols1
+					490 cell
+						491 text 2.41.5-0+deb13u1
+					492 cell
+						493 text CVE-2026-78409
+					494 cell
+						495 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				496 row
+					497 cell
+						498 text HIGH
+					499 cell
+						500 text libsmartcols1
+					501 cell
+						502 text 2.41.5-0+deb13u1
+					503 cell
+						504 text CVE-2026-78410
+					505 cell
+						506 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				507 row
+					508 cell
+						509 text HIGH
+					510 cell
+						511 text libsystemd0
+					512 cell
+						513 text 257.13-1~deb13u1
+					514 cell
+						515 text CVE-2026-16742
+					516 cell
+						517 link Description: https://avd.aquasec.com/nvd/cve-2026-16742, Value: avd.aquasec.com/nvd…
+				518 row
+					519 cell
+						520 text HIGH
+					521 cell
+						522 text libtinfo6
+					523 cell
+						524 text 6.5+20250216-2
+					525 cell
+						526 link Description: CVE-2025-69720, Value: github.com/advisori…
+					527 cell
+						528 link Description: https://avd.aquasec.com/nvd/cve-2025-69720, Value: avd.aquasec.com/nvd…
+				529 row
+					530 cell
+						531 text HIGH
+					532 cell
+						533 text libudev1
+					534 cell
+						535 text 257.13-1~deb13u1
+					536 cell
+						537 text CVE-2026-16742
+					538 cell
+						539 link Description: https://avd.aquasec.com/nvd/cve-2026-16742, Value: avd.aquasec.com/nvd…
+				540 row
+					541 cell
+						542 text HIGH
+					543 cell
+						544 text libuuid1
+					545 cell
+						546 text 2.41.5-0+deb13u1
+					547 cell
+						548 text CVE-2026-76642
+					549 cell
+						550 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				551 row
+					552 cell
+						553 text HIGH
+					554 cell
+						555 text libuuid1
+					556 cell
+						557 text 2.41.5-0+deb13u1
+					558 cell
+						559 text CVE-2026-78408
+					560 cell
+						561 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				562 row
+					563 cell
+						564 text HIGH
+					565 cell
+						566 text libuuid1
+					567 cell
+						568 text 2.41.5-0+deb13u1
+					569 cell
+						570 text CVE-2026-78409
+					571 cell
+						572 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				573 row
+					574 cell
+						575 text HIGH
+					576 cell
+						577 text libuuid1
+					578 cell
+						579 text 2.41.5-0+deb13u1
+					580 cell
+						581 text CVE-2026-78410
+					582 cell
+						583 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				584 row
+					585 cell
+						586 text HIGH
+					587 cell
+						588 text login
+					589 cell
+						590 text 1:4.16.0-2+really2.41.5-0+deb13u1
+					591 cell
+						592 text CVE-2026-76642
+					593 cell
+						594 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				595 row
+					596 cell
+						597 text HIGH
+					598 cell
+						599 text login
+					600 cell
+						601 text 1:4.16.0-2+really2.41.5-0+deb13u1
+					602 cell
+						603 text CVE-2026-78408
+					604 cell
+						605 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				606 row
+					607 cell
+						608 text HIGH
+					609 cell
+						610 text login
+					611 cell
+						612 text 1:4.16.0-2+really2.41.5-0+deb13u1
+					613 cell
+						614 text CVE-2026-78409
+					615 cell
+						616 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				617 row
+					618 cell
+						619 text HIGH
+					620 cell
+						621 text login
+					622 cell
+						623 text 1:4.16.0-2+really2.41.5-0+deb13u1
+					624 cell
+						625 text CVE-2026-78410
+					626 cell
+						627 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				628 row
+					629 cell
+						630 text HIGH
+					631 cell
+						632 text mount
+					633 cell
+						634 text 2.41.5-0+deb13u1
+					635 cell
+						636 text CVE-2026-76642
+					637 cell
+						638 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				639 row
+					640 cell
+						641 text HIGH
+					642 cell
+						643 text mount
+					644 cell
+						645 text 2.41.5-0+deb13u1
+					646 cell
+						647 text CVE-2026-78408
+					648 cell
+						649 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				650 row
+					651 cell
+						652 text HIGH
+					653 cell
+						654 text mount
+					655 cell
+						656 text 2.41.5-0+deb13u1
+					657 cell
+						658 text CVE-2026-78409
+					659 cell
+						660 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				661 row
+					662 cell
+						663 text HIGH
+					664 cell
+						665 text mount
+					666 cell
+						667 text 2.41.5-0+deb13u1
+					668 cell
+						669 text CVE-2026-78410
+					670 cell
+						671 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				672 row
+					673 cell
+						674 text HIGH
+					675 cell
+						676 text ncurses-base
+					677 cell
+						678 text 6.5+20250216-2
+					679 cell
+						680 link Description: CVE-2025-69720, Value: github.com/advisori…
+					681 cell
+						682 link Description: https://avd.aquasec.com/nvd/cve-2025-69720, Value: avd.aquasec.com/nvd…
+				683 row
+					684 cell
+						685 text HIGH
+					686 cell
+						687 text ncurses-bin
+					688 cell
+						689 text 6.5+20250216-2
+					690 cell
+						691 link Description: CVE-2025-69720, Value: github.com/advisori…
+					692 cell
+						693 link Description: https://avd.aquasec.com/nvd/cve-2025-69720, Value: avd.aquasec.com/nvd…
+				694 row
+					695 cell
+						696 text HIGH
+					697 cell
+						698 text pacote
+					699 cell
+						700 text 19.0.2
+					701 cell
+						702 text 21.5.1
+					703 cell
+						704 link Description: CVE-2026-9496, Value: github.com/advisori…
+					705 cell
+						706 link Description: https://avd.aquasec.com/nvd/cve-2026-9496, Value: avd.aquasec.com/nvd…
+				707 row
+					708 cell
+						709 text HIGH
+					710 cell
+						711 text pacote
+					712 cell
+						713 text 20.0.1
+					714 cell
+						715 text 21.5.1
+					716 cell
+						717 link Description: CVE-2026-9496, Value: github.com/advisori…
+					718 cell
+						719 link Description: https://avd.aquasec.com/nvd/cve-2026-9496, Value: avd.aquasec.com/nvd…
+				720 row
+					721 cell
+						722 text HIGH
+					723 cell
+						724 text perl-base
+					725 cell
+						726 text 5.40.1-6+deb13u1
+					727 cell
+						728 link Description: CVE-2026-9538, Value: github.com/advisori…
+					729 cell
+						730 link Description: https://avd.aquasec.com/nvd/cve-2026-9538, Value: avd.aquasec.com/nvd…
+				731 row
+					732 cell
+						733 text HIGH
+					734 cell
+						735 text picomatch
+					736 cell
+						737 text 4.0.3
+					738 cell
+						739 text 4.0.4, 3.0.2, 2.3.2
+					740 cell
+						741 link Description: CVE-2026-33671, Value: github.com/advisori…
+					742 cell
+						743 link Description: https://avd.aquasec.com/nvd/cve-2026-33671, Value: avd.aquasec.com/nvd…
+				744 row
+					745 cell
+						746 text HIGH
+					747 cell
+						748 text sigstore
+					749 cell
+						750 text 3.1.0
+					751 cell
+						752 text 4.1.1
+					753 cell
+						754 link Description: CVE-2026-48815, Value: github.com/advisori…
+					755 cell
+						756 link Description: https://avd.aquasec.com/nvd/cve-2026-48815, Value: avd.aquasec.com/nvd…
+				757 row
+					758 cell
+						759 text HIGH
+					760 cell
+						761 text util-linux
+					762 cell
+						763 text 2.41.5-0+deb13u1
+					764 cell
+						765 text CVE-2026-76642
+					766 cell
+						767 link Description: https://avd.aquasec.com/nvd/cve-2026-76642, Value: avd.aquasec.com/nvd…
+				768 row
+					769 cell
+						770 text HIGH
+					771 cell
+						772 text util-linux
+					773 cell
+						774 text 2.41.5-0+deb13u1
+					775 cell
+						776 text CVE-2026-78408
+					777 cell
+						778 link Description: https://avd.aquasec.com/nvd/cve-2026-78408, Value: avd.aquasec.com/nvd…
+				779 row
+					780 cell
+						781 text HIGH
+					782 cell
+						783 text util-linux
+					784 cell
+						785 text 2.41.5-0+deb13u1
+					786 cell
+						787 text CVE-2026-78409
+					788 cell
+						789 link Description: https://avd.aquasec.com/nvd/cve-2026-78409, Value: avd.aquasec.com/nvd…
+				790 row
+					791 cell
+						792 text HIGH
+					793 cell
+						794 text util-linux
+					795 cell
+						796 text 2.41.5-0+deb13u1
+					797 cell
+						798 text CVE-2026-78410
+					799 cell
+						800 link Description: https://avd.aquasec.com/nvd/cve-2026-78410, Value: avd.aquasec.com/nvd…
+				801 row
+					802 cell
+						803 text LOW
+					804 cell
+						805 text apt
+					806 cell
+						807 text 3.0.3
+					808 cell
+						809 link Description: CVE-2011-3374, Value: github.com/advisori…
+					810 cell
+						811 link Description: https://avd.aquasec.com/nvd/cve-2011-3374, Value: avd.aquasec.com/nvd…
+				812 row
+					813 cell
+						814 text LOW
+					815 cell
+						816 text bash
+					817 cell
+						818 text 5.2.37-2+b10
+					819 cell
+						820 text TEMP-0841856-B18BAF
+					821 cell
+						822 link Description: https://security-tracker.debian.org/tracker/TEMP-0841856-B18BAF, Value: security-tracker.de…
+				823 row
+					824 cell
+						825 text LOW
+					826 cell
+						827 text bsdutils
+					828 cell
+						829 text 1:2.41.5-0+deb13u1
+					830 cell
+						831 link Description: CVE-2022-0563, Value: github.com/advisori…
+					832 cell
+						833 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				834 row
+					835 cell
+						836 text LOW
+					837 cell
+						838 text coreutils
+					839 cell
+						840 text 9.7-3
+					841 cell
+						842 text CVE-2017-18018
+					843 cell
+						844 link Description: https://avd.aquasec.com/nvd/cve-2017-18018, Value: avd.aquasec.com/nvd…
+				845 row
+					846 cell
+						847 text LOW
+					848 cell
+						849 text coreutils
+					850 cell
+						851 text 9.7-3
+					852 cell
+						853 link Description: CVE-2025-5278, Value: github.com/advisori…
+					854 cell
+						855 link Description: https://avd.aquasec.com/nvd/cve-2025-5278, Value: avd.aquasec.com/nvd…
+				856 row
+					857 cell
+						858 text LOW
+					859 cell
+						860 text coreutils
+					861 cell
+						862 text 9.7-3
+					863 cell
+						864 link Description: CVE-2026-56391, Value: github.com/advisori…
+					865 cell
+						866 link Description: https://avd.aquasec.com/nvd/cve-2026-56391, Value: avd.aquasec.com/nvd…
+				867 row
+					868 cell
+						869 text LOW
+					870 cell
+						871 text coreutils
+					872 cell
+						873 text 9.7-3
+					874 cell
+						875 link Description: CVE-2026-56392, Value: github.com/advisori…
+					876 cell
+						877 link Description: https://avd.aquasec.com/nvd/cve-2026-56392, Value: avd.aquasec.com/nvd…
+				878 row
+					879 cell
+						880 text LOW
+					881 cell
+						882 text dash
+					883 cell
+						884 text 0.5.12-12
+					885 cell
+						886 link Description: CVE-2026-102473, Value: github.com/advisori…
+					887 cell
+						888 link Description: https://avd.aquasec.com/nvd/cve-2026-102473, Value: avd.aquasec.com/nvd…
+				889 row
+					890 cell
+						891 text LOW
+					892 cell
+						893 text dash
+					894 cell
+						895 text 0.5.12-12
+					896 cell
+						897 link Description: CVE-2026-102474, Value: github.com/advisori…
+					898 cell
+						899 link Description: https://avd.aquasec.com/nvd/cve-2026-102474, Value: avd.aquasec.com/nvd…
+				900 row
+					901 cell
+						902 text LOW
+					903 cell
+						904 text diffutils
+					905 cell
+						906 text 1:3.10-4
+					907 cell
+						908 link Description: CVE-2026-53910, Value: github.com/advisori…
+					909 cell
+						910 link Description: https://avd.aquasec.com/nvd/cve-2026-53910, Value: avd.aquasec.com/nvd…
+				911 row
+					912 cell
+						913 text LOW
+					914 cell
+						915 text libapt-pkg7.0
+					916 cell
+						917 text 3.0.3
+					918 cell
+						919 link Description: CVE-2011-3374, Value: github.com/advisori…
+					920 cell
+						921 link Description: https://avd.aquasec.com/nvd/cve-2011-3374, Value: avd.aquasec.com/nvd…
+				922 row
+					923 cell
+						924 text LOW
+					925 cell
+						926 text libblkid1
+					927 cell
+						928 text 2.41.5-0+deb13u1
+					929 cell
+						930 link Description: CVE-2022-0563, Value: github.com/advisori…
+					931 cell
+						932 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				933 row
+					934 cell
+						935 text LOW
+					936 cell
+						937 text libc-bin
+					938 cell
+						939 text 2.41-12+deb13u4
+					940 cell
+						941 link Description: CVE-2010-4756, Value: github.com/advisori…
+					942 cell
+						943 link Description: https://avd.aquasec.com/nvd/cve-2010-4756, Value: avd.aquasec.com/nvd…
+				944 row
+					945 cell
+						946 text LOW
+					947 cell
+						948 text libc-bin
+					949 cell
+						950 text 2.41-12+deb13u4
+					951 cell
+						952 link Description: CVE-2018-20796, Value: github.com/advisori…
+					953 cell
+						954 link Description: https://avd.aquasec.com/nvd/cve-2018-20796, Value: avd.aquasec.com/nvd…
+				955 row
+					956 cell
+						957 text LOW
+					958 cell
+						959 text libc-bin
+					960 cell
+						961 text 2.41-12+deb13u4
+					962 cell
+						963 link Description: CVE-2019-1010022, Value: github.com/advisori…
+					964 cell
+						965 link Description: https://avd.aquasec.com/nvd/cve-2019-1010022, Value: avd.aquasec.com/nvd…
+				966 row
+					967 cell
+						968 text LOW
+					969 cell
+						970 text libc-bin
+					971 cell
+						972 text 2.41-12+deb13u4
+					973 cell
+						974 link Description: CVE-2019-1010023, Value: github.com/advisori…
+					975 cell
+						976 link Description: https://avd.aquasec.com/nvd/cve-2019-1010023, Value: avd.aquasec.com/nvd…
+				977 row
+					978 cell
+						979 text LOW
+					980 cell
+						981 text libc-bin
+					982 cell
+						983 text 2.41-12+deb13u4
+					984 cell
+						985 link Description: CVE-2019-1010024, Value: github.com/advisori…
+					986 cell
+						987 link Description: https://avd.aquasec.com/nvd/cve-2019-1010024, Value: avd.aquasec.com/nvd…
+				988 row
+					989 cell
+						990 text LOW
+					991 cell
+						992 text libc-bin
+					993 cell
+						994 text 2.41-12+deb13u4
+					995 cell
+						996 link Description: CVE-2019-1010025, Value: github.com/advisori…
+					997 cell
+						998 link Description: https://avd.aquasec.com/nvd/cve-2019-1010025, Value: avd.aquasec.com/nvd…
+				999 row
+					1000 cell
+						1001 text LOW
+					1002 cell
+						1003 text libc-bin
+					1004 cell
+						1005 text 2.41-12+deb13u4
+					1006 cell
+						1007 link Description: CVE-2019-9192, Value: github.com/advisori…
+					1008 cell
+						1009 link Description: https://avd.aquasec.com/nvd/cve-2019-9192, Value: avd.aquasec.com/nvd…
+				1010 row
+					1011 cell
+						1012 text LOW
+					1013 cell
+						1014 text libc-bin
+					1015 cell
+						1016 text 2.41-12+deb13u4
+					1017 cell
+						1018 link Description: CVE-2026-97399, Value: github.com/advisori…
+					1019 cell
+						1020 link Description: https://avd.aquasec.com/nvd/cve-2026-97399, Value: avd.aquasec.com/nvd…
+				1021 row
+					1022 cell
+						1023 text LOW
+					1024 cell
+						1025 text libc6
+					1026 cell
+						1027 text 2.41-12+deb13u4
+					1028 cell
+						1029 link Description: CVE-2010-4756, Value: github.com/advisori…
+					1030 cell
+						1031 link Description: https://avd.aquasec.com/nvd/cve-2010-4756, Value: avd.aquasec.com/nvd…
+				1032 row
+					1033 cell
+						1034 text LOW
+					1035 cell
+						1036 text libc6
+					1037 cell
+						1038 text 2.41-12+deb13u4
+					1039 cell
+						1040 link Description: CVE-2018-20796, Value: github.com/advisori…
+					1041 cell
+						1042 link Description: https://avd.aquasec.com/nvd/cve-2018-20796, Value: avd.aquasec.com/nvd…
+				1043 row
+					1044 cell
+						1045 text LOW
+					1046 cell
+						1047 text libc6
+					1048 cell
+						1049 text 2.41-12+deb13u4
+					1050 cell
+						1051 link Description: CVE-2019-1010022, Value: github.com/advisori…
+					1052 cell
+						1053 link Description: https://avd.aquasec.com/nvd/cve-2019-1010022, Value: avd.aquasec.com/nvd…
+				1054 row
+					1055 cell
+						1056 text LOW
+					1057 cell
+						1058 text libc6
+					1059 cell
+						1060 text 2.41-12+deb13u4
+					1061 cell
+						1062 link Description: CVE-2019-1010023, Value: github.com/advisori…
+					1063 cell
+						1064 link Description: https://avd.aquasec.com/nvd/cve-2019-1010023, Value: avd.aquasec.com/nvd…
+				1065 row
+					1066 cell
+						1067 text LOW
+					1068 cell
+						1069 text libc6
+					1070 cell
+						1071 text 2.41-12+deb13u4
+					1072 cell
+						1073 link Description: CVE-2019-1010024, Value: github.com/advisori…
+					1074 cell
+						1075 link Description: https://avd.aquasec.com/nvd/cve-2019-1010024, Value: avd.aquasec.com/nvd…
+				1076 row
+					1077 cell
+						1078 text LOW
+					1079 cell
+						1080 text libc6
+					1081 cell
+						1082 text 2.41-12+deb13u4
+					1083 cell
+						1084 link Description: CVE-2019-1010025, Value: github.com/advisori…
+					1085 cell
+						1086 link Description: https://avd.aquasec.com/nvd/cve-2019-1010025, Value: avd.aquasec.com/nvd…
+				1087 row
+					1088 cell
+						1089 text LOW
+					1090 cell
+						1091 text libc6
+					1092 cell
+						1093 text 2.41-12+deb13u4
+					1094 cell
+						1095 link Description: CVE-2019-9192, Value: github.com/advisori…
+					1096 cell
+						1097 link Description: https://avd.aquasec.com/nvd/cve-2019-9192, Value: avd.aquasec.com/nvd…
+				1098 row
+					1099 cell
+						1100 text LOW
+					1101 cell
+						1102 text libc6
+					1103 cell
+						1104 text 2.41-12+deb13u4
+					1105 cell
+						1106 link Description: CVE-2026-97399, Value: github.com/advisori…
+					1107 cell
+						1108 link Description: https://avd.aquasec.com/nvd/cve-2026-97399, Value: avd.aquasec.com/nvd…
+				1109 row
+					1110 cell
+						1111 text LOW
+					1112 cell
+						1113 text liblastlog2-2
+					1114 cell
+						1115 text 2.41.5-0+deb13u1
+					1116 cell
+						1117 link Description: CVE-2022-0563, Value: github.com/advisori…
+					1118 cell
+						1119 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				1120 row
+					1121 cell
+						1122 text LOW
+					1123 cell
+						1124 text libmount1
+					1125 cell
+						1126 text 2.41.5-0+deb13u1
+					1127 cell
+						1128 link Description: CVE-2022-0563, Value: github.com/advisori…
+					1129 cell
+						1130 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				1131 row
+					1132 cell
+						1133 text LOW
+					1134 cell
+						1135 text libsmartcols1
+					1136 cell
+						1137 text 2.41.5-0+deb13u1
+					1138 cell
+						1139 link Description: CVE-2022-0563, Value: github.com/advisori…
+					1140 cell
+						1141 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				1142 row
+					1143 cell
+						1144 text LOW
+					1145 cell
+						1146 text libsqlite3-0
+					1147 cell
+						1148 text 3.46.1-7+deb13u2
+					1149 cell
+						1150 link Description: CVE-2021-45346, Value: github.com/advisori…
+					1151 cell
+						1152 link Description: https://avd.aquasec.com/nvd/cve-2021-45346, Value: avd.aquasec.com/nvd…
+				1153 row
+					1154 cell
+						1155 text LOW
+					1156 cell
+						1157 text libsqlite3-0
+					1158 cell
+						1159 text 3.46.1-7+deb13u2
+					1160 cell
+						1161 link Description: CVE-2025-70873, Value: github.com/advisori…
+					1162 cell
+						1163 link Description: https://avd.aquasec.com/nvd/cve-2025-70873, Value: avd.aquasec.com/nvd…
+				1164 row
+					1165 cell
+						1166 text LOW
+					1167 cell
+						1168 text libsystemd0
+					1169 cell
+						1170 text 257.13-1~deb13u1
+					1171 cell
+						1172 link Description: CVE-2013-4392, Value: github.com/advisori…
+					1173 cell
+						1174 link Description: https://avd.aquasec.com/nvd/cve-2013-4392, Value: avd.aquasec.com/nvd…
+				1175 row
+					1176 cell
+						1177 text LOW
+					1178 cell
+						1179 text libsystemd0
+					1180 cell
+						1181 text 257.13-1~deb13u1
+					1182 cell
+						1183 link Description: CVE-2023-31437, Value: github.com/advisori…
+					1184 cell
+						1185 link Description: https://avd.aquasec.com/nvd/cve-2023-31437, Value: avd.aquasec.com/nvd…
+				1186 row
+					1187 cell
+						1188 text LOW
+					1189 cell
+						1190 text libsystemd0
+					1191 cell
+						1192 text 257.13-1~deb13u1
+					1193 cell
+						1194 link Description: CVE-2023-31438, Value: github.com/advisori…
+					1195 cell
+						1196 link Description: https://avd.aquasec.com/nvd/cve-2023-31438, Value: avd.aquasec.com/nvd…
+				1197 row
+					1198 cell
+						1199 text LOW
+					1200 cell
+						1201 text libsystemd0
+					1202 cell
+						1203 text 257.13-1~deb13u1
+					1204 cell
+						1205 link Description: CVE-2023-31439, Value: github.com/advisori…
+					1206 cell
+						1207 link Description: https://avd.aquasec.com/nvd/cve-2023-31439, Value: avd.aquasec.com/nvd…
+				1208 row
+					1209 cell
+						1210 text LOW
+					1211 cell
+						1212 text libsystemd0
+					1213 cell
+						1214 text 257.13-1~deb13u1
+					1215 cell
+						1216 link Description: CVE-2026-40228, Value: github.com/advisori…
+					1217 cell
+						1218 link Description: https://avd.aquasec.com/nvd/cve-2026-40228, Value: avd.aquasec.com/nvd…
+				1219 row
+					1220 cell
+						1221 text LOW
+					1222 cell
+						1223 text libtinfo6
+					1224 cell
+						1225 text 6.5+20250216-2
+					1226 cell
+						1227 link Description: CVE-2025-6141, Value: github.com/advisori…
+					1228 cell
+						1229 link Description: https://avd.aquasec.com/nvd/cve-2025-6141, Value: avd.aquasec.com/nvd…
+				1230 row
+					1231 cell
+						1232 text LOW
+					1233 cell
+						1234 text libudev1
+					1235 cell
+						1236 text 257.13-1~deb13u1
+					1237 cell
+						1238 link Description: CVE-2013-4392, Value: github.com/advisori…
+					1239 cell
+						1240 link Description: https://avd.aquasec.com/nvd/cve-2013-4392, Value: avd.aquasec.com/nvd…
+				1241 row
+					1242 cell
+						1243 text LOW
+					1244 cell
+						1245 text libudev1
+					1246 cell
+						1247 text 257.13-1~deb13u1
+					1248 cell
+						1249 link Description: CVE-2023-31437, Value: github.com/advisori…
+					1250 cell
+						1251 link Description: https://avd.aquasec.com/nvd/cve-2023-31437, Value: avd.aquasec.com/nvd…
+				1252 row
+					1253 cell
+						1254 text LOW
+					1255 cell
+						1256 text libudev1
+					1257 cell
+						1258 text 257.13-1~deb13u1
+					1259 cell
+						1260 link Description: CVE-2023-31438, Value: github.com/advisori…
+					1261 cell
+						1262 link Description: https://avd.aquasec.com/nvd/cve-2023-31438, Value: avd.aquasec.com/nvd…
+				1263 row
+					1264 cell
+						1265 text LOW
+					1266 cell
+						1267 text libudev1
+					1268 cell
+						1269 text 257.13-1~deb13u1
+					1270 cell
+						1271 link Description: CVE-2023-31439, Value: github.com/advisori…
+					1272 cell
+						1273 link Description: https://avd.aquasec.com/nvd/cve-2023-31439, Value: avd.aquasec.com/nvd…
+				1274 row
+					1275 cell
+						1276 text LOW
+					1277 cell
+						1278 text libudev1
+					1279 cell
+						1280 text 257.13-1~deb13u1
+					1281 cell
+						1282 link Description: CVE-2026-40228, Value: github.com/advisori…
+					1283 cell
+						1284 link Description: https://avd.aquasec.com/nvd/cve-2026-40228, Value: avd.aquasec.com/nvd…
+				1285 row
+					1286 cell
+						1287 text LOW
+					1288 cell
+						1289 text libuuid1
+					1290 cell
+						1291 text 2.41.5-0+deb13u1
+					1292 cell
+						1293 link Description: CVE-2022-0563, Value: github.com/advisori…
+					1294 cell
+						1295 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				1296 row
+					1297 cell
+						1298 text LOW
+					1299 cell
+						1300 text login
+					1301 cell
+						1302 text 1:4.16.0-2+really2.41.5-0+deb13u1
+					1303 cell
+						1304 link Description: CVE-2022-0563, Value: github.com/advisori…
+					1305 cell
+						1306 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				1307 row
+					1308 cell
+						1309 text LOW
+					1310 cell
+						1311 text login.defs
+					1312 cell
+						1313 text 1:4.17.4-2
+					1314 cell
+						1315 link Description: CVE-2007-5686, Value: github.com/advisori…
+					1316 cell
+						1317 link Description: https://avd.aquasec.com/nvd/cve-2007-5686, Value: avd.aquasec.com/nvd…
+				1318 row
+					1319 cell
+						1320 text LOW
+					1321 cell
+						1322 text login.defs
+					1323 cell
+						1324 text 1:4.17.4-2
+					1325 cell
+						1326 text CVE-2024-56433
+					1327 cell
+						1328 link Description: https://avd.aquasec.com/nvd/cve-2024-56433, Value: avd.aquasec.com/nvd…
+				1329 row
+					1330 cell
+						1331 text LOW
+					1332 cell
+						1333 text login.defs
+					1334 cell
+						1335 text 1:4.17.4-2
+					1336 cell
+						1337 text TEMP-0628843-DBAD28
+					1338 cell
+						1339 link Description: https://security-tracker.debian.org/tracker/TEMP-0628843-DBAD28, Value: security-tracker.de…
+				1340 row
+					1341 cell
+						1342 text LOW
+					1343 cell
+						1344 text mount
+					1345 cell
+						1346 text 2.41.5-0+deb13u1
+					1347 cell
+						1348 link Description: CVE-2022-0563, Value: github.com/advisori…
+					1349 cell
+						1350 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: avd.aquasec.com/nvd…
+				1351 row
+					1352 cell
+						1353 text LOW
+					1354 cell
+						1355 text ncurses-base
+					1356 cell
+						1357 text 6.5+20250216-2
+					1358 cell
+						1359 link Description: CVE-2025-6141, Value: github.com/advisori…
+					1360 cell
+						1361 link Description: https://avd.aquasec.com/nvd/cve-2025-6141, Value: avd.aquasec.com/nvd…
+				1362 row
+					1363 cell
+						1364 text LOW
+					1365 cell
+						1366 text ncurses-bin
+					1367 cell
+						1368 text 6.5+20250216-2
+					1369 cell
+						1370 link Description: CVE-2025-6141, Value: github.com/advisori…
+					1371 cell
+						1372 link Description: https://avd.aquasec.com/nvd/cve-2025-6141, Value: …
+				1373 row
+					1374 cell
+						1375 text LOW
+					1376 cell
+						1377 text passwd
+					1378 cell
+						1379 text 1:4.17.4-2
+					1380 cell
+						1381 link Description: CVE-2007-5686, Value: …
+					1382 cell
+						1383 link Description: https://avd.aquasec.com/nvd/cve-2007-5686, Value: …
+				1384 row
+					1385 cell
+						1386 text LOW
+					1387 cell
+						1388 text passwd
+					1389 cell
+						1390 text 1:4.17.4-2
+					1391 cell
+						1392 text CVE-2024-56433
+					1393 cell
+						1394 link Description: https://avd.aquasec.com/nvd/cve-2024-56433, Value: …
+				1395 row
+					1396 cell
+						1397 text LOW
+					1398 cell
+						1399 text passwd
+					1400 cell
+						1401 text 1:4.17.4-2
+					1402 cell
+						1403 text TEMP-0628843-DBAD28
+					1404 cell
+						1405 link Description: https://security-tracker.debian.org/tracker/TEMP-0628843-DBAD28, Value: …
+				1406 row
+					1407 cell
+						1408 text LOW
+					1409 cell
+						1410 text perl-base
+					1411 cell
+						1412 text 5.40.1-6+deb13u1
+					1413 cell
+						1414 text CVE-2011-4116
+					1415 cell
+						1416 link Description: https://avd.aquasec.com/nvd/cve-2011-4116, Value: …
+				1417 row
+					1418 cell
+						1419 text LOW
+					1420 cell
+						1421 text postcss-selector-parser
+					1422 cell
+						1423 text 7.1.1
+					1424 cell
+						1425 text 6.1.3, 7.1.3
+					1426 cell
+						1427 text CVE-2026-9358
+					1428 cell
+						1429 link Description: https://avd.aquasec.com/nvd/cve-2026-9358, Value: …
+				1430 row
+					1431 cell
+						1432 text LOW
+					1433 cell
+						1434 text sysvinit-utils
+					1435 cell
+						1436 text 3.14-4
+					1437 cell
+						1438 text TEMP-0517018-A83CE6
+					1439 cell
+						1440 link Description: https://security-tracker.debian.org/tracker/TEMP-0517018-A83CE6, Value: …
+				1441 row
+					1442 cell
+						1443 text LOW
+					1444 cell
+						1445 text tar
+					1446 cell
+						1447 text 1.35+dfsg-3.1
+					1448 cell
+						1449 text CVE-2005-2541
+					1450 cell
+						1451 link Description: https://avd.aquasec.com/nvd/cve-2005-2541, Value: …
+				1452 row
+					1453 cell
+						1454 text LOW
+					1455 cell
+						1456 text tar
+					1457 cell
+						1458 text 1.35+dfsg-3.1
+					1459 cell
+						1460 text TEMP-0290435-0B57B5
+					1461 cell
+						1462 link Description: https://security-tracker.debian.org/tracker/TEMP-0290435-0B57B5, Value: …
+				1463 row
+					1464 cell
+						1465 text LOW
+					1466 cell
+						1467 text util-linux
+					1468 cell
+						1469 text 2.41.5-0+deb13u1
+					1470 cell
+						1471 link Description: CVE-2022-0563, Value: …
+					1472 cell
+						1473 link Description: https://avd.aquasec.com/nvd/cve-2022-0563, Value: …
+				1474 row
+					1475 cell
+						1476 text MEDIUM
+					1477 cell
+						1478 text @sigstore/core
+					1479 cell
+						1480 text 2.0.0
+					1481 cell
+						1482 text 3.2.1
+					1483 cell
+						1484 text CVE-2026-48758
+					1485 cell
+						1486 link Description: https://avd.aquasec.com/nvd/cve-2026-48758, Value: …
+				1487 row
+					1488 cell
+						1489 text MEDIUM
+					1490 cell
+						1491 text brace-expansion
+					1492 cell
+						1493 text 2.0.2
+					1494 cell
+						1495 text 5.0.12, 3.0.9, 2.1.7, 1.1.21
+					1496 cell
+						1497 text CVE-2026-102277
+					1498 cell
+						1499 link Description: https://avd.aquasec.com/nvd/cve-2026-102277, Value: …
+				1500 row
+					1501 cell
+						1502 text MEDIUM
+					1503 cell
+						1504 text brace-expansion
+					1505 cell
+						1506 text 2.0.2
+					1507 cell
+						1508 text 5.0.5, 3.0.2, 2.0.3, 1.1.13
+					1509 cell
+						1510 text CVE-2026-33750
+					1511 cell
+						1512 link Description: https://avd.aquasec.com/nvd/cve-2026-33750, Value: …
+				1513 row
+					1514 cell
+						1515 text MEDIUM
+					1516 cell
+						1517 text bsdutils
+					1518 cell
+						1519 text 1:2.41.5-0+deb13u1
+					1520 cell
+						1521 text CVE-2026-3184
+					1522 cell
+						1523 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				1524 row
+					1525 cell
+						1526 text MEDIUM
+					1527 cell
+						1528 text gcc-14-base
+					1529 cell
+						1530 text 14.2.0-19
+					1531 cell
+						1532 text CVE-2026-102010
+					1533 cell
+						1534 link Description: https://avd.aquasec.com/nvd/cve-2026-102010, Value: …
+				1535 row
+					1536 cell
+						1537 text MEDIUM
+					1538 cell
+						1539 text gcc-14-base
+					1540 cell
+						1541 text 14.2.0-19
+					1542 cell
+						1543 text CVE-2026-95619
+					1544 cell
+						1545 link Description: https://avd.aquasec.com/nvd/cve-2026-95619, Value: …
+				1546 row
+					1547 cell
+						1548 text MEDIUM
+					1549 cell
+						1550 text ip-address
+					1551 cell
+						1552 text 10.1.0
+					1553 cell
+						1554 text 10.1.1
+					1555 cell
+						1556 text CVE-2026-42338
+					1557 cell
+						1558 link Description: https://avd.aquasec.com/nvd/cve-2026-42338, Value: …
+				1559 row
+					1560 cell
+						1561 text MEDIUM
+					1562 cell
+						1563 text ip-address
+					1564 cell
+						1565 text 10.1.0
+					1566 cell
+						1567 text 10.5.1
+					1568 cell
+						1569 text CVE-2026-101913
+					1570 cell
+						1571 link Description: https://avd.aquasec.com/nvd/cve-2026-101913, Value: …
+				1572 row
+					1573 cell
+						1574 text MEDIUM
+					1575 cell
+						1576 text ip-address
+					1577 cell
+						1578 text 10.1.0
+					1579 cell
+						1580 text 10.7.1
+					1581 cell
+						1582 text CVE-2026-101911
+					1583 cell
+						1584 link Description: https://avd.aquasec.com/nvd/cve-2026-101911, Value: …
+				1585 row
+					1586 cell
+						1587 text MEDIUM
+					1588 cell
+						1589 text ip-address
+					1590 cell
+						1591 text 10.1.0
+					1592 cell
+						1593 text 10.7.1
+					1594 cell
+						1595 text CVE-2026-101912
+					1596 cell
+						1597 link Description: https://avd.aquasec.com/nvd/cve-2026-101912, Value: …
+				1598 row
+					1599 cell
+						1600 text MEDIUM
+					1601 cell
+						1602 text libacl1
+					1603 cell
+						1604 text 2.3.2-2+b1
+					1605 cell
+						1606 text CVE-2026-54370
+					1607 cell
+						1608 link Description: https://avd.aquasec.com/nvd/cve-2026-54370, Value: …
+				1609 row
+					1610 cell
+						1611 text MEDIUM
+					1612 cell
+						1613 text libattr1
+					1614 cell
+						1615 text 1:2.5.2-3
+					1616 cell
+						1617 text CVE-2026-54371
+					1618 cell
+						1619 link Description: https://avd.aquasec.com/nvd/cve-2026-54371, Value: …
+				1620 row
+					1621 cell
+						1622 text MEDIUM
+					1623 cell
+						1624 text libblkid1
+					1625 cell
+						1626 text 2.41.5-0+deb13u1
+					1627 cell
+						1628 text CVE-2026-3184
+					1629 cell
+						1630 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				1631 row
+					1632 cell
+						1633 text MEDIUM
+					1634 cell
+						1635 text libbz2-1.0
+					1636 cell
+						1637 text 1.0.8-6
+					1638 cell
+						1639 text CVE-2026-42250
+					1640 cell
+						1641 link Description: https://avd.aquasec.com/nvd/cve-2026-42250, Value: …
+				1642 row
+					1643 cell
+						1644 text MEDIUM
+					1645 cell
+						1646 text libc-bin
+					1647 cell
+						1648 text 2.41-12+deb13u4
+					1649 cell
+						1650 text CVE-2026-18374
+					1651 cell
+						1652 link Description: https://avd.aquasec.com/nvd/cve-2026-18374, Value: …
+				1653 row
+					1654 cell
+						1655 text MEDIUM
+					1656 cell
+						1657 text libc-bin
+					1658 cell
+						1659 text 2.41-12+deb13u4
+					1660 cell
+						1661 text CVE-2026-19499
+					1662 cell
+						1663 link Description: https://avd.aquasec.com/nvd/cve-2026-19499, Value: …
+				1664 row
+					1665 cell
+						1666 text MEDIUM
+					1667 cell
+						1668 text libc-bin
+					1669 cell
+						1670 text 2.41-12+deb13u4
+					1671 cell
+						1672 text CVE-2026-19542
+					1673 cell
+						1674 link Description: https://avd.aquasec.com/nvd/cve-2026-19542, Value: …
+				1675 row
+					1676 cell
+						1677 text MEDIUM
+					1678 cell
+						1679 text libc-bin
+					1680 cell
+						1681 text 2.41-12+deb13u4
+					1682 cell
+						1683 text CVE-2026-5435
+					1684 cell
+						1685 link Description: https://avd.aquasec.com/nvd/cve-2026-5435, Value: …
+				1686 row
+					1687 cell
+						1688 text MEDIUM
+					1689 cell
+						1690 text libc-bin
+					1691 cell
+						1692 text 2.41-12+deb13u4
+					1693 cell
+						1694 text CVE-2026-6238
+					1695 cell
+						1696 link Description: https://avd.aquasec.com/nvd/cve-2026-6238, Value: …
+				1697 row
+					1698 cell
+						1699 text MEDIUM
+					1700 cell
+						1701 text libc-bin
+					1702 cell
+						1703 text 2.41-12+deb13u4
+					1704 cell
+						1705 text CVE-2026-6368
+					1706 cell
+						1707 link Description: https://avd.aquasec.com/nvd/cve-2026-6368, Value: …
+				1708 row
+					1709 cell
+						1710 text MEDIUM
+					1711 cell
+						1712 text libc-bin
+					1713 cell
+						1714 text 2.41-12+deb13u4
+					1715 cell
+						1716 text CVE-2026-6791
+					1717 cell
+						1718 link Description: https://avd.aquasec.com/nvd/cve-2026-6791, Value: …
+				1719 row
+					1720 cell
+						1721 text MEDIUM
+					1722 cell
+						1723 text libc-bin
+					1724 cell
+						1725 text 2.41-12+deb13u4
+					1726 cell
+						1727 text CVE-2026-77117
+					1728 cell
+						1729 link Description: https://avd.aquasec.com/nvd/cve-2026-77117, Value: …
+				1730 row
+					1731 cell
+						1732 text MEDIUM
+					1733 cell
+						1734 text libc-bin
+					1735 cell
+						1736 text 2.41-12+deb13u4
+					1737 cell
+						1738 text CVE-2026-80489
+					1739 cell
+						1740 link Description: https://avd.aquasec.com/nvd/cve-2026-80489, Value: …
+				1741 row
+					1742 cell
+						1743 text MEDIUM
+					1744 cell
+						1745 text libc-bin
+					1746 cell
+						1747 text 2.41-12+deb13u4
+					1748 cell
+						1749 text CVE-2026-8674
+					1750 cell
+						1751 link Description: https://avd.aquasec.com/nvd/cve-2026-8674, Value: …
+				1752 row
+					1753 cell
+						1754 text MEDIUM
+					1755 cell
+						1756 text libc-bin
+					1757 cell
+						1758 text 2.41-12+deb13u4
+					1759 cell
+						1760 text CVE-2026-86805
+					1761 cell
+						1762 link Description: https://avd.aquasec.com/nvd/cve-2026-86805, Value: …
+				1763 row
+					1764 cell
+						1765 text MEDIUM
+					1766 cell
+						1767 text libc-bin
+					1768 cell
+						1769 text 2.41-12+deb13u4
+					1770 cell
+						1771 text CVE-2026-89092
+					1772 cell
+						1773 link Description: https://avd.aquasec.com/nvd/cve-2026-89092, Value: …
+				1774 row
+					1775 cell
+						1776 text MEDIUM
+					1777 cell
+						1778 text libc-bin
+					1779 cell
+						1780 text 2.41-12+deb13u4
+					1781 cell
+						1782 text CVE-2026-95818
+					1783 cell
+						1784 link Description: https://avd.aquasec.com/nvd/cve-2026-95818, Value: …
+				1785 row
+					1786 cell
+						1787 text MEDIUM
+					1788 cell
+						1789 text libc6
+					1790 cell
+						1791 text 2.41-12+deb13u4
+					1792 cell
+						1793 text CVE-2026-18374
+					1794 cell
+						1795 link Description: https://avd.aquasec.com/nvd/cve-2026-18374, Value: …
+				1796 row
+					1797 cell
+						1798 text MEDIUM
+					1799 cell
+						1800 text libc6
+					1801 cell
+						1802 text 2.41-12+deb13u4
+					1803 cell
+						1804 text CVE-2026-19499
+					1805 cell
+						1806 link Description: https://avd.aquasec.com/nvd/cve-2026-19499, Value: …
+				1807 row
+					1808 cell
+						1809 text MEDIUM
+					1810 cell
+						1811 text libc6
+					1812 cell
+						1813 text 2.41-12+deb13u4
+					1814 cell
+						1815 text CVE-2026-19542
+					1816 cell
+						1817 link Description: https://avd.aquasec.com/nvd/cve-2026-19542, Value: …
+				1818 row
+					1819 cell
+						1820 text MEDIUM
+					1821 cell
+						1822 text libc6
+					1823 cell
+						1824 text 2.41-12+deb13u4
+					1825 cell
+						1826 text CVE-2026-5435
+					1827 cell
+						1828 link Description: https://avd.aquasec.com/nvd/cve-2026-5435, Value: …
+				1829 row
+					1830 cell
+						1831 text MEDIUM
+					1832 cell
+						1833 text libc6
+					1834 cell
+						1835 text 2.41-12+deb13u4
+					1836 cell
+						1837 text CVE-2026-6238
+					1838 cell
+						1839 link Description: https://avd.aquasec.com/nvd/cve-2026-6238, Value: …
+				1840 row
+					1841 cell
+						1842 text MEDIUM
+					1843 cell
+						1844 text libc6
+					1845 cell
+						1846 text 2.41-12+deb13u4
+					1847 cell
+						1848 text CVE-2026-6368
+					1849 cell
+						1850 link Description: https://avd.aquasec.com/nvd/cve-2026-6368, Value: …
+				1851 row
+					1852 cell
+						1853 text MEDIUM
+					1854 cell
+						1855 text libc6
+					1856 cell
+						1857 text 2.41-12+deb13u4
+					1858 cell
+						1859 text CVE-2026-6791
+					1860 cell
+						1861 link Description: https://avd.aquasec.com/nvd/cve-2026-6791, Value: …
+				1862 row
+					1863 cell
+						1864 text MEDIUM
+					1865 cell
+						1866 text libc6
+					1867 cell
+						1868 text 2.41-12+deb13u4
+					1869 cell
+						1870 text CVE-2026-77117
+					1871 cell
+						1872 link Description: https://avd.aquasec.com/nvd/cve-2026-77117, Value: …
+				1873 row
+					1874 cell
+						1875 text MEDIUM
+					1876 cell
+						1877 text libc6
+					1878 cell
+						1879 text 2.41-12+deb13u4
+					1880 cell
+						1881 text CVE-2026-80489
+					1882 cell
+						1883 link Description: https://avd.aquasec.com/nvd/cve-2026-80489, Value: …
+				1884 row
+					1885 cell
+						1886 text MEDIUM
+					1887 cell
+						1888 text libc6
+					1889 cell
+						1890 text 2.41-12+deb13u4
+					1891 cell
+						1892 text CVE-2026-8674
+					1893 cell
+						1894 link Description: https://avd.aquasec.com/nvd/cve-2026-8674, Value: …
+				1895 row
+					1896 cell
+						1897 text MEDIUM
+					1898 cell
+						1899 text libc6
+					1900 cell
+						1901 text 2.41-12+deb13u4
+					1902 cell
+						1903 text CVE-2026-86805
+					1904 cell
+						1905 link Description: https://avd.aquasec.com/nvd/cve-2026-86805, Value: …
+				1906 row
+					1907 cell
+						1908 text MEDIUM
+					1909 cell
+						1910 text libc6
+					1911 cell
+						1912 text 2.41-12+deb13u4
+					1913 cell
+						1914 text CVE-2026-89092
+					1915 cell
+						1916 link Description: https://avd.aquasec.com/nvd/cve-2026-89092, Value: …
+				1917 row
+					1918 cell
+						1919 text MEDIUM
+					1920 cell
+						1921 text libc6
+					1922 cell
+						1923 text 2.41-12+deb13u4
+					1924 cell
+						1925 text CVE-2026-95818
+					1926 cell
+						1927 link Description: https://avd.aquasec.com/nvd/cve-2026-95818, Value: …
+				1928 row
+					1929 cell
+						1930 text MEDIUM
+					1931 cell
+						1932 text libgcc-s1
+					1933 cell
+						1934 text 14.2.0-19
+					1935 cell
+						1936 text CVE-2026-102010
+					1937 cell
+						1938 link Description: https://avd.aquasec.com/nvd/cve-2026-102010, Value: …
+				1939 row
+					1940 cell
+						1941 text MEDIUM
+					1942 cell
+						1943 text libgcc-s1
+					1944 cell
+						1945 text 14.2.0-19
+					1946 cell
+						1947 text CVE-2026-95619
+					1948 cell
+						1949 link Description: https://avd.aquasec.com/nvd/cve-2026-95619, Value: …
+				1950 row
+					1951 cell
+						1952 text MEDIUM
+					1953 cell
+						1954 text liblastlog2-2
+					1955 cell
+						1956 text 2.41.5-0+deb13u1
+					1957 cell
+						1958 text CVE-2026-3184
+					1959 cell
+						1960 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				1961 row
+					1962 cell
+						1963 text MEDIUM
+					1964 cell
+						1965 text libmount1
+					1966 cell
+						1967 text 2.41.5-0+deb13u1
+					1968 cell
+						1969 text CVE-2026-3184
+					1970 cell
+						1971 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				1972 row
+					1973 cell
+						1974 text MEDIUM
+					1975 cell
+						1976 text libpam-modules
+					1977 cell
+						1978 text 1.7.0-5
+					1979 cell
+						1980 text CVE-2026-54411
+					1981 cell
+						1982 link Description: https://avd.aquasec.com/nvd/cve-2026-54411, Value: …
+				1983 row
+					1984 cell
+						1985 text MEDIUM
+					1986 cell
+						1987 text libpam-modules-bin
+					1988 cell
+						1989 text 1.7.0-5
+					1990 cell
+						1991 text CVE-2026-54411
+					1992 cell
+						1993 link Description: https://avd.aquasec.com/nvd/cve-2026-54411, Value: …
+				1994 row
+					1995 cell
+						1996 text MEDIUM
+					1997 cell
+						1998 text libpam-runtime
+					1999 cell
+						2000 text 1.7.0-5
+					2001 cell
+						2002 text CVE-2026-54411
+					2003 cell
+						2004 link Description: https://avd.aquasec.com/nvd/cve-2026-54411, Value: …
+				2005 row
+					2006 cell
+						2007 text MEDIUM
+					2008 cell
+						2009 text libpam0g
+					2010 cell
+						2011 text 1.7.0-5
+					2012 cell
+						2013 text CVE-2026-54411
+					2014 cell
+						2015 link Description: https://avd.aquasec.com/nvd/cve-2026-54411, Value: …
+				2016 row
+					2017 cell
+						2018 text MEDIUM
+					2019 cell
+						2020 text libsmartcols1
+					2021 cell
+						2022 text 2.41.5-0+deb13u1
+					2023 cell
+						2024 text CVE-2026-3184
+					2025 cell
+						2026 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				2027 row
+					2028 cell
+						2029 text MEDIUM
+					2030 cell
+						2031 text libsqlite3-0
+					2032 cell
+						2033 text 3.46.1-7+deb13u2
+					2034 cell
+						2035 text CVE-2026-50812
+					2036 cell
+						2037 link Description: https://avd.aquasec.com/nvd/cve-2026-50812, Value: …
+				2038 row
+					2039 cell
+						2040 text MEDIUM
+					2041 cell
+						2042 text libsqlite3-0
+					2043 cell
+						2044 text 3.46.1-7+deb13u2
+					2045 cell
+						2046 text CVE-2026-50813
+					2047 cell
+						2048 link Description: https://avd.aquasec.com/nvd/cve-2026-50813, Value: …
+				2049 row
+					2050 cell
+						2051 text MEDIUM
+					2052 cell
+						2053 text libstdc++6
+					2054 cell
+						2055 text 14.2.0-19
+					2056 cell
+						2057 text CVE-2026-102010
+					2058 cell
+						2059 link Description: https://avd.aquasec.com/nvd/cve-2026-102010, Value: …
+				2060 row
+					2061 cell
+						2062 text MEDIUM
+					2063 cell
+						2064 text libstdc++6
+					2065 cell
+						2066 text 14.2.0-19
+					2067 cell
+						2068 text CVE-2026-95619
+					2069 cell
+						2070 link Description: https://avd.aquasec.com/nvd/cve-2026-95619, Value: …
+				2071 row
+					2072 cell
+						2073 text MEDIUM
+					2074 cell
+						2075 text libsystemd0
+					2076 cell
+						2077 text 257.13-1~deb13u1
+					2078 cell
+						2079 text CVE-2026-15059
+					2080 cell
+						2081 link Description: https://avd.aquasec.com/nvd/cve-2026-15059, Value: …
+				2082 row
+					2083 cell
+						2084 text MEDIUM
+					2085 cell
+						2086 text libudev1
+					2087 cell
+						2088 text 257.13-1~deb13u1
+					2089 cell
+						2090 text CVE-2026-15059
+					2091 cell
+						2092 link Description: https://avd.aquasec.com/nvd/cve-2026-15059, Value: …
+				2093 row
+					2094 cell
+						2095 text MEDIUM
+					2096 cell
+						2097 text libuuid1
+					2098 cell
+						2099 text 2.41.5-0+deb13u1
+					2100 cell
+						2101 text CVE-2026-3184
+					2102 cell
+						2103 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				2104 row
+					2105 cell
+						2106 text MEDIUM
+					2107 cell
+						2108 text login
+					2109 cell
+						2110 text 1:4.16.0-2+really2.41.5-0+deb13u1
+					2111 cell
+						2112 text CVE-2026-3184
+					2113 cell
+						2114 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				2115 row
+					2116 cell
+						2117 text MEDIUM
+					2118 cell
+						2119 text mount
+					2120 cell
+						2121 text 2.41.5-0+deb13u1
+					2122 cell
+						2123 text CVE-2026-3184
+					2124 cell
+						2125 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				2126 row
+					2127 cell
+						2128 text MEDIUM
+					2129 cell
+						2130 text perl-base
+					2131 cell
+						2132 text 5.40.1-6+deb13u1
+					2133 cell
+						2134 text CVE-2026-15534
+					2135 cell
+						2136 link Description: https://avd.aquasec.com/nvd/cve-2026-15534, Value: …
+				2137 row
+					2138 cell
+						2139 text MEDIUM
+					2140 cell
+						2141 text picomatch
+					2142 cell
+						2143 text 4.0.3
+					2144 cell
+						2145 text 4.0.4, 3.0.2, 2.3.2
+					2146 cell
+						2147 text CVE-2026-33672
+					2148 cell
+						2149 link Description: https://avd.aquasec.com/nvd/cve-2026-33672, Value: …
+				2150 row
+					2151 cell
+						2152 text MEDIUM
+					2153 cell
+						2154 text postcss-selector-parser
+					2155 cell
+						2156 text 7.1.1
+					2157 cell
+						2158 text 7.1.6
+					2159 cell
+						2160 text CVE-2026-104844
+					2161 cell
+						2162 link Description: https://avd.aquasec.com/nvd/cve-2026-104844, Value: …
+				2163 row
+					2164 cell
+						2165 text MEDIUM
+					2166 cell
+						2167 text tar
+					2168 cell
+						2169 text 1.35+dfsg-3.1
+					2170 cell
+						2171 text CVE-2026-18477
+					2172 cell
+						2173 link Description: https://avd.aquasec.com/nvd/cve-2026-18477, Value: …
+				2174 row
+					2175 cell
+						2176 text MEDIUM
+					2177 cell
+						2178 text tar
+					2179 cell
+						2180 text 1.35+dfsg-3.1
+					2181 cell
+						2182 text CVE-2026-18508
+					2183 cell
+						2184 link Description: https://avd.aquasec.com/nvd/cve-2026-18508, Value: …
+				2185 row
+					2186 cell
+						2187 text MEDIUM
+					2188 cell
+						2189 text tar
+					2190 cell
+						2191 text 1.35+dfsg-3.1
+					2192 cell
+						2193 text CVE-2026-5704
+					2194 cell
+						2195 link Description: https://avd.aquasec.com/nvd/cve-2026-5704, Value: …
+				2196 row
+					2197 cell
+						2198 text MEDIUM
+					2199 cell
+						2200 text util-linux
+					2201 cell
+						2202 text 2.41.5-0+deb13u1
+					2203 cell
+						2204 text CVE-2026-3184
+					2205 cell
+						2206 link Description: https://avd.aquasec.com/nvd/cve-2026-3184, Value: …
+				2207 row
+					2208 cell
+						2209 text MEDIUM
+					2210 cell
+						2211 text zlib1g
+					2212 cell
+						2213 text 1:1.3.dfsg+really1.3.1-1+b1
+					2214 cell
+						2215 text CVE-2026-27171
+					2216 cell
+						2217 link Description: https://avd.aquasec.com/nvd/cve-2026-27171, Value: …
+				2218 row
+					2219 cell
+						2220 text MEDIUM
+					2221 cell
+						2222 text zlib1g
+					2223 cell
+						2224 text 1:1.3.dfsg+really1.3.1-1+b1
+					2225 cell
+						2226 text CVE-2026-85091
+					2227 cell
+						2228 link Description: https://avd.aquasec.com/nvd/cve-2026-85091, Value: …
+				2229 row
+					2230 cell
+						2231 text UNKNOWN
+					2232 cell
+						2233 text liblzma5
+					2234 cell
+						2235 text 5.8.1-1+deb13u1
+					2236 cell
+						2237 text 5.8.1-1+deb13u2
+					2238 cell
+						2239 text DSA-6549-1
+				2240 row
+					2241 cell
+						2242 text UNKNOWN
+					2243 cell
+						2244 text liblzma5
+					2245 cell
+						2246 text 5.8.1-1+deb13u1
+					2247 cell
+						2248 text 5.8.1-1+deb13u2
+					2249 cell
+						2250 text TEMP-1147318-639065
+					2251 cell
+						2252 link Description: https://security-tracker.debian.org/tracker/TEMP-1147318-639065, Value: …
+				2253 row
+					2254 cell
+						2255 text UNKNOWN
+					2256 cell
+						2257 text perl-base
+					2258 cell
+						2259 text 5.40.1-6+deb13u1
+					2260 cell
+						2261 text CVE-2026-82560
+					2262 cell
+						2263 link Description: https://avd.aquasec.com/nvd/cve-2026-82560, Value: …
+			2264 heading Trivy scanner and vulnerability database metadata, Value: 3
+				2265 text Trivy scanner and vulnerability database metadata
+			2266 container
+				2267 text Version: 0.76.0
+Vulnerability DB:
+  Version: 2
+  UpdatedAt: 2026-10-16 01:13:54.947090392 +0000 UTC
+  NextUpdate: 2026-10-17 01:13:54.947090202 +0000 UTC
+  DownloadedAt: 2026-10-16 20:43:13.50376911 +0000 UTC
+
+				2268 button Copy code to clipboard
+			2269 heading BuildKit cgroup limits, Value: 3
+				2270 text BuildKit cgroup limits
+			2271 content list
+				2272 container
+					2273 AXListMarker • 
+					2274 text memory.max: 8589934592 bytes; memory.swap.max: 0 bytes (Docker memory and memory-swap both capped at 8 GiB total)
+				2275 container
+					2276 AXListMarker • 
+					2277 text cpu.max: 300000 100000; BuildKit OCI worker max-parallelism: 1
+				2278 container
+					2279 AXListMarker • 
+					2280 text Initial memory event and CPU counters captured before build; no retry is configured
+			2281 heading Build result and cgroup counters, Value: 3
+				2282 text Build result and cgroup counters
+			2283 content list
+				2284 container
+					2285 AXListMarker • 
+					2286 text Build interval: 2026-10-16T20:43:26Z to 2026-10-16T20:44:45Z UTC (79 seconds)
+				2287 container
+					2288 AXListMarker • 
+					2289 text Build command exit code: 1
+				2290 container
+					2291 AXListMarker • 
+					2292 text Observed builder counters immediately after build:
+			2293 container
+				2294 text ==memory.max==
+8589934592
+==memory.swap.max==
+0
+==memory.peak==
+7931895808
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==cpu.max==
+300000 100000
+==cpu.stat==
+usage_usec 124062726
+user_usec 101926567
+system_usec 22136159
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 695
+nr_throttled 76
+throttled_usec 5347658
+nr_bursts 0
+burst_usec 0
+
+				2295 button Copy code to clipboard
+			2296 text Base scan gate: CRITICAL=0 HIGH=54 (threshold: zero for both)
+			2297 heading Downloadable evidence bundle, Value: 3
+				2298 text Downloadable evidence bundle
+			2299 content list
+				2300 container
+					2301 AXListMarker • 
+					2302 text Upload status: success
+				2303 container
+					2304 AXListMarker • 
+					2305 text Artifact: 
+					2306 link Description: https://github.com/joserubiobejarano/Ornigami/actions/runs/38964204005/artifacts/12074571185, Value: …
+				2307 container
+					2308 AXListMarker • 
+					2309 text Retention requested: 30 days (subject to repository policy)
+				2310 container
+					2311 AXListMarker • 
+					2312 text The local image archive is excluded; scan JSON and sanitized runtime/resource receipts are retained when produced.
+			2313 heading Disk and Docker usage before cleanup, Value: 3
+				2314 text Disk and Docker usage before cleanup
+			2315 container
+				2316 text Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 68910968832 85966442496      45% /
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          8         1         2.349GB   2.1GB (89%)
+Containers      1         1         9.433kB   0B (0%)
+Local Volumes   1         1         3.318GB   0B (0%)
+Build Cache     0         0         0B        0B
+51781189	/home/runner/work/_temp/source
+1629495448	/home/runner/work/_temp/trivy-cache
+
+				2317 button Copy code to clipboard
+			2318 heading Final builder cgroup counters before cleanup, Value: 3
+				2319 text Final builder cgroup counters before cleanup
+			2320 container
+				2321 text ==memory.max==
+8589934592
+==memory.swap.max==
+0
+==memory.peak==
+7931895808
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==cpu.max==
+300000 100000
+==cpu.stat==
+usage_usec 124080591
+user_usec 101936003
+system_usec 22144587
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 704
+nr_throttled 76
+throttled_usec 5347658
+nr_bursts 0
+burst_usec 0
+
+				2322 button Copy code to clipboard
+			2323 heading Disk after cleanup, Value: 3
+				2324 text Disk after cleanup
+			2325 container
+				2326 text Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 65281380352 89596030976      43% /
+
+				2327 button Copy code to clipboard
+			2328 link Description: Job summary generated at run-time, Value: …
+		2329 container Annotations
