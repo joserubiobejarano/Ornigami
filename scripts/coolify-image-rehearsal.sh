@@ -47,7 +47,7 @@ if (( mem_available_mib < 2560 )); then
 fi
 cpu_count=$(getconf _NPROCESSORS_ONLN)
 load_1m=$(awk '{print $1}' /proc/loadavg)
-if ! awk -v load="$load_1m" -v cpus="$cpu_count" 'BEGIN { exit !(load < cpus * 0.75) }'; then
+if ! awk -v host_load="$load_1m" -v cpus="$cpu_count" 'BEGIN { exit !(host_load < cpus * 0.75) }'; then
   printf 'Refusing rehearsal: 1-minute host load %s is too high for %s online CPUs.\n' "$load_1m" "$cpu_count" >&2
   exit 1
 fi
