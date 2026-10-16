@@ -1,5 +1,7 @@
 # Coolify preparation — 16 October 2026
 
+The [external build approval packet](../../docs/handoffs/ornigami-coolify-20261016/RUN_APPROVAL.md) describes the preparation-branch-only Linux image workflow. Installing it in Git does not grant deployment, scheduler, provider or GHCR publication permission.
+
 This profile replaces the installation steps in the [VPS reference](../vps/README.md) for the existing shared Contabo host. Its runtime, permission, retention, lease, schema and recovery contracts remain binding. This is preparation, not permission to deploy, enable autodeploy, register providers or open public traffic. See the [task handoff](../../docs/handoffs/ornigami-coolify-20261016/HANDOFF.md) for dated evidence and unresolved gates.
 
 Use existing Ornigami project `vqkyv5dpjpjazuknkgyunioi`, fictional-staging environment `d9ixeysd9tajcavvibltt3is`. Do not create duplicate projects/environments. Authenticated browser inspection confirmed zero resources. Dashboard access is the owner's private localhost SSH tunnel; it is not an application origin. Coolify 4.4.6, its Docker supervisor and its existing Traefik v3.7 own ingress and process supervision. Install neither Caddy nor the old app/systemd units. No shared settings are changed by these files.
