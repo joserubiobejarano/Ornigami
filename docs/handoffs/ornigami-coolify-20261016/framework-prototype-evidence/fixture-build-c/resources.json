@@ -1,0 +1,17 @@
+{
+  "startedAtUtc": "2026-10-16T19:48:47.4484097Z",
+  "endedAtUtc": "2026-10-16T19:49:03.5738126Z",
+  "initialFreeBytes": 12176601088,
+  "minimumFreeBytes": 11733381120,
+  "memoryLimitBytes": 6442450944.0,
+  "peakJobCommittedBytes": 598339584,
+  "cpuLimitCores": 3,
+  "nodeHeapMiB": 4096,
+  "wallLimitSeconds": 1200,
+  "durationSeconds": 16.1254149,
+  "diskGrowthLimitBytes": 21474836480,
+  "observedSystemDiskGrowthPeakBytes": 122925056,
+  "exitCode": 0,
+  "stopReason": null,
+  "oomCounters": "Linux cgroup OOM counters unavailable on Windows; hard job commit limit enforced. Nonzero exits require log review, not a zero-OOM claim."
+}

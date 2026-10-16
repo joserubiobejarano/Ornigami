@@ -1,0 +1,120 @@
+import { webpack, sources } from 'next/dist/compiled/webpack/webpack'
+import crypto from 'crypto'
+import { SUBRESOURCE_INTEGRITY_MANIFEST } from '../../../shared/lib/constants'
+
+const PLUGIN_NAME = 'SubresourceIntegrityPlugin'
+export type SubresourceIntegrityAlgorithm = 'sha256' | 'sha384' | 'sha512'
+
+/** Experimental app-owned repair; not an upstream Next distribution. */
+export class SubresourceIntegrityPlugin {
+  constructor(private readonly algorithm: SubresourceIntegrityAlgorithm) {}
+
+  public apply(compiler: webpack.Compiler) {
+    const digest = (bytes: string | Buffer) =>
+      `${this.algorithm}-${crypto.createHash(this.algorithm).update(bytes).digest('base64')}`
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      if (compilation.outputOptions.chunkLoading !== 'jsonp') {
+        throw new Error('SRI: prototype supports only webpack JSONP browser loading')
+      }
+      if (!compiler.options.optimization.realContentHash) {
+        throw new Error('SRI: realContentHash is required')
+      }
+      const placeholders = new Map<string, webpack.Chunk>()
+      const tracked = new Set<string>()
+      const { RuntimeModule, RuntimeGlobals } = compiler.webpack
+      class IntegrityLoader extends RuntimeModule {
+        constructor() { super('ornigami SRI loader', RuntimeModule.STAGE_ATTACH + 1) }
+        generate() {
+          const table: Record<string, string> = {}
+          for (const chunk of compilation.chunks) {
+            if (chunk.hasRuntime() || chunk.id === null) continue
+            const length = digest('').length
+            const placeholder = ('ORNIGAMI_SRI_' + digest(String(chunk.id))).slice(0, length)
+            placeholders.set(placeholder, chunk)
+            table[String(chunk.id)] = placeholder
+          }
+          return [
+            `var ornigamiBootstrap = typeof document !== 'undefined' && document.currentScript;`,
+            `if (!${RuntimeGlobals.scriptNonce} && ornigamiBootstrap && ornigamiBootstrap.nonce) ${RuntimeGlobals.scriptNonce} = ornigamiBootstrap.nonce;`,
+            `var ornigamiSri = ${JSON.stringify(table)};`,
+            `var ornigamiLoad = ${RuntimeGlobals.loadScript};`,
+            `${RuntimeGlobals.loadScript} = function(url, done, key, chunkId) {`,
+            `var integrity = ornigamiSri[chunkId];`,
+            `if (!integrity || !/^sha(?:256|384|512)-[A-Za-z0-9+/]+=*$/.test(integrity)) throw new Error('SRI: missing chunk integrity');`,
+            `return ornigamiLoad(url, done, key, chunkId);`,
+            `};`,
+            `${RuntimeGlobals.require}.ornigamiSri = ornigamiSri;`,
+          ].join('\n')
+        }
+      }
+      // webpack 5 compatibility hook delegates to this compiler's actual
+      // LoadScriptRuntimeModule createScript hook; set SRI before appendChild.
+      compilation.mainTemplate.hooks.jsonpScript.tap(PLUGIN_NAME, (source) =>
+        source + '\nscript.integrity = __webpack_require__.ornigamiSri[chunkId];\n' +
+        `script.crossOrigin = ${JSON.stringify(compilation.outputOptions.crossOriginLoading || 'anonymous')};\n`
+      )
+      const attached = new Set<webpack.Chunk>()
+      compilation.hooks.runtimeRequirementInTree.for(RuntimeGlobals.loadScript).tap(PLUGIN_NAME, (chunk) => {
+        if (!attached.has(chunk)) {
+          attached.add(chunk)
+          compilation.addRuntimeModule(chunk, new IntegrityLoader())
+        }
+      })
+      // Resolve fixed-width placeholders after minimization. Register SRI as
+      // content hashes so RealContentHash repairs references after renaming.
+      // The same phase boundary is used by webpack-subresource-integrity.
+      compilation.hooks.processAssets.tap(
+        { name: PLUGIN_NAME, stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE },
+        () => {
+          const replacements = new Map<string, string>()
+          for (const [placeholder, chunk] of placeholders) {
+            const files = [...chunk.files].filter((name) => /\.js$/.test(name))
+            if (!files.length) continue // CSS-only chunks never invoke JS loader.
+            if (files.length !== 1) throw new Error('SRI: ambiguous JavaScript chunk')
+            const asset = compilation.getAsset(files[0])
+            if (!asset) throw new Error('SRI: missing chunk asset')
+            replacements.set(placeholder, digest(asset.source.buffer()))
+          }
+          for (const asset of compilation.getAssets()) {
+            if (!/\.js$/.test(asset.name)) continue
+            const original = asset.source.source().toString()
+            const updated = new sources.ReplaceSource(asset.source)
+            for (const [placeholder, integrity] of replacements) {
+              let offset = original.indexOf(placeholder)
+              while (offset !== -1) {
+                updated.replace(offset, offset + placeholder.length - 1, integrity)
+                offset = original.indexOf(placeholder, offset + placeholder.length)
+              }
+            }
+            const integrity = digest(updated.buffer())
+            tracked.add(integrity)
+            compilation.updateAsset(asset.name, updated, (info) => ({
+              ...info,
+              contenthash: [...new Set([...(Array.isArray(info.contenthash) ? info.contenthash : info.contenthash ? [info.contenthash] : []), integrity])],
+            }))
+          }
+        }
+      )
+      compiler.webpack.optimize.RealContentHashPlugin.getCompilationHooks(compilation).updateHash.tap(PLUGIN_NAME, (input, oldHash) => {
+        if (!tracked.has(oldHash)) return undefined
+        if (!input[0]) throw new Error('SRI: missing real content hash bytes')
+        const integrity = digest(input[0])
+        tracked.add(integrity)
+        return integrity
+      })
+      compilation.hooks.afterProcessAssets.tap(PLUGIN_NAME, () => {
+        const hashes: Record<string, string> = {}
+        for (const asset of compilation.getAssets()) {
+          if (/\.js$/.test(asset.name) && asset.source.source().toString().includes('ORNIGAMI_SRI_')) {
+            throw new Error(`SRI: unresolved placeholder in ${asset.name}`)
+          }
+          hashes[asset.name] = digest(asset.source.buffer())
+        }
+        const json = JSON.stringify(hashes, null, 2)
+        const file = 'server/' + SUBRESOURCE_INTEGRITY_MANIFEST
+        compilation.emitAsset(file + '.js', new sources.RawSource(`self.__SUBRESOURCE_INTEGRITY_MANIFEST=${JSON.stringify(json)}`))
+        compilation.emitAsset(file + '.json', new sources.RawSource(json))
+      })
+    })
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "checks": [
+    {
+      "name": "production-http-sri-and-csp",
+      "state": "failed",
+      "assertion": "All script SRI digests must match on /\n+ actual - expected\n\n+ [\n+   {\n+     issue: 'missing-integrity',\n+     src: '/_next/static/chunks/app/global-error-a5a41b72f2d386b5.js',\n+     tagIndex: 3\n+   },\n+   {\n+     issue: 'missing-integrity',\n+     src: '/_next/static/chunks/app/error-3c97918790728c20.js',\n+     tagIndex: 4\n+   },\n+   {\n+     issue: 'missing-integrity',\n+     src: '/_next/static/chunks/app/page-53aaa183f22a39de.js',\n+     tagIndex: 5\n+   }\n+ ]\n- []\n",
+      "stack": "AssertionError [ERR_ASSERTION]: All script SRI digests must match on /\n+ actual - expected\n\n+ [\n+   {\n+     issue: 'missing-integrity',\n+     src: '/_next/static/chunks/app/global-error-a5a41b72f2d386b5.js',\n+     tagIndex: 3\n+   },\n+   {\n+     issue: 'missing-integrity',\n+     src: '/_next/static/chunks/app/error-3c97918790728c20.js',\n+     tagIndex: 4\n+   },\n+   {\n+     issue: 'missing-integrity',\n+     src: '/_next/static/chunks/app/page-53aaa183f22a39de.js',\n+     tagIndex: 5\n+   }\n+ ]\n- []\n\n    at file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:74:14\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async check (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:17:26)\n    at async file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:61:3"
+    },
+    {
+      "name": "valid-hydration-late-loading-and-navigation",
+      "state": "failed",
+      "assertion": "Nonce retained before append",
+      "stack": "AssertionError [ERR_ASSERTION]: Nonce retained before append\n    at file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:97:16\n    at async check (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:17:26)\n    at async file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:85:3"
+    },
+    {
+      "name": "corrupted-bootstrap-rejected",
+      "state": "passed",
+      "evidence": {
+        "target": "/_next/static/chunks/webpack-301595d1e78fcfbf.js",
+        "intercepted": 1,
+        "status": 200,
+        "corruptionMarkerExecuted": false
+      }
+    },
+    {
+      "name": "corrupted-asynchronous-chunk-rejected",
+      "state": "failed",
+      "assertion": "Valid late-load case must identify exact asset first",
+      "stack": "AssertionError [ERR_ASSERTION]: Valid late-load case must identify exact asset first\n    at file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:129:12\n    at check (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:17:32)\n    at file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:128:9"
+    },
+    {
+      "name": "missing-and-malformed-manifest-entry-fail-closed",
+      "state": "passed",
+      "evidence": {
+        "missingEntryRejected": true,
+        "malformedEntryRejected": true
+      }
+    },
+    {
+      "name": "production-missing-manifest-fail-closed",
+      "state": "failed",
+      "assertion": "Production server readiness timeout",
+      "stack": "Error: Production server readiness timeout\n    at start (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:36:9)\n    at async file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:163:7\n    at async check (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:17:26)\n    at async file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/browser-regressions.mjs:157:3"
+    }
+  ],
+  "http": [
+    {
+      "route": "/",
+      "status": 200,
+      "expected": 200,
+      "headers": {
+        "content-security-policy": "default-src 'self'; script-src 'self' 'nonce-YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm' 'strict-dynamic'; style-src 'self' 'nonce-YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "<!DOCTYPE html><html><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\" href=\"/_next/static/chunks/webpack-301595d1e78fcfbf.js\" integrity=\"sha256-UbcorFbullRuUD+W3vOngIDpSzCSFACe0YMccrxo5Oc=\" crossorigin=\"\"/><script src=\"/_next/static/chunks/4bd1b696-c29fcbad74eaf0af.js\" async=\"\" crossorigin=\"\" integrity=\"sha256-384lHnPB7xGdFWkGkOvwiO+3UU6xoeEcubaF437kmcg=\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script><script src=\"/_next/static/chunks/794-5270bd99ea9ff9c7.js\" async=\"\" crossorigin=\"\" integrity=\"sha256-H/nRjrldETwqa/qjSTTTKARMY588hDdIN878Cn20qQo=\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script><script src=\"/_next/static/chunks/main-app-076228b92cb9224e.js\" async=\"\" crossorigin=\"\" integrity=\"sha256-ufllhIfl7ADSVVbfwFnRP16fzD4/QWKMzh4ljA7vnhs=\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script><script src=\"/_next/static/chunks/app/global-error-a5a41b72f2d386b5.js\" async=\"\" crossorigin=\"\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script><script src=\"/_next/static/chunks/app/error-3c97918790728c20.js\" async=\"\" crossorigin=\"\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script><script src=\"/_next/static/chunks/app/page-53aaa183f22a39de.js\" async=\"\" crossorigin=\"\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script><script src=\"/_next/static/chunks/polyfills-42372ed130431b0a.js\" integrity=\"sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=\" crossorigin=\"anonymous\" noModule=\"\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\"></script></head><body><div hidden=\"\"><!--$--><!--/$--></div><!--$--><main><p>Fictional SRI fixture</p><button>Load late chunk</button><output id=\"late-result\">idle</output><a href=\"/other\">Other route</a></main><!--$--><!--/$--><!--/$--><script src=\"/_next/static/chunks/webpack-301595d1e78fcfbf.js\" nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\" integrity=\"sha256-UbcorFbullRuUD+W3vOngIDpSzCSFACe0YMccrxo5Oc=\" crossorigin=\"\" id=\"_R_\" async=\"\"></script><script nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\">(self.__next_f=self.__next_f||[]).push([0])</script><script nonce=\"YWE0YTZkY2QtMGVlYy00YTQwLTk0ZjktNTdlYjlhMzkyYzZm\">self.__next_f.push([1,\"1:\\\"LoadingBoundaryProvider\\\"\\n2:I[7121,[],\\\"$1\\\"]\\n3:\\\"$Sreact.fragment\\\"\\n7:I[484,[],\\\"OutletBoundary\\\"]\\n8:\\\"$Sreact.suspense\\\"\\na:\\\"ViewportBoundary\\\"\\nb:I[484,[],\\\"$a\\\"]\\nd:\\\"MetadataBoundary\\\"\\ne:I[484,[],\\\"$d\\\"]\\n10:\\\"static/chunks/app/global-error-a5a41b72f2d386b5.js\\\"\\n11:I[3986,[\\\"219\\\",\\\"$10\\\"],\\\"default\\\"]\\n5:[[\\\"children\\\",{\\\"s\\\":\\\"__PAGE__\\\",\\\"d\\\":{\\\"r\\\":[\\\"$\\\",\\\"$3\\\",\\\"c\\\",{\\\"children\\\":[\\\"$L6\\\",null,[\\\"$\\\",\\\"$L7\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$8\\\",null,{\\\"name\\\":\\\"Next.MetadataOutlet\\\",\\\"children\\\":\\\"$@9\\\"}]}]]}],\\\"p\\\":false,\\\"v\\\":null}}]]\\n0:{\\\"P\\\":null,\\\"c\\\":[\\\"\\\",\\\"\\\"],\\\"q\\\":\\\"\\\",\\\"i\\\":false,\\\"t\\\":{\\\"t\\\":{\\\"s\\\":\\\"\\\",\\\"h\\\":20,\\\"d\\\":{\\\"r\\\":[\\\"$\\\",\\\"$L2\\\",null,{\\\"loading\\\":[[\\\"$\\\",\\\"p\\\",\\\"l\\\",{\\\"children\\\":\\\"Fictional loading boundary\\\"}],[],null],\\\"children\\\":[\\\"$\\\",\\\"$3\\\",\\\"c\\\",{\\\"children\\\":[null,\\\"$L4\\\"]}]}],\\\"p\\\":false,\\\"v\\\":null},\\\"c\\\":\\\"$Q5\\\"},\\\"h\\\":{\\\"r\\\":[\\\"$\\\",\\\"$3\\\",\\\"h\\\",{\\\"children\\\":[null,[\\\"$\\\",\\\"$Lb\\\",null,{\\\"children\\\":\\\"$Lc\\\"}],[\\\"$\\\",\\\"$Le\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"div\\\",null,{\\\"hidden\\\":true,\\\"children\\\":[\\\"$\\\",\\\"$8\\\",null,{\\\"name\\\":\\\"Next.Metadata\\\",\\\"children\\\":\\\"$Lf\\\"}]}],null]}],null]}],\\\"p\\\":false,\\\"v\\\":null}},\\\"m\\\":\\\"$undefined\\\",\\\"G\\\":[\\\"$11\\\",[]],\\\"S\\\":false,\\\"r\\\":\\\"$undefined\\\",\\\"s\\\":\\\"$undefined\\\",\\\"a\\\":\\\"$undefined\\\",\\\"l\\\":\\\"$undefined\\\",\\\"p\\\":\\\"$undefined\\\",\\\"d\\\":\\\"$undefined\\\",\\\"b\\\":\\\"v75mXk_nKOO_Y37CsdYe4\\\"}\\n12:I[7121,[],\\\"\\\"]\\n13:\\\"static/chunks/app/error-3c97918790728c20.js\\\"\\n14:I[7756,[\\\"39\\\",\\\"$13\\\"],\\\"default\\\"]\\n15:I[4581,[],\\\"\\\"]\\n16:\\\"static/chunks/app/page-53aaa183f22a39de.js\\\"\\n17:I[4624,[\\\"974\\\",\\\"$16\\\"],\\\"default\\\"]\\n18:I[8500,[\\\"974\\\",\\\"$16\\\"],\\\"\\\"]\\n4:[\\\"$\\\",\\\"html\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"body\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$L12\\\",null,{\\\"parallelRouterKey\\\":\\\"children\\\",\\\"error\\\":\\\"$14\\\",\\\"errorStyles\\\":[],\\\"errorScripts\\\":null,\\\"template\\\":[\\\"$\\\",\\\"$L15\\\",null,{}],\\\"templateStyles\\\":\\\"$undefined\\\",\\\"templateScripts\\\":\\\"$undefined\\\",\\\"notFound\\\":[[\\\"$\\\",\\\"p\\\",null,{\\\"children\\\":\\\"Fictional not found\\\"}],[]],\\\"forbidden\\\":\\\"$undefined\\\",\\\"unauthorized\\\":\\\"$undefined\\\"}]}]}]\\n6:[\\\"$\\\",\\\"main\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"p\\\",null,{\\\"children\\\":\\\"Fictional SRI fixture\\\"}],[\\\"$\\\",\\\"$L17\\\",null,{}],[\\\"$\\\",\\\"$L18\\\",null,{\\\"href\\\":\\\"/other\\\",\\\"prefetch\\\":false,\\\"children\\\":\\\"Other route\\\"}]]}]\\nc:[[\\\"$\\\",\\\"meta\\\",\\\"0\\\",{\\\"charSet\\\":\\\"utf-8\\\"}],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"viewport\\\",\\\"content\\\":\\\"width=device-width, initial-scale=1\\\"}]]\\n9:null\\nf:[]\\n\"])</script></body></html>",
+      "coverage": {
+        "totalScriptTags": 10,
+        "sameOriginCount": 8,
+        "externalCount": 0,
+        "issues": [
+          {
+            "tagIndex": 3,
+            "src": "/_next/static/chunks/app/global-error-a5a41b72f2d386b5.js",
+            "issue": "missing-integrity"
+          },
+          {
+            "tagIndex": 4,
+            "src": "/_next/static/chunks/app/error-3c97918790728c20.js",
+            "issue": "missing-integrity"
+          },
+          {
+            "tagIndex": 5,
+            "src": "/_next/static/chunks/app/page-53aaa183f22a39de.js",
+            "issue": "missing-integrity"
+          }
+        ]
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to find a valid digest in the 'integrity' attribute for resource 'http://127.0.0.1:63217/_next/static/chunks/webpack-301595d1e78fcfbf.js' with computed SHA-256 integrity 'BL3iAoclLLRou702x+BGpx8N210eVOWuW1gkatABukI='. The resource has been blocked."
+    }
+  ],
+  "insertion": [],
+  "forbiddenRequests": [],
+  "cleanup": false,
+  "browserVersion": "155.0.8059.84",
+  "serverExitCode": null
+}

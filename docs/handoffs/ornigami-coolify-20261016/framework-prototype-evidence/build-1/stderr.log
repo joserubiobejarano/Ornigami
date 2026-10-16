@@ -1,0 +1,17 @@
+node:internal/modules/cjs/loader:1430
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module 'taskr/bin/taskr'
+Require stack:
+- C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\package.json
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at Function.resolve (node:internal/modules/helpers:157:19)
+    at file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/scripts/framework-prototype/build-package.mjs:38:66 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\joser\\Desktop\\Projects\\Ornigami-coolify-prep-20261016\\.local\\framework-prototype\\upstream\\package.json'
+  ]
+}
+
+Node.js v22.23.3

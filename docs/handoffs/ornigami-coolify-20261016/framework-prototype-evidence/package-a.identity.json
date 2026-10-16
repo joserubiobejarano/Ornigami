@@ -1,0 +1,17 @@
+{
+  "distribution": "ornigami-sri.1-experiment",
+  "internalVersion": "16.4.2",
+  "upstreamCommit": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "officialPackageSha256": "44ad2c420d30f7d1a8e4c511759c57eb40ccbbc36213a1bf32b1698bcebd3a1d",
+  "upstreamLockSha256": "69dfbd54a513cdcd94aca9ea0c83f7ba3803518372b90184a7d6a3b7103621c6",
+  "patchSha256": "5cfe25e12c624fe5767681843d965a2d9fc0f8b405072da941c28b5f1a06e50c",
+  "node": "v22.23.3",
+  "platform": "win32",
+  "arch": "x64",
+  "buildMode": "Official verified package seed; source TS server/build outputs and four production App Router bundles rebuilt serially. Unchanged assets and declarations retained.",
+  "adopted": false,
+  "maintenanceOwners": "unassigned",
+  "bytes": 44313172,
+  "sha256": "6f5ffcd8b97024a5cb5cb274d22df697e3f91a7a53dae958a83cc1e75c0d0cd5",
+  "integrity": "sha512-qoi5iKlc2NSKyGN0y1eCqeXuqVUN2uyX392hJ5mvS0NWpJhc4j7a+r2DSftYrVfylW0+XWca1AMG6mvW3g9pjg=="
+}

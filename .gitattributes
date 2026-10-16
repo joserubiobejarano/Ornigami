@@ -11,3 +11,7 @@ docs/handoffs/ornigami-coolify-20261016/external-trial-38938062184/** -text -whi
 docs/handoffs/ornigami-coolify-20261016/local-repair-evidence/** -text -whitespace
 docs/handoffs/ornigami-coolify-20261016/sri-fresh-evidence/** -text -whitespace
 docs/handoffs/ornigami-coolify-20261016/framework-decision-evidence/** -text -whitespace
+scripts/framework-prototype/** text eol=lf
+scripts/framework-prototype/*.patch -text -whitespace
+tests/fixtures/framework-sri/** text eol=lf
+docs/handoffs/ornigami-coolify-20261016/framework-prototype-evidence/** -text -whitespace
