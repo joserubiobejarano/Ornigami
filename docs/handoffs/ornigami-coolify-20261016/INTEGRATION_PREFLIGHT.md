@@ -1,4 +1,21 @@
-# Publication preflight — stopped before first push
+# Publication preflight — integration checks completed
+
+## Current result: cleared for the approved preparation push
+
+16 October 2026, approximately 16:53–16:58 UTC, after owner Netlify sign-in. The account's team switcher shows one team, `joserubiobejarano`. Its unfiltered project inventory lists four projects, and each project's Developer settings → Repository card explicitly states **Current repository: Not linked**:
+
+- `elastic-bartik-99fd7d`
+- `distracted-joliot-36e072`
+- `eloquent-curran-4666ab`
+- `elastic-beaver-e31029`
+
+No Netlify project in this account is linked to Ornigami or any Git repository, so the installed Netlify App has no site to deploy from this branch. The owner states they have no other Netlify account. No site, repository connection, permission, branch rule or provider setting was changed. The four local `netlify-<project>-repository.txt` receipts contain the same rendered card text, each SHA-256 `601e40b839221897e5cc4785321ec068421e590f098ef89ac4628a1ca0058ad5`. The project inventory and team-switcher receipts are retained beside them with account email redacted.
+
+Before publication, GitHub again reports public visibility and `main` as default, zero repository webhooks and zero Actions runs on the preparation branch; remote branch is absent. Executable candidate/workflow/lock/Vercel guard are unchanged from the approved SHA. Vercel's live project still points to `joserubiobejarano/Ornigami`, production branch `main`; the candidate blocks this exact preparation branch. Authenticated GitHub inventory identified only the three Apps recorded below; no deployment-capable App remains unidentified.
+
+The private dashboard tunnel had closed. A local `ssh -N` forwarding process using the existing protected configuration restored only `127.0.0.1:18000` access; **no remote shell command** or host configuration/build operation ran. A stale failed browser tab initially retained its connection error; a fresh tab loaded the restored dashboard successfully. Read-only Coolify project/environment views again report zero Ornigami resources. The refreshed AX receipt is `coolify-refreshed-before-publication.txt`. No app exists there to autodeploy. Shared host/proxy/firewall and other projects were not changed.
+
+The owner’s existing conditional approval can now be exercised: publish the preparation branch without a marker, verify no build/deployment started, refresh checks as needed, then push exactly one request-only commit for candidate `51673d76bd407f69fa1a437f1b52587f0a888cfa`. No new approval is required for those already-approved steps. The sections below preserve the earlier access failures and their resolution; they are historical, not current blockers.
 
 Initial check 16 October 2026, approximately 16:41–16:45 UTC; resumed after owner GitHub sign-in at approximately 16:49–16:52 UTC. The owner approved branch publication and one request-only trial for candidate `51673d76bd407f69fa1a437f1b52587f0a888cfa`, conditional on checking deployment integrations before either push. That approval persists. It has **not been exercised**: the App inventory is now checked, but newly discovered Netlify deployment behavior remains unverified.
 
@@ -57,6 +74,6 @@ Raw AX text and a Coolify screenshot are retained in ignored `.local/coolify-pre
 
 ## Resume without repeating approval
 
-The missing dependency is authenticated read access to the owner's existing Netlify account. Verify whether any site is linked to `joserubiobejarano/Ornigami`, including its branch-deploy, production-branch and preview behavior. Confirm no site can deploy this preparation branch. Do not grant broader access, regenerate tokens or modify shared settings to bypass this check. If another external watcher is identified, verify its branch exclusion before publication; otherwise stop with its specific uncertainty.
+The previously missing Netlify access is resolved by the current result above. Do not grant broader access, regenerate tokens or modify shared settings to bypass any new uncertainty. If another external watcher is identified, verify its branch exclusion before publication; otherwise stop with its specific uncertainty.
 
 Once that condition is satisfied, refresh the read-only integration checks immediately before publishing; execute the already-approved [publication/run procedure](./RUN_APPROVAL.md) without requesting the same approval again. The candidate remains unchanged. After the first push, verify no build/deployment started before creating the single request-only commit. Capture the one trial's summaries/logs while available, including failures; do not retry, increase limits or publish an image. There are no new build, scan, HTTP, restart/cache, memory or disk results in this preflight because the trial has not started. Original failed-build evidence and all outstanding advisory/release gates remain unchanged.
