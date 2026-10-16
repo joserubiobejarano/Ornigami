@@ -1,0 +1,56 @@
+{
+  "candidate": "25b536d833bf99b02d87b807ac17fdf9d53e5575",
+  "branch": "codex/ornigami-capture-remediation-20261017",
+  "parent": "496b57d147bc2a63182e3489583bb3532d28cfc2",
+  "files": [
+    {
+      "path": ".github/workflows/ornigami-image-rehearsal.yml",
+      "bytes": 59305,
+      "sha256": "b8b0c5b391f5509ff591f0b2d7ccf30ba6f00f7dbe0df98e938f486fb052322b",
+      "gitBlob": "dfcc1ad6cc7a166c4dc629c1876f048608520a1f"
+    },
+    {
+      "path": "scripts/framework-prototype/README.md",
+      "bytes": 7053,
+      "sha256": "ce5f89b2f57f07cb5499560976d22d71022d159b0f2888bc799ce9ba7d76e4ea",
+      "gitBlob": "935de563c69626d822f7ca48de611f9afc59db59"
+    },
+    {
+      "path": "scripts/framework-prototype/STAGE_SCANNING.md",
+      "bytes": 5590,
+      "sha256": "8a68822be4bf70ae9cf864394c1bf330e38c30d1b4fabceb4a1bdc6d4914158f",
+      "gitBlob": "dd68ba6a478ff1d4cff90bd0e1909c4f727ea68d"
+    },
+    {
+      "path": "scripts/framework-prototype/bounded-local.ps1",
+      "bytes": 6905,
+      "sha256": "066752cee5c6928ca6de89830f55f21cf5fc025ed0530e4b4fd3f0ba0f0ee70a",
+      "gitBlob": "4f3c42dd226e76925d3ef73058446e39c6bc08cb"
+    },
+    {
+      "path": "scripts/framework-prototype/scan-image-stages.mjs",
+      "bytes": 8037,
+      "sha256": "a3846152ece9267f02a92fa3aa07a1bc0fcf2d8f0d3816f7b4ae015a97be6863",
+      "gitBlob": "1b4c6d44a4eb788c990776210b476549eea302ae"
+    },
+    {
+      "path": "tests/coolify-rehearsal-workflow.test.mjs",
+      "bytes": 27363,
+      "sha256": "50f9cdf2956f7785c8144e62cca3579646ae913211c08fa5477f90150d51a5b6",
+      "gitBlob": "ccd4bc6320ca239ff103e18e5ddaeef157f9237f"
+    },
+    {
+      "path": "tests/tooling-stage-scan.test.mjs",
+      "bytes": 7850,
+      "sha256": "6972170ca19b6839c0b22256149fb5671b86af4a7e6859da08313158e0a05ba8",
+      "gitBlob": "8f1307aff2467f6e0683d45f696f92352012280d"
+    }
+  ],
+  "unchangedApplicationLockSha256": "060925fca2813f36357b6ce2459485b0367e33be848ffc253977aca96dbbb350",
+  "unchangedFrameworkPatchSha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+  "unchangedFrameworkPackageSha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+  "officialUpstream": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "originalLinuxFunctionalSource": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+  "requestMarker": "unchanged; still requests historical a069, not this local candidate",
+  "realImageScans": "none; all new base/tooling image results untested"
+}

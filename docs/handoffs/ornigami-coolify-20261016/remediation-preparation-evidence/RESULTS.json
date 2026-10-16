@@ -1,0 +1,46 @@
+{
+  "candidate": "25b536d833bf99b02d87b807ac17fdf9d53e5575",
+  "localTests": 40,
+  "localPassing": 40,
+  "localFailing": 0,
+  "localSkipped": 0,
+  "historicalLocalTestFailuresPreserved": 2,
+  "historicalEvidenceHashesVerified": 194,
+  "bashBlocks": 16,
+  "scope": "capture changes and bounded preparation only",
+  "existingLinux": {
+    "run": 38976049055,
+    "source": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+    "functional": "passed, preserved",
+    "baseSecurity": "failed 0 critical/54 high",
+    "finalSecurity": "failed 0 critical/43 high",
+    "artifactSemanticCompleteness": "failed, original unchanged",
+    "supplementalRecovery": "separate preserved summary-derived receipts",
+    "custody": "historical passed, not completeness/security acceptance"
+  },
+  "vendorReview": {
+    "advisories": 8,
+    "affectedPackageRows": 43,
+    "compatibleTrixieFixEstablished": false
+  },
+  "baseProposal": "minimal Debian13/glibc distroless Node22 runtime + debug-nonroot tooling feasibility; no adoption or clean-image claim",
+  "realIntermediateScans": "untested; runnable collector prepared, no images/archives or integrated export driver",
+  "newImage": "none",
+  "resourceEvidence": {
+    "buildPeak": 8589934592,
+    "memoryMaxEvents": 3,
+    "oom": 0,
+    "phaseOfPeak": "unknown: no time series or memory.stat retained"
+  },
+  "closedGates": [
+    "push",
+    "external trial",
+    "registry",
+    "VPS",
+    "deployment",
+    "cron/provider activation",
+    "public release",
+    "production framework adoption"
+  ],
+  "owners": "primary, backup and security-review ownership unaccepted"
+}

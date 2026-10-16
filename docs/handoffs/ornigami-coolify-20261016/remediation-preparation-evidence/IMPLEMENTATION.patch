@@ -1,0 +1,766 @@
+diff --git a/.github/workflows/ornigami-image-rehearsal.yml b/.github/workflows/ornigami-image-rehearsal.yml
+index e323959..dfcc1ad 100644
+--- a/.github/workflows/ornigami-image-rehearsal.yml
++++ b/.github/workflows/ornigami-image-rehearsal.yml
+@@ -22,11 +22,16 @@ jobs:
+     timeout-minutes: 40
+     steps:
+       - name: Initialize evidence bundle
++        id: evidence_initialize
+         shell: bash
+         run: |
+           set -Eeuo pipefail
+           evidence_dir="$RUNNER_TEMP/ornigami-evidence"
++          # GITHUB_STEP_SUMMARY is step-local. Export a stable pre-upload path.
++          ORNIGAMI_JOB_SUMMARY="$RUNNER_TEMP/ornigami-job-summary.md"
++          echo "ORNIGAMI_JOB_SUMMARY=$ORNIGAMI_JOB_SUMMARY" >> "$GITHUB_ENV"
+           install -d -m 700 "$evidence_dir" "$evidence_dir/build" "$evidence_dir/scans" "$evidence_dir/runner" "$evidence_dir/runtime" "$evidence_dir/browser"
++          printf '# Ornigami diagnostic evidence\n\nRun %s / attempt %s; request %s.\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" > "$ORNIGAMI_JOB_SUMMARY"
+           printf '%s\n' 'This artifact contains public rehearsal evidence only. It excludes the local image archive and credentials.' > "$evidence_dir/README.txt"
+           printf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \
+             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"
+@@ -91,7 +96,7 @@ jobs:
+             printf '%s\n' '- Workflow blob: identical at candidate and request commits'
+             printf '%s\n' '- Candidate is an ancestor of the request commit'
+             printf '%s\n' '- Checkout: detached exact candidate; clean before build'
+-          } >> "$GITHUB_STEP_SUMMARY"
++          } >> "$ORNIGAMI_JOB_SUMMARY"
+           {
+             printf 'request_sha=%s\nsource_sha=%s\nexpected_lock_sha256=%s\nsource_lock_sha256=%s\ncheckout_lock_sha256=%s\ncandidate_workflow_blob=%s\nrequest_workflow_blob=%s\n' \
+               "$REQUEST_SHA" "$SOURCE_SHA" "$EXPECTED_LOCK_SHA256" "$source_lock_sha" "$checkout_lock_sha" "$candidate_workflow_blob" "$request_workflow_blob"
+@@ -116,7 +121,7 @@ jobs:
+             printf '%s\n' "- Total memory: ${total_mib} MiB (minimum 14336 MiB)"
+             printf '%s\n' "- Available memory before build: ${available_mib} MiB (minimum 12288 MiB)"
+             printf '%s\n' "- Free runner disk before build: ${free_disk_bytes} bytes (minimum 10737418240)"
+-          } >> "$GITHUB_STEP_SUMMARY"
++          } >> "$ORNIGAMI_JOB_SUMMARY"
+           [[ "$cpu_count" =~ ^[0-9]+$ && "$cpu_count" -ge 4 ]]
+           [[ "$total_mib" =~ ^[0-9]+$ && "$total_mib" -ge 14336 ]]
+           [[ "$available_mib" =~ ^[0-9]+$ && "$available_mib" -ge 12288 ]]
+@@ -142,7 +147,7 @@ jobs:
+             printf '%s\n' '### Scanner verification'
+             printf '%s\n' '- Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:'
+             printf '%s\n' '  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt'
+-          } >> "$GITHUB_STEP_SUMMARY"
++          } >> "$ORNIGAMI_JOB_SUMMARY"
+ 
+       - name: Scan pinned Node base image and record advisory gate
+         id: base_scan
+@@ -174,7 +179,7 @@ jobs:
+           docker save --output "$RUNNER_TEMP/node-base.tar" "$BASE_IMAGE"
+           "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/node-base.tar" \
+             --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/base-trivy.json" --no-progress
+-          python3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_STEP_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'
++          python3 - "$RUNNER_TEMP/base-trivy.json" "$ORNIGAMI_JOB_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'
+           import collections, json, pathlib, sys
+           report = json.loads(pathlib.Path(sys.argv[1]).read_text())
+           expected_image_id = sys.argv[3]
+@@ -232,7 +237,7 @@ jobs:
+             printf '%s\n' '```text'
+             "$RUNNER_TEMP/trivy" --version
+             printf '%s\n' '```'
+-          } >> "$GITHUB_STEP_SUMMARY"
++          } >> "$ORNIGAMI_JOB_SUMMARY"
+           rm -f -- "$RUNNER_TEMP/node-base.tar"
+ 
+       - name: Create bounded serial BuildKit builder
+@@ -282,7 +287,7 @@ jobs:
+             printf '%s\n' '- memory.max: 8589934592 bytes; memory.swap.max: 0 bytes (Docker memory and memory-swap both capped at 8 GiB total)'
+             printf '%s\n' '- cpu.max: 300000 100000; BuildKit OCI worker max-parallelism: 1'
+             printf '%s\n' '- Initial memory event and CPU counters captured before build; no retry is configured'
+-          } >> "$GITHUB_STEP_SUMMARY"
++          } >> "$ORNIGAMI_JOB_SUMMARY"
+ 
+       - name: Build local Linux amd64 image
+         id: image_build
+@@ -346,10 +351,10 @@ jobs:
+               else
+                 printf '%s\n' '- Builder cgroup counters unavailable after build; resource acceptance will fail if an image was produced.'
+               fi
+-            } >> "$GITHUB_STEP_SUMMARY"
++            } >> "$ORNIGAMI_JOB_SUMMARY"
+           else
+             printf '\n### Build result\n\n- Build interval: %s to %s UTC (%s seconds)\n- Build command exit code: %s\n- Builder cgroup counters: unavailable; builder container not running\n' \
+-              "$build_start_utc" "$build_end_utc" "$build_seconds" "$build_rc" >> "$GITHUB_STEP_SUMMARY"
++              "$build_start_utc" "$build_end_utc" "$build_seconds" "$build_rc" >> "$ORNIGAMI_JOB_SUMMARY"
+           fi
+           [[ "$build_rc" -eq 0 ]]
+           image="ornigami:rehearsal-${SOURCE_SHA}"
+@@ -359,7 +364,7 @@ jobs:
+           [[ "$image_revision" == "$SOURCE_SHA" && "$image_platform" == linux/amd64 ]]
+           printf 'image_tag=%s\nimage_id=%s\n' "$image" "$image_id" >> "$GITHUB_OUTPUT"
+           printf '\n### Local image identity\n\n- Image ID: `%s`\n- Platform: `%s`\n- Source revision label: `%s`\n- Image delivery: local runner only; no image publication\n' \
+-            "$image_id" "$image_platform" "$image_revision" >> "$GITHUB_STEP_SUMMARY"
++            "$image_id" "$image_platform" "$image_revision" >> "$ORNIGAMI_JOB_SUMMARY"
+           {
+             printf 'image_id=%s\nimage_platform=%s\nimage_revision=%s\n' "$image_id" "$image_platform" "$image_revision"
+           } > "$ORNIGAMI_EVIDENCE_DIR/image-identity.txt"
+@@ -373,7 +378,7 @@ jobs:
+           runtime_rc=0
+           bash "$RUNNER_TEMP/source/deploy/coolify/linux-runtime-acceptance.sh" "$image" > "$RUNNER_TEMP/runtime-acceptance.log" 2>&1 || runtime_rc=$?
+           printf 'runtime_exit_code=%s\n' "$runtime_rc" >> "$GITHUB_OUTPUT"
+-          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/runtime-acceptance.log"
++          tee -a "$ORNIGAMI_JOB_SUMMARY" < "$RUNNER_TEMP/runtime-acceptance.log"
+           report_path=$(sed -n 's/^report=//p' "$RUNNER_TEMP/runtime-acceptance.log" | tail -n1)
+           if [[ -n "$report_path" && -f "$report_path" ]]; then
+             report_dir=$(dirname "$report_path")
+@@ -381,9 +386,9 @@ jobs:
+             runner_real=$(realpath -e "$RUNNER_TEMP")
+             [[ "$report_real" == "$runner_real"/ornigami-runtime-acceptance-* ]]
+             mkdir -p "$ORNIGAMI_EVIDENCE_DIR/runtime"
+-            for evidence_file in report.txt runtime-http.json failure.json failure-evidence.txt container-logs.txt runtime-final-cgroup.txt runtime-container-cgroup.txt runtime-*-cgroup.txt runtime-disk.txt host-disk-before.txt host-disk-after.txt; do
+-              [[ -f "$report_dir/$evidence_file" ]] || continue
+-              cp -- "$report_dir/$evidence_file" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
++            for evidence_path in "$report_dir"/report.txt "$report_dir"/runtime-http.json "$report_dir"/failure.json "$report_dir"/failure-evidence.txt "$report_dir"/container-logs.txt "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
++              [[ -f "$evidence_path" ]] || continue
++              cp -- "$evidence_path" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
+             done
+             {
+               printf '\n### Runtime acceptance receipt\n\n'
+@@ -395,9 +400,9 @@ jobs:
+                 cat "$metric_file"
+               done
+               printf '%s\n' '```'
+-            } >> "$GITHUB_STEP_SUMMARY"
++            } >> "$ORNIGAMI_JOB_SUMMARY"
+           else
+-            printf '\nRuntime acceptance receipt path unavailable.\n' >> "$GITHUB_STEP_SUMMARY"
++            printf '\nRuntime acceptance receipt path unavailable.\n' >> "$ORNIGAMI_JOB_SUMMARY"
+           fi
+           exit "$runtime_rc"
+ 
+@@ -460,10 +465,10 @@ jobs:
+             printf '%s\n' "- Saved archive SHA-256: \`$archive_sha256\`"
+             printf '%s\n' "- Saved archive bytes: $archive_bytes"
+             printf '%s\n' '- Trivy report ImageID must match the local Docker image ID above'
+-          } >> "$GITHUB_STEP_SUMMARY"
++          } >> "$ORNIGAMI_JOB_SUMMARY"
+           "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/ornigami-image.tar" \
+             --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/trivy.json" --no-progress
+-          python3 - "$RUNNER_TEMP/trivy.json" "$GITHUB_STEP_SUMMARY" "$image_id" <<'PY'
++          python3 - "$RUNNER_TEMP/trivy.json" "$ORNIGAMI_JOB_SUMMARY" "$image_id" <<'PY'
+           import collections, json, pathlib, sys
+           report = json.loads(pathlib.Path(sys.argv[1]).read_text())
+           expected_image_id = sys.argv[3]
+@@ -537,7 +542,7 @@ jobs:
+             exit 1
+           fi
+           set +e
+-          python3 - "$before" "$after" "$GITHUB_STEP_SUMMARY" <<'PY' 2>&1 | tee "$ORNIGAMI_EVIDENCE_DIR/runner/resource-assessment.txt"
++          python3 - "$before" "$after" "$ORNIGAMI_JOB_SUMMARY" <<'PY' 2>&1 | tee "$ORNIGAMI_EVIDENCE_DIR/runner/resource-assessment.txt"
+           import pathlib, re, sys
+           def values(path):
+               text = pathlib.Path(path).read_text()
+@@ -613,7 +618,7 @@ jobs:
+           critical='${{ steps.base_scan.outputs.critical_count }}'
+           high='${{ steps.base_scan.outputs.high_count }}'
+           [[ "$critical" =~ ^[0-9]+$ && "$high" =~ ^[0-9]+$ ]]
+-          printf 'Base scan gate: CRITICAL=%s HIGH=%s (threshold: zero for both)\n' "$critical" "$high" | tee "$ORNIGAMI_EVIDENCE_DIR/base-advisory-gate.txt" >> "$GITHUB_STEP_SUMMARY"
++          printf 'Base scan gate: CRITICAL=%s HIGH=%s (threshold: zero for both)\n' "$critical" "$high" | tee "$ORNIGAMI_EVIDENCE_DIR/base-advisory-gate.txt" >> "$ORNIGAMI_JOB_SUMMARY"
+           [[ "$critical" == 0 && "$high" == 0 ]]
+ 
+       - name: Capture evidence bundle before cleanup
+@@ -640,6 +645,8 @@ jobs:
+           OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
+         run: |
+           set -Eeuo pipefail
++          ORNIGAMI_JOB_SUMMARY=${ORNIGAMI_JOB_SUMMARY:-"$RUNNER_TEMP/ornigami-job-summary.md"}
++          ORNIGAMI_EVIDENCE_DIR=${ORNIGAMI_EVIDENCE_DIR:-"$RUNNER_TEMP/ornigami-evidence"}
+           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner" "$ORNIGAMI_EVIDENCE_DIR/runtime" "$ORNIGAMI_EVIDENCE_DIR/build" "$ORNIGAMI_EVIDENCE_DIR/browser"
+           printf 'builder_name=%s\nbuilder_container_id=%s\nbuilder_state_volume=%s\nimage_tag=%s\nimage_id=%s\n' \
+             "$OWNED_BUILDER_NAME" "$OWNED_BUILDER_CONTAINER_ID" "$OWNED_BUILDER_STATE_VOLUME" "$OWNED_IMAGE_TAG" "$OWNED_IMAGE_ID" \
+@@ -678,6 +685,28 @@ jobs:
+           else
+             printf 'status=not-run\nruntime_step_outcome=skipped\n' > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"
+           fi
++          # Require all independently measured phases after success. A failed/early
++          # runtime keeps available snapshots and exact failure diagnostics; later
++          # phases are explicitly unavailable, never fabricated or called passed.
++          {
++            printf 'runtime_step_outcome=%s\n' "$RUNTIME_OUTCOME"
++            for phase_file in runtime-first-cgroup.txt runtime-after-restart-cgroup.txt runtime-after-recreate-cgroup.txt; do
++              if [[ -s "$ORNIGAMI_EVIDENCE_DIR/runtime/$phase_file" ]]; then
++                printf '%s=collected\n' "$phase_file"
++              else
++                printf '%s=unavailable\n' "$phase_file"
++                if [[ "$RUNTIME_OUTCOME" == success ]]; then runtime_evidence_missing=1; fi
++              fi
++            done
++            if [[ "$RUNTIME_OUTCOME" == failure ]]; then
++              for failure_file in failure.json failure-evidence.txt; do
++                if [[ ! -s "$ORNIGAMI_EVIDENCE_DIR/runtime/$failure_file" ]]; then
++                  printf '%s=missing-required-failure-diagnostic\n' "$failure_file"
++                  runtime_evidence_missing=1
++                fi
++              done
++            fi
++          } > "$ORNIGAMI_EVIDENCE_DIR/runtime/snapshot-status.txt"
+           printf 'workflow_outcome=%s\nworkflow_exit_code=%s\n' "${FRAMEWORK_BROWSER_OUTCOME:-unknown}" "${FRAMEWORK_BROWSER_EXIT_CODE:-}" > "$ORNIGAMI_EVIDENCE_DIR/browser/workflow-status.txt"
+           if [[ -x "$RUNNER_TEMP/trivy" ]]; then
+             "$RUNNER_TEMP/trivy" --version > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt" 2>&1 || printf '%s\n' 'Trivy version metadata unavailable.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"
+@@ -695,7 +724,19 @@ jobs:
+               if ! timeout 15s du -sb "$path"; then printf 'size unavailable: %s\n' "$(basename "$path")"; fi
+             done
+           } > "$ORNIGAMI_EVIDENCE_DIR/runner/pre-cleanup-usage.txt" 2>&1
+-          cp -- "$GITHUB_STEP_SUMMARY" "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
++          summary_evidence_missing=0
++          if [[ -s "$ORNIGAMI_JOB_SUMMARY" ]]; then
++            cp -- "$ORNIGAMI_JOB_SUMMARY" "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
++            printf 'status=collected\nsource=persistent-job-summary\n' > "$ORNIGAMI_EVIDENCE_DIR/summary-status.txt"
++          else
++            summary_evidence_missing=1
++            printf '# Incomplete evidence capture\n\nPersistent pre-upload job summary was missing or empty. Runtime outcome: %s; build outcome: %s. Capture failed; this fallback is not recovered phase evidence.\n' "$RUNTIME_OUTCOME" "$IMAGE_BUILD_OUTCOME" > "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
++            printf 'status=missing-or-empty\nfallback=diagnostic-only\n' > "$ORNIGAMI_EVIDENCE_DIR/summary-status.txt"
++          fi
++          [[ -s "$ORNIGAMI_EVIDENCE_DIR/step-summary.md" ]]
++          cat "$ORNIGAMI_EVIDENCE_DIR/step-summary.md" >> "$GITHUB_STEP_SUMMARY"
++          export CAPTURE_COMPLETENESS=passed
++          if [[ "$runtime_evidence_missing" -eq 1 || "$summary_evidence_missing" -eq 1 ]]; then export CAPTURE_COMPLETENESS=failed; fi
+           python3 - "$ORNIGAMI_EVIDENCE_DIR" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" "${SOURCE_SHA:-}" "${EXPECTED_LOCK_SHA256:-}" "$ADMISSION_OUTCOME" "$RUNNER_PREFLIGHT_OUTCOME" "$BASE_SCAN_OUTCOME" "$IMAGE_BUILD_OUTCOME" "$IMAGE_BUILD_EXIT_CODE" "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" "$FINAL_SCAN_OUTCOME" "$RESOURCE_OUTCOME" "$BASE_GATE_OUTCOME" <<'PY'
+           import hashlib, json, pathlib, sys
+           root = pathlib.Path(sys.argv[1])
+@@ -704,13 +745,17 @@ jobs:
+           metadata["framework_browser_outcome"] = __import__("os").environ.get("FRAMEWORK_BROWSER_OUTCOME", "unknown")
+           metadata["framework_browser_exit_code"] = __import__("os").environ.get("FRAMEWORK_BROWSER_EXIT_CODE", "")
+           metadata["runtime_evidence_status"] = (root / "runtime/runtime-evidence-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
++          metadata["summary_evidence_status"] = (root / "summary-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
++          metadata["runtime_snapshot_status"] = (root / "runtime/snapshot-status.txt").read_text(encoding="utf-8").splitlines()
++          metadata["capture_completeness_status"] = __import__("os").environ["CAPTURE_COMPLETENESS"]
++          metadata["custody_status"] = "not-assessed-by-capture"
+           files = []
+           for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):
+               files.append({"path": path.relative_to(root).as_posix(), "bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+           (root / "manifest.json").write_text(json.dumps({"schema": 1, **metadata, "files": files}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+           PY
+-          if [[ "$runtime_evidence_missing" -eq 1 ]]; then
+-            printf '%s\n' 'Runtime acceptance ran but its structured sanitized HTTP evidence was missing; evidence collection failed.' >&2
++          if [[ "$runtime_evidence_missing" -eq 1 || "$summary_evidence_missing" -eq 1 ]]; then
++            printf '%s\n' 'Required runtime receipts, successful phase snapshots or persistent summary were missing; evidence collection failed. Manifest retained; custody is independent.' >&2
+             exit 1
+           fi
+ 
+diff --git a/scripts/framework-prototype/README.md b/scripts/framework-prototype/README.md
+index 1a709b3..935de56 100644
+--- a/scripts/framework-prototype/README.md
++++ b/scripts/framework-prototype/README.md
+@@ -1,5 +1,14 @@
+ # Isolated Next SRI experiment
+ 
++Current local capture-remediation branch: qualified runtime snapshot copies,
++persistent pre-upload summary, explicit completeness failure and local regressions
++are prepared without a build or external run. [Stage inventory/scanning](./STAGE_SCANNING.md)
++is runnable against future approved archives, not integrated or executed on Linux.
++Historical trial 38976049055 passed Linux functional checks and failed both scan
++gates; its original artifact omissions and supplemental summary recovery remain
++unchanged. Custody is independent. The older checkpoint descriptions below do not
++authorize publication or adoption of this new branch.
++
+ Authorized for local experimentation only. Primary/backup/security ownership and any maintenance SLA are **unaccepted**. This isolated candidate consumes the checksum-pinned `.2` package. The request marker still references the historical failed candidate; no push or new trial is authorized. See `docs/handoffs/ornigami-coolify-20261016/PORTABLE_REPAIR_PREPARATION.md` for the current repair scope and unresolved image advisories.
+ 
+ The complete patch includes the production runtime build configuration. Its emitted CommonJS requests normalize host separators before bundling, and a committed readable overlay must match the actual configuration. The recipe pins its initial bytes and refuses a mid-build edit. VM regressions exercise both Windows and POSIX paths, and an additional AST audit checks all four cold-installed production bundles. This does not establish Linux runtime portability.
+diff --git a/scripts/framework-prototype/STAGE_SCANNING.md b/scripts/framework-prototype/STAGE_SCANNING.md
+new file mode 100644
+index 0000000..dd68ba6
+--- /dev/null
++++ b/scripts/framework-prototype/STAGE_SCANNING.md
+@@ -0,0 +1,95 @@
++# Intermediate image inventory and scanning preparation
++
++This helper is prepared locally, not wired into a run. No new image exists. Real
++Trivy/archive execution and every intermediate security result remain untested.
++Local tests use fake scanner/metadata responses and do not invoke custody APIs.
++
++After separate exact-candidate/run approval, `scan-image-stages.mjs PLAN.json NEW_OUTPUT`
++consumes already exported single-image **Docker archives**. It never builds, pulls,
++runs containers, publishes, changes limits, suppresses findings or acknowledges
++custody. The destination must not exist. Each image needs its archive SHA-256 and
++config image ID, checked independently against its archive. Hashing streams the
++archive rather than loading gigabytes into the Node heap. Linux amd64 is required.
++
++Plan shape (`<...>` must be replaced by measured, approved identities):
++
++```json
++{
++  "schema": 1,
++  "sourceSha": "<full committed candidate SHA>",
++  "trivy": {
++    "path": "<checksum-verified Trivy 0.76.0 executable>",
++    "sha256": "<extracted binary SHA-256>",
++    "cacheDirectory": "<fresh predownloaded cache, frozen for all stages>"
++  },
++  "images": [
++    {
++      "stage": "original-base",
++      "archive": "<single-image Docker archive>",
++      "archiveSha256": "<64 lowercase hex>",
++      "imageId": "sha256:<64 lowercase hex>"
++    }
++  ]
++}
++```
++
++Include **all** `original-base`, `build-base`, `deps`, `builder`, `prod-deps`,
++`runner`, `buildkit`, `dockerfile-frontend` entries. Additional parents/tool images
++are allowed, scanned and gated equally. A two-parent minimal-image proposal must
++also include `original-runtime-base`; do not treat a debug builder parent as
++evidence for a different runtime parent. Do not populate unknown identities with
++guesses or reuse an archive under a misleading stage name.
++
++The exact Dockerfile currently has five named stages. During an authorized future
++run, export them **serially through the existing 8 GiB/3 CPU/zero-swap BuildKit
++builder**, with the exact source context and the same fictional build arguments:
++4096 MiB heap, memory optimizations true, source maps retained, webpack worker
++false. Use `--target STAGE --output type=docker,dest=STAGE.tar --metadata-file ...`
++and `--label org.opencontainers.image.revision=SOURCE_SHA` so builder/runner archive
++labels bind to the admitted source. Preserve BuildKit metadata, source/workflow/
++lock hashes and archive/config hashes before scanning. Cache reuse is an
++optimization, never permission to skip an unbuilt stage or an error.
++
++Only one archive is exported/scanned at a time; remove that run-owned archive
++after its scan, inventory and digest receipts are saved. A future driver may call
++the same collector per export only if it preserves this aggregate coverage and
++final all-stage gate; the current helper expects all plan archives present, so its
++all-at-once use requires explicit disk admission for their total size. **Do not
++assume serial scanning makes all-at-once archive storage bounded.** Keep at least
++20 GiB free plus estimated total archive size when choosing that mode. Admission
++must stop rather than purchase/increase capacity. Prefer implementing streaming
++serial export/collection after separate run-scope review. Do not add extra parallel
++builds or silently rerun a failed export.
++
++Record the exact original parent image(s), BuildKit pinned image and Dockerfile
++frontend image resolved by the admitted build; save their archives separately. The
++current BuildKit is `moby/buildkit:v0.33.1` at the committed digest. The old build
++resolved Dockerfile frontend 1.7 to
++`sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e`;
++the Dockerfile directive is still tag-based. Pinning that frontend and any base
++change belongs to the next reviewed implementation, not this capture-only repair.
++
++Every scan requests **all OS/library packages and every severity**, uses an empty
++explicit ignore file in a fresh working directory, removes inherited TRIVY_*
++overrides and disables ignore-unfixed. Collection exits zero only to retain the
++complete report; the independent aggregate gate fails on any high/critical,
++scanner error, identity mismatch, missing OS inventory or absent upgraded npm
++tree/root version. It continues collecting other stages after a stage error.
++Raw JSON, package inventories, arguments, logs, exits, config/arch identity and an
++incrementally saved index remain available even when security fails. The npm
++11.21.1 root and `/opt/ornigami-npm/` bundled tree must be present in every upgraded
++intermediate; a scanner coverage limitation is failure, not a clean result.
++
++Freeze and hash the fresh Trivy DB plus metadata for all stages; reject expired
++metadata and DB mutation. Retain scanner release/archive checksum evidence as the
++existing workflow does. Scans must precede owner custody and cleanup and be copied
++into the final artifact/manifest. Do not upload the archives or embedded build env.
++No stage scan is evidence custody; no custody acknowledgment is image acceptance.
++
++Inventory limits: scanner-reported package coverage is not a complete audit of
++statically embedded code in Node, SWC, sharp/libvips or downloaded native tooling.
++Also collect all installed package manifests, `.node`/ELF file hashes, interpreter/
++DT_NEEDED/RPATH/version requirements with an external pinned ELF inspector, and
++Node/OpenSSL/sharp/libvips versions. Never run `ldd` on untrusted input or copy an
++unchecked library closure. Preserve unknown applicability as open. The approved
++run's zero final language highs is not a substitute for these tooling scans.
+diff --git a/scripts/framework-prototype/bounded-local.ps1 b/scripts/framework-prototype/bounded-local.ps1
+index fc6fa40..4f3c42d 100644
+--- a/scripts/framework-prototype/bounded-local.ps1
++++ b/scripts/framework-prototype/bounded-local.ps1
+@@ -36,6 +36,12 @@ public static class OrnigamiBuildJob {
+ $outPath = [IO.Path]::GetFullPath($Output)
+ [IO.Directory]::CreateDirectory($outPath) | Out-Null
+ $specPath = [IO.Path]::GetFullPath($Spec)
++$specConfig = Get-Content -LiteralPath $specPath -Raw | ConvertFrom-Json
++$effectiveNodeOptions = '--max-old-space-size=4096'
++if ($specConfig.env -and $specConfig.env.PSObject.Properties['NODE_OPTIONS']) { $effectiveNodeOptions = [string]$specConfig.env.NODE_OPTIONS }
++$heapMatches = [regex]::Matches($effectiveNodeOptions, '(?:^|\s)--max-old-space-size(?:=|\s+)(\d+)(?=\s|$)')
++$configuredHeapMiB = $null
++if ($heapMatches.Count -gt 0) { $configuredHeapMiB = [int]$heapMatches[$heapMatches.Count - 1].Groups[1].Value }
+ $nodePath = (Resolve-Path -LiteralPath $Node).Path
+ $gatePath = Join-Path $outPath 'job-assigned'
+ if (Test-Path -LiteralPath $gatePath) { throw 'Use a new output directory for each attempt.' }
+@@ -93,7 +99,8 @@ try {
+  $receipt = [ordered]@{
+   startedAtUtc=$started.ToString('o'); endedAtUtc=[DateTime]::UtcNow.ToString('o');
+   initialFreeBytes=$initialFree; minimumFreeBytes=$minimumFree;
+-  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=3; nodeHeapMiB=4096;
++  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=3; nodeHeapMiB=$configuredHeapMiB;
++  nodeOptions=$effectiveNodeOptions; nodeHeapEvidence='configured NODE_OPTIONS; command-line overrides require separate assessment';
+   wallLimitSeconds=$Seconds; durationSeconds=([DateTime]::UtcNow-$started).TotalSeconds;
+   diskGrowthLimitBytes=20GB; observedSystemDiskGrowthPeakBytes=$peakDiskDelta;
+   exitCode=$exitCode; stopReason=$stopReason;
+diff --git a/scripts/framework-prototype/scan-image-stages.mjs b/scripts/framework-prototype/scan-image-stages.mjs
+new file mode 100644
+index 0000000..1b4c6d4
+--- /dev/null
++++ b/scripts/framework-prototype/scan-image-stages.mjs
+@@ -0,0 +1,87 @@
++import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
++import { createHash } from 'node:crypto';
++import { spawnSync } from 'node:child_process';
++import { dirname, resolve, join } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++export const requiredStages = ['original-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
++const hashBytes = bytes => createHash('sha256').update(bytes).digest('hex');
++async function hashFile(file) { const hash = createHash('sha256'); for await (const bytes of createReadStream(file)) hash.update(bytes); return hash.digest('hex'); }
++const save = (file, data) => writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
++
++// Consumes explicitly prepared Docker archives only. Never builds, pulls, runs
++// containers, mutates a registry, accepts exceptions, or acknowledges custody.
++export async function scanStages(plan, planDirectory, outputDirectory, invoke = spawnSync) {
++  if (plan.schema !== 1 || !/^[0-9a-f]{40}$/.test(plan.sourceSha ?? '')) throw Error('Invalid source identity');
++  if (!Array.isArray(plan.images) || requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All eight required stage/tool images and unique valid names are required');
++  const tool = resolve(planDirectory, plan.trivy.path), cache = resolve(planDirectory, plan.trivy.cacheDirectory);
++  if (!/^[0-9a-f]{64}$/.test(plan.trivy.sha256 ?? '') || await hashFile(tool) !== plan.trivy.sha256) throw Error('Scanner binary checksum mismatch');
++  const databaseMetadata = JSON.parse(readFileSync(join(cache, 'db/metadata.json'), 'utf8'));
++  if (!(Date.parse(databaseMetadata.UpdatedAt) <= Date.now()) || !(Date.parse(databaseMetadata.NextUpdate) > Date.now())) throw Error('Database metadata missing, future-dated or expired; prepare a fresh frozen database first');
++  const databaseSha256 = await hashFile(join(cache, 'db/trivy.db'));
++  mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
++  const ignorefile = join(outputDirectory, 'empty-ignorefile'); writeFileSync(ignorefile, '');
++  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('TRIVY_')));
++  const index = { schema: 1, sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
++  save(join(outputDirectory, 'index.json'), index);
++  for (const stage of plan.images.map(x => x.stage)) {
++    const item = plan.images.find(x => x.stage === stage), record = { stage, result: 'failed', coverage: 'unverified' };
++    index.stages.push(record);
++    const folder = join(outputDirectory, stage); mkdirSync(folder);
++    try {
++      if (!/^[0-9a-f]{64}$/.test(item.archiveSha256 ?? '') || !/^sha256:[0-9a-f]{64}$/.test(item.imageId ?? '')) throw Error('Archive/image identity missing');
++      const archive = resolve(planDirectory, item.archive);
++      record.archiveSha256 = await hashFile(archive);
++      if (record.archiveSha256 !== item.archiveSha256) throw Error('Archive checksum mismatch');
++      // Docker archive identity binds the exact config and platform, not its tag.
++      const extract = entry => {
++        const result = invoke('tar', ['-xOf', archive, entry], { encoding: 'utf8', maxBuffer: 4 * 1024 * 1024, timeout: 30_000, windowsHide: true });
++        if (result.status !== 0) throw Error('Docker archive metadata extraction failed');
++        return result.stdout;
++      };
++      const manifests = JSON.parse(extract('manifest.json'));
++      if (!Array.isArray(manifests) || manifests.length !== 1) throw Error('Expected single-image Docker archive');
++      const configPath = manifests[0].Config;
++      if (typeof configPath !== 'string' || !/^(?:blobs\/sha256\/)?[0-9a-f]{64}(?:\.json)?$/.test(configPath)) throw Error('Unsafe config member');
++      const rawConfig = extract(configPath), config = JSON.parse(rawConfig);
++      record.imageId = 'sha256:' + hashBytes(rawConfig);
++      if (record.imageId !== item.imageId || config.architecture !== 'amd64' || config.os !== 'linux') throw Error('Config/platform identity mismatch');
++      if (['builder', 'runner'].includes(stage) && config.config?.Labels?.['org.opencontainers.image.revision'] !== plan.sourceSha) throw Error('Source revision label missing/mismatched');
++      save(join(folder, 'image-identity.json'), { imageId: record.imageId, platform: 'linux/amd64', sourceRevision: config.config?.Labels?.['org.opencontainers.image.revision'] ?? null, archiveSha256: record.archiveSha256 });
++      const reportPath = join(folder, 'trivy.json');
++      const args = ['image', '--input', archive, '--cache-dir', cache, '--skip-db-update', '--skip-java-db-update', '--scanners', 'vuln', '--pkg-types', 'os,library', '--list-all-pkgs', '--ignore-unfixed=false', '--severity', 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL', '--ignorefile', ignorefile, '--format', 'json', '--exit-code', '0', '--no-progress', '--output', reportPath];
++      save(join(folder, 'scanner-arguments.json'), args);
++      const result = invoke(tool, args, { cwd: outputDirectory, env, encoding: 'utf8', timeout: 180_000, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
++      record.scannerExit = result.status;
++      writeFileSync(join(folder, 'scanner.log'), (result.stdout ?? '') + (result.stderr ?? ''));
++      if (result.status !== 0 || !existsSync(reportPath)) throw Error('Scanner failed or report absent');
++      const report = JSON.parse(readFileSync(reportPath, 'utf8'));
++      const results = report.Results ?? [];
++      const packages = results.flatMap(r => (r.Packages ?? []).map(p => ({ target: r.Target, class: r.Class, type: r.Type, ...p })));
++      save(join(folder, 'package-inventory.json'), packages);
++      record.packageCount = packages.length;
++      if (!packages.length || !results.some(r => r.Class === 'os-pkgs' && r.Packages?.length)) throw Error('Missing complete OS package inventory');
++      const npmPackages = packages.filter(p => /(?:^|\/)opt\/ornigami-npm\//.test(p.FilePath ?? ''));
++      if (['build-base', 'deps', 'builder', 'prod-deps'].includes(stage) && (!npmPackages.length || !npmPackages.some(p => p.Name === 'npm' && p.Version === '11.21.1'))) throw Error('Upgraded npm tree/root version not inventoried');
++      record.upgradedNpmPackageCount = npmPackages.length;
++      record.counts = {};
++      for (const r of results) for (const v of r.Vulnerabilities ?? []) record.counts[v.Severity] = (record.counts[v.Severity] ?? 0) + 1;
++      record.coverage = 'complete reported OS/library inventory; not proof of every embedded binary';
++      record.result = (record.counts.CRITICAL ?? 0) || (record.counts.HIGH ?? 0) ? 'failed-security-threshold' : 'passed';
++    } catch (error) { record.error = error.message; }
++    save(join(outputDirectory, 'index.json'), index); // Keep every preceding result if interrupted.
++  }
++  if (await hashFile(join(cache, 'db/trivy.db')) !== databaseSha256) { index.databaseChanged = true; }
++  index.result = !index.databaseChanged && index.stages.every(x => x.result === 'passed') ? 'passed' : 'failed';
++  save(join(outputDirectory, 'index.json'), index);
++  return index;
++}
++
++if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
++  try {
++    const [, , planFile, output] = process.argv;
++    if (!planFile || !output) throw Error('Usage: node scan-image-stages.mjs PLAN.json NEW_OUTPUT_DIRECTORY');
++    const result = await scanStages(JSON.parse(readFileSync(planFile, 'utf8')), dirname(resolve(planFile)), resolve(output));
++    console.log(JSON.stringify(result)); process.exitCode = result.result === 'passed' ? 0 : 1;
++  } catch (error) { console.error(error.message); process.exitCode = 1; }
++}
+diff --git a/tests/coolify-rehearsal-workflow.test.mjs b/tests/coolify-rehearsal-workflow.test.mjs
+index aa8f015..ccd4bc6 100644
+--- a/tests/coolify-rehearsal-workflow.test.mjs
++++ b/tests/coolify-rehearsal-workflow.test.mjs
+@@ -126,6 +126,8 @@ function fakeEnvironment(root, overrides = {}) {
+   mkdirSync(runnerTemp, { recursive: true });
+   const summary = join(root, "summary.md");
+   writeFileSync(summary, "fake workflow summary\n");
++  const stepSummary = join(root, "step-local-summary.md");
++  writeFileSync(stepSummary, "");
+   const env = {
+     ...process.env,
+     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
+@@ -137,7 +139,8 @@ function fakeEnvironment(root, overrides = {}) {
+     FAKE_STATE_VOLUME: "buildx_buildkit_ornigami-external-rehearsal0_state",
+     FAKE_INSPECTED_IMAGE_ID: "foreign-image-id",
+     RUNNER_TEMP: runnerTemp,
+-    GITHUB_STEP_SUMMARY: summary,
++    GITHUB_STEP_SUMMARY: stepSummary,
++    ORNIGAMI_JOB_SUMMARY: summary,
+     ORNIGAMI_EVIDENCE_DIR: join(runnerTemp, "ornigami-evidence"),
+     GITHUB_RUN_ID: "local-test-run",
+     GITHUB_RUN_ATTEMPT: "1",
+@@ -177,6 +180,8 @@ function verifyManifest(evidenceDirectory) {
+   assert.equal(manifest.runtime_evidence_status, "collected");
+   assert.equal(manifest.image_build_exit_code, "0");
+   assert.equal(manifest.runtime_exit_code, "0");
++  assert.equal(manifest.capture_completeness_status, "passed");
++  assert.equal(manifest.custody_status, "not-assessed-by-capture");
+   assert.ok(!manifest.files.some((item) => item.path.includes("image.tar")));
+   assert.ok(!manifest.files.some((item) => /\.raw$/.test(item.path)));
+   assert.ok(!manifest.files.some((item) => /(?:stderr|container-logs)\.raw/.test(item.path)));
+@@ -189,6 +194,30 @@ function createHash(bytes) {
+   return createHashImpl("sha256").update(bytes).digest("hex");
+ }
+ 
++test('initialization exports a persistent summary path rather than a step-local summary', () => withSandbox(root => {
++  const { env } = fakeEnvironment(root); env.GITHUB_ENV = join(root, 'github-env.txt');
++  // NTFS/Git Bash install cannot enforce Linux modes. Verify the exact requested
++  // mode, then model directory creation only on Windows; Linux uses real install.
++  const windowsInstall = process.platform === 'win32' ? `install() { [[ "$1" == -d && "$2" == -m && "$3" == 700 ]] || return 97; printf '%s\\n' "$*" > "$RUNNER_TEMP/install-arguments.txt"; shift 3; mkdir -p -- "$@"; }\n` : '';
++  const result = runShell(root, windowsInstall + runBlock('evidence_initialize'), env);
++  assert.equal(result.status, 0, result.stderr);
++  if (process.platform === 'win32') assert.match(readFileSync(join(env.RUNNER_TEMP, 'install-arguments.txt'), 'utf8'), /^-d -m 700 /);
++  assert.match(readFileSync(env.GITHUB_ENV, 'utf8'), /ORNIGAMI_JOB_SUMMARY=.*ornigami-job-summary.md/);
++  assert.match(readFileSync(join(env.RUNNER_TEMP, 'ornigami-job-summary.md'), 'utf8'), /Ornigami diagnostic evidence/);
++  assert.equal(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), '');
++}));
++
++test('failed initialization with neither exported path still retains a failed capture manifest', () => withSandbox(root => {
++  const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME:'skipped', IMAGE_BUILD_OUTCOME:'skipped', ADMISSION_OUTCOME:'skipped' });
++  delete env.ORNIGAMI_EVIDENCE_DIR; delete env.ORNIGAMI_JOB_SUMMARY;
++  const result = runShell(root, runBlock('evidence_capture'), env);
++  assert.equal(result.status, 1, result.stderr);
++  const evidence = join(env.RUNNER_TEMP,'ornigami-evidence');
++  const manifest = JSON.parse(readFileSync(join(evidence,'manifest.json'),'utf8'));
++  assert.equal(manifest.capture_completeness_status,'failed'); assert.equal(manifest.runtime_evidence_status,'not-run');
++  assert.match(readFileSync(join(evidence,'step-summary.md'),'utf8'),/Incomplete evidence capture/);
++}));
++
+ test("evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt", () => {
+   withSandbox((root) => {
+     const { env, runnerTemp } = fakeEnvironment(root, { RUNTIME_OUTCOME: "failure", RUNTIME_EXIT_CODE: "1" });
+@@ -218,12 +247,18 @@ test("success evidence capture hashes scan/runtime receipts and excludes the ima
+     writeFileSync(join(runnerTemp, "stderr.raw"), "raw diagnostic sentinel; must never enter artifact");
+     writeFileSync(join(runnerTemp, "container-logs.raw"), "raw log sentinel; must never enter artifact");
+     writeFileSync(join(evidence, "runtime", "runtime-http.json"), JSON.stringify({ schemaVersion: 1, result: "passed", exitStatus: 0, httpObservations: [] }));
++    for (const file of ["runtime-first-cgroup.txt", "runtime-after-restart-cgroup.txt", "runtime-after-recreate-cgroup.txt"]) {
++      writeFileSync(join(evidence, "runtime", file), counters());
++    }
+     const result = runShell(root, runBlock("evidence_capture"), env);
+     assert.equal(result.status, 0, result.stderr);
+     verifyManifest(evidence);
+     assert.ok(existsSync(join(evidence, "scans", "base-trivy.json")));
+     assert.ok(existsSync(join(evidence, "scans", "trivy.json")));
+     assert.ok(existsSync(join(evidence, "runtime", "runtime-http.json")));
++    assert.equal(readFileSync(join(evidence, "step-summary.md"), "utf8"), "fake workflow summary\n");
++    assert.equal(readFileSync(env.GITHUB_STEP_SUMMARY, "utf8"), "fake workflow summary\n");
++    assert.equal(JSON.parse(readFileSync(join(evidence, "manifest.json"), "utf8")).summary_evidence_status, "collected");
+   });
+ });
+ 
+@@ -237,6 +272,8 @@ test("cold failure before runtime creates every directory and a complete skipped
+     assert.equal(manifest.runtime_evidence_status,'not-run');
+     assert.equal(manifest.image_build_exit_code,'17');
+     assert.equal(manifest.framework_browser_outcome,'skipped');
++    assert.equal(manifest.capture_completeness_status,'passed');
++    assert.ok(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'step-summary.md'),'utf8').length>0);
+     for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
+     assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'build/workflow-status.txt')));
+     assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'browser/workflow-status.txt')));
+@@ -272,6 +309,79 @@ test("failed build retains combined stdout/stderr and exact exit before runtime
+ function counters({oom=0,cpu=1,peak=1000000}={}) {
+   return `==memory.max==\n8589934592\n==memory.swap.max==\n0\n==memory.peak==\n${peak}\n==memory.events==\nlow 0\nhigh 0\nmax 0\noom ${oom}\noom_kill 0\noom_group_kill 0\n==cpu.max==\n300000 100000\n==cpu.stat==\nusage_usec ${cpu}\nuser_usec ${cpu}\nsystem_usec 0\n`;
+ }
++
++function fixtureRuntime(root, env, { failure = false } = {}) {
++  const harness = join(env.RUNNER_TEMP, 'source/deploy/coolify/linux-runtime-acceptance.sh');
++  mkdirSync(resolve(harness, '..'), { recursive: true });
++  writeFileSync(harness, `#!/usr/bin/env bash
++set -euo pipefail
++report_dir="$RUNNER_TEMP/ornigami-runtime-acceptance-fixture"
++mkdir -p "$report_dir"
++printf 'result=${failure ? 'failed' : 'passed'}\\n' > "$report_dir/report.txt"
++printf '%s\\n' '{"schemaVersion":1,"result":"${failure ? 'failed' : 'passed'}","exitStatus":${failure ? 23 : 0},"assertions":${failure ? '["exact-fixture-assertion"]' : '[]'}}' > "$report_dir/runtime-http.json"
++printf 'cold fixture counters\\n' > "$report_dir/runtime-first-cgroup.txt"
++${failure ? `printf '%s\\n' '{"assertion":"exact-fixture-assertion","status":403,"exitStatus":23,"headers":{"x-frame-options":"DENY"},"body":"sanitized fictional body"}' > "$report_dir/failure.json"
++printf 'exact-fixture-assertion; status=403; exit=23\\n' > "$report_dir/failure-evidence.txt"` : `printf 'restart fixture counters\\n' > "$report_dir/runtime-after-restart-cgroup.txt"
++printf 'recreate fixture counters\\n' > "$report_dir/runtime-after-recreate-cgroup.txt"`}
++printf 'final fixture counters\\n' > "$report_dir/runtime-final-cgroup.txt"
++printf 'sanitized container log\\n' > "$report_dir/container-logs.txt"
++printf 'report=%s/report.txt\\n' "$report_dir"
++exit ${failure ? 23 : 0}
++`);
++  env.GITHUB_OUTPUT = join(root, 'outputs.txt');
++}
++
++test('runtime receipt copy uses qualified report paths despite a decoy glob in cwd', () => withSandbox(root => {
++  const { env } = fakeEnvironment(root);
++  fixtureRuntime(root, env);
++  writeFileSync(join(env.RUNNER_TEMP, 'runtime-poison-cgroup.txt'), 'must not copy cwd decoy');
++  const result = runShell(root, 'cd "$RUNNER_TEMP"\n' + runBlock('runtime_acceptance'), env);
++  assert.equal(result.status, 0, result.stderr);
++  const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
++  for (const phase of ['first', 'after-restart', 'after-recreate', 'final']) assert.ok(existsSync(join(runtime, `runtime-${phase}-cgroup.txt`)));
++  assert.ok(!existsSync(join(runtime, 'runtime-poison-cgroup.txt')));
++  const captured = runShell(root, runBlock('evidence_capture'), env);
++  assert.equal(captured.status, 0, captured.stderr);
++  verifyManifest(env.ORNIGAMI_EVIDENCE_DIR);
++}));
++
++test('failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest', () => withSandbox(root => {
++  const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME: 'failure', RUNTIME_EXIT_CODE: '23' });
++  fixtureRuntime(root, env, { failure: true });
++  const runtimeResult = runShell(root, runBlock('runtime_acceptance'), env);
++  assert.equal(runtimeResult.status, 23, runtimeResult.stderr);
++  const captured = runShell(root, runBlock('evidence_capture'), env);
++  assert.equal(captured.status, 0, captured.stderr); // successful collection of a failed acceptance
++  const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
++  const diagnostic = JSON.parse(readFileSync(join(runtime, 'failure.json'), 'utf8'));
++  assert.equal(diagnostic.assertion, 'exact-fixture-assertion'); assert.equal(diagnostic.status, 403); assert.equal(diagnostic.exitStatus, 23);
++  assert.equal(diagnostic.headers['x-frame-options'], 'DENY'); assert.equal(diagnostic.body, 'sanitized fictional body');
++  assert.match(readFileSync(join(runtime, 'container-logs.txt'), 'utf8'), /sanitized container log/);
++  assert.match(readFileSync(join(runtime, 'snapshot-status.txt'), 'utf8'), /runtime-after-recreate-cgroup.txt=unavailable/);
++  const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
++  assert.equal(manifest.runtime_outcome, 'failure'); assert.equal(manifest.runtime_exit_code, '23');
++  assert.equal(manifest.capture_completeness_status, 'passed'); assert.equal(manifest.custody_status, 'not-assessed-by-capture');
++  for (const f of manifest.files) assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, f.path))), f.sha256);
++}));
++
++test('successful runtime missing phase snapshots fails capture but retains its manifest', () => withSandbox(root => {
++  const { env } = fakeEnvironment(root); const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
++  mkdirSync(runtime, { recursive: true });
++  writeFileSync(join(runtime, 'runtime-http.json'), '{"result":"passed"}');
++  assert.equal(runShell(root, runBlock('evidence_capture'), env).status, 1);
++  const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
++  assert.ok(manifest.runtime_snapshot_status.includes('runtime-after-restart-cgroup.txt=unavailable'));
++}));
++
++for (const missing of [false, true]) test(`skipped stages with ${missing ? 'missing' : 'empty'} persistent summary fail capture with nonempty diagnostic and manifest`, () => withSandbox(root => {
++  const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME: 'skipped', IMAGE_BUILD_OUTCOME: 'skipped' });
++  if (missing) rmSync(env.ORNIGAMI_JOB_SUMMARY); else writeFileSync(env.ORNIGAMI_JOB_SUMMARY, '');
++  const result = runShell(root, runBlock('evidence_capture'), env);
++  assert.equal(result.status, 1, result.stderr);
++  const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
++  assert.equal(manifest.summary_evidence_status, 'missing-or-empty'); assert.equal(manifest.runtime_evidence_status, 'not-run');
++  assert.match(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'step-summary.md'), 'utf8'), /Incomplete evidence capture/);
++}));
+ test('resource gate runs after an available builder even when image build failed',()=>{
+   const step=workflow.slice(workflow.indexOf('      - name: Reject build-time OOM'),workflow.indexOf('      - name: Enforce pinned base'));
+   assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);
+diff --git a/tests/tooling-stage-scan.test.mjs b/tests/tooling-stage-scan.test.mjs
+new file mode 100644
+index 0000000..8f1307a
+--- /dev/null
++++ b/tests/tooling-stage-scan.test.mjs
+@@ -0,0 +1,108 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
++import { join, basename, dirname } from 'node:path';
++import { tmpdir } from 'node:os';
++import { createHash } from 'node:crypto';
++import { scanStages, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
++const sha = data => createHash('sha256').update(data).digest('hex');
++
++async function fixture(callback, modes = {}) {
++  const root = mkdtempSync(join(tmpdir(), 'ornigami-stage-scan-'));
++  try {
++    const sourceSha = 'a'.repeat(40), scanner = join(root, 'trivy-fixture'); writeFileSync(scanner, 'fake scanner, never executed');
++    mkdirSync(join(root, 'cache/db'), { recursive: true }); writeFileSync(join(root, 'cache/db/metadata.json'), JSON.stringify({Version:2,UpdatedAt:new Date(Date.now()-3600000).toISOString(),NextUpdate:new Date(Date.now()+3600000).toISOString()})); writeFileSync(join(root, 'cache/db/trivy.db'), 'fixture database');
++    const config = JSON.stringify({ architecture: 'amd64', os: 'linux', config: { Labels: { 'org.opencontainers.image.revision': sourceSha } } });
++    const imageId = 'sha256:' + sha(config), configName = sha(config) + '.json';
++    const plan = { schema: 1, sourceSha, trivy: { path: scanner, sha256: sha(readFileSync(scanner)), cacheDirectory: join(root, 'cache') }, images: requiredStages.map(stage => {
++      const archive = join(root, stage + '.tar'); writeFileSync(archive, 'fixture archive ' + stage);
++      return { stage, archive, archiveSha256: sha(readFileSync(archive)), imageId };
++    }) };
++    const calls = [];
++    const invoke = (command, args, options) => {
++      if (command === 'tar') return { status: 0, stdout: args.at(-1) === 'manifest.json' ? JSON.stringify([{ Config: configName }]) : config };
++      assert.equal(command, scanner); calls.push({ args, options });
++      const reportPath = args[args.indexOf('--output') + 1], stage = basename(dirname(reportPath));
++      if (modes.error === stage) return { status: 17, stderr: 'fictional scanner failure' };
++      const packages = [{ Name: 'libc6', Version: '2.41' }];
++      const npmPackages = modes.missingNpm === stage ? [] : [{ Name: 'npm', Version: '11.21.1', FilePath: 'opt/ornigami-npm/package.json' }, { Name: 'http-cache-semantics', Version: '4.3.0', FilePath: 'opt/ornigami-npm/node_modules/http-cache-semantics/package.json' }];
++      const report = { Results: [{ Class: 'os-pkgs', Type: 'debian', Packages: modes.noOs === stage ? [] : packages, Vulnerabilities: modes.high?.includes(stage) ? [{ Severity: 'HIGH', PkgName: 'libc6', VulnerabilityID: 'fixture-CVE' }] : [] }, { Class: 'lang-pkgs', Type: 'node-pkg', Packages: npmPackages, Vulnerabilities: [] }] };
++      writeFileSync(reportPath, JSON.stringify(report));
++      if (modes.mutateDb) writeFileSync(join(root, 'cache/db/trivy.db'), 'changed');
++      return { status: 0, stdout: 'fictional scanner success' };
++    };
++    await callback({ root, plan, invoke, calls, output: join(root, 'results') });
++  } finally { rmSync(root, { recursive: true, force: true }); }
++}
++
++test('all eight stages retain complete inventories and explicit unchanged scan coverage', () => fixture(async f => {
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.result, 'passed'); assert.equal(result.stages.length, 8); assert.equal(f.calls.length, 8);
++  for (const call of f.calls) {
++    for (const flag of ['--list-all-pkgs', '--ignore-unfixed=false', '--skip-db-update']) assert.ok(call.args.includes(flag));
++    assert.equal(call.args[call.args.indexOf('--pkg-types') + 1], 'os,library');
++    assert.equal(call.args[call.args.indexOf('--severity') + 1], 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL');
++    assert.equal(readFileSync(call.args[call.args.indexOf('--ignorefile') + 1], 'utf8'), '');
++    assert.ok(Object.keys(call.options.env).every(k => !k.startsWith('TRIVY_')));
++  }
++  assert.equal(result.stages.find(s => s.stage === 'build-base').upgradedNpmPackageCount, 2);
++  const inventory = JSON.parse(readFileSync(join(f.output, 'builder/package-inventory.json'), 'utf8'));
++  assert.ok(inventory.some(p => p.Name === 'http-cache-semantics'));
++}));
++
++test('base/final highs fail independently while every tooling stage is still scanned', () => fixture(async f => {
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 8);
++  for (const stage of ['original-base', 'runner']) assert.equal(result.stages.find(s => s.stage === stage).result, 'failed-security-threshold');
++}, { high: ['original-base', 'runner'] }));
++
++test('scanner error preserves exact exit/log and later stage results', () => fixture(async f => {
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 8);
++  assert.equal(result.stages.find(s => s.stage === 'builder').scannerExit, 17);
++  assert.match(readFileSync(join(f.output, 'builder/scanner.log'), 'utf8'), /fictional scanner failure/);
++  assert.equal(result.stages.at(-1).result, 'passed');
++}, { error: 'builder' }));
++
++test('missing upgraded npm is a coverage failure, not a zero-finding pass', () => fixture(async f => {
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.result, 'failed'); assert.match(result.stages.find(s => s.stage === 'build-base').error, /npm/);
++}, { missingNpm: 'build-base' }));
++
++test('absent OS inventory cannot pass as a clean image', () => fixture(async f => {
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.result, 'failed'); assert.match(result.stages.find(s => s.stage === 'runner').error, /OS package/);
++}, { noOs: 'runner' }));
++
++test('identity mismatch fails that stage while preserving other scans', () => fixture(async f => {
++  f.plan.images[0].archiveSha256 = '0'.repeat(64);
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.result, 'failed'); assert.match(result.stages[0].error, /checksum mismatch/); assert.equal(f.calls.length, 7);
++}));
++
++test('missing stage rejects an incomplete plan before scanning', () => fixture(async f => {
++  f.plan.images.pop(); await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /eight/); assert.equal(f.calls.length, 0);
++}));
++
++test('database drift fails even when every fake scan reports zero findings', () => fixture(async f => {
++  const result = await scanStages(f.plan, f.root, f.output, f.invoke);
++  assert.equal(result.databaseChanged, true); assert.equal(result.result, 'failed');
++}, { mutateDb: true }));
++
++test('historical output destination is never overwritten', () => fixture(async f => {
++  mkdirSync(f.output); writeFileSync(join(f.output, 'sentinel'), 'preserve');
++  await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /exist/i);
++  assert.equal(readFileSync(join(f.output, 'sentinel'), 'utf8'), 'preserve');
++}));
++
++test('expired database cannot produce a clean security result', () => fixture(async f => {
++  writeFileSync(join(f.root, 'cache/db/metadata.json'), JSON.stringify({UpdatedAt:'2020-01-01',NextUpdate:'2020-01-02'}));
++  await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /expired/); assert.equal(f.calls.length, 0);
++}));
++
++test('an additional runtime parent is scanned and cannot silently escape its high gate', () => fixture(async f => {
++  f.plan.images.push({...f.plan.images[0], stage:'original-runtime-base'});
++  const result=await scanStages(f.plan,f.root,f.output,f.invoke);
++  assert.equal(result.stages.length,9);assert.equal(f.calls.length,9);assert.equal(result.result,'failed');
++  assert.equal(result.stages.at(-1).result,'failed-security-threshold');
++}, {high:['original-runtime-base']}));

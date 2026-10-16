@@ -1,0 +1,250 @@
+TAP version 13
+# Subtest: initialization exports a persistent summary path rather than a step-local summary
+ok 1 - initialization exports a persistent summary path rather than a step-local summary
+  ---
+  duration_ms: 137.3355
+  type: 'test'
+  ...
+# Subtest: failed initialization with neither exported path still retains a failed capture manifest
+ok 2 - failed initialization with neither exported path still retains a failed capture manifest
+  ---
+  duration_ms: 525.9362
+  type: 'test'
+  ...
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 3 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 662.9414
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 4 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 649.8892
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 5 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 535.1498
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 6 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 542.5458
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 7 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 376.6304
+  type: 'test'
+  ...
+# Subtest: runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+ok 8 - runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+  ---
+  duration_ms: 1287.9155
+  type: 'test'
+  ...
+# Subtest: failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+ok 9 - failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+  ---
+  duration_ms: 1196.3114
+  type: 'test'
+  ...
+# Subtest: successful runtime missing phase snapshots fails capture but retains its manifest
+ok 10 - successful runtime missing phase snapshots fails capture but retains its manifest
+  ---
+  duration_ms: 538.951
+  type: 'test'
+  ...
+# Subtest: skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+ok 11 - skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 512.8186
+  type: 'test'
+  ...
+# Subtest: skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+ok 12 - skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 518.0691
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 13 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.2505
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 14 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 285.4921
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 15 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 281.7608
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 16 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 276.7735
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 17 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 276.9165
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 18 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 123.7822
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 19 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 173.0317
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 20 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 293.9205
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 21 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.2286
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 22 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 397.9842
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 23 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 761.2918
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 24 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 14.8006
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 25 - wrong owner never posts a remote status
+  ---
+  duration_ms: 1.7692
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 26 - wrong source never posts a remote status
+  ---
+  duration_ms: 0.8542
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 27 - wrong run never posts a remote status
+  ---
+  duration_ms: 0.6806
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 28 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 0.8852
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 29 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 0.6056
+  type: 'test'
+  ...
+# Subtest: all eight stages retain complete inventories and explicit unchanged scan coverage
+ok 30 - all eight stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 102.4088
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 31 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 93.3189
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 32 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 98.6998
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 33 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 99.9576
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 34 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 91.5399
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 35 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 86.3526
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 36 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 16.3406
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 37 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 90.0973
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 38 - historical output destination is never overwritten
+  ---
+  duration_ms: 14.7436
+  type: 'test'
+  ...
+# Subtest: expired database cannot produce a clean security result
+ok 39 - expired database cannot produce a clean security result
+  ---
+  duration_ms: 13.8466
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 40 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 98.1452
+  type: 'test'
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 40
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11526.6356

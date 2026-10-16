@@ -1,0 +1,44 @@
+[
+  {
+    "reference": "gcr.io/distroless/nodejs22-debian13:nonroot",
+    "observedAt": "2026-10-16T23:09:20.439Z",
+    "indexDigest": "sha256:ec2313763dd43931543bd03830466e0c409ce73a487e8d46f10db72d3b816c1c",
+    "amd64Digest": "sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
+    "configDigest": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320",
+    "layerCompressedBytes": 54609006,
+    "config": {
+      "architecture": "amd64",
+      "os": "linux",
+      "User": "65532",
+      "Entrypoint": [
+        "/nodejs/bin/node"
+      ],
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
+      ]
+    },
+    "validation": "Metadata only; no layers pulled, signature check, scan or execution. Exact node patch requires extraction/runtime proof; not adopted."
+  },
+  {
+    "reference": "gcr.io/distroless/nodejs22-debian13:debug-nonroot",
+    "observedAt": "2026-10-16T23:09:21.645Z",
+    "indexDigest": "sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce",
+    "amd64Digest": "sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
+    "configDigest": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842",
+    "layerCompressedBytes": 55349170,
+    "config": {
+      "architecture": "amd64",
+      "os": "linux",
+      "User": "65532",
+      "Entrypoint": [
+        "/nodejs/bin/node"
+      ],
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/busybox",
+        "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
+      ]
+    },
+    "validation": "Metadata only; no layers pulled, signature check, scan or execution. Exact node patch requires extraction/runtime proof; not adopted."
+  }
+]

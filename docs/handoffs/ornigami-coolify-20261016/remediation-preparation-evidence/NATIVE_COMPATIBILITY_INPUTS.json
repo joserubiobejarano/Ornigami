@@ -1,0 +1,1039 @@
+{
+  "scope": "Lock candidates are not proof of installed ELF closure. Installed packages below come from fresh final scan.",
+  "nativeLock": [
+    {
+      "path": "node_modules/@img/sharp-darwin-arm64",
+      "version": "0.35.5",
+      "os": [
+        "darwin"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-QRUlFQ0WxvdWyqqG/WtI3iupfD5rBzmCHXSdPsY91sAtVtTo7Q4cb6zOccZ3gqEqkr0f1As1ehLqmEpDsRf+lg=="
+    },
+    {
+      "path": "node_modules/@img/sharp-darwin-x64",
+      "version": "0.35.5",
+      "os": [
+        "darwin"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-+BR255RhDlpygUpOc/Jdt1nT6DQ3XG/ERo5wbcdOf5Q320dKtPCKPLR1LJs9VGXRaMa8l1uUa0tkCNOXiAxZUw=="
+    },
+    {
+      "path": "node_modules/@img/sharp-freebsd-wasm32",
+      "version": "0.35.5",
+      "os": [
+        "freebsd"
+      ],
+      "optional": true,
+      "integrity": "sha512-Y/z91nEZ4uIBX5X3nfTovjU9lHNKFYbL2lpHCLVNmXQK03VIZvXBBt0KxbPGp2SdGSF+2mQU4e+hQaWOt86iAw=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "os": [
+        "darwin"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-5R89nBYiRdUlSWJxPhO+GVtaXzXSxKnRu/xqMn3KTA3L9EB9Oy/P+Nn2f2vlhPuUdy/Zusb2DarbyTpGCfEDuw=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-darwin-x64",
+      "version": "1.3.4",
+      "os": [
+        "darwin"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-iR2OKH80yi0U+dUplyh3/xdpFvps6YkCwsXenIJxqxR1v9o+xtKTGbS9H7cps+2Vxjc8B1j96p75NmTGjIhtpQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-arm",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm"
+      ],
+      "optional": true,
+      "integrity": "sha512-LmRtTsOHuvM2+wlO2Db37dx5MiZhB0FvSunciw48YjdOkZz9KAiRbm8ujeMOA1INqmei5NapFxYEK1D1ZSidmw=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-arm64",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-Y3dgX/6lE2QhQb+Gxy0WZxfg9MEm/JBjamZpS2IklP7xIQoKN4hzAm7KcMVGtaVDt3neE9OKBC7vAfonA/Lr1A=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "ppc64"
+      ],
+      "optional": true,
+      "integrity": "sha512-Le6boB8Tai0Nis+gIxIpKx68UDVVIqdR8Tin5Yf1z2LJJQLDJvCDRqRu+jC2qCoD+eIomonmOwB4smBRxfVpYQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "riscv64"
+      ],
+      "optional": true,
+      "integrity": "sha512-aHkkIEHPRdQEegJN20MLmGtxYD9R2wQr3Cwpddnu5+YKMt6Uzax7S9h5gpZTo8wyrGuZSlfQ63OevL5mTyOC7Q=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-s390x",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "s390x"
+      ],
+      "optional": true,
+      "integrity": "sha512-ra/mB6MikESDUO7Yg+Mi95bFBb9GsObURuhnOv3OqknjGe9sZrG8tCe9q0xSIGrtLgvgw0gKnFWcK4blSgQOuQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-hvulFwtjUcagsis6BBxHwGFwWoNZjgYmULGVrZcyfNbjA8hKILbRxGg15/7w5HDyXHXUos/j6baAWqnCyQ2DWA=="
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-6zXKeE/p39I1AmA3cJG35eyBGNqNddLnUXjhwBnsGjFPWqf5VKkDBEqaEkPDoTEtkxwi2vv8Tcr2mDyP4So7Fg=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-arm",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm"
+      ],
+      "optional": true,
+      "integrity": "sha512-LEaXK2WdXVK5ykcw0buWyPMsmLLL2vpHLD6yrNSW+JGEL3BZPA4tpKN6iaMc4AxTTAoaX/sU1rOL51lcIz48ZQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-arm64",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-LYVx5JTsOM2CBzmxreh+nl64/3H6Xb09iSLknqH47z2T2DFFxDeFLP5y4dJwe6H7uGQlHPyEEtIqyo3DYsRwdQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-ppc64",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "ppc64"
+      ],
+      "optional": true,
+      "integrity": "sha512-QVxAAq8evVRI9ia2vqgwrmWucn5Dfv+JdWzj75pD8omHLPSP7f8p20O8jxzjCcuCEQEOtYOZUmX1hkiZ0kdevA=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-riscv64",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "riscv64"
+      ],
+      "optional": true,
+      "integrity": "sha512-LtdreXguaavKODPIfzJ4kffx7UNt1omwtK0rch4EBbbSTXPnxWmYSayXdLJw0fJzQ97kHt1gL/yh4tvU+nCyRQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-s390x",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "s390x"
+      ],
+      "optional": true,
+      "integrity": "sha512-UZasTOFiYzotTsGOCu42BfUzP6Tu6Do/947iRm1RsLKvlllxwGcn4RN27LibGWceix4Y+Pmw3jsnTcCQIgWjqA=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linuxmusl-arm64",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-9HbMclmI1zlNkFRs3z9/eBtDjfD0sGlrX1z6b1qwmiFY5ElDLh4BC0LPBdVp7z1DXFiKlIcznf+ZlsuZzLxQqg=="
+    },
+    {
+      "path": "node_modules/@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-4KOphqB035HrVdqLZfCgMzzERrQkkzOwRhl4OAkRO1YCldbaFjySXMaK534Mo0V+LndnlJk+sbUyLeU0ULyD1A=="
+    },
+    {
+      "path": "node_modules/@img/sharp-wasm32",
+      "version": "0.35.5",
+      "optional": true,
+      "integrity": "sha512-Ptsga1su4tQx+LLF1ECS9U6nz5kmrXKo6XVbtR48Ke3ZRxxgaWBu7IDtEe1quo8hiupwm6WFqxVlXaSf7IINGQ=="
+    },
+    {
+      "path": "node_modules/@img/sharp-webcontainers-wasm32",
+      "version": "0.35.5",
+      "cpu": [
+        "wasm32"
+      ],
+      "optional": true,
+      "integrity": "sha512-hfhF/FmoQyTUkA0bIKFOtw536BQSeBMe6BF6QyWlrPxT754+TFLaZ7sKKTfvvM0yJgKgaYTwnFCIZ/GuDw5SUA=="
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-arm64",
+      "version": "0.35.5",
+      "os": [
+        "win32"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-X4t7g+7ZA5DKblCBEXGjUqqemj4vczING/5viFwAL8h4N3qYeyjwdCvRLHi4EdOUI+2Z7UFlp1VM+p/AuEtm6Q=="
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-ia32",
+      "version": "0.35.5",
+      "os": [
+        "win32"
+      ],
+      "cpu": [
+        "ia32"
+      ],
+      "optional": true,
+      "integrity": "sha512-5Zm82LoBc43nhwNybZlG7Y1KO//Zhsn306fQl29ZOuStHLGTo3BWL83q3cznX0poxSAMuYL1On/BHBxkBeKr6A=="
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-x64",
+      "version": "0.35.5",
+      "os": [
+        "win32"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg=="
+    },
+    {
+      "path": "node_modules/@next/swc-linux-arm64-gnu",
+      "version": "16.4.2",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-xhwFTAncJyaCNy5KqKKuKaIIdCy1/1ZV1s5S1G0hhT7wGMkDTlfJ6aQbfRFnIG/s3/kDrxQ8aycVe+c5QnP8ow=="
+    },
+    {
+      "path": "node_modules/@next/swc-linux-arm64-musl",
+      "version": "16.4.2",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-T1PNmfbPcxr5ndtWUL/3wQtLXsz808lq6sc2GrNT5k2oquF7UyqZddHSuAewHVsWsGXe6nsl9HoN1YNriVjuSg=="
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-gnu",
+      "version": "16.4.2",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-N9cDUOCGtkJG5PNKDFZUF3xXndrJJcpLp121uAGjIGvO/U2p9tfdNOM9htj7+5f72l0m8rMw/cvYacUJBQoudg=="
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-musl",
+      "version": "16.4.2",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-yY2uh1YhX6ufuYy2FCbw1dqblbhI57GLYAJfCkqD9auTv6pLrH67Uccjc3QMKBeCYAG6lkgu08ExmX1bbjejjQ=="
+    },
+    {
+      "path": "node_modules/@sentry/cli-linux-arm",
+      "version": "2.58.6",
+      "os": [
+        "linux",
+        "freebsd",
+        "android"
+      ],
+      "cpu": [
+        "arm"
+      ],
+      "optional": true,
+      "integrity": "sha512-pD0LAt5PcUzAinBwvDqc66x9+2CabHEv486yP0gRjWO7SakbaxmfVq/EXd8VLq/Tzi39LAu422UYK1lpW3MILw=="
+    },
+    {
+      "path": "node_modules/@sentry/cli-linux-arm64",
+      "version": "2.58.6",
+      "os": [
+        "linux",
+        "freebsd",
+        "android"
+      ],
+      "cpu": [
+        "arm64"
+      ],
+      "optional": true,
+      "integrity": "sha512-q8mEcNNmeXMy5i+jWT30TVpH7LcP4HD21CD5XRSPAd/a912HF6EpK0ybf/1USO14WOhoXbAGi9txwaWabSe33g=="
+    },
+    {
+      "path": "node_modules/@sentry/cli-linux-i686",
+      "version": "2.58.6",
+      "os": [
+        "linux",
+        "freebsd",
+        "android"
+      ],
+      "cpu": [
+        "x86",
+        "ia32"
+      ],
+      "optional": true,
+      "integrity": "sha512-q8vNJi1eOV/4vxAFWBsEwLHoSYapaZHIf4j76KJGJXFKTkEbsjCOOsKbwUIBTQQhRgV4DFWh3ryfsPS/que4Kg=="
+    },
+    {
+      "path": "node_modules/@sentry/cli-linux-x64",
+      "version": "2.58.6",
+      "os": [
+        "linux",
+        "freebsd",
+        "android"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "optional": true,
+      "integrity": "sha512-DZu956Mhi3ZRjTBe1WdbGV46ldVbA8d2rgp/fh51GsI25zjBHah4wZnPTSzpc+YqxU6pJpg579B/r3jrIK530Q=="
+    },
+    {
+      "path": "node_modules/sharp",
+      "version": "0.35.5",
+      "optional": true,
+      "integrity": "sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g=="
+    },
+    {
+      "path": "node_modules/sharp/node_modules/semver",
+      "version": "7.8.5",
+      "optional": true,
+      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="
+    }
+  ],
+  "nativeInstalled": [
+    {
+      "class": "lang-pkgs",
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "path": "app/node_modules/@img/colour/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "path": "app/node_modules/@img/sharp-libvips-linux-x64/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "path": "app/node_modules/@img/sharp-libvips-linuxmusl-x64/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "path": "app/node_modules/@img/sharp-linux-x64/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "path": "app/node_modules/@img/sharp-linuxmusl-x64/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@next/swc-linux-x64-gnu",
+      "version": "16.4.2",
+      "path": "app/node_modules/@next/swc-linux-x64-gnu/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@next/swc-linux-x64-musl",
+      "version": "16.4.2",
+      "path": "app/node_modules/@next/swc-linux-x64-musl/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@sentry/cli",
+      "version": "2.58.6",
+      "path": "app/node_modules/@sentry/cli/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "@sentry/cli-linux-x64",
+      "version": "2.58.6",
+      "path": "app/node_modules/@sentry/cli-linux-x64/package.json"
+    },
+    {
+      "class": "lang-pkgs",
+      "name": "sharp",
+      "version": "0.35.5",
+      "path": "app/node_modules/sharp/package.json"
+    }
+  ],
+  "finalInstalledOsPackages": [
+    {
+      "class": "os-pkgs",
+      "name": "adduser",
+      "version": "3.152",
+      "source": "adduser",
+      "sourceVersion": "3.152"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "apt",
+      "version": "3.0.3",
+      "source": "apt",
+      "sourceVersion": "3.0.3"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "base-files",
+      "version": "13.8+deb13u7",
+      "source": "base-files",
+      "sourceVersion": "13.8+deb13u7"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "base-passwd",
+      "version": "3.6.7",
+      "source": "base-passwd",
+      "sourceVersion": "3.6.7"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "bash",
+      "version": "5.2.37",
+      "source": "bash",
+      "sourceVersion": "5.2.37"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "bsdutils",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "coreutils",
+      "version": "9.7",
+      "source": "coreutils",
+      "sourceVersion": "9.7"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "dash",
+      "version": "0.5.12",
+      "source": "dash",
+      "sourceVersion": "0.5.12"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "debconf",
+      "version": "1.5.91",
+      "source": "debconf",
+      "sourceVersion": "1.5.91"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "debian-archive-keyring",
+      "version": "2025.1",
+      "source": "debian-archive-keyring",
+      "sourceVersion": "2025.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "debianutils",
+      "version": "5.23.2",
+      "source": "debianutils",
+      "sourceVersion": "5.23.2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "diffutils",
+      "version": "3.10",
+      "source": "diffutils",
+      "sourceVersion": "3.10"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "dpkg",
+      "version": "1.22.22",
+      "source": "dpkg",
+      "sourceVersion": "1.22.22"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "findutils",
+      "version": "4.10.0",
+      "source": "findutils",
+      "sourceVersion": "4.10.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "gcc-14-base",
+      "version": "14.2.0",
+      "source": "gcc-14",
+      "sourceVersion": "14.2.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "grep",
+      "version": "3.11",
+      "source": "grep",
+      "sourceVersion": "3.11"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "gzip",
+      "version": "1.13",
+      "source": "gzip",
+      "sourceVersion": "1.13"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "hostname",
+      "version": "3.25",
+      "source": "hostname",
+      "sourceVersion": "3.25"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "init-system-helpers",
+      "version": "1.69~deb13u1",
+      "source": "init-system-helpers",
+      "sourceVersion": "1.69~deb13u1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libacl1",
+      "version": "2.3.2",
+      "source": "acl",
+      "sourceVersion": "2.3.2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libapt-pkg7.0",
+      "version": "3.0.3",
+      "source": "apt",
+      "sourceVersion": "3.0.3"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libattr1",
+      "version": "2.5.2",
+      "source": "attr",
+      "sourceVersion": "2.5.2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libaudit-common",
+      "version": "4.0.2",
+      "source": "audit",
+      "sourceVersion": "4.0.2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libaudit1",
+      "version": "4.0.2",
+      "source": "audit",
+      "sourceVersion": "4.0.2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libblkid1",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libbsd0",
+      "version": "0.12.2",
+      "source": "libbsd",
+      "sourceVersion": "0.12.2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libbz2-1.0",
+      "version": "1.0.8",
+      "source": "bzip2",
+      "sourceVersion": "1.0.8"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libc-bin",
+      "version": "2.41",
+      "source": "glibc",
+      "sourceVersion": "2.41"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libc6",
+      "version": "2.41",
+      "source": "glibc",
+      "sourceVersion": "2.41"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libcap-ng0",
+      "version": "0.8.5",
+      "source": "libcap-ng",
+      "sourceVersion": "0.8.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libcap2",
+      "version": "2.75",
+      "source": "libcap2",
+      "sourceVersion": "2.75"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libcrypt1",
+      "version": "4.4.38",
+      "source": "libxcrypt",
+      "sourceVersion": "4.4.38"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libdb5.3t64",
+      "version": "5.3.28+dfsg2",
+      "source": "db5.3",
+      "sourceVersion": "5.3.28+dfsg2"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libdebconfclient0",
+      "version": "0.280",
+      "source": "cdebconf",
+      "sourceVersion": "0.280"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libgcc-s1",
+      "version": "14.2.0",
+      "source": "gcc-14",
+      "sourceVersion": "14.2.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libgmp10",
+      "version": "6.3.0+dfsg",
+      "source": "gmp",
+      "sourceVersion": "6.3.0+dfsg"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libhogweed6t64",
+      "version": "3.10.1",
+      "source": "nettle",
+      "sourceVersion": "3.10.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "liblastlog2-2",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "liblz4-1",
+      "version": "1.10.0",
+      "source": "lz4",
+      "sourceVersion": "1.10.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "liblzma5",
+      "version": "5.8.1",
+      "source": "xz-utils",
+      "sourceVersion": "5.8.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libmd0",
+      "version": "1.1.0",
+      "source": "libmd",
+      "sourceVersion": "1.1.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libmount1",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libnettle8t64",
+      "version": "3.10.1",
+      "source": "nettle",
+      "sourceVersion": "3.10.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libpam-modules",
+      "version": "1.7.0",
+      "source": "pam",
+      "sourceVersion": "1.7.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libpam-modules-bin",
+      "version": "1.7.0",
+      "source": "pam",
+      "sourceVersion": "1.7.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libpam-runtime",
+      "version": "1.7.0",
+      "source": "pam",
+      "sourceVersion": "1.7.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libpam0g",
+      "version": "1.7.0",
+      "source": "pam",
+      "sourceVersion": "1.7.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libpcre2-8-0",
+      "version": "10.46",
+      "source": "pcre2",
+      "sourceVersion": "10.46"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libseccomp2",
+      "version": "2.6.0",
+      "source": "libseccomp",
+      "sourceVersion": "2.6.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libselinux1",
+      "version": "3.8.1",
+      "source": "libselinux",
+      "sourceVersion": "3.8.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libsemanage-common",
+      "version": "3.8.1",
+      "source": "libsemanage",
+      "sourceVersion": "3.8.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libsemanage2",
+      "version": "3.8.1",
+      "source": "libsemanage",
+      "sourceVersion": "3.8.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libsepol2",
+      "version": "3.8.1",
+      "source": "libsepol",
+      "sourceVersion": "3.8.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libsmartcols1",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libsqlite3-0",
+      "version": "3.46.1",
+      "source": "sqlite3",
+      "sourceVersion": "3.46.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libssl3t64",
+      "version": "3.5.7",
+      "source": "openssl",
+      "sourceVersion": "3.5.7"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libstdc++6",
+      "version": "14.2.0",
+      "source": "gcc-14",
+      "sourceVersion": "14.2.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libsystemd0",
+      "version": "257.13",
+      "source": "systemd",
+      "sourceVersion": "257.13"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libtinfo6",
+      "version": "6.5+20250216",
+      "source": "ncurses",
+      "sourceVersion": "6.5+20250216"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libudev1",
+      "version": "257.13",
+      "source": "systemd",
+      "sourceVersion": "257.13"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libuuid1",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libxxhash0",
+      "version": "0.8.3",
+      "source": "xxhash",
+      "sourceVersion": "0.8.3"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "libzstd1",
+      "version": "1.5.7+dfsg",
+      "source": "libzstd",
+      "sourceVersion": "1.5.7+dfsg"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "login",
+      "version": "4.16.0-2+really2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "login.defs",
+      "version": "4.17.4",
+      "source": "shadow",
+      "sourceVersion": "4.17.4"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "mawk",
+      "version": "1.3.4.20250131",
+      "source": "mawk",
+      "sourceVersion": "1.3.4.20250131"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "mount",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "ncurses-base",
+      "version": "6.5+20250216",
+      "source": "ncurses",
+      "sourceVersion": "6.5+20250216"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "ncurses-bin",
+      "version": "6.5+20250216",
+      "source": "ncurses",
+      "sourceVersion": "6.5+20250216"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "openssl-provider-legacy",
+      "version": "3.5.7",
+      "source": "openssl",
+      "sourceVersion": "3.5.7"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "passwd",
+      "version": "4.17.4",
+      "source": "shadow",
+      "sourceVersion": "4.17.4"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "perl-base",
+      "version": "5.40.1",
+      "source": "perl",
+      "sourceVersion": "5.40.1"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "sed",
+      "version": "4.9",
+      "source": "sed",
+      "sourceVersion": "4.9"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "sqv",
+      "version": "1.3.0",
+      "source": "rust-sequoia-sqv",
+      "sourceVersion": "1.3.0"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "sysvinit-utils",
+      "version": "3.14",
+      "source": "sysvinit",
+      "sourceVersion": "3.14"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "tar",
+      "version": "1.35+dfsg",
+      "source": "tar",
+      "sourceVersion": "1.35+dfsg"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "tzdata",
+      "version": "2026c",
+      "source": "tzdata",
+      "sourceVersion": "2026c"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "util-linux",
+      "version": "2.41.5",
+      "source": "util-linux",
+      "sourceVersion": "2.41.5"
+    },
+    {
+      "class": "os-pkgs",
+      "name": "zlib1g",
+      "version": "1.3.dfsg+really1.3.1",
+      "source": "zlib",
+      "sourceVersion": "1.3.dfsg+really1.3.1"
+    }
+  ]
+}

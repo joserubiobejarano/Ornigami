@@ -1,0 +1,276 @@
+TAP version 13
+# Subtest: initialization exports a persistent summary path rather than a step-local summary
+not ok 1 - initialization exports a persistent summary path rather than a step-local summary
+  ---
+  duration_ms: 133.6037
+  type: 'test'
+  location: 'C:\\Users\\joser\\Desktop\\Projects\\Ornigami-coolify-prep-20261016\\.local\\framework-prototype\\ornigami-capture-remediation\\tests\\coolify-rehearsal-workflow.test.mjs:197:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    install: cannot change permissions of 'C:\\Users/joser/AppData/Local/Temp/ornigami-rehearsal-workflow-SCfCkm/runner-temp/ornigami-evidence': Permission denied
+    install: cannot change permissions of 'C:\\Users/joser/AppData/Local/Temp/ornigami-rehearsal-workflow-SCfCkm/runner-temp/ornigami-evidence/build': Permission denied
+    install: cannot change permissions of 'C:\\Users/joser/AppData/Local/Temp/ornigami-rehearsal-workflow-SCfCkm/runner-temp/ornigami-evidence/scans': Permission denied
+    install: cannot change permissions of 'C:\\Users/joser/AppData/Local/Temp/ornigami-rehearsal-workflow-SCfCkm/runner-temp/ornigami-evidence/runner': Permission denied
+    install: cannot change permissions of 'C:\\Users/joser/AppData/Local/Temp/ornigami-rehearsal-workflow-SCfCkm/runner-temp/ornigami-evidence/runtime': Permission denied
+    install: cannot change permissions of 'C:\\Users/joser/AppData/Local/Temp/ornigami-rehearsal-workflow-SCfCkm/runner-temp/ornigami-evidence/browser': Permission denied
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/framework-prototype/ornigami-capture-remediation/tests/coolify-rehearsal-workflow.test.mjs:200:10
+    withSandbox (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/framework-prototype/ornigami-capture-remediation/tests/coolify-rehearsal-workflow.test.mjs:44:12)
+    TestContext.<anonymous> (file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/framework-prototype/ornigami-capture-remediation/tests/coolify-rehearsal-workflow.test.mjs:197:97)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: failed initialization with neither exported path still retains a failed capture manifest
+ok 2 - failed initialization with neither exported path still retains a failed capture manifest
+  ---
+  duration_ms: 539.4948
+  type: 'test'
+  ...
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 3 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 655.0764
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 4 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 649.84
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 5 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 532.2891
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 6 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 531.5174
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 7 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 386.5147
+  type: 'test'
+  ...
+# Subtest: runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+ok 8 - runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+  ---
+  duration_ms: 1313.8248
+  type: 'test'
+  ...
+# Subtest: failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+ok 9 - failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+  ---
+  duration_ms: 1184.0066
+  type: 'test'
+  ...
+# Subtest: successful runtime missing phase snapshots fails capture but retains its manifest
+ok 10 - successful runtime missing phase snapshots fails capture but retains its manifest
+  ---
+  duration_ms: 545.6651
+  type: 'test'
+  ...
+# Subtest: skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+ok 11 - skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 521.046
+  type: 'test'
+  ...
+# Subtest: skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+ok 12 - skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 524.8526
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 13 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.2048
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 14 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 285.9724
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 15 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 307.9104
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 16 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 293.5231
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 17 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 275.9644
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 18 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 122.3888
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 19 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 169.6854
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 20 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 301.3134
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 21 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.2351
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 22 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 398.0904
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 23 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 736.5614
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 24 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 13.9514
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 25 - wrong owner never posts a remote status
+  ---
+  duration_ms: 1.6582
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 26 - wrong source never posts a remote status
+  ---
+  duration_ms: 0.7543
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 27 - wrong run never posts a remote status
+  ---
+  duration_ms: 0.596
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 28 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 1.3827
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 29 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 0.572
+  type: 'test'
+  ...
+# Subtest: all eight stages retain complete inventories and explicit unchanged scan coverage
+ok 30 - all eight stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 93.5832
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 31 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 85.7437
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 32 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 89.1026
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 33 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 83.6386
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 34 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 88.9776
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 35 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 88.3407
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 36 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 14.3365
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 37 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 87.2243
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 38 - historical output destination is never overwritten
+  ---
+  duration_ms: 16.1649
+  type: 'test'
+  ...
+# Subtest: expired database cannot produce a clean security result
+ok 39 - expired database cannot produce a clean security result
+  ---
+  duration_ms: 15.3609
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 40 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 97.718
+  type: 'test'
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 39
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11525.4974

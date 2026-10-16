@@ -1,5 +1,7 @@
 # Portable candidate: one diagnostic Linux trial — 17 October 2026
 
+Subsequent authorized local preparation: [capture repairs, security/tooling decision and memory investigation](./LOCAL_SECURITY_REMEDIATION.md). That work creates no new build/trial and does not change any original result, failed gate, artifact or supplemental recovery below.
+
 Owner authorization covers exact candidate `a069cd4d6232f57c72e1a8d7af2349bb707f0474`, correction publication, one request-only commit and one diagnostic Linux run, plus one owner custody acknowledgment after verified identity/digest/durable download/read-back. This grants no security exception, framework adoption or image/deployment acceptance. All timestamps in receipts are UTC (the preflight began 16 October at 22:23 UTC, 17 October locally).
 
 ## Preflight and publication

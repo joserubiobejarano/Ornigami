@@ -1,0 +1,238 @@
+TAP version 13
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 1 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 679.5871
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 2 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 667.0322
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 3 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 559.0493
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 4 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 559.2562
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 5 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 382.6803
+  type: 'test'
+  ...
+# Subtest: runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+ok 6 - runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+  ---
+  duration_ms: 1294.6837
+  type: 'test'
+  ...
+# Subtest: failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+ok 7 - failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+  ---
+  duration_ms: 1178.1809
+  type: 'test'
+  ...
+# Subtest: successful runtime missing phase snapshots fails capture but retains its manifest
+ok 8 - successful runtime missing phase snapshots fails capture but retains its manifest
+  ---
+  duration_ms: 543.1067
+  type: 'test'
+  ...
+# Subtest: skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+ok 9 - skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 532.9144
+  type: 'test'
+  ...
+# Subtest: skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+ok 10 - skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 524.0033
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 11 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.2797
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 12 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 285.3006
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 13 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 294.4952
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 14 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 272.9999
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 15 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 293.5697
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 16 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 121.6998
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 17 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 182.7243
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 18 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 295.1805
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 19 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.2321
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 20 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 393.2056
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 21 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 732.5048
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 22 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 20.3847
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 23 - wrong owner never posts a remote status
+  ---
+  duration_ms: 1.9193
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 24 - wrong source never posts a remote status
+  ---
+  duration_ms: 0.8897
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 25 - wrong run never posts a remote status
+  ---
+  duration_ms: 0.7828
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 26 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 1.5791
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 27 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 0.6366
+  type: 'test'
+  ...
+# Subtest: all eight stages retain complete inventories and explicit unchanged scan coverage
+ok 28 - all eight stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 98.6733
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 29 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 85.1462
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 30 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 84.5576
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 31 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 93.5573
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 32 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 91.7843
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 33 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 89.017
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 34 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 14.2593
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 35 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 86.8197
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 36 - historical output destination is never overwritten
+  ---
+  duration_ms: 15.2539
+  type: 'test'
+  ...
+# Subtest: expired database cannot produce a clean security result
+ok 37 - expired database cannot produce a clean security result
+  ---
+  duration_ms: 19.9913
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 38 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 104.031
+  type: 'test'
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10944.2413
