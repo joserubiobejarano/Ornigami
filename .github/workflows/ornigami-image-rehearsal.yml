@@ -1,0 +1,520 @@
+name: Ornigami image build and validation rehearsal
+
+on:
+  push:
+    branches:
+      - codex/ornigami-coolify-preparation-20261016
+    paths:
+      - .github/build-requests/ornigami.json
+
+permissions: {}
+
+concurrency:
+  group: ornigami-external-image-build
+  cancel-in-progress: false
+
+jobs:
+  build-validate-scan:
+    name: Build, runtime acceptance, and vulnerability scans
+    if: github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.ref == 'refs/heads/codex/ornigami-coolify-preparation-20261016'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Validate inputs and fetch exact public source
+        shell: bash
+        env:
+          REQUEST_SHA: ${{ github.event.after }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$GITHUB_EVENT_NAME" == push ]]
+          [[ "$GITHUB_REF" == refs/heads/codex/ornigami-coolify-preparation-20261016 ]]
+          [[ "$REQUEST_SHA" =~ ^[0-9a-f]{40}$ && "$REQUEST_SHA" == "$GITHUB_SHA" ]]
+          repo_dir="$RUNNER_TEMP/request-repository"
+          repo='https://github.com/joserubiobejarano/Ornigami.git'
+          mkdir "$repo_dir"
+          git -C "$repo_dir" init --quiet
+          git -C "$repo_dir" remote add origin "$repo"
+          git -C "$repo_dir" fetch --quiet --no-tags origin "$REQUEST_SHA"
+          actual_request_sha=$(git -C "$repo_dir" rev-parse FETCH_HEAD)
+          [[ "$actual_request_sha" == "$REQUEST_SHA" ]]
+          git -C "$repo_dir" checkout --quiet --detach "$REQUEST_SHA"
+          read -r commit_sha first_parent extra_parents < <(git -C "$repo_dir" rev-list --parents -n1 "$REQUEST_SHA")
+          [[ "$commit_sha" == "$REQUEST_SHA" && -n "$first_parent" && -z "${extra_parents:-}" ]]
+          mapfile -t changed_paths < <(git -C "$repo_dir" diff --name-only "$first_parent" "$REQUEST_SHA")
+          [[ ${#changed_paths[@]} -eq 1 && "${changed_paths[0]}" == .github/build-requests/ornigami.json ]]
+          git -C "$repo_dir" show "$REQUEST_SHA:.github/build-requests/ornigami.json" > "$RUNNER_TEMP/ornigami-build-request.json"
+          jq -e 'type == "object" and (keys == ["packageLockSha256", "sourceSha"]) and (.sourceSha | type == "string" and test("^[0-9a-f]{40}$")) and (.packageLockSha256 | type == "string" and test("^[0-9a-f]{64}$"))' "$RUNNER_TEMP/ornigami-build-request.json" >/dev/null
+          SOURCE_SHA=$(jq -r '.sourceSha' "$RUNNER_TEMP/ornigami-build-request.json")
+          EXPECTED_LOCK_SHA256=$(jq -r '.packageLockSha256' "$RUNNER_TEMP/ornigami-build-request.json")
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+          echo "EXPECTED_LOCK_SHA256=$EXPECTED_LOCK_SHA256" >> "$GITHUB_ENV"
+          git -C "$repo_dir" merge-base --is-ancestor "$SOURCE_SHA" "$REQUEST_SHA"
+          candidate_workflow_blob=$(git -C "$repo_dir" rev-parse "$SOURCE_SHA:.github/workflows/ornigami-image-rehearsal.yml")
+          request_workflow_blob=$(git -C "$repo_dir" rev-parse "$REQUEST_SHA:.github/workflows/ornigami-image-rehearsal.yml")
+          [[ "$candidate_workflow_blob" == "$request_workflow_blob" ]]
+          git -C "$repo_dir" worktree add --quiet --detach "$RUNNER_TEMP/source" "$SOURCE_SHA"
+          actual_sha=$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)
+          [[ "$actual_sha" == "$SOURCE_SHA" ]]
+          [[ -z "$(git -C "$RUNNER_TEMP/source" status --porcelain --untracked-files=all)" ]]
+          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh; do
+            [[ -f "$RUNNER_TEMP/source/$required" ]]
+          done
+          actual_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
+          [[ "$actual_lock_sha" == "$EXPECTED_LOCK_SHA256" ]]
+          {
+            printf '%s\n' '### Build request admission'
+            printf '%s\n' "- Request commit: \`$REQUEST_SHA\`"
+            printf '%s\n' "- Commit: \`$actual_sha\`"
+            printf '%s\n' "- package-lock.json SHA-256: \`$actual_lock_sha\`"
+            printf '%s\n' '- Request marker: exact source and lock fields; only marker changed in single-parent request commit'
+            printf '%s\n' '- Workflow blob: identical at candidate and request commits'
+            printf '%s\n' '- Candidate is an ancestor of the request commit'
+            printf '%s\n' '- Checkout: detached exact candidate; clean before build'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify runner and Docker Buildx
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(uname -m)" == x86_64 ]]
+          docker info >/dev/null
+          docker buildx version
+          docker buildx ls
+          cpu_count=$(getconf _NPROCESSORS_ONLN)
+          total_mib=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo)
+          available_mib=$(awk '/^MemAvailable:/ {print int($2 / 1024)}' /proc/meminfo)
+          free_disk_bytes=$(df -PB1 "$RUNNER_TEMP" | awk 'NR == 2 {print $4}')
+          {
+            printf '%s\n' '### Runner preflight'
+            printf '%s\n' "- Online CPUs: ${cpu_count} (minimum 4)"
+            printf '%s\n' "- Total memory: ${total_mib} MiB (minimum 14336 MiB)"
+            printf '%s\n' "- Available memory before build: ${available_mib} MiB (minimum 12288 MiB)"
+            printf '%s\n' "- Free runner disk before build: ${free_disk_bytes} bytes (minimum 10737418240)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          [[ "$cpu_count" =~ ^[0-9]+$ && "$cpu_count" -ge 4 ]]
+          [[ "$total_mib" =~ ^[0-9]+$ && "$total_mib" -ge 14336 ]]
+          [[ "$available_mib" =~ ^[0-9]+$ && "$available_mib" -ge 12288 ]]
+          [[ "$free_disk_bytes" =~ ^[0-9]+$ && "$free_disk_bytes" -ge 10737418240 ]]
+
+      - name: Download and verify pinned Trivy scanner
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location \
+            --output trivy_0.76.0_Linux-64bit.tar.gz \
+            https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_Linux-64bit.tar.gz
+          curl --fail --silent --show-error --location \
+            --output trivy_0.76.0_checksums.txt \
+            https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt
+          grep -Fx 'e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7  trivy_0.76.0_Linux-64bit.tar.gz' trivy_0.76.0_checksums.txt >/dev/null
+          echo 'e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7  trivy_0.76.0_Linux-64bit.tar.gz' | sha256sum --check --status
+          tar -xzf trivy_0.76.0_Linux-64bit.tar.gz trivy
+          chmod 0755 trivy
+          ./trivy --version
+          {
+            printf '%s\n' '### Scanner verification'
+            printf '%s\n' '- Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:'
+            printf '%s\n' '  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Scan pinned Node base image and record advisory gate
+        shell: bash
+        env:
+          BASE_IMAGE: node:22.23.3-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562
+        run: |
+          set -Eeuo pipefail
+          export TRIVY_CACHE_DIR="$RUNNER_TEMP/trivy-cache"
+          docker pull --platform linux/amd64 "$BASE_IMAGE"
+          base_id=$(docker image inspect "$BASE_IMAGE" --format '{{.Id}}')
+          docker save --output "$RUNNER_TEMP/node-base.tar" "$BASE_IMAGE"
+          "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/node-base.tar" \
+            --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/base-trivy.json" --no-progress
+          python3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_STEP_SUMMARY" "$base_id" <<'PY'
+          import collections, json, pathlib, sys
+          report = json.loads(pathlib.Path(sys.argv[1]).read_text())
+          expected_image_id = sys.argv[3]
+          if not isinstance(report, dict) or type(report.get("SchemaVersion")) is not int or report["SchemaVersion"] != 2:
+              raise SystemExit("Base Trivy report schema invalid")
+          if report.get("ArtifactType") != "container_image" or not isinstance(report.get("Metadata"), dict) or report["Metadata"].get("ImageID") != expected_image_id:
+              raise SystemExit("Base Trivy report identity invalid")
+          results = report.get("Results")
+          if not isinstance(results, list) or not results:
+              raise SystemExit("Base Trivy report has no results")
+          counts = collections.Counter()
+          findings = []
+          has_debian = False
+          for result in results:
+              if not isinstance(result, dict) or not isinstance(result.get("Target"), str) or not result["Target"]:
+                  raise SystemExit("Base Trivy report has a malformed result")
+              if result.get("Class") == "os-pkgs" and result.get("Type") == "debian":
+                  has_debian = True
+              elif result.get("Class") == "lang-pkgs" and result.get("Type") in {"npm", "node-pkg"}:
+                  pass
+              else:
+                  raise SystemExit("Base Trivy report has an unrecognized result class/type")
+              vulnerabilities = result.get("Vulnerabilities")
+              if vulnerabilities is None:
+                  continue
+              if not isinstance(vulnerabilities, list):
+                  raise SystemExit("Base Trivy report has malformed Vulnerabilities")
+              for item in vulnerabilities:
+                  if not isinstance(item, dict) or any(not isinstance(item.get(key), str) or not item[key].strip() for key in ("Severity", "VulnerabilityID", "PkgName")):
+                      raise SystemExit("Base Trivy report has malformed vulnerability entry")
+                  severity = item["Severity"].upper()
+                  if severity not in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"}:
+                      raise SystemExit("Base Trivy report has unknown severity")
+                  counts[severity] += 1
+                  findings.append((severity, item["PkgName"], item.get("InstalledVersion", ""), item.get("FixedVersion", ""), item["VulnerabilityID"], item.get("PrimaryURL", "")))
+          if not has_debian:
+              raise SystemExit("Base Trivy report has no Debian inventory")
+          with open(sys.argv[2], "a", encoding="utf-8") as out:
+              out.write("\n### Pinned base image advisory review gate\n\n")
+              out.write("Image: `node:22.23.3-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562`\n\n")
+              out.write(f"Docker image ID: `{expected_image_id}`\n\n")
+              out.write("| Severity | Findings |\n| --- | ---: |\n")
+              for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"):
+                  out.write(f"| {level} | {counts[level]} |\n")
+              out.write("\nBase findings are recorded for explicit review; this step does not clear the release advisory gate.\n")
+              if findings:
+                  out.write("\n| Severity | Package | Installed | Fixed | Advisory | Primary URL |\n| --- | --- | --- | --- | --- | --- |\n")
+                  safe = lambda value: str(value).replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")
+                  for severity, package, installed, fixed, advisory, url in sorted(findings):
+                      out.write(f"| {safe(severity)} | {safe(package)} | {safe(installed)} | {safe(fixed)} | {safe(advisory)} | {safe(url)} |\n")
+          PY
+          {
+            printf '\n### Trivy scanner and vulnerability database metadata\n\n'
+            printf '%s\n' '```text'
+            "$RUNNER_TEMP/trivy" --version
+            printf '%s\n' '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          rm -f -- "$RUNNER_TEMP/node-base.tar"
+
+      - name: Create bounded serial BuildKit builder
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          builder='ornigami-external-rehearsal'
+          if docker buildx ls --format '{{.Name}}' | grep -Fxq "$builder"; then
+            echo 'Refusing to reuse an existing builder.' >&2
+            exit 1
+          fi
+          printf '[worker.oci]\n  max-parallelism = 1\n' > "$RUNNER_TEMP/buildkitd.toml"
+          docker buildx create --name "$builder" --driver docker-container \
+            --driver-opt 'image=moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea,memory=8g,memory-swap=8g,cpu-quota=300000,cpu-period=100000' \
+            --buildkitd-config "$RUNNER_TEMP/buildkitd.toml" --use --bootstrap
+          mapfile -t ids < <(docker ps --filter name=buildx_buildkit_ornigami-external-rehearsal --format '{{.ID}}')
+          [[ ${#ids[@]} -eq 1 ]]
+          docker inspect "${ids[0]}" --format 'memory={{.HostConfig.Memory}} memory_swap={{.HostConfig.MemorySwap}} cpu_quota={{.HostConfig.CpuQuota}} cpu_period={{.HostConfig.CpuPeriod}}'
+          [[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.Memory}}')" == 8589934592 ]]
+          [[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.MemorySwap}}')" == 8589934592 ]]
+          [[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.CpuQuota}}')" == 300000 ]]
+          [[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.CpuPeriod}}')" == 100000 ]]
+          docker exec "${ids[0]}" sh -c 'printf "memory.max="; cat /sys/fs/cgroup/memory.max; printf "memory.swap.max="; cat /sys/fs/cgroup/memory.swap.max; printf "cpu.max="; cat /sys/fs/cgroup/cpu.max'
+          [[ "$(docker exec "${ids[0]}" cat /sys/fs/cgroup/memory.max)" == 8589934592 ]]
+          [[ "$(docker exec "${ids[0]}" cat /sys/fs/cgroup/memory.swap.max)" == 0 ]]
+          [[ "$(docker exec "${ids[0]}" cat /sys/fs/cgroup/cpu.max)" == '300000 100000' ]]
+          docker exec "${ids[0]}" sh -c '
+            for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do
+              printf "==%s==\\n" "$path"
+              cat "/sys/fs/cgroup/$path"
+            done
+          ' > "$RUNNER_TEMP/builder-before-build.txt"
+          {
+            printf '%s\n' '### BuildKit cgroup limits'
+            printf '%s\n' '- memory.max: 8589934592 bytes; memory.swap.max: 0 bytes (Docker memory and memory-swap both capped at 8 GiB total)'
+            printf '%s\n' '- cpu.max: 300000 100000; BuildKit OCI worker max-parallelism: 1'
+            printf '%s\n' '- Initial memory event and CPU counters captured before build; no retry is configured'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build local Linux amd64 image
+        id: image_build
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          build_start_epoch=$(date +%s)
+          build_start_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          echo "build_start_epoch=$build_start_epoch" >> "$GITHUB_OUTPUT"
+          echo "build_start_utc=$build_start_utc" >> "$GITHUB_OUTPUT"
+          build_rc=0
+          timeout --signal=TERM --kill-after=30s 30m docker buildx build \
+            --builder ornigami-external-rehearsal \
+            --platform linux/amd64 \
+            --load \
+            --tag "ornigami:rehearsal-${SOURCE_SHA}" \
+            --build-arg NEXT_PUBLIC_APP_URL=https://rehearsal.invalid \
+            --build-arg "ORNIGAMI_SOURCE_SHA=${SOURCE_SHA}" \
+            --build-arg ORNIGAMI_BUILD_HEAP_MIB=4096 \
+            --build-arg ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true \
+            --build-arg ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false \
+            --build-arg ORNIGAMI_BUILD_WEBPACK_WORKER=false \
+            "$RUNNER_TEMP/source" || build_rc=$?
+          build_end_epoch=$(date +%s)
+          build_end_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          build_seconds=$((build_end_epoch - build_start_epoch))
+          echo "build_end_epoch=$build_end_epoch" >> "$GITHUB_OUTPUT"
+          echo "build_end_utc=$build_end_utc" >> "$GITHUB_OUTPUT"
+          echo "build_seconds=$build_seconds" >> "$GITHUB_OUTPUT"
+          echo "build_exit_code=$build_rc" >> "$GITHUB_OUTPUT"
+          builder_id=$(docker ps -q --filter name=buildx_buildkit_ornigami-external-rehearsal | head -n1)
+          if [[ -n "$builder_id" ]]; then
+            capture_rc=0
+            docker exec "$builder_id" sh -c '
+              for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do
+                printf "==%s==\\n" "$path"
+                cat "/sys/fs/cgroup/$path"
+              done
+            ' > "$RUNNER_TEMP/builder-after-build.txt" || capture_rc=$?
+            {
+              printf '\n### Build result and cgroup counters\n\n'
+              printf '%s\n' "- Build interval: ${build_start_utc} to ${build_end_utc} UTC (${build_seconds} seconds)"
+              printf '%s\n' "- Build command exit code: ${build_rc}"
+              if [[ "$capture_rc" -eq 0 ]]; then
+                printf '%s\n' '- Observed builder counters immediately after build:'
+                printf '%s\n' '```text'
+                cat "$RUNNER_TEMP/builder-after-build.txt"
+                printf '%s\n' '```'
+              else
+                printf '%s\n' '- Builder cgroup counters unavailable after build; resource acceptance will fail if an image was produced.'
+              fi
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '\n### Build result\n\n- Build interval: %s to %s UTC (%s seconds)\n- Build command exit code: %s\n- Builder cgroup counters: unavailable; builder container not running\n' \
+              "$build_start_utc" "$build_end_utc" "$build_seconds" "$build_rc" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          [[ "$build_rc" -eq 0 ]]
+          image="ornigami:rehearsal-${SOURCE_SHA}"
+          image_revision=$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
+          image_platform=$(docker image inspect "$image" --format '{{.Os}}/{{.Architecture}}')
+          image_id=$(docker image inspect "$image" --format '{{.Id}}')
+          [[ "$image_revision" == "$SOURCE_SHA" && "$image_platform" == linux/amd64 ]]
+          printf '\n### Local image identity\n\n- Image ID: `%s`\n- Platform: `%s`\n- Source revision label: `%s`\n- Delivery: local runner only; no artifact or image publication\n' \
+            "$image_id" "$image_platform" "$image_revision" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run disconnected Linux runtime acceptance
+        id: runtime_acceptance
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          image="ornigami:rehearsal-${SOURCE_SHA}"
+          runtime_rc=0
+          bash "$RUNNER_TEMP/source/deploy/coolify/linux-runtime-acceptance.sh" "$image" > "$RUNNER_TEMP/runtime-acceptance.log" 2>&1 || runtime_rc=$?
+          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/runtime-acceptance.log"
+          report_path=$(sed -n 's/^report=//p' "$RUNNER_TEMP/runtime-acceptance.log" | tail -n1)
+          if [[ -n "$report_path" && -f "$report_path" ]]; then
+            report_dir=$(dirname "$report_path")
+            {
+              printf '\n### Runtime acceptance receipt\n\n'
+              printf '%s\n' '```text'
+              cat "$report_path"
+              for metric_file in "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
+                [[ -f "$metric_file" ]] || continue
+                printf '\n==%s==\n' "$(basename "$metric_file")"
+                cat "$metric_file"
+              done
+              printf '%s\n' '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '\nRuntime acceptance receipt path unavailable.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$runtime_rc"
+
+      - name: Scan local image archive for OS and language vulnerabilities
+        if: ${{ always() && steps.image_build.outputs.build_exit_code == '0' }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export TRIVY_CACHE_DIR="$RUNNER_TEMP/trivy-cache"
+          image="ornigami:rehearsal-${SOURCE_SHA}"
+          image_id=$(docker image inspect "$image" --format '{{.Id}}')
+          image_size=$(docker image inspect "$image" --format '{{.Size}}')
+          rootfs_layers=$(docker image inspect "$image" --format '{{json .RootFS.Layers}}')
+          rootfs_layers_sha256=$(printf '%s' "$rootfs_layers" | sha256sum | cut -d' ' -f1)
+          docker save --output "$RUNNER_TEMP/ornigami-image.tar" "$image"
+          archive_sha256=$(sha256sum "$RUNNER_TEMP/ornigami-image.tar" | cut -d' ' -f1)
+          archive_bytes=$(stat -c %s "$RUNNER_TEMP/ornigami-image.tar")
+          {
+            printf '\n### Final image archive identity\n\n'
+            printf '%s\n' "- Docker image ID: \`$image_id\`"
+            printf '%s\n' "- Docker image bytes: $image_size"
+            printf '%s\n' "- Root filesystem layer IDs: \`$rootfs_layers\`"
+            printf '%s\n' "- Root filesystem layer-list SHA-256: \`$rootfs_layers_sha256\`"
+            printf '%s\n' "- Saved archive SHA-256: \`$archive_sha256\`"
+            printf '%s\n' "- Saved archive bytes: $archive_bytes"
+            printf '%s\n' '- Trivy report ImageID must match the local Docker image ID above'
+          } >> "$GITHUB_STEP_SUMMARY"
+          "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/ornigami-image.tar" \
+            --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/trivy.json" --no-progress
+          python3 - "$RUNNER_TEMP/trivy.json" "$GITHUB_STEP_SUMMARY" "$image_id" <<'PY'
+          import collections, json, pathlib, sys
+          report = json.loads(pathlib.Path(sys.argv[1]).read_text())
+          expected_image_id = sys.argv[3]
+          if not isinstance(report, dict) or type(report.get("SchemaVersion")) is not int or report["SchemaVersion"] != 2:
+              raise SystemExit("Trivy report SchemaVersion is missing or unsupported; refusing to accept the scan")
+          if report.get("ArtifactType") != "container_image":
+              raise SystemExit("Trivy report ArtifactType is not container_image; refusing to accept the scan")
+          metadata = report.get("Metadata")
+          if not isinstance(metadata, dict) or metadata.get("ImageID") != expected_image_id:
+              raise SystemExit("Trivy report Metadata.ImageID does not match the built image; refusing to accept the scan")
+          results = report.get("Results")
+          if not isinstance(results, list) or not results:
+              raise SystemExit("Trivy returned missing or empty Results; refusing to accept the scan")
+          counts = collections.Counter()
+          findings = []
+          seen_classes = set()
+          expected_types = {"os-pkgs": {"debian"}, "lang-pkgs": {"npm", "node-pkg"}}
+          seen_node_type = False
+          for result in results:
+              if not isinstance(result, dict) or not isinstance(result.get("Target"), str) or not result["Target"]:
+                  raise SystemExit("Trivy returned a malformed result entry; refusing to accept the scan")
+              result_class = result.get("Class")
+              result_type = result.get("Type")
+              if not isinstance(result_class, str) or not isinstance(result_type, str) or result_class not in expected_types or result_type not in expected_types[result_class]:
+                  raise SystemExit("Trivy returned an unrecognized result class/type; refusing to accept the scan")
+              seen_classes.add(result_class)
+              if result_class == "lang-pkgs":
+                  seen_node_type = True
+              vulnerabilities = result.get("Vulnerabilities")
+              if vulnerabilities is None:
+                  continue
+              if not isinstance(vulnerabilities, list):
+                  raise SystemExit("Trivy returned malformed Vulnerabilities; expected absent, null, or a list")
+              for item in vulnerabilities:
+                  if not isinstance(item, dict) or any(not isinstance(item.get(key), str) or not item[key].strip() for key in ("Severity", "VulnerabilityID", "PkgName")):
+                      raise SystemExit("Trivy returned a malformed vulnerability entry; refusing to accept the scan")
+                  severity = item["Severity"].upper()
+                  counts[severity] += 1
+                  findings.append((severity, item["PkgName"], item.get("InstalledVersion", ""), item.get("FixedVersion", ""), item["VulnerabilityID"], item.get("PrimaryURL", "")))
+          if seen_classes != set(expected_types) or not seen_node_type:
+              raise SystemExit("Trivy report lacks OS or Node.js package inventory coverage; refusing to accept the scan")
+          if any(level not in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"} for level, *_ in findings):
+              raise SystemExit("Trivy returned an unknown severity; refusing to accept the scan")
+          with open(sys.argv[2], "a", encoding="utf-8") as out:
+              out.write("\n### Trivy 0.76.0 image scan\n\n")
+              out.write("| Severity | Findings |\n| --- | ---: |\n")
+              for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"):
+                  out.write(f"| {level} | {counts[level]} |\n")
+              out.write("\nNo image was pushed or published by this workflow.\n")
+              if findings:
+                  out.write("\n| Severity | Package | Installed | Fixed | Advisory | Primary URL |\n| --- | --- | --- | --- | --- | --- |\n")
+                  safe = lambda value: str(value).replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")
+                  for severity, package, installed, fixed, advisory, url in sorted(findings):
+                      out.write(f"| {safe(severity)} | {safe(package)} | {safe(installed)} | {safe(fixed)} | {safe(advisory)} | {safe(url)} |\n")
+          if counts["CRITICAL"] or counts["HIGH"]:
+              raise SystemExit("Trivy found HIGH or CRITICAL vulnerabilities; scan recorded and build validation failed")
+          PY
+
+      - name: Reject build-time OOM or invalid cgroup counters
+        if: ${{ always() && steps.image_build.outputs.build_exit_code == '0' }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          before="$RUNNER_TEMP/builder-before-build.txt"
+          after="$RUNNER_TEMP/builder-after-build.txt"
+          [[ -s "$before" && -s "$after" ]]
+          python3 - "$before" "$after" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import pathlib, re, sys
+          def values(path):
+              text = pathlib.Path(path).read_text()
+              found = {}
+              current = None
+              for line in text.splitlines():
+                  match = re.fullmatch(r"==([a-z.]+)==", line)
+                  if match:
+                      current = match.group(1)
+                      found[current] = []
+                  elif current:
+                      if not line.strip():
+                          raise SystemExit(f"Empty cgroup counter line in {path}")
+                      found[current].append(line.strip())
+              required = {"memory.max", "memory.swap.max", "memory.peak", "memory.events", "cpu.max", "cpu.stat"}
+              if set(found) != required:
+                  raise SystemExit(f"Incomplete builder cgroup counters in {path}")
+              if any(not lines for lines in found.values()):
+                  raise SystemExit(f"Empty builder cgroup counter section in {path}")
+              found = {key: "\n".join(lines) for key, lines in found.items()}
+              return found
+          before, after = values(sys.argv[1]), values(sys.argv[2])
+          if before["memory.max"] != "8589934592" or after["memory.max"] != "8589934592":
+              raise SystemExit("Builder memory.max did not remain at 8 GiB")
+          if before["memory.swap.max"] != "0" or after["memory.swap.max"] != "0":
+              raise SystemExit("Builder memory.swap.max did not remain at zero")
+          if before["cpu.max"] != "300000 100000" or after["cpu.max"] != "300000 100000":
+              raise SystemExit("Builder CPU quota did not remain at 3 CPUs")
+          def key_values(text):
+              result = {}
+              for line in text.splitlines():
+                  parts = line.split()
+                  if len(parts) != 2 or parts[0] in result or not parts[1].isdecimal():
+                      raise SystemExit("Malformed cgroup counter values")
+                  result[parts[0]] = int(parts[1])
+              return result
+          old_events, new_events = key_values(before["memory.events"]), key_values(after["memory.events"])
+          required_events = {"low", "high", "max", "oom", "oom_kill", "oom_group_kill"}
+          if not required_events.issubset(old_events) or not required_events.issubset(new_events):
+              raise SystemExit("Incomplete memory.events counters")
+          deltas = {key: new_events[key] - old_events[key] for key in sorted(new_events)}
+          if any(delta < 0 for delta in deltas.values()):
+              raise SystemExit("Builder memory.events counters decreased or reset")
+          old_cpu, new_cpu = key_values(before["cpu.stat"]), key_values(after["cpu.stat"])
+          if set(old_cpu) != set(new_cpu) or not {"usage_usec", "user_usec", "system_usec"}.issubset(old_cpu):
+              raise SystemExit("Incomplete or mismatched builder cpu.stat counters")
+          cpu_deltas = {key: new_cpu[key] - old_cpu[key] for key in sorted(old_cpu)}
+          if any(delta < 0 for delta in cpu_deltas.values()):
+              raise SystemExit("Builder cpu.stat counters decreased or reset")
+          peak = after["memory.peak"]
+          if not peak.isdecimal() or int(peak) > 8589934592:
+              raise SystemExit("Builder memory.peak is invalid or exceeded its 8 GiB cap")
+          with open(sys.argv[3], "a", encoding="utf-8") as out:
+              out.write("\n### Build resource acceptance\n\n")
+              out.write(f"- Builder memory.peak: {peak} bytes\n")
+              out.write(f"- Build-time memory.events deltas: `{deltas}`\n")
+              out.write(f"- Build-time cpu.stat deltas: `{cpu_deltas}`\n")
+          if deltas["oom"] or deltas["oom_kill"] or deltas["oom_group_kill"]:
+              raise SystemExit("Builder recorded a build-time OOM event; resource acceptance failed")
+          PY
+
+      - name: Remove temporary builder and local image
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          {
+            printf '\n### Disk and Docker usage before cleanup\n\n'
+            printf '%s\n' '```text'
+            df -PB1 "$RUNNER_TEMP"
+            docker system df
+            for path in "$RUNNER_TEMP/source" "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/trivy-cache" "$RUNNER_TEMP/trivy.db" "$RUNNER_TEMP/java-db"; do
+              [[ -e "$path" ]] || continue
+              du -sb "$path"
+            done
+            printf '%s\n' '```'
+          } >> "$GITHUB_STEP_SUMMARY" 2>&1
+          builder_id=$(docker ps -aq --filter name=buildx_buildkit_ornigami-external-rehearsal | head -n1)
+          if [[ -n "$builder_id" ]] && [[ "$(docker inspect "$builder_id" --format '{{.State.Running}}' 2>/dev/null)" == true ]]; then
+            docker exec "$builder_id" sh -c '
+              for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do
+                printf "==%s==\\n" "$path"
+                cat "/sys/fs/cgroup/$path"
+              done
+            ' > "$RUNNER_TEMP/builder-final.txt"
+            if [[ -s "$RUNNER_TEMP/builder-final.txt" ]]; then
+              {
+                printf '\n### Final builder cgroup counters before cleanup\n\n'
+                printf '%s\n' '```text'
+                cat "$RUNNER_TEMP/builder-final.txt"
+                printf '%s\n' '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            printf '\n### Final builder cgroup counters\n\n- Unavailable: no running temporary builder remained for capture.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          docker buildx rm ornigami-external-rehearsal >/dev/null 2>&1 || true
+          docker image rm "ornigami:rehearsal-${SOURCE_SHA}" >/dev/null 2>&1 || true
+          rm -f -- "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/node-base.tar" "$RUNNER_TEMP/trivy.json"
+          {
+            printf '\n### Disk after cleanup\n\n'
+            printf '%s\n' '```text'
+            df -PB1 "$RUNNER_TEMP"
+            printf '%s\n' '```'
+          } >> "$GITHUB_STEP_SUMMARY" 2>&1
