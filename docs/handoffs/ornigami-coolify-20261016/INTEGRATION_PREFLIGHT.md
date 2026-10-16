@@ -1,5 +1,7 @@
 # Publication preflight — integration checks completed
 
+Current follow-up: [framework trial hold receipts and restoration steps](./FRAMEWORK_LINUX_TRIAL.md). At approximately 20:39–20:43 UTC, fresh owner inspection established a reversible **app-specific Vercel Git disconnection**, null link and zero active deployments, unchanged production deployment, four unlinked Netlify sites, known GitHub Apps/hooks and an empty Coolify environment. The exact experimental candidate and one request-only commit were then published; the one trial failed and its approval is consumed. Vercel remains disconnected afterward. Earlier branch guards and the Vercel `createDeployments` metadata field below are historical and are not proof of a hold on the experimental branch. No shared installation was removed or suspended and QR staging was not changed.
+
 Revalidated before both repaired-trial pushes on 16 October: protections remained effective; correction publication started no run/deployment, then one separate request-only push started the approved trial. Post-trial checks found no deployment and zero Coolify resources. See [repaired-trial identities, gates and receipts](./REPAIRED_TRIAL.md). This historical preflight is not authorization for another push/run.
 
 

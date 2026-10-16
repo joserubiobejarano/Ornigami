@@ -1,4 +1,8 @@
-# Local framework prototype — final local result
+# Local framework prototype — local result and Linux follow-up
+
+Latest follow-up: the owner-approved [single Linux trial](./FRAMEWORK_LINUX_TRIAL.md) of exact candidate `fe71816993f5eb42d0565befb4354d478e48429a` **failed**. Compilation/TypeScript passed, but generated Windows external-module specifiers failed Linux page collection. No image exists. Fresh base scan: 0 critical/54 high, threshold failed. Linux runtime/browser/restart/cache and final-image scanning remain untested. The exact partial artifact was downloaded and owner-acknowledged before cleanup; evidence-capture failure and recovered logs are documented. Vercel is held by app-specific Git disconnection. One trial/acknowledgment approval is consumed; no retry or production adoption is authorized.
+
+## Historical local checkpoint
 
 The bounded Windows experiment passed its focused checks. **This is not production adoption, Linux/image acceptance or an accepted maintenance SLA.** All work is local. No external runner, publication, live integration change, VPS operation, deployment, provider send or agent delegation occurred.
 

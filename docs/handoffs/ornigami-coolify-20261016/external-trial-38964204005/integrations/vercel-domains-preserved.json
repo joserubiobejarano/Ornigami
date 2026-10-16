@@ -1,0 +1,17 @@
+[
+  {
+    "name": "ornigami.com",
+    "gitBranch": null,
+    "redirect": null
+  },
+  {
+    "name": "www.ornigami.com",
+    "gitBranch": null,
+    "redirect": "ornigami.com"
+  },
+  {
+    "name": "locallift-indol.vercel.app",
+    "gitBranch": null,
+    "redirect": null
+  }
+]

@@ -1,0 +1,243 @@
+{
+  "schema": 1,
+  "runId": "38964204005",
+  "attempt": 1,
+  "candidate": "fe71816993f5eb42d0565befb4354d478e48429a",
+  "request": "6ab0f70c7a585132b3bb3c388493040ea9085b5c",
+  "branch": "codex/ornigami-sri-local-prototype-f-20261016",
+  "conclusion": "failure",
+  "candidateLockSha256": "8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898",
+  "workflowBlob": "4938e0fe6cfd93c491ab1691eb02c89555d48fa2",
+  "frameworkPackageSha256": "3ebe019c4b83a48469956f0ca255f03be22272599127c86d87e1e2daa3519a81",
+  "patchSha256": "41708142d05f1d6ff1383b090a48c72fce09b69e25a44cd1586b39fa55580db6",
+  "startedAt": "2026-10-16T20:42:47Z",
+  "completedAt": "2026-10-16T20:45:26Z",
+  "buildSeconds": 79,
+  "buildExitCode": 1,
+  "imageId": null,
+  "imageDigest": null,
+  "build": {
+    "compilation": "passed in 35.1s",
+    "typescript": "passed in 5.5s",
+    "pageDataCollection": "failed: MODULE_NOT_FOUND for Windows-style next\\dist\\server\\app-render\\work-async-storage.external.js",
+    "productionBuild": "failed",
+    "resourceEnforcement": {
+      "memoryMaxBytes": 8589934592,
+      "swapMaxBytes": 0,
+      "cpuMax": "300000 100000",
+      "nodeHeapMiB": 4096
+    },
+    "peakMemoryBytes": 7931895808,
+    "oomCounters": {
+      "before": {
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "after": {
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    },
+    "automatedResourceGate": "skipped because image build failed; counters reviewed separately"
+  },
+  "disk": {
+    "source": "Visible GitHub job summary retained in runner-summary.txt; not present in incomplete uploaded artifact",
+    "freeBeforeBytes": 91955589120,
+    "freeBeforeCleanupBytes": 85966442496,
+    "freeAfterCleanupBytes": 89596030976,
+    "observedGrowthBeforeCleanupBytes": 5989146624,
+    "sourceDirectoryBytes": 51781189,
+    "trivyCacheBytes": 1629495448,
+    "buildkitVolumeReported": "3.318GB",
+    "scope": "Shared runner filesystem observations at checkpoints; not continuous peak disk measurement"
+  },
+  "baseScan": {
+    "critical": 0,
+    "high": 54,
+    "thresholdGate": "failed"
+  },
+  "finalScan": "untested: no image",
+  "runtimeHttpSecurity": "untested: no image",
+  "browserRegressions": "untested: no image; dependent workflow stage skipped",
+  "restartCachePersistence": "untested: no image",
+  "sourceMapCompletion": "untested: build stopped before completion",
+  "evidence": {
+    "capture": "failed: runtime directory absent when runtime stage was skipped; no artifact manifest, scanner metadata copy, disk copy or step-summary copy was generated",
+    "uploadedPartialArtifact": "passed",
+    "verifiedDurablePartialArtifactCustody": "passed before cleanup",
+    "ownerStatusCount": 1,
+    "fullLogRecovery": "passed after run completion, when GitHub exposed logs",
+    "artifactDigest": "47a143e8e3f578db2424686c1b1e263b055e4ca5a88f145ad2196625f9766d43",
+    "artifactBytes": 118012,
+    "artifactId": "12074571185",
+    "downloadedAt": "2026-10-16T20:45:03.767Z",
+    "acknowledgedAt": "2026-10-16T20:45:04Z",
+    "cleanupStartedAt": "2026-10-16T20:45:10Z",
+    "completeness": "failed; do not reconstruct a runner manifest or mark missing evidence as passed"
+  },
+  "cleanup": "success",
+  "workflowSteps": [
+    {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:42:48Z",
+      "completed_at": "2026-10-16T20:42:49Z"
+    },
+    {
+      "number": 2,
+      "name": "Initialize evidence bundle",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:42:49Z",
+      "completed_at": "2026-10-16T20:42:49Z"
+    },
+    {
+      "number": 3,
+      "name": "Validate inputs and fetch exact public source",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:42:49Z",
+      "completed_at": "2026-10-16T20:42:51Z"
+    },
+    {
+      "number": 4,
+      "name": "Verify runner and Docker Buildx",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:42:51Z",
+      "completed_at": "2026-10-16T20:42:55Z"
+    },
+    {
+      "number": 5,
+      "name": "Download and verify pinned Trivy scanner",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:42:55Z",
+      "completed_at": "2026-10-16T20:42:56Z"
+    },
+    {
+      "number": 6,
+      "name": "Scan pinned Node base image and record advisory gate",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:42:56Z",
+      "completed_at": "2026-10-16T20:43:15Z"
+    },
+    {
+      "number": 7,
+      "name": "Create bounded serial BuildKit builder",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:43:15Z",
+      "completed_at": "2026-10-16T20:43:26Z"
+    },
+    {
+      "number": 8,
+      "name": "Build local Linux amd64 image",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-16T20:43:26Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 9,
+      "name": "Run disconnected Linux runtime acceptance",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 10,
+      "name": "Run bounded Linux framework browser regressions",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 11,
+      "name": "Scan local image archive for OS and language vulnerabilities",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 12,
+      "name": "Reject build-time OOM or invalid cgroup counters",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 13,
+      "name": "Enforce pinned base image advisory threshold",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 14,
+      "name": "Capture evidence bundle before cleanup",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:45Z"
+    },
+    {
+      "number": 15,
+      "name": "Upload rehearsal evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:44:45Z",
+      "completed_at": "2026-10-16T20:44:47Z"
+    },
+    {
+      "number": 16,
+      "name": "Report downloadable evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:44:47Z",
+      "completed_at": "2026-10-16T20:44:47Z"
+    },
+    {
+      "number": 17,
+      "name": "Require verified owner local evidence custody before cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:44:47Z",
+      "completed_at": "2026-10-16T20:45:10Z"
+    },
+    {
+      "number": 18,
+      "name": "Remove temporary builder and local image",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:45:10Z",
+      "completed_at": "2026-10-16T20:45:24Z"
+    },
+    {
+      "number": 19,
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T20:45:24Z",
+      "completed_at": "2026-10-16T20:45:24Z"
+    }
+  ],
+  "noRetry": true,
+  "retainedDeployableImage": false,
+  "productionAdoption": false,
+  "maintenanceOwners": "unassigned",
+  "registryPublication": false,
+  "vpsOperations": false,
+  "deployments": false,
+  "providerActivation": false
+}

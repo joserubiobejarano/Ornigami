@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-10-16T20:39:35.1743332Z",
+  "id": "prj_b4ud7KOZHWQeV9YXbGD3c8XMmKIv",
+  "name": "locallift",
+  "link": {
+    "type": "github",
+    "org": "joserubiobejarano",
+    "repo": "Ornigami",
+    "repoId": 1098540125,
+    "productionBranch": "main",
+    "createdAt": 1778939774564
+  },
+  "deployHookCount": 0,
+  "gitProviderOptions": {
+    "createDeployments": "enabled"
+  },
+  "commandForIgnoringBuildStep": null,
+  "paused": null,
+  "productionDeploymentId": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE"
+}

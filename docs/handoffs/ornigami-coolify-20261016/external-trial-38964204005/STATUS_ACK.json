@@ -1,0 +1,10 @@
+{
+  "id": 56561458084,
+  "state": "success",
+  "context": "ornigami/evidence-local/38964204005/1",
+  "description": "artifact=12074571185;sha256=47a143e8e3f578db2424686c1b1e263b055e4ca5a88f145ad2196625f9766d43",
+  "createdAt": "2026-10-16T20:45:04Z",
+  "creator": "joserubiobejarano",
+  "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/statuses/6ab0f70c7a585132b3bb3c388493040ea9085b5c",
+  "sanitization": "Selected public acknowledgment fields; original helper response retained locally."
+}

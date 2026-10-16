@@ -1,0 +1,872 @@
+Build, runtime acceptance, and vulnerability scans	Set up job	﻿2026-10-16T20:42:48.4077734Z Current runner version: '2.337.0'
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4097476Z ##[group]Runner Image Provisioner
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4098045Z Hosted Compute Agent
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4098399Z Version: 20261012.601
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4098834Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4099273Z Build Date: 2026-10-12T17:48:21Z
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4099745Z Worker ID: {f7b380f7-7ca9-406a-8e59-912cd763f1db}
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4100189Z Region: centralus
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4100545Z Cloud: Azure
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4100923Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4101693Z ##[group]Operating System
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4102124Z Ubuntu
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4102455Z 24.04.5
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4102777Z LTS
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4103127Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4103460Z ##[group]Runner Image
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4103839Z Image: ubuntu-24.04
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4104233Z Version: 20261012.334.1
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4104884Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4105945Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4106758Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4107478Z ##[group]GITHUB_TOKEN Permissions
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4108773Z Metadata: read
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4109140Z Statuses: read
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4109513Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4110926Z Secret source: Actions
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4111471Z Cache mode: write
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4111961Z Prepare workflow directory
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4407672Z Prepare all required actions
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.4452660Z Getting action download info
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:48.6605360Z Download action repository 'actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f' (SHA:bbbca2ddaa5d8feaa63e36b76fdaad77386f024f)
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T20:42:49.2973717Z Complete job name: Build, runtime acceptance, and vulnerability scans
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	﻿2026-10-16T20:42:49.3962316Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3962819Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3963237Z [36;1mevidence_dir="$RUNNER_TEMP/ornigami-evidence"[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3963650Z [36;1minstall -d -m 700 "$evidence_dir"[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3964398Z [36;1mprintf '%s\n' 'This artifact contains public rehearsal evidence only. It excludes the local image archive and credentials.' > "$evidence_dir/README.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3965237Z [36;1mprintf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3965961Z [36;1m  "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.3967032Z [36;1mecho "ORNIGAMI_EVIDENCE_DIR=$evidence_dir" >> "$GITHUB_ENV"[0m
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.4545954Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Initialize evidence bundle	2026-10-16T20:42:49.4547545Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	﻿2026-10-16T20:42:49.5617492Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5618008Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5618368Z [36;1m[[ "$GITHUB_EVENT_NAME" == push ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5618858Z [36;1m[[ "$GITHUB_REF" == refs/heads/codex/ornigami-sri-local-prototype-f-20261016 ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5619453Z [36;1m[[ "$REQUEST_SHA" =~ ^[0-9a-f]{40}$ && "$REQUEST_SHA" == "$GITHUB_SHA" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5619919Z [36;1mrepo_dir="$RUNNER_TEMP/request-repository"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5620376Z [36;1mrepo='https://github.com/joserubiobejarano/Ornigami.git'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5620797Z [36;1mmkdir "$repo_dir"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5621109Z [36;1mgit -C "$repo_dir" init --quiet[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5621490Z [36;1mgit -C "$repo_dir" remote add origin "$repo"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5621953Z [36;1mgit -C "$repo_dir" fetch --quiet --no-tags origin "$REQUEST_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5622491Z [36;1mactual_request_sha=$(git -C "$repo_dir" rev-parse FETCH_HEAD)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5622985Z [36;1m[[ "$actual_request_sha" == "$REQUEST_SHA" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5623429Z [36;1mgit -C "$repo_dir" checkout --quiet --detach "$REQUEST_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5624328Z [36;1mread -r commit_sha first_parent extra_parents < <(git -C "$repo_dir" rev-list --parents -n1 "$REQUEST_SHA")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5625029Z [36;1m[[ "$commit_sha" == "$REQUEST_SHA" && -n "$first_parent" && -z "${extra_parents:-}" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5625691Z [36;1mmapfile -t changed_paths < <(git -C "$repo_dir" diff --name-only "$first_parent" "$REQUEST_SHA")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5626519Z [36;1m[[ ${#changed_paths[@]} -eq 1 && "${changed_paths[0]}" == .github/build-requests/ornigami.json ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5627326Z [36;1mgit -C "$repo_dir" show "$REQUEST_SHA:.github/build-requests/ornigami.json" > "$RUNNER_TEMP/ornigami-build-request.json"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5628624Z [36;1mjq -e 'type == "object" and (keys == ["packageLockSha256", "sourceSha"]) and (.sourceSha | type == "string" and test("^[0-9a-f]{40}$")) and (.packageLockSha256 | type == "string" and test("^[0-9a-f]{64}$"))' "$RUNNER_TEMP/ornigami-build-request.json" >/dev/null[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5629739Z [36;1mSOURCE_SHA=$(jq -r '.sourceSha' "$RUNNER_TEMP/ornigami-build-request.json")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5630423Z [36;1mEXPECTED_LOCK_SHA256=$(jq -r '.packageLockSha256' "$RUNNER_TEMP/ornigami-build-request.json")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5631008Z [36;1mecho "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5631670Z [36;1mecho "EXPECTED_LOCK_SHA256=$EXPECTED_LOCK_SHA256" >> "$GITHUB_ENV"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5632163Z [36;1mecho "REQUEST_SHA=$REQUEST_SHA" >> "$GITHUB_ENV"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5632664Z [36;1mgit -C "$repo_dir" merge-base --is-ancestor "$SOURCE_SHA" "$REQUEST_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5633332Z [36;1msource_lock_sha=$(git -C "$repo_dir" show "$SOURCE_SHA:package-lock.json" | sha256sum | cut -d' ' -f1)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5633952Z [36;1mif [[ "$source_lock_sha" != "$EXPECTED_LOCK_SHA256" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5634627Z [36;1m  printf 'Build request package-lock SHA-256 mismatch: request=%s candidate_git_blob=%s. Refusing to build.\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5635275Z [36;1m    "$EXPECTED_LOCK_SHA256" "$source_lock_sha" >&2[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5635657Z [36;1m  exit 1[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5635917Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5636526Z [36;1mcandidate_workflow_blob=$(git -C "$repo_dir" rev-parse "$SOURCE_SHA:.github/workflows/ornigami-image-rehearsal.yml")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5637389Z [36;1mrequest_workflow_blob=$(git -C "$repo_dir" rev-parse "$REQUEST_SHA:.github/workflows/ornigami-image-rehearsal.yml")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5638080Z [36;1m[[ "$candidate_workflow_blob" == "$request_workflow_blob" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5638650Z [36;1mgit -C "$repo_dir" worktree add --quiet --detach "$RUNNER_TEMP/source" "$SOURCE_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5639230Z [36;1mactual_sha=$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5639662Z [36;1m[[ "$actual_sha" == "$SOURCE_SHA" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5640360Z [36;1m[[ -z "$(git -C "$RUNNER_TEMP/source" status --porcelain --untracked-files=all)" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5641104Z [36;1mfor required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh; do[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5641722Z [36;1m  [[ -f "$RUNNER_TEMP/source/$required" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5642076Z [36;1mdone[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5642516Z [36;1mcheckout_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5643071Z [36;1m[[ "$checkout_lock_sha" == "$source_lock_sha" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5643435Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5643730Z [36;1m  printf '%s\n' '### Build request admission'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5644155Z [36;1m  printf '%s\n' "- Request commit: \`$REQUEST_SHA\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5644579Z [36;1m  printf '%s\n' "- Commit: \`$actual_sha\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5645064Z [36;1m  printf '%s\n' "- Committed package-lock.json SHA-256: \`$source_lock_sha\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5645702Z [36;1m  printf '%s\n' "- Detached checkout package-lock.json SHA-256: \`$checkout_lock_sha\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5646642Z [36;1m  printf '%s\n' '- Request marker: exact source and lock fields; only marker changed in single-parent request commit'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5647359Z [36;1m  printf '%s\n' '- Workflow blob: identical at candidate and request commits'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5647922Z [36;1m  printf '%s\n' '- Candidate is an ancestor of the request commit'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5648461Z [36;1m  printf '%s\n' '- Checkout: detached exact candidate; clean before build'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5648923Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5649240Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5649945Z [36;1m  printf 'request_sha=%s\nsource_sha=%s\nexpected_lock_sha256=%s\nsource_lock_sha256=%s\ncheckout_lock_sha256=%s\ncandidate_workflow_blob=%s\nrequest_workflow_blob=%s\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5651077Z [36;1m    "$REQUEST_SHA" "$SOURCE_SHA" "$EXPECTED_LOCK_SHA256" "$source_lock_sha" "$checkout_lock_sha" "$candidate_workflow_blob" "$request_workflow_blob"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5651808Z [36;1m} > "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5706702Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5707112Z env:
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5707453Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5707925Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T20:42:49.5708296Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	﻿2026-10-16T20:42:51.5700218Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5700496Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5700673Z [36;1m[[ "$(uname -m)" == x86_64 ]][0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5700864Z [36;1mdocker info >/dev/null[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5701043Z [36;1mdocker buildx version[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5701212Z [36;1mdocker buildx ls[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5701401Z [36;1mcpu_count=$(getconf _NPROCESSORS_ONLN)[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5701662Z [36;1mtotal_mib=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo)[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5701985Z [36;1mavailable_mib=$(awk '/^MemAvailable:/ {print int($2 / 1024)}' /proc/meminfo)[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5702294Z [36;1mfree_disk_bytes=$(df -PB1 "$RUNNER_TEMP" | awk 'NR == 2 {print $4}')[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5702524Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5702685Z [36;1m  printf '%s\n' '### Runner preflight'[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5702918Z [36;1m  printf '%s\n' "- Online CPUs: ${cpu_count} (minimum 4)"[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5703198Z [36;1m  printf '%s\n' "- Total memory: ${total_mib} MiB (minimum 14336 MiB)"[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5703545Z [36;1m  printf '%s\n' "- Available memory before build: ${available_mib} MiB (minimum 12288 MiB)"[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5703943Z [36;1m  printf '%s\n' "- Free runner disk before build: ${free_disk_bytes} bytes (minimum 10737418240)"[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5704223Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5704431Z [36;1m[[ "$cpu_count" =~ ^[0-9]+$ && "$cpu_count" -ge 4 ]][0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5704675Z [36;1m[[ "$total_mib" =~ ^[0-9]+$ && "$total_mib" -ge 14336 ]][0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5704929Z [36;1m[[ "$available_mib" =~ ^[0-9]+$ && "$available_mib" -ge 12288 ]][0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5705221Z [36;1m[[ "$free_disk_bytes" =~ ^[0-9]+$ && "$free_disk_bytes" -ge 10737418240 ]][0m
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5762201Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5762424Z env:
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5762629Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5762903Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5763196Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5763496Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:51.5763694Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:54.8638624Z github.com/docker/buildx v0.38.0 0dbe87f36ed472fe36b6796c3f70b4210a731fc5
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:55.0119176Z NAME/NODE     DRIVER/ENDPOINT   STATUS    BUILDKIT   PLATFORMS
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:55.0120256Z default*      docker                                 
+Build, runtime acceptance, and vulnerability scans	Verify runner and Docker Buildx	2026-10-16T20:42:55.0120623Z  \_ default    \_ default       running   v0.20.2    linux/amd64 (+4), linux/386
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	﻿2026-10-16T20:42:55.0357381Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0357645Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0357796Z [36;1mcd "$RUNNER_TEMP"[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0357965Z [36;1mcurl --fail --silent --show-error --location \[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0358176Z [36;1m  --output trivy_0.76.0_Linux-64bit.tar.gz \[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0358482Z [36;1m  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_Linux-64bit.tar.gz[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0358783Z [36;1mcurl --fail --silent --show-error --location \[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0358973Z [36;1m  --output trivy_0.76.0_checksums.txt \[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0359242Z [36;1m  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0359731Z [36;1mgrep -Fx 'e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7  trivy_0.76.0_Linux-64bit.tar.gz' trivy_0.76.0_checksums.txt >/dev/null[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0360269Z [36;1mecho 'e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7  trivy_0.76.0_Linux-64bit.tar.gz' | sha256sum --check --status[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0360652Z [36;1mtar -xzf trivy_0.76.0_Linux-64bit.tar.gz trivy[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0360828Z [36;1mchmod 0755 trivy[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0360967Z [36;1m./trivy --version[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0361098Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0361237Z [36;1m  printf '%s\n' '### Scanner verification'[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0361535Z [36;1m  printf '%s\n' '- Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:'[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0361984Z [36;1m  printf '%s\n' '  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt'[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0422259Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0480676Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0480906Z env:
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0481087Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0481324Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0481591Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0481867Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:55.0482041Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Download and verify pinned Trivy scanner	2026-10-16T20:42:56.6467933Z Version: 0.76.0
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	﻿2026-10-16T20:42:56.6529876Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6530160Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6530480Z [36;1mpython3 - "$RUNNER_TEMP/source/Dockerfile" "$RUNNER_TEMP/source/deploy/coolify/base-image-candidate.json" "$BASE_IMAGE" <<'PY'[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6530809Z [36;1mimport json, pathlib, re, sys[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6531014Z [36;1mdockerfile, receipt_path = map(pathlib.Path, sys.argv[1:3])[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6531236Z [36;1mbase_image = sys.argv[3][0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6531406Z [36;1mtext = dockerfile.read_text(encoding="utf-8")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6531741Z [36;1mexternal_from = re.compile(r"^FROM\s+--platform=linux/amd64\s+(node:[^\s]+)(?:\s+AS\s+[^\s]+)?\s*$", re.IGNORECASE | re.MULTILINE)[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6532057Z [36;1mrefs = set(external_from.findall(text))[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6532228Z [36;1mif refs != {base_image}:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6532511Z [36;1m    raise SystemExit(f"Dockerfile external Node base references differ from pinned scan target: {sorted(refs)}")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6532877Z [36;1mreceipt = json.loads(receipt_path.read_text(encoding="utf-8"))[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6533107Z [36;1mcandidate, digest = base_image.split("@", 1)[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6533451Z [36;1mif receipt.get("candidate") != candidate or receipt.get("platform") != "linux/amd64" or receipt.get("platformManifestDigest") != digest:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6534036Z [36;1m    raise SystemExit("Pinned base image differs from the machine-readable base image candidate receipt")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6534302Z [36;1mPY[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6534451Z [36;1mexport TRIVY_CACHE_DIR="$RUNNER_TEMP/trivy-cache"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6534666Z [36;1mdocker pull --platform linux/amd64 "$BASE_IMAGE"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6534896Z [36;1mbase_id=$(docker image inspect "$BASE_IMAGE" --format '{{.Id}}')[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6535114Z [36;1mmkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6535449Z [36;1mcp -- "$RUNNER_TEMP/source/deploy/coolify/base-image-candidate.json" "$ORNIGAMI_EVIDENCE_DIR/scans/base-image-candidate.json"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6535933Z [36;1mprintf 'base_image=%s\nbase_image_id=%s\nplatform=linux/amd64\n' "$BASE_IMAGE" "$base_id" > "$ORNIGAMI_EVIDENCE_DIR/base-image-identity.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6536504Z [36;1mdocker save --output "$RUNNER_TEMP/node-base.tar" "$BASE_IMAGE"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6536765Z [36;1m"$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/node-base.tar" \[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6537084Z [36;1m  --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/base-trivy.json" --no-progress[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6537483Z [36;1mpython3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_STEP_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6537783Z [36;1mimport collections, json, pathlib, sys[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6537996Z [36;1mreport = json.loads(pathlib.Path(sys.argv[1]).read_text())[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6538201Z [36;1mexpected_image_id = sys.argv[3][0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6538497Z [36;1mif not isinstance(report, dict) or type(report.get("SchemaVersion")) is not int or report["SchemaVersion"] != 2:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6538816Z [36;1m    raise SystemExit("Base Trivy report schema invalid")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6539205Z [36;1mif report.get("ArtifactType") != "container_image" or not isinstance(report.get("Metadata"), dict) or report["Metadata"].get("ImageID") != expected_image_id:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6539600Z [36;1m    raise SystemExit("Base Trivy report identity invalid")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6539800Z [36;1mresults = report.get("Results")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6539982Z [36;1mif not isinstance(results, list) or not results:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6540194Z [36;1m    raise SystemExit("Base Trivy report has no results")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6540390Z [36;1mcounts = collections.Counter()[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6540542Z [36;1mfindings = [][0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6540675Z [36;1mhas_debian = False[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6540815Z [36;1mfor result in results:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6541208Z [36;1m    if not isinstance(result, dict) or not isinstance(result.get("Target"), str) or not result["Target"]:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6541529Z [36;1m        raise SystemExit("Base Trivy report has a malformed result")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6541792Z [36;1m    if result.get("Class") == "os-pkgs" and result.get("Type") == "debian":[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6542017Z [36;1m        has_debian = True[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6542252Z [36;1m    elif result.get("Class") == "lang-pkgs" and result.get("Type") in {"npm", "node-pkg"}:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6542520Z [36;1m        pass[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6542646Z [36;1m    else:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6542846Z [36;1m        raise SystemExit("Base Trivy report has an unrecognized result class/type")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6543110Z [36;1m    vulnerabilities = result.get("Vulnerabilities")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6543299Z [36;1m    if vulnerabilities is None:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6543451Z [36;1m        continue[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6543612Z [36;1m    if not isinstance(vulnerabilities, list):[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6543847Z [36;1m        raise SystemExit("Base Trivy report has malformed Vulnerabilities")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6544074Z [36;1m    for item in vulnerabilities:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6544418Z [36;1m        if not isinstance(item, dict) or any(not isinstance(item.get(key), str) or not item[key].strip() for key in ("Severity", "VulnerabilityID", "PkgName")):[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6544939Z [36;1m            raise SystemExit("Base Trivy report has malformed vulnerability entry")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6545187Z [36;1m        severity = item["Severity"].upper()[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6545412Z [36;1m        if severity not in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"}:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6545680Z [36;1m            raise SystemExit("Base Trivy report has unknown severity")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6545892Z [36;1m        counts[severity] += 1[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6546606Z [36;1m        findings.append((severity, item["PkgName"], item.get("InstalledVersion", ""), item.get("FixedVersion", ""), item["VulnerabilityID"], item.get("PrimaryURL", "")))[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6546983Z [36;1mif not has_debian:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6547174Z [36;1m    raise SystemExit("Base Trivy report has no Debian inventory")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6547448Z [36;1mwith open(sys.argv[2], "a", encoding="utf-8") as out:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6547771Z [36;1m    out.write("\n### Pinned base image advisory review gate\n\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6548021Z [36;1m    out.write(f"Image: `{sys.argv[5]}`\n\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6548229Z [36;1m    out.write(f"Docker image ID: `{expected_image_id}`\n\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6548457Z [36;1m    out.write("| Severity | Findings |\n| --- | ---: |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6548684Z [36;1m    for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"):[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6548912Z [36;1m        out.write(f"| {level} | {counts[level]} |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6549307Z [36;1m    out.write("\nBase findings are recorded here. The HIGH/CRITICAL acceptance gate runs after runtime, final-image scan, and resource evidence collection.\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6549669Z [36;1m    if findings:[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6549947Z [36;1m        out.write("\n| Severity | Package | Installed | Fixed | Advisory | Primary URL |\n| --- | --- | --- | --- | --- | --- |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6550409Z [36;1m        safe = lambda value: str(value).replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6550802Z [36;1m        for severity, package, installed, fixed, advisory, url in sorted(findings):[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6551170Z [36;1m            out.write(f"| {safe(severity)} | {safe(package)} | {safe(installed)} | {safe(fixed)} | {safe(advisory)} | {safe(url)} |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6551612Z [36;1mpathlib.Path(sys.argv[4]).write_text(f"critical_count={counts['CRITICAL']}\nhigh_count={counts['HIGH']}\n", encoding="utf-8")[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6552044Z [36;1mPY[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6552153Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6552332Z [36;1m  printf '\n### Trivy scanner and vulnerability database metadata\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6552543Z [36;1m  printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6552701Z [36;1m  "$RUNNER_TEMP/trivy" --version[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6552862Z [36;1m  printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6553005Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6553169Z [36;1mrm -f -- "$RUNNER_TEMP/node-base.tar"[0m
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6607339Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6607534Z env:
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6607703Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6607929Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6608194Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6608476Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6608786Z   BASE_IMAGE: node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:56.6609068Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1249050Z docker.io/library/node@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812: Pulling from library/node
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1334738Z ecc510c1e359: Pulling fs layer
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1335092Z a35b98544534: Pulling fs layer
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1335322Z cb3017dcfd11: Pulling fs layer
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1335555Z f5bfc00e35f0: Pulling fs layer
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1335775Z 1a21341009fa: Pulling fs layer
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1336192Z f5bfc00e35f0: Waiting
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.1336938Z 1a21341009fa: Waiting
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.2950590Z a35b98544534: Verifying Checksum
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.2951311Z a35b98544534: Download complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.4578855Z ecc510c1e359: Verifying Checksum
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.4591912Z ecc510c1e359: Download complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.4863904Z cb3017dcfd11: Verifying Checksum
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.4864372Z cb3017dcfd11: Download complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.4983637Z f5bfc00e35f0: Verifying Checksum
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.4984053Z f5bfc00e35f0: Download complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.6103115Z 1a21341009fa: Verifying Checksum
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:57.6103504Z 1a21341009fa: Download complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:42:58.1463792Z ecc510c1e359: Pull complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:05.5252449Z a35b98544534: Pull complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:07.2381282Z cb3017dcfd11: Pull complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:07.3388122Z f5bfc00e35f0: Pull complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:07.3473768Z 1a21341009fa: Pull complete
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:07.3500564Z Digest: sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:07.3507442Z Status: Downloaded newer image for node@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:07.3515347Z docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:09.4582799Z 2026-10-16T20:43:09Z	INFO	[vulndb] Need to update DB
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:09.4583178Z 2026-10-16T20:43:09Z	INFO	[vulndb] Downloading vulnerability DB...
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:09.4583624Z 2026-10-16T20:43:09Z	INFO	[vulndb] Downloading artifact...	repo="mirror.gcr.io/aquasec/trivy-db:2"
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:13.5038634Z 2026-10-16T20:43:13Z	INFO	[vulndb] Artifact successfully downloaded	repo="mirror.gcr.io/aquasec/trivy-db:2"
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:13.5040206Z 2026-10-16T20:43:13Z	INFO	[vuln] Vulnerability scanning is enabled
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:14.7217493Z 2026-10-16T20:43:14Z	INFO	Detected OS	family="debian" version="13.7"
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:14.7217874Z 2026-10-16T20:43:14Z	INFO	[debian] Detecting vulnerabilities...	os_version="13" pkg_num=79
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:14.7258159Z 2026-10-16T20:43:14Z	INFO	Number of language-specific files	num=1
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:14.7259391Z 2026-10-16T20:43:14Z	INFO	[node-pkg] Detecting vulnerabilities...
+Build, runtime acceptance, and vulnerability scans	Scan pinned Node base image and record advisory gate	2026-10-16T20:43:14.7281961Z 2026-10-16T20:43:14Z	WARN	Using severities from other vendors for some vulnerabilities. Read https://trivy.dev/docs/v0.76/guide/scanner/vulnerability#severity-selection for details.
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	﻿2026-10-16T20:43:15.1539660Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1539918Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1540081Z [36;1mbuilder='ornigami-external-rehearsal'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1540328Z [36;1mif docker buildx ls --format '{{.Name}}' | grep -Fxq "$builder"; then[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1540575Z [36;1m  echo 'Refusing to reuse an existing builder.' >&2[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1540752Z [36;1m  exit 1[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1540862Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1541021Z [36;1mbuilder_state_volume="buildx_buildkit_${builder}0_state"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1541290Z [36;1mif docker volume ls --format '{{.Name}}' | grep -Fxq "$builder_state_volume"; then[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1541571Z [36;1m  echo 'Refusing to reuse an existing BuildKit state volume.' >&2[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1541766Z [36;1m  exit 1[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1541875Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1542065Z [36;1mprintf '[worker.oci]\n  max-parallelism = 1\n' > "$RUNNER_TEMP/buildkitd.toml"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1542379Z [36;1mdocker buildx create --name "$builder" --driver docker-container \[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1542868Z [36;1m  --driver-opt 'image=moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea,memory=8g,memory-swap=8g,cpu-quota=300000,cpu-period=100000' \[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1543491Z [36;1m  --buildkitd-config "$RUNNER_TEMP/buildkitd.toml" --use --bootstrap[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1543827Z [36;1mmapfile -t ids < <(docker ps --no-trunc --filter "name=^/buildx_buildkit_${builder}0$" --format '{{.ID}}')[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1544099Z [36;1m[[ ${#ids[@]} -eq 1 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1544298Z [36;1mcontainer_name=$(docker inspect "${ids[0]}" --format '{{.Name}}')[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1544536Z [36;1m[[ "$container_name" == "/buildx_buildkit_${builder}0" ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1544825Z [36;1mprintf 'builder_name=%s\nbuilder_container_id=%s\n' "$builder" "${ids[0]}" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1545280Z [36;1mstate_volume=$(docker inspect "${ids[0]}" --format '{{range .Mounts}}{{if and (eq .Type "volume") (eq .Destination "/var/lib/buildkit")}}{{.Name}}{{end}}{{end}}')[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1545732Z [36;1m[[ "$state_volume" == "$builder_state_volume" && "$state_volume" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1546035Z [36;1mprintf 'builder_state_volume=%s\n' "$state_volume" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1546667Z [36;1mdocker inspect "${ids[0]}" --format 'memory={{.HostConfig.Memory}} memory_swap={{.HostConfig.MemorySwap}} cpu_quota={{.HostConfig.CpuQuota}} cpu_period={{.HostConfig.CpuPeriod}}'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1547136Z [36;1m[[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.Memory}}')" == 8589934592 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1547431Z [36;1m[[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.MemorySwap}}')" == 8589934592 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1547722Z [36;1m[[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.CpuQuota}}')" == 300000 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1548007Z [36;1m[[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.CpuPeriod}}')" == 100000 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1548485Z [36;1mdocker exec "${ids[0]}" sh -c 'printf "memory.max="; cat /sys/fs/cgroup/memory.max; printf "memory.swap.max="; cat /sys/fs/cgroup/memory.swap.max; printf "cpu.max="; cat /sys/fs/cgroup/cpu.max'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1548949Z [36;1m[[ "$(docker exec "${ids[0]}" cat /sys/fs/cgroup/memory.max)" == 8589934592 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1549211Z [36;1m[[ "$(docker exec "${ids[0]}" cat /sys/fs/cgroup/memory.swap.max)" == 0 ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1549470Z [36;1m[[ "$(docker exec "${ids[0]}" cat /sys/fs/cgroup/cpu.max)" == '300000 100000' ]][0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1549685Z [36;1mdocker exec "${ids[0]}" sh -c '[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1549931Z [36;1m  for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1550176Z [36;1m    printf "==%s==\\n" "$path"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1550329Z [36;1m    cat "/sys/fs/cgroup/$path"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1550621Z [36;1m  done[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1550760Z [36;1m' > "$RUNNER_TEMP/builder-before-build.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1550924Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1551058Z [36;1m  printf '%s\n' '### BuildKit cgroup limits'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1551386Z [36;1m  printf '%s\n' '- memory.max: 8589934592 bytes; memory.swap.max: 0 bytes (Docker memory and memory-swap both capped at 8 GiB total)'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1551763Z [36;1m  printf '%s\n' '- cpu.max: 300000 100000; BuildKit OCI worker max-parallelism: 1'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1552094Z [36;1m  printf '%s\n' '- Initial memory event and CPU counters captured before build; no retry is configured'[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1552359Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1604673Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1604863Z env:
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1605028Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1605255Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1605533Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1605912Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.1606090Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.5622912Z #1 [internal] booting buildkit
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:15.7129286Z #1 pulling image moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:25.5188915Z #1 pulling image moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea 10.0s done
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:25.6705099Z #1 creating container buildx_buildkit_ornigami-external-rehearsal0
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.1600292Z #1 creating container buildx_buildkit_ornigami-external-rehearsal0 0.6s done
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.1824055Z #1 DONE 10.6s
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.1824312Z ornigami-external-rehearsal
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.2295326Z memory=8589934592 memory_swap=8589934592 cpu_quota=300000 cpu_period=100000
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.2982224Z memory.max=8589934592
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.2984396Z memory.swap.max=0
+Build, runtime acceptance, and vulnerability scans	Create bounded serial BuildKit builder	2026-10-16T20:43:26.2989743Z cpu.max=300000 100000
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	﻿2026-10-16T20:43:26.4295157Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4295406Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4295552Z [36;1mbuild_start_epoch=$(date +%s)[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4295735Z [36;1mbuild_start_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4295960Z [36;1mecho "build_start_epoch=$build_start_epoch" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4296361Z [36;1mecho "build_start_utc=$build_start_utc" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4296580Z [36;1mbuild_rc=0[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4296766Z [36;1mtimeout --signal=TERM --kill-after=30s 30m docker buildx build \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4297000Z [36;1m  --builder ornigami-external-rehearsal \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4297180Z [36;1m  --platform linux/amd64 \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4297326Z [36;1m  --load \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4297475Z [36;1m  --tag "ornigami:rehearsal-${SOURCE_SHA}" \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4297702Z [36;1m  --build-arg NEXT_PUBLIC_APP_URL=https://rehearsal.invalid \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4297953Z [36;1m  --build-arg "ORNIGAMI_SOURCE_SHA=${SOURCE_SHA}" \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4298176Z [36;1m  --build-arg ORNIGAMI_BUILD_HEAP_MIB=4096 \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4298383Z [36;1m  --build-arg ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4298608Z [36;1m  --build-arg ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4298821Z [36;1m  --build-arg ORNIGAMI_BUILD_WEBPACK_WORKER=false \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4299012Z [36;1m  "$RUNNER_TEMP/source" || build_rc=$?[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4299179Z [36;1mbuild_end_epoch=$(date +%s)[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4299348Z [36;1mbuild_end_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4299552Z [36;1mbuild_seconds=$((build_end_epoch - build_start_epoch))[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4299779Z [36;1mecho "build_end_epoch=$build_end_epoch" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4300007Z [36;1mecho "build_end_utc=$build_end_utc" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4300229Z [36;1mecho "build_seconds=$build_seconds" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4300448Z [36;1mecho "build_exit_code=$build_rc" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4300729Z [36;1mbuilder_id=$(docker inspect "$BUILDKIT_CONTAINER_ID" --format '{{.Id}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4301089Z [36;1mbuilder_name=$(docker inspect "$BUILDKIT_CONTAINER_ID" --format '{{.Name}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4301476Z [36;1mif [[ "$builder_id" == "$BUILDKIT_CONTAINER_ID" && "$builder_name" == "/buildx_buildkit_${BUILDKIT_CONTAINER_NAME}0" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4301757Z [36;1m  capture_rc=0[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4301903Z [36;1m  docker exec "$builder_id" sh -c '[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4302161Z [36;1m    for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4302411Z [36;1m      printf "==%s==\\n" "$path"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4302572Z [36;1m      cat "/sys/fs/cgroup/$path"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4302870Z [36;1m    done[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4303039Z [36;1m  ' > "$RUNNER_TEMP/builder-after-build.txt" || capture_rc=$?[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4303228Z [36;1m  {[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4303378Z [36;1m    printf '\n### Build result and cgroup counters\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4303674Z [36;1m    printf '%s\n' "- Build interval: ${build_start_utc} to ${build_end_utc} UTC (${build_seconds} seconds)"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4303970Z [36;1m    printf '%s\n' "- Build command exit code: ${build_rc}"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4304166Z [36;1m    if [[ "$capture_rc" -eq 0 ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4304382Z [36;1m      printf '%s\n' '- Observed builder counters immediately after build:'[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4304595Z [36;1m      printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4304772Z [36;1m      cat "$RUNNER_TEMP/builder-after-build.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4304949Z [36;1m      printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4305087Z [36;1m    else[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4305363Z [36;1m      printf '%s\n' '- Builder cgroup counters unavailable after build; resource acceptance will fail if an image was produced.'[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4305779Z [36;1m    fi[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4305901Z [36;1m  } >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4306042Z [36;1melse[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4307340Z [36;1m  printf '\n### Build result\n\n- Build interval: %s to %s UTC (%s seconds)\n- Build command exit code: %s\n- Builder cgroup counters: unavailable; builder container not running\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4307816Z [36;1m    "$build_start_utc" "$build_end_utc" "$build_seconds" "$build_rc" >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4308049Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4308166Z [36;1m[[ "$build_rc" -eq 0 ]][0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4308327Z [36;1mimage="ornigami:rehearsal-${SOURCE_SHA}"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4308648Z [36;1mimage_revision=$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4309043Z [36;1mimage_platform=$(docker image inspect "$image" --format '{{.Os}}/{{.Architecture}}')[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4309330Z [36;1mimage_id=$(docker image inspect "$image" --format '{{.Id}}')[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4309587Z [36;1m[[ "$image_revision" == "$SOURCE_SHA" && "$image_platform" == linux/amd64 ]][0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4309867Z [36;1mprintf 'image_tag=%s\nimage_id=%s\n' "$image" "$image_id" >> "$GITHUB_OUTPUT"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4327529Z [36;1mprintf '\n### Local image identity\n\n- Image ID: `%s`\n- Platform: `%s`\n- Source revision label: `%s`\n- Image delivery: local runner only; no image publication\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4328008Z [36;1m  "$image_id" "$image_platform" "$image_revision" >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4328225Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4328469Z [36;1m  printf 'image_id=%s\nimage_platform=%s\nimage_revision=%s\n' "$image_id" "$image_platform" "$image_revision"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4328777Z [36;1m} > "$ORNIGAMI_EVIDENCE_DIR/image-identity.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4383778Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4383989Z env:
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4384162Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4384395Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4384661Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4384940Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4385207Z   BUILDKIT_CONTAINER_ID: 7a4a353a40440aca736c65a96f2ec3235458a38a2483a0a8067bbac1aceae149
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4385482Z   BUILDKIT_CONTAINER_NAME: ornigami-external-rehearsal
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.4385656Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7347386Z #0 building with "ornigami-external-rehearsal" instance using docker-container driver
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7347665Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7347752Z #1 [internal] load build definition from Dockerfile
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7348195Z #1 transferring dockerfile: 4.79kB 0.0s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7348364Z #1 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7348429Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.7348532Z #2 [auth] docker/dockerfile:pull token for registry-1.docker.io
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.8854836Z #2 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.8854966Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:26.8855096Z #3 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.2415377Z #3 DONE 0.6s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.3988372Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.3988809Z #4 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.3989335Z #4 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.4003922Z #4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 5.24MB / 11.98MB 0.2s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.5340270Z #4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 11.98MB / 11.98MB 0.2s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.5341185Z #4 extracting sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 0.1s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.5341950Z #4 DONE 0.3s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.7613296Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.7613863Z #5 [auth] library/node:pull token for registry-1.docker.io
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.7614104Z #5 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.7614175Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.7614436Z #6 [internal] load metadata for docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:27.9287324Z #6 DONE 0.4s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.0703696Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.0704791Z #7 [internal] load .dockerignore
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.0705180Z #7 transferring context: 696B done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1879809Z #7 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1880007Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1880406Z #8 [deps 1/7] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1881162Z #8 resolve docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1881683Z #8 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1881781Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.1883350Z #9 [internal] load build context
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.4005611Z #9 transferring context: 49.10MB 0.2s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.4005972Z #9 DONE 0.3s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.4006080Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.4006558Z #8 [deps 1/7] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.4007226Z #8 sha256:f5bfc00e35f00ffb05af2b15dcb408c6b418d94cdda09e6621336e159922fb67 1.72MB / 1.72MB 0.1s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.5009353Z #8 sha256:1a21341009fa15dc1477fe0ded951f23c4958462102712c0a825b1f32bf301cd 449B / 449B 0.1s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.5010017Z #8 sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 12.58MB / 49.88MB 0.2s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.5010543Z #8 sha256:a35b9854453484eb4b8d836e6555ef413afdaf1660faec1c77c685a37aa74216 0B / 3.31kB 0.2s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.6488536Z #8 sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 49.88MB / 49.88MB 0.3s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.6489297Z #8 sha256:a35b9854453484eb4b8d836e6555ef413afdaf1660faec1c77c685a37aa74216 3.31kB / 3.31kB 0.2s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.6490098Z #8 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 0B / 29.84MB 0.2s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.7995727Z #8 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 29.84MB / 29.84MB 0.3s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:28.9859537Z #8 sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 49.88MB / 49.88MB 0.6s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.1401087Z #8 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 29.84MB / 29.84MB 0.6s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.1401905Z #8 extracting sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.4429993Z #8 extracting sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 0.5s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.4431626Z #8 DONE 1.1s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.6037894Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.6039161Z #8 [deps 1/7] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.6039860Z #8 extracting sha256:a35b9854453484eb4b8d836e6555ef413afdaf1660faec1c77c685a37aa74216 0.0s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:29.6040369Z #8 extracting sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.1700550Z #8 extracting sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 0.7s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.1701069Z #8 DONE 1.8s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3496862Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3498007Z #8 [deps 1/7] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3498690Z #8 extracting sha256:f5bfc00e35f00ffb05af2b15dcb408c6b418d94cdda09e6621336e159922fb67 0.0s done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3499126Z #8 extracting sha256:1a21341009fa15dc1477fe0ded951f23c4958462102712c0a825b1f32bf301cd done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3499975Z #8 DONE 1.9s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3500073Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:30.3500160Z #10 [deps 2/7] WORKDIR /app
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:31.8013219Z #10 DONE 1.6s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:31.9516583Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:31.9517987Z #11 [runner  2/14] RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg     && test "$(node --version)" = "v22.23.3"     && for path in /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg; do test ! -e "$path"; done
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.0613648Z #11 DONE 0.3s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2852024Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2852716Z #12 [deps 3/7] RUN mkdir -p /app && chown node:node /app
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853040Z #12 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853110Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853168Z #13 [runner  3/14] WORKDIR /app
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853306Z #13 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853367Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853484Z #14 [deps 4/7] COPY --chown=node:node package.json package-lock.json ./
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853680Z #14 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853745Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2853904Z #15 [deps 5/7] COPY --chown=node:node scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2854153Z #15 DONE 0.0s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2854217Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.2854316Z #16 [deps 6/7] COPY --chown=node:node vendor/framework ./vendor/framework
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.3859440Z #16 DONE 0.3s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:32.5374113Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.8416819Z #17 [deps 7/7] RUN npm ci
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.8417202Z #17 9.455 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.8417440Z #17 9.455 added 663 packages, and audited 665 packages in 9s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.8417804Z #17 9.455 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.8418283Z #17 9.455 244 packages are looking for funding
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.8418558Z #17 9.455   run `npm fund` for details
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9940955Z #17 9.456 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9941438Z #17 9.456 found 0 vulnerabilities
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9941773Z #17 9.457 npm notice
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9942088Z #17 9.457 npm notice New major version of npm available! 10.9.9 -> 12.2.0
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9942517Z #17 9.457 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9942926Z #17 9.457 npm notice To update run: npm install -g npm@12.2.0
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:41.9943206Z #17 9.457 npm notice
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:47.9444832Z #17 DONE 15.6s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:48.0951753Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:48.0952327Z #18 [prod-deps 7/7] RUN npm ci --omit=dev
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.2453649Z #18 8.301 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.2454045Z #18 8.301 added 405 packages, and audited 407 packages in 8s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.2454338Z #18 8.301 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.2454525Z #18 8.301 120 packages are looking for funding
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.2455240Z #18 8.301   run `npm fund` for details
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3976758Z #18 8.302 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3977006Z #18 8.302 found 0 vulnerabilities
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3977195Z #18 8.303 npm notice
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3977396Z #18 8.303 npm notice New major version of npm available! 10.9.9 -> 12.2.0
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3977696Z #18 8.303 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3977958Z #18 8.303 npm notice To update run: npm install -g npm@12.2.0
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:43:56.3978145Z #18 8.303 npm notice
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:01.1535958Z #18 DONE 13.2s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:01.3042293Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:01.3043398Z #19 [builder 1/2] COPY --chown=node:node . .
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:01.9090716Z #19 DONE 0.8s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.0607171Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.0609661Z #20 [builder 2/2] RUN test -n "https://rehearsal.invalid" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? ""; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error("ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB"); for (const name of ["ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS", "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS", "ORNIGAMI_BUILD_WEBPACK_WORKER"]) if (!/^(true|false)$/.test(process.env[name] ?? "")) throw new Error(`${name} must be true or false`)' && npm run build
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.0881196Z #20 0.178 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.0882664Z #20 0.178 > ornigami@0.1.0 build
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.0883907Z #20 0.178 > next build --webpack && node scripts/generate-static-csp-hashes.mjs
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.0884392Z #20 0.178 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.4368782Z #20 0.525 ▲ Next.js 16.4.2 (webpack)
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:02.8408442Z #20 0.930 ✓ Running next.config.ts took 405ms
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0285843Z #20 0.940 - Experiments (use with caution):
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0297556Z #20 0.940   · clientTraceMetadata
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0298128Z #20 0.940   · cpus: 1
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0298487Z #20 0.940   · sri
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0298882Z #20 0.940   ✓ webpackMemoryOptimizations
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0299274Z #20 0.940 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:03.0299636Z #20 0.966   Creating an optimized production build ...
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:38.4128415Z #20 36.50 ✓ Compiled successfully in 35.1s
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:38.5650473Z #20 36.50   Running TypeScript ...
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:43.9350857Z #20 42.02   Finished TypeScript in 5.5s ...
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.0871150Z #20 42.03   Collecting page data using 1 worker ...
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4403970Z #20 42.53 Error: Cannot find module 'next\dist\server\app-render\work-async-storage.external.js'
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4404456Z #20 42.53 Require stack:
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4404788Z #20 42.53 - /app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4405161Z #20 42.53 - /app/.next/server/app/_not-found/page.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4405492Z #20 42.53 - /app/node_modules/next/dist/server/require.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4405810Z #20 42.53 - /app/node_modules/next/dist/server/load-components.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4406122Z #20 42.53 - /app/node_modules/next/dist/build/utils.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4406632Z #20 42.53 - /app/node_modules/next/dist/build/worker.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4406953Z #20 42.53 - /app/node_modules/next/dist/compiled/jest-worker/processChild.js
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4407871Z #20 42.53     at ignore-listed frames {
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4408088Z #20 42.53   code: 'MODULE_NOT_FOUND',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4408296Z #20 42.53   requireStack: [
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4408538Z #20 42.53     '/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4410924Z #20 42.53     '/app/.next/server/app/_not-found/page.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4411240Z #20 42.53     '/app/node_modules/next/dist/server/require.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4411551Z #20 42.53     '/app/node_modules/next/dist/server/load-components.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4412212Z #20 42.53     '/app/node_modules/next/dist/build/utils.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4412468Z #20 42.53     '/app/node_modules/next/dist/build/worker.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4412782Z #20 42.53     '/app/node_modules/next/dist/compiled/jest-worker/processChild.js'
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4412985Z #20 42.53   ]
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.4413092Z #20 42.53 }
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.5953628Z #20 42.53 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.5953901Z #20 42.53 > Build error occurred
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.5954200Z #20 42.53 Error: Failed to collect page data for /_not-found
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.5954498Z #20 42.53     at ignore-listed frames {
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.5954726Z #20 42.53   type: 'Error'
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:44.5954914Z #20 42.53 }
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1516779Z #20 ERROR: process "/bin/sh -c test -n \"$NEXT_PUBLIC_APP_URL\" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? \"\")) throw new Error(\"ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA\"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? \"\"; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error(\"ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB\"); for (const name of [\"ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS\", \"ORNIGAMI_BUILD_DISABLE_SOURCEMAPS\", \"ORNIGAMI_BUILD_WEBPACK_WORKER\"]) if (!/^(true|false)$/.test(process.env[name] ?? \"\")) throw new Error(`${name} must be true or false`)' && npm run build" did not complete successfully: exit code: 1
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1736953Z 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1737190Z #21 [runner  4/14] COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1737468Z #21 CANCELED
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1737583Z ------
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1739012Z  > [builder 2/2] RUN test -n "https://rehearsal.invalid" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? ""; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error("ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB"); for (const name of ["ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS", "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS", "ORNIGAMI_BUILD_WEBPACK_WORKER"]) if (!/^(true|false)$/.test(process.env[name] ?? "")) throw new Error(`${name} must be true or false`)' && npm run build:
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1740298Z 42.53     '/app/node_modules/next/dist/build/worker.js',
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1740539Z 42.53     '/app/node_modules/next/dist/compiled/jest-worker/processChild.js'
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1740748Z 42.53   ]
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1740852Z 42.53 }
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1740953Z 42.53 
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1741064Z 42.53 > Build error occurred
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1741234Z 42.53 Error: Failed to collect page data for /_not-found
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1741415Z 42.53     at ignore-listed frames {
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1741560Z 42.53   type: 'Error'
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1741679Z 42.53 }
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1741781Z ------
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.1789969Z ERROR: failed to build: failed to solve: process "/bin/sh -c test -n \"$NEXT_PUBLIC_APP_URL\" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? \"\")) throw new Error(\"ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA\"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? \"\"; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error(\"ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB\"); for (const name of [\"ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS\", \"ORNIGAMI_BUILD_DISABLE_SOURCEMAPS\", \"ORNIGAMI_BUILD_WEBPACK_WORKER\"]) if (!/^(true|false)$/.test(process.env[name] ?? \"\")) throw new Error(`${name} must be true or false`)' && npm run build" did not complete successfully: exit code: 1
+Build, runtime acceptance, and vulnerability scans	Build local Linux amd64 image	2026-10-16T20:44:45.2405532Z ##[error]Process completed with exit code 1.
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	﻿2026-10-16T20:44:45.2567652Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2567871Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2568012Z [36;1mcritical='0'[0m
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2568136Z [36;1mhigh='54'[0m
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2568288Z [36;1m[[ "$critical" =~ ^[0-9]+$ && "$high" =~ ^[0-9]+$ ]][0m
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2568710Z [36;1mprintf 'Base scan gate: CRITICAL=%s HIGH=%s (threshold: zero for both)\n' "$critical" "$high" | tee "$ORNIGAMI_EVIDENCE_DIR/base-advisory-gate.txt" >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2569108Z [36;1m[[ "$critical" == 0 && "$high" == 0 ]][0m
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2622860Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2623052Z env:
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2623218Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2623445Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2623708Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2624023Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2624195Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Enforce pinned base image advisory threshold	2026-10-16T20:44:45.2702787Z ##[error]Process completed with exit code 1.
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	﻿2026-10-16T20:44:45.2728047Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2728269Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2728483Z [36;1mmkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2728837Z [36;1mprintf 'builder_name=%s\nbuilder_container_id=%s\nbuilder_state_volume=%s\nimage_tag=%s\nimage_id=%s\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2729253Z [36;1m  "$OWNED_BUILDER_NAME" "$OWNED_BUILDER_CONTAINER_ID" "$OWNED_BUILDER_STATE_VOLUME" "$OWNED_IMAGE_TAG" "$OWNED_IMAGE_ID" \[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2729587Z [36;1m  > "$ORNIGAMI_EVIDENCE_DIR/runner/owned-resources.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2729785Z [36;1mruntime_evidence_missing=0[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2729961Z [36;1mfor file in base-trivy.json trivy.json; do[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2730231Z [36;1m  [[ -f "$RUNNER_TEMP/$file" ]] && cp -- "$RUNNER_TEMP/$file" "$ORNIGAMI_EVIDENCE_DIR/scans/$file"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2730474Z [36;1mdone[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2730692Z [36;1mfor file in builder-before-build.txt builder-after-build.txt builder-final.txt; do[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2731041Z [36;1m  [[ -f "$RUNNER_TEMP/$file" ]] && cp -- "$RUNNER_TEMP/$file" "$ORNIGAMI_EVIDENCE_DIR/runner/$file"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2731274Z [36;1mdone[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2731417Z [36;1mif [[ -n "$OWNED_BUILDER_CONTAINER_ID" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2731715Z [36;1m  current_builder_id=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Id}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2732110Z [36;1m  current_builder_name=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Name}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2732550Z [36;1m  if [[ "$current_builder_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$current_builder_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2733263Z [36;1m    if docker exec "$OWNED_BUILDER_CONTAINER_ID" sh -c 'for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do printf "==%s==\\n" "$path"; cat "/sys/fs/cgroup/$path"; done' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup.txt" 2>&1; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2733932Z [36;1m      printf '%s\n' 'status=collected' >> "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2734196Z [36;1m    else[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2734437Z [36;1m      printf '%s\n' 'status=unavailable' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2734703Z [36;1m    fi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2734814Z [36;1m  else[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2736120Z [36;1m    printf '%s\n' 'status=owned-builder-container-not-present' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2736681Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2736790Z [36;1melse[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2737229Z [36;1m  printf '%s\n' 'status=builder-not-created-or-id-unavailable' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2737551Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2737861Z [36;1m[[ -f "$RUNNER_TEMP/runtime-acceptance.log" ]] && cp -- "$RUNNER_TEMP/runtime-acceptance.log" "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-acceptance.log"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2738232Z [36;1mif [[ "$RUNTIME_OUTCOME" != skipped ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2738462Z [36;1m  if [[ ! -s "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-http.json" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2738901Z [36;1m    printf 'status=missing\nruntime_step_outcome=%s\nexit_code=%s\n' "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2739287Z [36;1m    runtime_evidence_missing=1[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2739438Z [36;1m  else[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2739779Z [36;1m    printf 'status=collected\nruntime_step_outcome=%s\nexit_code=%s\n' "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2740160Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2740269Z [36;1melse[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2740647Z [36;1m  printf 'status=not-run\nruntime_step_outcome=skipped\n' > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2740941Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2741068Z [36;1mif [[ -x "$RUNNER_TEMP/trivy" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2741495Z [36;1m  "$RUNNER_TEMP/trivy" --version > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt" 2>&1 || printf '%s\n' 'Trivy version metadata unavailable.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2741898Z [36;1melse[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2742149Z [36;1m  printf '%s\n' 'Trivy was unavailable before artifact capture.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2742425Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2742531Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2742673Z [36;1m  printf '== runner disk before cleanup ==\n'[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2742916Z [36;1m  if ! df -PB1 "$RUNNER_TEMP"; then printf '%s\n' 'disk usage unavailable'; fi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2744216Z [36;1m  printf '\n== Docker storage before cleanup ==\n'[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2744896Z [36;1m  if ! timeout 15s docker system df; then printf '%s\n' 'Docker storage report unavailable or timed out'; fi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2745282Z [36;1m  printf '\n== selected runner-temp path sizes (image archive size only; archive content is excluded) ==\n'[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2749229Z [36;1m  for path in "$RUNNER_TEMP/source" "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/trivy-cache" "$RUNNER_TEMP/trivy.db" "$RUNNER_TEMP/java-db"; do[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2749711Z [36;1m    [[ -e "$path" ]] || continue[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2750049Z [36;1m    if ! timeout 15s du -sb "$path"; then printf 'size unavailable: %s\n' "$(basename "$path")"; fi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2750915Z [36;1m  done[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2751776Z [36;1m} > "$ORNIGAMI_EVIDENCE_DIR/runner/pre-cleanup-usage.txt" 2>&1[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2752277Z [36;1mcp -- "$GITHUB_STEP_SUMMARY" "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2754928Z [36;1mpython3 - "$ORNIGAMI_EVIDENCE_DIR" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" "${SOURCE_SHA:-}" "${EXPECTED_LOCK_SHA256:-}" "$ADMISSION_OUTCOME" "$RUNNER_PREFLIGHT_OUTCOME" "$BASE_SCAN_OUTCOME" "$IMAGE_BUILD_OUTCOME" "$IMAGE_BUILD_EXIT_CODE" "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" "$FINAL_SCAN_OUTCOME" "$RESOURCE_OUTCOME" "$BASE_GATE_OUTCOME" <<'PY'[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2756784Z [36;1mimport hashlib, json, pathlib, sys[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2757036Z [36;1mroot = pathlib.Path(sys.argv[1])[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2758055Z [36;1mnames = ("run_id", "run_attempt", "request_sha", "ref", "event", "source_sha", "expected_lock_sha256", "admission_outcome", "runner_preflight_outcome", "base_scan_outcome", "image_build_outcome", "image_build_exit_code", "runtime_outcome", "runtime_exit_code", "final_scan_outcome", "resource_outcome", "base_gate_outcome")[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2758791Z [36;1mmetadata = dict(zip(names, sys.argv[2:]))[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2759166Z [36;1mmetadata["runtime_evidence_status"] = (root / "runtime/runtime-evidence-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1][0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2759509Z [36;1mfiles = [][0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2759732Z [36;1mfor path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2760163Z [36;1m    files.append({"path": path.relative_to(root).as_posix(), "bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2760660Z [36;1m(root / "manifest.json").write_text(json.dumps({"schema": 1, **metadata, "files": files}, indent=2, sort_keys=True) + "\n", encoding="utf-8")[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2760971Z [36;1mPY[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2761119Z [36;1mif [[ "$runtime_evidence_missing" -eq 1 ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2761457Z [36;1m  printf '%s\n' 'Runtime acceptance ran but its structured sanitized HTTP evidence was missing; evidence collection failed.' >&2[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2761858Z [36;1m  exit 1[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2761970Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2810932Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2811119Z env:
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2811284Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2811511Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2811778Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812053Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812228Z   ADMISSION_OUTCOME: success
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812373Z   RUNNER_PREFLIGHT_OUTCOME: success
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812525Z   BASE_SCAN_OUTCOME: success
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812669Z   IMAGE_BUILD_OUTCOME: failure
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812811Z   IMAGE_BUILD_EXIT_CODE: 1
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2812943Z   RUNTIME_OUTCOME: skipped
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2813072Z   RUNTIME_EXIT_CODE: 
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2813209Z   FINAL_SCAN_OUTCOME: skipped
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2813349Z   RESOURCE_OUTCOME: skipped
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2813490Z   BASE_GATE_OUTCOME: failure
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2813644Z   OWNED_BUILDER_NAME: ornigami-external-rehearsal
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2813910Z   OWNED_BUILDER_CONTAINER_ID: 7a4a353a40440aca736c65a96f2ec3235458a38a2483a0a8067bbac1aceae149
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2814228Z   OWNED_BUILDER_STATE_VOLUME: buildx_buildkit_ornigami-external-rehearsal0_state
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2814446Z   OWNED_IMAGE_TAG: 
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2814563Z   OWNED_IMAGE_ID: 
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.2814681Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.3728921Z /home/runner/work/_temp/3788700d-28dc-4c13-91c2-d5740d5496c0.sh: line 37: /home/runner/work/_temp/ornigami-evidence/runtime/runtime-evidence-status.txt: No such file or directory
+Build, runtime acceptance, and vulnerability scans	Capture evidence bundle before cleanup	2026-10-16T20:44:45.3731510Z ##[error]Process completed with exit code 1.
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	﻿2026-10-16T20:44:45.3805606Z ##[group]Run actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3805891Z with:
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3806026Z   name: ornigami-rehearsal-38964204005-1
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3806389Z   path: /home/runner/work/_temp/ornigami-evidence/
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3806593Z   if-no-files-found: error
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3806726Z   retention-days: 30
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3806855Z   compression-level: 6
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3806973Z   overwrite: false
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3807095Z   include-hidden-files: false
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3807229Z   archive: true
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3807336Z env:
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3807492Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3807707Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3807971Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3808431Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.3808598Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.4793228Z With the provided path, there will be 12 files uploaded
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.4797359Z Artifact name is valid!
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.4797698Z Root directory input is valid!
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.7737609Z Uploading artifact: ornigami-rehearsal-38964204005-1.zip
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:45.7766591Z Beginning upload of artifact content to blob storage
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:46.0908425Z Uploaded bytes 118012
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:46.1354618Z Finished uploading artifact content to blob storage!
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:46.1355208Z SHA256 digest of uploaded artifact is 47a143e8e3f578db2424686c1b1e263b055e4ca5a88f145ad2196625f9766d43
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:46.1355634Z Finalizing artifact upload
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:47.1206001Z Artifact ornigami-rehearsal-38964204005-1 successfully finalized. Artifact ID 12074571185
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:47.1207215Z Artifact ornigami-rehearsal-38964204005-1 has been successfully uploaded! Final size is 118012 bytes. Artifact ID is 12074571185
+Build, runtime acceptance, and vulnerability scans	Upload rehearsal evidence	2026-10-16T20:44:47.1209816Z Artifact download URL: https://github.com/joserubiobejarano/Ornigami/actions/runs/38964204005/artifacts/12074571185
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	﻿2026-10-16T20:44:47.1325944Z ##[group]Run {
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1326130Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1326437Z [36;1m  printf '\n### Downloadable evidence bundle\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1326687Z [36;1m  printf '%s\n' "- Upload status: ${UPLOAD_OUTCOME:-unavailable}"[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1327036Z [36;1m  if [[ -n "${EVIDENCE_URL:-}" ]]; then printf '%s\n' "- Artifact: ${EVIDENCE_URL}"; fi[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1327392Z [36;1m  printf '%s\n' '- Retention requested: 30 days (subject to repository policy)'[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1327785Z [36;1m  printf '%s\n' '- The local image archive is excluded; scan JSON and sanitized runtime/resource receipts are retained when produced.'[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1328114Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1385490Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1385704Z env:
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1385879Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1386115Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1386587Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1386866Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1387178Z   EVIDENCE_URL: https://github.com/joserubiobejarano/Ornigami/actions/runs/38964204005/artifacts/12074571185
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1387462Z   UPLOAD_OUTCOME: success
+Build, runtime acceptance, and vulnerability scans	Report downloadable evidence	2026-10-16T20:44:47.1387597Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	﻿2026-10-16T20:44:47.1488587Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1488800Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1489000Z [36;1m[[ "$ARTIFACT_ID" =~ ^[0-9]+$ && "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]][0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1489280Z [36;1mcontext="ornigami/evidence-local/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1489575Z [36;1mdescription="artifact=${ARTIFACT_ID};sha256=${ARTIFACT_DIGEST}"[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1489914Z [36;1mprintf 'Awaiting approved local download receipt: run=%s attempt=%s request=%s artifact=%s digest=%s\n' \[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1490283Z [36;1m  "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST"[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1490541Z [36;1mfor observation in $(seq 1 60); do[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1490844Z [36;1m  statuses=$(gh api --hostname github.com "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100")[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1491260Z [36;1m  if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" \[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1491744Z [36;1m    'any(.[]; .context == $context and .description == $description and .state == "success" and .creator.login == $owner)' <<< "$statuses" >/dev/null; then[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1492177Z [36;1m    printf '%s\n' 'Owner checksum-verified local custody acknowledged before cleanup.'[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1492559Z [36;1m    exit 0[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1492679Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1492795Z [36;1m  sleep 10[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1492915Z [36;1mdone[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1493238Z [36;1mprintf '%s\n' 'Local-download gate failed: no matching owner receipt in ten minutes. Uploaded failure evidence remains retained; no acceptance claim.' >&2[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1493620Z [36;1mexit 1[0m
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1546400Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1546600Z env:
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1546766Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1547010Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1547273Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1547551Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1549647Z   GH_TOKEN: ***
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1549781Z   ARTIFACT_ID: 12074571185
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1550004Z   ARTIFACT_DIGEST: 47a143e8e3f578db2424686c1b1e263b055e4ca5a88f145ad2196625f9766d43
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1550239Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:44:47.1619500Z Awaiting approved local download receipt: run=38964204005 attempt=1 request=6ab0f70c7a585132b3bb3c388493040ea9085b5c artifact=12074571185 digest=47a143e8e3f578db2424686c1b1e263b055e4ca5a88f145ad2196625f9766d43
+Build, runtime acceptance, and vulnerability scans	Require verified owner local evidence custody before cleanup	2026-10-16T20:45:10.1095287Z Owner checksum-verified local custody acknowledged before cleanup.
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	﻿2026-10-16T20:45:10.1120817Z ##[group]Run set +e
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1121039Z [36;1mset +e[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1121153Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1121317Z [36;1m  printf '\n### Disk and Docker usage before cleanup\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1121520Z [36;1m  printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1121677Z [36;1m  df -PB1 "$RUNNER_TEMP"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1121828Z [36;1m  docker system df[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1122185Z [36;1m  for path in "$RUNNER_TEMP/source" "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/trivy-cache" "$RUNNER_TEMP/trivy.db" "$RUNNER_TEMP/java-db"; do[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1122540Z [36;1m    [[ -e "$path" ]] || continue[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1122703Z [36;1m    du -sb "$path"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1122834Z [36;1m  done[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1122958Z [36;1m  printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1123107Z [36;1m} >> "$GITHUB_STEP_SUMMARY" 2>&1[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1123266Z [36;1mbuilder_actual_id=''[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1123408Z [36;1mbuilder_actual_name=''[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1123607Z [36;1mif [[ -n "$OWNED_BUILDER_CONTAINER_ID" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1123915Z [36;1m  builder_actual_id=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Id}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1124318Z [36;1m  builder_actual_name=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Name}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1124589Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1125079Z [36;1mif [[ -n "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" && "$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.State.Running}}' 2>/dev/null)" == true ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1125640Z [36;1m  docker exec "$OWNED_BUILDER_CONTAINER_ID" sh -c '[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1125919Z [36;1m    for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1126170Z [36;1m      printf "==%s==\\n" "$path"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1126514Z [36;1m      cat "/sys/fs/cgroup/$path"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1126663Z [36;1m    done[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1126799Z [36;1m  ' > "$RUNNER_TEMP/builder-final.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1126995Z [36;1m  if [[ -s "$RUNNER_TEMP/builder-final.txt" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1127166Z [36;1m    {[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1127337Z [36;1m      printf '\n### Final builder cgroup counters before cleanup\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1127691Z [36;1m      printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1127860Z [36;1m      cat "$RUNNER_TEMP/builder-final.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1128029Z [36;1m      printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1128181Z [36;1m    } >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1128324Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1128434Z [36;1melse[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1128797Z [36;1m  printf '\n### Final builder cgroup counters\n\n- Unavailable: the exact BuildKit container created by this run was not present and running for capture.\n' >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1129188Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1129511Z [36;1mif [[ -n "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1129922Z [36;1m  docker rm -f "$OWNED_BUILDER_CONTAINER_ID" >/dev/null 2>&1 || true[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1130125Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1130439Z [36;1mif [[ -n "$OWNED_BUILDER_STATE_VOLUME" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1130916Z [36;1m  state_volume=$(docker volume inspect "$OWNED_BUILDER_STATE_VOLUME" --format '{{.Name}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1131321Z [36;1m  volume_users=$(docker ps -aq --filter "volume=$OWNED_BUILDER_STATE_VOLUME" --no-trunc 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1131679Z [36;1m  if [[ "$state_volume" == "$OWNED_BUILDER_STATE_VOLUME" && -z "$volume_users" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1132111Z [36;1m    docker volume rm "$OWNED_BUILDER_STATE_VOLUME" >/dev/null 2>&1 || true[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1132319Z [36;1m  else[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1132633Z [36;1m    printf 'Preserved BuildKit state volume %s because it was unavailable or still attached.\n' "$OWNED_BUILDER_STATE_VOLUME" >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1132971Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1133085Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1133237Z [36;1mif [[ -n "$OWNED_IMAGE_TAG" && -n "$OWNED_IMAGE_ID" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1133531Z [36;1m  current_image_id=$(docker image inspect "$OWNED_IMAGE_TAG" --format '{{.Id}}' 2>/dev/null || true)[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1133821Z [36;1m  if [[ "$current_image_id" == "$OWNED_IMAGE_ID" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1134050Z [36;1m    docker image rm "$OWNED_IMAGE_TAG" >/dev/null 2>&1 || true[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1134233Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1134346Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1134568Z [36;1mrm -f -- "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/node-base.tar" "$RUNNER_TEMP/trivy.json"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1134821Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1134951Z [36;1m  printf '\n### Disk after cleanup\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1135118Z [36;1m  printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1135268Z [36;1m  df -PB1 "$RUNNER_TEMP"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1135421Z [36;1m  printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1135568Z [36;1m} >> "$GITHUB_STEP_SUMMARY" 2>&1[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1189303Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1189494Z env:
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1189663Z   ORNIGAMI_EVIDENCE_DIR: /home/runner/work/_temp/ornigami-evidence
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1189890Z   SOURCE_SHA: fe71816993f5eb42d0565befb4354d478e48429a
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1190151Z   EXPECTED_LOCK_SHA256: 8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1190424Z   REQUEST_SHA: 6ab0f70c7a585132b3bb3c388493040ea9085b5c
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1190627Z   OWNED_BUILDER_NAME: ornigami-external-rehearsal
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1190895Z   OWNED_BUILDER_CONTAINER_ID: 7a4a353a40440aca736c65a96f2ec3235458a38a2483a0a8067bbac1aceae149
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1191211Z   OWNED_BUILDER_STATE_VOLUME: buildx_buildkit_ornigami-external-rehearsal0_state
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1191431Z   OWNED_IMAGE_TAG: 
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1191671Z   OWNED_IMAGE_ID: 
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T20:45:10.1191787Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Complete job	﻿2026-10-16T20:45:24.2977054Z Cleaning up orphan processes
