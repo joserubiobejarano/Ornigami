@@ -1,0 +1,14 @@
+Evidence provenance
+
+Operator: Codex subagent /root/container, during the user-authorized bounded rehearsal. This is an operator note, not a signed receipt.
+Candidate: 42e75deb4d9525f111222879b2229cffda904f57.
+Builder container: 0e75ea3f9178 (temporary BuildKit builder ornigami-rehearsal-42e75deb4d95).
+Memory snapshot time: 2026-10-16T15:28:15Z, immediately before the build failure and builder cleanup.
+
+The memory-pressure.txt snapshot was captured over SSH using these read-only commands:
+- docker exec 0e75ea3f9178 cat /sys/fs/cgroup/memory.stat
+- docker exec 0e75ea3f9178 cat /sys/fs/cgroup/memory.pressure
+- cat /var/tmp/ornigami-rehearsal-42e75deb4d95/report.txt
+- date -u +%Y-%m-%dT%H:%M:%SZ
+
+The final cgroup counters were captured by the rehearsal script EXIT trap into builder-cgroup.txt before the temporary builder was removed. build.log and report.txt were copied from the retained remote report directory after cleanup. post-cleanup.txt was captured read-only over SSH at 2026-10-16T15:32:06Z and records running containers, builders, candidate image filter, host RAM, and Docker storage filesystem.
