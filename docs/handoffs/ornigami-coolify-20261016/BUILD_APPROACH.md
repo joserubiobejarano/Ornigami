@@ -1,5 +1,8 @@
 # Build memory investigation and external builder recommendation
 
+Current measured result: the separately authorized [repaired trial](./REPAIRED_TRIAL.md) built in 180 seconds at the accepted 8 GiB/3 CPU cap, peaking at 7.572 GiB with zero OOM events. Scan and HTTP/security acceptance failed; persistence remains untested. The external approach has one successful build sample, not deployment acceptance. No further run, Contabo retry or resource increase is authorized. Earlier investigation/proposals below are historical.
+
+
 Latest external result: [the one approved Actions trial failed source admission](./EXTERNAL_TRIAL.md), before any build or Linux memory/runtime measurement. Earlier lock SHA-256 values in this investigation identify Windows working-copy bytes; the trial report distinguishes the committed LF checksum. No retry or Linux fit is established.
 
 The owner accepted the external resource/cost approach after this investigation. The subsequent [build approval packet](./RUN_APPROVAL.md) supersedes the inactive-template instructions below with a restricted preparation-branch workflow and exact candidate/run procedure. Publication and one trial are conditionally approved; the [integration preflight](./INTEGRATION_PREFLIGHT.md) must be completed before either push. The measurements and failed-build evidence below are unchanged.

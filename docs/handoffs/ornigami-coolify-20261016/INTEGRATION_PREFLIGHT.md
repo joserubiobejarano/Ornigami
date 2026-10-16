@@ -1,5 +1,8 @@
 # Publication preflight — integration checks completed
 
+Revalidated before both repaired-trial pushes on 16 October: protections remained effective; correction publication started no run/deployment, then one separate request-only push started the approved trial. Post-trial checks found no deployment and zero Coolify resources. See [repaired-trial identities, gates and receipts](./REPAIRED_TRIAL.md). This historical preflight is not authorization for another push/run.
+
+
 Outcome: the cleared first push and the sole approved request push have occurred. The [external trial report](./EXTERNAL_TRIAL.md) records the admission failure, downloaded evidence and unchanged deployment gates. The earlier pause/resumption instructions below are historical; the original one-trial approval is consumed.
 
 ## Current result: cleared for the approved preparation push

@@ -1,0 +1,806 @@
+Build, runtime acceptance, and vulnerability scans summary
+Build request admission
+Request commit: 18298cf019800f55a921186ae88d465150a69e7b
+Commit: a0f319c39a3bbc315e8e2a0d8ca4f854c7438838
+Committed package-lock.json SHA-256: b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1
+Detached checkout package-lock.json SHA-256: b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1
+Request marker: exact source and lock fields; only marker changed in single-parent request commit
+Workflow blob: identical at candidate and request commits
+Candidate is an ancestor of the request commit
+Checkout: detached exact candidate; clean before build
+Runner preflight
+Online CPUs: 4 (minimum 4)
+Total memory: 15989 MiB (minimum 14336 MiB)
+Available memory before build: 15041 MiB (minimum 12288 MiB)
+Free runner disk before build: 92103778304 bytes (minimum 10737418240)
+Scanner verification
+Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:
+https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt
+Pinned base image advisory review gate
+
+Image: node:22.23.3-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562
+
+Docker image ID: sha256:d0a16be756b6ec6658aecb8b7bcf87fa6c7d0d7fcc6ca53ad14bb49a4c90bdd7
+
+Severity	Findings
+CRITICAL	4
+HIGH	71
+MEDIUM	102
+LOW	84
+UNKNOWN	1
+
+Base findings are recorded for explicit review; this step does not clear the release advisory gate.
+
+Severity	Package	Installed	Fixed	Advisory	Primary URL
+CRITICAL	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-13221	https://avd.aquasec.com/nvd/cve-2026-13221
+CRITICAL	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-42496	https://avd.aquasec.com/nvd/cve-2026-42496
+CRITICAL	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-8376	https://avd.aquasec.com/nvd/cve-2026-8376
+CRITICAL	zlib1g	1:1.2.13.dfsg-1		CVE-2023-45853	https://avd.aquasec.com/nvd/cve-2023-45853
+HIGH	brace-expansion	2.0.2	1.1.18, 2.1.4, 3.0.6, 5.0.9	CVE-2026-69152	https://avd.aquasec.com/nvd/cve-2026-69152
+HIGH	brace-expansion	2.0.2	5.0.10, 3.0.7, 2.1.5, 1.1.19	CVE-2026-102276	https://avd.aquasec.com/nvd/cve-2026-102276
+HIGH	brace-expansion	2.0.2	5.0.11, 3.0.8, 2.1.6, 1.1.20	CVE-2026-102278	https://avd.aquasec.com/nvd/cve-2026-102278
+HIGH	brace-expansion	2.0.2	5.0.7, 1.1.16, 2.1.2	CVE-2026-13149	https://avd.aquasec.com/nvd/cve-2026-13149
+HIGH	brace-expansion	2.0.2	5.0.8, 3.0.3, 2.1.3, 1.1.17	CVE-2026-14257	https://avd.aquasec.com/nvd/cve-2026-14257
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	gzip	1.12-1		CVE-2026-41992	https://avd.aquasec.com/nvd/cve-2026-41992
+HIGH	http-cache-semantics	4.2.0		CVE-2026-93748	https://avd.aquasec.com/nvd/cve-2026-93748
+HIGH	ip-address	10.1.0	10.3.1	CVE-2026-69192	https://avd.aquasec.com/nvd/cve-2026-69192
+HIGH	libacl1	2.3.1-3		CVE-2026-54369	https://avd.aquasec.com/nvd/cve-2026-54369
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	libsystemd0	252.39-1~deb12u2		CVE-2026-16742	https://avd.aquasec.com/nvd/cve-2026-16742
+HIGH	libtinfo6	6.4-4		CVE-2025-69720	https://avd.aquasec.com/nvd/cve-2025-69720
+HIGH	libudev1	252.39-1~deb12u2		CVE-2026-16742	https://avd.aquasec.com/nvd/cve-2026-16742
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	ncurses-base	6.4-4		CVE-2025-69720	https://avd.aquasec.com/nvd/cve-2025-69720
+HIGH	ncurses-bin	6.4-4		CVE-2025-69720	https://avd.aquasec.com/nvd/cve-2025-69720
+HIGH	pacote	19.0.2	21.5.1	CVE-2026-9496	https://avd.aquasec.com/nvd/cve-2026-9496
+HIGH	pacote	20.0.1	21.5.1	CVE-2026-9496	https://avd.aquasec.com/nvd/cve-2026-9496
+HIGH	perl-base	5.36.0-7+deb12u3		CVE-2026-9538	https://avd.aquasec.com/nvd/cve-2026-9538
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-42497	https://avd.aquasec.com/nvd/cve-2026-42497
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-48962	https://avd.aquasec.com/nvd/cve-2026-48962
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-57432	https://avd.aquasec.com/nvd/cve-2026-57432
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-57433	https://avd.aquasec.com/nvd/cve-2026-57433
+HIGH	picomatch	4.0.3	4.0.4, 3.0.2, 2.3.2	CVE-2026-33671	https://avd.aquasec.com/nvd/cve-2026-33671
+HIGH	sigstore	3.1.0	4.1.1	CVE-2026-48815	https://avd.aquasec.com/nvd/cve-2026-48815
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+LOW	apt	2.6.1		CVE-2011-3374	https://avd.aquasec.com/nvd/cve-2011-3374
+LOW	bash	5.2.15-2+b13		TEMP-0841856-B18BAF	https://security-tracker.debian.org/tracker/TEMP-0841856-B18BAF
+LOW	bsdutils	1:2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	bsdutils	1:2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	coreutils	9.1-1		CVE-2016-2781	https://avd.aquasec.com/nvd/cve-2016-2781
+LOW	coreutils	9.1-1		CVE-2017-18018	https://avd.aquasec.com/nvd/cve-2017-18018
+LOW	coreutils	9.1-1		CVE-2025-5278	https://avd.aquasec.com/nvd/cve-2025-5278
+LOW	coreutils	9.1-1		CVE-2026-56391	https://avd.aquasec.com/nvd/cve-2026-56391
+LOW	coreutils	9.1-1		CVE-2026-56392	https://avd.aquasec.com/nvd/cve-2026-56392
+LOW	dash	0.5.12-2		CVE-2026-102473	https://avd.aquasec.com/nvd/cve-2026-102473
+LOW	dash	0.5.12-2		CVE-2026-102474	https://avd.aquasec.com/nvd/cve-2026-102474
+LOW	diffutils	1:3.8-4		CVE-2026-53910	https://avd.aquasec.com/nvd/cve-2026-53910
+LOW	gcc-12-base	12.2.0-14+deb12u1		CVE-2022-27943	https://avd.aquasec.com/nvd/cve-2022-27943
+LOW	gpgv	2.2.40-1.1+deb12u2		CVE-2022-3219	https://avd.aquasec.com/nvd/cve-2022-3219
+LOW	gpgv	2.2.40-1.1+deb12u2		CVE-2026-105712	https://avd.aquasec.com/nvd/cve-2026-105712
+LOW	gpgv	2.2.40-1.1+deb12u2		CVE-2026-57062	https://avd.aquasec.com/nvd/cve-2026-57062
+LOW	libapt-pkg6.0	2.6.1		CVE-2011-3374	https://avd.aquasec.com/nvd/cve-2011-3374
+LOW	libblkid1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libblkid1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	libc-bin	2.36-9+deb12u14		CVE-2010-4756	https://avd.aquasec.com/nvd/cve-2010-4756
+LOW	libc-bin	2.36-9+deb12u14		CVE-2018-20796	https://avd.aquasec.com/nvd/cve-2018-20796
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010022	https://avd.aquasec.com/nvd/cve-2019-1010022
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010023	https://avd.aquasec.com/nvd/cve-2019-1010023
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010024	https://avd.aquasec.com/nvd/cve-2019-1010024
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010025	https://avd.aquasec.com/nvd/cve-2019-1010025
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-9192	https://avd.aquasec.com/nvd/cve-2019-9192
+LOW	libc-bin	2.36-9+deb12u14		CVE-2026-97399	https://avd.aquasec.com/nvd/cve-2026-97399
+LOW	libc6	2.36-9+deb12u14		CVE-2010-4756	https://avd.aquasec.com/nvd/cve-2010-4756
+LOW	libc6	2.36-9+deb12u14		CVE-2018-20796	https://avd.aquasec.com/nvd/cve-2018-20796
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010022	https://avd.aquasec.com/nvd/cve-2019-1010022
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010023	https://avd.aquasec.com/nvd/cve-2019-1010023
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010024	https://avd.aquasec.com/nvd/cve-2019-1010024
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010025	https://avd.aquasec.com/nvd/cve-2019-1010025
+LOW	libc6	2.36-9+deb12u14		CVE-2019-9192	https://avd.aquasec.com/nvd/cve-2019-9192
+LOW	libc6	2.36-9+deb12u14		CVE-2026-97399	https://avd.aquasec.com/nvd/cve-2026-97399
+LOW	libgcc-s1	12.2.0-14+deb12u1		CVE-2022-27943	https://avd.aquasec.com/nvd/cve-2022-27943
+LOW	libgcrypt20	1.10.1-3+deb12u1		CVE-2018-6829	https://avd.aquasec.com/nvd/cve-2018-6829
+LOW	libgcrypt20	1.10.1-3+deb12u1		CVE-2024-2236	https://avd.aquasec.com/nvd/cve-2024-2236
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2011-3389	https://avd.aquasec.com/nvd/cve-2011-3389
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-67693	https://avd.aquasec.com/nvd/cve-2026-67693
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-88647	https://avd.aquasec.com/nvd/cve-2026-88647
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-88648	https://avd.aquasec.com/nvd/cve-2026-88648
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-95184	https://avd.aquasec.com/nvd/cve-2026-95184
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-95209	https://avd.aquasec.com/nvd/cve-2026-95209
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-95210	https://avd.aquasec.com/nvd/cve-2026-95210
+LOW	libmount1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libmount1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	libsmartcols1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libsmartcols1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	libstdc++6	12.2.0-14+deb12u1		CVE-2022-27943	https://avd.aquasec.com/nvd/cve-2022-27943
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2013-4392	https://avd.aquasec.com/nvd/cve-2013-4392
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2023-31437	https://avd.aquasec.com/nvd/cve-2023-31437
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2023-31438	https://avd.aquasec.com/nvd/cve-2023-31438
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2023-31439	https://avd.aquasec.com/nvd/cve-2023-31439
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2026-40228	https://avd.aquasec.com/nvd/cve-2026-40228
+LOW	libtasn1-6	4.19.0-2+deb12u1		CVE-2025-13151	https://avd.aquasec.com/nvd/cve-2025-13151
+LOW	libtinfo6	6.4-4		CVE-2025-6141	https://avd.aquasec.com/nvd/cve-2025-6141
+LOW	libudev1	252.39-1~deb12u2		CVE-2013-4392	https://avd.aquasec.com/nvd/cve-2013-4392
+LOW	libudev1	252.39-1~deb12u2		CVE-2023-31437	https://avd.aquasec.com/nvd/cve-2023-31437
+LOW	libudev1	252.39-1~deb12u2		CVE-2023-31438	https://avd.aquasec.com/nvd/cve-2023-31438
+LOW	libudev1	252.39-1~deb12u2		CVE-2023-31439	https://avd.aquasec.com/nvd/cve-2023-31439
+LOW	libudev1	252.39-1~deb12u2		CVE-2026-40228	https://avd.aquasec.com/nvd/cve-2026-40228
+LOW	libuuid1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libuuid1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	login	1:4.13+dfsg1-1+deb12u2		CVE-2007-5686	https://avd.aquasec.com/nvd/cve-2007-5686
+LOW	login	1:4.13+dfsg1-1+deb12u2		CVE-2024-56433	https://avd.aquasec.com/nvd/cve-2024-56433
+LOW	login	1:4.13+dfsg1-1+deb12u2		TEMP-0628843-DBAD28	https://security-tracker.debian.org/tracker/TEMP-0628843-DBAD28
+LOW	mount	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	mount	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	ncurses-base	6.4-4		CVE-2025-6141	https://avd.aquasec.com/nvd/cve-2025-6141
+LOW	ncurses-bin	6.4-4		CVE-2025-6141	https://avd.aquasec.com/nvd/cve-2025-6141
+LOW	passwd	1:4.13+dfsg1-1+deb12u2		CVE-2007-5686	https://avd.aquasec.com/nvd/cve-2007-5686
+LOW	passwd	1:4.13+dfsg1-1+deb12u2		CVE-2024-56433	https://avd.aquasec.com/nvd/cve-2024-56433
+LOW	passwd	1:4.13+dfsg1-1+deb12u2		TEMP-0628843-DBAD28	https://security-tracker.debian.org/tracker/TEMP-0628843-DBAD28
+LOW	perl-base	5.36.0-7+deb12u3		CVE-2011-4116	https://avd.aquasec.com/nvd/cve-2011-4116
+LOW	perl-base	5.36.0-7+deb12u3		CVE-2023-31486	https://avd.aquasec.com/nvd/cve-2023-31486
+LOW	postcss-selector-parser	7.1.1	6.1.3, 7.1.3	CVE-2026-9358	https://avd.aquasec.com/nvd/cve-2026-9358
+LOW	sysvinit-utils	3.06-4		TEMP-0517018-A83CE6	https://security-tracker.debian.org/tracker/TEMP-0517018-A83CE6
+LOW	tar	1.34+dfsg-1.2+deb12u1		CVE-2005-2541	https://avd.aquasec.com/nvd/cve-2005-2541
+LOW	tar	1.34+dfsg-1.2+deb12u1		TEMP-0290435-0B57B5	https://security-tracker.debian.org/tracker/TEMP-0290435-0B57B5
+LOW	util-linux	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	util-linux	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	util-linux-extra	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	util-linux-extra	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+MEDIUM	@sigstore/core	2.0.0	3.2.1	CVE-2026-48758	https://avd.aquasec.com/nvd/cve-2026-48758
+MEDIUM	brace-expansion	2.0.2	5.0.12, 3.0.9, 2.1.7, 1.1.21	CVE-2026-102277	https://avd.aquasec.com/nvd/cve-2026-102277
+MEDIUM	brace-expansion	2.0.2	5.0.5, 3.0.2, 2.0.3, 1.1.13	CVE-2026-33750	https://avd.aquasec.com/nvd/cve-2026-33750
+MEDIUM	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	gcc-12-base	12.2.0-14+deb12u1		CVE-2026-102010	https://avd.aquasec.com/nvd/cve-2026-102010
+MEDIUM	gcc-12-base	12.2.0-14+deb12u1		CVE-2026-95619	https://avd.aquasec.com/nvd/cve-2026-95619
+MEDIUM	gpgv	2.2.40-1.1+deb12u2		CVE-2025-30258	https://avd.aquasec.com/nvd/cve-2025-30258
+MEDIUM	gpgv	2.2.40-1.1+deb12u2		CVE-2025-68972	https://avd.aquasec.com/nvd/cve-2025-68972
+MEDIUM	gzip	1.12-1		CVE-2026-41991	https://avd.aquasec.com/nvd/cve-2026-41991
+MEDIUM	ip-address	10.1.0	10.1.1	CVE-2026-42338	https://avd.aquasec.com/nvd/cve-2026-42338
+MEDIUM	ip-address	10.1.0	10.5.1	CVE-2026-101913	https://avd.aquasec.com/nvd/cve-2026-101913
+MEDIUM	ip-address	10.1.0	10.7.1	CVE-2026-101911	https://avd.aquasec.com/nvd/cve-2026-101911
+MEDIUM	ip-address	10.1.0	10.7.1	CVE-2026-101912	https://avd.aquasec.com/nvd/cve-2026-101912
+MEDIUM	libacl1	2.3.1-3		CVE-2026-54370	https://avd.aquasec.com/nvd/cve-2026-54370
+MEDIUM	libattr1	1:2.5.1-4		CVE-2026-54371	https://avd.aquasec.com/nvd/cve-2026-54371
+MEDIUM	libblkid1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libblkid1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libblkid1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	libbz2-1.0	1.0.8-5+b1		CVE-2026-42250	https://avd.aquasec.com/nvd/cve-2026-42250
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-18374	https://avd.aquasec.com/nvd/cve-2026-18374
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-19499	https://avd.aquasec.com/nvd/cve-2026-19499
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-19542	https://avd.aquasec.com/nvd/cve-2026-19542
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-5435	https://avd.aquasec.com/nvd/cve-2026-5435
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-5450	https://avd.aquasec.com/nvd/cve-2026-5450
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-5928	https://avd.aquasec.com/nvd/cve-2026-5928
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-6238	https://avd.aquasec.com/nvd/cve-2026-6238
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-6368	https://avd.aquasec.com/nvd/cve-2026-6368
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-6791	https://avd.aquasec.com/nvd/cve-2026-6791
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-77117	https://avd.aquasec.com/nvd/cve-2026-77117
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-80489	https://avd.aquasec.com/nvd/cve-2026-80489
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-8674	https://avd.aquasec.com/nvd/cve-2026-8674
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-86805	https://avd.aquasec.com/nvd/cve-2026-86805
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-89092	https://avd.aquasec.com/nvd/cve-2026-89092
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-95818	https://avd.aquasec.com/nvd/cve-2026-95818
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-18374	https://avd.aquasec.com/nvd/cve-2026-18374
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-19499	https://avd.aquasec.com/nvd/cve-2026-19499
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-19542	https://avd.aquasec.com/nvd/cve-2026-19542
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-5435	https://avd.aquasec.com/nvd/cve-2026-5435
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-5450	https://avd.aquasec.com/nvd/cve-2026-5450
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-5928	https://avd.aquasec.com/nvd/cve-2026-5928
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-6238	https://avd.aquasec.com/nvd/cve-2026-6238
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-6368	https://avd.aquasec.com/nvd/cve-2026-6368
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-6791	https://avd.aquasec.com/nvd/cve-2026-6791
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-77117	https://avd.aquasec.com/nvd/cve-2026-77117
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-80489	https://avd.aquasec.com/nvd/cve-2026-80489
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-8674	https://avd.aquasec.com/nvd/cve-2026-8674
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-86805	https://avd.aquasec.com/nvd/cve-2026-86805
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-89092	https://avd.aquasec.com/nvd/cve-2026-89092
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-95818	https://avd.aquasec.com/nvd/cve-2026-95818
+MEDIUM	libgcc-s1	12.2.0-14+deb12u1		CVE-2026-102010	https://avd.aquasec.com/nvd/cve-2026-102010
+MEDIUM	libgcc-s1	12.2.0-14+deb12u1		CVE-2026-95619	https://avd.aquasec.com/nvd/cve-2026-95619
+MEDIUM	libmount1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libmount1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libmount1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	libp11-kit0	0.24.1-2		CVE-2026-13757	https://avd.aquasec.com/nvd/cve-2026-13757
+MEDIUM	libp11-kit0	0.24.1-2		CVE-2026-18938	https://avd.aquasec.com/nvd/cve-2026-18938
+MEDIUM	libpam-modules	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam-modules	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libpam-modules-bin	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam-modules-bin	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libpam-runtime	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam-runtime	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libpam0g	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam0g	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	libstdc++6	12.2.0-14+deb12u1		CVE-2026-102010	https://avd.aquasec.com/nvd/cve-2026-102010
+MEDIUM	libstdc++6	12.2.0-14+deb12u1		CVE-2026-95619	https://avd.aquasec.com/nvd/cve-2026-95619
+MEDIUM	libsystemd0	252.39-1~deb12u2		CVE-2026-15059	https://avd.aquasec.com/nvd/cve-2026-15059
+MEDIUM	libtinfo6	6.4-4		CVE-2023-50495	https://avd.aquasec.com/nvd/cve-2023-50495
+MEDIUM	libudev1	252.39-1~deb12u2		CVE-2026-15059	https://avd.aquasec.com/nvd/cve-2026-15059
+MEDIUM	libuuid1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libuuid1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libuuid1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	mount	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	mount	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	mount	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	ncurses-base	6.4-4		CVE-2023-50495	https://avd.aquasec.com/nvd/cve-2023-50495
+MEDIUM	ncurses-bin	6.4-4		CVE-2023-50495	https://avd.aquasec.com/nvd/cve-2023-50495
+MEDIUM	perl-base	5.36.0-7+deb12u3		CVE-2026-15534	https://avd.aquasec.com/nvd/cve-2026-15534
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2025-15649	https://avd.aquasec.com/nvd/cve-2025-15649
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-12087	https://avd.aquasec.com/nvd/cve-2026-12087
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-19487	https://avd.aquasec.com/nvd/cve-2026-19487
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-48959	https://avd.aquasec.com/nvd/cve-2026-48959
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-7010	https://avd.aquasec.com/nvd/cve-2026-7010
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-7017	https://avd.aquasec.com/nvd/cve-2026-7017
+MEDIUM	picomatch	4.0.3	4.0.4, 3.0.2, 2.3.2	CVE-2026-33672	https://avd.aquasec.com/nvd/cve-2026-33672
+MEDIUM	postcss-selector-parser	7.1.1	7.1.6	CVE-2026-104844	https://avd.aquasec.com/nvd/cve-2026-104844
+MEDIUM	tar	1.34+dfsg-1.2+deb12u1		CVE-2026-18477	https://avd.aquasec.com/nvd/cve-2026-18477
+MEDIUM	tar	1.34+dfsg-1.2+deb12u1		CVE-2026-18508	https://avd.aquasec.com/nvd/cve-2026-18508
+MEDIUM	tar	1.34+dfsg-1.2+deb12u1		CVE-2026-5704	https://avd.aquasec.com/nvd/cve-2026-5704
+MEDIUM	util-linux	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	util-linux	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	util-linux	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	zlib1g	1:1.2.13.dfsg-1		CVE-2026-27171	https://avd.aquasec.com/nvd/cve-2026-27171
+MEDIUM	zlib1g	1:1.2.13.dfsg-1		CVE-2026-85091	https://avd.aquasec.com/nvd/cve-2026-85091
+UNKNOWN	perl-base	5.36.0-7+deb12u3		CVE-2026-82560	https://avd.aquasec.com/nvd/cve-2026-82560
+Trivy scanner and vulnerability database metadata
+Version: 0.76.0
+Vulnerability DB:
+  Version: 2
+  UpdatedAt: 2026-10-16 01:13:54.947090392 +0000 UTC
+  NextUpdate: 2026-10-17 01:13:54.947090202 +0000 UTC
+  DownloadedAt: 2026-10-16 17:14:03.80171621 +0000 UTC
+
+BuildKit cgroup limits
+memory.max: 8589934592 bytes; memory.swap.max: 0 bytes (Docker memory and memory-swap both capped at 8 GiB total)
+cpu.max: 300000 100000; BuildKit OCI worker max-parallelism: 1
+Initial memory event and CPU counters captured before build; no retry is configured
+Build result and cgroup counters
+Build interval: 2026-10-16T17:14:15Z to 2026-10-16T17:17:15Z UTC (180 seconds)
+Build command exit code: 0
+Observed builder counters immediately after build:
+==memory.max==
+8589934592
+==memory.swap.max==
+0
+==memory.peak==
+8130437120
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==cpu.max==
+300000 100000
+==cpu.stat==
+usage_usec 249721763
+user_usec 207258306
+system_usec 42463456
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 1424
+nr_throttled 101
+throttled_usec 6846036
+nr_bursts 0
+burst_usec 0
+
+Local image identity
+Image ID: sha256:d24ed046ead4ed183456f4535172a338255d4b8345688d96d6b602e3188a69d3
+Platform: linux/amd64
+Source revision label: a0f319c39a3bbc315e8e2a0d8ca4f854c7438838
+Delivery: local runner only; no artifact or image publication
+
+report=/home/runner/work/_temp/ornigami-runtime-acceptance-a0f319c39a3b-1b2a8092-c2f9-4a3c-8981-a4e36128f8c9/report.txt
+
+Runtime acceptance receipt
+image=ornigami:rehearsal-a0f319c39a3bbc315e8e2a0d8ca4f854c7438838
+image_id=sha256:d24ed046ead4ed183456f4535172a338255d4b8345688d96d6b602e3188a69d3
+image_size_bytes=1905623097
+image_platform=linux/amd64
+image_user=node
+image_revision=a0f319c39a3bbc315e8e2a0d8ca4f854c7438838
+image_origin=https://rehearsal.invalid
+started_at_utc=2026-10-16T17:17:15Z
+runtime_env=all_features_disabled;no_database_or_provider_secrets;synthetic_google_only
+runtime_uid=1000
+runtime_inspect_limits=805306368|805306368|750000000|128|true|none|{}|["ALL"]|["no-new-privileges:true"]
+root_write=rejected
+tmp_write=allowed
+state=running oom_killed=false exit_code=0 memory=805306368 swap=805306368 nanocpus=750000000 pids=128 readonly=true network=none port_bindings={}
+result=failed
+exit_status=1
+
+==runtime-final-cgroup.txt==
+==memory.max==
+805306368
+==memory.swap.max==
+0
+==memory.current==
+143933440
+==memory.peak==
+176586752
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==memory.stat==
+anon 135520256
+file 8192
+kernel 7917568
+kernel_stack 245760
+pagetables 4112384
+sec_pagetables 0
+percpu 2640
+sock 0
+vmalloc 24576
+shmem 4096
+zswap 0
+zswapped 0
+file_mapped 0
+file_dirty 4096
+file_writeback 0
+swapcached 0
+anon_thp 29360128
+file_thp 0
+shmem_thp 0
+inactive_anon 0
+active_anon 135307264
+inactive_file 4096
+active_file 0
+unevictable 0
+slab_reclaimable 2833856
+slab_unreclaimable 676312
+slab 3510168
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgdemote_kswapd 0
+pgdemote_direct 0
+pgdemote_khugepaged 0
+pgdemote_proactive 0
+pgpromote_success 0
+pgscan 0
+pgsteal 0
+pswpin 0
+pswpout 0
+pgscan_kswapd 0
+pgscan_direct 0
+pgscan_khugepaged 0
+pgscan_proactive 0
+pgsteal_kswapd 0
+pgsteal_direct 0
+pgsteal_khugepaged 0
+pgsteal_proactive 0
+pgfault 97577
+pgmajfault 0
+pgrefill 0
+pgactivate 0
+pgdeactivate 0
+pglazyfree 0
+pglazyfreed 0
+swpin_zero 0
+swpout_zero 0
+zswpin 0
+zswpout 0
+zswpwb 0
+thp_fault_alloc 31
+thp_collapse_alloc 0
+thp_swpout 0
+thp_swpout_fallback 0
+numa_pages_migrated 0
+numa_pte_updates 0
+numa_hint_faults 0
+==memory.pressure==
+some avg10=0.00 avg60=0.00 avg300=0.00 total=0
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+==cpu.max==
+75000 100000
+==cpu.stat==
+usage_usec 2854961
+user_usec 2427715
+system_usec 427245
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 43
+nr_throttled 35
+throttled_usec 2864385
+nr_bursts 0
+burst_usec 0
+==pids.max==
+128
+
+==host-disk-before.txt==
+Filesystem     1024-blocks     Used Available Capacity Mounted on
+/dev/root        151263856 70873308  80374164      47% /
+/dev/root        151263856 70873308  80374164      47% /
+
+Final image archive identity
+Docker image ID: sha256:d24ed046ead4ed183456f4535172a338255d4b8345688d96d6b602e3188a69d3
+Docker image bytes: 1905623097
+Root filesystem layer IDs: ["sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7","sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8","sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240","sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49","sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde","sha256:13bc14457e3d9fa99788dc65220ff7e82a0fc320168d049d14f10ef5ee9c69b1","sha256:cea1019bb9722f126f89c6ae31172fd5bf6aee4cd3125c3c3131c5f1ebc79768","sha256:b2bd058d583b5b79c43031e5b9d456b0c899999021aefea8601f85e79695979c","sha256:064fcdca9e8316ec2e6c667d804da616f4cac289a0dfe93b8d4bd3e077141a6c","sha256:7e37680ae71b81169b18f2502b0fc58d85694ecbdf759f08871a889dfe644359","sha256:e471a450da1eff14acd6cdf3cce9c01b36ea56738a78b20a5186a75153e4cbfb","sha256:e4efea2f370f4762c5f86cf0b4c653e2e013869f9e8eea6d48209aabfb06f8a4","sha256:1e52d7636b0708f47a6f3f9407b33055ad0bf958923e68c914943df9f1b658e6","sha256:a6de569340a754e3ea47f57efa1571018b38082a7d556d138428bb3e7b72784c","sha256:9bd01ded5961e3319c91e2221cb84c5c42549cbef67bda6b11fd3025f1b3bc35","sha256:af7538e076473fe693cf0cb4016f87367d656685eb3b60e613cfa4ffd595ebf7","sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"]
+Root filesystem layer-list SHA-256: 90a614c3190a9219e3f1432d567888ad3f83310b57cae6caeae89a5d0f23066d
+Saved archive SHA-256: e1e00d48b37971f38c1cf26c42fec5171af37555315fb2c32de6f6bd37cb4fd2
+Saved archive bytes: 1942539264
+Trivy report ImageID must match the local Docker image ID above
+Trivy 0.76.0 image scan
+Severity	Findings
+CRITICAL	4
+HIGH	71
+MEDIUM	102
+LOW	84
+UNKNOWN	1
+
+No image was pushed or published by this workflow.
+
+Severity	Package	Installed	Fixed	Advisory	Primary URL
+CRITICAL	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-13221	https://avd.aquasec.com/nvd/cve-2026-13221
+CRITICAL	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-42496	https://avd.aquasec.com/nvd/cve-2026-42496
+CRITICAL	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-8376	https://avd.aquasec.com/nvd/cve-2026-8376
+CRITICAL	zlib1g	1:1.2.13.dfsg-1		CVE-2023-45853	https://avd.aquasec.com/nvd/cve-2023-45853
+HIGH	brace-expansion	2.0.2	1.1.18, 2.1.4, 3.0.6, 5.0.9	CVE-2026-69152	https://avd.aquasec.com/nvd/cve-2026-69152
+HIGH	brace-expansion	2.0.2	5.0.10, 3.0.7, 2.1.5, 1.1.19	CVE-2026-102276	https://avd.aquasec.com/nvd/cve-2026-102276
+HIGH	brace-expansion	2.0.2	5.0.11, 3.0.8, 2.1.6, 1.1.20	CVE-2026-102278	https://avd.aquasec.com/nvd/cve-2026-102278
+HIGH	brace-expansion	2.0.2	5.0.7, 1.1.16, 2.1.2	CVE-2026-13149	https://avd.aquasec.com/nvd/cve-2026-13149
+HIGH	brace-expansion	2.0.2	5.0.8, 3.0.3, 2.1.3, 1.1.17	CVE-2026-14257	https://avd.aquasec.com/nvd/cve-2026-14257
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	gzip	1.12-1		CVE-2026-41992	https://avd.aquasec.com/nvd/cve-2026-41992
+HIGH	http-cache-semantics	4.2.0		CVE-2026-93748	https://avd.aquasec.com/nvd/cve-2026-93748
+HIGH	ip-address	10.1.0	10.3.1	CVE-2026-69192	https://avd.aquasec.com/nvd/cve-2026-69192
+HIGH	libacl1	2.3.1-3		CVE-2026-54369	https://avd.aquasec.com/nvd/cve-2026-54369
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libblkid1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libmount1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	libsystemd0	252.39-1~deb12u2		CVE-2026-16742	https://avd.aquasec.com/nvd/cve-2026-16742
+HIGH	libtinfo6	6.4-4		CVE-2025-69720	https://avd.aquasec.com/nvd/cve-2025-69720
+HIGH	libudev1	252.39-1~deb12u2		CVE-2026-16742	https://avd.aquasec.com/nvd/cve-2026-16742
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	libuuid1	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	mount	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	ncurses-base	6.4-4		CVE-2025-69720	https://avd.aquasec.com/nvd/cve-2025-69720
+HIGH	ncurses-bin	6.4-4		CVE-2025-69720	https://avd.aquasec.com/nvd/cve-2025-69720
+HIGH	pacote	19.0.2	21.5.1	CVE-2026-9496	https://avd.aquasec.com/nvd/cve-2026-9496
+HIGH	pacote	20.0.1	21.5.1	CVE-2026-9496	https://avd.aquasec.com/nvd/cve-2026-9496
+HIGH	perl-base	5.36.0-7+deb12u3		CVE-2026-9538	https://avd.aquasec.com/nvd/cve-2026-9538
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-42497	https://avd.aquasec.com/nvd/cve-2026-42497
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-48962	https://avd.aquasec.com/nvd/cve-2026-48962
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-57432	https://avd.aquasec.com/nvd/cve-2026-57432
+HIGH	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-57433	https://avd.aquasec.com/nvd/cve-2026-57433
+HIGH	picomatch	4.0.3	4.0.4, 3.0.2, 2.3.2	CVE-2026-33671	https://avd.aquasec.com/nvd/cve-2026-33671
+HIGH	sigstore	3.1.0	4.1.1	CVE-2026-48815	https://avd.aquasec.com/nvd/cve-2026-48815
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	util-linux	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-53613	https://avd.aquasec.com/nvd/cve-2026-53613
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-53615	https://avd.aquasec.com/nvd/cve-2026-53615
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-76642	https://avd.aquasec.com/nvd/cve-2026-76642
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-78408	https://avd.aquasec.com/nvd/cve-2026-78408
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-78409	https://avd.aquasec.com/nvd/cve-2026-78409
+HIGH	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-78410	https://avd.aquasec.com/nvd/cve-2026-78410
+LOW	apt	2.6.1		CVE-2011-3374	https://avd.aquasec.com/nvd/cve-2011-3374
+LOW	bash	5.2.15-2+b13		TEMP-0841856-B18BAF	https://security-tracker.debian.org/tracker/TEMP-0841856-B18BAF
+LOW	bsdutils	1:2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	bsdutils	1:2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	coreutils	9.1-1		CVE-2016-2781	https://avd.aquasec.com/nvd/cve-2016-2781
+LOW	coreutils	9.1-1		CVE-2017-18018	https://avd.aquasec.com/nvd/cve-2017-18018
+LOW	coreutils	9.1-1		CVE-2025-5278	https://avd.aquasec.com/nvd/cve-2025-5278
+LOW	coreutils	9.1-1		CVE-2026-56391	https://avd.aquasec.com/nvd/cve-2026-56391
+LOW	coreutils	9.1-1		CVE-2026-56392	https://avd.aquasec.com/nvd/cve-2026-56392
+LOW	dash	0.5.12-2		CVE-2026-102473	https://avd.aquasec.com/nvd/cve-2026-102473
+LOW	dash	0.5.12-2		CVE-2026-102474	https://avd.aquasec.com/nvd/cve-2026-102474
+LOW	diffutils	1:3.8-4		CVE-2026-53910	https://avd.aquasec.com/nvd/cve-2026-53910
+LOW	gcc-12-base	12.2.0-14+deb12u1		CVE-2022-27943	https://avd.aquasec.com/nvd/cve-2022-27943
+LOW	gpgv	2.2.40-1.1+deb12u2		CVE-2022-3219	https://avd.aquasec.com/nvd/cve-2022-3219
+LOW	gpgv	2.2.40-1.1+deb12u2		CVE-2026-105712	https://avd.aquasec.com/nvd/cve-2026-105712
+LOW	gpgv	2.2.40-1.1+deb12u2		CVE-2026-57062	https://avd.aquasec.com/nvd/cve-2026-57062
+LOW	libapt-pkg6.0	2.6.1		CVE-2011-3374	https://avd.aquasec.com/nvd/cve-2011-3374
+LOW	libblkid1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libblkid1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	libc-bin	2.36-9+deb12u14		CVE-2010-4756	https://avd.aquasec.com/nvd/cve-2010-4756
+LOW	libc-bin	2.36-9+deb12u14		CVE-2018-20796	https://avd.aquasec.com/nvd/cve-2018-20796
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010022	https://avd.aquasec.com/nvd/cve-2019-1010022
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010023	https://avd.aquasec.com/nvd/cve-2019-1010023
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010024	https://avd.aquasec.com/nvd/cve-2019-1010024
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-1010025	https://avd.aquasec.com/nvd/cve-2019-1010025
+LOW	libc-bin	2.36-9+deb12u14		CVE-2019-9192	https://avd.aquasec.com/nvd/cve-2019-9192
+LOW	libc-bin	2.36-9+deb12u14		CVE-2026-97399	https://avd.aquasec.com/nvd/cve-2026-97399
+LOW	libc6	2.36-9+deb12u14		CVE-2010-4756	https://avd.aquasec.com/nvd/cve-2010-4756
+LOW	libc6	2.36-9+deb12u14		CVE-2018-20796	https://avd.aquasec.com/nvd/cve-2018-20796
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010022	https://avd.aquasec.com/nvd/cve-2019-1010022
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010023	https://avd.aquasec.com/nvd/cve-2019-1010023
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010024	https://avd.aquasec.com/nvd/cve-2019-1010024
+LOW	libc6	2.36-9+deb12u14		CVE-2019-1010025	https://avd.aquasec.com/nvd/cve-2019-1010025
+LOW	libc6	2.36-9+deb12u14		CVE-2019-9192	https://avd.aquasec.com/nvd/cve-2019-9192
+LOW	libc6	2.36-9+deb12u14		CVE-2026-97399	https://avd.aquasec.com/nvd/cve-2026-97399
+LOW	libgcc-s1	12.2.0-14+deb12u1		CVE-2022-27943	https://avd.aquasec.com/nvd/cve-2022-27943
+LOW	libgcrypt20	1.10.1-3+deb12u1		CVE-2018-6829	https://avd.aquasec.com/nvd/cve-2018-6829
+LOW	libgcrypt20	1.10.1-3+deb12u1		CVE-2024-2236	https://avd.aquasec.com/nvd/cve-2024-2236
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2011-3389	https://avd.aquasec.com/nvd/cve-2011-3389
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-67693	https://avd.aquasec.com/nvd/cve-2026-67693
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-88647	https://avd.aquasec.com/nvd/cve-2026-88647
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-88648	https://avd.aquasec.com/nvd/cve-2026-88648
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-95184	https://avd.aquasec.com/nvd/cve-2026-95184
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-95209	https://avd.aquasec.com/nvd/cve-2026-95209
+LOW	libgnutls30	3.7.9-2+deb12u7		CVE-2026-95210	https://avd.aquasec.com/nvd/cve-2026-95210
+LOW	libmount1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libmount1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	libsmartcols1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libsmartcols1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	libstdc++6	12.2.0-14+deb12u1		CVE-2022-27943	https://avd.aquasec.com/nvd/cve-2022-27943
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2013-4392	https://avd.aquasec.com/nvd/cve-2013-4392
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2023-31437	https://avd.aquasec.com/nvd/cve-2023-31437
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2023-31438	https://avd.aquasec.com/nvd/cve-2023-31438
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2023-31439	https://avd.aquasec.com/nvd/cve-2023-31439
+LOW	libsystemd0	252.39-1~deb12u2		CVE-2026-40228	https://avd.aquasec.com/nvd/cve-2026-40228
+LOW	libtasn1-6	4.19.0-2+deb12u1		CVE-2025-13151	https://avd.aquasec.com/nvd/cve-2025-13151
+LOW	libtinfo6	6.4-4		CVE-2025-6141	https://avd.aquasec.com/nvd/cve-2025-6141
+LOW	libudev1	252.39-1~deb12u2		CVE-2013-4392	https://avd.aquasec.com/nvd/cve-2013-4392
+LOW	libudev1	252.39-1~deb12u2		CVE-2023-31437	https://avd.aquasec.com/nvd/cve-2023-31437
+LOW	libudev1	252.39-1~deb12u2		CVE-2023-31438	https://avd.aquasec.com/nvd/cve-2023-31438
+LOW	libudev1	252.39-1~deb12u2		CVE-2023-31439	https://avd.aquasec.com/nvd/cve-2023-31439
+LOW	libudev1	252.39-1~deb12u2		CVE-2026-40228	https://avd.aquasec.com/nvd/cve-2026-40228
+LOW	libuuid1	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	libuuid1	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	login	1:4.13+dfsg1-1+deb12u2		CVE-2007-5686	https://avd.aquasec.com/nvd/cve-2007-5686
+LOW	login	1:4.13+dfsg1-1+deb12u2		CVE-2024-56433	https://avd.aquasec.com/nvd/cve-2024-56433
+LOW	login	1:4.13+dfsg1-1+deb12u2		TEMP-0628843-DBAD28	https://security-tracker.debian.org/tracker/TEMP-0628843-DBAD28
+LOW	mount	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	mount	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	ncurses-base	6.4-4		CVE-2025-6141	https://avd.aquasec.com/nvd/cve-2025-6141
+LOW	ncurses-bin	6.4-4		CVE-2025-6141	https://avd.aquasec.com/nvd/cve-2025-6141
+LOW	passwd	1:4.13+dfsg1-1+deb12u2		CVE-2007-5686	https://avd.aquasec.com/nvd/cve-2007-5686
+LOW	passwd	1:4.13+dfsg1-1+deb12u2		CVE-2024-56433	https://avd.aquasec.com/nvd/cve-2024-56433
+LOW	passwd	1:4.13+dfsg1-1+deb12u2		TEMP-0628843-DBAD28	https://security-tracker.debian.org/tracker/TEMP-0628843-DBAD28
+LOW	perl-base	5.36.0-7+deb12u3		CVE-2011-4116	https://avd.aquasec.com/nvd/cve-2011-4116
+LOW	perl-base	5.36.0-7+deb12u3		CVE-2023-31486	https://avd.aquasec.com/nvd/cve-2023-31486
+LOW	postcss-selector-parser	7.1.1	6.1.3, 7.1.3	CVE-2026-9358	https://avd.aquasec.com/nvd/cve-2026-9358
+LOW	sysvinit-utils	3.06-4		TEMP-0517018-A83CE6	https://security-tracker.debian.org/tracker/TEMP-0517018-A83CE6
+LOW	tar	1.34+dfsg-1.2+deb12u1		CVE-2005-2541	https://avd.aquasec.com/nvd/cve-2005-2541
+LOW	tar	1.34+dfsg-1.2+deb12u1		TEMP-0290435-0B57B5	https://security-tracker.debian.org/tracker/TEMP-0290435-0B57B5
+LOW	util-linux	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	util-linux	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+LOW	util-linux-extra	2.38.1-5+deb12u3		CVE-2022-0563	https://avd.aquasec.com/nvd/cve-2022-0563
+LOW	util-linux-extra	2.38.1-5+deb12u3		CVE-2025-14104	https://avd.aquasec.com/nvd/cve-2025-14104
+MEDIUM	@sigstore/core	2.0.0	3.2.1	CVE-2026-48758	https://avd.aquasec.com/nvd/cve-2026-48758
+MEDIUM	brace-expansion	2.0.2	5.0.12, 3.0.9, 2.1.7, 1.1.21	CVE-2026-102277	https://avd.aquasec.com/nvd/cve-2026-102277
+MEDIUM	brace-expansion	2.0.2	5.0.5, 3.0.2, 2.0.3, 1.1.13	CVE-2026-33750	https://avd.aquasec.com/nvd/cve-2026-33750
+MEDIUM	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	bsdutils	1:2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	gcc-12-base	12.2.0-14+deb12u1		CVE-2026-102010	https://avd.aquasec.com/nvd/cve-2026-102010
+MEDIUM	gcc-12-base	12.2.0-14+deb12u1		CVE-2026-95619	https://avd.aquasec.com/nvd/cve-2026-95619
+MEDIUM	gpgv	2.2.40-1.1+deb12u2		CVE-2025-30258	https://avd.aquasec.com/nvd/cve-2025-30258
+MEDIUM	gpgv	2.2.40-1.1+deb12u2		CVE-2025-68972	https://avd.aquasec.com/nvd/cve-2025-68972
+MEDIUM	gzip	1.12-1		CVE-2026-41991	https://avd.aquasec.com/nvd/cve-2026-41991
+MEDIUM	ip-address	10.1.0	10.1.1	CVE-2026-42338	https://avd.aquasec.com/nvd/cve-2026-42338
+MEDIUM	ip-address	10.1.0	10.5.1	CVE-2026-101913	https://avd.aquasec.com/nvd/cve-2026-101913
+MEDIUM	ip-address	10.1.0	10.7.1	CVE-2026-101911	https://avd.aquasec.com/nvd/cve-2026-101911
+MEDIUM	ip-address	10.1.0	10.7.1	CVE-2026-101912	https://avd.aquasec.com/nvd/cve-2026-101912
+MEDIUM	libacl1	2.3.1-3		CVE-2026-54370	https://avd.aquasec.com/nvd/cve-2026-54370
+MEDIUM	libattr1	1:2.5.1-4		CVE-2026-54371	https://avd.aquasec.com/nvd/cve-2026-54371
+MEDIUM	libblkid1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libblkid1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libblkid1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	libbz2-1.0	1.0.8-5+b1		CVE-2026-42250	https://avd.aquasec.com/nvd/cve-2026-42250
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-18374	https://avd.aquasec.com/nvd/cve-2026-18374
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-19499	https://avd.aquasec.com/nvd/cve-2026-19499
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-19542	https://avd.aquasec.com/nvd/cve-2026-19542
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-5435	https://avd.aquasec.com/nvd/cve-2026-5435
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-5450	https://avd.aquasec.com/nvd/cve-2026-5450
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-5928	https://avd.aquasec.com/nvd/cve-2026-5928
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-6238	https://avd.aquasec.com/nvd/cve-2026-6238
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-6368	https://avd.aquasec.com/nvd/cve-2026-6368
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-6791	https://avd.aquasec.com/nvd/cve-2026-6791
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-77117	https://avd.aquasec.com/nvd/cve-2026-77117
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-80489	https://avd.aquasec.com/nvd/cve-2026-80489
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-8674	https://avd.aquasec.com/nvd/cve-2026-8674
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-86805	https://avd.aquasec.com/nvd/cve-2026-86805
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-89092	https://avd.aquasec.com/nvd/cve-2026-89092
+MEDIUM	libc-bin	2.36-9+deb12u14		CVE-2026-95818	https://avd.aquasec.com/nvd/cve-2026-95818
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-18374	https://avd.aquasec.com/nvd/cve-2026-18374
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-19499	https://avd.aquasec.com/nvd/cve-2026-19499
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-19542	https://avd.aquasec.com/nvd/cve-2026-19542
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-5435	https://avd.aquasec.com/nvd/cve-2026-5435
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-5450	https://avd.aquasec.com/nvd/cve-2026-5450
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-5928	https://avd.aquasec.com/nvd/cve-2026-5928
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-6238	https://avd.aquasec.com/nvd/cve-2026-6238
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-6368	https://avd.aquasec.com/nvd/cve-2026-6368
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-6791	https://avd.aquasec.com/nvd/cve-2026-6791
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-77117	https://avd.aquasec.com/nvd/cve-2026-77117
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-80489	https://avd.aquasec.com/nvd/cve-2026-80489
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-8674	https://avd.aquasec.com/nvd/cve-2026-8674
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-86805	https://avd.aquasec.com/nvd/cve-2026-86805
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-89092	https://avd.aquasec.com/nvd/cve-2026-89092
+MEDIUM	libc6	2.36-9+deb12u14		CVE-2026-95818	https://avd.aquasec.com/nvd/cve-2026-95818
+MEDIUM	libgcc-s1	12.2.0-14+deb12u1		CVE-2026-102010	https://avd.aquasec.com/nvd/cve-2026-102010
+MEDIUM	libgcc-s1	12.2.0-14+deb12u1		CVE-2026-95619	https://avd.aquasec.com/nvd/cve-2026-95619
+MEDIUM	libmount1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libmount1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libmount1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	libp11-kit0	0.24.1-2		CVE-2026-13757	https://avd.aquasec.com/nvd/cve-2026-13757
+MEDIUM	libp11-kit0	0.24.1-2		CVE-2026-18938	https://avd.aquasec.com/nvd/cve-2026-18938
+MEDIUM	libpam-modules	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam-modules	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libpam-modules-bin	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam-modules-bin	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libpam-runtime	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam-runtime	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libpam0g	1.5.2-6+deb12u2		CVE-2024-10041	https://avd.aquasec.com/nvd/cve-2024-10041
+MEDIUM	libpam0g	1.5.2-6+deb12u2		CVE-2026-54411	https://avd.aquasec.com/nvd/cve-2026-54411
+MEDIUM	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libsmartcols1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	libstdc++6	12.2.0-14+deb12u1		CVE-2026-102010	https://avd.aquasec.com/nvd/cve-2026-102010
+MEDIUM	libstdc++6	12.2.0-14+deb12u1		CVE-2026-95619	https://avd.aquasec.com/nvd/cve-2026-95619
+MEDIUM	libsystemd0	252.39-1~deb12u2		CVE-2026-15059	https://avd.aquasec.com/nvd/cve-2026-15059
+MEDIUM	libtinfo6	6.4-4		CVE-2023-50495	https://avd.aquasec.com/nvd/cve-2023-50495
+MEDIUM	libudev1	252.39-1~deb12u2		CVE-2026-15059	https://avd.aquasec.com/nvd/cve-2026-15059
+MEDIUM	libuuid1	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	libuuid1	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	libuuid1	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	mount	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	mount	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	mount	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	ncurses-base	6.4-4		CVE-2023-50495	https://avd.aquasec.com/nvd/cve-2023-50495
+MEDIUM	ncurses-bin	6.4-4		CVE-2023-50495	https://avd.aquasec.com/nvd/cve-2023-50495
+MEDIUM	perl-base	5.36.0-7+deb12u3		CVE-2026-15534	https://avd.aquasec.com/nvd/cve-2026-15534
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2025-15649	https://avd.aquasec.com/nvd/cve-2025-15649
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-12087	https://avd.aquasec.com/nvd/cve-2026-12087
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-19487	https://avd.aquasec.com/nvd/cve-2026-19487
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-48959	https://avd.aquasec.com/nvd/cve-2026-48959
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-7010	https://avd.aquasec.com/nvd/cve-2026-7010
+MEDIUM	perl-base	5.36.0-7+deb12u3	5.36.0-7+deb12u4	CVE-2026-7017	https://avd.aquasec.com/nvd/cve-2026-7017
+MEDIUM	picomatch	4.0.3	4.0.4, 3.0.2, 2.3.2	CVE-2026-33672	https://avd.aquasec.com/nvd/cve-2026-33672
+MEDIUM	postcss-selector-parser	7.1.1	7.1.6	CVE-2026-104844	https://avd.aquasec.com/nvd/cve-2026-104844
+MEDIUM	tar	1.34+dfsg-1.2+deb12u1		CVE-2026-18477	https://avd.aquasec.com/nvd/cve-2026-18477
+MEDIUM	tar	1.34+dfsg-1.2+deb12u1		CVE-2026-18508	https://avd.aquasec.com/nvd/cve-2026-18508
+MEDIUM	tar	1.34+dfsg-1.2+deb12u1		CVE-2026-5704	https://avd.aquasec.com/nvd/cve-2026-5704
+MEDIUM	util-linux	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	util-linux	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	util-linux	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-13595	https://avd.aquasec.com/nvd/cve-2026-13595
+MEDIUM	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-27456	https://avd.aquasec.com/nvd/cve-2026-27456
+MEDIUM	util-linux-extra	2.38.1-5+deb12u3		CVE-2026-3184	https://avd.aquasec.com/nvd/cve-2026-3184
+MEDIUM	zlib1g	1:1.2.13.dfsg-1		CVE-2026-27171	https://avd.aquasec.com/nvd/cve-2026-27171
+MEDIUM	zlib1g	1:1.2.13.dfsg-1		CVE-2026-85091	https://avd.aquasec.com/nvd/cve-2026-85091
+UNKNOWN	perl-base	5.36.0-7+deb12u3		CVE-2026-82560	https://avd.aquasec.com/nvd/cve-2026-82560
+Build resource acceptance
+Builder memory.peak: 8130437120 bytes
+Build-time memory.events deltas: {'high': 0, 'low': 0, 'max': 0, 'oom': 0, 'oom_group_kill': 0, 'oom_kill': 0}
+Build-time cpu.stat deltas: {'burst_usec': 0, 'core_sched.force_idle_usec': 0, 'nice_usec': 0, 'nr_bursts': 0, 'nr_periods': 1420, 'nr_throttled': 101, 'system_usec': 42387847, 'throttled_usec': 6846036, 'usage_usec': 249571594, 'user_usec': 207183747}
+Disk and Docker usage before cleanup
+Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 74519425024 80357986304      49% /
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          9         1         4.024GB   3.775GB (93%)
+Containers      1         1         9.407kB   0B (0%)
+Local Volumes   1         1         5.218GB   0B (0%)
+Build Cache     0         0         0B        0B
+5885506	/home/runner/work/_temp/source
+1942539264	/home/runner/work/_temp/ornigami-image.tar
+1630544024	/home/runner/work/_temp/trivy-cache
+
+Final builder cgroup counters before cleanup
+==memory.max==
+8589934592
+==memory.swap.max==
+0
+==memory.peak==
+8130437120
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==cpu.max==
+300000 100000
+==cpu.stat==
+usage_usec 249783117
+user_usec 207289189
+system_usec 42493927
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 1461
+nr_throttled 101
+throttled_usec 6846036
+nr_bursts 0
+burst_usec 0
+
+Disk after cleanup
+Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 65130528768 89746882560      43% /
+
+Job summary generated at run-time

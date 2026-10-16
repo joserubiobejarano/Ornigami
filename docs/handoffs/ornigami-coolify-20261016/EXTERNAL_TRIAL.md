@@ -1,5 +1,8 @@
 # One approved external trial — admission failed
 
+Follow-up: the separately authorized [repaired trial](./REPAIRED_TRIAL.md) has finished. It passed source admission and image build, failed vulnerability and cold HTTP/security acceptance, and did not reach restart/persistence. The original failed run and receipts below remain unchanged. No more trial is authorized.
+
+
 16 October 2026. The preparation branch was published after the [integration preflight](./INTEGRATION_PREFLIGHT.md) cleared. Exactly one request-only commit was pushed and one Actions run occurred, attempt 1. **No image build started and no image exists. No retry was performed.**
 
 | Identity | Value |

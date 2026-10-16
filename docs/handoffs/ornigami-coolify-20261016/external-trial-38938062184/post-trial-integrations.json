@@ -1,0 +1,24 @@
+{
+  "checkedAtUtc": "2026-10-16T17:22:48.6168379Z",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "databaseId": 38938062184,
+      "headSha": "18298cf019800f55a921186ae88d465150a69e7b",
+      "status": "completed",
+      "url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38938062184"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "databaseId": 38936353655,
+      "headSha": "e6b0e1ac83ade48bbc6eadbf4a2e6a1b6b091fcc",
+      "status": "completed",
+      "url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38936353655"
+    }
+  ],
+  "githubDeploymentsForRequest": 0,
+  "vercelInventoryCount": 20,
+  "vercelMatchingPreparationDeployments": 0
+}

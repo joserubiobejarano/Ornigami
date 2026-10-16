@@ -1,0 +1,176 @@
+{
+  "run_id": 38938062184,
+  "attempt": 1,
+  "job_id": 117098439630,
+  "run_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38938062184",
+  "candidate_sha": "a0f319c39a3bbc315e8e2a0d8ca4f854c7438838",
+  "correction_publication_sha": "58492698a3b5caf6ca6e76368d85cb7fd1ea9e25",
+  "request_sha": "18298cf019800f55a921186ae88d465150a69e7b",
+  "workflow_blob": "6447501d8e4fa4c7d16aef94fa99be4098af7445",
+  "canonical_lock_sha256": "b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1",
+  "conclusion": "failure",
+  "gates": {
+    "integration_protections": "passed",
+    "source_admission": "passed",
+    "runner_preflight": "passed",
+    "scanner_verification": "passed",
+    "base_scan_execution": "passed",
+    "base_vulnerability_acceptance": "failed",
+    "bounded_linux_image_build": "passed",
+    "build_resources_zero_oom": "passed",
+    "runtime_startup_isolation_limits": "passed",
+    "cold_http_security_group": "failed",
+    "individual_http_security_assertions": "untested: no retained pass/failure details",
+    "native_image_optimization": "untested",
+    "restart_cache_persistence": "untested",
+    "final_scan_execution_identity": "passed",
+    "final_vulnerability_acceptance": "failed",
+    "cleanup_commands": "passed",
+    "final_disposable_resource_absence": "untested: no independent post-cleanup inventory",
+    "retained_registry_image": "untested and not authorized",
+    "neon_recovery_public_origin_providers": "untested and not authorized"
+  },
+  "image_built": true,
+  "image_id": "sha256:d24ed046ead4ed183456f4535172a338255d4b8345688d96d6b602e3188a69d3",
+  "image_retained_or_published": false,
+  "registry_manifest_digest": null,
+  "build": {
+    "startUtc": "2026-10-16T17:14:15Z",
+    "endUtc": "2026-10-16T17:17:15Z",
+    "durationSeconds": 180,
+    "commandExitCode": 0,
+    "runnerPreflight": {
+      "onlineCpus": 4,
+      "totalMemoryMiB": 15989,
+      "availableMemoryMiB": 15041,
+      "freeDiskBytes": 92103778304
+    },
+    "buildkitLimits": {
+      "memoryMaxBytes": 8589934592,
+      "memorySwapMaxBytes": 0,
+      "cpuMax": "300000 100000",
+      "workerMaxParallelism": 1,
+      "memoryPeakBytes": 8130437120,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "cpuStat": {
+        "usage_usec": 249721763,
+        "user_usec": 207258306,
+        "system_usec": 42463456,
+        "nice_usec": 0,
+        "core_sched.force_idle_usec": 0,
+        "nr_periods": 1424,
+        "nr_throttled": 101,
+        "throttled_usec": 6846036,
+        "nr_bursts": 0,
+        "burst_usec": 0
+      },
+      "resourceAcceptanceDeltas": {
+        "memoryEvents": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0
+        },
+        "cpuStat": {
+          "burst_usec": 0,
+          "core_sched.force_idle_usec": 0,
+          "nice_usec": 0,
+          "nr_bursts": 0,
+          "nr_periods": 1420,
+          "nr_throttled": 101,
+          "system_usec": 42387847,
+          "throttled_usec": 6846036,
+          "usage_usec": 249571594,
+          "user_usec": 207183747
+        }
+      }
+    },
+    "imagePublished": false
+  },
+  "runtime_peak_memory_bytes": 176586752,
+  "base_severity_counts": {
+    "CRITICAL": 4,
+    "HIGH": 71,
+    "MEDIUM": 102,
+    "LOW": 84,
+    "UNKNOWN": 1
+  },
+  "final_severity_counts": {
+    "CRITICAL": 4,
+    "HIGH": 71,
+    "MEDIUM": 102,
+    "LOW": 84,
+    "UNKNOWN": 1
+  },
+  "high_critical_rows_per_scan": 75,
+  "high_critical_rows_without_fixed_version_per_scan": 58,
+  "runtime_failure_diagnostic": "HTTP block redirected to http-cold.txt; workflow did not export this file. Exact assertion unavailable after cleanup.",
+  "scan_evidence_scope": "Rendered GitHub summary and derived JSON/CSV retained; original Trivy JSON and image archive were transient, not downloaded.",
+  "download_timing": "Completed-run logs and summary downloaded after runner cleanup and before log expiry; in-progress job summary was not exposed.",
+  "new_runs_this_authorization": 1,
+  "automatic_retries": 0,
+  "paid_fallback": false,
+  "resource_increase": false,
+  "ghcr_published": false,
+  "deployment_authorized": false,
+  "artifacts": {
+    "raw-logs.zip": {
+      "sha256": "970596c2fb186b9c953c7cecb1306bcda05390b1c93778d0489db573b5357e1c",
+      "bytes": 46279,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:18:25.010384+00:00"
+    },
+    "run.log": {
+      "sha256": "a8943efe57202bef05cda574fdd985396f9271b75677a3f7014cd2c08c6f6c54",
+      "bytes": 162375,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:18:27.175147+00:00"
+    },
+    "run.json": {
+      "sha256": "5f0416ac5e6e0f0030307598c8c7bf2ba31feec2d7bffa94ea4602ef2b662da7",
+      "bytes": 2725,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:18:23.260217+00:00"
+    },
+    "summary.txt": {
+      "sha256": "dada70d978f097fed10780e3d48c34b78fe1cb1f649dc713d04baa78eb54430c",
+      "bytes": 57478,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:18:29.186172+00:00"
+    },
+    "advisory-findings.json": {
+      "sha256": "6381a7cdb7a687464b0b3fcfb252e86513c282a3456b86f508c4aee73a98a10d",
+      "bytes": 78076,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:20:19.790152+00:00",
+      "derivation_note": "Derived from rendered summary; Docker usage table completed from that same preserved summary."
+    },
+    "final-high-critical.csv": {
+      "sha256": "75691e4c6210059f9f6c756583e1e0d440edd8091a13af1cd4a9d3c9db43ff7e",
+      "bytes": 7103,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:24:54.611144+00:00"
+    },
+    "post-trial-integrations.json": {
+      "sha256": "634ed55c2d20ff4f7470e3b717edb7905ad07d52dfdb845a7452ccf7a87a1790",
+      "bytes": 750,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:22:48.642409+00:00"
+    },
+    "coolify-after-trial.txt": {
+      "sha256": "fb4b2e58310c28befe95d7918d5f778994e51079ac382628a2fdda80fd31e3ca",
+      "bytes": 3688,
+      "local_downloaded_or_generated_at_utc": "2026-10-16T17:23:14.109304+00:00"
+    }
+  },
+  "runtime_oom_counters": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  }
+}
