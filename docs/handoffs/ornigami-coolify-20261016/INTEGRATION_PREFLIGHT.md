@@ -1,6 +1,30 @@
 # Publication preflight — stopped before first push
 
-Checked 16 October 2026, approximately 16:41–16:45 UTC. The owner approved branch publication and one request-only trial for candidate `51673d76bd407f69fa1a437f1b52587f0a888cfa`, conditional on checking deployment integrations before either push. That approval persists. It has **not been exercised**: the GitHub App installation inventory cannot yet be checked with available authentication.
+Initial check 16 October 2026, approximately 16:41–16:45 UTC; resumed after owner GitHub sign-in at approximately 16:49–16:52 UTC. The owner approved branch publication and one request-only trial for candidate `51673d76bd407f69fa1a437f1b52587f0a888cfa`, conditional on checking deployment integrations before either push. That approval persists. It has **not been exercised**: the App inventory is now checked, but newly discovered Netlify deployment behavior remains unverified.
+
+## Resumed check: GitHub accessible, Netlify remains unverified
+
+The authenticated repository installation page lists exactly **coderabbitai, Netlify and Vercel**. Installation configuration pages show all three have access to all repositories, including Ornigami. No installation selection, permissions, suspension or uninstallation controls were changed, and no pending permission update was accepted.
+
+| App | Installation | Observed access / deployment implication |
+| --- | --- | --- |
+| coderabbitai | `84505349` | Read actions/checks/discussions/metadata; write code/statuses/issues/PRs. Described workflow is PR review; no deployment or actions-write permission is shown. No PR is being opened. |
+| Netlify | `7102738` | Read code/metadata, write checks/statuses/PRs; all repositories. Its page describes automatic builds/deployments on Git pushes. App installation alone does not prove an Ornigami site exists or that this preparation branch is excluded. **This is the current blocking uncertainty.** |
+| Vercel | `80672078` | All repositories, including deployment/hook permissions. Earlier live project inspection and the candidate's exact branch block still apply; refresh before publication. |
+
+No Netlify CLI/connector is available. `https://app.netlify.com/` shows a login page. Trying its GitHub login reached an **Authorize Netlify Auth** screen requesting read-only email-address access; that new grant was not accepted. The authorization was cancelled and the Netlify login page left open for the owner to use their existing account. No credentials or OAuth callback/state values are retained in the evidence.
+
+The repository webhook list remains empty. At 16:51 UTC, `git ls-remote` still showed no preparation branch; the request marker remains absent. No push or trial occurred. Source candidate and executable workflow/runtime files are unchanged. The earlier observations below are historical receipts, not current claims that GitHub remains signed out.
+
+New local receipt hashes under the same ignored evidence directory:
+
+| File | SHA-256 |
+| --- | --- |
+| `github-installed-apps-signed-in.txt` | `39eeaab830de908efdacf523c352066f24c0384d518b1b95bbc2963ff8103f36` |
+| `netlify-github-installation.txt` | `7d6dd03bc00222f666265e4ede36d4c92d698bd603d9b441f805a5da6191cf0f` |
+| `coderabbit-github-installation.txt` | `0e5ab1905498500409c70a6fb29b1daad497d85e41b29e53ca5547e35710e85d` |
+| `vercel-github-installation.txt` | `7898cc85a863ca370f11629a4cdb2545ea1fdccb8400697331b661e14094632a` |
+| `netlify-sign-in-required.txt` | `f439ef07fd34d90109934e9aea0b2711a95c3130b8558b1164c0f7eb6f7b9528` |
 
 ## Evidence
 
@@ -33,6 +57,6 @@ Raw AX text and a Coolify screenshot are retained in ignored `.local/coolify-pre
 
 ## Resume without repeating approval
 
-The missing dependency is authenticated read access to the repository's GitHub App installation settings. Sign in as the owner in the in-app browser and inspect the installed Apps and any deployment-capable integration's repository/branch configuration. Do not grant broader access, regenerate tokens or modify shared settings to bypass this check. If another external watcher is identified, verify its branch exclusion before publication; otherwise stop with its specific uncertainty.
+The missing dependency is authenticated read access to the owner's existing Netlify account. Verify whether any site is linked to `joserubiobejarano/Ornigami`, including its branch-deploy, production-branch and preview behavior. Confirm no site can deploy this preparation branch. Do not grant broader access, regenerate tokens or modify shared settings to bypass this check. If another external watcher is identified, verify its branch exclusion before publication; otherwise stop with its specific uncertainty.
 
 Once that condition is satisfied, refresh the read-only integration checks immediately before publishing; execute the already-approved [publication/run procedure](./RUN_APPROVAL.md) without requesting the same approval again. The candidate remains unchanged. After the first push, verify no build/deployment started before creating the single request-only commit. Capture the one trial's summaries/logs while available, including failures; do not retry, increase limits or publish an image. There are no new build, scan, HTTP, restart/cache, memory or disk results in this preflight because the trial has not started. Original failed-build evidence and all outstanding advisory/release gates remain unchanged.

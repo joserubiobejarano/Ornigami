@@ -1,6 +1,6 @@
 # External Linux build approval packet
 
-Prepared 16 October 2026. **Not pushed or run.** The owner has accepted standard public GitHub Actions, an 8 GiB/3 CPU serial BuildKit cap, 4096 MiB Node build heap, source maps retained and no paid runner. Publication and one request-only trial are now approved conditional on verifying deployment integrations before either push. The [current preflight](./INTEGRATION_PREFLIGHT.md) stopped before publication because GitHub App inventory access is unavailable; the approval persists for resumption once verified. No Contabo host commands or changes occurred. Deployment, autodeploy, cron, providers, production data, migrations and GHCR publication remain closed.
+Prepared 16 October 2026. **Not pushed or run.** The owner has accepted standard public GitHub Actions, an 8 GiB/3 CPU serial BuildKit cap, 4096 MiB Node build heap, source maps retained and no paid runner. Publication and one request-only trial are now approved conditional on verifying deployment integrations before either push. The [current preflight](./INTEGRATION_PREFLIGHT.md) stopped before publication: GitHub App inventory is now accessible, but Netlify's repository/branch deployment behavior requires owner account sign-in. The approval persists for resumption once verified. No Contabo host commands or changes occurred. Deployment, autodeploy, cron, providers, production data, migrations and GHCR publication remain closed.
 
 ## Exact identities
 

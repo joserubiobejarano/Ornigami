@@ -1,6 +1,6 @@
 # Ornigami Coolify preparation — 16 October 2026
 
-Publication status: [integration preflight stopped before the first push](./INTEGRATION_PREFLIGHT.md). Conditional approval for the exact candidate and one trial is recorded; GitHub App installation inventory requires owner browser sign-in. No request marker, push or new build occurred.
+Publication status: [integration preflight stopped before the first push](./INTEGRATION_PREFLIGHT.md). Conditional approval for the exact candidate and one trial is recorded. Owner GitHub sign-in resolved App inventory access; newly discovered Netlify repository/branch deployment behavior requires Netlify account sign-in. No request marker, push or new build occurred.
 
 Current next step: review the [external build approval packet](./RUN_APPROVAL.md), including the committed candidate, restricted trigger, Linux runtime/security/persistence checks and evidence requirements. No external run or image publication has occurred.
 
