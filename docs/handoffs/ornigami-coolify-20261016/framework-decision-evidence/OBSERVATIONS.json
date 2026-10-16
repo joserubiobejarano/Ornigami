@@ -1,0 +1,48 @@
+{
+  "checkedAtUtc": "2026-10-16T18:58:33.982Z",
+  "baseline": {
+    "branch": "codex/ornigami-coolify-preparation-20261016",
+    "documentationHead": "814589168b4b6365295c5a944d7b43d40cc79e45",
+    "testedCandidate": "193a795de330a2cfef47a45571c29cbe3c0c8b69",
+    "remotePreparationHead": "18298cf019800f55a921186ae88d465150a69e7b",
+    "initialWorktreeClean": true
+  },
+  "coolify": {
+    "method": "Read-only in-app browser through existing owner tunnel",
+    "version": "4.4.6",
+    "projectId": "vqkyv5dpjpjazuknkgyunioi",
+    "project": "Ornigami",
+    "environmentId": "d9ixeysd9tajcavvibltt3is",
+    "environment": "fictional-staging",
+    "resourceCount": 0,
+    "rawLocalReceiptSha256": "267555672294e4411289e14f04a2ba9213375401c15a9b38edd55e57e74a1f58",
+    "mutations": false
+  },
+  "githubApps": {
+    "method": "Read-only GitHub repository settings browser view",
+    "apps": [
+      "coderabbitai",
+      "Netlify",
+      "Vercel"
+    ],
+    "rawLocalReceiptSha256": "d69f66cd9afcaf06ae2c6c4706914ebbbc24f2243d8a241bcb883ea932ec26d0",
+    "settingsChanged": false
+  },
+  "publication": {
+    "allowed": false,
+    "vercelLiveHoldVerified": false,
+    "vercelDeploymentCreation": "enabled",
+    "netlifyFreshCheck": "pending",
+    "note": "Local rules, production branch main, empty hooks and historic receipts do not establish current branch deployment safety."
+  },
+  "scope": {
+    "frameworkImplemented": false,
+    "newBuildRun": false,
+    "externalTrialRun": false,
+    "pushed": false,
+    "hostCommandRun": false,
+    "resourcesCreated": false,
+    "providersInvoked": false
+  },
+  "rawBrowserReceipts": "Retained in ignored local inspection directory; only app-scoped observations and receipt hashes committed."
+}

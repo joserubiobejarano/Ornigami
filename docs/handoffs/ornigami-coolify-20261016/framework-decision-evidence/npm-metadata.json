@@ -1,0 +1,51 @@
+{
+  "name": "next",
+  "version": "16.4.2",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "postcss": "8.5.23",
+    "@next/env": "16.4.2",
+    "styled-jsx": "5.1.6",
+    "@swc/helpers": "0.5.23",
+    "caniuse-lite": "^1.0.30001579",
+    "baseline-browser-mapping": "^2.9.19"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.35.5",
+    "@next/swc-darwin-x64": "16.4.2",
+    "@next/swc-darwin-arm64": "16.4.2",
+    "@next/swc-linux-x64-gnu": "16.4.2",
+    "@next/swc-linux-x64-musl": "16.4.2",
+    "@next/swc-win32-x64-msvc": "16.4.2",
+    "@next/swc-linux-arm64-gnu": "16.4.2",
+    "@next/swc-linux-arm64-musl": "16.4.2",
+    "@next/swc-win32-arm64-msvc": "16.4.2"
+  },
+  "dist": {
+    "shasum": "5b35585834dd7ed338099723eefe117eb6ab497b",
+    "tarball": "https://registry.npmjs.org/next/-/next-16.4.2.tgz",
+    "fileCount": 8690,
+    "integrity": "sha512-r+oBJojfefUjOiWkBhXgLS+igxX/7BWyK59uHnyOyplMSLtBZ+QLP3okrdYTbrfrbrmNTVWLBPaHDX9KRaIt3w==",
+    "signatures": [
+      {
+        "sig": "MEUCIBJU9xbb/wbuS42idTzzcSnj16UvCTgWEGkp+o4Rdm9VAiEAmjiQqhr3ATBa1NE8dtE2LwHxAiUd997VjXfe3LHoCkM=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEUCIB5fOb32vsM4KMVNpbscR16j3peCrChqvXCB79dqnAHZAiEA8c0cJxXsGKDTasckOeGDDvoejmvr+utP9JFYtaK3oEM=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/next@16.4.2",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    },
+    "unpackedSize": 192517704
+  },
+  "checkedAtUtc": "2026-10-16T18:51:37.416367+00:00"
+}

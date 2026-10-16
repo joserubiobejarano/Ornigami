@@ -1,0 +1,22 @@
+{
+  "checkedAtUtc": "2026-10-16T18:58:33.984Z",
+  "packageBytes": 43679232,
+  "sha256Matches": true,
+  "sha512Matches": true,
+  "sha1Matches": true,
+  "signatureTests": [
+    {
+      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+      "originalVerified": true,
+      "alteredPayloadRejected": true
+    },
+    {
+      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+      "originalVerified": true,
+      "alteredPayloadRejected": true
+    }
+  ],
+  "frameworkBuildRun": false,
+  "runtimeAcceptance": "not run; prior failures remain",
+  "trustBoundary": "Official HTTPS registry keys; no independent SLSA verification or reproduced upstream build."
+}

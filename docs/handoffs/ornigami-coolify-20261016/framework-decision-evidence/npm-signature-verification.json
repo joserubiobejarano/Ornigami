@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUtc": "2026-10-16T18:51:52.657Z",
+  "package": "next@16.4.2",
+  "signedPayload": "next@16.4.2:sha512-r+oBJojfefUjOiWkBhXgLS+igxX/7BWyK59uHnyOyplMSLtBZ+QLP3okrdYTbrfrbrmNTVWLBPaHDX9KRaIt3w==",
+  "checks": [
+    {
+      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+      "verified": true,
+      "keyExpires": null
+    },
+    {
+      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+      "verified": true,
+      "keyExpires": null
+    }
+  ],
+  "anyVerified": true,
+  "trustBoundary": "Registry keys retrieved over HTTPS from the official npm key endpoint; this is registry signature verification, not independent SLSA provenance or reproducible-build verification."
+}

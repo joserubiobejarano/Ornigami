@@ -1,5 +1,7 @@
 # Fresh-source SRI investigation and framework decision
 
+Follow-up: [the framework decision packet](./FRAMEWORK_DECISION.md) adds official package checksum/signature verification, upstream packaging constraints, production/browser regressions and proposed maintenance ownership. No framework implementation or repeat build was performed. Fresh live watcher evidence blocks publication pending verified Vercel branch protection; this does not alter the historical test results below.
+
 **The stock framework still fails the reviewed SRI contract. No security requirement has been relaxed.** A fresh local build now establishes this independently of the old Windows output. The concrete alternative below needs review before adopting a maintained framework distribution; no fork, framework monkey patch, HTML rewrite or dependency upgrade has been applied.
 
 Tested candidate: **`193a795de330a2cfef47a45571c29cbe3c0c8b69`**, branch `codex/ornigami-coolify-preparation-20261016`. Canonical lock SHA-256 remains `b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1`; Next remains exactly 16.4.1. This candidate adds a repeatable fresh-build checker and regression tests. It does not claim to repair the framework's missing attributes or qualify for release. The subsequent documentation/evidence commit records the result without changing build inputs. Nothing is pushed.

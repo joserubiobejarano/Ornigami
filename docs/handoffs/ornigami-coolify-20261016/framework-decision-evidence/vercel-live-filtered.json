@@ -1,0 +1,12 @@
+{
+  "checkedAtUtc": "2026-10-16T18:54:05.7261624Z",
+  "projectId": "prj_b4ud7KOZHWQeV9YXbGD3c8XMmKIv",
+  "name": "locallift",
+  "githubOrg": "joserubiobejarano",
+  "githubRepo": "Ornigami",
+  "productionBranch": "main",
+  "createDeployments": "enabled",
+  "deployHookCount": 0,
+  "liveHoldVerified": false,
+  "publicationAllowed": false
+}

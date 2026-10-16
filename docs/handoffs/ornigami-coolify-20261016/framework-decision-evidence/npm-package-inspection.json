@@ -1,0 +1,40 @@
+{
+  "checkedAtUtc": "2026-10-16T18:51:38.246302+00:00",
+  "version": "16.4.2",
+  "url": "https://registry.npmjs.org/next/-/next-16.4.2.tgz",
+  "bytes": 43679232,
+  "sha256": "44ad2c420d30f7d1a8e4c511759c57eb40ccbbc36213a1bf32b1698bcebd3a1d",
+  "sha512Integrity": "sha512-r+oBJojfefUjOiWkBhXgLS+igxX/7BWyK59uHnyOyplMSLtBZ+QLP3okrdYTbrfrbrmNTVWLBPaHDX9KRaIt3w==",
+  "sha512Matched": true,
+  "sha1Matched": true,
+  "inspectionOnly": true,
+  "installedOrExecuted": false,
+  "selectedFiles": {
+    "package/dist/server/app-render/get-layer-assets.js": {
+      "bytes": 3263,
+      "sha256": "beb0062aed54c7e9428a50ae4c20dff6404f9b0e9c9e98a23c5a00036b0ee3a5",
+      "containsIntegrityProperty": false
+    },
+    "package/dist/server/app-render/create-component-styles-and-scripts.js": {
+      "bytes": 1600,
+      "sha256": "61bcc7f0fa7697cb026fd2ee016266d2cc19e68dfb276a06b87e6c2d415d52d5",
+      "containsIntegrityProperty": false
+    },
+    "package/dist/server/route-modules/app-page/module.compiled.js": {
+      "bytes": 1609,
+      "sha256": "3b55f56f8c70bbadffdacea23a1c19689c3889bab7e78da6c8121ada787bfe99"
+    },
+    "package/dist/compiled/next-server/app-page.runtime.prod.js": {
+      "bytes": 705797,
+      "sha256": "6b1fffe76b211e7b0e23f2331cb11801308b99e3cf97eaca6d5f4ac7df1d3c91"
+    },
+    "package/dist/build/webpack/plugins/subresource-integrity-plugin.js": {
+      "bytes": 2443,
+      "sha256": "260ccce40de09f1a76f126327db2af04bc735f708c34c7282a53e16ac94b232b"
+    },
+    "package/dist/client/route-loader.js": {
+      "bytes": 12383,
+      "sha256": "a8f86fd77cd73f01225f3269db9ca3940a0161c3b2a0952de77a87c29ba37741"
+    }
+  }
+}

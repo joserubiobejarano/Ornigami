@@ -1,5 +1,7 @@
 # Ornigami Coolify preparation — 16 October 2026
 
+Latest preparation: [framework decision packet and fresh live observations](./FRAMEWORK_DECISION.md). Official Next 16.4.2 package/source provenance was checked; its emitter gap remains. Approve maintenance ownership and a bounded local framework implementation before changing the package. No framework patch, repeat build or external trial ran. The tested candidate remains `193a795de330a2cfef47a45571c29cbe3c0c8b69`; there is no accepted retained image. Fresh Coolify inspection confirms the same empty Ornigami environment. **Publication is blocked:** live Vercel Git deployment creation is enabled and no branch hold is verified. Earlier integration receipts below are historical, not current clearance. Owner supplied `ornigami.com`; exact staging origin/callback acceptance and DNS authorization remain open. QR Loyalty's active deployment and shared infrastructure were untouched.
+
 Current local result: [fresh exact-source SRI investigation and framework alternative](./SRI_FRAMEWORK_REVIEW.md). Candidate `193a795de330a2cfef47a45571c29cbe3c0c8b69` compiles in a fresh Windows Node 22 checkout but fails mandatory SRI on 21 script-tag occurrences. The stock framework limitation and a concrete maintained-framework alternative are documented for review. No security assertion is removed, no external trial is approved, and Trixie/package-manager-removal remediation remains unverified without fresh scans. Previous evidence and the diagnostic retention/restart/cache contract remain unchanged.
 
 

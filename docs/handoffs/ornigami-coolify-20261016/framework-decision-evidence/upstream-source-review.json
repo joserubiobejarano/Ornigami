@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUtc": "2026-10-16T18:52:13.776660+00:00",
+  "commit": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "files": {
+    "package.json": {
+      "bytes": 16195,
+      "sha256": "0300a6eccddbfa2b71316b804345ee37549ef6d937824a74322ebbd6bd423c62",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/package.json",
+      "selectedFields": {
+        "name": "nextjs-project",
+        "version": "0.0.0",
+        "packageManager": "pnpm@10.33.0",
+        "engines": {
+          "node": ">=20.9.0"
+        }
+      },
+      "selectedScripts": {
+        "build": "turbo run build --remote-cache-timeout 60 --summarize true",
+        "build-all": "turbo run build build-native-auto --remote-cache-timeout 60 --summarize true",
+        "pack-next": "tsx scripts/pack-next.ts",
+        "types": "pnpm --filter \"./packages/**\" --stream run types",
+        "postinstall": "node scripts/git-configure.mjs && node scripts/install-native.mjs"
+      }
+    },
+    "packages/next/package.json": {
+      "bytes": 11107,
+      "sha256": "8e90c279a244a25402bbd3fac266e9fa01fadb421ab4915df2310b5934d882ed",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/packages/next/package.json",
+      "selectedFields": {
+        "name": "next",
+        "version": "16.4.2",
+        "engines": {
+          "node": ">=20.9.0"
+        },
+        "files": [
+          "AGENTS.md",
+          "analyze",
+          "dist",
+          "app.js",
+          "app.d.ts",
+          "babel.js",
+          "babel.d.ts",
+          "client.js",
+          "client.d.ts",
+          "compat",
+          "cache.js",
+          "cache.d.ts",
+          "constants.js",
+          "constants.d.ts",
+          "document.js",
+          "document.d.ts",
+          "dynamic.js",
+          "dynamic.d.ts",
+          "error.js",
+          "error.d.ts",
+          "future",
+          "legacy",
+          "script.js",
+          "script.d.ts",
+          "server.js",
+          "server.d.ts",
+          "head.js",
+          "head.d.ts",
+          "image.js",
+          "image.d.ts",
+          "link.js",
+          "link.d.ts",
+          "offline.js",
+          "offline.d.ts",
+          "form.js",
+          "form.d.ts",
+          "router.js",
+          "router.d.ts",
+          "jest.js",
+          "jest.d.ts",
+          "og.js",
+          "og.d.ts",
+          "root-params.js",
+          "root-params.d.ts",
+          "types.d.ts",
+          "types.js",
+          "index.d.ts",
+          "types/global.d.ts",
+          "types/compiled.d.ts",
+          "image-types/global.d.ts",
+          "navigation-types/navigation.d.ts",
+          "navigation-types/compat/navigation.d.ts",
+          "font",
+          "navigation.js",
+          "navigation.d.ts",
+          "headers.js",
+          "headers.d.ts",
+          "navigation-types",
+          "web-vitals.js",
+          "web-vitals.d.ts",
+          "experimental/testing/server.js",
+          "experimental/testing/server.d.ts",
+          "experimental/testmode/playwright.js",
+          "experimental/testmode/playwright.d.ts",
+          "experimental/testmode/playwright/msw.js",
+          "experimental/testmode/playwright/msw.d.ts",
+          "experimental/testmode/proxy.js",
+          "experimental/testmode/proxy.d.ts"
+        ]
+      },
+      "selectedScripts": {
+        "build": "taskr release",
+        "types": "tsc --project tsconfig.build.json --declaration --emitDeclarationOnly --stripInternal --declarationDir dist"
+      }
+    },
+    "pnpm-lock.yaml": {
+      "bytes": 1345722,
+      "sha256": "69dfbd54a513cdcd94aca9ea0c83f7ba3803518372b90184a7d6a3b7103621c6",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/pnpm-lock.yaml"
+    },
+    ".node-version": {
+      "bytes": 4,
+      "sha256": "a17db3c0d2c8e9d09be1557d580e9a5c4186aa41566e927ede1c6e7d1532333e",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/.node-version",
+      "value": "v20"
+    },
+    ".nvmrc": {
+      "httpStatus": 404
+    },
+    "rust-toolchain.toml": {
+      "bytes": 282,
+      "sha256": "31ad862a776d4a2bfb0067373bc8b2930f6e3a2158ed514bb4f4a70901eab5dc",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/rust-toolchain.toml",
+      "value": "# if you update this, also update `.devcontainer/rust/devcontainer-feature.json`\n# if you move the file, also update any turbo.json inputs that references it.\n[toolchain]\nchannel = \"nightly-2026-08-20\"\ncomponents = [\"rustfmt\", \"clippy\", \"rust-analyzer\", \"miri\"]\nprofile = \"minimal\""
+    },
+    "contributing/core/developing.md": {
+      "bytes": 5995,
+      "sha256": "72437328b1d7a7e84465f763ba073c5c7034424204bac6f45d073dea7bd32f7c",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/contributing/core/developing.md"
+    },
+    "scripts/pack-next.ts": {
+      "bytes": 10428,
+      "sha256": "53fa49ae852d7cbbb6e1ae5fdc604860863d95e672f6db725365f215f1edc149",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/scripts/pack-next.ts"
+    },
+    "scripts/install-native.mjs": {
+      "bytes": 4592,
+      "sha256": "32197aca92be196d72c84e5de97f5803d359d478a64b46b16dc78b69fcae66f6",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/scripts/install-native.mjs"
+    },
+    "packages/next/taskfile.js": {
+      "bytes": 98926,
+      "sha256": "4d4d9619832066d829d9013c07e65489549272308d33fe9a17f49d8d609c4311",
+      "url": "https://raw.githubusercontent.com/vercel/next.js/2864b1772c37242a9b40ab4d366eb7d368c2a070/packages/next/taskfile.js"
+    }
+  }
+}
