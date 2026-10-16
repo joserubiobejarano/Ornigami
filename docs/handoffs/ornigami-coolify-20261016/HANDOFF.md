@@ -1,5 +1,7 @@
 # Ornigami Coolify preparation — 16 October 2026
 
+Latest result: [one approved external trial failed source admission](./EXTERNAL_TRIAL.md). The branch and request-only commit are published; no build/image/runtime acceptance occurred. Logs and cleanup/disk evidence are downloaded and preserved. A checksum/step-guard repair is committed locally only; there was no retry and another trial requires new authorization.
+
 Publication status: [integration preflight completed](./INTEGRATION_PREFLIGHT.md). Owner sign-in resolved the GitHub/Netlify checks; no Netlify repository is linked and Coolify has zero Ornigami resources. The exact candidate and one request-only build are approved. Actual publication/trial results must be recorded separately; no deployment or provider gate is opened by this approval.
 
 Current next step: review the [external build approval packet](./RUN_APPROVAL.md), including the committed candidate, restricted trigger, Linux runtime/security/persistence checks and evidence requirements. No external run or image publication has occurred.

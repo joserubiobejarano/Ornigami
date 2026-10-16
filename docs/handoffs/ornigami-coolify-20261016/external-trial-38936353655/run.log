@@ -1,0 +1,288 @@
+Build, runtime acceptance, and vulnerability scans	Set up job	﻿2026-10-16T17:00:37.9788343Z Current runner version: '2.337.0'
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9810187Z ##[group]Runner Image Provisioner
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9811244Z Hosted Compute Agent
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9811750Z Version: 20261012.601
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9812251Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9812913Z Build Date: 2026-10-12T17:48:21Z
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9813477Z Worker ID: {0f99bd40-e35f-43ea-9e95-25a178f0d1a2}
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9814166Z Region: westus3
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9814616Z Cloud: Azure
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9815031Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9816501Z ##[group]Operating System
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9817034Z Ubuntu
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9817566Z 24.04.5
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9817999Z LTS
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9818420Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9818919Z ##[group]Runner Image
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9819410Z Image: ubuntu-24.04
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9819956Z Version: 20261012.334.1
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9821082Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9822566Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9823371Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9824284Z ##[group]GITHUB_TOKEN Permissions
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9826067Z Metadata: read
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9826615Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9828270Z Secret source: Actions
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9829036Z Cache mode: write
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:37.9829879Z Prepare workflow directory
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:38.0085367Z Prepare all required actions
+Build, runtime acceptance, and vulnerability scans	Set up job	2026-10-16T17:00:38.0207915Z Complete job name: Build, runtime acceptance, and vulnerability scans
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	﻿2026-10-16T17:00:38.0942046Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0943097Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0943983Z [36;1m[[ "$GITHUB_EVENT_NAME" == push ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0945175Z [36;1m[[ "$GITHUB_REF" == refs/heads/codex/ornigami-coolify-preparation-20261016 ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0946648Z [36;1m[[ "$REQUEST_SHA" =~ ^[0-9a-f]{40}$ && "$REQUEST_SHA" == "$GITHUB_SHA" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0947846Z [36;1mrepo_dir="$RUNNER_TEMP/request-repository"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0948999Z [36;1mrepo='https://github.com/joserubiobejarano/Ornigami.git'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0949997Z [36;1mmkdir "$repo_dir"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0950953Z [36;1mgit -C "$repo_dir" init --quiet[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0951904Z [36;1mgit -C "$repo_dir" remote add origin "$repo"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0952989Z [36;1mgit -C "$repo_dir" fetch --quiet --no-tags origin "$REQUEST_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0954171Z [36;1mactual_request_sha=$(git -C "$repo_dir" rev-parse FETCH_HEAD)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0955490Z [36;1m[[ "$actual_request_sha" == "$REQUEST_SHA" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0956621Z [36;1mgit -C "$repo_dir" checkout --quiet --detach "$REQUEST_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0958185Z [36;1mread -r commit_sha first_parent extra_parents < <(git -C "$repo_dir" rev-list --parents -n1 "$REQUEST_SHA")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0959802Z [36;1m[[ "$commit_sha" == "$REQUEST_SHA" && -n "$first_parent" && -z "${extra_parents:-}" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0961695Z [36;1mmapfile -t changed_paths < <(git -C "$repo_dir" diff --name-only "$first_parent" "$REQUEST_SHA")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0963359Z [36;1m[[ ${#changed_paths[@]} -eq 1 && "${changed_paths[0]}" == .github/build-requests/ornigami.json ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0965217Z [36;1mgit -C "$repo_dir" show "$REQUEST_SHA:.github/build-requests/ornigami.json" > "$RUNNER_TEMP/ornigami-build-request.json"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0968073Z [36;1mjq -e 'type == "object" and (keys == ["packageLockSha256", "sourceSha"]) and (.sourceSha | type == "string" and test("^[0-9a-f]{40}$")) and (.packageLockSha256 | type == "string" and test("^[0-9a-f]{64}$"))' "$RUNNER_TEMP/ornigami-build-request.json" >/dev/null[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0970818Z [36;1mSOURCE_SHA=$(jq -r '.sourceSha' "$RUNNER_TEMP/ornigami-build-request.json")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0972381Z [36;1mEXPECTED_LOCK_SHA256=$(jq -r '.packageLockSha256' "$RUNNER_TEMP/ornigami-build-request.json")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0974055Z [36;1mecho "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0975246Z [36;1mecho "EXPECTED_LOCK_SHA256=$EXPECTED_LOCK_SHA256" >> "$GITHUB_ENV"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0976618Z [36;1mgit -C "$repo_dir" merge-base --is-ancestor "$SOURCE_SHA" "$REQUEST_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0978362Z [36;1mcandidate_workflow_blob=$(git -C "$repo_dir" rev-parse "$SOURCE_SHA:.github/workflows/ornigami-image-rehearsal.yml")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0980324Z [36;1mrequest_workflow_blob=$(git -C "$repo_dir" rev-parse "$REQUEST_SHA:.github/workflows/ornigami-image-rehearsal.yml")[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0982148Z [36;1m[[ "$candidate_workflow_blob" == "$request_workflow_blob" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0983477Z [36;1mgit -C "$repo_dir" worktree add --quiet --detach "$RUNNER_TEMP/source" "$SOURCE_SHA"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0984801Z [36;1mactual_sha=$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0985934Z [36;1m[[ "$actual_sha" == "$SOURCE_SHA" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0987049Z [36;1m[[ -z "$(git -C "$RUNNER_TEMP/source" status --porcelain --untracked-files=all)" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0988920Z [36;1mfor required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh; do[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0990321Z [36;1m  [[ -f "$RUNNER_TEMP/source/$required" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0991348Z [36;1mdone[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0992368Z [36;1mactual_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0993711Z [36;1m[[ "$actual_lock_sha" == "$EXPECTED_LOCK_SHA256" ]][0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0994871Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0995584Z [36;1m  printf '%s\n' '### Build request admission'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0996573Z [36;1m  printf '%s\n' "- Request commit: \`$REQUEST_SHA\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0997548Z [36;1m  printf '%s\n' "- Commit: \`$actual_sha\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.0998647Z [36;1m  printf '%s\n' "- package-lock.json SHA-256: \`$actual_lock_sha\`"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.1000285Z [36;1m  printf '%s\n' '- Request marker: exact source and lock fields; only marker changed in single-parent request commit'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.1002206Z [36;1m  printf '%s\n' '- Workflow blob: identical at candidate and request commits'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.1003639Z [36;1m  printf '%s\n' '- Candidate is an ancestor of the request commit'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.1004900Z [36;1m  printf '%s\n' '- Checkout: detached exact candidate; clean before build'[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.1006065Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.5084687Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.5085571Z env:
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.5086045Z   REQUEST_SHA: e6b0e1ac83ade48bbc6eadbf4a2e6a1b6b091fcc
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:38.5086617Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Validate inputs and fetch exact public source	2026-10-16T17:00:40.3482730Z ##[error]Process completed with exit code 1.
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	﻿2026-10-16T17:00:40.3621717Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3622151Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3622457Z [36;1mexport TRIVY_CACHE_DIR="$RUNNER_TEMP/trivy-cache"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3622803Z [36;1mimage="ornigami:rehearsal-${SOURCE_SHA}"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3623162Z [36;1mimage_id=$(docker image inspect "$image" --format '{{.Id}}')[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3623560Z [36;1mimage_size=$(docker image inspect "$image" --format '{{.Size}}')[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3624015Z [36;1mrootfs_layers=$(docker image inspect "$image" --format '{{json .RootFS.Layers}}')[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3624502Z [36;1mrootfs_layers_sha256=$(printf '%s' "$rootfs_layers" | sha256sum | cut -d' ' -f1)[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3624964Z [36;1mdocker save --output "$RUNNER_TEMP/ornigami-image.tar" "$image"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3625399Z [36;1marchive_sha256=$(sha256sum "$RUNNER_TEMP/ornigami-image.tar" | cut -d' ' -f1)[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3625849Z [36;1marchive_bytes=$(stat -c %s "$RUNNER_TEMP/ornigami-image.tar")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3626213Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3626669Z [36;1m  printf '\n### Final image archive identity\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3627021Z [36;1m  printf '%s\n' "- Docker image ID: \`$image_id\`"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3627365Z [36;1m  printf '%s\n' "- Docker image bytes: $image_size"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3627733Z [36;1m  printf '%s\n' "- Root filesystem layer IDs: \`$rootfs_layers\`"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3628179Z [36;1m  printf '%s\n' "- Root filesystem layer-list SHA-256: \`$rootfs_layers_sha256\`"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3628633Z [36;1m  printf '%s\n' "- Saved archive SHA-256: \`$archive_sha256\`"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3629009Z [36;1m  printf '%s\n' "- Saved archive bytes: $archive_bytes"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3629430Z [36;1m  printf '%s\n' '- Trivy report ImageID must match the local Docker image ID above'[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3629820Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3630174Z [36;1m"$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/ornigami-image.tar" \[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3630880Z [36;1m  --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/trivy.json" --no-progress[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3631437Z [36;1mpython3 - "$RUNNER_TEMP/trivy.json" "$GITHUB_STEP_SUMMARY" "$image_id" <<'PY'[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3631850Z [36;1mimport collections, json, pathlib, sys[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3632239Z [36;1mreport = json.loads(pathlib.Path(sys.argv[1]).read_text())[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3632587Z [36;1mexpected_image_id = sys.argv[3][0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3633056Z [36;1mif not isinstance(report, dict) or type(report.get("SchemaVersion")) is not int or report["SchemaVersion"] != 2:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3633708Z [36;1m    raise SystemExit("Trivy report SchemaVersion is missing or unsupported; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3634209Z [36;1mif report.get("ArtifactType") != "container_image":[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3634695Z [36;1m    raise SystemExit("Trivy report ArtifactType is not container_image; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3635166Z [36;1mmetadata = report.get("Metadata")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3635565Z [36;1mif not isinstance(metadata, dict) or metadata.get("ImageID") != expected_image_id:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3636146Z [36;1m    raise SystemExit("Trivy report Metadata.ImageID does not match the built image; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3636640Z [36;1mresults = report.get("Results")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3636956Z [36;1mif not isinstance(results, list) or not results:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3637404Z [36;1m    raise SystemExit("Trivy returned missing or empty Results; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3637826Z [36;1mcounts = collections.Counter()[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3638094Z [36;1mfindings = [][0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3638325Z [36;1mseen_classes = set()[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3638673Z [36;1mexpected_types = {"os-pkgs": {"debian"}, "lang-pkgs": {"npm", "node-pkg"}}[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3639047Z [36;1mseen_node_type = False[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3639463Z [36;1mfor result in results:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3639884Z [36;1m    if not isinstance(result, dict) or not isinstance(result.get("Target"), str) or not result["Target"]:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3640619Z [36;1m        raise SystemExit("Trivy returned a malformed result entry; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3641064Z [36;1m    result_class = result.get("Class")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3641369Z [36;1m    result_type = result.get("Type")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3641961Z [36;1m    if not isinstance(result_class, str) or not isinstance(result_type, str) or result_class not in expected_types or result_type not in expected_types[result_class]:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3642713Z [36;1m        raise SystemExit("Trivy returned an unrecognized result class/type; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3643168Z [36;1m    seen_classes.add(result_class)[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3643458Z [36;1m    if result_class == "lang-pkgs":[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3643746Z [36;1m        seen_node_type = True[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3644163Z [36;1m    vulnerabilities = result.get("Vulnerabilities")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3644487Z [36;1m    if vulnerabilities is None:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3644753Z [36;1m        continue[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3645028Z [36;1m    if not isinstance(vulnerabilities, list):[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3645494Z [36;1m        raise SystemExit("Trivy returned malformed Vulnerabilities; expected absent, null, or a list")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3645940Z [36;1m    for item in vulnerabilities:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3646479Z [36;1m        if not isinstance(item, dict) or any(not isinstance(item.get(key), str) or not item[key].strip() for key in ("Severity", "VulnerabilityID", "PkgName")):[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3647243Z [36;1m            raise SystemExit("Trivy returned a malformed vulnerability entry; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3647715Z [36;1m        severity = item["Severity"].upper()[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3648015Z [36;1m        counts[severity] += 1[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3648603Z [36;1m        findings.append((severity, item["PkgName"], item.get("InstalledVersion", ""), item.get("FixedVersion", ""), item["VulnerabilityID"], item.get("PrimaryURL", "")))[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3649244Z [36;1mif seen_classes != set(expected_types) or not seen_node_type:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3649884Z [36;1m    raise SystemExit("Trivy report lacks OS or Node.js package inventory coverage; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3650620Z [36;1mif any(level not in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"} for level, *_ in findings):[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3651153Z [36;1m    raise SystemExit("Trivy returned an unknown severity; refusing to accept the scan")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3651606Z [36;1mwith open(sys.argv[2], "a", encoding="utf-8") as out:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3651962Z [36;1m    out.write("\n### Trivy 0.76.0 image scan\n\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3652325Z [36;1m    out.write("| Severity | Findings |\n| --- | ---: |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3652709Z [36;1m    for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"):[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3653077Z [36;1m        out.write(f"| {level} | {counts[level]} |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3653471Z [36;1m    out.write("\nNo image was pushed or published by this workflow.\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3653824Z [36;1m    if findings:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3654265Z [36;1m        out.write("\n| Severity | Package | Installed | Fixed | Advisory | Primary URL |\n| --- | --- | --- | --- | --- | --- |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3654960Z [36;1m        safe = lambda value: str(value).replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3655565Z [36;1m        for severity, package, installed, fixed, advisory, url in sorted(findings):[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3656134Z [36;1m            out.write(f"| {safe(severity)} | {safe(package)} | {safe(installed)} | {safe(fixed)} | {safe(advisory)} | {safe(url)} |\n")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3656759Z [36;1mif counts["CRITICAL"] or counts["HIGH"]:[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3657245Z [36;1m    raise SystemExit("Trivy found HIGH or CRITICAL vulnerabilities; scan recorded and build validation failed")[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3657698Z [36;1mPY[0m
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3715187Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3715536Z env:
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3715782Z   SOURCE_SHA: 51673d76bd407f69fa1a437f1b52587f0a888cfa
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3716202Z   EXPECTED_LOCK_SHA256: 5eff2b421d8becc7d24b79b9af9265cb655014c56e36873c8400b2a2c1c5ed47
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.3716585Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.4544822Z Error response from daemon: No such image: ornigami:rehearsal-51673d76bd407f69fa1a437f1b52587f0a888cfa
+Build, runtime acceptance, and vulnerability scans	Scan local image archive for OS and language vulnerabilities	2026-10-16T17:00:40.4551537Z ##[error]Process completed with exit code 1.
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	﻿2026-10-16T17:00:40.4586218Z ##[group]Run set -Eeuo pipefail
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4586594Z [36;1mset -Eeuo pipefail[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4587031Z [36;1mbefore="$RUNNER_TEMP/builder-before-build.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4587371Z [36;1mafter="$RUNNER_TEMP/builder-after-build.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4587689Z [36;1m[[ -s "$before" && -s "$after" ]][0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4588021Z [36;1mpython3 - "$before" "$after" "$GITHUB_STEP_SUMMARY" <<'PY'[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4588350Z [36;1mimport pathlib, re, sys[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4588606Z [36;1mdef values(path):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4588875Z [36;1m    text = pathlib.Path(path).read_text()[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4589154Z [36;1m    found = {}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4589381Z [36;1m    current = None[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4589635Z [36;1m    for line in text.splitlines():[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4589943Z [36;1m        match = re.fullmatch(r"==([a-z.]+)==", line)[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4590245Z [36;1m        if match:[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4590867Z [36;1m            current = match.group(1)[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4591226Z [36;1m            found[current] = [][0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4591492Z [36;1m        elif current:[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4591739Z [36;1m            if not line.strip():[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4592075Z [36;1m                raise SystemExit(f"Empty cgroup counter line in {path}")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4592445Z [36;1m            found[current].append(line.strip())[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4592887Z [36;1m    required = {"memory.max", "memory.swap.max", "memory.peak", "memory.events", "cpu.max", "cpu.stat"}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4593312Z [36;1m    if set(found) != required:[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4593664Z [36;1m        raise SystemExit(f"Incomplete builder cgroup counters in {path}")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4594064Z [36;1m    if any(not lines for lines in found.values()):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4594452Z [36;1m        raise SystemExit(f"Empty builder cgroup counter section in {path}")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4594885Z [36;1m    found = {key: "\n".join(lines) for key, lines in found.items()}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4595225Z [36;1m    return found[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4595534Z [36;1mbefore, after = values(sys.argv[1]), values(sys.argv[2])[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4595946Z [36;1mif before["memory.max"] != "8589934592" or after["memory.max"] != "8589934592":[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4596380Z [36;1m    raise SystemExit("Builder memory.max did not remain at 8 GiB")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4596828Z [36;1mif before["memory.swap.max"] != "0" or after["memory.swap.max"] != "0":[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4597273Z [36;1m    raise SystemExit("Builder memory.swap.max did not remain at zero")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4597707Z [36;1mif before["cpu.max"] != "300000 100000" or after["cpu.max"] != "300000 100000":[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4598128Z [36;1m    raise SystemExit("Builder CPU quota did not remain at 3 CPUs")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4598466Z [36;1mdef key_values(text):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4598704Z [36;1m    result = {}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4598959Z [36;1m    for line in text.splitlines():[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4599235Z [36;1m        parts = line.split()[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4599589Z [36;1m        if len(parts) != 2 or parts[0] in result or not parts[1].isdecimal():[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4599981Z [36;1m            raise SystemExit("Malformed cgroup counter values")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4600313Z [36;1m        result[parts[0]] = int(parts[1])[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4600884Z [36;1m    return result[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4601274Z [36;1mold_events, new_events = key_values(before["memory.events"]), key_values(after["memory.events"])[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4601782Z [36;1mrequired_events = {"low", "high", "max", "oom", "oom_kill", "oom_group_kill"}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4602272Z [36;1mif not required_events.issubset(old_events) or not required_events.issubset(new_events):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4602748Z [36;1m    raise SystemExit("Incomplete memory.events counters")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4603161Z [36;1mdeltas = {key: new_events[key] - old_events[key] for key in sorted(new_events)}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4603757Z [36;1mif any(delta < 0 for delta in deltas.values()):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4604246Z [36;1m    raise SystemExit("Builder memory.events counters decreased or reset")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4604710Z [36;1mold_cpu, new_cpu = key_values(before["cpu.stat"]), key_values(after["cpu.stat"])[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4605225Z [36;1mif set(old_cpu) != set(new_cpu) or not {"usage_usec", "user_usec", "system_usec"}.issubset(old_cpu):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4605722Z [36;1m    raise SystemExit("Incomplete or mismatched builder cpu.stat counters")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4606174Z [36;1mcpu_deltas = {key: new_cpu[key] - old_cpu[key] for key in sorted(old_cpu)}[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4606594Z [36;1mif any(delta < 0 for delta in cpu_deltas.values()):[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4606996Z [36;1m    raise SystemExit("Builder cpu.stat counters decreased or reset")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4607356Z [36;1mpeak = after["memory.peak"][0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4607668Z [36;1mif not peak.isdecimal() or int(peak) > 8589934592:[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4608088Z [36;1m    raise SystemExit("Builder memory.peak is invalid or exceeded its 8 GiB cap")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4608519Z [36;1mwith open(sys.argv[3], "a", encoding="utf-8") as out:[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4608877Z [36;1m    out.write("\n### Build resource acceptance\n\n")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4609226Z [36;1m    out.write(f"- Builder memory.peak: {peak} bytes\n")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4609603Z [36;1m    out.write(f"- Build-time memory.events deltas: `{deltas}`\n")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4609999Z [36;1m    out.write(f"- Build-time cpu.stat deltas: `{cpu_deltas}`\n")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4610583Z [36;1mif deltas["oom"] or deltas["oom_kill"] or deltas["oom_group_kill"]:[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4611099Z [36;1m    raise SystemExit("Builder recorded a build-time OOM event; resource acceptance failed")[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4611525Z [36;1mPY[0m
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4669300Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4669636Z env:
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4669888Z   SOURCE_SHA: 51673d76bd407f69fa1a437f1b52587f0a888cfa
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4670300Z   EXPECTED_LOCK_SHA256: 5eff2b421d8becc7d24b79b9af9265cb655014c56e36873c8400b2a2c1c5ed47
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4670858Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Reject build-time OOM or invalid cgroup counters	2026-10-16T17:00:40.4746050Z ##[error]Process completed with exit code 1.
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	﻿2026-10-16T17:00:40.4773856Z ##[group]Run set +e
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4774145Z [36;1mset +e[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4774351Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4774617Z [36;1m  printf '\n### Disk and Docker usage before cleanup\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4774935Z [36;1m  printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4775199Z [36;1m  df -PB1 "$RUNNER_TEMP"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4775449Z [36;1m  docker system df[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4775972Z [36;1m  for path in "$RUNNER_TEMP/source" "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/trivy-cache" "$RUNNER_TEMP/trivy.db" "$RUNNER_TEMP/java-db"; do[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4776524Z [36;1m    [[ -e "$path" ]] || continue[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4776822Z [36;1m    du -sb "$path"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4777061Z [36;1m  done[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4777282Z [36;1m  printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4777545Z [36;1m} >> "$GITHUB_STEP_SUMMARY" 2>&1[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4777979Z [36;1mbuilder_id=$(docker ps -aq --filter name=buildx_buildkit_ornigami-external-rehearsal | head -n1)[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4778634Z [36;1mif [[ -n "$builder_id" ]] && [[ "$(docker inspect "$builder_id" --format '{{.State.Running}}' 2>/dev/null)" == true ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4779091Z [36;1m  docker exec "$builder_id" sh -c '[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4779499Z [36;1m    for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4779898Z [36;1m      printf "==%s==\\n" "$path"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4780168Z [36;1m      cat "/sys/fs/cgroup/$path"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4780629Z [36;1m    done[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4780866Z [36;1m  ' > "$RUNNER_TEMP/builder-final.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4781325Z [36;1m  if [[ -s "$RUNNER_TEMP/builder-final.txt" ]]; then[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4781614Z [36;1m    {[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4781897Z [36;1m      printf '\n### Final builder cgroup counters before cleanup\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4782233Z [36;1m      printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4782512Z [36;1m      cat "$RUNNER_TEMP/builder-final.txt"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4782800Z [36;1m      printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4783058Z [36;1m    } >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4783311Z [36;1m  fi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4783509Z [36;1melse[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4783979Z [36;1m  printf '\n### Final builder cgroup counters\n\n- Unavailable: no running temporary builder remained for capture.\n' >> "$GITHUB_STEP_SUMMARY"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4784490Z [36;1mfi[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4784810Z [36;1mdocker buildx rm ornigami-external-rehearsal >/dev/null 2>&1 || true[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4785257Z [36;1mdocker image rm "ornigami:rehearsal-${SOURCE_SHA}" >/dev/null 2>&1 || true[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4785781Z [36;1mrm -f -- "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/node-base.tar" "$RUNNER_TEMP/trivy.json"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4786175Z [36;1m{[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4786405Z [36;1m  printf '\n### Disk after cleanup\n\n'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4786685Z [36;1m  printf '%s\n' '```text'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4786945Z [36;1m  df -PB1 "$RUNNER_TEMP"[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4787198Z [36;1m  printf '%s\n' '```'[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4787453Z [36;1m} >> "$GITHUB_STEP_SUMMARY" 2>&1[0m
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4841382Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4841725Z env:
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4841963Z   SOURCE_SHA: 51673d76bd407f69fa1a437f1b52587f0a888cfa
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4842372Z   EXPECTED_LOCK_SHA256: 5eff2b421d8becc7d24b79b9af9265cb655014c56e36873c8400b2a2c1c5ed47
+Build, runtime acceptance, and vulnerability scans	Remove temporary builder and local image	2026-10-16T17:00:40.4842758Z ##[endgroup]
+Build, runtime acceptance, and vulnerability scans	Complete job	﻿2026-10-16T17:00:41.0171414Z Cleaning up orphan processes

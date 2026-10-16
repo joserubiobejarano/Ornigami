@@ -1,0 +1,68 @@
+{
+  "run_id": 38936353655,
+  "attempt": 1,
+  "job_id": 117092729136,
+  "run_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38936353655",
+  "candidate_sha": "51673d76bd407f69fa1a437f1b52587f0a888cfa",
+  "first_publish_sha": "b7c32ae039efbc80bc06667e2aa7872e12207e46",
+  "request_sha": "e6b0e1ac83ade48bbc6eadbf4a2e6a1b6b091fcc",
+  "request_lock_sha256_windows_crlf": "5eff2b421d8becc7d24b79b9af9265cb655014c56e36873c8400b2a2c1c5ed47",
+  "candidate_git_blob_lock_sha256_lf": "b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1",
+  "conclusion": "failure",
+  "failure_stage": "source admission lock checksum mismatch",
+  "image_produced": false,
+  "image_id": null,
+  "registry_digest": null,
+  "buildkit_started": false,
+  "builder_peak_memory_bytes": null,
+  "builder_oom_counters": null,
+  "runtime_peak_memory_bytes": null,
+  "runtime_oom_counters": null,
+  "base_scan": "skipped",
+  "final_scan": "step failed: no image, scanner did not run",
+  "production_http_security": "skipped",
+  "restart_cache_persistence": "skipped",
+  "cleanup": "success; no temporary builder existed",
+  "runner_filesystem_bytes": 154894188544,
+  "runner_disk_used_before_cleanup_bytes": 62773571584,
+  "runner_disk_available_before_cleanup_bytes": 92103839744,
+  "runner_disk_used_after_cleanup_bytes": 62773551104,
+  "runner_disk_available_after_cleanup_bytes": 92103860224,
+  "source_directory_bytes": 5857689,
+  "download_timing": "GitHub persisted logs/summary downloaded after runner cleanup, before log expiry; no claim of pre-cleanup local download",
+  "retries": 0,
+  "ghcr_published": false,
+  "deployment_authorized": false,
+  "artifacts": {
+    "raw-logs.zip": {
+      "sha256": "bf8f7891b99adae6f3d6cf404418b30b046f592073a0247751fc3da1583d3436",
+      "bytes": 17426,
+      "local_downloaded_or_captured_at_utc": "2026-10-16T17:02:56.544022+00:00"
+    },
+    "run.log": {
+      "sha256": "4626119f97aedc42072fde9951524bd2a0010578e9eb1ec78328ce65d042e607",
+      "bytes": 54824,
+      "local_downloaded_or_captured_at_utc": "2026-10-16T17:00:57.493014+00:00"
+    },
+    "run.json": {
+      "sha256": "c9110891b529005e663a68e2011cc0a61ce3be82f4ea779600b7c9531d457048",
+      "bytes": 2725,
+      "local_downloaded_or_captured_at_utc": "2026-10-16T17:00:55.464352+00:00"
+    },
+    "summary.txt": {
+      "sha256": "1f233b4e5ae5455b6a87ee08123b5c7e2974776f56a8e5d4093cf6aeeac983df",
+      "bytes": 819,
+      "local_downloaded_or_captured_at_utc": "2026-10-16T17:02:56.678023+00:00"
+    },
+    "post-trial-integrations.json": {
+      "sha256": "71cc4bf1e95a7695e2ba2a629febbdabd7148ba63f8a457f8e05efbc5adc0530",
+      "bytes": 485,
+      "local_downloaded_or_captured_at_utc": "2026-10-16T17:03:30.582388+00:00"
+    },
+    "coolify-after-trial.txt": {
+      "sha256": "c71fcb0ba758b3cdbfa6eea72628aa63623d594e50224ed4d5e8e7ac464eef9c",
+      "bytes": 380,
+      "local_downloaded_or_captured_at_utc": "2026-10-16T17:03:33.062703+00:00"
+    }
+  }
+}

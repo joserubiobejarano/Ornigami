@@ -1,0 +1,18 @@
+Build, runtime acceptance, and vulnerability scans summary
+Disk and Docker usage before cleanup
+Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 62773571584 92103839744      41% /
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          6         0         1.869GB   1.869GB (100%)
+Containers      0         0         0B        0B
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+5857689	/home/runner/work/_temp/source
+
+Final builder cgroup counters
+Unavailable: no running temporary builder remained for capture.
+Disk after cleanup
+Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 62773551104 92103860224      41% /
+
+Job summary generated at run-time

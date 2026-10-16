@@ -6,3 +6,4 @@ scripts/sql/*.sql text eol=lf
 scripts/coolify-image-rehearsal.sh text eol=lf
 deploy/coolify/linux-runtime-acceptance.sh text eol=lf
 docs/handoffs/ornigami-coolify-20261016/evidence/*.txt -text -whitespace
+docs/handoffs/ornigami-coolify-20261016/external-trial-38936353655/** -text -whitespace

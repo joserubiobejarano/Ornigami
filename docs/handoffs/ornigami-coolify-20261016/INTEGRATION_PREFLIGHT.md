@@ -1,5 +1,7 @@
 # Publication preflight — integration checks completed
 
+Outcome: the cleared first push and the sole approved request push have occurred. The [external trial report](./EXTERNAL_TRIAL.md) records the admission failure, downloaded evidence and unchanged deployment gates. The earlier pause/resumption instructions below are historical; the original one-trial approval is consumed.
+
 ## Current result: cleared for the approved preparation push
 
 16 October 2026, approximately 16:53–16:58 UTC, after owner Netlify sign-in. The account's team switcher shows one team, `joserubiobejarano`. Its unfiltered project inventory lists four projects, and each project's Developer settings → Repository card explicitly states **Current repository: Not linked**:

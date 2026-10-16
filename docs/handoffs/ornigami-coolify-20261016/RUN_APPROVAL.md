@@ -1,5 +1,7 @@
 # External Linux build approval packet
 
+**Historical approval packet: the one authorized trial has now run and failed admission. Do not execute these commands again.** See the [actual trial, checksum correction and evidence](./EXTERNAL_TRIAL.md). The `5eff…` checksum below was the approved request's Windows CRLF hash; the canonical committed LF hash is `b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1`. Another trial needs new authorization and a newly reviewed request/candidate, not repetition of this packet.
+
 Prepared 16 October 2026. The owner has accepted standard public GitHub Actions, an 8 GiB/3 CPU serial BuildKit cap, 4096 MiB Node build heap, source maps retained and no paid runner. Publication and one request-only trial are approved conditional on verifying deployment integrations before either push. The [current preflight](./INTEGRATION_PREFLIGHT.md) now clears the integration checks: owner GitHub/Netlify access resolved the earlier uncertainties; Netlify has no linked repository and Coolify has zero Ornigami resources. No Contabo remote command or host change occurred; only the existing private dashboard forwarding connection was reopened for read-only checks. Deployment, autodeploy, cron, providers, production data, migrations and GHCR publication remain closed. Record actual push/run results separately; this packet is the approved procedure, not proof of trial success.
 
 ## Exact identities
