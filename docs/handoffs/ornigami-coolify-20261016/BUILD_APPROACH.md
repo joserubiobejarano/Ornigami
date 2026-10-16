@@ -1,6 +1,6 @@
 # Build memory investigation and external builder recommendation
 
-The owner accepted the external resource/cost approach after this investigation. The subsequent [build approval packet](./RUN_APPROVAL.md) supersedes the inactive-template instructions below with a restricted preparation-branch workflow and exact candidate/run procedure. Publication and execution still require approval; the measurements and failed-build evidence below are unchanged.
+The owner accepted the external resource/cost approach after this investigation. The subsequent [build approval packet](./RUN_APPROVAL.md) supersedes the inactive-template instructions below with a restricted preparation-branch workflow and exact candidate/run procedure. Publication and one trial are conditionally approved; the [integration preflight](./INTEGRATION_PREFLIGHT.md) must be completed before either push. The measurements and failed-build evidence below are unchanged.
 
 16 October 2026. This follows the [failed Linux build handoff](./HANDOFF.md). The original failure receipts and hashes remain unchanged. No Contabo connection/retry, shared-limit change, purchase, external workflow dispatch, image publication, deployment, cron activation or provider action is authorized or performed by this follow-up.
 

@@ -1,5 +1,7 @@
 # Ornigami Coolify preparation — 16 October 2026
 
+Publication status: [integration preflight stopped before the first push](./INTEGRATION_PREFLIGHT.md). Conditional approval for the exact candidate and one trial is recorded; GitHub App installation inventory requires owner browser sign-in. No request marker, push or new build occurred.
+
 Current next step: review the [external build approval packet](./RUN_APPROVAL.md), including the committed candidate, restricted trigger, Linux runtime/security/persistence checks and evidence requirements. No external run or image publication has occurred.
 
 Follow-up: [build memory investigation, external builder and complete incremental cost](./BUILD_APPROACH.md). The recommendation uses the existing public GitHub repository's standard Linux runner; preparation remains local and no subsequent Contabo build or external workflow was run. The original failed-build receipts below remain unchanged.

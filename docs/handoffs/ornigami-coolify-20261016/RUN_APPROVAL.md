@@ -1,6 +1,6 @@
 # External Linux build approval packet
 
-Prepared 16 October 2026. **Not pushed or run.** The owner has accepted standard public GitHub Actions, an 8 GiB/3 CPU serial BuildKit cap, 4096 MiB Node build heap, source maps retained and no paid runner. Approval of the publication/run steps below is still pending. Contabo is untouched. Deployment, autodeploy, cron, providers, production data, migrations and GHCR publication remain closed.
+Prepared 16 October 2026. **Not pushed or run.** The owner has accepted standard public GitHub Actions, an 8 GiB/3 CPU serial BuildKit cap, 4096 MiB Node build heap, source maps retained and no paid runner. Publication and one request-only trial are now approved conditional on verifying deployment integrations before either push. The [current preflight](./INTEGRATION_PREFLIGHT.md) stopped before publication because GitHub App inventory access is unavailable; the approval persists for resumption once verified. No Contabo host commands or changes occurred. Deployment, autodeploy, cron, providers, production data, migrations and GHCR publication remain closed.
 
 ## Exact identities
 
@@ -49,7 +49,7 @@ The [exact Docker Hub manifest snapshot](https://hub.docker.com/layers/library/n
 
 The workflow verifies the pinned Trivy binary, scans the exact base and then the exact final image for OS and language vulnerabilities. Base findings remain visible for remediation review; a base scan does not replace a final-image scan. Invalid/partial reports fail. Final HIGH/CRITICAL findings fail the job; the workflow does not ignore unfixed findings or accept a scanner outage as success. Human review must resolve each affected component/version/fix or an explicit disposition before any later release. Announced fixes not yet represented in a scanner database remain a separate gate even if a scan is green.
 
-## Proposed publication and run steps — approval required
+## Publication and run steps — approved subject to integration verification
 
 These commands are a reviewable procedure, **not executed**. Use PowerShell in `C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016`. Stop on any nonzero Git result. Do not force-push, merge, open a deployment PR or modify the candidate.
 
