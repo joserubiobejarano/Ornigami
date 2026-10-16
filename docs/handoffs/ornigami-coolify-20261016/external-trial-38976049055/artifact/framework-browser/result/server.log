@@ -1,0 +1,27 @@
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:33237
+- Network:       http://127.0.0.1:33237
+✓ Ready in 129ms
+✓ Running next.config.mjs took 20ms
+⨯ Error: Fictional route regression
+    at e (.next/server/app/fail/page.js:1:2798) {
+  digest: '1454029468'
+}
+⨯ Error: Fictional layout regression
+    at f (.next/server/app/slow/page.js:1:2561) {
+  digest: '3731372894'
+}
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:33051
+- Network:       http://127.0.0.1:33051
+✓ Ready in 130ms
+✓ Running next.config.mjs took 17ms
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:42973
+- Network:       http://127.0.0.1:42973
+✓ Ready in 128ms
+✓ Running next.config.mjs took 19ms
+⨯ Error: SRI: enabled production build has no integrity manifest
+    at async Module.Y (.next/server/chunks/644.js:628:40038)
+⨯ Error: SRI: enabled production build has no integrity manifest
+    at async Module.Y (.next/server/chunks/644.js:628:40038)

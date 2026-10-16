@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-16T22:50:48.260Z",
+  "originalArtifactFilesVerified": 45,
+  "priorEvidenceFilesVerified": 109,
+  "credentialPatternScreenFiles": 85,
+  "credentialPatternScreen": "passed limited pattern screen; no assertion of exhaustive secret detection",
+  "source": "candidate and request are unchanged; docs/evidence only",
+  "localEvidenceFiles": 85
+}

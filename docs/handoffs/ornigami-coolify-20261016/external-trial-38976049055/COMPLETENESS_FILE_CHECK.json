@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-10-16T22:36:19.141Z",
+  "runId": "38976049055",
+  "source": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+  "manifestFiles": 45,
+  "hashes": "passed",
+  "fileCoverage": "passed",
+  "semanticCompleteness": "Separate phase review pending; file/hash coverage alone does not establish all required acceptance evidence."
+}

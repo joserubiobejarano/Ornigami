@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-16T22:45:10.512Z",
+  "candidateDeployments": [],
+  "requestDeployments": [],
+  "ownerCustodyStatuses": [
+    {
+      "id": 56568604441,
+      "context": "ornigami/evidence-local/38976049055/1",
+      "state": "success",
+      "created_at": "2026-10-16T22:36:27Z",
+      "description": "artifact=12078779166;sha256=d0e2c26dea7505c0a8c6050a141f82b1f25ae0859cea0ee33f309764d8e65224",
+      "creator": "joserubiobejarano"
+    }
+  ],
+  "runs": [
+    {
+      "id": 38976049055,
+      "head_sha": "496b57d147bc2a63182e3489583bb3532d28cfc2",
+      "status": "completed",
+      "conclusion": "failure",
+      "run_attempt": 1,
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38976049055"
+    },
+    {
+      "id": 38964204005,
+      "head_sha": "6ab0f70c7a585132b3bb3c388493040ea9085b5c",
+      "status": "completed",
+      "conclusion": "failure",
+      "run_attempt": 1,
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38964204005"
+    },
+    {
+      "id": 38964110954,
+      "head_sha": "fe71816993f5eb42d0565befb4354d478e48429a",
+      "status": "completed",
+      "conclusion": "skipped",
+      "run_attempt": 1,
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/38964110954"
+    }
+  ]
+}

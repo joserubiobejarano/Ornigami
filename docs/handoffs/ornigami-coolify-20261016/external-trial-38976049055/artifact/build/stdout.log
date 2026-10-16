@@ -1,0 +1,341 @@
+#0 building with "ornigami-external-rehearsal" instance using docker-container driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 5.72kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#2 ...
+
+#3 [auth] docker/dockerfile:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#2 DONE 0.8s
+
+#4 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+#4 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e done
+#4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 11.98MB / 11.98MB 0.1s done
+#4 extracting sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 0.1s done
+#4 DONE 0.3s
+
+#5 [auth] library/node:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+#6 DONE 0.5s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 696B done
+#7 DONE 0.0s
+
+#8 [runner  1/14] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+#8 resolve docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 done
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 transferring context: 52.45MB 0.3s done
+#9 DONE 0.3s
+
+#8 [runner  1/14] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+#8 sha256:1a21341009fa15dc1477fe0ded951f23c4958462102712c0a825b1f32bf301cd 449B / 449B 0.1s done
+#8 sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 12.58MB / 49.88MB 0.2s
+#8 sha256:f5bfc00e35f00ffb05af2b15dcb408c6b418d94cdda09e6621336e159922fb67 1.72MB / 1.72MB 0.2s done
+#8 sha256:a35b9854453484eb4b8d836e6555ef413afdaf1660faec1c77c685a37aa74216 3.31kB / 3.31kB 0.2s done
+#8 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 12.58MB / 29.84MB 0.2s
+#8 sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 49.88MB / 49.88MB 0.3s
+#8 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 29.84MB / 29.84MB 0.3s
+#8 sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 49.88MB / 49.88MB 0.6s done
+#8 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 29.84MB / 29.84MB 0.5s done
+#8 extracting sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e
+#8 extracting sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 0.7s done
+#8 DONE 1.3s
+
+#8 [runner  1/14] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+#8 extracting sha256:a35b9854453484eb4b8d836e6555ef413afdaf1660faec1c77c685a37aa74216 0.0s done
+#8 extracting sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab
+#8 extracting sha256:cb3017dcfd1197fbc307ea81e6a482ce555f0e9b2e3b36d61015db78611b22ab 0.8s done
+#8 DONE 2.2s
+
+#8 [runner  1/14] FROM docker.io/library/node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+#8 extracting sha256:f5bfc00e35f00ffb05af2b15dcb408c6b418d94cdda09e6621336e159922fb67 0.0s done
+#8 extracting sha256:1a21341009fa15dc1477fe0ded951f23c4958462102712c0a825b1f32bf301cd done
+#8 DONE 2.2s
+
+#10 [runner  2/14] RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg     && test "$(node --version)" = "v22.23.3"     && for path in /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg; do test ! -e "$path"; done
+#10 DONE 2.4s
+
+#11 [build-base 2/3] COPY vendor/build-tools/npm-11.21.1.tgz /tmp/ornigami-npm.tgz
+#11 DONE 0.0s
+
+#12 [runner  3/14] WORKDIR /app
+#12 DONE 0.0s
+
+#13 [build-base 3/3] RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(crypto.createHash("sha256").update(fs.readFileSync("/tmp/ornigami-npm.tgz")).digest("hex")!=="dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b")throw new Error("npm archive checksum mismatch")'     && mkdir /opt/ornigami-npm     && tar -xzf /tmp/ornigami-npm.tgz --strip-components=1 -C /opt/ornigami-npm     && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg /tmp/ornigami-npm.tgz     && ln -s /opt/ornigami-npm/bin/npm-cli.js /usr/local/bin/npm     && ln -s /opt/ornigami-npm/bin/npx-cli.js /usr/local/bin/npx     && test "$(npm --version)" = "11.21.1"
+#13 DONE 0.8s
+
+#14 [prod-deps 1/6] WORKDIR /app
+#14 DONE 0.1s
+
+#15 [prod-deps 2/6] RUN mkdir -p /app && chown node:node /app
+#15 DONE 0.0s
+
+#16 [prod-deps 3/6] COPY --chown=node:node package.json package-lock.json ./
+#16 DONE 0.0s
+
+#17 [prod-deps 4/6] COPY --chown=node:node scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
+#17 DONE 0.0s
+
+#18 [prod-deps 5/6] COPY --chown=node:node vendor/framework ./vendor/framework
+#18 DONE 0.2s
+
+#19 [prod-deps 6/6] RUN npm ci --omit=dev
+#19 10.64 
+#19 10.64 added 403 packages, and audited 405 packages in 11s
+#19 10.64 
+#19 10.64 120 packages are looking for funding
+#19 10.64   run `npm fund` for details
+#19 10.64 
+#19 10.64 found 0 vulnerabilities
+#19 10.64 npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+#19 10.64 npm warn install-scripts   @sentry/cli@2.58.6 (postinstall: node ./scripts/install.js)
+#19 10.64 npm warn install-scripts
+#19 10.64 npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+#19 10.64 npm notice
+#19 10.64 npm notice New major version of npm available! 11.21.1 -> 12.2.0
+#19 10.64 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#19 10.64 npm notice To update run: npm install -g npm@12.2.0
+#19 10.64 npm notice
+#19 DONE 10.7s
+
+#20 [deps 6/6] RUN npm ci
+#20 14.15 
+#20 14.15 added 661 packages, and audited 663 packages in 14s
+#20 14.15 
+#20 14.15 244 packages are looking for funding
+#20 14.15   run `npm fund` for details
+#20 14.15 
+#20 14.15 found 0 vulnerabilities
+#20 14.15 npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+#20 14.15 npm warn install-scripts   @sentry/cli@2.58.6 (postinstall: node ./scripts/install.js)
+#20 14.15 npm warn install-scripts   unrs-resolver@1.11.1 (postinstall: napi-postinstall unrs-resolver 1.11.1 check)
+#20 14.15 npm warn install-scripts
+#20 14.15 npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+#20 14.16 npm notice
+#20 14.16 npm notice New major version of npm available! 11.21.1 -> 12.2.0
+#20 14.16 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#20 14.16 npm notice To update run: npm install -g npm@12.2.0
+#20 14.16 npm notice
+#20 DONE 17.0s
+
+#21 [runner  4/14] COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+#21 DONE 8.5s
+
+#22 [builder 1/2] COPY --chown=node:node . .
+#22 DONE 0.8s
+
+#23 [builder 2/2] RUN test -n "https://rehearsal.invalid" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? ""; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error("ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB"); for (const name of ["ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS", "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS", "ORNIGAMI_BUILD_WEBPACK_WORKER"]) if (!/^(true|false)$/.test(process.env[name] ?? "")) throw new Error(`${name} must be true or false`)' && npm run build
+#23 0.189 
+#23 0.189 > ornigami@0.1.0 build
+#23 0.189 > next build --webpack && node scripts/generate-static-csp-hashes.mjs
+#23 0.189 
+#23 0.533 ▲ Next.js 16.4.2 (webpack)
+#23 0.932 ✓ Running next.config.ts took 398ms
+#23 0.958 - Experiments (use with caution):
+#23 0.958   · clientTraceMetadata
+#23 0.958   · cpus: 1
+#23 0.958   · sri
+#23 0.958   ✓ webpackMemoryOptimizations
+#23 0.958 
+#23 0.981   Creating an optimized production build ...
+#23 40.31 ✓ Compiled successfully in 38.9s
+#23 40.32   Running TypeScript ...
+#23 47.34   Finished TypeScript in 7.0s ...
+#23 47.35   Collecting page data using 1 worker ...
+#23 50.99   Generating static pages using 1 worker (0/24) ...
+#23 51.47   Generating static pages using 1 worker (6/24) 
+#23 51.47   Generating static pages using 1 worker (12/24) 
+#23 51.47   Generating static pages using 1 worker (18/24) 
+#23 51.47 ✓ Generating static pages using 1 worker (24/24) in 478ms
+#23 52.82   Finalizing page optimization ...
+#23 52.82   Collecting build traces ...
+#23 64.23 
+#23 64.24 Route (app)
+#23 64.24 ┌ ƒ /
+#23 64.24 ├ ƒ /_not-found
+#23 64.24 ├ ƒ /about
+#23 64.24 ├ ƒ /account/deletion
+#23 64.24 ├ ƒ /api-public-demo-review-booster
+#23 64.24 ├ ƒ /api/audit/free-profile
+#23 64.24 ├ ƒ /api/auth/[...nextauth]
+#23 64.24 ├ ƒ /api/auth/forgot-password
+#23 64.24 ├ ƒ /api/auth/register
+#23 64.24 ├ ƒ /api/auth/resend-verification
+#23 64.24 ├ ƒ /api/auth/reset-password
+#23 64.24 ├ ƒ /api/auth/signout
+#23 64.24 ├ ƒ /api/auth/verify-email
+#23 64.24 ├ ƒ /api/cron/health
+#23 64.24 ├ ƒ /api/cron/privacy
+#23 64.24 ├ ƒ /api/cron/review-booster
+#23 64.24 ├ ƒ /api/cron/review-replies
+#23 64.24 ├ ƒ /api/csp-report
+#23 64.24 ├ ƒ /api/dashboard/summary
+#23 64.24 ├ ƒ /api/feedback
+#23 64.24 ├ ƒ /api/google/connection
+#23 64.24 ├ ƒ /api/google/disconnect
+#23 64.24 ├ ƒ /api/google/locations
+#23 64.24 ├ ƒ /api/google/locations/list
+#23 64.24 ├ ƒ /api/google/locations/selection
+#23 64.24 ├ ƒ /api/google/locations/sync
+#23 64.24 ├ ƒ /api/google/oauth/callback
+#23 64.24 ├ ƒ /api/google/oauth/start
+#23 64.24 ├ ƒ /api/google/replies
+#23 64.24 ├ ƒ /api/google/reviews/process-pending
+#23 64.24 ├ ƒ /api/google/reviews/sync
+#23 64.24 ├ ƒ /api/leads
+#23 64.24 ├ ƒ /api/openai/review-reply
+#23 64.24 ├ ƒ /api/privacy/delete
+#23 64.24 ├ ƒ /api/privacy/export
+#23 64.24 ├ ƒ /api/projects
+#23 64.24 ├ ƒ /api/projects/[id]
+#23 64.24 ├ ƒ /api/review-booster/booking-credentials
+#23 64.24 ├ ƒ /api/review-booster/deliveries/[deliveryId]/reconcile
+#23 64.24 ├ ƒ /api/review-booster/run-now
+#23 64.24 ├ ƒ /api/review-booster/settings
+#23 64.24 ├ ƒ /api/review-booster/unsubscribe
+#23 64.24 ├ ƒ /api/review-booster/upload
+#23 64.24 ├ ƒ /api/review-booster/visits
+#23 64.24 ├ ƒ /api/reviews
+#23 64.24 ├ ƒ /api/reviews/draft
+#23 64.24 ├ ƒ /api/settings/reply
+#23 64.24 ├ ƒ /api/stripe/change-plan
+#23 64.24 ├ ƒ /api/stripe/checkout
+#23 64.24 ├ ƒ /api/stripe/portal
+#23 64.24 ├ ƒ /api/stripe/webhook
+#23 64.24 ├ ƒ /api/team
+#23 64.24 ├ ƒ /api/team/invitations/[token]
+#23 64.24 ├ ƒ /api/team/members/[userId]
+#23 64.24 ├ ƒ /api/user/plan
+#23 64.24 ├ ƒ /api/webhooks/booking
+#23 64.24 ├ ƒ /api/webhooks/resend
+#23 64.24 ├ ƒ /connect
+#23 64.24 ├ ƒ /contact
+#23 64.24 ├ ƒ /dashboard
+#23 64.24 ├ ƒ /dashboard/agents/review-booster
+#23 64.24 ├ ƒ /dashboard/agents/review-booster/new
+#23 64.24 ├ ƒ /dashboard/agents/review-booster/settings
+#23 64.24 ├ ƒ /dashboard/agents/review-booster/upload
+#23 64.24 ├ ƒ /dashboard/agents/review-replies
+#23 64.24 ├ ƒ /dashboard/agents/review-replies/google-connection
+#23 64.24 ├ ƒ /dashboard/agents/review-replies/reviews
+#23 64.24 ├ ƒ /dashboard/agents/review-replies/settings
+#23 64.24 ├ ƒ /dashboard/billing
+#23 64.24 ├ ƒ /demo
+#23 64.24 ├ ƒ /demo-review-booster
+#23 64.24 ├ ƒ /demo-review-replies
+#23 64.24 ├ ƒ /feedback
+#23 64.24 ├ ƒ /forgot-password
+#23 64.24 ├ ƒ /free-audit
+#23 64.24 ├ ƒ /legal
+#23 64.24 ├ ƒ /local-seo
+#23 64.24 ├ ƒ /login
+#23 64.24 ├ ○ /opengraph-image
+#23 64.24 ├ ƒ /pricing
+#23 64.24 ├ ƒ /privacy
+#23 64.24 ├ ƒ /r/[token]
+#23 64.24 ├ ƒ /resend-verification
+#23 64.24 ├ ƒ /reset-password
+#23 64.24 ├ ƒ /review-booster
+#23 64.24 ├ ƒ /review-replies
+#23 64.24 ├ ƒ /reviews
+#23 64.24 ├ ○ /robots.txt
+#23 64.24 ├ ƒ /settings
+#23 64.24 ├ ƒ /signup
+#23 64.24 ├ ○ /sitemap.xml
+#23 64.24 ├ ƒ /team/invite/[token]
+#23 64.24 └ ƒ /terms
+#23 64.24 
+#23 64.24 
+#23 64.24 ƒ Proxy (Middleware)
+#23 64.24 
+#23 64.24 ○  (Static)   prerendered as static content
+#23 64.24 ƒ  (Dynamic)  server-rendered on demand
+#23 64.24 
+#23 64.46 Generated 2 static CSP script hashes.
+#23 DONE 64.5s
+
+#24 [runner  5/14] COPY --from=builder --chown=node:node /app/.next ./.next
+#24 DONE 5.6s
+
+#25 [runner  6/14] COPY --from=builder --chown=node:node /app/public ./public
+#25 DONE 0.0s
+
+#26 [runner  7/14] COPY --from=builder --chown=node:node /app/package.json ./package.json
+#26 DONE 0.0s
+
+#27 [runner  8/14] COPY --from=builder --chown=node:node /app/next.config.ts ./next.config.ts
+#27 DONE 0.0s
+
+#28 [runner  9/14] COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
+#28 DONE 0.0s
+
+#29 [runner 10/14] COPY --from=builder --chown=node:node /app/src/lib/security-headers.ts ./src/lib/security-headers.ts
+#29 DONE 0.0s
+
+#30 [runner 11/14] COPY --from=builder --chown=node:node /app/src/lib/env.ts ./src/lib/env.ts
+#30 DONE 0.0s
+
+#31 [runner 12/14] COPY --from=builder --chown=node:node /app/scripts/coolify-cron-dispatch.mjs ./scripts/coolify-cron-dispatch.mjs
+#31 DONE 0.0s
+
+#32 [runner 13/14] COPY --from=builder --chown=node:node /app/scripts/vps-cron-dispatch.mjs ./scripts/vps-cron-dispatch.mjs
+#32 DONE 0.0s
+
+#33 [runner 14/14] RUN mkdir -p .next/cache && chown node:node .next/cache
+#33 DONE 0.2s
+
+#34 exporting to docker image format
+#34 exporting layers
+#34 exporting layers 18.9s done
+#34 exporting manifest sha256:98b24c6c8195618778e07d959369639edb098831010d7c56d3325ffb392de2d2 done
+#34 exporting config sha256:611da6de8de56c986e872035d2c89d81200824dc2dfbe6700ffc2b25657a42bc done
+#34 sending tarball
+#34 ...
+
+#35 importing to docker
+#35 loading layer 01186ba25250 345B / 345B
+#35 loading layer 20e26f54d8d5 93B / 93B
+#35 loading layer ffed31e6257f 557.06kB / 176.88MB
+#35 loading layer ffed31e6257f 106.95MB / 176.88MB 2.1s
+#35 loading layer ffed31e6257f 117.54MB / 176.88MB 4.5s
+#35 loading layer ffed31e6257f 161.55MB / 176.88MB 6.5s
+#35 loading layer ffed31e6257f 176.59MB / 176.88MB 8.6s
+#35 loading layer b4fc92d7402d 557.06kB / 154.31MB
+#35 loading layer b4fc92d7402d 120.32MB / 154.31MB 2.1s
+#35 loading layer c2106e4e77ac 32.77kB / 44.66kB
+#35 loading layer 600b01ccb2c2 978B / 978B
+#35 loading layer 888521222ac5 1.16kB / 1.16kB
+#35 loading layer b342535c3c72 525B / 525B
+#35 loading layer 387a2741d36d 787B / 787B
+#35 loading layer 575c9c417541 1.32kB / 1.32kB
+#35 loading layer 3fffde978300 1.27kB / 1.27kB
+#35 loading layer f49b7a012eb6 1.34kB / 1.34kB
+#35 loading layer 5f70bf18a086 32B / 32B
+#35 loading layer 01186ba25250 345B / 345B 23.7s done
+#35 loading layer 20e26f54d8d5 93B / 93B 21.3s done
+#35 loading layer ffed31e6257f 176.88MB / 176.88MB 21.2s done
+#35 loading layer b4fc92d7402d 154.31MB / 154.31MB 8.1s done
+#35 loading layer c2106e4e77ac 44.66kB / 44.66kB 0.2s done
+#35 loading layer 600b01ccb2c2 978B / 978B 0.2s done
+#35 loading layer 888521222ac5 1.16kB / 1.16kB 0.2s done
+#35 loading layer b342535c3c72 525B / 525B 0.2s done
+#35 loading layer 387a2741d36d 787B / 787B 0.2s done
+#35 loading layer 575c9c417541 1.32kB / 1.32kB 0.2s done
+#35 loading layer 3fffde978300 1.27kB / 1.27kB 0.2s done
+#35 loading layer f49b7a012eb6 1.34kB / 1.34kB 0.1s done
+#35 loading layer 5f70bf18a086 32B / 32B 0.0s done
+#35 DONE 23.7s
+
+#34 exporting to docker image format
+#34 sending tarball 25.2s done
+#34 DONE 44.1s

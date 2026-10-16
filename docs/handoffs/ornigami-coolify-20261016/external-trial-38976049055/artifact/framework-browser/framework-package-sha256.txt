@@ -1,0 +1,1 @@
+ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f  /home/runner/work/_temp/source/vendor/framework/next-16.4.2-ornigami-sri.2.tgz

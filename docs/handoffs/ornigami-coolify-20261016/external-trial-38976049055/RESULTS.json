@@ -1,0 +1,276 @@
+{
+  "candidate": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+  "request": "496b57d147bc2a63182e3489583bb3532d28cfc2",
+  "run": 38976049055,
+  "attempt": 1,
+  "conclusion": "failure",
+  "image": {
+    "kind": "ephemeral local Linux amd64 image ID, not a registry digest",
+    "id": "sha256:611da6de8de56c986e872035d2c89d81200824dc2dfbe6700ffc2b25657a42bc",
+    "bytes": 1900430908,
+    "retained": false,
+    "accepted": false,
+    "published": false
+  },
+  "phaseSteps": [
+    {
+      "name": "Set up job",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:29Z",
+      "completed_at": "2026-10-16T22:29:30Z"
+    },
+    {
+      "name": "Initialize evidence bundle",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:30Z",
+      "completed_at": "2026-10-16T22:29:30Z"
+    },
+    {
+      "name": "Validate inputs and fetch exact public source",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:30Z",
+      "completed_at": "2026-10-16T22:29:33Z"
+    },
+    {
+      "name": "Verify runner and Docker Buildx",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:33Z",
+      "completed_at": "2026-10-16T22:29:34Z"
+    },
+    {
+      "name": "Download and verify pinned Trivy scanner",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:34Z",
+      "completed_at": "2026-10-16T22:29:36Z"
+    },
+    {
+      "name": "Scan pinned Node base image and record advisory gate",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:36Z",
+      "completed_at": "2026-10-16T22:29:57Z"
+    },
+    {
+      "name": "Create bounded serial BuildKit builder",
+      "result": "success",
+      "started_at": "2026-10-16T22:29:57Z",
+      "completed_at": "2026-10-16T22:30:10Z"
+    },
+    {
+      "name": "Build local Linux amd64 image",
+      "result": "success",
+      "started_at": "2026-10-16T22:30:10Z",
+      "completed_at": "2026-10-16T22:32:52Z"
+    },
+    {
+      "name": "Run disconnected Linux runtime acceptance",
+      "result": "success",
+      "started_at": "2026-10-16T22:32:52Z",
+      "completed_at": "2026-10-16T22:33:20Z"
+    },
+    {
+      "name": "Run bounded Linux framework browser regressions",
+      "result": "success",
+      "started_at": "2026-10-16T22:33:20Z",
+      "completed_at": "2026-10-16T22:33:49Z"
+    },
+    {
+      "name": "Scan local image archive for OS and language vulnerabilities",
+      "result": "failure",
+      "started_at": "2026-10-16T22:33:49Z",
+      "completed_at": "2026-10-16T22:34:07Z"
+    },
+    {
+      "name": "Reject build-time OOM or invalid cgroup counters",
+      "result": "success",
+      "started_at": "2026-10-16T22:34:07Z",
+      "completed_at": "2026-10-16T22:34:07Z"
+    },
+    {
+      "name": "Enforce pinned base image advisory threshold",
+      "result": "failure",
+      "started_at": "2026-10-16T22:34:07Z",
+      "completed_at": "2026-10-16T22:34:07Z"
+    },
+    {
+      "name": "Capture evidence bundle before cleanup",
+      "result": "success",
+      "started_at": "2026-10-16T22:34:07Z",
+      "completed_at": "2026-10-16T22:34:09Z"
+    },
+    {
+      "name": "Upload rehearsal evidence",
+      "result": "success",
+      "started_at": "2026-10-16T22:34:09Z",
+      "completed_at": "2026-10-16T22:34:10Z"
+    },
+    {
+      "name": "Report downloadable evidence",
+      "result": "success",
+      "started_at": "2026-10-16T22:34:10Z",
+      "completed_at": "2026-10-16T22:34:10Z"
+    },
+    {
+      "name": "Require verified owner local evidence custody before cleanup",
+      "result": "success",
+      "started_at": "2026-10-16T22:34:10Z",
+      "completed_at": "2026-10-16T22:36:37Z"
+    },
+    {
+      "name": "Remove temporary builder and local image",
+      "result": "success",
+      "started_at": "2026-10-16T22:36:37Z",
+      "completed_at": "2026-10-16T22:37:02Z"
+    },
+    {
+      "name": "Complete job",
+      "result": "success",
+      "started_at": "2026-10-16T22:37:02Z",
+      "completed_at": "2026-10-16T22:37:02Z"
+    }
+  ],
+  "runtime": {
+    "result": "passed",
+    "exitStatus": 0,
+    "phaseStatuses": {
+      "cold_http_exit_status": "0",
+      "restart_http": "true",
+      "recreate_http": "true",
+      "next_image_cache_restart": "true",
+      "next_image_cache_recreate": "true"
+    },
+    "httpObservations": 37,
+    "verifiedSriAssets": 15,
+    "phaseCounters": {
+      "runtime-first-cgroup.txt": {
+        "source": "finished-summary-ax.txt: GitHub rendered job summary, recovered after cleanup; not runner artifact bytes",
+        "memoryPeakBytes": 185360384,
+        "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpuMax": "75000 100000",
+        "memoryMax": 805306368,
+        "swapMax": 0,
+        "sha256": "e1af4a4f641d28148f8d47b22ae65559290fa8e8ea19fdfa2dfa5eaaa139fb8d"
+      },
+      "runtime-after-restart-cgroup.txt": {
+        "source": "finished-summary-ax.txt: GitHub rendered job summary, recovered after cleanup; not runner artifact bytes",
+        "memoryPeakBytes": 171339776,
+        "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpuMax": "75000 100000",
+        "memoryMax": 805306368,
+        "swapMax": 0,
+        "sha256": "fe1ef10fb86ad47f5f68453047d02340f300db3bff881afb913609eb755424ab"
+      },
+      "runtime-after-recreate-cgroup.txt": {
+        "source": "finished-summary-ax.txt: GitHub rendered job summary, recovered after cleanup; not runner artifact bytes",
+        "memoryPeakBytes": 171692032,
+        "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpuMax": "75000 100000",
+        "memoryMax": 805306368,
+        "swapMax": 0,
+        "sha256": "75afb75b650840979ee11780275575c8fc720124b198a99ffac51625b523802c"
+      }
+    }
+  },
+  "browserGroups": [
+    {
+      "name": "production-http-sri-and-csp",
+      "result": "passed"
+    },
+    {
+      "name": "valid-hydration-late-loading-and-navigation",
+      "result": "passed"
+    },
+    {
+      "name": "corrupted-bootstrap-rejected",
+      "result": "passed"
+    },
+    {
+      "name": "corrupted-asynchronous-chunk-rejected",
+      "result": "passed"
+    },
+    {
+      "name": "missing-and-malformed-manifest-entry-fail-closed",
+      "result": "passed"
+    },
+    {
+      "name": "browser-missing-chunk-hash-fail-closed-before-request",
+      "result": "passed"
+    },
+    {
+      "name": "browser-malformed-chunk-hash-fail-closed-before-request",
+      "result": "passed"
+    },
+    {
+      "name": "independent-local-restart-and-generated-cache-marker",
+      "result": "passed"
+    },
+    {
+      "name": "production-missing-manifest-fail-closed",
+      "result": "passed"
+    }
+  ],
+  "resources": {
+    "build": {
+      "limitBytes": 8589934592,
+      "peakBytes": 8589934592,
+      "cpus": 3,
+      "heapMiB": 4096,
+      "swapBytes": 0,
+      "seconds": 162,
+      "memoryMaxEvents": 3,
+      "oom": 0,
+      "oomKill": 0,
+      "headroom": "none demonstrated; peak reached cap"
+    },
+    "browser": {
+      "peakBytes": 1527496704,
+      "oom": 0
+    },
+    "runner": {
+      "cpus": 4,
+      "memoryMiB": 15989,
+      "availableMemoryMiB": 14626,
+      "diskFreeBeforeBytes": 91896913920,
+      "diskFreeBeforeCleanupBytes": 78982017024,
+      "diskFreeAfterCleanupBytes": 88474587136
+    },
+    "runtimeLimits": {
+      "memoryBytes": 805306368,
+      "cpus": 0.75,
+      "heapMiB": 512,
+      "swapBytes": 0
+    }
+  },
+  "scanCounts": {
+    "base": {
+      "LOW": 61,
+      "HIGH": 54,
+      "MEDIUM": 67,
+      "UNKNOWN": 3
+    },
+    "final": {
+      "LOW": 60,
+      "HIGH": 43,
+      "MEDIUM": 58,
+      "UNKNOWN": 3
+    }
+  },
+  "custody": "passed; exactly one verified owner acknowledgment, before cleanup; independent of completeness/security",
+  "evidence": "artifact hash coverage passed; semantic omissions recovered separately from rendered job summary; original artifact completeness failed",
+  "untested": [
+    "Linux forced build-failure/skipped-stage capture paths",
+    "separate complete upgraded build-tooling image scan",
+    "accepted retained image",
+    "database/media backup and recovery",
+    "Coolify/Traefik public HTTPS and accepted origins/callbacks",
+    "production/provider integration; framework adoption"
+  ],
+  "gates": {
+    "deployment": "closed",
+    "provider": "closed",
+    "cron": "closed for trial and proposed VPS; existing production jobs preserved",
+    "release": "closed",
+    "registry": "closed",
+    "frameworkAdoption": "not accepted"
+  },
+  "trialCost": "standard public runner, no paid capacity or registry; evidence within verified included storage"
+}

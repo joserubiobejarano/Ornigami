@@ -1,0 +1,14 @@
+Browser tab: 22, Title: "fictional-... > Resources | Coolify", URL: "http://127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is".
+1 AXWebArea fictional-... > Resources | Coolify, URL: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is
+		9 button Ornigami, Help: Switch project
+			10 text Ornigami
+		13 button fictional-staging, Help: Switch environment
+			14 text fictional-staging
+		43 heading fictional-staging, Value: 1
+			44 text fictional-staging
+			46 text 0 resources  in Ornigami
+		47 link Description: Shared variables for fictional-staging, Value: 127.0.0.1:18000/shared-variables/environments/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is
+		48 link Description: Open settings for fictional-staging, Value: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/edit
+		50 heading No resources yet, Value: 2
+			51 text No resources yet
+The focused UI element is 1 AXWebArea fictional-... > Resources | Coolify, URL: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is

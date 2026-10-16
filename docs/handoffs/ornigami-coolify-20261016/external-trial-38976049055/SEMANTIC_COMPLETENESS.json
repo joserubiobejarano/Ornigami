@@ -1,0 +1,37 @@
+{
+  "artifactFileHashCoverage": "passed: all 45 listed files match; original manifest/ZIP unchanged",
+  "artifactSemanticCompleteness": "failed: three phase cgroup files omitted; step-summary.md is empty",
+  "cause": "workflow line 384 expands runtime-*-cgroup.txt outside report_dir; quoted joined path fails the file test. Correctly qualified summary loop separately retained these counters.",
+  "supplementalRecovery": "passed: all three phase counters recovered from completed GitHub job summary after cleanup. These are separately attributed rendered-summary receipts, not artifact-contained originals.",
+  "recovered": {
+    "runtime-first-cgroup.txt": {
+      "source": "finished-summary-ax.txt: GitHub rendered job summary, recovered after cleanup; not runner artifact bytes",
+      "memoryPeakBytes": 185360384,
+      "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+      "cpuMax": "75000 100000",
+      "memoryMax": 805306368,
+      "swapMax": 0,
+      "sha256": "e1af4a4f641d28148f8d47b22ae65559290fa8e8ea19fdfa2dfa5eaaa139fb8d"
+    },
+    "runtime-after-restart-cgroup.txt": {
+      "source": "finished-summary-ax.txt: GitHub rendered job summary, recovered after cleanup; not runner artifact bytes",
+      "memoryPeakBytes": 171339776,
+      "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+      "cpuMax": "75000 100000",
+      "memoryMax": 805306368,
+      "swapMax": 0,
+      "sha256": "fe1ef10fb86ad47f5f68453047d02340f300db3bff881afb913609eb755424ab"
+    },
+    "runtime-after-recreate-cgroup.txt": {
+      "source": "finished-summary-ax.txt: GitHub rendered job summary, recovered after cleanup; not runner artifact bytes",
+      "memoryPeakBytes": 171692032,
+      "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+      "cpuMax": "75000 100000",
+      "memoryMax": 805306368,
+      "swapMax": 0,
+      "sha256": "75afb75b650840979ee11780275575c8fc720124b198a99ffac51625b523802c"
+    }
+  },
+  "failedOrSkippedBuildRuntimeEvidencePaths": "untested on Linux: build/runtime succeeded. Existing 16 local failure-path tests remain local evidence only.",
+  "cleanup": "step succeeded; disk reclaimed. Cleanup ignores individual command errors and has no final owned-resource inventory; absolute cleanup completeness unproven."
+}

@@ -1,0 +1,10 @@
+				81 image coderabbitai
+				82 text coderabbitai Developed by 
+				83 link Description: coderabbitai, Value: github.com/coderabbitai
+				84 link Description: Configure, Value: github.com/settings/installations/84505349
+				86 image Netlify
+				87 text Netlify Developed by 
+				89 link Description: Configure, Value: github.com/settings/installations/7102738
+				91 image Vercel
+				92 text Vercel Developed by 
+				94 link Description: Configure, Value: github.com/settings/installations/80672078

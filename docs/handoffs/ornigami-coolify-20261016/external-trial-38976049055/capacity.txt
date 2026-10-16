@@ -1,0 +1,9 @@
+			107 text GitHub Free $0.00 per  month
+				128 text Billable spend for Actions and Actions Runners for the selected timeframe. Applicable discounts cover Actions usage in public repositories and included usage for Actions minutes and storage.
+				164 text Actions minutes
+				165 text 78 min used / 2,000 min included
+				166 progress indicator Description: Actions minutes, Value: 4
+				167 text Actions storage
+				168 pop up button (collapsed) About GitHub Actions storage billing, Secondary Actions: Expand
+				169 text 0.1 GB used / 0.5 GB included
+				170 progress indicator Description: Actions storage, Value: 20

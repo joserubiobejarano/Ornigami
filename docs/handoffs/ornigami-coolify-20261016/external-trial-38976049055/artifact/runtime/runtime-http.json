@@ -1,0 +1,874 @@
+{
+  "schemaVersion": 1,
+  "result": "passed",
+  "exitStatus": 0,
+  "phaseStatuses": {
+    "cold_http_exit_status": "0",
+    "restart_http": "true",
+    "recreate_http": "true",
+    "next_image_cache_restart": "true",
+    "next_image_cache_recreate": "true"
+  },
+  "httpObservations": [
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "text/html; charset=utf-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/e23c0ce1481559a5.css\" nonce=\"H6yJ-NLwANFFAjcxEPb9nQ\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" nonce=\"H6yJ-NLwANFFAjcxEPb9nQ\" href=\"/_next/static/chunks/webpack-80108613d8ec666b.js\" integrity=\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\"/><script src=\"/_next/static/chunks/4bd1b696-5ab16a6c4e2c"
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/9826-f01c0143669cade1.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/main-app-bc3195e359f35387.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/5930-0a7517faad12a649.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/9441-5bc7bdd6d4037f75.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/1518-823041558f779953.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/9094-95036afb52c6fa42.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/3981-4aef9ab29528d497.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/249-196155a0e296eca7.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/app/layout-bcc97ac1ab67aba1.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/app/error-36b815e15165b057.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/app/page-497c3b22e9f6162c.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/app/global-error-7d8799b8181abc89.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/_next/static/chunks/webpack-80108613d8ec666b.js",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-type": "application/javascript; charset=UTF-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/login",
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "text/html; charset=utf-8",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/e23c0ce1481559a5.css\" nonce=\"pDCrH3F4TNomHQdCqSaZdg\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" nonce=\"pDCrH3F4TNomHQdCqSaZdg\" href=\"/_next/static/chunks/webpack-80108613d8ec666b.js\" integrity=\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\"/><script src=\"/_next/static/chunks/4bd1b696-5ab16a6c4e2c"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboard",
+      "status": 307,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "location": "https://rehearsal.invalid/login?callbackUrl=%2Fdashboard",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/dashboard",
+      "status": 307,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "location": "https://rehearsal.invalid/login?callbackUrl=%2Fdashboard",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/robots.txt",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "text/plain",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-nextjs-cache": "HIT"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/opengraph-image",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "image/png",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-nextjs-cache": "HIT"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-cache, no-store",
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "null"
+    },
+    {
+      "method": "GET",
+      "path": "/api/google/oauth/start",
+      "status": 307,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "location": "https://rehearsal.invalid/login",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/stripe/checkout",
+      "status": 307,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "location": "https://rehearsal.invalid/login",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/openai/review-reply",
+      "status": 403,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"error\":\"Cross-origin request rejected.\"}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/privacy/delete",
+      "status": 503,
+      "headers": {
+        "cache-control": "no-store, max-age=0",
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"error\":\"Account deletion is temporarily unavailable.\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/health",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/health",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/review-booster",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/review-booster",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/review-replies",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/review-replies",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/privacy",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cron/privacy",
+      "status": 401,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2",
+        "content-type": "application/json",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "body": "{\"ok\":false,\"error\":\"Unauthorized\"}"
+    },
+    {
+      "method": "GET",
+      "path": "/_next/image",
+      "status": 200,
+      "headers": {
+        "cache-control": "public, max-age=14400, must-revalidate",
+        "content-length": "416",
+        "content-security-policy": "script-src 'none'; frame-src 'none'; sandbox;",
+        "content-type": "image/webp",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "vary": "Accept",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-nextjs-cache": "MISS"
+      },
+      "body": ""
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app https://*.sentry.io; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com; object-src 'none'",
+        "content-type": "text/html; charset=utf-8",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "body": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/e23c0ce1481559a5.css\" nonce=\"5RQFxNpJBTsec4UnW3j94g\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" nonce=\"5RQFxNpJBTsec4UnW3j94g\" href=\"/_next/static/chunks/webpack-80108613d8ec666b.js\" integrity=\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\"/><script src=\"/_next/static/chunks/4bd1b696-5ab16a6c4e2c"
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'self'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-[REDACTED]' https://js.stripe.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com; connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.openai.com https://api.resend.com https://oauth2.googleapis.com https://mybusiness.googleapis.com https://businessprofileperformance.googleapis.com https://generativelanguage.googleapis.com https://*.neon.tech https://*.vercel.app https://*.sentry.io; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com; object-src 'none'",
+        "content-type": "text/html; charset=utf-8",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "permissions-policy": "camera=(), microphone=(), geolocation=()",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "body": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/css/e23c0ce1481559a5.css\" nonce=\"0_HeG8DIwITDQV_EMonMOg\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" nonce=\"0_HeG8DIwITDQV_EMonMOg\" href=\"/_next/static/chunks/webpack-80108613d8ec666b.js\" integrity=\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\"/><script src=\"/_next/static/chunks/4bd1b696-5ab16a6c4e2c"
+    }
+  ],
+  "sriAssets": [
+    {
+      "path": "/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js",
+      "status": 200,
+      "bodyBytes": 204075,
+      "actual": "sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=",
+      "expected": "sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM="
+    },
+    {
+      "path": "/_next/static/chunks/9826-f01c0143669cade1.js",
+      "status": 200,
+      "bodyBytes": 245032,
+      "actual": "sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=",
+      "expected": "sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs="
+    },
+    {
+      "path": "/_next/static/chunks/main-app-bc3195e359f35387.js",
+      "status": 200,
+      "bodyBytes": 4096,
+      "actual": "sha256-4JwbQMGzlV182aBnXhHG2CpjLRFmE4OQvg5m6GYSZPw=",
+      "expected": "sha256-4JwbQMGzlV182aBnXhHG2CpjLRFmE4OQvg5m6GYSZPw="
+    },
+    {
+      "path": "/_next/static/chunks/5930-0a7517faad12a649.js",
+      "status": 200,
+      "bodyBytes": 8020,
+      "actual": "sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=",
+      "expected": "sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I="
+    },
+    {
+      "path": "/_next/static/chunks/9441-5bc7bdd6d4037f75.js",
+      "status": 200,
+      "bodyBytes": 28641,
+      "actual": "sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=",
+      "expected": "sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI="
+    },
+    {
+      "path": "/_next/static/chunks/1518-823041558f779953.js",
+      "status": 200,
+      "bodyBytes": 8175,
+      "actual": "sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=",
+      "expected": "sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk="
+    },
+    {
+      "path": "/_next/static/chunks/9094-95036afb52c6fa42.js",
+      "status": 200,
+      "bodyBytes": 33943,
+      "actual": "sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=",
+      "expected": "sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs="
+    },
+    {
+      "path": "/_next/static/chunks/3981-4aef9ab29528d497.js",
+      "status": 200,
+      "bodyBytes": 15138,
+      "actual": "sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=",
+      "expected": "sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8="
+    },
+    {
+      "path": "/_next/static/chunks/249-196155a0e296eca7.js",
+      "status": 200,
+      "bodyBytes": 117844,
+      "actual": "sha256-C6F9B2qPGAVeew2VBRLCN0xJTQvlLaCYP5/yZ04maRc=",
+      "expected": "sha256-C6F9B2qPGAVeew2VBRLCN0xJTQvlLaCYP5/yZ04maRc="
+    },
+    {
+      "path": "/_next/static/chunks/app/layout-bcc97ac1ab67aba1.js",
+      "status": 200,
+      "bodyBytes": 15927,
+      "actual": "sha256-99sk8zMEKWSrdoAcVNyP57XDZqJUUQx1T23RqKE9Av8=",
+      "expected": "sha256-99sk8zMEKWSrdoAcVNyP57XDZqJUUQx1T23RqKE9Av8="
+    },
+    {
+      "path": "/_next/static/chunks/app/error-36b815e15165b057.js",
+      "status": 200,
+      "bodyBytes": 3886,
+      "actual": "sha256-qybDba2zk5Se2ghr7we3PyH+wAIFmyozHu6WgOmXbuI=",
+      "expected": "sha256-qybDba2zk5Se2ghr7we3PyH+wAIFmyozHu6WgOmXbuI="
+    },
+    {
+      "path": "/_next/static/chunks/app/page-497c3b22e9f6162c.js",
+      "status": 200,
+      "bodyBytes": 1659,
+      "actual": "sha256-bxl54UujUfc9ya7cYzrwjKvAoMAMfshFu6Te9Z6Dtt4=",
+      "expected": "sha256-bxl54UujUfc9ya7cYzrwjKvAoMAMfshFu6Te9Z6Dtt4="
+    },
+    {
+      "path": "/_next/static/chunks/app/global-error-7d8799b8181abc89.js",
+      "status": 200,
+      "bodyBytes": 4062,
+      "actual": "sha256-zt17LRLDTM3uANUDNNp/yoxMtouloBLlUTIXcuAG288=",
+      "expected": "sha256-zt17LRLDTM3uANUDNNp/yoxMtouloBLlUTIXcuAG288="
+    },
+    {
+      "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "status": 200,
+      "bodyBytes": 112594,
+      "actual": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+      "expected": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM="
+    },
+    {
+      "path": "/_next/static/chunks/webpack-80108613d8ec666b.js",
+      "status": 200,
+      "bodyBytes": 12028,
+      "actual": "sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=",
+      "expected": "sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI="
+    }
+  ],
+  "sriScriptTags": [
+    {
+      "path": "/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js",
+      "integrity": "sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/9826-f01c0143669cade1.js",
+      "integrity": "sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/main-app-bc3195e359f35387.js",
+      "integrity": "sha256-4JwbQMGzlV182aBnXhHG2CpjLRFmE4OQvg5m6GYSZPw=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/5930-0a7517faad12a649.js",
+      "integrity": "sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/9441-5bc7bdd6d4037f75.js",
+      "integrity": "sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/1518-823041558f779953.js",
+      "integrity": "sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/9094-95036afb52c6fa42.js",
+      "integrity": "sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/3981-4aef9ab29528d497.js",
+      "integrity": "sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/249-196155a0e296eca7.js",
+      "integrity": "sha256-C6F9B2qPGAVeew2VBRLCN0xJTQvlLaCYP5/yZ04maRc=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/app/layout-bcc97ac1ab67aba1.js",
+      "integrity": "sha256-99sk8zMEKWSrdoAcVNyP57XDZqJUUQx1T23RqKE9Av8=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/app/error-36b815e15165b057.js",
+      "integrity": "sha256-qybDba2zk5Se2ghr7we3PyH+wAIFmyozHu6WgOmXbuI=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/app/page-497c3b22e9f6162c.js",
+      "integrity": "sha256-bxl54UujUfc9ya7cYzrwjKvAoMAMfshFu6Te9Z6Dtt4=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/app/global-error-7d8799b8181abc89.js",
+      "integrity": "sha256-zt17LRLDTM3uANUDNNp/yoxMtouloBLlUTIXcuAG288=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "integrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+      "noncePresent": true
+    },
+    {
+      "path": "/_next/static/chunks/webpack-80108613d8ec666b.js",
+      "integrity": "sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=",
+      "noncePresent": true
+    }
+  ],
+  "imageCacheObservations": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "image/webp",
+        "x-nextjs-cache": "HIT"
+      },
+      "bodyBytes": 416,
+      "bodySha256": "af07cc460260bbbee901e61cea55e2b65e2dc8424d0955d36cc7a52a8ac0cafd"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "image/webp",
+        "x-nextjs-cache": "HIT"
+      },
+      "bodyBytes": 416,
+      "bodySha256": "af07cc460260bbbee901e61cea55e2b65e2dc8424d0955d36cc7a52a8ac0cafd"
+    }
+  ],
+  "imageCacheErrors": [],
+  "assertions": [],
+  "manifestContext": [
+    {
+      "generatedStaticScriptHashCount": 2,
+      "manifestHashCount": 2,
+      "builtHashesMatch": true
+    }
+  ],
+  "httpOutputTail": [
+    "sri_script_tag={\"path\":\"/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js\",\"integrity\":\"sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js\",\"status\":200,\"bodyBytes\":204075,\"actual\":\"sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=\",\"expected\":\"sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/9826-f01c0143669cade1.js\",\"integrity\":\"sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/9826-f01c0143669cade1.js\",\"status\":200,\"bodyBytes\":245032,\"actual\":\"sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=\",\"expected\":\"sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/main-app-bc3195e359f35387.js\",\"integrity\":\"sha256-4JwbQMGzlV182aBnXhHG2CpjLRFmE4OQvg5m6GYSZPw=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/main-app-bc3195e359f35387.js\",\"status\":200,\"bodyBytes\":4096,\"actual\":\"sha256-4JwbQMGzlV182aBnXhHG2CpjLRFmE4OQvg5m6GYSZPw=\",\"expected\":\"sha256-4JwbQMGzlV182aBnXhHG2CpjLRFmE4OQvg5m6GYSZPw=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/5930-0a7517faad12a649.js\",\"integrity\":\"sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/5930-0a7517faad12a649.js\",\"status\":200,\"bodyBytes\":8020,\"actual\":\"sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=\",\"expected\":\"sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/9441-5bc7bdd6d4037f75.js\",\"integrity\":\"sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/9441-5bc7bdd6d4037f75.js\",\"status\":200,\"bodyBytes\":28641,\"actual\":\"sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=\",\"expected\":\"sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/1518-823041558f779953.js\",\"integrity\":\"sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/1518-823041558f779953.js\",\"status\":200,\"bodyBytes\":8175,\"actual\":\"sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=\",\"expected\":\"sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/9094-95036afb52c6fa42.js\",\"integrity\":\"sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/9094-95036afb52c6fa42.js\",\"status\":200,\"bodyBytes\":33943,\"actual\":\"sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=\",\"expected\":\"sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/3981-4aef9ab29528d497.js\",\"integrity\":\"sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/3981-4aef9ab29528d497.js\",\"status\":200,\"bodyBytes\":15138,\"actual\":\"sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=\",\"expected\":\"sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/249-196155a0e296eca7.js\",\"integrity\":\"sha256-C6F9B2qPGAVeew2VBRLCN0xJTQvlLaCYP5/yZ04maRc=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/249-196155a0e296eca7.js\",\"status\":200,\"bodyBytes\":117844,\"actual\":\"sha256-C6F9B2qPGAVeew2VBRLCN0xJTQvlLaCYP5/yZ04maRc=\",\"expected\":\"sha256-C6F9B2qPGAVeew2VBRLCN0xJTQvlLaCYP5/yZ04maRc=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/app/layout-bcc97ac1ab67aba1.js\",\"integrity\":\"sha256-99sk8zMEKWSrdoAcVNyP57XDZqJUUQx1T23RqKE9Av8=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/app/layout-bcc97ac1ab67aba1.js\",\"status\":200,\"bodyBytes\":15927,\"actual\":\"sha256-99sk8zMEKWSrdoAcVNyP57XDZqJUUQx1T23RqKE9Av8=\",\"expected\":\"sha256-99sk8zMEKWSrdoAcVNyP57XDZqJUUQx1T23RqKE9Av8=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/app/error-36b815e15165b057.js\",\"integrity\":\"sha256-qybDba2zk5Se2ghr7we3PyH+wAIFmyozHu6WgOmXbuI=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/app/error-36b815e15165b057.js\",\"status\":200,\"bodyBytes\":3886,\"actual\":\"sha256-qybDba2zk5Se2ghr7we3PyH+wAIFmyozHu6WgOmXbuI=\",\"expected\":\"sha256-qybDba2zk5Se2ghr7we3PyH+wAIFmyozHu6WgOmXbuI=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/app/page-497c3b22e9f6162c.js\",\"integrity\":\"sha256-bxl54UujUfc9ya7cYzrwjKvAoMAMfshFu6Te9Z6Dtt4=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/app/page-497c3b22e9f6162c.js\",\"status\":200,\"bodyBytes\":1659,\"actual\":\"sha256-bxl54UujUfc9ya7cYzrwjKvAoMAMfshFu6Te9Z6Dtt4=\",\"expected\":\"sha256-bxl54UujUfc9ya7cYzrwjKvAoMAMfshFu6Te9Z6Dtt4=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/app/global-error-7d8799b8181abc89.js\",\"integrity\":\"sha256-zt17LRLDTM3uANUDNNp/yoxMtouloBLlUTIXcuAG288=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/app/global-error-7d8799b8181abc89.js\",\"status\":200,\"bodyBytes\":4062,\"actual\":\"sha256-zt17LRLDTM3uANUDNNp/yoxMtouloBLlUTIXcuAG288=\",\"expected\":\"sha256-zt17LRLDTM3uANUDNNp/yoxMtouloBLlUTIXcuAG288=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/polyfills-42372ed130431b0a.js\",\"integrity\":\"sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/polyfills-42372ed130431b0a.js\",\"status\":200,\"bodyBytes\":112594,\"actual\":\"sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=\",\"expected\":\"sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=\"}",
+    "sri_script_tag={\"path\":\"/_next/static/chunks/webpack-80108613d8ec666b.js\",\"integrity\":\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\",\"noncePresent\":true}",
+    "sri_asset={\"path\":\"/_next/static/chunks/webpack-80108613d8ec666b.js\",\"status\":200,\"bodyBytes\":12028,\"actual\":\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\",\"expected\":\"sha256-8hOXbvFc98Z89xvcd+hAReJ82HifpxuHCcBiDbsrcyI=\"}",
+    "static_csp_hash_count=2",
+    "sri_assets_verified=15",
+    "hostile_forwarded_redirect_origin=https://rehearsal.invalid",
+    "image_cache_body_sha256=af07cc460260bbbee901e61cea55e2b65e2dc8424d0955d36cc7a52a8ac0cafd",
+    "image_cache_status_header=MISS",
+    "sri_check=passed",
+    "HTTP acceptance passed: CSP static manifest parity, nonce hydration, 15 verified SRI assets, security headers, anonymous auth/provider boundaries, cron rejects, and image optimization.",
+    "",
+    ""
+  ],
+  "containerLogs": [
+    "▲ Next.js 16.4.2",
+    "- Local:         http://localhost:3000",
+    "- Network:       http://0.0.0.0:3000",
+    "✓ Ready in 206ms",
+    "✓ Running next.config.ts took 641ms"
+  ]
+}

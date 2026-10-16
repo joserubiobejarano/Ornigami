@@ -1,0 +1,104 @@
+==memory.max==
+805306368
+==memory.swap.max==
+0
+==memory.current==
+161443840
+==memory.peak==
+185360384
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==memory.stat==
+anon 152473600
+file 16384
+kernel 8642560
+kernel_stack 294912
+pagetables 4517888
+sec_pagetables 0
+percpu 2640
+sock 0
+vmalloc 24576
+shmem 4096
+zswap 0
+zswapped 0
+file_mapped 0
+file_dirty 4096
+file_writeback 0
+swapcached 0
+anon_thp 27262976
+file_thp 0
+shmem_thp 0
+inactive_anon 0
+active_anon 152416256
+inactive_file 12288
+active_file 4096
+unevictable 0
+slab_reclaimable 3030448
+slab_unreclaimable 749488
+slab 3779936
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgdemote_kswapd 0
+pgdemote_direct 0
+pgdemote_khugepaged 0
+pgdemote_proactive 0
+pgpromote_success 0
+pgscan 0
+pgsteal 0
+pswpin 0
+pswpout 0
+pgscan_kswapd 0
+pgscan_direct 0
+pgscan_khugepaged 0
+pgscan_proactive 0
+pgsteal_kswapd 0
+pgsteal_direct 0
+pgsteal_khugepaged 0
+pgsteal_proactive 0
+pgfault 106215
+pgmajfault 0
+pgrefill 0
+pgactivate 0
+pgdeactivate 0
+pglazyfree 0
+pglazyfreed 0
+swpin_zero 0
+swpout_zero 0
+zswpin 0
+zswpout 0
+zswpwb 0
+thp_fault_alloc 32
+thp_collapse_alloc 0
+thp_swpout 0
+thp_swpout_fallback 0
+numa_pages_migrated 0
+numa_pte_updates 0
+numa_hint_faults 0
+==memory.pressure==
+some avg10=0.00 avg60=0.00 avg300=0.00 total=0
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+==cpu.max==
+75000 100000
+==cpu.stat==
+usage_usec 2854896
+user_usec 2430466
+system_usec 424430
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 41
+nr_throttled 34
+throttled_usec 2174099
+nr_bursts 0
+burst_usec 0
+==pids.max==
+128

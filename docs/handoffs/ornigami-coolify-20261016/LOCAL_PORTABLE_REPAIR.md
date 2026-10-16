@@ -1,5 +1,7 @@
 # Portable framework and evidence-capture repair — local results
 
+Follow-up: the owner subsequently approved one publication and diagnostic Linux trial. [PORTABLE_LINUX_TRIAL.md](./PORTABLE_LINUX_TRIAL.md) records its separate request, passed functional checks, failed security gates, custody, artifact omissions and supplemental recovery. The local-only statements below describe this earlier checkpoint and do not authorize any further run.
+
 Exact locally committed candidate: **`a069cd4d6232f57c72e1a8d7af2349bb707f0474`**, branch `codex/ornigami-sri-portable-local-20261016`, worktree `.local/framework-prototype/ornigami-app-portable`. It descends from the historical request commit and leaves `.github/build-requests/ornigami.json` unchanged. No push, external runner, registry, VPS, deployment or provider operation was performed. A read-only Vercel check at **21:41:08 UTC** still returned `link: null` and the same production deployment `dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE`. The hold remains; no restoration was attempted. QR staging and shared infrastructure were not changed.
 
 ## Immutable identities

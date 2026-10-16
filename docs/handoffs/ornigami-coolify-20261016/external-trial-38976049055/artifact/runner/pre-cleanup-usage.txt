@@ -1,0 +1,15 @@
+== runner disk before cleanup ==
+Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 75895230464 78982180864      50% /
+
+== Docker storage before cleanup ==
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          9         1         4.018GB   3.769GB (93%)
+Containers      1         1         9.432kB   0B (0%)
+Local Volumes   1         1         5.339GB   0B (0%)
+Build Cache     0         0         0B        0B
+
+== selected runner-temp path sizes (image archive size only; archive content is excluded) ==
+56718649	/home/runner/work/_temp/source
+1936712704	/home/runner/work/_temp/ornigami-image.tar
+1630544025	/home/runner/work/_temp/trivy-cache

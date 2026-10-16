@@ -1,0 +1,250 @@
+{
+  "admission_outcome": "success",
+  "base_gate_outcome": "failure",
+  "base_scan_outcome": "success",
+  "event": "push",
+  "expected_lock_sha256": "060925fca2813f36357b6ce2459485b0367e33be848ffc253977aca96dbbb350",
+  "files": [
+    {
+      "bytes": 108,
+      "path": "README.txt",
+      "sha256": "1edef77d0d42d4c2da5a1790ad2c20dc61bb7126aafd9abea831eed291bbda7b"
+    },
+    {
+      "bytes": 62,
+      "path": "base-advisory-gate.txt",
+      "sha256": "6d5eafa24393b68e6660999b86cb39d0a51071952a2fbf8c008e80cf1064cc99"
+    },
+    {
+      "bytes": 215,
+      "path": "base-image-identity.txt",
+      "sha256": "1d358f7f8dda17dd2cc6267cf99134dc26fcd55713775ecebf3ee33c2b778f87"
+    },
+    {
+      "bytes": 46,
+      "path": "browser/workflow-status.txt",
+      "sha256": "88135b248f2bc6292272f13a572179bf343aa0d624db4a82e11d8a736310eaef"
+    },
+    {
+      "bytes": 35,
+      "path": "build/exit-code.txt",
+      "sha256": "948f9927262af00d5eb26c0d41942d4260cfe2b377ac196b9fa02caa3d08c214"
+    },
+    {
+      "bytes": 16447,
+      "path": "build/stdout.log",
+      "sha256": "2eafb9eaa833bc93cae5f92bd1e69494f01b44e4e20d089d87cdb09d155c7456"
+    },
+    {
+      "bytes": 46,
+      "path": "build/workflow-status.txt",
+      "sha256": "88135b248f2bc6292272f13a572179bf343aa0d624db4a82e11d8a736310eaef"
+    },
+    {
+      "bytes": 361,
+      "path": "framework-browser/cgroup-after.txt",
+      "sha256": "a923b6363758bec62b4b05f6868844b6080844e708427c1c403e7dd8ab3419b8"
+    },
+    {
+      "bytes": 343,
+      "path": "framework-browser/cgroup-before.txt",
+      "sha256": "fbda117cd257d79666f47e079c48d64386ef69ff88aa93e98c43257256a4202b"
+    },
+    {
+      "bytes": 127,
+      "path": "framework-browser/disk-after.txt",
+      "sha256": "6fc5cfd8fefd3853ece84f6c5ecab173ccef55d0ecd12d0a0d3e9b72b5eee437"
+    },
+    {
+      "bytes": 127,
+      "path": "framework-browser/disk-before.txt",
+      "sha256": "f12ff072324503b99a809d207ad2095d0affeaa4692d64e3666a34d6a477e58e"
+    },
+    {
+      "bytes": 2,
+      "path": "framework-browser/exit-code.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 145,
+      "path": "framework-browser/framework-package-sha256.txt",
+      "sha256": "9fc06ec8ec4af26e22e1ad5102949c108edf56235a3c03fb3013760202538181"
+    },
+    {
+      "bytes": 352,
+      "path": "framework-browser/package-portability.json",
+      "sha256": "c6349836abce9b2e881b441a17a780a0b19f4b4d4ef6608dcc35abbe1f776e47"
+    },
+    {
+      "bytes": 46089,
+      "path": "framework-browser/result/regressions.json",
+      "sha256": "4fb2f79fb84c1a1e634e29f1fb55fbf3fe86bf8b74166bdb918c385393870a83"
+    },
+    {
+      "bytes": 951,
+      "path": "framework-browser/result/server.log",
+      "sha256": "c24cdedd43e3a6a96aa3f96f312741b045a51974db641184b7a40aa30fa82350"
+    },
+    {
+      "bytes": 2,
+      "path": "framework-browser/scope-exit-code.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 41,
+      "path": "framework-browser/source-sha.txt",
+      "sha256": "90d01223a0a78db3c7a060b377d8a3de6c45bf1547c23f1cefa98559bd2ea611"
+    },
+    {
+      "bytes": 955,
+      "path": "framework-browser/trial.log",
+      "sha256": "4187874c1649bfcacb6331ec4a72c5ad00bccb0af75cb35ec30d3cd6591ec3e3"
+    },
+    {
+      "bytes": 56,
+      "path": "framework-browser/work-disk.txt",
+      "sha256": "bf9ab3d3980ada5b10bca3a43c99b1a47b39211c55d2942c3dd33ed616ca96f5"
+    },
+    {
+      "bytes": 164,
+      "path": "image-identity.txt",
+      "sha256": "744082a6299830e11134cd977a74b907ef32f67932da955d87977b0aa318b5f3"
+    },
+    {
+      "bytes": 158,
+      "path": "run-identity.txt",
+      "sha256": "b69f281fd74ca657387e0ce9c14c42a8eaa8734d92088ad5699ee53131b449bb"
+    },
+    {
+      "bytes": 368,
+      "path": "runner/builder-after-build.txt",
+      "sha256": "960b619752eaf2f66b8ab81afbc905eaf2a735651b2a00638e05db091681846e"
+    },
+    {
+      "bytes": 346,
+      "path": "runner/builder-before-build.txt",
+      "sha256": "1633a71fcbcfd231170829e45e2704cdff5a7a74945d59fbbed4d84c074e8255"
+    },
+    {
+      "bytes": 17,
+      "path": "runner/builder-before-cleanup-status.txt",
+      "sha256": "bfefd0f84ca5583db8f08277728054c080908472bb3959533b0953e63465d54d"
+    },
+    {
+      "bytes": 368,
+      "path": "runner/builder-before-cleanup.txt",
+      "sha256": "b89baa06bdf64efa4ea3905ff4dc5e69001f95887777189070716945e50dbd6a"
+    },
+    {
+      "bytes": 350,
+      "path": "runner/owned-resources.txt",
+      "sha256": "b2ce8b6c87657c2caa3c3ab334da79934c8e6f1ff10dc35d4f367fbb4a7f6f4a"
+    },
+    {
+      "bytes": 715,
+      "path": "runner/pre-cleanup-usage.txt",
+      "sha256": "088d912d5a7eab5d4f5c1f99ef0c9c848487e5b0e379c2e7c973f55ab832e682"
+    },
+    {
+      "bytes": 376,
+      "path": "runner/resource-assessment.txt",
+      "sha256": "8390ed960bbeb3a48fcf4780332955ddeb3de6c27ab288de47ffeb14344e1aa4"
+    },
+    {
+      "bytes": 39,
+      "path": "runner/resource-exit-code.txt",
+      "sha256": "0833d21e62120403df7b1986e9f2f637c44541cbd17939263dd4e059f6b751c7"
+    },
+    {
+      "bytes": 152,
+      "path": "runtime/container-logs.txt",
+      "sha256": "e2b0fd18131751262ce6d94755bde5c9da715a0fc20f0c9e096ff64d11b77b54"
+    },
+    {
+      "bytes": 180,
+      "path": "runtime/host-disk-after.txt",
+      "sha256": "a5d5f55967496d857abb21527f2f14ff9dfe02de8fa9c2e213d6df27350aa543"
+    },
+    {
+      "bytes": 180,
+      "path": "runtime/host-disk-before.txt",
+      "sha256": "889603056b611954afc93c51e1ed0b6c0472840b369eccd3740879dfe844adcd"
+    },
+    {
+      "bytes": 2668,
+      "path": "runtime/report.txt",
+      "sha256": "b976e8a4dfd500aec67d6551636edcf15795826ab10bd68470c28259d8009c3d"
+    },
+    {
+      "bytes": 291,
+      "path": "runtime/runtime-acceptance.log",
+      "sha256": "13180fc24842c30cab3ee867826800d17690b848311d6fe15db4a61d04148939"
+    },
+    {
+      "bytes": 255,
+      "path": "runtime/runtime-disk.txt",
+      "sha256": "451a4daab913b3651161761ca70127ecdc4ddad56e233f368af521a45dc46d10"
+    },
+    {
+      "bytes": 58,
+      "path": "runtime/runtime-evidence-status.txt",
+      "sha256": "d30d8de6d5d3bf02b5cd105b447b6020d3148e789ece45c328ae66e699c20c61"
+    },
+    {
+      "bytes": 1683,
+      "path": "runtime/runtime-final-cgroup.txt",
+      "sha256": "79e2f0104743679a8736a532b0c4ba9a652f038ccbe321bed89cc9058663c01f"
+    },
+    {
+      "bytes": 52348,
+      "path": "runtime/runtime-http.json",
+      "sha256": "85eaaccb5eaa6566d41e0fe09421591c1cabfcdeaed107bda46553075551d5dc"
+    },
+    {
+      "bytes": 2248,
+      "path": "scans/base-image-candidate.json",
+      "sha256": "2599857889ff5b34e21ccb8ab1e49b46cb6524ca4505ade455fac259d60db9d7"
+    },
+    {
+      "bytes": 983097,
+      "path": "scans/base-trivy.json",
+      "sha256": "1b8c1574cbfedeaab792332cee3a362cc0cb47245f788f2ac1cb24a0b4d325b5"
+    },
+    {
+      "bytes": 16,
+      "path": "scans/trivy-version.txt",
+      "sha256": "caeca6a0f6641907faa757b0975d2edcf05fe6ca9b724a7f86e36fe0626f4441"
+    },
+    {
+      "bytes": 1035590,
+      "path": "scans/trivy.json",
+      "sha256": "04435e52be9badb6b1e7b77a0608dd83cd4c73fbbb27bf93401282ba7bd5b529"
+    },
+    {
+      "bytes": 489,
+      "path": "source-identity.txt",
+      "sha256": "48c12184914d21525e81cc4a19248eb0e0bcf32102d4ba208ba2eb8aa3b725ab"
+    },
+    {
+      "bytes": 0,
+      "path": "step-summary.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "final_scan_outcome": "failure",
+  "framework_browser_exit_code": "0",
+  "framework_browser_outcome": "success",
+  "image_build_exit_code": "0",
+  "image_build_outcome": "success",
+  "ref": "refs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "request_sha": "496b57d147bc2a63182e3489583bb3532d28cfc2",
+  "resource_outcome": "success",
+  "run_attempt": "1",
+  "run_id": "38976049055",
+  "runner_preflight_outcome": "success",
+  "runtime_evidence_status": "collected",
+  "runtime_exit_code": "0",
+  "runtime_outcome": "success",
+  "schema": 1,
+  "source_sha": "a069cd4d6232f57c72e1a8d7af2349bb707f0474"
+}

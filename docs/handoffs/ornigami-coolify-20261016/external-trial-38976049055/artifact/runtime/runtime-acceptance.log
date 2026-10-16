@@ -1,0 +1,2 @@
+Linux runtime acceptance passed for ornigami:rehearsal-a069cd4d6232f57c72e1a8d7af2349bb707f0474. Local image retained; runtime container and cache volume will be removed.
+report=/home/runner/work/_temp/ornigami-runtime-acceptance-a069cd4d6232-aaa8ff9a-003a-4385-b888-7002b2b8f37e/report.txt

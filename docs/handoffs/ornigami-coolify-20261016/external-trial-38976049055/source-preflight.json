@@ -1,0 +1,78 @@
+{
+  "observedAt": "2026-10-16T22:26:28.240Z",
+  "candidate": "a069cd4d6232f57c72e1a8d7af2349bb707f0474",
+  "implementationBranch": "codex/ornigami-sri-portable-local-20261016",
+  "proposedPublicationBranch": "codex/ornigami-sri-local-prototype-f-20261016",
+  "upstream": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "officialPackageSha256": "44ad2c420d30f7d1a8e4c511759c57eb40ccbbc36213a1bf32b1698bcebd3a1d",
+  "upstreamDependencyLockSha256": "69dfbd54a513cdcd94aca9ea0c83f7ba3803518372b90184a7d6a3b7103621c6",
+  "files": [
+    {
+      "path": "scripts/framework-prototype/next-16.4.2-sri.patch",
+      "bytes": 22865,
+      "sha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+      "gitBlob": "09b0e99ec285c1d30bcb9034397ad5ba416615cf"
+    },
+    {
+      "path": "scripts/framework-prototype/build-package.mjs",
+      "bytes": 6446,
+      "sha256": "7137e70a2aa56e59647fe81edba2e7d228b49cc3537caf6b1f445f4a958dd154",
+      "gitBlob": "d52a8acb014b72e83c881289dff0eeaa38b9bb13"
+    },
+    {
+      "path": "scripts/framework-prototype/deterministic-pack.py",
+      "bytes": 1010,
+      "sha256": "8b56157a7bdc6d8364be3918b9a9f74f4a1a15d9d1b0a9affb423d0ffe6b76e9",
+      "gitBlob": "df3798b8ac7c778cfc196427ac08e1773e9e673f"
+    },
+    {
+      "path": "scripts/framework-prototype/check-package-portability.mjs",
+      "bytes": 1441,
+      "sha256": "9902214a1f8aab5a2ad66887f8bf3bb2581ac92dea621e8c5280df0d8a596997",
+      "gitBlob": "cbbded8cfaa9ab9fa2eec9aa96e5b9fb6b345c9d"
+    },
+    {
+      "path": "scripts/framework-prototype/overlay/next-runtime.webpack-config.js.source",
+      "bytes": 14316,
+      "sha256": "8e13c9a5424234455a016fd2155d81c84e68cc29bbe76fa2bd77442963b87526",
+      "gitBlob": "07d8da010c68371f5258f1a9bedc524203fd5a4b"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 495202,
+      "sha256": "060925fca2813f36357b6ce2459485b0367e33be848ffc253977aca96dbbb350",
+      "gitBlob": "acba7ecf1e6d320c94d2d435fbaa2dc5f9030fc7"
+    },
+    {
+      "path": ".github/workflows/ornigami-image-rehearsal.yml",
+      "bytes": 55843,
+      "sha256": "4c222b649853d37b3b64b5a89e11aa97fb5caf1b42a6e075ae03e1fa4e309219",
+      "gitBlob": "e323959ad1edd6f69269b4fd2d568e1aa48f4afe"
+    },
+    {
+      "path": "tests/fixtures/framework-sri/package-lock.json",
+      "bytes": 31037,
+      "sha256": "167c2899986ef54e6e867ea9fd99e33511c99e4241b86dde869126ef1b36e779",
+      "gitBlob": "a8149695f89ce73356e6e4133e963c134ea7c783"
+    },
+    {
+      "path": "scripts/framework-prototype/browser-tools/package-lock.json",
+      "bytes": 1701,
+      "sha256": "f0e06f4053177dddd5c287f28a506d98d50af0625bf36e7c08b7420065534ee5",
+      "gitBlob": "58447d5327a5aff28a5e8a05b131e41cda8cfbcb"
+    },
+    {
+      "path": "vendor/framework/next-16.4.2-ornigami-sri.2.tgz",
+      "bytes": 44857205,
+      "sha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+      "gitBlob": "20dd66b5e924a0e0e16181953f2d4f5aa9bdf846"
+    },
+    {
+      "path": "vendor/build-tools/npm-11.21.1.tgz",
+      "bytes": 3329270,
+      "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+      "gitBlob": "2ef8673d6f721febd81bbadf07a2ee8a2a297dc1"
+    }
+  ],
+  "checks": "Clean exact source, all 11 committed/worktree file identities, exact lock, unchanged request marker, standard runner and reviewed caps passed."
+}

@@ -1,0 +1,4 @@
+Filesystem     1024-blocks     Used Available Capacity Mounted on
+overlay          151263856 72123668  79123804      48% /
+tmpfs                32768        0     32768       0% /tmp
+/dev/root        151263856 72123668  79123804      48% /app/.next/cache
