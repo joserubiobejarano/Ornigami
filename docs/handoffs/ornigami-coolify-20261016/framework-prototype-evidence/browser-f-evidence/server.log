@@ -1,0 +1,27 @@
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:55892
+- Network:       http://127.0.0.1:55892
+✓ Ready in 245ms
+✓ Running next.config.mjs took 34ms
+⨯ Error: Fictional route regression
+    at e (C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\fixture-f\.next\server\app\fail\page.js:1:2327) {
+  digest: '3106359797'
+}
+⨯ Error: Fictional layout regression
+    at f (C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\fixture-f\.next\server\app\slow\page.js:1:2090) {
+  digest: '2165547100'
+}
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:57326
+- Network:       http://127.0.0.1:57326
+✓ Ready in 239ms
+✓ Running next.config.mjs took 37ms
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:57333
+- Network:       http://127.0.0.1:57333
+✓ Ready in 237ms
+✓ Running next.config.mjs took 34ms
+⨯ Error: SRI: enabled production build has no integrity manifest
+    at async Module.Y (C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\fixture-f\.next\server\chunks\644.js:628:40038)
+⨯ Error: SRI: enabled production build has no integrity manifest
+    at async Module.Y (C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\fixture-f\.next\server\chunks\644.js:628:40038)

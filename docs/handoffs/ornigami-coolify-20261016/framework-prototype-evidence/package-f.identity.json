@@ -1,0 +1,20 @@
+{
+  "distribution": "ornigami-sri.1-experiment",
+  "internalVersion": "16.4.2",
+  "upstreamCommit": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "officialPackageSha256": "44ad2c420d30f7d1a8e4c511759c57eb40ccbbc36213a1bf32b1698bcebd3a1d",
+  "upstreamLockSha256": "69dfbd54a513cdcd94aca9ea0c83f7ba3803518372b90184a7d6a3b7103621c6",
+  "patchSha256": "41708142d05f1d6ff1383b090a48c72fce09b69e25a44cd1586b39fa55580db6",
+  "node": "v22.23.3",
+  "platform": "win32",
+  "arch": "x64",
+  "builderSha256": "e9246717eaa49adf970c2c051304f7308fc57fd9185dd01e6f02d18594c4e0fd",
+  "packerSha256": "8b56157a7bdc6d8364be3918b9a9f74f4a1a15d9d1b0a9affb423d0ffe6b76e9",
+  "patchedSourceLineEndings": "LF",
+  "buildMode": "Official verified package seed; source TS server/build outputs and four production App Router bundles rebuilt serially. Unchanged assets and declarations retained.",
+  "adopted": false,
+  "maintenanceOwners": "unassigned",
+  "bytes": 44857165,
+  "sha256": "3ebe019c4b83a48469956f0ca255f03be22272599127c86d87e1e2daa3519a81",
+  "integrity": "sha512-1JZymjORjD/blhNgk+/mzWBJ2G6Ynep/a+iCj+tO43TTmTXaHHZXx0RcCSKVYxSPKaS6wyL/d9yBYYCUyYErpw=="
+}

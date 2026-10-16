@@ -3,7 +3,7 @@ import gzip, io, sys, tarfile
 from pathlib import Path
 source, output = map(Path, sys.argv[1:])
 assert source.is_dir() and not output.exists()
-with output.open('xb') as raw, gzip.GzipFile(filename='', mode='wb', fileobj=raw, mtime=0, compresslevel=9) as gz:
+with output.open('xb') as raw, gzip.GzipFile(filename='', mode='wb', fileobj=raw, mtime=0, compresslevel=6) as gz:
     with tarfile.open(fileobj=gz, mode='w|', format=tarfile.GNU_FORMAT) as archive:
         for p in sorted(source.rglob('*'), key=lambda p:p.relative_to(source).as_posix()):
             assert not p.is_symlink(), f'Unexpected package symlink: {p}'

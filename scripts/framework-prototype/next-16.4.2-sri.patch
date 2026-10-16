@@ -11,10 +11,10 @@ index 23ae2238..083c01b8 100644
    ssrModuleMapping: {
      [moduleId: string]: ManifestNode
 diff --git a/packages/next/src/build/webpack/plugins/subresource-integrity-plugin.ts b/packages/next/src/build/webpack/plugins/subresource-integrity-plugin.ts
-index fb248999..a4745ada 100644
+index fb248999..8c56089f 100644
 --- a/packages/next/src/build/webpack/plugins/subresource-integrity-plugin.ts
 +++ b/packages/next/src/build/webpack/plugins/subresource-integrity-plugin.ts
-@@ -3,68 +3,118 @@ import crypto from 'crypto'
+@@ -3,68 +3,122 @@ import crypto from 'crypto'
  import { SUBRESOURCE_INTEGRITY_MANIFEST } from '../../../shared/lib/constants'
  
  const PLUGIN_NAME = 'SubresourceIntegrityPlugin'
@@ -50,6 +50,9 @@ index fb248999..a4745ada 100644
 +          const table: Record<string, string> = {}
 +          for (const chunk of compilation.chunks) {
 +            if (chunk.hasRuntime() || chunk.id === null) continue
++            // CSS-only split chunks have no JavaScript asset and never invoke
++            // the JSONP script loader. Do not generate unresolvable JS hashes.
++            if (![...(compilation.chunkGraph.getChunkModulesIterableBySourceType(chunk, 'javascript') || [])].length) continue
 +            const length = digest('').length
 +            const placeholder = ('ORNIGAMI_SRI_' + digest(String(chunk.id))).slice(0, length)
 +            placeholders.set(placeholder, chunk)
@@ -62,7 +65,7 @@ index fb248999..a4745ada 100644
 +            `var ornigamiLoad = ${RuntimeGlobals.loadScript};`,
 +            `${RuntimeGlobals.loadScript} = function(url, done, key, chunkId) {`,
 +            `var integrity = ornigamiSri[chunkId];`,
-+            `if (!integrity || !/^sha(?:256|384|512)-[A-Za-z0-9+/]+=*$/.test(integrity)) throw new Error('SRI: missing chunk integrity');`,
++            `if (!integrity || !/^(?:sha256-[A-Za-z0-9+/]{43}=|sha384-[A-Za-z0-9+/]{64}|sha512-[A-Za-z0-9+/]{86}==)$/.test(integrity)) throw new Error('SRI: missing or malformed chunk integrity');`,
 +            `return ornigamiLoad(url, done, key, chunkId);`,
 +            `};`,
 +            `${RuntimeGlobals.require}.ornigamiSri = ornigamiSri;`,
@@ -171,7 +174,8 @@ index fb248999..a4745ada 100644
 +        const hashes: Record<string, string> = {}
 +        for (const asset of compilation.getAssets()) {
 +          if (/\.js$/.test(asset.name) && asset.source.source().toString().includes('ORNIGAMI_SRI_')) {
-+            throw new Error(`SRI: unresolved placeholder in ${asset.name}`)
++            const unresolved = [...placeholders].filter(([placeholder]) => asset.source.source().toString().includes(placeholder)).map(([,chunk]) => ({id:chunk.id, files:[...chunk.files]}))
++            throw new Error(`SRI: unresolved placeholder in ${asset.name}: ${JSON.stringify(unresolved)}`)
 +          }
 +          hashes[asset.name] = digest(asset.source.buffer())
 +        }

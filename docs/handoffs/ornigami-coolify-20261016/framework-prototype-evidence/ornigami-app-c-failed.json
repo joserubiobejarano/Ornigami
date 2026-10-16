@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-16T19:56:16.877Z",
+  "sourceIdentity": {
+    "providedSha": "fc34ec15c25b4787480ec4a2ddbeef5a1b8371bd",
+    "verifiedSha": "fc34ec15c25b4787480ec4a2ddbeef5a1b8371bd",
+    "verified": true,
+    "clean": true,
+    "packageLock": {
+      "committedBlobSha": "2f76caf43a604ad2b0949833293ebe29ca01dee7",
+      "rawSha256": "209033904d832f437b01811f97f37b4d20fc007057002fd388424fed8fefe4d0",
+      "rawMatchesCommittedBlob": true
+    }
+  },
+  "status": "failed",
+  "errors": [
+    "next exited 1."
+  ],
+  "pages": [],
+  "diagnostics": [
+    {
+      "command": "next",
+      "exitStatus": 1,
+      "signal": null,
+      "timedOut": false,
+      "outputTail": "▲ Next.js 16.4.2 (webpack) ✓ Running next.config.ts took 1301ms ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache - Experiments (use with caution):   · clientTraceMetadata   · cpus: 1   · sri   ✓ webpackMemoryOptimizations   Creating an optimized production build ... unhandledRejection Error: SRI: unresolved placeholder in static/chunks/webpack-33c0495eb7fefafa.js     at ignore-listed frames "
+    }
+  ],
+  "sriTotals": {
+    "sameOriginScripts": 0,
+    "externalScriptsSkipped": 0,
+    "missingOrInvalid": 0
+  },
+  "nodeVersion": "v22.23.3",
+  "nodePlatform": "win32",
+  "nodeArchitecture": "x64",
+  "nextVersion": "16.4.2",
+  "finishedAt": "2026-10-16T19:57:01.863Z"
+}

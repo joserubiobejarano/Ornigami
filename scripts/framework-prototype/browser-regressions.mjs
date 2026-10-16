@@ -80,7 +80,7 @@ try {
     assert.equal(new Set(nonces).size,nonces.length,'Nonce must rotate across responses');
     return {routes:report.http.length};
   });
-  const executable = ['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(fs.existsSync);
+  const executable = [process.env.ORNIGAMI_TEST_BROWSER_EXECUTABLE,'C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','/usr/bin/google-chrome','/usr/bin/chromium'].filter(Boolean).find(fs.existsSync);
   assert.ok(executable,'Installed isolated browser required; no external download fallback');
   browser=await chromium.launch({executablePath:executable,headless:true,args:['--disable-background-networking']});
   report.browserVersion=browser.version();
@@ -157,23 +157,26 @@ try {
     assert.equal(scriptIntegrity(undefined,'development.js'),undefined,'Explicit non-SRI mode');
     return {missingEntryRejected:true,malformedEntryRejected:true};
   });
-  await check('browser-missing-chunk-hash-fail-closed-before-request',async()=>{
+  for (const mode of ['missing','malformed']) await check(`browser-${mode}-chunk-hash-fail-closed-before-request`,async()=>{
     const ctx=await context();
     try {
       const page=await ctx.newPage();await page.goto(origin);
-      const dropped=await page.evaluate(()=>{
+      const dropped=await page.evaluate(mode=>{
         let count=0;
         globalThis.webpackChunk_N_E.push([[987654321],{},require=>{
-          for(const key of Object.keys(require.ornigamiSri)){delete require.ornigamiSri[key];count++;}
+          for(const key of Object.keys(require.ornigamiSri)){
+            if (mode==='missing') delete require.ornigamiSri[key]; else require.ornigamiSri[key]='sha256-wrong';
+            count++;
+          }
         }]);
         return count;
-      });
+      },mode);
       assert.ok(dropped>0,'Exercise the actual webpack SRI map');
       let requests=0;
       page.on('request',request=>{if(new URL(request.url()).pathname===lateAsset)requests++;});
       await page.getByRole('button',{name:'Load late chunk'}).click();
       await page.locator('#late-result').filter({hasText:'rejected'}).waitFor();
-      assert.equal(requests,0,'Missing integrity must reject before requesting late script');
+      assert.equal(requests,0,'Missing/malformed integrity must reject before requesting late script');
       assert.equal(await page.evaluate(()=>globalThis.__ORNIGAMI_VALID_LATE__),undefined);
       return {dropped,lateRequests:requests};
     } finally {await ctx.close();}
