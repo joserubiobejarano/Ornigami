@@ -20,7 +20,19 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
+      - name: Initialize evidence bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          evidence_dir="$RUNNER_TEMP/ornigami-evidence"
+          install -d -m 700 "$evidence_dir"
+          printf '%s\n' 'This artifact contains public rehearsal evidence only. It excludes the local image archive and credentials.' > "$evidence_dir/README.txt"
+          printf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \
+            "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"
+          echo "ORNIGAMI_EVIDENCE_DIR=$evidence_dir" >> "$GITHUB_ENV"
+
       - name: Validate inputs and fetch exact public source
+        id: validate_inputs
         shell: bash
         env:
           REQUEST_SHA: ${{ github.event.after }}
@@ -48,6 +60,7 @@ jobs:
           EXPECTED_LOCK_SHA256=$(jq -r '.packageLockSha256' "$RUNNER_TEMP/ornigami-build-request.json")
           echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
           echo "EXPECTED_LOCK_SHA256=$EXPECTED_LOCK_SHA256" >> "$GITHUB_ENV"
+          echo "REQUEST_SHA=$REQUEST_SHA" >> "$GITHUB_ENV"
           git -C "$repo_dir" merge-base --is-ancestor "$SOURCE_SHA" "$REQUEST_SHA"
           source_lock_sha=$(git -C "$repo_dir" show "$SOURCE_SHA:package-lock.json" | sha256sum | cut -d' ' -f1)
           if [[ "$source_lock_sha" != "$EXPECTED_LOCK_SHA256" ]]; then
@@ -78,8 +91,13 @@ jobs:
             printf '%s\n' '- Candidate is an ancestor of the request commit'
             printf '%s\n' '- Checkout: detached exact candidate; clean before build'
           } >> "$GITHUB_STEP_SUMMARY"
+          {
+            printf 'request_sha=%s\nsource_sha=%s\nexpected_lock_sha256=%s\nsource_lock_sha256=%s\ncheckout_lock_sha256=%s\ncandidate_workflow_blob=%s\nrequest_workflow_blob=%s\n' \
+              "$REQUEST_SHA" "$SOURCE_SHA" "$EXPECTED_LOCK_SHA256" "$source_lock_sha" "$checkout_lock_sha" "$candidate_workflow_blob" "$request_workflow_blob"
+          } > "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"
 
       - name: Verify runner and Docker Buildx
+        id: runner_preflight
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -126,18 +144,36 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Scan pinned Node base image and record advisory gate
+        id: base_scan
         shell: bash
         env:
-          BASE_IMAGE: node:22.23.3-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562
+          BASE_IMAGE: node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
         run: |
           set -Eeuo pipefail
+          python3 - "$RUNNER_TEMP/source/Dockerfile" "$RUNNER_TEMP/source/deploy/coolify/base-image-candidate.json" "$BASE_IMAGE" <<'PY'
+          import json, pathlib, re, sys
+          dockerfile, receipt_path = map(pathlib.Path, sys.argv[1:3])
+          base_image = sys.argv[3]
+          text = dockerfile.read_text(encoding="utf-8")
+          external_from = re.compile(r"^FROM\s+--platform=linux/amd64\s+(node:[^\s]+)(?:\s+AS\s+[^\s]+)?\s*$", re.IGNORECASE | re.MULTILINE)
+          refs = set(external_from.findall(text))
+          if refs != {base_image}:
+              raise SystemExit(f"Dockerfile external Node base references differ from pinned scan target: {sorted(refs)}")
+          receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+          candidate, digest = base_image.split("@", 1)
+          if receipt.get("candidate") != candidate or receipt.get("platform") != "linux/amd64" or receipt.get("platformManifestDigest") != digest:
+              raise SystemExit("Pinned base image differs from the machine-readable base image candidate receipt")
+          PY
           export TRIVY_CACHE_DIR="$RUNNER_TEMP/trivy-cache"
           docker pull --platform linux/amd64 "$BASE_IMAGE"
           base_id=$(docker image inspect "$BASE_IMAGE" --format '{{.Id}}')
+          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans"
+          cp -- "$RUNNER_TEMP/source/deploy/coolify/base-image-candidate.json" "$ORNIGAMI_EVIDENCE_DIR/scans/base-image-candidate.json"
+          printf 'base_image=%s\nbase_image_id=%s\nplatform=linux/amd64\n' "$BASE_IMAGE" "$base_id" > "$ORNIGAMI_EVIDENCE_DIR/base-image-identity.txt"
           docker save --output "$RUNNER_TEMP/node-base.tar" "$BASE_IMAGE"
           "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/node-base.tar" \
             --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/base-trivy.json" --no-progress
-          python3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_STEP_SUMMARY" "$base_id" <<'PY'
+          python3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_STEP_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'
           import collections, json, pathlib, sys
           report = json.loads(pathlib.Path(sys.argv[1]).read_text())
           expected_image_id = sys.argv[3]
@@ -177,17 +213,18 @@ jobs:
               raise SystemExit("Base Trivy report has no Debian inventory")
           with open(sys.argv[2], "a", encoding="utf-8") as out:
               out.write("\n### Pinned base image advisory review gate\n\n")
-              out.write("Image: `node:22.23.3-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562`\n\n")
+              out.write(f"Image: `{sys.argv[5]}`\n\n")
               out.write(f"Docker image ID: `{expected_image_id}`\n\n")
               out.write("| Severity | Findings |\n| --- | ---: |\n")
               for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"):
                   out.write(f"| {level} | {counts[level]} |\n")
-              out.write("\nBase findings are recorded for explicit review; this step does not clear the release advisory gate.\n")
+              out.write("\nBase findings are recorded here. The HIGH/CRITICAL acceptance gate runs after runtime, final-image scan, and resource evidence collection.\n")
               if findings:
                   out.write("\n| Severity | Package | Installed | Fixed | Advisory | Primary URL |\n| --- | --- | --- | --- | --- | --- |\n")
                   safe = lambda value: str(value).replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")
                   for severity, package, installed, fixed, advisory, url in sorted(findings):
                       out.write(f"| {safe(severity)} | {safe(package)} | {safe(installed)} | {safe(fixed)} | {safe(advisory)} | {safe(url)} |\n")
+          pathlib.Path(sys.argv[4]).write_text(f"critical_count={counts['CRITICAL']}\nhigh_count={counts['HIGH']}\n", encoding="utf-8")
           PY
           {
             printf '\n### Trivy scanner and vulnerability database metadata\n\n'
@@ -198,6 +235,7 @@ jobs:
           rm -f -- "$RUNNER_TEMP/node-base.tar"
 
       - name: Create bounded serial BuildKit builder
+        id: buildkit
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -206,12 +244,23 @@ jobs:
             echo 'Refusing to reuse an existing builder.' >&2
             exit 1
           fi
+          builder_state_volume="buildx_buildkit_${builder}0_state"
+          if docker volume ls --format '{{.Name}}' | grep -Fxq "$builder_state_volume"; then
+            echo 'Refusing to reuse an existing BuildKit state volume.' >&2
+            exit 1
+          fi
           printf '[worker.oci]\n  max-parallelism = 1\n' > "$RUNNER_TEMP/buildkitd.toml"
           docker buildx create --name "$builder" --driver docker-container \
             --driver-opt 'image=moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea,memory=8g,memory-swap=8g,cpu-quota=300000,cpu-period=100000' \
             --buildkitd-config "$RUNNER_TEMP/buildkitd.toml" --use --bootstrap
-          mapfile -t ids < <(docker ps --filter name=buildx_buildkit_ornigami-external-rehearsal --format '{{.ID}}')
+          mapfile -t ids < <(docker ps --no-trunc --filter "name=^/buildx_buildkit_${builder}0$" --format '{{.ID}}')
           [[ ${#ids[@]} -eq 1 ]]
+          container_name=$(docker inspect "${ids[0]}" --format '{{.Name}}')
+          [[ "$container_name" == "/buildx_buildkit_${builder}0" ]]
+          printf 'builder_name=%s\nbuilder_container_id=%s\n' "$builder" "${ids[0]}" >> "$GITHUB_OUTPUT"
+          state_volume=$(docker inspect "${ids[0]}" --format '{{range .Mounts}}{{if and (eq .Type "volume") (eq .Destination "/var/lib/buildkit")}}{{.Name}}{{end}}{{end}}')
+          [[ "$state_volume" == "$builder_state_volume" && "$state_volume" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]
+          printf 'builder_state_volume=%s\n' "$state_volume" >> "$GITHUB_OUTPUT"
           docker inspect "${ids[0]}" --format 'memory={{.HostConfig.Memory}} memory_swap={{.HostConfig.MemorySwap}} cpu_quota={{.HostConfig.CpuQuota}} cpu_period={{.HostConfig.CpuPeriod}}'
           [[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.Memory}}')" == 8589934592 ]]
           [[ "$(docker inspect "${ids[0]}" --format '{{.HostConfig.MemorySwap}}')" == 8589934592 ]]
@@ -237,6 +286,9 @@ jobs:
       - name: Build local Linux amd64 image
         id: image_build
         shell: bash
+        env:
+          BUILDKIT_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+          BUILDKIT_CONTAINER_NAME: ${{ steps.buildkit.outputs.builder_name }}
         run: |
           set -Eeuo pipefail
           build_start_epoch=$(date +%s)
@@ -263,8 +315,9 @@ jobs:
           echo "build_end_utc=$build_end_utc" >> "$GITHUB_OUTPUT"
           echo "build_seconds=$build_seconds" >> "$GITHUB_OUTPUT"
           echo "build_exit_code=$build_rc" >> "$GITHUB_OUTPUT"
-          builder_id=$(docker ps -q --filter name=buildx_buildkit_ornigami-external-rehearsal | head -n1)
-          if [[ -n "$builder_id" ]]; then
+          builder_id=$(docker inspect "$BUILDKIT_CONTAINER_ID" --format '{{.Id}}' 2>/dev/null || true)
+          builder_name=$(docker inspect "$BUILDKIT_CONTAINER_ID" --format '{{.Name}}' 2>/dev/null || true)
+          if [[ "$builder_id" == "$BUILDKIT_CONTAINER_ID" && "$builder_name" == "/buildx_buildkit_${BUILDKIT_CONTAINER_NAME}0" ]]; then
             capture_rc=0
             docker exec "$builder_id" sh -c '
               for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do
@@ -295,8 +348,12 @@ jobs:
           image_platform=$(docker image inspect "$image" --format '{{.Os}}/{{.Architecture}}')
           image_id=$(docker image inspect "$image" --format '{{.Id}}')
           [[ "$image_revision" == "$SOURCE_SHA" && "$image_platform" == linux/amd64 ]]
-          printf '\n### Local image identity\n\n- Image ID: `%s`\n- Platform: `%s`\n- Source revision label: `%s`\n- Delivery: local runner only; no artifact or image publication\n' \
+          printf 'image_tag=%s\nimage_id=%s\n' "$image" "$image_id" >> "$GITHUB_OUTPUT"
+          printf '\n### Local image identity\n\n- Image ID: `%s`\n- Platform: `%s`\n- Source revision label: `%s`\n- Image delivery: local runner only; no image publication\n' \
             "$image_id" "$image_platform" "$image_revision" >> "$GITHUB_STEP_SUMMARY"
+          {
+            printf 'image_id=%s\nimage_platform=%s\nimage_revision=%s\n' "$image_id" "$image_platform" "$image_revision"
+          } > "$ORNIGAMI_EVIDENCE_DIR/image-identity.txt"
 
       - name: Run disconnected Linux runtime acceptance
         id: runtime_acceptance
@@ -306,10 +363,19 @@ jobs:
           image="ornigami:rehearsal-${SOURCE_SHA}"
           runtime_rc=0
           bash "$RUNNER_TEMP/source/deploy/coolify/linux-runtime-acceptance.sh" "$image" > "$RUNNER_TEMP/runtime-acceptance.log" 2>&1 || runtime_rc=$?
+          printf 'runtime_exit_code=%s\n' "$runtime_rc" >> "$GITHUB_OUTPUT"
           tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/runtime-acceptance.log"
           report_path=$(sed -n 's/^report=//p' "$RUNNER_TEMP/runtime-acceptance.log" | tail -n1)
           if [[ -n "$report_path" && -f "$report_path" ]]; then
             report_dir=$(dirname "$report_path")
+            report_real=$(realpath -e "$report_dir")
+            runner_real=$(realpath -e "$RUNNER_TEMP")
+            [[ "$report_real" == "$runner_real"/ornigami-runtime-acceptance-* ]]
+            mkdir -p "$ORNIGAMI_EVIDENCE_DIR/runtime"
+            for evidence_file in report.txt runtime-http.json failure.json failure-evidence.txt container-logs.txt runtime-final-cgroup.txt runtime-container-cgroup.txt runtime-*-cgroup.txt runtime-disk.txt host-disk-before.txt host-disk-after.txt; do
+              [[ -f "$report_dir/$evidence_file" ]] || continue
+              cp -- "$report_dir/$evidence_file" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
+            done
             {
               printf '\n### Runtime acceptance receipt\n\n'
               printf '%s\n' '```text'
@@ -327,6 +393,7 @@ jobs:
           exit "$runtime_rc"
 
       - name: Scan local image archive for OS and language vulnerabilities
+        id: final_scan
         if: ${{ always() && steps.image_build.outcome == 'success' && steps.image_build.outputs.build_exit_code != '' && steps.image_build.outputs.build_exit_code == '0' }}
         shell: bash
         run: |
@@ -412,6 +479,7 @@ jobs:
           PY
 
       - name: Reject build-time OOM or invalid cgroup counters
+        id: build_resources
         if: ${{ always() && steps.image_build.outcome == 'success' && steps.image_build.outputs.build_exit_code != '' && steps.image_build.outputs.build_exit_code == '0' }}
         shell: bash
         run: |
@@ -481,9 +549,145 @@ jobs:
               raise SystemExit("Builder recorded a build-time OOM event; resource acceptance failed")
           PY
 
-      - name: Remove temporary builder and local image
+      - name: Enforce pinned base image advisory threshold
+        id: base_advisory_gate
+        if: ${{ always() && steps.base_scan.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          critical='${{ steps.base_scan.outputs.critical_count }}'
+          high='${{ steps.base_scan.outputs.high_count }}'
+          [[ "$critical" =~ ^[0-9]+$ && "$high" =~ ^[0-9]+$ ]]
+          printf 'Base scan gate: CRITICAL=%s HIGH=%s (threshold: zero for both)\n' "$critical" "$high" | tee "$ORNIGAMI_EVIDENCE_DIR/base-advisory-gate.txt" >> "$GITHUB_STEP_SUMMARY"
+          [[ "$critical" == 0 && "$high" == 0 ]]
+
+      - name: Capture evidence bundle before cleanup
+        id: evidence_capture
         if: always()
         shell: bash
+        env:
+          ADMISSION_OUTCOME: ${{ steps.validate_inputs.outcome }}
+          RUNNER_PREFLIGHT_OUTCOME: ${{ steps.runner_preflight.outcome }}
+          BASE_SCAN_OUTCOME: ${{ steps.base_scan.outcome }}
+          IMAGE_BUILD_OUTCOME: ${{ steps.image_build.outcome }}
+          IMAGE_BUILD_EXIT_CODE: ${{ steps.image_build.outputs.build_exit_code }}
+          RUNTIME_OUTCOME: ${{ steps.runtime_acceptance.outcome }}
+          RUNTIME_EXIT_CODE: ${{ steps.runtime_acceptance.outputs.runtime_exit_code }}
+          FINAL_SCAN_OUTCOME: ${{ steps.final_scan.outcome }}
+          RESOURCE_OUTCOME: ${{ steps.build_resources.outcome }}
+          BASE_GATE_OUTCOME: ${{ steps.base_advisory_gate.outcome }}
+          OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
+          OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+          OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
+          OWNED_IMAGE_TAG: ${{ steps.image_build.outputs.image_tag }}
+          OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner"
+          printf 'builder_name=%s\nbuilder_container_id=%s\nbuilder_state_volume=%s\nimage_tag=%s\nimage_id=%s\n' \
+            "$OWNED_BUILDER_NAME" "$OWNED_BUILDER_CONTAINER_ID" "$OWNED_BUILDER_STATE_VOLUME" "$OWNED_IMAGE_TAG" "$OWNED_IMAGE_ID" \
+            > "$ORNIGAMI_EVIDENCE_DIR/runner/owned-resources.txt"
+          runtime_evidence_missing=0
+          for file in base-trivy.json trivy.json; do
+            [[ -f "$RUNNER_TEMP/$file" ]] && cp -- "$RUNNER_TEMP/$file" "$ORNIGAMI_EVIDENCE_DIR/scans/$file"
+          done
+          for file in builder-before-build.txt builder-after-build.txt builder-final.txt; do
+            [[ -f "$RUNNER_TEMP/$file" ]] && cp -- "$RUNNER_TEMP/$file" "$ORNIGAMI_EVIDENCE_DIR/runner/$file"
+          done
+          if [[ -n "$OWNED_BUILDER_CONTAINER_ID" ]]; then
+            current_builder_id=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Id}}' 2>/dev/null || true)
+            current_builder_name=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Name}}' 2>/dev/null || true)
+            if [[ "$current_builder_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$current_builder_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then
+              if docker exec "$OWNED_BUILDER_CONTAINER_ID" sh -c 'for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do printf "==%s==\\n" "$path"; cat "/sys/fs/cgroup/$path"; done' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup.txt" 2>&1; then
+                printf '%s\n' 'status=collected' >> "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"
+              else
+                printf '%s\n' 'status=unavailable' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"
+              fi
+            else
+              printf '%s\n' 'status=owned-builder-container-not-present' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"
+            fi
+          else
+            printf '%s\n' 'status=builder-not-created-or-id-unavailable' > "$ORNIGAMI_EVIDENCE_DIR/runner/builder-before-cleanup-status.txt"
+          fi
+          [[ -f "$RUNNER_TEMP/runtime-acceptance.log" ]] && cp -- "$RUNNER_TEMP/runtime-acceptance.log" "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-acceptance.log"
+          if [[ "$RUNTIME_OUTCOME" != skipped ]]; then
+            if [[ ! -s "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-http.json" ]]; then
+              printf 'status=missing\nruntime_step_outcome=%s\nexit_code=%s\n' "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"
+              runtime_evidence_missing=1
+            else
+              printf 'status=collected\nruntime_step_outcome=%s\nexit_code=%s\n' "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"
+            fi
+          else
+            printf 'status=not-run\nruntime_step_outcome=skipped\n' > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"
+          fi
+          if [[ -x "$RUNNER_TEMP/trivy" ]]; then
+            "$RUNNER_TEMP/trivy" --version > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt" 2>&1 || printf '%s\n' 'Trivy version metadata unavailable.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"
+          else
+            printf '%s\n' 'Trivy was unavailable before artifact capture.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"
+          fi
+          {
+            printf '== runner disk before cleanup ==\n'
+            if ! df -PB1 "$RUNNER_TEMP"; then printf '%s\n' 'disk usage unavailable'; fi
+            printf '\n== Docker storage before cleanup ==\n'
+            if ! timeout 15s docker system df; then printf '%s\n' 'Docker storage report unavailable or timed out'; fi
+            printf '\n== selected runner-temp path sizes (image archive size only; archive content is excluded) ==\n'
+            for path in "$RUNNER_TEMP/source" "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/trivy-cache" "$RUNNER_TEMP/trivy.db" "$RUNNER_TEMP/java-db"; do
+              [[ -e "$path" ]] || continue
+              if ! timeout 15s du -sb "$path"; then printf 'size unavailable: %s\n' "$(basename "$path")"; fi
+            done
+          } > "$ORNIGAMI_EVIDENCE_DIR/runner/pre-cleanup-usage.txt" 2>&1
+          cp -- "$GITHUB_STEP_SUMMARY" "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
+          python3 - "$ORNIGAMI_EVIDENCE_DIR" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" "${SOURCE_SHA:-}" "${EXPECTED_LOCK_SHA256:-}" "$ADMISSION_OUTCOME" "$RUNNER_PREFLIGHT_OUTCOME" "$BASE_SCAN_OUTCOME" "$IMAGE_BUILD_OUTCOME" "$IMAGE_BUILD_EXIT_CODE" "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" "$FINAL_SCAN_OUTCOME" "$RESOURCE_OUTCOME" "$BASE_GATE_OUTCOME" <<'PY'
+          import hashlib, json, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          names = ("run_id", "run_attempt", "request_sha", "ref", "event", "source_sha", "expected_lock_sha256", "admission_outcome", "runner_preflight_outcome", "base_scan_outcome", "image_build_outcome", "image_build_exit_code", "runtime_outcome", "runtime_exit_code", "final_scan_outcome", "resource_outcome", "base_gate_outcome")
+          metadata = dict(zip(names, sys.argv[2:]))
+          metadata["runtime_evidence_status"] = (root / "runtime/runtime-evidence-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
+          files = []
+          for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):
+              files.append({"path": path.relative_to(root).as_posix(), "bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+          (root / "manifest.json").write_text(json.dumps({"schema": 1, **metadata, "files": files}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+          if [[ "$runtime_evidence_missing" -eq 1 ]]; then
+            printf '%s\n' 'Runtime acceptance ran but its structured sanitized HTTP evidence was missing; evidence collection failed.' >&2
+            exit 1
+          fi
+
+      - name: Upload rehearsal evidence
+        id: evidence_upload
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ornigami-rehearsal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ornigami-evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Report downloadable evidence
+        if: always()
+        shell: bash
+        env:
+          EVIDENCE_URL: ${{ steps.evidence_upload.outputs.artifact-url }}
+          UPLOAD_OUTCOME: ${{ steps.evidence_upload.outcome }}
+        run: |
+          {
+            printf '\n### Downloadable evidence bundle\n\n'
+            printf '%s\n' "- Upload status: ${UPLOAD_OUTCOME:-unavailable}"
+            if [[ -n "${EVIDENCE_URL:-}" ]]; then printf '%s\n' "- Artifact: ${EVIDENCE_URL}"; fi
+            printf '%s\n' '- Retention requested: 30 days (subject to repository policy)'
+            printf '%s\n' '- The local image archive is excluded; scan JSON and sanitized runtime/resource receipts are retained when produced.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary builder and local image
+        id: cleanup
+        if: always()
+        shell: bash
+        env:
+          OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
+          OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+          OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
+          OWNED_IMAGE_TAG: ${{ steps.image_build.outputs.image_tag }}
+          OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
         run: |
           set +e
           {
@@ -497,9 +701,14 @@ jobs:
             done
             printf '%s\n' '```'
           } >> "$GITHUB_STEP_SUMMARY" 2>&1
-          builder_id=$(docker ps -aq --filter name=buildx_buildkit_ornigami-external-rehearsal | head -n1)
-          if [[ -n "$builder_id" ]] && [[ "$(docker inspect "$builder_id" --format '{{.State.Running}}' 2>/dev/null)" == true ]]; then
-            docker exec "$builder_id" sh -c '
+          builder_actual_id=''
+          builder_actual_name=''
+          if [[ -n "$OWNED_BUILDER_CONTAINER_ID" ]]; then
+            builder_actual_id=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Id}}' 2>/dev/null || true)
+            builder_actual_name=$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.Name}}' 2>/dev/null || true)
+          fi
+          if [[ -n "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" && "$(docker inspect "$OWNED_BUILDER_CONTAINER_ID" --format '{{.State.Running}}' 2>/dev/null)" == true ]]; then
+            docker exec "$OWNED_BUILDER_CONTAINER_ID" sh -c '
               for path in memory.max memory.swap.max memory.peak memory.events cpu.max cpu.stat; do
                 printf "==%s==\\n" "$path"
                 cat "/sys/fs/cgroup/$path"
@@ -514,10 +723,26 @@ jobs:
               } >> "$GITHUB_STEP_SUMMARY"
             fi
           else
-            printf '\n### Final builder cgroup counters\n\n- Unavailable: no running temporary builder remained for capture.\n' >> "$GITHUB_STEP_SUMMARY"
+            printf '\n### Final builder cgroup counters\n\n- Unavailable: the exact BuildKit container created by this run was not present and running for capture.\n' >> "$GITHUB_STEP_SUMMARY"
           fi
-          docker buildx rm ornigami-external-rehearsal >/dev/null 2>&1 || true
-          docker image rm "ornigami:rehearsal-${SOURCE_SHA}" >/dev/null 2>&1 || true
+          if [[ -n "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then
+            docker rm -f "$OWNED_BUILDER_CONTAINER_ID" >/dev/null 2>&1 || true
+          fi
+          if [[ -n "$OWNED_BUILDER_STATE_VOLUME" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then
+            state_volume=$(docker volume inspect "$OWNED_BUILDER_STATE_VOLUME" --format '{{.Name}}' 2>/dev/null || true)
+            volume_users=$(docker ps -aq --filter "volume=$OWNED_BUILDER_STATE_VOLUME" --no-trunc 2>/dev/null || true)
+            if [[ "$state_volume" == "$OWNED_BUILDER_STATE_VOLUME" && -z "$volume_users" ]]; then
+              docker volume rm "$OWNED_BUILDER_STATE_VOLUME" >/dev/null 2>&1 || true
+            else
+              printf 'Preserved BuildKit state volume %s because it was unavailable or still attached.\n' "$OWNED_BUILDER_STATE_VOLUME" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          if [[ -n "$OWNED_IMAGE_TAG" && -n "$OWNED_IMAGE_ID" ]]; then
+            current_image_id=$(docker image inspect "$OWNED_IMAGE_TAG" --format '{{.Id}}' 2>/dev/null || true)
+            if [[ "$current_image_id" == "$OWNED_IMAGE_ID" ]]; then
+              docker image rm "$OWNED_IMAGE_TAG" >/dev/null 2>&1 || true
+            fi
+          fi
           rm -f -- "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/node-base.tar" "$RUNNER_TEMP/trivy.json"
           {
             printf '\n### Disk after cleanup\n\n'

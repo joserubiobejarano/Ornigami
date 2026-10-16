@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "verifiedAtUtc": "2026-10-16T17:53:04.677149+00:00",
+  "scope": "Local preparation verification; fake Docker only. Not Linux image/runtime/release acceptance.",
+  "parentSha": "d050183d898fa4cd9d436344403c9aa9ac98a63f",
+  "canonicalCommittedLockSha256": "b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1",
+  "tests": {
+    "command": "node --test tests/coolify-rehearsal-workflow.test.mjs tests/coolify-runtime-acceptance.test.mjs",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "focusedEslint": "passed; both new test files, no diagnostics",
+  "syntax": {
+    "workflowYaml": "passed",
+    "workflowBashRunBlocks": 14,
+    "workflowPythonAstBlocks": 5,
+    "runtimeBash": "passed",
+    "runtimePythonAstBlocks": 5,
+    "runtimeNodeHeredocBlocks": 1
+  },
+  "originalRuntimeAssertLinesRetained": 32,
+  "priorEvidenceUnchanged": true,
+  "requestAndApplicationManifestsUnchanged": true,
+  "baseCandidate": "registry/layer inventory verified; no candidate image built or scanned",
+  "localExistingBuildHttpProbe": "failed SRI; later negative checks passed; Windows and exact build provenance unverified",
+  "realDockerLifecycle": "untested",
+  "githubArtifactUpload": "untested",
+  "linuxCandidateBuildScanRuntime": "untested",
+  "externalTrialsStarted": 0,
+  "branchPushed": false,
+  "ghcrPublication": false,
+  "contaboTouched": false,
+  "deploymentProviderCronLiveReleaseGates": "closed",
+  "artifacts": {
+    "local-runtime-probe.json": {
+      "bytes": 1964,
+      "sha256": "4add063f18943d4d7e9f8679191ceaf7dd2eec8ceed1afd39ccaab73be003948"
+    }
+  }
+}

@@ -1,5 +1,8 @@
 # Coolify preparation — 16 October 2026
 
+Current local repair: [candidate advisory disposition and proposed next trial](../../docs/handoffs/ornigami-coolify-20261016/CANDIDATE_REPAIR.md). This candidate has not been built or scanned. The former bookworm image compiled successfully externally but failed vulnerability and HTTP/security acceptance; restart/persistence remains open. The accepted external build envelope is 8 GiB/3 CPU, 4096 MiB heap with source maps retained; no new trial is authorized. The earlier shared-host build procedure below is historical and must not be rerun.
+
+
 The [external build approval packet](../../docs/handoffs/ornigami-coolify-20261016/RUN_APPROVAL.md) describes the preparation-branch-only Linux image workflow. Installing it in Git does not grant deployment, scheduler, provider or GHCR publication permission.
 
 This profile replaces the installation steps in the [VPS reference](../vps/README.md) for the existing shared Contabo host. Its runtime, permission, retention, lease, schema and recovery contracts remain binding. This is preparation, not permission to deploy, enable autodeploy, register providers or open public traffic. See the [task handoff](../../docs/handoffs/ornigami-coolify-20261016/HANDOFF.md) for dated evidence and unresolved gates.

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "scope": "Windows local production build only; not Linux/container evidence",
+  "checkoutHeadAtProbe": "d050183d898fa4cd9d436344403c9aa9ac98a63f",
+  "buildSourceProvenance": "existing Windows .next; exact source SHA unverified",
+  "workingCopyLockSha256": "5eff2b421d8becc7d24b79b9af9265cb655014c56e36873c8400b2a2c1c5ed47",
+  "canonicalCommittedLockSha256": "b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1",
+  "nextBuildId": "qKkJzdmzDFeBhu564Fdra",
+  "origin": "https://rehearsal.invalid",
+  "secrets": "synthetic only; provider/cron flags false",
+  "probe": "Full extracted cold HTTP Node block from deploy/coolify/linux-runtime-acceptance.sh; only local host/port and .next paths adjusted",
+  "result": "failed at first full-page script SRI assertion after continuing remaining checks",
+  "firstFailure": "script /_next/static/chunks/5930-0a7517faad12a649.js lacks SHA-256 SRI",
+  "checks": {
+    "robots": "200",
+    "anonymousDashboard": "307 to fictional login",
+    "sri": "3 preceding script assets matched; 0 remaining verified because first following script lacks integrity",
+    "openGraph": "200 image/png",
+    "anonymousSession": "200 null",
+    "staticCspManifest": "generatedStaticScriptHashCount=2; manifestHashCount=2; builtHashesMatch=true",
+    "privacyDeletion": "503",
+    "googleOAuthStart": "307 to login",
+    "cronMissingAndWrongTokens": "401 for all four routes",
+    "optimizedImage": "200 image/webp; MISS; body SHA  af07cc460260bbbee901e61cea55e2b65e2dc8424d0955d36cc7a52a8ac0cafd",
+    "home": "200 with CSP/nonce; 14 inline nonce scripts",
+    "openaiNegative": "403",
+    "hostileForwardedDashboard": "307; hostile forwarded origin ignored",
+    "login": "200",
+    "stripeCheckout": "307 to login"
+  },
+  "externalNetwork": "No external URLs requested; app accessed at localhost only",
+  "restartCache": "Not exercised in this local HTTP-block probe"
+}
