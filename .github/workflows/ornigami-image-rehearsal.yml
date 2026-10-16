@@ -49,6 +49,12 @@ jobs:
           echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
           echo "EXPECTED_LOCK_SHA256=$EXPECTED_LOCK_SHA256" >> "$GITHUB_ENV"
           git -C "$repo_dir" merge-base --is-ancestor "$SOURCE_SHA" "$REQUEST_SHA"
+          source_lock_sha=$(git -C "$repo_dir" show "$SOURCE_SHA:package-lock.json" | sha256sum | cut -d' ' -f1)
+          if [[ "$source_lock_sha" != "$EXPECTED_LOCK_SHA256" ]]; then
+            printf 'Build request package-lock SHA-256 mismatch: request=%s candidate_git_blob=%s. Refusing to build.\n' \
+              "$EXPECTED_LOCK_SHA256" "$source_lock_sha" >&2
+            exit 1
+          fi
           candidate_workflow_blob=$(git -C "$repo_dir" rev-parse "$SOURCE_SHA:.github/workflows/ornigami-image-rehearsal.yml")
           request_workflow_blob=$(git -C "$repo_dir" rev-parse "$REQUEST_SHA:.github/workflows/ornigami-image-rehearsal.yml")
           [[ "$candidate_workflow_blob" == "$request_workflow_blob" ]]
@@ -59,13 +65,14 @@ jobs:
           for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh; do
             [[ -f "$RUNNER_TEMP/source/$required" ]]
           done
-          actual_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
-          [[ "$actual_lock_sha" == "$EXPECTED_LOCK_SHA256" ]]
+          checkout_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
+          [[ "$checkout_lock_sha" == "$source_lock_sha" ]]
           {
             printf '%s\n' '### Build request admission'
             printf '%s\n' "- Request commit: \`$REQUEST_SHA\`"
             printf '%s\n' "- Commit: \`$actual_sha\`"
-            printf '%s\n' "- package-lock.json SHA-256: \`$actual_lock_sha\`"
+            printf '%s\n' "- Committed package-lock.json SHA-256: \`$source_lock_sha\`"
+            printf '%s\n' "- Detached checkout package-lock.json SHA-256: \`$checkout_lock_sha\`"
             printf '%s\n' '- Request marker: exact source and lock fields; only marker changed in single-parent request commit'
             printf '%s\n' '- Workflow blob: identical at candidate and request commits'
             printf '%s\n' '- Candidate is an ancestor of the request commit'
@@ -320,7 +327,7 @@ jobs:
           exit "$runtime_rc"
 
       - name: Scan local image archive for OS and language vulnerabilities
-        if: ${{ always() && steps.image_build.outputs.build_exit_code == '0' }}
+        if: ${{ always() && steps.image_build.outcome == 'success' && steps.image_build.outputs.build_exit_code != '' && steps.image_build.outputs.build_exit_code == '0' }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -405,7 +412,7 @@ jobs:
           PY
 
       - name: Reject build-time OOM or invalid cgroup counters
-        if: ${{ always() && steps.image_build.outputs.build_exit_code == '0' }}
+        if: ${{ always() && steps.image_build.outcome == 'success' && steps.image_build.outputs.build_exit_code != '' && steps.image_build.outputs.build_exit_code == '0' }}
         shell: bash
         run: |
           set -Eeuo pipefail
