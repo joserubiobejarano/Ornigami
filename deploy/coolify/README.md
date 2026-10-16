@@ -1,6 +1,6 @@
 # Coolify preparation — 16 October 2026
 
-Current local repair: [candidate advisory disposition and proposed next trial](../../docs/handoffs/ornigami-coolify-20261016/CANDIDATE_REPAIR.md). This candidate has not been built or scanned. The former bookworm image compiled successfully externally but failed vulnerability and HTTP/security acceptance; restart/persistence remains open. The accepted external build envelope is 8 GiB/3 CPU, 4096 MiB heap with source maps retained; no new trial is authorized. The earlier shared-host build procedure below is historical and must not be rerun.
+Current local result: [fresh exact-source SRI investigation and framework alternative](../../docs/handoffs/ornigami-coolify-20261016/SRI_FRAMEWORK_REVIEW.md), with [advisory disposition](../../docs/handoffs/ornigami-coolify-20261016/CANDIDATE_REPAIR.md). Fresh Windows Node 22 compilation passes but mandatory SRI fails; no new Linux image build or scan has run. The framework alternative requires review, and real restart/persistence remains open. The accepted external build envelope is 8 GiB/3 CPU, 4096 MiB heap with source maps retained; no new trial is authorized. The earlier shared-host build procedure below is historical and must not be rerun.
 
 
 The [external build approval packet](../../docs/handoffs/ornigami-coolify-20261016/RUN_APPROVAL.md) describes the preparation-branch-only Linux image workflow. Installing it in Git does not grant deployment, scheduler, provider or GHCR publication permission.

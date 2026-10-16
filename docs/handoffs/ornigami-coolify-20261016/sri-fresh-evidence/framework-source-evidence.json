@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUtc": "2026-10-16T18:05:03.334384+00:00",
+  "sourceSha": "193a795de330a2cfef47a45571c29cbe3c0c8b69",
+  "nextVersion": "16.4.1",
+  "files": {
+    "node_modules/next/dist/server/route-modules/app-page/module.compiled.js": {
+      "bytes": 1609,
+      "sha256": "3b55f56f8c70bbadffdacea23a1c19689c3889bab7e78da6c8121ada787bfe99"
+    },
+    "node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js": {
+      "bytes": 705797,
+      "sha256": "76557c74ce6f2e8a592ef8c0810c58b8563f1e8b6e86aa71ca933eafc87902a4"
+    },
+    "node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js.map": {
+      "bytes": 4223939,
+      "sha256": "c34b379c5e72c4651a2670ae959db13ae220b9abbba0ceb6513c493b4bc88786"
+    },
+    "node_modules/next/dist/server/app-render/get-layer-assets.js": {
+      "bytes": 3263,
+      "sha256": "beb0062aed54c7e9428a50ae4c20dff6404f9b0e9c9e98a23c5a00036b0ee3a5"
+    },
+    "node_modules/next/dist/server/app-render/create-component-styles-and-scripts.js": {
+      "bytes": 1600,
+      "sha256": "61bcc7f0fa7697cb026fd2ee016266d2cc19e68dfb276a06b87e6c2d415d52d5"
+    },
+    "node_modules/next/dist/server/app-render/required-scripts.js": {
+      "bytes": 2709,
+      "sha256": "9a97c7eb8d21f4df449b174bb502556c8fa5e79315c6a9f10ec165d9608523f9"
+    },
+    "node_modules/next/dist/build/webpack/plugins/subresource-integrity-plugin.js": {
+      "bytes": 2443,
+      "sha256": "260ccce40de09f1a76f126327db2af04bc735f708c34c7282a53e16ac94b232b"
+    },
+    "node_modules/next/dist/client/route-loader.js": {
+      "bytes": 12383,
+      "sha256": "a8f86fd77cd73f01225f3269db9ca3940a0161c3b2a0952de77a87c29ba37741"
+    },
+    "node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md": {
+      "bytes": 21130,
+      "sha256": "c5de325cbd9f711cd7fac87e36781c132c7b86def73aab7516c3e107b0ed21e8"
+    }
+  },
+  "latestStableReviewed": {
+    "version": "16.4.2",
+    "tagCommit": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+    "layerSource": "https://raw.githubusercontent.com/vercel/next.js/v16.4.2/packages/next/src/server/app-render/get-layer-assets.tsx",
+    "boundarySource": "https://raw.githubusercontent.com/vercel/next.js/v16.4.2/packages/next/src/server/app-render/create-component-styles-and-scripts.tsx",
+    "observation": "Both source emitters omit integrity; upgrading alone is not a demonstrated fix."
+  },
+  "productionObservation": "Node production App Router selects a precompiled runtime; standalone dist source edits are insufficient. Its embedded component emitter omits integrity.",
+  "vulnerabilityDisposition": "No candidate image finding confirmed resolved; Trixie and manager removal unscanned."
+}

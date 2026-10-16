@@ -1,0 +1,11 @@
+{
+  "startUtc": "2026-10-16T18:01:30.159459+00:00",
+  "endUtc": "2026-10-16T18:01:32.159920+00:00",
+  "elapsedSeconds": 2.0,
+  "exitCode": 1,
+  "canonicalLockSha256": "b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1",
+  "installSourceSha": "be8b16d133bffc3c0be32590afac0f9049459030",
+  "nodeVersion": "v22.23.3",
+  "nodeArchiveSha256": "2b0ff57b049cda1bbcea2240eec20467018713c1efe1f7360c2681859b90ed71",
+  "environment": "whitelist only; empty npm user/global config; task cache; no app credentials"
+}

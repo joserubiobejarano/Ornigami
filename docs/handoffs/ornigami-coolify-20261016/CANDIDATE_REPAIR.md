@@ -1,5 +1,7 @@
 # Local candidate repair — no new trial authorized
 
+Follow-up: [fresh exact-source build and framework decision](./SRI_FRAMEWORK_REVIEW.md) supersedes the proposed trial below. Candidate `193a795de330a2cfef47a45571c29cbe3c0c8b69` compiles locally on verified Node 22 but still fails mandatory SRI. The framework alternative needs review; another external trial is not approved. The historical receipts and advisory table below remain unchanged.
+
 This preparation follows the [failed runtime/advisory acceptance trial](./REPAIRED_TRIAL.md). Successful compilation of `a0f319c39a3bbc315e8e2a0d8ca4f854c7438838` remains historical evidence, not acceptance of this repaired candidate. No external run, branch push, GHCR publication, Contabo command, deployment, cron or provider operation is part of this repair. Previous evidence directories remain unchanged.
 
 Committed build candidate: **`27a81c30bc1f38464eea826fed4ff7e2da0744dd`** on `codex/ornigami-coolify-preparation-20261016`. Canonical lock SHA-256: `b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1`. Workflow blob: `6641e7b643337981f290764c1d522257e1797ba2`. The follow-up documentation commit records this identity without changing build inputs, workflow or the request file. Neither commit is pushed.

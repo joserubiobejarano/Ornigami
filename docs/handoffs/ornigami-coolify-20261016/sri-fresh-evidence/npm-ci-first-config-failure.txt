@@ -1,0 +1,3 @@
+Exit prior to config file resolving
+cause
+double-loading config "C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\sri-fresh-preparation\empty-npm-config" as "global", previously loaded as "user"

@@ -1,6 +1,6 @@
 # Ornigami Coolify preparation — 16 October 2026
 
-Current local preparation: [base-image and acceptance-harness repair](./CANDIDATE_REPAIR.md) is prepared for review after the failed trial below. No further trial or publication is authorized; prior evidence remains unchanged. The repair report distinguishes source changes, local verification and the proposed next Linux acceptance trial.
+Current local result: [fresh exact-source SRI investigation and framework alternative](./SRI_FRAMEWORK_REVIEW.md). Candidate `193a795de330a2cfef47a45571c29cbe3c0c8b69` compiles in a fresh Windows Node 22 checkout but fails mandatory SRI on 21 script-tag occurrences. The stock framework limitation and a concrete maintained-framework alternative are documented for review. No security assertion is removed, no external trial is approved, and Trixie/package-manager-removal remediation remains unverified without fresh scans. Previous evidence and the diagnostic retention/restart/cache contract remain unchanged.
 
 
 Latest result: [the repaired external trial built successfully but failed acceptance](./REPAIRED_TRIAL.md). Source `a0f319c39a3bbc315e8e2a0d8ca4f854c7438838` built within 8 GiB/3 CPU, peaking at 7.572 GiB with zero OOM events. Both scans found 4 critical and 71 high findings. The cold HTTP/security block failed without retained assertion diagnostics; restart/cache persistence is untested. The image was ephemeral, not retained or published. Exactly one new trial ran; this authorization is consumed and no retry is queued.

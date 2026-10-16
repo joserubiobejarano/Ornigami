@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "sourceSha": "193a795de330a2cfef47a45571c29cbe3c0c8b69",
+  "canonicalLockSha256": "b7335ef2e1163bf36afcf48309c3eaab68ea4731909a6bc4c981b0a0ea048ed1",
+  "scope": "Fresh exact-source Windows Node22 build; not Linux image/runtime/release acceptance",
+  "artifacts": {
+    "framework-source-evidence.json": {
+      "bytes": 2748,
+      "sha256": "b72c8f33d3c2fdfca2cff8a987b17f102b66f71a14593cad613accabfbb4bb0d"
+    },
+    "fresh-build-sri.json": {
+      "bytes": 13747,
+      "sha256": "11d0cbf1f13887f00b7bc937751d659056d612d8f84fcb4baa47eeba29e80344"
+    },
+    "fresh-manifest-parity.json": {
+      "bytes": 6969,
+      "sha256": "f0cfd2f8f1908d22e32a8d1c368d539417c4f3d05cb4ae91aef43613e1795054"
+    },
+    "LOCAL_CHECKS.json": {
+      "bytes": 2616,
+      "sha256": "f950b927fce6cd31e76ff335f9a73dbb62c77cf0054681bad6744f2f9a5b2809"
+    },
+    "node-download-checksum.txt": {
+      "bytes": 93,
+      "sha256": "6d413778cbabe5c6524944dc81a3a42218e702c3a37328b432b2fcf064419d68"
+    },
+    "npm-ci-first-config-failure.json": {
+      "bytes": 530,
+      "sha256": "451fc8e0486f43cdbb2888b4e401d70bc1d89a9b6e3164898cfb099e48a8888d"
+    },
+    "npm-ci-first-config-failure.txt": {
+      "bytes": 216,
+      "sha256": "9e81a0113cd03219141a5f9534559fa882c838792f4ed847883eef240b485d09"
+    },
+    "npm-ci-receipt.json": {
+      "bytes": 540,
+      "sha256": "4e258edb39d7a4eb3f25786d93580bb88fc0cd3ff759cc7905063b17b3457ff2"
+    },
+    "npm-ci.txt": {
+      "bytes": 26,
+      "sha256": "82ffbc54ff799a7e82ff04d4d10c59ed6ddb7d0664d4242a354d8fbacb47ce4f"
+    }
+  }
+}

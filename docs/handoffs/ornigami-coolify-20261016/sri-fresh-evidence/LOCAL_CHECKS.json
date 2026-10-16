@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "verifiedAtUtc": "2026-10-16T18:08:53.896339+00:00",
+  "sourceSha": "193a795de330a2cfef47a45571c29cbe3c0c8b69",
+  "nodeVersion": "v22.23.3",
+  "platform": "win32",
+  "arch": "x64",
+  "focusedTestCommand": "node --test tests/sri-production-check.test.mjs tests/coolify-rehearsal-workflow.test.mjs tests/coolify-runtime-acceptance.test.mjs",
+  "tests": {
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0
+  },
+  "focusedEslint": "passed, checker and its tests",
+  "gitDiffCheck": "passed",
+  "priorContractBlobComparison": {
+    "deploy/coolify/linux-runtime-acceptance.sh": {
+      "previousBlob": "5128539c9f1cba8d8acdec5f7daaf1fa9ee93ea9",
+      "candidateBlob": "5128539c9f1cba8d8acdec5f7daaf1fa9ee93ea9",
+      "unchanged": true
+    },
+    ".github/workflows/ornigami-image-rehearsal.yml": {
+      "previousBlob": "6641e7b643337981f290764c1d522257e1797ba2",
+      "candidateBlob": "6641e7b643337981f290764c1d522257e1797ba2",
+      "unchanged": true
+    },
+    ".github/build-requests/ornigami.json": {
+      "previousBlob": "16601d620aa6099a3fecf6d8c4536cbe71aaa30c",
+      "candidateBlob": "16601d620aa6099a3fecf6d8c4536cbe71aaa30c",
+      "unchanged": true
+    },
+    "Dockerfile": {
+      "previousBlob": "f24904d0de0e21ee652960267c43aefc367d523e",
+      "candidateBlob": "f24904d0de0e21ee652960267c43aefc367d523e",
+      "unchanged": true
+    },
+    "package.json": {
+      "previousBlob": "9bd6cd30e24cc7106068a45a96313445b80e4f60",
+      "candidateBlob": "9bd6cd30e24cc7106068a45a96313445b80e4f60",
+      "unchanged": true
+    },
+    "package-lock.json": {
+      "previousBlob": "e3456fcc2854516962472fbf5f17a23ebaeedb7c",
+      "candidateBlob": "e3456fcc2854516962472fbf5f17a23ebaeedb7c",
+      "unchanged": true
+    },
+    "src/lib/security-headers.ts": {
+      "previousBlob": "0c85f5892683e799c81f703e43adb31c7b155ab1",
+      "candidateBlob": "0c85f5892683e799c81f703e43adb31c7b155ab1",
+      "unchanged": true
+    },
+    "src/proxy.ts": {
+      "previousBlob": "6edcd368e51962be4ae230f30ddf49746c215b81",
+      "candidateBlob": "6edcd368e51962be4ae230f30ddf49746c215b81",
+      "unchanged": true
+    }
+  },
+  "freshBuild": {
+    "compilation": "passed",
+    "sriAcceptance": "failed",
+    "linuxImage": "untested",
+    "imageAdvisoryFixes": "unverified"
+  },
+  "newExternalTrials": 0,
+  "pushes": 0,
+  "deployed": false,
+  "ghcrPublished": false,
+  "contaboTouched": false,
+  "originalEvidenceUnchanged": true,
+  "trialNodeProcessesRemaining": 0,
+  "dependencyInstallationLockMatchesCandidate": true
+}
