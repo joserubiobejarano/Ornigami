@@ -1,5 +1,7 @@
 # Fresh-source SRI investigation and framework decision
 
+Later result: [the isolated app-owned package prototype](./LOCAL_FRAMEWORK_PROTOTYPE.md) passes fresh Windows application HTTP/SRI checks and focused browser regressions without relaxing protections. This changes neither the stock-framework failure recorded below nor the unverified Linux image/advisory state. Ownership/adoption and external-trial approval remain open.
+
 Follow-up: [the framework decision packet](./FRAMEWORK_DECISION.md) adds official package checksum/signature verification, upstream packaging constraints, production/browser regressions and proposed maintenance ownership. No framework implementation or repeat build was performed. Fresh live watcher evidence blocks publication pending verified Vercel branch protection; this does not alter the historical test results below.
 
 **The stock framework still fails the reviewed SRI contract. No security requirement has been relaxed.** A fresh local build now establishes this independently of the old Windows output. The concrete alternative below needs review before adopting a maintained framework distribution; no fork, framework monkey patch, HTML rewrite or dependency upgrade has been applied.

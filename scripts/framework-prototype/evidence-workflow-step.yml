@@ -1,0 +1,25 @@
+      - name: Require verified owner local evidence custody before cleanup
+        if: ${{ always() && steps.evidence_upload.outcome == 'success' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.evidence_upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence_upload.outputs.artifact-digest }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$ARTIFACT_ID" =~ ^[0-9]+$ && "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]
+          context="ornigami/evidence-local/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
+          description="artifact=${ARTIFACT_ID};sha256=${ARTIFACT_DIGEST}"
+          printf 'Awaiting approved local download receipt: run=%s attempt=%s request=%s artifact=%s digest=%s\n' \
+            "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST"
+          for observation in $(seq 1 60); do
+            statuses=$(gh api --hostname github.com "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100")
+            if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" \
+              'any(.[]; .context == $context and .description == $description and .state == "success" and .creator.login == $owner)' <<< "$statuses" >/dev/null; then
+              printf '%s\n' 'Owner checksum-verified local custody acknowledged before cleanup.'
+              exit 0
+            fi
+            sleep 10
+          done
+          printf '%s\n' 'Local-download gate failed: no matching owner receipt in ten minutes. Uploaded failure evidence remains retained; no acceptance claim.' >&2
+          exit 1

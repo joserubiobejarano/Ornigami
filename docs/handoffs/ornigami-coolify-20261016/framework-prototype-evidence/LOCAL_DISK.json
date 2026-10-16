@@ -1,0 +1,9 @@
+{
+  "directoryLogicalBytes": 9848664330,
+  "filesWithoutFollowingLinks": 497053,
+  "unreadableOrDisappearedEntries": 0,
+  "physicalAllocatedBytes": "not measured; hard links may duplicate logical accounting",
+  "scope": "new ignored framework-prototype directory only",
+  "note": "Initial unprefixed metadata walk hit Windows MAX_PATH; long-path-prefixed walk used instead. Per-phase volume disk observations are retained separately. Snapshot precedes the final receipt-gated fresh checkout; final per-phase disk observations are separate.",
+  "snapshotAtUtc": "2026-10-16T20:14:31.447737+00:00"
+}

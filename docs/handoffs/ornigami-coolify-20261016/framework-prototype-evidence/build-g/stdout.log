@@ -1,0 +1,33 @@
+SOURCE_BUILD_TARGET server
+[35m[22:05:36][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:36][39m[0m Starting [1m[33mserver[39m[0m
+[35m[22:05:36][39m[0m Finished [34m[1mserver[22m[0m in [32m976ms[39m[0m
+SOURCE_BUILD_TARGET server_esm
+[35m[22:05:37][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:37][39m[0m Starting [1m[33mserver_esm[39m[0m
+[35m[22:05:38][39m[0m Finished [34m[1mserver_esm[22m[0m in [32m742ms[39m[0m
+SOURCE_BUILD_TARGET nextbuild
+[35m[22:05:39][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:39][39m[0m Starting [1m[33mnextbuild[39m[0m
+[35m[22:05:39][39m[0m Finished [34m[1mnextbuild[22m[0m in [32m324ms[39m[0m
+SOURCE_BUILD_TARGET nextbuild_esm
+[35m[22:05:40][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:40][39m[0m Starting [1m[33mnextbuild_esm[39m[0m
+[35m[22:05:41][39m[0m Finished [34m[1mnextbuild_esm[22m[0m in [32m517ms[39m[0m
+SOURCE_BUILD_TARGET next_bundle_app_prod
+[35m[22:05:42][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:42][39m[0m Starting [1m[33mnext_bundle_app_prod[39m[0m
+[35m[22:05:43][39m[0m Finished [34m[1mnext_bundle_app_prod[22m[0m in [32m1.60s[39m[0m
+SOURCE_BUILD_TARGET next_bundle_app_prod_experimental
+[35m[22:05:44][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:44][39m[0m Starting [1m[33mnext_bundle_app_prod_experimental[39m[0m
+[35m[22:05:45][39m[0m Finished [34m[1mnext_bundle_app_prod_experimental[22m[0m in [32m985ms[39m[0m
+SOURCE_BUILD_TARGET next_bundle_app_prod_turbo
+[35m[22:05:45][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:45][39m[0m Starting [1m[33mnext_bundle_app_prod_turbo[39m[0m
+[35m[22:05:46][39m[0m Finished [34m[1mnext_bundle_app_prod_turbo[22m[0m in [32m965ms[39m[0m
+SOURCE_BUILD_TARGET next_bundle_app_prod_turbo_experimental
+[35m[22:05:47][39m[0m Running with [4m[36mC:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\.local\framework-prototype\upstream\packages\next\taskfile.js[39m[0m
+[35m[22:05:47][39m[0m Starting [1m[33mnext_bundle_app_prod_turbo_experimental[39m[0m
+[35m[22:05:48][39m[0m Finished [34m[1mnext_bundle_app_prod_turbo_experimental[22m[0m in [32m901ms[39m[0m
+PACKAGE_SHA256 3ebe019c4b83a48469956f0ca255f03be22272599127c86d87e1e2daa3519a81

@@ -1,0 +1,21 @@
+{
+  "applicationCandidateSha": "fe71816993f5eb42d0565befb4354d478e48429a",
+  "branch": "codex/ornigami-sri-local-prototype-f-20261016",
+  "implementationCommit": "f9f43a700228a014569fd5827ede82b76c713e66",
+  "sourcePatchSha256": "41708142d05f1d6ff1383b090a48c72fce09b69e25a44cd1586b39fa55580db6",
+  "sourcePatchGitBlob": "e891f9d46b45d29034406707d45453e13c250405",
+  "upstreamCommit": "2864b1772c37242a9b40ab4d366eb7d368c2a070",
+  "upstreamLockSha256": "69dfbd54a513cdcd94aca9ea0c83f7ba3803518372b90184a7d6a3b7103621c6",
+  "applicationLockSha256": "8a4b5a645fc660814914aced2dd86b283f7efb5da235de4d9ac8df69f42ed898",
+  "applicationLockGitBlob": "0834a612086d00f94da53de9063938d2ee33e5bb",
+  "packageSha256": "3ebe019c4b83a48469956f0ca255f03be22272599127c86d87e1e2daa3519a81",
+  "packageIntegrity": "sha512-1JZymjORjD/blhNgk+/mzWBJ2G6Ynep/a+iCj+tO43TTmTXaHHZXx0RcCSKVYxSPKaS6wyL/d9yBYYCUyYErpw==",
+  "packageGitBlob": "9b9de9da84dda9fdd0ffe22d02c8a232d5286c3d",
+  "workflowGitBlob": "4938e0fe6cfd93c491ab1691eb02c89555d48fa2",
+  "fixtureLockSha256": "80112b403b80edf8052a7bf22dd40501dbfa59ac89127231b3d10a6be133b1f5",
+  "browserToolLockSha256": "f0e06f4053177dddd5c287f28a506d98d50af0625bf36e7c08b7420065534ee5",
+  "published": false,
+  "acceptedDeployableImage": null,
+  "maintenanceOwners": "unassigned",
+  "retentionProtocol": "owner-verified durable zip download plus exact run/attempt/request/artifact/digest commit-status receipt before cleanup acceptance"
+}

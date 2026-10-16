@@ -1,0 +1,14 @@
+{
+  "yamlParsedLocally": true,
+  "allRunBlocksBashSyntaxChecked": true,
+  "linuxAdapterBashSyntaxChecked": true,
+  "linuxExecution": "untested; no external trial authorized",
+  "branchRestricted": "codex/ornigami-sri-local-prototype-f-20261016",
+  "firstCreationJobDisabled": true,
+  "requestFileAbsent": true,
+  "jobTokenPermission": "statuses: read",
+  "receiptGuardLocalTests": 6,
+  "receiptTestsUseFakeApisOnly": true,
+  "realStatusPosted": false,
+  "workflowBlob": "4938e0fe6cfd93c491ab1691eb02c89555d48fa2"
+}

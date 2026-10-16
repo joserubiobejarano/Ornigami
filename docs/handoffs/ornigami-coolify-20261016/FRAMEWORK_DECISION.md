@@ -1,5 +1,7 @@
 # Framework decision packet — 16 October 2026
 
+Follow-up: the owner approved a bounded local experiment, explicitly excluding production adoption and any maintenance SLA. [The completed local prototype](./LOCAL_FRAMEWORK_PROTOTYPE.md) records source/package identities, fresh app/browser results, reproduction and remaining Linux/adoption gates. The decision and observations below remain the historical approval basis; they do not authorize publication, external execution or release.
+
 Decision requested: approve a bounded **local implementation** of an app-owned Next distribution, conditional on accepting its maintenance ownership. No framework patch or dependency change has been implemented. No build, external trial, publication, host mutation or provider operation was performed for this packet. Waiting for a verified upstream fix remains the alternative if ownership is declined.
 
 ## Verified baseline and live protections
