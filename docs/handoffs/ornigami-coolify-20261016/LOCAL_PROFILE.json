@@ -1,0 +1,122 @@
+{
+  "captured_at_utc": "2026-10-16T15:59:14.6119875Z",
+  "baseline_git_head": "092694df82e395595893a5d4d1fa0b9990ea2ccd",
+  "working_tree_config_modified": true,
+  "node_config_sha256": "21dc8fcdbd2f63c55a19753ecef2422b38cb7215a727d0ece33c1608a9ea2c6b",
+  "dockerfile_sha256": "b47b4c5abf2f0bde22b8f138eb007befc69f72453d62c578dbd54730ce66bdac",
+  "package_lock_sha256": "5eff2b421d8becc7d24b79b9af9265cb655014c56e36873c8400b2a2c1c5ed47",
+  "helper_sha256": "7d0d495a93c1ca63a17982fcb66684072273308f8b6bbb52e4e199afc4ee9fef",
+  "environment": {
+    "node": "v24.11.1",
+    "platform": "Windows 11 Pro x64 (build 26200)",
+    "container_heap_mib": 1408,
+    "build_cpus": 1,
+    "sentry_auth_token": "absent",
+    "origin": "https://rehearsal.invalid",
+    "credentials": "synthetic only",
+    "next_flags": {
+      "reactCompiler": true,
+      "sri_algorithm": "sha256",
+      "validation_enabled": true
+    }
+  },
+  "sampling": {
+    "method": "Win32_Process working-set sum for npm.cmd process and recursively discovered descendants",
+    "interval_seconds_approx": 2.16,
+    "hard_guard_bytes": 8589934592,
+    "caveat": "sampled process-tree RSS, not cgroup accounting or guaranteed OS-wide peak; child enumeration is subject to process-table sampling races"
+  },
+  "profiles": [
+    {
+      "variant": "baseline",
+      "success": true,
+      "exit_code": 0,
+      "peak_process_tree_rss_bytes": 3398213632,
+      "sample_count": 55,
+      "sampling_interval_seconds_approx": 2.16,
+      "first_sample_utc": "2026-10-16T15:50:47.2626294+00:00",
+      "last_sample_utc": "2026-10-16T15:52:44.5492748+00:00",
+      "sampled_span_seconds": 117.3,
+      "measured_wall_seconds": null,
+      "flags": {
+        "ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS": "false",
+        "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS": "false",
+        "ORNIGAMI_BUILD_WEBPACK_WORKER": "false"
+      }
+    },
+    {
+      "variant": "memory",
+      "success": true,
+      "exit_code": 0,
+      "peak_process_tree_rss_bytes": 3350503424,
+      "sample_count": 59,
+      "sampling_interval_seconds_approx": 2.16,
+      "first_sample_utc": "2026-10-16T15:52:47.2961194+00:00",
+      "last_sample_utc": "2026-10-16T15:54:57.9365210+00:00",
+      "sampled_span_seconds": 130.6,
+      "measured_wall_seconds": null,
+      "flags": {
+        "ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS": "true",
+        "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS": "false",
+        "ORNIGAMI_BUILD_WEBPACK_WORKER": "false"
+      }
+    },
+    {
+      "variant": "sourcemaps",
+      "success": true,
+      "exit_code": 0,
+      "peak_process_tree_rss_bytes": 3037605888,
+      "sample_count": 33,
+      "sampling_interval_seconds_approx": 2.16,
+      "first_sample_utc": "2026-10-16T15:55:00.6277656+00:00",
+      "last_sample_utc": "2026-10-16T15:56:10.0583051+00:00",
+      "sampled_span_seconds": 69.4,
+      "measured_wall_seconds": null,
+      "flags": {
+        "ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS": "false",
+        "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS": "true",
+        "ORNIGAMI_BUILD_WEBPACK_WORKER": "false"
+      }
+    },
+    {
+      "variant": "combined",
+      "success": true,
+      "exit_code": 0,
+      "peak_process_tree_rss_bytes": 2937016320,
+      "sample_count": 27,
+      "sampling_interval_seconds_approx": 2.16,
+      "first_sample_utc": "2026-10-16T15:56:12.5490974+00:00",
+      "last_sample_utc": "2026-10-16T15:57:08.4893557+00:00",
+      "sampled_span_seconds": 55.9,
+      "measured_wall_seconds": null,
+      "flags": {
+        "ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS": "true",
+        "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS": "true",
+        "ORNIGAMI_BUILD_WEBPACK_WORKER": "false"
+      }
+    },
+    {
+      "variant": "worker-memory",
+      "success": true,
+      "exit_code": 0,
+      "peak_process_tree_rss_bytes": 2952921088,
+      "sample_count": 34,
+      "sampling_interval_seconds_approx": 2.16,
+      "first_sample_utc": "2026-10-16T15:57:27.7938825+00:00",
+      "last_sample_utc": "2026-10-16T15:58:39.0226067+00:00",
+      "sampled_span_seconds": 71.2,
+      "measured_wall_seconds": 73.5,
+      "flags": {
+        "ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS": "true",
+        "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS": "false",
+        "ORNIGAMI_BUILD_WEBPACK_WORKER": "true"
+      }
+    }
+  ],
+  "validation": {
+    "npm_build": "all five passed including generate-static-csp-hashes",
+    "production_http_smoke": "not run on these generated outputs; output cleanup/restoration was intentional",
+    "security_tests": "7 passed",
+    "typescript": "npx tsc --noEmit --incremental false passed"
+  }
+}

@@ -11,15 +11,22 @@ FROM deps AS builder
 COPY --chown=node:node . .
 ARG NEXT_PUBLIC_APP_URL
 ARG ORNIGAMI_SOURCE_SHA
+ARG ORNIGAMI_BUILD_HEAP_MIB=1408
+ARG ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=false
+ARG ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false
+ARG ORNIGAMI_BUILD_WEBPACK_WORKER=false
 ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
     ORNIGAMI_CONTAINER_BUILD=true \
-    NODE_OPTIONS=--max-old-space-size=1408 \
+    ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=${ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS} \
+    ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=${ORNIGAMI_BUILD_DISABLE_SOURCEMAPS} \
+    ORNIGAMI_BUILD_WEBPACK_WORKER=${ORNIGAMI_BUILD_WEBPACK_WORKER} \
+    NODE_OPTIONS=--max-old-space-size=${ORNIGAMI_BUILD_HEAP_MIB} \
     AUTH_SECRET=rehearsal-only-synthetic-build-secret-not-for-use \
     GOOGLE_CLIENT_ID=rehearsal.invalid \
     GOOGLE_CLIENT_SECRET=rehearsal-only-placeholder-not-a-provider-credential \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production
-RUN test -n "$NEXT_PUBLIC_APP_URL" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA")' && npm run build
+RUN test -n "$NEXT_PUBLIC_APP_URL" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? ""; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error("ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB"); for (const name of ["ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS", "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS", "ORNIGAMI_BUILD_WEBPACK_WORKER"]) if (!/^(true|false)$/.test(process.env[name] ?? "")) throw new Error(`${name} must be true or false`)' && npm run build
 
 FROM --platform=linux/amd64 node:22.23.3-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562 AS prod-deps
 WORKDIR /app

@@ -1,5 +1,7 @@
 # Ornigami Coolify preparation — 16 October 2026
 
+Follow-up: [build memory investigation, external builder and complete incremental cost](./BUILD_APPROACH.md). The recommendation uses the existing public GitHub repository's standard Linux runner; preparation remains local and no subsequent Contabo build or external workflow was run. The original failed-build receipts below remain unchanged.
+
 Owner: Jose; integration owns merge and rollout. Branch `codex/ornigami-coolify-preparation-20261016`, separate worktree `C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016`. Original workspace and unrelated work are preserved. Nothing is merged, publicly routed, registered with providers or deployed through Coolify. Autodeploy, jobs, sending, paid AI and live-release gates stay closed.
 
 The [deployment contract](../../../deploy/coolify/README.md) contains configuration, app-only resource/network/volume mappings, secret names without values, disabled task inventory, origin/callback requirements, backup/recovery and cutover/rollback procedures. Root Dockerfile and Compose files are the reviewable implementation. The earlier Caddy/systemd profile remains historical reference; do not install it beside Coolify.
