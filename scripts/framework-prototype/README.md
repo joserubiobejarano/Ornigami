@@ -1,5 +1,14 @@
 # Isolated Next SRI experiment
 
+Current local capture-remediation branch: qualified runtime snapshot copies,
+persistent pre-upload summary, explicit completeness failure and local regressions
+are prepared without a build or external run. [Stage inventory/scanning](./STAGE_SCANNING.md)
+is runnable against future approved archives, not integrated or executed on Linux.
+Historical trial 38976049055 passed Linux functional checks and failed both scan
+gates; its original artifact omissions and supplemental summary recovery remain
+unchanged. Custody is independent. The older checkpoint descriptions below do not
+authorize publication or adoption of this new branch.
+
 Authorized for local experimentation only. Primary/backup/security ownership and any maintenance SLA are **unaccepted**. This isolated candidate consumes the checksum-pinned `.2` package. The request marker still references the historical failed candidate; no push or new trial is authorized. See `docs/handoffs/ornigami-coolify-20261016/PORTABLE_REPAIR_PREPARATION.md` for the current repair scope and unresolved image advisories.
 
 The complete patch includes the production runtime build configuration. Its emitted CommonJS requests normalize host separators before bundling, and a committed readable overlay must match the actual configuration. The recipe pins its initial bytes and refuses a mid-build edit. VM regressions exercise both Windows and POSIX paths, and an additional AST audit checks all four cold-installed production bundles. This does not establish Linux runtime portability.

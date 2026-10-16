@@ -126,6 +126,8 @@ function fakeEnvironment(root, overrides = {}) {
   mkdirSync(runnerTemp, { recursive: true });
   const summary = join(root, "summary.md");
   writeFileSync(summary, "fake workflow summary\n");
+  const stepSummary = join(root, "step-local-summary.md");
+  writeFileSync(stepSummary, "");
   const env = {
     ...process.env,
     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
@@ -137,7 +139,8 @@ function fakeEnvironment(root, overrides = {}) {
     FAKE_STATE_VOLUME: "buildx_buildkit_ornigami-external-rehearsal0_state",
     FAKE_INSPECTED_IMAGE_ID: "foreign-image-id",
     RUNNER_TEMP: runnerTemp,
-    GITHUB_STEP_SUMMARY: summary,
+    GITHUB_STEP_SUMMARY: stepSummary,
+    ORNIGAMI_JOB_SUMMARY: summary,
     ORNIGAMI_EVIDENCE_DIR: join(runnerTemp, "ornigami-evidence"),
     GITHUB_RUN_ID: "local-test-run",
     GITHUB_RUN_ATTEMPT: "1",
@@ -177,6 +180,8 @@ function verifyManifest(evidenceDirectory) {
   assert.equal(manifest.runtime_evidence_status, "collected");
   assert.equal(manifest.image_build_exit_code, "0");
   assert.equal(manifest.runtime_exit_code, "0");
+  assert.equal(manifest.capture_completeness_status, "passed");
+  assert.equal(manifest.custody_status, "not-assessed-by-capture");
   assert.ok(!manifest.files.some((item) => item.path.includes("image.tar")));
   assert.ok(!manifest.files.some((item) => /\.raw$/.test(item.path)));
   assert.ok(!manifest.files.some((item) => /(?:stderr|container-logs)\.raw/.test(item.path)));
@@ -188,6 +193,30 @@ function verifyManifest(evidenceDirectory) {
 function createHash(bytes) {
   return createHashImpl("sha256").update(bytes).digest("hex");
 }
+
+test('initialization exports a persistent summary path rather than a step-local summary', () => withSandbox(root => {
+  const { env } = fakeEnvironment(root); env.GITHUB_ENV = join(root, 'github-env.txt');
+  // NTFS/Git Bash install cannot enforce Linux modes. Verify the exact requested
+  // mode, then model directory creation only on Windows; Linux uses real install.
+  const windowsInstall = process.platform === 'win32' ? `install() { [[ "$1" == -d && "$2" == -m && "$3" == 700 ]] || return 97; printf '%s\\n' "$*" > "$RUNNER_TEMP/install-arguments.txt"; shift 3; mkdir -p -- "$@"; }\n` : '';
+  const result = runShell(root, windowsInstall + runBlock('evidence_initialize'), env);
+  assert.equal(result.status, 0, result.stderr);
+  if (process.platform === 'win32') assert.match(readFileSync(join(env.RUNNER_TEMP, 'install-arguments.txt'), 'utf8'), /^-d -m 700 /);
+  assert.match(readFileSync(env.GITHUB_ENV, 'utf8'), /ORNIGAMI_JOB_SUMMARY=.*ornigami-job-summary.md/);
+  assert.match(readFileSync(join(env.RUNNER_TEMP, 'ornigami-job-summary.md'), 'utf8'), /Ornigami diagnostic evidence/);
+  assert.equal(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), '');
+}));
+
+test('failed initialization with neither exported path still retains a failed capture manifest', () => withSandbox(root => {
+  const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME:'skipped', IMAGE_BUILD_OUTCOME:'skipped', ADMISSION_OUTCOME:'skipped' });
+  delete env.ORNIGAMI_EVIDENCE_DIR; delete env.ORNIGAMI_JOB_SUMMARY;
+  const result = runShell(root, runBlock('evidence_capture'), env);
+  assert.equal(result.status, 1, result.stderr);
+  const evidence = join(env.RUNNER_TEMP,'ornigami-evidence');
+  const manifest = JSON.parse(readFileSync(join(evidence,'manifest.json'),'utf8'));
+  assert.equal(manifest.capture_completeness_status,'failed'); assert.equal(manifest.runtime_evidence_status,'not-run');
+  assert.match(readFileSync(join(evidence,'step-summary.md'),'utf8'),/Incomplete evidence capture/);
+}));
 
 test("evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt", () => {
   withSandbox((root) => {
@@ -218,12 +247,18 @@ test("success evidence capture hashes scan/runtime receipts and excludes the ima
     writeFileSync(join(runnerTemp, "stderr.raw"), "raw diagnostic sentinel; must never enter artifact");
     writeFileSync(join(runnerTemp, "container-logs.raw"), "raw log sentinel; must never enter artifact");
     writeFileSync(join(evidence, "runtime", "runtime-http.json"), JSON.stringify({ schemaVersion: 1, result: "passed", exitStatus: 0, httpObservations: [] }));
+    for (const file of ["runtime-first-cgroup.txt", "runtime-after-restart-cgroup.txt", "runtime-after-recreate-cgroup.txt"]) {
+      writeFileSync(join(evidence, "runtime", file), counters());
+    }
     const result = runShell(root, runBlock("evidence_capture"), env);
     assert.equal(result.status, 0, result.stderr);
     verifyManifest(evidence);
     assert.ok(existsSync(join(evidence, "scans", "base-trivy.json")));
     assert.ok(existsSync(join(evidence, "scans", "trivy.json")));
     assert.ok(existsSync(join(evidence, "runtime", "runtime-http.json")));
+    assert.equal(readFileSync(join(evidence, "step-summary.md"), "utf8"), "fake workflow summary\n");
+    assert.equal(readFileSync(env.GITHUB_STEP_SUMMARY, "utf8"), "fake workflow summary\n");
+    assert.equal(JSON.parse(readFileSync(join(evidence, "manifest.json"), "utf8")).summary_evidence_status, "collected");
   });
 });
 
@@ -237,6 +272,8 @@ test("cold failure before runtime creates every directory and a complete skipped
     assert.equal(manifest.runtime_evidence_status,'not-run');
     assert.equal(manifest.image_build_exit_code,'17');
     assert.equal(manifest.framework_browser_outcome,'skipped');
+    assert.equal(manifest.capture_completeness_status,'passed');
+    assert.ok(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'step-summary.md'),'utf8').length>0);
     for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
     assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'build/workflow-status.txt')));
     assert.ok(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,'browser/workflow-status.txt')));
@@ -272,6 +309,79 @@ test("failed build retains combined stdout/stderr and exact exit before runtime 
 function counters({oom=0,cpu=1,peak=1000000}={}) {
   return `==memory.max==\n8589934592\n==memory.swap.max==\n0\n==memory.peak==\n${peak}\n==memory.events==\nlow 0\nhigh 0\nmax 0\noom ${oom}\noom_kill 0\noom_group_kill 0\n==cpu.max==\n300000 100000\n==cpu.stat==\nusage_usec ${cpu}\nuser_usec ${cpu}\nsystem_usec 0\n`;
 }
+
+function fixtureRuntime(root, env, { failure = false } = {}) {
+  const harness = join(env.RUNNER_TEMP, 'source/deploy/coolify/linux-runtime-acceptance.sh');
+  mkdirSync(resolve(harness, '..'), { recursive: true });
+  writeFileSync(harness, `#!/usr/bin/env bash
+set -euo pipefail
+report_dir="$RUNNER_TEMP/ornigami-runtime-acceptance-fixture"
+mkdir -p "$report_dir"
+printf 'result=${failure ? 'failed' : 'passed'}\\n' > "$report_dir/report.txt"
+printf '%s\\n' '{"schemaVersion":1,"result":"${failure ? 'failed' : 'passed'}","exitStatus":${failure ? 23 : 0},"assertions":${failure ? '["exact-fixture-assertion"]' : '[]'}}' > "$report_dir/runtime-http.json"
+printf 'cold fixture counters\\n' > "$report_dir/runtime-first-cgroup.txt"
+${failure ? `printf '%s\\n' '{"assertion":"exact-fixture-assertion","status":403,"exitStatus":23,"headers":{"x-frame-options":"DENY"},"body":"sanitized fictional body"}' > "$report_dir/failure.json"
+printf 'exact-fixture-assertion; status=403; exit=23\\n' > "$report_dir/failure-evidence.txt"` : `printf 'restart fixture counters\\n' > "$report_dir/runtime-after-restart-cgroup.txt"
+printf 'recreate fixture counters\\n' > "$report_dir/runtime-after-recreate-cgroup.txt"`}
+printf 'final fixture counters\\n' > "$report_dir/runtime-final-cgroup.txt"
+printf 'sanitized container log\\n' > "$report_dir/container-logs.txt"
+printf 'report=%s/report.txt\\n' "$report_dir"
+exit ${failure ? 23 : 0}
+`);
+  env.GITHUB_OUTPUT = join(root, 'outputs.txt');
+}
+
+test('runtime receipt copy uses qualified report paths despite a decoy glob in cwd', () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  fixtureRuntime(root, env);
+  writeFileSync(join(env.RUNNER_TEMP, 'runtime-poison-cgroup.txt'), 'must not copy cwd decoy');
+  const result = runShell(root, 'cd "$RUNNER_TEMP"\n' + runBlock('runtime_acceptance'), env);
+  assert.equal(result.status, 0, result.stderr);
+  const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
+  for (const phase of ['first', 'after-restart', 'after-recreate', 'final']) assert.ok(existsSync(join(runtime, `runtime-${phase}-cgroup.txt`)));
+  assert.ok(!existsSync(join(runtime, 'runtime-poison-cgroup.txt')));
+  const captured = runShell(root, runBlock('evidence_capture'), env);
+  assert.equal(captured.status, 0, captured.stderr);
+  verifyManifest(env.ORNIGAMI_EVIDENCE_DIR);
+}));
+
+test('failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest', () => withSandbox(root => {
+  const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME: 'failure', RUNTIME_EXIT_CODE: '23' });
+  fixtureRuntime(root, env, { failure: true });
+  const runtimeResult = runShell(root, runBlock('runtime_acceptance'), env);
+  assert.equal(runtimeResult.status, 23, runtimeResult.stderr);
+  const captured = runShell(root, runBlock('evidence_capture'), env);
+  assert.equal(captured.status, 0, captured.stderr); // successful collection of a failed acceptance
+  const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
+  const diagnostic = JSON.parse(readFileSync(join(runtime, 'failure.json'), 'utf8'));
+  assert.equal(diagnostic.assertion, 'exact-fixture-assertion'); assert.equal(diagnostic.status, 403); assert.equal(diagnostic.exitStatus, 23);
+  assert.equal(diagnostic.headers['x-frame-options'], 'DENY'); assert.equal(diagnostic.body, 'sanitized fictional body');
+  assert.match(readFileSync(join(runtime, 'container-logs.txt'), 'utf8'), /sanitized container log/);
+  assert.match(readFileSync(join(runtime, 'snapshot-status.txt'), 'utf8'), /runtime-after-recreate-cgroup.txt=unavailable/);
+  const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
+  assert.equal(manifest.runtime_outcome, 'failure'); assert.equal(manifest.runtime_exit_code, '23');
+  assert.equal(manifest.capture_completeness_status, 'passed'); assert.equal(manifest.custody_status, 'not-assessed-by-capture');
+  for (const f of manifest.files) assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, f.path))), f.sha256);
+}));
+
+test('successful runtime missing phase snapshots fails capture but retains its manifest', () => withSandbox(root => {
+  const { env } = fakeEnvironment(root); const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
+  mkdirSync(runtime, { recursive: true });
+  writeFileSync(join(runtime, 'runtime-http.json'), '{"result":"passed"}');
+  assert.equal(runShell(root, runBlock('evidence_capture'), env).status, 1);
+  const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
+  assert.ok(manifest.runtime_snapshot_status.includes('runtime-after-restart-cgroup.txt=unavailable'));
+}));
+
+for (const missing of [false, true]) test(`skipped stages with ${missing ? 'missing' : 'empty'} persistent summary fail capture with nonempty diagnostic and manifest`, () => withSandbox(root => {
+  const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME: 'skipped', IMAGE_BUILD_OUTCOME: 'skipped' });
+  if (missing) rmSync(env.ORNIGAMI_JOB_SUMMARY); else writeFileSync(env.ORNIGAMI_JOB_SUMMARY, '');
+  const result = runShell(root, runBlock('evidence_capture'), env);
+  assert.equal(result.status, 1, result.stderr);
+  const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
+  assert.equal(manifest.summary_evidence_status, 'missing-or-empty'); assert.equal(manifest.runtime_evidence_status, 'not-run');
+  assert.match(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'step-summary.md'), 'utf8'), /Incomplete evidence capture/);
+}));
 test('resource gate runs after an available builder even when image build failed',()=>{
   const step=workflow.slice(workflow.indexOf('      - name: Reject build-time OOM'),workflow.indexOf('      - name: Enforce pinned base'));
   assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);

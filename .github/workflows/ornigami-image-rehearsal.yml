@@ -22,11 +22,16 @@ jobs:
     timeout-minutes: 40
     steps:
       - name: Initialize evidence bundle
+        id: evidence_initialize
         shell: bash
         run: |
           set -Eeuo pipefail
           evidence_dir="$RUNNER_TEMP/ornigami-evidence"
+          # GITHUB_STEP_SUMMARY is step-local. Export a stable pre-upload path.
+          ORNIGAMI_JOB_SUMMARY="$RUNNER_TEMP/ornigami-job-summary.md"
+          echo "ORNIGAMI_JOB_SUMMARY=$ORNIGAMI_JOB_SUMMARY" >> "$GITHUB_ENV"
           install -d -m 700 "$evidence_dir" "$evidence_dir/build" "$evidence_dir/scans" "$evidence_dir/runner" "$evidence_dir/runtime" "$evidence_dir/browser"
+          printf '# Ornigami diagnostic evidence\n\nRun %s / attempt %s; request %s.\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" > "$ORNIGAMI_JOB_SUMMARY"
           printf '%s\n' 'This artifact contains public rehearsal evidence only. It excludes the local image archive and credentials.' > "$evidence_dir/README.txt"
           printf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \
             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"
@@ -91,7 +96,7 @@ jobs:
             printf '%s\n' '- Workflow blob: identical at candidate and request commits'
             printf '%s\n' '- Candidate is an ancestor of the request commit'
             printf '%s\n' '- Checkout: detached exact candidate; clean before build'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$ORNIGAMI_JOB_SUMMARY"
           {
             printf 'request_sha=%s\nsource_sha=%s\nexpected_lock_sha256=%s\nsource_lock_sha256=%s\ncheckout_lock_sha256=%s\ncandidate_workflow_blob=%s\nrequest_workflow_blob=%s\n' \
               "$REQUEST_SHA" "$SOURCE_SHA" "$EXPECTED_LOCK_SHA256" "$source_lock_sha" "$checkout_lock_sha" "$candidate_workflow_blob" "$request_workflow_blob"
@@ -116,7 +121,7 @@ jobs:
             printf '%s\n' "- Total memory: ${total_mib} MiB (minimum 14336 MiB)"
             printf '%s\n' "- Available memory before build: ${available_mib} MiB (minimum 12288 MiB)"
             printf '%s\n' "- Free runner disk before build: ${free_disk_bytes} bytes (minimum 10737418240)"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$ORNIGAMI_JOB_SUMMARY"
           [[ "$cpu_count" =~ ^[0-9]+$ && "$cpu_count" -ge 4 ]]
           [[ "$total_mib" =~ ^[0-9]+$ && "$total_mib" -ge 14336 ]]
           [[ "$available_mib" =~ ^[0-9]+$ && "$available_mib" -ge 12288 ]]
@@ -142,7 +147,7 @@ jobs:
             printf '%s\n' '### Scanner verification'
             printf '%s\n' '- Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:'
             printf '%s\n' '  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$ORNIGAMI_JOB_SUMMARY"
 
       - name: Scan pinned Node base image and record advisory gate
         id: base_scan
@@ -174,7 +179,7 @@ jobs:
           docker save --output "$RUNNER_TEMP/node-base.tar" "$BASE_IMAGE"
           "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/node-base.tar" \
             --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/base-trivy.json" --no-progress
-          python3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_STEP_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'
+          python3 - "$RUNNER_TEMP/base-trivy.json" "$ORNIGAMI_JOB_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'
           import collections, json, pathlib, sys
           report = json.loads(pathlib.Path(sys.argv[1]).read_text())
           expected_image_id = sys.argv[3]
@@ -232,7 +237,7 @@ jobs:
             printf '%s\n' '```text'
             "$RUNNER_TEMP/trivy" --version
             printf '%s\n' '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$ORNIGAMI_JOB_SUMMARY"
           rm -f -- "$RUNNER_TEMP/node-base.tar"
 
       - name: Create bounded serial BuildKit builder
@@ -282,7 +287,7 @@ jobs:
             printf '%s\n' '- memory.max: 8589934592 bytes; memory.swap.max: 0 bytes (Docker memory and memory-swap both capped at 8 GiB total)'
             printf '%s\n' '- cpu.max: 300000 100000; BuildKit OCI worker max-parallelism: 1'
             printf '%s\n' '- Initial memory event and CPU counters captured before build; no retry is configured'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$ORNIGAMI_JOB_SUMMARY"
 
       - name: Build local Linux amd64 image
         id: image_build
@@ -346,10 +351,10 @@ jobs:
               else
                 printf '%s\n' '- Builder cgroup counters unavailable after build; resource acceptance will fail if an image was produced.'
               fi
-            } >> "$GITHUB_STEP_SUMMARY"
+            } >> "$ORNIGAMI_JOB_SUMMARY"
           else
             printf '\n### Build result\n\n- Build interval: %s to %s UTC (%s seconds)\n- Build command exit code: %s\n- Builder cgroup counters: unavailable; builder container not running\n' \
-              "$build_start_utc" "$build_end_utc" "$build_seconds" "$build_rc" >> "$GITHUB_STEP_SUMMARY"
+              "$build_start_utc" "$build_end_utc" "$build_seconds" "$build_rc" >> "$ORNIGAMI_JOB_SUMMARY"
           fi
           [[ "$build_rc" -eq 0 ]]
           image="ornigami:rehearsal-${SOURCE_SHA}"
@@ -359,7 +364,7 @@ jobs:
           [[ "$image_revision" == "$SOURCE_SHA" && "$image_platform" == linux/amd64 ]]
           printf 'image_tag=%s\nimage_id=%s\n' "$image" "$image_id" >> "$GITHUB_OUTPUT"
           printf '\n### Local image identity\n\n- Image ID: `%s`\n- Platform: `%s`\n- Source revision label: `%s`\n- Image delivery: local runner only; no image publication\n' \
-            "$image_id" "$image_platform" "$image_revision" >> "$GITHUB_STEP_SUMMARY"
+            "$image_id" "$image_platform" "$image_revision" >> "$ORNIGAMI_JOB_SUMMARY"
           {
             printf 'image_id=%s\nimage_platform=%s\nimage_revision=%s\n' "$image_id" "$image_platform" "$image_revision"
           } > "$ORNIGAMI_EVIDENCE_DIR/image-identity.txt"
@@ -373,7 +378,7 @@ jobs:
           runtime_rc=0
           bash "$RUNNER_TEMP/source/deploy/coolify/linux-runtime-acceptance.sh" "$image" > "$RUNNER_TEMP/runtime-acceptance.log" 2>&1 || runtime_rc=$?
           printf 'runtime_exit_code=%s\n' "$runtime_rc" >> "$GITHUB_OUTPUT"
-          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/runtime-acceptance.log"
+          tee -a "$ORNIGAMI_JOB_SUMMARY" < "$RUNNER_TEMP/runtime-acceptance.log"
           report_path=$(sed -n 's/^report=//p' "$RUNNER_TEMP/runtime-acceptance.log" | tail -n1)
           if [[ -n "$report_path" && -f "$report_path" ]]; then
             report_dir=$(dirname "$report_path")
@@ -381,9 +386,9 @@ jobs:
             runner_real=$(realpath -e "$RUNNER_TEMP")
             [[ "$report_real" == "$runner_real"/ornigami-runtime-acceptance-* ]]
             mkdir -p "$ORNIGAMI_EVIDENCE_DIR/runtime"
-            for evidence_file in report.txt runtime-http.json failure.json failure-evidence.txt container-logs.txt runtime-final-cgroup.txt runtime-container-cgroup.txt runtime-*-cgroup.txt runtime-disk.txt host-disk-before.txt host-disk-after.txt; do
-              [[ -f "$report_dir/$evidence_file" ]] || continue
-              cp -- "$report_dir/$evidence_file" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
+            for evidence_path in "$report_dir"/report.txt "$report_dir"/runtime-http.json "$report_dir"/failure.json "$report_dir"/failure-evidence.txt "$report_dir"/container-logs.txt "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
+              [[ -f "$evidence_path" ]] || continue
+              cp -- "$evidence_path" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
             done
             {
               printf '\n### Runtime acceptance receipt\n\n'
@@ -395,9 +400,9 @@ jobs:
                 cat "$metric_file"
               done
               printf '%s\n' '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+            } >> "$ORNIGAMI_JOB_SUMMARY"
           else
-            printf '\nRuntime acceptance receipt path unavailable.\n' >> "$GITHUB_STEP_SUMMARY"
+            printf '\nRuntime acceptance receipt path unavailable.\n' >> "$ORNIGAMI_JOB_SUMMARY"
           fi
           exit "$runtime_rc"
 
@@ -460,10 +465,10 @@ jobs:
             printf '%s\n' "- Saved archive SHA-256: \`$archive_sha256\`"
             printf '%s\n' "- Saved archive bytes: $archive_bytes"
             printf '%s\n' '- Trivy report ImageID must match the local Docker image ID above'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$ORNIGAMI_JOB_SUMMARY"
           "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/ornigami-image.tar" \
             --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/trivy.json" --no-progress
-          python3 - "$RUNNER_TEMP/trivy.json" "$GITHUB_STEP_SUMMARY" "$image_id" <<'PY'
+          python3 - "$RUNNER_TEMP/trivy.json" "$ORNIGAMI_JOB_SUMMARY" "$image_id" <<'PY'
           import collections, json, pathlib, sys
           report = json.loads(pathlib.Path(sys.argv[1]).read_text())
           expected_image_id = sys.argv[3]
@@ -537,7 +542,7 @@ jobs:
             exit 1
           fi
           set +e
-          python3 - "$before" "$after" "$GITHUB_STEP_SUMMARY" <<'PY' 2>&1 | tee "$ORNIGAMI_EVIDENCE_DIR/runner/resource-assessment.txt"
+          python3 - "$before" "$after" "$ORNIGAMI_JOB_SUMMARY" <<'PY' 2>&1 | tee "$ORNIGAMI_EVIDENCE_DIR/runner/resource-assessment.txt"
           import pathlib, re, sys
           def values(path):
               text = pathlib.Path(path).read_text()
@@ -613,7 +618,7 @@ jobs:
           critical='${{ steps.base_scan.outputs.critical_count }}'
           high='${{ steps.base_scan.outputs.high_count }}'
           [[ "$critical" =~ ^[0-9]+$ && "$high" =~ ^[0-9]+$ ]]
-          printf 'Base scan gate: CRITICAL=%s HIGH=%s (threshold: zero for both)\n' "$critical" "$high" | tee "$ORNIGAMI_EVIDENCE_DIR/base-advisory-gate.txt" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Base scan gate: CRITICAL=%s HIGH=%s (threshold: zero for both)\n' "$critical" "$high" | tee "$ORNIGAMI_EVIDENCE_DIR/base-advisory-gate.txt" >> "$ORNIGAMI_JOB_SUMMARY"
           [[ "$critical" == 0 && "$high" == 0 ]]
 
       - name: Capture evidence bundle before cleanup
@@ -640,6 +645,8 @@ jobs:
           OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
         run: |
           set -Eeuo pipefail
+          ORNIGAMI_JOB_SUMMARY=${ORNIGAMI_JOB_SUMMARY:-"$RUNNER_TEMP/ornigami-job-summary.md"}
+          ORNIGAMI_EVIDENCE_DIR=${ORNIGAMI_EVIDENCE_DIR:-"$RUNNER_TEMP/ornigami-evidence"}
           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner" "$ORNIGAMI_EVIDENCE_DIR/runtime" "$ORNIGAMI_EVIDENCE_DIR/build" "$ORNIGAMI_EVIDENCE_DIR/browser"
           printf 'builder_name=%s\nbuilder_container_id=%s\nbuilder_state_volume=%s\nimage_tag=%s\nimage_id=%s\n' \
             "$OWNED_BUILDER_NAME" "$OWNED_BUILDER_CONTAINER_ID" "$OWNED_BUILDER_STATE_VOLUME" "$OWNED_IMAGE_TAG" "$OWNED_IMAGE_ID" \
@@ -678,6 +685,28 @@ jobs:
           else
             printf 'status=not-run\nruntime_step_outcome=skipped\n' > "$ORNIGAMI_EVIDENCE_DIR/runtime/runtime-evidence-status.txt"
           fi
+          # Require all independently measured phases after success. A failed/early
+          # runtime keeps available snapshots and exact failure diagnostics; later
+          # phases are explicitly unavailable, never fabricated or called passed.
+          {
+            printf 'runtime_step_outcome=%s\n' "$RUNTIME_OUTCOME"
+            for phase_file in runtime-first-cgroup.txt runtime-after-restart-cgroup.txt runtime-after-recreate-cgroup.txt; do
+              if [[ -s "$ORNIGAMI_EVIDENCE_DIR/runtime/$phase_file" ]]; then
+                printf '%s=collected\n' "$phase_file"
+              else
+                printf '%s=unavailable\n' "$phase_file"
+                if [[ "$RUNTIME_OUTCOME" == success ]]; then runtime_evidence_missing=1; fi
+              fi
+            done
+            if [[ "$RUNTIME_OUTCOME" == failure ]]; then
+              for failure_file in failure.json failure-evidence.txt; do
+                if [[ ! -s "$ORNIGAMI_EVIDENCE_DIR/runtime/$failure_file" ]]; then
+                  printf '%s=missing-required-failure-diagnostic\n' "$failure_file"
+                  runtime_evidence_missing=1
+                fi
+              done
+            fi
+          } > "$ORNIGAMI_EVIDENCE_DIR/runtime/snapshot-status.txt"
           printf 'workflow_outcome=%s\nworkflow_exit_code=%s\n' "${FRAMEWORK_BROWSER_OUTCOME:-unknown}" "${FRAMEWORK_BROWSER_EXIT_CODE:-}" > "$ORNIGAMI_EVIDENCE_DIR/browser/workflow-status.txt"
           if [[ -x "$RUNNER_TEMP/trivy" ]]; then
             "$RUNNER_TEMP/trivy" --version > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt" 2>&1 || printf '%s\n' 'Trivy version metadata unavailable.' > "$ORNIGAMI_EVIDENCE_DIR/scans/trivy-version.txt"
@@ -695,7 +724,19 @@ jobs:
               if ! timeout 15s du -sb "$path"; then printf 'size unavailable: %s\n' "$(basename "$path")"; fi
             done
           } > "$ORNIGAMI_EVIDENCE_DIR/runner/pre-cleanup-usage.txt" 2>&1
-          cp -- "$GITHUB_STEP_SUMMARY" "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
+          summary_evidence_missing=0
+          if [[ -s "$ORNIGAMI_JOB_SUMMARY" ]]; then
+            cp -- "$ORNIGAMI_JOB_SUMMARY" "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
+            printf 'status=collected\nsource=persistent-job-summary\n' > "$ORNIGAMI_EVIDENCE_DIR/summary-status.txt"
+          else
+            summary_evidence_missing=1
+            printf '# Incomplete evidence capture\n\nPersistent pre-upload job summary was missing or empty. Runtime outcome: %s; build outcome: %s. Capture failed; this fallback is not recovered phase evidence.\n' "$RUNTIME_OUTCOME" "$IMAGE_BUILD_OUTCOME" > "$ORNIGAMI_EVIDENCE_DIR/step-summary.md"
+            printf 'status=missing-or-empty\nfallback=diagnostic-only\n' > "$ORNIGAMI_EVIDENCE_DIR/summary-status.txt"
+          fi
+          [[ -s "$ORNIGAMI_EVIDENCE_DIR/step-summary.md" ]]
+          cat "$ORNIGAMI_EVIDENCE_DIR/step-summary.md" >> "$GITHUB_STEP_SUMMARY"
+          export CAPTURE_COMPLETENESS=passed
+          if [[ "$runtime_evidence_missing" -eq 1 || "$summary_evidence_missing" -eq 1 ]]; then export CAPTURE_COMPLETENESS=failed; fi
           python3 - "$ORNIGAMI_EVIDENCE_DIR" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" "${SOURCE_SHA:-}" "${EXPECTED_LOCK_SHA256:-}" "$ADMISSION_OUTCOME" "$RUNNER_PREFLIGHT_OUTCOME" "$BASE_SCAN_OUTCOME" "$IMAGE_BUILD_OUTCOME" "$IMAGE_BUILD_EXIT_CODE" "$RUNTIME_OUTCOME" "$RUNTIME_EXIT_CODE" "$FINAL_SCAN_OUTCOME" "$RESOURCE_OUTCOME" "$BASE_GATE_OUTCOME" <<'PY'
           import hashlib, json, pathlib, sys
           root = pathlib.Path(sys.argv[1])
@@ -704,13 +745,17 @@ jobs:
           metadata["framework_browser_outcome"] = __import__("os").environ.get("FRAMEWORK_BROWSER_OUTCOME", "unknown")
           metadata["framework_browser_exit_code"] = __import__("os").environ.get("FRAMEWORK_BROWSER_EXIT_CODE", "")
           metadata["runtime_evidence_status"] = (root / "runtime/runtime-evidence-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
+          metadata["summary_evidence_status"] = (root / "summary-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
+          metadata["runtime_snapshot_status"] = (root / "runtime/snapshot-status.txt").read_text(encoding="utf-8").splitlines()
+          metadata["capture_completeness_status"] = __import__("os").environ["CAPTURE_COMPLETENESS"]
+          metadata["custody_status"] = "not-assessed-by-capture"
           files = []
           for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):
               files.append({"path": path.relative_to(root).as_posix(), "bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
           (root / "manifest.json").write_text(json.dumps({"schema": 1, **metadata, "files": files}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
           PY
-          if [[ "$runtime_evidence_missing" -eq 1 ]]; then
-            printf '%s\n' 'Runtime acceptance ran but its structured sanitized HTTP evidence was missing; evidence collection failed.' >&2
+          if [[ "$runtime_evidence_missing" -eq 1 || "$summary_evidence_missing" -eq 1 ]]; then
+            printf '%s\n' 'Required runtime receipts, successful phase snapshots or persistent summary were missing; evidence collection failed. Manifest retained; custody is independent.' >&2
             exit 1
           fi
 

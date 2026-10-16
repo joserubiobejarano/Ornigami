@@ -36,6 +36,12 @@ public static class OrnigamiBuildJob {
 $outPath = [IO.Path]::GetFullPath($Output)
 [IO.Directory]::CreateDirectory($outPath) | Out-Null
 $specPath = [IO.Path]::GetFullPath($Spec)
+$specConfig = Get-Content -LiteralPath $specPath -Raw | ConvertFrom-Json
+$effectiveNodeOptions = '--max-old-space-size=4096'
+if ($specConfig.env -and $specConfig.env.PSObject.Properties['NODE_OPTIONS']) { $effectiveNodeOptions = [string]$specConfig.env.NODE_OPTIONS }
+$heapMatches = [regex]::Matches($effectiveNodeOptions, '(?:^|\s)--max-old-space-size(?:=|\s+)(\d+)(?=\s|$)')
+$configuredHeapMiB = $null
+if ($heapMatches.Count -gt 0) { $configuredHeapMiB = [int]$heapMatches[$heapMatches.Count - 1].Groups[1].Value }
 $nodePath = (Resolve-Path -LiteralPath $Node).Path
 $gatePath = Join-Path $outPath 'job-assigned'
 if (Test-Path -LiteralPath $gatePath) { throw 'Use a new output directory for each attempt.' }
@@ -93,7 +99,8 @@ try {
  $receipt = [ordered]@{
   startedAtUtc=$started.ToString('o'); endedAtUtc=[DateTime]::UtcNow.ToString('o');
   initialFreeBytes=$initialFree; minimumFreeBytes=$minimumFree;
-  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=3; nodeHeapMiB=4096;
+  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=3; nodeHeapMiB=$configuredHeapMiB;
+  nodeOptions=$effectiveNodeOptions; nodeHeapEvidence='configured NODE_OPTIONS; command-line overrides require separate assessment';
   wallLimitSeconds=$Seconds; durationSeconds=([DateTime]::UtcNow-$started).TotalSeconds;
   diskGrowthLimitBytes=20GB; observedSystemDiskGrowthPeakBytes=$peakDiskDelta;
   exitCode=$exitCode; stopReason=$stopReason;
