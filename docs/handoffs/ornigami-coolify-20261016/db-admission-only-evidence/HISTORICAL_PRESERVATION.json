@@ -1,0 +1,46 @@
+{
+  "result": "passed",
+  "directories": [
+    {
+      "directory": "framework-decision-evidence",
+      "verifiedFiles": 13
+    },
+    {
+      "directory": "framework-prototype-evidence",
+      "verifiedFiles": 158
+    },
+    {
+      "directory": "portable-repair-evidence",
+      "verifiedFiles": 57
+    },
+    {
+      "directory": "external-trial-38964204005",
+      "verifiedFiles": 52
+    },
+    {
+      "directory": "external-trial-38976049055",
+      "verifiedFiles": 85
+    },
+    {
+      "directory": "remediation-preparation-evidence",
+      "verifiedFiles": 31
+    },
+    {
+      "directory": "minimal-glibc-evidence",
+      "verifiedFiles": 86
+    },
+    {
+      "directory": "minimal-glibc-admission-evidence",
+      "verifiedFiles": 4
+    },
+    {
+      "directory": "external-trial-39027472379",
+      "verifiedFiles": 136
+    },
+    {
+      "directory": "db-admission-repair-evidence",
+      "verifiedFiles": 120
+    }
+  ],
+  "verifiedFiles": 742
+}

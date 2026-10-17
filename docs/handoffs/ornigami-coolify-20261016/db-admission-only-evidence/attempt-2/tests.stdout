@@ -1,0 +1,388 @@
+TAP version 13
+# Subtest: controller success: one download, one admission, explicit independent capture
+ok 1 - controller success: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 384.9799
+  type: 'test'
+  ...
+# Subtest: controller reject: one download, one admission, explicit independent capture
+ok 2 - controller reject: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 347.5118
+  type: 'test'
+  ...
+# Subtest: controller download-failure: one download, one admission, explicit independent capture
+ok 3 - controller download-failure: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 435.9358
+  type: 'test'
+  ...
+# Subtest: controller fixtures-failure: one download, one admission, explicit independent capture
+ok 4 - controller fixtures-failure: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 362.4585
+  type: 'test'
+  ...
+# Subtest: download executor exception still produces admission failure index and skips fixtures
+ok 5 - download executor exception still produces admission failure index and skips fixtures
+  ---
+  duration_ms: 273.2152
+  type: 'test'
+  ...
+# Subtest: bootstrap failure retains explicit skipped phases and a nonempty manifest
+ok 6 - bootstrap failure retains explicit skipped phases and a nonempty manifest
+  ---
+  duration_ms: 251.4475
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-summary-input while retaining failure manifest
+ok 7 - capture refuses missing-summary-input while retaining failure manifest
+  ---
+  duration_ms: 297.9905
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-original while retaining failure manifest
+ok 8 - capture refuses missing-original while retaining failure manifest
+  ---
+  duration_ms: 408.1952
+  type: 'test'
+  ...
+# Subtest: capture refuses tampered-original while retaining failure manifest
+ok 9 - capture refuses tampered-original while retaining failure manifest
+  ---
+  duration_ms: 298.2476
+  type: 'test'
+  ...
+# Subtest: capture refuses incomplete-admission while retaining failure manifest
+ok 10 - capture refuses incomplete-admission while retaining failure manifest
+  ---
+  duration_ms: 315.8346
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-resource while retaining failure manifest
+ok 11 - capture refuses missing-resource while retaining failure manifest
+  ---
+  duration_ms: 295.0664
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-exit while retaining failure manifest
+ok 12 - capture refuses missing-exit while retaining failure manifest
+  ---
+  duration_ms: 344.8693
+  type: 'test'
+  ...
+# Subtest: capture refuses dependent-after-rejection while retaining failure manifest
+ok 13 - capture refuses dependent-after-rejection while retaining failure manifest
+  ---
+  duration_ms: 275.0299
+  type: 'test'
+  ...
+# Subtest: exact-source protocol accepts real local single request-only child
+ok 14 - exact-source protocol accepts real local single request-only child
+  ---
+  duration_ms: 976.5269
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses wrong-source
+ok 15 - exact-source protocol refuses wrong-source
+  ---
+  duration_ms: 910.4799
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses wrong-lock
+ok 16 - exact-source protocol refuses wrong-lock
+  ---
+  duration_ms: 898.6024
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses extra-key
+ok 17 - exact-source protocol refuses extra-key
+  ---
+  duration_ms: 640.0767
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses wrong-purpose
+ok 18 - exact-source protocol refuses wrong-purpose
+  ---
+  duration_ms: 670.5059
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses extra-file
+ok 19 - exact-source protocol refuses extra-file
+  ---
+  duration_ms: 583.6048
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses workflow-drift
+ok 20 - exact-source protocol refuses workflow-drift
+  ---
+  duration_ms: 601.7442
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses full-marker-drift
+ok 21 - exact-source protocol refuses full-marker-drift
+  ---
+  duration_ms: 580.7332
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses merge request
+ok 22 - exact-source protocol refuses merge request
+  ---
+  duration_ms: 602.9761
+  type: 'test'
+  ...
+# Subtest: cleanup none is confined to run-owned direct child
+ok 23 - cleanup none is confined to run-owned direct child
+  ---
+  duration_ms: 169.4584
+  type: 'test'
+  ...
+# Subtest: cleanup owner-drift is confined to run-owned direct child
+ok 24 - cleanup owner-drift is confined to run-owned direct child
+  ---
+  duration_ms: 194.6449
+  type: 'test'
+  ...
+# Subtest: cleanup outside is confined to run-owned direct child
+ok 25 - cleanup outside is confined to run-owned direct child
+  ---
+  duration_ms: 185.8504
+  type: 'test'
+  ...
+# Subtest: cleanup symlink is confined to run-owned direct child
+ok 26 - cleanup symlink is confined to run-owned direct child
+  ---
+  duration_ms: 194.5136
+  type: 'test'
+  ...
+# Subtest: restricted triggers isolate candidate publication, diagnostic request and full marker
+ok 27 - restricted triggers isolate candidate publication, diagnostic request and full marker
+  ---
+  duration_ms: 1.2935
+  type: 'test'
+  ...
+# Subtest: workflow resource, source binding, evidence, custody and no-image boundaries remain explicit
+ok 28 - workflow resource, source binding, evidence, custody and no-image boundaries remain explicit
+  ---
+  duration_ms: 0.4664
+  type: 'test'
+  ...
+# Subtest: diagnostic custody none remains run-specific and independent
+ok 29 - diagnostic custody none remains run-specific and independent
+  ---
+  duration_ms: 18.433
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-workflow remains run-specific and independent
+ok 30 - diagnostic custody wrong-workflow remains run-specific and independent
+  ---
+  duration_ms: 2.3233
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-artifact remains run-specific and independent
+ok 31 - diagnostic custody wrong-artifact remains run-specific and independent
+  ---
+  duration_ms: 1.3462
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-attempt remains run-specific and independent
+ok 32 - diagnostic custody wrong-attempt remains run-specific and independent
+  ---
+  duration_ms: 1.2234
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-digest remains run-specific and independent
+ok 33 - diagnostic custody wrong-digest remains run-specific and independent
+  ---
+  duration_ms: 1.3098
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 34 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 17.7992
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 35 - wrong owner never posts a remote status
+  ---
+  duration_ms: 2.1693
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 36 - wrong source never posts a remote status
+  ---
+  duration_ms: 1.0423
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 37 - wrong run never posts a remote status
+  ---
+  duration_ms: 1.025
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 38 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 2.2924
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 39 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 1.1183
+  type: 'test'
+  ...
+# Subtest: canonical fixture follows the actual Trivy 0.76.0 pinned Go metadata declaration
+ok 40 - canonical fixture follows the actual Trivy 0.76.0 pinned Go metadata declaration
+  ---
+  duration_ms: 4.2495
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit missing decision survive admission
+ok 41 - bounded original bytes/clock/hash and explicit missing decision survive admission
+  ---
+  duration_ms: 59.9819
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit malformed decision survive admission
+ok 42 - bounded original bytes/clock/hash and explicit malformed decision survive admission
+  ---
+  duration_ms: 42.2377
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit BOM is not Go JSON metadata decision survive admission
+ok 43 - bounded original bytes/clock/hash and explicit BOM is not Go JSON metadata decision survive admission
+  ---
+  duration_ms: 39.6191
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit invalid UTF8 decision survive admission
+ok 44 - bounded original bytes/clock/hash and explicit invalid UTF8 decision survive admission
+  ---
+  duration_ms: 41.0374
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit wrong schema decision survive admission
+ok 45 - bounded original bytes/clock/hash and explicit wrong schema decision survive admission
+  ---
+  duration_ms: 45.4701
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit missing timestamp decision survive admission
+ok 46 - bounded original bytes/clock/hash and explicit missing timestamp decision survive admission
+  ---
+  duration_ms: 43.2568
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit invalid calendar decision survive admission
+ok 47 - bounded original bytes/clock/hash and explicit invalid calendar decision survive admission
+  ---
+  duration_ms: 46.8414
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit future updated time decision survive admission
+ok 48 - bounded original bytes/clock/hash and explicit future updated time decision survive admission
+  ---
+  duration_ms: 42.2821
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit expired even freshly downloaded decision survive admission
+ok 49 - bounded original bytes/clock/hash and explicit expired even freshly downloaded decision survive admission
+  ---
+  duration_ms: 48.6041
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit deadline equality decision survive admission
+ok 50 - bounded original bytes/clock/hash and explicit deadline equality decision survive admission
+  ---
+  duration_ms: 42.9055
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit oversized decision survive admission
+ok 51 - bounded original bytes/clock/hash and explicit oversized decision survive admission
+  ---
+  duration_ms: 54.1481
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit valid decision survive admission
+ok 52 - bounded original bytes/clock/hash and explicit valid decision survive admission
+  ---
+  duration_ms: 40.5182
+  type: 'test'
+  ...
+# Subtest: metadata bytes and clock are durably written before JSON decoding begins
+ok 53 - metadata bytes and clock are durably written before JSON decoding begins
+  ---
+  duration_ms: 40.0633
+  type: 'test'
+  ...
+# Subtest: Go RFC3339Nano offsets are interpreted, impossible dates and weak date-only parsing rejected
+ok 54 - Go RFC3339Nano offsets are interpreted, impossible dates and weak date-only parsing rejected
+  ---
+  duration_ms: 0.4266
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses metadata drift without re-admission
+ok 55 - single shared admission refuses metadata drift without re-admission
+  ---
+  duration_ms: 40.9848
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses database drift without re-admission
+ok 56 - single shared admission refuses database drift without re-admission
+  ---
+  duration_ms: 43.8701
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses scanner drift without re-admission
+ok 57 - single shared admission refuses scanner drift without re-admission
+  ---
+  duration_ms: 46.9202
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses receipt drift without re-admission
+ok 58 - single shared admission refuses receipt drift without re-admission
+  ---
+  duration_ms: 52.8842
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses expiry drift without re-admission
+ok 59 - single shared admission refuses expiry drift without re-admission
+  ---
+  duration_ms: 43.1035
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses backward drift without re-admission
+ok 60 - single shared admission refuses backward drift without re-admission
+  ---
+  duration_ms: 43.1046
+  type: 'test'
+  ...
+# Subtest: failed shared prerequisite skips all nine roles before invoking any external tool
+ok 61 - failed shared prerequisite skips all nine roles before invoking any external tool
+  ---
+  duration_ms: 278.1537
+  type: 'test'
+  ...
+# Subtest: invalid clock, scanner mismatch and empty DB still retain independent diagnostics
+ok 62 - invalid clock, scanner mismatch and empty DB still retain independent diagnostics
+  ---
+  duration_ms: 33.1745
+  type: 'test'
+  ...
+# Subtest: actual admit CLI failure retains raw evidence and immediately marks all dependent roles skipped
+ok 63 - actual admit CLI failure retains raw evidence and immediately marks all dependent roles skipped
+  ---
+  duration_ms: 257.5897
+  type: 'test'
+  ...
+1..63
+# tests 63
+# suites 0
+# pass 63
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11656.3547

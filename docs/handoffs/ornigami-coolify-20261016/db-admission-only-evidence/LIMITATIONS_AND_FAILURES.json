@@ -1,0 +1,29 @@
+{
+  "localOnly": true,
+  "noExternalOperations": true,
+  "realDbResult": "untested",
+  "historicalLinuxRejectionPreciseCause": "unrecoverable from missing original metadata",
+  "initialLocalRun": {
+    "result": "57/58; junction refusal failed",
+    "limits": "legacy local launcher: 4 GiB/3 CPU/512 MiB heap; no external scope changed",
+    "evidence": "attempt-1 and bounded-1"
+  },
+  "repair": "Reject Windows junctions/reparse points as well as symlinks; expose tighter local launcher options without changing defaults. Final runner remains 2 GiB/1 CPU/zero swap/512 MiB heap.",
+  "subsequentRuns": "63,117,127 and127 tests passed after relevant custody/capture/resource/workflow-binding changes; final late-worker completeness repair recorded separately. No scanner executed; no DB, binary tool or app dependency download occurred. One small pinned official Go source was inspected and retained.",
+  "localLinuxProof": "not established; Windows Job Object counters are not Linux cgroup/swap/OOM evidence",
+  "notRun": [
+    "real tool bootstrap",
+    "GitHub push workflow registration/execution",
+    "actual runner source fetch and jq protocol execution",
+    "real DB download/admission",
+    "Linux cgroup/zero-swap observations",
+    "runner artifact upload",
+    "owner custody acknowledgment",
+    "Linux scoped cleanup"
+  ],
+  "historicalSecurity": "43 Debian highs unresolved; historical final-image findings remain separate; no image/security/runtime/release acceptance",
+  "maintenance": "production adoption, primary/backup/security review ownership unresolved",
+  "holds": "No integration configuration changed; fresh effective holds/active watcher and operation checks are required before future publication",
+  "externalTrialAuthorization": "none; future run and exactly one owner custody acknowledgment require separate explicit approval",
+  "finalRun": "128/128 passed after late-worker completeness repair; bounded-6 final receipt"
+}

@@ -1,0 +1,10 @@
+{
+  "actionlintArchiveSha256": "6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f6e9",
+  "actionlintExecutableSha256": "54ca21be3de4c7cfa26914aa8b61bd76bf573ef3caac5f80d110558cdf241718",
+  "executableMatchesPinnedArchive": true,
+  "trivyDbFlagsSource": {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/flag/db_flags.go",
+    "sha256": "5295590906fafc0e5ba7fd80d1ef4723052e0446445ed732447a34887708fb6b"
+  },
+  "githubWorkflowContextDocumentation": "https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context"
+}

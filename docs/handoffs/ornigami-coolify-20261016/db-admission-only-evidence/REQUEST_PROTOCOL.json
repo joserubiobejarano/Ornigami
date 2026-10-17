@@ -1,0 +1,37 @@
+{
+  "publicationBranch": "codex/ornigami-sri-local-prototype-f-20261016",
+  "requestPath": ".github/build-requests/ornigami-db-admission.json",
+  "purpose": "ornigami-db-admission-only-v1",
+  "previewSha256": "1e2aa1f555db9f6169402de942fc5e134a903aaa364a5b2dc38d5d9a667e151e",
+  "previewGitBlob": "fb4df5ba25448b41dd7738d65ae29520cbdcafdf",
+  "futureRequestCommitSha": "not-created; requires separate approval",
+  "requiredSingleParent": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "custodyAcknowledgment": "one exact run; requires separate explicit approval",
+  "deadlinesSeconds": {
+    "job": 1500,
+    "workFromInitialization": 600,
+    "bootstrap": 180,
+    "worker": 360,
+    "eachCommand": 180,
+    "custody": 600,
+    "cleanup": 90,
+    "killGrace": 5
+  },
+  "limits": {
+    "memoryBytes": 2147483648,
+    "cpu": 1,
+    "swapBytes": 0,
+    "nodeHeapMiB": 512,
+    "diskReserveBytes": 21474836480
+  },
+  "artifact": {
+    "name": "ornigami-db-admission-RUN_ID-1",
+    "retentionDays": 30,
+    "maxContentBytes": 67108864
+  },
+  "tools": {
+    "nodeArchiveSha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de",
+    "trivyArchiveSha256": "e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7",
+    "trivyExecutableSha256": "1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19"
+  }
+}

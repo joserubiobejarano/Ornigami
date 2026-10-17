@@ -1,0 +1,786 @@
+diff --git a/.github/workflows/ornigami-db-admission-only.yml b/.github/workflows/ornigami-db-admission-only.yml
+new file mode 100644
+index 0000000..0c586a0
+--- /dev/null
++++ b/.github/workflows/ornigami-db-admission-only.yml
+@@ -0,0 +1,186 @@
++name: Ornigami frozen DB admission only
++
++on:
++  push:
++    branches:
++      - codex/ornigami-sri-local-prototype-f-20261016
++    paths:
++      - .github/build-requests/ornigami-db-admission.json
++
++permissions:
++  statuses: read
++
++concurrency:
++  group: ornigami-external-image-build
++  cancel-in-progress: false
++
++jobs:
++  admission-only:
++    if: github.event.created == false && github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.run_attempt == 1 && github.ref == 'refs/heads/codex/ornigami-sri-local-prototype-f-20261016'
++    runs-on: ubuntu-24.04
++    timeout-minutes: 25
++    steps:
++      - name: Initialize run-owned evidence
++        id: initialize
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          root=$(mktemp -d "$RUNNER_TEMP/ornigami-db-only-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")
++          chmod 700 "$root"
++          mkdir -m 700 "$root/evidence"
++          echo "DB_ONLY_ROOT=$root" >> "$GITHUB_ENV"
++          echo "DB_ONLY_DEADLINE=$(( $(date +%s) + 600 ))" >> "$GITHUB_ENV"
++          python3 - "$root" <<'PY'
++          import json, os, pathlib, sys
++          root = pathlib.Path(sys.argv[1])
++          identity = {key: os.environ[key] for key in ['GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_SHA', 'GITHUB_REF']}
++          for file in [root / 'owner.json', root / 'evidence/run-identity.json']:
++              file.write_text(json.dumps(identity, indent=2) + '\n')
++          PY
++
++      - name: Verify request-only child and exact workflow binding
++        id: protocol
++        shell: bash
++        env:
++          RUN_WORKFLOW_SHA: ${{ github.workflow_sha }}
++          RUN_WORKFLOW_REF: ${{ github.workflow_ref }}
++        run: |
++          set -Eeuo pipefail
++          [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_RUN_ATTEMPT" == 1 ]]
++          [[ "$GITHUB_REF" == refs/heads/codex/ornigami-sri-local-prototype-f-20261016 ]]
++          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
++          [[ "$RUN_WORKFLOW_SHA" == "$GITHUB_SHA" ]]
++          [[ "$RUN_WORKFLOW_REF" == 'joserubiobejarano/Ornigami/.github/workflows/ornigami-db-admission-only.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016' ]]
++          repo="$DB_ONLY_ROOT/source"
++          git init --quiet "$repo"
++          git -C "$repo" remote add origin https://github.com/joserubiobejarano/Ornigami.git
++          timeout --kill-after=5s 60s git -C "$repo" fetch --quiet --no-tags --depth=2 origin "$GITHUB_SHA"
++          [[ "$(git -C "$repo" rev-parse FETCH_HEAD)" == "$GITHUB_SHA" ]]
++          read -r request parent extra < <(git -C "$repo" rev-list --parents -n1 "$GITHUB_SHA")
++          [[ "$request" == "$GITHUB_SHA" && "$parent" =~ ^[0-9a-f]{40}$ && -z "${extra:-}" ]]
++          mapfile -t changes < <(git -C "$repo" diff --name-only "$parent" "$request")
++          [[ ${#changes[@]} -eq 1 && "${changes[0]}" == .github/build-requests/ornigami-db-admission.json ]]
++          git -C "$repo" show "$request:.github/build-requests/ornigami-db-admission.json" > "$DB_ONLY_ROOT/request.json"
++          jq -e 'type == "object" and keys == ["packageLockSha256","purpose","sourceSha"] and .purpose == "ornigami-db-admission-only-v1" and (.sourceSha | test("^[0-9a-f]{40}$")) and (.packageLockSha256 | test("^[0-9a-f]{64}$"))' "$DB_ONLY_ROOT/request.json" >/dev/null
++          SOURCE_SHA=$(jq -r .sourceSha "$DB_ONLY_ROOT/request.json")
++          [[ "$SOURCE_SHA" == "$parent" ]]
++          for file in .github/workflows/ornigami-db-admission-only.yml .github/workflows/ornigami-image-rehearsal.yml .github/build-requests/ornigami.json; do
++            [[ "$(git -C "$repo" rev-parse "$parent:$file")" == "$(git -C "$repo" rev-parse "$request:$file")" ]]
++          done
++          lock=$(git -C "$repo" show "$parent:package-lock.json" | sha256sum | cut -d' ' -f1)
++          [[ "$lock" == "$(jq -r .packageLockSha256 "$DB_ONLY_ROOT/request.json")" ]]
++          blob=$(git -C "$repo" rev-parse "$parent:.github/workflows/ornigami-db-admission-only.yml")
++          jq -n --arg requestSha "$request" --arg sourceSha "$SOURCE_SHA" --arg packageLockSha256 "$lock" --arg workflowBlob "$blob" --arg workflowSha "$RUN_WORKFLOW_SHA" --arg workflowRef "$RUN_WORKFLOW_REF" '{requestSha:$requestSha,sourceSha:$sourceSha,packageLockSha256:$packageLockSha256,workflowBlob:$workflowBlob,workflowSha:$workflowSha,workflowRef:$workflowRef}' > "$DB_ONLY_ROOT/evidence/protocol.json"
++          git -C "$repo" checkout --quiet --detach "$SOURCE_SHA"
++          [[ -z "$(git -C "$repo" status --porcelain)" ]]
++          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
++
++      - name: Bounded pinned tool preparation
++        id: bootstrap
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          [[ "$(uname -m)" == x86_64 && "$(uname -s)" == Linux ]]
++          [[ $(getconf _NPROCESSORS_ONLN) -ge 2 ]]
++          [[ $(awk '/MemAvailable:/ {print $2}' /proc/meminfo) -ge 3145728 ]]
++          [[ $(df -PB1 "$DB_ONLY_ROOT" | awk 'NR==2 {print $4}') -ge 21474836480 ]]
++          [[ $(date +%s) -lt "$DB_ONLY_DEADLINE" ]]
++          { date -u +%FT%TZ; uname -a; git --version; curl --version; python3 --version; systemd-run --version; df -PB1 "$DB_ONLY_ROOT"; } > "$DB_ONLY_ROOT/evidence/host-tools.stdout"
++          set +e
++          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-tools-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
++            /usr/sbin/runuser -u "$(id -un)" -- timeout --kill-after=5s 180s /bin/bash "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-bootstrap.sh" "$DB_ONLY_ROOT" \
++            > "$DB_ONLY_ROOT/evidence/bootstrap.stdout" 2> "$DB_ONLY_ROOT/evidence/bootstrap.stderr"
++          code=$?
++          set -e
++          jq -n --argjson exit "$code" '{exit:$exit,result:(if $exit==0 then "passed" else "failed" end)}' > "$DB_ONLY_ROOT/evidence/bootstrap.json"
++          exit "$code"
++
++      - name: One DB download and one shared admission then controlled fixtures
++        id: diagnostic
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          [[ $(date +%s) -lt "$DB_ONLY_DEADLINE" ]]
++          cd "$DB_ONLY_ROOT/source"
++          remaining=$(( DB_ONLY_DEADLINE - $(date +%s) ))
++          (( remaining > 0 && remaining <= 600 ))
++          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-only-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
++            /usr/sbin/runuser -u "$(id -un)" -- env NODE_OPTIONS=--max-old-space-size=512 timeout --kill-after=5s "${remaining}s" \
++            "$DB_ONLY_ROOT/tools/node" --max-old-space-size=512 scripts/framework-prototype/admission-only-worker.mjs "$DB_ONLY_ROOT" "$SOURCE_SHA"
++
++      - name: Capture complete or explicit failed and skipped evidence
++        id: capture
++        if: always() && steps.initialize.outcome == 'success'
++        shell: bash
++        env:
++          PROTOCOL_RESULT: ${{ steps.protocol.outcome }}
++          BOOTSTRAP_RESULT: ${{ steps.bootstrap.outcome }}
++          DIAGNOSTIC_RESULT: ${{ steps.diagnostic.outcome }}
++        run: |
++          set -Eeuo pipefail
++          jq -n --arg protocol "$PROTOCOL_RESULT" --arg bootstrap "$BOOTSTRAP_RESULT" --arg diagnostic "$DIAGNOSTIC_RESULT" '{protocol:$protocol,bootstrap:$bootstrap,diagnostic:$diagnostic}' > "$DB_ONLY_ROOT/evidence/step-outcomes.json"
++          if [[ "$PROTOCOL_RESULT" == success ]]; then
++            python3 "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-capture.py" capture "$DB_ONLY_ROOT/evidence"
++          else
++            # Never execute candidate-owned code after failed source admission.
++            python3 - "$DB_ONLY_ROOT/evidence" <<'PY'
++          import hashlib, json, pathlib, sys
++          root = pathlib.Path(sys.argv[1])
++          phases = {key: {'result': 'skipped', 'reason': 'source admission failed'} for key in ['download','admission','fixtures']}
++          (root/'phases.json').write_text(json.dumps({'phases':phases}))
++          (root/'capture.json').write_text(json.dumps({'result':'failed','errors':['source admission failed'],'custody':'not-assessed'}))
++          (root/'SUMMARY.md').write_text('# DB admission-only\n\nSource admission failed. All dependent phases skipped. Custody is independent.\n')
++          files = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()]
++          (root/'manifest.json').write_text(json.dumps({'files':files,'capture':'failed'}))
++          PY
++            exit 1
++          fi
++
++      - name: Upload immutable admission evidence
++        id: upload
++        if: always() && steps.initialize.outcome == 'success'
++        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
++        with:
++          name: ornigami-db-admission-${{ github.run_id }}-${{ github.run_attempt }}
++          path: ${{ env.DB_ONLY_ROOT }}/evidence/
++          if-no-files-found: error
++          retention-days: 30
++
++      - name: Require owner verified durable custody
++        id: custody
++        if: always() && steps.upload.outcome == 'success'
++        shell: bash
++        env:
++          GH_TOKEN: ${{ github.token }}
++          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
++          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
++        run: |
++          set -Eeuo pipefail
++          [[ "$ARTIFACT_ID" =~ ^[0-9]+$ && "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]
++          context="ornigami/evidence-local/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
++          description="artifact=${ARTIFACT_ID};sha256=${ARTIFACT_DIGEST}"
++          printf 'Custody required run=%s attempt=%s request=%s artifact=%s sha256=%s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST"
++          for observation in $(seq 1 60); do
++            statuses=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100")
++            if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" 'any(.[]; .context==$context and .description==$description and .state=="success" and .creator.login==$owner)' <<< "$statuses" >/dev/null; then
++              exit 0
++            fi
++            sleep 10
++          done
++          echo 'Custody deadline failed; no acceptance; uploaded evidence remains retained.' >&2
++          exit 1
++
++      - name: Scoped cleanup and finished observations
++        if: always() && steps.protocol.outcome == 'success'
++        shell: bash
++        env:
++          CUSTODY_RESULT: ${{ steps.custody.outcome }}
++        run: |
++          set -Eeuo pipefail
++          if [[ "$CUSTODY_RESULT" != success ]]; then
++            echo 'Explicit cleanup skipped: durable custody unverified. Ephemeral runner teardown remains platform-controlled.' | tee -a "$GITHUB_STEP_SUMMARY"
++            exit 1
++          fi
++          identity=$(jq -n --arg GITHUB_RUN_ID "$GITHUB_RUN_ID" --arg GITHUB_RUN_ATTEMPT "$GITHUB_RUN_ATTEMPT" --arg GITHUB_SHA "$GITHUB_SHA" --arg GITHUB_REF "$GITHUB_REF" '{GITHUB_RUN_ID:$GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT:$GITHUB_RUN_ATTEMPT,GITHUB_SHA:$GITHUB_SHA,GITHUB_REF:$GITHUB_REF}')
++          timeout --kill-after=5s 90s python3 "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-capture.py" cleanup "$DB_ONLY_ROOT" "$RUNNER_TEMP" "$identity" | tee -a "$GITHUB_STEP_SUMMARY"
++          echo 'Cleanup observations are in finished job logs/summary, recovered separately after custody. They were produced after the immutable artifact.' >> "$GITHUB_STEP_SUMMARY"
+diff --git a/scripts/framework-prototype/DB_ADMISSION_ONLY.md b/scripts/framework-prototype/DB_ADMISSION_ONLY.md
+new file mode 100644
+index 0000000..4c1b0b0
+--- /dev/null
++++ b/scripts/framework-prototype/DB_ADMISSION_ONLY.md
+@@ -0,0 +1,53 @@
++# Dedicated frozen DB admission diagnostic
++
++This workflow is locally prepared, **not registered, published or authorized to run**. It does not establish image, security, runtime, framework-adoption or release acceptance. Historical failed scans and incomplete artifacts remain evidence, not corrected results.
++
++## Publication and request protocol (future separate approval)
++
++Workflow: `.github/workflows/ornigami-db-admission-only.yml`. The only push trigger is branch `codex/ornigami-sri-local-prototype-f-20261016` and path `.github/build-requests/ornigami-db-admission.json`. There is no dispatch/default-branch dependency, PR trigger or scheduled trigger. The local implementation branch is not the publication target.
++
++Before any future publication, freshly verify Vercel/Netlify/Coolify/other integration holds, watchers, active operations, exact candidate/package/lock/workflow identities, no competing trial and included public GitHub Actions/artifact capacity. Existing recorded holds are not fresh proof. Stop on uncertainty or drift. Keep QR staging untouched.
++
++1. Publish only the approved candidate to the existing restricted branch, without force and without either request-marker change. Confirm no unintended workflow/build/deployment started. CI/security already exclude this branch; the full image workflow watches only the unchanged `.github/build-requests/ornigami.json`.
++2. Starting **exactly at that candidate**, create one single-parent, request-only child commit. Add/update only the new diagnostic request path with exactly these keys:
++
++   ```json
++   {
++     "purpose": "ornigami-db-admission-only-v1",
++     "sourceSha": "<approved 40-character candidate SHA>",
++     "packageLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815"
++   }
++   ```
++
++   No live marker is included in this preparation. Do not modify the full-build marker. Push this child once, without force. The request must name its immediate parent; lock bytes must match; candidate/request diagnostic workflow, full workflow and full marker Git blobs must match. Require the executed `github.workflow_sha` to equal the request SHA and `github.workflow_ref` to equal this exact workflow on the restricted branch, using [GitHub's workflow identity contexts](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context). The runner fetches the public request with depth two and checks out the exact parent detached. No arbitrary workflow/source selectors or merge request commits are accepted. The local `verifyProtocol(repo, requestSha)` helper tests the same invariants against actual local Git histories; the workflow independently checks them before candidate-owned execution.
++3. Admit **exactly one attempt** on one standard public `ubuntu-24.04` job. A workflow rerun is rejected by `run_attempt == 1`. Shared concurrency group `ornigami-external-image-build` prevents overlap with the full image workflow; cancellation is disabled. Do not queue another request/retry on failure. This does not itself prove live integration holds.
++
++## Tools, boundaries and deadlines
++
++Node 22.23.3/OpenSSL 3.5.8 remains unchanged. Node Linux amd64 archive SHA-256 `df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de`; Trivy 0.76.0 archive `e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7`; Trivy executable `1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19`. Verify archives before extraction and scanner bytes before execution. Exact actual versions and executable/archive identities go into bootstrap logs. No package manager/dependency installation, image pull, scanner image, vulnerability scan or app build occurs. Host git/curl/tar/bash/timeout/systemd/Python/jq/gh are standard runner administrative tools, inventoried rather than falsely called checksum-pinned downloads. Pinned upload-artifact action: `bbbca2ddaa5d8feaa63e36b76fdaad77386f024f`.
++
++Tool preparation and diagnostic work use **serial** verified systemd scopes: 2 GiB memory, 1 CPU, zero swap; Node heap 512 MiB. Bootstrap timeout 180 seconds plus 5-second kill grace. The worker deadline is 360 seconds, each command at most 180 seconds, and an outer work deadline of 600 seconds from initialization cannot be extended. Required admission: Linux x64, at least two online host CPUs, 3 GiB available host memory, 20 GiB free disk reserve, working sudo/systemd/cgroup v2 and exact memory/swap/CPU controls. No fallback on unsupported tooling/protocol. The diagnostic records timestamped wall/monotonic/cgroup/disk observations every second and before/after work; memory peak, max/OOM/kill counters and CPU observations remain visible. Nonzero memory-limit/OOM counters fail resource admission. Bootstrap records initial controls and final peak/events/CPU/disk even on ordinary failure. A hard kill may leave incomplete diagnostics; capture then fails rather than inventing counters. Source fetch and evidence/custody/cleanup are administrative host steps outside worker scopes; the whole job has a 25-minute deadline.
++
++The cache starts empty in a uniquely claimed private runner-temp directory. Exactly **one Trivy DB-download invocation** uses `image --download-db-only --no-progress --db-repository ghcr.io/aquasecurity/trivy-db:2 --cache-dir <owned cache>`. The single explicit supported repository avoids Trivy's default mirror fallback; flags and default repository ordering were verified in the [exact pinned upstream source](https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/pkg/flag/db_flags.go). This retrieves the OCI **DB artifact only**, not a container image; there is no second DB/Java DB or replacement download. No orchestration retry is configured; this is not a promise that upstream HTTP libraries make only one network request. Download stdout/stderr, exit/signal/error and command clocks are retained. The tool has a 180-second execution deadline. No added-package or network fallback is available.
++
++One shared admission runs even after download failure, to retain partial/missing metadata diagnostics. It uses the unchanged reviewed helper/policy: schema 2, canonical timestamps, `UpdatedAt <= actual guard clock < NextUpdate`, zero grace and no DownloadedAt extension. Retain bounded original metadata (64 KiB), available original/retained identities, DB hash (not contents), scanner hash, initial and validation OS clocks, raw/parsed values and explicit errors before returning failure. An interrupted index remains failed/incomplete. Failure stops all dependent work; every image/scan/build phase is out of scope. On successful download **and** admission only, run built-in-only `tests/frozen-db-admission.test.mjs` with controlled clocks and fictional bytes on Linux. Its fixture results are separately labeled and cannot substitute for the real downloaded DB result.
++
++## Evidence, custody and cleanup
++
++Always capture phase outcomes, skipped reasons, required receipts, nonempty summary and a SHA-256/byte-count manifest. Rejected admission may have **complete diagnostic evidence** while its admission gate fails; interrupted or missing receipts fail completeness. Complete capture, successful custody, freshness, resource and fictional-fixture gates are separate. Artifact is capped at 64 MiB of content and retained for 30 days subject to repository policy. No actual DB bytes, tool archives, app secrets or credentials are uploaded. Failed source admission uses workflow-owned inline capture rather than executing candidate code.
++
++**The proposed run requires one separately authorized owner-authenticated custody acknowledgment**, within ten minutes of upload. The prepared helper additionally binds the diagnostic workflow path, attempt one and exact artifact name. Its underlying helper verifies owner/run/request/artifact identity, ZIP SHA-256, durable fsync save and read-back before posting one run-specific status. Invoke only after future explicit approval:
++
++```text
++node scripts/framework-prototype/retain-db-admission-evidence.mjs RUN_ID 1 REQUEST_SHA ARTIFACT_ID ZIP_SHA256 NEW_LOCAL_DIRECTORY --acknowledge
++```
++
++Custody does not claim manifest completeness or successful security admission. Assess the downloaded manifest separately. No status is posted during local tests (fake APIs only). The workflow token can only read statuses. No acknowledgment is currently authorized.
++
++Only verified custody permits explicit cleanup. Cleanup has a 90-second deadline plus five-second kill grace; it verifies exact current run/attempt/request/ref against the ownership receipt, resolved direct-child runner-temp location and absence of symlinks/junctions before removing that claimed directory. It never prunes shared paths or container resources. On failed custody, explicit cleanup is skipped with an error; platform ephemeral-runner teardown is outside our control and uploaded evidence remains the fallback. Failed source protocol likewise leaves cleanup to platform teardown, without executing candidate cleanup code. After successful cleanup, recover **finished logs and summary** durably and separately: cleanup free-disk/removal/read-back receipts were produced after the immutable artifact and cannot be claimed part of it. No blanket guarantee of capture on runner cancellation/hard termination is possible; such evidence is incomplete.
++
++## Local verification versus future Linux proof
++
++Local tests use actual temporary Git histories, controlled clocks/fictional metadata and DB/tool files, mocked executor/API responses, actual Python capture/cleanup and syntax checks. They never download DBs or invoke the scanner. Local Windows Job Object tests can enforce 2 GiB/1 CPU/512 MiB heap; Linux zero-swap/cgroup behavior, real tool bootstrap/protocol execution, actual DB provenance/freshness, memory peaks and runner artifacts remain untested until the separately approved diagnostic.
++
++Passing that diagnostic would establish DB-handling behavior only. The 43 historical Debian highs, complete parent/intermediate/final scans, native/runtime/CSP/SRI/browser/restart/cache acceptance, compiler memory investigation, retained deployable image and maintenance/recovery/origin decisions remain outside its acceptance scope. Holds, cron/provider/live-release gates stay closed. No VPS or QR operation is included.
+diff --git a/scripts/framework-prototype/admission-only-bootstrap.sh b/scripts/framework-prototype/admission-only-bootstrap.sh
+new file mode 100644
+index 0000000..65c35c6
+--- /dev/null
++++ b/scripts/framework-prototype/admission-only-bootstrap.sh
+@@ -0,0 +1,32 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++root=$1
++[[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]]
++group=$(awk -F: '$1 == "0" {print $3}' /proc/self/cgroup)
++[[ -n "$group" ]]
++metrics="/sys/fs/cgroup$group"
++[[ "$(cat "$metrics/memory.max")" == 2147483648 ]]
++[[ "$(cat "$metrics/memory.swap.max")" == 0 ]]
++[[ "$(cat "$metrics/cpu.max")" == '100000 100000' ]]
++[[ $(df -PB1 "$root" | awk 'NR==2 {print $4}') -ge 21474836480 ]]
++mkdir "$root/tools"
++cd "$root/tools"
++trap 'date -u +%FT%TZ; cat "$metrics/memory.peak" "$metrics/memory.events" "$metrics/cpu.stat"; df -PB1 "$root"' EXIT
++date -u +%FT%TZ
++cat "$metrics/memory.max" "$metrics/memory.swap.max" "$metrics/cpu.max"
++# Two tool archives only; no DB is fetched here. No curl retries or fallbacks.
++curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --connect-timeout 10 --max-time 60 --max-filesize 104857600 \
++  --output node.tar.xz https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
++echo 'df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de  node.tar.xz' | sha256sum --check --status
++tar -xJf node.tar.xz node-v22.23.3-linux-x64/bin/node --strip-components=2
++curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --connect-timeout 10 --max-time 60 --max-filesize 104857600 \
++  --output trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_Linux-64bit.tar.gz
++echo 'e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7  trivy.tar.gz' | sha256sum --check --status
++tar -xzf trivy.tar.gz trivy
++echo '1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19  trivy' | sha256sum --check --status
++./node --max-old-space-size=512 -e 'if(process.version!=="v22.23.3"||process.versions.openssl!=="3.5.8")process.exit(1);console.log(JSON.stringify(process.versions))'
++./trivy --version
++[[ "$(./trivy --version | head -1)" == 'Version: 0.76.0' ]]
++sha256sum node.tar.xz node trivy.tar.gz trivy
++[[ $(df -PB1 "$root" | awk 'NR==2 {print $4}') -ge 21474836480 ]]
++awk '$1=="max" || $1=="oom" || $1=="oom_kill" || $1=="oom_group_kill" {if($2!=0)exit 1}' "$metrics/memory.events"
+diff --git a/scripts/framework-prototype/admission-only-capture.py b/scripts/framework-prototype/admission-only-capture.py
+new file mode 100644
+index 0000000..9c3d6b6
+--- /dev/null
++++ b/scripts/framework-prototype/admission-only-capture.py
+@@ -0,0 +1,150 @@
++"""Stdlib capture/cleanup. Never downloads, scans or executes dependencies."""
++import hashlib
++import json
++import os
++import pathlib
++import shutil
++import sys
++from datetime import datetime, timezone
++
++
++def unsafe_link(file):
++    # Windows junctions are reparse points but are not Path.is_symlink().
++    return file.is_symlink() or bool(getattr(file.lstat(), 'st_file_attributes', 0) & 0x400)
++
++
++def save(file, value):
++    file.parent.mkdir(parents=True, exist_ok=True)
++    with file.open('w', encoding='utf-8', newline='\n') as stream:
++        json.dump(value, stream, indent=2)
++        stream.write('\n')
++        stream.flush()
++        os.fsync(stream.fileno())
++
++
++def capture(evidence):
++    evidence = pathlib.Path(evidence)
++    evidence.mkdir(parents=True, exist_ok=True)
++    errors = []
++    try:
++        outcomes = json.loads((evidence / 'step-outcomes.json').read_text())
++    except Exception as error:
++        outcomes = {}
++        errors.append('workflow outcomes unavailable: ' + str(error))
++    phases = {'download': {'result': 'skipped', 'reason': 'bootstrap/admission not reached'},
++              'admission': {'result': 'skipped', 'reason': 'bootstrap/admission not reached'},
++              'fixtures': {'result': 'skipped', 'reason': 'shared prerequisite not passed'}}
++    if (evidence / 'phases.json').exists():
++        try:
++            phases = json.loads((evidence / 'phases.json').read_text())['phases']
++            if set(phases) != {'download', 'admission', 'fixtures'}:
++                raise ValueError('unexpected phase inventory')
++        except Exception as error:
++            errors.append('phase inventory: ' + str(error))
++    else:
++        if outcomes.get('diagnostic') in ['success', 'failure', 'cancelled']:
++            errors.append('attempted diagnostic has no phase inventory')
++        save(evidence / 'phases.json', {'phases': phases, 'imageWork': 'out-of-scope', 'custody': 'not-assessed'})
++    required = ['run-identity.json', 'protocol.json', 'bootstrap.json', 'step-outcomes.json',
++                'bootstrap.stdout', 'bootstrap.stderr', 'host-tools.stdout']
++    if outcomes.get('diagnostic') in ['success', 'failure', 'cancelled']:
++        required += ['resources.json']
++    if phases['download']['result'] != 'skipped':
++        required += ['download.stdout', 'download.stderr', 'resources.json', 'controller.stdout', 'controller.stderr']
++    if phases['fixtures']['result'] != 'skipped':
++        required += ['fixtures.stdout', 'fixtures.stderr']
++        if phases['fixtures'].get('data') != 'fictional fixtures only; independent of real DB':
++            errors.append('fixtures are not explicitly distinguished from real data')
++    if phases['admission']['result'] != 'skipped':
++        prefix = 'database-admission/'
++        required += [prefix + f for f in ['index.json', 'clock.json', 'validation-clock.json',
++                    'metadata-identity.json', 'databaseIdentity.json', 'scannerIdentity.json']]
++        try:
++            receipt = json.loads((evidence / prefix / 'index.json').read_text())
++            identity = json.loads((evidence / prefix / 'metadata-identity.json').read_text())
++            if receipt['phase'] != 'complete' or receipt['result'] != phases['admission']['result']:
++                errors.append('admission incomplete or phase verdict mismatch')
++            if receipt['sourceSha'] != json.loads((evidence / 'protocol.json').read_text())['sourceSha']:
++                errors.append('admission source mismatch')
++            for file, key in [('clock.json', 'captureClock'), ('validation-clock.json', 'clock'),
++                              ('databaseIdentity.json', 'databaseIdentity'), ('scannerIdentity.json', 'scannerIdentity')]:
++                actual = json.loads((evidence / prefix / file).read_text())
++                if receipt.get(key) is not None and receipt[key] != actual:
++                    errors.append('admission receipt mismatch: ' + file)
++            if receipt.get('metadataIdentity') is not None and receipt['metadataIdentity'] != identity:
++                errors.append('admission metadata identity receipt mismatch')
++            raw = evidence / prefix / 'metadata.original.bin'
++            if identity.get('retainedSha256'):
++                required += [prefix + 'metadata.original.bin']
++                if raw.stat().st_size > 65536 or hashlib.sha256(raw.read_bytes()).hexdigest() != identity['retainedSha256']:
++                    errors.append('original metadata identity mismatch')
++            if receipt['result'] == 'failed' and not receipt.get('errors'):
++                errors.append('rejection reasons missing')
++        except Exception as error:
++            errors.append('admission capture: ' + str(error))
++    for file in required:
++        if not (evidence / file).is_file():
++            errors.append('missing required file: ' + file)
++    for name, phase in phases.items():
++        if phase.get('result') not in ['passed', 'failed', 'skipped']:
++            errors.append('invalid phase verdict: ' + name)
++        if phase.get('result') == 'skipped' and not phase.get('reason'):
++            errors.append('missing skipped reason: ' + name)
++        if name != 'admission' and phase.get('result') != 'skipped' and 'exit' not in phase:
++            errors.append('missing command exit: ' + name)
++    if phases['admission']['result'] != 'passed' and phases['fixtures']['result'] != 'skipped':
++        errors.append('dependent fixtures ran after failed shared prerequisite')
++    summary = '\n'.join(['# Ornigami DB admission-only evidence', '',
++        *[f"- {key}: {value['result']}" for key, value in phases.items()],
++        '- Capture: ' + ('failed' if errors else 'passed'),
++        '- Custody: independently assessed after immutable upload.',
++        '- No image/security/runtime/release acceptance is established.',
++        *['- Capture error: ' + error for error in errors], ''])
++    (evidence / 'SUMMARY.md').write_text(summary, encoding='utf-8')
++    save(evidence / 'capture.json', {'result': 'failed' if errors else 'passed', 'errors': errors,
++         'at': datetime.now(timezone.utc).isoformat(), 'custody': 'not-assessed'})
++    files = []
++    total = 0
++    for file in sorted(evidence.rglob('*')):
++        if unsafe_link(file):
++            raise ValueError('Evidence symlink refused')
++        if not file.is_file() or file == evidence / 'manifest.json':
++            continue
++        if file.stat().st_size + total > 64 * 1024 * 1024:
++            raise ValueError('64 MiB evidence bound exceeded')
++        content = file.read_bytes()
++        total += len(content)
++        if total > 64 * 1024 * 1024:
++            raise ValueError('64 MiB evidence bound exceeded')
++        files.append({'path': file.relative_to(evidence).as_posix(), 'bytes': len(content),
++                      'sha256': hashlib.sha256(content).hexdigest()})
++    save(evidence / 'manifest.json', {'files': files, 'bytes': total, 'capture': 'failed' if errors else 'passed'})
++    return 1 if errors else 0
++
++
++def cleanup(root, runner_temp, identity):
++    root, runner_temp = pathlib.Path(root), pathlib.Path(runner_temp).resolve()
++    if unsafe_link(root) or root.resolve().parent != runner_temp or not root.name.startswith('ornigami-db-only-'):
++        raise ValueError('Cleanup target is not a directly owned runner-temp directory')
++    # Verify every path before any recursive operation; refuse symlinks, even if
++    # Python rmtree would not normally follow them. No global cleanup or pruning.
++    if not root.is_dir():
++        raise ValueError('Owned directory missing')
++    if any(unsafe_link(file) for file in root.rglob('*')):
++        raise ValueError('Cleanup symlink refused')
++    if json.loads((root / 'owner.json').read_text()) != identity:
++        raise ValueError('Cleanup owner drift')
++    before = shutil.disk_usage(runner_temp).free
++    shutil.rmtree(root)
++    return {'result': 'passed', 'removed': str(root), 'freeBefore': before,
++            'freeAfter': shutil.disk_usage(runner_temp).free, 'existsAfter': root.exists(),
++            'at': datetime.now(timezone.utc).isoformat()}
++
++
++if __name__ == '__main__':
++    if sys.argv[1] == 'capture':
++        sys.exit(capture(sys.argv[2]))
++    elif sys.argv[1] == 'cleanup':
++        print(json.dumps(cleanup(sys.argv[2], sys.argv[3], json.loads(sys.argv[4]))))
++    else:
++        raise ValueError('Unsupported capture operation')
+diff --git a/scripts/framework-prototype/admission-only-worker.mjs b/scripts/framework-prototype/admission-only-worker.mjs
+new file mode 100644
+index 0000000..66f3aa3
+--- /dev/null
++++ b/scripts/framework-prototype/admission-only-worker.mjs
+@@ -0,0 +1,33 @@
++import fs from 'node:fs';
++import path from 'node:path';
++import {spawn} from 'node:child_process';
++import {validateResourceObservation} from './admission-only.mjs';
++const [root,sourceSha]=process.argv.slice(2);
++const out=path.join(root,'evidence');fs.mkdirSync(out,{recursive:true});
++fs.writeFileSync(path.join(out,'phases.json'),JSON.stringify({sourceSha,phases:Object.fromEntries(['download','admission','fixtures'].map(name=>[name,{result:'skipped',reason:'worker resource admission has not passed'}])),imageWork:'out-of-scope',custody:'not-assessed'},null,2)+'\n');
++const record={startedAt:new Date().toISOString(),result:'failed',resourceResult:'failed',resourceErrors:[],samples:[],node:process.version,nodeHeapMiB:512};
++const metrics=['memory.max','memory.swap.max','memory.current','memory.peak','memory.events','cpu.max','cpu.stat'];
++let group;
++let child,timer,deadline;
++function save(){fs.writeFileSync(path.join(out,'resources.json'),JSON.stringify(record,null,2)+'\n');}
++function snapshot(){
++  const cgroup=Object.fromEntries(metrics.map(k=>[k,fs.readFileSync(path.join('/sys/fs/cgroup',group??'missing',k),'utf8').trim()]));
++  const stat=fs.statfsSync(root,{bigint:true}),diskFreeBytes=String(stat.bavail*stat.bsize);
++  const s={at:new Date().toISOString(),monotonicNs:String(process.hrtime.bigint()),diskFreeBytes,cgroup};record.samples.push(s);save();
++  validateResourceObservation(s);
++}
++function sample(){try{snapshot();}catch(error){record.resourceErrors.push(error.message);throw error;}}
++function stop(error){record.error=error.message;if(child?.pid){try{process.kill(-child.pid,'SIGKILL');}catch{}}}
++try{
++  if(process.platform!=='linux'||process.arch!=='x64'||process.version!=='v22.23.3'||!process.execArgv.includes('--max-old-space-size=512'))throw Error('Pinned Linux amd64 Node/heap required');
++  group=fs.readFileSync('/proc/self/cgroup','utf8').split('\n').find(s=>s.startsWith('0::'))?.slice(3);
++  sample();
++  const stdout=fs.openSync(path.join(out,'controller.stdout'),'w'),stderr=fs.openSync(path.join(out,'controller.stderr'),'w');
++  child=spawn(process.execPath,['--max-old-space-size=512','scripts/framework-prototype/admission-only.mjs',root,sourceSha],{detached:true,stdio:['ignore',stdout,stderr],env:{...process.env,NODE_OPTIONS:'--max-old-space-size=512'}});
++  fs.closeSync(stdout);fs.closeSync(stderr);
++  timer=setInterval(()=>{try{sample();}catch(e){stop(e);}},1000);
++  deadline=setTimeout(()=>stop(Error('360 second work deadline exceeded')),360000);
++  const result=await new Promise(resolve=>{child.on('error',error=>resolve({error:error.message}));child.on('exit',(exit,signal)=>resolve({exit,signal}));});
++  Object.assign(record,result);sample();if(result.exit===0&&!record.error)record.result='passed';
++}catch(error){stop(error);}
++finally{clearInterval(timer);clearTimeout(deadline);try{sample();}catch(error){record.finalObservationError=error.message;}record.resourceResult=record.samples.length>=2&&!record.resourceErrors.length?'passed':'failed';if(record.resourceResult==='failed')record.result='failed';record.finishedAt=new Date().toISOString();save();process.exitCode=record.result==='passed'?0:1;}
+diff --git a/scripts/framework-prototype/admission-only.mjs b/scripts/framework-prototype/admission-only.mjs
+new file mode 100644
+index 0000000..9bad716
+--- /dev/null
++++ b/scripts/framework-prototype/admission-only.mjs
+@@ -0,0 +1,73 @@
++// Admission diagnostics only. No image/scan/build interfaces and no network on import.
++import fs from 'node:fs';
++import path from 'node:path';
++import crypto from 'node:crypto';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';
++import {admitFrozenDatabase} from './frozen-db-admission.mjs';
++
++export const requestPath='.github/build-requests/ornigami-db-admission.json';
++export const workflowPath='.github/workflows/ornigami-db-admission-only.yml';
++export const branch='codex/ornigami-sri-local-prototype-f-20261016';
++export const scannerSha='1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19';
++const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
++export function validateResourceObservation({cgroup,diskFreeBytes}){
++  const events=Object.fromEntries(cgroup['memory.events'].split('\n').map(s=>s.split(/\s+/)));
++  if(cgroup['memory.max']!=='2147483648'||cgroup['memory.swap.max']!=='0'||cgroup['cpu.max']!=='100000 100000'||['max','oom','oom_kill','oom_group_kill'].some(k=>events[k]!=='0'))throw Error('Resource admission failed: limits drift or nonzero limit/OOM event');
++  if(BigInt(diskFreeBytes)<21474836480n)throw Error('20 GiB disk reserve exhausted');
++}
++function write(file,value){fs.mkdirSync(path.dirname(file),{recursive:true});const fd=fs.openSync(file,'w',0o600);try{fs.writeFileSync(fd,JSON.stringify(value,null,2)+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}
++function git(repo,...args){const r=spawnSync('git',['-C',repo,...args],{encoding:'utf8',timeout:10000,maxBuffer:1024*1024});if(r.status!==0)throw Error('Git identity check failed: '+args[0]);return r.stdout.trim();}
++
++// Also exercised against real local Git histories. The workflow independently
++// enforces this protocol before executing any candidate-owned code.
++function verifySingleParent(repo,requestSha,sourceSha,parents){
++  // Kept separate to make accidental merge commits fail closed.
++  if(parents.length!==2)throw Error('Request must have exactly one parent');
++  const changed=git(repo,'diff','--name-only',sourceSha,requestSha).split('\n');
++  if(changed.length!==1||changed[0]!==requestPath)throw Error('Request-only commit required');
++  const request=JSON.parse(git(repo,'show',`${requestSha}:${requestPath}`));
++  if(JSON.stringify(Object.keys(request).sort())!==JSON.stringify(['packageLockSha256','purpose','sourceSha'])||request.purpose!=='ornigami-db-admission-only-v1'||request.sourceSha!==sourceSha||!/^[a-f0-9]{64}$/.test(request.packageLockSha256))throw Error('Invalid request protocol/source');
++  for(const file of [workflowPath,'.github/workflows/ornigami-image-rehearsal.yml','.github/build-requests/ornigami.json'])if(git(repo,'rev-parse',`${sourceSha}:${file}`)!==git(repo,'rev-parse',`${requestSha}:${file}`))throw Error('Workflow/full marker drift');
++  const lock=spawnSync('git',['-C',repo,'show',`${sourceSha}:package-lock.json`],{timeout:10000,maxBuffer:4*1024*1024});
++  if(lock.status!==0||hash(lock.stdout)!==request.packageLockSha256)throw Error('Lock mismatch');
++  return {requestSha,sourceSha,packageLockSha256:request.packageLockSha256,workflowBlob:git(repo,'rev-parse',`${sourceSha}:${workflowPath}`)};
++}
++export function verifyProtocol(repo,requestSha){
++  if(!/^[a-f0-9]{40}$/.test(requestSha))throw Error('Invalid request SHA');
++  const parents=git(repo,'rev-list','--parents','-n1',requestSha).split(' ');
++  return verifySingleParent(repo,requestSha,parents[1],parents);
++}
++
++export async function runAdmission({root,sourceSha,execute,now=Date.now,scannerHash=scannerSha}){
++  const evidence=path.join(root,'evidence'),cache=path.join(root,'cache'),scanner=path.join(root,'tools/trivy');
++  const phases={download:{result:'skipped',reason:'not reached'},admission:{result:'skipped',reason:'not reached'},fixtures:{result:'skipped',reason:'shared prerequisite not passed'}};
++  const save=()=>write(path.join(evidence,'phases.json'),{sourceSha,phases,imageWork:'out-of-scope',custody:'not-assessed'});
++  save();
++  async function command(name,executable,args){
++    phases[name]={result:'failed',startedAt:new Date(now()).toISOString(),command:path.basename(executable),arguments:args};save();
++    let r;try{r=await execute(name,executable,args);}catch(error){r={status:null,stdout:'',stderr:error.message,error:error.message};}
++    fs.writeFileSync(path.join(evidence,`${name}.stdout`),r.stdout??'');fs.writeFileSync(path.join(evidence,`${name}.stderr`),r.stderr??'');
++    phases[name]={...phases[name],result:r.status===0?'passed':'failed',exit:r.status??null,signal:r.signal??null,error:r.error?.message??r.error??null,finishedAt:new Date(now()).toISOString()};save();return r.status===0;
++  }
++  // Exactly one download invocation, never retried or substituted. Even failure
++  // proceeds to the single diagnostic admission to retain partial/missing bytes.
++  const downloaded=await command('download',scanner,['image','--download-db-only','--no-progress','--db-repository','ghcr.io/aquasecurity/trivy-db:2','--cache-dir',cache]);
++  phases.admission={result:'failed',startedAt:new Date(now()).toISOString()};save();
++  try{
++    const r=await admitFrozenDatabase({cacheDirectory:cache,outputDirectory:path.join(evidence,'database-admission'),sourceSha,scannerPath:scanner,scannerSha256:scannerHash,now});
++    phases.admission={...phases.admission,result:r.result,errors:r.errors,finishedAt:new Date(now()).toISOString()};
++  }catch(error){phases.admission={...phases.admission,error:error.message,finishedAt:new Date(now()).toISOString()};}
++  save();
++  if(downloaded&&phases.admission.result==='passed'){
++    await command('fixtures',process.execPath,['--max-old-space-size=512','--test','tests/frozen-db-admission.test.mjs']);
++    phases.fixtures.data='fictional fixtures only; independent of real DB';save();
++  }else{phases.fixtures.reason='download or shared admission failed; no dependent work';save();}
++  return Object.values(phases).every(p=>p.result==='passed')?0:1;
++}
++
++if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
++  const [root,sourceSha]=process.argv.slice(2);
++  const execute=(name,executable,args)=>spawnSync(executable,args,{encoding:'utf8',timeout:180000,maxBuffer:4*1024*1024,env:{...process.env,NODE_OPTIONS:'--max-old-space-size=512'}});
++  process.exitCode=await runAdmission({root,sourceSha,execute});
++}
+diff --git a/scripts/framework-prototype/bounded-local.ps1 b/scripts/framework-prototype/bounded-local.ps1
+index 4f3c42d..26cacfc 100644
+--- a/scripts/framework-prototype/bounded-local.ps1
++++ b/scripts/framework-prototype/bounded-local.ps1
+@@ -3,7 +3,8 @@ param(
+   [Parameter(Mandatory=$true)][string]$Node,
+   [Parameter(Mandatory=$true)][string]$Output,
+   [int]$Seconds = 1200,
+-  [ValidateRange(4,8)][int]$MemoryGiB = 6
++  [ValidateRange(2,8)][int]$MemoryGiB = 6,
++  [ValidateRange(1,3)][int]$CpuCores = 3
+ )
+ $ErrorActionPreference = 'Stop'
+ # The launcher waits for job assignment before it can spawn any work.
+@@ -51,7 +52,7 @@ $initialDisk = (Get-PSDrive C).Free
+ if ($initialFree -lt (($MemoryGiB + 3) * 1GB)) { throw 'Admission requires job limit plus 3 GiB available physical memory.' }
+ if ($initialDisk -lt 40GB) { throw 'Admission requires at least 40 GiB free disk.' }
+ $logical = [Environment]::ProcessorCount
+-$cpuRate = [uint32][Math]::Floor(10000 * [Math]::Min(3,$logical) / $logical)
++$cpuRate = [uint32][Math]::Floor(10000 * [Math]::Min($CpuCores,$logical) / $logical)
+ $job = [OrnigamiBuildJob]::CreateJobObject([IntPtr]::Zero,$null)
+ if ($job -eq [IntPtr]::Zero) { throw 'Cannot create bounded build job.' }
+ $limits = New-Object OrnigamiBuildJob+Extended
+@@ -99,7 +100,7 @@ try {
+  $receipt = [ordered]@{
+   startedAtUtc=$started.ToString('o'); endedAtUtc=[DateTime]::UtcNow.ToString('o');
+   initialFreeBytes=$initialFree; minimumFreeBytes=$minimumFree;
+-  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=3; nodeHeapMiB=$configuredHeapMiB;
++  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=$CpuCores; nodeHeapMiB=$configuredHeapMiB;
+   nodeOptions=$effectiveNodeOptions; nodeHeapEvidence='configured NODE_OPTIONS; command-line overrides require separate assessment';
+   wallLimitSeconds=$Seconds; durationSeconds=([DateTime]::UtcNow-$started).TotalSeconds;
+   diskGrowthLimitBytes=20GB; observedSystemDiskGrowthPeakBytes=$peakDiskDelta;
+diff --git a/scripts/framework-prototype/retain-db-admission-evidence.mjs b/scripts/framework-prototype/retain-db-admission-evidence.mjs
+new file mode 100644
+index 0000000..6623207
+--- /dev/null
++++ b/scripts/framework-prototype/retain-db-admission-evidence.mjs
+@@ -0,0 +1,25 @@
++// Future run-specific owner authorization required. Import has no side effects.
++import {spawnSync} from 'node:child_process';
++import assert from 'node:assert/strict';
++import path from 'node:path';
++import {fileURLToPath} from 'node:url';
++import {retainAndAcknowledge} from './retain-external-evidence.mjs';
++import {workflowPath} from './admission-only.mjs';
++export function retainAdmissionEvidence(options,api){
++  const guarded=(endpoint,body)=>{
++    const bytes=api(endpoint,body);
++    if(endpoint.endsWith(`/actions/runs/${options.runId}`)){
++      const run=JSON.parse(bytes.toString('utf8'));assert.equal(run.path,workflowPath,'Wrong diagnostic workflow');assert.equal(String(run.run_attempt),'1','No rerun permitted');
++    }
++    if(endpoint.endsWith(`/actions/artifacts/${options.artifactId}`)){
++      const artifact=JSON.parse(bytes.toString('utf8'));assert.equal(artifact.name,`ornigami-db-admission-${options.runId}-${options.attempt}`,'Wrong diagnostic artifact');
++    }
++    return bytes;
++  };
++  return retainAndAcknowledge(options,guarded);
++}
++function gh(endpoint,body){const args=['api','--hostname','github.com',endpoint];if(body)args.push('--method','POST','--input','-');const result=spawnSync('gh',args,{input:body?JSON.stringify(body):undefined,maxBuffer:256*1024*1024,timeout:60000,windowsHide:true});assert.equal(result.status,0,'GitHub evidence API failed; no acknowledgment');return result.stdout;}
++if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
++  const [runId,attempt,requestSha,artifactId,digest,output,flag]=process.argv.slice(2);assert.equal(flag,'--acknowledge');
++  console.log(JSON.stringify(retainAdmissionEvidence({runId,attempt,requestSha,artifactId,digest,output,acknowledge:true},gh)));
++}
+diff --git a/tests/admission-only.test.mjs b/tests/admission-only.test.mjs
+new file mode 100644
+index 0000000..470fc6b
+--- /dev/null
++++ b/tests/admission-only.test.mjs
+@@ -0,0 +1,154 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import {spawnSync} from 'node:child_process';
++import {createHash} from 'node:crypto';
++import {runAdmission,verifyProtocol,validateResourceObservation,requestPath,workflowPath,branch} from '../scripts/framework-prototype/admission-only.mjs';
++import {retainAdmissionEvidence} from '../scripts/framework-prototype/retain-db-admission-evidence.mjs';
++const hash=b=>createHash('sha256').update(b).digest('hex');
++const time=Date.parse('2026-10-17T12:00:00Z');
++const sourceSha='a'.repeat(40);
++const captureScript=path.resolve('scripts/framework-prototype/admission-only-capture.py');
++const python=process.platform==='win32'?'python':'python3';
++const save=(file,v)=>{fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,typeof v==='string'?v:JSON.stringify(v));};
++function temporary(fn){const root=fs.mkdtempSync(path.join(os.tmpdir(),'ornigami-admission-test-'));return Promise.resolve().then(()=>fn(root)).finally(()=>{assert.ok(fs.realpathSync(root).startsWith(fs.realpathSync(os.tmpdir())+path.sep+'ornigami-admission-test-'));fs.rmSync(root,{recursive:true,force:true});});}
++function capture(root){return spawnSync(python,[captureScript,'capture',path.join(root,'evidence')],{encoding:'utf8',timeout:15000});}
++function baseEvidence(root){
++  for(const [file,data] of Object.entries({'run-identity.json':{fictional:true},'protocol.json':{sourceSha},'bootstrap.json':{exit:0,result:'passed'},'step-outcomes.json':{fictional:true},'bootstrap.stdout':'fictional bootstrap stdout','bootstrap.stderr':'','host-tools.stdout':'fictional tool inventory','resources.json':{fictional:true},'controller.stdout':'fictional controller log','controller.stderr':''}))save(path.join(root,'evidence',file),data);
++}
++async function controllerFixture(root,mode){
++  baseEvidence(root);save(path.join(root,'tools/trivy'),'fictional tool; never executed');
++  const calls=[];
++  const exit=await runAdmission({root,sourceSha,scannerHash:hash('fictional tool; never executed'),now:()=>time,execute:async(name,executable,args)=>{
++    calls.push({name,executable,args});
++    if(name==='download'&&mode!=='download-failure'){
++      save(path.join(root,'cache/db/trivy.db'),'fictional DB bytes; not a real DB');
++      save(path.join(root,'cache/db/metadata.json'),mode==='reject'?'{broken':{Version:2,UpdatedAt:'2026-10-17T11:00:00Z',NextUpdate:'2026-10-17T13:00:00Z',DownloadedAt:'2026-10-17T11:55:00Z'});
++    }
++    return {status:mode==='download-failure'?37:mode==='fixtures-failure'&&name==='fixtures'?12:0,stdout:`fictional ${name}`,stderr:name==='download'&&mode==='download-failure'?'fictional transport failure':''};
++  }});
++  return {exit,calls,phases:JSON.parse(fs.readFileSync(path.join(root,'evidence/phases.json'))).phases};
++}
++for(const mode of ['success','reject','download-failure','fixtures-failure'])test(`controller ${mode}: one download, one admission, explicit independent capture`,()=>temporary(async root=>{
++  const r=await controllerFixture(root,mode);assert.equal(r.exit,mode==='success'?0:1);
++  assert.equal(r.calls.filter(x=>x.name==='download').length,1);
++  assert.deepEqual(r.calls[0].args,['image','--download-db-only','--no-progress','--db-repository','ghcr.io/aquasecurity/trivy-db:2','--cache-dir',path.join(root,'cache')]);
++  assert.equal(r.phases.admission.result,['reject','download-failure'].includes(mode)?'failed':'passed');
++  assert.equal(r.phases.fixtures.result,['reject','download-failure'].includes(mode)?'skipped':mode==='fixtures-failure'?'failed':'passed');
++  assert.equal(r.calls.length,['reject','download-failure'].includes(mode)?1:2);
++  const receipt=JSON.parse(fs.readFileSync(path.join(root,'evidence/database-admission/index.json')));assert.equal(receipt.phase,'complete');assert.equal(receipt.clock.epochMs,time);
++  if(mode==='reject'){assert.ok(receipt.errors.some(e=>e.code==='metadata-malformed-json'));assert.equal(fs.readFileSync(path.join(root,'evidence/database-admission/metadata.original.bin'),'utf8'),'{broken');}
++  if(mode==='download-failure')assert.equal(r.phases.download.exit,37);
++  const c=capture(root);assert.equal(c.status,0,c.stderr);
++  const manifest=JSON.parse(fs.readFileSync(path.join(root,'evidence/manifest.json')));assert.equal(manifest.capture,'passed');
++  for(const file of manifest.files){const b=fs.readFileSync(path.join(root,'evidence',file.path));assert.equal(b.length,file.bytes);assert.equal(hash(b),file.sha256);}
++  assert.ok(fs.statSync(path.join(root,'evidence/SUMMARY.md')).size>0);
++  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'evidence/capture.json'))).custody,'not-assessed');
++}));
++test('download executor exception still produces admission failure index and skips fixtures',()=>temporary(async root=>{
++ baseEvidence(root);save(path.join(root,'tools/trivy'),'fake');
++ assert.equal(await runAdmission({root,sourceSha,scannerHash:hash('fake'),now:()=>time,execute:async()=>{throw Error('fictional launch failure');}}),1);
++ assert.match(fs.readFileSync(path.join(root,'evidence/download.stderr'),'utf8'),/fictional launch failure/);
++ assert.equal(JSON.parse(fs.readFileSync(path.join(root,'evidence/database-admission/index.json'))).result,'failed');
++ assert.equal(capture(root).status,0);
++}));
++test('bootstrap failure retains explicit skipped phases and a nonempty manifest',()=>temporary(root=>{
++ baseEvidence(root);save(path.join(root,'evidence/bootstrap.json'),{exit:42,result:'failed'});
++ assert.equal(capture(root).status,0);
++ const phases=JSON.parse(fs.readFileSync(path.join(root,'evidence/phases.json'))).phases;
++ assert.ok(Object.values(phases).every(p=>p.result==='skipped'&&p.reason));
++ assert.ok(JSON.parse(fs.readFileSync(path.join(root,'evidence/manifest.json'))).files.length>5);
++}));
++test('attempted diagnostic missing its phase inventory fails completeness instead of passing as skipped',()=>temporary(root=>{
++ baseEvidence(root);save(path.join(root,'evidence/step-outcomes.json'),{protocol:'success',bootstrap:'success',diagnostic:'failure'});
++ const c=capture(root);assert.equal(c.status,1,c.stderr);const r=JSON.parse(fs.readFileSync(path.join(root,'evidence/capture.json')));assert.ok(r.errors.includes('attempted diagnostic has no phase inventory'));assert.ok(fs.existsSync(path.join(root,'evidence/manifest.json')));
++}));
++for(const mutation of ['missing-summary-input','missing-original','tampered-original','tampered-clock','tampered-identity','incomplete-admission','missing-resource','missing-exit','dependent-after-rejection'])test(`capture refuses ${mutation} while retaining failure manifest`,()=>temporary(async root=>{
++ await controllerFixture(root,mutation==='dependent-after-rejection'?'reject':'success');
++ if(mutation==='missing-summary-input')fs.unlinkSync(path.join(root,'evidence/protocol.json'));
++ if(mutation==='missing-original')fs.unlinkSync(path.join(root,'evidence/database-admission/metadata.original.bin'));
++ if(mutation==='tampered-original')save(path.join(root,'evidence/database-admission/metadata.original.bin'),'tampered');
++ if(mutation==='missing-resource')fs.unlinkSync(path.join(root,'evidence/resources.json'));
++ if(mutation==='tampered-clock')save(path.join(root,'evidence/database-admission/validation-clock.json'),{epochMs:time+1});
++ if(mutation==='tampered-identity')save(path.join(root,'evidence/database-admission/scannerIdentity.json'),{sha256:'0'.repeat(64)});
++ if(mutation==='incomplete-admission'){const p=path.join(root,'evidence/database-admission/index.json'),r=JSON.parse(fs.readFileSync(p));r.phase='retained-before-parsing';save(p,r);}
++ if(['missing-exit','dependent-after-rejection'].includes(mutation)){const p=path.join(root,'evidence/phases.json'),r=JSON.parse(fs.readFileSync(p));if(mutation==='missing-exit')delete r.phases.download.exit;else r.phases.fixtures={result:'passed',exit:0,data:'fictional fixtures only; independent of real DB'};save(p,r);}
++ const c=capture(root);assert.equal(c.status,1,c.stderr);assert.equal(JSON.parse(fs.readFileSync(path.join(root,'evidence/manifest.json'))).capture,'failed');assert.ok(fs.statSync(path.join(root,'evidence/SUMMARY.md')).size>0);
++}));
++function git(repo,...args){const r=spawnSync('git',['-c','core.autocrlf=false','-c','commit.gpgsign=false','-C',repo,...args],{encoding:'utf8',timeout:15000});assert.equal(r.status,0,r.stderr);return r.stdout.trim();}
++async function history(root,mutation){
++ git(root,'init','-q');git(root,'config','user.name','Fictional Fixture');git(root,'config','user.email','fixture@example.invalid');
++ const lock='{"fictional":true}\n';
++ for(const [file,value] of Object.entries({[workflowPath]:'fictional workflow','.github/workflows/ornigami-image-rehearsal.yml':'fictional full workflow','.github/build-requests/ornigami.json':'unchanged full marker','package-lock.json':lock}))save(path.join(root,file),value);
++ git(root,'add','.');git(root,'commit','-qm','fictional candidate');const parent=git(root,'rev-parse','HEAD');
++ const request={purpose:'ornigami-db-admission-only-v1',sourceSha:parent,packageLockSha256:hash(lock)};
++ if(mutation==='wrong-source')request.sourceSha='b'.repeat(40);
++ if(mutation==='wrong-lock')request.packageLockSha256='0'.repeat(64);
++ if(mutation==='extra-key')request.arbitraryWorkflow='other';
++ if(mutation==='wrong-purpose')request.purpose='full-build';
++ save(path.join(root,requestPath),request);
++ if(mutation==='extra-file')save(path.join(root,'extra.txt'),'extra');
++ if(mutation==='workflow-drift')save(path.join(root,workflowPath),'changed workflow');
++ if(mutation==='full-marker-drift')save(path.join(root,'.github/build-requests/ornigami.json'),'changed full marker');
++ git(root,'add','.');git(root,'commit','-qm','fictional request');return {parent,request:git(root,'rev-parse','HEAD')};
++}
++test('exact-source protocol accepts real local single request-only child',()=>temporary(async root=>{const h=await history(root);assert.equal(verifyProtocol(root,h.request).sourceSha,h.parent);}));
++for(const mutation of ['wrong-source','wrong-lock','extra-key','wrong-purpose','extra-file','workflow-drift','full-marker-drift'])test(`exact-source protocol refuses ${mutation}`,()=>temporary(async root=>{const h=await history(root,mutation);assert.throws(()=>verifyProtocol(root,h.request));}));
++test('exact-source protocol refuses merge request',()=>temporary(async root=>{
++ const h=await history(root);const tree=git(root,'rev-parse',`${h.request}^{tree}`);
++ const merge=git(root,'commit-tree',tree,'-p',h.parent,'-p',h.request,'-m','fictional merge');assert.throws(()=>verifyProtocol(root,merge),/exactly one parent/);
++}));
++for(const mutation of ['none','owner-drift','outside','symlink'])test(`cleanup ${mutation} is confined to run-owned direct child`,()=>temporary(root=>{
++ const owned=path.join(root,'ornigami-db-only-1-1-fixture'),other=path.join(root,'preserve-other-project');fs.mkdirSync(owned);fs.mkdirSync(other);save(path.join(other,'keep'),'preserve');const identity={run:'1',attempt:'1',request:'a'.repeat(40)};save(path.join(owned,'owner.json'),identity);save(path.join(owned,'payload'),'fictional cache');
++ if(mutation==='symlink')fs.symlinkSync(other,path.join(owned,'link'),process.platform==='win32'?'junction':'dir');
++ const target=mutation==='outside'?other:owned,expected=mutation==='owner-drift'?{...identity,attempt:'2'}:identity;
++ const r=spawnSync(python,[captureScript,'cleanup',target,root,JSON.stringify(expected)],{encoding:'utf8',timeout:15000});
++ assert.equal(r.status,mutation==='none'?0:1,r.stderr);assert.equal(fs.readFileSync(path.join(other,'keep'),'utf8'),'preserve');assert.equal(fs.existsSync(owned),mutation!=='none');
++ if(mutation==='symlink')fs.unlinkSync(path.join(owned,'link'));
++}));
++test('restricted triggers isolate candidate publication, diagnostic request and full marker',()=>{
++ const diagnostic=fs.readFileSync(workflowPath,'utf8'),full=fs.readFileSync('.github/workflows/ornigami-image-rehearsal.yml','utf8');
++ const parse=text=>({branches:[...text.split('permissions:')[0].matchAll(/      - (codex\/[^\n]+)/g)].map(m=>m[1].trim()),paths:[...text.split('permissions:')[0].matchAll(/      - (\.github\/[^\n]+)/g)].map(m=>m[1].trim())});
++ const d=parse(diagnostic),f=parse(full);assert.deepEqual(d,{branches:[branch],paths:[requestPath]});assert.deepEqual(f,{branches:[branch],paths:['.github/build-requests/ornigami.json']});
++ const fires=(w,files)=>files.some(file=>w.paths.includes(file));
++ assert.equal(fires(d,[workflowPath,'scripts/framework-prototype/admission-only.mjs']),false);assert.equal(fires(f,[workflowPath]),false);assert.equal(fires(d,[requestPath]),true);assert.equal(fires(f,[requestPath]),false);assert.equal(fires(d,f.paths),false);
++ for(const file of ['.github/workflows/ci.yml','.github/workflows/security.yml'])assert.match(fs.readFileSync(file,'utf8').split('pull_request:')[0],new RegExp(branch));
++ assert.match(diagnostic,/github\.event\.created == false/);assert.match(diagnostic,/github\.run_attempt == 1/);assert.doesNotMatch(diagnostic,/workflow_dispatch|pull_request:/);
++ assert.equal((diagnostic.match(/    runs-on:/g)??[]).length,1);assert.match(diagnostic,/runs-on: ubuntu-24\.04/);
++});
++test('workflow source-admission failure fallback produces failed manifest and explicit skipped phases',()=>temporary(root=>{
++ const workflow=fs.readFileSync(workflowPath,'utf8'),blocks=[...workflow.matchAll(/<<'PY'[^\n]*\n([\s\S]*?)\n          PY/g)];
++ assert.equal(blocks.length,2);const script=blocks[1][1].split('\n').map(line=>line.startsWith('          ')?line.slice(10):line).join('\n');
++ const evidence=path.join(root,'evidence');fs.mkdirSync(evidence);save(path.join(evidence,'run-identity.json'),{fictional:true});
++ const r=spawnSync(python,['-c',script,evidence],{encoding:'utf8',timeout:15000});assert.equal(r.status,0,r.stderr);
++ assert.equal(JSON.parse(fs.readFileSync(path.join(evidence,'manifest.json'))).capture,'failed');assert.ok(Object.values(JSON.parse(fs.readFileSync(path.join(evidence,'phases.json'))).phases).every(p=>p.result==='skipped'&&p.reason));assert.ok(fs.statSync(path.join(evidence,'SUMMARY.md')).size>0);
++}));
++test('workflow resource, source binding, evidence, custody and no-image boundaries remain explicit',()=>{
++ const w=fs.readFileSync(workflowPath,'utf8'),bootstrap=fs.readFileSync('scripts/framework-prototype/admission-only-bootstrap.sh','utf8'),worker=fs.readFileSync('scripts/framework-prototype/admission-only-worker.mjs','utf8');
++ assert.equal((w.match(/MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100%/g)??[]).length,2);
++ for(const text of [w,bootstrap,fs.readFileSync('scripts/framework-prototype/admission-only.mjs','utf8')])assert.match(text,/21474836480/);
++ assert.match(w,/--max-old-space-size=512/);assert.match(worker,/360000/);assert.match(w,/\+ 600/);assert.match(w,/timeout-minutes: 25/);
++ assert.match(w,/retention-days: 30/);assert.match(w,/git -C "\$repo" checkout --quiet --detach "\$SOURCE_SHA"/);
++ assert.match(w,/RUN_WORKFLOW_SHA: \$\{\{ github\.workflow_sha \}\}/);assert.match(w,/\[\[ "\$RUN_WORKFLOW_SHA" == "\$GITHUB_SHA" \]\]/);assert.match(w,/RUN_WORKFLOW_REF: \$\{\{ github\.workflow_ref \}\}/);
++ assert.match(w,/if \[\[ "\$CUSTODY_RESULT" != success/);assert.match(w,/creator.login==\$owner/);
++ assert.doesNotMatch(w+bootstrap,/docker |buildx|npm (?:ci|install)|npx |--skip-db-update|--ignore-unfixed|--severity|curl --retry/);
++ assert.match(bootstrap,/df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de/);assert.match(bootstrap,/e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7/);
++});
++for(const mutation of ['none','memory','swap','cpu','max','oom','oom_kill','oom_group_kill','missing-counter','disk'])test(`resource policy ${mutation} keeps exact bounded fail-closed limits`,()=>{
++ const s={cgroup:{'memory.max':'2147483648','memory.swap.max':'0','cpu.max':'100000 100000','memory.events':'low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0'},diskFreeBytes:'21474836480'};
++ if(mutation==='memory')s.cgroup['memory.max']='max';if(mutation==='swap')s.cgroup['memory.swap.max']='1';if(mutation==='cpu')s.cgroup['cpu.max']='200000 100000';if(mutation==='disk')s.diskFreeBytes='21474836479';if(mutation==='missing-counter')s.cgroup['memory.events']='max 0';if(['max','oom','oom_kill','oom_group_kill'].includes(mutation))s.cgroup['memory.events']=s.cgroup['memory.events'].replace(`${mutation} 0`,`${mutation} 1`);
++ if(mutation==='none')assert.doesNotThrow(()=>validateResourceObservation(s));else assert.throws(()=>validateResourceObservation(s));
++});
++for(const mutation of ['none','wrong-workflow','wrong-artifact','wrong-attempt','wrong-digest'])test(`diagnostic custody ${mutation} remains run-specific and independent`,()=>temporary(root=>{
++ const bytes=Buffer.from('fictional zip; not evidence of any real DB result'),options={runId:'123',attempt:'1',requestSha:sourceSha,artifactId:'456',digest:hash(bytes),output:path.join(root,'retained'),acknowledge:true};let posts=0;
++ const api=(endpoint,body)=>{
++   if(body){assert.equal(fs.existsSync(path.join(options.output,'DOWNLOAD_RECEIPT.json')),true);assert.deepEqual(fs.readFileSync(path.join(options.output,'evidence.zip')),bytes);posts++;return Buffer.from(JSON.stringify({...body,creator:{login:'joserubiobejarano'}}));}
++   if(endpoint==='user')return Buffer.from(JSON.stringify({login:'joserubiobejarano'}));
++   if(endpoint.endsWith('/zip'))return mutation==='wrong-digest'?Buffer.from('corrupt'):bytes;
++   if(endpoint.includes('/actions/artifacts/'))return Buffer.from(JSON.stringify({name:mutation==='wrong-artifact'?'wrong':'ornigami-db-admission-123-1',expired:false,workflow_run:{id:123,head_sha:sourceSha}}));
++   return Buffer.from(JSON.stringify({path:mutation==='wrong-workflow'?'.github/workflows/ornigami-image-rehearsal.yml':workflowPath,run_attempt:mutation==='wrong-attempt'?2:1,head_sha:sourceSha,head_branch:branch,event:'push',repository:{full_name:'joserubiobejarano/Ornigami'}}));
++ };
++ if(mutation==='none'){assert.equal(retainAdmissionEvidence(options,api).sha256,options.digest);assert.equal(posts,1);}else{assert.throws(()=>retainAdmissionEvidence(options,api));assert.equal(posts,0);}
++}));

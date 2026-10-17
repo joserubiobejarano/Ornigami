@@ -1,5 +1,7 @@
 # Local frozen database admission repairs — 17 October 2026
 
+Follow-up: the dedicated workflow is now locally prepared; see [exact admission-only candidate and approval packet](./LOCAL_DB_ADMISSION_ONLY.md). No publication or run is authorized by that preparation. The proposal/history below is preserved.
+
 **Local preparation only. No replacement DB download, real scanner invocation, full scan, Go compilation, app/image build, push, external runner, registry/VPS operation or deployment occurred.** Holds were left unchanged, not freshly queried for this local work; QR staging was untouched. No provider, cron, framework-adoption or live-release gate was opened. No new custody acknowledgment was made.
 
 The previous [Linux trial](./MINIMAL_GLIBC_LINUX_TRIAL.md) remains failed, its one-run authorization consumed. **Its precise DB rejection cannot be recovered**: the rejected metadata and clock were not retained. Source inspection and fictional regressions establish how the new helper behaves, not what the missing historical values were. All 43 historical Debian highs remain unresolved; no accepted retained deployable image exists.

@@ -1,0 +1,11 @@
+{
+  "args": [
+    "--max-old-space-size=512",
+    "C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/admission-only-20261017/checks.mjs"
+  ],
+  "env": {
+    "NODE_OPTIONS": "--max-old-space-size=512"
+  },
+  "executable": "C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/sri-fresh-preparation/node-v22.23.3-win-x64/node.exe",
+  "cwd": "C:\\Users\\joser\\Desktop\\Projects\\Ornigami-coolify-prep-20261016\\.local\\framework-prototype\\ornigami-db-admission-only"
+}
