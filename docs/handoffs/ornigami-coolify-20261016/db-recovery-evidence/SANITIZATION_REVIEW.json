@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-17T20:06:31.7625894Z",
+  "result": "passed",
+  "patterns": [
+    "ghp_[A-Za-z0-9]{20,}",
+    "github_pat_[A-Za-z0-9_]{20,}",
+    "-----BEGIN .*PRIVATE KEY",
+    "Bearer [A-Za-z0-9_-]{20,}",
+    "[?&](sig|token|access_token)=[^*\\s&]{12,}"
+  ],
+  "note": "Focused credential/private-key/signed-query pattern review; not a guarantee of all possible sensitive content"
+}

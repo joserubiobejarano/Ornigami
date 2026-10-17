@@ -1,5 +1,7 @@
 # Official DB publisher investigation — 17 October 2026
 
+Current continuation: [recovered official publication, digest-bound candidate, coverage hold and active campaign](./DB_RECOVERY_ADMISSION.md). The historical investigation below remains unchanged in its original scope.
+
 **Decision: external publisher dependency; do not repeat the admission request.** No fresh official publication was established during the bounded investigation, ending **2026-10-17T13:10:58Z**. The current official GHCR manifest matches the last successful publisher upload; six later scheduled builds failed before publication. Sampled official logs identify a Debian version-parsing failure. No endpoint, Trivy version, mirror, freshness-policy or advisory exception is proposed for immediate adoption.
 
 This task used retained evidence, read-only official publisher/registry metadata and checksum-recorded official source. No DB layer, full database, scanner binary, dependency or image was downloaded; no scanner/build/external runner, push, VPS/deployment/provider operation, hold restoration or upstream write/contact occurred. Source candidate **2ae7f60ce8edd1880b24924a0e213f34abd97ed1** and published request **97fc2b86f2efe55683242e8b20a38a79fdebfb1e** remain unchanged. Prior run/custody approval is consumed.

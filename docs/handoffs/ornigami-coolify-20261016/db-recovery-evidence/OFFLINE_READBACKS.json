@@ -1,0 +1,46 @@
+[
+  {
+    "name": "publisher-run.json",
+    "endpoint": "repos/aquasecurity/trivy-db/actions/runs/39056570786",
+    "startedAt": "2026-10-17T19:58:20.982Z",
+    "finishedAt": "2026-10-17T19:58:21.013Z",
+    "bytes": 12673,
+    "sha256": "b9678adf0dffe6e1fc3af751be90a98574be2e5af1551264cd11091c261c4fbc"
+  },
+  {
+    "name": "publisher-jobs.json",
+    "endpoint": "repos/aquasecurity/trivy-db/actions/runs/39056570786/jobs",
+    "startedAt": "2026-10-17T19:58:21.016Z",
+    "finishedAt": "2026-10-17T19:58:21.028Z",
+    "bytes": 4494,
+    "sha256": "e1fb2c3ca5e8a3577ade6f920fb5a216fca733a96793454eeb31f0058ff90e2e"
+  },
+  {
+    "name": "publisher-upload-log-tail.txt",
+    "endpoint": "repos/aquasecurity/trivy-db/actions/jobs/117465634326/logs",
+    "startedAt": "2026-10-17T19:58:21.029Z",
+    "finishedAt": "2026-10-17T19:58:21.030Z",
+    "bytes": 127684,
+    "sha256": "830da6c1d30a98cc27bd85c0c35e6bfa5ec4690a268bdd689b3d4f60b5a0cb35"
+  },
+  {
+    "name": "registry-tag-manifest.json",
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "at": "2026-10-17T19:58:21.038Z",
+    "bytes": 616,
+    "digest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "headers": {
+      "docker-content-digest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730"
+    }
+  },
+  {
+    "name": "registry-digest-manifest.json",
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "at": "2026-10-17T19:58:21.044Z",
+    "bytes": 616,
+    "digest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "headers": {
+      "docker-content-digest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730"
+    }
+  }
+]

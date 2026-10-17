@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-17T19:58:21.045Z",
+  "runId": 39056570786,
+  "publisherHead": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+  "jobId": 117465634326,
+  "digest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+  "manifest": {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "artifactType": "application/vnd.aquasec.trivy.config.v1+json",
+    "config": {
+      "mediaType": "application/vnd.oci.empty.v1+json",
+      "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "size": 2,
+      "data": "e30="
+    },
+    "layers": [
+      {
+        "mediaType": "application/vnd.aquasec.trivy.db.layer.v1.tar+gzip",
+        "digest": "sha256:3fb08347d6ef5444dd6bb3ef718204fbf8f2f609f681e18f5eee8177f524d85c",
+        "size": 134666882,
+        "annotations": {
+          "org.opencontainers.image.title": "db.tar.gz"
+        }
+      }
+    ],
+    "annotations": {
+      "org.opencontainers.image.created": "2026-10-17T18:43:51Z"
+    }
+  },
+  "uploadLogDigestBinding": true,
+  "blobDownloads": 0,
+  "internalFreshness": "not yet tested",
+  "advisoryCoverage": "source and exact database review pending"
+}
