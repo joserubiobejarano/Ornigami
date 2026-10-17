@@ -34,7 +34,7 @@ async function controllerFixture(root,mode){
 for(const mode of ['success','reject','download-failure','fixtures-failure'])test(`controller ${mode}: one download, one admission, explicit independent capture`,()=>temporary(async root=>{
   const r=await controllerFixture(root,mode);assert.equal(r.exit,mode==='success'?0:1);
   assert.equal(r.calls.filter(x=>x.name==='download').length,1);
-  assert.deepEqual(r.calls[0].args,['image','--download-db-only','--no-progress','--db-repository','ghcr.io/aquasecurity/trivy-db:2','--cache-dir',path.join(root,'cache')]);
+  assert.deepEqual(r.calls[0].args,['image','--download-db-only','--no-progress','--db-repository','ghcr.io/aquasecurity/trivy-db@sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730','--cache-dir',path.join(root,'cache')]);
   assert.equal(r.phases.admission.result,['reject','download-failure'].includes(mode)?'failed':'passed');
   assert.equal(r.phases.fixtures.result,['reject','download-failure'].includes(mode)?'skipped':mode==='fixtures-failure'?'failed':'passed');
   assert.equal(r.calls.length,['reject','download-failure'].includes(mode)?1:2);
@@ -65,8 +65,11 @@ test('attempted diagnostic missing its phase inventory fails completeness instea
  baseEvidence(root);save(path.join(root,'evidence/step-outcomes.json'),{protocol:'success',bootstrap:'success',diagnostic:'failure'});
  const c=capture(root);assert.equal(c.status,1,c.stderr);const r=JSON.parse(fs.readFileSync(path.join(root,'evidence/capture.json')));assert.ok(r.errors.includes('attempted diagnostic has no phase inventory'));assert.ok(fs.existsSync(path.join(root,'evidence/manifest.json')));
 }));
-for(const mutation of ['missing-summary-input','missing-original','tampered-original','tampered-clock','tampered-identity','incomplete-admission','missing-resource','missing-exit','dependent-after-rejection'])test(`capture refuses ${mutation} while retaining failure manifest`,()=>temporary(async root=>{
+for(const mutation of ['missing-publication','publication-source-drift','publication-repository-drift','download-publication-drift','missing-summary-input','missing-original','tampered-original','tampered-clock','tampered-identity','incomplete-admission','missing-resource','missing-exit','dependent-after-rejection'])test(`capture refuses ${mutation} while retaining failure manifest`,()=>temporary(async root=>{
  await controllerFixture(root,mutation==='dependent-after-rejection'?'reject':'success');
+ if(mutation==='missing-publication')fs.unlinkSync(path.join(root,'evidence/db-publication.json'));
+ if(['publication-source-drift','publication-repository-drift'].includes(mutation)){const p=path.join(root,'evidence/db-publication.json'),r=JSON.parse(fs.readFileSync(p));if(mutation==='publication-source-drift')r.sourceSha='b'.repeat(40);else r.repository='ghcr.io/aquasecurity/trivy-db:2';save(p,r);}
+ if(mutation==='download-publication-drift'){const p=path.join(root,'evidence/phases.json'),r=JSON.parse(fs.readFileSync(p));r.phases.download.arguments[r.phases.download.arguments.indexOf('--db-repository')+1]='ghcr.io/aquasecurity/trivy-db:2';save(p,r);}
  if(mutation==='missing-summary-input')fs.unlinkSync(path.join(root,'evidence/protocol.json'));
  if(mutation==='missing-original')fs.unlinkSync(path.join(root,'evidence/database-admission/metadata.original.bin'));
  if(mutation==='tampered-original')save(path.join(root,'evidence/database-admission/metadata.original.bin'),'tampered');

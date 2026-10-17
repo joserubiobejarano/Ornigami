@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {admitFrozenDatabase} from './frozen-db-admission.mjs';
+import {databaseRepository,officialPublication} from './official-db-publication.mjs';
 
 export const requestPath='.github/build-requests/ornigami-db-admission.json';
 export const workflowPath='.github/workflows/ornigami-db-admission-only.yml';
@@ -44,6 +45,7 @@ export async function runAdmission({root,sourceSha,execute,now=Date.now,scannerH
   const phases={download:{result:'skipped',reason:'not reached'},admission:{result:'skipped',reason:'not reached'},fixtures:{result:'skipped',reason:'shared prerequisite not passed'}};
   const save=()=>write(path.join(evidence,'phases.json'),{sourceSha,phases,imageWork:'out-of-scope',custody:'not-assessed'});
   save();
+  write(path.join(evidence,'db-publication.json'),{sourceSha,...officialPublication()});
   async function command(name,executable,args){
     phases[name]={result:'failed',startedAt:new Date(now()).toISOString(),command:path.basename(executable),arguments:args};save();
     let r;try{r=await execute(name,executable,args);}catch(error){r={status:null,stdout:'',stderr:error.message,error:error.message};}
@@ -52,7 +54,7 @@ export async function runAdmission({root,sourceSha,execute,now=Date.now,scannerH
   }
   // Exactly one download invocation, never retried or substituted. Even failure
   // proceeds to the single diagnostic admission to retain partial/missing bytes.
-  const downloaded=await command('download',scanner,['image','--download-db-only','--no-progress','--db-repository','ghcr.io/aquasecurity/trivy-db:2','--cache-dir',cache]);
+  const downloaded=await command('download',scanner,['image','--download-db-only','--no-progress','--db-repository',databaseRepository,'--cache-dir',cache]);
   phases.admission={result:'failed',startedAt:new Date(now()).toISOString()};save();
   try{
     const r=await admitFrozenDatabase({cacheDirectory:cache,outputDirectory:path.join(evidence,'database-admission'),sourceSha,scannerPath:scanner,scannerSha256:scannerHash,now});

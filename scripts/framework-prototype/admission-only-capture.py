@@ -51,6 +51,18 @@ def capture(evidence):
         required += ['resources.json']
     if phases['download']['result'] != 'skipped':
         required += ['download.stdout', 'download.stderr', 'resources.json', 'controller.stdout', 'controller.stderr']
+        required += ['db-publication.json']
+        try:
+            publication = json.loads((evidence / 'db-publication.json').read_text())
+            if publication['sourceSha'] != json.loads((evidence / 'protocol.json').read_text())['sourceSha']:
+                errors.append('publication source mismatch')
+            if publication['repository'] != 'ghcr.io/aquasecurity/trivy-db@' + publication['manifestDigest']:
+                errors.append('publication repository mismatch')
+            download_args = phases['download'].get('arguments', [])
+            if download_args.count('--db-repository') != 1 or download_args[download_args.index('--db-repository') + 1] != publication['repository']:
+                errors.append('download publication mismatch')
+        except Exception as error:
+            errors.append('publication capture: ' + str(error))
     if phases['fixtures']['result'] != 'skipped':
         required += ['fixtures.stdout', 'fixtures.stderr']
         if phases['fixtures'].get('data') != 'fictional fixtures only; independent of real DB':
