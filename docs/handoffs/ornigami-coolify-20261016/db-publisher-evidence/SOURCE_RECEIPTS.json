@@ -1,0 +1,112 @@
+[
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/db/db.go",
+    "repo": "trivy",
+    "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+    "path": "pkg/db/db.go",
+    "startedAt": "2026-10-17T13:07:16.257Z",
+    "finishedAt": "2026-10-17T13:07:16.576Z",
+    "bytes": 7495,
+    "sha256": "41aa153ea3668450714a97288acc3c7a82d8ec7985fb3570ecb33c700109b9f5",
+    "file": "official-source/trivy--pkg_db_db.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/oci/artifact.go",
+    "repo": "trivy",
+    "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+    "path": "pkg/oci/artifact.go",
+    "startedAt": "2026-10-17T13:07:16.577Z",
+    "finishedAt": "2026-10-17T13:07:16.804Z",
+    "bytes": 9565,
+    "sha256": "1cdc159ff8976e1f6c00de266a4bfd36067160916bcb3bc72235bc93a1b11257",
+    "file": "official-source/trivy--pkg_oci_artifact.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/remote/remote.go",
+    "repo": "trivy",
+    "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+    "path": "pkg/remote/remote.go",
+    "startedAt": "2026-10-17T13:07:16.804Z",
+    "finishedAt": "2026-10-17T13:07:17.030Z",
+    "bytes": 8664,
+    "sha256": "5c8fe95c80d8036a8283aa47957ea72cfba232ce432b985fb10403aa6a426b02",
+    "file": "official-source/trivy--pkg_remote_remote.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/x/http/transport.go",
+    "repo": "trivy",
+    "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+    "path": "pkg/x/http/transport.go",
+    "startedAt": "2026-10-17T13:07:17.030Z",
+    "finishedAt": "2026-10-17T13:07:17.253Z",
+    "bytes": 4292,
+    "sha256": "8ccd0bdde077510b46963a4f6b938d7ac6604cbb9332ca824f72c1d09f0f7637",
+    "file": "official-source/trivy--pkg_x_http_transport.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/x/http/client.go",
+    "repo": "trivy",
+    "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+    "path": "pkg/x/http/client.go",
+    "startedAt": "2026-10-17T13:07:17.253Z",
+    "finishedAt": "2026-10-17T13:07:17.470Z",
+    "bytes": 607,
+    "sha256": "c6afdce0a31e0327642c99c3f2c736941ec7c96ad27afc6db29e6685763e638b",
+    "file": "official-source/trivy--pkg_x_http_client.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/flag/db_flags.go",
+    "repo": "trivy",
+    "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+    "path": "pkg/flag/db_flags.go",
+    "startedAt": "2026-10-17T13:07:17.470Z",
+    "finishedAt": "2026-10-17T13:07:17.695Z",
+    "bytes": 5762,
+    "sha256": "5295590906fafc0e5ba7fd80d1ef4723052e0446445ed732447a34887708fb6b",
+    "file": "official-source/trivy--pkg_flag_db_flags.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/.github/workflows/cron.yml",
+    "repo": "trivy-db",
+    "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "path": ".github/workflows/cron.yml",
+    "startedAt": "2026-10-17T13:07:17.695Z",
+    "finishedAt": "2026-10-17T13:07:17.891Z",
+    "bytes": 4713,
+    "sha256": "76f5eac37a9c952a853235638d51dbf2c842d691a42acbe4f563809b9bdd3fc0",
+    "file": "official-source/trivy-db--.github_workflows_cron.yml"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/Makefile",
+    "repo": "trivy-db",
+    "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "path": "Makefile",
+    "startedAt": "2026-10-17T13:07:17.891Z",
+    "finishedAt": "2026-10-17T13:07:18.086Z",
+    "bytes": 4692,
+    "sha256": "f08d81289b6b27b92107bd7f49bc10dbf1c2ec95ae923c08d3e4ffc2ce24db0d",
+    "file": "official-source/trivy-db--Makefile"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/pkg/metadata/metadata.go",
+    "repo": "trivy-db",
+    "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "path": "pkg/metadata/metadata.go",
+    "startedAt": "2026-10-17T13:07:18.086Z",
+    "finishedAt": "2026-10-17T13:07:18.307Z",
+    "bytes": 1688,
+    "sha256": "fa3bad2c1b9089742cf5fe9381d51cf6f0479781691247b262077a12217eef27",
+    "file": "official-source/trivy-db--pkg_metadata_metadata.go"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/pkg/vulnsrc/debian/debian.go",
+    "repo": "trivy-db",
+    "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "path": "pkg/vulnsrc/debian/debian.go",
+    "startedAt": "2026-10-17T13:08:42.806Z",
+    "finishedAt": "2026-10-17T13:08:43.121Z",
+    "bytes": 18828,
+    "sha256": "233a872e0780a6fa5703348e7ce2858de13e9864079bfd14847f146ca7d762fd",
+    "file": "official-source/trivy-db--pkg_vulnsrc_debian_debian.go"
+  }
+]

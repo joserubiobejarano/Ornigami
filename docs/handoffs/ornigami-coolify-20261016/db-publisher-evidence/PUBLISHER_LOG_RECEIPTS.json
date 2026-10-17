@@ -1,0 +1,44 @@
+[
+  {
+    "jobId": 117391966038,
+    "api": "https://api.github.com/repos/aquasecurity/trivy-db/actions/jobs/117391966038/logs",
+    "startedAt": "2026-10-17T13:06:28.062Z",
+    "finishedAt": "2026-10-17T13:06:29.186Z",
+    "requestedRange": "bytes=-131072",
+    "actualHeaders": {
+      "content-length": "101830",
+      "content-type": "text/plain",
+      "date": "Sat, 17 Oct 2026 13:06:29 GMT",
+      "etag": "\"0x8DF2C4DF34A228D\"",
+      "last-modified": "Sat, 17 Oct 2026 12:55:41 GMT"
+    },
+    "statusLine": "HTTP/1.1 200 OK",
+    "commandExit": 0,
+    "error": null,
+    "retainedBodyBytes": 101830,
+    "sha256": "6d27c4da637f5d8eb445a3c6193304530234d7567678558451fb5c7965733201",
+    "partial": "suffix only if content-range confirms it; not complete publisher logs",
+    "authorizationHeadersAndSignedLocationsRetained": false
+  },
+  {
+    "jobId": 116740711404,
+    "api": "https://api.github.com/repos/aquasecurity/trivy-db/actions/jobs/116740711404/logs",
+    "startedAt": "2026-10-17T13:06:29.188Z",
+    "finishedAt": "2026-10-17T13:06:30.420Z",
+    "requestedRange": "bytes=-131072",
+    "actualHeaders": {
+      "content-length": "127809",
+      "content-type": "text/plain",
+      "date": "Sat, 17 Oct 2026 13:06:30 GMT",
+      "etag": "\"0x8DF2B23BFDE9095\"",
+      "last-modified": "Fri, 16 Oct 2026 01:21:05 GMT"
+    },
+    "statusLine": "HTTP/1.1 200 OK",
+    "commandExit": 0,
+    "error": null,
+    "retainedBodyBytes": 127809,
+    "sha256": "9d7da57867135b8ff394b9ce5a18ee762436f4e5a4efe21b86a71c714961380a",
+    "partial": "suffix only if content-range confirms it; not complete publisher logs",
+    "authorizationHeadersAndSignedLocationsRetained": false
+  }
+]

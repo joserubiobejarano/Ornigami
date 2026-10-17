@@ -1,0 +1,314 @@
+{
+  "files": [
+    {
+      "path": "anonymous-auth.json",
+      "bytes": 180,
+      "sha256": "6ee7e6bdbd8570a63915d5b461e366ff7d9e58a2906df0b0bacbd9ed51c4142a"
+    },
+    {
+      "path": "CHECKS.json",
+      "bytes": 874,
+      "sha256": "e1ddaeea39418cbb223ee5355362c98fa1c11d14d2016b8bd27d39c36e45fc56"
+    },
+    {
+      "path": "final-probe.mjs",
+      "bytes": 1758,
+      "sha256": "e1389c71a0c3215da2f25670699bcdcd8353c9d7ffa520f3c90bc71c7bad11fc"
+    },
+    {
+      "path": "FINAL_OBSERVATION.json",
+      "bytes": 938,
+      "sha256": "7024821eee641a5d799586bb78cec14051499936c7862b340ce15493e601b022"
+    },
+    {
+      "path": "FINDINGS.json",
+      "bytes": 4989,
+      "sha256": "5c32fc8ee580aab322c50a767b4137338f9deab7a132a1a2d7ef517561b9f4b8"
+    },
+    {
+      "path": "HISTORICAL_PRESERVATION.json",
+      "bytes": 100,
+      "sha256": "59f5c8ad91a2c85ac453f9bdacdb850765e4702a97e557db2708a8dbecc746bf"
+    },
+    {
+      "path": "LOCAL_VERIFICATION_NOTES.json",
+      "bytes": 643,
+      "sha256": "b60b54a08b2f9b0d10dcff5e14843848da114e2af1b2bd07fede7d1389684489"
+    },
+    {
+      "path": "log-tail-probe.mjs",
+      "bytes": 1900,
+      "sha256": "99e9d62219e8b20de8e66f04ded7e7a72897e38afd7086c15a5e797c020853ee"
+    },
+    {
+      "path": "official-source/trivy--pkg_db_db.go",
+      "bytes": 7495,
+      "sha256": "41aa153ea3668450714a97288acc3c7a82d8ec7985fb3570ecb33c700109b9f5"
+    },
+    {
+      "path": "official-source/trivy--pkg_flag_db_flags.go",
+      "bytes": 5762,
+      "sha256": "5295590906fafc0e5ba7fd80d1ef4723052e0446445ed732447a34887708fb6b"
+    },
+    {
+      "path": "official-source/trivy--pkg_oci_artifact.go",
+      "bytes": 9565,
+      "sha256": "1cdc159ff8976e1f6c00de266a4bfd36067160916bcb3bc72235bc93a1b11257"
+    },
+    {
+      "path": "official-source/trivy--pkg_remote_remote.go",
+      "bytes": 8664,
+      "sha256": "5c8fe95c80d8036a8283aa47957ea72cfba232ce432b985fb10403aa6a426b02"
+    },
+    {
+      "path": "official-source/trivy--pkg_x_http_client.go",
+      "bytes": 607,
+      "sha256": "c6afdce0a31e0327642c99c3f2c736941ec7c96ad27afc6db29e6685763e638b"
+    },
+    {
+      "path": "official-source/trivy--pkg_x_http_transport.go",
+      "bytes": 4292,
+      "sha256": "8ccd0bdde077510b46963a4f6b938d7ac6604cbb9332ca824f72c1d09f0f7637"
+    },
+    {
+      "path": "official-source/trivy-db--.github_workflows_cron.yml",
+      "bytes": 4713,
+      "sha256": "76f5eac37a9c952a853235638d51dbf2c842d691a42acbe4f563809b9bdd3fc0"
+    },
+    {
+      "path": "official-source/trivy-db--Makefile",
+      "bytes": 4692,
+      "sha256": "f08d81289b6b27b92107bd7f49bc10dbf1c2ec95ae923c08d3e4ffc2ce24db0d"
+    },
+    {
+      "path": "official-source/trivy-db--pkg_metadata_metadata.go",
+      "bytes": 1688,
+      "sha256": "fa3bad2c1b9089742cf5fe9381d51cf6f0479781691247b262077a12217eef27"
+    },
+    {
+      "path": "official-source/trivy-db--pkg_vulnsrc_debian_debian.go",
+      "bytes": 18828,
+      "sha256": "233a872e0780a6fa5703348e7ce2858de13e9864079bfd14847f146ca7d762fd"
+    },
+    {
+      "path": "PR_RECEIPTS.json",
+      "bytes": 555,
+      "sha256": "3ca020161f4197a20c6c1252c870e5a8b5d3cd91ff5a9fc7c06df02eeedef57e"
+    },
+    {
+      "path": "prior-log-probe.mjs",
+      "bytes": 1907,
+      "sha256": "6b22c7a61654b082ed143d0bc6e9e6b92cc4dc6142f685cdf071e09550c895c8"
+    },
+    {
+      "path": "proposals-probe.mjs",
+      "bytes": 1967,
+      "sha256": "d18f79553afd2dabfe1ffa5745810195db7f6ddaf83d36878ca81af4076045d8"
+    },
+    {
+      "path": "publisher-38828255551-jobs.json",
+      "bytes": 4494,
+      "sha256": "e46a69792c3afc62783c22efee7f61c1bc7a13fd12080dbdcc5a76f28aa59ca8"
+    },
+    {
+      "path": "publisher-38828255551-run.json",
+      "bytes": 12673,
+      "sha256": "60158b7e1bf25e260116561a898d567cc994fc82e64f25cff6bc286f05ab27aa"
+    },
+    {
+      "path": "publisher-38859594790-jobs.json",
+      "bytes": 3979,
+      "sha256": "2169e4317392659313e639a6843a8c6c22d80434c1980fbfd999684f2ecb357f"
+    },
+    {
+      "path": "publisher-38859594790-run.json",
+      "bytes": 12673,
+      "sha256": "aeff98fa6630bcda430ce4190cedc6c2fb02759d7ff64a4b3a492c4654b83a21"
+    },
+    {
+      "path": "publisher-38898441139-jobs.json",
+      "bytes": 3979,
+      "sha256": "d268943eaef283cdfa7ba6c457d82ca7ef9d9ccb91001a5dcc499d4d2f35fced"
+    },
+    {
+      "path": "publisher-38898441139-run.json",
+      "bytes": 12673,
+      "sha256": "c44564d0b85b144c56ecc9a6e25402c529dc148f76ee6bf88f64946a4549f34d"
+    },
+    {
+      "path": "publisher-38944776605-jobs.json",
+      "bytes": 3979,
+      "sha256": "2b7c3b898a375e1b4eb494de20b5619f4788277806acc259e7f242eac30622e8"
+    },
+    {
+      "path": "publisher-38944776605-run.json",
+      "bytes": 12673,
+      "sha256": "0f7fdcae568817524581b95e997ff6f9102447b96fbefd2fa9417880c8e1b2fd"
+    },
+    {
+      "path": "publisher-38985388805-jobs.json",
+      "bytes": 3979,
+      "sha256": "f7cc9eb6218acbd6ca4430d46cbfc2c2118acec90a884265da426f8bd137ac80"
+    },
+    {
+      "path": "publisher-38985388805-run.json",
+      "bytes": 12673,
+      "sha256": "1ccf57daed7c967e4b63f04a77dc115a08ccdd945c47a6c867d0e5684b7ad7cd"
+    },
+    {
+      "path": "publisher-39008766209-jobs.json",
+      "bytes": 3979,
+      "sha256": "ade16252e2a2c4ec0b624e4ce26025f69332017d391373bd88968758c97321b7"
+    },
+    {
+      "path": "publisher-39008766209-run.json",
+      "bytes": 12673,
+      "sha256": "bc0ba8829799cd7a4a8d86612e41008d007fa95517b6cbf70bf6354d99d8cc1a"
+    },
+    {
+      "path": "publisher-39031246212-jobs.json",
+      "bytes": 3979,
+      "sha256": "0b6cfa7e7a368bc11eae94861807597059a2ef1dfb8cef312ba736afbe527a12"
+    },
+    {
+      "path": "publisher-39031246212-run.json",
+      "bytes": 12673,
+      "sha256": "bdedc99354735944c6b560733d062a7d7db16e972b42b3c6a40757670abaf634"
+    },
+    {
+      "path": "publisher-final-latest-run.json",
+      "bytes": 12712,
+      "sha256": "4edb092c211209c45cad99049bebaf2baa5a60ae8e9489d865878da0c7d67779"
+    },
+    {
+      "path": "publisher-first-failed-log-tail.txt",
+      "bytes": 101747,
+      "sha256": "8b628c07a6640094f13408721b7e06cba659ec842e50cefb308792b192a391b0"
+    },
+    {
+      "path": "publisher-head.json",
+      "bytes": 104975,
+      "sha256": "e0d829e48fdce69921b9d9b2de16259cc10e0ec74b8af59a47230b1be9cdf7de"
+    },
+    {
+      "path": "publisher-last-successful-log-tail.txt",
+      "bytes": 127809,
+      "sha256": "9d7da57867135b8ff394b9ce5a18ee762436f4e5a4efe21b86a71c714961380a"
+    },
+    {
+      "path": "publisher-latest-failed-log-tail.txt",
+      "bytes": 101830,
+      "sha256": "6d27c4da637f5d8eb445a3c6193304530234d7567678558451fb5c7965733201"
+    },
+    {
+      "path": "publisher-pr-700.json",
+      "bytes": 18154,
+      "sha256": "b1fa6904af766f11aea9b6fb6b3e0640b099b786b398f46aa4c044f536639c66"
+    },
+    {
+      "path": "publisher-pr-701.json",
+      "bytes": 19764,
+      "sha256": "f07a4d887e5d099ac219dea5f51747889a5b7e696c4f242b9eab372190fb5376"
+    },
+    {
+      "path": "publisher-pretrial-failed-log-tail.txt",
+      "bytes": 101754,
+      "sha256": "f2583fd65a2d9c19c462a2c5e2082952095108a07784eb70c8fe0e6fbbd39fd0"
+    },
+    {
+      "path": "publisher-probe.mjs",
+      "bytes": 1540,
+      "sha256": "5227531776f839ca8897abccd58513a7035d030acb06a1c114e259eb4ece22c7"
+    },
+    {
+      "path": "publisher-repository.json",
+      "bytes": 6531,
+      "sha256": "eabe7e02b2e17b04ba1495bb2da73081c82c3b1606459d5eb2b1dc984957ec05"
+    },
+    {
+      "path": "publisher-runs.json",
+      "bytes": 152126,
+      "sha256": "e0171d685794a520c71fa0c58bba3ea23a6d4a9c3222ca6f2c5503e9db7171d8"
+    },
+    {
+      "path": "publisher-workflows.json",
+      "bytes": 4591,
+      "sha256": "29f458517d1e0b43e8295a6732e3ba0a612d06c37b1fd1b94175bb069a24da6c"
+    },
+    {
+      "path": "PUBLISHER_LOG_RECEIPTS.json",
+      "bytes": 1691,
+      "sha256": "65a9b90506fa21ef710633996da84dcf62e90f0c199f83bbf34b2ce270b02bed"
+    },
+    {
+      "path": "PUBLISHER_PRIOR_LOG_RECEIPTS.json",
+      "bytes": 1691,
+      "sha256": "c9c95703a6fb3c113534dbfefc4537ad089e8a8a94a87ffd26f26bdf3d9a4535"
+    },
+    {
+      "path": "PUBLISHER_REQUESTS.json",
+      "bytes": 6055,
+      "sha256": "a6029a4a296413ac601933e8aa6879212b65aedb94e3c5d8067f64a9f06ccf47"
+    },
+    {
+      "path": "registry-digest-manifest.json",
+      "bytes": 616,
+      "sha256": "9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c"
+    },
+    {
+      "path": "registry-head-default.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "registry-head-revalidate.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "registry-probe.mjs",
+      "bytes": 3915,
+      "sha256": "6701061aed87cf3b7285caf48a8fe86340f2e5b39b945e2f90edb7a35f29d7a6"
+    },
+    {
+      "path": "registry-tag-manifest.json",
+      "bytes": 616,
+      "sha256": "9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c"
+    },
+    {
+      "path": "registry-unauth-head.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "REGISTRY_OBSERVATION.json",
+      "bytes": 1094,
+      "sha256": "33a14a6867c4bf24eb08608c5828212f70b206af02c1eeb51a8e4e164e956876"
+    },
+    {
+      "path": "REGISTRY_REQUESTS.json",
+      "bytes": 5449,
+      "sha256": "a069c91518e39054e7683117fdf92c0b86c4df0705bb8d6bd4612f46cd87d597"
+    },
+    {
+      "path": "source-probe.mjs",
+      "bytes": 1645,
+      "sha256": "ce1be3d32c744e094a0b590d53ced24c7096930a1f5bcaaeea0e7b7a33cb4398"
+    },
+    {
+      "path": "SOURCE_RECEIPTS.json",
+      "bytes": 5089,
+      "sha256": "a0ba07623bf98f94d7cc6351931b9c1c17d4e211cda5dd0dd5b563a773b71b7e"
+    },
+    {
+      "path": "verify-receipts-first.py",
+      "bytes": 5856,
+      "sha256": "bbdea9e42cec306e23fc74a268a12e2c9729c61276902a92e744953f9dbb4cec"
+    },
+    {
+      "path": "verify-receipts.py",
+      "bytes": 6032,
+      "sha256": "76fbcdb875c3ac835d82250edd7ee91e85b2a24511355469536b330f489bb337"
+    }
+  ]
+}

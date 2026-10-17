@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-17T13:04:37.101Z",
+  "result": "acquired in memory only",
+  "service": "ghcr.io",
+  "scope": "repository:aquasecurity/trivy-db:pull",
+  "tokenRetained": false
+}

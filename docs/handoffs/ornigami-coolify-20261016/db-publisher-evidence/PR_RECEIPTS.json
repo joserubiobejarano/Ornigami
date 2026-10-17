@@ -1,0 +1,16 @@
+[
+  {
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/pulls/700",
+    "startedAt": "2026-10-17T13:08:40.424Z",
+    "finishedAt": "2026-10-17T13:08:41.540Z",
+    "bytes": 18154,
+    "sha256": "b1fa6904af766f11aea9b6fb6b3e0640b099b786b398f46aa4c044f536639c66"
+  },
+  {
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/pulls/701",
+    "startedAt": "2026-10-17T13:08:41.541Z",
+    "finishedAt": "2026-10-17T13:08:42.805Z",
+    "bytes": 19764,
+    "sha256": "f07a4d887e5d099ac219dea5f51747889a5b7e696c4f242b9eab372190fb5376"
+  }
+]

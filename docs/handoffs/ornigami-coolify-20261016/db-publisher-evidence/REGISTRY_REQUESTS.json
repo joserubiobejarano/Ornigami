@@ -1,0 +1,115 @@
+[
+  {
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "method": "HEAD",
+    "startedAt": "2026-10-17T13:04:36.514Z",
+    "finishedAt": "2026-10-17T13:04:36.821Z",
+    "requestHeaders": {
+      "accept": "application/vnd.oci.image.manifest.v1+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json",
+      "cacheControl": null,
+      "authorization": null
+    },
+    "status": 401,
+    "headers": {
+      "date": "Sat, 17 Oct 2026 13:04:37 GMT",
+      "content-type": "application/json",
+      "content-length": "73",
+      "x-github-request-id": "FCA3:2A9A77:62E204:6E814B:6AD37265"
+    },
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "registry-unauth-head.bin"
+  },
+  {
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "method": "HEAD",
+    "startedAt": "2026-10-17T13:04:37.102Z",
+    "finishedAt": "2026-10-17T13:04:37.386Z",
+    "requestHeaders": {
+      "accept": "application/vnd.oci.image.manifest.v1+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json",
+      "cacheControl": null,
+      "authorization": "anonymous registry token present; not retained"
+    },
+    "status": 200,
+    "headers": {
+      "date": "Sat, 17 Oct 2026 13:04:37 GMT",
+      "content-type": "application/vnd.oci.image.manifest.v1+json",
+      "content-length": "616",
+      "docker-content-digest": "sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+      "etag": "\"sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c\"",
+      "x-github-request-id": "FCA5:1A41AE:5CE41A:688305:6AD37265"
+    },
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "registry-head-default.bin"
+  },
+  {
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "method": "HEAD",
+    "startedAt": "2026-10-17T13:04:37.386Z",
+    "finishedAt": "2026-10-17T13:04:37.566Z",
+    "requestHeaders": {
+      "accept": "application/vnd.oci.image.manifest.v1+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json",
+      "cacheControl": "no-cache",
+      "authorization": "anonymous registry token present; not retained"
+    },
+    "status": 200,
+    "headers": {
+      "date": "Sat, 17 Oct 2026 13:04:38 GMT",
+      "content-type": "application/vnd.oci.image.manifest.v1+json",
+      "content-length": "616",
+      "docker-content-digest": "sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+      "etag": "\"sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c\"",
+      "x-github-request-id": "FCA4:19D097:56B087:62505D:6AD37265"
+    },
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "registry-head-revalidate.bin"
+  },
+  {
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "method": "GET",
+    "startedAt": "2026-10-17T13:04:37.566Z",
+    "finishedAt": "2026-10-17T13:04:37.803Z",
+    "requestHeaders": {
+      "accept": "application/vnd.oci.image.manifest.v1+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json",
+      "cacheControl": "no-cache",
+      "authorization": "anonymous registry token present; not retained"
+    },
+    "status": 200,
+    "headers": {
+      "date": "Sat, 17 Oct 2026 13:04:38 GMT",
+      "content-type": "application/vnd.oci.image.manifest.v1+json",
+      "content-length": "616",
+      "docker-content-digest": "sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+      "etag": "\"sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c\"",
+      "x-github-request-id": "FCA6:269E4B:607657:6C1ADB:6AD37266"
+    },
+    "bytes": 616,
+    "sha256": "9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+    "file": "registry-tag-manifest.json"
+  },
+  {
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+    "method": "GET",
+    "startedAt": "2026-10-17T13:04:37.803Z",
+    "finishedAt": "2026-10-17T13:04:38.031Z",
+    "requestHeaders": {
+      "accept": "application/vnd.oci.image.manifest.v1+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.docker.distribution.manifest.list.v2+json",
+      "cacheControl": null,
+      "authorization": "anonymous registry token present; not retained"
+    },
+    "status": 200,
+    "headers": {
+      "date": "Sat, 17 Oct 2026 13:04:38 GMT",
+      "content-type": "application/vnd.oci.image.manifest.v1+json",
+      "content-length": "616",
+      "docker-content-digest": "sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+      "etag": "\"sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c\"",
+      "x-github-request-id": "FCA7:1DA35C:5D7532:6918A0:6AD37266"
+    },
+    "bytes": 616,
+    "sha256": "9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+    "file": "registry-digest-manifest.json"
+  }
+]

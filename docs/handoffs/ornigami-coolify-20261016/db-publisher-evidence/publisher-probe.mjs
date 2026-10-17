@@ -1,0 +1,7 @@
+import fs from'node:fs';import path from'node:path';import{execFileSync}from'node:child_process';import{createHash}from'node:crypto';
+const out=path.resolve('.local/db-publisher-investigation-20261017'),ledger=[];
+function api(name,endpoint){const startedAt=new Date().toISOString(),bytes=execFileSync('gh',['api',endpoint],{maxBuffer:512*1024,timeout:30000,windowsHide:true});fs.writeFileSync(path.join(out,name),bytes);ledger.push({name,url:'https://api.github.com/'+endpoint,startedAt,finishedAt:new Date().toISOString(),bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});return JSON.parse(bytes);}
+const repo=api('publisher-repository.json','repos/aquasecurity/trivy-db');api('publisher-head.json','repos/aquasecurity/trivy-db/commits/main');api('publisher-workflows.json','repos/aquasecurity/trivy-db/actions/workflows');
+const runs=api('publisher-runs.json','repos/aquasecurity/trivy-db/actions/workflows/20889/runs?per_page=12&branch=main');
+const selected=runs.workflow_runs.slice(0,7);for(const run of selected){api('publisher-'+run.id+'-run.json','repos/aquasecurity/trivy-db/actions/runs/'+run.id);api('publisher-'+run.id+'-jobs.json','repos/aquasecurity/trivy-db/actions/runs/'+run.id+'/jobs');}
+fs.writeFileSync(path.join(out,'PUBLISHER_REQUESTS.json'),JSON.stringify(ledger,null,2)+'\n');console.log(JSON.stringify({at:new Date().toISOString(),publisher:repo.full_name,runs:selected.map(r=>({id:r.id,conclusion:r.conclusion,created_at:r.created_at,updated_at:r.updated_at,head_sha:r.head_sha}))}));

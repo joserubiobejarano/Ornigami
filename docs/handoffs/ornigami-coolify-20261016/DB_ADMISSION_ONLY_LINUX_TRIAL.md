@@ -1,5 +1,7 @@
 # Admission-only Linux trial — 17 October 2026
 
+Follow-up investigation: [official publisher failures, exact current registry identity and decision to wait](./DB_PUBLISHER_INVESTIGATION.md). This does not recover the previous missing-metadata failure or authorize another DB download/trial. The original trial record and evidence below remain unchanged.
+
 **One authorized attempt completed and failed admission. No retry or replacement download.** [Run 39032144805, attempt 1](https://github.com/joserubiobejarano/Ornigami/actions/runs/39032144805) downloaded one DB successfully, then correctly rejected its expired NextUpdate under the unchanged freshness policy. Dependent Linux fixtures were skipped. Original diagnostics and complete failure capture are retained; one verified owner custody acknowledgment and scoped cleanup passed. This grants no image/security/runtime/release acceptance.
 
 ## Exact publication and admission

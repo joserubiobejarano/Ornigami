@@ -1,0 +1,26 @@
+{
+  "startedAt": "2026-10-17T13:10:57.161Z",
+  "finishedAt": "2026-10-17T13:10:58.322Z",
+  "publisherLatest": {
+    "id": 39031246212,
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "updatedAt": "2026-10-17T12:55:42Z"
+  },
+  "publisherResponseSha256": "4edb092c211209c45cad99049bebaf2baa5a60ae8e9489d865878da0c7d67779",
+  "registry": {
+    "method": "HEAD",
+    "url": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "status": 200,
+    "headers": {
+      "date": "Sat, 17 Oct 2026 13:10:58 GMT",
+      "content-type": "application/vnd.oci.image.manifest.v1+json",
+      "content-length": "616",
+      "docker-content-digest": "sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+      "etag": "\"sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c\""
+    }
+  },
+  "DBBlobRequests": 0,
+  "tokenRetained": false
+}

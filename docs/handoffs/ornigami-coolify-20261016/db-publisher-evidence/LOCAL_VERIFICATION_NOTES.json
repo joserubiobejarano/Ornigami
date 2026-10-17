@@ -1,0 +1,8 @@
+{
+  "initialCheck": "offline publication-log matcher failed because it assumed Digest immediately follows Pushed",
+  "observedFormat": "ArtifactType intervenes; original publisher logs unchanged",
+  "repair": "bind exact tag push to its digest within its four-line publication record; no identity/security expectation changed",
+  "networkRetry": false,
+  "firstVerifierPreserved": "verify-receipts-first.py",
+  "worktreePreparation": "initial long target path exceeded Windows path length; failed add rolled back; short isolated worktree created with command-scoped core.longpaths=true; no global setting or other worktree modified"
+}

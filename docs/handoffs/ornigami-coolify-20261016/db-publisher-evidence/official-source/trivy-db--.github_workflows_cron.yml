@@ -1,0 +1,134 @@
+---
+name: Trivy DB
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_publish:
+        description: "Build the database without publishing"
+        type: boolean
+        default: false
+env:
+  REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
+  GH_USER: aqua-bot
+  VERSION: 2
+permissions:
+  contents: read
+  packages: write  # for pushing to ghcr.io
+
+jobs:
+  build:
+    name: Build DB
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version-file: go.mod
+
+      - name: Install bbolt
+        run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
+
+      - name: Download vuln-list and advisories
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make db-fetch-langs db-fetch-vuln-list
+
+      - name: Build the binary
+        run: make build
+
+      - name: Build database
+        run: make db-build
+
+      - name: Compact DB
+        run: make db-compact
+
+      - name: Compress assets
+        run: make db-compress
+
+      - name: Move DB
+        run: mv assets/db.tar.gz .
+
+      - name: Login to Docker Hub
+        if: ${{ !inputs.skip_publish }}
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Packages Container registry
+        if: ${{ !inputs.skip_publish }}
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ env.GH_USER }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to ECR
+        if: ${{ !inputs.skip_publish }}
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: public.ecr.aws
+          username: ${{ secrets.ECR_ACCESS_KEY_ID }}
+          password: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
+
+      - name: Install oras
+        if: ${{ !inputs.skip_publish }}
+        run: |
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
+          tar -xvf ./oras_1.2.0_linux_amd64.tar.gz
+
+      - name: Upload assets to registries
+        if: ${{ !inputs.skip_publish }}
+        run: |
+          lowercase_repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "Starting artifact upload process..."
+
+          # Define an array of registry base URLs and their corresponding repository names
+          declare -A registries=(
+            ["ghcr.io"]="${lowercase_repo}"
+            ["public.ecr.aws"]="${lowercase_repo}"
+            ["docker.io"]="${lowercase_repo}"
+          )
+
+          # Special case for docker.io if the organization is 'aquasecurity'
+          if [[ "${lowercase_repo}" == "aquasecurity/"* ]]; then
+            registries["docker.io"]="aquasec/${lowercase_repo#aquasecurity/}"
+            echo "Docker Hub repository adjusted for aquasecurity: ${registries["docker.io"]}"
+          fi
+
+          # Loop through each registry and push the artifact
+          for registry in "${!registries[@]}"; do
+            repo_name=${registries[$registry]}
+            full_registry_url="${registry}/${repo_name}"
+            echo "Processing registry: ${full_registry_url}"
+
+            tags=(latest ${{ env.VERSION }})
+            for tag in "${tags[@]}"; do
+              echo "Pushing artifact with tag: ${tag}"
+
+              if ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
+                "${full_registry_url}:${tag}" \
+                db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip; then
+                echo "Successfully pushed to ${full_registry_url}:${tag}"
+              else
+                echo "Failed to push to ${full_registry_url}:${tag}"
+                exit 1
+              fi
+            done
+          done
+            
+          echo "Artifact upload process completed."
+
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        if: ${{ failure() && !inputs.skip_publish }}
+        with:
+          webhook: ${{ secrets.TRIVY_SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: ":x: *${{ github.workflow }}* workflow failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>"

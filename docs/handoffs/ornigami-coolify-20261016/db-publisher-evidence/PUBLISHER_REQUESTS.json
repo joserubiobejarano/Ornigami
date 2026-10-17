@@ -1,0 +1,146 @@
+[
+  {
+    "name": "publisher-repository.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db",
+    "startedAt": "2026-10-17T13:05:03.060Z",
+    "finishedAt": "2026-10-17T13:05:03.669Z",
+    "bytes": 6531,
+    "sha256": "eabe7e02b2e17b04ba1495bb2da73081c82c3b1606459d5eb2b1dc984957ec05"
+  },
+  {
+    "name": "publisher-head.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/commits/main",
+    "startedAt": "2026-10-17T13:05:03.669Z",
+    "finishedAt": "2026-10-17T13:05:04.264Z",
+    "bytes": 104975,
+    "sha256": "e0d829e48fdce69921b9d9b2de16259cc10e0ec74b8af59a47230b1be9cdf7de"
+  },
+  {
+    "name": "publisher-workflows.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/workflows",
+    "startedAt": "2026-10-17T13:05:04.265Z",
+    "finishedAt": "2026-10-17T13:05:04.773Z",
+    "bytes": 4591,
+    "sha256": "29f458517d1e0b43e8295a6732e3ba0a612d06c37b1fd1b94175bb069a24da6c"
+  },
+  {
+    "name": "publisher-runs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/workflows/20889/runs?per_page=12&branch=main",
+    "startedAt": "2026-10-17T13:05:04.773Z",
+    "finishedAt": "2026-10-17T13:05:05.533Z",
+    "bytes": 152126,
+    "sha256": "e0171d685794a520c71fa0c58bba3ea23a6d4a9c3222ca6f2c5503e9db7171d8"
+  },
+  {
+    "name": "publisher-39031246212-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/39031246212",
+    "startedAt": "2026-10-17T13:05:05.534Z",
+    "finishedAt": "2026-10-17T13:05:06.069Z",
+    "bytes": 12673,
+    "sha256": "bdedc99354735944c6b560733d062a7d7db16e972b42b3c6a40757670abaf634"
+  },
+  {
+    "name": "publisher-39031246212-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/39031246212/jobs",
+    "startedAt": "2026-10-17T13:05:06.069Z",
+    "finishedAt": "2026-10-17T13:05:06.676Z",
+    "bytes": 3979,
+    "sha256": "0b6cfa7e7a368bc11eae94861807597059a2ef1dfb8cef312ba736afbe527a12"
+  },
+  {
+    "name": "publisher-39008766209-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/39008766209",
+    "startedAt": "2026-10-17T13:05:06.676Z",
+    "finishedAt": "2026-10-17T13:05:07.227Z",
+    "bytes": 12673,
+    "sha256": "bc0ba8829799cd7a4a8d86612e41008d007fa95517b6cbf70bf6354d99d8cc1a"
+  },
+  {
+    "name": "publisher-39008766209-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/39008766209/jobs",
+    "startedAt": "2026-10-17T13:05:07.227Z",
+    "finishedAt": "2026-10-17T13:05:07.824Z",
+    "bytes": 3979,
+    "sha256": "ade16252e2a2c4ec0b624e4ce26025f69332017d391373bd88968758c97321b7"
+  },
+  {
+    "name": "publisher-38985388805-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38985388805",
+    "startedAt": "2026-10-17T13:05:07.824Z",
+    "finishedAt": "2026-10-17T13:05:08.358Z",
+    "bytes": 12673,
+    "sha256": "1ccf57daed7c967e4b63f04a77dc115a08ccdd945c47a6c867d0e5684b7ad7cd"
+  },
+  {
+    "name": "publisher-38985388805-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38985388805/jobs",
+    "startedAt": "2026-10-17T13:05:08.358Z",
+    "finishedAt": "2026-10-17T13:05:09.055Z",
+    "bytes": 3979,
+    "sha256": "f7cc9eb6218acbd6ca4430d46cbfc2c2118acec90a884265da426f8bd137ac80"
+  },
+  {
+    "name": "publisher-38944776605-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38944776605",
+    "startedAt": "2026-10-17T13:05:09.055Z",
+    "finishedAt": "2026-10-17T13:05:09.519Z",
+    "bytes": 12673,
+    "sha256": "0f7fdcae568817524581b95e997ff6f9102447b96fbefd2fa9417880c8e1b2fd"
+  },
+  {
+    "name": "publisher-38944776605-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38944776605/jobs",
+    "startedAt": "2026-10-17T13:05:09.519Z",
+    "finishedAt": "2026-10-17T13:05:10.213Z",
+    "bytes": 3979,
+    "sha256": "2b7c3b898a375e1b4eb494de20b5619f4788277806acc259e7f242eac30622e8"
+  },
+  {
+    "name": "publisher-38898441139-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38898441139",
+    "startedAt": "2026-10-17T13:05:10.213Z",
+    "finishedAt": "2026-10-17T13:05:10.725Z",
+    "bytes": 12673,
+    "sha256": "c44564d0b85b144c56ecc9a6e25402c529dc148f76ee6bf88f64946a4549f34d"
+  },
+  {
+    "name": "publisher-38898441139-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38898441139/jobs",
+    "startedAt": "2026-10-17T13:05:10.725Z",
+    "finishedAt": "2026-10-17T13:05:11.450Z",
+    "bytes": 3979,
+    "sha256": "d268943eaef283cdfa7ba6c457d82ca7ef9d9ccb91001a5dcc499d4d2f35fced"
+  },
+  {
+    "name": "publisher-38859594790-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38859594790",
+    "startedAt": "2026-10-17T13:05:11.451Z",
+    "finishedAt": "2026-10-17T13:05:11.970Z",
+    "bytes": 12673,
+    "sha256": "aeff98fa6630bcda430ce4190cedc6c2fb02759d7ff64a4b3a492c4654b83a21"
+  },
+  {
+    "name": "publisher-38859594790-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38859594790/jobs",
+    "startedAt": "2026-10-17T13:05:11.970Z",
+    "finishedAt": "2026-10-17T13:05:12.683Z",
+    "bytes": 3979,
+    "sha256": "2169e4317392659313e639a6843a8c6c22d80434c1980fbfd999684f2ecb357f"
+  },
+  {
+    "name": "publisher-38828255551-run.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38828255551",
+    "startedAt": "2026-10-17T13:05:12.683Z",
+    "finishedAt": "2026-10-17T13:05:13.183Z",
+    "bytes": 12673,
+    "sha256": "60158b7e1bf25e260116561a898d567cc994fc82e64f25cff6bc286f05ab27aa"
+  },
+  {
+    "name": "publisher-38828255551-jobs.json",
+    "url": "https://api.github.com/repos/aquasecurity/trivy-db/actions/runs/38828255551/jobs",
+    "startedAt": "2026-10-17T13:05:13.183Z",
+    "finishedAt": "2026-10-17T13:05:13.793Z",
+    "bytes": 4494,
+    "sha256": "e46a69792c3afc62783c22efee7f61c1bc7a13fd12080dbdcc5a76f28aa59ca8"
+  }
+]

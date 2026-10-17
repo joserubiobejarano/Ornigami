@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-17T13:04:38.032Z",
+  "registry": "ghcr.io/aquasecurity/trivy-db:2",
+  "digest": "sha256:9dd4076bb4c826ace2a305983a2285de1044fbf99d27eb619b91abc4dfc1b43c",
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "artifactType": "application/vnd.aquasec.trivy.config.v1+json",
+  "annotations": {
+    "org.opencontainers.image.created": "2026-10-16T01:20:52Z"
+  },
+  "config": {
+    "mediaType": "application/vnd.oci.empty.v1+json",
+    "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "size": 2,
+    "data": "e30="
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.aquasec.trivy.db.layer.v1.tar+gzip",
+      "digest": "sha256:21c41a540cbf645dc6f754e5dd54e0c44efafc4e4085315b4dd51e63ed88feb5",
+      "size": 134244714,
+      "annotations": {
+        "org.opencontainers.image.title": "db.tar.gz"
+      }
+    }
+  ],
+  "tagAndDigestBytesMatch": true,
+  "blobRequests": 0,
+  "DBDownloaded": false,
+  "cacheInference": "only retained current response headers; historical runner transport headers/digest were not captured"
+}

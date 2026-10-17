@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-17T13:12:09.714538+00:00",
+  "checks": [
+    {
+      "name": "manifest hash/header/immutable bytes; no index or blob body requests",
+      "result": "passed"
+    },
+    {
+      "name": "six failed publishers, skipped uploads, last success/current digest linkage and three direct error logs",
+      "result": "passed"
+    },
+    {
+      "name": "pinned official source hashes and unmerged proposal identities",
+      "result": "passed"
+    },
+    {
+      "name": "retained rejection remains exact and 916 historical files unchanged",
+      "result": "passed"
+    },
+    {
+      "name": "credential/signed-redirect patterns not retained",
+      "result": "passed"
+    }
+  ],
+  "scope": "Offline receipt/source/hash analysis only; no scanner, DB download, build or network fixtures. No runtime change or workflow implementation."
+}

@@ -1,0 +1,873 @@
+﻿2026-10-17T06:07:54.1516855Z Current runner version: '2.337.0'
+2026-10-17T06:07:54.1551515Z ##[group]Runner Image Provisioner
+2026-10-17T06:07:54.1552854Z Hosted Compute Agent
+2026-10-17T06:07:54.1554039Z Version: 20261012.601
+2026-10-17T06:07:54.1555238Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-17T06:07:54.1556644Z Build Date: 2026-10-12T17:48:21Z
+2026-10-17T06:07:54.1557923Z Worker ID: {fa9a8ce2-f51a-4384-afed-2f7d6ecb81f8}
+2026-10-17T06:07:54.1559275Z Region: eastus2
+2026-10-17T06:07:54.1560584Z Cloud: Azure
+2026-10-17T06:07:54.1561704Z ##[endgroup]
+2026-10-17T06:07:54.1564176Z ##[group]Operating System
+2026-10-17T06:07:54.1565369Z Ubuntu
+2026-10-17T06:07:54.1566361Z 24.04.5
+2026-10-17T06:07:54.1567342Z LTS
+2026-10-17T06:07:54.1568429Z ##[endgroup]
+2026-10-17T06:07:54.1569378Z ##[group]Runner Image
+2026-10-17T06:07:54.1570916Z Image: ubuntu-24.04
+2026-10-17T06:07:54.1572018Z Version: 20261012.334.1
+2026-10-17T06:07:54.1574236Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-17T06:07:54.1577077Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-17T06:07:54.1579038Z ##[endgroup]
+2026-10-17T06:07:54.1581488Z ##[group]GITHUB_TOKEN Permissions
+2026-10-17T06:07:54.1584234Z Contents: read
+2026-10-17T06:07:54.1585409Z Metadata: read
+2026-10-17T06:07:54.1586388Z Packages: write
+2026-10-17T06:07:54.1587393Z ##[endgroup]
+2026-10-17T06:07:54.1590725Z Secret source: Actions
+2026-10-17T06:07:54.1592562Z Cache mode: write
+2026-10-17T06:07:54.1593860Z Prepare workflow directory
+2026-10-17T06:07:54.2332134Z Prepare all required actions
+2026-10-17T06:07:54.2406337Z Getting action download info
+2026-10-17T06:07:54.4454237Z Download action repository 'actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8' (SHA:8e8c483db84b4bee98b60c0593521ed34d9990e8)
+2026-10-17T06:07:54.5766019Z Download action repository 'actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c' (SHA:4dc6199c7b1a012772edbd06daecab0f50c9053c)
+2026-10-17T06:07:54.7871548Z Download action repository 'docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef' (SHA:5e57cd118135c172c3672efd75eb46360885c0ef)
+2026-10-17T06:07:55.0512804Z Download action repository 'slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d' (SHA:dcb1066f776dd043e64d0e8ba94ca15cc7e1875d)
+2026-10-17T06:07:55.3669869Z Complete job name: Build DB
+2026-10-17T06:07:55.4589088Z ##[group]Run actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+2026-10-17T06:07:55.4591095Z with:
+2026-10-17T06:07:55.4592115Z   repository: ***urity/trivy-db
+2026-10-17T06:07:55.4599454Z   token: ***
+2026-10-17T06:07:55.4600519Z   ssh-strict: true
+2026-10-17T06:07:55.4601461Z   ssh-user: git
+2026-10-17T06:07:55.4602394Z   persist-credentials: true
+2026-10-17T06:07:55.4603392Z   clean: true
+2026-10-17T06:07:55.4604330Z   sparse-checkout-cone-mode: true
+2026-10-17T06:07:55.4605398Z   fetch-depth: 1
+2026-10-17T06:07:55.4606290Z   fetch-tags: false
+2026-10-17T06:07:55.4607214Z   show-progress: true
+2026-10-17T06:07:55.4608185Z   lfs: false
+2026-10-17T06:07:55.4609054Z   submodules: false
+2026-10-17T06:07:55.4609995Z   set-safe-directory: true
+2026-10-17T06:07:55.4611482Z env:
+2026-10-17T06:07:55.4612408Z   REPO_OWNER: ***urity
+2026-10-17T06:07:55.4613338Z   GH_USER: aqua-bot
+2026-10-17T06:07:55.4614225Z   VERSION: 2
+2026-10-17T06:07:55.4615087Z ##[endgroup]
+2026-10-17T06:07:55.5674000Z Syncing repository: ***urity/trivy-db
+2026-10-17T06:07:55.5676874Z ##[group]Getting Git version info
+2026-10-17T06:07:55.5678246Z Working directory is '/home/runner/work/trivy-db/trivy-db'
+2026-10-17T06:07:55.5680704Z [command]/usr/bin/git version
+2026-10-17T06:07:55.5755896Z git version 2.55.0
+2026-10-17T06:07:55.5779155Z ##[endgroup]
+2026-10-17T06:07:55.5793016Z Temporarily overriding HOME='/home/runner/work/_temp/979f4a5c-bc04-4680-815d-bd67d8f23efe' before making global git config changes
+2026-10-17T06:07:55.5795512Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-17T06:07:55.5798993Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/trivy-db/trivy-db
+2026-10-17T06:07:55.5851435Z Deleting the contents of '/home/runner/work/trivy-db/trivy-db'
+2026-10-17T06:07:55.5855989Z ##[group]Initializing the repository
+2026-10-17T06:07:55.5859935Z [command]/usr/bin/git init /home/runner/work/trivy-db/trivy-db
+2026-10-17T06:07:55.6005139Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-17T06:07:55.6007742Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-17T06:07:55.6010987Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-17T06:07:55.6013917Z hint: call:
+2026-10-17T06:07:55.6015538Z hint:
+2026-10-17T06:07:55.6017786Z hint: 	git config --global init.defaultBranch <name>
+2026-10-17T06:07:55.6020533Z hint:
+2026-10-17T06:07:55.6022633Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-17T06:07:55.6025764Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-17T06:07:55.6028188Z hint:
+2026-10-17T06:07:55.6029767Z hint: 	git branch -m <name>
+2026-10-17T06:07:55.6031056Z hint:
+2026-10-17T06:07:55.6032335Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-17T06:07:55.6034262Z Initialized empty Git repository in /home/runner/work/trivy-db/trivy-db/.git/
+2026-10-17T06:07:55.6038769Z [command]/usr/bin/git remote add origin https://github.com/***urity/trivy-db
+2026-10-17T06:07:55.6077914Z ##[endgroup]
+2026-10-17T06:07:55.6080913Z ##[group]Disabling automatic garbage collection
+2026-10-17T06:07:55.6083232Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-17T06:07:55.6115501Z ##[endgroup]
+2026-10-17T06:07:55.6118508Z ##[group]Setting up auth
+2026-10-17T06:07:55.6121300Z Removing SSH command configuration
+2026-10-17T06:07:55.6124371Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-17T06:07:55.6154473Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-17T06:07:55.6512317Z Removing HTTP extra header
+2026-10-17T06:07:55.6518912Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-17T06:07:55.6554210Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-17T06:07:55.6774587Z Removing includeIf entries pointing to credentials config files
+2026-10-17T06:07:55.6792351Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-17T06:07:55.6820535Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-17T06:07:55.7078218Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-17T06:07:55.7116327Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/trivy-db/trivy-db/.git.path /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:07:55.7150476Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/trivy-db/trivy-db/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:07:55.7185342Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:07:55.7219383Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:07:55.7249644Z ##[endgroup]
+2026-10-17T06:07:55.7252960Z ##[group]Fetching the repository
+2026-10-17T06:07:55.7261316Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cbebf2ecd6df42d36463844a45e689afee51c70f:refs/remotes/origin/main
+2026-10-17T06:07:56.1615795Z From https://github.com/***urity/trivy-db
+2026-10-17T06:07:56.1617194Z  * [new ref]         cbebf2ecd6df42d36463844a45e689afee51c70f -> origin/main
+2026-10-17T06:07:56.1621028Z ##[endgroup]
+2026-10-17T06:07:56.1621906Z ##[group]Determining the checkout info
+2026-10-17T06:07:56.1624568Z ##[endgroup]
+2026-10-17T06:07:56.1633415Z [command]/usr/bin/git sparse-checkout disable
+2026-10-17T06:07:56.1696035Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-17T06:07:56.1728561Z ##[group]Checking out the ref
+2026-10-17T06:07:56.1733587Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-10-17T06:07:56.3162827Z Switched to a new branch 'main'
+2026-10-17T06:07:56.3166943Z branch 'main' set up to track 'origin/main'.
+2026-10-17T06:07:56.3174409Z ##[endgroup]
+2026-10-17T06:07:56.3217599Z [command]/usr/bin/git log -1 --format=%H
+2026-10-17T06:07:56.3241654Z cbebf2ecd6df42d36463844a45e689afee51c70f
+2026-10-17T06:07:56.3503616Z ##[group]Run actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+2026-10-17T06:07:56.3504140Z with:
+2026-10-17T06:07:56.3504446Z   go-version-file: go.mod
+2026-10-17T06:07:56.3504793Z   check-latest: false
+2026-10-17T06:07:56.3507253Z   token: ***
+2026-10-17T06:07:56.3507534Z   cache: true
+2026-10-17T06:07:56.3507805Z env:
+2026-10-17T06:07:56.3508086Z   REPO_OWNER: ***urity
+2026-10-17T06:07:56.3508387Z   GH_USER: aqua-bot
+2026-10-17T06:07:56.3508665Z   VERSION: 2
+2026-10-17T06:07:56.3508924Z ##[endgroup]
+2026-10-17T06:07:56.4846179Z Setup go version spec 1.24.0
+2026-10-17T06:07:56.4858804Z Attempting to download 1.24.0...
+2026-10-17T06:07:56.4972814Z (node:2321) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-17T06:07:56.4974496Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-17T06:07:57.3760715Z matching 1.24.0...
+2026-10-17T06:07:57.3824610Z Acquiring 1.24.0 from https://github.com/actions/go-versions/releases/download/1.24.0-13277276272/go-1.24.0-linux-x64.tar.gz
+2026-10-17T06:07:57.9719555Z Extracting Go...
+2026-10-17T06:07:57.9853839Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/53b5e7a2-9494-4a32-b47b-699c3ba39d36 -f /home/runner/work/_temp/5e0522c7-5a2e-422e-aad5-a5a9b977dc7c
+2026-10-17T06:07:59.7430435Z Successfully extracted go to /home/runner/work/_temp/53b5e7a2-9494-4a32-b47b-699c3ba39d36
+2026-10-17T06:07:59.7442173Z Adding to the cache ...
+2026-10-17T06:08:05.1314320Z Successfully cached go to /opt/hostedtoolcache/go/1.24.0/x64
+2026-10-17T06:08:05.1316638Z Added go to the path
+2026-10-17T06:08:05.1318834Z Successfully set up Go version 1.24.0
+2026-10-17T06:08:05.1527917Z [command]/opt/hostedtoolcache/go/1.24.0/x64/bin/go env GOMODCACHE
+2026-10-17T06:08:05.1567420Z [command]/opt/hostedtoolcache/go/1.24.0/x64/bin/go env GOCACHE
+2026-10-17T06:08:05.1617684Z /home/runner/go/pkg/mod
+2026-10-17T06:08:05.1623810Z /home/runner/.cache/go-build
+2026-10-17T06:08:05.2457490Z Cache hit for: setup-go-Linux-x64-ubuntu24-go-1.24.0-3221d137926eabea9bf0dc9631328d2217e351ab648b81fdb5e0754855e8810e
+2026-10-17T06:08:05.2577079Z (node:2321) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-17T06:08:05.6481805Z Received 86934011 of 86934011 (100.0%), 225.3 MBs/sec
+2026-10-17T06:08:05.6482725Z Cache Size: ~83 MB (86934011 B)
+2026-10-17T06:08:05.6551533Z [command]/usr/bin/tar -xf /home/runner/work/_temp/180dc698-5c57-4a01-8d32-b43177c79348/cache.tzst -P -C /home/runner/work/trivy-db/trivy-db --use-compress-program unzstd
+2026-10-17T06:08:06.4965987Z Cache restored successfully
+2026-10-17T06:08:06.5012731Z Cache restored from key: setup-go-Linux-x64-ubuntu24-go-1.24.0-3221d137926eabea9bf0dc9631328d2217e351ab648b81fdb5e0754855e8810e
+2026-10-17T06:08:06.5043726Z go version go1.24.0 linux/amd64
+2026-10-17T06:08:06.5043975Z 
+2026-10-17T06:08:06.5044304Z ##[group]go env
+2026-10-17T06:08:06.5179792Z AR='ar'
+2026-10-17T06:08:06.5180515Z CC='gcc'
+2026-10-17T06:08:06.5180950Z CGO_CFLAGS='-O2 -g'
+2026-10-17T06:08:06.5181372Z CGO_CPPFLAGS=''
+2026-10-17T06:08:06.5181836Z CGO_CXXFLAGS='-O2 -g'
+2026-10-17T06:08:06.5182319Z CGO_ENABLED='1'
+2026-10-17T06:08:06.5182793Z CGO_FFLAGS='-O2 -g'
+2026-10-17T06:08:06.5183257Z CGO_LDFLAGS='-O2 -g'
+2026-10-17T06:08:06.5183758Z CXX='g++'
+2026-10-17T06:08:06.5185310Z GCCGO='gccgo'
+2026-10-17T06:08:06.5185765Z GO111MODULE=''
+2026-10-17T06:08:06.5186173Z GOAMD64='v1'
+2026-10-17T06:08:06.5186580Z GOARCH='amd64'
+2026-10-17T06:08:06.5186965Z GOAUTH='netrc'
+2026-10-17T06:08:06.5187307Z GOBIN=''
+2026-10-17T06:08:06.5187728Z GOCACHE='/home/runner/.cache/go-build'
+2026-10-17T06:08:06.5188211Z GOCACHEPROG=''
+2026-10-17T06:08:06.5188578Z GODEBUG=''
+2026-10-17T06:08:06.5188988Z GOENV='/home/runner/.config/go/env'
+2026-10-17T06:08:06.5189435Z GOEXE=''
+2026-10-17T06:08:06.5190302Z GOEXPERIMENT=''
+2026-10-17T06:08:06.5190737Z GOFIPS140='off'
+2026-10-17T06:08:06.5191496Z GOFLAGS=''
+2026-10-17T06:08:06.5192662Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build109293303=/tmp/go-build -gno-record-gcc-switches'
+2026-10-17T06:08:06.5193854Z GOHOSTARCH='amd64'
+2026-10-17T06:08:06.5194268Z GOHOSTOS='linux'
+2026-10-17T06:08:06.5194641Z GOINSECURE=''
+2026-10-17T06:08:06.5195113Z GOMOD='/home/runner/work/trivy-db/trivy-db/go.mod'
+2026-10-17T06:08:06.5195708Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-10-17T06:08:06.5196263Z GONOPROXY=''
+2026-10-17T06:08:06.5196618Z GONOSUMDB=''
+2026-10-17T06:08:06.5196944Z GOOS='linux'
+2026-10-17T06:08:06.5197312Z GOPATH='/home/runner/go'
+2026-10-17T06:08:06.5197727Z GOPRIVATE=''
+2026-10-17T06:08:06.5198185Z GOPROXY='https://proxy.golang.org,direct'
+2026-10-17T06:08:06.5198755Z GOROOT='/opt/hostedtoolcache/go/1.24.0/x64'
+2026-10-17T06:08:06.5199251Z GOSUMDB='sum.golang.org'
+2026-10-17T06:08:06.5199673Z GOTELEMETRY='local'
+2026-10-17T06:08:06.5200427Z GOTELEMETRYDIR='/home/runner/.config/go/telemetry'
+2026-10-17T06:08:06.5200992Z GOTMPDIR=''
+2026-10-17T06:08:06.5201351Z GOTOOLCHAIN='local'
+2026-10-17T06:08:06.5201925Z GOTOOLDIR='/opt/hostedtoolcache/go/1.24.0/x64/pkg/tool/linux_amd64'
+2026-10-17T06:08:06.5202549Z GOVCS=''
+2026-10-17T06:08:06.5202894Z GOVERSION='go1.24.0'
+2026-10-17T06:08:06.5203278Z GOWORK=''
+2026-10-17T06:08:06.5203674Z PKG_CONFIG='pkg-config'
+2026-10-17T06:08:06.5203944Z 
+2026-10-17T06:08:06.5204452Z ##[endgroup]
+2026-10-17T06:08:06.5400908Z ##[group]Run go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
+2026-10-17T06:08:06.5401433Z [36;1mgo install go.etcd.io/bbolt/cmd/bbolt@v1.3.5[0m
+2026-10-17T06:08:06.5715734Z shell: /usr/bin/bash -e {0}
+2026-10-17T06:08:06.5716136Z env:
+2026-10-17T06:08:06.5716573Z   REPO_OWNER: ***urity
+2026-10-17T06:08:06.5716898Z   GH_USER: aqua-bot
+2026-10-17T06:08:06.5717186Z   VERSION: 2
+2026-10-17T06:08:06.5717471Z   GOTOOLCHAIN: local
+2026-10-17T06:08:06.5717766Z ##[endgroup]
+2026-10-17T06:08:06.8284043Z go: downloading go.etcd.io/bbolt v1.3.5
+2026-10-17T06:08:07.6948637Z ##[group]Run make db-fetch-langs db-fetch-vuln-list
+2026-10-17T06:08:07.6949088Z [36;1mmake db-fetch-langs db-fetch-vuln-list[0m
+2026-10-17T06:08:07.7011156Z shell: /usr/bin/bash -e {0}
+2026-10-17T06:08:07.7011438Z env:
+2026-10-17T06:08:07.7011916Z   REPO_OWNER: ***urity
+2026-10-17T06:08:07.7012192Z   GH_USER: aqua-bot
+2026-10-17T06:08:07.7012433Z   VERSION: 2
+2026-10-17T06:08:07.7012657Z   GOTOOLCHAIN: local
+2026-10-17T06:08:07.7015018Z   GITHUB_TOKEN: ***
+2026-10-17T06:08:07.7015270Z ##[endgroup]
+2026-10-17T06:08:07.7400891Z mkdir -p cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb,k8s-cve-feed,julia,rapidfort-security-advisories}
+2026-10-17T06:08:07.7435842Z Downloading https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz...
+2026-10-17T06:08:08.0293316Z 2026-10-17 06:08:08 URL:https://codeload.github.com/rubysec/ruby-advisory-db/tar.gz/refs/heads/master [587794/587794] -> "/tmp/tmp.BMbABWidFB" [1]
+2026-10-17T06:08:08.0927085Z Downloading https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz...
+2026-10-17T06:08:08.4887171Z 2026-10-17 06:08:08 URL:https://codeload.github.com/FriendsOfPHP/security-advisories/tar.gz/refs/heads/master [159455] -> "/tmp/tmp.o7F2JcZYK4" [1]
+2026-10-17T06:08:08.5775706Z Downloading https://github.com/nodejs/security-wg/archive/main.tar.gz...
+2026-10-17T06:08:08.9257344Z 2026-10-17 06:08:08 URL:https://codeload.github.com/nodejs/security-wg/tar.gz/refs/heads/main [396643] -> "/tmp/tmp.tR7YovEN8w" [1]
+2026-10-17T06:08:08.9641134Z Downloading https://github.com/bitnami/vulndb/archive/main.tar.gz...
+2026-10-17T06:08:09.5412439Z 2026-10-17 06:08:09 URL:https://codeload.github.com/bitnami/vulndb/tar.gz/refs/heads/main [2402141] -> "/tmp/tmp.uwzQ9ntOcV" [1]
+2026-10-17T06:08:09.8355037Z Downloading https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz...
+2026-10-17T06:08:28.5984024Z 2026-10-17 06:08:28 URL:https://codeload.github.com/github/advisory-database/tar.gz/refs/heads/main [140276307] -> "/tmp/tmp.Lr5KlpVO8m" [1]
+2026-10-17T06:09:05.3538436Z Downloading https://github.com/golang/vulndb/archive/refs/heads/master.tar.gz...
+2026-10-17T06:09:06.5176840Z 2026-10-17 06:09:06 URL:https://codeload.github.com/golang/vulndb/tar.gz/refs/heads/master [18568237] -> "/tmp/tmp.kx1cyMRmep" [1]
+2026-10-17T06:09:07.0110903Z ## required to convert GHSA Swift repo links to Cocoapods package names
+2026-10-17T06:09:07.0134183Z Downloading https://github.com/CocoaPods/Specs/archive/master.tar.gz...
+2026-10-17T06:09:40.1306510Z 2026-10-17 06:09:40 URL:https://codeload.github.com/CocoaPods/Specs/tar.gz/refs/heads/master [85613029] -> "/tmp/tmp.OxG0oZVXc3" [1]
+2026-10-17T06:11:06.3240344Z Downloading https://github.com/kubernetes-sigs/cve-feed-osv/archive/main.tar.gz...
+2026-10-17T06:11:06.6308871Z 2026-10-17 06:11:06 URL:https://codeload.github.com/kubernetes-sigs/cve-feed-osv/tar.gz/refs/heads/main [49470] -> "/tmp/tmp.4AhxtTh6qA" [1]
+2026-10-17T06:11:06.6410598Z Downloading https://github.com/JuliaLang/SecurityAdvisories.jl/archive/refs/heads/generated/osv.tar.gz...
+2026-10-17T06:11:07.0337583Z 2026-10-17 06:11:07 URL:https://codeload.github.com/JuliaLang/SecurityAdvisories.jl/tar.gz/refs/heads/generated/osv [777863] -> "/tmp/tmp.nJGB2mxMUW" [1]
+2026-10-17T06:11:07.1017899Z Downloading https://github.com/rapidfort/security-advisories/archive/refs/heads/main.tar.gz...
+2026-10-17T06:12:08.9328321Z 2026-10-17 06:12:08 URL:https://codeload.github.com/rapidfort/security-advisories/tar.gz/refs/heads/main [366600950] -> "/tmp/tmp.IVpjTvmlNP" [1]
+2026-10-17T06:12:21.0193758Z mkdir -p cache/{vuln-list,vuln-list-redhat,vuln-list-debian,vuln-list-nvd,vuln-list-aqua}
+2026-10-17T06:12:21.0235896Z Downloading https://github.com/***urity/vuln-list/archive/main.tar.gz...
+2026-10-17T06:14:27.3929189Z 2026-10-17 06:14:27 URL:https://codeload.github.com/***urity/vuln-list/tar.gz/refs/heads/main [711008174] -> "/tmp/tmp.tuQGnPvFvt" [1]
+2026-10-17T06:15:28.0942404Z Downloading https://github.com/***urity/vuln-list-redhat/archive/main.tar.gz...
+2026-10-17T06:47:10.2057538Z 2026-10-17 06:47:10 URL:https://codeload.github.com/***urity/vuln-list-redhat/tar.gz/refs/heads/main [1538501933] -> "/tmp/tmp.jP7OtHs5iV" [1]
+2026-10-17T06:48:59.9420763Z Downloading https://github.com/***urity/vuln-list-debian/archive/main.tar.gz...
+2026-10-17T06:49:10.8603180Z 2026-10-17 06:49:10 URL:https://codeload.github.com/***urity/vuln-list-debian/tar.gz/refs/heads/main [89014494] -> "/tmp/tmp.lUx0ZQ3pBY" [1]
+2026-10-17T06:49:22.7104064Z Downloading https://github.com/***urity/vuln-list-nvd/archive/main.tar.gz...
+2026-10-17T06:49:55.9149115Z 2026-10-17 06:49:55 URL:https://codeload.github.com/***urity/vuln-list-nvd/tar.gz/refs/heads/main [231615936] -> "/tmp/tmp.TEMZwxNhmv" [1]
+2026-10-17T06:50:14.4946361Z Downloading https://github.com/***urity/vuln-list-aqua/archive/main.tar.gz...
+2026-10-17T06:50:14.8575092Z 2026-10-17 06:50:14 URL:https://codeload.github.com/***urity/vuln-list-aqua/tar.gz/refs/heads/main [5699] -> "/tmp/tmp.v5PLT7HcFl" [1]
+2026-10-17T06:50:14.8700520Z ##[group]Run make build
+2026-10-17T06:50:14.8700844Z [36;1mmake build[0m
+2026-10-17T06:50:14.9598909Z shell: /usr/bin/bash -e {0}
+2026-10-17T06:50:14.9599252Z env:
+2026-10-17T06:50:14.9599599Z   REPO_OWNER: ***urity
+2026-10-17T06:50:14.9599916Z   GH_USER: aqua-bot
+2026-10-17T06:50:14.9600511Z   VERSION: 2
+2026-10-17T06:50:14.9600782Z   GOTOOLCHAIN: local
+2026-10-17T06:50:14.9601076Z ##[endgroup]
+2026-10-17T06:50:15.0028565Z go build -ldflags "-s -w" ./cmd/trivy-db
+2026-10-17T06:50:32.5499151Z ##[group]Run make db-build
+2026-10-17T06:50:32.5499466Z [36;1mmake db-build[0m
+2026-10-17T06:50:32.5560393Z shell: /usr/bin/bash -e {0}
+2026-10-17T06:50:32.5560692Z env:
+2026-10-17T06:50:32.5560973Z   REPO_OWNER: ***urity
+2026-10-17T06:50:32.5561312Z   GH_USER: aqua-bot
+2026-10-17T06:50:32.5561543Z   VERSION: 2
+2026-10-17T06:50:32.5561757Z   GOTOOLCHAIN: local
+2026-10-17T06:50:32.5561988Z ##[endgroup]
+2026-10-17T06:50:32.5962127Z ./trivy-db build --cache-dir ./cache --output-dir ./out --update-interval 24h
+2026-10-17T06:50:33.9170719Z 2026/10/17 06:50:33 INFO Updating vulnerability database...
+2026-10-17T06:50:33.9172019Z 2026/10/17 06:50:33 INFO [nvd] Updating data...
+2026-10-17T06:51:01.4909785Z 2026/10/17 06:51:01 INFO [nvd] NVD batch update
+2026-10-17T06:51:20.5349648Z 2026/10/17 06:51:20 INFO [alma] Updating data...
+2026-10-17T06:51:26.3614359Z 2026/10/17 06:51:26 INFO [alpine] Updating data...
+2026-10-17T06:51:29.6967023Z 2026/10/17 06:51:29 INFO [redhat] Updating data...
+2026-10-17T06:51:52.4095531Z 2026/10/17 06:51:52 INFO [redhat] Saving DB
+2026-10-17T06:52:04.0255560Z 2026/10/17 06:52:04 INFO [redhat-oval] Updating data...
+2026-10-17T06:52:04.2893175Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/amq-clients-1
+2026-10-17T06:52:04.2917296Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/amq-clients-1-including-unpatched
+2026-10-17T06:52:04.2922903Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/jboss-eap-6
+2026-10-17T06:52:04.3789845Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.2
+2026-10-17T06:52:04.3796129Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.3
+2026-10-17T06:52:04.3809062Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.4
+2026-10-17T06:52:04.3821463Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.5
+2026-10-17T06:52:04.3832698Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.6
+2026-10-17T06:52:04.3838262Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.7
+2026-10-17T06:52:04.3844153Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/5/satellite-tools-6.8
+2026-10-17T06:52:04.3851446Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/amq-clients-1
+2026-10-17T06:52:04.3858230Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/amq-clients-1-including-unpatched
+2026-10-17T06:52:04.3863825Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/amq-clients-2
+2026-10-17T06:52:04.3896558Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/amq-clients-2-including-unpatched
+2026-10-17T06:52:04.4379273Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-cs
+2026-10-17T06:52:04.4518870Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-cs-including-unpatched
+2026-10-17T06:52:04.5386788Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-eap-6
+2026-10-17T06:52:04.6287023Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-eap-7
+2026-10-17T06:52:04.7171195Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-2
+2026-10-17T06:52:04.7346006Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-2-including-unpatched
+2026-10-17T06:52:04.8047639Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-3
+2026-10-17T06:52:04.8236133Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-3-including-unpatched
+2026-10-17T06:52:04.8716184Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-4
+2026-10-17T06:52:04.8722306Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-4-including-unpatched
+2026-10-17T06:52:04.8727430Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-5
+2026-10-17T06:52:04.8785322Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/jboss-ws-5-including-unpatched
+2026-10-17T06:52:04.9335813Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/mrg-2
+2026-10-17T06:52:04.9895273Z 2026/10/17 06:52:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6
+2026-10-17T06:52:05.6835442Z 2026/10/17 06:52:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6-els
+2026-10-17T06:52:06.4550040Z 2026/10/17 06:52:06 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6-extras
+2026-10-17T06:52:06.4562959Z 2026/10/17 06:52:06 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6-extras-including-unpatched
+2026-10-17T06:52:06.4875740Z 2026/10/17 06:52:06 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6-including-unpatched
+2026-10-17T06:52:19.4244189Z 2026/10/17 06:52:19 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.1-eus
+2026-10-17T06:52:19.6206819Z 2026/10/17 06:52:19 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.2-aus
+2026-10-17T06:52:19.8944035Z 2026/10/17 06:52:19 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.2-eus
+2026-10-17T06:52:20.1573605Z 2026/10/17 06:52:20 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.3-eus
+2026-10-17T06:52:20.4698713Z 2026/10/17 06:52:20 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.4-aus
+2026-10-17T06:52:20.8757482Z 2026/10/17 06:52:20 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.4-eus
+2026-10-17T06:52:21.2672451Z 2026/10/17 06:52:21 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.5-aus
+2026-10-17T06:52:21.7281401Z 2026/10/17 06:52:21 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.5-eus
+2026-10-17T06:52:22.1777191Z 2026/10/17 06:52:22 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.5-tus
+2026-10-17T06:52:22.6276415Z 2026/10/17 06:52:22 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.6-aus
+2026-10-17T06:52:23.1955647Z 2026/10/17 06:52:23 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.6-eus
+2026-10-17T06:52:23.7105734Z 2026/10/17 06:52:23 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.6-tus
+2026-10-17T06:52:24.2389818Z 2026/10/17 06:52:24 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhel-6.7-eus
+2026-10-17T06:52:24.8236873Z 2026/10/17 06:52:24 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhscl
+2026-10-17T06:52:24.9748772Z 2026/10/17 06:52:24 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhsso
+2026-10-17T06:52:24.9813408Z 2026/10/17 06:52:24 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhsso-including-unpatched
+2026-10-17T06:52:25.1707278Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhvh-4
+2026-10-17T06:52:25.1712499Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/rhvh-4-including-unpatched
+2026-10-17T06:52:25.1717700Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-5.8
+2026-10-17T06:52:25.1853900Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-6.2
+2026-10-17T06:52:25.1997584Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-proxy-5.8
+2026-10-17T06:52:25.2009743Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6-including-unpatched
+2026-10-17T06:52:25.2173677Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.10
+2026-10-17T06:52:25.2183518Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.2
+2026-10-17T06:52:25.2189056Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.3
+2026-10-17T06:52:25.2200686Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.4
+2026-10-17T06:52:25.2211052Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.5
+2026-10-17T06:52:25.2220829Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.6
+2026-10-17T06:52:25.2226470Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.7
+2026-10-17T06:52:25.2231740Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.8
+2026-10-17T06:52:25.2236943Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/satellite-tools-6.9
+2026-10-17T06:52:25.2245633Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/storage-gluster-3
+2026-10-17T06:52:25.2529594Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/6/storage-gluster-3-including-unpatched
+2026-10-17T06:52:25.4284118Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/amq-clients-1
+2026-10-17T06:52:25.4289772Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/amq-clients-1-including-unpatched
+2026-10-17T06:52:25.4294822Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/amq-clients-2
+2026-10-17T06:52:25.4332331Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/amq-clients-2-including-unpatched
+2026-10-17T06:52:25.5051691Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2
+2026-10-17T06:52:25.5111696Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2-including-unpatched
+2026-10-17T06:52:25.5167496Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2.5
+2026-10-17T06:52:25.5192502Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2.6
+2026-10-17T06:52:25.5220501Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2.7
+2026-10-17T06:52:25.5265574Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2.8
+2026-10-17T06:52:25.5294715Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/ansible-2.9
+2026-10-17T06:52:25.5333618Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/cfme-5-including-unpatched
+2026-10-17T06:52:25.5799199Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/cfme-5.10
+2026-10-17T06:52:25.5931334Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/cfme-5.8
+2026-10-17T06:52:25.6000489Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/cfme-5.9
+2026-10-17T06:52:25.6120712Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/devtools
+2026-10-17T06:52:25.6369892Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/devtools-including-unpatched
+2026-10-17T06:52:25.6638062Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-2.1
+2026-10-17T06:52:25.6704172Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-2.1-including-unpatched
+2026-10-17T06:52:25.6977373Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-2.2
+2026-10-17T06:52:25.7013289Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-2.2-including-unpatched
+2026-10-17T06:52:25.7083249Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-3.0
+2026-10-17T06:52:25.7097016Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-3.0-including-unpatched
+2026-10-17T06:52:25.7115331Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-3.1
+2026-10-17T06:52:25.7255348Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-3.1-including-unpatched
+2026-10-17T06:52:25.7563895Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-5.0
+2026-10-17T06:52:25.7623260Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-5.0-including-unpatched
+2026-10-17T06:52:25.7760389Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-6.0
+2026-10-17T06:52:25.7868175Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/dotnet-6.0-including-unpatched
+2026-10-17T06:52:25.8096826Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/fast-datapath
+2026-10-17T06:52:25.8179317Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/fast-datapath-including-unpatched
+2026-10-17T06:52:25.8310453Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-cs
+2026-10-17T06:52:25.8594193Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-cs-including-unpatched
+2026-10-17T06:52:25.9641133Z 2026/10/17 06:52:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-eap-6
+2026-10-17T06:52:26.0551267Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-eap-7
+2026-10-17T06:52:26.2041331Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-3
+2026-10-17T06:52:26.2211848Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-3-including-unpatched
+2026-10-17T06:52:26.2674198Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-4
+2026-10-17T06:52:26.2679631Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-4-including-unpatched
+2026-10-17T06:52:26.2685508Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-5
+2026-10-17T06:52:26.2880981Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-5-including-unpatched
+2026-10-17T06:52:26.3521450Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-6
+2026-10-17T06:52:26.3531684Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/jboss-ws-6-including-unpatched
+2026-10-17T06:52:26.4115376Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.0
+2026-10-17T06:52:26.4144264Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.0-including-unpatched
+2026-10-17T06:52:26.4241272Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.1
+2026-10-17T06:52:26.4352340Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.1-including-unpatched
+2026-10-17T06:52:26.4572080Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.10
+2026-10-17T06:52:26.4779159Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.10-including-unpatched
+2026-10-17T06:52:26.5448852Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.11
+2026-10-17T06:52:26.5772630Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.11-including-unpatched
+2026-10-17T06:52:26.7775939Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.2
+2026-10-17T06:52:26.7866095Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.2-including-unpatched
+2026-10-17T06:52:26.8093981Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.3
+2026-10-17T06:52:26.8153807Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.3-including-unpatched
+2026-10-17T06:52:26.8357587Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.4
+2026-10-17T06:52:26.8411409Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.4-including-unpatched
+2026-10-17T06:52:26.8651309Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.5
+2026-10-17T06:52:26.8696062Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.5-including-unpatched
+2026-10-17T06:52:26.8936548Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.6
+2026-10-17T06:52:26.9003807Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.6-including-unpatched
+2026-10-17T06:52:26.9551560Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.7
+2026-10-17T06:52:26.9867385Z 2026/10/17 06:52:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.7-including-unpatched
+2026-10-17T06:52:27.0375373Z 2026/10/17 06:52:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.8
+2026-10-17T06:52:27.0398967Z 2026/10/17 06:52:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.8-including-unpatched
+2026-10-17T06:52:27.0422094Z 2026/10/17 06:52:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.9
+2026-10-17T06:52:27.0691716Z 2026/10/17 06:52:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-3.9-including-unpatched
+2026-10-17T06:52:27.1363648Z 2026/10/17 06:52:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4-including-unpatched
+2026-10-17T06:52:28.6341693Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.1
+2026-10-17T06:52:28.6442954Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.10
+2026-10-17T06:52:28.6493959Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.11
+2026-10-17T06:52:28.6502383Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.2
+2026-10-17T06:52:28.6566461Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.3
+2026-10-17T06:52:28.6728346Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.4
+2026-10-17T06:52:28.6863216Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.5
+2026-10-17T06:52:28.6925709Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.6
+2026-10-17T06:52:28.6972629Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.7
+2026-10-17T06:52:28.7053734Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.8
+2026-10-17T06:52:28.7090632Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-4.9
+2026-10-17T06:52:28.7116777Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-1.0
+2026-10-17T06:52:28.7139763Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-1.0-including-unpatched
+2026-10-17T06:52:28.7233627Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-1.1
+2026-10-17T06:52:28.7245964Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-1.1-including-unpatched
+2026-10-17T06:52:28.7315648Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-2.0
+2026-10-17T06:52:28.7321448Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-2.0-including-unpatched
+2026-10-17T06:52:28.7326560Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-2.1
+2026-10-17T06:52:28.7332421Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openshift-service-mesh-2.1-including-unpatched
+2026-10-17T06:52:28.7337834Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-10
+2026-10-17T06:52:28.7605925Z 2026/10/17 06:52:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-10-including-unpatched
+2026-10-17T06:52:29.1561402Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-12
+2026-10-17T06:52:29.1663270Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-12-including-unpatched
+2026-10-17T06:52:29.2790936Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-13
+2026-10-17T06:52:29.3056765Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-13-including-unpatched
+2026-10-17T06:52:29.8514205Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-14
+2026-10-17T06:52:29.8626183Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-14-including-unpatched
+2026-10-17T06:52:29.9837981Z 2026/10/17 06:52:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-7
+2026-10-17T06:52:30.0070816Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-7-including-unpatched
+2026-10-17T06:52:30.2476853Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-8
+2026-10-17T06:52:30.2616105Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-8-including-unpatched
+2026-10-17T06:52:30.4794139Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-9
+2026-10-17T06:52:30.4952426Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/openstack-9-including-unpatched
+2026-10-17T06:52:30.7141478Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhacm-1
+2026-10-17T06:52:30.7148176Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhacm-2
+2026-10-17T06:52:30.7154266Z 2026/10/17 06:52:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7
+2026-10-17T06:52:31.6278755Z 2026/10/17 06:52:31 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7-alt
+2026-10-17T06:52:32.5633145Z 2026/10/17 06:52:32 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7-els
+2026-10-17T06:52:33.7021580Z 2026/10/17 06:52:33 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7-extras
+2026-10-17T06:52:33.7309771Z 2026/10/17 06:52:33 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7-extras-including-unpatched
+2026-10-17T06:52:33.8144216Z 2026/10/17 06:52:33 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7-including-unpatched
+2026-10-17T06:52:48.4021628Z 2026/10/17 06:52:48 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.1-eus
+2026-10-17T06:52:48.5962026Z 2026/10/17 06:52:48 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.2-aus
+2026-10-17T06:52:48.8768718Z 2026/10/17 06:52:48 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.2-e4s
+2026-10-17T06:52:49.1449892Z 2026/10/17 06:52:49 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.2-eus
+2026-10-17T06:52:49.4659231Z 2026/10/17 06:52:49 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.2-tus
+2026-10-17T06:52:49.7466503Z 2026/10/17 06:52:49 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.3-aus
+2026-10-17T06:52:50.1622988Z 2026/10/17 06:52:50 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.3-e4s
+2026-10-17T06:52:50.5121008Z 2026/10/17 06:52:50 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.3-eus
+2026-10-17T06:52:50.9048601Z 2026/10/17 06:52:50 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.3-tus
+2026-10-17T06:52:51.2493297Z 2026/10/17 06:52:51 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.4-aus
+2026-10-17T06:52:51.7219454Z 2026/10/17 06:52:51 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.4-e4s
+2026-10-17T06:52:52.1560802Z 2026/10/17 06:52:52 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.4-eus
+2026-10-17T06:52:52.5729618Z 2026/10/17 06:52:52 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.4-tus
+2026-10-17T06:52:53.0595151Z 2026/10/17 06:52:53 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.5-eus
+2026-10-17T06:52:53.5248089Z 2026/10/17 06:52:53 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.6-aus
+2026-10-17T06:52:54.1581864Z 2026/10/17 06:52:54 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.6-e4s
+2026-10-17T06:52:54.7956478Z 2026/10/17 06:52:54 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.6-eus
+2026-10-17T06:52:55.4358188Z 2026/10/17 06:52:55 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.6-tus
+2026-10-17T06:52:56.0562759Z 2026/10/17 06:52:56 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.7-aus
+2026-10-17T06:52:56.7794987Z 2026/10/17 06:52:56 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.7-e4s
+2026-10-17T06:52:57.5082037Z 2026/10/17 06:52:57 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.7-eus
+2026-10-17T06:52:58.2306776Z 2026/10/17 06:52:58 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhel-7.7-tus
+2026-10-17T06:52:58.9511718Z 2026/10/17 06:52:58 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhoar-nodejs-10
+2026-10-17T06:52:58.9526637Z 2026/10/17 06:52:58 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhoar-nodejs-10-including-unpatched
+2026-10-17T06:52:58.9538589Z 2026/10/17 06:52:58 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhoar-nodejs-8
+2026-10-17T06:52:58.9550601Z 2026/10/17 06:52:58 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhoar-nodejs-8-including-unpatched
+2026-10-17T06:52:58.9562346Z 2026/10/17 06:52:58 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhscl
+2026-10-17T06:52:59.2742643Z 2026/10/17 06:52:59 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhscl-including-unpatched
+2026-10-17T06:53:00.6673712Z 2026/10/17 06:53:00 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhsso
+2026-10-17T06:53:00.6832559Z 2026/10/17 06:53:00 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhsso-including-unpatched
+2026-10-17T06:53:00.8757301Z 2026/10/17 06:53:00 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhvh-4
+2026-10-17T06:53:00.9116051Z 2026/10/17 06:53:00 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhvh-4-including-unpatched
+2026-10-17T06:53:00.9471353Z 2026/10/17 06:53:00 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhvm-4
+2026-10-17T06:53:00.9725426Z 2026/10/17 06:53:00 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/rhvm-4-including-unpatched
+2026-10-17T06:53:01.0626329Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6-including-unpatched
+2026-10-17T06:53:01.5267163Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.10
+2026-10-17T06:53:01.5298449Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.2
+2026-10-17T06:53:01.5443697Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.3
+2026-10-17T06:53:01.5565224Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.4
+2026-10-17T06:53:01.5698387Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.5
+2026-10-17T06:53:01.5828195Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.6
+2026-10-17T06:53:01.5978135Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.7
+2026-10-17T06:53:01.6149089Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.8
+2026-10-17T06:53:01.6373730Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-6.9
+2026-10-17T06:53:01.6737650Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6-including-unpatched
+2026-10-17T06:53:01.7098506Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.10
+2026-10-17T06:53:01.7121863Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.2
+2026-10-17T06:53:01.7123527Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.3
+2026-10-17T06:53:01.7159615Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.4
+2026-10-17T06:53:01.7183161Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.5
+2026-10-17T06:53:01.7230377Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.6
+2026-10-17T06:53:01.7236522Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.7
+2026-10-17T06:53:01.7242177Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.8
+2026-10-17T06:53:01.7249999Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/satellite-tools-6.9
+2026-10-17T06:53:01.7264501Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-ceph-2
+2026-10-17T06:53:01.7460924Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-ceph-2-including-unpatched
+2026-10-17T06:53:01.8434356Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-ceph-3
+2026-10-17T06:53:01.8552806Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-ceph-3-including-unpatched
+2026-10-17T06:53:01.9538159Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-ceph-4
+2026-10-17T06:53:01.9644897Z 2026/10/17 06:53:01 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-ceph-4-including-unpatched
+2026-10-17T06:53:02.0295962Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-gluster-3
+2026-10-17T06:53:02.0629214Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/7/storage-gluster-3-including-unpatched
+2026-10-17T06:53:02.3432964Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/advanced-virtualization
+2026-10-17T06:53:02.4433163Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/advanced-virtualization-including-unpatched
+2026-10-17T06:53:02.7654597Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/amq-clients-2
+2026-10-17T06:53:02.7702051Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/amq-clients-2-including-unpatched
+2026-10-17T06:53:02.8351302Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/amq-clients-3
+2026-10-17T06:53:02.8355929Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/amq-clients-3-including-unpatched
+2026-10-17T06:53:02.8360886Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/ansible-2
+2026-10-17T06:53:02.8402468Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/ansible-2-including-unpatched
+2026-10-17T06:53:02.8482308Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/ansible-2.8
+2026-10-17T06:53:02.8515009Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/ansible-2.9
+2026-10-17T06:53:02.8549787Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/cfme-5-including-unpatched
+2026-10-17T06:53:02.8914238Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/cfme-5.11
+2026-10-17T06:53:02.8975146Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/fast-datapath
+2026-10-17T06:53:02.9182800Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/fast-datapath-including-unpatched
+2026-10-17T06:53:02.9702202Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-cs
+2026-10-17T06:53:02.9861359Z 2026/10/17 06:53:02 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-cs-including-unpatched
+2026-10-17T06:53:03.0021457Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-eap-7
+2026-10-17T06:53:03.0840480Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-eap-8
+2026-10-17T06:53:03.1203649Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-ws-5
+2026-10-17T06:53:03.1351500Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-ws-5-including-unpatched
+2026-10-17T06:53:03.1941517Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-ws-6
+2026-10-17T06:53:03.2023493Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/jboss-ws-6-including-unpatched
+2026-10-17T06:53:03.2363137Z 2026/10/17 06:53:03 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4-including-unpatched
+2026-10-17T06:53:04.5701656Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.1
+2026-10-17T06:53:04.5771698Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.10
+2026-10-17T06:53:04.5899556Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.11
+2026-10-17T06:53:04.6233985Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.12
+2026-10-17T06:53:04.6823633Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.13
+2026-10-17T06:53:04.6976133Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.14
+2026-10-17T06:53:04.7137906Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.15
+2026-10-17T06:53:04.7283950Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.16
+2026-10-17T06:53:04.7401330Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.17
+2026-10-17T06:53:04.7494972Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.18
+2026-10-17T06:53:04.7581249Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.19
+2026-10-17T06:53:04.7605506Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.2
+2026-10-17T06:53:04.7647072Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.20
+2026-10-17T06:53:04.7669666Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.21
+2026-10-17T06:53:04.7695259Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.22
+2026-10-17T06:53:04.7733833Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.3
+2026-10-17T06:53:04.7810142Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.4
+2026-10-17T06:53:04.7883953Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.5
+2026-10-17T06:53:04.7925374Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.6
+2026-10-17T06:53:04.8030348Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.7
+2026-10-17T06:53:04.8139204Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.8
+2026-10-17T06:53:04.8233441Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-4.9
+2026-10-17T06:53:04.8303382Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-1.0
+2026-10-17T06:53:04.8380676Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-1.0-including-unpatched
+2026-10-17T06:53:04.8675310Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-1.1
+2026-10-17T06:53:04.8748399Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-1.1-including-unpatched
+2026-10-17T06:53:04.9062396Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.0
+2026-10-17T06:53:04.9105584Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.0-including-unpatched
+2026-10-17T06:53:04.9678611Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.1
+2026-10-17T06:53:04.9713803Z 2026/10/17 06:53:04 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.1-including-unpatched
+2026-10-17T06:53:05.0029251Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.2
+2026-10-17T06:53:05.0034697Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.2-including-unpatched
+2026-10-17T06:53:05.0840530Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.3
+2026-10-17T06:53:05.0846763Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.3-including-unpatched
+2026-10-17T06:53:05.1630826Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.4
+2026-10-17T06:53:05.1646813Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.4-including-unpatched
+2026-10-17T06:53:05.2424760Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.5
+2026-10-17T06:53:05.2430576Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.5-including-unpatched
+2026-10-17T06:53:05.3247940Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.6
+2026-10-17T06:53:05.3253480Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openshift-service-mesh-2.6-including-unpatched
+2026-10-17T06:53:05.4083983Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-15
+2026-10-17T06:53:05.4132901Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-15-including-unpatched
+2026-10-17T06:53:05.4428381Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-16
+2026-10-17T06:53:05.4460407Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-16-including-unpatched
+2026-10-17T06:53:05.4644622Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-16.1
+2026-10-17T06:53:05.4842791Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-16.1-including-unpatched
+2026-10-17T06:53:05.5619932Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-16.2
+2026-10-17T06:53:05.5847521Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-16.2-including-unpatched
+2026-10-17T06:53:05.8182508Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-17
+2026-10-17T06:53:05.8197592Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-17-including-unpatched
+2026-10-17T06:53:05.8429455Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-17.1
+2026-10-17T06:53:05.8435606Z 2026/10/17 06:53:05 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/openstack-17.1-including-unpatched
+2026-10-17T06:53:06.0201495Z 2026/10/17 06:53:06 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhacm-1
+2026-10-17T06:53:06.0208366Z 2026/10/17 06:53:06 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhacm-2
+2026-10-17T06:53:06.0214425Z 2026/10/17 06:53:06 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8
+2026-10-17T06:53:07.9386201Z 2026/10/17 06:53:07 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8-including-unpatched
+2026-10-17T06:53:26.3788299Z 2026/10/17 06:53:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.0-e4s
+2026-10-17T06:53:26.4918660Z 2026/10/17 06:53:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.1-e4s
+2026-10-17T06:53:26.8185985Z 2026/10/17 06:53:26 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.1-eus
+2026-10-17T06:53:27.1921687Z 2026/10/17 06:53:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.2-aus
+2026-10-17T06:53:27.8177044Z 2026/10/17 06:53:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.2-e4s
+2026-10-17T06:53:28.2917069Z 2026/10/17 06:53:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.2-eus
+2026-10-17T06:53:28.8535913Z 2026/10/17 06:53:28 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.2-tus
+2026-10-17T06:53:29.3436215Z 2026/10/17 06:53:29 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.4-aus
+2026-10-17T06:53:30.4060628Z 2026/10/17 06:53:30 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.4-e4s
+2026-10-17T06:53:31.3497234Z 2026/10/17 06:53:31 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.4-eus
+2026-10-17T06:53:31.9676138Z 2026/10/17 06:53:31 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.4-tus
+2026-10-17T06:53:32.9201407Z 2026/10/17 06:53:32 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.6-aus
+2026-10-17T06:53:34.3221060Z 2026/10/17 06:53:34 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.6-e4s
+2026-10-17T06:53:35.7018711Z 2026/10/17 06:53:35 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.6-eus
+2026-10-17T06:53:36.8398939Z 2026/10/17 06:53:36 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.6-tus
+2026-10-17T06:53:38.2398428Z 2026/10/17 06:53:38 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.8-aus
+2026-10-17T06:53:39.6042161Z 2026/10/17 06:53:39 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.8-e4s
+2026-10-17T06:53:41.2329679Z 2026/10/17 06:53:41 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.8-eus
+2026-10-17T06:53:42.8151795Z 2026/10/17 06:53:42 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhel-8.8-tus
+2026-10-17T06:53:44.5508646Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhoar-nodejs-10
+2026-10-17T06:53:44.5515541Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhoar-nodejs-10-including-unpatched
+2026-10-17T06:53:44.5521303Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhoar-nodejs-12
+2026-10-17T06:53:44.5527178Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhoar-nodejs-12-including-unpatched
+2026-10-17T06:53:44.5533753Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhsso
+2026-10-17T06:53:44.5708756Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhsso-including-unpatched
+2026-10-17T06:53:44.7587253Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhvh-4
+2026-10-17T06:53:44.7729528Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhvh-4-including-unpatched
+2026-10-17T06:53:44.8147164Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhvm-4
+2026-10-17T06:53:44.8287991Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/rhvm-4-including-unpatched
+2026-10-17T06:53:44.8702296Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6-including-unpatched
+2026-10-17T06:53:44.8862483Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6.10
+2026-10-17T06:53:44.8875289Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6.5
+2026-10-17T06:53:44.8885920Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6.6
+2026-10-17T06:53:44.8892061Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6.7
+2026-10-17T06:53:44.8917204Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6.8
+2026-10-17T06:53:44.8924597Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/satellite-tools-6.9
+2026-10-17T06:53:44.8938168Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-4
+2026-10-17T06:53:44.9023944Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-4-including-unpatched
+2026-10-17T06:53:44.9725405Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-5
+2026-10-17T06:53:44.9806035Z 2026/10/17 06:53:44 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-5-including-unpatched
+2026-10-17T06:53:45.0633552Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-6
+2026-10-17T06:53:45.0659780Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-6-including-unpatched
+2026-10-17T06:53:45.1460423Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-7
+2026-10-17T06:53:45.1503067Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-7-including-unpatched
+2026-10-17T06:53:45.2326669Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-8
+2026-10-17T06:53:45.2332041Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-8-including-unpatched
+2026-10-17T06:53:45.3049435Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-9
+2026-10-17T06:53:45.3055057Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-ceph-9-including-unpatched
+2026-10-17T06:53:45.4024481Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-gluster-3
+2026-10-17T06:53:45.4079747Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/8/storage-gluster-3-including-unpatched
+2026-10-17T06:53:45.4810004Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/amq-clients-2
+2026-10-17T06:53:45.4816386Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/amq-clients-2-including-unpatched
+2026-10-17T06:53:45.5258862Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/amq-clients-3
+2026-10-17T06:53:45.5265648Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/amq-clients-3-including-unpatched
+2026-10-17T06:53:45.5270902Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/fast-datapath
+2026-10-17T06:53:45.5409521Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/fast-datapath-including-unpatched
+2026-10-17T06:53:45.5762564Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-cs
+2026-10-17T06:53:45.5768578Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-cs-including-unpatched
+2026-10-17T06:53:45.6377160Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-eap-7
+2026-10-17T06:53:45.6813486Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-eap-8
+2026-10-17T06:53:45.7197728Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-ws-5
+2026-10-17T06:53:45.7288593Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-ws-5-including-unpatched
+2026-10-17T06:53:45.7856876Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-ws-6
+2026-10-17T06:53:45.7943432Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/jboss-ws-6-including-unpatched
+2026-10-17T06:53:45.8319215Z 2026/10/17 06:53:45 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4-including-unpatched
+2026-10-17T06:53:47.2196269Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.12
+2026-10-17T06:53:47.2325288Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.13
+2026-10-17T06:53:47.2556308Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.14
+2026-10-17T06:53:47.2933814Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.15
+2026-10-17T06:53:47.3477789Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.16
+2026-10-17T06:53:47.3803118Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.17
+2026-10-17T06:53:47.4042013Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.18
+2026-10-17T06:53:47.4327042Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.19
+2026-10-17T06:53:47.4577285Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.20
+2026-10-17T06:53:47.4774835Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.21
+2026-10-17T06:53:47.4938775Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-4.22
+2026-10-17T06:53:47.5105287Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openshift-service-mesh-3.0
+2026-10-17T06:53:47.5141205Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openstack-17
+2026-10-17T06:53:47.5228534Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/openstack-17.1
+2026-10-17T06:53:47.5560490Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhacm-2
+2026-10-17T06:53:47.5572171Z 2026/10/17 06:53:47 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9
+2026-10-17T06:53:48.8517846Z 2026/10/17 06:53:48 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9-including-unpatched
+2026-10-17T06:54:13.3927407Z 2026/10/17 06:54:13 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.0-e4s
+2026-10-17T06:54:13.8075640Z 2026/10/17 06:54:13 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.0-eus
+2026-10-17T06:54:14.0134308Z 2026/10/17 06:54:14 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.2-aus
+2026-10-17T06:54:14.4811195Z 2026/10/17 06:54:14 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.2-e4s
+2026-10-17T06:54:15.6600436Z 2026/10/17 06:54:15 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.2-eus
+2026-10-17T06:54:16.1747413Z 2026/10/17 06:54:16 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.4-aus
+2026-10-17T06:54:16.9976148Z 2026/10/17 06:54:16 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.4-e4s
+2026-10-17T06:54:18.4170469Z 2026/10/17 06:54:18 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.4-eus
+2026-10-17T06:54:19.3296001Z 2026/10/17 06:54:19 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.6-aus
+2026-10-17T06:54:20.8384422Z 2026/10/17 06:54:20 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.6-e4s
+2026-10-17T06:54:22.1469882Z 2026/10/17 06:54:22 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.6-eus
+2026-10-17T06:54:23.6951005Z 2026/10/17 06:54:23 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.8-e4s
+2026-10-17T06:54:25.5971742Z 2026/10/17 06:54:25 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhel-9.8-eus
+2026-10-17T06:54:27.1482062Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhsso
+2026-10-17T06:54:27.1564921Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/rhsso-including-unpatched
+2026-10-17T06:54:27.3356259Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-5
+2026-10-17T06:54:27.3405721Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-5-including-unpatched
+2026-10-17T06:54:27.4084957Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-6
+2026-10-17T06:54:27.4132791Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-6-including-unpatched
+2026-10-17T06:54:27.4972269Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-7
+2026-10-17T06:54:27.5040589Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-7-including-unpatched
+2026-10-17T06:54:27.5873237Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-8
+2026-10-17T06:54:27.5941056Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-8-including-unpatched
+2026-10-17T06:54:27.7007364Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-9
+2026-10-17T06:54:27.7029686Z 2026/10/17 06:54:27 INFO [redhat-oval] Parsing OVAL stream dir_path=cache/vuln-list-redhat/oval/9/storage-ceph-9-including-unpatched
+2026-10-17T06:55:14.3277300Z 2026/10/17 06:55:14 INFO [debian] Updating data...
+2026-10-17T06:55:14.3279309Z 2026/10/17 06:55:14 INFO [debian] Parsing distributions...
+2026-10-17T06:55:14.3280539Z 2026/10/17 06:55:14 INFO [debian] Parsing sources... code=bookworm
+2026-10-17T06:55:21.9287535Z 2026/10/17 06:55:21 INFO [debian] Parsing sources... code=forky
+2026-10-17T06:55:30.8108684Z 2026/10/17 06:55:30 INFO [debian] Parsing sources... code=trixie
+2026-10-17T06:55:39.2201251Z 2026/10/17 06:55:39 INFO [debian] Parsing sources... code=bullseye
+2026-10-17T06:55:45.8431399Z 2026/10/17 06:55:45 INFO [debian] Parsing sources... code=trixie
+2026-10-17T06:55:45.9683707Z 2026/10/17 06:55:45 INFO [debian] Parsing sources... code=bullseye
+2026-10-17T06:55:46.1745031Z 2026/10/17 06:55:46 INFO [debian] Parsing sources... code=bookworm
+2026-10-17T06:55:46.3157978Z 2026/10/17 06:55:46 INFO [debian] Parsing CVE JSON files...
+2026-10-17T06:56:14.4049060Z 2026/10/17 06:56:14 INFO [debian] Parsing DLA JSON files...
+2026-10-17T06:56:15.6172142Z 2026/10/17 06:56:15 INFO [debian] Parsing DSA JSON files...
+2026-10-17T06:56:17.1359078Z 2026/10/17 06:56:17 INFO [debian] Saving DB
+2026-10-17T06:56:34.3366326Z 2026/10/17 06:56:34 ERROR Oops: build error: insert error: update error: save error: batch update error: batch update error: version error: version comparison error: version error: upstream_version must start with digit
+2026-10-17T06:56:34.3368471Z Time: 2026-10-17 06:56:34.334391811 +0000 UTC
+2026-10-17T06:56:34.3369509Z Domain: debian
+2026-10-17T06:56:34.3369985Z Trace: 01M54ABSGYREB06KJPSZWFDPCS
+2026-10-17T06:56:34.3370838Z Context:
+2026-10-17T06:56:34.3373826Z   * targets: [nvd alma alpine redhat redhat-oval debian ubuntu amazon oracle-oval rocky suse-cvrf opensuse-cvrf photon azure cbl-mariner wolfi chainguard bitnami echo echo-osv minimos bottlerocket rapidfort rootio seal k8s ruby-advisory-db php-security-advisories nodejs-security-wg ghsa glad govulndb julia aqua]
+2026-10-17T06:56:34.3375624Z   * cache_dir: ./cache
+2026-10-17T06:56:34.3375970Z   * package_name: zziplib
+2026-10-17T06:56:34.3376304Z   * target: debian
+2026-10-17T06:56:34.3376627Z   * vuln_id: CVE-2026-111142
+2026-10-17T06:56:34.3376992Z   * code_ver: 0.13.72+dfsg.1-1.1
+2026-10-17T06:56:34.3377354Z   * output_dir: ./out
+2026-10-17T06:56:34.3377939Z   * update_interval: 24h0m0s
+2026-10-17T06:56:34.3378302Z   * sid_ver: undetermined
+2026-10-17T06:56:34.3378648Z   * sid: undetermined
+2026-10-17T06:56:34.3378977Z   * code_name: bookworm
+2026-10-17T06:56:34.3379288Z Stacktrace:
+2026-10-17T06:56:34.3379578Z   Oops: version error
+2026-10-17T06:56:34.3380540Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:688 compareVersions()
+2026-10-17T06:56:34.3381551Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:661 hasFixedVersion()
+2026-10-17T06:56:34.3382300Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:418 VulnSrc.commit()
+2026-10-17T06:56:34.3383060Z     --- at /home/runner/go/pkg/mod/go.etcd.io/bbolt@v1.4.3/db.go:908 DB.Update()
+2026-10-17T06:56:34.3383685Z     --- at /home/runner/go/pkg/mod/go.etcd.io/bbolt@v1.4.3/db.go:986 DB.Batch()
+2026-10-17T06:56:34.3384375Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/db/db.go:146 Config.BatchUpdate()
+2026-10-17T06:56:34.3385118Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:357 VulnSrc.save()
+2026-10-17T06:56:34.3385840Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:123 VulnSrc.Update()
+2026-10-17T06:56:34.3386519Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:83 TrivyDB.Insert()
+2026-10-17T06:56:34.3387144Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3387613Z   Thrown: version comparison error
+2026-10-17T06:56:34.3388177Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:663 hasFixedVersion()
+2026-10-17T06:56:34.3388896Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:418 VulnSrc.commit()
+2026-10-17T06:56:34.3389551Z     --- at /home/runner/go/pkg/mod/go.etcd.io/bbolt@v1.4.3/db.go:908 DB.Update()
+2026-10-17T06:56:34.3390555Z     --- at /home/runner/go/pkg/mod/go.etcd.io/bbolt@v1.4.3/db.go:986 DB.Batch()
+2026-10-17T06:56:34.3391257Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/db/db.go:146 Config.BatchUpdate()
+2026-10-17T06:56:34.3392030Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:357 VulnSrc.save()
+2026-10-17T06:56:34.3392764Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:123 VulnSrc.Update()
+2026-10-17T06:56:34.3393478Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:83 TrivyDB.Insert()
+2026-10-17T06:56:34.3394100Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3394666Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3395067Z   Thrown: version error
+2026-10-17T06:56:34.3395591Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:420 VulnSrc.commit()
+2026-10-17T06:56:34.3396246Z     --- at /home/runner/go/pkg/mod/go.etcd.io/bbolt@v1.4.3/db.go:908 DB.Update()
+2026-10-17T06:56:34.3396845Z     --- at /home/runner/go/pkg/mod/go.etcd.io/bbolt@v1.4.3/db.go:986 DB.Batch()
+2026-10-17T06:56:34.3397452Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/db/db.go:146 Config.BatchUpdate()
+2026-10-17T06:56:34.3398346Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:357 VulnSrc.save()
+2026-10-17T06:56:34.3399080Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:123 VulnSrc.Update()
+2026-10-17T06:56:34.3399742Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:83 TrivyDB.Insert()
+2026-10-17T06:56:34.3400679Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3401273Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3401888Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3402359Z   Thrown: batch update error
+2026-10-17T06:56:34.3402842Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/db/db.go:148 Config.BatchUpdate()
+2026-10-17T06:56:34.3403700Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:357 VulnSrc.save()
+2026-10-17T06:56:34.3404465Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:123 VulnSrc.Update()
+2026-10-17T06:56:34.3405153Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:83 TrivyDB.Insert()
+2026-10-17T06:56:34.3405768Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3406335Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3406953Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3407656Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/command.go:175 Command.Run()
+2026-10-17T06:56:34.3408317Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:277 App.Run()
+2026-10-17T06:56:34.3408946Z     --- at /home/runner/work/trivy-db/trivy-db/cmd/trivy-db/main.go:17 main()
+2026-10-17T06:56:34.3409371Z   Thrown: batch update error
+2026-10-17T06:56:34.3409884Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:359 VulnSrc.save()
+2026-10-17T06:56:34.3410861Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:123 VulnSrc.Update()
+2026-10-17T06:56:34.3411519Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:83 TrivyDB.Insert()
+2026-10-17T06:56:34.3412204Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3412825Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3413433Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3414114Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/command.go:175 Command.Run()
+2026-10-17T06:56:34.3414779Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:277 App.Run()
+2026-10-17T06:56:34.3415384Z     --- at /home/runner/work/trivy-db/trivy-db/cmd/trivy-db/main.go:17 main()
+2026-10-17T06:56:34.3415784Z   Thrown: save error
+2026-10-17T06:56:34.3416292Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulnsrc/debian/debian.go:124 VulnSrc.Update()
+2026-10-17T06:56:34.3416950Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:83 TrivyDB.Insert()
+2026-10-17T06:56:34.3417563Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3418121Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3418730Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3419420Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/command.go:175 Command.Run()
+2026-10-17T06:56:34.3420325Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:277 App.Run()
+2026-10-17T06:56:34.3420954Z     --- at /home/runner/work/trivy-db/trivy-db/cmd/trivy-db/main.go:17 main()
+2026-10-17T06:56:34.3421431Z   Thrown: update error
+2026-10-17T06:56:34.3421881Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:84 TrivyDB.Insert()
+2026-10-17T06:56:34.3422666Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:105 TrivyDB.Build()
+2026-10-17T06:56:34.3423219Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3423828Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3424523Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/command.go:175 Command.Run()
+2026-10-17T06:56:34.3425180Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:277 App.Run()
+2026-10-17T06:56:34.3425784Z     --- at /home/runner/work/trivy-db/trivy-db/cmd/trivy-db/main.go:17 main()
+2026-10-17T06:56:34.3426180Z   Thrown: insert error
+2026-10-17T06:56:34.3426811Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/vulndb/db.go:106 TrivyDB.Build()
+2026-10-17T06:56:34.3427379Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:25 build()
+2026-10-17T06:56:34.3427979Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3428731Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/command.go:175 Command.Run()
+2026-10-17T06:56:34.3429412Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:277 App.Run()
+2026-10-17T06:56:34.3430235Z     --- at /home/runner/work/trivy-db/trivy-db/cmd/trivy-db/main.go:17 main()
+2026-10-17T06:56:34.3430696Z   Thrown: build error
+2026-10-17T06:56:34.3431093Z     --- at /home/runner/work/trivy-db/trivy-db/pkg/build.go:26 build()
+2026-10-17T06:56:34.3431713Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:524 HandleAction()
+2026-10-17T06:56:34.3432419Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/command.go:175 Command.Run()
+2026-10-17T06:56:34.3433092Z     --- at /home/runner/go/pkg/mod/github.com/urfave/cli@v1.22.16/app.go:277 App.Run()
+2026-10-17T06:56:34.3433697Z     --- at /home/runner/work/trivy-db/trivy-db/cmd/trivy-db/main.go:17 main()
+2026-10-17T06:56:34.4079153Z make: *** [Makefile:94: db-build] Error 1
+2026-10-17T06:56:34.4112214Z ##[error]Process completed with exit code 2.
+2026-10-17T06:56:34.4328966Z ##[group]Run slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d
+2026-10-17T06:56:34.4329478Z with:
+2026-10-17T06:56:34.4329978Z   webhook: ***
+2026-10-17T06:56:34.4330477Z   webhook-type: incoming-webhook
+2026-10-17T06:56:34.4331127Z   payload: text: ":x: *Trivy DB* workflow failed — <https://github.com/***urity/trivy-db/actions/runs/39008766209|view run>"
+
+2026-10-17T06:56:34.4331696Z   errors: false
+2026-10-17T06:56:34.4331937Z   payload-templated: false
+2026-10-17T06:56:34.4332191Z   retries: 5
+2026-10-17T06:56:34.4332395Z env:
+2026-10-17T06:56:34.4332625Z   REPO_OWNER: ***urity
+2026-10-17T06:56:34.4332870Z   GH_USER: aqua-bot
+2026-10-17T06:56:34.4333087Z   VERSION: 2
+2026-10-17T06:56:34.4333297Z   GOTOOLCHAIN: local
+2026-10-17T06:56:34.4333524Z ##[endgroup]
+2026-10-17T06:56:35.0016884Z Post job cleanup.
+2026-10-17T06:56:35.0950773Z [command]/usr/bin/git version
+2026-10-17T06:56:35.1002474Z git version 2.55.0
+2026-10-17T06:56:35.1039889Z Temporarily overriding HOME='/home/runner/work/_temp/464cf767-8038-4af9-91fa-141a4bda37bf' before making global git config changes
+2026-10-17T06:56:35.1041491Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-17T06:56:35.1045342Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/trivy-db/trivy-db
+2026-10-17T06:56:35.1080819Z Removing SSH command configuration
+2026-10-17T06:56:35.1084218Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-17T06:56:35.1132369Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-17T06:56:35.1491776Z Removing HTTP extra header
+2026-10-17T06:56:35.1496938Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-17T06:56:35.1531616Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-17T06:56:35.1747040Z Removing includeIf entries pointing to credentials config files
+2026-10-17T06:56:35.1754674Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-17T06:56:35.1812595Z includeif.gitdir:/home/runner/work/trivy-db/trivy-db/.git.path
+2026-10-17T06:56:35.1813504Z includeif.gitdir:/home/runner/work/trivy-db/trivy-db/.git/worktrees/*.path
+2026-10-17T06:56:35.1814462Z includeif.gitdir:/github/workspace/.git.path
+2026-10-17T06:56:35.1815275Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-17T06:56:35.1822218Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/trivy-db/trivy-db/.git.path
+2026-10-17T06:56:35.1844194Z /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.1855716Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/trivy-db/trivy-db/.git.path /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.1890817Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/trivy-db/trivy-db/.git/worktrees/*.path
+2026-10-17T06:56:35.1913247Z /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.1922697Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/trivy-db/trivy-db/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.1954333Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-17T06:56:35.1974721Z /github/runner_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.1982998Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.2014079Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-17T06:56:35.2034635Z /github/runner_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.2043524Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config
+2026-10-17T06:56:35.2076199Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-17T06:56:35.2294864Z Removing credentials config '/home/runner/work/_temp/git-credentials-0724dc0f-c427-4e19-86c9-db3e532c68da.config'
+2026-10-17T06:56:35.2447385Z Cleaning up orphan processes
+2026-10-17T06:56:35.2891518Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
