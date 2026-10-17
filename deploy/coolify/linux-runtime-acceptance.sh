@@ -58,6 +58,7 @@ exec 3>&2
 exec 2>"$stderr_raw"
 container_created=false
 volume_created=false
+owned_container_id=
 final_result=failed
 cold_http_failed=false
 cache_check_failed=false
@@ -156,9 +157,75 @@ capture_runtime_state() {
   fi
 }
 
+cleanup_owned_resources() {
+  local cleanup_failed=false container_cleanup=not_created volume_cleanup=not_created
+  local container_remove_failed=false volume_remove_failed=false
+  local current_id inventory_ids inventory_volumes
+  local container_absence_verified=false volume_absence_verified=false
+  if [[ $container_created == true ]]; then
+    container_cleanup=failed
+    if [[ -n $owned_container_id ]]; then
+      if current_id=$(docker inspect --format '{{.Id}}' "$name" 2>/dev/null); then
+        if [[ $current_id == "$owned_container_id" ]]; then
+          if docker rm -f "$owned_container_id" >/dev/null 2>&1; then container_cleanup=removed; else container_remove_failed=true; fi
+        else
+          container_cleanup=identity_drift_preserved
+        fi
+      fi
+      if inventory_ids=$(docker ps --all --quiet --no-trunc 2>/dev/null); then
+        if grep -Fxq -- "$owned_container_id" <<<"$inventory_ids"; then container_cleanup=present_after_cleanup
+        else
+          container_absence_verified=true
+          if [[ $container_remove_failed == true ]]; then container_cleanup=remove_error_absent
+          elif [[ $container_cleanup == removed || $container_cleanup == failed ]]; then container_cleanup=absent
+          fi
+        fi
+      else
+        container_cleanup=inventory_unavailable
+      fi
+      if [[ $container_absence_verified != true || $container_remove_failed == true || $container_cleanup == identity_drift_preserved ]]; then cleanup_failed=true; fi
+    else
+      container_cleanup=identity_unavailable
+      cleanup_failed=true
+    fi
+  fi
+  if [[ $volume_created == true ]]; then
+    volume_cleanup=failed
+    if docker volume rm "$cache_volume" >/dev/null 2>&1; then volume_cleanup=removed; else volume_remove_failed=true; fi
+    if inventory_volumes=$(docker volume ls --format '{{.Name}}' 2>/dev/null); then
+      if grep -Fxq -- "$cache_volume" <<<"$inventory_volumes"; then volume_cleanup=present_after_cleanup
+      else
+        volume_absence_verified=true
+        if [[ $volume_remove_failed == true ]]; then volume_cleanup=remove_error_absent
+        elif [[ $volume_cleanup == removed || $volume_cleanup == failed ]]; then volume_cleanup=absent
+        fi
+      fi
+    else
+      volume_cleanup=inventory_unavailable
+    fi
+    if [[ $volume_absence_verified != true || $volume_remove_failed == true ]]; then cleanup_failed=true; fi
+  fi
+  printf 'cleanup_container=%s\ncleanup_container_absence_verified=%s\ncleanup_container_remove_error=%s\ncleanup_cache_volume=%s\ncleanup_cache_volume_absence_verified=%s\ncleanup_cache_volume_remove_error=%s\n' \
+    "$container_cleanup" "$container_absence_verified" "$container_remove_failed" \
+    "$volume_cleanup" "$volume_absence_verified" "$volume_remove_failed" >>"$report"
+  if ! python3 - "$report_dir/cleanup.json" "$container_cleanup" "$container_absence_verified" "$container_remove_failed" "$volume_cleanup" "$volume_absence_verified" "$volume_remove_failed" <<'PY'
+import json, pathlib, sys
+pathlib.Path(sys.argv[1]).write_text(json.dumps({
+    "schemaVersion": 1,
+    "container": {"outcome": sys.argv[2], "absenceVerified": sys.argv[3] == "true", "removeError": sys.argv[4] == "true"},
+    "cacheVolume": {"outcome": sys.argv[5], "absenceVerified": sys.argv[6] == "true", "removeError": sys.argv[7] == "true"},
+}, indent=2) + "\n", encoding="utf-8")
+PY
+  then
+    cleanup_failed=true
+  fi
+  [[ $cleanup_failed == false ]]
+}
+
 cleanup() {
   local status=$?
   local diagnostic_capture_failed=false
+  local cleanup_failed=false
   trap - EXIT INT TERM ERR
   set +e
   exec 2>&3
@@ -238,7 +305,16 @@ PY
   fi
   [[ -s $report_dir/runtime-http.json ]] || diagnostic_capture_failed=true
   if [[ $final_result != passed ]]; then
-    printf 'result=failed\nexit_status=%s\n' "$status" >>"$report"
+    python3 - "$report" "$status" <<'PY' || diagnostic_capture_failed=true
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+lines = path.read_text(encoding="utf-8").splitlines()
+lines = ["result=failed" if line == "result=passed" else line for line in lines]
+if not any(line.startswith("result=") for line in lines):
+    lines.append("result=failed")
+lines.append("exit_status=" + sys.argv[2])
+path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+PY
   if ! python3 - "$report_dir" "$status" "${failure_status:-}" "$failure_line" "$failure_command" <<'PY'
 import json, pathlib, re, sys
 root = pathlib.Path(sys.argv[1])
@@ -339,8 +415,52 @@ PY
       "$report_dir/image-cache-prime.stderr" "$report_dir/image-cache-restart.stderr" "$report_dir/image-cache-recreate.stderr" \
       "$report_dir/container-logs.raw" "$report_dir/container-state-final.raw"
   fi
-  if [[ $container_created == true ]]; then docker rm -f "$name" >/dev/null 2>&1 || true; fi
-  if [[ $volume_created == true ]]; then docker volume rm "$cache_volume" >/dev/null 2>&1 || true; fi
+  cleanup_owned_resources || cleanup_failed=true
+  if [[ $cleanup_failed == true ]]; then
+    [[ $status != 0 ]] || status=1
+    final_result=failed
+    python3 - "$report" "$status" "$report_dir" <<'PY' || diagnostic_capture_failed=true
+import json, pathlib, sys
+report = pathlib.Path(sys.argv[1])
+status = int(sys.argv[2])
+root = pathlib.Path(sys.argv[3])
+lines = [
+    "result=failed" if line == "result=passed" else
+    "exit_status=" + str(status) if line.startswith("exit_status=") else line
+    for line in report.read_text(encoding="utf-8").splitlines()
+]
+if not any(line.startswith("exit_status=") for line in lines):
+    lines.append("exit_status=" + str(status))
+if not any(line.startswith("result=") for line in lines):
+    lines.append("result=failed")
+report.write_text("\n".join(lines) + "\n", encoding="utf-8")
+http_receipt = root / "runtime-http.json"
+if http_receipt.exists():
+    data = json.loads(http_receipt.read_text(encoding="utf-8"))
+    data["result"] = "failed"
+    data["exitStatus"] = status
+    http_receipt.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+assertion = "Runtime resource cleanup failed; see cleanup.json."
+failure_path = root / "failure.json"
+if not failure_path.exists():
+    failure_path.write_text(json.dumps({
+        "schemaVersion": 1,
+        "status": status,
+        "phase": "cleanup",
+        "failingCommandStatus": None,
+        "line": None,
+        "command": None,
+        "assertions": [assertion],
+        "cleanupReceipt": "cleanup.json",
+    }, indent=2) + "\n", encoding="utf-8")
+evidence_path = root / "failure-evidence.txt"
+if not evidence_path.exists():
+    evidence_path.write_text(
+        f"failure_status={status}\nfailure_phase=cleanup\ncleanup_receipt=cleanup.json\n\n==assertions==\n{assertion}\n",
+        encoding="utf-8",
+    )
+PY
+  fi
   printf 'report=%s\n' "$report"
   exit "$status"
 }
@@ -399,6 +519,7 @@ docker volume create "$cache_volume" >/dev/null
 volume_created=true
 container_created=true
 docker run "${runtime_args[@]}" >/dev/null
+owned_container_id=$(docker inspect --format '{{.Id}}' "$name")
 
 wait_for_health() {
   local attempt state
@@ -879,6 +1000,7 @@ docker rm "$name" >/dev/null
 container_created=false
 container_created=true
 docker run "${runtime_args[@]}" >/dev/null
+owned_container_id=$(docker inspect --format '{{.Id}}' "$name")
 verify_runtime_config
 wait_for_health
 container_id_after_recreate=$(docker inspect --format '{{.Id}}' "$name")

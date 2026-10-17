@@ -1,0 +1,195 @@
+{
+  "authorization": "Owner approved experimental construction/testing in this chat; no registry/deployment/permanent adoption",
+  "buildContractSha256": "d37daa5bedc8ee357bea90f02ac2f8e34b8af243f1c16a149334dd3b666531e1",
+  "contract": {
+    "apkLock": {
+      "file": "apk-lock.json",
+      "maxBytes": 268435456,
+      "maxPackages": 100,
+      "sha256": "8c399fa5ff05ba2e457e131ba457e7ede365314e656208ff7d48209be1e233dd"
+    },
+    "bases": {
+      "compiler": {
+        "amd64Digest": "sha256:929e6c7d2f48657a580141155579281939296b952d6426846149fa40a7d090a1",
+        "compressedBytes": 75241665,
+        "configDigest": "sha256:5264a43183bc8e2ca53e96cad003b69d2b0e10e4f32ba5d415e19f9dbccb3650",
+        "indexDigest": "sha256:9e45f0eb4a63ed37ad6e604950407558b7c738e34e015ae77a5d4ad369cde079",
+        "repository": "library/golang",
+        "tag": "1.27.2-alpine3.23"
+      },
+      "runtime": {
+        "amd64Digest": "sha256:1f3591b8a02ea153f41c5bba878ad477f63ab3d19349762cb77504db02a23e15",
+        "compressedBytes": 3848507,
+        "configDigest": "sha256:f6d31b983274a75183386cda3aac54849498fac0fc3e0d98f92ff56ed517d92b",
+        "indexDigest": "sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0",
+        "repository": "library/alpine",
+        "tag": "3.23"
+      }
+    },
+    "binaries": [
+      {
+        "cgo": false,
+        "ldflags": "-X github.com/moby/buildkit/version.Version=v0.34.0-ornigami-exp.1 -X github.com/moby/buildkit/version.Revision=f5b59a1f2fb25a0cb7072c398cab9aed7835da4e+patched-go-modules",
+        "name": "buildkitd",
+        "package": "./cmd/buildkitd",
+        "source": "buildkit",
+        "tags": "osusergo,netgo,static_build,seccomp"
+      },
+      {
+        "cgo": false,
+        "ldflags": "-X github.com/moby/buildkit/version.Version=v0.34.0-ornigami-exp.1 -X github.com/moby/buildkit/version.Revision=f5b59a1f2fb25a0cb7072c398cab9aed7835da4e+patched-go-modules",
+        "name": "buildctl",
+        "package": "./cmd/buildctl",
+        "source": "buildkit",
+        "tags": "osusergo,netgo,static_build"
+      },
+      {
+        "cgo": false,
+        "ldflags": "-X main.Version=buildkit-v0.34.0-ornigami-exp.1 -X main.Revision=f5b59a1f2fb25a0cb7072c398cab9aed7835da4e+patched-go-modules",
+        "name": "dockerfile-frontend",
+        "package": "./frontend/dockerfile/cmd/dockerfile-frontend",
+        "source": "buildkit",
+        "tags": "netgo,static_build,osusergo"
+      },
+      {
+        "cgo": false,
+        "ldflags": "-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=v1.9.1-ornigami-exp.1",
+        "name": "buildkit-cni-bridge",
+        "package": "./plugins/main/bridge",
+        "source": "cni",
+        "tags": "netgo,static_build,osusergo"
+      },
+      {
+        "cgo": false,
+        "ldflags": "-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=v1.9.1-ornigami-exp.1",
+        "name": "buildkit-cni-firewall",
+        "package": "./plugins/meta/firewall",
+        "source": "cni",
+        "tags": "netgo,static_build,osusergo"
+      },
+      {
+        "cgo": false,
+        "ldflags": "-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=v1.9.1-ornigami-exp.1",
+        "name": "buildkit-cni-host-local",
+        "package": "./plugins/ipam/host-local",
+        "source": "cni",
+        "tags": "netgo,static_build,osusergo"
+      },
+      {
+        "cgo": false,
+        "ldflags": "-X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=v1.9.1-ornigami-exp.1",
+        "name": "buildkit-cni-loopback",
+        "package": "./plugins/main/loopback",
+        "source": "cni",
+        "tags": "netgo,static_build,osusergo"
+      },
+      {
+        "cgo": true,
+        "ldflags": "-extldflags=-static -X main.gitCommit=29dd3dc2b13b4123162e5fe132504bb4b15569f1 -X main.extraVersion=ornigami-exp.1",
+        "name": "buildkit-runc",
+        "package": "./",
+        "source": "runc",
+        "tags": "apparmor,seccomp,netgo,cgo,static_build,osusergo"
+      }
+    ],
+    "compiler": {
+      "GOMAXPROCS": 3,
+      "GOMEMLIMIT": "1536MiB",
+      "cpus": 3,
+      "maxSeconds": 600,
+      "memoryBytes": 8589934592,
+      "memorySwapBytes": 8589934592,
+      "parallelism": 2
+    },
+    "goBinary": {
+      "bytes": 17164055,
+      "diffId": "sha256:f5ca01e3dca6054acc963ccf760f49bbfb378f89d46b70daed86202c20489cd7",
+      "layerDigest": "sha256:b2b6413ae8f393d11d32262c8dc6bd053dbaea3d074f95edd5605d3eb116e3c2",
+      "path": "usr/local/go/bin/go",
+      "scope": "registry layer digest and uncompressed diffID verified; no signature attestation claimed",
+      "sha256": "548d3c32f83fa81152f543eb1526be7884cfe0526eb5e9ce29d3eca14786e7e0"
+    },
+    "goVersion": "go1.27.2",
+    "modules": {
+      "mode": "readonly",
+      "proxy": "https://proxy.golang.org",
+      "sumdb": "sum.golang.org",
+      "toolchain": "local"
+    },
+    "platform": "linux/amd64",
+    "schema": 1,
+    "security": "zero HIGH/CRITICAL in both tooling and all supplemental bootstrap reports; no suppression; source/runtime/adoption coverage gates separate",
+    "sourceDate": "2026-10-07T20:29:19Z",
+    "sources": {
+      "buildkit": {
+        "bytes": 12143295,
+        "commit": "f5b59a1f2fb25a0cb7072c398cab9aed7835da4e",
+        "locks": {
+          "go.mod": {
+            "file": "locks/buildkit.go.mod",
+            "originalSha256": "9114ace60db407b7b70eccc340cda6cc5ff3313400afbdd8e1f14849bc244fb3",
+            "sha256": "014c3b0c23b0bbd6acc9e1139334fd17e09f772a043e680b3d120c115c7206d0"
+          },
+          "go.sum": {
+            "file": "locks/buildkit.go.sum",
+            "originalSha256": "35904aa6f9ae03717b2ee03ed55e6f026de822f556e37491801d13cf13fb9e46",
+            "sha256": "d40412f5434135074fa85bb1b78e9a9cde508e878572ad3939482183425b726c"
+          }
+        },
+        "name": "buildkit",
+        "repo": "moby/buildkit",
+        "sha256": "6608d2ee63bedf99e1e3fecbfa19868c36f34a402c410a9605529986632816c3",
+        "url": "https://codeload.github.com/moby/buildkit/tar.gz/f5b59a1f2fb25a0cb7072c398cab9aed7835da4e"
+      },
+      "cni": {
+        "bytes": 4096717,
+        "commit": "adc3e6b5b581638afbd194cf2e9319ecbb0151a1",
+        "locks": {
+          "go.mod": {
+            "file": "locks/cni.go.mod",
+            "originalSha256": "b0c4514e74c27f6a0a86f98a9dacf4857b5392084688ad3aa75a0b3bc76a18e2",
+            "sha256": "c3ae49c9c82de44d3af192997e7bca9a66c9b5b5a61069d977456b7596527c15"
+          },
+          "go.sum": {
+            "file": "locks/cni.go.sum",
+            "originalSha256": "9fb797985a1c6a41aff52d93183e2b5ef02244a41f162451d338105f860065ea",
+            "sha256": "6a5c9a01cf07ad995e068e6d41d0260317cf4d66a43b7e3bed06547973de7557"
+          }
+        },
+        "name": "cni",
+        "repo": "containernetworking/plugins",
+        "sha256": "3b723ab805f716f03820dfeee4289181d9ade76a34d628f9bb36120e44fe767e",
+        "url": "https://codeload.github.com/containernetworking/plugins/tar.gz/adc3e6b5b581638afbd194cf2e9319ecbb0151a1"
+      },
+      "runc": {
+        "bytes": 2666129,
+        "commit": "29dd3dc2b13b4123162e5fe132504bb4b15569f1",
+        "locks": {
+          "go.mod": {
+            "file": "locks/runc.go.mod",
+            "originalSha256": "8a0003c2cffd24dbd449e6a891ae03d62f56f43151c5844f327268261eb6e8e7",
+            "sha256": "70292419f5c176b4799a69310914534623833fedcb0e71c290762dda4e236e1c"
+          },
+          "go.sum": {
+            "file": "locks/runc.go.sum",
+            "originalSha256": "b75a468d05b1bfedde110814da1d6f91a84f97d512a86fa27cd5ee3f49e473e6",
+            "sha256": "7ba3a64b71b454005fb051aa13c3586fd44afea43b8e507f36ec127ed2d3a186"
+          }
+        },
+        "name": "runc",
+        "repo": "opencontainers/runc",
+        "sha256": "5386e1968f70cc1482b4b2a93dc1a88ea7fa5517fba49b9e0fafe614d5a4c97a",
+        "url": "https://codeload.github.com/opencontainers/runc/tar.gz/29dd3dc2b13b4123162e5fe132504bb4b15569f1"
+      }
+    }
+  },
+  "expectedFrontend": {
+    "binarySha256": "4c827ee5910208a1c8a530b8509d6a512e70a26b4ddb523efdcd7492669d84fc",
+    "configDigest": "sha256:d63b52477262e8a132e3c20e061134eea067a1b7c506e4c68b848bdeb1f6c345",
+    "manifestDigest": "sha256:57122ca6b725a0c96f2202b1a52ea896f8b470654a839e21990e02d6d872208c",
+    "layerDigest": "sha256:ef0ce2aacf5a6834bb99bb12b42119b6224e830bc9017134fdfddfb74a1a81d5"
+  },
+  "experimental": true,
+  "schema": 1,
+  "trialScope": "tooling"
+}
