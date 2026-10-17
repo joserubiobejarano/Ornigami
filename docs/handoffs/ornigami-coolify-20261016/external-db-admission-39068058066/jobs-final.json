@@ -1,0 +1,113 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 117499719282,
+      "run_id": 39068058066,
+      "workflow_name": "Ornigami frozen DB admission only",
+      "head_branch": "codex/ornigami-sri-local-prototype-f-20261016",
+      "run_url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/runs/39068058066",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQXpkXc8AAAAbW4ducg",
+      "head_sha": "49367ae2d941c362f0e9b6fe2b50d9b3df336b34",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/jobs/117499719282",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/39068058066/job/117499719282",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-17T20:45:22Z",
+      "started_at": "2026-10-17T20:45:23Z",
+      "completed_at": "2026-10-17T20:46:17Z",
+      "name": "admission-only",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-17T20:45:24Z",
+          "completed_at": "2026-10-17T20:45:25Z"
+        },
+        {
+          "name": "Initialize run-owned evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-17T20:45:25Z",
+          "completed_at": "2026-10-17T20:45:25Z"
+        },
+        {
+          "name": "Verify request-only child and exact workflow binding",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-17T20:45:25Z",
+          "completed_at": "2026-10-17T20:45:26Z"
+        },
+        {
+          "name": "Bounded pinned tool preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-17T20:45:26Z",
+          "completed_at": "2026-10-17T20:45:31Z"
+        },
+        {
+          "name": "One DB download and one shared admission then controlled fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-17T20:45:31Z",
+          "completed_at": "2026-10-17T20:45:43Z"
+        },
+        {
+          "name": "Capture complete or explicit failed and skipped evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-17T20:45:43Z",
+          "completed_at": "2026-10-17T20:45:43Z"
+        },
+        {
+          "name": "Upload immutable admission evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-17T20:45:43Z",
+          "completed_at": "2026-10-17T20:45:44Z"
+        },
+        {
+          "name": "Require owner verified durable custody",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-17T20:45:44Z",
+          "completed_at": "2026-10-17T20:46:15Z"
+        },
+        {
+          "name": "Scoped cleanup and finished observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-17T20:46:15Z",
+          "completed_at": "2026-10-17T20:46:15Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-17T20:46:15Z",
+          "completed_at": "2026-10-17T20:46:15Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/joserubiobejarano/Ornigami/check-runs/117499719282",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001807,
+      "runner_name": "GitHub Actions 1000001807",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

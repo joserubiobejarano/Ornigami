@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-17T20:43:46.390Z",
+  "digest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+  "bytes": 616,
+  "headerDigest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+  "schemaVersion": 2,
+  "layer": {
+    "mediaType": "application/vnd.aquasec.trivy.db.layer.v1.tar+gzip",
+    "digest": "sha256:3fb08347d6ef5444dd6bb3ef718204fbf8f2f609f681e18f5eee8177f524d85c",
+    "size": 134666882,
+    "annotations": {
+      "org.opencontainers.image.title": "db.tar.gz"
+    }
+  },
+  "blobDownloads": 0,
+  "internalFreshness": "pending real admission",
+  "coverage": "held; no security acceptance"
+}

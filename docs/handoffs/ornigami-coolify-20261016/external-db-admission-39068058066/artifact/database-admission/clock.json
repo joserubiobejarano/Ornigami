@@ -1,0 +1,9 @@
+{
+  "epochMs": 1792269940341,
+  "utc": "2026-10-17T20:45:40.341Z",
+  "monotonicNs": "68774415316",
+  "node": "v22.23.3",
+  "platform": "linux",
+  "arch": "x64",
+  "scope": "actual admission/scanner-guard process OS wall clock; future Trivy subprocess shares OS clock, not a claimed Trivy internal trace"
+}

@@ -1,0 +1,46 @@
+{
+  "sourceSha": "013ad70ec86e66cb22b65a0827b247f793f0d9c4",
+  "phases": {
+    "download": {
+      "result": "passed",
+      "startedAt": "2026-10-17T20:45:31.883Z",
+      "command": "trivy",
+      "arguments": [
+        "image",
+        "--download-db-only",
+        "--no-progress",
+        "--db-repository",
+        "ghcr.io/aquasecurity/trivy-db@sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+        "--cache-dir",
+        "/home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P/cache"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "finishedAt": "2026-10-17T20:45:40.338Z"
+    },
+    "admission": {
+      "result": "passed",
+      "startedAt": "2026-10-17T20:45:40.339Z",
+      "errors": [],
+      "finishedAt": "2026-10-17T20:45:42.663Z"
+    },
+    "fixtures": {
+      "result": "passed",
+      "startedAt": "2026-10-17T20:45:42.663Z",
+      "command": "node",
+      "arguments": [
+        "--max-old-space-size=512",
+        "--test",
+        "tests/frozen-db-admission.test.mjs"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "finishedAt": "2026-10-17T20:45:43.172Z",
+      "data": "fictional fixtures only; independent of real DB"
+    }
+  },
+  "imageWork": "out-of-scope",
+  "custody": "not-assessed"
+}

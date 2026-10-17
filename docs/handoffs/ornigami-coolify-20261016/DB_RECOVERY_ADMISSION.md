@@ -1,5 +1,7 @@
 # Official DB recovery and digest-bound admission candidate — 17 October 2026
 
+Latest executed result: [Linux freshness admission and24fixtures passed; verified custody/cleanup; coverage held](./DB_RECOVERY_LINUX_TRIAL.md). Source `013ad70`, request `49367ae`, run39068058066 completed once. Earlier pending-decision descriptions below are historical; the owner selected freshness diagnostic with coverage hold and delegated planning defaults.
+
 ## Latest local continuation: full-workflow binding prepared
 
 Executable candidate **`013ad70ec86e66cb22b65a0827b247f793f0d9c4`**, tree **`2c8fcd3351da048ca6d044dd565e1b66d47401e9`**, supersedes `5b1efb0` for the next proposed request. Continued on the same local branch/worktree. **No dispatch; owner coverage and staging-input questions remain unanswered.** Current Goal turn made local implementation/verification progress; it was not a verified wait on a live job. Campaign remains 0 dispatches / 0 charged or reserved minutes. Zoisial ledger at this follow-up records 2 dispatches, 1 charged minute and 50 unsettled reserved minutes; preserve them and refresh actual shared capacity before any trial.

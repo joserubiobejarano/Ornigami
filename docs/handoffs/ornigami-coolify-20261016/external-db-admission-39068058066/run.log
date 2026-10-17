@@ -1,0 +1,220 @@
+admission-only	Set up job	﻿2026-10-17T20:45:24.6119244Z Current runner version: '2.337.0'
+admission-only	Set up job	2026-10-17T20:45:24.6157143Z ##[group]Runner Image Provisioner
+admission-only	Set up job	2026-10-17T20:45:24.6158582Z Hosted Compute Agent
+admission-only	Set up job	2026-10-17T20:45:24.6159670Z Version: 20261012.601
+admission-only	Set up job	2026-10-17T20:45:24.6160889Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+admission-only	Set up job	2026-10-17T20:45:24.6162185Z Build Date: 2026-10-12T17:48:21Z
+admission-only	Set up job	2026-10-17T20:45:24.6163772Z Worker ID: {c92ff578-da95-4e56-8ee1-05c0df9f6a0a}
+admission-only	Set up job	2026-10-17T20:45:24.6165137Z Region: eastus
+admission-only	Set up job	2026-10-17T20:45:24.6166214Z Cloud: Azure
+admission-only	Set up job	2026-10-17T20:45:24.6167263Z ##[endgroup]
+admission-only	Set up job	2026-10-17T20:45:24.6169837Z ##[group]Operating System
+admission-only	Set up job	2026-10-17T20:45:24.6171031Z Ubuntu
+admission-only	Set up job	2026-10-17T20:45:24.6171937Z 24.04.5
+admission-only	Set up job	2026-10-17T20:45:24.6172833Z LTS
+admission-only	Set up job	2026-10-17T20:45:24.6174060Z ##[endgroup]
+admission-only	Set up job	2026-10-17T20:45:24.6175195Z ##[group]Runner Image
+admission-only	Set up job	2026-10-17T20:45:24.6176232Z Image: ubuntu-24.04
+admission-only	Set up job	2026-10-17T20:45:24.6177240Z Version: 20261012.334.1
+admission-only	Set up job	2026-10-17T20:45:24.6179256Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+admission-only	Set up job	2026-10-17T20:45:24.6182430Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+admission-only	Set up job	2026-10-17T20:45:24.6184544Z ##[endgroup]
+admission-only	Set up job	2026-10-17T20:45:24.6186589Z ##[group]GITHUB_TOKEN Permissions
+admission-only	Set up job	2026-10-17T20:45:24.6189463Z Metadata: read
+admission-only	Set up job	2026-10-17T20:45:24.6190592Z Statuses: read
+admission-only	Set up job	2026-10-17T20:45:24.6191663Z ##[endgroup]
+admission-only	Set up job	2026-10-17T20:45:24.6194839Z Secret source: Actions
+admission-only	Set up job	2026-10-17T20:45:24.6196692Z Cache mode: write
+admission-only	Set up job	2026-10-17T20:45:24.6198086Z Prepare workflow directory
+admission-only	Set up job	2026-10-17T20:45:24.6693999Z Prepare all required actions
+admission-only	Set up job	2026-10-17T20:45:24.6769366Z Getting action download info
+admission-only	Set up job	2026-10-17T20:45:24.8459077Z Download action repository 'actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f' (SHA:bbbca2ddaa5d8feaa63e36b76fdaad77386f024f)
+admission-only	Set up job	2026-10-17T20:45:25.1792524Z Complete job name: admission-only
+admission-only	Initialize run-owned evidence	﻿2026-10-17T20:45:25.2526658Z ##[group]Run set -Eeuo pipefail
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2527356Z [36;1mset -Eeuo pipefail[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2528278Z [36;1mroot=$(mktemp -d "$RUNNER_TEMP/ornigami-db-only-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2529210Z [36;1mchmod 700 "$root"[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2529736Z [36;1mmkdir -m 700 "$root/evidence"[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2530355Z [36;1mecho "DB_ONLY_ROOT=$root" >> "$GITHUB_ENV"[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2531123Z [36;1mecho "DB_ONLY_DEADLINE=$(( $(date +%s) + 600 ))" >> "$GITHUB_ENV"[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2531842Z [36;1mpython3 - "$root" <<'PY'[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2532395Z [36;1mimport json, os, pathlib, sys[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2533567Z [36;1mroot = pathlib.Path(sys.argv[1])[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2534559Z [36;1midentity = {key: os.environ[key] for key in ['GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_SHA', 'GITHUB_REF']}[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2535689Z [36;1mfor file in [root / 'owner.json', root / 'evidence/run-identity.json']:[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2536617Z [36;1m    file.write_text(json.dumps(identity, indent=2) + '\n')[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2537293Z [36;1mPY[0m
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2820278Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	Initialize run-owned evidence	2026-10-17T20:45:25.2821284Z ##[endgroup]
+admission-only	Verify request-only child and exact workflow binding	﻿2026-10-17T20:45:25.3431165Z ##[group]Run set -Eeuo pipefail
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3431850Z [36;1mset -Eeuo pipefail[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3432530Z [36;1m[[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_RUN_ATTEMPT" == 1 ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3433798Z [36;1m[[ "$GITHUB_REF" == refs/heads/codex/ornigami-sri-local-prototype-f-20261016 ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3434667Z [36;1m[[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3435296Z [36;1m[[ "$RUN_WORKFLOW_SHA" == "$GITHUB_SHA" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3436647Z [36;1m[[ "$RUN_WORKFLOW_REF" == 'joserubiobejarano/Ornigami/.github/workflows/ornigami-db-admission-only.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016' ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3437983Z [36;1mrepo="$DB_ONLY_ROOT/source"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3438549Z [36;1mgit init --quiet "$repo"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3439663Z [36;1mgit -C "$repo" remote add origin https://github.com/joserubiobejarano/Ornigami.git[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3440823Z [36;1mtimeout --kill-after=5s 60s git -C "$repo" fetch --quiet --no-tags --depth=2 origin "$GITHUB_SHA"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3441877Z [36;1m[[ "$(git -C "$repo" rev-parse FETCH_HEAD)" == "$GITHUB_SHA" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3442838Z [36;1mread -r request parent extra < <(git -C "$repo" rev-list --parents -n1 "$GITHUB_SHA")[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3444143Z [36;1m[[ "$request" == "$GITHUB_SHA" && "$parent" =~ ^[0-9a-f]{40}$ && -z "${extra:-}" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3445125Z [36;1mmapfile -t changes < <(git -C "$repo" diff --name-only "$parent" "$request")[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3446180Z [36;1m[[ ${#changes[@]} -eq 1 && "${changes[0]}" == .github/build-requests/ornigami-db-admission.json ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3447492Z [36;1mgit -C "$repo" show "$request:.github/build-requests/ornigami-db-admission.json" > "$DB_ONLY_ROOT/request.json"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3449575Z [36;1mjq -e 'type == "object" and keys == ["packageLockSha256","purpose","sourceSha"] and .purpose == "ornigami-db-admission-only-v1" and (.sourceSha | test("^[0-9a-f]{40}$")) and (.packageLockSha256 | test("^[0-9a-f]{64}$"))' "$DB_ONLY_ROOT/request.json" >/dev/null[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3451353Z [36;1mSOURCE_SHA=$(jq -r .sourceSha "$DB_ONLY_ROOT/request.json")[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3452078Z [36;1m[[ "$SOURCE_SHA" == "$parent" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3453478Z [36;1mfor file in .github/workflows/ornigami-db-admission-only.yml .github/workflows/ornigami-image-rehearsal.yml .github/build-requests/ornigami.json; do[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3455015Z [36;1m  [[ "$(git -C "$repo" rev-parse "$parent:$file")" == "$(git -C "$repo" rev-parse "$request:$file")" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3455851Z [36;1mdone[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3456534Z [36;1mlock=$(git -C "$repo" show "$parent:package-lock.json" | sha256sum | cut -d' ' -f1)[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3457520Z [36;1m[[ "$lock" == "$(jq -r .packageLockSha256 "$DB_ONLY_ROOT/request.json")" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3458588Z [36;1mblob=$(git -C "$repo" rev-parse "$parent:.github/workflows/ornigami-db-admission-only.yml")[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3461495Z [36;1mjq -n --arg requestSha "$request" --arg sourceSha "$SOURCE_SHA" --arg packageLockSha256 "$lock" --arg workflowBlob "$blob" --arg workflowSha "$RUN_WORKFLOW_SHA" --arg workflowRef "$RUN_WORKFLOW_REF" '{requestSha:$requestSha,sourceSha:$sourceSha,packageLockSha256:$packageLockSha256,workflowBlob:$workflowBlob,workflowSha:$workflowSha,workflowRef:$workflowRef}' > "$DB_ONLY_ROOT/evidence/protocol.json"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3464318Z [36;1mgit -C "$repo" checkout --quiet --detach "$SOURCE_SHA"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3465055Z [36;1m[[ -z "$(git -C "$repo" status --porcelain)" ]][0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3465750Z [36;1mecho "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"[0m
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3529434Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3530096Z env:
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3530717Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3531636Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3532251Z   RUN_WORKFLOW_SHA: 49367ae2d941c362f0e9b6fe2b50d9b3df336b34
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3533963Z   RUN_WORKFLOW_REF: joserubiobejarano/Ornigami/.github/workflows/ornigami-db-admission-only.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016
+admission-only	Verify request-only child and exact workflow binding	2026-10-17T20:45:25.3535193Z ##[endgroup]
+admission-only	Bounded pinned tool preparation	﻿2026-10-17T20:45:26.8449361Z ##[group]Run set -Eeuo pipefail
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8450951Z [36;1mset -Eeuo pipefail[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8452526Z [36;1m[[ "$(uname -m)" == x86_64 && "$(uname -s)" == Linux ]][0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8454579Z [36;1m[[ $(getconf _NPROCESSORS_ONLN) -ge 2 ]][0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8456623Z [36;1m[[ $(awk '/MemAvailable:/ {print $2}' /proc/meminfo) -ge 3145728 ]][0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8459003Z [36;1m[[ $(df -PB1 "$DB_ONLY_ROOT" | awk 'NR==2 {print $4}') -ge 21474836480 ]][0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8461096Z [36;1m[[ $(date +%s) -lt "$DB_ONLY_DEADLINE" ]][0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8465242Z [36;1m{ date -u +%FT%TZ; uname -a; git --version; curl --version; python3 --version; systemd-run --version; df -PB1 "$DB_ONLY_ROOT"; } > "$DB_ONLY_ROOT/evidence/host-tools.stdout"[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8468803Z [36;1mset +e[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8472384Z [36;1msudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-tools-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8478758Z [36;1m  /usr/sbin/runuser -u "$(id -un)" -- timeout --kill-after=5s 180s /bin/bash "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-bootstrap.sh" "$DB_ONLY_ROOT" \[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8483037Z [36;1m  > "$DB_ONLY_ROOT/evidence/bootstrap.stdout" 2> "$DB_ONLY_ROOT/evidence/bootstrap.stderr"[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8485433Z [36;1mcode=$?[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8486474Z [36;1mset -e[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8488879Z [36;1mjq -n --argjson exit "$code" '{exit:$exit,result:(if $exit==0 then "passed" else "failed" end)}' > "$DB_ONLY_ROOT/evidence/bootstrap.json"[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8491625Z [36;1mexit "$code"[0m
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8559068Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8560646Z env:
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8562137Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8564315Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8565700Z   SOURCE_SHA: 013ad70ec86e66cb22b65a0827b247f793f0d9c4
+admission-only	Bounded pinned tool preparation	2026-10-17T20:45:26.8567194Z ##[endgroup]
+admission-only	One DB download and one shared admission then controlled fixtures	﻿2026-10-17T20:45:31.7373378Z ##[group]Run set -Eeuo pipefail
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7374050Z [36;1mset -Eeuo pipefail[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7374622Z [36;1m[[ $(date +%s) -lt "$DB_ONLY_DEADLINE" ]][0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7375244Z [36;1mcd "$DB_ONLY_ROOT/source"[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7375892Z [36;1mremaining=$(( DB_ONLY_DEADLINE - $(date +%s) ))[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7376599Z [36;1m(( remaining > 0 && remaining <= 600 ))[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7378172Z [36;1msudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-only-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7380225Z [36;1m  /usr/sbin/runuser -u "$(id -un)" -- env NODE_OPTIONS=--max-old-space-size=512 timeout --kill-after=5s "${remaining}s" \[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7382088Z [36;1m  "$DB_ONLY_ROOT/tools/node" --max-old-space-size=512 scripts/framework-prototype/admission-only-worker.mjs "$DB_ONLY_ROOT" "$SOURCE_SHA"[0m
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7450874Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7451322Z env:
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7451713Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7452164Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7452515Z   SOURCE_SHA: 013ad70ec86e66cb22b65a0827b247f793f0d9c4
+admission-only	One DB download and one shared admission then controlled fixtures	2026-10-17T20:45:31.7452864Z ##[endgroup]
+admission-only	Capture complete or explicit failed and skipped evidence	﻿2026-10-17T20:45:43.1924057Z ##[group]Run set -Eeuo pipefail
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1924508Z [36;1mset -Eeuo pipefail[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1925438Z [36;1mjq -n --arg protocol "$PROTOCOL_RESULT" --arg bootstrap "$BOOTSTRAP_RESULT" --arg diagnostic "$DIAGNOSTIC_RESULT" '{protocol:$protocol,bootstrap:$bootstrap,diagnostic:$diagnostic}' > "$DB_ONLY_ROOT/evidence/step-outcomes.json"[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1926437Z [36;1mif [[ "$PROTOCOL_RESULT" == success ]]; then[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1927064Z [36;1m  python3 "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-capture.py" capture "$DB_ONLY_ROOT/evidence"[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1927637Z [36;1melse[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1927956Z [36;1m  # Never execute candidate-owned code after failed source admission.[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1928397Z [36;1m  python3 - "$DB_ONLY_ROOT/evidence" <<'PY'[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1928721Z [36;1mimport hashlib, json, pathlib, sys[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1929027Z [36;1mroot = pathlib.Path(sys.argv[1])[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1929578Z [36;1mphases = {key: {'result': 'skipped', 'reason': 'source admission failed'} for key in ['download','admission','fixtures']}[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1930451Z [36;1m(root/'phases.json').write_text(json.dumps({'phases':phases}))[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1931106Z [36;1m(root/'capture.json').write_text(json.dumps({'result':'failed','errors':['source admission failed'],'custody':'not-assessed'}))[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1932004Z [36;1m(root/'SUMMARY.md').write_text('# DB admission-only\n\nSource admission failed. All dependent phases skipped. Custody is independent.\n')[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1933040Z [36;1mfiles = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()][0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1934126Z [36;1m(root/'manifest.json').write_text(json.dumps({'files':files,'capture':'failed'}))[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1934542Z [36;1mPY[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1934733Z [36;1m  exit 1[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1934932Z [36;1mfi[0m
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1997310Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1997659Z env:
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1997981Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1998385Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1998682Z   SOURCE_SHA: 013ad70ec86e66cb22b65a0827b247f793f0d9c4
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1999000Z   PROTOCOL_RESULT: success
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1999235Z   BOOTSTRAP_RESULT: success
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1999497Z   DIAGNOSTIC_RESULT: success
+admission-only	Capture complete or explicit failed and skipped evidence	2026-10-17T20:45:43.1999726Z ##[endgroup]
+admission-only	Upload immutable admission evidence	﻿2026-10-17T20:45:43.2659345Z ##[group]Run actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2659838Z with:
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2660099Z   name: ornigami-db-admission-39068058066-1
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2660535Z   path: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P/evidence/
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2660954Z   if-no-files-found: error
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2661190Z   retention-days: 30
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2661417Z   compression-level: 6
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2661629Z   overwrite: false
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2661841Z   include-hidden-files: false
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2662075Z   archive: true
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2662260Z env:
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2662563Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2662952Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2663606Z   SOURCE_SHA: 013ad70ec86e66cb22b65a0827b247f793f0d9c4
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.2663921Z ##[endgroup]
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.4184103Z With the provided path, there will be 26 files uploaded
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.4190314Z Artifact name is valid!
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.4190976Z Root directory input is valid!
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.6223698Z Uploading artifact: ornigami-db-admission-39068058066-1.zip
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.6270284Z Beginning upload of artifact content to blob storage
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.7593448Z Uploaded bytes 12516
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.7717270Z Finished uploading artifact content to blob storage!
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.7718282Z SHA256 digest of uploaded artifact is 6c8e0c875a48fd0f4605c8dddb4474eff462ae9a9e8d874c17bf0a3a6209d47c
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:43.7719329Z Finalizing artifact upload
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:44.0079892Z Artifact ornigami-db-admission-39068058066-1 successfully finalized. Artifact ID 12113983005
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:44.0081765Z Artifact ornigami-db-admission-39068058066-1 has been successfully uploaded! Final size is 12516 bytes. Artifact ID is 12113983005
+admission-only	Upload immutable admission evidence	2026-10-17T20:45:44.0084896Z Artifact download URL: https://github.com/joserubiobejarano/Ornigami/actions/runs/39068058066/artifacts/12113983005
+admission-only	Require owner verified durable custody	﻿2026-10-17T20:45:44.0217076Z ##[group]Run set -Eeuo pipefail
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0217417Z [36;1mset -Eeuo pipefail[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0217770Z [36;1m[[ "$ARTIFACT_ID" =~ ^[0-9]+$ && "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]][0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0218273Z [36;1mcontext="ornigami/evidence-local/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0218789Z [36;1mdescription="artifact=${ARTIFACT_ID};sha256=${ARTIFACT_DIGEST}"[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0219742Z [36;1mprintf 'Custody required run=%s attempt=%s request=%s artifact=%s sha256=%s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST"[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0220436Z [36;1mfor observation in $(seq 1 60); do[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0220914Z [36;1m  statuses=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100")[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0222116Z [36;1m  if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" 'any(.[]; .context==$context and .description==$description and .state=="success" and .creator.login==$owner)' <<< "$statuses" >/dev/null; then[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0223410Z [36;1m    exit 0[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0223645Z [36;1m  fi[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0223857Z [36;1m  sleep 10[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0224071Z [36;1mdone[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0224456Z [36;1mecho 'Custody deadline failed; no acceptance; uploaded evidence remains retained.' >&2[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0224918Z [36;1mexit 1[0m
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0287751Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0288105Z env:
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0288423Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0288817Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0289106Z   SOURCE_SHA: 013ad70ec86e66cb22b65a0827b247f793f0d9c4
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0291634Z   GH_TOKEN: ***
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0291856Z   ARTIFACT_ID: 12113983005
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0292250Z   ARTIFACT_DIGEST: 6c8e0c875a48fd0f4605c8dddb4474eff462ae9a9e8d874c17bf0a3a6209d47c
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0292680Z ##[endgroup]
+admission-only	Require owner verified durable custody	2026-10-17T20:45:44.0375419Z Custody required run=39068058066 attempt=1 request=49367ae2d941c362f0e9b6fe2b50d9b3df336b34 artifact=12113983005 sha256=6c8e0c875a48fd0f4605c8dddb4474eff462ae9a9e8d874c17bf0a3a6209d47c
+admission-only	Scoped cleanup and finished observations	﻿2026-10-17T20:46:15.3935519Z ##[group]Run set -Eeuo pipefail
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3935876Z [36;1mset -Eeuo pipefail[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3936179Z [36;1mif [[ "$CUSTODY_RESULT" != success ]]; then[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3936906Z [36;1m  echo 'Explicit cleanup skipped: durable custody unverified. Ephemeral runner teardown remains platform-controlled.' | tee -a "$GITHUB_STEP_SUMMARY"[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3937587Z [36;1m  exit 1[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3937783Z [36;1mfi[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3938753Z [36;1midentity=$(jq -n --arg GITHUB_RUN_ID "$GITHUB_RUN_ID" --arg GITHUB_RUN_ATTEMPT "$GITHUB_RUN_ATTEMPT" --arg GITHUB_SHA "$GITHUB_SHA" --arg GITHUB_REF "$GITHUB_REF" '{GITHUB_RUN_ID:$GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT:$GITHUB_RUN_ATTEMPT,GITHUB_SHA:$GITHUB_SHA,GITHUB_REF:$GITHUB_REF}')[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3940385Z [36;1mtimeout --kill-after=5s 90s python3 "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-capture.py" cleanup "$DB_ONLY_ROOT" "$RUNNER_TEMP" "$identity" | tee -a "$GITHUB_STEP_SUMMARY"[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.3941709Z [36;1mecho 'Cleanup observations are in finished job logs/summary, recovered separately after custody. They were produced after the immutable artifact.' >> "$GITHUB_STEP_SUMMARY"[0m
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4003935Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4004286Z env:
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4004603Z   DB_ONLY_ROOT: /home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4005002Z   DB_ONLY_DEADLINE: 1792270525
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4005289Z   SOURCE_SHA: 013ad70ec86e66cb22b65a0827b247f793f0d9c4
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4005601Z   CUSTODY_RESULT: success
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.4005823Z ##[endgroup]
+admission-only	Scoped cleanup and finished observations	2026-10-17T20:46:15.8787096Z {"result": "passed", "removed": "/home/runner/work/_temp/ornigami-db-only-39068058066-1-eFP52P", "freeBefore": 89968242688, "freeAfter": 92116738048, "existsAfter": false, "at": "2026-10-17T20:46:15.878356+00:00"}
+admission-only	Complete job	﻿2026-10-17T20:46:15.8940627Z Cleaning up orphan processes

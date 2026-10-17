@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-17T20:44:15.986Z",
+  "result": "passed for exact source publication and one admission-only trial",
+  "source": "013ad70ec86e66cb22b65a0827b247f793f0d9c4",
+  "baseline": "97fc2b86f2efe55683242e8b20a38a79fdebfb1e",
+  "minutesUsed": 145,
+  "storageUsedGB": 0.1,
+  "sharedReservedMinutes": 50,
+  "reserveMinutes": 25,
+  "standardPublicRunner": "ubuntu-24.04",
+  "paidUsage": "blocked, no spending changes",
+  "coverage": "owner selected freshness-only; security/deployment acceptance held",
+  "exactSourceAndMarkers": "verified"
+}

@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 12113983005,
+      "node_id": "MDg6QXJ0aWZhY3QxMjExMzk4MzAwNQ==",
+      "name": "ornigami-db-admission-39068058066-1",
+      "size_in_bytes": 12516,
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/artifacts/12113983005",
+      "archive_download_url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/artifacts/12113983005/zip",
+      "expired": false,
+      "digest": "sha256:6c8e0c875a48fd0f4605c8dddb4474eff462ae9a9e8d874c17bf0a3a6209d47c",
+      "created_at": "2026-10-17T20:45:43Z",
+      "updated_at": "2026-10-17T20:45:43Z",
+      "expires_at": "2026-11-16T20:45:43Z",
+      "workflow_run": {
+        "id": 39068058066,
+        "repository_id": 1098540125,
+        "head_repository_id": 1098540125,
+        "head_branch": "codex/ornigami-sri-local-prototype-f-20261016",
+        "head_sha": "49367ae2d941c362f0e9b6fe2b50d9b3df336b34"
+      }
+    }
+  ]
+}
