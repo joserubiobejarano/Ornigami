@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import {recordOfficialPublication,databaseRepository} from '../scripts/framework-prototype/official-db-publication.mjs';
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const workflowPath = join(repositoryRoot, ".github", "workflows", "ornigami-image-rehearsal.yml");
@@ -171,6 +172,24 @@ function fakeEnvironment(root, overrides = {}) {
   };
   return { env, runnerTemp, summary, dockerLog: env.FAKE_DOCKER_LOG };
 }
+
+for(const mode of ['success','download-failure','manifest-drift'])test(`full DB download block ${mode}: real publication CLI, recorded scope arguments, no scanner/network`,()=>withSandbox(root=>{
+ const {env}=fakeEnvironment(root,{FAKE_DB_EXIT:mode==='download-failure'?'37':'0',REAL_TEST_NODE:process.execPath.replaceAll('\\','/'),FAKE_DB_SCOPE_ARGUMENTS:join(root,'db-scope-args.txt')});
+ const source=join(env.RUNNER_TEMP,'source/scripts/framework-prototype');
+ for(const name of ['official-db-publication.mjs','official-db-manifest.json'])copyFileSync(join(repositoryRoot,'scripts/framework-prototype',name),join(source,name));
+ if(mode==='manifest-drift')writeFileSync(join(source,'official-db-manifest.json'),'{}');
+ const nodeBin=join(env.RUNNER_TEMP,'node-v22.23.3-linux-x64/bin');mkdirSync(nodeBin,{recursive:true});
+ writeExecutable(join(nodeBin,'node'),'#!/usr/bin/env bash\nexec "$REAL_TEST_NODE" "$@"\n');
+ writeExecutable(join(root,'fake-bin/sudo'),'#!/usr/bin/env bash\nset -euo pipefail\n[[ -s "$ORNIGAMI_EVIDENCE_DIR/stage-scans/db-publication.json" ]]\nprintf "%s\\n" "$@" > "$FAKE_DB_SCOPE_ARGUMENTS"\nexit "$FAKE_DB_EXIT"\n');
+ const result=runShell(root,runBlock('database_download'),env);
+ assert.equal(result.status,mode==='success'?0:mode==='download-failure'?37:1,result.stderr);
+ if(mode==='manifest-drift'){assert.equal(existsSync(env.FAKE_DB_SCOPE_ARGUMENTS),false);return;}
+ const args=readFileSync(env.FAKE_DB_SCOPE_ARGUMENTS,'utf8').trim().split(/\r?\n/);
+ assert.equal(args.filter(x=>x==='--db-repository').length,1);
+ assert.equal(args[args.indexOf('--db-repository')+1],databaseRepository);
+ assert.ok(args.includes('MemoryMax=2147483648'));assert.ok(args.includes('MemorySwapMax=0'));assert.ok(args.includes('CPUQuota=100%'));
+ assert.equal(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans/database-download-exit.txt'),'utf8').trim(),env.FAKE_DB_EXIT);
+}));
 
 function verifyManifest(evidenceDirectory) {
   const manifest = JSON.parse(readFileSync(join(evidenceDirectory, "manifest.json"), "utf8"));
@@ -393,12 +412,16 @@ test('resource gate runs after an available builder even when image build failed
   assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
 });
 
-for(const outcome of ['success','failure','skipped','missing-diagnostics','tampered-original'])test(`shared DB ${outcome} capture keeps manifest and custody separate`,()=>withSandbox(root=>{
- const bad=outcome==='missing-diagnostics'||outcome==='tampered-original';
+for(const outcome of ['success','failure','skipped','missing-diagnostics','tampered-original','missing-publication','mutable-download','publication-source-drift'])test(`shared DB ${outcome} capture keeps manifest and custody separate`,()=>withSandbox(root=>{
+ const bad=['missing-diagnostics','tampered-original','missing-publication','mutable-download','publication-source-drift'].includes(outcome);
  const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped',DATABASE_ADMISSION_OUTCOME:bad?'failure':outcome});
  const dir=join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans/database-admission');
  if(outcome!=='skipped'&&outcome!=='missing-diagnostics'){
   mkdirSync(dir,{recursive:true});const raw='{"Version":2}';writeFileSync(join(dir,'metadata.original.bin'),raw);
+  const publicationPath=join(dir,'../db-publication.json');
+  recordOfficialPublication(outcome==='publication-source-drift'?'d'.repeat(40):env.SOURCE_SHA,publicationPath);
+  if(outcome==='missing-publication')rmSync(publicationPath);
+  writeFileSync(join(dir,'../database-resources.json'),JSON.stringify({arguments:['image','--download-db-only','--db-repository',outcome==='mutable-download'?'ghcr.io/aquasecurity/trivy-db:2':databaseRepository]}));
   for(const name of ['clock.json','validation-clock.json','metadata-identity.json','databaseIdentity.json','scannerIdentity.json'])writeFileSync(join(dir,name),JSON.stringify({fixture:true}));
   writeFileSync(join(dir,'index.json'),JSON.stringify({phase:'complete',sourceSha:env.SOURCE_SHA,result:outcome==='success'?'passed':'failed',metadataIdentity:{sha256:createHash(raw),bytes:Buffer.byteLength(raw),retainedBytes:Buffer.byteLength(raw),retainedSha256:createHash(raw),truncated:false}}));
   if(outcome==='tampered-original')writeFileSync(join(dir,'metadata.original.bin'),raw+'tampered');

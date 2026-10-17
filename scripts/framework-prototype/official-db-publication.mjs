@@ -1,6 +1,8 @@
 // One official publication, never a mutable tag, mirror or replacement DB.
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
 export const databaseRepository = 'ghcr.io/aquasecurity/trivy-db@sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730';
 export function verifyPublication(bytes) {
   const digest = 'sha256:' + createHash('sha256').update(bytes).digest('hex');
@@ -18,4 +20,18 @@ export function verifyPublication(bytes) {
 }
 export function officialPublication() {
   return verifyPublication(fs.readFileSync(new URL('./official-db-manifest.json',import.meta.url)));
+}
+export function recordOfficialPublication(sourceSha,receiptPath) {
+  if(!/^[a-f0-9]{40}$/.test(sourceSha??''))throw Error('Admitted source identity required');
+  const publication={sourceSha,...officialPublication()};
+  // Refuse an existing receipt: never replace a publication mid-attempt.
+  const fd=fs.openSync(receiptPath,'wx',0o600);
+  try{fs.writeFileSync(fd,JSON.stringify(publication,null,2)+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}
+  return publication;
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+  try{
+    const args=process.argv.slice(2);if(args.length!==2)throw Error('Expected exact source SHA and new receipt path');
+    console.log(recordOfficialPublication(...args).repository);
+  }catch(error){console.error(error.message);process.exitCode=1;}
 }

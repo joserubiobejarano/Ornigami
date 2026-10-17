@@ -34,3 +34,4 @@ vendor/framework/*.tgz -text
 package-lock.json text eol=lf
 docs/handoffs/ornigami-coolify-20261016/db-recovery-evidence/** -text -whitespace
 scripts/framework-prototype/official-db-manifest.json -text
+docs/handoffs/ornigami-coolify-20261016/full-db-binding-evidence/** -text -whitespace
