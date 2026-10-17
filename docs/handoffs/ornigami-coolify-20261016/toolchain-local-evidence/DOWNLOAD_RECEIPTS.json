@@ -1,0 +1,59 @@
+{
+  "scope": "bounded official DB content and local diagnostic scanner only; no acceptance or registry mutation",
+  "publication": {
+    "repository": "ghcr.io/aquasecurity/trivy-db@sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "manifestDigest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "manifestBytes": 616,
+    "manifest": {
+      "schemaVersion": 2,
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "artifactType": "application/vnd.aquasec.trivy.config.v1+json",
+      "config": {
+        "mediaType": "application/vnd.oci.empty.v1+json",
+        "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "size": 2,
+        "data": "e30="
+      },
+      "layers": [
+        {
+          "mediaType": "application/vnd.aquasec.trivy.db.layer.v1.tar+gzip",
+          "digest": "sha256:3fb08347d6ef5444dd6bb3ef718204fbf8f2f609f681e18f5eee8177f524d85c",
+          "size": 134666882,
+          "annotations": {
+            "org.opencontainers.image.title": "db.tar.gz"
+          }
+        }
+      ],
+      "annotations": {
+        "org.opencontainers.image.created": "2026-10-17T18:43:51Z"
+      }
+    },
+    "publisherRun": 39056570786,
+    "publisherSource": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "provenance": "official successful upload log binds manifest digest; no signature attestation claimed",
+    "coverage": "HOLD: source/input review implies Debian undetermined status skips CVE-2026-111142/zziplib; exact published DB coverage untested; freshness-only diagnostic does not grant security acceptance",
+    "freshness": "must independently pass strict internal metadata admission against actual clock"
+  },
+  "receipts": [
+    {
+      "file": "db-layer.tar.gz",
+      "url": "https://ghcr.io/v2/aquasecurity/trivy-db/blobs/sha256:3fb08347d6ef5444dd6bb3ef718204fbf8f2f609f681e18f5eee8177f524d85c",
+      "bytes": 134666882,
+      "sha256": "3fb08347d6ef5444dd6bb3ef718204fbf8f2f609f681e18f5eee8177f524d85c"
+    },
+    {
+      "file": "trivy-checksums.txt",
+      "url": "https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt",
+      "bytes": 2121,
+      "sha256": "761d7853500074a0c81b1ef2f05ccb07f05080937aab68f98e7f2902a565e945"
+    },
+    {
+      "file": "trivy-windows.zip",
+      "url": "https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_windows-64bit.zip",
+      "bytes": 53449911,
+      "sha256": "7b4762a5a5326cb4b83dfd2bb5d9aaf15a1ed867c75cad7dd8b38840a28e7be6"
+    }
+  ],
+  "at": "2026-10-17T23:21:58.150Z",
+  "credentialsRetained": false
+}

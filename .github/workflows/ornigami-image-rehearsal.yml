@@ -92,6 +92,11 @@ jobs:
           done
           checkout_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
           [[ "$checkout_lock_sha" == "$source_lock_sha" ]]
+          trial_scope=full
+          if [[ -f "$RUNNER_TEMP/source/deploy/coolify/toolchain/recipe.json" ]]; then
+            trial_scope=$(jq -er '.trialScope | select(. == "tooling" or . == "full")' "$RUNNER_TEMP/source/deploy/coolify/toolchain/recipe.json")
+          fi
+          echo "ORNIGAMI_TRIAL_SCOPE=$trial_scope" >> "$GITHUB_ENV"
           {
             printf '%s\n' '### Build request admission'
             printf '%s\n' "- Request commit: \`$REQUEST_SHA\`"
@@ -108,6 +113,7 @@ jobs:
               "$REQUEST_SHA" "$SOURCE_SHA" "$EXPECTED_LOCK_SHA256" "$source_lock_sha" "$checkout_lock_sha" "$candidate_workflow_blob" "$request_workflow_blob"
           } > "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"
           printf 'workflow_sha=%s\nworkflow_ref=%s\n' "$RUN_WORKFLOW_SHA" "$RUN_WORKFLOW_REF" >> "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"
+          printf 'trial_scope=%s\n' "$trial_scope" >> "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"
 
       - name: Verify runner and Docker Buildx
         id: runner_preflight
@@ -116,6 +122,8 @@ jobs:
           set -Eeuo pipefail
           [[ "$(uname -m)" == x86_64 ]]
           docker info >/dev/null
+          docker info --format '{{.ID}}|{{.Driver}}|{{.CgroupDriver}}|{{.CgroupVersion}}|{{.DockerRootDir}}|{{json .SecurityOptions}}|{{.LiveRestoreEnabled}}' > "$RUNNER_TEMP/ornigami-daemon-before.txt"
+          [[ -s "$RUNNER_TEMP/ornigami-daemon-before.txt" ]]
           docker buildx version
           docker buildx ls
           cpu_count=$(getconf _NPROCESSORS_ONLN)
@@ -201,7 +209,16 @@ jobs:
             /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 SOURCE_SHA="$SOURCE_SHA" RUNNER_TEMP="$RUNNER_TEMP" ORNIGAMI_EVIDENCE_DIR="$ORNIGAMI_EVIDENCE_DIR" \
             "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-admission-resources.json" "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" admit
 
-      - name: Collect complete original parent and tool scans
+      - name: Construct bounded experimental tooling after strict DB admission
+        id: toolchain_build
+        if: ${{ success() && steps.database_admission.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export NODE_OPTIONS=--max-old-space-size=512
+          "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-build.mjs" build
+
+      - name: Collect complete signed parent and constructed tool scans
         id: base_scan
         if: ${{ success() && steps.database_admission.outcome == 'success' }}
         shell: bash
@@ -216,7 +233,16 @@ jobs:
           with open(sys.argv[3],'a') as out: out.write(f"\nOriginal minimal runtime base: CRITICAL={counts['CRITICAL']} HIGH={counts['HIGH']}; both parents and tooling scans retained; strict aggregate gate remains independent.\n")
           PY
 
-      - name: Require shared database lease before any compilation
+      - name: Require both tooling security gates before BuildKit execution
+        id: tooling_prerequisites
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export NODE_OPTIONS=--max-old-space-size=512
+          node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" gate
+          node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" args "$RUNNER_TEMP/ornigami-frontend-args.nul"
+
+      - name: Require shared database lease before BuildKit probe or application compilation
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -241,13 +267,16 @@ jobs:
             exit 1
           fi
           printf '[worker.oci]\n  max-parallelism = 1\n' > "$RUNNER_TEMP/buildkitd.toml"
+          tool_image=$(node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" image)
+          tool_image_id=$(node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" image-id)
           docker buildx create --name "$builder" --driver docker-container \
-            --driver-opt 'image=moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea,memory=8g,memory-swap=8g,cpu-quota=300000,cpu-period=100000' \
+            --driver-opt "image=$tool_image,memory=8g,memory-swap=8g,cpu-quota=300000,cpu-period=100000" \
             --buildkitd-config "$RUNNER_TEMP/buildkitd.toml" --use --bootstrap
           mapfile -t ids < <(docker ps --no-trunc --filter "name=^/buildx_buildkit_${builder}0$" --format '{{.ID}}')
           [[ ${#ids[@]} -eq 1 ]]
           container_name=$(docker inspect "${ids[0]}" --format '{{.Name}}')
           [[ "$container_name" == "/buildx_buildkit_${builder}0" ]]
+          [[ "$(docker inspect "${ids[0]}" --format '{{.Image}}')" == "$tool_image_id" ]]
           printf 'builder_name=%s\nbuilder_container_id=%s\n' "$builder" "${ids[0]}" >> "$GITHUB_OUTPUT"
           state_volume=$(docker inspect "${ids[0]}" --format '{{range .Mounts}}{{if and (eq .Type "volume") (eq .Destination "/var/lib/buildkit")}}{{.Name}}{{end}}{{end}}')
           [[ "$state_volume" == "$builder_state_volume" && "$state_volume" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]
@@ -274,8 +303,21 @@ jobs:
             printf '%s\n' '- Initial memory event and CPU counters captured before build; no retry is configured'
           } >> "$ORNIGAMI_JOB_SUMMARY"
 
+      - name: Probe constructed tooling without application compilation
+        id: tooling_probe
+        if: ${{ success() && env.ORNIGAMI_TRIAL_SCOPE == 'tooling' }}
+        shell: bash
+        env:
+          BUILDKIT_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+        run: |
+          set -Eeuo pipefail
+          export NODE_OPTIONS=--max-old-space-size=512
+          node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-probe.mjs"
+          printf '\nTooling-only compatibility passed. Application phases intentionally unrequested; advisory coverage and overall security acceptance remain held.\n' >> "$ORNIGAMI_JOB_SUMMARY"
+
       - name: Build local Linux amd64 image
         id: image_build
+        if: ${{ success() && env.ORNIGAMI_TRIAL_SCOPE == 'full' }}
         shell: bash
         env:
           BUILDKIT_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
@@ -293,11 +335,15 @@ jobs:
           trap 'touch "$stop_file"; wait "$observer_pid" || true' EXIT
           build_timeout=$(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) ))
           [[ "$build_timeout" -gt 0 ]]
+          node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" verify
+          mapfile -d '' -t frontend_args < "$RUNNER_TEMP/ornigami-frontend-args.nul"
+          [[ "${#frontend_args[@]}" -eq 2 ]]
           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/build"
           set +e
           timeout --signal=TERM --kill-after=30s "$build_timeout"s docker buildx build \
             --builder ornigami-external-rehearsal \
             --platform linux/amd64 \
+            "${frontend_args[@]}" \
             --load \
             --tag "ornigami:rehearsal-${SOURCE_SHA}" \
             --build-arg NEXT_PUBLIC_APP_URL=https://rehearsal.invalid \
@@ -362,6 +408,7 @@ jobs:
 
       - name: Run disconnected Linux runtime acceptance
         id: runtime_acceptance
+        if: ${{ success() && steps.image_build.outcome == 'success' && env.ORNIGAMI_TRIAL_SCOPE == 'full' }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -378,7 +425,7 @@ jobs:
             runner_real=$(realpath -e "$RUNNER_TEMP")
             [[ "$report_real" == "$runner_real"/ornigami-runtime-acceptance-* ]]
             mkdir -p "$ORNIGAMI_EVIDENCE_DIR/runtime"
-            for evidence_path in "$report_dir"/native-image-formats.json "$report_dir"/native-image-formats-error.txt "$report_dir"/report.txt "$report_dir"/runtime-http.json "$report_dir"/failure.json "$report_dir"/failure-evidence.txt "$report_dir"/container-logs.txt "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
+            for evidence_path in "$report_dir"/native-image-formats.json "$report_dir"/native-image-formats-error.txt "$report_dir"/report.txt "$report_dir"/runtime-http.json "$report_dir"/cleanup.json "$report_dir"/failure.json "$report_dir"/failure-evidence.txt "$report_dir"/container-logs.txt "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
               [[ -f "$evidence_path" ]] || continue
               cp -- "$evidence_path" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
             done
@@ -524,7 +571,7 @@ jobs:
 
       - name: Collect serial bounded intermediate native and vulnerability evidence
         id: intermediate_scans
-        if: ${{ always() && steps.buildkit.outcome == 'success' && steps.parent_admission.outcome == 'success' }}
+        if: ${{ always() && env.ORNIGAMI_TRIAL_SCOPE == 'full' && steps.buildkit.outcome == 'success' && steps.parent_admission.outcome == 'success' }}
         shell: bash
         env:
           INITIAL_BUILD_OUTCOME: ${{ steps.image_build.outcome }}
@@ -535,7 +582,7 @@ jobs:
 
       - name: Enforce complete all-stage security native and resource gates
         id: all_stage_gate
-        if: ${{ always() && steps.parent_admission.outcome == 'success' }}
+        if: ${{ always() && env.ORNIGAMI_TRIAL_SCOPE == 'full' && steps.parent_admission.outcome == 'success' }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -545,7 +592,7 @@ jobs:
         id: build_resources
         env:
           EXPECTED_OBSERVED_BUILDER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
-        if: ${{ always() && steps.buildkit.outcome == 'success' }}
+        if: ${{ always() && env.ORNIGAMI_TRIAL_SCOPE == 'full' && steps.buildkit.outcome == 'success' }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -659,6 +706,9 @@ jobs:
           BASE_GATE_OUTCOME: ${{ steps.base_advisory_gate.outcome }}
           ALL_STAGE_OUTCOME: ${{ steps.all_stage_gate.outcome }}
           DATABASE_ADMISSION_OUTCOME: ${{ steps.database_admission.outcome }}
+          TOOLING_BUILD_OUTCOME: ${{ steps.toolchain_build.outcome }}
+          TOOLING_PREREQUISITES_OUTCOME: ${{ steps.tooling_prerequisites.outcome }}
+          TOOLING_PROBE_OUTCOME: ${{ steps.tooling_probe.outcome }}
           OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
           OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
           OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
@@ -673,6 +723,7 @@ jobs:
             "$OWNED_BUILDER_NAME" "$OWNED_BUILDER_CONTAINER_ID" "$OWNED_BUILDER_STATE_VOLUME" "$OWNED_IMAGE_TAG" "$OWNED_IMAGE_ID" \
             > "$ORNIGAMI_EVIDENCE_DIR/runner/owned-resources.txt"
           printf 'workflow_outcome=%s\nworkflow_exit_code=%s\n' "$IMAGE_BUILD_OUTCOME" "$IMAGE_BUILD_EXIT_CODE" > "$ORNIGAMI_EVIDENCE_DIR/build/workflow-status.txt"
+          printf 'trial_scope=%s\ntooling_build=%s\ntooling_prerequisites=%s\ntooling_probe=%s\nsecurity_acceptance=false\ncoverage_hold=true\n' "${ORNIGAMI_TRIAL_SCOPE:-unavailable}" "$TOOLING_BUILD_OUTCOME" "$TOOLING_PREREQUISITES_OUTCOME" "$TOOLING_PROBE_OUTCOME" > "$ORNIGAMI_EVIDENCE_DIR/tooling-scope-status.txt"
           runtime_evidence_missing=0
           for file in base-trivy.json trivy.json; do
             [[ -f "$RUNNER_TEMP/$file" ]] && cp -- "$RUNNER_TEMP/$file" "$ORNIGAMI_EVIDENCE_DIR/scans/$file"
@@ -772,6 +823,12 @@ jobs:
           metadata["custody_status"] = "not-assessed-by-capture"
           metadata["all_stage_gate_outcome"] = __import__("os").environ.get("ALL_STAGE_OUTCOME", "unknown")
           metadata["database_admission_outcome"] = __import__("os").environ.get("DATABASE_ADMISSION_OUTCOME", "unknown")
+          metadata["trial_scope"] = __import__("os").environ.get("ORNIGAMI_TRIAL_SCOPE", "unavailable")
+          metadata["tooling_build_outcome"] = __import__("os").environ.get("TOOLING_BUILD_OUTCOME", "unknown")
+          metadata["tooling_prerequisites_outcome"] = __import__("os").environ.get("TOOLING_PREREQUISITES_OUTCOME", "unknown")
+          metadata["tooling_probe_outcome"] = __import__("os").environ.get("TOOLING_PROBE_OUTCOME", "unknown")
+          metadata["security_acceptance"] = False
+          metadata["coverage_hold"] = True
           stages = root / "stage-scans/index.json"
           expected=["original-base","original-runtime-base","build-base","deps","builder","prod-deps","runner","buildkit","dockerfile-frontend"]
           stages.parent.mkdir(parents=True,exist_ok=True)
@@ -905,6 +962,27 @@ jobs:
           OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
         run: |
           set +e
+          set -o pipefail
+          cleanup_failed=0
+          cleanup_record() { printf 'cleanup_readback=%s\n' "$1" | tee -a "$GITHUB_STEP_SUMMARY"; }
+          verify_absent() {
+            local kind="$1" identity="$2" inventory
+            case "$kind" in
+              container) inventory=$(docker ps --all --quiet --no-trunc) ;;
+              volume) inventory=$(docker volume ls --format '{{.Name}}') ;;
+              image) inventory=$(docker image ls --all --quiet --no-trunc) ;;
+              *) return 1 ;;
+            esac
+            if [[ $? -ne 0 || -z "$identity" ]]; then
+              cleanup_record "$kind inventory unavailable; absence unproven"
+              return 1
+            fi
+            if grep -Fxq -- "$identity" <<< "$inventory"; then
+              cleanup_record "$kind still present: $identity"
+              return 1
+            fi
+            cleanup_record "$kind absence verified: $identity"
+          }
           {
             printf '\n### Disk and Docker usage before cleanup\n\n'
             printf '%s\n' '```text'
@@ -941,22 +1019,46 @@ jobs:
             printf '\n### Final builder cgroup counters\n\n- Unavailable: the exact BuildKit container created by this run was not present and running for capture.\n' >> "$GITHUB_STEP_SUMMARY"
           fi
           if [[ -n "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then
-            docker rm -f "$OWNED_BUILDER_CONTAINER_ID" >/dev/null 2>&1 || true
+            if ! docker rm -f "$OWNED_BUILDER_CONTAINER_ID" >/dev/null 2>&1; then
+              cleanup_failed=1
+              cleanup_record 'owned builder removal failed'
+            fi
+          elif [[ -n "$OWNED_BUILDER_CONTAINER_ID" && -n "$builder_actual_id" ]]; then
+            cleanup_failed=1
+            cleanup_record 'preserved builder identity drift'
+          fi
+          if [[ -n "$OWNED_BUILDER_CONTAINER_ID" ]]; then
+            verify_absent container "$OWNED_BUILDER_CONTAINER_ID" || cleanup_failed=1
           fi
           if [[ -n "$OWNED_BUILDER_STATE_VOLUME" && "$builder_actual_id" == "$OWNED_BUILDER_CONTAINER_ID" && "$builder_actual_name" == "/buildx_buildkit_${OWNED_BUILDER_NAME}0" ]]; then
             state_volume=$(docker volume inspect "$OWNED_BUILDER_STATE_VOLUME" --format '{{.Name}}' 2>/dev/null || true)
-            volume_users=$(docker ps -aq --filter "volume=$OWNED_BUILDER_STATE_VOLUME" --no-trunc 2>/dev/null || true)
-            if [[ "$state_volume" == "$OWNED_BUILDER_STATE_VOLUME" && -z "$volume_users" ]]; then
-              docker volume rm "$OWNED_BUILDER_STATE_VOLUME" >/dev/null 2>&1 || true
+            volume_users=$(docker ps -aq --filter "volume=$OWNED_BUILDER_STATE_VOLUME" --no-trunc 2>/dev/null)
+            volume_users_exit=$?
+            if [[ "$volume_users_exit" -eq 0 && "$state_volume" == "$OWNED_BUILDER_STATE_VOLUME" && -z "$volume_users" ]]; then
+              if ! docker volume rm "$OWNED_BUILDER_STATE_VOLUME" >/dev/null 2>&1; then
+                cleanup_failed=1
+                cleanup_record 'owned state volume removal failed'
+              fi
             else
+              cleanup_failed=1
               printf 'Preserved BuildKit state volume %s because it was unavailable or still attached.\n' "$OWNED_BUILDER_STATE_VOLUME" >> "$GITHUB_STEP_SUMMARY"
             fi
+          fi
+          if [[ -n "$OWNED_BUILDER_STATE_VOLUME" ]]; then
+            verify_absent volume "$OWNED_BUILDER_STATE_VOLUME" || cleanup_failed=1
           fi
           if [[ -n "$OWNED_IMAGE_TAG" && -n "$OWNED_IMAGE_ID" ]]; then
             current_image_id=$(docker image inspect "$OWNED_IMAGE_TAG" --format '{{.Id}}' 2>/dev/null || true)
             if [[ "$current_image_id" == "$OWNED_IMAGE_ID" ]]; then
-              docker image rm "$OWNED_IMAGE_TAG" >/dev/null 2>&1 || true
+              if ! docker image rm "$OWNED_IMAGE_ID" >/dev/null 2>&1; then
+                cleanup_failed=1
+                cleanup_record 'owned final image removal failed'
+              fi
+            elif [[ -n "$current_image_id" ]]; then
+              cleanup_failed=1
+              cleanup_record 'preserved final image identity drift'
             fi
+            verify_absent image "$OWNED_IMAGE_ID" || cleanup_failed=1
           fi
           rm -f -- "$RUNNER_TEMP/ornigami-image.tar" "$RUNNER_TEMP/node-base.tar" "$RUNNER_TEMP/trivy.json"
           {
@@ -967,5 +1069,26 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY" 2>&1
 
           if [[ -f "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" && -x "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" ]]; then
-            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" cleanup | tee -a "$GITHUB_STEP_SUMMARY"
+            if ! "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" cleanup | tee -a "$GITHUB_STEP_SUMMARY"; then
+              cleanup_failed=1
+            fi
+          else
+            cleanup_failed=1
+            cleanup_record 'owned tooling image cleanup unavailable'
           fi
+          if [[ -f "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-build.mjs" && -x "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" ]]; then
+            if ! "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-build.mjs" cleanup | tee -a "$GITHUB_STEP_SUMMARY"; then
+              cleanup_failed=1
+            fi
+          else
+            cleanup_failed=1
+            cleanup_record 'experimental toolchain cleanup unavailable'
+          fi
+          if [[ -s "$RUNNER_TEMP/ornigami-daemon-before.txt" ]] && docker info --format '{{.ID}}|{{.Driver}}|{{.CgroupDriver}}|{{.CgroupVersion}}|{{.DockerRootDir}}|{{json .SecurityOptions}}|{{.LiveRestoreEnabled}}' > "$RUNNER_TEMP/ornigami-daemon-after.txt" && cmp -s "$RUNNER_TEMP/ornigami-daemon-before.txt" "$RUNNER_TEMP/ornigami-daemon-after.txt"; then
+            cleanup_record 'daemon identity/configuration unchanged'
+          else
+            cleanup_failed=1
+            cleanup_record 'daemon identity/configuration verification unavailable or drifted'
+          fi
+          cleanup_record "result=$cleanup_failed (0 requires successful owned-resource absence and daemon read-back)"
+          exit "$cleanup_failed"

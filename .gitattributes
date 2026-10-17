@@ -40,3 +40,6 @@ docs/handoffs/ornigami-coolify-20261016/external-trial-39068571833/** -text -whi
 docs/handoffs/ornigami-coolify-20261016/npm-bootstrap-repair-evidence/** -text -whitespace
 
 docs/handoffs/ornigami-coolify-20261016/external-trial-39069347358/** -text -whitespace
+
+deploy/coolify/toolchain/** text eol=lf
+docs/handoffs/ornigami-coolify-20261016/toolchain-local-evidence/** -text -whitespace

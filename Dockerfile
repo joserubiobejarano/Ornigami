@@ -1,4 +1,6 @@
-# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+# syntax=ornigami-frontend
+# The admitted controller MUST supply this named context from the hash-bound
+# local OCI frontend in deploy/coolify/toolchain/recipe.json. No registry fallback.
 # Signed parents: exact official Node 22.23.3 / OpenSSL 3.5.8 binary identity.
 # Static ELF closure passed; Linux loading, codecs and security remain unaccepted.
 FROM --platform=linux/amd64 gcr.io/distroless/nodejs22-debian13:debug-nonroot@sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5 AS build-base

@@ -10,17 +10,101 @@ const harness = readFileSync(harnessPath, "utf8");
 const pythonBlocks = [...harness.matchAll(/<<'PY'\n([\s\S]*?)\nPY/g)].map((match) => match[1]);
 const receiptWriter = pythonBlocks.find((block) => block.includes('"runtime-http.json"'));
 const failureWriter = pythonBlocks.find((block) => block.includes('"failure-evidence.txt"'));
+const cleanupFailureWriter = harness.match(/python3 - "\$report" "\$status" "\$report_dir" <<'PY'(?:[ \t]+\|\|[^\r\n]*)?\r?\n([\s\S]*?)\r?\nPY/)?.[1];
 const python = process.env.PYTHON3 ?? (process.platform === "win32" ? "python" : "python3");
 const bash = process.env.BASH ?? (process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash");
 
 assert.ok(receiptWriter, "runtime receipt Python writer must be present");
 assert.ok(failureWriter, "failure receipt Python writer must be present");
+assert.ok(cleanupFailureWriter, "late cleanup failure receipt writer must be present");
+
+test("owned resource cleanup requires removal and authoritative absence readback", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted cleanup test");
+  const start = harness.indexOf("cleanup_owned_resources() {");
+  const end = harness.indexOf("\ncleanup() {", start);
+  assert.ok(start >= 0 && end > start);
+  const cleanupResources = harness.slice(start, end);
+  for (const scenario of ["noop", "inventory", "remove", "drift", "success"]) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-cleanup-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const shell = [
+      "set -u",
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      `report='${join(root, "report.txt").replaceAll("'", "'\\''")}'`,
+      "name=runtime-test",
+      "cache_volume=runtime-cache",
+      "container_created=true",
+      "volume_created=true",
+      "owned_container_id=owned-id",
+      `scenario=${scenario}`,
+      "docker() { case \"$1\" in inspect) [[ $scenario == drift ]] && printf foreign-id || printf owned-id;; rm) printf 'cleanup_test_docker_rm=%s\\n' \"$*\" >>\"$report\"; [[ $scenario == remove ]] && return 1; return 0;; ps) [[ $scenario == inventory ]] && return 1; if [[ $scenario == noop || $scenario == remove ]]; then printf owned-id; elif [[ $scenario == drift ]]; then printf foreign-id; fi; return 0;; volume) case \"$2\" in rm) [[ $scenario == remove ]] && return 1; return 0;; ls) [[ $scenario == inventory ]] && return 1; [[ $scenario == noop || $scenario == remove ]] && printf runtime-cache; return 0;; esac;; esac; }",
+      cleanupResources,
+      "cleanup_owned_resources",
+      "result=$?",
+      "printf 'status=%s\\n' \"$result\"",
+    ].join("\n");
+    const script = join(root, "cleanup-resources.sh");
+    writeFileSync(script, shell);
+    const result = spawnSync(bash, [script], { encoding: "utf8" });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(result.stdout, new RegExp(`status=${scenario === "success" ? 0 : 1}`), `scenario=${scenario}`);
+    const receipt = readFileSync(join(root, "report.txt"), "utf8");
+    if (scenario === "drift") {
+      assert.match(receipt, /cleanup_container=identity_drift_preserved/);
+      assert.equal(receipt.includes("cleanup_test_docker_rm="), false);
+    }
+    if (scenario === "inventory") assert.match(receipt, /inventory_unavailable/);
+    if (scenario === "noop") assert.match(receipt, /cleanup_container=present_after_cleanup/);
+    if (scenario === "remove") assert.match(receipt, /cleanup_container=present_after_cleanup/);
+    if (scenario === "remove") assert.match(receipt, /cleanup_container_remove_error=true/);
+    if (scenario === "success") {
+      assert.match(receipt, /cleanup_container_absence_verified=true/);
+      assert.match(receipt, /cleanup_cache_volume_absence_verified=true/);
+    }
+    if (scenario !== "drift") {
+      const rmCall = receipt.match(/^cleanup_test_docker_rm=(.*)$/m)?.[1] ?? "";
+      assert.match(rmCall, /owned-id/);
+      assert.equal(rmCall.includes("runtime-test"), false);
+    }
+  }
+});
 
 function runPython(block, args) {
   const result = spawnSync(python, ["-c", block, ...args], { encoding: "utf8" });
   if (result.error) throw result.error;
   return result;
 }
+
+test("late cleanup failure writes failure evidence and preserves original diagnostics", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "ornigami-late-cleanup-receipt-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  writeFileSync(join(root, "report.txt"), "result=passed\n");
+  writeFileSync(join(root, "runtime-http.json"), JSON.stringify({ result: "passed", exitStatus: 0 }));
+  const result = runPython(cleanupFailureWriter, [join(root, "report.txt"), "1", root]);
+  assert.equal(result.status, 0, result.stderr);
+  const report = readFileSync(join(root, "report.txt"), "utf8");
+  assert.match(report, /^result=failed\r?\n/m);
+  assert.equal(report.includes("result=passed"), false);
+  const failure = JSON.parse(readFileSync(join(root, "failure.json"), "utf8"));
+  assert.equal(failure.status, 1);
+  assert.equal(failure.phase, "cleanup");
+  assert.equal(failure.cleanupReceipt, "cleanup.json");
+  assert.match(readFileSync(join(root, "failure-evidence.txt"), "utf8"), /failure_phase=cleanup/);
+  const runtimeHttp = JSON.parse(readFileSync(join(root, "runtime-http.json"), "utf8"));
+  assert.equal(runtimeHttp.result, "failed");
+  assert.equal(runtimeHttp.exitStatus, 1);
+
+  const originalFailure = JSON.stringify({ status: 23, command: "original phase failure" });
+  const originalEvidence = "original failure evidence\n";
+  writeFileSync(join(root, "failure.json"), originalFailure);
+  writeFileSync(join(root, "failure-evidence.txt"), originalEvidence);
+  writeFileSync(join(root, "report.txt"), "result=failed\nexit_status=23\n");
+  const preserved = runPython(cleanupFailureWriter, [join(root, "report.txt"), "23", root]);
+  assert.equal(preserved.status, 0, preserved.stderr);
+  assert.equal(readFileSync(join(root, "failure.json"), "utf8"), originalFailure);
+  assert.equal(readFileSync(join(root, "failure-evidence.txt"), "utf8"), originalEvidence);
+  assert.match(readFileSync(join(root, "report.txt"), "utf8"), /exit_status=23/);
+});
 
 test("runtime receipts retain phase failures and redact HTTP/log secret fields", (t) => {
   const root = mkdtempSync(join(tmpdir(), "ornigami-runtime-receipt-"));

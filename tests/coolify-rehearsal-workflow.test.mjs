@@ -26,6 +26,27 @@ function runBlock(id) {
   return `${lines.slice(runLine + 1, stepEnd).map((line) => line.startsWith("          ") ? line.slice(10) : line).join("\n").replace(/\n+$/, "")}\n`;
 }
 
+// These low-level shell fixtures use explicit local image identities so the
+// builder ownership checks do not fake the separate toolchain identity gate.
+function runBuildkitFixtureBlock() {
+  const script = runBlock("buildkit")
+    .replace('tool_image=$(node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" image)', 'tool_image="ornigami-tool-buildkit:fixture"')
+    .replace('tool_image_id=$(node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" image-id)', 'tool_image_id="sha256:fixture-tool-image"');
+  assert.doesNotMatch(script, /toolchain-runtime\.mjs/);
+  return script;
+}
+
+// Keep the build failure/evidence harness focused on workflow shell behavior;
+// toolchain-runtime's real identity gate is exercised separately.
+function runImageBuildFixtureBlock() {
+  const script = runBlock('image_build').replace(
+    'node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" verify',
+    `printf '%s\\0%s\\0' '--build-context' 'ornigami-frontend=oci-layout://fixture@sha256:${'a'.repeat(64)}' > "$RUNNER_TEMP/ornigami-frontend-args.nul"`,
+  );
+  assert.doesNotMatch(script, /toolchain-runtime\.mjs/);
+  return script;
+}
+
 function bashPath() {
   const candidates = process.platform === "win32"
     ? [join(process.env.ProgramFiles ?? "C:\\Program Files", "Git", "bin", "bash.exe"), "bash"]
@@ -83,6 +104,10 @@ case "$command_name" in
   system)
     printf 'TYPE TOTAL ACTIVE SIZE RECLAIMABLE\\n'
     ;;
+  info)
+    if [[ \${FAKE_DAEMON_INFO_FAIL:-0} == 1 ]]; then exit 18; fi
+    printf '%s\\n' "\${FAKE_DAEMON_INFO:-fixture-daemon}"
+    ;;
   inspect)
     target=\${1:-}; shift || true
     [[ \${1:-} == --format ]] && format=\${2:-} || format=''
@@ -97,18 +122,22 @@ case "$command_name" in
     printf '==memory.max==\\n805306368\\n==memory.swap.max==\\n0\\n==memory.peak==\\n1000000\\n==memory.events==\\nlow 0\\nhigh 0\\nmax 0\\noom 0\\noom_kill 0\\n==cpu.max==\\n75000 100000\\n==cpu.stat==\\nusage_usec 1\\nuser_usec 1\\nsystem_usec 0\\n'
     ;;
   ps)
+    if [[ \${FAKE_DOCKER_INVENTORY_FAIL:-0} == 1 ]]; then exit 19; fi
+    if [[ \${FAKE_REMOVAL_NOOP:-0} == 1 ]]; then printf '%s\\n' "$FAKE_BUILDER_ID"; fi
     if [[ -n \${FAKE_PS_CONTAINER_ID:-} ]]; then printf '%s\\n' "$FAKE_PS_CONTAINER_ID"; fi
     ;;
   volume)
     subcommand=\${1:-}; shift || true
     if [[ "$subcommand" == inspect ]]; then printf '%s\\n' "$FAKE_STATE_VOLUME"; fi
-    if [[ "$subcommand" == ls && \${FAKE_EXISTING_VOLUME:-0} == 1 ]]; then printf '%s\\n' "$FAKE_STATE_VOLUME"; fi
+    if [[ "$subcommand" == ls && ( \${FAKE_EXISTING_VOLUME:-0} == 1 || \${FAKE_REMOVAL_NOOP:-0} == 1 ) ]]; then printf '%s\\n' "$FAKE_STATE_VOLUME"; fi
     ;;
   rm)
+    if [[ \${FAKE_REMOVAL_FAIL:-0} == 1 ]]; then exit 20; fi
     ;;
   image)
     subcommand=\${1:-}; shift || true
     if [[ "$subcommand" == inspect ]]; then printf '%s\\n' "$FAKE_INSPECTED_IMAGE_ID"; fi
+    if [[ "$subcommand" == ls && \${FAKE_REMOVAL_NOOP:-0} == 1 ]]; then printf '%s\\n' "$FAKE_INSPECTED_IMAGE_ID"; fi
     ;;
   *)
     printf 'unexpected fake docker call: %s\\n' "$command_name" >&2
@@ -129,9 +158,13 @@ function fakeEnvironment(root, overrides = {}) {
   writeFileSync(summary, "fake workflow summary\n");
   const stepSummary = join(root, "step-local-summary.md");
   writeFileSync(stepSummary, "");
-  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","cleanup-owned-images.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs","toolchain-runtime.mjs","toolchain-contract.mjs","tool-image.mjs","toolchain-build.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+  const cleanupNode=join(runnerTemp,'node-v22.23.3-linux-x64/bin');mkdirSync(cleanupNode,{recursive:true});
+  writeExecutable(join(cleanupNode,'node'),'#!/usr/bin/env bash\nexec "$TEST_REAL_NODE" "$@"\n');
+  writeFileSync(join(runnerTemp,'ornigami-daemon-before.txt'),'fixture-daemon\n');
   const env = {
     ...process.env,
+    TEST_REAL_NODE: process.execPath.replaceAll('\\','/'),
     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
     FAKE_DOCKER_LOG: join(root, "docker.log"),
     FAKE_BUILDER_ID: "owned-builder-id",
@@ -158,6 +191,9 @@ function fakeEnvironment(root, overrides = {}) {
     BASE_SCAN_OUTCOME: "success",
     IMAGE_BUILD_OUTCOME: "success",
     IMAGE_BUILD_EXIT_CODE: "0",
+    TOOLING_BUILD_OUTCOME: "skipped",
+    TOOLING_PREREQUISITES_OUTCOME: "skipped",
+    TOOLING_PROBE_OUTCOME: "skipped",
     RUNTIME_OUTCOME: "success",
     RUNTIME_EXIT_CODE: "0",
     FINAL_SCAN_OUTCOME: "success",
@@ -320,7 +356,7 @@ test("failed build retains combined stdout/stderr and exact exit before runtime 
   withSandbox(root=>{
     const {env}=fakeEnvironment(root,{FAKE_BUILD_EXIT:'17',BUILDKIT_CONTAINER_ID:'owned-builder-id',BUILDKIT_CONTAINER_NAME:'ornigami-external-rehearsal'});
     env.GITHUB_OUTPUT=join(root,'outputs.txt');
-    const result=runShell(root,runBlock('image_build'),env);
+    const result=runShell(root,runImageBuildFixtureBlock(),env);
     assert.equal(result.status,1,result.stderr);
     const log=readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'build/stdout.log'),'utf8');
     assert.match(log,/build stdout fixture/);assert.match(log,/build stderr fixture/);
@@ -408,7 +444,7 @@ for (const missing of [false, true]) test(`skipped stages with ${missing ? 'miss
 }));
 test('resource gate runs after an available builder even when image build failed',()=>{
   const step=workflow.slice(workflow.indexOf('      - name: Reject build-time OOM'),workflow.indexOf('      - name: Enforce pinned base'));
-  assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);
+  assert.match(step,/always\(\) && (?:env\.ORNIGAMI_TRIAL_SCOPE == 'full' && )?steps\.buildkit\.outcome == 'success'/);
   assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
 });
 
@@ -469,7 +505,7 @@ test("builder creation refuses a pre-existing state volume before creating or cl
     const { env, dockerLog } = fakeEnvironment(root, { FAKE_EXISTING_VOLUME: "1" });
     const output = join(root, "github-output.txt");
     env.GITHUB_OUTPUT = output;
-    const result = runShell(root, runBlock("buildkit"), env);
+    const result = runShell(root, runBuildkitFixtureBlock(), env);
     assert.notEqual(result.status, 0, result.stdout);
     const calls = readFileSync(dockerLog, "utf8");
     assert.match(calls, /<volume><ls><--format><\{\{\.Name\}\}>/);
@@ -488,7 +524,7 @@ test("builder creation does not claim a similarly named foreign container", () =
     });
     const output = join(root, "github-output.txt");
     env.GITHUB_OUTPUT = output;
-    const result = runShell(root, runBlock("buildkit"), env);
+    const result = runShell(root, runBuildkitFixtureBlock(), env);
     assert.notEqual(result.status, 0, result.stdout);
     const calls = readFileSync(dockerLog, "utf8");
     assert.match(calls, /<buildx><create>/);
@@ -500,7 +536,7 @@ test("builder creation does not claim a similarly named foreign container", () =
 });
 
 test("builder creation uses anchored exact-name and state-volume checks", () => {
-  const script = runBlock("buildkit");
+  const script = runBuildkitFixtureBlock();
   assert.match(script, /grep -Fxq "\$builder_state_volume"/);
   assert.match(script, /--filter "name=\^\/buildx_buildkit_\$\{builder\}0\$"/);
   assert.match(script, /\[\[ "\$container_name" == "\/buildx_buildkit_\$\{builder\}0" \]\]/);
@@ -512,11 +548,11 @@ test("cleanup preserves foreign builder, state volume, and image IDs", () => {
     const { env, dockerLog, runnerTemp } = fakeEnvironment(root);
     writeFileSync(join(runnerTemp, "ornigami-image.tar"), "local-only archive");
     const result = runShell(root, runBlock("cleanup"), env);
-    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.status, 1, result.stderr);
     const log = readFileSync(dockerLog, "utf8");
     assert.doesNotMatch(log, /<rm><-f><owned-builder-id>/);
     assert.doesNotMatch(log, /<volume><rm><buildx_buildkit_ornigami-external-rehearsal0_state>/);
-    assert.doesNotMatch(log, /<image><rm><ornigami:rehearsal-test>/);
+    assert.doesNotMatch(log, /<image><rm>/);
     assert.doesNotMatch(log, /<buildx><rm>/);
   });
 });
@@ -533,7 +569,22 @@ test("cleanup removes only exact owned builder, unattached state volume, and mat
     const log = readFileSync(dockerLog, "utf8");
     assert.match(log, /<rm><-f><owned-builder-id>/);
     assert.match(log, /<volume><rm><buildx_buildkit_ornigami-external-rehearsal0_state>/);
-    assert.match(log, /<image><rm><ornigami:rehearsal-test>/);
+    assert.match(log, /<image><rm><owned-image-id>/);
     assert.doesNotMatch(log, /<buildx><rm>/);
   });
 });
+
+for (const [name, overrides, expected] of [
+  ['successful no-op deletion', {FAKE_REMOVAL_NOOP:'1'}, /still present/],
+  ['removal error', {FAKE_REMOVAL_FAIL:'1'}, /builder removal failed/],
+  ['unavailable resource inventory', {FAKE_DOCKER_INVENTORY_FAIL:'1'}, /inventory unavailable/],
+  ['daemon configuration drift', {FAKE_DAEMON_INFO:'different-daemon'}, /daemon.*drifted/],
+  ['unavailable daemon', {FAKE_DAEMON_INFO_FAIL:'1'}, /daemon.*unavailable/],
+]) test(`actual cleanup workflow fails on ${name}`, () => withSandbox(root => {
+  const {env}=fakeEnvironment(root, {FAKE_INSPECTED_BUILDER_ID:'owned-builder-id',FAKE_INSPECTED_IMAGE_ID:'owned-image-id',...overrides});
+  const result=runShell(root,runBlock('cleanup'),env);
+  assert.equal(result.status,1,result.stderr);
+  assert.match(result.stdout,expected);
+  assert.match(result.stdout,/cleanup_readback=result=1/);
+  assert.doesNotMatch(readFileSync(env.FAKE_DOCKER_LOG,'utf8'), /<prune>|<buildx><rm>/);
+}));

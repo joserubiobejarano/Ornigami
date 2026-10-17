@@ -2,6 +2,8 @@ import fs from'node:fs';import path from'node:path';import{spawnSync,spawn}from'
 const here=path.dirname(fileURLToPath(import.meta.url)),hash=b=>createHash('sha256').update(b).digest('hex');
 const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
 import{admitFrozenDatabase,requireFrozenDatabase}from'./frozen-db-admission.mjs';
+import{cleanupOwnedImages}from'./cleanup-owned-images.mjs';
+import{loadToolchainOutput}from'./toolchain-runtime.mjs';
 export function skipDependentStages(root,sourceSha,reason){
   fs.mkdirSync(root,{recursive:true});const records=[];
   for(const stage of requiredStages){const dir=path.join(root,stage),file=path.join(dir,'driver.json');
@@ -29,8 +31,8 @@ async function main(){
     console.log(JSON.stringify({result:result.result,errors:result.errors,scope:'single shared prerequisite; no role pull/scan/build'}));return;
   }
   if(mode==='cleanup'){
-    const results=[];for(const r of records().filter(x=>x.ownedImage&&x.reference&&/^sha256:[0-9a-f]{64}$/.test(x.imageId??''))){const check=spawnSync('docker',['image','inspect',r.reference,'--format','{{.Id}}'],{encoding:'utf8'});if(check.status!==0){results.push({stage:r.stage,result:'already absent'});continue;}if(check.stdout.trim()!==r.imageId){results.push({stage:r.stage,result:'preserved identity drift'});continue;}const removed=spawnSync('docker',['image','rm',r.reference],{encoding:'utf8'});results.push({stage:r.stage,result:removed.status===0?'removed exact claimed image':'failed removal',exit:removed.status});}
-    for(const stage of requiredStages){const receipt=path.join(root,stage,'filesystem/spool-ownership.json');if(!fs.existsSync(receipt))continue;const own=JSON.parse(fs.readFileSync(receipt));if(!fs.existsSync(own.directory))continue;const actual=fs.realpathSync(own.directory);if(path.dirname(actual)!==fs.realpathSync(temp)||!path.basename(actual).startsWith('ornigami-inspect-spool-')||(process.getuid&&fs.statSync(actual).uid!==process.getuid())){results.push({stage,result:'preserved unproven spool ownership'});continue;}fs.rmSync(actual,{recursive:true,force:true});results.push({stage,result:'removed exact claimed spool'});}
+    const results=cleanupOwnedImages(records());
+    for(const stage of requiredStages){const receipt=path.join(root,stage,'filesystem/spool-ownership.json');if(!fs.existsSync(receipt))continue;const own=JSON.parse(fs.readFileSync(receipt));if(!fs.existsSync(own.directory))continue;const actual=fs.realpathSync(own.directory);if(path.dirname(actual)!==fs.realpathSync(temp)||!path.basename(actual).startsWith('ornigami-inspect-spool-')||(process.getuid&&fs.statSync(actual).uid!==process.getuid())){results.push({stage,result:'preserved unproven spool ownership'});continue;}fs.rmSync(actual,{recursive:true,force:false});results.push({stage,result:fs.existsSync(actual)?'claimed spool remains after removal':'removed exact claimed spool'});}
     save(path.join(root,'cleanup.json'),results);console.log(JSON.stringify(results));if(results.some(x=>!['already absent','removed exact claimed image','removed exact claimed spool'].includes(x.result)))process.exitCode=1;return;
   }
   if(mode==='aggregate'){const result=aggregate(records(),source);save(path.join(root,'index.json'),result);process.exitCode=result.result==='passed'?0:1;return;}
@@ -39,7 +41,8 @@ async function main(){
   if(mode==='check'){console.log('Shared frozen DB lease/content remains valid; no admission repeated');return;}
   const policy=JSON.parse(fs.readFileSync(path.join(here,'minimal-parent-policy.json'))),node=process.execPath,cache=path.join(temp,'trivy-cache'),trivy=path.join(temp,'trivy');
   const parents=Object.fromEntries(policy.parents.map(x=>[x.role,'gcr.io/distroless/nodejs22-debian13@'+x.amd64Digest]));
-  parents.buildkit='moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea';parents['dockerfile-frontend']='docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e';
+  const toolchain=loadToolchainOutput();
+  parents.buildkit=toolchain.buildkit.reference;parents['dockerfile-frontend']=toolchain.frontend.reference;
   const stages=mode==='parents'?['original-base','original-runtime-base','buildkit','dockerfile-frontend']:mode==='final'?['runner']:['build-base','deps','builder','prod-deps'];
   const run=(command,args,{log,timeout=180000}={})=>{const r=spawnSync(command,args,{encoding:'utf8',maxBuffer:8*1024*1024,timeout:Math.min(timeout,remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH)*1000),windowsHide:true});if(log)fs.writeFileSync(log,(r.stdout??'')+(r.stderr??''));if(r.status!==0)throw Error(`${path.basename(command)} exit=${r.status} signal=${r.signal??''}`);return r.stdout;};
   const scoped=(stage,name,args,dir)=>{
@@ -51,9 +54,18 @@ async function main(){
     try{
       remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH);const free=fs.statfsSync(temp,{bigint:true});if(free.bavail*free.bsize<20n*1024n**3n)throw Error('Less than 20 GiB disk reserve; stop rather than increase capacity');
       if(mode==='parents'){
-        const existed=spawnSync('docker',['image','inspect',parents[stage]],{stdio:'ignore'}).status===0;
-        run('docker',['pull','--platform','linux/amd64',parents[stage]],{log:path.join(dir,'pull.log')});record.reference=parents[stage];record.preexistingImage=existed;
+        const constructed=stage==='buildkit'?toolchain.buildkit:stage==='dockerfile-frontend'?toolchain.frontend:null;
+        let existed;
+        if(constructed){existed=!constructed.ownedImage;}
+        else{
+          const inventory=run('docker',['image','ls','--all','--quiet','--no-trunc']).split(/\s+/).filter(Boolean);
+          const expected=policy.parents.find(x=>x.role===stage)?.configDigest;if(!expected)throw Error('Parent config identity missing');
+          existed=inventory.includes(expected);
+          run('docker',['pull','--platform','linux/amd64',parents[stage]],{log:path.join(dir,'pull.log')});
+        }
+        record.reference=parents[stage];record.preexistingImage=existed;
         record.imageId=run('docker',['image','inspect',parents[stage],'--format','{{.Id}}']).trim();record.ownedImage=!existed;
+        if(constructed&&record.imageId!==constructed.imageId)throw Error('Constructed tool image drift; no registry fallback');
         if(fs.existsSync(archive))throw Error('Refusing preexisting stage archive');ownedArchive=true;run('docker',['image','save','--output',archive,parents[stage]],{log:path.join(dir,'save.log')});
       }else{
         if(process.env.INITIAL_BUILD_OUTCOME!=='success'){record.result='skipped';throw Error('Initial build failed/skipped; target exports prohibited to avoid retry');}
@@ -64,7 +76,7 @@ async function main(){
           if(fs.existsSync(archive))throw Error('Refusing preexisting stage archive');ownedArchive=true;
           const builder=JSON.parse(run('docker',['inspect',process.env.OWNED_BUILDER_CONTAINER_ID]));const host=builder[0]?.HostConfig;
           if(host?.Memory!==8589934592||host.MemorySwap!==8589934592||host.CpuQuota!==300000||host.CpuPeriod!==100000||builder[0]?.Name!=='/buildx_buildkit_ornigami-external-rehearsal0')throw Error('Owned bounded BuildKit configuration drift');
-          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64','--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),'--build-arg','NEXT_PUBLIC_APP_URL=https://rehearsal.invalid','--build-arg','ORNIGAMI_SOURCE_SHA='+source,'--build-arg','ORNIGAMI_BUILD_HEAP_MIB=4096','--build-arg','ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true','--build-arg','ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false','--build-arg','ORNIGAMI_BUILD_WEBPACK_WORKER=false',path.join(temp,'source')];
+          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64',...toolchain.frontendBuildArguments,'--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),'--build-arg','NEXT_PUBLIC_APP_URL=https://rehearsal.invalid','--build-arg','ORNIGAMI_SOURCE_SHA='+source,'--build-arg','ORNIGAMI_BUILD_HEAP_MIB=4096','--build-arg','ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true','--build-arg','ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false','--build-arg','ORNIGAMI_BUILD_WEBPACK_WORKER=false',path.join(temp,'source')];
           const stop=path.join(dir,'observer.stop'),observations=path.join(dir,'builder-observations.jsonl');const observer=spawn(node,[path.join(here,'observe-buildkit.mjs'),process.env.OWNED_BUILDER_CONTAINER_ID,observations,stop],{stdio:'ignore'});const observerDone=new Promise(r=>{observer.once('error',r);observer.once('close',r);});
           const child=spawn('docker',args,{stdio:['ignore','pipe','pipe']});let buffer='',cacheMiss=false,provenCachedRun=false,killer;const log=fs.createWriteStream(path.join(dir,'cache-export.log'),{flags:'wx'});let malformed=false;
           const abort=()=>{child.kill('SIGTERM');killer??=setTimeout(()=>child.kill('SIGKILL'),10000);};
@@ -79,6 +91,12 @@ async function main(){
       if(!/^sha256:[0-9a-f]{64}$/.test(record.imageId??''))throw Error('Exact stage image ID missing');
       record.archiveSha256=await fileHash(archive);record.archiveBytes=fs.statSync(archive).size;
       try{scoped(stage,'filesystem',[path.join(here,'analyze-docker-archive.mjs'),archive,path.join(dir,'filesystem'),stage,record.imageId],dir);}catch(error){record.nativeError=error.message;}
+      if(['buildkit','dockerfile-frontend'].includes(stage)&&!record.nativeError){
+        const inventory=JSON.parse(fs.readFileSync(path.join(dir,'filesystem/filesystem.json')));
+        const binaries=toolchain.builtBinaries.filter(b=>(b.name==='dockerfile-frontend')===(stage==='dockerfile-frontend'));
+        for(const binary of binaries){const member=(stage==='buildkit'?'usr/bin/':'bin/')+binary.name;if(!inventory.some(f=>f.path===member&&f.sha256===binary.sha256&&f.size===binary.bytes))record.nativeError='Constructed binary/image content mismatch: '+binary.name;}
+        record.constructionBinaryBinding=record.nativeError?'failed':'passed';
+      }
       const receipt=path.join(dir,'filesystem/result.json'),plan={schema:1,sourceSha:source,trivy:{path:trivy,sha256:await fileHash(trivy),cacheDirectory:cache,admissionDirectory,admissionSha256:await fileHash(path.join(admissionDirectory,'index.json'))},images:[{stage,archive,archiveSha256:record.archiveSha256,imageId:record.imageId,...(fs.existsSync(receipt)?{filesystemReceipt:receipt,filesystemReceiptSha256:await fileHash(receipt)}:{})}]};
       save(path.join(dir,'scan-plan.json'),plan);
       try{scoped(stage,'vulnerabilities',[path.join(here,'scan-image-stages.mjs'),path.join(dir,'scan-plan.json'),path.join(dir,'scan'),'--single'],dir);}catch(error){record.scanError=error.message;}

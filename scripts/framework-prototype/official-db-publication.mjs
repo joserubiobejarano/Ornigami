@@ -15,7 +15,7 @@ export function verifyPublication(bytes) {
   return {repository:databaseRepository,manifestDigest:digest,manifestBytes:bytes.length,manifest:m,
     publisherRun:39056570786,publisherSource:'cbebf2ecd6df42d36463844a45e689afee51c70f',
     provenance:'official successful upload log binds manifest digest; no signature attestation claimed',
-    coverage:'HOLD: source/input review implies Debian undetermined status skips CVE-2026-111142/zziplib; exact published DB coverage untested; freshness-only diagnostic does not grant security acceptance',
+    coverage:'HOLD: read-only query of exact published DB confirms global CVE-2026-111142 record but no Debian 12/13/14 zziplib advisory; corrected current source is undetermined; exact mutable publisher input snapshot remains unestablished; freshness/tooling diagnostics do not grant security acceptance',
     freshness:'must independently pass strict internal metadata admission against actual clock'};
 }
 export function officialPublication() {

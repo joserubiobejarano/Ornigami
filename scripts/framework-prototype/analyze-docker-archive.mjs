@@ -1,5 +1,8 @@
 import fs from 'node:fs';import path from 'node:path';import{createGunzip}from'node:zlib';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';import{inventoryTar,mergeLayer}from'./tar-inventory.mjs';import{verifyClosure}from'./elf-closure.mjs';
 import{Transform}from'node:stream';
+import{loadToolchainRecipe}from'./toolchain-contract.mjs';
+const toolchainInputs=['toolchain-go-base','toolchain-compiler','toolchain-runtime-base','toolchain-runtime-base-installed'];
+export function compilerSdkData(stage,p){return ['toolchain-go-base','toolchain-compiler'].includes(stage)&&p.startsWith('usr/local/go/src/')&&(p.includes('/testdata/')||p.endsWith('.syso'));}
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
 export async function analyzeArchive(archive,out,stage,expectedImageId,policy){
@@ -21,9 +24,13 @@ export async function analyzeArchive(archive,out,stage,expectedImageId,policy){
     const inventory=[...files].map(([p,v])=>({path:p,...Object.fromEntries(Object.entries(v).filter(([key])=>key!=='bytes'))}));save(path.join(out,'filesystem.json'),inventory);
     const packages=[];for(const[p,file]of files){if(p.endsWith('/package.json')&&file.bytes){const pkg=JSON.parse(file.bytes);packages.push({path:p,name:pkg.name,version:pkg.version,os:pkg.os,cpu:pkg.cpu,libc:pkg.libc,engines:pkg.engines,napi:pkg.napi,installScriptNames:Object.keys(pkg.scripts??{}).filter(x=>/install/.test(x))});}}
     save(path.join(out,'package-manifests.json'),packages);
-    const roots=[...files].filter(([,file])=>file.bytes?.subarray(0,4).toString('hex')==='7f454c46').map(([p])=>p);
+    const allRoots=[...files].filter(([,file])=>file.bytes?.subarray(0,4).toString('hex')==='7f454c46').map(([p])=>p);
+    const sdkData=allRoots.filter(p=>compilerSdkData(stage,p)),roots=allRoots.filter(p=>!compilerSdkData(stage,p));
+    if(sdkData.length)save(path.join(out,'sdk-elf-data.json'),{scope:'Go SDK source test inputs and platform link objects; fully inventoried and still included in the unfiltered scanner; no executable compatibility claim or advisory exception',files:sdkData.map(p=>({path:p,sha256:files.get(p).sha256,size:files.get(p).size}))});
     const closure=verifyClosure(files,roots);save(path.join(out,'native-closure.json'),closure);if(!roots.length)throw Error('No native executable inventory');if(closure.result!=='passed')throw Error('Static native closure failed');
-    if(!['buildkit','dockerfile-frontend'].includes(stage)){
+    if(toolchainInputs.includes(stage)){
+      if(['toolchain-go-base','toolchain-compiler'].includes(stage)&&(!/^[a-f0-9]{64}$/.test(policy.toolchainGoBinarySha256??'')||files.get('usr/local/go/bin/go')?.sha256!==policy.toolchainGoBinarySha256))throw Error('Pinned toolchain Go executable missing or changed');
+    }else if(!['buildkit','dockerfile-frontend'].includes(stage)){
       const node=files.get('nodejs/bin/node');if(node?.sha256!==policy.nodeBinarySha256)throw Error('Exact reviewed Node binary not present');
       if(['build-base','deps','builder','prod-deps'].includes(stage)&&!packages.some(p=>p.path==='opt/ornigami-npm/package.json'&&p.name==='npm'&&p.version==='11.21.1'))throw Error('Upgraded npm filesystem inventory missing');
       for(const p of packages.filter(p=>p.path.startsWith('app/node_modules/'))){for(const[key,value]of[['os','linux'],['cpu','x64'],['libc','glibc']]){const values=p[key];if(values?.includes('!'+value)||(values?.some(x=>!x.startsWith('!'))&&!values.includes(value)))throw Error('Foreign native/platform manifest installed: '+p.path);}}
@@ -34,11 +41,11 @@ export async function analyzeArchive(archive,out,stage,expectedImageId,policy){
       if(files.get('app/.next/cache')?.uid!==1000||files.get('app/.next/cache')?.gid!==1000)throw Error('Final cache ownership missing');
       if([...files.keys()].some(p=>p.startsWith('busybox/')||p==='usr/bin/sh'||p==='bin/sh'||p.startsWith('opt/ornigami-npm/')||p.startsWith('usr/local/lib/node_modules/npm/')))throw Error('Runtime contains shell/npm tooling');
     }
-    result.files=inventory.length;result.packages=packages.length;result.nativeFiles=roots.length;result.nativePaths=roots.sort();result.hasOsPackageDatabase=inventory.some(p=>/^(?:var\/lib\/dpkg\/status(?:\.d\/.*)?|lib\/apk\/db\/installed)$/.test(p.path));result.result='passed';
+    result.files=inventory.length;result.packages=packages.length;result.nativeFiles=roots.length;result.nativePaths=roots.sort();result.sdkDataElfFiles=sdkData.length;result.totalInventoriedElfFiles=allRoots.length;result.hasOsPackageDatabase=inventory.some(p=>/^(?:var\/lib\/dpkg\/status(?:\.d\/.*)?|lib\/apk\/db\/installed)$/.test(p.path));result.result='passed';
   }catch(error){result.error=error.message;}
   finally{save(path.join(out,'result.json'),result);const actual=fs.realpathSync(owned);if(path.dirname(actual)!==spoolParent||!path.basename(actual).startsWith('ornigami-inspect-spool-'))throw Error('Refusing cleanup outside owned spool parent');fs.rmSync(actual,{recursive:true,force:true});}
   return result;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
-  try{const[, ,archive,out,stage,imageId]=process.argv;const policy=JSON.parse(fs.readFileSync(new URL('./minimal-parent-policy.json',import.meta.url)));const result=await analyzeArchive(archive,out,stage,imageId,policy);console.log(JSON.stringify(result));process.exitCode=result.result==='passed'?0:1;}catch(error){console.error(error.message);process.exitCode=1;}
+  try{const[, ,archive,out,stage,imageId]=process.argv;const policy=JSON.parse(fs.readFileSync(new URL('./minimal-parent-policy.json',import.meta.url)));if(toolchainInputs.includes(stage)){const recipe=loadToolchainRecipe(fileURLToPath(new URL('../../deploy/coolify/toolchain/',import.meta.url)));policy.toolchainGoBinarySha256=recipe.contract.goBinary.sha256;}const result=await analyzeArchive(archive,out,stage,imageId,policy);console.log(JSON.stringify(result));process.exitCode=result.result==='passed'?0:1;}catch(error){console.error(error.message);process.exitCode=1;}
 }

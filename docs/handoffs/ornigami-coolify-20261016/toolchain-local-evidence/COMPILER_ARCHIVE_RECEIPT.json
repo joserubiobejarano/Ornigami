@@ -1,0 +1,7 @@
+{
+  "scope": "local diagnostic only; original compiler image config and diffIDs verified",
+  "imageId": "sha256:5264a43183bc8e2ca53e96cad003b69d2b0e10e4f32ba5d415e19f9dbccb3650",
+  "scannerSha256": "51e50a34f8739424bc88282602d10945b25249ffdb51703fe3c9453c20217c42",
+  "scannerBytes": 178127360,
+  "archiveBytes": 266311680
+}

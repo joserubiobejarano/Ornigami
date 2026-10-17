@@ -1,0 +1,20 @@
+[
+  {
+    "path": "trivy.db",
+    "type": "0",
+    "size": 1634836480,
+    "mode": 420,
+    "uid": 1001,
+    "gid": 1001,
+    "sha256": "53ec1bdd7717514174ed808d43464deab895ce6e32924f8224b2a68b0c244125"
+  },
+  {
+    "path": "metadata.json",
+    "type": "0",
+    "size": 143,
+    "mode": 420,
+    "uid": 1001,
+    "gid": 1001,
+    "sha256": "17cbf633dd4873bfedfaa7f16a72c9739d1ecacafffecdf5572b36e8eebc905a"
+  }
+]
