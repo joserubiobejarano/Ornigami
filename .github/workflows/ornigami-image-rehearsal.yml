@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build-validate-scan:
     name: Build, runtime acceptance, and vulnerability scans
-    if: github.event.created == false && github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.ref == 'refs/heads/codex/ornigami-sri-local-prototype-f-20261016'
+    if: github.event.created == false && github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.run_attempt == 1 && github.ref == 'refs/heads/codex/ornigami-sri-local-prototype-f-20261016'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -43,11 +43,15 @@ jobs:
         shell: bash
         env:
           REQUEST_SHA: ${{ github.event.after }}
+          RUN_WORKFLOW_SHA: ${{ github.workflow_sha }}
+          RUN_WORKFLOW_REF: ${{ github.workflow_ref }}
         run: |
           set -Eeuo pipefail
           [[ "$GITHUB_EVENT_NAME" == push ]]
           [[ "$GITHUB_REF" == refs/heads/codex/ornigami-sri-local-prototype-f-20261016 ]]
           [[ "$REQUEST_SHA" =~ ^[0-9a-f]{40}$ && "$REQUEST_SHA" == "$GITHUB_SHA" ]]
+          [[ "$GITHUB_RUN_ATTEMPT" == 1 && "$RUN_WORKFLOW_SHA" == "$GITHUB_SHA" ]]
+          [[ "$RUN_WORKFLOW_REF" == 'joserubiobejarano/Ornigami/.github/workflows/ornigami-image-rehearsal.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016' ]]
           repo_dir="$RUNNER_TEMP/request-repository"
           repo='https://github.com/joserubiobejarano/Ornigami.git'
           mkdir "$repo_dir"
@@ -64,6 +68,7 @@ jobs:
           git -C "$repo_dir" show "$REQUEST_SHA:.github/build-requests/ornigami.json" > "$RUNNER_TEMP/ornigami-build-request.json"
           jq -e 'type == "object" and (keys == ["packageLockSha256", "sourceSha"]) and (.sourceSha | type == "string" and test("^[0-9a-f]{40}$")) and (.packageLockSha256 | type == "string" and test("^[0-9a-f]{64}$"))' "$RUNNER_TEMP/ornigami-build-request.json" >/dev/null
           SOURCE_SHA=$(jq -r '.sourceSha' "$RUNNER_TEMP/ornigami-build-request.json")
+          [[ "$SOURCE_SHA" == "$first_parent" ]]
           EXPECTED_LOCK_SHA256=$(jq -r '.packageLockSha256' "$RUNNER_TEMP/ornigami-build-request.json")
           echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
           echo "EXPECTED_LOCK_SHA256=$EXPECTED_LOCK_SHA256" >> "$GITHUB_ENV"
@@ -102,6 +107,7 @@ jobs:
             printf 'request_sha=%s\nsource_sha=%s\nexpected_lock_sha256=%s\nsource_lock_sha256=%s\ncheckout_lock_sha256=%s\ncandidate_workflow_blob=%s\nrequest_workflow_blob=%s\n' \
               "$REQUEST_SHA" "$SOURCE_SHA" "$EXPECTED_LOCK_SHA256" "$source_lock_sha" "$checkout_lock_sha" "$candidate_workflow_blob" "$request_workflow_blob"
           } > "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"
+          printf 'workflow_sha=%s\nworkflow_ref=%s\n' "$RUN_WORKFLOW_SHA" "$RUN_WORKFLOW_REF" >> "$ORNIGAMI_EVIDENCE_DIR/source-identity.txt"
 
       - name: Verify runner and Docker Buildx
         id: runner_preflight
@@ -121,12 +127,12 @@ jobs:
             printf '%s\n' "- Online CPUs: ${cpu_count} (minimum 4)"
             printf '%s\n' "- Total memory: ${total_mib} MiB (minimum 14336 MiB)"
             printf '%s\n' "- Available memory before build: ${available_mib} MiB (minimum 12288 MiB)"
-            printf '%s\n' "- Free runner disk before build: ${free_disk_bytes} bytes (minimum 10737418240)"
+            printf '%s\n' "- Free runner disk before build: ${free_disk_bytes} bytes (minimum 21474836480)"
           } >> "$ORNIGAMI_JOB_SUMMARY"
           [[ "$cpu_count" =~ ^[0-9]+$ && "$cpu_count" -ge 4 ]]
           [[ "$total_mib" =~ ^[0-9]+$ && "$total_mib" -ge 14336 ]]
           [[ "$available_mib" =~ ^[0-9]+$ && "$available_mib" -ge 12288 ]]
-          [[ "$free_disk_bytes" =~ ^[0-9]+$ && "$free_disk_bytes" -ge 10737418240 ]]
+          [[ "$free_disk_bytes" =~ ^[0-9]+$ && "$free_disk_bytes" -ge 21474836480 ]]
 
       - name: Download and verify pinned Trivy scanner
         shell: bash
@@ -174,6 +180,7 @@ jobs:
           set -Eeuo pipefail
           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/stage-scans"
           database_repository=$("$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" --max-old-space-size=512 "$RUNNER_TEMP/source/scripts/framework-prototype/official-db-publication.mjs" "$SOURCE_SHA" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/db-publication.json")
+          [[ $(df -PB1 "$RUNNER_TEMP" | awk 'NR==2 {print $4}') -ge 21474836480 ]]
           caller=$(id -un)
           set +e
           sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
