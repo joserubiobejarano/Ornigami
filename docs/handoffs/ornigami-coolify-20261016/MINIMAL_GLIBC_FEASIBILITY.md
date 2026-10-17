@@ -1,5 +1,7 @@
 # Minimal Debian 13/glibc feasibility — 17 October 2026
 
+Subsequent status: the owner authorized this exact trial, but [fresh admission stopped before either push because the private Coolify dashboard was unreachable](./MINIMAL_GLIBC_ADMISSION.md). The proposal/approval language below records the earlier preparation checkpoint. No trial has started or consumed the one-run authorization.
+
 **Implemented and committed locally; no full build, cold installation, push, external trial, registry publication, VPS operation, deployment or provider activation occurred.** Existing deployment holds were left unchanged, not freshly queried; they must be freshly proven before any future publication. QR staging was untouched. No custody acknowledgment was performed. Framework adoption and maintenance ownership remain unaccepted.
 
 Recommend testing the signed Distroless Debian 13 Node 22 parents below, with explicit BusyBox/npm only in build stages and a shell-free final image. This is a feasibility candidate, **not image security acceptance**. All 43 historical Debian highs remain unresolved until exact-image scans demonstrate their disposition. No package from unstable/testing/experimental was introduced and no scan suppression or threshold exception was added.

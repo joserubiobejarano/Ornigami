@@ -1,0 +1,3 @@
+Browser tab: 2, Title: "Projects | joserubiobejarano | Netlify", URL: "https://app.netlify.com/teams/joserubiobejarano/projects".
+There has been no change in the accessibility tree.
+The focused UI element is 0 AXWebArea Projects | joserubiobejarano | Netlify, URL: app.netlify.com/teams/joserubiobejarano/projects

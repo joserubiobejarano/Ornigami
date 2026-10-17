@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-17T10:36:56.274Z",
+  "result": "blocked-before-publication",
+  "authorizedSource": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "authorizedLock": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "remoteRestrictedBranch": {
+    "branch": "codex/ornigami-sri-local-prototype-f-20261016",
+    "observedSha": "496b57d147bc2a63182e3489583bb3532d28cfc2",
+    "source": "fresh git ls-remote"
+  },
+  "blocker": {
+    "surface": "Existing private Coolify dashboard",
+    "url": "http://127.0.0.1:18000/projects/vqkyv5dpjpjazuknkgyunioi",
+    "error": "net::ERR_CONNECTION_REFUSED",
+    "uncertainty": "Cannot freshly verify existing Ornigami project/environment resource inventory, deployment watchers or active operations. No tunnel was started and no host operation attempted."
+  },
+  "phases": {
+    "localIdentities": "passed",
+    "githubInventory": "partial: ADMIN/public, hooks empty, expected three Apps and six workflows enumerated",
+    "scheduledRuns": "Latest three visible runs were completed Cron health monitor schedule jobs; not triggered or changed; global active-operation admission not completed",
+    "netlify": "partial: authenticated owner inventory observed, individual repository links and active builds not checked",
+    "vercel": "untested: installed CLI available; no fresh project/operation API query completed",
+    "coolify": "failed access; effective hold unverified",
+    "capacity": "untested: included billing/artifact capacity not freshly checked",
+    "parentLiveProvenance": "untested this admission; exact committed pins verified locally",
+    "publication": "not attempted",
+    "requestCommit": "not created",
+    "linuxTrial": "not started; no run ID",
+    "custody": "not attempted; no artifact exists for this authorization",
+    "runtimeScansBrowsersPersistence": "untested for new candidate"
+  },
+  "githubAppDefinition": {
+    "slug": "coderabbitai",
+    "permissions": {
+      "actions": "read",
+      "checks": "write",
+      "contents": "write",
+      "discussions": "read",
+      "issues": "write",
+      "members": "read",
+      "merge_queues": "read",
+      "metadata": "read",
+      "pull_requests": "write",
+      "statuses": "write",
+      "workflows": "write"
+    },
+    "events": [
+      "issues",
+      "issue_comment",
+      "label",
+      "membership",
+      "merge_group",
+      "organization",
+      "pull_request",
+      "pull_request_review",
+      "pull_request_review_comment",
+      "pull_request_review_thread",
+      "release",
+      "repository",
+      "team"
+    ],
+    "assessment": "Public maximum definition queried freshly; no push event. Full current publication admission remains incomplete; no app settings changed."
+  },
+  "scope": "Read-only integration checks and local documentation only. No push, request commit, external run, acknowledgment, registry/VPS/deployment/provider/framework-adoption action. Holds left unchanged; QR staging untouched.",
+  "next": "Restore access to existing private dashboard tunnel without shared infrastructure changes; repeat complete fresh admission, then proceed under existing exact one-trial authorization only if all checks pass."
+}

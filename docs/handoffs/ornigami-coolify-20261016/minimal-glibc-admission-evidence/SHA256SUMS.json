@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-17T10:36:56.285Z",
+  "files": [
+    {
+      "path": "ADMISSION.json",
+      "bytes": 3185,
+      "sha256": "28647a0bdd58efb61ef4e37920ec1a588f98a3fc250da0ba69c34acb9dbf47f2"
+    },
+    {
+      "path": "github-apps.txt",
+      "bytes": 283,
+      "sha256": "3c0afe06d4df4215500c9c8bcd80b4f3bdbf94882d4f3b508fff6ce35cd81906"
+    },
+    {
+      "path": "netlify-inventory.txt",
+      "bytes": 313,
+      "sha256": "6f77a6486b0d1e6b30d8f9df68bccfd4fd7468094320a8ec95d31e01c0494a31"
+    },
+    {
+      "path": "SOURCE_IDENTITIES.json",
+      "bytes": 5209,
+      "sha256": "eaf470b12b03b7dc6ebaded94a6d98be5acf4e205c7bee0aebb88844c3ed38c8"
+    }
+  ]
+}
