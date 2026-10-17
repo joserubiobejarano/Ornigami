@@ -1,6 +1,15 @@
 import fs from'node:fs';import path from'node:path';import{spawnSync,spawn}from'node:child_process';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';import{requiredStages}from'./scan-image-stages.mjs';
 const here=path.dirname(fileURLToPath(import.meta.url)),hash=b=>createHash('sha256').update(b).digest('hex');
 const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
+import{admitFrozenDatabase,requireFrozenDatabase}from'./frozen-db-admission.mjs';
+export function skipDependentStages(root,sourceSha,reason){
+  fs.mkdirSync(root,{recursive:true});const records=[];
+  for(const stage of requiredStages){const dir=path.join(root,stage),file=path.join(dir,'driver.json');
+    if(!fs.existsSync(file)){fs.mkdirSync(dir,{recursive:true});save(file,{stage,result:'skipped',collectionComplete:false,reason,prerequisite:'shared frozen database admission',recordedAt:new Date().toISOString()});}
+    records.push(JSON.parse(fs.readFileSync(file)));
+  }
+  save(path.join(root,'index.json'),aggregate(records,sourceSha));return records;
+}
 export function aggregate(records,sourceSha){return{schema:1,...(sourceSha?{sourceSha}:{}),expectedStages:requiredStages,stages:requiredStages.map(stage=>records.find(x=>x.stage===stage)??{stage,result:'skipped',reason:'phase did not produce a receipt'}),result:requiredStages.every(s=>records.some(x=>x.stage===s&&x.result==='passed'))?'passed':'failed'};}
 export function rejectReexecution(event){return(event.vertexes??[event]).some(v=>/\bRUN\b/.test(v.name??'')&&(v.started||v.completed)&&v.cached!==true);}
 export function cachedTargetRun(event,target){return(event.vertexes??[event]).some(v=>v.name?.startsWith('['+target+' ')&&/\bRUN\b/.test(v.name)&&v.cached===true);}
@@ -8,16 +17,26 @@ export function remainingSeconds(deadline){const n=Math.floor(Number(deadline)-D
 export function validateBuilderObservation(last){if(!last?.final||last.exit!==0)throw Error('Final owned-builder observation unavailable');for(const[key,value]of[['memory.max','8589934592'],['memory.swap.max','0'],['cpu.max','300000 100000']])if(!last.metrics.includes('=='+key+'==\n'+value+'\n'))throw Error('Observed builder limit drift');const events=last.metrics.match(/==memory.events==\n([\s\S]*?)(?=\n==)/)?.[1];if(!events||['oom','oom_kill','oom_group_kill'].some(k=>!events.split('\n').includes(k+' 0')))throw Error('Builder OOM/kill counters nonzero or unavailable');return true;}
 async function fileHash(file){const h=createHash('sha256');for await(const b of fs.createReadStream(file))h.update(b);return h.digest('hex');}
 async function main(){
-  const mode=process.argv[2];if(!['parents','final','intermediates','aggregate','cleanup'].includes(mode))throw Error('Expected parents/final/intermediates/aggregate/cleanup');
+  const mode=process.argv[2];if(!['admit','check','parents','final','intermediates','aggregate','cleanup'].includes(mode))throw Error('Expected admit/check/parents/final/intermediates/aggregate/cleanup');
   const temp=process.env.RUNNER_TEMP,source=process.env.SOURCE_SHA,evidence=process.env.ORNIGAMI_EVIDENCE_DIR;if(!temp||!evidence||!/^[0-9a-f]{40}$/.test(source??''))throw Error('Admitted source/workspace required');
   const root=path.join(evidence,'stage-scans');fs.mkdirSync(root,{recursive:true});
   const records=()=>requiredStages.flatMap(stage=>{const file=path.join(root,stage,'driver.json');return fs.existsSync(file)?[JSON.parse(fs.readFileSync(file))]:[];});
+  const admissionDirectory=path.join(root,'database-admission'),trivyPath=path.join(temp,'trivy'),cacheDirectory=path.join(temp,'trivy-cache');
+  if(mode==='admit'){
+    let result;try{result=await admitFrozenDatabase({cacheDirectory,outputDirectory:admissionDirectory,sourceSha:source,scannerPath:trivyPath,scannerSha256:'1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19'});}
+    catch(error){skipDependentStages(root,source,'Shared DB admission unavailable: '+error.message);throw error;}
+    if(result.result!=='passed'){skipDependentStages(root,source,'Shared DB admission failed: '+result.errors.map(x=>x.code).join(', '));process.exitCode=1;}
+    console.log(JSON.stringify({result:result.result,errors:result.errors,scope:'single shared prerequisite; no role pull/scan/build'}));return;
+  }
   if(mode==='cleanup'){
     const results=[];for(const r of records().filter(x=>x.ownedImage&&x.reference&&/^sha256:[0-9a-f]{64}$/.test(x.imageId??''))){const check=spawnSync('docker',['image','inspect',r.reference,'--format','{{.Id}}'],{encoding:'utf8'});if(check.status!==0){results.push({stage:r.stage,result:'already absent'});continue;}if(check.stdout.trim()!==r.imageId){results.push({stage:r.stage,result:'preserved identity drift'});continue;}const removed=spawnSync('docker',['image','rm',r.reference],{encoding:'utf8'});results.push({stage:r.stage,result:removed.status===0?'removed exact claimed image':'failed removal',exit:removed.status});}
     for(const stage of requiredStages){const receipt=path.join(root,stage,'filesystem/spool-ownership.json');if(!fs.existsSync(receipt))continue;const own=JSON.parse(fs.readFileSync(receipt));if(!fs.existsSync(own.directory))continue;const actual=fs.realpathSync(own.directory);if(path.dirname(actual)!==fs.realpathSync(temp)||!path.basename(actual).startsWith('ornigami-inspect-spool-')||(process.getuid&&fs.statSync(actual).uid!==process.getuid())){results.push({stage,result:'preserved unproven spool ownership'});continue;}fs.rmSync(actual,{recursive:true,force:true});results.push({stage,result:'removed exact claimed spool'});}
     save(path.join(root,'cleanup.json'),results);console.log(JSON.stringify(results));if(results.some(x=>!['already absent','removed exact claimed image','removed exact claimed spool'].includes(x.result)))process.exitCode=1;return;
   }
   if(mode==='aggregate'){const result=aggregate(records(),source);save(path.join(root,'index.json'),result);process.exitCode=result.result==='passed'?0:1;return;}
+  try{await requireFrozenDatabase({admissionDirectory,cacheDirectory,scannerPath:trivyPath,scannerSha256:'1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19',sourceSha:source});}
+  catch(error){skipDependentStages(root,source,'Shared DB prerequisite unavailable/drifted: '+error.message);throw error;}
+  if(mode==='check'){console.log('Shared frozen DB lease/content remains valid; no admission repeated');return;}
   const policy=JSON.parse(fs.readFileSync(path.join(here,'minimal-parent-policy.json'))),node=process.execPath,cache=path.join(temp,'trivy-cache'),trivy=path.join(temp,'trivy');
   const parents=Object.fromEntries(policy.parents.map(x=>[x.role,'gcr.io/distroless/nodejs22-debian13@'+x.amd64Digest]));
   parents.buildkit='moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea';parents['dockerfile-frontend']='docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e';
@@ -60,19 +79,21 @@ async function main(){
       if(!/^sha256:[0-9a-f]{64}$/.test(record.imageId??''))throw Error('Exact stage image ID missing');
       record.archiveSha256=await fileHash(archive);record.archiveBytes=fs.statSync(archive).size;
       try{scoped(stage,'filesystem',[path.join(here,'analyze-docker-archive.mjs'),archive,path.join(dir,'filesystem'),stage,record.imageId],dir);}catch(error){record.nativeError=error.message;}
-      const receipt=path.join(dir,'filesystem/result.json'),plan={schema:1,sourceSha:source,trivy:{path:trivy,sha256:await fileHash(trivy),cacheDirectory:cache},images:[{stage,archive,archiveSha256:record.archiveSha256,imageId:record.imageId,...(fs.existsSync(receipt)?{filesystemReceipt:receipt,filesystemReceiptSha256:await fileHash(receipt)}:{})}]};
+      const receipt=path.join(dir,'filesystem/result.json'),plan={schema:1,sourceSha:source,trivy:{path:trivy,sha256:await fileHash(trivy),cacheDirectory:cache,admissionDirectory,admissionSha256:await fileHash(path.join(admissionDirectory,'index.json'))},images:[{stage,archive,archiveSha256:record.archiveSha256,imageId:record.imageId,...(fs.existsSync(receipt)?{filesystemReceipt:receipt,filesystemReceiptSha256:await fileHash(receipt)}:{})}]};
       save(path.join(dir,'scan-plan.json'),plan);
       try{scoped(stage,'vulnerabilities',[path.join(here,'scan-image-stages.mjs'),path.join(dir,'scan-plan.json'),path.join(dir,'scan'),'--single'],dir);}catch(error){record.scanError=error.message;}
       const index=JSON.parse(fs.readFileSync(path.join(dir,'scan/index.json')));record.scanResult=index.stages[0];record.resources=['filesystem','vulnerabilities'].map(name=>{const p=path.join(dir,name+'-resources.json');return fs.existsSync(p)?JSON.parse(fs.readFileSync(p)):{resourceResult:'failed',error:'resource receipt missing'};});
       record.result=index.result==='passed'&&!record.nativeError&&record.resources.every(x=>x.resourceResult==='passed')?'passed':'failed-security-native-coverage-or-resources';record.collectionComplete=!!record.scanResult.counts&&record.scanResult.coverage!=='unverified'&&!record.nativeError&&record.resources.every(x=>x.resourceResult==='passed');
+      if(!record.collectionComplete)record.stopDependentRoles=true;
       if(stage==='original-runtime-base')fs.copyFileSync(path.join(dir,'scan',stage,'trivy.json'),path.join(temp,'base-trivy.json'));
       if(stage==='runner')fs.copyFileSync(path.join(dir,'scan',stage,'trivy.json'),path.join(temp,'trivy.json'));
-    }catch(error){record.error=error.message;}
+    }catch(error){record.error=error.message;record.stopDependentRoles=true;}
     finally{
       record.finishedAt=new Date().toISOString();save(path.join(dir,'driver.json'),record);
       if(ownedArchive&&fs.existsSync(archive)){if(path.dirname(path.resolve(archive))!==fs.realpathSync(temp))throw Error('Refusing archive cleanup outside runner temp');fs.unlinkSync(archive);}
       save(path.join(root,'index.json'),aggregate(records(),source));
     }
+    if(record.stopDependentRoles||record.scanResult?.prerequisiteFailure){skipDependentStages(root,source,'Prior role/shared prerequisite failed; no later role attempted: '+(record.error??record.scanResult.error));break;}
   }
   const complete=stages.every(stage=>records().some(x=>x.stage===stage&&x.collectionComplete));if(!complete)process.exitCode=1;
 }

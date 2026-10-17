@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {requireFrozenDatabase} from './frozen-db-admission.mjs';
 
 export const requiredStages = ['original-base', 'original-runtime-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
 const hashBytes = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -12,23 +13,33 @@ const save = (file, data) => writeFileSync(file, JSON.stringify(data, null, 2) +
 // Consumes explicitly prepared Docker archives only. Never builds, pulls, runs
 // containers, mutates a registry, accepts exceptions, or acknowledges custody.
 async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
+  mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
+  const index = {schema:1,mode:partial?'partial-single-stage; aggregate required':'complete-plan',sourceSha:plan.sourceSha,result:'failed',securityThreshold:'zero HIGH/CRITICAL at every stage; no suppression',custody:'not performed; independent later owner check',stages:[]};
+  save(join(outputDirectory,'index.json'),index);
+  let tool,cache,databaseSha256;
+  try{
   if (plan.schema !== 1 || !/^[0-9a-f]{40}$/.test(plan.sourceSha ?? '')) throw Error('Invalid source identity');
   if (!Array.isArray(plan.images) || (partial ? plan.images.length!==1 : requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1)) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All nine required stage/tool images (or explicit single-stage partial mode) and unique valid names are required');
-  const tool = resolve(planDirectory, plan.trivy.path), cache = resolve(planDirectory, plan.trivy.cacheDirectory);
-  if (!/^[0-9a-f]{64}$/.test(plan.trivy.sha256 ?? '') || await hashFile(tool) !== plan.trivy.sha256) throw Error('Scanner binary checksum mismatch');
-  const databaseMetadata = JSON.parse(readFileSync(join(cache, 'db/metadata.json'), 'utf8'));
-  if (!(Date.parse(databaseMetadata.UpdatedAt) <= Date.now()) || !(Date.parse(databaseMetadata.NextUpdate) > Date.now())) throw Error('Database metadata missing, future-dated or expired; prepare a fresh frozen database first');
-  const databaseSha256 = await hashFile(join(cache, 'db/trivy.db'));
-  mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
+  tool = resolve(planDirectory, plan.trivy.path); cache = resolve(planDirectory, plan.trivy.cacheDirectory);
+  if(!plan.trivy.admissionDirectory||!plan.trivy.admissionSha256)throw Error('Single shared database admission receipt and identity are required');
+  const admissionDirectory=resolve(planDirectory,plan.trivy.admissionDirectory);
+  const admission=await requireFrozenDatabase({admissionDirectory,admissionSha256:plan.trivy.admissionSha256,cacheDirectory:cache,scannerPath:tool,scannerSha256:plan.trivy.sha256,sourceSha:plan.sourceSha});
+  databaseSha256=admission.databaseIdentity.sha256;index.scannerBinarySha256=admission.scannerIdentity.sha256;index.databaseMetadata=admission.metadata;index.databaseSha256=databaseSha256;index.databaseAdmissionDirectory=admissionDirectory;
+  }catch(error){
+    index.prerequisiteFailure=true;index.error=error.message;
+    index.stages=(Array.isArray(plan.images)?plan.images:[]).map(x=>({stage:x.stage,result:'skipped',prerequisiteFailure:true,error:error.message,reason:'shared admission failed; scanner not invoked'}));
+    save(join(outputDirectory,'index.json'),index);throw error;
+  }
   const ignorefile = join(outputDirectory, 'empty-ignorefile'); writeFileSync(ignorefile, '');
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('TRIVY_')));
-  const index = { schema: 1, mode:partial?'partial-single-stage; aggregate required':'complete-plan', sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
   save(join(outputDirectory, 'index.json'), index);
   for (const stage of plan.images.map(x => x.stage)) {
     const item = plan.images.find(x => x.stage === stage), record = { stage, result: 'failed', coverage: 'unverified' };
     index.stages.push(record);
     const folder = join(outputDirectory, stage); mkdirSync(folder);
     try {
+      try{await requireFrozenDatabase({admissionDirectory:resolve(planDirectory,plan.trivy.admissionDirectory),admissionSha256:plan.trivy.admissionSha256,cacheDirectory:cache,scannerPath:tool,scannerSha256:plan.trivy.sha256,sourceSha:plan.sourceSha});}
+      catch(error){record.prerequisiteFailure=true;throw error;}
       if (!/^[0-9a-f]{64}$/.test(item.archiveSha256 ?? '') || !/^sha256:[0-9a-f]{64}$/.test(item.imageId ?? '')) throw Error('Archive/image identity missing');
       const archive = resolve(planDirectory, item.archive);
       record.archiveSha256 = await hashFile(archive);
@@ -54,6 +65,8 @@ async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
       const result = invoke(tool, args, { cwd: outputDirectory, env, encoding: 'utf8', timeout: 180_000, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
       record.scannerExit = result.status;
       writeFileSync(join(folder, 'scanner.log'), (result.stdout ?? '') + (result.stderr ?? ''));
+      try{if(await hashFile(join(cache,'db/trivy.db'))!==databaseSha256)throw Error('content changed');}
+      catch(error){index.databaseChanged=true;record.prerequisiteFailure=true;throw Error('Frozen database unavailable/changed during scan; stop dependent roles: '+error.message);}
       if (result.status !== 0 || !existsSync(reportPath)) throw Error('Scanner failed or report absent');
       const report = JSON.parse(readFileSync(reportPath, 'utf8'));
       if(report.SchemaVersion!==2||report.ArtifactType!=='container_image'||report.Metadata?.ImageID!==item.imageId)throw Error('Scanner schema/artifact/image identity mismatch');
@@ -80,8 +93,10 @@ async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
       record.result = (record.counts.CRITICAL ?? 0) || (record.counts.HIGH ?? 0) ? 'failed-security-threshold' : 'passed';
     } catch (error) { record.error = error.message; }
     save(join(outputDirectory, 'index.json'), index); // Keep every preceding result if interrupted.
+    if(record.prerequisiteFailure){for(const remaining of plan.images.slice(index.stages.length))index.stages.push({stage:remaining.stage,result:'skipped',prerequisiteFailure:true,reason:'prior shared prerequisite failed; scanner not invoked'});break;}
   }
-  if (await hashFile(join(cache, 'db/trivy.db')) !== databaseSha256) { index.databaseChanged = true; }
+  try{if(await hashFile(join(cache,'db/trivy.db'))!==databaseSha256)index.databaseChanged=true;}
+  catch(error){index.databaseChanged=true;index.prerequisiteFailure=true;index.error='Frozen database unavailable after scan: '+error.message;}
   index.result = !index.databaseChanged && index.stages.every(x => x.result === 'passed') ? 'passed' : 'failed';
   save(join(outputDirectory, 'index.json'), index);
   return index;

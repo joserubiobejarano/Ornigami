@@ -5,6 +5,7 @@ import { join, basename, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { scanStages, scanOneStage, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
+import {admitFrozenDatabase} from '../scripts/framework-prototype/frozen-db-admission.mjs';
 const sha = data => createHash('sha256').update(data).digest('hex');
 
 async function fixture(callback, modes = {}) {
@@ -19,6 +20,9 @@ async function fixture(callback, modes = {}) {
       return { stage, archive, archiveSha256: sha(readFileSync(archive)), imageId };
     }) };
     const calls = [];
+    const admissionDirectory=join(root,'admission');
+    assert.equal((await admitFrozenDatabase({cacheDirectory:plan.trivy.cacheDirectory,outputDirectory:admissionDirectory,sourceSha,scannerPath:scanner,scannerSha256:plan.trivy.sha256})).result,'passed');
+    plan.trivy.admissionDirectory=admissionDirectory;plan.trivy.admissionSha256=sha(readFileSync(join(admissionDirectory,'index.json')));
     const invoke = (command, args, options) => {
       if (command === 'tar') return { status: 0, stdout: args.at(-1) === 'manifest.json' ? JSON.stringify([{ Config: configName }]) : config };
       assert.equal(command, scanner); calls.push({ args, options });
@@ -86,7 +90,7 @@ test('missing stage rejects an incomplete plan before scanning', () => fixture(a
 
 test('database drift fails even when every fake scan reports zero findings', () => fixture(async f => {
   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
-  assert.equal(result.databaseChanged, true); assert.equal(result.result, 'failed');
+  assert.equal(result.databaseChanged, true); assert.equal(result.result, 'failed');assert.equal(f.calls.length,1);assert.equal(result.stages.filter(x=>x.result==='skipped').length,8);
 }, { mutateDb: true }));
 
 test('historical output destination is never overwritten', () => fixture(async f => {
@@ -95,9 +99,10 @@ test('historical output destination is never overwritten', () => fixture(async f
   assert.equal(readFileSync(join(f.output, 'sentinel'), 'utf8'), 'preserve');
 }));
 
-test('expired database cannot produce a clean security result', () => fixture(async f => {
+test('replacing admitted metadata with expired metadata fails frozen identity before scans', () => fixture(async f => {
   writeFileSync(join(f.root, 'cache/db/metadata.json'), JSON.stringify({UpdatedAt:'2020-01-01',NextUpdate:'2020-01-02'}));
-  await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /expired/); assert.equal(f.calls.length, 0);
+  await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /metadata identity drift/); assert.equal(f.calls.length, 0);
+  assert.equal(JSON.parse(readFileSync(join(f.output,'index.json'))).prerequisiteFailure,true);
 }));
 
 test('an additional runtime parent is scanned and cannot silently escape its high gate', () => fixture(async f => {

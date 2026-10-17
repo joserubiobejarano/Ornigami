@@ -165,15 +165,37 @@ jobs:
           printf '%s  %s\n' 4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71 "$RUNNER_TEMP/cosign" | sha256sum --check
           chmod 700 "$RUNNER_TEMP/cosign"
           "$node_dir/node" "$RUNNER_TEMP/source/scripts/framework-prototype/verify-minimal-parents.mjs" "$RUNNER_TEMP/cosign" "$ORNIGAMI_EVIDENCE_DIR/parent-admission"
+          "$node_dir/node" -e 'const fs=require("node:fs"),p=JSON.parse(fs.readFileSync(process.argv[1])),d=fs.readFileSync(process.argv[2],"utf8");for(const x of p.parents)if(!d.includes("@"+x.amd64Digest))throw Error("Dockerfile parent policy drift")' "$RUNNER_TEMP/source/scripts/framework-prototype/minimal-parent-policy.json" "$RUNNER_TEMP/source/Dockerfile"
+
+      - name: Download bounded frozen database once
+        id: database_download
+        shell: bash
+        run: |
+          set -Eeuo pipefail
           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/stage-scans"
           caller=$(id -un)
+          set +e
           sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
             /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 GOMEMLIMIT=1536MiB \
-            "$node_dir/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-resources.json" "$RUNNER_TEMP/trivy" image --download-db-only --cache-dir "$RUNNER_TEMP/trivy-cache"
-          "$node_dir/node" -e 'const fs=require("node:fs"),p=JSON.parse(fs.readFileSync(process.argv[1])),d=fs.readFileSync(process.argv[2],"utf8");for(const x of p.parents)if(!d.includes("@"+x.amd64Digest))throw Error("Dockerfile parent policy drift")' "$RUNNER_TEMP/source/scripts/framework-prototype/minimal-parent-policy.json" "$RUNNER_TEMP/source/Dockerfile"
+            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-resources.json" "$RUNNER_TEMP/trivy" image --download-db-only --cache-dir "$RUNNER_TEMP/trivy-cache" > "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-download.log" 2>&1
+          download_rc=$?
+          printf '%s\n' "$download_rc" > "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-download-exit.txt"
+          exit "$download_rc"
+
+      - name: Retain and validate shared frozen database before dependent work
+        id: database_admission
+        if: ${{ always() && steps.parent_admission.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          caller=$(id -un)
+          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-admit-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
+            /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 SOURCE_SHA="$SOURCE_SHA" RUNNER_TEMP="$RUNNER_TEMP" ORNIGAMI_EVIDENCE_DIR="$ORNIGAMI_EVIDENCE_DIR" \
+            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-admission-resources.json" "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" admit
 
       - name: Collect complete original parent and tool scans
         id: base_scan
+        if: ${{ success() && steps.database_admission.outcome == 'success' }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -185,6 +207,15 @@ jobs:
           with open(sys.argv[2],'a') as out: out.write(f"critical_count={counts['CRITICAL']}\nhigh_count={counts['HIGH']}\n")
           with open(sys.argv[3],'a') as out: out.write(f"\nOriginal minimal runtime base: CRITICAL={counts['CRITICAL']} HIGH={counts['HIGH']}; both parents and tooling scans retained; strict aggregate gate remains independent.\n")
           PY
+
+      - name: Require shared database lease before any compilation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          caller=$(id -un)
+          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-check-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
+            /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 SOURCE_SHA="$SOURCE_SHA" RUNNER_TEMP="$RUNNER_TEMP" ORNIGAMI_EVIDENCE_DIR="$ORNIGAMI_EVIDENCE_DIR" \
+            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-prebuild-check-resources.json" "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" check
 
       - name: Create bounded serial BuildKit builder
         id: buildkit
@@ -619,6 +650,7 @@ jobs:
           FRAMEWORK_BROWSER_EXIT_CODE: ${{ steps.framework_browser.outputs.exit_code }}
           BASE_GATE_OUTCOME: ${{ steps.base_advisory_gate.outcome }}
           ALL_STAGE_OUTCOME: ${{ steps.all_stage_gate.outcome }}
+          DATABASE_ADMISSION_OUTCOME: ${{ steps.database_admission.outcome }}
           OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
           OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
           OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
@@ -731,6 +763,7 @@ jobs:
           metadata["capture_completeness_status"] = __import__("os").environ["CAPTURE_COMPLETENESS"]
           metadata["custody_status"] = "not-assessed-by-capture"
           metadata["all_stage_gate_outcome"] = __import__("os").environ.get("ALL_STAGE_OUTCOME", "unknown")
+          metadata["database_admission_outcome"] = __import__("os").environ.get("DATABASE_ADMISSION_OUTCOME", "unknown")
           stages = root / "stage-scans/index.json"
           expected=["original-base","original-runtime-base","build-base","deps","builder","prod-deps","runner","buildkit","dockerfile-frontend"]
           stages.parent.mkdir(parents=True,exist_ok=True)
@@ -757,6 +790,30 @@ jobs:
               metadata["capture_completeness_status"]="failed"
           stages.write_text(json.dumps(data,indent=2)+"\n")
           (stages.parent/"completeness-status.txt").write_text(stage_capture+"\n")
+          if metadata["database_admission_outcome"] in ("success", "failure"):
+              try:
+                  dbdir=stages.parent/"database-admission"
+                  for name in ("index.json","clock.json","validation-clock.json","metadata-identity.json","databaseIdentity.json","scannerIdentity.json"):
+                      if not (dbdir/name).is_file() or not (dbdir/name).stat().st_size:
+                          raise ValueError("missing shared DB admission receipt: "+name)
+                  db=json.loads((dbdir/"index.json").read_text())
+                  if db.get("phase") != "complete" or db["sourceSha"] != metadata["source_sha"] or db["result"] != ("passed" if metadata["database_admission_outcome"] == "success" else "failed"):
+                      raise ValueError("shared DB admission source/result mismatch")
+                  if db.get("metadataIdentity") and not (dbdir/"metadata.original.bin").is_file():
+                      raise ValueError("original bounded metadata missing")
+                  if db.get("metadataIdentity"):
+                      original=(dbdir/"metadata.original.bin").read_bytes()
+                      identity=db["metadataIdentity"]
+                      digest=hashlib.sha256(original).hexdigest()
+                      if len(original)>65536 or len(original)!=identity["retainedBytes"] or digest!=identity["retainedSha256"] or (not identity["truncated"] and (identity["sha256"]!=digest or identity["bytes"]!=len(original))):
+                          raise ValueError("original metadata content/identity mismatch")
+                  metadata["database_diagnostics_status"]="collected"
+              except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+                  metadata["database_diagnostics_status"]="failed: "+str(error)
+                  metadata["capture_completeness_status"]="failed"
+                  (stages.parent/"completeness-status.txt").write_text("failed\n")
+          else:
+              metadata["database_diagnostics_status"]="not-run"
           metadata["all_stage_evidence_status"] = data["result"]
           files = []
           for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):

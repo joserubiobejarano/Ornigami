@@ -128,7 +128,7 @@ function fakeEnvironment(root, overrides = {}) {
   writeFileSync(summary, "fake workflow summary\n");
   const stepSummary = join(root, "step-local-summary.md");
   writeFileSync(stepSummary, "");
-  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
   const env = {
     ...process.env,
     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
@@ -392,6 +392,22 @@ test('resource gate runs after an available builder even when image build failed
   assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);
   assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
 });
+
+for(const outcome of ['success','failure','skipped','missing-diagnostics','tampered-original'])test(`shared DB ${outcome} capture keeps manifest and custody separate`,()=>withSandbox(root=>{
+ const bad=outcome==='missing-diagnostics'||outcome==='tampered-original';
+ const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped',DATABASE_ADMISSION_OUTCOME:bad?'failure':outcome});
+ const dir=join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans/database-admission');
+ if(outcome!=='skipped'&&outcome!=='missing-diagnostics'){
+  mkdirSync(dir,{recursive:true});const raw='{"Version":2}';writeFileSync(join(dir,'metadata.original.bin'),raw);
+  for(const name of ['clock.json','validation-clock.json','metadata-identity.json','databaseIdentity.json','scannerIdentity.json'])writeFileSync(join(dir,name),JSON.stringify({fixture:true}));
+  writeFileSync(join(dir,'index.json'),JSON.stringify({phase:'complete',sourceSha:env.SOURCE_SHA,result:outcome==='success'?'passed':'failed',metadataIdentity:{sha256:createHash(raw),bytes:Buffer.byteLength(raw),retainedBytes:Buffer.byteLength(raw),retainedSha256:createHash(raw),truncated:false}}));
+  if(outcome==='tampered-original')writeFileSync(join(dir,'metadata.original.bin'),raw+'tampered');
+ }
+ const result=runShell(root,runBlock('evidence_capture'),env);assert.equal(result.status,bad?1:0,result.stderr);
+ const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));assert.equal(manifest.custody_status,'not-assessed-by-capture');
+ assert.equal(manifest.capture_completeness_status,bad?'failed':'passed');assert.match(manifest.database_diagnostics_status,outcome==='skipped'?/not-run/:bad?/failed:/:/collected/);
+ for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
+}));
 
 for (const scenario of ['truncated', 'wrong-type', 'wrong-source', 'missing-receipts']) test(`scan capture preserves manifest and fails on ${scenario}`, () => withSandbox(root => {
   const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped'});

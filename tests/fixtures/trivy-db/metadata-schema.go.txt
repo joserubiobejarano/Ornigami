@@ -1,0 +1,6 @@
+type Metadata struct {
+ Version int `json:",omitempty"`
+ NextUpdate time.Time
+ UpdatedAt time.Time
+ DownloadedAt time.Time
+}
