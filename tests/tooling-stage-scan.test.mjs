@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
 import { join, basename, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { scanStages, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
+import { scanStages, scanOneStage, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
 const sha = data => createHash('sha256').update(data).digest('hex');
 
 async function fixture(callback, modes = {}) {
@@ -26,7 +26,7 @@ async function fixture(callback, modes = {}) {
       if (modes.error === stage) return { status: 17, stderr: 'fictional scanner failure' };
       const packages = [{ Name: 'libc6', Version: '2.41' }];
       const npmPackages = modes.missingNpm === stage ? [] : [{ Name: 'npm', Version: '11.21.1', FilePath: 'opt/ornigami-npm/package.json' }, { Name: 'http-cache-semantics', Version: '4.3.0', FilePath: 'opt/ornigami-npm/node_modules/http-cache-semantics/package.json' }];
-      const report = { Results: [{ Class: 'os-pkgs', Type: 'debian', Packages: modes.noOs === stage ? [] : packages, Vulnerabilities: modes.high?.includes(stage) ? [{ Severity: 'HIGH', PkgName: 'libc6', VulnerabilityID: 'fixture-CVE' }] : [] }, { Class: 'lang-pkgs', Type: 'node-pkg', Packages: npmPackages, Vulnerabilities: [] }] };
+      const report = {SchemaVersion:2,ArtifactType:'container_image',Metadata:{ImageID:modes.wrongImage===stage?'sha256:'+'0'.repeat(64):imageId}, Results: modes.scratch===stage?[{Class:'lang-pkgs',Type:'gobinary',Target:'bin/frontend',Packages:[{Name:'stdlib',Version:'go1.25.3'}],Vulnerabilities:modes.high?.includes(stage)?[{Severity:'HIGH',VulnerabilityID:'fixture-go-CVE'}]:[]}]:[{ Class: 'os-pkgs', Type: 'debian', Packages: modes.noOs === stage ? [] : packages, Vulnerabilities: modes.high?.includes(stage) ? [{ Severity: 'HIGH', PkgName: 'libc6', VulnerabilityID: 'fixture-CVE' }] : [] }, { Class: 'lang-pkgs', Type: 'node-pkg', Packages: npmPackages, Vulnerabilities: [] }] };
       writeFileSync(reportPath, JSON.stringify(report));
       if (modes.mutateDb) writeFileSync(join(root, 'cache/db/trivy.db'), 'changed');
       return { status: 0, stdout: 'fictional scanner success' };
@@ -35,9 +35,9 @@ async function fixture(callback, modes = {}) {
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
-test('all eight stages retain complete inventories and explicit unchanged scan coverage', () => fixture(async f => {
+test('all nine stages retain complete inventories and explicit unchanged scan coverage', () => fixture(async f => {
   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
-  assert.equal(result.result, 'passed'); assert.equal(result.stages.length, 8); assert.equal(f.calls.length, 8);
+  assert.equal(result.result, 'passed'); assert.equal(result.stages.length, 9); assert.equal(f.calls.length, 9);
   for (const call of f.calls) {
     for (const flag of ['--list-all-pkgs', '--ignore-unfixed=false', '--skip-db-update']) assert.ok(call.args.includes(flag));
     assert.equal(call.args[call.args.indexOf('--pkg-types') + 1], 'os,library');
@@ -52,13 +52,13 @@ test('all eight stages retain complete inventories and explicit unchanged scan c
 
 test('base/final highs fail independently while every tooling stage is still scanned', () => fixture(async f => {
   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
-  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 8);
+  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 9);
   for (const stage of ['original-base', 'runner']) assert.equal(result.stages.find(s => s.stage === stage).result, 'failed-security-threshold');
 }, { high: ['original-base', 'runner'] }));
 
 test('scanner error preserves exact exit/log and later stage results', () => fixture(async f => {
   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
-  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 8);
+  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 9);
   assert.equal(result.stages.find(s => s.stage === 'builder').scannerExit, 17);
   assert.match(readFileSync(join(f.output, 'builder/scanner.log'), 'utf8'), /fictional scanner failure/);
   assert.equal(result.stages.at(-1).result, 'passed');
@@ -77,11 +77,11 @@ test('absent OS inventory cannot pass as a clean image', () => fixture(async f =
 test('identity mismatch fails that stage while preserving other scans', () => fixture(async f => {
   f.plan.images[0].archiveSha256 = '0'.repeat(64);
   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
-  assert.equal(result.result, 'failed'); assert.match(result.stages[0].error, /checksum mismatch/); assert.equal(f.calls.length, 7);
+  assert.equal(result.result, 'failed'); assert.match(result.stages[0].error, /checksum mismatch/); assert.equal(f.calls.length, 8);
 }));
 
 test('missing stage rejects an incomplete plan before scanning', () => fixture(async f => {
-  f.plan.images.pop(); await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /eight/); assert.equal(f.calls.length, 0);
+  f.plan.images.pop(); await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /nine/); assert.equal(f.calls.length, 0);
 }));
 
 test('database drift fails even when every fake scan reports zero findings', () => fixture(async f => {
@@ -101,8 +101,15 @@ test('expired database cannot produce a clean security result', () => fixture(as
 }));
 
 test('an additional runtime parent is scanned and cannot silently escape its high gate', () => fixture(async f => {
-  f.plan.images.push({...f.plan.images[0], stage:'original-runtime-base'});
+  f.plan.images.push({...f.plan.images[0], stage:'supplemental-parent'});
   const result=await scanStages(f.plan,f.root,f.output,f.invoke);
-  assert.equal(result.stages.length,9);assert.equal(f.calls.length,9);assert.equal(result.result,'failed');
+  assert.equal(result.stages.length,10);assert.equal(f.calls.length,10);assert.equal(result.result,'failed');
   assert.equal(result.stages.at(-1).result,'failed-security-threshold');
-}, {high:['original-runtime-base']}));
+}, {high:['supplemental-parent']}));
+
+test('scanner image identity mismatch is not accepted as a clean report',()=>fixture(async f=>{const result=await scanStages(f.plan,f.root,f.output,f.invoke);assert.equal(result.result,'failed');assert.match(result.stages.find(x=>x.stage==='runner').error,/identity mismatch/);},{wrongImage:'runner'}));
+test('explicit single-stage collection remains partial and cannot claim aggregate coverage',()=>fixture(async f=>{f.plan.images=f.plan.images.filter(x=>x.stage==='build-base');const result=await scanOneStage(f.plan,f.root,f.output,f.invoke);assert.equal(result.result,'passed');assert.match(result.mode,/partial-single-stage/);assert.equal(result.stages.length,1);}));
+for(const unmatched of [false,true])test(`bare-Go frontend requires hash-bound complete native coverage (${unmatched?'unmatched ELF fails':'matching targets retain highs'})`,()=>fixture(async f=>{
+ const image=f.plan.images.find(x=>x.stage==='dockerfile-frontend'),receipt=join(f.root,'frontend-filesystem.json');writeFileSync(receipt,JSON.stringify({result:'passed',imageId:image.imageId,hasOsPackageDatabase:false,nativeFiles:unmatched?2:1,nativePaths:unmatched?['bin/frontend','bin/unknown-c']:['bin/frontend']}));image.filesystemReceipt=receipt;image.filesystemReceiptSha256=sha(readFileSync(receipt));
+ const result=await scanStages(f.plan,f.root,f.output,f.invoke);assert.equal(result.result,'failed');const entry=result.stages.find(x=>x.stage==='dockerfile-frontend');if(unmatched)assert.match(entry.error,/OS package inventory/);else{assert.equal(entry.result,'failed-security-threshold');assert.equal(entry.counts.HIGH,1);assert.match(entry.osCoverage,/No OS database/);}
+},{scratch:'dockerfile-frontend',high:['dockerfile-frontend']}));

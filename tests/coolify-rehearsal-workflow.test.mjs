@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash as createHashImpl } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -128,6 +128,7 @@ function fakeEnvironment(root, overrides = {}) {
   writeFileSync(summary, "fake workflow summary\n");
   const stepSummary = join(root, "step-local-summary.md");
   writeFileSync(stepSummary, "");
+  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
   const env = {
     ...process.env,
     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
@@ -148,6 +149,8 @@ function fakeEnvironment(root, overrides = {}) {
     GITHUB_REF: "refs/heads/local-test",
     GITHUB_EVENT_NAME: "push",
     SOURCE_SHA: "b".repeat(40),
+    ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now()/1000)+1440),
+    EXPECTED_OBSERVED_BUILDER_ID: 'a'.repeat(64),
     EXPECTED_LOCK_SHA256: "c".repeat(64),
     ADMISSION_OUTCOME: "success",
     RUNNER_PREFLIGHT_OUTCOME: "success",
@@ -250,6 +253,7 @@ test("success evidence capture hashes scan/runtime receipts and excludes the ima
     for (const file of ["runtime-first-cgroup.txt", "runtime-after-restart-cgroup.txt", "runtime-after-recreate-cgroup.txt"]) {
       writeFileSync(join(evidence, "runtime", file), counters());
     }
+    writeFileSync(join(evidence,"runtime/native-image-formats.json"),JSON.stringify({result:"passed"}));
     const result = runShell(root, runBlock("evidence_capture"), env);
     assert.equal(result.status, 0, result.stderr);
     verifyManifest(evidence);
@@ -324,6 +328,7 @@ ${failure ? `printf '%s\\n' '{"assertion":"exact-fixture-assertion","status":403
 printf 'exact-fixture-assertion; status=403; exit=23\\n' > "$report_dir/failure-evidence.txt"` : `printf 'restart fixture counters\\n' > "$report_dir/runtime-after-restart-cgroup.txt"
 printf 'recreate fixture counters\\n' > "$report_dir/runtime-after-recreate-cgroup.txt"`}
 printf 'final fixture counters\\n' > "$report_dir/runtime-final-cgroup.txt"
+printf '{"result":"passed"}\\n' > "$report_dir/native-image-formats.json"
 printf 'sanitized container log\\n' > "$report_dir/container-logs.txt"
 printf 'report=%s/report.txt\\n' "$report_dir"
 exit ${failure ? 23 : 0}
@@ -387,9 +392,25 @@ test('resource gate runs after an available builder even when image build failed
   assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);
   assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
 });
+
+for (const scenario of ['truncated', 'wrong-type', 'wrong-source', 'missing-receipts']) test(`scan capture preserves manifest and fails on ${scenario}`, () => withSandbox(root => {
+  const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped'});
+  const dir=join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans');mkdirSync(dir,{recursive:true});
+  const expected=['original-base','original-runtime-base','build-base','deps','builder','prod-deps','runner','buildkit','dockerfile-frontend'];
+  const data={schema:1,sourceSha:scenario==='wrong-source'?'c'.repeat(40):env.SOURCE_SHA,expectedStages:expected,result:'failed',stages:expected.map(stage=>({stage,result:'failed',collectionComplete:scenario==='missing-receipts'}))};
+  const original=scenario==='truncated'?'{"stages":[':scenario==='wrong-type'?'[]':JSON.stringify(data);
+  writeFileSync(join(dir,'index.json'),original);
+  const result=runShell(root,runBlock('evidence_capture'),env);assert.equal(result.status,1,result.stderr);
+  assert.equal(readFileSync(join(dir,'invalid-index-preserved.txt'),'utf8'),original);
+  const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
+  assert.equal(manifest.capture_completeness_status,'failed');assert.equal(manifest.custody_status,'not-assessed-by-capture');
+  assert.equal(JSON.parse(readFileSync(join(dir,'index.json'),'utf8')).stages.length,9);
+  for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
+}));
 for(const scenario of [{name:'valid counters after build failure',after:counters({cpu:2}),status:0},{name:'OOM after build failure',after:counters({oom:1,cpu:2}),status:1},{name:'reset CPU counters',after:counters({cpu:0}),status:1},{name:'missing counter sections',after:'==memory.max==\n8589934592\n',status:1}]) {
   test(`resource assessment retains ${scenario.name}`,()=>withSandbox(root=>{
     const {env,runnerTemp}=fakeEnvironment(root,{IMAGE_BUILD_OUTCOME:'failure',IMAGE_BUILD_EXIT_CODE:'17'});
+    mkdirSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner'),{recursive:true});writeFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner/full-build-observations.jsonl'),JSON.stringify({containerId:'a'.repeat(64),final:true,exit:0,metrics:counters()})+'\n');
     writeFileSync(join(runnerTemp,'builder-before-build.txt'),counters());
     writeFileSync(join(runnerTemp,'builder-after-build.txt'),scenario.after);
     const result=runShell(root,runBlock('build_resources'),env);

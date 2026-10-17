@@ -4,16 +4,16 @@ import { spawnSync } from 'node:child_process';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const requiredStages = ['original-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
+export const requiredStages = ['original-base', 'original-runtime-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
 const hashBytes = bytes => createHash('sha256').update(bytes).digest('hex');
 async function hashFile(file) { const hash = createHash('sha256'); for await (const bytes of createReadStream(file)) hash.update(bytes); return hash.digest('hex'); }
 const save = (file, data) => writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
 
 // Consumes explicitly prepared Docker archives only. Never builds, pulls, runs
 // containers, mutates a registry, accepts exceptions, or acknowledges custody.
-export async function scanStages(plan, planDirectory, outputDirectory, invoke = spawnSync) {
+async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
   if (plan.schema !== 1 || !/^[0-9a-f]{40}$/.test(plan.sourceSha ?? '')) throw Error('Invalid source identity');
-  if (!Array.isArray(plan.images) || requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All eight required stage/tool images and unique valid names are required');
+  if (!Array.isArray(plan.images) || (partial ? plan.images.length!==1 : requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1)) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All nine required stage/tool images (or explicit single-stage partial mode) and unique valid names are required');
   const tool = resolve(planDirectory, plan.trivy.path), cache = resolve(planDirectory, plan.trivy.cacheDirectory);
   if (!/^[0-9a-f]{64}$/.test(plan.trivy.sha256 ?? '') || await hashFile(tool) !== plan.trivy.sha256) throw Error('Scanner binary checksum mismatch');
   const databaseMetadata = JSON.parse(readFileSync(join(cache, 'db/metadata.json'), 'utf8'));
@@ -22,7 +22,7 @@ export async function scanStages(plan, planDirectory, outputDirectory, invoke = 
   mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
   const ignorefile = join(outputDirectory, 'empty-ignorefile'); writeFileSync(ignorefile, '');
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('TRIVY_')));
-  const index = { schema: 1, sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
+  const index = { schema: 1, mode:partial?'partial-single-stage; aggregate required':'complete-plan', sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
   save(join(outputDirectory, 'index.json'), index);
   for (const stage of plan.images.map(x => x.stage)) {
     const item = plan.images.find(x => x.stage === stage), record = { stage, result: 'failed', coverage: 'unverified' };
@@ -56,16 +56,26 @@ export async function scanStages(plan, planDirectory, outputDirectory, invoke = 
       writeFileSync(join(folder, 'scanner.log'), (result.stdout ?? '') + (result.stderr ?? ''));
       if (result.status !== 0 || !existsSync(reportPath)) throw Error('Scanner failed or report absent');
       const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+      if(report.SchemaVersion!==2||report.ArtifactType!=='container_image'||report.Metadata?.ImageID!==item.imageId)throw Error('Scanner schema/artifact/image identity mismatch');
       const results = report.Results ?? [];
       const packages = results.flatMap(r => (r.Packages ?? []).map(p => ({ target: r.Target, class: r.Class, type: r.Type, ...p })));
       save(join(folder, 'package-inventory.json'), packages);
       record.packageCount = packages.length;
-      if (!packages.length || !results.some(r => r.Class === 'os-pkgs' && r.Packages?.length)) throw Error('Missing complete OS package inventory');
+      record.counts = {};
+      for (const r of results) for (const v of r.Vulnerabilities ?? []) record.counts[v.Severity] = (record.counts[v.Severity] ?? 0) + 1;
+      let provenScratch=false;
+      if(stage==='dockerfile-frontend'&&item.filesystemReceipt&&item.filesystemReceiptSha256){
+        const receipt=resolve(planDirectory,item.filesystemReceipt),bytes=readFileSync(receipt);
+        if(hashBytes(bytes)!==item.filesystemReceiptSha256)throw Error('Filesystem receipt digest mismatch');
+        const metadata=JSON.parse(bytes);
+        const goTargets=results.filter(r=>r.Type==='gobinary'&&r.Packages?.length).map(r=>r.Target.replace(/^\.?\//,'')).sort();
+        provenScratch=metadata.result==='passed'&&metadata.imageId===item.imageId&&metadata.hasOsPackageDatabase===false&&metadata.nativeFiles>0&&JSON.stringify(metadata.nativePaths)===JSON.stringify(goTargets);
+      }
+      if (!packages.length || (!results.some(r => r.Class === 'os-pkgs' && r.Packages?.length)&&!provenScratch)) throw Error('Missing complete OS package inventory or proven bare-Go frontend coverage');
+      record.osCoverage=provenScratch?'No OS database in complete hash-bound filesystem; native closure and Go binary package inventory required':'OS package inventory present';
       const npmPackages = packages.filter(p => /(?:^|\/)opt\/ornigami-npm\//.test(p.FilePath ?? ''));
       if (['build-base', 'deps', 'builder', 'prod-deps'].includes(stage) && (!npmPackages.length || !npmPackages.some(p => p.Name === 'npm' && p.Version === '11.21.1'))) throw Error('Upgraded npm tree/root version not inventoried');
       record.upgradedNpmPackageCount = npmPackages.length;
-      record.counts = {};
-      for (const r of results) for (const v of r.Vulnerabilities ?? []) record.counts[v.Severity] = (record.counts[v.Severity] ?? 0) + 1;
       record.coverage = 'complete reported OS/library inventory; not proof of every embedded binary';
       record.result = (record.counts.CRITICAL ?? 0) || (record.counts.HIGH ?? 0) ? 'failed-security-threshold' : 'passed';
     } catch (error) { record.error = error.message; }
@@ -77,11 +87,15 @@ export async function scanStages(plan, planDirectory, outputDirectory, invoke = 
   return index;
 }
 
+export async function scanStages(plan,planDirectory,outputDirectory,invoke=spawnSync){return collect(plan,planDirectory,outputDirectory,invoke,false);}
+export async function scanOneStage(plan,planDirectory,outputDirectory,invoke=spawnSync){return collect(plan,planDirectory,outputDirectory,invoke,true);}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const [, , planFile, output] = process.argv;
+    const [, , planFile, output, mode] = process.argv;
     if (!planFile || !output) throw Error('Usage: node scan-image-stages.mjs PLAN.json NEW_OUTPUT_DIRECTORY');
-    const result = await scanStages(JSON.parse(readFileSync(planFile, 'utf8')), dirname(resolve(planFile)), resolve(output));
+    if(mode&&mode!=='--single')throw Error('Unknown collection mode');
+    const result = await (mode?scanOneStage:scanStages)(JSON.parse(readFileSync(planFile, 'utf8')), dirname(resolve(planFile)), resolve(output));
     console.log(JSON.stringify(result)); process.exitCode = result.result === 'passed' ? 0 : 1;
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }
