@@ -31,7 +31,7 @@
         "clsx": "^2.1.1",
         "lucide-react": "^1.31.0",
         "motion": "^12.23.24",
-        "next": "16.4.1",
+        "next": "file:vendor/framework/next-16.4.2-ornigami-sri.2.tgz",
         "next-auth": "5.0.0-beta.32",
         "openai": "^6.49.0",
         "react": "19.2.9",

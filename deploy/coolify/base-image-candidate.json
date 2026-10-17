@@ -1,43 +1,17 @@
 {
-  "candidate": "node:22.23.3-trixie-slim",
-  "verifiedAtUtc": "2026-10-16T17:34:52Z",
-  "registry": "registry-1.docker.io/v2/library/node",
-  "indexDigest": "sha256:154ba2f4d6fec323d28e4f4bb86bba4677f1223391a1979cf521304e03a98dfa",
+  "candidate": "gcr.io/distroless/nodejs22-debian13:nonroot",
   "platform": "linux/amd64",
-  "platformManifestDigest": "sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812",
-  "platformManifestAnnotations": {
-    "org.opencontainers.image.version": "22-trixie-slim",
-    "org.opencontainers.image.created": "2026-10-06T01:45:05Z",
-    "org.opencontainers.image.revision": "81f419144a1251854c6d9afb09eaa39928e724e8",
-    "org.opencontainers.image.source": "https://github.com/nodejs/docker-node.git#81f419144a1251854c6d9afb09eaa39928e724e8:22/trixie-slim",
-    "org.opencontainers.image.base.name": "debian:trixie-slim",
-    "org.opencontainers.image.base.digest": "sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483"
+  "platformManifestDigest": "sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
+  "toolingParent": {
+    "role": "original-base",
+    "variant": "debug-nonroot",
+    "indexDigest": "sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce",
+    "amd64Digest": "sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
+    "configDigest": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842"
   },
-  "scanStatus": "unscanned_candidate_requires_base_and_final_image_scans",
-  "debianBaseLayerInventory": {
-    "manifestDigest": "sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483",
-    "rootfsLayerDigest": "sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e",
-    "rootfsLayerSizeBytes": 29843350,
-    "verifiedLayerSha256": "ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e",
-    "packageInventorySource": "var/lib/dpkg/status extracted read-only from the digest-verified Debian base rootfs layer; Node image subsequent apt install/purge layer may change final inventory",
-    "packages": {
-      "perl-base": "5.40.1-6+deb13u1",
-      "zlib1g": "1:1.3.dfsg+really1.3.1-1+b1",
-      "util-linux": "2.41.5-0+deb13u1",
-      "bsdutils": "1:2.41.5-0+deb13u1",
-      "libblkid1": "2.41.5-0+deb13u1",
-      "libmount1": "2.41.5-0+deb13u1",
-      "libsmartcols1": "2.41.5-0+deb13u1",
-      "libuuid1": "2.41.5-0+deb13u1",
-      "mount": "2.41.5-0+deb13u1",
-      "util-linux-extra": null,
-      "gzip": "1.13-1+deb13u1",
-      "libacl1": "2.3.2-2+b1",
-      "libsystemd0": "257.13-1~deb13u1",
-      "libudev1": "257.13-1~deb13u1",
-      "libtinfo6": "6.5+20250216-2",
-      "ncurses-base": "6.5+20250216-2",
-      "ncurses-bin": "6.5+20250216-2"
-    }
-  }
+  "nodeVersion": "v22.23.3",
+  "opensslVersion": "3.5.8",
+  "nodeBinarySha256": "fde6a4bf8d0562f7751d1a2d6cb9b417c4cfe107bbcb0aa3e9a24e125e348f48",
+  "admission": "Both signed indexes and exact official Node binary locally verified; static native closure only. No exact-image SCA or Linux execution. Historical 43 Debian highs remain unresolved.",
+  "policy": "scripts/framework-prototype/minimal-parent-policy.json"
 }

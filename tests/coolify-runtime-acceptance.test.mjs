@@ -147,6 +147,7 @@ test("cold HTTP failure still runs restart and recreate checks and exits nonzero
     "cache_before='[[\"image\",1,\"digest\"]]'",
     "cold_http_failed=true",
     "cache_check_failed=false",
+    "native_formats_failed=false",
     "restart_http_passed=false",
     "recreate_http_passed=false",
     "restart_cache_passed=false",

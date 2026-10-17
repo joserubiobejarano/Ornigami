@@ -1,0 +1,186 @@
+name: Ornigami frozen DB admission only
+
+on:
+  push:
+    branches:
+      - codex/ornigami-sri-local-prototype-f-20261016
+    paths:
+      - .github/build-requests/ornigami-db-admission.json
+
+permissions:
+  statuses: read
+
+concurrency:
+  group: ornigami-external-image-build
+  cancel-in-progress: false
+
+jobs:
+  admission-only:
+    if: github.event.created == false && github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.run_attempt == 1 && github.ref == 'refs/heads/codex/ornigami-sri-local-prototype-f-20261016'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Initialize run-owned evidence
+        id: initialize
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          root=$(mktemp -d "$RUNNER_TEMP/ornigami-db-only-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")
+          chmod 700 "$root"
+          mkdir -m 700 "$root/evidence"
+          echo "DB_ONLY_ROOT=$root" >> "$GITHUB_ENV"
+          echo "DB_ONLY_DEADLINE=$(( $(date +%s) + 600 ))" >> "$GITHUB_ENV"
+          python3 - "$root" <<'PY'
+          import json, os, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          identity = {key: os.environ[key] for key in ['GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_SHA', 'GITHUB_REF']}
+          for file in [root / 'owner.json', root / 'evidence/run-identity.json']:
+              file.write_text(json.dumps(identity, indent=2) + '\n')
+          PY
+
+      - name: Verify request-only child and exact workflow binding
+        id: protocol
+        shell: bash
+        env:
+          RUN_WORKFLOW_SHA: ${{ github.workflow_sha }}
+          RUN_WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          [[ "$GITHUB_REF" == refs/heads/codex/ornigami-sri-local-prototype-f-20261016 ]]
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$RUN_WORKFLOW_SHA" == "$GITHUB_SHA" ]]
+          [[ "$RUN_WORKFLOW_REF" == 'joserubiobejarano/Ornigami/.github/workflows/ornigami-db-admission-only.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016' ]]
+          repo="$DB_ONLY_ROOT/source"
+          git init --quiet "$repo"
+          git -C "$repo" remote add origin https://github.com/joserubiobejarano/Ornigami.git
+          timeout --kill-after=5s 60s git -C "$repo" fetch --quiet --no-tags --depth=2 origin "$GITHUB_SHA"
+          [[ "$(git -C "$repo" rev-parse FETCH_HEAD)" == "$GITHUB_SHA" ]]
+          read -r request parent extra < <(git -C "$repo" rev-list --parents -n1 "$GITHUB_SHA")
+          [[ "$request" == "$GITHUB_SHA" && "$parent" =~ ^[0-9a-f]{40}$ && -z "${extra:-}" ]]
+          mapfile -t changes < <(git -C "$repo" diff --name-only "$parent" "$request")
+          [[ ${#changes[@]} -eq 1 && "${changes[0]}" == .github/build-requests/ornigami-db-admission.json ]]
+          git -C "$repo" show "$request:.github/build-requests/ornigami-db-admission.json" > "$DB_ONLY_ROOT/request.json"
+          jq -e 'type == "object" and keys == ["packageLockSha256","purpose","sourceSha"] and .purpose == "ornigami-db-admission-only-v1" and (.sourceSha | test("^[0-9a-f]{40}$")) and (.packageLockSha256 | test("^[0-9a-f]{64}$"))' "$DB_ONLY_ROOT/request.json" >/dev/null
+          SOURCE_SHA=$(jq -r .sourceSha "$DB_ONLY_ROOT/request.json")
+          [[ "$SOURCE_SHA" == "$parent" ]]
+          for file in .github/workflows/ornigami-db-admission-only.yml .github/workflows/ornigami-image-rehearsal.yml .github/build-requests/ornigami.json; do
+            [[ "$(git -C "$repo" rev-parse "$parent:$file")" == "$(git -C "$repo" rev-parse "$request:$file")" ]]
+          done
+          lock=$(git -C "$repo" show "$parent:package-lock.json" | sha256sum | cut -d' ' -f1)
+          [[ "$lock" == "$(jq -r .packageLockSha256 "$DB_ONLY_ROOT/request.json")" ]]
+          blob=$(git -C "$repo" rev-parse "$parent:.github/workflows/ornigami-db-admission-only.yml")
+          jq -n --arg requestSha "$request" --arg sourceSha "$SOURCE_SHA" --arg packageLockSha256 "$lock" --arg workflowBlob "$blob" --arg workflowSha "$RUN_WORKFLOW_SHA" --arg workflowRef "$RUN_WORKFLOW_REF" '{requestSha:$requestSha,sourceSha:$sourceSha,packageLockSha256:$packageLockSha256,workflowBlob:$workflowBlob,workflowSha:$workflowSha,workflowRef:$workflowRef}' > "$DB_ONLY_ROOT/evidence/protocol.json"
+          git -C "$repo" checkout --quiet --detach "$SOURCE_SHA"
+          [[ -z "$(git -C "$repo" status --porcelain)" ]]
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+
+      - name: Bounded pinned tool preparation
+        id: bootstrap
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(uname -m)" == x86_64 && "$(uname -s)" == Linux ]]
+          [[ $(getconf _NPROCESSORS_ONLN) -ge 2 ]]
+          [[ $(awk '/MemAvailable:/ {print $2}' /proc/meminfo) -ge 3145728 ]]
+          [[ $(df -PB1 "$DB_ONLY_ROOT" | awk 'NR==2 {print $4}') -ge 21474836480 ]]
+          [[ $(date +%s) -lt "$DB_ONLY_DEADLINE" ]]
+          { date -u +%FT%TZ; uname -a; git --version; curl --version; python3 --version; systemd-run --version; df -PB1 "$DB_ONLY_ROOT"; } > "$DB_ONLY_ROOT/evidence/host-tools.stdout"
+          set +e
+          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-tools-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
+            /usr/sbin/runuser -u "$(id -un)" -- timeout --kill-after=5s 180s /bin/bash "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-bootstrap.sh" "$DB_ONLY_ROOT" \
+            > "$DB_ONLY_ROOT/evidence/bootstrap.stdout" 2> "$DB_ONLY_ROOT/evidence/bootstrap.stderr"
+          code=$?
+          set -e
+          jq -n --argjson exit "$code" '{exit:$exit,result:(if $exit==0 then "passed" else "failed" end)}' > "$DB_ONLY_ROOT/evidence/bootstrap.json"
+          exit "$code"
+
+      - name: One DB download and one shared admission then controlled fixtures
+        id: diagnostic
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ $(date +%s) -lt "$DB_ONLY_DEADLINE" ]]
+          cd "$DB_ONLY_ROOT/source"
+          remaining=$(( DB_ONLY_DEADLINE - $(date +%s) ))
+          (( remaining > 0 && remaining <= 600 ))
+          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-only-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
+            /usr/sbin/runuser -u "$(id -un)" -- env NODE_OPTIONS=--max-old-space-size=512 timeout --kill-after=5s "${remaining}s" \
+            "$DB_ONLY_ROOT/tools/node" --max-old-space-size=512 scripts/framework-prototype/admission-only-worker.mjs "$DB_ONLY_ROOT" "$SOURCE_SHA"
+
+      - name: Capture complete or explicit failed and skipped evidence
+        id: capture
+        if: always() && steps.initialize.outcome == 'success'
+        shell: bash
+        env:
+          PROTOCOL_RESULT: ${{ steps.protocol.outcome }}
+          BOOTSTRAP_RESULT: ${{ steps.bootstrap.outcome }}
+          DIAGNOSTIC_RESULT: ${{ steps.diagnostic.outcome }}
+        run: |
+          set -Eeuo pipefail
+          jq -n --arg protocol "$PROTOCOL_RESULT" --arg bootstrap "$BOOTSTRAP_RESULT" --arg diagnostic "$DIAGNOSTIC_RESULT" '{protocol:$protocol,bootstrap:$bootstrap,diagnostic:$diagnostic}' > "$DB_ONLY_ROOT/evidence/step-outcomes.json"
+          if [[ "$PROTOCOL_RESULT" == success ]]; then
+            python3 "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-capture.py" capture "$DB_ONLY_ROOT/evidence"
+          else
+            # Never execute candidate-owned code after failed source admission.
+            python3 - "$DB_ONLY_ROOT/evidence" <<'PY'
+          import hashlib, json, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          phases = {key: {'result': 'skipped', 'reason': 'source admission failed'} for key in ['download','admission','fixtures']}
+          (root/'phases.json').write_text(json.dumps({'phases':phases}))
+          (root/'capture.json').write_text(json.dumps({'result':'failed','errors':['source admission failed'],'custody':'not-assessed'}))
+          (root/'SUMMARY.md').write_text('# DB admission-only\n\nSource admission failed. All dependent phases skipped. Custody is independent.\n')
+          files = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()]
+          (root/'manifest.json').write_text(json.dumps({'files':files,'capture':'failed'}))
+          PY
+            exit 1
+          fi
+
+      - name: Upload immutable admission evidence
+        id: upload
+        if: always() && steps.initialize.outcome == 'success'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ornigami-db-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.DB_ONLY_ROOT }}/evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Require owner verified durable custody
+        id: custody
+        if: always() && steps.upload.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$ARTIFACT_ID" =~ ^[0-9]+$ && "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]
+          context="ornigami/evidence-local/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
+          description="artifact=${ARTIFACT_ID};sha256=${ARTIFACT_DIGEST}"
+          printf 'Custody required run=%s attempt=%s request=%s artifact=%s sha256=%s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST"
+          for observation in $(seq 1 60); do
+            statuses=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100")
+            if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" 'any(.[]; .context==$context and .description==$description and .state=="success" and .creator.login==$owner)' <<< "$statuses" >/dev/null; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Custody deadline failed; no acceptance; uploaded evidence remains retained.' >&2
+          exit 1
+
+      - name: Scoped cleanup and finished observations
+        if: always() && steps.protocol.outcome == 'success'
+        shell: bash
+        env:
+          CUSTODY_RESULT: ${{ steps.custody.outcome }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$CUSTODY_RESULT" != success ]]; then
+            echo 'Explicit cleanup skipped: durable custody unverified. Ephemeral runner teardown remains platform-controlled.' | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          identity=$(jq -n --arg GITHUB_RUN_ID "$GITHUB_RUN_ID" --arg GITHUB_RUN_ATTEMPT "$GITHUB_RUN_ATTEMPT" --arg GITHUB_SHA "$GITHUB_SHA" --arg GITHUB_REF "$GITHUB_REF" '{GITHUB_RUN_ID:$GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT:$GITHUB_RUN_ATTEMPT,GITHUB_SHA:$GITHUB_SHA,GITHUB_REF:$GITHUB_REF}')
+          timeout --kill-after=5s 90s python3 "$DB_ONLY_ROOT/source/scripts/framework-prototype/admission-only-capture.py" cleanup "$DB_ONLY_ROOT" "$RUNNER_TEMP" "$identity" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo 'Cleanup observations are in finished job logs/summary, recovered separately after custody. They were produced after the immutable artifact.' >> "$GITHUB_STEP_SUMMARY"

@@ -13,6 +13,7 @@ assert.ok(outputArg, 'Usage: build-package.mjs UPSTREAM OFFICIAL_TARBALL WORK OU
 const upstream = path.resolve(upstreamArg), work = path.resolve(workArg), output = path.resolve(outputArg);
 const next = path.join(upstream, 'packages/next');
 const scripts = path.dirname(fileURLToPath(import.meta.url));
+const recipeBytes = fs.readFileSync(fileURLToPath(import.meta.url));
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const command = (exe, args, cwd = upstream) => {
   const result = spawnSync(exe, args, {cwd, stdio: 'inherit', env: process.env, windowsHide: true});
@@ -21,16 +22,18 @@ const command = (exe, args, cwd = upstream) => {
 };
 const gitHead = spawnSync('git', ['rev-parse', 'HEAD'], {cwd: upstream, encoding:'utf8'});
 assert.equal(gitHead.stdout.trim(), '2864b1772c37242a9b40ab4d366eb7d368c2a070');
-const modified = spawnSync('git',['diff','HEAD','--name-only','--','packages/next/src'],{cwd:upstream,encoding:'utf8'});
+const patchPaths = ['packages/next/src', 'packages/next/next-runtime.webpack-config.js'];
+const modified = spawnSync('git',['diff','HEAD','--name-only','--',...patchPaths],{cwd:upstream,encoding:'utf8'});
 assert.equal(modified.status,0);
 for (const relative of modified.stdout.trim().split('\n').filter(Boolean)) {
-  assert.match(relative,/^packages\/next\/src\/.+\.(?:ts|tsx|js)$/);
+  assert.match(relative,/^(?:packages\/next\/src\/.+\.(?:ts|tsx|js)|packages\/next\/next-runtime\.webpack-config\.js)$/);
   const file = path.join(upstream,relative);
   fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n'));
 }
-const sourcePatch = spawnSync('git', ['diff', 'HEAD', '--binary', '--', 'packages/next/src'], {cwd:upstream, maxBuffer:4*1024*1024});
+const sourcePatch = spawnSync('git', ['diff', 'HEAD', '--binary', '--', ...patchPaths], {cwd:upstream, maxBuffer:4*1024*1024});
 assert.equal(sourcePatch.status, 0);
 assert.deepEqual(sourcePatch.stdout, fs.readFileSync(path.join(scripts,'next-16.4.2-sri.patch')), 'Actual full source patch must match reviewable input');
+assert.equal(fs.readFileSync(path.join(next,'next-runtime.webpack-config.js'),'utf8'), fs.readFileSync(path.join(scripts,'overlay/next-runtime.webpack-config.js.source'),'utf8'), 'VM-tested build configuration must match production source');
 const official = fs.readFileSync(officialTarArg);
 assert.equal(sha(official), '44ad2c420d30f7d1a8e4c511759c57eb40ccbbc36213a1bf32b1698bcebd3a1d');
 const lock = spawnSync('git', ['show', 'HEAD:pnpm-lock.yaml'], {cwd: upstream, maxBuffer: 4*1024*1024});
@@ -63,21 +66,25 @@ for (const task of ['server', 'server_esm', 'nextbuild', 'nextbuild_esm',
   command(process.execPath, [taskr, task], next);
 }
 fs.cpSync(path.join(next, 'dist'), path.join(seed, 'dist'), {recursive:true});
-const patch = spawnSync('git', ['diff', 'HEAD', '--binary', '--', 'packages/next/src'], {cwd:upstream, maxBuffer:4*1024*1024});
+command(process.execPath, [path.join(scripts,'check-package-portability.mjs'),seed]);
+const patch = spawnSync('git', ['diff', 'HEAD', '--binary', '--', ...patchPaths], {cwd:upstream, maxBuffer:4*1024*1024});
 assert.equal(patch.status, 0);
 const provenance = {
-  distribution:'ornigami-sri.1-experiment', internalVersion:'16.4.2',
+  distribution:'ornigami-sri.2-experiment', internalVersion:'16.4.2',
   upstreamCommit:gitHead.stdout.trim(), officialPackageSha256:sha(official),
   upstreamLockSha256:sha(lock.stdout), patchSha256:sha(patch.stdout),
   node:process.version, platform:process.platform, arch:process.arch,
-  builderSha256:sha(fs.readFileSync(fileURLToPath(import.meta.url))),
+  builderSha256:sha(recipeBytes),
   packerSha256:sha(fs.readFileSync(path.join(scripts,'deterministic-pack.py'))),
+  runtimeBuildConfigSha256:sha(fs.readFileSync(path.join(next,'next-runtime.webpack-config.js'))),
+  portabilityCheckerSha256:sha(fs.readFileSync(path.join(scripts,'check-package-portability.mjs'))),
   patchedSourceLineEndings:'LF',
   buildMode:'Official verified package seed; source TS server/build outputs and four production App Router bundles rebuilt serially. Unchanged assets and declarations retained.',
   adopted:false, maintenanceOwners:'unassigned',
 };
 fs.writeFileSync(path.join(seed,'ORNIGAMI_PROVENANCE.json'),JSON.stringify(provenance,null,2)+'\n');
 // Deterministic standard-library tar/gzip: sorted paths, fixed modes, epoch 0.
+assert.deepEqual(fs.readFileSync(fileURLToPath(import.meta.url)),recipeBytes,'Recipe changed during build; refuse ambiguous provenance');
 fs.mkdirSync(path.dirname(output),{recursive:true});
 command('python', [path.join(scripts, 'deterministic-pack.py'), seed, output]);
 const bytes = fs.readFileSync(output);

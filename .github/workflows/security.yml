@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore:
       - codex/ornigami-coolify-preparation-20261016
+      - codex/ornigami-sri-local-prototype-f-20261016
   pull_request:
 
 jobs:

@@ -3,7 +3,8 @@ param(
   [Parameter(Mandatory=$true)][string]$Node,
   [Parameter(Mandatory=$true)][string]$Output,
   [int]$Seconds = 1200,
-  [ValidateRange(4,8)][int]$MemoryGiB = 6
+  [ValidateRange(2,8)][int]$MemoryGiB = 6,
+  [ValidateRange(1,3)][int]$CpuCores = 3
 )
 $ErrorActionPreference = 'Stop'
 # The launcher waits for job assignment before it can spawn any work.
@@ -36,6 +37,12 @@ public static class OrnigamiBuildJob {
 $outPath = [IO.Path]::GetFullPath($Output)
 [IO.Directory]::CreateDirectory($outPath) | Out-Null
 $specPath = [IO.Path]::GetFullPath($Spec)
+$specConfig = Get-Content -LiteralPath $specPath -Raw | ConvertFrom-Json
+$effectiveNodeOptions = '--max-old-space-size=4096'
+if ($specConfig.env -and $specConfig.env.PSObject.Properties['NODE_OPTIONS']) { $effectiveNodeOptions = [string]$specConfig.env.NODE_OPTIONS }
+$heapMatches = [regex]::Matches($effectiveNodeOptions, '(?:^|\s)--max-old-space-size(?:=|\s+)(\d+)(?=\s|$)')
+$configuredHeapMiB = $null
+if ($heapMatches.Count -gt 0) { $configuredHeapMiB = [int]$heapMatches[$heapMatches.Count - 1].Groups[1].Value }
 $nodePath = (Resolve-Path -LiteralPath $Node).Path
 $gatePath = Join-Path $outPath 'job-assigned'
 if (Test-Path -LiteralPath $gatePath) { throw 'Use a new output directory for each attempt.' }
@@ -45,7 +52,7 @@ $initialDisk = (Get-PSDrive C).Free
 if ($initialFree -lt (($MemoryGiB + 3) * 1GB)) { throw 'Admission requires job limit plus 3 GiB available physical memory.' }
 if ($initialDisk -lt 40GB) { throw 'Admission requires at least 40 GiB free disk.' }
 $logical = [Environment]::ProcessorCount
-$cpuRate = [uint32][Math]::Floor(10000 * [Math]::Min(3,$logical) / $logical)
+$cpuRate = [uint32][Math]::Floor(10000 * [Math]::Min($CpuCores,$logical) / $logical)
 $job = [OrnigamiBuildJob]::CreateJobObject([IntPtr]::Zero,$null)
 if ($job -eq [IntPtr]::Zero) { throw 'Cannot create bounded build job.' }
 $limits = New-Object OrnigamiBuildJob+Extended
@@ -93,7 +100,8 @@ try {
  $receipt = [ordered]@{
   startedAtUtc=$started.ToString('o'); endedAtUtc=[DateTime]::UtcNow.ToString('o');
   initialFreeBytes=$initialFree; minimumFreeBytes=$minimumFree;
-  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=3; nodeHeapMiB=4096;
+  memoryLimitBytes=($MemoryGiB * 1GB); peakJobCommittedBytes=$peak; cpuLimitCores=$CpuCores; nodeHeapMiB=$configuredHeapMiB;
+  nodeOptions=$effectiveNodeOptions; nodeHeapEvidence='configured NODE_OPTIONS; command-line overrides require separate assessment';
   wallLimitSeconds=$Seconds; durationSeconds=([DateTime]::UtcNow-$started).TotalSeconds;
   diskGrowthLimitBytes=20GB; observedSystemDiskGrowthPeakBytes=$peakDiskDelta;
   exitCode=$exitCode; stopReason=$stopReason;

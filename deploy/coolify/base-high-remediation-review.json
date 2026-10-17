@@ -1,0 +1,1389 @@
+{
+  "observedAt": "2026-10-16T21:31:42.735Z",
+  "historicalScan": "38964204005: base 0 critical/54 high; final image absent",
+  "policy": "No suppression, ignore-unfixed, severity override or zero-high threshold change.",
+  "debianRows": 43,
+  "nodeRows": 11,
+  "preparedTool": {
+    "source": "https://registry.npmjs.org/npm/11.21.1",
+    "observedAt": "2026-10-16T21:28:48.121Z",
+    "name": "npm",
+    "version": "11.21.1",
+    "engines": {
+      "node": "^20.17.0 || >=22.9.0"
+    },
+    "dist": {
+      "shasum": "77c0bf80b262ae49293836d3c98fbea2ffd4490a",
+      "tarball": "https://registry.npmjs.org/npm/-/npm-11.21.1.tgz",
+      "fileCount": 1961,
+      "integrity": "sha512-YTzL6QBEJXyHcTu0JiUc7RKMp+mzlJtl7rGLmERaXUQeFHIMc9atdr6G9M9C8vDWbv40epoTQAzNL2/PtZVDhQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDmeY0Nr8Smv3ktv2GaBCnbv6HYnY239btVI/QF6VWObAIgYHyG028sDBr4Ajlh5CoNyrDPVOY8AT0kLMhUT4tRH+8=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIErOLf4IZ3OOpiB5EquAHrqO7XODqII0AFSg48CUGh+uAiA1hMWFsBkppnVfyA77sWPtnTyOc/P76LJZa3bHaUSojA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 13032050
+    },
+    "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+    "bundledPackageInventory": [
+      {
+        "path": "package/node_modules/brace-expansion/package.json",
+        "name": "brace-expansion",
+        "version": "5.0.12",
+        "engines": {
+          "node": "20 || >=22"
+        }
+      },
+      {
+        "path": "package/node_modules/http-cache-semantics/package.json",
+        "name": "http-cache-semantics",
+        "version": "4.3.0",
+        "engines": null
+      },
+      {
+        "path": "package/node_modules/ip-address/package.json",
+        "name": "ip-address",
+        "version": "10.7.2",
+        "engines": {
+          "node": ">= 12"
+        }
+      },
+      {
+        "path": "package/node_modules/pacote/package.json",
+        "name": "pacote",
+        "version": "21.5.1",
+        "engines": {
+          "node": "^20.17.0 || >=22.9.0"
+        }
+      },
+      {
+        "path": "package/node_modules/sigstore/package.json",
+        "name": "sigstore",
+        "version": "4.1.1",
+        "engines": {
+          "node": "^20.17.0 || >=22.9.0"
+        }
+      },
+      {
+        "path": "package/node_modules/tinyglobby/node_modules/picomatch/package.json",
+        "name": "picomatch",
+        "version": "4.0.4",
+        "engines": {
+          "node": ">=12"
+        }
+      },
+      {
+        "path": "package/package.json",
+        "name": "npm",
+        "version": "11.21.1",
+        "engines": {
+          "node": "^20.17.0 || >=22.9.0"
+        }
+      }
+    ]
+  },
+  "findings": [
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "bsdutils",
+      "installedVersion": "1:2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "bsdutils",
+      "installedVersion": "1:2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "bsdutils",
+      "installedVersion": "1:2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "bsdutils",
+      "installedVersion": "1:2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-54369",
+      "package": "libacl1",
+      "installedVersion": "2.3.2-2+b1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "acl: Symlink traversal privilege escalation via libacl functions",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-54369",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "acl",
+        "fixedUnstable": "2.4.0-1",
+        "condition": "Privileged ACL caller and attacker-controlled path components; new ABI needs coordinated updates",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-54369",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "libblkid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "libblkid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "libblkid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "libblkid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "liblastlog2-2",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "liblastlog2-2",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "liblastlog2-2",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "liblastlog2-2",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "libmount1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "libmount1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "libmount1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "libmount1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "libsmartcols1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "libsmartcols1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "libsmartcols1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "libsmartcols1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-16742",
+      "package": "libsystemd0",
+      "installedVersion": "257.13-1~deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "systemd: systemd-homed: Local privilege escalation via missing home-record signature verification",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-16742",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "systemd",
+        "fixedUnstable": "261.2-1",
+        "condition": "Running systemd-homed and a homed-managed logged-in user",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-16742",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2025-69720",
+      "package": "libtinfo6",
+      "installedVersion": "6.5+20250216-2",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "ncurses: ncurses: Buffer overflow vulnerability may lead to arbitrary code execution.",
+      "url": "https://avd.aquasec.com/nvd/cve-2025-69720",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "ncurses",
+        "fixedUnstable": "6.6+20251231-1",
+        "condition": "infocmp processing malicious terminfo input",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-16742",
+      "package": "libudev1",
+      "installedVersion": "257.13-1~deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "systemd: systemd-homed: Local privilege escalation via missing home-record signature verification",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-16742",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "systemd",
+        "fixedUnstable": "261.2-1",
+        "condition": "Running systemd-homed and a homed-managed logged-in user",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-16742",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "libuuid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "libuuid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "libuuid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "libuuid1",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "login",
+      "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "login",
+      "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "login",
+      "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "login",
+      "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "mount",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "mount",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "mount",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "mount",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2025-69720",
+      "package": "ncurses-base",
+      "installedVersion": "6.5+20250216-2",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "ncurses: ncurses: Buffer overflow vulnerability may lead to arbitrary code execution.",
+      "url": "https://avd.aquasec.com/nvd/cve-2025-69720",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "ncurses",
+        "fixedUnstable": "6.6+20251231-1",
+        "condition": "infocmp processing malicious terminfo input",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2025-69720",
+      "package": "ncurses-bin",
+      "installedVersion": "6.5+20250216-2",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "ncurses: ncurses: Buffer overflow vulnerability may lead to arbitrary code execution.",
+      "url": "https://avd.aquasec.com/nvd/cve-2025-69720",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "ncurses",
+        "fixedUnstable": "6.6+20251231-1",
+        "condition": "infocmp processing malicious terminfo input",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-9538",
+      "package": "perl-base",
+      "installedVersion": "5.40.1-6+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "fix_deferred",
+      "title": "perl-Archive-Tar: perl-Archive-Tar: Denial of Service via crafted tar header with large entry size",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-9538",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "perl",
+        "fixedUnstable": "5.42.3-1",
+        "condition": "Archive::Tar reads a crafted archive entry; deferred upstream-regression review",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-9538",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-76642",
+      "package": "util-linux",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-76642",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Privileged mount helper / authorized fstab post-hooks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78408",
+      "package": "util-linux",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78408",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.4-1",
+        "condition": "Privileged nsenter --join-cgroup against an attacker-controlled target",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78409",
+      "package": "util-linux",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78409",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Authorized X-mount.subdir and attacker-controlled intermediate symlinks",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "/home/runner/work/_temp/node-base.tar (debian 13.7)",
+      "type": "debian",
+      "id": "CVE-2026-78410",
+      "package": "util-linux",
+      "installedVersion": "2.41.5-0+deb13u1",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-78410",
+      "pkgPath": null,
+      "review": {
+        "sourcePackage": "util-linux",
+        "fixedUnstable": "2.42.3-1",
+        "condition": "Restricted privileged bind mount with attacker-writable source path",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+        "compatibleTrixieFix": null,
+        "disposition": "Unresolved. Tracker still marks Trixie vulnerable; do not mix unstable binaries, custom ABI backports or waive the scanner gate.",
+        "applicability": "Requires Linux package/file/privilege proof; non-root alone is not an approved exception."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-102276",
+      "package": "brace-expansion",
+      "installedVersion": "2.0.2",
+      "fixedVersions": "5.0.10, 3.0.7, 2.1.5, 1.1.19",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "brace-expansion: brace-expansion: Denial of Service via stack exhaustion from crafted brace patterns",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-102276",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/brace-expansion/package.json",
+            "name": "brace-expansion",
+            "version": "5.0.12",
+            "engines": {
+              "node": "20 || >=22"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-102278",
+      "package": "brace-expansion",
+      "installedVersion": "2.0.2",
+      "fixedVersions": "5.0.11, 3.0.8, 2.1.6, 1.1.20",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "brace-expansion: brace-expansion: Denial of Service via uncontrolled recursion in nested brace patterns",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-102278",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/brace-expansion/package.json",
+            "name": "brace-expansion",
+            "version": "5.0.12",
+            "engines": {
+              "node": "20 || >=22"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-13149",
+      "package": "brace-expansion",
+      "installedVersion": "2.0.2",
+      "fixedVersions": "5.0.7, 1.1.16, 2.1.2",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "brace-expansion: Brace-expansion: Denial of Service due to exponential-time complexity",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-13149",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/brace-expansion/package.json",
+            "name": "brace-expansion",
+            "version": "5.0.12",
+            "engines": {
+              "node": "20 || >=22"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-14257",
+      "package": "brace-expansion",
+      "installedVersion": "2.0.2",
+      "fixedVersions": "5.0.8, 3.0.3, 2.1.3, 1.1.17",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "brace-expansion: Brace-expansion: Denial of Service via memory exhaustion in expand() function",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-14257",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/brace-expansion/package.json",
+            "name": "brace-expansion",
+            "version": "5.0.12",
+            "engines": {
+              "node": "20 || >=22"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-69152",
+      "package": "brace-expansion",
+      "installedVersion": "2.0.2",
+      "fixedVersions": "1.1.18, 2.1.4, 3.0.6, 5.0.9",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-69152",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/brace-expansion/package.json",
+            "name": "brace-expansion",
+            "version": "5.0.12",
+            "engines": {
+              "node": "20 || >=22"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-93748",
+      "package": "http-cache-semantics",
+      "installedVersion": "4.2.0",
+      "fixedVersions": null,
+      "severity": "HIGH",
+      "status": "affected",
+      "title": "http-cache-semantics: http-cache-semantics: Information Disclosure via max-stale directive",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-93748",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/http-cache-semantics/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/http-cache-semantics/package.json",
+            "name": "http-cache-semantics",
+            "version": "4.3.0",
+            "engines": null
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-ch52-4w7c-c8xp"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": false,
+        "disposition": "Outside published affected range, but no first patched version stated; vendor clarification/fresh scan still required. Not marked fixed."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-69192",
+      "package": "ip-address",
+      "installedVersion": "10.1.0",
+      "fixedVersions": "10.3.1",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "ip-address: ip-address: Inconsistent IP address parsing leads to Server-Side Request Forgery (SSRF) and trust-boundary bypass",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-69192",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/ip-address/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/ip-address/package.json",
+            "name": "ip-address",
+            "version": "10.7.2",
+            "engines": {
+              "node": ">= 12"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-mwp4-54f8-5fhr"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-9496",
+      "package": "pacote",
+      "installedVersion": "19.0.2",
+      "fixedVersions": "21.5.1",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "pacote: Pacote: Denial of Service via crafted spec.rawSpec value in addGitSha function",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-9496",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/pacote/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/pacote/package.json",
+            "name": "pacote",
+            "version": "21.5.1",
+            "engines": {
+              "node": "^20.17.0 || >=22.9.0"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-w4pp-8pjf-rmxw"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-9496",
+      "package": "pacote",
+      "installedVersion": "20.0.1",
+      "fixedVersions": "21.5.1",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "pacote: Pacote: Denial of Service via crafted spec.rawSpec value in addGitSha function",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-9496",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/@npmcli/metavuln-calculator/node_modules/pacote/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/pacote/package.json",
+            "name": "pacote",
+            "version": "21.5.1",
+            "engines": {
+              "node": "^20.17.0 || >=22.9.0"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-w4pp-8pjf-rmxw"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-33671",
+      "package": "picomatch",
+      "installedVersion": "4.0.3",
+      "fixedVersions": "4.0.4, 3.0.2, 2.3.2",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "picomatch: Picomatch: Regular Expression Denial of Service via crafted extglob patterns",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-33671",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/picomatch/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/tinyglobby/node_modules/picomatch/package.json",
+            "name": "picomatch",
+            "version": "4.0.4",
+            "engines": {
+              "node": ">=12"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-c2c7-rcm5-vvqj"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    },
+    {
+      "target": "Node.js",
+      "type": "node-pkg",
+      "id": "CVE-2026-48815",
+      "package": "sigstore",
+      "installedVersion": "3.1.0",
+      "fixedVersions": "4.1.1",
+      "severity": "HIGH",
+      "status": "fixed",
+      "title": "sigstore: Sigstore: Unauthorized certificates accepted due to ignored `certificateOIDs` verification option",
+      "url": "https://avd.aquasec.com/nvd/cve-2026-48815",
+      "pkgPath": "usr/local/lib/node_modules/npm/node_modules/sigstore/package.json",
+      "review": {
+        "preparedTool": "npm@11.21.1",
+        "replacementPackages": [
+          {
+            "path": "package/node_modules/sigstore/package.json",
+            "name": "sigstore",
+            "version": "4.1.1",
+            "engines": {
+              "node": "^20.17.0 || >=22.9.0"
+            }
+          }
+        ],
+        "advisorySources": [
+          "https://github.com/advisories/GHSA-52v5-jr5w-gjxr"
+        ],
+        "stillInPublishedAffectedRange": false,
+        "explicitPatchedVersionReported": true,
+        "disposition": "Prepared pinned whole-tool upgrade; versions outside advisory ranges. Fresh scan required; not a confirmed image fix."
+      }
+    }
+  ],
+  "finalImage": "Historical 4 critical/71 high remain separate; fresh final image scan untested."
+}
