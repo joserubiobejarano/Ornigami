@@ -26,6 +26,11 @@ def capture(evidence):
     evidence = pathlib.Path(evidence)
     evidence.mkdir(parents=True, exist_ok=True)
     errors = []
+    try:
+        outcomes = json.loads((evidence / 'step-outcomes.json').read_text())
+    except Exception as error:
+        outcomes = {}
+        errors.append('workflow outcomes unavailable: ' + str(error))
     phases = {'download': {'result': 'skipped', 'reason': 'bootstrap/admission not reached'},
               'admission': {'result': 'skipped', 'reason': 'bootstrap/admission not reached'},
               'fixtures': {'result': 'skipped', 'reason': 'shared prerequisite not passed'}}
@@ -37,9 +42,13 @@ def capture(evidence):
         except Exception as error:
             errors.append('phase inventory: ' + str(error))
     else:
+        if outcomes.get('diagnostic') in ['success', 'failure', 'cancelled']:
+            errors.append('attempted diagnostic has no phase inventory')
         save(evidence / 'phases.json', {'phases': phases, 'imageWork': 'out-of-scope', 'custody': 'not-assessed'})
     required = ['run-identity.json', 'protocol.json', 'bootstrap.json', 'step-outcomes.json',
                 'bootstrap.stdout', 'bootstrap.stderr', 'host-tools.stdout']
+    if outcomes.get('diagnostic') in ['success', 'failure', 'cancelled']:
+        required += ['resources.json']
     if phases['download']['result'] != 'skipped':
         required += ['download.stdout', 'download.stderr', 'resources.json', 'controller.stdout', 'controller.stderr']
     if phases['fixtures']['result'] != 'skipped':

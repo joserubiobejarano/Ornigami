@@ -4,6 +4,7 @@ import {spawn} from 'node:child_process';
 import {validateResourceObservation} from './admission-only.mjs';
 const [root,sourceSha]=process.argv.slice(2);
 const out=path.join(root,'evidence');fs.mkdirSync(out,{recursive:true});
+fs.writeFileSync(path.join(out,'phases.json'),JSON.stringify({sourceSha,phases:Object.fromEntries(['download','admission','fixtures'].map(name=>[name,{result:'skipped',reason:'worker resource admission has not passed'}])),imageWork:'out-of-scope',custody:'not-assessed'},null,2)+'\n');
 const record={startedAt:new Date().toISOString(),result:'failed',resourceResult:'failed',resourceErrors:[],samples:[],node:process.version,nodeHeapMiB:512};
 const metrics=['memory.max','memory.swap.max','memory.current','memory.peak','memory.events','cpu.max','cpu.stat'];
 let group;

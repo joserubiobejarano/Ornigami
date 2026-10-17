@@ -61,6 +61,10 @@ test('bootstrap failure retains explicit skipped phases and a nonempty manifest'
  assert.ok(Object.values(phases).every(p=>p.result==='skipped'&&p.reason));
  assert.ok(JSON.parse(fs.readFileSync(path.join(root,'evidence/manifest.json'))).files.length>5);
 }));
+test('attempted diagnostic missing its phase inventory fails completeness instead of passing as skipped',()=>temporary(root=>{
+ baseEvidence(root);save(path.join(root,'evidence/step-outcomes.json'),{protocol:'success',bootstrap:'success',diagnostic:'failure'});
+ const c=capture(root);assert.equal(c.status,1,c.stderr);const r=JSON.parse(fs.readFileSync(path.join(root,'evidence/capture.json')));assert.ok(r.errors.includes('attempted diagnostic has no phase inventory'));assert.ok(fs.existsSync(path.join(root,'evidence/manifest.json')));
+}));
 for(const mutation of ['missing-summary-input','missing-original','tampered-original','tampered-clock','tampered-identity','incomplete-admission','missing-resource','missing-exit','dependent-after-rejection'])test(`capture refuses ${mutation} while retaining failure manifest`,()=>temporary(async root=>{
  await controllerFixture(root,mutation==='dependent-after-rejection'?'reject':'success');
  if(mutation==='missing-summary-input')fs.unlinkSync(path.join(root,'evidence/protocol.json'));
