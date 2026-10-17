@@ -1,0 +1,856 @@
+TAP version 13
+# Subtest: controller success: one download, one admission, explicit independent capture
+ok 1 - controller success: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 293.5121
+  type: 'test'
+  ...
+# Subtest: controller reject: one download, one admission, explicit independent capture
+ok 2 - controller reject: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 249.825
+  type: 'test'
+  ...
+# Subtest: controller download-failure: one download, one admission, explicit independent capture
+ok 3 - controller download-failure: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 236.9167
+  type: 'test'
+  ...
+# Subtest: controller fixtures-failure: one download, one admission, explicit independent capture
+ok 4 - controller fixtures-failure: one download, one admission, explicit independent capture
+  ---
+  duration_ms: 269.7173
+  type: 'test'
+  ...
+# Subtest: download executor exception still produces admission failure index and skips fixtures
+ok 5 - download executor exception still produces admission failure index and skips fixtures
+  ---
+  duration_ms: 221.88
+  type: 'test'
+  ...
+# Subtest: bootstrap failure retains explicit skipped phases and a nonempty manifest
+ok 6 - bootstrap failure retains explicit skipped phases and a nonempty manifest
+  ---
+  duration_ms: 186.3974
+  type: 'test'
+  ...
+# Subtest: attempted diagnostic missing its phase inventory fails completeness instead of passing as skipped
+ok 7 - attempted diagnostic missing its phase inventory fails completeness instead of passing as skipped
+  ---
+  duration_ms: 178.5152
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-publication while retaining failure manifest
+ok 8 - capture refuses missing-publication while retaining failure manifest
+  ---
+  duration_ms: 253.8966
+  type: 'test'
+  ...
+# Subtest: capture refuses publication-source-drift while retaining failure manifest
+ok 9 - capture refuses publication-source-drift while retaining failure manifest
+  ---
+  duration_ms: 249.8029
+  type: 'test'
+  ...
+# Subtest: capture refuses publication-repository-drift while retaining failure manifest
+ok 10 - capture refuses publication-repository-drift while retaining failure manifest
+  ---
+  duration_ms: 255.4441
+  type: 'test'
+  ...
+# Subtest: capture refuses download-publication-drift while retaining failure manifest
+ok 11 - capture refuses download-publication-drift while retaining failure manifest
+  ---
+  duration_ms: 253.6502
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-summary-input while retaining failure manifest
+ok 12 - capture refuses missing-summary-input while retaining failure manifest
+  ---
+  duration_ms: 272.2069
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-original while retaining failure manifest
+ok 13 - capture refuses missing-original while retaining failure manifest
+  ---
+  duration_ms: 255.0969
+  type: 'test'
+  ...
+# Subtest: capture refuses tampered-original while retaining failure manifest
+ok 14 - capture refuses tampered-original while retaining failure manifest
+  ---
+  duration_ms: 291.4853
+  type: 'test'
+  ...
+# Subtest: capture refuses tampered-clock while retaining failure manifest
+ok 15 - capture refuses tampered-clock while retaining failure manifest
+  ---
+  duration_ms: 280.3969
+  type: 'test'
+  ...
+# Subtest: capture refuses tampered-identity while retaining failure manifest
+ok 16 - capture refuses tampered-identity while retaining failure manifest
+  ---
+  duration_ms: 256.7686
+  type: 'test'
+  ...
+# Subtest: capture refuses incomplete-admission while retaining failure manifest
+ok 17 - capture refuses incomplete-admission while retaining failure manifest
+  ---
+  duration_ms: 276.2785
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-resource while retaining failure manifest
+ok 18 - capture refuses missing-resource while retaining failure manifest
+  ---
+  duration_ms: 274.104
+  type: 'test'
+  ...
+# Subtest: capture refuses missing-exit while retaining failure manifest
+ok 19 - capture refuses missing-exit while retaining failure manifest
+  ---
+  duration_ms: 277.6012
+  type: 'test'
+  ...
+# Subtest: capture refuses dependent-after-rejection while retaining failure manifest
+ok 20 - capture refuses dependent-after-rejection while retaining failure manifest
+  ---
+  duration_ms: 251.8066
+  type: 'test'
+  ...
+# Subtest: exact-source protocol accepts real local single request-only child
+ok 21 - exact-source protocol accepts real local single request-only child
+  ---
+  duration_ms: 918.605
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses wrong-source
+ok 22 - exact-source protocol refuses wrong-source
+  ---
+  duration_ms: 574.5291
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses wrong-lock
+ok 23 - exact-source protocol refuses wrong-lock
+  ---
+  duration_ms: 851.9346
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses extra-key
+ok 24 - exact-source protocol refuses extra-key
+  ---
+  duration_ms: 573.6782
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses wrong-purpose
+ok 25 - exact-source protocol refuses wrong-purpose
+  ---
+  duration_ms: 601.8266
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses extra-file
+ok 26 - exact-source protocol refuses extra-file
+  ---
+  duration_ms: 585.5052
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses workflow-drift
+ok 27 - exact-source protocol refuses workflow-drift
+  ---
+  duration_ms: 549.6374
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses full-marker-drift
+ok 28 - exact-source protocol refuses full-marker-drift
+  ---
+  duration_ms: 551.6935
+  type: 'test'
+  ...
+# Subtest: exact-source protocol refuses merge request
+ok 29 - exact-source protocol refuses merge request
+  ---
+  duration_ms: 570.1056
+  type: 'test'
+  ...
+# Subtest: cleanup none is confined to run-owned direct child
+ok 30 - cleanup none is confined to run-owned direct child
+  ---
+  duration_ms: 154.3156
+  type: 'test'
+  ...
+# Subtest: cleanup owner-drift is confined to run-owned direct child
+ok 31 - cleanup owner-drift is confined to run-owned direct child
+  ---
+  duration_ms: 181.0365
+  type: 'test'
+  ...
+# Subtest: cleanup outside is confined to run-owned direct child
+ok 32 - cleanup outside is confined to run-owned direct child
+  ---
+  duration_ms: 183.3762
+  type: 'test'
+  ...
+# Subtest: cleanup symlink is confined to run-owned direct child
+ok 33 - cleanup symlink is confined to run-owned direct child
+  ---
+  duration_ms: 203.1665
+  type: 'test'
+  ...
+# Subtest: restricted triggers isolate candidate publication, diagnostic request and full marker
+ok 34 - restricted triggers isolate candidate publication, diagnostic request and full marker
+  ---
+  duration_ms: 1.1002
+  type: 'test'
+  ...
+# Subtest: workflow source-admission failure fallback produces failed manifest and explicit skipped phases
+ok 35 - workflow source-admission failure fallback produces failed manifest and explicit skipped phases
+  ---
+  duration_ms: 159.4727
+  type: 'test'
+  ...
+# Subtest: workflow resource, source binding, evidence, custody and no-image boundaries remain explicit
+ok 36 - workflow resource, source binding, evidence, custody and no-image boundaries remain explicit
+  ---
+  duration_ms: 0.6647
+  type: 'test'
+  ...
+# Subtest: resource policy none keeps exact bounded fail-closed limits
+ok 37 - resource policy none keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.4203
+  type: 'test'
+  ...
+# Subtest: resource policy memory keeps exact bounded fail-closed limits
+ok 38 - resource policy memory keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.1811
+  type: 'test'
+  ...
+# Subtest: resource policy swap keeps exact bounded fail-closed limits
+ok 39 - resource policy swap keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.1019
+  type: 'test'
+  ...
+# Subtest: resource policy cpu keeps exact bounded fail-closed limits
+ok 40 - resource policy cpu keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.0776
+  type: 'test'
+  ...
+# Subtest: resource policy max keeps exact bounded fail-closed limits
+ok 41 - resource policy max keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.0776
+  type: 'test'
+  ...
+# Subtest: resource policy oom keeps exact bounded fail-closed limits
+ok 42 - resource policy oom keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.0649
+  type: 'test'
+  ...
+# Subtest: resource policy oom_kill keeps exact bounded fail-closed limits
+ok 43 - resource policy oom_kill keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.0666
+  type: 'test'
+  ...
+# Subtest: resource policy oom_group_kill keeps exact bounded fail-closed limits
+ok 44 - resource policy oom_group_kill keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.0687
+  type: 'test'
+  ...
+# Subtest: resource policy missing-counter keeps exact bounded fail-closed limits
+ok 45 - resource policy missing-counter keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.064
+  type: 'test'
+  ...
+# Subtest: resource policy disk keeps exact bounded fail-closed limits
+ok 46 - resource policy disk keeps exact bounded fail-closed limits
+  ---
+  duration_ms: 0.067
+  type: 'test'
+  ...
+# Subtest: diagnostic custody none remains run-specific and independent
+ok 47 - diagnostic custody none remains run-specific and independent
+  ---
+  duration_ms: 12.9252
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-workflow remains run-specific and independent
+ok 48 - diagnostic custody wrong-workflow remains run-specific and independent
+  ---
+  duration_ms: 2.5961
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-artifact remains run-specific and independent
+ok 49 - diagnostic custody wrong-artifact remains run-specific and independent
+  ---
+  duration_ms: 1.4162
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-attempt remains run-specific and independent
+ok 50 - diagnostic custody wrong-attempt remains run-specific and independent
+  ---
+  duration_ms: 1.1929
+  type: 'test'
+  ...
+# Subtest: diagnostic custody wrong-digest remains run-specific and independent
+ok 51 - diagnostic custody wrong-digest remains run-specific and independent
+  ---
+  duration_ms: 1.2944
+  type: 'test'
+  ...
+# Subtest: full DB download block success: real publication CLI, recorded scope arguments, no scanner/network
+ok 52 - full DB download block success: real publication CLI, recorded scope arguments, no scanner/network
+  ---
+  duration_ms: 336.6595
+  type: 'test'
+  ...
+# Subtest: full DB download block download-failure: real publication CLI, recorded scope arguments, no scanner/network
+ok 53 - full DB download block download-failure: real publication CLI, recorded scope arguments, no scanner/network
+  ---
+  duration_ms: 303.747
+  type: 'test'
+  ...
+# Subtest: full DB download block manifest-drift: real publication CLI, recorded scope arguments, no scanner/network
+ok 54 - full DB download block manifest-drift: real publication CLI, recorded scope arguments, no scanner/network
+  ---
+  duration_ms: 249.2896
+  type: 'test'
+  ...
+# Subtest: initialization exports a persistent summary path rather than a step-local summary
+ok 55 - initialization exports a persistent summary path rather than a step-local summary
+  ---
+  duration_ms: 163.9051
+  type: 'test'
+  ...
+# Subtest: failed initialization with neither exported path still retains a failed capture manifest
+ok 56 - failed initialization with neither exported path still retains a failed capture manifest
+  ---
+  duration_ms: 712.8389
+  type: 'test'
+  ...
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 57 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 837.0897
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 58 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 826.7267
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 59 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 700.1752
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 60 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 727.2022
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 61 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 462.4089
+  type: 'test'
+  ...
+# Subtest: runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+ok 62 - runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+  ---
+  duration_ms: 1536.2721
+  type: 'test'
+  ...
+# Subtest: failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+ok 63 - failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+  ---
+  duration_ms: 1370.4782
+  type: 'test'
+  ...
+# Subtest: successful runtime missing phase snapshots fails capture but retains its manifest
+ok 64 - successful runtime missing phase snapshots fails capture but retains its manifest
+  ---
+  duration_ms: 657.0737
+  type: 'test'
+  ...
+# Subtest: skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+ok 65 - skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 661.151
+  type: 'test'
+  ...
+# Subtest: skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+ok 66 - skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 766.7482
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 67 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.2279
+  type: 'test'
+  ...
+# Subtest: shared DB success capture keeps manifest and custody separate
+ok 68 - shared DB success capture keeps manifest and custody separate
+  ---
+  duration_ms: 706.1079
+  type: 'test'
+  ...
+# Subtest: shared DB failure capture keeps manifest and custody separate
+ok 69 - shared DB failure capture keeps manifest and custody separate
+  ---
+  duration_ms: 719.467
+  type: 'test'
+  ...
+# Subtest: shared DB skipped capture keeps manifest and custody separate
+ok 70 - shared DB skipped capture keeps manifest and custody separate
+  ---
+  duration_ms: 731.346
+  type: 'test'
+  ...
+# Subtest: shared DB missing-diagnostics capture keeps manifest and custody separate
+ok 71 - shared DB missing-diagnostics capture keeps manifest and custody separate
+  ---
+  duration_ms: 729.8913
+  type: 'test'
+  ...
+# Subtest: shared DB tampered-original capture keeps manifest and custody separate
+ok 72 - shared DB tampered-original capture keeps manifest and custody separate
+  ---
+  duration_ms: 677.5334
+  type: 'test'
+  ...
+# Subtest: shared DB missing-publication capture keeps manifest and custody separate
+ok 73 - shared DB missing-publication capture keeps manifest and custody separate
+  ---
+  duration_ms: 685.6146
+  type: 'test'
+  ...
+# Subtest: shared DB mutable-download capture keeps manifest and custody separate
+ok 74 - shared DB mutable-download capture keeps manifest and custody separate
+  ---
+  duration_ms: 728.277
+  type: 'test'
+  ...
+# Subtest: shared DB publication-source-drift capture keeps manifest and custody separate
+ok 75 - shared DB publication-source-drift capture keeps manifest and custody separate
+  ---
+  duration_ms: 673.6359
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on truncated
+ok 76 - scan capture preserves manifest and fails on truncated
+  ---
+  duration_ms: 745.2452
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on wrong-type
+ok 77 - scan capture preserves manifest and fails on wrong-type
+  ---
+  duration_ms: 687.7378
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on wrong-source
+ok 78 - scan capture preserves manifest and fails on wrong-source
+  ---
+  duration_ms: 710.1618
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on missing-receipts
+ok 79 - scan capture preserves manifest and fails on missing-receipts
+  ---
+  duration_ms: 688.2093
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 80 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 415.7931
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 81 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 377.2591
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 82 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 392.7335
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 83 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 389.1367
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 84 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 126.5761
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 85 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 271.0751
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 86 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 302.1828
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 87 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.541
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 88 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 494.1471
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 89 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 829.5218
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 90 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 15.9363
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 91 - wrong owner never posts a remote status
+  ---
+  duration_ms: 1.9856
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 92 - wrong source never posts a remote status
+  ---
+  duration_ms: 1.0762
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 93 - wrong run never posts a remote status
+  ---
+  duration_ms: 0.8376
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 94 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 0.919
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 95 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 0.7747
+  type: 'test'
+  ...
+# Subtest: canonical fixture follows the actual Trivy 0.76.0 pinned Go metadata declaration
+ok 96 - canonical fixture follows the actual Trivy 0.76.0 pinned Go metadata declaration
+  ---
+  duration_ms: 3.7787
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit missing decision survive admission
+ok 97 - bounded original bytes/clock/hash and explicit missing decision survive admission
+  ---
+  duration_ms: 40.8442
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit malformed decision survive admission
+ok 98 - bounded original bytes/clock/hash and explicit malformed decision survive admission
+  ---
+  duration_ms: 38.6641
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit BOM is not Go JSON metadata decision survive admission
+ok 99 - bounded original bytes/clock/hash and explicit BOM is not Go JSON metadata decision survive admission
+  ---
+  duration_ms: 36.0351
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit invalid UTF8 decision survive admission
+ok 100 - bounded original bytes/clock/hash and explicit invalid UTF8 decision survive admission
+  ---
+  duration_ms: 35.4781
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit wrong schema decision survive admission
+ok 101 - bounded original bytes/clock/hash and explicit wrong schema decision survive admission
+  ---
+  duration_ms: 34.8547
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit missing timestamp decision survive admission
+ok 102 - bounded original bytes/clock/hash and explicit missing timestamp decision survive admission
+  ---
+  duration_ms: 37.7498
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit invalid calendar decision survive admission
+ok 103 - bounded original bytes/clock/hash and explicit invalid calendar decision survive admission
+  ---
+  duration_ms: 38.6613
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit future updated time decision survive admission
+ok 104 - bounded original bytes/clock/hash and explicit future updated time decision survive admission
+  ---
+  duration_ms: 35.6246
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit expired even freshly downloaded decision survive admission
+ok 105 - bounded original bytes/clock/hash and explicit expired even freshly downloaded decision survive admission
+  ---
+  duration_ms: 34.656
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit deadline equality decision survive admission
+ok 106 - bounded original bytes/clock/hash and explicit deadline equality decision survive admission
+  ---
+  duration_ms: 38.2971
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit oversized decision survive admission
+ok 107 - bounded original bytes/clock/hash and explicit oversized decision survive admission
+  ---
+  duration_ms: 47.3931
+  type: 'test'
+  ...
+# Subtest: bounded original bytes/clock/hash and explicit valid decision survive admission
+ok 108 - bounded original bytes/clock/hash and explicit valid decision survive admission
+  ---
+  duration_ms: 35.1388
+  type: 'test'
+  ...
+# Subtest: metadata bytes and clock are durably written before JSON decoding begins
+ok 109 - metadata bytes and clock are durably written before JSON decoding begins
+  ---
+  duration_ms: 35.3591
+  type: 'test'
+  ...
+# Subtest: Go RFC3339Nano offsets are interpreted, impossible dates and weak date-only parsing rejected
+ok 110 - Go RFC3339Nano offsets are interpreted, impossible dates and weak date-only parsing rejected
+  ---
+  duration_ms: 0.42
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses metadata drift without re-admission
+ok 111 - single shared admission refuses metadata drift without re-admission
+  ---
+  duration_ms: 45.7585
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses database drift without re-admission
+ok 112 - single shared admission refuses database drift without re-admission
+  ---
+  duration_ms: 40.898
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses scanner drift without re-admission
+ok 113 - single shared admission refuses scanner drift without re-admission
+  ---
+  duration_ms: 46.6294
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses receipt drift without re-admission
+ok 114 - single shared admission refuses receipt drift without re-admission
+  ---
+  duration_ms: 45.0288
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses expiry drift without re-admission
+ok 115 - single shared admission refuses expiry drift without re-admission
+  ---
+  duration_ms: 36.5126
+  type: 'test'
+  ...
+# Subtest: single shared admission refuses backward drift without re-admission
+ok 116 - single shared admission refuses backward drift without re-admission
+  ---
+  duration_ms: 35.8648
+  type: 'test'
+  ...
+# Subtest: failed shared prerequisite skips all nine roles before invoking any external tool
+ok 117 - failed shared prerequisite skips all nine roles before invoking any external tool
+  ---
+  duration_ms: 159.7136
+  type: 'test'
+  ...
+# Subtest: invalid clock, scanner mismatch and empty DB still retain independent diagnostics
+ok 118 - invalid clock, scanner mismatch and empty DB still retain independent diagnostics
+  ---
+  duration_ms: 29.8993
+  type: 'test'
+  ...
+# Subtest: actual admit CLI failure retains raw evidence and immediately marks all dependent roles skipped
+ok 119 - actual admit CLI failure retains raw evidence and immediately marks all dependent roles skipped
+  ---
+  duration_ms: 196.9033
+  type: 'test'
+  ...
+# Subtest: all nine distinct parent/intermediate/final/tool roles are required independently
+ok 120 - all nine distinct parent/intermediate/final/tool roles are required independently
+  ---
+  duration_ms: 1.1508
+  type: 'test'
+  ...
+# Subtest: cached target export rejects a started uncached RUN instead of retrying compilation
+ok 121 - cached target export rejects a started uncached RUN instead of retrying compilation
+  ---
+  duration_ms: 0.4456
+  type: 'test'
+  ...
+# Subtest: work deadline cannot be missing, exhausted or extended by an invalid value
+ok 122 - work deadline cannot be missing, exhausted or extended by an invalid value
+  ---
+  duration_ms: 0.5389
+  type: 'test'
+  ...
+# Subtest: final observer enforces original limits and OOM counters; pressure is not headroom
+ok 123 - final observer enforces original limits and OOM counters; pressure is not headroom
+  ---
+  duration_ms: 0.3783
+  type: 'test'
+  ...
+# Subtest: official manifest binds exact publication and layer without granting coverage acceptance
+ok 124 - official manifest binds exact publication and layer without granting coverage acceptance
+  ---
+  duration_ms: 1.7023
+  type: 'test'
+  ...
+# Subtest: changed manifest bytes fail before a download can be selected
+ok 125 - changed manifest bytes fail before a download can be selected
+  ---
+  duration_ms: 0.7571
+  type: 'test'
+  ...
+# Subtest: real CLI records exact source before yielding a single immutable repository; refuses replay
+ok 126 - real CLI records exact source before yielding a single immutable repository; refuses replay
+  ---
+  duration_ms: 210.9843
+  type: 'test'
+  ...
+# Subtest: all nine stages retain complete inventories and explicit unchanged scan coverage
+ok 127 - all nine stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 168.303
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 128 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 145.993
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 129 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 135.4167
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 130 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 128.0175
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 131 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 123.4698
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 132 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 135.0234
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 133 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 54.992
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 134 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 68.335
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 135 - historical output destination is never overwritten
+  ---
+  duration_ms: 51.9221
+  type: 'test'
+  ...
+# Subtest: replacing admitted metadata with expired metadata fails frozen identity before scans
+ok 136 - replacing admitted metadata with expired metadata fails frozen identity before scans
+  ---
+  duration_ms: 53.3887
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 137 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 140.0426
+  type: 'test'
+  ...
+# Subtest: scanner image identity mismatch is not accepted as a clean report
+ok 138 - scanner image identity mismatch is not accepted as a clean report
+  ---
+  duration_ms: 131.3268
+  type: 'test'
+  ...
+# Subtest: explicit single-stage collection remains partial and cannot claim aggregate coverage
+ok 139 - explicit single-stage collection remains partial and cannot claim aggregate coverage
+  ---
+  duration_ms: 65.6417
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+ok 140 - bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+  ---
+  duration_ms: 144.6093
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+ok 141 - bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+  ---
+  duration_ms: 134.1295
+  type: 'test'
+  ...
+1..141
+# tests 141
+# suites 0
+# pass 141
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 37967.5215

@@ -1,0 +1,11 @@
+{
+  "executable": "C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/sri-fresh-preparation/node-v22.23.3-win-x64/node.exe",
+  "cwd": "C:\\Users\\joser\\Desktop\\Projects\\Ornigami-coolify-prep-20261016\\.local\\db-pub-wt",
+  "env": {
+    "NODE_OPTIONS": "--max-old-space-size=512"
+  },
+  "args": [
+    "--max-old-space-size=512",
+    "C:\\Users\\joser\\Desktop\\Projects\\Ornigami-coolify-prep-20261016\\.local\\db-pub-wt\\docs\\handoffs\\ornigami-coolify-20261016\\full-db-binding-evidence\\checks.mjs"
+  ]
+}
