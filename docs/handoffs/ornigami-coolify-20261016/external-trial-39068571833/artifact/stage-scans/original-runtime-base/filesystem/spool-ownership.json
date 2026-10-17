@@ -1,0 +1,6 @@
+{
+  "directory": "/home/runner/work/_temp/ornigami-inspect-spool-2nsJvi",
+  "parent": "/home/runner/work/_temp",
+  "uid": 1001,
+  "scope": "run-owned raw layers outside evidence; never upload; cleanup after verified custody if the worker is killed"
+}

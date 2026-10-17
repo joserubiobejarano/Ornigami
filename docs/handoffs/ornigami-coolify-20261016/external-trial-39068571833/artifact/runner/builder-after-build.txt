@@ -1,0 +1,26 @@
+==memory.max==
+8589934592
+==memory.swap.max==
+0
+==memory.peak==
+587522048
+==memory.events==
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
+==cpu.max==
+300000 100000
+==cpu.stat==
+usage_usec 3378513
+user_usec 1929977
+system_usec 1448536
+nice_usec 0
+core_sched.force_idle_usec 0
+nr_periods 55
+nr_throttled 4
+throttled_usec 34532
+nr_bursts 0
+burst_usec 0

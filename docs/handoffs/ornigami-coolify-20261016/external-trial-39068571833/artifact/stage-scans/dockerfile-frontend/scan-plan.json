@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "sourceSha": "d20ea56ac3ead80439d3e5f66cdc4dc34963d40e",
+  "trivy": {
+    "path": "/home/runner/work/_temp/trivy",
+    "sha256": "1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19",
+    "cacheDirectory": "/home/runner/work/_temp/trivy-cache",
+    "admissionDirectory": "/home/runner/work/_temp/ornigami-evidence/stage-scans/database-admission",
+    "admissionSha256": "77a22ab9f49f223a8fe4d766d0f0dc7e9bc1f89593e0e8fb0eefa5d7c41c7c13"
+  },
+  "images": [
+    {
+      "stage": "dockerfile-frontend",
+      "archive": "/home/runner/work/_temp/ornigami-stage-dockerfile-frontend.tar",
+      "archiveSha256": "00fffabe9f1951d0069b1b20d34a5d00324aac15838786e49a5d321b2555ae29",
+      "imageId": "sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4",
+      "filesystemReceipt": "/home/runner/work/_temp/ornigami-evidence/stage-scans/dockerfile-frontend/filesystem/result.json",
+      "filesystemReceiptSha256": "2bba173d26359f070a5ae2cc73ba4c58261daffadb299ca8bd1d42dc614757eb"
+    }
+  ]
+}

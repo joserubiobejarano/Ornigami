@@ -1,0 +1,1007 @@
+[
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/buildkit",
+    "Name": "github.com/moby/buildkit",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/buildkit",
+      "UID": "b09559dd9eb5f1e7"
+    },
+    "Relationship": "root",
+    "DependsOn": [
+      "github.com/agext/levenshtein@v1.2.3",
+      "github.com/containerd/containerd@v1.7.13",
+      "github.com/containerd/continuity@v0.4.3",
+      "github.com/containerd/log@v0.1.0",
+      "github.com/containerd/stargz-snapshotter/estargz@v0.15.1",
+      "github.com/containerd/ttrpc@v1.2.2",
+      "github.com/containerd/typeurl/v2@v2.1.1",
+      "github.com/distribution/reference@v0.5.0",
+      "github.com/docker/docker@v25.0.3+incompatible",
+      "github.com/docker/go-connections@v0.5.0",
+      "github.com/docker/go-units@v0.5.0",
+      "github.com/felixge/httpsnoop@v1.0.4",
+      "github.com/go-logr/logr@v1.3.0",
+      "github.com/go-logr/stdr@v1.2.2",
+      "github.com/gofrs/flock@v0.8.1",
+      "github.com/gogo/googleapis@v1.4.1",
+      "github.com/gogo/protobuf@v1.3.2",
+      "github.com/golang/protobuf@v1.5.3",
+      "github.com/google/go-cmp@v0.6.0",
+      "github.com/google/shlex@v0.0.0-20191202100458-e7afc7fbc510",
+      "github.com/grpc-ecosystem/go-grpc-middleware@v1.3.0",
+      "github.com/grpc-ecosystem/grpc-gateway/v2@v2.16.0",
+      "github.com/in-toto/in-toto-golang@v0.5.0",
+      "github.com/klauspost/compress@v1.17.4",
+      "github.com/moby/docker-image-spec@v1.3.1",
+      "github.com/moby/locker@v1.0.1",
+      "github.com/moby/patternmatcher@v0.6.0",
+      "github.com/moby/sys/mountinfo@v0.7.1",
+      "github.com/moby/sys/signal@v0.7.0",
+      "github.com/moby/sys/user@v0.1.0",
+      "github.com/opencontainers/go-digest@v1.0.0",
+      "github.com/opencontainers/image-spec@v1.1.0-rc5",
+      "github.com/pkg/errors@v0.9.1",
+      "github.com/secure-systems-lab/go-securesystemslib@v0.4.0",
+      "github.com/shibumi/go-pathspec@v1.3.0",
+      "github.com/sirupsen/logrus@v1.9.3",
+      "github.com/tonistiigi/fsutil@v0.0.0-20240424095704-91a3fc46842c",
+      "github.com/vbatts/tar-split@v0.11.5",
+      "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc@v0.46.1",
+      "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace@v0.46.1",
+      "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp@v0.46.1",
+      "go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.21.0",
+      "go.opentelemetry.io/otel/metric@v1.21.0",
+      "go.opentelemetry.io/otel/sdk@v1.21.0",
+      "go.opentelemetry.io/otel/trace@v1.21.0",
+      "go.opentelemetry.io/otel@v1.21.0",
+      "go.opentelemetry.io/proto/otlp@v1.0.0",
+      "golang.org/x/crypto@v0.21.0",
+      "golang.org/x/net@v0.23.0",
+      "golang.org/x/sync@v0.5.0",
+      "golang.org/x/sys@v0.18.0",
+      "golang.org/x/text@v0.14.0",
+      "google.golang.org/genproto/googleapis/api@v0.0.0-20231016165738-49dd2c1f3d0b",
+      "google.golang.org/genproto/googleapis/rpc@v0.0.0-20231016165738-49dd2c1f3d0b",
+      "google.golang.org/genproto@v0.0.0-20231016165738-49dd2c1f3d0b",
+      "google.golang.org/grpc@v1.59.0",
+      "google.golang.org/protobuf@v1.31.0",
+      "stdlib@v1.21.9"
+    ],
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "stdlib@v1.21.9",
+    "Name": "stdlib",
+    "Identifier": {
+      "PURL": "pkg:golang/stdlib@v1.21.9",
+      "UID": "57f91cd9b05b1022"
+    },
+    "Version": "v1.21.9",
+    "Relationship": "direct",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/agext/levenshtein@v1.2.3",
+    "Name": "github.com/agext/levenshtein",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/agext/levenshtein@v1.2.3",
+      "UID": "8ec71fd09b3e4f6c"
+    },
+    "Version": "v1.2.3",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/containerd/containerd@v1.7.13",
+    "Name": "github.com/containerd/containerd",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/containerd/containerd@v1.7.13",
+      "UID": "fe5f0f92dc84c04"
+    },
+    "Version": "v1.7.13",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/containerd/continuity@v0.4.3",
+    "Name": "github.com/containerd/continuity",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/containerd/continuity@v0.4.3",
+      "UID": "d3b78cd0eaeb91e5"
+    },
+    "Version": "v0.4.3",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/containerd/log@v0.1.0",
+    "Name": "github.com/containerd/log",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/containerd/log@v0.1.0",
+      "UID": "3f9016f76e7c0e9a"
+    },
+    "Version": "v0.1.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/containerd/stargz-snapshotter/estargz@v0.15.1",
+    "Name": "github.com/containerd/stargz-snapshotter/estargz",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/containerd/stargz-snapshotter/estargz@v0.15.1",
+      "UID": "81b0e789d37dad10"
+    },
+    "Version": "v0.15.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/containerd/ttrpc@v1.2.2",
+    "Name": "github.com/containerd/ttrpc",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/containerd/ttrpc@v1.2.2",
+      "UID": "de2903a09b5689c5"
+    },
+    "Version": "v1.2.2",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/containerd/typeurl/v2@v2.1.1",
+    "Name": "github.com/containerd/typeurl/v2",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/containerd/typeurl/v2@v2.1.1",
+      "UID": "3ad86300df996e4f"
+    },
+    "Version": "v2.1.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/distribution/reference@v0.5.0",
+    "Name": "github.com/distribution/reference",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/distribution/reference@v0.5.0",
+      "UID": "35f8df868b2a325d"
+    },
+    "Version": "v0.5.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/docker/docker@v25.0.3+incompatible",
+    "Name": "github.com/docker/docker",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/docker/docker@v25.0.3%2Bincompatible",
+      "UID": "c63ea9eaabfdcf71"
+    },
+    "Version": "v25.0.3+incompatible",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/docker/go-connections@v0.5.0",
+    "Name": "github.com/docker/go-connections",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/docker/go-connections@v0.5.0",
+      "UID": "b03f279bb7b015f0"
+    },
+    "Version": "v0.5.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/docker/go-units@v0.5.0",
+    "Name": "github.com/docker/go-units",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/docker/go-units@v0.5.0",
+      "UID": "8db297ff8faa1eb8"
+    },
+    "Version": "v0.5.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/felixge/httpsnoop@v1.0.4",
+    "Name": "github.com/felixge/httpsnoop",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/felixge/httpsnoop@v1.0.4",
+      "UID": "d47ef9f433584cf4"
+    },
+    "Version": "v1.0.4",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/go-logr/logr@v1.3.0",
+    "Name": "github.com/go-logr/logr",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/go-logr/logr@v1.3.0",
+      "UID": "903e265e3600740d"
+    },
+    "Version": "v1.3.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/go-logr/stdr@v1.2.2",
+    "Name": "github.com/go-logr/stdr",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/go-logr/stdr@v1.2.2",
+      "UID": "2eac2b539c508def"
+    },
+    "Version": "v1.2.2",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/gofrs/flock@v0.8.1",
+    "Name": "github.com/gofrs/flock",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/gofrs/flock@v0.8.1",
+      "UID": "3180a38f792145b0"
+    },
+    "Version": "v0.8.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/gogo/googleapis@v1.4.1",
+    "Name": "github.com/gogo/googleapis",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/gogo/googleapis@v1.4.1",
+      "UID": "35853cce1476db91"
+    },
+    "Version": "v1.4.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/gogo/protobuf@v1.3.2",
+    "Name": "github.com/gogo/protobuf",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/gogo/protobuf@v1.3.2",
+      "UID": "e097b0ac9ff33723"
+    },
+    "Version": "v1.3.2",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/golang/protobuf@v1.5.3",
+    "Name": "github.com/golang/protobuf",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/golang/protobuf@v1.5.3",
+      "UID": "41eb126577fd2269"
+    },
+    "Version": "v1.5.3",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/google/go-cmp@v0.6.0",
+    "Name": "github.com/google/go-cmp",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/google/go-cmp@v0.6.0",
+      "UID": "b3b1a17f4e787ba7"
+    },
+    "Version": "v0.6.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/google/shlex@v0.0.0-20191202100458-e7afc7fbc510",
+    "Name": "github.com/google/shlex",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/google/shlex@v0.0.0-20191202100458-e7afc7fbc510",
+      "UID": "29b4be69c35b9ea6"
+    },
+    "Version": "v0.0.0-20191202100458-e7afc7fbc510",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/grpc-ecosystem/go-grpc-middleware@v1.3.0",
+    "Name": "github.com/grpc-ecosystem/go-grpc-middleware",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/grpc-ecosystem/go-grpc-middleware@v1.3.0",
+      "UID": "6b55607e803d1887"
+    },
+    "Version": "v1.3.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/grpc-ecosystem/grpc-gateway/v2@v2.16.0",
+    "Name": "github.com/grpc-ecosystem/grpc-gateway/v2",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/grpc-ecosystem/grpc-gateway/v2@v2.16.0",
+      "UID": "c0dacc1ce034d851"
+    },
+    "Version": "v2.16.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/in-toto/in-toto-golang@v0.5.0",
+    "Name": "github.com/in-toto/in-toto-golang",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/in-toto/in-toto-golang@v0.5.0",
+      "UID": "7d72bcc7ded17a8e"
+    },
+    "Version": "v0.5.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/klauspost/compress@v1.17.4",
+    "Name": "github.com/klauspost/compress",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/klauspost/compress@v1.17.4",
+      "UID": "9754ff32bb9706a5"
+    },
+    "Version": "v1.17.4",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/docker-image-spec@v1.3.1",
+    "Name": "github.com/moby/docker-image-spec",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/docker-image-spec@v1.3.1",
+      "UID": "ff35ba7b77abce57"
+    },
+    "Version": "v1.3.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/locker@v1.0.1",
+    "Name": "github.com/moby/locker",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/locker@v1.0.1",
+      "UID": "72371e9ade8cf979"
+    },
+    "Version": "v1.0.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/patternmatcher@v0.6.0",
+    "Name": "github.com/moby/patternmatcher",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/patternmatcher@v0.6.0",
+      "UID": "b2ed0f1e1d6e681e"
+    },
+    "Version": "v0.6.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/sys/mountinfo@v0.7.1",
+    "Name": "github.com/moby/sys/mountinfo",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/sys/mountinfo@v0.7.1",
+      "UID": "2164b4b2b275dd28"
+    },
+    "Version": "v0.7.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/sys/signal@v0.7.0",
+    "Name": "github.com/moby/sys/signal",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/sys/signal@v0.7.0",
+      "UID": "fd87ae28fbce7e7e"
+    },
+    "Version": "v0.7.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/moby/sys/user@v0.1.0",
+    "Name": "github.com/moby/sys/user",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/moby/sys/user@v0.1.0",
+      "UID": "124c280151233f30"
+    },
+    "Version": "v0.1.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/opencontainers/go-digest@v1.0.0",
+    "Name": "github.com/opencontainers/go-digest",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/opencontainers/go-digest@v1.0.0",
+      "UID": "df0eccea44160f17"
+    },
+    "Version": "v1.0.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/opencontainers/image-spec@v1.1.0-rc5",
+    "Name": "github.com/opencontainers/image-spec",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/opencontainers/image-spec@v1.1.0-rc5",
+      "UID": "9ec3e8ed892c868f"
+    },
+    "Version": "v1.1.0-rc5",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/pkg/errors@v0.9.1",
+    "Name": "github.com/pkg/errors",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/pkg/errors@v0.9.1",
+      "UID": "9087e967e2392e5"
+    },
+    "Version": "v0.9.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/secure-systems-lab/go-securesystemslib@v0.4.0",
+    "Name": "github.com/secure-systems-lab/go-securesystemslib",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/secure-systems-lab/go-securesystemslib@v0.4.0",
+      "UID": "d4bf471531b48694"
+    },
+    "Version": "v0.4.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/shibumi/go-pathspec@v1.3.0",
+    "Name": "github.com/shibumi/go-pathspec",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/shibumi/go-pathspec@v1.3.0",
+      "UID": "21d8d34cd619fcaa"
+    },
+    "Version": "v1.3.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/sirupsen/logrus@v1.9.3",
+    "Name": "github.com/sirupsen/logrus",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/sirupsen/logrus@v1.9.3",
+      "UID": "5bc6f6dbf45724eb"
+    },
+    "Version": "v1.9.3",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/tonistiigi/fsutil@v0.0.0-20240424095704-91a3fc46842c",
+    "Name": "github.com/tonistiigi/fsutil",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/tonistiigi/fsutil@v0.0.0-20240424095704-91a3fc46842c",
+      "UID": "9f5b0e63fbc18bac"
+    },
+    "Version": "v0.0.0-20240424095704-91a3fc46842c",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "github.com/vbatts/tar-split@v0.11.5",
+    "Name": "github.com/vbatts/tar-split",
+    "Identifier": {
+      "PURL": "pkg:golang/github.com/vbatts/tar-split@v0.11.5",
+      "UID": "6308541ada5c7c88"
+    },
+    "Version": "v0.11.5",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc@v0.46.1",
+    "Name": "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc@v0.46.1",
+      "UID": "d3c520a6923dc58b"
+    },
+    "Version": "v0.46.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace@v0.46.1",
+    "Name": "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace@v0.46.1",
+      "UID": "f1b33054059e09f"
+    },
+    "Version": "v0.46.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp@v0.46.1",
+    "Name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp@v0.46.1",
+      "UID": "1e33d72820b90d23"
+    },
+    "Version": "v0.46.1",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/otel@v1.21.0",
+    "Name": "go.opentelemetry.io/otel",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/otel@v1.21.0",
+      "UID": "bbaf8eae0c4c670b"
+    },
+    "Version": "v1.21.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.21.0",
+    "Name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.21.0",
+      "UID": "7071436571cd8c4a"
+    },
+    "Version": "v1.21.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/otel/metric@v1.21.0",
+    "Name": "go.opentelemetry.io/otel/metric",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/otel/metric@v1.21.0",
+      "UID": "565d13c26f86151e"
+    },
+    "Version": "v1.21.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/otel/sdk@v1.21.0",
+    "Name": "go.opentelemetry.io/otel/sdk",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/otel/sdk@v1.21.0",
+      "UID": "11136715c98daa09"
+    },
+    "Version": "v1.21.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/otel/trace@v1.21.0",
+    "Name": "go.opentelemetry.io/otel/trace",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/otel/trace@v1.21.0",
+      "UID": "63585e3999cb656a"
+    },
+    "Version": "v1.21.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "go.opentelemetry.io/proto/otlp@v1.0.0",
+    "Name": "go.opentelemetry.io/proto/otlp",
+    "Identifier": {
+      "PURL": "pkg:golang/go.opentelemetry.io/proto/otlp@v1.0.0",
+      "UID": "f7123ec6e022172f"
+    },
+    "Version": "v1.0.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "golang.org/x/crypto@v0.21.0",
+    "Name": "golang.org/x/crypto",
+    "Identifier": {
+      "PURL": "pkg:golang/golang.org/x/crypto@v0.21.0",
+      "UID": "643316a56ae4295b"
+    },
+    "Version": "v0.21.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "golang.org/x/net@v0.23.0",
+    "Name": "golang.org/x/net",
+    "Identifier": {
+      "PURL": "pkg:golang/golang.org/x/net@v0.23.0",
+      "UID": "5f913d76667ce314"
+    },
+    "Version": "v0.23.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "golang.org/x/sync@v0.5.0",
+    "Name": "golang.org/x/sync",
+    "Identifier": {
+      "PURL": "pkg:golang/golang.org/x/sync@v0.5.0",
+      "UID": "9819e1a7f76a8436"
+    },
+    "Version": "v0.5.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "golang.org/x/sys@v0.18.0",
+    "Name": "golang.org/x/sys",
+    "Identifier": {
+      "PURL": "pkg:golang/golang.org/x/sys@v0.18.0",
+      "UID": "1a8c3e539195ed71"
+    },
+    "Version": "v0.18.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "golang.org/x/text@v0.14.0",
+    "Name": "golang.org/x/text",
+    "Identifier": {
+      "PURL": "pkg:golang/golang.org/x/text@v0.14.0",
+      "UID": "28067a1200cb9743"
+    },
+    "Version": "v0.14.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "google.golang.org/genproto@v0.0.0-20231016165738-49dd2c1f3d0b",
+    "Name": "google.golang.org/genproto",
+    "Identifier": {
+      "PURL": "pkg:golang/google.golang.org/genproto@v0.0.0-20231016165738-49dd2c1f3d0b",
+      "UID": "36621453a0cfc493"
+    },
+    "Version": "v0.0.0-20231016165738-49dd2c1f3d0b",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "google.golang.org/genproto/googleapis/api@v0.0.0-20231016165738-49dd2c1f3d0b",
+    "Name": "google.golang.org/genproto/googleapis/api",
+    "Identifier": {
+      "PURL": "pkg:golang/google.golang.org/genproto/googleapis/api@v0.0.0-20231016165738-49dd2c1f3d0b",
+      "UID": "d07fd33a7722302b"
+    },
+    "Version": "v0.0.0-20231016165738-49dd2c1f3d0b",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "google.golang.org/genproto/googleapis/rpc@v0.0.0-20231016165738-49dd2c1f3d0b",
+    "Name": "google.golang.org/genproto/googleapis/rpc",
+    "Identifier": {
+      "PURL": "pkg:golang/google.golang.org/genproto/googleapis/rpc@v0.0.0-20231016165738-49dd2c1f3d0b",
+      "UID": "2b36cfb52f3b40f9"
+    },
+    "Version": "v0.0.0-20231016165738-49dd2c1f3d0b",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "google.golang.org/grpc@v1.59.0",
+    "Name": "google.golang.org/grpc",
+    "Identifier": {
+      "PURL": "pkg:golang/google.golang.org/grpc@v1.59.0",
+      "UID": "df325a829479dfa"
+    },
+    "Version": "v1.59.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  },
+  {
+    "target": "bin/dockerfile-frontend",
+    "class": "lang-pkgs",
+    "type": "gobinary",
+    "ID": "google.golang.org/protobuf@v1.31.0",
+    "Name": "google.golang.org/protobuf",
+    "Identifier": {
+      "PURL": "pkg:golang/google.golang.org/protobuf@v1.31.0",
+      "UID": "6c39594bc316e4c6"
+    },
+    "Version": "v1.31.0",
+    "Layer": {
+      "DiffID": "sha256:327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+    },
+    "AnalyzedBy": "gobinary"
+  }
+]

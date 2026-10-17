@@ -1,0 +1,1 @@
+status=passed; peak_bytes=587522048; memory_events_delta={'high': 0, 'low': 0, 'max': 0, 'oom': 0, 'oom_group_kill': 0, 'oom_kill': 0}; cpu_stat_delta={'burst_usec': 0, 'core_sched.force_idle_usec': 0, 'nice_usec': 0, 'nr_bursts': 0, 'nr_periods': 51, 'nr_throttled': 4, 'system_usec': 1400137, 'throttled_usec': 34532, 'usage_usec': 3268808, 'user_usec': 1868672}

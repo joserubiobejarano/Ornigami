@@ -1,0 +1,1672 @@
+[
+  {
+    "role": "buildkit",
+    "target": "/home/runner/work/_temp/ornigami-stage-buildkit.tar (alpine 3.23.6)",
+    "id": "CVE-2026-103111",
+    "package": "pcre2",
+    "installed": "10.48-r0",
+    "fixed": "10.49-r0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildctl",
+    "id": "CVE-2026-78669",
+    "package": "golang.org/x/net",
+    "installed": "v0.58.0",
+    "fixed": "0.60.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildctl",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildctl",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildctl",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-25679",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.8, 1.26.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-27145",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-32280",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-32281",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-32283",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-33811",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-33814",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-33818",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-39820",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-39821",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-39822",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-39836",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-42499",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-42504",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-56853",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-56858",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-56859",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-56860",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-56862",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-bridge",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-25679",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.8, 1.26.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-27145",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-32280",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-32281",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-32283",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-33811",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-33814",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-33818",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-39820",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-39821",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-39822",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-39836",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-42499",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-42504",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-56853",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-56858",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-56859",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-56860",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-56862",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-firewall",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-25679",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.8, 1.26.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-27145",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-32280",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-32281",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-32283",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-33811",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-33814",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-33818",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-39820",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-39821",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-39822",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-39836",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-42499",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-42504",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-56853",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-56858",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-56859",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-56860",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-56862",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-host-local",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-25679",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.8, 1.26.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-27145",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-32280",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-32281",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-32283",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-33811",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-33814",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-33818",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-39820",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-39821",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-39822",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-39836",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-42499",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-42504",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-56853",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-56858",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-56859",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-56860",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-56862",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-cni-loopback",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.25.7",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-25681",
+    "package": "golang.org/x/net",
+    "installed": "v0.43.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-27136",
+    "package": "golang.org/x/net",
+    "installed": "v0.43.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-33814",
+    "package": "golang.org/x/net",
+    "installed": "v0.43.0",
+    "fixed": "0.53.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-39821",
+    "package": "golang.org/x/net",
+    "installed": "v0.43.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-46600",
+    "package": "golang.org/x/net",
+    "installed": "v0.43.0",
+    "fixed": "0.56.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-78669",
+    "package": "golang.org/x/net",
+    "installed": "v0.43.0",
+    "fixed": "0.60.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkit-runc",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkitd",
+    "id": "CVE-2026-17106",
+    "package": "github.com/moby/go-archive",
+    "installed": "v0.2.0",
+    "fixed": "0.3.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkitd",
+    "id": "CVE-2026-78669",
+    "package": "golang.org/x/net",
+    "installed": "v0.58.0",
+    "fixed": "0.60.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkitd",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkitd",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "buildkit",
+    "target": "usr/bin/buildkitd",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.26.8",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2024-25621",
+    "package": "github.com/containerd/containerd",
+    "installed": "v1.7.13",
+    "fixed": "1.7.29",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-53488",
+    "package": "github.com/containerd/containerd",
+    "installed": "v1.7.13",
+    "fixed": "1.7.33",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2024-41110",
+    "package": "github.com/docker/docker",
+    "installed": "v25.0.3+incompatible",
+    "fixed": "23.0.15, 26.1.5, 27.1.1, 25.0.6",
+    "severity": "CRITICAL",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-41567",
+    "package": "github.com/docker/docker",
+    "installed": "v25.0.3+incompatible",
+    "fixed": null,
+    "severity": "HIGH",
+    "status": "affected"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-42306",
+    "package": "github.com/docker/docker",
+    "installed": "v25.0.3+incompatible",
+    "fixed": null,
+    "severity": "HIGH",
+    "status": "affected"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-24051",
+    "package": "go.opentelemetry.io/otel/sdk",
+    "installed": "v1.21.0",
+    "fixed": "1.40.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39883",
+    "package": "go.opentelemetry.io/otel/sdk",
+    "installed": "v1.21.0",
+    "fixed": "1.43.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2024-45337",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.31.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2025-22869",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.35.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2025-47913",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.43.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39828",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39829",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39830",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39831",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39832",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39835",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-42508",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-46595",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-46597",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.52.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56854",
+    "package": "golang.org/x/crypto",
+    "installed": "v0.21.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2024-45338",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.33.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-25681",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-27136",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-33814",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.53.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39821",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.55.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-46600",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.56.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-78669",
+    "package": "golang.org/x/net",
+    "installed": "v0.23.0",
+    "fixed": "0.60.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56851",
+    "package": "golang.org/x/text",
+    "installed": "v0.14.0",
+    "fixed": "0.41.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56852",
+    "package": "golang.org/x/text",
+    "installed": "v0.14.0",
+    "fixed": "0.39.0",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-33186",
+    "package": "google.golang.org/grpc",
+    "installed": "v1.59.0",
+    "fixed": "1.79.3",
+    "severity": "CRITICAL",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-84304",
+    "package": "google.golang.org/grpc",
+    "installed": "v1.59.0",
+    "fixed": "1.83.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-84445",
+    "package": "google.golang.org/grpc",
+    "installed": "v1.59.0",
+    "fixed": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "GHSA-hrxh-6v49-42gf",
+    "package": "google.golang.org/grpc",
+    "installed": "v1.59.0",
+    "fixed": "1.82.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2024-24790",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.21.11, 1.22.4",
+    "severity": "CRITICAL",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2025-68121",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.24.13, 1.25.7, 1.26.0-rc.3",
+    "severity": "CRITICAL",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2024-34156",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.22.7, 1.23.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2025-61726",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.24.12, 1.25.6",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2025-61729",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.24.11, 1.25.5",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-25679",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.8, 1.26.1",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-27145",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-32280",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-32281",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-32283",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.9, 1.26.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-33811",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-33814",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-33818",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39820",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39821",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39822",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-39836",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-42499",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.10, 1.26.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-42504",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.11, 1.26.4",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56853",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56858",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56859",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56860",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-56862",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-78667",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-78669",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  },
+  {
+    "role": "dockerfile-frontend",
+    "target": "bin/dockerfile-frontend",
+    "id": "CVE-2026-97031",
+    "package": "stdlib",
+    "installed": "v1.21.9",
+    "fixed": "1.26.9, 1.27.2",
+    "severity": "HIGH",
+    "status": "fixed"
+  }
+]

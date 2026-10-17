@@ -1,0 +1,8 @@
+{
+  "stage": "prod-deps",
+  "result": "skipped",
+  "collectionComplete": false,
+  "reason": "Prior role/shared prerequisite failed; no later role attempted: Initial build failed/skipped; target exports prohibited to avoid retry",
+  "prerequisite": "shared frozen database admission",
+  "recordedAt": "2026-10-17T20:54:05.560Z"
+}

@@ -1,0 +1,14 @@
+== runner disk before cleanup ==
+Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 66340323328 88537088000      43% /
+
+== Docker storage before cleanup ==
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          10        1         2.446GB   2.197GB (89%)
+Containers      1         1         9.43kB    0B (0%)
+Local Volumes   1         1         466MB     0B (0%)
+Build Cache     0         0         0B        0B
+
+== selected runner-temp path sizes (image archive size only; archive content is excluded) ==
+70544206	/home/runner/work/_temp/source
+1635360920	/home/runner/work/_temp/trivy-cache

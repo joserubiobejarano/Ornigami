@@ -1,0 +1,8 @@
+{
+  "stage": "build-base",
+  "result": "skipped",
+  "startedAt": "2026-10-17T20:54:05.558Z",
+  "error": "Initial build failed/skipped; target exports prohibited to avoid retry",
+  "stopDependentRoles": true,
+  "finishedAt": "2026-10-17T20:54:05.558Z"
+}

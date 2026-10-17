@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-17T20:52:02.103Z",
+  "result": "passed for exact source publication and one full minimal-base diagnostic",
+  "source": "d20ea56ac3ead80439d3e5f66cdc4dc34963d40e",
+  "baseline": "49367ae2d941c362f0e9b6fe2b50d9b3df336b34",
+  "minutesUsed": 154,
+  "storageUsedGB": 0.1,
+  "sharedReservedMinutes": 0,
+  "reserveMinutes": 40,
+  "standardPublicRunner": "ubuntu-24.04",
+  "paidUsage": "blocked, no spending changes",
+  "coverage": "standing full diagnostic after passed freshness; security/deployment acceptance held",
+  "exactSourceAndMarkers": "verified"
+}

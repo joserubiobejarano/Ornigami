@@ -1,0 +1,21 @@
+[
+  {
+    "path": "bin",
+    "type": "5",
+    "size": 0,
+    "mode": 493,
+    "uid": 0,
+    "gid": 0,
+    "layer": "blobs/sha256/327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+  },
+  {
+    "path": "bin/dockerfile-frontend",
+    "type": "0",
+    "size": 23775052,
+    "mode": 493,
+    "uid": 0,
+    "gid": 0,
+    "sha256": "99556bc30c092c714b39b9f188e86ea7eff62acdf6027b48ba0e2d6187029b3c",
+    "layer": "blobs/sha256/327211ea034026032264266ca671642dba140d0d42af811bcc58a245c42b579b"
+  }
+]

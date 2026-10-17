@@ -1,5 +1,7 @@
 # Recovered official DB: Linux freshness admission passed — 17 October 2026
 
+Latest full continuation: [full trial failed on npm Bash launcher PATH shadowing and tooling security; coherent local repair tested](./FRESH_DB_FULL_LINUX_TRIAL.md). The successful freshness result below remains valid in its scope; it never granted full image/security acceptance.
+
 **Run [39068058066](https://github.com/joserubiobejarano/Ornigami/actions/runs/39068058066), attempt 1, completed successfully. Advisory-coverage/security/deployment acceptance remains held.** Owner explicitly selected freshness-only diagnostic with coverage hold and delegated staging planning defaults. No image was built or accepted by this diagnostic.
 
 Source `013ad70ec86e66cb22b65a0827b247f793f0d9c4`; request-only child `49367ae2d941c362f0e9b6fe2b50d9b3df336b34`; diagnostic workflow blob `0c586a048fc3055b675ba9fbf242cf48917f335a`; unchanged LF app lock `4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815`. Actual Linux request/source/ref/workflow binding passed. No rerun/replacement download.

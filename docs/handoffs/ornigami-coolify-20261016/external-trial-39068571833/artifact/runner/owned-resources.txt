@@ -1,0 +1,5 @@
+builder_name=ornigami-external-rehearsal
+builder_container_id=f080f73bcbf84aac3214f891424da648780aa43310d5bd0ca9f5d5a9b769c701
+builder_state_volume=buildx_buildkit_ornigami-external-rehearsal0_state
+image_tag=
+image_id=

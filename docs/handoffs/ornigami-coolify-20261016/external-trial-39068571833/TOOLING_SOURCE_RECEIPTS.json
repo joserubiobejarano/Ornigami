@@ -1,0 +1,34 @@
+[
+  {
+    "endpoint": "repos/moby/buildkit/contents/go.mod?ref=v0.34.0",
+    "ref": "v0.34.0",
+    "blob": "8f54e267431aaef353b9018285ac294c00f49ec0",
+    "file": "buildkit-v0.34.0-go_mod",
+    "bytes": 12526,
+    "sha256": "9114ace60db407b7b70eccc340cda6cc5ff3313400afbdd8e1f14849bc244fb3"
+  },
+  {
+    "endpoint": "repos/moby/buildkit/contents/Dockerfile?ref=v0.34.0",
+    "ref": "v0.34.0",
+    "blob": "a21c52014a0b7794e82a202d8787354e6d04bc7e",
+    "file": "buildkit-v0.34.0-Dockerfile",
+    "bytes": 20192,
+    "sha256": "97f1b2ceb183375a19add9941566e69bbd7d04532ee843ea86977c13ac3c3590"
+  },
+  {
+    "endpoint": "repos/moby/buildkit/contents/go.mod?ref=64aefaef4d7dbb993156a0839958e4342aeb4c51",
+    "ref": "64aefaef4d7dbb993156a0839958e4342aeb4c51",
+    "blob": "d799879b9eb5045a971f4f03f830f5d4fd325934",
+    "file": "buildkit-master-pinned-go_mod",
+    "bytes": 12526,
+    "sha256": "6b29685fb6ac105eaf417d7646c76ce7089b829a235f00b4a5e25ffc72e668a9"
+  },
+  {
+    "endpoint": "repos/moby/buildkit/contents/Dockerfile?ref=64aefaef4d7dbb993156a0839958e4342aeb4c51",
+    "ref": "64aefaef4d7dbb993156a0839958e4342aeb4c51",
+    "blob": "55388bdfe2302b4cf1b75444a7545370c4a1d610",
+    "file": "buildkit-master-pinned-Dockerfile",
+    "bytes": 19747,
+    "sha256": "2080fe039799166b54033c4f5bf31831bd19c7f4f493a3b133df87d9d302dee8"
+  }
+]

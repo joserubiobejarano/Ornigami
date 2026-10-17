@@ -1,0 +1,35 @@
+docker.io/moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea: Pulling from moby/buildkit
+d0c1d894c237: Pulling fs layer
+7e798cef5121: Pulling fs layer
+98c91a1a17d1: Pulling fs layer
+c8f0d8a79114: Pulling fs layer
+efab3150af2c: Pulling fs layer
+19ed272c7ade: Pulling fs layer
+1d8ab3a073db: Pulling fs layer
+efab3150af2c: Waiting
+19ed272c7ade: Waiting
+1d8ab3a073db: Waiting
+c8f0d8a79114: Waiting
+98c91a1a17d1: Download complete
+d0c1d894c237: Verifying Checksum
+d0c1d894c237: Download complete
+c8f0d8a79114: Verifying Checksum
+c8f0d8a79114: Download complete
+d0c1d894c237: Pull complete
+7e798cef5121: Verifying Checksum
+7e798cef5121: Download complete
+1d8ab3a073db: Verifying Checksum
+1d8ab3a073db: Download complete
+19ed272c7ade: Verifying Checksum
+19ed272c7ade: Download complete
+efab3150af2c: Verifying Checksum
+efab3150af2c: Download complete
+7e798cef5121: Pull complete
+98c91a1a17d1: Pull complete
+c8f0d8a79114: Pull complete
+efab3150af2c: Pull complete
+19ed272c7ade: Pull complete
+1d8ab3a073db: Pull complete
+Digest: sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
+Status: Downloaded newer image for moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
+docker.io/moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea

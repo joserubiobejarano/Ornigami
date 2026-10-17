@@ -1,0 +1,2 @@
+workflow_outcome=failure
+workflow_exit_code=1

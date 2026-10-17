@@ -1,0 +1,20 @@
+{
+  "result": "passed",
+  "roots": [
+    "bin/dockerfile-frontend"
+  ],
+  "nodes": {
+    "bin/dockerfile-frontend": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    }
+  },
+  "errors": [],
+  "scope": "Static ELF/interpreter/DT_NEEDED/symbol-version closure only; no Linux dlopen, CPU, image codec, TLS/DNS or runtime execution proof"
+}

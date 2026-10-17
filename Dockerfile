@@ -4,7 +4,9 @@
 FROM --platform=linux/amd64 gcr.io/distroless/nodejs22-debian13:debug-nonroot@sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5 AS build-base
 USER 0:0
 SHELL ["/busybox/sh", "-ec"]
-ENV PATH=/nodejs/bin:/opt/ornigami-npm/bin:/busybox:/usr/local/bin:/usr/bin:/bin \
+# npm's bin/npm and bin/npx are Bash launchers. Expose only the JS entrypoint
+# symlinks below; the signed minimal parent deliberately has no Bash.
+ENV PATH=/nodejs/bin:/busybox:/usr/local/bin:/usr/bin:/bin \
     HOME=/home/node \
     npm_config_script_shell=/busybox/sh \
     NEXT_TELEMETRY_DISABLED=1

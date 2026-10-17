@@ -1,0 +1,3 @@
+assessment_exit_code=0
+log_exit_code=0
+observation_exit_code=0

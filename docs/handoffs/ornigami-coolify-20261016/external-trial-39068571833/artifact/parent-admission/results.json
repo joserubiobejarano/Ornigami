@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-17T20:52:57.159Z",
+  "parents": [
+    {
+      "role": "original-base",
+      "variant": "debug-nonroot",
+      "indexDigest": "sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce",
+      "amd64Digest": "sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
+      "configDigest": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842",
+      "result": "passed",
+      "scope": "fresh signature and signed index/manifest/config/annotation binding; exact local Node binary proof separately retained"
+    },
+    {
+      "role": "original-runtime-base",
+      "variant": "nonroot",
+      "indexDigest": "sha256:ec2313763dd43931543bd03830466e0c409ce73a487e8d46f10db72d3b816c1c",
+      "amd64Digest": "sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
+      "configDigest": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320",
+      "result": "passed",
+      "scope": "fresh signature and signed index/manifest/config/annotation binding; exact local Node binary proof separately retained"
+    }
+  ],
+  "complete": true
+}
