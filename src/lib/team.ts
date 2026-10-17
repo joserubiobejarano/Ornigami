@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { getOptionalEnv, getServerAppUrl } from "@/lib/env";
+import { qrMailConfigured, sendAuthorizedResend, type QrMailContext } from "@/lib/qr-mail";
 
 export const TEAM_INVITATION_DAYS = 7;
 
@@ -26,6 +27,8 @@ function escapeHtml(value: string): string {
 }
 
 export async function sendTeamInvitationEmail(input: {
+  invitationId: string;
+  businessId: string;
   email: string;
   businessName: string;
   inviterEmail: string;
@@ -33,31 +36,25 @@ export async function sendTeamInvitationEmail(input: {
 }): Promise<{ sent: boolean }> {
   const resendApiKey = getOptionalEnv("RESEND_API_KEY");
   const emailFrom = getOptionalEnv("EMAIL_FROM");
-  if (!resendApiKey || !emailFrom) {
-    return { sent: false };
+  if (!resendApiKey || !emailFrom || !qrMailConfigured("team_invitation")) {
+    throw new Error("Team invitation delivery is unavailable.");
   }
 
   const businessName = escapeHtml(input.businessName || "your team");
   const inviterEmail = escapeHtml(input.inviterEmail);
   const invitationUrl = escapeHtml(input.invitationUrl);
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const payload = JSON.stringify({
       from: `Ornigami <${emailFrom}>`,
       to: input.email,
       subject: `You have been invited to ${input.businessName || "an Ornigami workspace"}`,
       text: `${input.inviterEmail} invited you to join ${input.businessName || "their Ornigami workspace"}. Accept the invitation: ${input.invitationUrl}`,
       html: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;"><p>${inviterEmail} invited you to join <strong>${businessName}</strong> on Ornigami.</p><p><a href="${invitationUrl}">Accept invitation</a></p><p style="font-size:12px;color:#64748b;">This invitation expires in ${TEAM_INVITATION_DAYS} days.</p></div>`,
-    }),
   });
-
-  if (!response.ok) {
-    throw new Error("Team invitation email could not be sent.");
-  }
+  const context: QrMailContext = {
+    purpose: "team_invitation", businessId: input.businessId, candidateId: input.invitationId,
+    workKey: `team-invitation:${input.invitationId}`, idempotencyKey: `team-invitation:${input.invitationId}`,
+  };
+  await sendAuthorizedResend(payload, context);
 
   return { sent: true };
 }

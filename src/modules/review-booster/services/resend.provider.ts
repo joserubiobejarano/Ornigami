@@ -1,6 +1,7 @@
 import { buildUnsubscribeUrl } from "@/modules/review-booster/services/unsubscribe-token.service";
 import { isSafeBookingUrl, isSafeGoogleReviewUrl, isSafeSenderName } from "@/modules/review-booster/services/settings-link-validation";
 import { getOptionalEnv, getRequiredEnv } from "@/lib/env";
+import { sendAuthorizedResend, type QrMailContext } from "@/lib/qr-mail";
 
 export type ResendEmailPayload = {
   from: string;
@@ -137,57 +138,24 @@ export async function prepareResendPayload(input: PrepareEmailInput): Promise<Re
 }
 
 /** Sends only the caller's frozen JSON payload; it never rebuilds email content. */
-export async function sendPreparedWithResend(payload: ResendEmailPayload, idempotencyKey: string): Promise<string> {
+export async function sendPreparedWithResend(payload: ResendEmailPayload, idempotencyKey: string, mailContext?: QrMailContext): Promise<string> {
   if (!idempotencyKey || idempotencyKey.length > 256) {
     throw new ResendDeliveryError("Invalid Resend idempotency key", "definite_rejection");
   }
-  let apiKey: string;
+  try { getRequiredEnv("RESEND_API_KEY"); }
+  catch (error) { throw new ResendDeliveryError(error instanceof Error ? error.message : "Missing Resend API key", "definite_rejection"); }
+  if (!mailContext) throw new ResendDeliveryError("Mail authorization context is required", "ambiguous");
+  const bytes = JSON.stringify(payload);
   try {
-    apiKey = getRequiredEnv("RESEND_API_KEY");
+    return await sendAuthorizedResend(bytes, { ...mailContext, idempotencyKey });
   } catch (error) {
-    throw new ResendDeliveryError(error instanceof Error ? error.message : "Missing Resend API key", "definite_rejection");
-  }
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10_000);
-  let response: Response;
-  try {
-    response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": idempotencyKey,
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    clearTimeout(timer);
-    throw new ResendDeliveryError(error instanceof Error ? error.message : "Resend transport failed", "ambiguous");
-  }
-  try {
-    let data: unknown;
-    try { data = await response.json(); } catch {
-      throw new ResendDeliveryError("Resend returned an unreadable response", response.ok || response.status >= 500 || response.status === 409 ? "ambiguous" : "definite_rejection", response.status);
-    }
-    const record = data && typeof data === "object" ? data as { id?: unknown; message?: unknown } : {};
-    if (!response.ok) {
-      const kind = response.status === 409 || response.status >= 500 || response.status < 400
-        ? "ambiguous"
-        : "definite_rejection";
-      throw new ResendDeliveryError(typeof record.message === "string" ? record.message : `Resend request failed (${response.status})`, kind, response.status);
-    }
-    if (typeof record.id !== "string" || !record.id.trim()) {
-      throw new ResendDeliveryError("Resend accepted the request but returned no message ID", "ambiguous", response.status);
-    }
-    return record.id;
-  } finally {
-    clearTimeout(timer);
+    if (isResendDeliveryError(error)) throw error;
+    throw new ResendDeliveryError(error instanceof Error ? error.message : "Mail delivery failed", "ambiguous");
   }
 }
 
 /** Compatibility entry point; durable/retryable delivery must use prepare + sendPrepared separately. */
-export async function sendWithResend(input: PrepareEmailInput): Promise<string> {
+export async function sendWithResend(input: PrepareEmailInput, mailContext?: QrMailContext): Promise<string> {
   const payload = await prepareResendPayload(input);
-  return sendPreparedWithResend(payload, crypto.randomUUID());
+  return sendPreparedWithResend(payload, mailContext?.idempotencyKey ?? crypto.randomUUID(), mailContext);
 }

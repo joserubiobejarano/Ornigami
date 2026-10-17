@@ -206,13 +206,13 @@ export async function runControlledResend({ env, runId, recipient = DEFAULT_RESE
     state.acceptedAt = new Date(now()).toISOString();
     state.providerMessageId = providerMessageId;
     writeState(statePath, state);
-    return { status: "provider-accepted", delivery: "unconfirmed", runId: state.runId, recipient, providerMessageId, payloadSha256: state.payloadSha256, evidenceFile: statePath };
+    return { status: "provider-accepted", delivery: "unconfirmed", runId: state.runId, recipientLabel: "controlled-test-mailbox", providerMessageId, payloadSha256: state.payloadSha256, evidenceFile: statePath };
   } catch (error) {
     state.status = error?.kind === "definite_rejection" ? "definite_rejection" : "unknown";
     state.failureClass = state.status;
     state.httpStatus = Number.isInteger(error?.status) ? error.status : null;
     writeState(statePath, state);
-    return { status: state.status, failureClass: error?.name || "provider-error", delivery: "unconfirmed", runId: state.runId, recipient, payloadSha256: state.payloadSha256, evidenceFile: statePath };
+    return { status: state.status, failureClass: error?.name || "provider-error", delivery: "unconfirmed", runId: state.runId, recipientLabel: "controlled-test-mailbox", payloadSha256: state.payloadSha256, evidenceFile: statePath };
   }
 }
 

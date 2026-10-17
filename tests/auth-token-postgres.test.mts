@@ -146,10 +146,13 @@ test("production token SQL rotates tokens and atomically consumes one valid toke
           getOptionalEnv: (name: string) => ({ RESEND_API_KEY: "test-key", EMAIL_FROM: "no-reply@example.com", NEXT_PUBLIC_APP_URL: "https://app.example" } as Record<string, string>)[name],
           getServerAppUrl: () => "https://app.example",
         },
-      },
-      fetch: async (_input, init) => {
-        emails.push(JSON.parse(String(init?.body)) as { text: string });
-        return new Response("{}", { status: 200 });
+        "@/lib/qr-mail": {
+          qrMailConfigured: () => true,
+          sendAuthorizedResend: async (payload: string) => {
+            emails.push(JSON.parse(payload) as { text: string });
+            return "fake-provider-id";
+          },
+        },
       },
     });
 

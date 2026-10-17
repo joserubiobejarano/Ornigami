@@ -1,7 +1,9 @@
+import { createHash } from "node:crypto";
 import type { FollowupRunResult } from "@/modules/review-booster/types/followup.types";
 import type { AtomicBeginSend, AtomicFollowupCandidate, AtomicFollowupClaim, FrozenFollowupPayload } from "@/modules/review-booster/services/atomic-followup-db.service";
 import { MAX_FOLLOWUPS_PER_RUN } from "@/lib/followup-run-policy";
 import { isSafeGoogleReviewUrl } from "@/modules/review-booster/services/settings-link-validation";
+import type { QrMailContext } from "@/lib/qr-mail";
 
 export type FollowupRunnerDependencies = {
   listCandidates: (limit: number) => Promise<AtomicFollowupCandidate[]>;
@@ -11,7 +13,7 @@ export type FollowupRunnerDependencies = {
   preparePayload: (visit: AtomicFollowupCandidate, subject: string, body: string, deliveryId: string) => Promise<FrozenFollowupPayload>;
   persistPayload: (deliveryId: string, fence: string, payload: FrozenFollowupPayload, reviewUrl: string) => Promise<boolean>;
   beginSend: (deliveryId: string, fence: string) => Promise<AtomicBeginSend>;
-  sendPrepared: (payload: FrozenFollowupPayload, idempotencyKey: string) => Promise<string>;
+  sendPrepared: (payload: FrozenFollowupPayload, idempotencyKey: string, context?: QrMailContext) => Promise<string>;
   classifySendError: (error: unknown) => "definite_rejection" | "ambiguous";
   finalizeAccepted: (input: { deliveryId: string; fence: string; providerMessageId: string; subject: string; body: string }) => Promise<boolean>;
   release: (input: { deliveryId: string; fence: string; outcome: "rejected" | "generation_failed"; error: string }) => Promise<boolean>;
@@ -123,7 +125,11 @@ export async function runEligibleFollowups(deps: FollowupRunnerDependencies, opt
 
     let providerMessageId: string;
     try {
-      providerMessageId = await deps.sendPrepared(begin.payload, begin.idempotencyKey);
+      providerMessageId = await deps.sendPrepared(begin.payload, begin.idempotencyKey, {
+        purpose: "booster_followup", businessId: visit.businessId, candidateId: visit.visitId,
+        workKey: claim.deliveryId, idempotencyKey: begin.idempotencyKey,
+        transportContext: { delivery_ref: `ref:${createHash("sha256").update(claim.deliveryId).digest("hex")}` },
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const kind = deps.classifySendError(error);

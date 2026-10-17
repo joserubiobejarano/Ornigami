@@ -6,14 +6,19 @@ const base = { ownerUserId: "owner", actorUserId: "member", businessId: "busines
   businessName: "Shop", locationName: "accounts/A/locations/L", reviews: [{ reviewerName: "R", starRating: 5, comment: "Review" }] };
 
 test("review alert holds a lifecycle lease and settles known delivery outcomes without logging response bodies", async () => {
-  const originalFetch = globalThis.fetch;
   const finished: string[] = [];
-  let status = 202;
-  globalThis.fetch = async () => new Response("private provider text", { status });
+  let failUnknown = false;
   try {
     const mod = loadTs<{ sendNewReviewAlert(input: typeof base): Promise<void> }>("src/lib/review-alerts.ts", {
       "@/lib/env": { getOptionalEnv: (name: string) => name === "RESEND_API_KEY" ? "test-key" : "test@example.test" },
       "@/lib/safe-logger": { safeLogger: { warn: () => undefined } },
+      "@/lib/qr-mail": {
+        qrMailConfigured: () => true,
+        sendAuthorizedResend: async () => {
+          if (failUnknown) { const error = new Error("provider outcome unknown"); error.name = "QrMailOutcomeUnknownError"; throw error; }
+          return "fake-provider-id";
+        },
+      },
       "@/lib/account-lifecycle": {
         beginAccountLifecycleOperation: async (input: { kind: string; actorUserId?: string; businessId: string; leaseMs: number }) => {
           assert.equal(input.kind, "resend_review_alert");
@@ -27,27 +32,24 @@ test("review alert holds a lifecycle lease and settles known delivery outcomes w
     });
     await mod.sendNewReviewAlert(base);
     assert.deepEqual(finished, ["done"]);
-    status = 503;
-    await assert.rejects(mod.sendNewReviewAlert(base), /provider rejected/);
+    failUnknown = true;
+    await assert.rejects(mod.sendNewReviewAlert(base), /provider outcome is unknown/);
     assert.deepEqual(finished, ["done", "uncertain"]);
   } finally {
-    globalThis.fetch = originalFetch;
   }
 });
 
 test("review alert does not send after lifecycle admission is denied", async () => {
-  const originalFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = async () => { calls += 1; return Response.json({}); };
   try {
     const mod = loadTs<{ sendNewReviewAlert(input: typeof base): Promise<void> }>("src/lib/review-alerts.ts", {
       "@/lib/env": { getOptionalEnv: () => "set" },
       "@/lib/safe-logger": { safeLogger: { warn: () => undefined } },
+      "@/lib/qr-mail": { qrMailConfigured: () => true, sendAuthorizedResend: async () => { calls += 1; return "fake-id"; } },
       "@/lib/account-lifecycle": { beginAccountLifecycleOperation: async () => ({ result: "frozen", token: null }) },
     });
     await mod.sendNewReviewAlert(base);
     assert.equal(calls, 0);
   } finally {
-    globalThis.fetch = originalFetch;
   }
 });

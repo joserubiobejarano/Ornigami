@@ -7,13 +7,28 @@ let replyTo = "reply@example.com";
 const linkValidation = loadTs("src/modules/review-booster/services/settings-link-validation.ts", {});
 const provider = loadTs<{
   prepareResendPayload: (input: Record<string, unknown>) => Promise<Record<string, unknown>>;
-  sendPreparedWithResend: (payload: Record<string, unknown>, key: string) => Promise<string>;
+  sendPreparedWithResend: (payload: Record<string, unknown>, key: string, context?: Record<string, unknown>) => Promise<string>;
   classifyResendFailure: (error: unknown) => string;
 }>("src/modules/review-booster/services/resend.provider.ts", {
   "@/lib/env": { getRequiredEnv: (name: string) => name === "EMAIL_FROM" ? emailFrom : "test-key", getOptionalEnv: () => replyTo },
   "@/modules/review-booster/services/unsubscribe-token.service": { buildUnsubscribeUrl: () => "https://app.example/unsubscribe?token=abc" },
   "@/modules/review-booster/services/settings-link-validation": linkValidation,
+  "@/lib/qr-mail": {
+    sendAuthorizedResend: async (bytes: string, context: { idempotencyKey: string }) => {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST", headers: { "Idempotency-Key": context.idempotencyKey }, body: bytes,
+        signal: AbortSignal.timeout(10_000),
+      });
+      let data: unknown;
+      try { data = await response.json(); } catch { throw Object.assign(new Error("ambiguous"), { name: "ResendDeliveryError", kind: "ambiguous" }); }
+      const id = data && typeof data === "object" ? (data as { id?: unknown }).id : null;
+      if (!response.ok || typeof id !== "string") throw Object.assign(new Error("ambiguous"), { name: "ResendDeliveryError", kind: "ambiguous" });
+      return id;
+    },
+  },
 });
+
+const mailContext = (idempotencyKey: string) => ({ purpose: "booster_followup", businessId: "business", candidateId: "candidate", workKey: "delivery", idempotencyKey });
 
 test("prepared payload localizes CTA and unsubscribe and safely escapes links/body", async () => {
   for (const language of ["en", "es", "fr", "de", "it", "pt", "pt-BR"]) {
@@ -44,7 +59,7 @@ test("sender uses the frozen payload and idempotency header and requires provide
       requestHeaders = new Headers(init?.headers);
       return new Response(JSON.stringify({ id: "email-123" }), { status: 200 });
     }) as typeof fetch;
-    assert.equal(await provider.sendPreparedWithResend(payload, "stable-key"), "email-123");
+    assert.equal(await provider.sendPreparedWithResend(payload, "stable-key", mailContext("stable-key")), "email-123");
     assert.deepEqual(JSON.parse(requestBody), payload);
     assert.equal(requestHeaders?.get("Idempotency-Key"), "stable-key");
   } finally { globalThis.fetch = originalFetch; }
@@ -63,8 +78,8 @@ test("a replay sends the prepared payload unchanged after environment settings c
       requests.push({ body: String(init?.body), key: new Headers(init?.headers).get("Idempotency-Key") });
       return new Response(JSON.stringify({ id: "email-existing" }), { status: 200 });
     }) as typeof fetch;
-    await provider.sendPreparedWithResend(payload, "stable-replay-key");
-    await provider.sendPreparedWithResend(payload, "stable-replay-key");
+    await provider.sendPreparedWithResend(payload, "stable-replay-key", mailContext("stable-replay-key"));
+    await provider.sendPreparedWithResend(payload, "stable-replay-key", mailContext("stable-replay-key"));
     assert.deepEqual(requests, [
       { body: serialized, key: "stable-replay-key" },
       { body: serialized, key: "stable-replay-key" },
@@ -78,21 +93,21 @@ test("a replay sends the prepared payload unchanged after environment settings c
   }
 });
 
-test("409, 5xx, transport failures, and malformed success are ambiguous; clear 4xx rejection is definite", async () => {
+test("all provider rejections, transport failures, and malformed success are ambiguous", async () => {
   const payload = { from: "x", to: "x", reply_to: "x", subject: "x", text: "x", html: "x" };
   const originalFetch = globalThis.fetch;
   try {
     for (const [status, responseBody, expected] of [
       [409, { message: "concurrent request" }, "ambiguous"],
       [503, { message: "unavailable" }, "ambiguous"],
-      [400, { message: "invalid address" }, "definite_rejection"],
+      [400, { message: "invalid address" }, "ambiguous"],
       [200, {}, "ambiguous"],
     ] as const) {
       globalThis.fetch = (async () => new Response(JSON.stringify(responseBody), { status })) as typeof fetch;
-      await assert.rejects(provider.sendPreparedWithResend(payload, "same-key"), (error: unknown) => provider.classifyResendFailure(error) === expected);
+      await assert.rejects(provider.sendPreparedWithResend(payload, "same-key", mailContext("same-key")), (error: unknown) => provider.classifyResendFailure(error) === expected);
     }
     globalThis.fetch = (async () => { throw new TypeError("socket reset"); }) as typeof fetch;
-    await assert.rejects(provider.sendPreparedWithResend(payload, "same-key"), (error: unknown) => provider.classifyResendFailure(error) === "ambiguous");
+    await assert.rejects(provider.sendPreparedWithResend(payload, "same-key", mailContext("same-key")), (error: unknown) => provider.classifyResendFailure(error) === "ambiguous");
     assert.equal(provider.classifyResendFailure({ name: "ResendDeliveryError", kind: "definite_rejection", status: 400 }), "definite_rejection");
   } finally { globalThis.fetch = originalFetch; }
 });
@@ -105,44 +120,12 @@ test("invalid review URL fails before transport while local tracked links remain
   assert.match(String(local.text), /http:\/\/localhost:3000\/review/);
 });
 
-test("timeout signal bounds a stalled response body read", async () => {
+test("sender requires an authority context before transport", async () => {
+  let calls = 0;
   const originalFetch = globalThis.fetch;
-  const originalSetTimeout = globalThis.setTimeout;
-  const originalClearTimeout = globalThis.clearTimeout;
-  let timerActive = false;
-  let signalWasAborted = false;
-  let fireTimeout: (() => void) | undefined;
+  globalThis.fetch = (async () => { calls += 1; return Response.json({ id: "unexpected" }); }) as typeof fetch;
   try {
-    globalThis.setTimeout = (((callback: TimerHandler) => {
-      timerActive = true;
-      fireTimeout = callback as () => void;
-      return 1;
-    }) as unknown) as typeof setTimeout;
-    globalThis.clearTimeout = ((() => { timerActive = false; }) as unknown) as typeof clearTimeout;
-    globalThis.fetch = (async (_url, init) => {
-      const signal = init?.signal as AbortSignal;
-      return {
-        ok: true,
-        status: 200,
-        json: async () => {
-          // Model a response body that only completes after the request timeout fires.
-          await Promise.resolve();
-          if (timerActive) {
-            fireTimeout?.();
-            signalWasAborted = signal.aborted;
-          }
-          if (!signalWasAborted) throw new Error("timeout was cleared before response body completed");
-          if (signal.aborted) throw new Error("response body aborted");
-          return { id: "unreachable" };
-        },
-      } as Response;
-    }) as typeof fetch;
-    const pending = provider.sendPreparedWithResend({ from: "x", to: "x", reply_to: "x", subject: "x", text: "x", html: "x" }, "k");
-    await assert.rejects(pending, (error: unknown) => provider.classifyResendFailure(error) === "ambiguous");
-    assert.equal(signalWasAborted, true);
-  } finally {
-    globalThis.fetch = originalFetch;
-    globalThis.setTimeout = originalSetTimeout;
-    globalThis.clearTimeout = originalClearTimeout;
-  }
+    await assert.rejects(provider.sendPreparedWithResend({ from: "x", to: "x", reply_to: "x", subject: "x", text: "x", html: "x" }, "k"), /Mail authorization context is required/);
+    assert.equal(calls, 0);
+  } finally { globalThis.fetch = originalFetch; }
 });

@@ -225,6 +225,12 @@ async function safeProviderMessageId(response) {
  */
 export function createA10ResendFetchGuard({ sender, apiKey, ownedRecipient, stateDir, workspaceRoot = process.cwd(), maxSends = A10_LIVE_MAX_SENDS } = {}) {
   const networkScope = new AsyncLocalStorage();
+  void claimAttempt;
+  void finishAttempt;
+  void safeProviderMessageId;
+  void stateDir;
+  void workspaceRoot;
+  void maxSends;
   return Object.freeze({
     permitsNetwork(target) {
       return networkScope.getStore() === true && target.host === "api.resend.com" && Number(target.port) === 443;
@@ -233,24 +239,9 @@ export function createA10ResendFetchGuard({ sender, apiKey, ownedRecipient, stat
       return networkScope.getStore() === true && String(host).toLowerCase().replace(/\.$/, "") === "api.resend.com";
     },
     async fetch(input, init, nativeFetch) {
-      const request = inspectA10ResendRequest(input, init, { sender, apiKey, ownedRecipient, maxSends });
-      if (!stateDir) throw new Error("A10 live provider attempt directory is unavailable");
-      const attempt = await claimAttempt(stateDir, request, maxSends, workspaceRoot);
-      const guardedInit = { ...init, redirect: "manual" };
-      let response;
-      try {
-        response = await networkScope.run(true, () => nativeFetch.call(globalThis, input, guardedInit));
-      } catch (error) {
-        await finishAttempt(attempt, { status: "unknown", outcome: "network_error" });
-        throw error;
-      }
-      const providerMessageId = await safeProviderMessageId(response);
-      await finishAttempt(attempt, {
-        status: response.ok && providerMessageId ? "accepted" : response.ok ? "unknown" : "rejected",
-        httpStatus: response.status,
-        ...(providerMessageId ? { providerMessageId } : {}),
-      });
-      return response;
+      inspectA10ResendRequest(input, init, { sender, apiKey, ownedRecipient, maxSends });
+      void nativeFetch;
+      throw new Error("A10 direct email sends are disabled; sending requires the enrolled QR mail authority path");
     },
   });
 }

@@ -78,7 +78,7 @@ test("outbound guard rejects other hosts, methods, sender, credentials, tags, fa
   assert.equal(A10_LIVE_MAX_SENDS, 2);
 });
 
-test("durable guard allows scoped Resend DNS/TLS only inside a validated fetch and forces manual redirects", async () => {
+test("durable guard rejects direct sends before network or attempt-ledger writes", async () => {
   await withRoot(async (workspaceRoot) => {
     const stateRoot = join(workspaceRoot, ".env.a10-live-resend");
     await secureA10PrivateDirectory(stateRoot);
@@ -88,7 +88,7 @@ test("durable guard allows scoped Resend DNS/TLS only inside a validated fetch a
     assert.equal(guard.permitsDns("api.resend.com"), false);
     const item = request();
     let calls = 0;
-    const response = await guard.fetch(item.url, item.init, async (_input, init) => {
+    await assert.rejects(guard.fetch(item.url, item.init, async (_input, init) => {
       calls += 1;
       assert.equal(init?.redirect, "manual");
       assert.equal(guard.permitsNetwork({ host: "api.resend.com", port: 443 }), true);
@@ -96,47 +96,33 @@ test("durable guard allows scoped Resend DNS/TLS only inside a validated fetch a
       assert.equal(guard.permitsNetwork({ host: "api.stripe.com", port: 443 }), false);
       assert.equal(guard.permitsNetwork({ host: "api.resend.com", port: 80 }), false);
       return new Response(JSON.stringify({ id: "re_test_message" }), { status: 200 });
-    });
-    assert.equal(response.status, 200);
-    assert.equal(calls, 1);
+    }), /direct email sends are disabled/);
+    assert.equal(calls, 0);
     assert.equal(guard.permitsNetwork({ host: "api.resend.com", port: 443 }), false);
-    const entries = await readdir(stateDir);
-    assert.deepEqual(entries.sort(), ["attempt-1.json"]);
-    const receipt = await readFile(join(stateDir, entries[0]!), "utf8");
-    const attemptReceipt = JSON.parse(receipt);
-    assert.equal(attemptReceipt.recipientLabel, "owned-test-inbox");
-    assert.equal(attemptReceipt.status, "accepted");
-    assert.equal(attemptReceipt.providerMessageId, "re_test_message");
-    assert.ok(!receipt.includes(OWNED_RECIPIENT));
-    assert.ok(!receipt.includes(API_KEY));
-    await assert.rejects(guard.fetch(item.url, item.init, async () => { calls += 1; return new Response("duplicate"); }), /already has a durable provider attempt/);
-    assert.equal(calls, 1);
+    await assert.rejects(readdir(stateDir), /ENOENT/);
   });
 });
 
-test("attempt ledger caps two unique delivery IDs across process restarts and preserves uncertain attempts", async () => {
+test("legacy attempt ledger path never sends or writes state, even across new guard instances", async () => {
   await withRoot(async (workspaceRoot) => {
     const stateRoot = join(workspaceRoot, ".env.a10-live-resend");
     await secureA10PrivateDirectory(stateRoot);
     const stateDir = join(stateRoot, "provider-attempts");
     const first = createA10ResendFetchGuard({ sender: SENDER, apiKey: API_KEY, ownedRecipient: OWNED_RECIPIENT, stateDir, workspaceRoot });
     const one = request();
-    await assert.rejects(first.fetch(one.url, one.init, async () => { throw new TypeError("synthetic network fault"); }), /synthetic network fault/);
+    let calls = 0;
+    await assert.rejects(first.fetch(one.url, one.init, async () => { calls += 1; return new Response("unexpected"); }), /direct email sends are disabled/);
     const second = request({ recipient: "bounced@resend.dev", deliveryId: DELIVERY_2, attemptId: ATTEMPT_2 });
     const afterRestart = createA10ResendFetchGuard({ sender: SENDER, apiKey: API_KEY, ownedRecipient: OWNED_RECIPIENT, stateDir, workspaceRoot });
-    await afterRestart.fetch(second.url, second.init, async () => new Response("ok", { status: 200 }));
-    const firstAttempt = JSON.parse(await readFile(join(stateDir, "attempt-1.json"), "utf8"));
-    const secondAttempt = JSON.parse(await readFile(join(stateDir, "attempt-2.json"), "utf8"));
-    assert.equal(firstAttempt.status, "unknown");
-    assert.equal(firstAttempt.outcome, "network_error");
-    assert.equal(secondAttempt.status, "unknown");
+    await assert.rejects(afterRestart.fetch(second.url, second.init, async () => { calls += 1; return new Response("unexpected"); }), /direct email sends are disabled/);
     const third = request({ deliveryId: "a1000000-0000-4000-8000-000000000003", attemptId: "a1000000-0000-4000-8000-000000000013" });
-    await assert.rejects(afterRestart.fetch(third.url, third.init, async () => new Response("must not send")), /send cap/);
-    assert.equal((await readdir(stateDir)).filter((name) => name.endsWith(".json")).length, 2);
+    await assert.rejects(afterRestart.fetch(third.url, third.init, async () => { calls += 1; return new Response("must not send"); }), /direct email sends are disabled/);
+    assert.equal(calls, 0);
+    await assert.rejects(readdir(stateDir), /ENOENT/);
   });
 });
 
-test("attempt ledger rejects reuse of an application-format idempotency key for another delivery", async () => {
+test("legacy attempt guard rejects idempotency-key variants before network calls", async () => {
   await withRoot(async (workspaceRoot) => {
     const stateRoot = join(workspaceRoot, ".env.a10-live-resend");
     await secureA10PrivateDirectory(stateRoot);
@@ -144,10 +130,10 @@ test("attempt ledger rejects reuse of an application-format idempotency key for 
     const guard = createA10ResendFetchGuard({ sender: SENDER, apiKey: API_KEY, ownedRecipient: OWNED_RECIPIENT, stateDir, workspaceRoot });
     const first = request();
     let calls = 0;
-    await guard.fetch(first.url, first.init, async () => { calls += 1; return new Response(JSON.stringify({ id: "re_test_message" }), { status: 200 }); });
+    await assert.rejects(guard.fetch(first.url, first.init, async () => { calls += 1; return new Response(JSON.stringify({ id: "re_test_message" }), { status: 200 }); }), /direct email sends are disabled/);
     const reused = request({ recipient: "bounced@resend.dev", deliveryId: DELIVERY_2 });
-    await assert.rejects(guard.fetch(reused.url, reused.init, async () => { calls += 1; return new Response("unexpected"); }), /idempotency key already has/);
-    assert.equal(calls, 1);
+    await assert.rejects(guard.fetch(reused.url, reused.init, async () => { calls += 1; return new Response("unexpected"); }), /direct email sends are disabled/);
+    assert.equal(calls, 0);
   });
 });
 

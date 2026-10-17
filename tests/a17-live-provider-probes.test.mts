@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import {
@@ -20,6 +20,7 @@ const env = {
 };
 
 test("allowlisted env loader discards unrelated secrets and detects duplicate provider keys", () => {
+  mkdirSync(join(process.cwd(), ".next"), { recursive: true });
   const source = join(process.cwd(), ".next", `a17-env-${process.pid}.tmp`);
   try {
     writeFileSync(source, "DATABASE_URL=postgres://secret/db\nRESEND_API_KEY=re_0123456789abcdef\nAUTH_SECRET='hidden-too'\n");
@@ -31,7 +32,7 @@ test("allowlisted env loader discards unrelated secrets and detects duplicate pr
   } finally { rmSync(source, { force: true }); }
 });
 
-test("controlled Resend send freezes one allowlisted recipient, payload hash and idempotency key", { timeout: 5_000 }, async () => {
+test("controlled Resend sender fails closed without authority context and makes no provider call", { timeout: 5_000 }, async () => {
   const root = join(process.cwd(), ".next", "a17-provider-evidence");
   const runId = "a1700000-0000-4000-8000-000000000001";
   const evidencePath = join(root, `resend-${runId}.json`);
@@ -49,20 +50,17 @@ test("controlled Resend send freezes one allowlisted recipient, payload hash and
         return Response.json({ id: "re_test_message_123" }, { status: 200 });
       },
     });
-    assert.equal(result.status, "provider-accepted", JSON.stringify(result));
+    assert.equal(result.status, "unknown");
     assert.equal(result.delivery, "unconfirmed", "provider acceptance does not claim recipient delivery");
-    assert.equal(result.recipient, "joserubiobejarano@gmail.com");
-    assert.equal(calls, 1);
-    assert.equal(sent?.url, "https://api.resend.com/emails");
-    const headers = new Headers(sent?.init.headers);
-    assert.equal(headers.get("Idempotency-Key"), `a17-controlled-${runId}`);
-    const body = JSON.parse(String(sent?.init.body));
-    assert.equal(body.to, result.recipient);
+    assert.equal(result.recipientLabel, "controlled-test-mailbox");
+    assert.equal(Object.hasOwn(result, "recipient"), false);
+    assert.equal(calls, 0);
+    assert.equal(sent, undefined);
     const state = JSON.parse(readFileSync(evidencePath, "utf8"));
-    assert.equal(state.status, "accepted");
+    assert.equal(state.status, "unknown");
     assert.equal(state.payloadSha256, result.payloadSha256);
     assert.equal(state.idempotencyKey, `a17-controlled-${runId}`);
-    assert.equal(state.providerMessageId, "re_test_message_123");
+    assert.equal(Object.hasOwn(state, "providerMessageId"), false);
   } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
 });
 
@@ -81,7 +79,7 @@ function writePreparedResendState(runId: string, evidencePath: string) {
   }) + "\n");
 }
 
-test("concurrent Resend invocations admit only one provider request for a run", { timeout: 5_000 }, async () => {
+test("concurrent Resend invocations admit no provider request without authority context", { timeout: 5_000 }, async () => {
   const root = join(process.cwd(), ".next", "a17-provider-evidence");
   const runId = "a1700000-0000-4000-8000-000000000005";
   const evidencePath = join(root, "resend-" + runId + ".json");
@@ -109,7 +107,7 @@ test("concurrent Resend invocations admit only one provider request for a run", 
       runControlledResend({ env, runId, stateRoot: root, fetcher, beforeAttemptClaim }),
     ]);
     assert.equal(claimArrivals, 2, "both callers validated the same prepared state before either claim");
-    assert.equal(calls, 1, "the same run cannot issue two provider requests");
+    assert.equal(calls, 0, "the same run cannot issue provider requests without authority context");
     assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
     assert.equal(readFileSync(claimPath, "utf8").includes(runId), true, "the permanent exclusive claim records the run");
   } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
@@ -145,7 +143,7 @@ test("controlled Resend rejects recipients outside the named allowlist without t
   assert.equal(RESEND_RECIPIENT_ALLOWLIST.size, 4);
 });
 
-test("ambiguous Resend result is recorded unknown and cannot be upgraded to delivery", async () => {
+test("missing authority remains unknown and cannot be upgraded to delivery", async () => {
   const root = join(process.cwd(), ".next", "a17-provider-evidence");
   const runId = "a1700000-0000-4000-8000-000000000003";
   const evidencePath = join(root, `resend-${runId}.json`);
@@ -163,7 +161,7 @@ test("ambiguous Resend result is recorded unknown and cannot be upgraded to deli
     assert.equal(state.status, "unknown");
     assert.equal(state.failureClass, "unknown");
     await assert.rejects(runControlledResend({ env, runId, stateRoot: root, fetcher: async () => { calls += 1; return Response.json({ id: "should-not-send" }); } }), /no provider request made/);
-    assert.equal(calls, 1, "an unknown outcome is never resent automatically");
+    assert.equal(calls, 0, "missing authority prevents provider I/O and an unknown outcome is never resent automatically");
   } finally { rmSync(evidencePath, { force: true }); rmSync(claimPath, { force: true }); }
 });
 

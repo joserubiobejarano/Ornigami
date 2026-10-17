@@ -14,6 +14,7 @@ import {
 import { safeLogger } from "@/lib/safe-logger";
 import { generateFollowupEmailBody } from "@/modules/review-booster/services/followup-email-generator.service";
 import { sendWithResend } from "@/modules/review-booster/services/resend.provider";
+import { qrMailConfigured, sendAuthorizedResend } from "@/lib/qr-mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,25 +50,18 @@ function normalizeOptional(value?: string | null): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-async function sendConfirmationEmail(recipientEmail: string, confirmationUrl: string) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${getRequiredResendApiKey()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+async function sendConfirmationEmail(recipientEmail: string, confirmationUrl: string, tokenHash: string) {
+  const payload = JSON.stringify({
       from: `Ornigami <${getRequiredEmailFrom()}>`,
       to: recipientEmail,
       subject: "Confirm your Ornigami demo email",
       text: `Confirm that you control this address to receive the sample demo email: ${confirmationUrl}`,
       html: `<p>Confirm that you control this address to receive the sample demo email.</p><p><a href="${confirmationUrl}">Confirm demo email</a></p>`,
-    }),
   });
-  if (!response.ok) throw new Error(`Resend request failed (${response.status})`);
-}
-
-function getRequiredResendApiKey(): string {
-  const value = getOptionalEnv("RESEND_API_KEY");
-  if (!value) throw new Error("RESEND_API_KEY is not set");
-  return value;
+  await sendAuthorizedResend(payload, {
+    purpose: "public_demo_confirmation", businessId: null, candidateId: tokenHash,
+    workKey: `public-demo-confirmation:${tokenHash}`, idempotencyKey: `public-demo-confirmation:${tokenHash}`,
+  });
 }
 
 function getRequiredEmailFrom(): string {
@@ -100,7 +94,7 @@ export async function POST(req: Request) {
     if (!ipAllowed) return NextResponse.json({ error: "Too many demo attempts. Please try again tomorrow." }, { status: 429 });
   }
 
-  if (!getOptionalEnv("RESEND_API_KEY") || !getOptionalEnv("EMAIL_FROM")) return NextResponse.json({ error: "Demo email sending is temporarily unavailable." }, { status: 503 });
+  if (!getOptionalEnv("RESEND_API_KEY") || !getOptionalEnv("EMAIL_FROM") || !qrMailConfigured("public_demo_confirmation")) return NextResponse.json({ error: "Demo email sending is temporarily unavailable." }, { status: 503 });
 
   const confirmationToken = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(confirmationToken).digest("hex");
@@ -110,7 +104,7 @@ export async function POST(req: Request) {
   `;
   const confirmationUrl = `${getServerAppUrl()}/api-public-demo-review-booster?token=${encodeURIComponent(confirmationToken)}`;
   try {
-    await sendConfirmationEmail(input.recipient_email, confirmationUrl);
+    await sendConfirmationEmail(input.recipient_email, confirmationUrl, tokenHash);
   } catch (error) {
     safeLogger.error("public_demo.review_booster.confirmation_failed", { error: error instanceof Error ? error.message : "unknown" });
     return NextResponse.json({ error: "We could not send the confirmation email right now." }, { status: 503 });
@@ -146,7 +140,10 @@ export async function GET(req: Request) {
   const subject = "A sample follow-up email from Ornigami";
   const demoBody = `${body}\n\n-\nSample sent by Ornigami for demonstration purposes.`;
   try {
-    await sendWithResend({ business_name: "Ornigami Demo", customer_email: challenge.recipient_email, subject, body: demoBody, google_review_url: input.google_review_url, email_from_name: "Ornigami Demo" });
+    await sendWithResend({ business_name: "Ornigami Demo", customer_email: challenge.recipient_email, subject, body: demoBody, google_review_url: input.google_review_url, email_from_name: "Ornigami Demo" }, {
+      purpose: "public_demo_sample", businessId: null, candidateId: tokenHash,
+      workKey: `public-demo-sample:${tokenHash}`, idempotencyKey: `public-demo-sample:${tokenHash}`,
+    });
     await sql`UPDATE public.public_demo_email_challenges SET used_at = now() WHERE token_hash = ${tokenHash}`;
   } catch (error) {
     safeLogger.error("public_demo.review_booster.send_failed", { error: error instanceof Error ? error.message : "unknown" });

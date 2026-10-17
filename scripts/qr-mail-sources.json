@@ -1,0 +1,26 @@
+{
+  "booster": [
+    "src/lib/qr-mail.ts",
+    "src/modules/review-booster/services/resend.provider.ts",
+    "src/modules/review-booster/services/followup-runner.service.ts",
+    "src/app/api-public-demo-review-booster/route.ts",
+    "migration-sources/follow-up/src/server/services/email/resend-provider.ts",
+    "migration-sources/follow-up/src/server/services/followup-runner.ts",
+    "scripts/a17-live-provider-probes.mjs"
+  ],
+  "direct": [
+    "src/lib/qr-mail.ts",
+    "src/lib/auth-verification.ts",
+    "src/lib/team.ts",
+    "src/lib/review-alerts.ts",
+    "src/app/api-public-demo-review-booster/route.ts",
+    "migration-sources/contactor/src/server/services/notifications/email/resend-email.provider.ts",
+    "scripts/a10-live-resend-guards.mjs"
+  ],
+  "excluded_read_or_webhook_operations": [
+    "src/modules/review-booster/services/resend-reconciliation.service.ts",
+    "scripts/a10-live-provider-control.mjs",
+    "scripts/a10-resend-endpoint.mjs",
+    "src/app/api/webhooks/resend/route.ts"
+  ]
+}

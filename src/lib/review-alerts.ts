@@ -1,9 +1,11 @@
 import { safeLogger } from "@/lib/safe-logger";
 import { getOptionalEnv } from "@/lib/env";
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/account-lifecycle";
+import { qrMailConfigured, sendAuthorizedResend } from "@/lib/qr-mail";
 
 type NewReviewAlertReview = {
+  eventId?: string;
   reviewerName: string | null;
   starRating: number | null;
   comment: string | null;
@@ -29,6 +31,11 @@ export async function sendNewReviewAlert(input: {
   required?: boolean;
 }): Promise<void> {
   if (input.reviews.length === 0) return;
+  if (!qrMailConfigured("review_alert")) {
+    safeLogger.warn("review.alert.skipped_mail_authority_unavailable", { count: input.reviews.length });
+    if (input.required) throw new Error("Review alert mail authorization is unavailable");
+    return;
+  }
   const resendApiKey = getOptionalEnv("RESEND_API_KEY");
   const emailFrom = getOptionalEnv("EMAIL_FROM");
   const replyToEmail = getOptionalEnv("REPLY_TO_EMAIL");
@@ -40,7 +47,7 @@ export async function sendNewReviewAlert(input: {
 
   const operation = await beginAccountLifecycleOperation({
     userId: input.ownerUserId, actorUserId: input.actorUserId, businessId: input.businessId,
-    kind: "resend_review_alert", idempotencyKey: randomUUID(), leaseMs: 25_000,
+    kind: "resend_review_alert", idempotencyKey: `review-alert:${createHash("sha256").update(input.reviews.map((review) => review.eventId ?? "").sort().join("\n") || JSON.stringify(input.reviews)).digest("hex")}`, leaseMs: 25_000,
   });
   if (operation.result !== "claimed" || !operation.token) {
     if (input.required) throw new Error("Review alert lifecycle admission is unavailable");
@@ -61,36 +68,27 @@ export async function sendNewReviewAlert(input: {
     return `${review.reviewerName || "A customer"} — ${rating}\n${review.comment || "No written comment"}`;
   }).join("\n\n");
 
-  let response: Response;
   try {
-    response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const payload = JSON.stringify({
         from: `Ornigami <${emailFrom}>`,
         to: input.recipientEmail,
         subject,
         text: `${text}\n\nLocation: ${input.locationName}`,
         html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a;"><h2>${escapeHtml(subject)}</h2><p>Location: ${escapeHtml(input.locationName)}</p><ul>${reviewLines}</ul></div>`,
         reply_to: replyToEmail || emailFrom,
-      }),
-      signal: input.signal ? AbortSignal.any([input.signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000),
     });
-  } catch {
-    await finishAccountLifecycleOperation(operation.token, "uncertain").catch(() => false);
-    throw new Error("Review alert provider request failed or timed out");
+    const sourceEvents = input.reviews.map((review) => review.eventId).filter((id): id is string => Boolean(id)).sort();
+    const workKey = `review-alert:${createHash("sha256").update(sourceEvents.length ? sourceEvents.join("\n") : payload).digest("hex")}`;
+    await sendAuthorizedResend(payload, {
+      purpose: "review_alert", businessId: input.businessId, candidateId: workKey, workKey,
+      idempotencyKey: workKey, transportContext: { event_count: input.reviews.length },
+    }, input.signal);
+  } catch (error) {
+    const unknown = error instanceof Error && error.name === "QrMailOutcomeUnknownError";
+    await finishAccountLifecycleOperation(operation.token, unknown ? "uncertain" : "failed").catch(() => false);
+    if (unknown) throw new Error("Review alert provider outcome is unknown; do not resend it.");
+    throw new Error("Review alert mail authorization or provider request failed");
   }
-
-  if (!response.ok) {
-    await response.body?.cancel().catch(() => undefined);
-    await finishAccountLifecycleOperation(operation.token, response.status >= 400 && response.status < 500 ? "failed" : "uncertain");
-    safeLogger.warn("review.alert.send_failed", { status: response.status });
-    throw new Error("Review alert provider rejected the request");
-  }
-  await response.body?.cancel().catch(() => undefined);
   if (!await finishAccountLifecycleOperation(operation.token, "done")) {
     throw new Error("Review alert lifecycle completion could not be confirmed");
   }

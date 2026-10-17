@@ -21,6 +21,7 @@ import {
   TEAM_INVITATION_DAYS,
 } from "@/lib/team";
 import { safeLogger } from "@/lib/safe-logger";
+import { QrMailOutcomeUnknownError } from "@/lib/qr-mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,6 +117,8 @@ async function createInvitation(req: Request) {
   const invitationUrl = teamInvitationUrl(token);
   try {
     const delivery = await sendTeamInvitationEmail({
+      invitationId,
+      businessId: context.businessId,
       email,
       businessName: context.business.name,
       inviterEmail: session.user.email,
@@ -123,8 +126,9 @@ async function createInvitation(req: Request) {
     });
     return NextResponse.json({ ok: true, sent: delivery.sent, invitationUrl: delivery.sent ? null : invitationUrl });
   } catch (error: unknown) {
-    await cleanupFailedTeamInvitation(invitationId, tokenHash);
+    const outcomeUnknown = error instanceof QrMailOutcomeUnknownError || (error instanceof Error && error.name === "QrMailOutcomeUnknownError");
+    if (!outcomeUnknown) await cleanupFailedTeamInvitation(invitationId, tokenHash);
     safeLogger.error("team.invitation.send.failed", { error: error instanceof Error ? error.message : "unknown" });
-    return NextResponse.json({ error: "The invitation could not be sent. Please try again." }, { status: 502 });
+    return NextResponse.json({ error: outcomeUnknown ? "Invitation delivery is unresolved. Do not resend this invitation." : "The invitation could not be sent." }, { status: outcomeUnknown ? 409 : 502 });
   }
 }

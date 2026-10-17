@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { sql } from "@/lib/db/neon";
 import { getOptionalEnv, getServerAppUrl } from "@/lib/env";
+import { qrMailConfigured, sendAuthorizedResend, type QrMailContext } from "@/lib/qr-mail";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -10,7 +11,7 @@ export function authEmailDeliveryAvailable(): boolean {
   const key = getOptionalEnv("RESEND_API_KEY");
   const from = getOptionalEnv("EMAIL_FROM");
   const rawUrl = getOptionalEnv("NEXT_PUBLIC_APP_URL");
-  if (!key || !from || !rawUrl) return false;
+  if (!key || !from || !rawUrl || !qrMailConfigured("auth_verification")) return false;
   try {
     const url = new URL(rawUrl);
     return process.env.NODE_ENV !== "production" || url.protocol === "https:";
@@ -19,33 +20,32 @@ export function authEmailDeliveryAvailable(): boolean {
   }
 }
 
-async function sendAuthEmail(to: string, subject: string, link: string, action: string) {
+async function sendAuthEmail(to: string, subject: string, link: string, action: string, context: QrMailContext) {
   const key = getOptionalEnv("RESEND_API_KEY");
   const from = getOptionalEnv("EMAIL_FROM");
   if (!key || !from) throw new Error("Auth email delivery unavailable");
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const payload = JSON.stringify({
       from: `Ornigami <${from}>`, to, subject,
       text: `${action}: ${link}`,
       html: `<p>${action}</p><p><a href="${link}">${action}</a></p>`,
-    }),
-    signal: AbortSignal.timeout(10_000),
   });
-  if (!response.ok) throw new Error("Auth email delivery failed");
+  await sendAuthorizedResend(payload, context);
 }
 
 export async function createEmailVerification(email: string, userId: string, callbackUrl: string): Promise<void> {
   const token = randomBytes(32).toString("base64url");
+  const tokenHash = hashToken(token);
   const inserted = await sql`SELECT public.auth_create_email_verification_token(
-    ${userId}, ${hashToken(token)}, ${callbackUrl}
+    ${userId}, ${tokenHash}, ${callbackUrl}
   ) AS created`;
   if ((inserted[0] as { created?: boolean } | undefined)?.created !== true) {
     throw new Error("auth_token_creation_denied");
   }
   const link = `${getServerAppUrl()}/api/auth/verify-email?token=${encodeURIComponent(token)}&callbackUrl=${encodeURIComponent(callbackUrl)}`;
-  await sendAuthEmail(email, "Verify your Ornigami email", link, "Verify your email address");
+  await sendAuthEmail(email, "Verify your Ornigami email", link, "Verify your email address", {
+    purpose: "auth_verification", businessId: null, candidateId: tokenHash, workKey: `auth-verification:${tokenHash}`,
+    idempotencyKey: `auth-verification:${tokenHash}`,
+  });
 }
 
 export async function createPasswordReset(email: string, userId: string, callbackUrl: string): Promise<void> {
@@ -57,7 +57,10 @@ export async function createPasswordReset(email: string, userId: string, callbac
     throw new Error("auth_token_creation_denied");
   }
   const link = `${getServerAppUrl()}/reset-password?token=${encodeURIComponent(token)}&callbackUrl=${encodeURIComponent(callbackUrl)}`;
-  await sendAuthEmail(email, "Reset your Ornigami password", link, "Reset your password");
+  await sendAuthEmail(email, "Reset your Ornigami password", link, "Reset your password", {
+    purpose: "password_reset", businessId: null, candidateId: hashToken(token), workKey: `password-reset:${hashToken(token)}`,
+    idempotencyKey: `password-reset:${hashToken(token)}`,
+  });
 }
 
 export async function verifyEmailToken(token: string): Promise<{ ok: boolean; callbackUrl: string | null }> {

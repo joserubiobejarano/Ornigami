@@ -192,7 +192,7 @@ test("email provider failure removes the exact reservation token and row", async
   h.state.deliveryError = true;
   const response = await h.team.POST(request("/api/team", "POST", { email: "New@Example.com" }));
   assert.equal(response.status, 502);
-  assert.deepEqual(await json(response), { error: "The invitation could not be sent. Please try again." });
+  assert.deepEqual(await json(response), { error: "The invitation could not be sent." });
   assert.deepEqual(h.state.reservations, [{
     actorId: "owner-id",
     businessId: "business-id",

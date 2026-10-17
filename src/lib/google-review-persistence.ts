@@ -3,6 +3,7 @@ import { parseGoogleStarRating } from "@/lib/google-review-rating";
 import type { GoogleReviewRecord } from "@/lib/google-review-sync";
 
 export type NewGoogleReview = {
+  eventId: string;
   reviewerName: string | null;
   starRating: number | null;
   comment: string | null;
@@ -127,7 +128,7 @@ export async function persistGoogleReviews(
     }
     for (const row of returned) {
       if (row.was_inserted) {
-        newReviews.push({ reviewerName: row.reviewer_name, starRating: row.star_rating, comment: row.comment });
+        newReviews.push({ eventId: row.google_review_id, reviewerName: row.reviewer_name, starRating: row.star_rating, comment: row.comment });
       }
     }
   }
