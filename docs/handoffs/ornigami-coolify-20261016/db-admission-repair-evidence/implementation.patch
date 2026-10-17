@@ -1,0 +1,652 @@
+diff --git a/.github/workflows/ornigami-image-rehearsal.yml b/.github/workflows/ornigami-image-rehearsal.yml
+index f29ae07..4da1bd0 100644
+--- a/.github/workflows/ornigami-image-rehearsal.yml
++++ b/.github/workflows/ornigami-image-rehearsal.yml
+@@ -165,15 +165,37 @@ jobs:
+           printf '%s  %s\n' 4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71 "$RUNNER_TEMP/cosign" | sha256sum --check
+           chmod 700 "$RUNNER_TEMP/cosign"
+           "$node_dir/node" "$RUNNER_TEMP/source/scripts/framework-prototype/verify-minimal-parents.mjs" "$RUNNER_TEMP/cosign" "$ORNIGAMI_EVIDENCE_DIR/parent-admission"
++          "$node_dir/node" -e 'const fs=require("node:fs"),p=JSON.parse(fs.readFileSync(process.argv[1])),d=fs.readFileSync(process.argv[2],"utf8");for(const x of p.parents)if(!d.includes("@"+x.amd64Digest))throw Error("Dockerfile parent policy drift")' "$RUNNER_TEMP/source/scripts/framework-prototype/minimal-parent-policy.json" "$RUNNER_TEMP/source/Dockerfile"
++
++      - name: Download bounded frozen database once
++        id: database_download
++        shell: bash
++        run: |
++          set -Eeuo pipefail
+           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/stage-scans"
+           caller=$(id -un)
++          set +e
+           sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
+             /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 GOMEMLIMIT=1536MiB \
+-            "$node_dir/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-resources.json" "$RUNNER_TEMP/trivy" image --download-db-only --cache-dir "$RUNNER_TEMP/trivy-cache"
+-          "$node_dir/node" -e 'const fs=require("node:fs"),p=JSON.parse(fs.readFileSync(process.argv[1])),d=fs.readFileSync(process.argv[2],"utf8");for(const x of p.parents)if(!d.includes("@"+x.amd64Digest))throw Error("Dockerfile parent policy drift")' "$RUNNER_TEMP/source/scripts/framework-prototype/minimal-parent-policy.json" "$RUNNER_TEMP/source/Dockerfile"
++            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-resources.json" "$RUNNER_TEMP/trivy" image --download-db-only --cache-dir "$RUNNER_TEMP/trivy-cache" > "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-download.log" 2>&1
++          download_rc=$?
++          printf '%s\n' "$download_rc" > "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-download-exit.txt"
++          exit "$download_rc"
++
++      - name: Retain and validate shared frozen database before dependent work
++        id: database_admission
++        if: ${{ always() && steps.parent_admission.outcome == 'success' }}
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          caller=$(id -un)
++          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-admit-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
++            /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 SOURCE_SHA="$SOURCE_SHA" RUNNER_TEMP="$RUNNER_TEMP" ORNIGAMI_EVIDENCE_DIR="$ORNIGAMI_EVIDENCE_DIR" \
++            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-admission-resources.json" "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" admit
+ 
+       - name: Collect complete original parent and tool scans
+         id: base_scan
++        if: ${{ success() && steps.database_admission.outcome == 'success' }}
+         shell: bash
+         run: |
+           set -Eeuo pipefail
+@@ -186,6 +208,15 @@ jobs:
+           with open(sys.argv[3],'a') as out: out.write(f"\nOriginal minimal runtime base: CRITICAL={counts['CRITICAL']} HIGH={counts['HIGH']}; both parents and tooling scans retained; strict aggregate gate remains independent.\n")
+           PY
+ 
++      - name: Require shared database lease before any compilation
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          caller=$(id -un)
++          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-check-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
++            /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 SOURCE_SHA="$SOURCE_SHA" RUNNER_TEMP="$RUNNER_TEMP" ORNIGAMI_EVIDENCE_DIR="$ORNIGAMI_EVIDENCE_DIR" \
++            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-prebuild-check-resources.json" "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" check
++
+       - name: Create bounded serial BuildKit builder
+         id: buildkit
+         shell: bash
+@@ -619,6 +650,7 @@ jobs:
+           FRAMEWORK_BROWSER_EXIT_CODE: ${{ steps.framework_browser.outputs.exit_code }}
+           BASE_GATE_OUTCOME: ${{ steps.base_advisory_gate.outcome }}
+           ALL_STAGE_OUTCOME: ${{ steps.all_stage_gate.outcome }}
++          DATABASE_ADMISSION_OUTCOME: ${{ steps.database_admission.outcome }}
+           OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
+           OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+           OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
+@@ -731,6 +763,7 @@ jobs:
+           metadata["capture_completeness_status"] = __import__("os").environ["CAPTURE_COMPLETENESS"]
+           metadata["custody_status"] = "not-assessed-by-capture"
+           metadata["all_stage_gate_outcome"] = __import__("os").environ.get("ALL_STAGE_OUTCOME", "unknown")
++          metadata["database_admission_outcome"] = __import__("os").environ.get("DATABASE_ADMISSION_OUTCOME", "unknown")
+           stages = root / "stage-scans/index.json"
+           expected=["original-base","original-runtime-base","build-base","deps","builder","prod-deps","runner","buildkit","dockerfile-frontend"]
+           stages.parent.mkdir(parents=True,exist_ok=True)
+@@ -757,6 +790,30 @@ jobs:
+               metadata["capture_completeness_status"]="failed"
+           stages.write_text(json.dumps(data,indent=2)+"\n")
+           (stages.parent/"completeness-status.txt").write_text(stage_capture+"\n")
++          if metadata["database_admission_outcome"] in ("success", "failure"):
++              try:
++                  dbdir=stages.parent/"database-admission"
++                  for name in ("index.json","clock.json","validation-clock.json","metadata-identity.json","databaseIdentity.json","scannerIdentity.json"):
++                      if not (dbdir/name).is_file() or not (dbdir/name).stat().st_size:
++                          raise ValueError("missing shared DB admission receipt: "+name)
++                  db=json.loads((dbdir/"index.json").read_text())
++                  if db.get("phase") != "complete" or db["sourceSha"] != metadata["source_sha"] or db["result"] != ("passed" if metadata["database_admission_outcome"] == "success" else "failed"):
++                      raise ValueError("shared DB admission source/result mismatch")
++                  if db.get("metadataIdentity") and not (dbdir/"metadata.original.bin").is_file():
++                      raise ValueError("original bounded metadata missing")
++                  if db.get("metadataIdentity"):
++                      original=(dbdir/"metadata.original.bin").read_bytes()
++                      identity=db["metadataIdentity"]
++                      digest=hashlib.sha256(original).hexdigest()
++                      if len(original)>65536 or len(original)!=identity["retainedBytes"] or digest!=identity["retainedSha256"] or (not identity["truncated"] and (identity["sha256"]!=digest or identity["bytes"]!=len(original))):
++                          raise ValueError("original metadata content/identity mismatch")
++                  metadata["database_diagnostics_status"]="collected"
++              except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
++                  metadata["database_diagnostics_status"]="failed: "+str(error)
++                  metadata["capture_completeness_status"]="failed"
++                  (stages.parent/"completeness-status.txt").write_text("failed\n")
++          else:
++              metadata["database_diagnostics_status"]="not-run"
+           metadata["all_stage_evidence_status"] = data["result"]
+           files = []
+           for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):
+diff --git a/scripts/framework-prototype/FROZEN_DB_ADMISSION.md b/scripts/framework-prototype/FROZEN_DB_ADMISSION.md
+new file mode 100644
+index 0000000..b9cbb48
+--- /dev/null
++++ b/scripts/framework-prototype/FROZEN_DB_ADMISSION.md
+@@ -0,0 +1,56 @@
++# Frozen DB admission contract
++
++Local repair only; no DB download, scan, app build or Linux trial was performed.
++The previous run's rejected metadata/clock is absent and its precise rejection
++cannot be recovered by these changes. Historical security gates remain failed.
++
++`trivy-metadata-contract.json` pins Trivy 0.76.0 source commit
++`531360e5d2a88e732373f1614ba99a38738538b8`, its exact trivy-db dependency
++`cbebf2ecd6df42d36463844a45e689afee51c70f`, and inspected source hashes. Schema
++Version 2 has Go fields Version, UpdatedAt, NextUpdate and DownloadedAt. The
++fixture is fictional data in that real schema, not a downloaded database. Go
++RFC3339Nano values/offsets are accepted with the existing millisecond comparisons.
++
++The reviewed rule remains `UpdatedAt <= actual guard clock < NextUpdate`, with
++zero clock grace and no new maximum-age rule. Upstream's default update decision
++can also treat DownloadedAt within one hour as current; this fallback is **not**
++adopted. Missing/null/zero DownloadedAt keeps upstream Go zero-value semantics and
++does not extend freshness. A future DownloadedAt is recorded as an observation,
++not a lease extension. Required timestamps still fail if missing/invalid. Version
++2, valid calendar and canonical RFC3339 shape are compatibility checks matching
++the pinned publisher, not a relaxed expiry/security threshold. Any proposal to
++accept expired DBs, add clock grace or make DownloadedAt a new freshness rule needs
++separate review.
++
++Before decoding metadata, the helper fsyncs its bounded original bytes, byte
++identity and initial OS clock. It also records scanner/DB hashes and a second
++clock immediately before validation, then saves parsed timestamps, explicit
++reason codes and a failed/passed index. Clock records identify the Node guard's
++actual OS wall clock/monotonic observation; they do not claim a separate trace of
++Trivy internals. No environment or credentials are recorded. DB bytes are not
++uploaded. Metadata over 64 KiB fails closed: retain only the prefix, original
++stat size and prefix hash; full-original hash is explicitly unavailable, never
++fabricated. Existing output directories are refused, preserving old evidence.
++
++The workflow downloads once, admits once under 2 GiB/1 CPU/zero swap, then
++requires that exact source-bound receipt. Failed admission marks all nine roles
++skipped before any dependent pull/scan/build. Later identity/lease checks do not
++reparse metadata or renew the lease. They stream hashes and stop on changed
++metadata/DB/tool, expiry or backward wall clock. No schema/timestamp rejection is
++repeated per role. Scan failure indexes exist before prerequisite checks. Shared
++failure, protocol errors and incomplete role receipts stop subsequent roles;
++positive advisory findings still fail unchanged thresholds and remain visible.
++
++Capture requires attempted admission's clock/raw identity/parsed result receipts,
++verifies retained bytes against identity, and writes a hashed manifest even if
++diagnostics are absent or corrupt. Successful, rejected, skipped and tampered
++capture are tested independently of owner custody. A capture pass cannot make
++security evidence complete, and custody never changes either result.
++
++No replacement DB, real Trivy invocation or Go compilation was used locally.
++Linux cgroup execution and real downloaded metadata handling remain untested.
++The modified image workflow is a **full image workflow**, not the proposed
++admission-only test; do not trigger it to test just DB admission. The handoff
++proposes a separate narrowly triggered, one-job Linux admission-only run with no
++Docker/image/scan/build steps. It requires its own prepared workflow review and
++separate authorization; none is approved or running here.
+diff --git a/scripts/framework-prototype/frozen-db-admission.mjs b/scripts/framework-prototype/frozen-db-admission.mjs
+new file mode 100644
+index 0000000..720a0f6
+--- /dev/null
++++ b/scripts/framework-prototype/frozen-db-admission.mjs
+@@ -0,0 +1,100 @@
++import fs from 'node:fs';
++import path from 'node:path';
++import {createHash} from 'node:crypto';
++import {fileURLToPath} from 'node:url';
++
++export const metadataLimit = 65536;
++export const policyId = 'trivy-0.76.0-schema2-updated-not-future-next-update-strict-v1';
++const hash = b => createHash('sha256').update(b).digest('hex');
++function durable(file, bytes) {const fd=fs.openSync(file,'wx',0o600);try{fs.writeFileSync(fd,bytes);fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}
++const save=(dir,name,value)=>durable(path.join(dir,name),JSON.stringify(value,null,2)+'\n');
++export async function contentIdentity(file) {
++  const before=fs.lstatSync(file);if(!before.isFile()||before.isSymbolicLink())throw Error('not a regular file');
++  const h=createHash('sha256');for await(const b of fs.createReadStream(file))h.update(b);
++  const after=fs.lstatSync(file);if(before.size!==after.size||before.mtimeMs!==after.mtimeMs||before.ino!==after.ino)throw Error('file changed while hashing');
++  return {bytes:after.size,sha256:h.digest('hex')};
++}
++export function parseTimestamp(value) {
++  if(typeof value!=='string')return {result:'invalid',raw:value??null,reason:'RFC3339 string required'};
++  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
++  if(!m)return{result:'invalid',raw:value,reason:'RFC3339 timestamp required'};
++  const [year,month,day,hour,minute,second]=m.slice(1,7).map(Number),leap=year%4===0&&(year%100!==0||year%400===0),days=[0,31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
++  if(month<1||month>12||day<1||day>days[month]||hour>23||minute>59||second>59||(m[8]!=='Z'&&(Number(m[10])>23||Number(m[11])>59)))return{result:'invalid',raw:value,reason:'invalid calendar/time/offset'};
++  const epochMs=Date.parse(value);if(!Number.isFinite(epochMs))return{result:'invalid',raw:value,reason:'unrepresentable timestamp'};
++  return{result:'passed',raw:value,epochMs,utc:new Date(epochMs).toISOString(),goZero:value==='0001-01-01T00:00:00Z'};
++}
++export function validateMetadata(metadata, nowMs) {
++  const errors=[],observations=[],parsedTimestamps={};
++  if(!Number.isFinite(nowMs))errors.push({code:'clock-invalid'});
++  if(!metadata||typeof metadata!=='object'||Array.isArray(metadata))return{result:'failed',errors:[...errors,{code:'metadata-object-required'}],parsedTimestamps,observations};
++  if(metadata.Version!==2)errors.push({code:'schema-version-unsupported',observed:metadata.Version??null,expected:2});
++  for(const field of ['UpdatedAt','NextUpdate','DownloadedAt']){
++    if(field==='DownloadedAt'&&metadata[field]===null){parsedTimestamps[field]={result:'passed',raw:null,goZero:true,epochMs:Date.parse('0001-01-01T00:00:00Z'),utc:'0001-01-01T00:00:00.000Z'};observations.push('DownloadedAt null retains Go zero value; never grants freshness');continue;}
++    if(!Object.hasOwn(metadata,field)){
++      parsedTimestamps[field]={result:'missing',raw:null};
++      if(field!=='DownloadedAt')errors.push({code:field+'-missing'});else observations.push('DownloadedAt omitted: upstream Go zero-value semantics; never grants freshness');
++      continue;
++    }
++    const parsed=parsedTimestamps[field]=parseTimestamp(metadata[field]);
++    if(parsed.result!=='passed')errors.push({code:field+'-invalid',reason:parsed.reason});
++    else if(field==='UpdatedAt'&&parsed.epochMs>nowMs)errors.push({code:'UpdatedAt-future'});
++    else if(field==='NextUpdate'&&parsed.epochMs<=nowMs)errors.push({code:'NextUpdate-expired'});
++    if(field==='DownloadedAt'&&parsed.result==='passed'&&parsed.epochMs>nowMs)observations.push('DownloadedAt is future-dated; informational under unchanged two-field freshness rule, not a freshness extension');
++  }
++  return{result:errors.length?'failed':'passed',errors,parsedTimestamps,observations};
++}
++
++// The original metadata, its identity and actual guard clock are durable before
++// decoding/JSON parsing. No download, scanner invocation, build or custody action.
++export async function admitFrozenDatabase({cacheDirectory,outputDirectory,sourceSha,scannerPath,scannerSha256,now=Date.now}) {
++  fs.mkdirSync(outputDirectory); // Never overwrite historical evidence.
++  const sampledAtMs=now(),validClock=Number.isFinite(sampledAtMs)&&Math.abs(sampledAtMs)<=8640000000000000,clock={epochMs:validClock?sampledAtMs:null,utc:validClock?new Date(sampledAtMs).toISOString():null,monotonicNs:process.hrtime.bigint().toString(),node:process.version,platform:process.platform,arch:process.arch,scope:'actual admission/scanner-guard process OS wall clock; future Trivy subprocess shares OS clock, not a claimed Trivy internal trace'};
++  save(outputDirectory,'clock.json',clock);
++  const index={schema:1,policyId,sourceSha,result:'failed',clock,scannerVersion:'0.76.0 (pinned archive contract)',metadataIdentity:null,databaseIdentity:null,scannerIdentity:null,parsedTimestamps:{},errors:[],observations:[],custody:'not assessed; independent'};
++  const persistIndex=value=>{const pending=path.join(outputDirectory,'index.next.json');durable(pending,JSON.stringify(value,null,2)+'\n');fs.renameSync(pending,path.join(outputDirectory,'index.json'));};
++  persistIndex({...index,phase:'capturing-identities',errors:[{code:'admission-incomplete'}]});
++  if(!validClock)index.errors.push({code:'clock-invalid'});
++  let raw,complete=false;
++  try{
++    const file=path.join(cacheDirectory,'db/metadata.json'),stat=fs.lstatSync(file);
++    if(!stat.isFile()||stat.isSymbolicLink())throw Error('metadata is not a regular file');
++    const fd=fs.openSync(file,'r');try{raw=Buffer.alloc(Math.min(stat.size,metadataLimit));const bytes=fs.readSync(fd,raw,0,raw.length,0);raw=raw.subarray(0,bytes);}finally{fs.closeSync(fd);}
++    complete=raw.length===stat.size&&stat.size<=metadataLimit;
++    durable(path.join(outputDirectory,'metadata.original.bin'),raw);
++    index.metadataIdentity={bytes:stat.size,retainedBytes:raw.length,retainedSha256:hash(raw),sha256:complete?hash(raw):null,truncated:!complete};
++    if(!complete)index.errors.push({code:'metadata-too-large-or-short-read',limit:metadataLimit});
++  }catch(error){index.errors.push({code:error.code==='ENOENT'?'metadata-missing':'metadata-read-failed',message:error.message});}
++  save(outputDirectory,'metadata-identity.json',index.metadataIdentity??{result:'unavailable',errors:index.errors});
++  // Retain content identity even when metadata will be rejected. Never retain DB bytes.
++  for(const [key,file]of [['databaseIdentity',path.join(cacheDirectory,'db/trivy.db')],['scannerIdentity',scannerPath]]){
++    try{index[key]=await contentIdentity(file);if(key==='scannerIdentity'&&index[key].sha256!==scannerSha256)index.errors.push({code:'scanner-checksum-mismatch'});if(key==='databaseIdentity'&&index[key].bytes===0)index.errors.push({code:'database-empty'});}
++    catch(error){index.errors.push({code:key+'-unavailable',message:error.message});}
++    save(outputDirectory,key+'.json',index[key]??{result:'unavailable'});
++  }
++  if(complete){try{if((await contentIdentity(path.join(cacheDirectory,'db/metadata.json'))).sha256!==index.metadataIdentity.sha256)index.errors.push({code:'metadata-changed-before-validation'});}catch(error){index.errors.push({code:'metadata-changed-before-validation',message:error.message});}}
++  const validationNow=now(),validationClock={...clock,epochMs:Number.isFinite(validationNow)&&Math.abs(validationNow)<=8640000000000000?validationNow:null,utc:Number.isFinite(validationNow)&&Math.abs(validationNow)<=8640000000000000?new Date(validationNow).toISOString():null,monotonicNs:process.hrtime.bigint().toString()};
++  index.captureClock=clock;index.clock=validationClock;save(outputDirectory,'validation-clock.json',validationClock);
++  persistIndex({...index,phase:'retained-before-parsing',errors:[...index.errors,{code:'admission-incomplete'}]});
++  if(complete){
++    try{const text=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(raw);let metadata;
++      try{metadata=JSON.parse(text);}catch(error){index.errors.push({code:'metadata-malformed-json',message:error.message});}
++      if(metadata!==undefined){const validation=validateMetadata(metadata,validationNow);index.metadata=metadata;index.parsedTimestamps=validation.parsedTimestamps;index.observations=validation.observations;index.errors.push(...validation.errors);}
++    }catch(error){index.errors.push({code:'metadata-invalid-utf8',message:error.message});}
++  }
++  if(!/^[0-9a-f]{40}$/.test(sourceSha??''))index.errors.push({code:'source-identity-invalid'});
++  index.result=index.errors.length?'failed':'passed';index.phase='complete';index.finishedAt=new Date().toISOString();persistIndex(index);return index;
++}
++
++// Identity/expiry checks consume the single admission, without re-parsing DB metadata
++// or granting a fresh lease. An expired/frozen-content drift stops downstream work.
++export async function requireFrozenDatabase({admissionDirectory,admissionSha256,cacheDirectory,scannerPath,scannerSha256,sourceSha,now=Date.now}) {
++  const bytes=fs.readFileSync(path.join(admissionDirectory,'index.json'));if(admissionSha256&&hash(bytes)!==admissionSha256)throw Error('Shared database admission receipt identity mismatch');
++  const r=JSON.parse(bytes),time=now();if(r.result!=='passed'||r.policyId!==policyId||r.sourceSha!==sourceSha)throw Error('Shared database admission failed/missing or source/policy drift');
++  if(!Number.isFinite(time)||!Number.isFinite(r.clock?.epochMs)||!Number.isFinite(r.parsedTimestamps?.NextUpdate?.epochMs)||time<r.clock.epochMs||time>=r.parsedTimestamps.NextUpdate.epochMs)throw Error('Shared database admission expired, invalid or clock moved backward');
++  if(r.scannerIdentity.sha256!==scannerSha256||(await contentIdentity(scannerPath)).sha256!==scannerSha256)throw Error('Scanner identity drift after shared admission');
++  const meta=await contentIdentity(path.join(cacheDirectory,'db/metadata.json'));if(meta.bytes>metadataLimit||meta.sha256!==r.metadataIdentity.sha256)throw Error('Frozen metadata identity drift');
++  const db=await contentIdentity(path.join(cacheDirectory,'db/trivy.db'));if(db.sha256!==r.databaseIdentity.sha256||db.bytes!==r.databaseIdentity.bytes)throw Error('Frozen database identity drift');return r;
++}
++if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
++  try{const[, ,cacheDirectory,outputDirectory,sourceSha,scannerPath,scannerSha256]=process.argv;const r=await admitFrozenDatabase({cacheDirectory,outputDirectory,sourceSha,scannerPath,scannerSha256});console.log(JSON.stringify({result:r.result,errors:r.errors,receipt:path.join(outputDirectory,'index.json')}));process.exitCode=r.result==='passed'?0:1;}catch(error){console.error(error.message);process.exitCode=1;}
++}
+diff --git a/scripts/framework-prototype/scan-image-stages.mjs b/scripts/framework-prototype/scan-image-stages.mjs
+index 08f59b1..b3e7432 100644
+--- a/scripts/framework-prototype/scan-image-stages.mjs
++++ b/scripts/framework-prototype/scan-image-stages.mjs
+@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
+ import { spawnSync } from 'node:child_process';
+ import { dirname, resolve, join } from 'node:path';
+ import { fileURLToPath } from 'node:url';
++import {requireFrozenDatabase} from './frozen-db-admission.mjs';
+ 
+ export const requiredStages = ['original-base', 'original-runtime-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
+ const hashBytes = bytes => createHash('sha256').update(bytes).digest('hex');
+@@ -12,23 +13,33 @@ const save = (file, data) => writeFileSync(file, JSON.stringify(data, null, 2) +
+ // Consumes explicitly prepared Docker archives only. Never builds, pulls, runs
+ // containers, mutates a registry, accepts exceptions, or acknowledges custody.
+ async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
++  mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
++  const index = {schema:1,mode:partial?'partial-single-stage; aggregate required':'complete-plan',sourceSha:plan.sourceSha,result:'failed',securityThreshold:'zero HIGH/CRITICAL at every stage; no suppression',custody:'not performed; independent later owner check',stages:[]};
++  save(join(outputDirectory,'index.json'),index);
++  let tool,cache,databaseSha256;
++  try{
+   if (plan.schema !== 1 || !/^[0-9a-f]{40}$/.test(plan.sourceSha ?? '')) throw Error('Invalid source identity');
+   if (!Array.isArray(plan.images) || (partial ? plan.images.length!==1 : requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1)) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All nine required stage/tool images (or explicit single-stage partial mode) and unique valid names are required');
+-  const tool = resolve(planDirectory, plan.trivy.path), cache = resolve(planDirectory, plan.trivy.cacheDirectory);
+-  if (!/^[0-9a-f]{64}$/.test(plan.trivy.sha256 ?? '') || await hashFile(tool) !== plan.trivy.sha256) throw Error('Scanner binary checksum mismatch');
+-  const databaseMetadata = JSON.parse(readFileSync(join(cache, 'db/metadata.json'), 'utf8'));
+-  if (!(Date.parse(databaseMetadata.UpdatedAt) <= Date.now()) || !(Date.parse(databaseMetadata.NextUpdate) > Date.now())) throw Error('Database metadata missing, future-dated or expired; prepare a fresh frozen database first');
+-  const databaseSha256 = await hashFile(join(cache, 'db/trivy.db'));
+-  mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
++  tool = resolve(planDirectory, plan.trivy.path); cache = resolve(planDirectory, plan.trivy.cacheDirectory);
++  if(!plan.trivy.admissionDirectory||!plan.trivy.admissionSha256)throw Error('Single shared database admission receipt and identity are required');
++  const admissionDirectory=resolve(planDirectory,plan.trivy.admissionDirectory);
++  const admission=await requireFrozenDatabase({admissionDirectory,admissionSha256:plan.trivy.admissionSha256,cacheDirectory:cache,scannerPath:tool,scannerSha256:plan.trivy.sha256,sourceSha:plan.sourceSha});
++  databaseSha256=admission.databaseIdentity.sha256;index.scannerBinarySha256=admission.scannerIdentity.sha256;index.databaseMetadata=admission.metadata;index.databaseSha256=databaseSha256;index.databaseAdmissionDirectory=admissionDirectory;
++  }catch(error){
++    index.prerequisiteFailure=true;index.error=error.message;
++    index.stages=(Array.isArray(plan.images)?plan.images:[]).map(x=>({stage:x.stage,result:'skipped',prerequisiteFailure:true,error:error.message,reason:'shared admission failed; scanner not invoked'}));
++    save(join(outputDirectory,'index.json'),index);throw error;
++  }
+   const ignorefile = join(outputDirectory, 'empty-ignorefile'); writeFileSync(ignorefile, '');
+   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('TRIVY_')));
+-  const index = { schema: 1, mode:partial?'partial-single-stage; aggregate required':'complete-plan', sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
+   save(join(outputDirectory, 'index.json'), index);
+   for (const stage of plan.images.map(x => x.stage)) {
+     const item = plan.images.find(x => x.stage === stage), record = { stage, result: 'failed', coverage: 'unverified' };
+     index.stages.push(record);
+     const folder = join(outputDirectory, stage); mkdirSync(folder);
+     try {
++      try{await requireFrozenDatabase({admissionDirectory:resolve(planDirectory,plan.trivy.admissionDirectory),admissionSha256:plan.trivy.admissionSha256,cacheDirectory:cache,scannerPath:tool,scannerSha256:plan.trivy.sha256,sourceSha:plan.sourceSha});}
++      catch(error){record.prerequisiteFailure=true;throw error;}
+       if (!/^[0-9a-f]{64}$/.test(item.archiveSha256 ?? '') || !/^sha256:[0-9a-f]{64}$/.test(item.imageId ?? '')) throw Error('Archive/image identity missing');
+       const archive = resolve(planDirectory, item.archive);
+       record.archiveSha256 = await hashFile(archive);
+@@ -54,6 +65,8 @@ async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
+       const result = invoke(tool, args, { cwd: outputDirectory, env, encoding: 'utf8', timeout: 180_000, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
+       record.scannerExit = result.status;
+       writeFileSync(join(folder, 'scanner.log'), (result.stdout ?? '') + (result.stderr ?? ''));
++      try{if(await hashFile(join(cache,'db/trivy.db'))!==databaseSha256)throw Error('content changed');}
++      catch(error){index.databaseChanged=true;record.prerequisiteFailure=true;throw Error('Frozen database unavailable/changed during scan; stop dependent roles: '+error.message);}
+       if (result.status !== 0 || !existsSync(reportPath)) throw Error('Scanner failed or report absent');
+       const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+       if(report.SchemaVersion!==2||report.ArtifactType!=='container_image'||report.Metadata?.ImageID!==item.imageId)throw Error('Scanner schema/artifact/image identity mismatch');
+@@ -80,8 +93,10 @@ async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
+       record.result = (record.counts.CRITICAL ?? 0) || (record.counts.HIGH ?? 0) ? 'failed-security-threshold' : 'passed';
+     } catch (error) { record.error = error.message; }
+     save(join(outputDirectory, 'index.json'), index); // Keep every preceding result if interrupted.
++    if(record.prerequisiteFailure){for(const remaining of plan.images.slice(index.stages.length))index.stages.push({stage:remaining.stage,result:'skipped',prerequisiteFailure:true,reason:'prior shared prerequisite failed; scanner not invoked'});break;}
+   }
+-  if (await hashFile(join(cache, 'db/trivy.db')) !== databaseSha256) { index.databaseChanged = true; }
++  try{if(await hashFile(join(cache,'db/trivy.db'))!==databaseSha256)index.databaseChanged=true;}
++  catch(error){index.databaseChanged=true;index.prerequisiteFailure=true;index.error='Frozen database unavailable after scan: '+error.message;}
+   index.result = !index.databaseChanged && index.stages.every(x => x.result === 'passed') ? 'passed' : 'failed';
+   save(join(outputDirectory, 'index.json'), index);
+   return index;
+diff --git a/scripts/framework-prototype/serial-scan-driver.mjs b/scripts/framework-prototype/serial-scan-driver.mjs
+index 49b3480..61c0e84 100644
+--- a/scripts/framework-prototype/serial-scan-driver.mjs
++++ b/scripts/framework-prototype/serial-scan-driver.mjs
+@@ -1,6 +1,15 @@
+ import fs from'node:fs';import path from'node:path';import{spawnSync,spawn}from'node:child_process';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';import{requiredStages}from'./scan-image-stages.mjs';
+ const here=path.dirname(fileURLToPath(import.meta.url)),hash=b=>createHash('sha256').update(b).digest('hex');
+ const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
++import{admitFrozenDatabase,requireFrozenDatabase}from'./frozen-db-admission.mjs';
++export function skipDependentStages(root,sourceSha,reason){
++  fs.mkdirSync(root,{recursive:true});const records=[];
++  for(const stage of requiredStages){const dir=path.join(root,stage),file=path.join(dir,'driver.json');
++    if(!fs.existsSync(file)){fs.mkdirSync(dir,{recursive:true});save(file,{stage,result:'skipped',collectionComplete:false,reason,prerequisite:'shared frozen database admission',recordedAt:new Date().toISOString()});}
++    records.push(JSON.parse(fs.readFileSync(file)));
++  }
++  save(path.join(root,'index.json'),aggregate(records,sourceSha));return records;
++}
+ export function aggregate(records,sourceSha){return{schema:1,...(sourceSha?{sourceSha}:{}),expectedStages:requiredStages,stages:requiredStages.map(stage=>records.find(x=>x.stage===stage)??{stage,result:'skipped',reason:'phase did not produce a receipt'}),result:requiredStages.every(s=>records.some(x=>x.stage===s&&x.result==='passed'))?'passed':'failed'};}
+ export function rejectReexecution(event){return(event.vertexes??[event]).some(v=>/\bRUN\b/.test(v.name??'')&&(v.started||v.completed)&&v.cached!==true);}
+ export function cachedTargetRun(event,target){return(event.vertexes??[event]).some(v=>v.name?.startsWith('['+target+' ')&&/\bRUN\b/.test(v.name)&&v.cached===true);}
+@@ -8,16 +17,26 @@ export function remainingSeconds(deadline){const n=Math.floor(Number(deadline)-D
+ export function validateBuilderObservation(last){if(!last?.final||last.exit!==0)throw Error('Final owned-builder observation unavailable');for(const[key,value]of[['memory.max','8589934592'],['memory.swap.max','0'],['cpu.max','300000 100000']])if(!last.metrics.includes('=='+key+'==\n'+value+'\n'))throw Error('Observed builder limit drift');const events=last.metrics.match(/==memory.events==\n([\s\S]*?)(?=\n==)/)?.[1];if(!events||['oom','oom_kill','oom_group_kill'].some(k=>!events.split('\n').includes(k+' 0')))throw Error('Builder OOM/kill counters nonzero or unavailable');return true;}
+ async function fileHash(file){const h=createHash('sha256');for await(const b of fs.createReadStream(file))h.update(b);return h.digest('hex');}
+ async function main(){
+-  const mode=process.argv[2];if(!['parents','final','intermediates','aggregate','cleanup'].includes(mode))throw Error('Expected parents/final/intermediates/aggregate/cleanup');
++  const mode=process.argv[2];if(!['admit','check','parents','final','intermediates','aggregate','cleanup'].includes(mode))throw Error('Expected admit/check/parents/final/intermediates/aggregate/cleanup');
+   const temp=process.env.RUNNER_TEMP,source=process.env.SOURCE_SHA,evidence=process.env.ORNIGAMI_EVIDENCE_DIR;if(!temp||!evidence||!/^[0-9a-f]{40}$/.test(source??''))throw Error('Admitted source/workspace required');
+   const root=path.join(evidence,'stage-scans');fs.mkdirSync(root,{recursive:true});
+   const records=()=>requiredStages.flatMap(stage=>{const file=path.join(root,stage,'driver.json');return fs.existsSync(file)?[JSON.parse(fs.readFileSync(file))]:[];});
++  const admissionDirectory=path.join(root,'database-admission'),trivyPath=path.join(temp,'trivy'),cacheDirectory=path.join(temp,'trivy-cache');
++  if(mode==='admit'){
++    let result;try{result=await admitFrozenDatabase({cacheDirectory,outputDirectory:admissionDirectory,sourceSha:source,scannerPath:trivyPath,scannerSha256:'1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19'});}
++    catch(error){skipDependentStages(root,source,'Shared DB admission unavailable: '+error.message);throw error;}
++    if(result.result!=='passed'){skipDependentStages(root,source,'Shared DB admission failed: '+result.errors.map(x=>x.code).join(', '));process.exitCode=1;}
++    console.log(JSON.stringify({result:result.result,errors:result.errors,scope:'single shared prerequisite; no role pull/scan/build'}));return;
++  }
+   if(mode==='cleanup'){
+     const results=[];for(const r of records().filter(x=>x.ownedImage&&x.reference&&/^sha256:[0-9a-f]{64}$/.test(x.imageId??''))){const check=spawnSync('docker',['image','inspect',r.reference,'--format','{{.Id}}'],{encoding:'utf8'});if(check.status!==0){results.push({stage:r.stage,result:'already absent'});continue;}if(check.stdout.trim()!==r.imageId){results.push({stage:r.stage,result:'preserved identity drift'});continue;}const removed=spawnSync('docker',['image','rm',r.reference],{encoding:'utf8'});results.push({stage:r.stage,result:removed.status===0?'removed exact claimed image':'failed removal',exit:removed.status});}
+     for(const stage of requiredStages){const receipt=path.join(root,stage,'filesystem/spool-ownership.json');if(!fs.existsSync(receipt))continue;const own=JSON.parse(fs.readFileSync(receipt));if(!fs.existsSync(own.directory))continue;const actual=fs.realpathSync(own.directory);if(path.dirname(actual)!==fs.realpathSync(temp)||!path.basename(actual).startsWith('ornigami-inspect-spool-')||(process.getuid&&fs.statSync(actual).uid!==process.getuid())){results.push({stage,result:'preserved unproven spool ownership'});continue;}fs.rmSync(actual,{recursive:true,force:true});results.push({stage,result:'removed exact claimed spool'});}
+     save(path.join(root,'cleanup.json'),results);console.log(JSON.stringify(results));if(results.some(x=>!['already absent','removed exact claimed image','removed exact claimed spool'].includes(x.result)))process.exitCode=1;return;
+   }
+   if(mode==='aggregate'){const result=aggregate(records(),source);save(path.join(root,'index.json'),result);process.exitCode=result.result==='passed'?0:1;return;}
++  try{await requireFrozenDatabase({admissionDirectory,cacheDirectory,scannerPath:trivyPath,scannerSha256:'1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19',sourceSha:source});}
++  catch(error){skipDependentStages(root,source,'Shared DB prerequisite unavailable/drifted: '+error.message);throw error;}
++  if(mode==='check'){console.log('Shared frozen DB lease/content remains valid; no admission repeated');return;}
+   const policy=JSON.parse(fs.readFileSync(path.join(here,'minimal-parent-policy.json'))),node=process.execPath,cache=path.join(temp,'trivy-cache'),trivy=path.join(temp,'trivy');
+   const parents=Object.fromEntries(policy.parents.map(x=>[x.role,'gcr.io/distroless/nodejs22-debian13@'+x.amd64Digest]));
+   parents.buildkit='moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea';parents['dockerfile-frontend']='docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e';
+@@ -60,19 +79,21 @@ async function main(){
+       if(!/^sha256:[0-9a-f]{64}$/.test(record.imageId??''))throw Error('Exact stage image ID missing');
+       record.archiveSha256=await fileHash(archive);record.archiveBytes=fs.statSync(archive).size;
+       try{scoped(stage,'filesystem',[path.join(here,'analyze-docker-archive.mjs'),archive,path.join(dir,'filesystem'),stage,record.imageId],dir);}catch(error){record.nativeError=error.message;}
+-      const receipt=path.join(dir,'filesystem/result.json'),plan={schema:1,sourceSha:source,trivy:{path:trivy,sha256:await fileHash(trivy),cacheDirectory:cache},images:[{stage,archive,archiveSha256:record.archiveSha256,imageId:record.imageId,...(fs.existsSync(receipt)?{filesystemReceipt:receipt,filesystemReceiptSha256:await fileHash(receipt)}:{})}]};
++      const receipt=path.join(dir,'filesystem/result.json'),plan={schema:1,sourceSha:source,trivy:{path:trivy,sha256:await fileHash(trivy),cacheDirectory:cache,admissionDirectory,admissionSha256:await fileHash(path.join(admissionDirectory,'index.json'))},images:[{stage,archive,archiveSha256:record.archiveSha256,imageId:record.imageId,...(fs.existsSync(receipt)?{filesystemReceipt:receipt,filesystemReceiptSha256:await fileHash(receipt)}:{})}]};
+       save(path.join(dir,'scan-plan.json'),plan);
+       try{scoped(stage,'vulnerabilities',[path.join(here,'scan-image-stages.mjs'),path.join(dir,'scan-plan.json'),path.join(dir,'scan'),'--single'],dir);}catch(error){record.scanError=error.message;}
+       const index=JSON.parse(fs.readFileSync(path.join(dir,'scan/index.json')));record.scanResult=index.stages[0];record.resources=['filesystem','vulnerabilities'].map(name=>{const p=path.join(dir,name+'-resources.json');return fs.existsSync(p)?JSON.parse(fs.readFileSync(p)):{resourceResult:'failed',error:'resource receipt missing'};});
+       record.result=index.result==='passed'&&!record.nativeError&&record.resources.every(x=>x.resourceResult==='passed')?'passed':'failed-security-native-coverage-or-resources';record.collectionComplete=!!record.scanResult.counts&&record.scanResult.coverage!=='unverified'&&!record.nativeError&&record.resources.every(x=>x.resourceResult==='passed');
++      if(!record.collectionComplete)record.stopDependentRoles=true;
+       if(stage==='original-runtime-base')fs.copyFileSync(path.join(dir,'scan',stage,'trivy.json'),path.join(temp,'base-trivy.json'));
+       if(stage==='runner')fs.copyFileSync(path.join(dir,'scan',stage,'trivy.json'),path.join(temp,'trivy.json'));
+-    }catch(error){record.error=error.message;}
++    }catch(error){record.error=error.message;record.stopDependentRoles=true;}
+     finally{
+       record.finishedAt=new Date().toISOString();save(path.join(dir,'driver.json'),record);
+       if(ownedArchive&&fs.existsSync(archive)){if(path.dirname(path.resolve(archive))!==fs.realpathSync(temp))throw Error('Refusing archive cleanup outside runner temp');fs.unlinkSync(archive);}
+       save(path.join(root,'index.json'),aggregate(records(),source));
+     }
++    if(record.stopDependentRoles||record.scanResult?.prerequisiteFailure){skipDependentStages(root,source,'Prior role/shared prerequisite failed; no later role attempted: '+(record.error??record.scanResult.error));break;}
+   }
+   const complete=stages.every(stage=>records().some(x=>x.stage===stage&&x.collectionComplete));if(!complete)process.exitCode=1;
+ }
+diff --git a/scripts/framework-prototype/trivy-metadata-contract.json b/scripts/framework-prototype/trivy-metadata-contract.json
+new file mode 100644
+index 0000000..980a234
+--- /dev/null
++++ b/scripts/framework-prototype/trivy-metadata-contract.json
+@@ -0,0 +1,67 @@
++{
++  "at": "2026-10-17T11:27:16.563Z",
++  "trivyVersion": "0.76.0",
++  "trivyCommit": "531360e5d2a88e732373f1614ba99a38738538b8",
++  "trivyDbModule": "v0.0.0-20261012084708-cbebf2ecd6df",
++  "trivyDbCommit": "cbebf2ecd6df42d36463844a45e689afee51c70f",
++  "receipts": [
++    {
++      "repo": "trivy",
++      "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
++      "path": "go.mod",
++      "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/go.mod",
++      "sha256": "67aeb8890e1c8d32367ff33b9b1f9796b7f6d418c9c23f7971c496367094457d",
++      "bytes": 25284
++    },
++    {
++      "repo": "trivy",
++      "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
++      "path": "pkg/db/db.go",
++      "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/db/db.go",
++      "sha256": "41aa153ea3668450714a97288acc3c7a82d8ec7985fb3570ecb33c700109b9f5",
++      "bytes": 7495
++    },
++    {
++      "repo": "trivy-db",
++      "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
++      "path": "pkg/metadata/metadata.go",
++      "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/pkg/metadata/metadata.go",
++      "sha256": "fa3bad2c1b9089742cf5fe9381d51cf6f0479781691247b262077a12217eef27",
++      "bytes": 1688
++    },
++    {
++      "repo": "trivy-db",
++      "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
++      "path": "pkg/db/db.go",
++      "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/pkg/db/db.go",
++      "sha256": "8f876dcf081315a5ba5e666b49334461a725bb67d09347816f77d693ab1f2fbf",
++      "bytes": 7469
++    },
++    {
++      "repo": "trivy",
++      "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
++      "path": "docs/guide/advanced/air-gap.md",
++      "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/advanced/air-gap.md",
++      "sha256": "bd798aa64085993b5fff10968f4192d4b3fcd18eab85161032a44ae6c933a665",
++      "bytes": 4835
++    }
++  ],
++  "note": "Only small official schema/source/docs files retrieved; no DB/OCI artifact/binary downloaded.",
++  "fixture": "tests/fixtures/trivy-db/metadata.json is fictional data encoded in the pinned Go fields/RFC3339Nano shape, not a downloaded DB",
++  "schemaVersion": 2,
++  "fields": {
++    "Version": "int; schema must equal 2",
++    "NextUpdate": "time.Time; publisher refresh deadline",
++    "UpdatedAt": "time.Time; publication/update time",
++    "DownloadedAt": "time.Time; local download completion; upstream zero value permitted"
++  },
++  "reviewedPolicy": {
++    "comparisons": "UpdatedAt <= actual guard clock < NextUpdate",
++    "precision": "milliseconds, unchanged from previous Date.parse guard",
++    "clockGraceMillis": 0,
++    "downloadedAtGrace": "not accepted; upstream one-hour fallback is not adopted",
++    "maximumAge": "no new arbitrary maximum age beyond NextUpdate",
++    "additionalCompatibilityChecks": "Version 2 and canonical RFC3339/valid calendar; no schema coercion"
++  },
++  "previousFailure": "Exact prior metadata/clock absent; its precise rejection remains unknown"
++}
+diff --git a/tests/coolify-rehearsal-workflow.test.mjs b/tests/coolify-rehearsal-workflow.test.mjs
+index 3e025fe..2c86041 100644
+--- a/tests/coolify-rehearsal-workflow.test.mjs
++++ b/tests/coolify-rehearsal-workflow.test.mjs
+@@ -128,7 +128,7 @@ function fakeEnvironment(root, overrides = {}) {
+   writeFileSync(summary, "fake workflow summary\n");
+   const stepSummary = join(root, "step-local-summary.md");
+   writeFileSync(stepSummary, "");
+-  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
++  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+   const env = {
+     ...process.env,
+     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
+@@ -393,6 +393,22 @@ test('resource gate runs after an available builder even when image build failed
+   assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
+ });
+ 
++for(const outcome of ['success','failure','skipped','missing-diagnostics','tampered-original'])test(`shared DB ${outcome} capture keeps manifest and custody separate`,()=>withSandbox(root=>{
++ const bad=outcome==='missing-diagnostics'||outcome==='tampered-original';
++ const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped',DATABASE_ADMISSION_OUTCOME:bad?'failure':outcome});
++ const dir=join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans/database-admission');
++ if(outcome!=='skipped'&&outcome!=='missing-diagnostics'){
++  mkdirSync(dir,{recursive:true});const raw='{"Version":2}';writeFileSync(join(dir,'metadata.original.bin'),raw);
++  for(const name of ['clock.json','validation-clock.json','metadata-identity.json','databaseIdentity.json','scannerIdentity.json'])writeFileSync(join(dir,name),JSON.stringify({fixture:true}));
++  writeFileSync(join(dir,'index.json'),JSON.stringify({phase:'complete',sourceSha:env.SOURCE_SHA,result:outcome==='success'?'passed':'failed',metadataIdentity:{sha256:createHash(raw),bytes:Buffer.byteLength(raw),retainedBytes:Buffer.byteLength(raw),retainedSha256:createHash(raw),truncated:false}}));
++  if(outcome==='tampered-original')writeFileSync(join(dir,'metadata.original.bin'),raw+'tampered');
++ }
++ const result=runShell(root,runBlock('evidence_capture'),env);assert.equal(result.status,bad?1:0,result.stderr);
++ const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));assert.equal(manifest.custody_status,'not-assessed-by-capture');
++ assert.equal(manifest.capture_completeness_status,bad?'failed':'passed');assert.match(manifest.database_diagnostics_status,outcome==='skipped'?/not-run/:bad?/failed:/:/collected/);
++ for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
++}));
++
+ for (const scenario of ['truncated', 'wrong-type', 'wrong-source', 'missing-receipts']) test(`scan capture preserves manifest and fails on ${scenario}`, () => withSandbox(root => {
+   const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped'});
+   const dir=join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans');mkdirSync(dir,{recursive:true});
+diff --git a/tests/fixtures/trivy-db/metadata-schema.go.txt b/tests/fixtures/trivy-db/metadata-schema.go.txt
+new file mode 100644
+index 0000000..acc2e25
+--- /dev/null
++++ b/tests/fixtures/trivy-db/metadata-schema.go.txt
+@@ -0,0 +1,6 @@
++type Metadata struct {
++ Version int `json:",omitempty"`
++ NextUpdate time.Time
++ UpdatedAt time.Time
++ DownloadedAt time.Time
++}
+diff --git a/tests/fixtures/trivy-db/metadata.json b/tests/fixtures/trivy-db/metadata.json
+new file mode 100644
+index 0000000..04a7451
+--- /dev/null
++++ b/tests/fixtures/trivy-db/metadata.json
+@@ -0,0 +1 @@
++{"Version":2,"NextUpdate":"2026-10-17T13:00:00Z","UpdatedAt":"2026-10-17T11:00:00Z","DownloadedAt":"2026-10-17T11:55:00.123456789Z"}
+diff --git a/tests/frozen-db-admission.test.mjs b/tests/frozen-db-admission.test.mjs
+new file mode 100644
+index 0000000..18760d2
+--- /dev/null
++++ b/tests/frozen-db-admission.test.mjs
+@@ -0,0 +1,53 @@
++import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import path from'node:path';import os from'node:os';import{createHash}from'node:crypto';import{spawnSync}from'node:child_process';
++import{admitFrozenDatabase,requireFrozenDatabase,validateMetadata,parseTimestamp,metadataLimit}from'../scripts/framework-prototype/frozen-db-admission.mjs';import{skipDependentStages}from'../scripts/framework-prototype/serial-scan-driver.mjs';
++const sha=b=>createHash('sha256').update(b).digest('hex'),time=Date.parse('2026-10-17T12:00:00Z'),valid={Version:2,UpdatedAt:'2026-10-17T11:00:00Z',NextUpdate:'2026-10-17T13:00:00Z',DownloadedAt:'2026-10-17T11:55:00Z'};
++test('canonical fixture follows the actual Trivy 0.76.0 pinned Go metadata declaration',()=>{
++ const contract=JSON.parse(fs.readFileSync(new URL('../scripts/framework-prototype/trivy-metadata-contract.json',import.meta.url))),fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/trivy-db/metadata.json',import.meta.url))),declaration=fs.readFileSync(new URL('./fixtures/trivy-db/metadata-schema.go.txt',import.meta.url),'utf8');
++ assert.equal(contract.trivyCommit,'531360e5d2a88e732373f1614ba99a38738538b8');assert.equal(contract.trivyDbCommit,'cbebf2ecd6df42d36463844a45e689afee51c70f');assert.equal(contract.schemaVersion,2);assert.deepEqual(Object.keys(fixture).sort(),Object.keys(contract.fields).sort());for(const key of Object.keys(fixture))assert.ok(declaration.includes(key+' '));assert.equal(validateMetadata(fixture,time).result,'passed');
++});
++async function fixture(fn){const root=fs.mkdtempSync(path.join(os.tmpdir(),'ornigami-db-admit-'));try{fs.mkdirSync(path.join(root,'cache/db'),{recursive:true});fs.writeFileSync(path.join(root,'cache/db/trivy.db'),'fictional database; not a downloaded DB');const scanner=path.join(root,'scanner');fs.writeFileSync(scanner,'fictional scanner; never executed');const args={cacheDirectory:path.join(root,'cache'),outputDirectory:path.join(root,'admission'),sourceSha:'a'.repeat(40),scannerPath:scanner,scannerSha256:sha(fs.readFileSync(scanner)),now:()=>time};return await fn(root,args);}finally{assert.ok(fs.realpathSync(root).startsWith(fs.realpathSync(os.tmpdir())+path.sep+'ornigami-db-admit-'));fs.rmSync(root,{recursive:true,force:true});}}
++for(const c of [
++ {name:'missing',raw:null,code:'metadata-missing'},
++ {name:'malformed',raw:'{"Version":',code:'metadata-malformed-json'},
++ {name:'BOM is not Go JSON metadata',raw:Buffer.concat([Buffer.from([239,187,191]),Buffer.from(JSON.stringify(valid))]),code:'metadata-malformed-json'},
++ {name:'invalid UTF8',raw:Buffer.from([0xff]),code:'metadata-invalid-utf8'},
++ {name:'wrong schema',raw:{...valid,Version:3},code:'schema-version-unsupported'},
++ {name:'missing timestamp',raw:{Version:2,NextUpdate:valid.NextUpdate},code:'UpdatedAt-missing'},
++ {name:'invalid calendar',raw:{...valid,UpdatedAt:'2026-02-30T11:00:00Z'},code:'UpdatedAt-invalid'},
++ {name:'future updated time',raw:{...valid,UpdatedAt:'2026-10-17T12:00:00.001Z'},code:'UpdatedAt-future'},
++ {name:'expired even freshly downloaded',raw:{...valid,NextUpdate:'2026-10-17T11:59:59Z',DownloadedAt:'2026-10-17T11:59:59Z'},code:'NextUpdate-expired'},
++ {name:'deadline equality',raw:{...valid,NextUpdate:'2026-10-17T12:00:00Z'},code:'NextUpdate-expired'},
++ {name:'oversized',raw:' '.repeat(metadataLimit+1),code:'metadata-too-large-or-short-read'},
++ {name:'valid',raw:valid}
++])test(`bounded original bytes/clock/hash and explicit ${c.name} decision survive admission`,()=>fixture(async(root,args)=>{
++ const raw=c.raw===null?null:Buffer.isBuffer(c.raw)?c.raw:Buffer.from(typeof c.raw==='string'?c.raw:JSON.stringify(c.raw));if(raw)fs.writeFileSync(path.join(args.cacheDirectory,'db/metadata.json'),raw);
++ const result=await admitFrozenDatabase(args);assert.equal(result.result,c.code?'failed':'passed');assert.equal(result.clock.epochMs,time);assert.ok(result.databaseIdentity.sha256);assert.equal(result.scannerIdentity.sha256,args.scannerSha256);
++ if(raw){assert.deepEqual(fs.readFileSync(path.join(args.outputDirectory,'metadata.original.bin')),raw.subarray(0,metadataLimit));assert.equal(result.metadataIdentity.retainedSha256,sha(raw.subarray(0,metadataLimit)));if(raw.length<=metadataLimit)assert.equal(result.metadataIdentity.sha256,sha(raw));else assert.equal(result.metadataIdentity.sha256,null);}
++ assert.ok(fs.statSync(path.join(args.outputDirectory,'clock.json')).size>0);assert.deepEqual(JSON.parse(fs.readFileSync(path.join(args.outputDirectory,'index.json'))),result);if(c.code)assert.ok(result.errors.some(e=>e.code===c.code),JSON.stringify(result.errors));else assert.equal(result.parsedTimestamps.NextUpdate.epochMs,time+3600000);
++}));
++test('metadata bytes and clock are durably written before JSON decoding begins',()=>fixture(async(root,args)=>{
++ const raw=JSON.stringify(valid);fs.writeFileSync(path.join(args.cacheDirectory,'db/metadata.json'),raw);const original=JSON.parse;let observed=false;
++ JSON.parse=function(text,...rest){if(text===raw){observed=true;assert.equal(fs.readFileSync(path.join(args.outputDirectory,'metadata.original.bin'),'utf8'),raw);assert.ok(fs.statSync(path.join(args.outputDirectory,'clock.json')).size);assert.ok(fs.statSync(path.join(args.outputDirectory,'metadata-identity.json')).size);const pending=original(fs.readFileSync(path.join(args.outputDirectory,'index.json')));assert.equal(pending.result,'failed');assert.equal(pending.phase,'retained-before-parsing');}return original(text,...rest);};
++ try{assert.equal((await admitFrozenDatabase(args)).result,'passed');assert.equal(observed,true);}finally{JSON.parse=original;}
++}));
++test('Go RFC3339Nano offsets are interpreted, impossible dates and weak date-only parsing rejected',()=>{
++ assert.equal(parseTimestamp('2026-10-17T14:00:00.123456789+02:00').epochMs,time+123);for(const bad of ['2026-10-17','2026-02-29T00:00:00Z','2026-10-17T24:00:00Z',123])assert.equal(parseTimestamp(bad).result,'invalid');
++ assert.equal(validateMetadata({...valid,UpdatedAt:'2026-10-17T12:00:00Z'},time).result,'passed');
++ assert.equal(validateMetadata({...valid,DownloadedAt:undefined},time).result,'failed');const omitted={...valid};delete omitted.DownloadedAt;assert.equal(validateMetadata(omitted,time).result,'passed');
++ assert.equal(validateMetadata({...valid,DownloadedAt:null},time).result,'passed');assert.equal(validateMetadata({...valid,DownloadedAt:'0001-01-01T00:00:00Z'},time).result,'passed');
++});
++for(const change of ['metadata','database','scanner','receipt','expiry','backward'])test(`single shared admission refuses ${change} drift without re-admission`,()=>fixture(async(root,args)=>{
++ fs.writeFileSync(path.join(args.cacheDirectory,'db/metadata.json'),JSON.stringify(valid));assert.equal((await admitFrozenDatabase(args)).result,'passed');const receipt=path.join(args.outputDirectory,'index.json'),proof={...args,admissionDirectory:args.outputDirectory,admissionSha256:sha(fs.readFileSync(receipt))};assert.equal((await requireFrozenDatabase(proof)).result,'passed');
++ if(change==='metadata')fs.appendFileSync(path.join(args.cacheDirectory,'db/metadata.json'),' ');if(change==='database')fs.appendFileSync(path.join(args.cacheDirectory,'db/trivy.db'),'drift');if(change==='scanner')fs.appendFileSync(args.scannerPath,'drift');if(change==='receipt')fs.appendFileSync(receipt,' ');if(change==='expiry')proof.now=()=>time+3600000;if(change==='backward')proof.now=()=>time-1;
++ await assert.rejects(requireFrozenDatabase(proof),/identity|drift|expired|backward/i);
++}));
++test('failed shared prerequisite skips all nine roles before invoking any external tool',()=>fixture(async(root,args)=>{
++ const evidence=path.join(root,'evidence');fs.mkdirSync(evidence);const result=spawnSync(process.execPath,['scripts/framework-prototype/serial-scan-driver.mjs','parents'],{cwd:process.cwd(),env:{...process.env,RUNNER_TEMP:root,ORNIGAMI_EVIDENCE_DIR:evidence,SOURCE_SHA:args.sourceSha,PATH:''},encoding:'utf8'});assert.equal(result.status,1);const index=JSON.parse(fs.readFileSync(path.join(evidence,'stage-scans/index.json')));assert.equal(index.stages.length,9);assert.ok(index.stages.every(s=>s.result==='skipped'&&s.collectionComplete===false));assert.equal(index.result,'failed');
++ const raw=fs.readFileSync(path.join(evidence,'stage-scans/original-base/driver.json'));skipDependentStages(path.join(evidence,'stage-scans'),args.sourceSha,'another failure');assert.deepEqual(fs.readFileSync(path.join(evidence,'stage-scans/original-base/driver.json')),raw);
++}));
++test('invalid clock, scanner mismatch and empty DB still retain independent diagnostics',()=>fixture(async(root,args)=>{fs.writeFileSync(path.join(args.cacheDirectory,'db/metadata.json'),JSON.stringify(valid));fs.writeFileSync(path.join(args.cacheDirectory,'db/trivy.db'),'');const r=await admitFrozenDatabase({...args,scannerSha256:'0'.repeat(64),now:()=>NaN});for(const code of ['clock-invalid','scanner-checksum-mismatch','database-empty'])assert.ok(r.errors.some(e=>e.code===code));assert.equal(r.result,'failed');}));
++test('actual admit CLI failure retains raw evidence and immediately marks all dependent roles skipped',()=>fixture(async(root,args)=>{
++ fs.cpSync(args.cacheDirectory,path.join(root,'trivy-cache'),{recursive:true});fs.writeFileSync(path.join(root,'trivy-cache/db/metadata.json'),'{');fs.copyFileSync(args.scannerPath,path.join(root,'trivy'));const evidence=path.join(root,'evidence');fs.mkdirSync(evidence);
++ const r=spawnSync(process.execPath,['scripts/framework-prototype/serial-scan-driver.mjs','admit'],{cwd:process.cwd(),env:{...process.env,RUNNER_TEMP:root,ORNIGAMI_EVIDENCE_DIR:evidence,SOURCE_SHA:args.sourceSha,PATH:''},encoding:'utf8'});assert.equal(r.status,1);
++ const base=path.join(evidence,'stage-scans'),proof=JSON.parse(fs.readFileSync(path.join(base,'database-admission/index.json')));assert.ok(proof.errors.some(e=>e.code==='metadata-malformed-json'));assert.equal(fs.readFileSync(path.join(base,'database-admission/metadata.original.bin'),'utf8'),'{');assert.equal(JSON.parse(fs.readFileSync(path.join(base,'index.json'))).stages.filter(s=>s.result==='skipped').length,9);
++}));
+diff --git a/tests/tooling-stage-scan.test.mjs b/tests/tooling-stage-scan.test.mjs
+index bb0dfac..e701d09 100644
+--- a/tests/tooling-stage-scan.test.mjs
++++ b/tests/tooling-stage-scan.test.mjs
+@@ -5,6 +5,7 @@ import { join, basename, dirname } from 'node:path';
+ import { tmpdir } from 'node:os';
+ import { createHash } from 'node:crypto';
+ import { scanStages, scanOneStage, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
++import {admitFrozenDatabase} from '../scripts/framework-prototype/frozen-db-admission.mjs';
+ const sha = data => createHash('sha256').update(data).digest('hex');
+ 
+ async function fixture(callback, modes = {}) {
+@@ -19,6 +20,9 @@ async function fixture(callback, modes = {}) {
+       return { stage, archive, archiveSha256: sha(readFileSync(archive)), imageId };
+     }) };
+     const calls = [];
++    const admissionDirectory=join(root,'admission');
++    assert.equal((await admitFrozenDatabase({cacheDirectory:plan.trivy.cacheDirectory,outputDirectory:admissionDirectory,sourceSha,scannerPath:scanner,scannerSha256:plan.trivy.sha256})).result,'passed');
++    plan.trivy.admissionDirectory=admissionDirectory;plan.trivy.admissionSha256=sha(readFileSync(join(admissionDirectory,'index.json')));
+     const invoke = (command, args, options) => {
+       if (command === 'tar') return { status: 0, stdout: args.at(-1) === 'manifest.json' ? JSON.stringify([{ Config: configName }]) : config };
+       assert.equal(command, scanner); calls.push({ args, options });
+@@ -86,7 +90,7 @@ test('missing stage rejects an incomplete plan before scanning', () => fixture(a
+ 
+ test('database drift fails even when every fake scan reports zero findings', () => fixture(async f => {
+   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
+-  assert.equal(result.databaseChanged, true); assert.equal(result.result, 'failed');
++  assert.equal(result.databaseChanged, true); assert.equal(result.result, 'failed');assert.equal(f.calls.length,1);assert.equal(result.stages.filter(x=>x.result==='skipped').length,8);
+ }, { mutateDb: true }));
+ 
+ test('historical output destination is never overwritten', () => fixture(async f => {
+@@ -95,9 +99,10 @@ test('historical output destination is never overwritten', () => fixture(async f
+   assert.equal(readFileSync(join(f.output, 'sentinel'), 'utf8'), 'preserve');
+ }));
+ 
+-test('expired database cannot produce a clean security result', () => fixture(async f => {
++test('replacing admitted metadata with expired metadata fails frozen identity before scans', () => fixture(async f => {
+   writeFileSync(join(f.root, 'cache/db/metadata.json'), JSON.stringify({UpdatedAt:'2020-01-01',NextUpdate:'2020-01-02'}));
+-  await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /expired/); assert.equal(f.calls.length, 0);
++  await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /metadata identity drift/); assert.equal(f.calls.length, 0);
++  assert.equal(JSON.parse(readFileSync(join(f.output,'index.json'))).prerequisiteFailure,true);
+ }));
+ 
+ test('an additional runtime parent is scanned and cannot silently escape its high gate', () => fixture(async f => {

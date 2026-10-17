@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "sourceSha": "4a555d43e5ae26ca6bdfe229a5215c62577c3077",
+  "expectedStages": [
+    "original-base",
+    "original-runtime-base",
+    "build-base",
+    "deps",
+    "builder",
+    "prod-deps",
+    "runner",
+    "buildkit",
+    "dockerfile-frontend"
+  ],
+  "stages": [
+    {
+      "stage": "original-base",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.861Z"
+    },
+    {
+      "stage": "original-runtime-base",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.868Z"
+    },
+    {
+      "stage": "build-base",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.877Z"
+    },
+    {
+      "stage": "deps",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.887Z"
+    },
+    {
+      "stage": "builder",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.895Z"
+    },
+    {
+      "stage": "prod-deps",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.903Z"
+    },
+    {
+      "stage": "runner",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.910Z"
+    },
+    {
+      "stage": "buildkit",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.917Z"
+    },
+    {
+      "stage": "dockerfile-frontend",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Fictional retained example only; no scans/builds in scope",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:43.924Z"
+    }
+  ],
+  "result": "failed"
+}

@@ -1,5 +1,7 @@
 # Minimal glibc diagnostic Linux trial — 17 October 2026
 
+Subsequent authorized [bounded local DB diagnostics/fail-fast repair](./LOCAL_DB_ADMISSION_REPAIR.md) is committed separately. It does not recover the missing historical timestamps or rerun this trial. The failure, custody/completeness distinctions and all original evidence below remain unchanged.
+
 **Exactly one authorized trial completed with failure before compilation. No retry is running or approved.** Candidate `5d1659d6fcce05be476d6bd8ab1932f9448db031` and request-only child `d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba` are published on `codex/ornigami-sri-local-prototype-f-20261016`. [Run 39027472379, attempt 1](https://github.com/joserubiobejarano/Ornigami/actions/runs/39027472379) failed original parent/tool scan collection and the independent all-stage gate. No BuildKit builder, app image, cold app installation or compilation occurred. Runtime/security/browser/restart/cache acceptance remains untested for this candidate. The one trial and one custody acknowledgment authorization are consumed.
 
 All 43 historical Debian highs remain unresolved. This run produced **no vulnerability reports**, so new-image finding counts are **unknown**, not zero. No deployable image was created or retained. Framework production adoption, registry publication, VPS changes, deployments, cron/provider activation and live release remain closed. Existing integration holds and QR staging were preserved.

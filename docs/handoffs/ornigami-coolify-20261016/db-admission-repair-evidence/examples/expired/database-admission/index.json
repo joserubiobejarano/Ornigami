@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "policyId": "trivy-0.76.0-schema2-updated-not-future-next-update-strict-v1",
+  "sourceSha": "4a555d43e5ae26ca6bdfe229a5215c62577c3077",
+  "result": "failed",
+  "clock": {
+    "epochMs": 1792237004142,
+    "utc": "2026-10-17T11:36:44.142Z",
+    "monotonicNs": "261258048774400",
+    "node": "v22.23.3",
+    "platform": "win32",
+    "arch": "x64",
+    "scope": "actual admission/scanner-guard process OS wall clock; future Trivy subprocess shares OS clock, not a claimed Trivy internal trace"
+  },
+  "scannerVersion": "0.76.0 (pinned archive contract)",
+  "metadataIdentity": {
+    "bytes": 134,
+    "retainedBytes": 134,
+    "retainedSha256": "ff10bbefd0c2608abcee6b59a4a14312edbd5d4b2c4c64d0911d26b39da91ce0",
+    "sha256": "ff10bbefd0c2608abcee6b59a4a14312edbd5d4b2c4c64d0911d26b39da91ce0",
+    "truncated": false
+  },
+  "databaseIdentity": {
+    "bytes": 49,
+    "sha256": "2eefefc11c3889048471ed820072b06a1274a062aa205f7d0ae54678216f661c"
+  },
+  "scannerIdentity": {
+    "bytes": 39,
+    "sha256": "c446ed6e7484cf1797baa1eb19bf54692028ca4c814dab9c8439c6a2e104e1d8"
+  },
+  "parsedTimestamps": {
+    "UpdatedAt": {
+      "result": "passed",
+      "raw": "2026-10-17T10:36:43.823Z",
+      "epochMs": 1792233403823,
+      "utc": "2026-10-17T10:36:43.823Z",
+      "goZero": false
+    },
+    "NextUpdate": {
+      "result": "passed",
+      "raw": "2026-10-17T11:36:43.822Z",
+      "epochMs": 1792237003822,
+      "utc": "2026-10-17T11:36:43.822Z",
+      "goZero": false
+    },
+    "DownloadedAt": {
+      "result": "passed",
+      "raw": "2026-10-17T11:36:43.823Z",
+      "epochMs": 1792237003823,
+      "utc": "2026-10-17T11:36:43.823Z",
+      "goZero": false
+    }
+  },
+  "errors": [
+    {
+      "code": "NextUpdate-expired"
+    }
+  ],
+  "observations": [],
+  "custody": "not assessed; independent",
+  "captureClock": {
+    "epochMs": 1792237004122,
+    "utc": "2026-10-17T11:36:44.122Z",
+    "monotonicNs": "261258028432300",
+    "node": "v22.23.3",
+    "platform": "win32",
+    "arch": "x64",
+    "scope": "actual admission/scanner-guard process OS wall clock; future Trivy subprocess shares OS clock, not a claimed Trivy internal trace"
+  },
+  "metadata": {
+    "Version": 2,
+    "UpdatedAt": "2026-10-17T10:36:43.823Z",
+    "NextUpdate": "2026-10-17T11:36:43.822Z",
+    "DownloadedAt": "2026-10-17T11:36:43.823Z"
+  },
+  "phase": "complete",
+  "finishedAt": "2026-10-17T11:36:44.147Z"
+}

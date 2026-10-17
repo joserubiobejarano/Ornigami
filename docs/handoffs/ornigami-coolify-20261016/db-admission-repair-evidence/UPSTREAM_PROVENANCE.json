@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-17T11:27:16.563Z",
+  "trivyVersion": "0.76.0",
+  "trivyCommit": "531360e5d2a88e732373f1614ba99a38738538b8",
+  "trivyDbModule": "v0.0.0-20261012084708-cbebf2ecd6df",
+  "trivyDbCommit": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+  "receipts": [
+    {
+      "repo": "trivy",
+      "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+      "path": "go.mod",
+      "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/go.mod",
+      "sha256": "67aeb8890e1c8d32367ff33b9b1f9796b7f6d418c9c23f7971c496367094457d",
+      "bytes": 25284
+    },
+    {
+      "repo": "trivy",
+      "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+      "path": "pkg/db/db.go",
+      "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/pkg/db/db.go",
+      "sha256": "41aa153ea3668450714a97288acc3c7a82d8ec7985fb3570ecb33c700109b9f5",
+      "bytes": 7495
+    },
+    {
+      "repo": "trivy-db",
+      "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+      "path": "pkg/metadata/metadata.go",
+      "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/pkg/metadata/metadata.go",
+      "sha256": "fa3bad2c1b9089742cf5fe9381d51cf6f0479781691247b262077a12217eef27",
+      "bytes": 1688
+    },
+    {
+      "repo": "trivy-db",
+      "revision": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+      "path": "pkg/db/db.go",
+      "url": "https://raw.githubusercontent.com/aquasecurity/trivy-db/cbebf2ecd6df42d36463844a45e689afee51c70f/pkg/db/db.go",
+      "sha256": "8f876dcf081315a5ba5e666b49334461a725bb67d09347816f77d693ab1f2fbf",
+      "bytes": 7469
+    },
+    {
+      "repo": "trivy",
+      "revision": "531360e5d2a88e732373f1614ba99a38738538b8",
+      "path": "docs/guide/advanced/air-gap.md",
+      "url": "https://raw.githubusercontent.com/aquasecurity/trivy/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/advanced/air-gap.md",
+      "sha256": "bd798aa64085993b5fff10968f4192d4b3fcd18eab85161032a44ae6c933a665",
+      "bytes": 4835
+    }
+  ],
+  "note": "Only small official schema/source/docs files retrieved; no DB/OCI artifact/binary downloaded."
+}

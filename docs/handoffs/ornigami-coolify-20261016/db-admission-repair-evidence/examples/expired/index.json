@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "sourceSha": "4a555d43e5ae26ca6bdfe229a5215c62577c3077",
+  "expectedStages": [
+    "original-base",
+    "original-runtime-base",
+    "build-base",
+    "deps",
+    "builder",
+    "prod-deps",
+    "runner",
+    "buildkit",
+    "dockerfile-frontend"
+  ],
+  "stages": [
+    {
+      "stage": "original-base",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.150Z"
+    },
+    {
+      "stage": "original-runtime-base",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.157Z"
+    },
+    {
+      "stage": "build-base",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.167Z"
+    },
+    {
+      "stage": "deps",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.176Z"
+    },
+    {
+      "stage": "builder",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.185Z"
+    },
+    {
+      "stage": "prod-deps",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.196Z"
+    },
+    {
+      "stage": "runner",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.206Z"
+    },
+    {
+      "stage": "buildkit",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.215Z"
+    },
+    {
+      "stage": "dockerfile-frontend",
+      "result": "skipped",
+      "collectionComplete": false,
+      "reason": "Shared DB admission failed; dependent work skipped",
+      "prerequisite": "shared frozen database admission",
+      "recordedAt": "2026-10-17T11:36:44.222Z"
+    }
+  ],
+  "result": "failed"
+}

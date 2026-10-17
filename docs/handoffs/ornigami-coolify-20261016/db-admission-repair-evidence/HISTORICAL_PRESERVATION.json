@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-17T11:36:44.330Z",
+  "total": 622,
+  "preserved": [
+    {
+      "directory": "framework-decision-evidence",
+      "files": 13,
+      "result": "passed"
+    },
+    {
+      "directory": "framework-prototype-evidence",
+      "files": 158,
+      "result": "passed"
+    },
+    {
+      "directory": "portable-repair-evidence",
+      "files": 57,
+      "result": "passed"
+    },
+    {
+      "directory": "external-trial-38964204005",
+      "files": 52,
+      "result": "passed"
+    },
+    {
+      "directory": "external-trial-38976049055",
+      "files": 85,
+      "result": "passed"
+    },
+    {
+      "directory": "remediation-preparation-evidence",
+      "files": 31,
+      "result": "passed"
+    },
+    {
+      "directory": "minimal-glibc-evidence",
+      "files": 86,
+      "result": "passed"
+    },
+    {
+      "directory": "minimal-glibc-admission-evidence",
+      "files": 4,
+      "result": "passed"
+    },
+    {
+      "directory": "external-trial-39027472379",
+      "files": 136,
+      "result": "passed"
+    }
+  ]
+}

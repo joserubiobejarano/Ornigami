@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-17T11:29:42.977Z",
+  "results": [
+    {
+      "name": "focused-tests",
+      "exit": 0,
+      "signal": null
+    },
+    {
+      "name": "actionlint",
+      "exit": 0,
+      "signal": null
+    }
+  ],
+  "syntax": {
+    "bash": 22,
+    "python": 4,
+    "errors": []
+  },
+  "scope": "Controlled fictional files, mock scanner/API and extracted workflow blocks only; no DB download/full scan/build/external runner"
+}

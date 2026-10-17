@@ -1,0 +1,18 @@
+node:fs:560
+  return binding.open(
+                 ^
+
+Error: ENOENT: no such file or directory, open 'C:\Users\joser\Desktop\Projects\Ornigami-coolify-prep-20261016\minimal-glibc-20261017\actionlint_1.7.12_windows_amd64.zip'
+    at Object.openSync (node:fs:560:18)
+    at Object.readFileSync (node:fs:444:35)
+    at file:///C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/db-admission-repair-20261017/checks.mjs:5:75
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\joser\\Desktop\\Projects\\Ornigami-coolify-prep-20261016\\minimal-glibc-20261017\\actionlint_1.7.12_windows_amd64.zip'
+}
+
+Node.js v22.23.3

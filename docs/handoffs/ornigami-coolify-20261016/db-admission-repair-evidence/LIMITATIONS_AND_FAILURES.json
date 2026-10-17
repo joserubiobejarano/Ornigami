@@ -1,0 +1,13 @@
+{
+  "historical": "Previous Linux metadata/clock was not retained; precise rejection remains unknown.",
+  "initialPreliminary": "67 focused tests passed in a session-only preliminary run; no bounded resource claim for that run.",
+  "firstBounded": {
+    "tests": "77 passed",
+    "overall": "failed after tests: local actionlint archive path was incorrect; no production test/security failure",
+    "preserved": "attempt-1 and checks-1"
+  },
+  "laterBounded": "79 then 81 focused tests passed as receipt integrity/fail-fast checks were added; final checks-5 has 81 passing tests and lint/syntax pass",
+  "publicSourceLookup": "An initially assumed documentation path returned 404; pinned source tree supplied docs/guide/advanced/air-gap.md. No database was fetched.",
+  "execution": "No replacement DB, real scanner invocation, Go compilation, image/app build, external runner, publication, VPS or integration operation. Fixture files contain fictional bytes.",
+  "policy": "No expiry grace, DownloadedAt freshness fallback, maximum-age change or severity suppression adopted."
+}

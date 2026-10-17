@@ -1,0 +1,8 @@
+{
+  "stage": "dockerfile-frontend",
+  "result": "skipped",
+  "collectionComplete": false,
+  "reason": "Fictional retained example only; no scans/builds in scope",
+  "prerequisite": "shared frozen database admission",
+  "recordedAt": "2026-10-17T11:36:43.924Z"
+}

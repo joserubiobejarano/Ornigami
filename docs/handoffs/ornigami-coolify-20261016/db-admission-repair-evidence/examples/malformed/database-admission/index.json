@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "policyId": "trivy-0.76.0-schema2-updated-not-future-next-update-strict-v1",
+  "sourceSha": "4a555d43e5ae26ca6bdfe229a5215c62577c3077",
+  "result": "failed",
+  "clock": {
+    "epochMs": 1792237003953,
+    "utc": "2026-10-17T11:36:43.953Z",
+    "monotonicNs": "261257859894500",
+    "node": "v22.23.3",
+    "platform": "win32",
+    "arch": "x64",
+    "scope": "actual admission/scanner-guard process OS wall clock; future Trivy subprocess shares OS clock, not a claimed Trivy internal trace"
+  },
+  "scannerVersion": "0.76.0 (pinned archive contract)",
+  "metadataIdentity": {
+    "bytes": 11,
+    "retainedBytes": 11,
+    "retainedSha256": "6b8b2f7be1366f039a367e2c34c50e7387530e87b9d00b3ad7d9aed3b81c6bce",
+    "sha256": "6b8b2f7be1366f039a367e2c34c50e7387530e87b9d00b3ad7d9aed3b81c6bce",
+    "truncated": false
+  },
+  "databaseIdentity": {
+    "bytes": 49,
+    "sha256": "2eefefc11c3889048471ed820072b06a1274a062aa205f7d0ae54678216f661c"
+  },
+  "scannerIdentity": {
+    "bytes": 39,
+    "sha256": "c446ed6e7484cf1797baa1eb19bf54692028ca4c814dab9c8439c6a2e104e1d8"
+  },
+  "parsedTimestamps": {},
+  "errors": [
+    {
+      "code": "metadata-malformed-json",
+      "message": "Unexpected end of JSON input"
+    }
+  ],
+  "observations": [],
+  "custody": "not assessed; independent",
+  "captureClock": {
+    "epochMs": 1792237003935,
+    "utc": "2026-10-17T11:36:43.935Z",
+    "monotonicNs": "261257841809500",
+    "node": "v22.23.3",
+    "platform": "win32",
+    "arch": "x64",
+    "scope": "actual admission/scanner-guard process OS wall clock; future Trivy subprocess shares OS clock, not a claimed Trivy internal trace"
+  },
+  "phase": "complete",
+  "finishedAt": "2026-10-17T11:36:43.957Z"
+}

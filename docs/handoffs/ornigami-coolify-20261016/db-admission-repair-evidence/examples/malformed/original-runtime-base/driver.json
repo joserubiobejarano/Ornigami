@@ -1,0 +1,8 @@
+{
+  "stage": "original-runtime-base",
+  "result": "skipped",
+  "collectionComplete": false,
+  "reason": "Shared DB admission failed; dependent work skipped",
+  "prerequisite": "shared frozen database admission",
+  "recordedAt": "2026-10-17T11:36:43.967Z"
+}
