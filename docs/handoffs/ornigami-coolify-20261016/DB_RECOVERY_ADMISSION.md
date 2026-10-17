@@ -1,6 +1,6 @@
 # Official DB recovery and digest-bound admission candidate — 17 October 2026
 
-Latest executed result: [Linux freshness admission and24fixtures passed; verified custody/cleanup; coverage held](./DB_RECOVERY_LINUX_TRIAL.md). Source `013ad70`, request `49367ae`, run39068058066 completed once. Earlier pending-decision descriptions below are historical; the owner selected freshness diagnostic with coverage hold and delegated planning defaults.
+Latest executed result: [minimal-base build/runtime/browser/persistence passed; complete nine-role scans failed tooling security; coverage held](./MINIMAL_BASE_LINUX_RESULT.md). Run39069347358, source `f6e26a1`, request `bc4e3b1`. Campaign3dispatches/15chargedminutes/0reserved;3trials/285minutes remain. Earlier pending-decision descriptions below are historical; the owner selected freshness diagnostic with coverage hold and delegated planning defaults. The initial [Linux freshness admission and24fixtures](./DB_RECOVERY_LINUX_TRIAL.md) remains independently retained.
 
 ## Latest local continuation: full-workflow binding prepared
 

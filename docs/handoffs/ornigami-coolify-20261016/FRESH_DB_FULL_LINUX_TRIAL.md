@@ -1,5 +1,7 @@
 # First full minimal-base trial with fresh DB — 17 October 2026
 
+Subsequent result: [run39069347358 validates the npm repair and app functional paths; both tooling scans still fail](./MINIMAL_BASE_LINUX_RESULT.md). The failed bootstrap and its original evidence below remain historical facts. Current campaign accounting is3dispatches/15minutes charged/0reserved.
+
 **[Run39068571833](https://github.com/joserubiobejarano/Ornigami/actions/runs/39068571833), attempt1, failed. No compilation/image/runtime acceptance.** Source `d20ea56ac3ead80439d3e5f66cdc4dc34963d40e`; request-only child `4cfb4b392f092e7706c4d5552e47b262167bb376`. One exact full request under the activated standing campaign, after successful fresh DB diagnostic39068058066. Both requests and all prior evidence preserved; local branch/worktree unchanged.
 
 Before dispatch, full workflow was tightened to reject reruns, bind executed workflow SHA/ref to request, bind source to immediate parent, and enforce the runbook20GiB initial/predownload reserve.141tests, full-workflow actionlint and Bash/Python syntax passed in bounded2GiB/1CPU/512MiB Node verification. Exact source/tree/lock/framework/workflow identities, current owner UI/API holds,154/2000 included minutes,0.1/0.5GB storage and zero-dollar usage blocks passed. Zoisial had0unsettled reservation at this full admission. Source publication was non-force, changed no marker and caused0runs/deployments; only the separate full-marker child dispatched once.40minutes reserved first. No shared host build/configuration or provider action.

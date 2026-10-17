@@ -1,0 +1,96 @@
+{
+  "sourceSha": "f6e26a1fc91826d760acc75c8bfa9612564115d6",
+  "tree": "603ce854bbf01e77bbc430ad6c783951446af6fa",
+  "localBranch": "codex/ornigami-db-publisher-investigation-20261017",
+  "remotePublicationBaseline": "4cfb4b392f092e7706c4d5552e47b262167bb376",
+  "files": {
+    ".github/workflows/ornigami-db-admission-only.yml": {
+      "bytes": 11617,
+      "sha256": "d9fbe748cd8df38b89d9b177edc62323c720bc92f9a774911e9cb7d3d5c7fdeb",
+      "gitBlob": "0c586a048fc3055b675ba9fbf242cf48917f335a"
+    },
+    ".github/workflows/ornigami-image-rehearsal.yml": {
+      "bytes": 67920,
+      "sha256": "a29be7ac73d29e367f2d0bdadd177ba455d0835aec54a2dcf7a74ef0906af1eb",
+      "gitBlob": "53a6923571213d07c3143e9af12c5c20844e58ef"
+    },
+    ".github/build-requests/ornigami-db-admission.json": {
+      "bytes": 199,
+      "sha256": "5fa8bcebc5157fad1856b69a2f1c2a43c81c1b953c141ec4b55523c2d6ba3c0b",
+      "gitBlob": "5935bfeb9b7d6d63e9228a1d50b2154a51230cab"
+    },
+    ".github/build-requests/ornigami.json": {
+      "bytes": 156,
+      "sha256": "fc6a1f4f19961347a138653ce57aad19ddcced7ee6d6d47afea5320d5a362ac2",
+      "gitBlob": "e7d88f26740965aba1d6bb66351033bd5fc448e3"
+    },
+    "package.json": {
+      "bytes": 2459,
+      "sha256": "cbaa1926668da0a71bddfd12e9363833016b47c5e78d978bfb4df92977828f04",
+      "gitBlob": "9d84f04385fe706eee32306e931ccc4fe08f84ab"
+    },
+    "package-lock.json": {
+      "bytes": 496110,
+      "sha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+      "gitBlob": "a9db529a0bdb7d4f61776ac9ea55302ea78d1f78"
+    },
+    "Dockerfile": {
+      "bytes": 6335,
+      "sha256": "251bcbfc97de43f15652789e8c02520de2c977bc5bce8aff5d6e37c7aff6e3bd",
+      "gitBlob": "a97ee83d6a95cb256f28f6c54c4e76d0a7289a0b"
+    },
+    "scripts/framework-prototype/official-db-publication.mjs": {
+      "bytes": 2671,
+      "sha256": "f8063dd3a03e793f34fa0ddd49c95d5f03040142e07546a920082012dba0fa6a",
+      "gitBlob": "4bbe0e63a66e621b5c056f2593941fda5a697cb6"
+    },
+    "scripts/framework-prototype/official-db-manifest.json": {
+      "bytes": 616,
+      "sha256": "10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+      "gitBlob": "809e4e0fb2940cc361d37655969389128748f223"
+    },
+    "scripts/framework-prototype/admission-only.mjs": {
+      "bytes": 6495,
+      "sha256": "c7eef2cfeca79a47f7fba35635c8399ba66f3fbd6366d19ab3ec3bd5df595711",
+      "gitBlob": "042251cd8a0a6856ae6125fae0f1752e15a3e3f5"
+    },
+    "scripts/framework-prototype/admission-only-capture.py": {
+      "bytes": 9231,
+      "sha256": "f5b049c799e6c76dde6e6780c9df4085f84c922a517e4f84b7ab3ff635fe88c4",
+      "gitBlob": "85dd6719a551a7a282ec4be3b9d2e04395fd6d13"
+    },
+    "scripts/framework-prototype/admission-only-bootstrap.sh": {
+      "bytes": 2135,
+      "sha256": "2f8b3babb920973171bc10ef991e5cf987e48e8077e6aafcd96beac4348bc582",
+      "gitBlob": "65c35c6588d8fd7372ba031c5a9cbbc09f84604e"
+    },
+    "scripts/framework-prototype/admission-only-worker.mjs": {
+      "bytes": 3150,
+      "sha256": "0c2c8886920e8565a6894e2f5fa96ac0119f6c29c86cf394f1d991b5321b0259",
+      "gitBlob": "66f3aa350643e6142ff9f432d7e4e4e07e94f576"
+    },
+    "scripts/framework-prototype/frozen-db-admission.mjs": {
+      "bytes": 10675,
+      "sha256": "eca21565887cdbf39261d50a563651d3fafcef7a26e80af0698a67790fd65fc8",
+      "gitBlob": "720a0f6c8351581f4ee0d93d56c15b8bee2ee2b0"
+    },
+    "scripts/framework-prototype/next-16.4.2-sri.patch": {
+      "bytes": 22865,
+      "sha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+      "gitBlob": "09b0e99ec285c1d30bcb9034397ad5ba416615cf"
+    },
+    "vendor/framework/next-16.4.2-ornigami-sri.2.tgz": {
+      "bytes": 44857205,
+      "sha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+      "gitBlob": "20dd66b5e924a0e0e16181953f2d4f5aa9bdf846"
+    },
+    "vendor/build-tools/npm-11.21.1.tgz": {
+      "bytes": 3329270,
+      "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+      "gitBlob": "2ef8673d6f721febd81bbadf07a2ee8a2a297dc1"
+    }
+  },
+  "publication": "not performed",
+  "request": "preview only",
+  "securityAcceptance": "HOLD; exact database coverage/internal freshness and full image acceptance untested"
+}

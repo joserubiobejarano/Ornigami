@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-17T21:03:48.911Z",
+  "requestSha": "bc4e3b1fcaec11d32187a532611e98e16478d079",
+  "sourceSha": "f6e26a1fc91826d760acc75c8bfa9612564115d6",
+  "packageLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "workflowBlob": "53a6923571213d07c3143e9af12c5c20844e58ef",
+  "markerSha256": "0e691cd73dc5487dafe35e69c4031a4e6756b9b1617fbb146a56e17191f14571",
+  "sourceOnlyPublicationConfirmed": true,
+  "requestNotPushed": true
+}

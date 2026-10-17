@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-17T21:16:10.176Z",
+  "runId": "39069347358",
+  "conclusion": "failure",
+  "records": [
+    {
+      "file": "run-final.json",
+      "bytes": 14468,
+      "sha256": "b2fdce3338f45c10ffc72428a1f8960fd7ceee7abbcd986ff83ddce760f89c3c"
+    },
+    {
+      "file": "jobs-final.json",
+      "bytes": 8126,
+      "sha256": "9c9b4888d98dde5a3f0b75d983578ed1b4ce13b3b4785b0238fc8164c90f72a0"
+    },
+    {
+      "file": "artifacts-final.json",
+      "bytes": 963,
+      "sha256": "1828558940a216ae982b259e7112224634479de9394986e5e07239de2c4260cb"
+    },
+    {
+      "file": "run-logs.zip",
+      "bytes": 86325,
+      "sha256": "8bdeeb5cad89f95e6fda4bd99a5e462e20499884e5e7a5ada06b250c5bbc99d0"
+    },
+    {
+      "file": "run.log",
+      "bytes": 289704,
+      "sha256": "a295e7f40c593cac9c648fbf60e55573b46149d64c975cbca20bd981efd52fce"
+    },
+    {
+      "file": "custody-status-confirmed.json",
+      "bytes": 1790,
+      "sha256": "547b046c184456f7f4e08a77095e611a30360aa12f2826c8eef9e62c59aa99ed"
+    }
+  ],
+  "readBack": "verified after fsync",
+  "separateFromOriginalArtifact": true
+}
