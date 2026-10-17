@@ -1,0 +1,6 @@
+{
+  "executable": "C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/sri-fresh-preparation/node-v22.23.3-win-x64/node.exe",
+  "args": ["--max-old-space-size=512", "C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/minimal-glibc-20261017/local-checks.mjs"],
+  "cwd": "C:/Users/joser/Desktop/Projects/Ornigami-coolify-prep-20261016/.local/framework-prototype/ornigami-minimal-glibc-feasibility",
+  "env": {"NODE_OPTIONS":"--max-old-space-size=512"}
+}

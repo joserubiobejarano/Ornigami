@@ -1,0 +1,478 @@
+TAP version 13
+# Subtest: initialization exports a persistent summary path rather than a step-local summary
+ok 1 - initialization exports a persistent summary path rather than a step-local summary
+  ---
+  duration_ms: 173.2562
+  type: 'test'
+  ...
+# Subtest: failed initialization with neither exported path still retains a failed capture manifest
+ok 2 - failed initialization with neither exported path still retains a failed capture manifest
+  ---
+  duration_ms: 679.4682
+  type: 'test'
+  ...
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 3 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 786.298
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 4 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 789.4294
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 5 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 671.8193
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 6 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 675.148
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 7 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 460.1972
+  type: 'test'
+  ...
+# Subtest: runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+ok 8 - runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+  ---
+  duration_ms: 1462.088
+  type: 'test'
+  ...
+# Subtest: failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+ok 9 - failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+  ---
+  duration_ms: 1337.6722
+  type: 'test'
+  ...
+# Subtest: successful runtime missing phase snapshots fails capture but retains its manifest
+ok 10 - successful runtime missing phase snapshots fails capture but retains its manifest
+  ---
+  duration_ms: 661.0091
+  type: 'test'
+  ...
+# Subtest: skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+ok 11 - skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 650.6812
+  type: 'test'
+  ...
+# Subtest: skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+ok 12 - skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 645.6697
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 13 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.2392
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on truncated
+ok 14 - scan capture preserves manifest and fails on truncated
+  ---
+  duration_ms: 680.8894
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on wrong-source
+ok 15 - scan capture preserves manifest and fails on wrong-source
+  ---
+  duration_ms: 688.0354
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on missing-receipts
+ok 16 - scan capture preserves manifest and fails on missing-receipts
+  ---
+  duration_ms: 682.867
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 17 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 390.4502
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 18 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 398.9503
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 19 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 411.6356
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 20 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 399.9115
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 21 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 135.5084
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 22 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 184.6559
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 23 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 316.5842
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 24 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.2872
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 25 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 450.6335
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 26 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 812.2267
+  type: 'test'
+  ...
+# Subtest: runtime receipts retain phase failures and redact HTTP/log secret fields
+ok 27 - runtime receipts retain phase failures and redact HTTP/log secret fields
+  ---
+  duration_ms: 319.8667
+  type: 'test'
+  ...
+# Subtest: receipt writer failures fail closed and retain raw diagnostics
+ok 28 - receipt writer failures fail closed and retain raw diagnostics
+  ---
+  duration_ms: 46.3888
+  type: 'test'
+  ...
+# Subtest: cold HTTP failure still runs restart and recreate checks and exits nonzero
+ok 29 - cold HTTP failure still runs restart and recreate checks and exits nonzero
+  ---
+  duration_ms: 168.1953
+  type: 'test'
+  ...
+# Subtest: positive receipt is posted only after checksum-verified durable local custody
+ok 30 - positive receipt is posted only after checksum-verified durable local custody
+  ---
+  duration_ms: 20.2932
+  type: 'test'
+  ...
+# Subtest: wrong owner never posts a remote status
+ok 31 - wrong owner never posts a remote status
+  ---
+  duration_ms: 2.3699
+  type: 'test'
+  ...
+# Subtest: wrong source never posts a remote status
+ok 32 - wrong source never posts a remote status
+  ---
+  duration_ms: 1.2043
+  type: 'test'
+  ...
+# Subtest: wrong run never posts a remote status
+ok 33 - wrong run never posts a remote status
+  ---
+  duration_ms: 0.8083
+  type: 'test'
+  ...
+# Subtest: corrupt archive never posts a remote status
+ok 34 - corrupt archive never posts a remote status
+  ---
+  duration_ms: 1.5272
+  type: 'test'
+  ...
+# Subtest: no acknowledgment approval never posts a remote status
+ok 35 - no acknowledgment approval never posts a remote status
+  ---
+  duration_ms: 0.5932
+  type: 'test'
+  ...
+# Subtest: signature policy binds publisher, signed index, amd64 manifest, config and exact Node version
+ok 36 - signature policy binds publisher, signed index, amd64 manifest, config and exact Node version
+  ---
+  duration_ms: 19.5131
+  type: 'test'
+  ...
+# Subtest: bad signature fails closed with original verifier diagnostics
+ok 37 - bad signature fails closed with original verifier diagnostics
+  ---
+  duration_ms: 13.6652
+  type: 'test'
+  ...
+# Subtest: unapproved Node patch cannot silently replace the reviewed version
+ok 38 - unapproved Node patch cannot silently replace the reviewed version
+  ---
+  duration_ms: 8.5496
+  type: 'test'
+  ...
+# Subtest: digest tampering is rejected even if a mock signature call returns success
+ok 39 - digest tampering is rejected even if a mock signature call returns success
+  ---
+  duration_ms: 6.3591
+  type: 'test'
+  ...
+# Subtest: unexpected parent default identity is rejected
+ok 40 - unexpected parent default identity is rejected
+  ---
+  duration_ms: 6.3835
+  type: 'test'
+  ...
+# Subtest: changed verifier bytes are refused before the executable is invoked
+ok 41 - changed verifier bytes are refused before the executable is invoked
+  ---
+  duration_ms: 9.5962
+  type: 'test'
+  ...
+# Subtest: all nine distinct parent/intermediate/final/tool roles are required independently
+ok 42 - all nine distinct parent/intermediate/final/tool roles are required independently
+  ---
+  duration_ms: 0.9876
+  type: 'test'
+  ...
+# Subtest: cached target export rejects a started uncached RUN instead of retrying compilation
+ok 43 - cached target export rejects a started uncached RUN instead of retrying compilation
+  ---
+  duration_ms: 0.2999
+  type: 'test'
+  ...
+# Subtest: work deadline cannot be missing, exhausted or extended by an invalid value
+ok 44 - work deadline cannot be missing, exhausted or extended by an invalid value
+  ---
+  duration_ms: 0.4571
+  type: 'test'
+  ...
+# Subtest: final observer enforces original limits and OOM counters; pressure is not headroom
+ok 45 - final observer enforces original limits and OOM counters; pressure is not headroom
+  ---
+  duration_ms: 0.3123
+  type: 'test'
+  ...
+# Subtest: shell-free cgroup probe preserves every metric and rejects missing/empty counters
+ok 46 - shell-free cgroup probe preserves every metric and rejects missing/empty counters
+  ---
+  duration_ms: 1.8957
+  type: 'test'
+  ...
+# Subtest: UID and GID must both equal the existing non-root 1000 contract
+ok 47 - UID and GID must both equal the existing non-root 1000 contract
+  ---
+  duration_ms: 0.225
+  type: 'test'
+  ...
+# Subtest: shell-free disk probe reports exact bigint bytes for root/tmp/cache
+ok 48 - shell-free disk probe reports exact bigint bytes for root/tmp/cache
+  ---
+  duration_ms: 1.209
+  type: 'test'
+  ...
+# Subtest: all supported codec paths must encode/decode/resize, including SVG input
+ok 49 - all supported codec paths must encode/decode/resize, including SVG input
+  ---
+  duration_ms: 0.7331
+  type: 'test'
+  ...
+# Subtest: missing codec support and wrong transformed dimensions cannot pass
+ok 50 - missing codec support and wrong transformed dimensions cannot pass
+  ---
+  duration_ms: 0.4914
+  type: 'test'
+  ...
+# Subtest: AVIF assertion requires actual AV1 metadata rather than any HEIF payload
+ok 51 - AVIF assertion requires actual AV1 metadata rather than any HEIF payload
+  ---
+  duration_ms: 0.2111
+  type: 'test'
+  ...
+# Subtest: runtime platform cannot silently switch Node/OpenSSL/libc or omit required CPU features
+ok 52 - runtime platform cannot silently switch Node/OpenSSL/libc or omit required CPU features
+  ---
+  duration_ms: 0.3384
+  type: 'test'
+  ...
+# Subtest: only integrity-proven libc metadata changed; dependency and framework identities are preserved
+ok 53 - only integrity-proven libc metadata changed; dependency and framework identities are preserved
+  ---
+  duration_ms: 81.8508
+  type: 'test'
+  ...
+# Subtest: pinned npm Arborist virtual tree retains libc and rejects musl before installation
+ok 54 - pinned npm Arborist virtual tree retains libc and rejects musl before installation
+  ---
+  duration_ms: 6263.0342
+  type: 'test'
+  ...
+# Subtest: streamed tar inventory hashes file bytes and retains ELF without extracting host paths
+ok 55 - streamed tar inventory hashes file bytes and retains ELF without extracting host paths
+  ---
+  duration_ms: 5.0794
+  type: 'test'
+  ...
+# Subtest: path traversal, malformed headers and hidden trailing payload are refused
+ok 56 - path traversal, malformed headers and hidden trailing payload are refused
+  ---
+  duration_ms: 1.0094
+  type: 'test'
+  ...
+# Subtest: whiteouts remove prior layer content but preserve new same-layer entries
+ok 57 - whiteouts remove prior layer content but preserve new same-layer entries
+  ---
+  duration_ms: 0.3104
+  type: 'test'
+  ...
+# Subtest: virtual image symlinks stay in image namespace and cycles cannot resolve
+ok 58 - virtual image symlinks stay in image namespace and cycles cannot resolve
+  ---
+  duration_ms: 0.6497
+  type: 'test'
+  ...
+# Subtest: wrong architecture, truncated ELF and missing native providers fail compatibility
+ok 59 - wrong architecture, truncated ELF and missing native providers fail compatibility
+  ---
+  duration_ms: 0.3368
+  type: 'test'
+  ...
+# Subtest: DT_NEEDED providers must resolve through real search paths and supply exact symbol versions
+ok 60 - DT_NEEDED providers must resolve through real search paths and supply exact symbol versions
+  ---
+  duration_ms: 1.447
+  type: 'test'
+  ...
+# Subtest: a missing dynamic interpreter fails even if every needed library is present
+ok 61 - a missing dynamic interpreter fails even if every needed library is present
+  ---
+  duration_ms: 0.2913
+  type: 'test'
+  ...
+# Subtest: Docker archive layer identity binds exact static filesystem
+ok 62 - Docker archive layer identity binds exact static filesystem
+  ---
+  duration_ms: 27.3741
+  type: 'test'
+  ...
+# Subtest: Docker archive layer identity mismatch fails
+ok 63 - Docker archive layer identity mismatch fails
+  ---
+  duration_ms: 23.2887
+  type: 'test'
+  ...
+# Subtest: all nine stages retain complete inventories and explicit unchanged scan coverage
+ok 64 - all nine stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 128.6876
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 65 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 94.7602
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 66 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 102.6488
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 67 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 112.8019
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 68 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 312.619
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 69 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 251.6589
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 70 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 26.0711
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 71 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 142.6073
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 72 - historical output destination is never overwritten
+  ---
+  duration_ms: 21.1635
+  type: 'test'
+  ...
+# Subtest: expired database cannot produce a clean security result
+ok 73 - expired database cannot produce a clean security result
+  ---
+  duration_ms: 15.7509
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 74 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 101.2794
+  type: 'test'
+  ...
+# Subtest: scanner image identity mismatch is not accepted as a clean report
+ok 75 - scanner image identity mismatch is not accepted as a clean report
+  ---
+  duration_ms: 100.3147
+  type: 'test'
+  ...
+# Subtest: explicit single-stage collection remains partial and cannot claim aggregate coverage
+ok 76 - explicit single-stage collection remains partial and cannot claim aggregate coverage
+  ---
+  duration_ms: 30.8793
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+ok 77 - bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+  ---
+  duration_ms: 97.0875
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+ok 78 - bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+  ---
+  duration_ms: 99.5294
+  type: 'test'
+  ...
+1..78
+# tests 78
+# suites 0
+# pass 78
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24116.0993

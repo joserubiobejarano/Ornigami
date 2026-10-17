@@ -1,0 +1,81 @@
+{
+  "sourceSha": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "branch": "codex/ornigami-minimal-glibc-feasibility-20261017",
+  "sourceTree": "caa2f4c22fc08114f41f9733bb592821bb7452b0",
+  "parent": "25b536d833bf99b02d87b807ac17fdf9d53e5575",
+  "publication": "local only; no push/request change",
+  "files": {
+    "Dockerfile": {
+      "sha256": "8ae41b498623c21533aee300f5c74af3c93d36a8d4d2e7a8251a0b6f3565f9d5",
+      "bytes": 6209,
+      "gitBlob": "662d7218e429d3dbc1d856e19bf1ced8498b574e",
+      "unchangedFromParent": false
+    },
+    ".dockerignore": {
+      "sha256": "2b1c089a9e26ca331ee088aeee67c1b0d775c8fc4b20f59a5e57b8d9ddb0bb61",
+      "bytes": 742,
+      "gitBlob": "c4102573eb4dbcdabd512a9824032b6f87dacccd",
+      "unchangedFromParent": false
+    },
+    ".github/workflows/ornigami-image-rehearsal.yml": {
+      "sha256": "569e69e546626efc56155ad2d371f921876082ea084baec37771e05ed4f45c3e",
+      "bytes": 61437,
+      "gitBlob": "f29ae07e8f356aadbd236342e6029cc53191c509",
+      "unchangedFromParent": false
+    },
+    "package.json": {
+      "sha256": "cbaa1926668da0a71bddfd12e9363833016b47c5e78d978bfb4df92977828f04",
+      "bytes": 2459,
+      "gitBlob": "9d84f04385fe706eee32306e931ccc4fe08f84ab",
+      "unchangedFromParent": true
+    },
+    "package-lock.json": {
+      "sha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+      "bytes": 496110,
+      "gitBlob": "a9db529a0bdb7d4f61776ac9ea55302ea78d1f78",
+      "unchangedFromParent": false
+    },
+    "vendor/framework/next-16.4.2-ornigami-sri.2.tgz": {
+      "sha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+      "bytes": 44857205,
+      "gitBlob": "20dd66b5e924a0e0e16181953f2d4f5aa9bdf846",
+      "unchangedFromParent": true
+    },
+    "scripts/framework-prototype/next-16.4.2-sri.patch": {
+      "sha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+      "bytes": 22865,
+      "gitBlob": "09b0e99ec285c1d30bcb9034397ad5ba416615cf",
+      "unchangedFromParent": true
+    },
+    "vendor/build-tools/npm-11.21.1.tgz": {
+      "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+      "bytes": 3329270,
+      "gitBlob": "2ef8673d6f721febd81bbadf07a2ee8a2a297dc1",
+      "unchangedFromParent": true
+    },
+    "scripts/framework-prototype/minimal-parent-policy.json": {
+      "sha256": "bbe2c86a7e5f64cb647c91343e2136349a38d9709641f1ec68287d722eae3c83",
+      "bytes": 1613,
+      "gitBlob": "c6aa50f560cd83b022677c2bc9a62cfe5ade5cd8",
+      "new": true
+    },
+    "scripts/framework-prototype/native-platform-policy.json": {
+      "sha256": "574ac48a3b5511f4ae1aeab7a0f28afdac067afb01281a5aa492c0f29842c1e4",
+      "bytes": 10392,
+      "gitBlob": "4e73f430ea06abf08eaad15e7a92288ccba955a8",
+      "new": true
+    },
+    "deploy/coolify/runtime-probes.mjs": {
+      "sha256": "95e200d3f2f1dd3f6a4eba4aa435b90282b6a88cc5c82800eea934ee743e49e1",
+      "bytes": 3994,
+      "gitBlob": "e8cd1d30c322bbe7f8e06ac3e6dc85200399f707",
+      "new": true
+    },
+    ".github/build-requests/ornigami.json": {
+      "sha256": "64adae42a4a48e0fd6c45b39cad80951b88c7f287787287db3a084ad6105bdb4",
+      "bytes": 144,
+      "gitBlob": "e7054319d5397d1cdd904a88fecb0eb812a980ce",
+      "unchangedFromParent": true
+    }
+  }
+}

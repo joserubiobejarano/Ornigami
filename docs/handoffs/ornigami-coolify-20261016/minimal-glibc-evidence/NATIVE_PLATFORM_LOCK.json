@@ -1,0 +1,296 @@
+{
+  "schema": 1,
+  "scope": "Linux x64 optional native package platform metadata from integrity-verified official package archives; no version/resolved/integrity changes or removals",
+  "entries": [
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-x64",
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "url": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.4.tgz",
+      "integrity": "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==",
+      "archiveSha256": "e371cb713fc8822c96a0d3fb60a3d092799d0aefab6d7f1fb3b72d8d75f1d109",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linuxmusl-x64",
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "url": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.3.4.tgz",
+      "integrity": "sha512-6zXKeE/p39I1AmA3cJG35eyBGNqNddLnUXjhwBnsGjFPWqf5VKkDBEqaEkPDoTEtkxwi2vv8Tcr2mDyP4So7Fg==",
+      "archiveSha256": "c6312802c16511458a1cf3d990c3e2b9dba555932caf297025ba0bec34ee5cbe",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-x64",
+      "name": "@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "url": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.35.5.tgz",
+      "integrity": "sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog==",
+      "archiveSha256": "556787285d3244c07686a355de5b5a4c4d0019a12785bf24764e756a96ea3334",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@img/sharp-linuxmusl-x64",
+      "name": "@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "url": "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.35.5.tgz",
+      "integrity": "sha512-4KOphqB035HrVdqLZfCgMzzERrQkkzOwRhl4OAkRO1YCldbaFjySXMaK534Mo0V+LndnlJk+sbUyLeU0ULyD1A==",
+      "archiveSha256": "577bca1fabb66b2d8d89fc203851280d2bf604130803382d229544f75bab2ea0",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    },
+    {
+      "path": "node_modules/@napi-rs/lzma-linux-x64-gnu",
+      "name": "@napi-rs/lzma-linux-x64-gnu",
+      "version": "1.5.1",
+      "url": "https://registry.npmjs.org/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz",
+      "integrity": "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==",
+      "archiveSha256": "e69ca2a96510be330953f5b04b1d74617e7ce5d4487db4876c4b02b8364ef7e7",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-gnu",
+      "name": "@next/swc-linux-x64-gnu",
+      "version": "16.4.2",
+      "url": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-16.4.2.tgz",
+      "integrity": "sha512-N9cDUOCGtkJG5PNKDFZUF3xXndrJJcpLp121uAGjIGvO/U2p9tfdNOM9htj7+5f72l0m8rMw/cvYacUJBQoudg==",
+      "archiveSha256": "d5bcd237f21218718b5cf4ab0fb3fbb9d04c2b25799739a2fa49dba9ff4c9049",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-musl",
+      "name": "@next/swc-linux-x64-musl",
+      "version": "16.4.2",
+      "url": "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-16.4.2.tgz",
+      "integrity": "sha512-yY2uh1YhX6ufuYy2FCbw1dqblbhI57GLYAJfCkqD9auTv6pLrH67Uccjc3QMKBeCYAG6lkgu08ExmX1bbjejjQ==",
+      "archiveSha256": "97a0b9379423e1fa8c715b8a897258cc89be1ef64a57362c02c0aed41f21f3f7",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-x64-gnu",
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.62.4",
+      "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.62.4.tgz",
+      "integrity": "sha512-W69hukhZ3KKNRCaMIEzKvcFye42hh0FE1+YoYaf5+Ikacuftoco6yO/xouz0hc5d5W/s3yBro5jRiuEE/Q5vUw==",
+      "archiveSha256": "c9a6b6126f53b36c7c83cdcefc74bb65d70c2ec5eebbe7f4a33e246d0a7a5b3e",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-x64-musl",
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.62.4",
+      "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.62.4.tgz",
+      "integrity": "sha512-qiXbGG2jkjXhzXpsFZSR2Xpb8DN/UaxYsbb/STbuR/6fpaDgRmmaq1B/LmtF2wQFOFOSsK2jdE0RZ3a0zHn4QA==",
+      "archiveSha256": "c204cc90e91ee90b776e075cc0c7d4f7d5a656c64768756c5bbabd7f519a0bc2",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    },
+    {
+      "path": "node_modules/@sentry/cli-linux-x64",
+      "name": "@sentry/cli-linux-x64",
+      "version": "2.58.6",
+      "url": "https://registry.npmjs.org/@sentry/cli-linux-x64/-/cli-linux-x64-2.58.6.tgz",
+      "integrity": "sha512-DZu956Mhi3ZRjTBe1WdbGV46ldVbA8d2rgp/fh51GsI25zjBHah4wZnPTSzpc+YqxU6pJpg579B/r3jrIK530Q==",
+      "archiveSha256": "27077d54416df56b750157048859fe25e7a4d007ad456f6ce28e99a571ad41d5",
+      "os": [
+        "linux",
+        "freebsd",
+        "android"
+      ],
+      "cpu": [
+        "x64"
+      ]
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-x64-gnu",
+      "name": "@tailwindcss/oxide-linux-x64-gnu",
+      "version": "4.1.17",
+      "url": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.1.17.tgz",
+      "integrity": "sha512-M3XZuORCGB7VPOEDH+nzpJ21XPvK5PyjlkSFkFziNHGLc5d6g3di2McAAblmaSUNl8IOmzYwLx9NsE7bplNkwQ==",
+      "archiveSha256": "a631cd9213806fa7868e8e484d294d15b03b995302053389a2491892b1613ef5",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@tailwindcss/oxide-linux-x64-musl",
+      "name": "@tailwindcss/oxide-linux-x64-musl",
+      "version": "4.1.17",
+      "url": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-musl/-/oxide-linux-x64-musl-4.1.17.tgz",
+      "integrity": "sha512-k7f+pf9eXLEey4pBlw+8dgfJHY4PZ5qOUFDyNf7SI6lHjQ9Zt7+NcscjpwdCEbYi6FI5c2KDTDWyf2iHcCSyyQ==",
+      "archiveSha256": "88ccab79970ca194100129ab37eea9e556dc1104a4cee0b93522b3e872c42be8",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    },
+    {
+      "path": "node_modules/@unrs/resolver-binding-linux-x64-gnu",
+      "name": "@unrs/resolver-binding-linux-x64-gnu",
+      "version": "1.11.1",
+      "url": "https://registry.npmjs.org/@unrs/resolver-binding-linux-x64-gnu/-/resolver-binding-linux-x64-gnu-1.11.1.tgz",
+      "integrity": "sha512-C3ZAHugKgovV5YvAMsxhq0gtXuwESUKc5MhEtjBpLoHPLYM+iuwSj3lflFwK3DPm68660rZ7G8BMcwSro7hD5w==",
+      "archiveSha256": "6bb251207f51ff13d71751f9cdcd1474407ddb19bbc6d016b7be745f8fdeba96",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/@unrs/resolver-binding-linux-x64-musl",
+      "name": "@unrs/resolver-binding-linux-x64-musl",
+      "version": "1.11.1",
+      "url": "https://registry.npmjs.org/@unrs/resolver-binding-linux-x64-musl/-/resolver-binding-linux-x64-musl-1.11.1.tgz",
+      "integrity": "sha512-rV0YSoyhK2nZ4vEswT/QwqzqQXw5I6CjoaYMOX0TqBlWhojUf8P94mvI7nuJTeaCkkds3QE4+zS8Ko+GdXuZtA==",
+      "archiveSha256": "f50d732cc4ae199ac3f8ae96df329a29873d310ef78a7470c4083401a2ade6fe",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    },
+    {
+      "path": "node_modules/lightningcss-linux-x64-gnu",
+      "name": "lightningcss-linux-x64-gnu",
+      "version": "1.30.2",
+      "url": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.30.2.tgz",
+      "integrity": "sha512-Cfd46gdmj1vQ+lR6VRTTadNHu6ALuw2pKR9lYq4FnhvgBc4zWY1EtZcAc6EffShbb1MFrIPfLDXD6Xprbnni4w==",
+      "archiveSha256": "02c6510693d73eb7fa71c8cc5beb09beab7bd34ed76a4070af181729ac71b71e",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "glibc"
+      ]
+    },
+    {
+      "path": "node_modules/lightningcss-linux-x64-musl",
+      "name": "lightningcss-linux-x64-musl",
+      "version": "1.30.2",
+      "url": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.30.2.tgz",
+      "integrity": "sha512-XJaLUUFXb6/QG2lGIW6aIk6jKdtjtcffUT0NKvIqhSBY3hh9Ch+1LCeH80dR9q9LBjG3ewbDjnumefsLsP6aiA==",
+      "archiveSha256": "47cc7941d4f65928d66c87ba69b91406e8316ef6c9655b2b054b4535d65bd68b",
+      "os": [
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ],
+      "libc": [
+        "musl"
+      ]
+    }
+  ],
+  "metadataChanges": [
+    "node_modules/@img/sharp-libvips-linux-x64",
+    "node_modules/@img/sharp-libvips-linuxmusl-x64",
+    "node_modules/@img/sharp-linux-x64",
+    "node_modules/@img/sharp-linuxmusl-x64",
+    "node_modules/@napi-rs/lzma-linux-x64-gnu",
+    "node_modules/@next/swc-linux-x64-gnu",
+    "node_modules/@next/swc-linux-x64-musl",
+    "node_modules/@rollup/rollup-linux-x64-gnu",
+    "node_modules/@rollup/rollup-linux-x64-musl",
+    "node_modules/@tailwindcss/oxide-linux-x64-gnu",
+    "node_modules/@tailwindcss/oxide-linux-x64-musl",
+    "node_modules/@unrs/resolver-binding-linux-x64-gnu",
+    "node_modules/@unrs/resolver-binding-linux-x64-musl",
+    "node_modules/lightningcss-linux-x64-gnu",
+    "node_modules/lightningcss-linux-x64-musl"
+  ],
+  "originalLockSha256": "060925fca2813f36357b6ce2459485b0367e33be848ffc253977aca96dbbb350",
+  "updatedLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815"
+}

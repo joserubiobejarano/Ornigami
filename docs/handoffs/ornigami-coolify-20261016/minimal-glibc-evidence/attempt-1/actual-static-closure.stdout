@@ -1,0 +1,53 @@
+{
+  "node": "v22.23.3",
+  "openssl": "3.5.8",
+  "results": [
+    {
+      "role": "runtime",
+      "result": "passed",
+      "roots": [
+        "nodejs/bin/node",
+        "app/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.7",
+        "app/node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64-0.35.5.node",
+        "app/node_modules/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node",
+        "app/node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node",
+        "app/node_modules/@rollup/rollup-linux-x64-gnu/rollup.linux-x64-gnu.node",
+        "app/node_modules/@sentry/cli-linux-x64/bin/sentry-cli",
+        "app/node_modules/@tailwindcss/oxide-linux-x64-gnu/tailwindcss-oxide.linux-x64-gnu.node",
+        "app/node_modules/@unrs/resolver-binding-linux-x64-gnu/resolver.linux-x64-gnu.node",
+        "app/node_modules/lightningcss-linux-x64-gnu/lightningcss.linux-x64-gnu.node"
+      ],
+      "elfNodes": 19,
+      "errors": []
+    },
+    {
+      "role": "tooling",
+      "result": "passed",
+      "roots": [
+        "nodejs/bin/node",
+        "app/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.7",
+        "app/node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64-0.35.5.node",
+        "app/node_modules/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node",
+        "app/node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node",
+        "app/node_modules/@rollup/rollup-linux-x64-gnu/rollup.linux-x64-gnu.node",
+        "app/node_modules/@sentry/cli-linux-x64/bin/sentry-cli",
+        "app/node_modules/@tailwindcss/oxide-linux-x64-gnu/tailwindcss-oxide.linux-x64-gnu.node",
+        "app/node_modules/@unrs/resolver-binding-linux-x64-gnu/resolver.linux-x64-gnu.node",
+        "app/node_modules/lightningcss-linux-x64-gnu/lightningcss.linux-x64-gnu.node",
+        "busybox/busybox"
+      ],
+      "elfNodes": 20,
+      "errors": []
+    }
+  ],
+  "busybox": [
+    "busybox/busybox",
+    "busybox/[",
+    "busybox/[[",
+    "busybox/acpid",
+    "busybox/add-shell",
+    "busybox/addgroup",
+    "busybox/adduser",
+    "busybox/adjtimex"
+  ]
+}

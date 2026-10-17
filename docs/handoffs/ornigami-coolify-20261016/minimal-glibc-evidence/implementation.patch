@@ -1,0 +1,1985 @@
+diff --git a/.dockerignore b/.dockerignore
+index 7f9dc57..c410257 100644
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -55,6 +55,11 @@ docs
+ .deploy/**
+ deploy
+ deploy/**
++!deploy/
++deploy/*
++!deploy/coolify/
++deploy/coolify/**
++!deploy/coolify/runtime-probes.mjs
+ tests
+ tests/**
+ .github
+diff --git a/.github/workflows/ornigami-image-rehearsal.yml b/.github/workflows/ornigami-image-rehearsal.yml
+index dfcc1ad..f29ae07 100644
+--- a/.github/workflows/ornigami-image-rehearsal.yml
++++ b/.github/workflows/ornigami-image-rehearsal.yml
+@@ -36,6 +36,7 @@ jobs:
+           printf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \
+             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"
+           echo "ORNIGAMI_EVIDENCE_DIR=$evidence_dir" >> "$GITHUB_ENV"
++          echo "ORNIGAMI_WORK_DEADLINE_EPOCH=$(( $(date +%s) + 1440 ))" >> "$GITHUB_ENV"
+ 
+       - name: Validate inputs and fetch exact public source
+         id: validate_inputs
+@@ -149,96 +150,41 @@ jobs:
+             printf '%s\n' '  https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt'
+           } >> "$ORNIGAMI_JOB_SUMMARY"
+ 
+-      - name: Scan pinned Node base image and record advisory gate
++      - name: Prepare pinned host Node and verify signed minimal parents
++        id: parent_admission
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          node_archive="$RUNNER_TEMP/node-v22.23.3-linux-x64.tar.xz"
++          curl --fail --silent --show-error --location --output "$node_archive" https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
++          printf '%s  %s\n' df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de "$node_archive" | sha256sum --check
++          tar -xJf "$node_archive" -C "$RUNNER_TEMP"
++          node_dir="$RUNNER_TEMP/node-v22.23.3-linux-x64/bin"
++          echo "$node_dir" >> "$GITHUB_PATH"
++          curl --fail --silent --show-error --location --output "$RUNNER_TEMP/cosign" https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64
++          printf '%s  %s\n' 4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71 "$RUNNER_TEMP/cosign" | sha256sum --check
++          chmod 700 "$RUNNER_TEMP/cosign"
++          "$node_dir/node" "$RUNNER_TEMP/source/scripts/framework-prototype/verify-minimal-parents.mjs" "$RUNNER_TEMP/cosign" "$ORNIGAMI_EVIDENCE_DIR/parent-admission"
++          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/stage-scans"
++          caller=$(id -un)
++          sudo -n systemd-run --scope --quiet --expand-environment=no --unit="ornigami-db-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" -p MemoryMax=2147483648 -p MemorySwapMax=0 -p CPUQuota=100% \
++            /usr/sbin/runuser -u "$caller" -- env NODE_OPTIONS=--max-old-space-size=512 GOMEMLIMIT=1536MiB \
++            "$node_dir/node" "$RUNNER_TEMP/source/scripts/framework-prototype/bounded-scan-worker.mjs" "$ORNIGAMI_EVIDENCE_DIR/stage-scans/database-resources.json" "$RUNNER_TEMP/trivy" image --download-db-only --cache-dir "$RUNNER_TEMP/trivy-cache"
++          "$node_dir/node" -e 'const fs=require("node:fs"),p=JSON.parse(fs.readFileSync(process.argv[1])),d=fs.readFileSync(process.argv[2],"utf8");for(const x of p.parents)if(!d.includes("@"+x.amd64Digest))throw Error("Dockerfile parent policy drift")' "$RUNNER_TEMP/source/scripts/framework-prototype/minimal-parent-policy.json" "$RUNNER_TEMP/source/Dockerfile"
++
++      - name: Collect complete original parent and tool scans
+         id: base_scan
+         shell: bash
+-        env:
+-          BASE_IMAGE: node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812
+         run: |
+           set -Eeuo pipefail
+-          python3 - "$RUNNER_TEMP/source/Dockerfile" "$RUNNER_TEMP/source/deploy/coolify/base-image-candidate.json" "$BASE_IMAGE" <<'PY'
+-          import json, pathlib, re, sys
+-          dockerfile, receipt_path = map(pathlib.Path, sys.argv[1:3])
+-          base_image = sys.argv[3]
+-          text = dockerfile.read_text(encoding="utf-8")
+-          external_from = re.compile(r"^FROM\s+--platform=linux/amd64\s+(node:[^\s]+)(?:\s+AS\s+[^\s]+)?\s*$", re.IGNORECASE | re.MULTILINE)
+-          refs = set(external_from.findall(text))
+-          if refs != {base_image}:
+-              raise SystemExit(f"Dockerfile external Node base references differ from pinned scan target: {sorted(refs)}")
+-          receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+-          candidate, digest = base_image.split("@", 1)
+-          if receipt.get("candidate") != candidate or receipt.get("platform") != "linux/amd64" or receipt.get("platformManifestDigest") != digest:
+-              raise SystemExit("Pinned base image differs from the machine-readable base image candidate receipt")
+-          PY
+-          export TRIVY_CACHE_DIR="$RUNNER_TEMP/trivy-cache"
+-          docker pull --platform linux/amd64 "$BASE_IMAGE"
+-          base_id=$(docker image inspect "$BASE_IMAGE" --format '{{.Id}}')
+-          mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans"
+-          cp -- "$RUNNER_TEMP/source/deploy/coolify/base-image-candidate.json" "$ORNIGAMI_EVIDENCE_DIR/scans/base-image-candidate.json"
+-          printf 'base_image=%s\nbase_image_id=%s\nplatform=linux/amd64\n' "$BASE_IMAGE" "$base_id" > "$ORNIGAMI_EVIDENCE_DIR/base-image-identity.txt"
+-          docker save --output "$RUNNER_TEMP/node-base.tar" "$BASE_IMAGE"
+-          "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/node-base.tar" \
+-            --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/base-trivy.json" --no-progress
+-          python3 - "$RUNNER_TEMP/base-trivy.json" "$ORNIGAMI_JOB_SUMMARY" "$base_id" "$GITHUB_OUTPUT" "$BASE_IMAGE" <<'PY'
+-          import collections, json, pathlib, sys
+-          report = json.loads(pathlib.Path(sys.argv[1]).read_text())
+-          expected_image_id = sys.argv[3]
+-          if not isinstance(report, dict) or type(report.get("SchemaVersion")) is not int or report["SchemaVersion"] != 2:
+-              raise SystemExit("Base Trivy report schema invalid")
+-          if report.get("ArtifactType") != "container_image" or not isinstance(report.get("Metadata"), dict) or report["Metadata"].get("ImageID") != expected_image_id:
+-              raise SystemExit("Base Trivy report identity invalid")
+-          results = report.get("Results")
+-          if not isinstance(results, list) or not results:
+-              raise SystemExit("Base Trivy report has no results")
+-          counts = collections.Counter()
+-          findings = []
+-          has_debian = False
+-          for result in results:
+-              if not isinstance(result, dict) or not isinstance(result.get("Target"), str) or not result["Target"]:
+-                  raise SystemExit("Base Trivy report has a malformed result")
+-              if result.get("Class") == "os-pkgs" and result.get("Type") == "debian":
+-                  has_debian = True
+-              elif result.get("Class") == "lang-pkgs" and result.get("Type") in {"npm", "node-pkg"}:
+-                  pass
+-              else:
+-                  raise SystemExit("Base Trivy report has an unrecognized result class/type")
+-              vulnerabilities = result.get("Vulnerabilities")
+-              if vulnerabilities is None:
+-                  continue
+-              if not isinstance(vulnerabilities, list):
+-                  raise SystemExit("Base Trivy report has malformed Vulnerabilities")
+-              for item in vulnerabilities:
+-                  if not isinstance(item, dict) or any(not isinstance(item.get(key), str) or not item[key].strip() for key in ("Severity", "VulnerabilityID", "PkgName")):
+-                      raise SystemExit("Base Trivy report has malformed vulnerability entry")
+-                  severity = item["Severity"].upper()
+-                  if severity not in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"}:
+-                      raise SystemExit("Base Trivy report has unknown severity")
+-                  counts[severity] += 1
+-                  findings.append((severity, item["PkgName"], item.get("InstalledVersion", ""), item.get("FixedVersion", ""), item["VulnerabilityID"], item.get("PrimaryURL", "")))
+-          if not has_debian:
+-              raise SystemExit("Base Trivy report has no Debian inventory")
+-          with open(sys.argv[2], "a", encoding="utf-8") as out:
+-              out.write("\n### Pinned base image advisory review gate\n\n")
+-              out.write(f"Image: `{sys.argv[5]}`\n\n")
+-              out.write(f"Docker image ID: `{expected_image_id}`\n\n")
+-              out.write("| Severity | Findings |\n| --- | ---: |\n")
+-              for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"):
+-                  out.write(f"| {level} | {counts[level]} |\n")
+-              out.write("\nBase findings are recorded here. The HIGH/CRITICAL acceptance gate runs after runtime, final-image scan, and resource evidence collection.\n")
+-              if findings:
+-                  out.write("\n| Severity | Package | Installed | Fixed | Advisory | Primary URL |\n| --- | --- | --- | --- | --- | --- |\n")
+-                  safe = lambda value: str(value).replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")
+-                  for severity, package, installed, fixed, advisory, url in sorted(findings):
+-                      out.write(f"| {safe(severity)} | {safe(package)} | {safe(installed)} | {safe(fixed)} | {safe(advisory)} | {safe(url)} |\n")
+-          pathlib.Path(sys.argv[4]).write_text(f"critical_count={counts['CRITICAL']}\nhigh_count={counts['HIGH']}\n", encoding="utf-8")
++          node "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" parents
++          python3 - "$RUNNER_TEMP/base-trivy.json" "$GITHUB_OUTPUT" "$ORNIGAMI_JOB_SUMMARY" <<'PY'
++          import collections,json,pathlib,sys
++          report=json.loads(pathlib.Path(sys.argv[1]).read_text())
++          counts=collections.Counter(v['Severity'] for r in report.get('Results',[]) for v in r.get('Vulnerabilities',[]))
++          with open(sys.argv[2],'a') as out: out.write(f"critical_count={counts['CRITICAL']}\nhigh_count={counts['HIGH']}\n")
++          with open(sys.argv[3],'a') as out: out.write(f"\nOriginal minimal runtime base: CRITICAL={counts['CRITICAL']} HIGH={counts['HIGH']}; both parents and tooling scans retained; strict aggregate gate remains independent.\n")
+           PY
+-          {
+-            printf '\n### Trivy scanner and vulnerability database metadata\n\n'
+-            printf '%s\n' '```text'
+-            "$RUNNER_TEMP/trivy" --version
+-            printf '%s\n' '```'
+-          } >> "$ORNIGAMI_JOB_SUMMARY"
+-          rm -f -- "$RUNNER_TEMP/node-base.tar"
+ 
+       - name: Create bounded serial BuildKit builder
+         id: buildkit
+@@ -302,9 +248,15 @@ jobs:
+           echo "build_start_epoch=$build_start_epoch" >> "$GITHUB_OUTPUT"
+           echo "build_start_utc=$build_start_utc" >> "$GITHUB_OUTPUT"
+           build_rc=0
++          stop_file="$RUNNER_TEMP/ornigami-full-build-observer.stop"
++          node "$RUNNER_TEMP/source/scripts/framework-prototype/observe-buildkit.mjs" "$BUILDKIT_CONTAINER_ID" "$ORNIGAMI_EVIDENCE_DIR/runner/full-build-observations.jsonl" "$stop_file" > "$ORNIGAMI_EVIDENCE_DIR/runner/observer.log" 2>&1 &
++          observer_pid=$!
++          trap 'touch "$stop_file"; wait "$observer_pid" || true' EXIT
++          build_timeout=$(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) ))
++          [[ "$build_timeout" -gt 0 ]]
+           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/build"
+           set +e
+-          timeout --signal=TERM --kill-after=30s 30m docker buildx build \
++          timeout --signal=TERM --kill-after=30s "$build_timeout"s docker buildx build \
+             --builder ornigami-external-rehearsal \
+             --platform linux/amd64 \
+             --load \
+@@ -374,6 +326,7 @@ jobs:
+         shell: bash
+         run: |
+           set -Eeuo pipefail
++          [[ $(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) )) -ge 150 ]]
+           image="ornigami:rehearsal-${SOURCE_SHA}"
+           runtime_rc=0
+           bash "$RUNNER_TEMP/source/deploy/coolify/linux-runtime-acceptance.sh" "$image" > "$RUNNER_TEMP/runtime-acceptance.log" 2>&1 || runtime_rc=$?
+@@ -386,7 +339,7 @@ jobs:
+             runner_real=$(realpath -e "$RUNNER_TEMP")
+             [[ "$report_real" == "$runner_real"/ornigami-runtime-acceptance-* ]]
+             mkdir -p "$ORNIGAMI_EVIDENCE_DIR/runtime"
+-            for evidence_path in "$report_dir"/report.txt "$report_dir"/runtime-http.json "$report_dir"/failure.json "$report_dir"/failure-evidence.txt "$report_dir"/container-logs.txt "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
++            for evidence_path in "$report_dir"/native-image-formats.json "$report_dir"/native-image-formats-error.txt "$report_dir"/report.txt "$report_dir"/runtime-http.json "$report_dir"/failure.json "$report_dir"/failure-evidence.txt "$report_dir"/container-logs.txt "$report_dir"/runtime-*-cgroup.txt "$report_dir"/runtime-disk.txt "$report_dir"/host-disk-before.txt "$report_dir"/host-disk-after.txt; do
+               [[ -f "$evidence_path" ]] || continue
+               cp -- "$evidence_path" "$ORNIGAMI_EVIDENCE_DIR/runtime/"
+             done
+@@ -422,6 +375,9 @@ jobs:
+           node_dir="$RUNNER_TEMP/node-v22.23.3-linux-x64"
+           git -C "$RUNNER_TEMP/source" rev-parse HEAD > "$evidence/source-sha.txt"
+           sha256sum "$RUNNER_TEMP/source/vendor/framework/next-16.4.2-ornigami-sri.2.tgz" > "$evidence/framework-package-sha256.txt"
++          browser_timeout=$(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) ))
++          [[ "$browser_timeout" -ge 60 ]]
++          if [[ "$browser_timeout" -gt 900 ]]; then browser_timeout=900; fi
+           command -v systemd-run >/dev/null
+           command -v google-chrome >/dev/null || command -v chromium >/dev/null
+           caller=$(id -un)
+@@ -431,7 +387,7 @@ jobs:
+             -p MemoryMax=8589934592 -p MemorySwapMax=0 -p CPUQuota=300% \
+             /usr/sbin/runuser -u "$caller" -- \
+             env GITHUB_ACTIONS=true GITHUB_REPOSITORY=joserubiobejarano/Ornigami \
+-            timeout --signal=TERM --kill-after=20s 900s \
++            timeout --signal=TERM --kill-after=20s "$browser_timeout"s \
+             bash "$RUNNER_TEMP/source/scripts/framework-prototype/linux-fixture-trial.sh" \
+               "$RUNNER_TEMP/source" "$RUNNER_TEMP/ornigami-browser-work" "$node_dir" "$evidence" \
+             2>&1 | tee "$evidence/trial.log"
+@@ -466,8 +422,8 @@ jobs:
+             printf '%s\n' "- Saved archive bytes: $archive_bytes"
+             printf '%s\n' '- Trivy report ImageID must match the local Docker image ID above'
+           } >> "$ORNIGAMI_JOB_SUMMARY"
+-          "$RUNNER_TEMP/trivy" image --input "$RUNNER_TEMP/ornigami-image.tar" \
+-            --scanners vuln --format json --exit-code 0 --output "$RUNNER_TEMP/trivy.json" --no-progress
++          export INITIAL_BUILD_OUTCOME=success
++          node "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" final
+           python3 - "$RUNNER_TEMP/trivy.json" "$ORNIGAMI_JOB_SUMMARY" "$image_id" <<'PY'
+           import collections, json, pathlib, sys
+           report = json.loads(pathlib.Path(sys.argv[1]).read_text())
+@@ -527,8 +483,29 @@ jobs:
+               raise SystemExit("Trivy found HIGH or CRITICAL vulnerabilities; scan recorded and build validation failed")
+           PY
+ 
++      - name: Collect serial bounded intermediate native and vulnerability evidence
++        id: intermediate_scans
++        if: ${{ always() && steps.buildkit.outcome == 'success' && steps.parent_admission.outcome == 'success' }}
++        shell: bash
++        env:
++          INITIAL_BUILD_OUTCOME: ${{ steps.image_build.outcome }}
++          OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
++        run: |
++          set -Eeuo pipefail
++          node "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" intermediates
++
++      - name: Enforce complete all-stage security native and resource gates
++        id: all_stage_gate
++        if: ${{ always() && steps.parent_admission.outcome == 'success' }}
++        shell: bash
++        run: |
++          set -Eeuo pipefail
++          node "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" aggregate
++
+       - name: Reject build-time OOM or invalid cgroup counters
+         id: build_resources
++        env:
++          EXPECTED_OBSERVED_BUILDER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+         if: ${{ always() && steps.buildkit.outcome == 'success' }}
+         shell: bash
+         run: |
+@@ -607,7 +584,10 @@ jobs:
+           pipeline_status=("${PIPESTATUS[@]}")
+           set -e
+           printf 'assessment_exit_code=%s\nlog_exit_code=%s\n' "${pipeline_status[0]}" "${pipeline_status[1]}" > "$ORNIGAMI_EVIDENCE_DIR/runner/resource-exit-code.txt"
+-          [[ "${pipeline_status[0]}" -eq 0 && "${pipeline_status[1]}" -eq 0 ]]
++          observation_status=0
++          node "$RUNNER_TEMP/source/scripts/framework-prototype/validate-build-observation.mjs" "$ORNIGAMI_EVIDENCE_DIR/runner/full-build-observations.jsonl" "$EXPECTED_OBSERVED_BUILDER_ID" > "$ORNIGAMI_EVIDENCE_DIR/runner/full-observation-gate.txt" 2>&1 || observation_status=$?
++          printf 'observation_exit_code=%s\n' "$observation_status" >> "$ORNIGAMI_EVIDENCE_DIR/runner/resource-exit-code.txt"
++          [[ "${pipeline_status[0]}" -eq 0 && "${pipeline_status[1]}" -eq 0 && "$observation_status" -eq 0 ]]
+ 
+       - name: Enforce pinned base image advisory threshold
+         id: base_advisory_gate
+@@ -638,6 +618,7 @@ jobs:
+           FRAMEWORK_BROWSER_OUTCOME: ${{ steps.framework_browser.outcome }}
+           FRAMEWORK_BROWSER_EXIT_CODE: ${{ steps.framework_browser.outputs.exit_code }}
+           BASE_GATE_OUTCOME: ${{ steps.base_advisory_gate.outcome }}
++          ALL_STAGE_OUTCOME: ${{ steps.all_stage_gate.outcome }}
+           OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
+           OWNED_BUILDER_CONTAINER_ID: ${{ steps.buildkit.outputs.builder_container_id }}
+           OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
+@@ -690,7 +671,7 @@ jobs:
+           # phases are explicitly unavailable, never fabricated or called passed.
+           {
+             printf 'runtime_step_outcome=%s\n' "$RUNTIME_OUTCOME"
+-            for phase_file in runtime-first-cgroup.txt runtime-after-restart-cgroup.txt runtime-after-recreate-cgroup.txt; do
++            for phase_file in runtime-first-cgroup.txt runtime-after-restart-cgroup.txt runtime-after-recreate-cgroup.txt native-image-formats.json; do
+               if [[ -s "$ORNIGAMI_EVIDENCE_DIR/runtime/$phase_file" ]]; then
+                 printf '%s=collected\n' "$phase_file"
+               else
+@@ -749,11 +730,40 @@ jobs:
+           metadata["runtime_snapshot_status"] = (root / "runtime/snapshot-status.txt").read_text(encoding="utf-8").splitlines()
+           metadata["capture_completeness_status"] = __import__("os").environ["CAPTURE_COMPLETENESS"]
+           metadata["custody_status"] = "not-assessed-by-capture"
++          metadata["all_stage_gate_outcome"] = __import__("os").environ.get("ALL_STAGE_OUTCOME", "unknown")
++          stages = root / "stage-scans/index.json"
++          expected=["original-base","original-runtime-base","build-base","deps","builder","prod-deps","runner","buildkit","dockerfile-frontend"]
++          stages.parent.mkdir(parents=True,exist_ok=True)
++          stage_capture = "passed"
++          try:
++              if not stages.exists():
++                  if metadata["all_stage_gate_outcome"] not in ("unknown", "skipped", ""):
++                      raise ValueError("attempted scan pipeline has no index")
++                  data={"schema":1,"sourceSha":metadata["source_sha"],"result":"failed","expectedStages":expected,"stages":[{"stage":s,"result":"skipped","reason":"pipeline unavailable before capture"} for s in expected]}
++              else:
++                  data=json.loads(stages.read_text())
++                  if data.get("sourceSha") != metadata["source_sha"] or data.get("expectedStages") != expected or sorted(x["stage"] for x in data["stages"]) != sorted(expected) or data.get("result") not in ("passed", "failed"):
++                      raise ValueError("scan index identity or nine-stage coverage mismatch")
++                  for stage in data["stages"]:
++                      if stage.get("collectionComplete"):
++                          required=["filesystem/result.json","filesystem-resources.json","vulnerabilities-resources.json","scan/index.json","scan/"+stage["stage"]+"/trivy.json"]
++                          if any(not (stages.parent/stage["stage"]/p).is_file() or (stages.parent/stage["stage"]/p).stat().st_size == 0 for p in required):
++                              raise ValueError("claimed complete stage lacks required receipts: "+stage["stage"])
++          except (ValueError, KeyError, TypeError, AttributeError, OSError) as error:
++              stage_capture="failed"
++              if stages.exists():
++                  (stages.parent/"invalid-index-preserved.txt").write_bytes(stages.read_bytes())
++              data={"schema":1,"sourceSha":metadata["source_sha"],"result":"failed","expectedStages":expected,"captureError":str(error),"stages":[{"stage":s,"result":"unverified","reason":"invalid or incomplete scan evidence"} for s in expected]}
++              metadata["capture_completeness_status"]="failed"
++          stages.write_text(json.dumps(data,indent=2)+"\n")
++          (stages.parent/"completeness-status.txt").write_text(stage_capture+"\n")
++          metadata["all_stage_evidence_status"] = data["result"]
+           files = []
+           for path in sorted(p for p in root.rglob("*") if p.is_file() and p.name != "manifest.json"):
+               files.append({"path": path.relative_to(root).as_posix(), "bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+           (root / "manifest.json").write_text(json.dumps({"schema": 1, **metadata, "files": files}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+           PY
++          if [[ "$(cat "$ORNIGAMI_EVIDENCE_DIR/stage-scans/completeness-status.txt")" != passed ]]; then exit 1; fi
+           if [[ "$runtime_evidence_missing" -eq 1 || "$summary_evidence_missing" -eq 1 ]]; then
+             printf '%s\n' 'Required runtime receipts, successful phase snapshots or persistent summary were missing; evidence collection failed. Manifest retained; custody is independent.' >&2
+             exit 1
+@@ -882,3 +892,7 @@ jobs:
+             df -PB1 "$RUNNER_TEMP"
+             printf '%s\n' '```'
+           } >> "$GITHUB_STEP_SUMMARY" 2>&1
++
++          if [[ -f "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" && -x "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" ]]; then
++            "$RUNNER_TEMP/node-v22.23.3-linux-x64/bin/node" "$RUNNER_TEMP/source/scripts/framework-prototype/serial-scan-driver.mjs" cleanup | tee -a "$GITHUB_STEP_SUMMARY"
++          fi
+diff --git a/Dockerfile b/Dockerfile
+index 55f6f82..662d721 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,33 +1,46 @@
+-# syntax=docker/dockerfile:1.7
+-FROM --platform=linux/amd64 node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 AS build-base
+-# Complete official npm distribution, checksum pinned; no transitive overrides.
++# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
++# Signed parents: exact official Node 22.23.3 / OpenSSL 3.5.8 binary identity.
++# Static ELF closure passed; Linux loading, codecs and security remain unaccepted.
++FROM --platform=linux/amd64 gcr.io/distroless/nodejs22-debian13:debug-nonroot@sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5 AS build-base
++USER 0:0
++SHELL ["/busybox/sh", "-ec"]
++ENV PATH=/nodejs/bin:/opt/ornigami-npm/bin:/busybox:/usr/local/bin:/usr/bin:/bin \
++    HOME=/home/node \
++    npm_config_script_shell=/busybox/sh \
++    NEXT_TELEMETRY_DISABLED=1
+ COPY vendor/build-tools/npm-11.21.1.tgz /tmp/ornigami-npm.tgz
+-RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(crypto.createHash("sha256").update(fs.readFileSync("/tmp/ornigami-npm.tgz")).digest("hex")!=="dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b")throw new Error("npm archive checksum mismatch")' \
+-    && mkdir /opt/ornigami-npm \
++RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(process.version!=="v22.23.3"||process.versions.openssl!=="3.5.8")throw Error("Unreviewed Node/OpenSSL version");if(crypto.createHash("sha256").update(fs.readFileSync("/tmp/ornigami-npm.tgz")).digest("hex")!=="dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b")throw Error("npm checksum mismatch")' \
++    && mkdir -p /opt/ornigami-npm /app /home/node /usr/bin /bin /usr/local/bin \
+     && tar -xzf /tmp/ornigami-npm.tgz --strip-components=1 -C /opt/ornigami-npm \
+-    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
+-    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg /tmp/ornigami-npm.tgz \
++    && rm /tmp/ornigami-npm.tgz \
++    && ln -s /busybox/env /usr/bin/env \
++    && ln -s /busybox/sh /bin/sh \
+     && ln -s /opt/ornigami-npm/bin/npm-cli.js /usr/local/bin/npm \
+     && ln -s /opt/ornigami-npm/bin/npx-cli.js /usr/local/bin/npx \
+-    && test "$(npm --version)" = "11.21.1"
++    && node -e 'const fs=require("node:fs");for(const p of ["/etc/passwd","/etc/group"])if(fs.readFileSync(p,"utf8").split("\n").some(l=>l&&l.split(":")[2]==="1000"))throw Error("UID/GID 1000 already assigned")' \
++    && printf 'node:x:1000:1000:Ornigami:/home/node:/sbin/nologin\n' >> /etc/passwd \
++    && printf 'node:x:1000:\n' >> /etc/group \
++    && chown 1000:1000 /app /home/node \
++    && test "$(npm --version)" = 11.21.1
++WORKDIR /app
++USER 1000:1000
+ 
+ FROM build-base AS deps
+-WORKDIR /app
+-RUN mkdir -p /app && chown node:node /app
+-COPY --chown=node:node package.json package-lock.json ./
+-COPY --chown=node:node scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
+-COPY --chown=node:node vendor/framework ./vendor/framework
+-USER node
+-RUN npm ci
++COPY --chown=1000:1000 package.json package-lock.json ./
++COPY --chown=1000:1000 scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
++COPY --chown=1000:1000 vendor/framework ./vendor/framework
++# Declare the target before installation; never delete foreign packages afterward.
++RUN npm ci --os=linux --cpu=x64 --libc=glibc
+ 
+ FROM deps AS builder
+-COPY --chown=node:node . .
++COPY --chown=1000:1000 . .
+ ARG NEXT_PUBLIC_APP_URL
+ ARG ORNIGAMI_SOURCE_SHA
+-ARG ORNIGAMI_BUILD_HEAP_MIB=1408
+-ARG ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=false
++ARG ORNIGAMI_BUILD_HEAP_MIB=4096
++ARG ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true
+ ARG ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false
+ ARG ORNIGAMI_BUILD_WEBPACK_WORKER=false
++LABEL org.opencontainers.image.revision=${ORNIGAMI_SOURCE_SHA}
+ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+     ORNIGAMI_CONTAINER_BUILD=true \
+     ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=${ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS} \
+@@ -37,24 +50,19 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+     AUTH_SECRET=rehearsal-only-synthetic-build-secret-not-for-use \
+     GOOGLE_CLIENT_ID=rehearsal.invalid \
+     GOOGLE_CLIENT_SECRET=rehearsal-only-placeholder-not-a-provider-credential \
+-    NEXT_TELEMETRY_DISABLED=1 \
+     NODE_ENV=production
+-RUN test -n "$NEXT_PUBLIC_APP_URL" && node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA ?? "")) throw new Error("ORNIGAMI_SOURCE_SHA must be a full lowercase commit SHA"); const raw=process.env.ORNIGAMI_BUILD_HEAP_MIB ?? ""; const heap=Number(raw); if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(heap) || heap < 512 || heap > 8192) throw new Error("ORNIGAMI_BUILD_HEAP_MIB must be an integer from 512 through 8192 MiB"); for (const name of ["ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS", "ORNIGAMI_BUILD_DISABLE_SOURCEMAPS", "ORNIGAMI_BUILD_WEBPACK_WORKER"]) if (!/^(true|false)$/.test(process.env[name] ?? "")) throw new Error(`${name} must be true or false`)' && npm run build
++RUN node -e 'if(!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA??"")||!process.env.NEXT_PUBLIC_APP_URL)throw Error("Build identity/origin missing");if(process.env.ORNIGAMI_BUILD_HEAP_MIB!=="4096"||process.env.ORNIGAMI_BUILD_DISABLE_SOURCEMAPS!=="false"||process.env.ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS!=="true"||process.env.ORNIGAMI_BUILD_WEBPACK_WORKER!=="false")throw Error("Unreviewed build arguments")' \
++    && npm run build \
++    && mkdir -p .next/cache \
++    && node -e 'const s=require("node:fs").statSync(".next/cache");if(s.uid!==1000||s.gid!==1000)throw Error("Cache ownership drift")'
+ 
+ FROM build-base AS prod-deps
+-WORKDIR /app
+-RUN mkdir -p /app && chown node:node /app
+-COPY --chown=node:node package.json package-lock.json ./
+-COPY --chown=node:node scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
+-COPY --chown=node:node vendor/framework ./vendor/framework
+-USER node
+-RUN npm ci --omit=dev
++COPY --chown=1000:1000 package.json package-lock.json ./
++COPY --chown=1000:1000 scripts/vendor/fast-glob-compat ./scripts/vendor/fast-glob-compat
++COPY --chown=1000:1000 vendor/framework ./vendor/framework
++RUN npm ci --omit=dev --os=linux --cpu=x64 --libc=glibc
+ 
+-FROM --platform=linux/amd64 node:22.23.3-trixie-slim@sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812 AS runner
+-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
+-    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg \
+-    && test "$(node --version)" = "v22.23.3" \
+-    && for path in /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg; do test ! -e "$path"; done
++FROM --platform=linux/amd64 gcr.io/distroless/nodejs22-debian13:nonroot@sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c AS runner
+ WORKDIR /app
+ ARG NEXT_PUBLIC_APP_URL
+ ARG ORNIGAMI_SOURCE_SHA
+@@ -62,20 +70,26 @@ LABEL org.opencontainers.image.revision=${ORNIGAMI_SOURCE_SHA} \
+       org.ornigami.public-origin=${NEXT_PUBLIC_APP_URL}
+ ENV NODE_ENV=production \
+     NEXT_TELEMETRY_DISABLED=1 \
++    HOME=/home/node \
++    PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin \
+     HOSTNAME=0.0.0.0 \
+     PORT=3000 \
+     NODE_OPTIONS=--max-old-space-size=512
+-COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+-COPY --from=builder --chown=node:node /app/.next ./.next
+-COPY --from=builder --chown=node:node /app/public ./public
+-COPY --from=builder --chown=node:node /app/package.json ./package.json
+-COPY --from=builder --chown=node:node /app/next.config.ts ./next.config.ts
+-COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
+-COPY --from=builder --chown=node:node /app/src/lib/security-headers.ts ./src/lib/security-headers.ts
+-COPY --from=builder --chown=node:node /app/src/lib/env.ts ./src/lib/env.ts
+-COPY --from=builder --chown=node:node /app/scripts/coolify-cron-dispatch.mjs ./scripts/coolify-cron-dispatch.mjs
+-COPY --from=builder --chown=node:node /app/scripts/vps-cron-dispatch.mjs ./scripts/vps-cron-dispatch.mjs
+-RUN mkdir -p .next/cache && chown node:node .next/cache
+-USER node
+-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 CMD ["node", "-e", "fetch('http://127.0.0.1:3000/robots.txt',{redirect:'manual',signal:AbortSignal.timeout(1500)}).then(async r=>{await r.body?.cancel();process.exit(r.status===200?0:1)}).catch(()=>process.exit(1))"]
+-CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]
++COPY --from=build-base --chown=0:0 /etc/passwd /etc/passwd
++COPY --from=build-base --chown=0:0 /etc/group /etc/group
++COPY --from=build-base --chown=1000:1000 /home/node /home/node
++COPY --from=prod-deps --chown=1000:1000 /app/node_modules ./node_modules
++COPY --from=builder --chown=1000:1000 /app/.next ./.next
++COPY --from=builder --chown=1000:1000 /app/public ./public
++COPY --from=builder --chown=1000:1000 /app/package.json ./package.json
++COPY --from=builder --chown=1000:1000 /app/next.config.ts ./next.config.ts
++COPY --from=builder --chown=1000:1000 /app/tsconfig.json ./tsconfig.json
++COPY --from=builder --chown=1000:1000 /app/src/lib/security-headers.ts ./src/lib/security-headers.ts
++COPY --from=builder --chown=1000:1000 /app/src/lib/env.ts ./src/lib/env.ts
++COPY --from=builder --chown=1000:1000 /app/scripts/coolify-cron-dispatch.mjs ./scripts/coolify-cron-dispatch.mjs
++COPY --from=builder --chown=1000:1000 /app/scripts/vps-cron-dispatch.mjs ./scripts/vps-cron-dispatch.mjs
++COPY --from=builder --chown=1000:1000 /app/deploy/coolify/runtime-probes.mjs ./deploy/coolify/runtime-probes.mjs
++USER 1000:1000
++HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/robots.txt',{redirect:'manual',signal:AbortSignal.timeout(1500)}).then(async r=>{await r.body?.cancel();process.exit(r.status===200?0:1)}).catch(()=>process.exit(1))"]
++ENTRYPOINT ["/nodejs/bin/node"]
++CMD ["node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]
+diff --git a/deploy/coolify/MINIMAL_GLIBC_FEASIBILITY.md b/deploy/coolify/MINIMAL_GLIBC_FEASIBILITY.md
+new file mode 100644
+index 0000000..fc2bba6
+--- /dev/null
++++ b/deploy/coolify/MINIMAL_GLIBC_FEASIBILITY.md
+@@ -0,0 +1,59 @@
++# Minimal glibc feasibility candidate
++
++Local prototype only. No image has been built or accepted from this candidate.
++All 43 historical Debian highs remain unresolved pending exact-image scans.
++Framework adoption, release, registry publication and provider gates remain closed.
++
++`scripts/framework-prototype/minimal-parent-policy.json` binds the signed Distroless
++Debian 13 parents, their indexes/manifests/configs, the official Node binary and
++Node 22.23.3/OpenSSL 3.5.8. No Node version change is proposed. Signature admission
++uses exact publisher identities, not a permissive identity regex. These checks do
++not establish a SLSA build attestation or a vulnerability-free image.
++
++The debug parent supplies explicit BusyBox tooling only to build stages. npm
++11.21.1 is checksum-pinned and its complete installed tree must be inventoried and
++scanned. Install/build run as UID:GID 1000:1000; the final parent contains neither
++BusyBox nor npm. Numeric cache ownership and read-only-root/tmpfs/named-cache
++contracts are retained. Runtime cgroup, identity, disk and codec probes use Node.
++Source maps and all existing HTTP/CSP/SRI assertions remain required.
++
++The new lock changes only 15 libc metadata fields obtained from integrity-verified
++upstream package manifests. Versions, resolved URLs, integrity pins and the custom
++framework package are unchanged. `native-platform-policy.json` records old/new lock
++checksums and all 16 Linux x64 package archives examined. npm's actual virtual-tree
++platform checker accepts nine GNU/generic packages and rejects seven musl packages;
++a fresh Linux cold installation remains required.
++
++The serial scanner requires nine distinct roles: both original parents,
++build-base, deps, builder, prod-deps, runner, BuildKit and Dockerfile frontend.
++Each archive is config/layer-bound, completely inventoried and scanned without
++ignores, with full severities and zero critical/high acceptance. A bare Go frontend
++may lack an OS database only when its hash-bound filesystem proves every native
++object is covered by Go package inventory. Unknown native files fail coverage.
++Each inventory/scan phase uses a separate 2 GiB/1 CPU/zero-swap scope; scans never
++overlap the compiler. BuildKit stays 8 GiB/3 CPU/zero swap, heap 4 GiB, serial worker.
++
++One future approved primary build could export intermediates from its existing
++cache. Those exports are bounded and reject noncached RUN events or unrecognized
++progress; they cannot be retried. BuildKit emits progress after work can start:
++the abort guard is not proof that no process started. Its raw progress protocol,
++cache retention, export compatibility and available disk/time need Linux proof.
++An export failure means incomplete evidence and no acceptance; no cold rebuild or
++capacity increase is allowed as fallback. No exports or build ran locally.
++
++The workflow preserves timestamped cgroup observations, compiler stdout/exit,
++per-phase scan/resource receipts and independently required restart/recreation
++snapshots. Raw archive spools remain outside artifact directories and are removed
++only within their recorded ownership scope. Invalid scan indexes are preserved;
++capture fails after writing a hashed manifest. Custody remains a separate check.
++
++Future Linux validation must prove actual npm/glibc selection, Node/OpenSSL/ABI/CPU,
++dynamic loading and all image formats, HTTP/CSP/SRI/browser corruption rejection,
++restart/recreation/cache persistence, all nine complete scans and resource receipts,
++and failed/skipped capture paths. The older Dockerfile frontend pin may itself have
++advisories: its scan must fail unchanged thresholds if so. No headroom claim follows
++from the historical 8 GiB peak/three limit events or these small Windows checks.
++
++Detailed signed-parent receipts, focused local results and exact source identities
++are handed off in the preparation worktree's
++`docs/handoffs/ornigami-coolify-20261016/MINIMAL_GLIBC_FEASIBILITY.md`.
+diff --git a/deploy/coolify/base-image-candidate.json b/deploy/coolify/base-image-candidate.json
+index b3df3cc..3997815 100644
+--- a/deploy/coolify/base-image-candidate.json
++++ b/deploy/coolify/base-image-candidate.json
+@@ -1,43 +1,17 @@
+ {
+-  "candidate": "node:22.23.3-trixie-slim",
+-  "verifiedAtUtc": "2026-10-16T17:34:52Z",
+-  "registry": "registry-1.docker.io/v2/library/node",
+-  "indexDigest": "sha256:154ba2f4d6fec323d28e4f4bb86bba4677f1223391a1979cf521304e03a98dfa",
++  "candidate": "gcr.io/distroless/nodejs22-debian13:nonroot",
+   "platform": "linux/amd64",
+-  "platformManifestDigest": "sha256:6b25e0bf3aaee33c18ba3c5d1b71646df1ba485a2a5500fd8376a3be3d110812",
+-  "platformManifestAnnotations": {
+-    "org.opencontainers.image.version": "22-trixie-slim",
+-    "org.opencontainers.image.created": "2026-10-06T01:45:05Z",
+-    "org.opencontainers.image.revision": "81f419144a1251854c6d9afb09eaa39928e724e8",
+-    "org.opencontainers.image.source": "https://github.com/nodejs/docker-node.git#81f419144a1251854c6d9afb09eaa39928e724e8:22/trixie-slim",
+-    "org.opencontainers.image.base.name": "debian:trixie-slim",
+-    "org.opencontainers.image.base.digest": "sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483"
++  "platformManifestDigest": "sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
++  "toolingParent": {
++    "role": "original-base",
++    "variant": "debug-nonroot",
++    "indexDigest": "sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce",
++    "amd64Digest": "sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
++    "configDigest": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842"
+   },
+-  "scanStatus": "unscanned_candidate_requires_base_and_final_image_scans",
+-  "debianBaseLayerInventory": {
+-    "manifestDigest": "sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483",
+-    "rootfsLayerDigest": "sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e",
+-    "rootfsLayerSizeBytes": 29843350,
+-    "verifiedLayerSha256": "ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e",
+-    "packageInventorySource": "var/lib/dpkg/status extracted read-only from the digest-verified Debian base rootfs layer; Node image subsequent apt install/purge layer may change final inventory",
+-    "packages": {
+-      "perl-base": "5.40.1-6+deb13u1",
+-      "zlib1g": "1:1.3.dfsg+really1.3.1-1+b1",
+-      "util-linux": "2.41.5-0+deb13u1",
+-      "bsdutils": "1:2.41.5-0+deb13u1",
+-      "libblkid1": "2.41.5-0+deb13u1",
+-      "libmount1": "2.41.5-0+deb13u1",
+-      "libsmartcols1": "2.41.5-0+deb13u1",
+-      "libuuid1": "2.41.5-0+deb13u1",
+-      "mount": "2.41.5-0+deb13u1",
+-      "util-linux-extra": null,
+-      "gzip": "1.13-1+deb13u1",
+-      "libacl1": "2.3.2-2+b1",
+-      "libsystemd0": "257.13-1~deb13u1",
+-      "libudev1": "257.13-1~deb13u1",
+-      "libtinfo6": "6.5+20250216-2",
+-      "ncurses-base": "6.5+20250216-2",
+-      "ncurses-bin": "6.5+20250216-2"
+-    }
+-  }
++  "nodeVersion": "v22.23.3",
++  "opensslVersion": "3.5.8",
++  "nodeBinarySha256": "fde6a4bf8d0562f7751d1a2d6cb9b417c4cfe107bbcb0aa3e9a24e125e348f48",
++  "admission": "Both signed indexes and exact official Node binary locally verified; static native closure only. No exact-image SCA or Linux execution. Historical 43 Debian highs remain unresolved.",
++  "policy": "scripts/framework-prototype/minimal-parent-policy.json"
+ }
+diff --git a/deploy/coolify/linux-runtime-acceptance.sh b/deploy/coolify/linux-runtime-acceptance.sh
+index 5128539..bab26a9 100644
+--- a/deploy/coolify/linux-runtime-acceptance.sh
++++ b/deploy/coolify/linux-runtime-acceptance.sh
+@@ -65,6 +65,7 @@ restart_http_passed=false
+ recreate_http_passed=false
+ restart_cache_passed=false
+ recreate_cache_passed=false
++native_formats_failed=false
+ started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+ started_epoch=$(date +%s)
+ failure_line=
+@@ -103,11 +104,7 @@ PY
+ 
+ capture_cgroup() {
+   local target=$1 prefix=$2
+-  if ! docker exec "$target" sh -c '
+-    for path in memory.max memory.swap.max memory.current memory.peak memory.events memory.stat memory.pressure cpu.max cpu.stat pids.max; do
+-      if [ -r "/sys/fs/cgroup/$path" ]; then printf "==%s==\n" "$path"; cat "/sys/fs/cgroup/$path"; fi
+-    done
+-  ' >"$report_dir/${prefix}-cgroup.txt" 2>&1; then
++  if ! docker exec "$target" node /app/deploy/coolify/runtime-probes.mjs cgroup >"$report_dir/${prefix}-cgroup.txt" 2>&1; then
+     printf 'Cgroup capture failed for %s.\n' "$target" >&2
+     return 1
+   fi
+@@ -468,7 +465,7 @@ verify_runtime_config() {
+ 
+ verify_runtime_config
+ wait_for_health
+-runtime_uid=$(docker exec "$name" id -u)
++runtime_uid=$(docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs uid)
+ [[ $runtime_uid == 1000 ]] || { printf 'Runtime UID is not 1000.\n' >&2; exit 1; }
+ readonly_result=$(docker exec "$name" node -e '
+   const fs = require("node:fs");
+@@ -477,6 +474,20 @@ readonly_result=$(docker exec "$name" node -e '
+ ' && printf rejected || printf writable)
+ [[ $readonly_result == rejected ]] || { printf 'Runtime root filesystem accepted a write.\n' >&2; exit 1; }
+ docker exec "$name" node -e 'require("node:fs").writeFileSync("/tmp/rehearsal-write-probe", "ok")'
++if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats >"$report_dir/native-image-formats.json" 2>"$report_dir/native-image-formats.stderr"; then
++  printf 'native_image_formats=passed\n' >>"$report"
++else
++  native_status=$?
++  record_error_context "$native_status" "$LINENO" 'native image format probes'
++  native_formats_failed=true
++  printf '{"result":"failed","exitStatus":%s,"diagnostic":"native-image-formats-error.txt"}\n' "$native_status" >"$report_dir/native-image-formats.json"
++  printf 'native_image_formats=failed\n' >>"$report"
++fi
++if [[ -s "$report_dir/native-image-formats.stderr" ]]; then
++  sanitize_file "$report_dir/native-image-formats.stderr" >"$report_dir/native-image-formats-error.txt"
++  cat "$report_dir/native-image-formats-error.txt" >&2
++fi
++rm -f -- "$report_dir/native-image-formats.stderr"
+ 
+ runtime_limits=$(docker inspect --format '{{.HostConfig.Memory}}|{{.HostConfig.MemorySwap}}|{{.HostConfig.NanoCpus}}|{{.HostConfig.PidsLimit}}|{{.HostConfig.ReadonlyRootfs}}|{{.HostConfig.NetworkMode}}|{{json .HostConfig.PortBindings}}|{{json .HostConfig.CapDrop}}|{{json .HostConfig.SecurityOpt}}' "$name")
+ expected_limits_prefix='805306368|805306368|750000000|128|true|none|'
+@@ -904,7 +915,7 @@ printf 'container_id_after_recreate=%s\ncontainer_identity_check=restart_same_re
+ printf 'recreate_http=%s\nnext_image_cache_recreate=%s\n' "$recreate_http_passed" "$recreate_cache_passed" >>"$report"
+ capture_cgroup "$name" runtime-after-recreate
+ assert_cgroup_metrics "$report_dir/runtime-after-recreate-cgroup.txt"
+-docker exec "$name" df -Pk / /tmp /app/.next/cache >"$report_dir/runtime-disk.txt" 2>&1 || true
++docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs disk >"$report_dir/runtime-disk.txt" 2>&1
+ df -Pk / "$report_root" >"$report_dir/host-disk-after.txt" 2>&1 || true
+ 
+ if grep -Eq '^oom_kill[[:space:]]+([1-9][0-9]*)$' "$report_dir/runtime-first-cgroup.txt" "$report_dir/runtime-after-restart-cgroup.txt" "$report_dir/runtime-after-recreate-cgroup.txt"; then
+@@ -912,9 +923,9 @@ if grep -Eq '^oom_kill[[:space:]]+([1-9][0-9]*)$' "$report_dir/runtime-first-cgr
+   exit 1
+ fi
+ printf 'cache_persistence_scope=next_image_cache_volume_only;does_not_accept_database_or_media_storage\n' >>"$report"
+-if [[ $cold_http_failed == true || $cache_check_failed == true ]]; then
+-  printf 'cold_http_failed=%s\ncache_check_failed=%s\n' "$cold_http_failed" "$cache_check_failed" >>"$report"
+-  printf 'Runtime acceptance failed: cold HTTP or image-cache persistence checks failed; restart/recreate observations were retained.\n' >&2
++if [[ $cold_http_failed == true || $cache_check_failed == true || $native_formats_failed == true ]]; then
++  printf 'cold_http_failed=%s\ncache_check_failed=%s\nnative_image_formats_failed=%s\n' "$cold_http_failed" "$cache_check_failed" "$native_formats_failed" >>"$report"
++  printf 'Runtime acceptance failed: HTTP, native image formats or image-cache persistence failed; restart/recreate observations were retained.\n' >&2
+   exit 1
+ fi
+ finished_epoch=$(date +%s)
+diff --git a/deploy/coolify/runtime-probes.mjs b/deploy/coolify/runtime-probes.mjs
+new file mode 100644
+index 0000000..e8cd1d3
+--- /dev/null
++++ b/deploy/coolify/runtime-probes.mjs
+@@ -0,0 +1,54 @@
++import fs from 'node:fs';
++import { resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++export const cgroupKeys = ['memory.max', 'memory.swap.max', 'memory.current', 'memory.peak', 'memory.events', 'memory.stat', 'memory.pressure', 'cpu.max', 'cpu.stat', 'pids.max'];
++export function cgroupSnapshot(read = key => fs.readFileSync('/sys/fs/cgroup/' + key, 'utf8')) {
++  return cgroupKeys.map(key => {
++    const value = read(key).trim();
++    if (!value) throw Error(`Empty required cgroup metric: ${key}`);
++    return `==${key}==\n${value}\n`;
++  }).join('');
++}
++export function identity({ uid = process.getuid?.(), gid = process.getgid?.() } = {}) {
++  if (uid !== 1000 || gid !== 1000) throw Error('Runtime UID/GID must remain 1000:1000');
++  return String(uid);
++}
++export function diskUsage(stat = path => fs.statfsSync(path, { bigint: true })) {
++  return ['/','/tmp','/app/.next/cache'].map(path => {
++    const s = stat(path);
++    return {path,blockSize:String(s.bsize),totalBytes:String(s.bsize*s.blocks),freeBytes:String(s.bsize*s.bfree),availableBytes:String(s.bsize*s.bavail)};
++  });
++}
++export async function imageFormats(sharp) {
++  const checks = [];
++  for (const format of ['png','jpeg','webp','avif','gif','tiff']) {
++    const capability=sharp.format[format==='avif'?'heif':format];
++    if (!capability?.input?.buffer || !capability?.output?.buffer || (format==='avif'&&!capability.output.alias?.includes('avif'))) throw Error(`Required native image format unavailable: ${format}`);
++    const input = await sharp({create:{width:8,height:8,channels:4,background:{r:23,g:47,b:89,alpha:1}}}).toFormat(format).toBuffer();
++    if(format==='avif'){const metadata=await sharp(input).metadata();if(metadata.format!=='heif'||metadata.compression!=='av1')throw Error('AVIF encoding did not produce AV1 in HEIF');}
++    const {data,info} = await sharp(input).resize(4,4).webp().toBuffer({resolveWithObject:true});
++    if (info.width !== 4 || info.height !== 4 || info.format !== 'webp' || !data.length) throw Error(`Image transform failed: ${format}`);
++    checks.push({format,inputBytes:input.length,outputBytes:data.length,width:info.width,height:info.height,result:'passed'});
++  }
++  const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#172f59"/></svg>');
++  const {data,info} = await sharp(svg).resize(4,4).png().toBuffer({resolveWithObject:true});
++  if (!data.length || info.width !== 4 || info.height !== 4 || info.format !== 'png') throw Error('Required SVG-input transform failed');
++  checks.push({format:'svg-input',inputBytes:svg.length,outputBytes:data.length,result:'passed'});
++  return {result:'passed',versions:sharp.versions,checks};
++}
++export function runtimePlatform({platform=process.platform,arch=process.arch,node=process.version,openssl=process.versions.openssl,glibc,flags}={}){
++  if(platform!=='linux'||arch!=='x64'||node!=='v22.23.3'||openssl!=='3.5.8'||!glibc||!flags?.split(/\s+/).includes('sse4_2'))throw Error('Unreviewed Linux/amd64 Node/OpenSSL/glibc/SSE4.2 runtime');
++  return{platform:'linux/amd64',node,openssl,glibc,sse4_2:true};
++}
++
++if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
++  try {
++    const command = process.argv[2];
++    if (command === 'cgroup') process.stdout.write(cgroupSnapshot());
++    else if (command === 'uid') process.stdout.write(identity());
++    else if (command === 'disk') console.log(JSON.stringify(diskUsage()));
++    else if (command === 'image-formats') {const report=process.report.getReport(),runtime=runtimePlatform({glibc:report.header.glibcVersionRuntime,flags:fs.readFileSync('/proc/cpuinfo','utf8')});const {default:sharp}=await import('sharp');console.log(JSON.stringify({...await imageFormats(sharp),runtime,loadedNativeObjects:process.report.getReport().sharedObjects}));}
++    else throw Error('Expected cgroup, uid, disk or image-formats');
++  } catch (error) { console.error(error.message); process.exitCode=1; }
++}
+diff --git a/package-lock.json b/package-lock.json
+index acba7ec..a9db529 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -838,7 +838,10 @@
+             ],
+             "funding": {
+                 "url": "https://opencollective.com/libvips"
+-            }
++            },
++            "libc": [
++                "glibc"
++            ]
+         },
+         "node_modules/@img/sharp-libvips-linuxmusl-arm64": {
+             "version": "1.3.4",
+@@ -870,7 +873,10 @@
+             ],
+             "funding": {
+                 "url": "https://opencollective.com/libvips"
+-            }
++            },
++            "libc": [
++                "musl"
++            ]
+         },
+         "node_modules/@img/sharp-linux-arm": {
+             "version": "0.35.5",
+@@ -1002,7 +1008,10 @@
+             },
+             "optionalDependencies": {
+                 "@img/sharp-libvips-linux-x64": "1.3.4"
+-            }
++            },
++            "libc": [
++                "glibc"
++            ]
+         },
+         "node_modules/@img/sharp-linuxmusl-arm64": {
+             "version": "0.35.5",
+@@ -1046,7 +1055,10 @@
+             },
+             "optionalDependencies": {
+                 "@img/sharp-libvips-linuxmusl-x64": "1.3.4"
+-            }
++            },
++            "libc": [
++                "musl"
++            ]
+         },
+         "node_modules/@img/sharp-wasm32": {
+             "version": "0.35.5",
+@@ -1210,7 +1222,10 @@
+             ],
+             "engines": {
+                 "node": "^22.20 || ^24.12 || >=25"
+-            }
++            },
++            "libc": [
++                "glibc"
++            ]
+         },
+         "node_modules/@napi-rs/wasm-runtime": {
+             "version": "0.2.12",
+@@ -1342,7 +1357,10 @@
+             ],
+             "engines": {
+                 "node": ">= 10"
+-            }
++            },
++            "libc": [
++                "glibc"
++            ]
+         },
+         "node_modules/@next/swc-linux-x64-musl": {
+             "version": "16.4.2",
+@@ -1358,7 +1376,10 @@
+             ],
+             "engines": {
+                 "node": ">= 10"
+-            }
++            },
++            "libc": [
++                "musl"
++            ]
+         },
+         "node_modules/@next/swc-win32-arm64-msvc": {
+             "version": "16.4.2",
+@@ -3050,6 +3071,9 @@
+             "optional": true,
+             "os": [
+                 "linux"
++            ],
++            "libc": [
++                "glibc"
+             ]
+         },
+         "node_modules/@rollup/rollup-linux-x64-musl": {
+@@ -3063,6 +3087,9 @@
+             "optional": true,
+             "os": [
+                 "linux"
++            ],
++            "libc": [
++                "musl"
+             ]
+         },
+         "node_modules/@rollup/rollup-openbsd-x64": {
+@@ -3822,7 +3849,10 @@
+             ],
+             "engines": {
+                 "node": ">= 10"
+-            }
++            },
++            "libc": [
++                "glibc"
++            ]
+         },
+         "node_modules/@tailwindcss/oxide-linux-x64-musl": {
+             "version": "4.1.17",
+@@ -3839,7 +3869,10 @@
+             ],
+             "engines": {
+                 "node": ">= 10"
+-            }
++            },
++            "libc": [
++                "musl"
++            ]
+         },
+         "node_modules/@tailwindcss/oxide-wasm32-wasi": {
+             "version": "4.1.17",
+@@ -4598,6 +4631,9 @@
+             "optional": true,
+             "os": [
+                 "linux"
++            ],
++            "libc": [
++                "glibc"
+             ]
+         },
+         "node_modules/@unrs/resolver-binding-linux-x64-musl": {
+@@ -4612,6 +4648,9 @@
+             "optional": true,
+             "os": [
+                 "linux"
++            ],
++            "libc": [
++                "musl"
+             ]
+         },
+         "node_modules/@unrs/resolver-binding-wasm32-wasi": {
+@@ -8015,7 +8054,10 @@
+             "funding": {
+                 "type": "opencollective",
+                 "url": "https://opencollective.com/parcel"
+-            }
++            },
++            "libc": [
++                "glibc"
++            ]
+         },
+         "node_modules/lightningcss-linux-x64-musl": {
+             "version": "1.30.2",
+@@ -8036,7 +8078,10 @@
+             "funding": {
+                 "type": "opencollective",
+                 "url": "https://opencollective.com/parcel"
+-            }
++            },
++            "libc": [
++                "musl"
++            ]
+         },
+         "node_modules/lightningcss-win32-arm64-msvc": {
+             "version": "1.30.2",
+diff --git a/scripts/framework-prototype/analyze-docker-archive.mjs b/scripts/framework-prototype/analyze-docker-archive.mjs
+new file mode 100644
+index 0000000..6ff1e9d
+--- /dev/null
++++ b/scripts/framework-prototype/analyze-docker-archive.mjs
+@@ -0,0 +1,44 @@
++import fs from 'node:fs';import path from 'node:path';import{createGunzip}from'node:zlib';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';import{inventoryTar,mergeLayer}from'./tar-inventory.mjs';import{verifyClosure}from'./elf-closure.mjs';
++import{Transform}from'node:stream';
++const hash=b=>createHash('sha256').update(b).digest('hex');
++const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
++export async function analyzeArchive(archive,out,stage,expectedImageId,policy){
++  fs.mkdirSync(out);const spoolParent=fs.realpathSync(path.dirname(path.resolve(archive))),owned=fs.mkdtempSync(path.join(spoolParent,'ornigami-inspect-spool-'));fs.chmodSync(owned,0o700);const stored=new Map(),files=new Map();
++  save(path.join(out,'spool-ownership.json'),{directory:owned,parent:spoolParent,uid:process.getuid?.()??null,scope:'run-owned raw layers outside evidence; never upload; cleanup after verified custody if the worker is killed'});
++  const result={stage,expectedImageId,result:'failed',scope:'static archive/filesystem/package/native evidence only; no runtime acceptance'};
++  try{
++    await inventoryTar(fs.createReadStream(archive),(entry)=>{}, {retainELF:false,sink:entry=>{
++      if(entry.type!=='0')return null;const file=path.join(owned,hash(Buffer.from(entry.path)));const fd=fs.openSync(file,'wx',0o600);stored.set(entry.path,file);return{write:data=>fs.writeSync(fd,data),end:()=>fs.closeSync(fd)};
++    }});
++    const manifests=JSON.parse(fs.readFileSync(stored.get('manifest.json'),'utf8'));if(manifests.length!==1)throw Error('Single-image Docker archive required');
++    const configBytes=fs.readFileSync(stored.get(manifests[0].Config)),config=JSON.parse(configBytes),imageId='sha256:'+hash(configBytes);result.imageId=imageId;
++    if(imageId!==expectedImageId||config.architecture!=='amd64'||config.os!=='linux')throw Error('Archive config/platform identity mismatch');
++    if(config.rootfs?.diff_ids?.length!==manifests[0].Layers.length)throw Error('Image rootfs layer identity list missing');let layerNumber=0;
++    for(const member of manifests[0].Layers){const file=stored.get(member);if(!file)throw Error('Image layer missing');const fd=fs.openSync(file,'r'),prefix=Buffer.alloc(2);fs.readSync(fd,prefix);fs.closeSync(fd);let stream=fs.createReadStream(file);if(prefix.toString('hex')==='1f8b')stream=stream.pipe(createGunzip());const digest=createHash('sha256');stream=stream.pipe(new Transform({transform(data,encoding,callback){digest.update(data);callback(null,data);}}));
++      await inventoryTar(stream,(entry,bytes)=>mergeLayer(files,entry,bytes,member),{retain:e=>e.path.endsWith('/package.json')||e.path==='etc/passwd'||e.path==='etc/group'});
++      if('sha256:'+digest.digest('hex')!==config.rootfs.diff_ids[layerNumber++])throw Error('Rootfs layer content does not match image config diff-ID');
++    }
++    const inventory=[...files].map(([p,v])=>({path:p,...Object.fromEntries(Object.entries(v).filter(([key])=>key!=='bytes'))}));save(path.join(out,'filesystem.json'),inventory);
++    const packages=[];for(const[p,file]of files){if(p.endsWith('/package.json')&&file.bytes){const pkg=JSON.parse(file.bytes);packages.push({path:p,name:pkg.name,version:pkg.version,os:pkg.os,cpu:pkg.cpu,libc:pkg.libc,engines:pkg.engines,napi:pkg.napi,installScriptNames:Object.keys(pkg.scripts??{}).filter(x=>/install/.test(x))});}}
++    save(path.join(out,'package-manifests.json'),packages);
++    const roots=[...files].filter(([,file])=>file.bytes?.subarray(0,4).toString('hex')==='7f454c46').map(([p])=>p);
++    const closure=verifyClosure(files,roots);save(path.join(out,'native-closure.json'),closure);if(!roots.length)throw Error('No native executable inventory');if(closure.result!=='passed')throw Error('Static native closure failed');
++    if(!['buildkit','dockerfile-frontend'].includes(stage)){
++      const node=files.get('nodejs/bin/node');if(node?.sha256!==policy.nodeBinarySha256)throw Error('Exact reviewed Node binary not present');
++      if(['build-base','deps','builder','prod-deps'].includes(stage)&&!packages.some(p=>p.path==='opt/ornigami-npm/package.json'&&p.name==='npm'&&p.version==='11.21.1'))throw Error('Upgraded npm filesystem inventory missing');
++      for(const p of packages.filter(p=>p.path.startsWith('app/node_modules/'))){for(const[key,value]of[['os','linux'],['cpu','x64'],['libc','glibc']]){const values=p[key];if(values?.includes('!'+value)||(values?.some(x=>!x.startsWith('!'))&&!values.includes(value)))throw Error('Foreign native/platform manifest installed: '+p.path);}}
++    }
++    if(stage==='runner'){
++      if(config.config?.User!=='1000:1000')throw Error('Final UID/GID drift');
++      if(!files.get('etc/passwd')?.bytes?.toString().split('\n').some(x=>/^node:x:1000:1000:/.test(x)))throw Error('Final passwd identity missing');
++      if(files.get('app/.next/cache')?.uid!==1000||files.get('app/.next/cache')?.gid!==1000)throw Error('Final cache ownership missing');
++      if([...files.keys()].some(p=>p.startsWith('busybox/')||p==='usr/bin/sh'||p==='bin/sh'||p.startsWith('opt/ornigami-npm/')||p.startsWith('usr/local/lib/node_modules/npm/')))throw Error('Runtime contains shell/npm tooling');
++    }
++    result.files=inventory.length;result.packages=packages.length;result.nativeFiles=roots.length;result.nativePaths=roots.sort();result.hasOsPackageDatabase=inventory.some(p=>/^(?:var\/lib\/dpkg\/status(?:\.d\/.*)?|lib\/apk\/db\/installed)$/.test(p.path));result.result='passed';
++  }catch(error){result.error=error.message;}
++  finally{save(path.join(out,'result.json'),result);const actual=fs.realpathSync(owned);if(path.dirname(actual)!==spoolParent||!path.basename(actual).startsWith('ornigami-inspect-spool-'))throw Error('Refusing cleanup outside owned spool parent');fs.rmSync(actual,{recursive:true,force:true});}
++  return result;
++}
++if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
++  try{const[, ,archive,out,stage,imageId]=process.argv;const policy=JSON.parse(fs.readFileSync(new URL('./minimal-parent-policy.json',import.meta.url)));const result=await analyzeArchive(archive,out,stage,imageId,policy);console.log(JSON.stringify(result));process.exitCode=result.result==='passed'?0:1;}catch(error){console.error(error.message);process.exitCode=1;}
++}
+diff --git a/scripts/framework-prototype/bounded-scan-worker.mjs b/scripts/framework-prototype/bounded-scan-worker.mjs
+new file mode 100644
+index 0000000..2130bed
+--- /dev/null
++++ b/scripts/framework-prototype/bounded-scan-worker.mjs
+@@ -0,0 +1,17 @@
++import fs from 'node:fs';import path from 'node:path';import{spawnSync}from'node:child_process';
++const[, ,receipt,executable,...args]=process.argv;
++const file=path.resolve(receipt);let cgroup;
++const metrics=['memory.max','memory.swap.max','memory.current','memory.peak','memory.events','memory.stat','memory.pressure','cpu.max','cpu.stat','pids.current','pids.max'];
++function snapshot(){if(!cgroup){const line=fs.readFileSync('/proc/self/cgroup','utf8').split('\n').find(x=>x.startsWith('0::'));if(!line)throw Error('Unified cgroup missing');cgroup=path.join('/sys/fs/cgroup',line.slice(3));}return Object.fromEntries(metrics.map(k=>[k,fs.readFileSync(path.join(cgroup,k),'utf8').trim()]));}
++const record={startedAt:new Date().toISOString(),result:'failed',resourceResult:'failed',command:path.basename(executable),arguments:args};
++function save(){fs.writeFileSync(file,JSON.stringify(record,null,2)+'\n');}
++try{
++  record.before=snapshot();save();if(record.before['memory.max']!=='2147483648'||record.before['memory.swap.max']!=='0'||record.before['cpu.max']!=='100000 100000')throw Error('Scan cgroup must be 2 GiB/1 CPU/zero swap');
++  record.limitsVerified=true;
++  const result=spawnSync(executable,args,{stdio:'inherit',timeout:180000,windowsHide:true});record.exit=result.status;record.signal=result.signal;record.error=result.error?.message;
++  if(result.status!==0)throw Error('Bounded scan command failed');record.result='passed';
++}catch(error){record.error=error.message;process.exitCode=1;}
++finally{
++  try{record.after=snapshot();const events=Object.fromEntries(record.after['memory.events'].split('\n').map(x=>x.split(/\s+/)));if(!record.limitsVerified||record.after['memory.max']!=='2147483648'||record.after['memory.swap.max']!=='0'||record.after['cpu.max']!=='100000 100000'||['oom','oom_kill','oom_group_kill'].some(k=>events[k]!=='0')){record.result='failed';record.error='Scan limits drifted or OOM counters nonzero';process.exitCode=1;}else record.resourceResult='passed';}catch(error){record.counterError=error.message;record.result='failed';process.exitCode=1;}
++  record.finishedAt=new Date().toISOString();save();
++}
+diff --git a/scripts/framework-prototype/elf-closure.mjs b/scripts/framework-prototype/elf-closure.mjs
+new file mode 100644
+index 0000000..7a47696
+--- /dev/null
++++ b/scripts/framework-prototype/elf-closure.mjs
+@@ -0,0 +1,67 @@
++import path from 'node:path';
++
++export function inspectElf(bytes) {
++  if (bytes.subarray(0,4).toString('hex') !== '7f454c46') return null;
++  if (bytes[4] !== 2 || bytes[5] !== 1 || bytes.readUInt16LE(18) !== 62) throw Error('Only Linux amd64 ELF64 little-endian is admitted');
++  const number = n => {if(n>BigInt(Number.MAX_SAFE_INTEGER))throw Error('ELF integer exceeds safe bounds');return Number(n);};
++  const u64 = offset => number(bytes.readBigUInt64LE(offset));
++  const bounded = (offset,size) => {if(offset<0||size<0||offset+size>bytes.length)throw Error('ELF range out of bounds');};
++  const phoff=u64(32), phsize=bytes.readUInt16LE(54), count=bytes.readUInt16LE(56), loads=[];let dynamic,interpreter=null;
++  if(phsize<56||count>4096)throw Error('Malformed ELF program headers');bounded(phoff,phsize*count);
++  for(let i=0;i<count;i++){
++    const at=phoff+i*phsize,type=bytes.readUInt32LE(at),offset=u64(at+8),vaddr=u64(at+16),size=u64(at+32);bounded(offset,size);
++    if(type===1)loads.push({offset,vaddr,size});
++    if(type===2)dynamic={offset,size};
++    if(type===3){bounded(offset,size);interpreter=bytes.subarray(offset,offset+size).toString().replace(/\0.*$/s,'');}
++  }
++  const address=v=>{const p=loads.find(x=>v>=x.vaddr&&v<x.vaddr+x.size);if(!p)throw Error('Unmapped ELF virtual address');return p.offset+v-p.vaddr;};
++  const tags=new Map();
++  if(dynamic)for(let at=dynamic.offset;at+16<=dynamic.offset+dynamic.size;at+=16){const tag=u64(at),value=u64(at+8);if(!tag)break;tags.set(tag,[...(tags.get(tag)??[]),value]);}
++  const first=tag=>tags.get(tag)?.[0];
++  if(!tags.size)return {machine:'amd64',interpreter,needed:[],rpath:[],runpath:[],soname:null,requiredVersions:{},providedVersions:[]};
++  if(first(5)===undefined||first(10)===undefined)throw Error('ELF dynamic string table missing');
++  const strings=address(first(5)),stringSize=first(10);bounded(strings,stringSize);
++  const str=offset=>{if(offset>=stringSize)throw Error('ELF string offset invalid');const start=strings+offset,end=bytes.indexOf(0,start);if(end<start||end>=strings+stringSize)throw Error('ELF string unterminated');return bytes.subarray(start,end).toString();};
++  const requiredVersions={},providedVersions=[];
++  if(first(0x6ffffffe)!==undefined){let at=address(first(0x6ffffffe));const n=first(0x6fffffff)??0;if(n>4096)throw Error('Too many version requirements');
++    for(let i=0;i<n;i++){bounded(at,16);const lib=str(bytes.readUInt32LE(at+4)),cnt=bytes.readUInt16LE(at+2);let aux=at+bytes.readUInt32LE(at+8);requiredVersions[lib]=[];if(cnt>4096)throw Error('Too many required versions');
++      for(let j=0;j<cnt;j++){bounded(aux,16);requiredVersions[lib].push(str(bytes.readUInt32LE(aux+8)));const next=bytes.readUInt32LE(aux+12);if(j+1<cnt&&!next)throw Error('Broken ELF version chain');aux+=next;}
++      const next=bytes.readUInt32LE(at+12);if(i+1<n&&!next)throw Error('Broken ELF dependency version chain');at+=next;
++    }
++  }
++  if(first(0x6ffffffc)!==undefined){let at=address(first(0x6ffffffc));const n=first(0x6ffffffd)??0;if(n>4096)throw Error('Too many version definitions');
++    for(let i=0;i<n;i++){bounded(at,20);const aux=at+bytes.readUInt32LE(at+12);bounded(aux,8);providedVersions.push(str(bytes.readUInt32LE(aux)));const next=bytes.readUInt32LE(at+16);if(i+1<n&&!next)throw Error('Broken ELF definition chain');at+=next;}
++  }
++  return {machine:'amd64',interpreter,needed:(tags.get(1)??[]).map(str),rpath:(first(15)===undefined?'':str(first(15))).split(':').filter(Boolean),runpath:(first(29)===undefined?'':str(first(29))).split(':').filter(Boolean),soname:first(14)===undefined?null:str(first(14)),requiredVersions,providedVersions};
++}
++
++export function resolveImagePath(files, requested) {
++  let name=path.posix.resolve('/',requested).slice(1);
++  for(let hops=0;hops<40;hops++){
++    const parts=name.split('/');let replaced=false;
++    for(let i=0;i<parts.length;i++){
++      const prefix=parts.slice(0,i+1).join('/'),entry=files.get(prefix);
++      if(entry?.link){name=path.posix.resolve('/',path.posix.dirname(prefix),entry.link,...parts.slice(i+1)).slice(1);replaced=true;break;}
++    }
++    if(!replaced)return files.has(name)?name:null;
++  }
++  throw Error('Image symlink cycle');
++}
++
++export function verifyClosure(files, roots) {
++  const nodes={},errors=[],queue=[...roots],visited=new Set();
++  while(queue.length){const requested=queue.shift(),file=resolveImagePath(files,requested);if(!file){errors.push({file:requested,error:'missing ELF root/provider'});continue;}if(visited.has(file))continue;visited.add(file);
++    let elf;try{elf=inspectElf(files.get(file).bytes??Buffer.alloc(0));}catch(error){errors.push({file,error:error.message});continue;}
++    if(!elf){errors.push({file,error:'expected ELF bytes unavailable'});continue;}nodes[file]=elf;
++    if(elf.interpreter){const loader=resolveImagePath(files,elf.interpreter);if(!loader)errors.push({file,error:'missing interpreter',interpreter:elf.interpreter});else queue.push(loader);}
++    const origin='/'+path.posix.dirname(file),directories=[...elf.rpath,...elf.runpath].map(x=>x.replaceAll('${ORIGIN}',origin).replaceAll('$ORIGIN',origin));
++    if(directories.some(x=>!x.startsWith('/')||x.includes('$'))) {errors.push({file,error:'unsupported relative/token library search path'});continue;}
++    directories.push('/lib/x86_64-linux-gnu','/usr/lib/x86_64-linux-gnu','/lib64','/usr/lib64','/lib','/usr/lib');
++    for(const library of elf.needed){
++      const provider=library.includes('/')?resolveImagePath(files,library):directories.map(dir=>resolveImagePath(files,path.posix.join(dir,library))).find(Boolean);
++      if(!provider){errors.push({file,library,error:'unresolved DT_NEEDED'});continue;}queue.push(provider);
++      const required=elf.requiredVersions[library]??[];try{const versions=inspectElf(files.get(provider).bytes??Buffer.alloc(0))?.providedVersions??[];for(const version of required)if(!versions.includes(version))errors.push({file,library,provider,version,error:'required symbol version absent'});}catch(error){errors.push({file,provider,error:error.message});}
++    }
++  }
++  return {result:errors.length?'failed':'passed',roots,nodes,errors,scope:'Static ELF/interpreter/DT_NEEDED/symbol-version closure only; no Linux dlopen, CPU, image codec, TLS/DNS or runtime execution proof'};
++}
+diff --git a/scripts/framework-prototype/minimal-parent-policy.json b/scripts/framework-prototype/minimal-parent-policy.json
+new file mode 100644
+index 0000000..c6aa50f
+--- /dev/null
++++ b/scripts/framework-prototype/minimal-parent-policy.json
+@@ -0,0 +1,30 @@
++{
++  "schema": 1,
++  "nodeVersion": "v22.23.3",
++  "opensslVersion": "3.5.8",
++  "nodeBinarySha256": "fde6a4bf8d0562f7751d1a2d6cb9b417c4cfe107bbcb0aa3e9a24e125e348f48",
++  "nodeArchiveSha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de",
++  "cosignVersion": "v3.1.3",
++  "cosignLinuxSha256": "4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71",
++  "cosignLinuxBundleSha256": "e16547fbee348eb23bd7e5a4d542b540395faea2e7bb1d18da01bbc3cc74d57d",
++  "signerIdentity": "keyless@distroless.iam.gserviceaccount.com",
++  "signerIssuer": "https://accounts.google.com",
++  "parents": [
++    {
++      "role": "original-base",
++      "variant": "debug-nonroot",
++      "indexDigest": "sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce",
++      "amd64Digest": "sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
++      "configDigest": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842"
++    },
++    {
++      "role": "original-runtime-base",
++      "variant": "nonroot",
++      "indexDigest": "sha256:ec2313763dd43931543bd03830466e0c409ce73a487e8d46f10db72d3b816c1c",
++      "amd64Digest": "sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
++      "configDigest": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320"
++    }
++  ],
++  "securityAcceptance": "unaccepted; all historical 43 Debian highs remain unresolved until exact-image scans",
++  "compatibility": "signature/hash-bound Node identity and local static GNU ELF closure passed; Linux dlopen/CPU/codec/DNS/TLS/runtime tests remain required"
++}
+diff --git a/scripts/framework-prototype/native-platform-policy.json b/scripts/framework-prototype/native-platform-policy.json
+new file mode 100644
+index 0000000..4e73f43
+--- /dev/null
++++ b/scripts/framework-prototype/native-platform-policy.json
+@@ -0,0 +1,296 @@
++{
++  "schema": 1,
++  "scope": "Linux x64 optional native package platform metadata from integrity-verified official package archives; no version/resolved/integrity changes or removals",
++  "entries": [
++    {
++      "path": "node_modules/@img/sharp-libvips-linux-x64",
++      "name": "@img/sharp-libvips-linux-x64",
++      "version": "1.3.4",
++      "url": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.4.tgz",
++      "integrity": "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==",
++      "archiveSha256": "e371cb713fc8822c96a0d3fb60a3d092799d0aefab6d7f1fb3b72d8d75f1d109",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@img/sharp-libvips-linuxmusl-x64",
++      "name": "@img/sharp-libvips-linuxmusl-x64",
++      "version": "1.3.4",
++      "url": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.3.4.tgz",
++      "integrity": "sha512-6zXKeE/p39I1AmA3cJG35eyBGNqNddLnUXjhwBnsGjFPWqf5VKkDBEqaEkPDoTEtkxwi2vv8Tcr2mDyP4So7Fg==",
++      "archiveSha256": "c6312802c16511458a1cf3d990c3e2b9dba555932caf297025ba0bec34ee5cbe",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    },
++    {
++      "path": "node_modules/@img/sharp-linux-x64",
++      "name": "@img/sharp-linux-x64",
++      "version": "0.35.5",
++      "url": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.35.5.tgz",
++      "integrity": "sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog==",
++      "archiveSha256": "556787285d3244c07686a355de5b5a4c4d0019a12785bf24764e756a96ea3334",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@img/sharp-linuxmusl-x64",
++      "name": "@img/sharp-linuxmusl-x64",
++      "version": "0.35.5",
++      "url": "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.35.5.tgz",
++      "integrity": "sha512-4KOphqB035HrVdqLZfCgMzzERrQkkzOwRhl4OAkRO1YCldbaFjySXMaK534Mo0V+LndnlJk+sbUyLeU0ULyD1A==",
++      "archiveSha256": "577bca1fabb66b2d8d89fc203851280d2bf604130803382d229544f75bab2ea0",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    },
++    {
++      "path": "node_modules/@napi-rs/lzma-linux-x64-gnu",
++      "name": "@napi-rs/lzma-linux-x64-gnu",
++      "version": "1.5.1",
++      "url": "https://registry.npmjs.org/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz",
++      "integrity": "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==",
++      "archiveSha256": "e69ca2a96510be330953f5b04b1d74617e7ce5d4487db4876c4b02b8364ef7e7",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@next/swc-linux-x64-gnu",
++      "name": "@next/swc-linux-x64-gnu",
++      "version": "16.4.2",
++      "url": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-16.4.2.tgz",
++      "integrity": "sha512-N9cDUOCGtkJG5PNKDFZUF3xXndrJJcpLp121uAGjIGvO/U2p9tfdNOM9htj7+5f72l0m8rMw/cvYacUJBQoudg==",
++      "archiveSha256": "d5bcd237f21218718b5cf4ab0fb3fbb9d04c2b25799739a2fa49dba9ff4c9049",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@next/swc-linux-x64-musl",
++      "name": "@next/swc-linux-x64-musl",
++      "version": "16.4.2",
++      "url": "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-16.4.2.tgz",
++      "integrity": "sha512-yY2uh1YhX6ufuYy2FCbw1dqblbhI57GLYAJfCkqD9auTv6pLrH67Uccjc3QMKBeCYAG6lkgu08ExmX1bbjejjQ==",
++      "archiveSha256": "97a0b9379423e1fa8c715b8a897258cc89be1ef64a57362c02c0aed41f21f3f7",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    },
++    {
++      "path": "node_modules/@rollup/rollup-linux-x64-gnu",
++      "name": "@rollup/rollup-linux-x64-gnu",
++      "version": "4.62.4",
++      "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.62.4.tgz",
++      "integrity": "sha512-W69hukhZ3KKNRCaMIEzKvcFye42hh0FE1+YoYaf5+Ikacuftoco6yO/xouz0hc5d5W/s3yBro5jRiuEE/Q5vUw==",
++      "archiveSha256": "c9a6b6126f53b36c7c83cdcefc74bb65d70c2ec5eebbe7f4a33e246d0a7a5b3e",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@rollup/rollup-linux-x64-musl",
++      "name": "@rollup/rollup-linux-x64-musl",
++      "version": "4.62.4",
++      "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.62.4.tgz",
++      "integrity": "sha512-qiXbGG2jkjXhzXpsFZSR2Xpb8DN/UaxYsbb/STbuR/6fpaDgRmmaq1B/LmtF2wQFOFOSsK2jdE0RZ3a0zHn4QA==",
++      "archiveSha256": "c204cc90e91ee90b776e075cc0c7d4f7d5a656c64768756c5bbabd7f519a0bc2",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    },
++    {
++      "path": "node_modules/@sentry/cli-linux-x64",
++      "name": "@sentry/cli-linux-x64",
++      "version": "2.58.6",
++      "url": "https://registry.npmjs.org/@sentry/cli-linux-x64/-/cli-linux-x64-2.58.6.tgz",
++      "integrity": "sha512-DZu956Mhi3ZRjTBe1WdbGV46ldVbA8d2rgp/fh51GsI25zjBHah4wZnPTSzpc+YqxU6pJpg579B/r3jrIK530Q==",
++      "archiveSha256": "27077d54416df56b750157048859fe25e7a4d007ad456f6ce28e99a571ad41d5",
++      "os": [
++        "linux",
++        "freebsd",
++        "android"
++      ],
++      "cpu": [
++        "x64"
++      ]
++    },
++    {
++      "path": "node_modules/@tailwindcss/oxide-linux-x64-gnu",
++      "name": "@tailwindcss/oxide-linux-x64-gnu",
++      "version": "4.1.17",
++      "url": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.1.17.tgz",
++      "integrity": "sha512-M3XZuORCGB7VPOEDH+nzpJ21XPvK5PyjlkSFkFziNHGLc5d6g3di2McAAblmaSUNl8IOmzYwLx9NsE7bplNkwQ==",
++      "archiveSha256": "a631cd9213806fa7868e8e484d294d15b03b995302053389a2491892b1613ef5",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@tailwindcss/oxide-linux-x64-musl",
++      "name": "@tailwindcss/oxide-linux-x64-musl",
++      "version": "4.1.17",
++      "url": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-musl/-/oxide-linux-x64-musl-4.1.17.tgz",
++      "integrity": "sha512-k7f+pf9eXLEey4pBlw+8dgfJHY4PZ5qOUFDyNf7SI6lHjQ9Zt7+NcscjpwdCEbYi6FI5c2KDTDWyf2iHcCSyyQ==",
++      "archiveSha256": "88ccab79970ca194100129ab37eea9e556dc1104a4cee0b93522b3e872c42be8",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    },
++    {
++      "path": "node_modules/@unrs/resolver-binding-linux-x64-gnu",
++      "name": "@unrs/resolver-binding-linux-x64-gnu",
++      "version": "1.11.1",
++      "url": "https://registry.npmjs.org/@unrs/resolver-binding-linux-x64-gnu/-/resolver-binding-linux-x64-gnu-1.11.1.tgz",
++      "integrity": "sha512-C3ZAHugKgovV5YvAMsxhq0gtXuwESUKc5MhEtjBpLoHPLYM+iuwSj3lflFwK3DPm68660rZ7G8BMcwSro7hD5w==",
++      "archiveSha256": "6bb251207f51ff13d71751f9cdcd1474407ddb19bbc6d016b7be745f8fdeba96",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/@unrs/resolver-binding-linux-x64-musl",
++      "name": "@unrs/resolver-binding-linux-x64-musl",
++      "version": "1.11.1",
++      "url": "https://registry.npmjs.org/@unrs/resolver-binding-linux-x64-musl/-/resolver-binding-linux-x64-musl-1.11.1.tgz",
++      "integrity": "sha512-rV0YSoyhK2nZ4vEswT/QwqzqQXw5I6CjoaYMOX0TqBlWhojUf8P94mvI7nuJTeaCkkds3QE4+zS8Ko+GdXuZtA==",
++      "archiveSha256": "f50d732cc4ae199ac3f8ae96df329a29873d310ef78a7470c4083401a2ade6fe",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    },
++    {
++      "path": "node_modules/lightningcss-linux-x64-gnu",
++      "name": "lightningcss-linux-x64-gnu",
++      "version": "1.30.2",
++      "url": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.30.2.tgz",
++      "integrity": "sha512-Cfd46gdmj1vQ+lR6VRTTadNHu6ALuw2pKR9lYq4FnhvgBc4zWY1EtZcAc6EffShbb1MFrIPfLDXD6Xprbnni4w==",
++      "archiveSha256": "02c6510693d73eb7fa71c8cc5beb09beab7bd34ed76a4070af181729ac71b71e",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "glibc"
++      ]
++    },
++    {
++      "path": "node_modules/lightningcss-linux-x64-musl",
++      "name": "lightningcss-linux-x64-musl",
++      "version": "1.30.2",
++      "url": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.30.2.tgz",
++      "integrity": "sha512-XJaLUUFXb6/QG2lGIW6aIk6jKdtjtcffUT0NKvIqhSBY3hh9Ch+1LCeH80dR9q9LBjG3ewbDjnumefsLsP6aiA==",
++      "archiveSha256": "47cc7941d4f65928d66c87ba69b91406e8316ef6c9655b2b054b4535d65bd68b",
++      "os": [
++        "linux"
++      ],
++      "cpu": [
++        "x64"
++      ],
++      "libc": [
++        "musl"
++      ]
++    }
++  ],
++  "metadataChanges": [
++    "node_modules/@img/sharp-libvips-linux-x64",
++    "node_modules/@img/sharp-libvips-linuxmusl-x64",
++    "node_modules/@img/sharp-linux-x64",
++    "node_modules/@img/sharp-linuxmusl-x64",
++    "node_modules/@napi-rs/lzma-linux-x64-gnu",
++    "node_modules/@next/swc-linux-x64-gnu",
++    "node_modules/@next/swc-linux-x64-musl",
++    "node_modules/@rollup/rollup-linux-x64-gnu",
++    "node_modules/@rollup/rollup-linux-x64-musl",
++    "node_modules/@tailwindcss/oxide-linux-x64-gnu",
++    "node_modules/@tailwindcss/oxide-linux-x64-musl",
++    "node_modules/@unrs/resolver-binding-linux-x64-gnu",
++    "node_modules/@unrs/resolver-binding-linux-x64-musl",
++    "node_modules/lightningcss-linux-x64-gnu",
++    "node_modules/lightningcss-linux-x64-musl"
++  ],
++  "originalLockSha256": "060925fca2813f36357b6ce2459485b0367e33be848ffc253977aca96dbbb350",
++  "updatedLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815"
++}
+diff --git a/scripts/framework-prototype/observe-buildkit.mjs b/scripts/framework-prototype/observe-buildkit.mjs
+new file mode 100644
+index 0000000..90f5771
+--- /dev/null
++++ b/scripts/framework-prototype/observe-buildkit.mjs
+@@ -0,0 +1,11 @@
++import fs from'node:fs';import{spawnSync}from'node:child_process';import{freemem}from'node:os';
++const[, ,container,out,stop]=process.argv;if(!/^[0-9a-f]{64}$/.test(container??''))throw Error('Exact owned container ID required');
++const keys='memory.max memory.swap.max memory.current memory.peak memory.events memory.events.local memory.stat memory.pressure cpu.max cpu.stat pids.current pids.max';
++const script=`for k in ${keys}; do printf '==%s==\\n' "$k"; cat "/sys/fs/cgroup/$k" || exit 1; done; printf '==owned-process-memory==\\n'; for p in /proc/[0-9]*; do [ -r "$p/status" ] || continue; grep -E '^(Name|Pid|PPid|VmRSS|VmHWM|Threads):' "$p/status"; if [ -r "$p/smaps_rollup" ]; then grep -E '^(Rss|Pss|Private_Clean|Private_Dirty):' "$p/smaps_rollup"; fi; done`;
++const started=Date.now();let sequence=0;
++do{
++  const final=fs.existsSync(stop);
++  const result=spawnSync('docker',['exec',container,'sh','-c',script],{encoding:'utf8',timeout:1800,maxBuffer:1024*1024});
++  fs.appendFileSync(out,JSON.stringify({at:new Date().toISOString(),sequence:sequence++,containerId:container,final,hostAvailableBytes:freemem(),exit:result.status,signal:result.signal,metrics:result.stdout??'',error:result.stderr??result.error?.message??'',scope:'owned BuildKit PID namespace only; no arguments or environment collected'})+'\n');
++  if(final)break;if(!fs.existsSync(stop))await new Promise(r=>setTimeout(r,2000));
++}while(Date.now()-started<24*60*1000);
+diff --git a/scripts/framework-prototype/scan-image-stages.mjs b/scripts/framework-prototype/scan-image-stages.mjs
+index 1b4c6d4..08f59b1 100644
+--- a/scripts/framework-prototype/scan-image-stages.mjs
++++ b/scripts/framework-prototype/scan-image-stages.mjs
+@@ -4,16 +4,16 @@ import { spawnSync } from 'node:child_process';
+ import { dirname, resolve, join } from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+-export const requiredStages = ['original-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
++export const requiredStages = ['original-base', 'original-runtime-base', 'build-base', 'deps', 'builder', 'prod-deps', 'runner', 'buildkit', 'dockerfile-frontend'];
+ const hashBytes = bytes => createHash('sha256').update(bytes).digest('hex');
+ async function hashFile(file) { const hash = createHash('sha256'); for await (const bytes of createReadStream(file)) hash.update(bytes); return hash.digest('hex'); }
+ const save = (file, data) => writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
+ 
+ // Consumes explicitly prepared Docker archives only. Never builds, pulls, runs
+ // containers, mutates a registry, accepts exceptions, or acknowledges custody.
+-export async function scanStages(plan, planDirectory, outputDirectory, invoke = spawnSync) {
++async function collect(plan, planDirectory, outputDirectory, invoke, partial) {
+   if (plan.schema !== 1 || !/^[0-9a-f]{40}$/.test(plan.sourceSha ?? '')) throw Error('Invalid source identity');
+-  if (!Array.isArray(plan.images) || requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All eight required stage/tool images and unique valid names are required');
++  if (!Array.isArray(plan.images) || (partial ? plan.images.length!==1 : requiredStages.some(name => plan.images.filter(x => x.stage === name).length !== 1)) || plan.images.some(x => !/^[a-z][a-z0-9-]{0,39}$/.test(x.stage)) || new Set(plan.images.map(x => x.stage)).size !== plan.images.length) throw Error('All nine required stage/tool images (or explicit single-stage partial mode) and unique valid names are required');
+   const tool = resolve(planDirectory, plan.trivy.path), cache = resolve(planDirectory, plan.trivy.cacheDirectory);
+   if (!/^[0-9a-f]{64}$/.test(plan.trivy.sha256 ?? '') || await hashFile(tool) !== plan.trivy.sha256) throw Error('Scanner binary checksum mismatch');
+   const databaseMetadata = JSON.parse(readFileSync(join(cache, 'db/metadata.json'), 'utf8'));
+@@ -22,7 +22,7 @@ export async function scanStages(plan, planDirectory, outputDirectory, invoke =
+   mkdirSync(outputDirectory); // Refuse an existing destination, including historical evidence.
+   const ignorefile = join(outputDirectory, 'empty-ignorefile'); writeFileSync(ignorefile, '');
+   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('TRIVY_')));
+-  const index = { schema: 1, sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
++  const index = { schema: 1, mode:partial?'partial-single-stage; aggregate required':'complete-plan', sourceSha: plan.sourceSha, scannerBinarySha256: plan.trivy.sha256, databaseMetadata, databaseSha256, securityThreshold: 'zero HIGH/CRITICAL at every stage; no suppression', custody: 'not performed; independent later owner check', stages: [] };
+   save(join(outputDirectory, 'index.json'), index);
+   for (const stage of plan.images.map(x => x.stage)) {
+     const item = plan.images.find(x => x.stage === stage), record = { stage, result: 'failed', coverage: 'unverified' };
+@@ -56,16 +56,26 @@ export async function scanStages(plan, planDirectory, outputDirectory, invoke =
+       writeFileSync(join(folder, 'scanner.log'), (result.stdout ?? '') + (result.stderr ?? ''));
+       if (result.status !== 0 || !existsSync(reportPath)) throw Error('Scanner failed or report absent');
+       const report = JSON.parse(readFileSync(reportPath, 'utf8'));
++      if(report.SchemaVersion!==2||report.ArtifactType!=='container_image'||report.Metadata?.ImageID!==item.imageId)throw Error('Scanner schema/artifact/image identity mismatch');
+       const results = report.Results ?? [];
+       const packages = results.flatMap(r => (r.Packages ?? []).map(p => ({ target: r.Target, class: r.Class, type: r.Type, ...p })));
+       save(join(folder, 'package-inventory.json'), packages);
+       record.packageCount = packages.length;
+-      if (!packages.length || !results.some(r => r.Class === 'os-pkgs' && r.Packages?.length)) throw Error('Missing complete OS package inventory');
++      record.counts = {};
++      for (const r of results) for (const v of r.Vulnerabilities ?? []) record.counts[v.Severity] = (record.counts[v.Severity] ?? 0) + 1;
++      let provenScratch=false;
++      if(stage==='dockerfile-frontend'&&item.filesystemReceipt&&item.filesystemReceiptSha256){
++        const receipt=resolve(planDirectory,item.filesystemReceipt),bytes=readFileSync(receipt);
++        if(hashBytes(bytes)!==item.filesystemReceiptSha256)throw Error('Filesystem receipt digest mismatch');
++        const metadata=JSON.parse(bytes);
++        const goTargets=results.filter(r=>r.Type==='gobinary'&&r.Packages?.length).map(r=>r.Target.replace(/^\.?\//,'')).sort();
++        provenScratch=metadata.result==='passed'&&metadata.imageId===item.imageId&&metadata.hasOsPackageDatabase===false&&metadata.nativeFiles>0&&JSON.stringify(metadata.nativePaths)===JSON.stringify(goTargets);
++      }
++      if (!packages.length || (!results.some(r => r.Class === 'os-pkgs' && r.Packages?.length)&&!provenScratch)) throw Error('Missing complete OS package inventory or proven bare-Go frontend coverage');
++      record.osCoverage=provenScratch?'No OS database in complete hash-bound filesystem; native closure and Go binary package inventory required':'OS package inventory present';
+       const npmPackages = packages.filter(p => /(?:^|\/)opt\/ornigami-npm\//.test(p.FilePath ?? ''));
+       if (['build-base', 'deps', 'builder', 'prod-deps'].includes(stage) && (!npmPackages.length || !npmPackages.some(p => p.Name === 'npm' && p.Version === '11.21.1'))) throw Error('Upgraded npm tree/root version not inventoried');
+       record.upgradedNpmPackageCount = npmPackages.length;
+-      record.counts = {};
+-      for (const r of results) for (const v of r.Vulnerabilities ?? []) record.counts[v.Severity] = (record.counts[v.Severity] ?? 0) + 1;
+       record.coverage = 'complete reported OS/library inventory; not proof of every embedded binary';
+       record.result = (record.counts.CRITICAL ?? 0) || (record.counts.HIGH ?? 0) ? 'failed-security-threshold' : 'passed';
+     } catch (error) { record.error = error.message; }
+@@ -77,11 +87,15 @@ export async function scanStages(plan, planDirectory, outputDirectory, invoke =
+   return index;
+ }
+ 
++export async function scanStages(plan,planDirectory,outputDirectory,invoke=spawnSync){return collect(plan,planDirectory,outputDirectory,invoke,false);}
++export async function scanOneStage(plan,planDirectory,outputDirectory,invoke=spawnSync){return collect(plan,planDirectory,outputDirectory,invoke,true);}
++
+ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+   try {
+-    const [, , planFile, output] = process.argv;
++    const [, , planFile, output, mode] = process.argv;
+     if (!planFile || !output) throw Error('Usage: node scan-image-stages.mjs PLAN.json NEW_OUTPUT_DIRECTORY');
+-    const result = await scanStages(JSON.parse(readFileSync(planFile, 'utf8')), dirname(resolve(planFile)), resolve(output));
++    if(mode&&mode!=='--single')throw Error('Unknown collection mode');
++    const result = await (mode?scanOneStage:scanStages)(JSON.parse(readFileSync(planFile, 'utf8')), dirname(resolve(planFile)), resolve(output));
+     console.log(JSON.stringify(result)); process.exitCode = result.result === 'passed' ? 0 : 1;
+   } catch (error) { console.error(error.message); process.exitCode = 1; }
+ }
+diff --git a/scripts/framework-prototype/serial-scan-driver.mjs b/scripts/framework-prototype/serial-scan-driver.mjs
+new file mode 100644
+index 0000000..49b3480
+--- /dev/null
++++ b/scripts/framework-prototype/serial-scan-driver.mjs
+@@ -0,0 +1,79 @@
++import fs from'node:fs';import path from'node:path';import{spawnSync,spawn}from'node:child_process';import{createHash}from'node:crypto';import{fileURLToPath}from'node:url';import{requiredStages}from'./scan-image-stages.mjs';
++const here=path.dirname(fileURLToPath(import.meta.url)),hash=b=>createHash('sha256').update(b).digest('hex');
++const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
++export function aggregate(records,sourceSha){return{schema:1,...(sourceSha?{sourceSha}:{}),expectedStages:requiredStages,stages:requiredStages.map(stage=>records.find(x=>x.stage===stage)??{stage,result:'skipped',reason:'phase did not produce a receipt'}),result:requiredStages.every(s=>records.some(x=>x.stage===s&&x.result==='passed'))?'passed':'failed'};}
++export function rejectReexecution(event){return(event.vertexes??[event]).some(v=>/\bRUN\b/.test(v.name??'')&&(v.started||v.completed)&&v.cached!==true);}
++export function cachedTargetRun(event,target){return(event.vertexes??[event]).some(v=>v.name?.startsWith('['+target+' ')&&/\bRUN\b/.test(v.name)&&v.cached===true);}
++export function remainingSeconds(deadline){const n=Math.floor(Number(deadline)-Date.now()/1000);if(!Number.isFinite(n)||n<1)throw Error('Work deadline exhausted/invalid; no retry');return n;}
++export function validateBuilderObservation(last){if(!last?.final||last.exit!==0)throw Error('Final owned-builder observation unavailable');for(const[key,value]of[['memory.max','8589934592'],['memory.swap.max','0'],['cpu.max','300000 100000']])if(!last.metrics.includes('=='+key+'==\n'+value+'\n'))throw Error('Observed builder limit drift');const events=last.metrics.match(/==memory.events==\n([\s\S]*?)(?=\n==)/)?.[1];if(!events||['oom','oom_kill','oom_group_kill'].some(k=>!events.split('\n').includes(k+' 0')))throw Error('Builder OOM/kill counters nonzero or unavailable');return true;}
++async function fileHash(file){const h=createHash('sha256');for await(const b of fs.createReadStream(file))h.update(b);return h.digest('hex');}
++async function main(){
++  const mode=process.argv[2];if(!['parents','final','intermediates','aggregate','cleanup'].includes(mode))throw Error('Expected parents/final/intermediates/aggregate/cleanup');
++  const temp=process.env.RUNNER_TEMP,source=process.env.SOURCE_SHA,evidence=process.env.ORNIGAMI_EVIDENCE_DIR;if(!temp||!evidence||!/^[0-9a-f]{40}$/.test(source??''))throw Error('Admitted source/workspace required');
++  const root=path.join(evidence,'stage-scans');fs.mkdirSync(root,{recursive:true});
++  const records=()=>requiredStages.flatMap(stage=>{const file=path.join(root,stage,'driver.json');return fs.existsSync(file)?[JSON.parse(fs.readFileSync(file))]:[];});
++  if(mode==='cleanup'){
++    const results=[];for(const r of records().filter(x=>x.ownedImage&&x.reference&&/^sha256:[0-9a-f]{64}$/.test(x.imageId??''))){const check=spawnSync('docker',['image','inspect',r.reference,'--format','{{.Id}}'],{encoding:'utf8'});if(check.status!==0){results.push({stage:r.stage,result:'already absent'});continue;}if(check.stdout.trim()!==r.imageId){results.push({stage:r.stage,result:'preserved identity drift'});continue;}const removed=spawnSync('docker',['image','rm',r.reference],{encoding:'utf8'});results.push({stage:r.stage,result:removed.status===0?'removed exact claimed image':'failed removal',exit:removed.status});}
++    for(const stage of requiredStages){const receipt=path.join(root,stage,'filesystem/spool-ownership.json');if(!fs.existsSync(receipt))continue;const own=JSON.parse(fs.readFileSync(receipt));if(!fs.existsSync(own.directory))continue;const actual=fs.realpathSync(own.directory);if(path.dirname(actual)!==fs.realpathSync(temp)||!path.basename(actual).startsWith('ornigami-inspect-spool-')||(process.getuid&&fs.statSync(actual).uid!==process.getuid())){results.push({stage,result:'preserved unproven spool ownership'});continue;}fs.rmSync(actual,{recursive:true,force:true});results.push({stage,result:'removed exact claimed spool'});}
++    save(path.join(root,'cleanup.json'),results);console.log(JSON.stringify(results));if(results.some(x=>!['already absent','removed exact claimed image','removed exact claimed spool'].includes(x.result)))process.exitCode=1;return;
++  }
++  if(mode==='aggregate'){const result=aggregate(records(),source);save(path.join(root,'index.json'),result);process.exitCode=result.result==='passed'?0:1;return;}
++  const policy=JSON.parse(fs.readFileSync(path.join(here,'minimal-parent-policy.json'))),node=process.execPath,cache=path.join(temp,'trivy-cache'),trivy=path.join(temp,'trivy');
++  const parents=Object.fromEntries(policy.parents.map(x=>[x.role,'gcr.io/distroless/nodejs22-debian13@'+x.amd64Digest]));
++  parents.buildkit='moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea';parents['dockerfile-frontend']='docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e';
++  const stages=mode==='parents'?['original-base','original-runtime-base','buildkit','dockerfile-frontend']:mode==='final'?['runner']:['build-base','deps','builder','prod-deps'];
++  const run=(command,args,{log,timeout=180000}={})=>{const r=spawnSync(command,args,{encoding:'utf8',maxBuffer:8*1024*1024,timeout:Math.min(timeout,remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH)*1000),windowsHide:true});if(log)fs.writeFileSync(log,(r.stdout??'')+(r.stderr??''));if(r.status!==0)throw Error(`${path.basename(command)} exit=${r.status} signal=${r.signal??''}`);return r.stdout;};
++  const scoped=(stage,name,args,dir)=>{
++    const seconds=Math.min(180,remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH));
++    const unit=`ornigami-${stage}-${name}-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`;
++    return run('sudo',['-n','systemd-run','--scope','--quiet','--expand-environment=no','--unit='+unit,'-p','MemoryMax=2147483648','-p','MemorySwapMax=0','-p','CPUQuota=100%','/usr/sbin/runuser','-u',process.env.USER??'runner','--','env','NODE_OPTIONS=--max-old-space-size=512','GOMEMLIMIT=1536MiB','timeout','--signal=TERM','--kill-after=10s',seconds+'s',node,path.join(here,'bounded-scan-worker.mjs'),path.join(dir,name+'-resources.json'),node,...args],{log:path.join(dir,name+'.log'),timeout:(seconds+20)*1000});
++  };
++  for(const stage of stages){const dir=path.join(root,stage);if(fs.existsSync(path.join(dir,'driver.json')))throw Error('Refusing a second stage attempt');fs.mkdirSync(dir,{recursive:true});const record={stage,result:'failed',startedAt:new Date().toISOString()};const archive=mode==='final'?path.join(temp,'ornigami-image.tar'):path.join(temp,'ornigami-stage-'+stage+'.tar');let ownedArchive=false;
++    try{
++      remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH);const free=fs.statfsSync(temp,{bigint:true});if(free.bavail*free.bsize<20n*1024n**3n)throw Error('Less than 20 GiB disk reserve; stop rather than increase capacity');
++      if(mode==='parents'){
++        const existed=spawnSync('docker',['image','inspect',parents[stage]],{stdio:'ignore'}).status===0;
++        run('docker',['pull','--platform','linux/amd64',parents[stage]],{log:path.join(dir,'pull.log')});record.reference=parents[stage];record.preexistingImage=existed;
++        record.imageId=run('docker',['image','inspect',parents[stage],'--format','{{.Id}}']).trim();record.ownedImage=!existed;
++        if(fs.existsSync(archive))throw Error('Refusing preexisting stage archive');ownedArchive=true;run('docker',['image','save','--output',archive,parents[stage]],{log:path.join(dir,'save.log')});
++      }else{
++        if(process.env.INITIAL_BUILD_OUTCOME!=='success'){record.result='skipped';throw Error('Initial build failed/skipped; target exports prohibited to avoid retry');}
++        if(stage==='runner'){
++          record.imageId=run('docker',['image','inspect','ornigami:rehearsal-'+source,'--format','{{.Id}}']).trim();
++          if(!fs.existsSync(archive))throw Error('Original final archive missing; no repeated export or scan');
++        }else{
++          if(fs.existsSync(archive))throw Error('Refusing preexisting stage archive');ownedArchive=true;
++          const builder=JSON.parse(run('docker',['inspect',process.env.OWNED_BUILDER_CONTAINER_ID]));const host=builder[0]?.HostConfig;
++          if(host?.Memory!==8589934592||host.MemorySwap!==8589934592||host.CpuQuota!==300000||host.CpuPeriod!==100000||builder[0]?.Name!=='/buildx_buildkit_ornigami-external-rehearsal0')throw Error('Owned bounded BuildKit configuration drift');
++          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64','--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),'--build-arg','NEXT_PUBLIC_APP_URL=https://rehearsal.invalid','--build-arg','ORNIGAMI_SOURCE_SHA='+source,'--build-arg','ORNIGAMI_BUILD_HEAP_MIB=4096','--build-arg','ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true','--build-arg','ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false','--build-arg','ORNIGAMI_BUILD_WEBPACK_WORKER=false',path.join(temp,'source')];
++          const stop=path.join(dir,'observer.stop'),observations=path.join(dir,'builder-observations.jsonl');const observer=spawn(node,[path.join(here,'observe-buildkit.mjs'),process.env.OWNED_BUILDER_CONTAINER_ID,observations,stop],{stdio:'ignore'});const observerDone=new Promise(r=>{observer.once('error',r);observer.once('close',r);});
++          const child=spawn('docker',args,{stdio:['ignore','pipe','pipe']});let buffer='',cacheMiss=false,provenCachedRun=false,killer;const log=fs.createWriteStream(path.join(dir,'cache-export.log'),{flags:'wx'});let malformed=false;
++          const abort=()=>{child.kill('SIGTERM');killer??=setTimeout(()=>child.kill('SIGKILL'),10000);};
++          const observe=data=>{log.write(data);buffer+=data.toString();let at;while((at=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,at);buffer=buffer.slice(at+1);if(!line.trim())continue;try{const event=JSON.parse(line);provenCachedRun||=cachedTargetRun(event,stage);if(rejectReexecution(event)){cacheMiss=true;abort();}}catch{malformed=true;abort();}}};child.stdout.on('data',observe);child.stderr.on('data',observe);
++          const timer=setTimeout(abort,Math.min(180,remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH))*1000);
++          let code;try{code=await new Promise((ok,bad)=>{child.once('error',bad);child.once('close',ok);});}finally{clearTimeout(timer);clearTimeout(killer);await new Promise(r=>log.end(r));fs.writeFileSync(stop,'stop');await observerDone;}
++          const last=JSON.parse(fs.readFileSync(observations,'utf8').trim().split('\n').at(-1));validateBuilderObservation(last);record.builderResources='passed OOM/limit gate; pressure and peak retained without headroom claim';
++          if(code!==0||cacheMiss||malformed||!provenCachedRun)throw Error(`Cached export failed; code=${code}; uncached_RUN=${cacheMiss}; cached_target_proven=${provenCachedRun}; malformed_progress=${malformed}; no retry`);
++          const metadata=JSON.parse(fs.readFileSync(path.join(dir,'buildkit-metadata.json')));record.imageId=metadata['containerimage.config.digest'];
++        }
++      }
++      if(!/^sha256:[0-9a-f]{64}$/.test(record.imageId??''))throw Error('Exact stage image ID missing');
++      record.archiveSha256=await fileHash(archive);record.archiveBytes=fs.statSync(archive).size;
++      try{scoped(stage,'filesystem',[path.join(here,'analyze-docker-archive.mjs'),archive,path.join(dir,'filesystem'),stage,record.imageId],dir);}catch(error){record.nativeError=error.message;}
++      const receipt=path.join(dir,'filesystem/result.json'),plan={schema:1,sourceSha:source,trivy:{path:trivy,sha256:await fileHash(trivy),cacheDirectory:cache},images:[{stage,archive,archiveSha256:record.archiveSha256,imageId:record.imageId,...(fs.existsSync(receipt)?{filesystemReceipt:receipt,filesystemReceiptSha256:await fileHash(receipt)}:{})}]};
++      save(path.join(dir,'scan-plan.json'),plan);
++      try{scoped(stage,'vulnerabilities',[path.join(here,'scan-image-stages.mjs'),path.join(dir,'scan-plan.json'),path.join(dir,'scan'),'--single'],dir);}catch(error){record.scanError=error.message;}
++      const index=JSON.parse(fs.readFileSync(path.join(dir,'scan/index.json')));record.scanResult=index.stages[0];record.resources=['filesystem','vulnerabilities'].map(name=>{const p=path.join(dir,name+'-resources.json');return fs.existsSync(p)?JSON.parse(fs.readFileSync(p)):{resourceResult:'failed',error:'resource receipt missing'};});
++      record.result=index.result==='passed'&&!record.nativeError&&record.resources.every(x=>x.resourceResult==='passed')?'passed':'failed-security-native-coverage-or-resources';record.collectionComplete=!!record.scanResult.counts&&record.scanResult.coverage!=='unverified'&&!record.nativeError&&record.resources.every(x=>x.resourceResult==='passed');
++      if(stage==='original-runtime-base')fs.copyFileSync(path.join(dir,'scan',stage,'trivy.json'),path.join(temp,'base-trivy.json'));
++      if(stage==='runner')fs.copyFileSync(path.join(dir,'scan',stage,'trivy.json'),path.join(temp,'trivy.json'));
++    }catch(error){record.error=error.message;}
++    finally{
++      record.finishedAt=new Date().toISOString();save(path.join(dir,'driver.json'),record);
++      if(ownedArchive&&fs.existsSync(archive)){if(path.dirname(path.resolve(archive))!==fs.realpathSync(temp))throw Error('Refusing archive cleanup outside runner temp');fs.unlinkSync(archive);}
++      save(path.join(root,'index.json'),aggregate(records(),source));
++    }
++  }
++  const complete=stages.every(stage=>records().some(x=>x.stage===stage&&x.collectionComplete));if(!complete)process.exitCode=1;
++}
++if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error(error.message);process.exitCode=1;});
+diff --git a/scripts/framework-prototype/tar-inventory.mjs b/scripts/framework-prototype/tar-inventory.mjs
+new file mode 100644
+index 0000000..fc1c83e
+--- /dev/null
++++ b/scripts/framework-prototype/tar-inventory.mjs
+@@ -0,0 +1,52 @@
++import { createHash } from 'node:crypto';
++import path from 'node:path';
++
++const string = bytes => bytes.toString('utf8').replace(/\0.*$/s,'');
++function numeric(bytes) {if(bytes[0]&128)throw Error('Unsupported base-256 tar number');const value=Number.parseInt(string(bytes).trim()||'0',8);if(!Number.isSafeInteger(value)||value<0)throw Error('Unsafe tar number');return value;}
++export function safeImagePath(name) {const n=name.replace(/^\.\//,'');if(n.startsWith('/')||n.includes('\\')||n.split('/').includes('..')||n.includes('\0'))throw Error('Unsafe tar member path');return path.posix.normalize(n).replace(/\/$/,'');}
++function pax(bytes) {
++  const result={};let offset=0;
++  while(offset<bytes.length){const space=bytes.indexOf(32,offset);if(space<0)throw Error('Malformed PAX length');const length=Number(bytes.subarray(offset,space).toString());if(!Number.isSafeInteger(length)||length<=space-offset+1||offset+length>bytes.length)throw Error('Invalid PAX range');const line=bytes.subarray(space+1,offset+length).toString().replace(/\n$/,'');const equal=line.indexOf('=');if(equal<1)throw Error('Malformed PAX field');result[line.slice(0,equal)]=line.slice(equal+1);offset+=length;}
++  return result;
++}
++
++// Never extracts a pathname to the host. Retains only requested metadata and ELF
++// bytes; hashes every regular file while streaming bounded chunks.
++export async function inventoryTar(stream, onEntry, {retain=()=>false,maxRetainedFileBytes=256*1024*1024,retainELF=true,sink=()=>null}={}) {
++  const iterator=stream[Symbol.asyncIterator]();let pending=Buffer.alloc(0),ended=false;
++  async function take(size,allowEof=false){const parts=[];let total=0;while(total<size){if(!pending.length){const next=await iterator.next();if(next.done){ended=true;if(allowEof&&total===0)return null;throw Error('Truncated tar archive');}pending=Buffer.from(next.value);}const n=Math.min(size-total,pending.length);parts.push(pending.subarray(0,n));pending=pending.subarray(n);total+=n;}return parts.length===1?parts[0]:Buffer.concat(parts,total);}
++  let global={},next={},longPath,longLink;
++  while(!ended){const header=await take(512,true);if(!header||header.every(x=>x===0))break;
++    const expected=numeric(header.subarray(148,156));let actual=0;for(let i=0;i<512;i++)actual+=(i>=148&&i<156)?32:header[i];if(actual!==expected)throw Error('Tar header checksum mismatch');
++    const prefix=string(header.subarray(345,500)),base=string(header.subarray(0,100));let name=prefix?prefix+'/'+base:base;
++    const size=numeric(header.subarray(124,136)),type=string(header.subarray(156,157))||'0';let link=string(header.subarray(157,257));
++    if(['x','g','L','K'].includes(type)){
++      if(size>1024*1024)throw Error('Oversized tar extension');const data=await take(size);await take((512-size%512)%512);
++      if(type==='x')next=pax(data);if(type==='g')global={...global,...pax(data)};if(type==='L')longPath=string(data);if(type==='K')longLink=string(data);continue;
++    }
++    const attrs={...global,...next};name=safeImagePath(attrs.path??longPath??name);link=attrs.linkpath??longLink??link;next={};longPath=longLink=undefined;
++    if(attrs.size!==undefined&&Number(attrs.size)!==size)throw Error('Unsupported PAX size override');
++    const entry={path:name,type,size,mode:numeric(header.subarray(100,108)),uid:numeric(header.subarray(108,116)),gid:numeric(header.subarray(116,124))};
++    if(type==='1'||type==='2')entry.link=type==='1'?'/'+safeImagePath(link):link;
++    const hash=createHash('sha256'),chunks=[],destination=sink(entry);let remaining=size,keep=retain(entry);
++    if(keep&&size>maxRetainedFileBytes)throw Error('Retained tar member exceeds byte bound');
++    try{while(remaining){const data=await take(Math.min(65536,remaining));if(retainELF&&remaining===size&&data.subarray(0,4).toString('hex')==='7f454c46'){if(size>maxRetainedFileBytes)throw Error('ELF exceeds inspection bound');keep=true;}hash.update(data);destination?.write(data);if(keep)chunks.push(data);remaining-=data.length;}}finally{destination?.end();}
++    await take((512-size%512)%512);
++    if(type==='0')entry.sha256=hash.digest('hex');
++    await onEntry(entry,keep?Buffer.concat(chunks,size):null);
++  }
++  // Consume/verify archive padding too, so layer diff-ID hashing and gzip CRC
++  // validation cover the whole input rather than stopping at the first zero block.
++  if(pending.some(x=>x!==0))throw Error('Nonzero bytes after tar terminator');
++  while(!ended){const next=await iterator.next();if(next.done){ended=true;break;}if(Buffer.from(next.value).some(x=>x!==0))throw Error('Nonzero trailing tar payload');}
++}
++
++export function mergeLayer(files, entry, bytes, layer) {
++  if(typeof layer!=='string'||!layer)throw Error('Explicit layer identity required');
++  const name=entry.path,base=path.posix.basename(name),directory=path.posix.dirname(name);
++  if(base==='.wh..wh..opq'){const prefix=directory==='.'?'':directory+'/';for(const key of files.keys())if(key.startsWith(prefix)&&key!==directory&&files.get(key).layer!==layer)files.delete(key);return;}
++  if(base.startsWith('.wh.')){const target=path.posix.join(directory,base.slice(4));for(const key of files.keys())if((key===target||key.startsWith(target+'/'))&&files.get(key).layer!==layer)files.delete(key);return;}
++  if(!['0','1','2','5','3','4','6'].includes(entry.type))throw Error('Unsupported tar entry type: '+entry.type);
++  if(entry.type!=='5')for(const key of files.keys())if(key.startsWith(name+'/'))files.delete(key);
++  files.set(name,{...entry,layer,...(bytes?{bytes}:{})});
++}
+diff --git a/scripts/framework-prototype/validate-build-observation.mjs b/scripts/framework-prototype/validate-build-observation.mjs
+new file mode 100644
+index 0000000..8168a38
+--- /dev/null
++++ b/scripts/framework-prototype/validate-build-observation.mjs
+@@ -0,0 +1,9 @@
++import fs from'node:fs';import{validateBuilderObservation}from'./serial-scan-driver.mjs';
++try{
++  const[, ,file,expected]=process.argv;
++  if(!/^[0-9a-f]{64}$/.test(expected??''))throw Error('Exact owned observer container ID missing');
++  const rows=fs.readFileSync(file,'utf8').trim().split('\n').map(JSON.parse);
++  if(rows.some(r=>r.containerId!==expected))throw Error('Observer container identity drift');
++  validateBuilderObservation(rows.at(-1));
++  console.log('status=passed; owned container/limits/OOM verified; time series retained; no headroom inferred');
++}catch(error){console.error(error.message);process.exitCode=1;}
+diff --git a/scripts/framework-prototype/verify-minimal-parents.mjs b/scripts/framework-prototype/verify-minimal-parents.mjs
+new file mode 100644
+index 0000000..87b50c9
+--- /dev/null
++++ b/scripts/framework-prototype/verify-minimal-parents.mjs
+@@ -0,0 +1,28 @@
++import fs from 'node:fs';import path from 'node:path';import{createHash}from'node:crypto';import{spawnSync}from'node:child_process';import{fileURLToPath}from'node:url';
++const hash=b=>createHash('sha256').update(b).digest('hex');
++export async function verifyParents(policy,cosign,out,{get=fetch,invoke=spawnSync}={}){
++  if(hash(fs.readFileSync(cosign))!==policy.cosignLinuxSha256)throw Error('Pinned Linux cosign checksum mismatch');
++  fs.mkdirSync(out);const results=[];
++  const json=async(url,digest)=>{const r=await get(url,{headers:{accept:'application/vnd.oci.image.index.v1+json,application/vnd.oci.image.manifest.v1+json'}});if(!r.ok)throw Error('Registry read failed: '+r.status);const bytes=Buffer.from(await r.arrayBuffer());if('sha256:'+hash(bytes)!==digest)throw Error('Registry object digest mismatch');return {bytes,value:JSON.parse(bytes)};};
++  try{
++    const bundleResponse=await get('https://github.com/sigstore/cosign/releases/download/'+policy.cosignVersion+'/cosign-linux-amd64.sigstore.json');if(!bundleResponse.ok)throw Error('Cosign publisher bundle unavailable');const bundle=Buffer.from(await bundleResponse.arrayBuffer());if(hash(bundle)!==policy.cosignLinuxBundleSha256)throw Error('Publisher bundle checksum mismatch');const bundlePath=path.join(out,'cosign-publisher.sigstore.json');fs.writeFileSync(bundlePath,bundle);
++    const publisher=invoke(cosign,['verify-blob','--bundle',bundlePath,'--certificate-identity','keyless@projectsigstore.iam.gserviceaccount.com','--certificate-oidc-issuer','https://accounts.google.com',cosign],{encoding:'utf8',maxBuffer:1024*1024,timeout:90000,windowsHide:true});fs.writeFileSync(path.join(out,'cosign-publisher.stdout'),publisher.stdout??'');fs.writeFileSync(path.join(out,'cosign-publisher.stderr'),publisher.stderr??'');if(publisher.status!==0)throw Error('Cosign publisher verification failed');
++    for(const parent of policy.parents){
++    const base='https://gcr.io/v2/distroless/nodejs22-debian13';
++    const signature=invoke(cosign,['verify','--certificate-identity',policy.signerIdentity,'--certificate-oidc-issuer',policy.signerIssuer,'--output','json','gcr.io/distroless/nodejs22-debian13@'+parent.indexDigest],{encoding:'utf8',maxBuffer:8*1024*1024,timeout:90000,windowsHide:true});
++    fs.writeFileSync(path.join(out,parent.role+'-signature.json'),signature.stdout??'');fs.writeFileSync(path.join(out,parent.role+'-signature.stderr'),signature.stderr??'');
++    if(signature.status!==0)throw Error(parent.role+' signature failed');
++    const signatures=JSON.parse(signature.stdout);if(!signatures.some(x=>x.critical?.image?.['docker-manifest-digest']===parent.indexDigest))throw Error('Verified payload digest not bound to selected parent');
++    const index=await json(base+'/manifests/'+parent.indexDigest,parent.indexDigest);
++    const amd64=index.value.manifests.filter(x=>x.platform?.os==='linux'&&x.platform?.architecture==='amd64');if(amd64.length!==1||amd64[0].digest!==parent.amd64Digest)throw Error('Signed index amd64 binding changed');
++    const manifest=await json(base+'/manifests/'+parent.amd64Digest,parent.amd64Digest);if(manifest.value.config.digest!==parent.configDigest||manifest.value.annotations?.['com.google.distroless.nodejs.version']!==policy.nodeVersion.slice(1))throw Error('Unreviewed parent config/Node version');
++    const config=await json(base+'/blobs/'+parent.configDigest,parent.configDigest);if(config.value.architecture!=='amd64'||config.value.os!=='linux'||config.value.config?.User!=='65532')throw Error('Unreviewed platform/default UID');
++    for(const[name,object]of[['index',index],['manifest',manifest],['config',config]])fs.writeFileSync(path.join(out,parent.role+'-'+name+'.json'),object.bytes);
++    results.push({...parent,result:'passed',scope:'fresh signature and signed index/manifest/config/annotation binding; exact local Node binary proof separately retained'});
++  }}finally{fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({at:new Date().toISOString(),parents:results,complete:results.length===policy.parents.length},null,2)+'\n');}
++  return results;
++}
++if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
++  try{const[, ,tool,out]=process.argv;const policy=JSON.parse(fs.readFileSync(new URL('./minimal-parent-policy.json',import.meta.url)));await verifyParents(policy,tool,path.resolve(out));}
++  catch(error){console.error(error.message);process.exitCode=1;}
++}
+diff --git a/tests/coolify-rehearsal-workflow.test.mjs b/tests/coolify-rehearsal-workflow.test.mjs
+index ccd4bc6..3e025fe 100644
+--- a/tests/coolify-rehearsal-workflow.test.mjs
++++ b/tests/coolify-rehearsal-workflow.test.mjs
+@@ -1,7 +1,7 @@
+ import assert from "node:assert/strict";
+ import { createHash as createHashImpl } from "node:crypto";
+ import { spawnSync } from "node:child_process";
+-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { chmodSync, copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { tmpdir } from "node:os";
+ import { delimiter, join, resolve } from "node:path";
+ import { fileURLToPath } from "node:url";
+@@ -128,6 +128,7 @@ function fakeEnvironment(root, overrides = {}) {
+   writeFileSync(summary, "fake workflow summary\n");
+   const stepSummary = join(root, "step-local-summary.md");
+   writeFileSync(stepSummary, "");
++  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","scan-image-stages.mjs","validate-build-observation.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+   const env = {
+     ...process.env,
+     PATH: `${docker.bin}${delimiter}${process.env.PATH ?? ""}`,
+@@ -148,6 +149,8 @@ function fakeEnvironment(root, overrides = {}) {
+     GITHUB_REF: "refs/heads/local-test",
+     GITHUB_EVENT_NAME: "push",
+     SOURCE_SHA: "b".repeat(40),
++    ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now()/1000)+1440),
++    EXPECTED_OBSERVED_BUILDER_ID: 'a'.repeat(64),
+     EXPECTED_LOCK_SHA256: "c".repeat(64),
+     ADMISSION_OUTCOME: "success",
+     RUNNER_PREFLIGHT_OUTCOME: "success",
+@@ -250,6 +253,7 @@ test("success evidence capture hashes scan/runtime receipts and excludes the ima
+     for (const file of ["runtime-first-cgroup.txt", "runtime-after-restart-cgroup.txt", "runtime-after-recreate-cgroup.txt"]) {
+       writeFileSync(join(evidence, "runtime", file), counters());
+     }
++    writeFileSync(join(evidence,"runtime/native-image-formats.json"),JSON.stringify({result:"passed"}));
+     const result = runShell(root, runBlock("evidence_capture"), env);
+     assert.equal(result.status, 0, result.stderr);
+     verifyManifest(evidence);
+@@ -324,6 +328,7 @@ ${failure ? `printf '%s\\n' '{"assertion":"exact-fixture-assertion","status":403
+ printf 'exact-fixture-assertion; status=403; exit=23\\n' > "$report_dir/failure-evidence.txt"` : `printf 'restart fixture counters\\n' > "$report_dir/runtime-after-restart-cgroup.txt"
+ printf 'recreate fixture counters\\n' > "$report_dir/runtime-after-recreate-cgroup.txt"`}
+ printf 'final fixture counters\\n' > "$report_dir/runtime-final-cgroup.txt"
++printf '{"result":"passed"}\\n' > "$report_dir/native-image-formats.json"
+ printf 'sanitized container log\\n' > "$report_dir/container-logs.txt"
+ printf 'report=%s/report.txt\\n' "$report_dir"
+ exit ${failure ? 23 : 0}
+@@ -387,9 +392,25 @@ test('resource gate runs after an available builder even when image build failed
+   assert.match(step,/always\(\) && steps\.buildkit\.outcome == 'success'/);
+   assert.doesNotMatch(step,/steps\.image_build\.outcome == 'success'/);
+ });
++
++for (const scenario of ['truncated', 'wrong-type', 'wrong-source', 'missing-receipts']) test(`scan capture preserves manifest and fails on ${scenario}`, () => withSandbox(root => {
++  const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'skipped'});
++  const dir=join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans');mkdirSync(dir,{recursive:true});
++  const expected=['original-base','original-runtime-base','build-base','deps','builder','prod-deps','runner','buildkit','dockerfile-frontend'];
++  const data={schema:1,sourceSha:scenario==='wrong-source'?'c'.repeat(40):env.SOURCE_SHA,expectedStages:expected,result:'failed',stages:expected.map(stage=>({stage,result:'failed',collectionComplete:scenario==='missing-receipts'}))};
++  const original=scenario==='truncated'?'{"stages":[':scenario==='wrong-type'?'[]':JSON.stringify(data);
++  writeFileSync(join(dir,'index.json'),original);
++  const result=runShell(root,runBlock('evidence_capture'),env);assert.equal(result.status,1,result.stderr);
++  assert.equal(readFileSync(join(dir,'invalid-index-preserved.txt'),'utf8'),original);
++  const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
++  assert.equal(manifest.capture_completeness_status,'failed');assert.equal(manifest.custody_status,'not-assessed-by-capture');
++  assert.equal(JSON.parse(readFileSync(join(dir,'index.json'),'utf8')).stages.length,9);
++  for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
++}));
+ for(const scenario of [{name:'valid counters after build failure',after:counters({cpu:2}),status:0},{name:'OOM after build failure',after:counters({oom:1,cpu:2}),status:1},{name:'reset CPU counters',after:counters({cpu:0}),status:1},{name:'missing counter sections',after:'==memory.max==\n8589934592\n',status:1}]) {
+   test(`resource assessment retains ${scenario.name}`,()=>withSandbox(root=>{
+     const {env,runnerTemp}=fakeEnvironment(root,{IMAGE_BUILD_OUTCOME:'failure',IMAGE_BUILD_EXIT_CODE:'17'});
++    mkdirSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner'),{recursive:true});writeFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'runner/full-build-observations.jsonl'),JSON.stringify({containerId:'a'.repeat(64),final:true,exit:0,metrics:counters()})+'\n');
+     writeFileSync(join(runnerTemp,'builder-before-build.txt'),counters());
+     writeFileSync(join(runnerTemp,'builder-after-build.txt'),scenario.after);
+     const result=runShell(root,runBlock('build_resources'),env);
+diff --git a/tests/coolify-runtime-acceptance.test.mjs b/tests/coolify-runtime-acceptance.test.mjs
+index d01a872..9db25db 100644
+--- a/tests/coolify-runtime-acceptance.test.mjs
++++ b/tests/coolify-runtime-acceptance.test.mjs
+@@ -147,6 +147,7 @@ test("cold HTTP failure still runs restart and recreate checks and exits nonzero
+     "cache_before='[[\"image\",1,\"digest\"]]'",
+     "cold_http_failed=true",
+     "cache_check_failed=false",
++    "native_formats_failed=false",
+     "restart_http_passed=false",
+     "recreate_http_passed=false",
+     "restart_cache_passed=false",
+diff --git a/tests/minimal-parent-admission.test.mjs b/tests/minimal-parent-admission.test.mjs
+new file mode 100644
+index 0000000..9def5b8
+--- /dev/null
++++ b/tests/minimal-parent-admission.test.mjs
+@@ -0,0 +1,19 @@
++import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import path from'node:path';import os from'node:os';import{createHash}from'node:crypto';import{verifyParents}from'../scripts/framework-prototype/verify-minimal-parents.mjs';
++const hash=b=>createHash('sha256').update(b).digest('hex');
++async function fixture(callback,{badSignature=false,nodeVersion='22.23.3',uid='65532',tamper=false}={}){
++  const root=fs.mkdtempSync(path.join(os.tmpdir(),'ornigami-parent-proof-'));try{
++    const tool=path.join(root,'cosign.fixture');fs.writeFileSync(tool,'fake verifier never executed');const bundle=Buffer.from('publisher bundle fixture');const blobs=new Map();
++    const add=o=>{const bytes=Buffer.from(JSON.stringify(o)),digest='sha256:'+hash(bytes);blobs.set(digest,bytes);return digest;};
++    const configDigest=add({architecture:'amd64',os:'linux',config:{User:uid}}),amd64Digest=add({config:{digest:configDigest},annotations:{'com.google.distroless.nodejs.version':nodeVersion}}),indexDigest=add({manifests:[{platform:{os:'linux',architecture:'amd64'},digest:amd64Digest}]});
++    const policy={cosignLinuxSha256:hash(fs.readFileSync(tool)),cosignLinuxBundleSha256:hash(bundle),cosignVersion:'v3.1.3',signerIdentity:'keyless@distroless.iam.gserviceaccount.com',signerIssuer:'https://accounts.google.com',nodeVersion:'v22.23.3',parents:[{role:'runtime',configDigest,amd64Digest,indexDigest}]};
++    const calls=[];const get=async url=>{const bytes=url.includes('github.com')?bundle:tamper?Buffer.from('{}'):blobs.get(url.split('/').at(-1));return{ok:true,arrayBuffer:async()=>bytes};};
++    const invoke=(command,args)=>{assert.equal(command,tool);calls.push(args);if(args[0]==='verify-blob'){assert.ok(args.includes('keyless@projectsigstore.iam.gserviceaccount.com'));return{status:0,stdout:'verified publisher',stderr:''};}assert.ok(args.includes(policy.signerIdentity));assert.ok(args.includes(policy.signerIssuer));return{status:badSignature?1:0,stdout:JSON.stringify([{critical:{image:{'docker-manifest-digest':indexDigest}}}]),stderr:badSignature?'signature refused':''};};
++    await callback({root,tool,policy,calls,get,invoke,out:path.join(root,'proof')});
++  }finally{const absolute=fs.realpathSync(root);assert.ok(absolute.startsWith(fs.realpathSync(os.tmpdir())+path.sep+'ornigami-parent-proof-'));fs.rmSync(absolute,{recursive:true,force:true});}
++}
++test('signature policy binds publisher, signed index, amd64 manifest, config and exact Node version',()=>fixture(async f=>{const result=await verifyParents(f.policy,f.tool,f.out,{get:f.get,invoke:f.invoke});assert.equal(result[0].result,'passed');assert.equal(f.calls.length,2);assert.equal(JSON.parse(fs.readFileSync(path.join(f.out,'results.json'))).complete,true);}));
++test('bad signature fails closed with original verifier diagnostics',()=>fixture(async f=>{await assert.rejects(verifyParents(f.policy,f.tool,f.out,{get:f.get,invoke:f.invoke}),/signature failed/);assert.match(fs.readFileSync(path.join(f.out,'runtime-signature.stderr'),'utf8'),/refused/);assert.equal(JSON.parse(fs.readFileSync(path.join(f.out,'results.json'))).complete,false);},{badSignature:true}));
++test('unapproved Node patch cannot silently replace the reviewed version',()=>fixture(async f=>{await assert.rejects(verifyParents(f.policy,f.tool,f.out,{get:f.get,invoke:f.invoke}),/Node version/);},{nodeVersion:'22.24.0'}));
++test('digest tampering is rejected even if a mock signature call returns success',()=>fixture(async f=>{await assert.rejects(verifyParents(f.policy,f.tool,f.out,{get:f.get,invoke:f.invoke}),/digest mismatch/);},{tamper:true}));
++test('unexpected parent default identity is rejected',()=>fixture(async f=>{await assert.rejects(verifyParents(f.policy,f.tool,f.out,{get:f.get,invoke:f.invoke}),/default UID/);},{uid:'0'}));
++test('changed verifier bytes are refused before the executable is invoked',()=>fixture(async f=>{fs.appendFileSync(f.tool,'changed');await assert.rejects(verifyParents(f.policy,f.tool,f.out,{get:f.get,invoke:f.invoke}),/checksum mismatch/);assert.equal(f.calls.length,0);}));
+diff --git a/tests/minimal-pipeline.test.mjs b/tests/minimal-pipeline.test.mjs
+new file mode 100644
+index 0000000..256d5fe
+--- /dev/null
++++ b/tests/minimal-pipeline.test.mjs
+@@ -0,0 +1,17 @@
++import test from'node:test';import assert from'node:assert/strict';import{aggregate,rejectReexecution,cachedTargetRun,remainingSeconds,validateBuilderObservation}from'../scripts/framework-prototype/serial-scan-driver.mjs';import{requiredStages}from'../scripts/framework-prototype/scan-image-stages.mjs';
++test('all nine distinct parent/intermediate/final/tool roles are required independently',()=>{
++  assert.equal(requiredStages.length,9);const complete=requiredStages.map(stage=>({stage,result:'passed'}));assert.equal(aggregate(complete).result,'passed');
++  for(const missing of requiredStages){const result=aggregate(complete.filter(x=>x.stage!==missing));assert.equal(result.result,'failed');assert.equal(result.stages.find(x=>x.stage===missing).result,'skipped');}
++  assert.equal(aggregate(complete.map(x=>x.stage==='build-base'?{...x,result:'failed-security-or-coverage'}:x)).result,'failed');
++});
++test('cached target export rejects a started uncached RUN instead of retrying compilation',()=>{
++  assert.equal(rejectReexecution({vertexes:[{name:'[builder 3/3] RUN npm run build',started:'now',cached:false}]}),true);
++  assert.equal(rejectReexecution({name:'[deps 1/1] RUN npm ci',started:'now',cached:true}),false);
++  assert.equal(rejectReexecution({name:'[internal] load context',started:'now',cached:false}),false);
++  assert.equal(cachedTargetRun({name:'[builder 2/2] RUN npm run build',cached:true},'builder'),true);
++  assert.equal(cachedTargetRun({name:'[deps 2/2] RUN npm ci',cached:true},'builder'),false);
++  assert.equal(cachedTargetRun({status:'unknown progress schema'},'builder'),false);
++});
++test('work deadline cannot be missing, exhausted or extended by an invalid value',()=>{assert.throws(()=>remainingSeconds(undefined),/deadline/);assert.throws(()=>remainingSeconds(1),/deadline/);assert.ok(remainingSeconds(Math.floor(Date.now()/1000)+60)<=60);});
++const valid={final:true,exit:0,metrics:'==memory.max==\n8589934592\n==memory.swap.max==\n0\n==cpu.max==\n300000 100000\n==memory.events==\nmax 3\noom 0\noom_kill 0\noom_group_kill 0\n==cpu.stat==\nusage_usec 1\n'};
++test('final observer enforces original limits and OOM counters; pressure is not headroom',()=>{assert.equal(validateBuilderObservation(valid),true);for(const changed of [{...valid,final:false},{...valid,exit:1},{...valid,metrics:valid.metrics.replace('8589934592','17179869184')},{...valid,metrics:valid.metrics.replace('oom_kill 0','oom_kill 1')}])assert.throws(()=>validateBuilderObservation(changed));});
+diff --git a/tests/minimal-runtime-probes.test.mjs b/tests/minimal-runtime-probes.test.mjs
+new file mode 100644
+index 0000000..18324cc
+--- /dev/null
++++ b/tests/minimal-runtime-probes.test.mjs
+@@ -0,0 +1,20 @@
++import test from'node:test';import assert from'node:assert/strict';import{cgroupSnapshot,cgroupKeys,identity,diskUsage,imageFormats,runtimePlatform}from'../deploy/coolify/runtime-probes.mjs';
++test('shell-free cgroup probe preserves every metric and rejects missing/empty counters',()=>{
++  const text=cgroupSnapshot(key=>'fixture-'+key);for(const key of cgroupKeys)assert.ok(text.includes('=='+key+'==\nfixture-'+key+'\n'));
++  assert.throws(()=>cgroupSnapshot(key=>key==='memory.events'?'':'1'),/Empty required/);
++  assert.throws(()=>cgroupSnapshot(()=>{throw Error('EACCES');}),/EACCES/);
++});
++test('UID and GID must both equal the existing non-root 1000 contract',()=>{
++  assert.equal(identity({uid:1000,gid:1000}),'1000');for(const input of [{uid:0,gid:0},{uid:65532,gid:65532},{uid:1000,gid:0}])assert.throws(()=>identity(input),/UID\/GID/);
++});
++test('shell-free disk probe reports exact bigint bytes for root/tmp/cache',()=>{
++  const seen=[],rows=diskUsage(p=>{seen.push(p);return{bsize:4096n,blocks:9007199254740993n,bfree:10n,bavail:9n};});assert.deepEqual(seen,['/','/tmp','/app/.next/cache']);assert.equal(rows[0].totalBytes,'36893488147419107328');assert.equal(rows[1].availableBytes,'36864');
++});
++function fakeSharp({unsupported,wrongSize,wrongAvif}={}){
++  const sharp=()=>{const api={toFormat:()=>api,resize:()=>api,webp:()=>api,png:()=>api,metadata:async()=>({format:'heif',compression:wrongAvif?'hevc':'av1'}),toBuffer:async options=>options?{data:Buffer.from('fictional-pixels'),info:{width:wrongSize?8:4,height:4,format:currentFormat}}:Buffer.from('fictional-image')};let currentFormat='webp';api.png=()=>{currentFormat='png';return api;};return api;};
++  sharp.format=Object.fromEntries(['png','jpeg','webp','avif','gif','tiff'].map(format=>[format==='avif'?'heif':format,{input:{buffer:format!==unsupported},output:{buffer:true,alias:format==='avif'?['avif']:[]}}]));sharp.versions={sharp:'fictional'};return sharp;
++}
++test('all supported codec paths must encode/decode/resize, including SVG input',async()=>{const result=await imageFormats(fakeSharp());assert.equal(result.result,'passed');assert.deepEqual(result.checks.map(x=>x.format),['png','jpeg','webp','avif','gif','tiff','svg-input']);});
++test('missing codec support and wrong transformed dimensions cannot pass',async()=>{await assert.rejects(imageFormats(fakeSharp({unsupported:'avif'})),/unavailable: avif/);await assert.rejects(imageFormats(fakeSharp({wrongSize:true})),/Image transform failed/);});
++test('AVIF assertion requires actual AV1 metadata rather than any HEIF payload',async()=>{await assert.rejects(imageFormats(fakeSharp({wrongAvif:true})),/AV1 in HEIF/);});
++test('runtime platform cannot silently switch Node/OpenSSL/libc or omit required CPU features',()=>{const valid={platform:'linux',arch:'x64',node:'v22.23.3',openssl:'3.5.8',glibc:'2.41',flags:'sse4_2 avx'};assert.equal(runtimePlatform(valid).sse4_2,true);for(const changed of [{node:'v22.24.0'},{openssl:'3.6.0'},{glibc:null},{flags:'sse2'}])assert.throws(()=>runtimePlatform({...valid,...changed}),/Unreviewed/);});
+diff --git a/tests/native-platform-lock.test.mjs b/tests/native-platform-lock.test.mjs
+new file mode 100644
+index 0000000..2477b1a
+--- /dev/null
++++ b/tests/native-platform-lock.test.mjs
+@@ -0,0 +1,18 @@
++import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import path from'node:path';import os from'node:os';import{createHash}from'node:crypto';import{execFileSync}from'node:child_process';import{createRequire}from'node:module';
++const source=path.resolve('.'),policy=JSON.parse(fs.readFileSync('scripts/framework-prototype/native-platform-policy.json')),lock=JSON.parse(fs.readFileSync('package-lock.json'));
++test('only integrity-proven libc metadata changed; dependency and framework identities are preserved',()=>{
++  const old=JSON.parse(execFileSync('git',['show','25b536d833bf99b02d87b807ac17fdf9d53e5575:package-lock.json'],{maxBuffer:2*1024*1024}));
++  for(const entry of policy.entries){const p=lock.packages[entry.path];assert.equal(p.version,entry.version);assert.equal(p.integrity,entry.integrity);assert.equal(p.resolved,entry.url);if(entry.libc)old.packages[entry.path].libc=entry.libc;}
++  assert.deepEqual(lock,old);assert.equal(policy.metadataChanges.length,15);assert.equal(createHash('sha256').update(fs.readFileSync('package-lock.json','utf8').replace(/\r\n/g,'\n')).digest('hex'),policy.updatedLockSha256);
++  assert.equal(createHash('sha256').update(fs.readFileSync('vendor/framework/next-16.4.2-ornigami-sri.2.tgz')).digest('hex'),'ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f');
++});
++test('pinned npm Arborist virtual tree retains libc and rejects musl before installation',async()=>{
++  const root=fs.mkdtempSync(path.join(os.tmpdir(),'ornigami-npm-platform-'));try{
++    const archive=path.join(source,'vendor/build-tools/npm-11.21.1.tgz');assert.equal(createHash('sha256').update(fs.readFileSync(archive)).digest('hex'),'dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b');
++    execFileSync('tar',['-xzf',archive,'-C',root]);const require=createRequire(path.join(root,'package/package.json'));const Arborist=require('@npmcli/arborist'),{checkPlatform}=require('npm-install-checks');
++    const tree=await new Arborist({path:source,ignoreScripts:true,offline:true}).loadVirtual();let gnu=0,musl=0;
++    for(const entry of policy.entries){const node=[...tree.inventory.values()].find(n=>n.location===entry.path);assert.ok(node,entry.path);assert.deepEqual(node.package.libc,entry.libc);
++      if(entry.libc?.includes('musl')){assert.throws(()=>checkPlatform(node.package,false,{os:'linux',cpu:'x64',libc:'glibc'}),{code:'EBADPLATFORM'});musl++;}else{checkPlatform(node.package,false,{os:'linux',cpu:'x64',libc:'glibc'});gnu++;}}
++    assert.equal(gnu,9);assert.equal(musl,7);assert.equal(fs.existsSync(path.join(source,'node_modules')),false,'Virtual-tree test must not install dependencies');
++  }finally{const absolute=fs.realpathSync(root);assert.ok(absolute.startsWith(fs.realpathSync(os.tmpdir())+path.sep+'ornigami-npm-platform-'));fs.rmSync(absolute,{recursive:true,force:true});}
++});
+diff --git a/tests/tar-native-inventory.test.mjs b/tests/tar-native-inventory.test.mjs
+new file mode 100644
+index 0000000..10be42e
+--- /dev/null
++++ b/tests/tar-native-inventory.test.mjs
+@@ -0,0 +1,30 @@
++import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import path from'node:path';import os from'node:os';import{Readable}from'node:stream';import{createHash}from'node:crypto';import{inventoryTar,mergeLayer,safeImagePath}from'../scripts/framework-prototype/tar-inventory.mjs';import{inspectElf,verifyClosure,resolveImagePath}from'../scripts/framework-prototype/elf-closure.mjs';import{analyzeArchive}from'../scripts/framework-prototype/analyze-docker-archive.mjs';
++const hash=b=>createHash('sha256').update(b).digest('hex');
++function tar(entries){const chunks=[];for(const e of entries){const bytes=e.bytes??Buffer.alloc(0),header=Buffer.alloc(512);header.write(e.path,0,100);header.write('0000644\0',100);header.write('0001750\0',108);header.write('0001750\0',116);header.write(bytes.length.toString(8).padStart(11,'0')+'\0',124);header.fill(32,148,156);header.write(e.type??'0',156);if(e.link)header.write(e.link,157,100);header.write('ustar\0',257);const sum=header.reduce((a,b)=>a+b,0);header.write(sum.toString(8).padStart(6,'0')+'\0 ',148);chunks.push(header,bytes,Buffer.alloc((512-bytes.length%512)%512));}chunks.push(Buffer.alloc(1024));return Buffer.concat(chunks);}
++function elf(){const b=Buffer.alloc(256);b.write('7f454c46','hex');b[4]=2;b[5]=1;b.writeUInt16LE(62,18);b.writeBigUInt64LE(64n,32);b.writeUInt16LE(56,54);b.writeUInt16LE(1,56);b.writeUInt32LE(1,64);b.writeBigUInt64LE(0x400000n,80);b.writeBigUInt64LE(256n,96);return b;}
++function dynamicElf({need,required,provided,search='$ORIGIN/libs',interpreter}={}){
++ const b=Buffer.alloc(4096);elf().copy(b);b.writeBigUInt64LE(4096n,96);b.writeUInt16LE(interpreter?3:2,56);b.writeUInt32LE(2,120);b.writeBigUInt64LE(512n,128);b.writeBigUInt64LE(0x400200n,136);b.writeBigUInt64LE(256n,152);
++ const strings=[''];let text='\0';const string=s=>{const at=text.length;text+=s+'\0';return at;};
++ const tags=[[5,0x400400]],name=need?string(need):null;if(need)tags.push([1,name],[29,string(search)]);
++ if(required){b.writeUInt16LE(1,2048);b.writeUInt16LE(1,2050);b.writeUInt32LE(name,2052);b.writeUInt32LE(16,2056);b.writeUInt32LE(string(required),2072);tags.push([0x6ffffffe,0x400800],[0x6fffffff,1]);}
++ if(provided){b.writeUInt16LE(1,2560);b.writeUInt16LE(2,2564);b.writeUInt16LE(1,2566);b.writeUInt32LE(20,2572);b.writeUInt32LE(string(provided),2580);tags.push([0x6ffffffc,0x400a00],[0x6ffffffd,1]);}
++ tags.push([10,text.length],[0,0]);tags.forEach(([tag,value],i)=>{b.writeBigUInt64LE(BigInt(tag),512+i*16);b.writeBigUInt64LE(BigInt(value),520+i*16);});b.write(text,1024,'utf8');
++ if(interpreter){b.writeUInt32LE(3,176);b.writeBigUInt64LE(896n,184);b.writeBigUInt64LE(BigInt(interpreter.length+1),208);b.write(interpreter+'\0',896);}
++ return b;
++}
++test('streamed tar inventory hashes file bytes and retains ELF without extracting host paths',async()=>{const entries=[];await inventoryTar(Readable.from([tar([{path:'bin/tool',bytes:elf()}])]),(entry,bytes)=>entries.push({entry,bytes}));assert.equal(entries[0].entry.sha256,hash(elf()));assert.equal(entries[0].bytes.length,256);assert.equal(inspectElf(entries[0].bytes).machine,'amd64');});
++test('path traversal, malformed headers and hidden trailing payload are refused',async()=>{for(const p of ['../escape','/absolute','a/../escape','a\\escape'])assert.throws(()=>safeImagePath(p));const bad=tar([{path:'file',bytes:Buffer.from('x')}]);bad[0]^=1;await assert.rejects(inventoryTar(Readable.from([bad]),()=>{}),/checksum/);await assert.rejects(inventoryTar(Readable.from([Buffer.concat([tar([]),Buffer.from('hidden')])]),()=>{}),/trailing|terminator/);});
++test('whiteouts remove prior layer content but preserve new same-layer entries',()=>{const files=new Map();mergeLayer(files,{path:'app/old',type:'0'},null,'old');mergeLayer(files,{path:'app/new',type:'0'},null,'new');mergeLayer(files,{path:'app/.wh..wh..opq',type:'0'},null,'new');assert.equal(files.has('app/old'),false);assert.equal(files.has('app/new'),true);mergeLayer(files,{path:'app/.wh.new',type:'0'},null,'third');assert.equal(files.has('app/new'),false);});
++test('virtual image symlinks stay in image namespace and cycles cannot resolve',()=>{const files=new Map([['lib',{link:'usr/lib'}],['usr/lib/tool',{bytes:elf()}]]);assert.equal(resolveImagePath(files,'/lib/tool'),'usr/lib/tool');assert.equal(verifyClosure(files,['/lib/tool']).result,'passed');files.set('loop',{link:'loop'});assert.throws(()=>resolveImagePath(files,'loop'),/cycle/);});
++test('wrong architecture, truncated ELF and missing native providers fail compatibility',()=>{const b=elf();b.writeUInt16LE(183,18);assert.throws(()=>inspectElf(b),/amd64/);assert.throws(()=>inspectElf(elf().subarray(0,70)));assert.equal(verifyClosure(new Map(),['missing.node']).result,'failed');});
++test('DT_NEEDED providers must resolve through real search paths and supply exact symbol versions',()=>{
++ const root=dynamicElf({need:'libfixture.so.1',required:'GLIBC_2.41'}),files=new Map([['app/addon.node',{bytes:root}],['app/libs/libfixture.so.1',{bytes:dynamicElf({provided:'GLIBC_2.41'})}]]);
++ assert.equal(verifyClosure(files,['app/addon.node']).result,'passed');files.set('app/libs/libfixture.so.1',{bytes:dynamicElf({provided:'GLIBC_2.28'})});const mismatch=verifyClosure(files,['app/addon.node']);assert.equal(mismatch.result,'failed');assert.ok(mismatch.errors.some(x=>x.version==='GLIBC_2.41'));
++ files.set('app/addon.node',{bytes:dynamicElf({need:'libfixture.so.1',search:'$ORIGIN/elsewhere'})});assert.ok(verifyClosure(files,['app/addon.node']).errors.some(x=>x.error==='unresolved DT_NEEDED'));
++});
++test('a missing dynamic interpreter fails even if every needed library is present',()=>{const files=new Map([['bin/tool',{bytes:dynamicElf({interpreter:'/lib64/ld-linux-x86-64.so.2'})}]]);assert.ok(verifyClosure(files,['bin/tool']).errors.some(x=>x.error==='missing interpreter'));files.set('lib64/ld-linux-x86-64.so.2',{bytes:elf()});assert.equal(verifyClosure(files,['bin/tool']).result,'passed');});
++for(const corrupt of [false,true])test(`Docker archive layer identity ${corrupt?'mismatch fails':'binds exact static filesystem'}`,async()=>{
++ const root=fs.mkdtempSync(path.join(os.tmpdir(),'ornigami-archive-'));try{const layer=tar([{path:'bin/frontend',bytes:elf()}]),config=Buffer.from(JSON.stringify({architecture:'amd64',os:'linux',rootfs:{diff_ids:['sha256:'+(corrupt?'0'.repeat(64):hash(layer))]}})),name=hash(config)+'.json',imageId='sha256:'+hash(config);const archive=path.join(root,'image.tar');fs.writeFileSync(archive,tar([{path:'manifest.json',bytes:Buffer.from(JSON.stringify([{Config:name,Layers:['layer.tar']}]))},{path:name,bytes:config},{path:'layer.tar',bytes:layer}]));const out=path.join(root,'analysis');const result=await analyzeArchive(archive,out,'dockerfile-frontend',imageId,{});assert.equal(result.result,corrupt?'failed':'passed');if(corrupt)assert.match(result.error,/diff-ID/);else{assert.deepEqual(result.nativePaths,['bin/frontend']);assert.equal(result.hasOsPackageDatabase,false);}assert.equal(fs.existsSync(path.join(out,'private-spool')),false,'Owned spool must be removed after success or failure');
++ const ownership=JSON.parse(fs.readFileSync(path.join(out,'spool-ownership.json')));assert.equal(path.dirname(ownership.directory),fs.realpathSync(root));assert.ok(!ownership.directory.startsWith(out+path.sep),'Raw spool must stay outside uploaded evidence');assert.equal(fs.existsSync(ownership.directory),false);assert.ok(!fs.readdirSync(root).some(name=>name.startsWith('ornigami-inspect-spool-')));
++ }finally{const absolute=fs.realpathSync(root);assert.ok(absolute.startsWith(fs.realpathSync(os.tmpdir())+path.sep+'ornigami-archive-'));fs.rmSync(absolute,{recursive:true,force:true});}
++});
+diff --git a/tests/tooling-stage-scan.test.mjs b/tests/tooling-stage-scan.test.mjs
+index 8f1307a..bb0dfac 100644
+--- a/tests/tooling-stage-scan.test.mjs
++++ b/tests/tooling-stage-scan.test.mjs
+@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
+ import { join, basename, dirname } from 'node:path';
+ import { tmpdir } from 'node:os';
+ import { createHash } from 'node:crypto';
+-import { scanStages, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
++import { scanStages, scanOneStage, requiredStages } from '../scripts/framework-prototype/scan-image-stages.mjs';
+ const sha = data => createHash('sha256').update(data).digest('hex');
+ 
+ async function fixture(callback, modes = {}) {
+@@ -26,7 +26,7 @@ async function fixture(callback, modes = {}) {
+       if (modes.error === stage) return { status: 17, stderr: 'fictional scanner failure' };
+       const packages = [{ Name: 'libc6', Version: '2.41' }];
+       const npmPackages = modes.missingNpm === stage ? [] : [{ Name: 'npm', Version: '11.21.1', FilePath: 'opt/ornigami-npm/package.json' }, { Name: 'http-cache-semantics', Version: '4.3.0', FilePath: 'opt/ornigami-npm/node_modules/http-cache-semantics/package.json' }];
+-      const report = { Results: [{ Class: 'os-pkgs', Type: 'debian', Packages: modes.noOs === stage ? [] : packages, Vulnerabilities: modes.high?.includes(stage) ? [{ Severity: 'HIGH', PkgName: 'libc6', VulnerabilityID: 'fixture-CVE' }] : [] }, { Class: 'lang-pkgs', Type: 'node-pkg', Packages: npmPackages, Vulnerabilities: [] }] };
++      const report = {SchemaVersion:2,ArtifactType:'container_image',Metadata:{ImageID:modes.wrongImage===stage?'sha256:'+'0'.repeat(64):imageId}, Results: modes.scratch===stage?[{Class:'lang-pkgs',Type:'gobinary',Target:'bin/frontend',Packages:[{Name:'stdlib',Version:'go1.25.3'}],Vulnerabilities:modes.high?.includes(stage)?[{Severity:'HIGH',VulnerabilityID:'fixture-go-CVE'}]:[]}]:[{ Class: 'os-pkgs', Type: 'debian', Packages: modes.noOs === stage ? [] : packages, Vulnerabilities: modes.high?.includes(stage) ? [{ Severity: 'HIGH', PkgName: 'libc6', VulnerabilityID: 'fixture-CVE' }] : [] }, { Class: 'lang-pkgs', Type: 'node-pkg', Packages: npmPackages, Vulnerabilities: [] }] };
+       writeFileSync(reportPath, JSON.stringify(report));
+       if (modes.mutateDb) writeFileSync(join(root, 'cache/db/trivy.db'), 'changed');
+       return { status: 0, stdout: 'fictional scanner success' };
+@@ -35,9 +35,9 @@ async function fixture(callback, modes = {}) {
+   } finally { rmSync(root, { recursive: true, force: true }); }
+ }
+ 
+-test('all eight stages retain complete inventories and explicit unchanged scan coverage', () => fixture(async f => {
++test('all nine stages retain complete inventories and explicit unchanged scan coverage', () => fixture(async f => {
+   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
+-  assert.equal(result.result, 'passed'); assert.equal(result.stages.length, 8); assert.equal(f.calls.length, 8);
++  assert.equal(result.result, 'passed'); assert.equal(result.stages.length, 9); assert.equal(f.calls.length, 9);
+   for (const call of f.calls) {
+     for (const flag of ['--list-all-pkgs', '--ignore-unfixed=false', '--skip-db-update']) assert.ok(call.args.includes(flag));
+     assert.equal(call.args[call.args.indexOf('--pkg-types') + 1], 'os,library');
+@@ -52,13 +52,13 @@ test('all eight stages retain complete inventories and explicit unchanged scan c
+ 
+ test('base/final highs fail independently while every tooling stage is still scanned', () => fixture(async f => {
+   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
+-  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 8);
++  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 9);
+   for (const stage of ['original-base', 'runner']) assert.equal(result.stages.find(s => s.stage === stage).result, 'failed-security-threshold');
+ }, { high: ['original-base', 'runner'] }));
+ 
+ test('scanner error preserves exact exit/log and later stage results', () => fixture(async f => {
+   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
+-  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 8);
++  assert.equal(result.result, 'failed'); assert.equal(f.calls.length, 9);
+   assert.equal(result.stages.find(s => s.stage === 'builder').scannerExit, 17);
+   assert.match(readFileSync(join(f.output, 'builder/scanner.log'), 'utf8'), /fictional scanner failure/);
+   assert.equal(result.stages.at(-1).result, 'passed');
+@@ -77,11 +77,11 @@ test('absent OS inventory cannot pass as a clean image', () => fixture(async f =
+ test('identity mismatch fails that stage while preserving other scans', () => fixture(async f => {
+   f.plan.images[0].archiveSha256 = '0'.repeat(64);
+   const result = await scanStages(f.plan, f.root, f.output, f.invoke);
+-  assert.equal(result.result, 'failed'); assert.match(result.stages[0].error, /checksum mismatch/); assert.equal(f.calls.length, 7);
++  assert.equal(result.result, 'failed'); assert.match(result.stages[0].error, /checksum mismatch/); assert.equal(f.calls.length, 8);
+ }));
+ 
+ test('missing stage rejects an incomplete plan before scanning', () => fixture(async f => {
+-  f.plan.images.pop(); await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /eight/); assert.equal(f.calls.length, 0);
++  f.plan.images.pop(); await assert.rejects(scanStages(f.plan, f.root, f.output, f.invoke), /nine/); assert.equal(f.calls.length, 0);
+ }));
+ 
+ test('database drift fails even when every fake scan reports zero findings', () => fixture(async f => {
+@@ -101,8 +101,15 @@ test('expired database cannot produce a clean security result', () => fixture(as
+ }));
+ 
+ test('an additional runtime parent is scanned and cannot silently escape its high gate', () => fixture(async f => {
+-  f.plan.images.push({...f.plan.images[0], stage:'original-runtime-base'});
++  f.plan.images.push({...f.plan.images[0], stage:'supplemental-parent'});
+   const result=await scanStages(f.plan,f.root,f.output,f.invoke);
+-  assert.equal(result.stages.length,9);assert.equal(f.calls.length,9);assert.equal(result.result,'failed');
++  assert.equal(result.stages.length,10);assert.equal(f.calls.length,10);assert.equal(result.result,'failed');
+   assert.equal(result.stages.at(-1).result,'failed-security-threshold');
+-}, {high:['original-runtime-base']}));
++}, {high:['supplemental-parent']}));
++
++test('scanner image identity mismatch is not accepted as a clean report',()=>fixture(async f=>{const result=await scanStages(f.plan,f.root,f.output,f.invoke);assert.equal(result.result,'failed');assert.match(result.stages.find(x=>x.stage==='runner').error,/identity mismatch/);},{wrongImage:'runner'}));
++test('explicit single-stage collection remains partial and cannot claim aggregate coverage',()=>fixture(async f=>{f.plan.images=f.plan.images.filter(x=>x.stage==='build-base');const result=await scanOneStage(f.plan,f.root,f.output,f.invoke);assert.equal(result.result,'passed');assert.match(result.mode,/partial-single-stage/);assert.equal(result.stages.length,1);}));
++for(const unmatched of [false,true])test(`bare-Go frontend requires hash-bound complete native coverage (${unmatched?'unmatched ELF fails':'matching targets retain highs'})`,()=>fixture(async f=>{
++ const image=f.plan.images.find(x=>x.stage==='dockerfile-frontend'),receipt=join(f.root,'frontend-filesystem.json');writeFileSync(receipt,JSON.stringify({result:'passed',imageId:image.imageId,hasOsPackageDatabase:false,nativeFiles:unmatched?2:1,nativePaths:unmatched?['bin/frontend','bin/unknown-c']:['bin/frontend']}));image.filesystemReceipt=receipt;image.filesystemReceiptSha256=sha(readFileSync(receipt));
++ const result=await scanStages(f.plan,f.root,f.output,f.invoke);assert.equal(result.result,'failed');const entry=result.stages.find(x=>x.stage==='dockerfile-frontend');if(unmatched)assert.match(entry.error,/OS package inventory/);else{assert.equal(entry.result,'failed-security-threshold');assert.equal(entry.counts.HIGH,1);assert.match(entry.osCoverage,/No OS database/);}
++},{scratch:'dockerfile-frontend',high:['dockerfile-frontend']}));

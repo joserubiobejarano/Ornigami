@@ -1,0 +1,277 @@
+[
+  {
+    "role": "runtime",
+    "reference": "gcr.io/distroless/nodejs22-debian13:nonroot",
+    "indexDigest": "sha256:ec2313763dd43931543bd03830466e0c409ce73a487e8d46f10db72d3b816c1c",
+    "amd64Digest": "sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
+    "annotations": {
+      "org.opencontainers.image.source": "https://github.com/GoogleContainerTools/distroless",
+      "com.google.distroless.nodejs.version": "22.23.3"
+    },
+    "configDigest": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320",
+    "layers": [
+      {
+        "size": 124525,
+        "digest": "sha256:2cc7ee286bf3a9e6af5f71756d7fc8e22e23ce65fec9047d774511ffcef79fa8",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 12675,
+        "digest": "sha256:c172f21841dff4c8cf45cde46589c1c2616cefe7e819965e92e6d3475c428aa0",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 288057,
+        "digest": "sha256:218cf840d0d95a86231eb9d33d26ac8a520a4299c6096cb70a0c2fb2a87c9e0a",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 254668,
+        "digest": "sha256:f6069939f718601b38d25ec5ed5631ed047e4da24acec2e252f8f29d251be718",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 32093,
+        "digest": "sha256:d6b1b89eccacc15c2420b2776d72c1dae334a00805ed9af54bf2f71e4d536f28",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 67,
+        "digest": "sha256:2780920e5dbfbe103d03a583ed75345306e572ec5a48cb10361f046767d9f29a",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 188,
+        "digest": "sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 123,
+        "digest": "sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 162,
+        "digest": "sha256:52630fc75a18675c530ed9eba5f55eca09b03e91bd5bc15307918bbc1a7e7296",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 80,
+        "digest": "sha256:dd64bf2dd177757451a98fcdc999a339c35dee5d9872d8f4dc69c8f3c4dd0112",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 351,
+        "digest": "sha256:b839dfae01f66e15c6a8b63520557ed315bdfe036342fa7a0c537259f10d7a9a",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 311,
+        "digest": "sha256:ebddc55facdc6b1f7e0f30816a5fc7cc62f38abdf76c0a8b0a0ce52085754795",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 143338,
+        "digest": "sha256:c4bc6f35ff5e25aa1afe7a148a0b6f10a760f54e298f86a4a4d44b91f1afbfab",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 5079079,
+        "digest": "sha256:b96fe2995f90d0ef0bf14f9b4a67b5f4e77d478e6108166e0565adc9efd6e4a3",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 3079177,
+        "digest": "sha256:810e2b405a0884835290e120ef380aa14dd1f53198a0cfa2260147e736d82cd5",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 372772,
+        "digest": "sha256:bd8962e292918c50c90edebd9684c053bc386b9c5503acd8fec75d0c6f93a0b7",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 96148,
+        "digest": "sha256:cac2ae0193cb073e7492050b05fc342a888651b4bbc966908c8793f889c299ba",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 158447,
+        "digest": "sha256:dd0d9bfd3bee080ad25a464362ec4f37ec5ca625695a4d7179fe69d207dc068d",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 901291,
+        "digest": "sha256:7cc70dfd88cf2327bb827123c9156f7cb95de95b2f98f3a7a931296aacec5786",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 84214,
+        "digest": "sha256:8224d91da70b7992430d3b04040ea38ecdef4a7b719bee38397c89aaa886e198",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 51535,
+        "digest": "sha256:1a4be5562d92d659f95e0b44b245ea5208bf5317481b9a351b07fad7fe5265ec",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 43929705,
+        "digest": "sha256:7255d342dc6c559165d8b6b21ec572b476d8e68ff47814aa5843ef5323e51929",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      }
+    ],
+    "config": {
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
+      ],
+      "User": "65532",
+      "WorkingDir": "/home/nonroot",
+      "Entrypoint": [
+        "/nodejs/bin/node"
+      ]
+    },
+    "versionAdmission": "not bound pending signatures and exact Node/OpenSSL/native proof"
+  },
+  {
+    "role": "tooling",
+    "reference": "gcr.io/distroless/nodejs22-debian13:debug-nonroot",
+    "indexDigest": "sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce",
+    "amd64Digest": "sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
+    "annotations": {
+      "org.opencontainers.image.source": "https://github.com/GoogleContainerTools/distroless",
+      "com.google.distroless.nodejs.version": "22.23.3"
+    },
+    "configDigest": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842",
+    "layers": [
+      {
+        "size": 124525,
+        "digest": "sha256:2cc7ee286bf3a9e6af5f71756d7fc8e22e23ce65fec9047d774511ffcef79fa8",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 12675,
+        "digest": "sha256:c172f21841dff4c8cf45cde46589c1c2616cefe7e819965e92e6d3475c428aa0",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 288057,
+        "digest": "sha256:218cf840d0d95a86231eb9d33d26ac8a520a4299c6096cb70a0c2fb2a87c9e0a",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 254668,
+        "digest": "sha256:f6069939f718601b38d25ec5ed5631ed047e4da24acec2e252f8f29d251be718",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 32093,
+        "digest": "sha256:d6b1b89eccacc15c2420b2776d72c1dae334a00805ed9af54bf2f71e4d536f28",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 67,
+        "digest": "sha256:2780920e5dbfbe103d03a583ed75345306e572ec5a48cb10361f046767d9f29a",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 188,
+        "digest": "sha256:7c12895b777bcaa8ccae0605b4de635b68fc32d60fa08f421dc3818bf55ee212",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 123,
+        "digest": "sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 162,
+        "digest": "sha256:52630fc75a18675c530ed9eba5f55eca09b03e91bd5bc15307918bbc1a7e7296",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 80,
+        "digest": "sha256:dd64bf2dd177757451a98fcdc999a339c35dee5d9872d8f4dc69c8f3c4dd0112",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 351,
+        "digest": "sha256:b839dfae01f66e15c6a8b63520557ed315bdfe036342fa7a0c537259f10d7a9a",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 311,
+        "digest": "sha256:ebddc55facdc6b1f7e0f30816a5fc7cc62f38abdf76c0a8b0a0ce52085754795",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 143338,
+        "digest": "sha256:c4bc6f35ff5e25aa1afe7a148a0b6f10a760f54e298f86a4a4d44b91f1afbfab",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 740164,
+        "digest": "sha256:61ea958ebee1eda610e5b63dd4622c6e7722ff2951cc28195b6987394dc523f8",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 5079079,
+        "digest": "sha256:b96fe2995f90d0ef0bf14f9b4a67b5f4e77d478e6108166e0565adc9efd6e4a3",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 3079177,
+        "digest": "sha256:810e2b405a0884835290e120ef380aa14dd1f53198a0cfa2260147e736d82cd5",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 372772,
+        "digest": "sha256:bd8962e292918c50c90edebd9684c053bc386b9c5503acd8fec75d0c6f93a0b7",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 96148,
+        "digest": "sha256:cac2ae0193cb073e7492050b05fc342a888651b4bbc966908c8793f889c299ba",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 158447,
+        "digest": "sha256:dd0d9bfd3bee080ad25a464362ec4f37ec5ca625695a4d7179fe69d207dc068d",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 901291,
+        "digest": "sha256:7cc70dfd88cf2327bb827123c9156f7cb95de95b2f98f3a7a931296aacec5786",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 84214,
+        "digest": "sha256:8224d91da70b7992430d3b04040ea38ecdef4a7b719bee38397c89aaa886e198",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 51535,
+        "digest": "sha256:1a4be5562d92d659f95e0b44b245ea5208bf5317481b9a351b07fad7fe5265ec",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      },
+      {
+        "size": 43929705,
+        "digest": "sha256:7255d342dc6c559165d8b6b21ec572b476d8e68ff47814aa5843ef5323e51929",
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip"
+      }
+    ],
+    "config": {
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/busybox",
+        "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
+      ],
+      "User": "65532",
+      "WorkingDir": "/home/nonroot",
+      "Entrypoint": [
+        "/nodejs/bin/node"
+      ]
+    },
+    "versionAdmission": "not bound pending signatures and exact Node/OpenSSL/native proof"
+  }
+]

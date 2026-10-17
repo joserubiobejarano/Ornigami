@@ -1,0 +1,559 @@
+[
+  {
+    "name": "@img/sharp-libvips-linux-x64",
+    "version": "1.3.4",
+    "url": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.4.tgz",
+    "integrity": "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==",
+    "archiveSha256": "e371cb713fc8822c96a0d3fb60a3d092799d0aefab6d7f1fb3b72d8d75f1d109",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.7",
+        "sha256": "4aa73553408c3964071728f4a231a8e86918e39bc49f1fbae75355f7ea933ea9",
+        "bytes": 18699288,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libresolv.so.2",
+            "libdl.so.2",
+            "libstdc++.so.6",
+            "libpthread.so.0",
+            "libm.so.6",
+            "libgcc_s.so.1",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [
+            "$ORIGIN/"
+          ],
+          "soname": "libvips-cpp.so.8.18.7",
+          "requiredVersions": {
+            "libresolv.so.2": [
+              "GLIBC_2.2.5"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_3.3",
+              "GCC_3.0",
+              "GCC_4.2.0"
+            ],
+            "libm.so.6": [
+              "GLIBC_2.27",
+              "GLIBC_2.2.5"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.18",
+              "GLIBC_2.3.4",
+              "GLIBC_2.3.2",
+              "GLIBC_2.12",
+              "GLIBC_2.2.5"
+            ],
+            "libstdc++.so.6": [
+              "GLIBCXX_3.4.17",
+              "CXXABI_1.3.8",
+              "GLIBCXX_3.4.18",
+              "GLIBCXX_3.4.14",
+              "GLIBCXX_3.4.19",
+              "CXXABI_1.3.11",
+              "GLIBCXX_3.4.22",
+              "GLIBCXX_3.4.9",
+              "CXXABI_1.3.3",
+              "GLIBCXX_3.4.15",
+              "GLIBCXX_3.4.21",
+              "CXXABI_1.3.9",
+              "GLIBCXX_3.4.11",
+              "CXXABI_1.3",
+              "GLIBCXX_3.4",
+              "GLIBCXX_3.4.20",
+              "CXXABI_1.3.2"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.27",
+              "GLIBC_2.25",
+              "GLIBC_2.12",
+              "GLIBC_2.15",
+              "GLIBC_2.18",
+              "GLIBC_2.6",
+              "GLIBC_2.16",
+              "GLIBC_2.9",
+              "GLIBC_2.10",
+              "GLIBC_2.17",
+              "GLIBC_2.11",
+              "GLIBC_2.5",
+              "GLIBC_2.3.3",
+              "GLIBC_2.3.4",
+              "GLIBC_2.28",
+              "GLIBC_2.3",
+              "GLIBC_2.4",
+              "GLIBC_2.7",
+              "GLIBC_2.14",
+              "GLIBC_2.3.2",
+              "GLIBC_2.2.5"
+            ],
+            "libdl.so.2": [
+              "GLIBC_2.2.5"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@img/sharp-linux-x64",
+    "version": "0.35.5",
+    "url": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.35.5.tgz",
+    "integrity": "sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog==",
+    "archiveSha256": "556787285d3244c07686a355de5b5a4c4d0019a12785bf24764e756a96ea3334",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64-0.35.5.node",
+        "sha256": "cf896cc1b7f3ae9c3e8eb3d7b2b198b8de2824ff7d0681d684bab5a825def335",
+        "bytes": 415112,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libvips-cpp.so.8.18.7",
+            "libstdc++.so.6",
+            "libm.so.6",
+            "libgcc_s.so.1",
+            "libpthread.so.0",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [
+            "$ORIGIN/../../sharp-libvips-linux-x64/lib",
+            "$ORIGIN/../../../sharp-libvips-linux-x64/1.3.4/lib",
+            "$ORIGIN/../../node_modules/@img/sharp-libvips-linux-x64/lib",
+            "$ORIGIN/../../../node_modules/@img/sharp-libvips-linux-x64/lib",
+            "$ORIGIN/../../../../../@img-sharp-libvips-linux-x64-npm-1.3.4-28ab0da74d/node_modules/@img/sharp-libvips-linux-x64/lib"
+          ],
+          "runpath": [],
+          "soname": "sharp-linux-x64-0.35.5.node",
+          "requiredVersions": {
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_3.0",
+              "GCC_3.3.1"
+            ],
+            "libm.so.6": [
+              "GLIBC_2.2.5"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.17",
+              "GLIBC_2.14",
+              "GLIBC_2.6",
+              "GLIBC_2.3",
+              "GLIBC_2.4",
+              "GLIBC_2.2.5"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.2.5"
+            ],
+            "libstdc++.so.6": [
+              "GLIBCXX_3.4.20",
+              "CXXABI_1.3.8",
+              "GLIBCXX_3.4.18",
+              "CXXABI_1.3.9",
+              "CXXABI_1.3",
+              "GLIBCXX_3.4.14",
+              "GLIBCXX_3.4.11",
+              "CXXABI_1.3.5",
+              "GLIBCXX_3.4.21",
+              "GLIBCXX_3.4"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@napi-rs/lzma-linux-x64-gnu",
+    "version": "1.5.1",
+    "url": "https://registry.npmjs.org/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz",
+    "integrity": "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==",
+    "archiveSha256": "e69ca2a96510be330953f5b04b1d74617e7ce5d4487db4876c4b02b8364ef7e7",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node",
+        "sha256": "1f62f0ff272b69f09dff7c867d840d407f2b43c5b6170fd6af0928ed0f542ed4",
+        "bytes": 1445448,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libdl.so.2",
+            "libgcc_s.so.1",
+            "librt.so.1",
+            "libpthread.so.0",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {
+            "librt.so.1": [
+              "GLIBC_2.2.5"
+            ],
+            "libdl.so.2": [
+              "GLIBC_2.2.5"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libm.so.6": [
+              "GLIBC_2.2.5"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_4.2.0",
+              "GCC_3.0",
+              "GCC_3.3"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.12",
+              "GLIBC_2.2.5"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.14",
+              "GLIBC_2.3",
+              "GLIBC_2.4",
+              "GLIBC_2.3.4",
+              "GLIBC_2.2.5"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@next/swc-linux-x64-gnu",
+    "version": "16.4.2",
+    "url": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-16.4.2.tgz",
+    "integrity": "sha512-N9cDUOCGtkJG5PNKDFZUF3xXndrJJcpLp121uAGjIGvO/U2p9tfdNOM9htj7+5f72l0m8rMw/cvYacUJBQoudg==",
+    "archiveSha256": "d5bcd237f21218718b5cf4ab0fb3fbb9d04c2b25799739a2fa49dba9ff4c9049",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node",
+        "sha256": "70fb1eee45473b0b8fb98e8894546e0096805f19355bca32129c08e83e7617ab",
+        "bytes": 100922416,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libdl.so.2",
+            "libgcc_s.so.1",
+            "libpthread.so.0",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {
+            "libdl.so.2": [
+              "GLIBC_2.2.5"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_3.0",
+              "GCC_3.3",
+              "GCC_4.2.0"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.2.5",
+              "GLIBC_2.12"
+            ],
+            "libm.so.6": [
+              "GLIBC_2.2.5",
+              "GLIBC_2.27",
+              "GLIBC_2.29"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.2.5",
+              "GLIBC_2.3",
+              "GLIBC_2.3.2",
+              "GLIBC_2.3.4",
+              "GLIBC_2.4",
+              "GLIBC_2.7",
+              "GLIBC_2.9",
+              "GLIBC_2.10",
+              "GLIBC_2.14",
+              "GLIBC_2.15",
+              "GLIBC_2.16",
+              "GLIBC_2.17",
+              "GLIBC_2.18",
+              "GLIBC_2.25",
+              "GLIBC_2.28",
+              "GLIBC_2.29",
+              "GLIBC_2.30"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@rollup/rollup-linux-x64-gnu",
+    "version": "4.62.4",
+    "url": "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.62.4.tgz",
+    "integrity": "sha512-W69hukhZ3KKNRCaMIEzKvcFye42hh0FE1+YoYaf5+Ikacuftoco6yO/xouz0hc5d5W/s3yBro5jRiuEE/Q5vUw==",
+    "archiveSha256": "c9a6b6126f53b36c7c83cdcefc74bb65d70c2ec5eebbe7f4a33e246d0a7a5b3e",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@rollup/rollup-linux-x64-gnu/rollup.linux-x64-gnu.node",
+        "sha256": "14c7ebcca6bb0f9b3225e30540127e17b244e1cb9df6e9ac4e0db7671d745ab6",
+        "bytes": 2088088,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libgcc_s.so.1",
+            "librt.so.1",
+            "libpthread.so.0",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {
+            "librt.so.1": [
+              "GLIBC_2.2.5"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libm.so.6": [
+              "GLIBC_2.2.5"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.2.5"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_4.2.0",
+              "GCC_3.0",
+              "GCC_3.3"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.14",
+              "GLIBC_2.3",
+              "GLIBC_2.4",
+              "GLIBC_2.3.4",
+              "GLIBC_2.2.5"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@sentry/cli-linux-x64",
+    "version": "2.58.6",
+    "url": "https://registry.npmjs.org/@sentry/cli-linux-x64/-/cli-linux-x64-2.58.6.tgz",
+    "integrity": "sha512-DZu956Mhi3ZRjTBe1WdbGV46ldVbA8d2rgp/fh51GsI25zjBHah4wZnPTSzpc+YqxU6pJpg579B/r3jrIK530Q==",
+    "archiveSha256": "27077d54416df56b750157048859fe25e7a4d007ad456f6ce28e99a571ad41d5",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@sentry/cli-linux-x64/bin/sentry-cli",
+        "sha256": "36b689311b399d9332950d84f4299aee682d2d290a770a77372b30a74f7e7add",
+        "bytes": 21337088,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {},
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@tailwindcss/oxide-linux-x64-gnu",
+    "version": "4.1.17",
+    "url": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.1.17.tgz",
+    "integrity": "sha512-M3XZuORCGB7VPOEDH+nzpJ21XPvK5PyjlkSFkFziNHGLc5d6g3di2McAAblmaSUNl8IOmzYwLx9NsE7bplNkwQ==",
+    "archiveSha256": "a631cd9213806fa7868e8e484d294d15b03b995302053389a2491892b1613ef5",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@tailwindcss/oxide-linux-x64-gnu/tailwindcss-oxide.linux-x64-gnu.node",
+        "sha256": "c983b9f11439dcda7cc2ad8542521966cf539fbf703f4da0ff41f713fb317185",
+        "bytes": 3039960,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libgcc_s.so.1",
+            "librt.so.1",
+            "libpthread.so.0",
+            "libdl.so.2",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {
+            "libdl.so.2": [
+              "GLIBC_2.2.5"
+            ],
+            "librt.so.1": [
+              "GLIBC_2.2.5"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_4.2.0",
+              "GCC_3.0",
+              "GCC_3.3"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.12",
+              "GLIBC_2.2.5"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.14",
+              "GLIBC_2.3",
+              "GLIBC_2.4",
+              "GLIBC_2.3.4",
+              "GLIBC_2.2.5"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "@unrs/resolver-binding-linux-x64-gnu",
+    "version": "1.11.1",
+    "url": "https://registry.npmjs.org/@unrs/resolver-binding-linux-x64-gnu/-/resolver-binding-linux-x64-gnu-1.11.1.tgz",
+    "integrity": "sha512-C3ZAHugKgovV5YvAMsxhq0gtXuwESUKc5MhEtjBpLoHPLYM+iuwSj3lflFwK3DPm68660rZ7G8BMcwSro7hD5w==",
+    "archiveSha256": "6bb251207f51ff13d71751f9cdcd1474407ddb19bbc6d016b7be745f8fdeba96",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/@unrs/resolver-binding-linux-x64-gnu/resolver.linux-x64-gnu.node",
+        "sha256": "d940f041c7ae80b839f639adeadda83f71b52b3e483d6cc9da8fa0a755a99869",
+        "bytes": 2272024,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libgcc_s.so.1",
+            "librt.so.1",
+            "libpthread.so.0",
+            "libdl.so.2",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {
+            "librt.so.1": [
+              "GLIBC_2.2.5"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.2.5"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_4.2.0",
+              "GCC_3.3",
+              "GCC_3.0"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.14",
+              "GLIBC_2.4",
+              "GLIBC_2.3",
+              "GLIBC_2.3.4",
+              "GLIBC_2.2.5"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  },
+  {
+    "name": "lightningcss-linux-x64-gnu",
+    "version": "1.30.2",
+    "url": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.30.2.tgz",
+    "integrity": "sha512-Cfd46gdmj1vQ+lR6VRTTadNHu6ALuw2pKR9lYq4FnhvgBc4zWY1EtZcAc6EffShbb1MFrIPfLDXD6Xprbnni4w==",
+    "archiveSha256": "02c6510693d73eb7fa71c8cc5beb09beab7bd34ed76a4070af181729ac71b71e",
+    "elfFiles": [
+      {
+        "path": "app/node_modules/lightningcss-linux-x64-gnu/lightningcss.linux-x64-gnu.node",
+        "sha256": "45ddc4ab13a8809fc9e544f8c3b6977a579e48feeeae7a4183791257ec09a543",
+        "bytes": 9468712,
+        "elf": {
+          "machine": "amd64",
+          "interpreter": null,
+          "needed": [
+            "libgcc_s.so.1",
+            "librt.so.1",
+            "libpthread.so.0",
+            "libm.so.6",
+            "libdl.so.2",
+            "libc.so.6",
+            "ld-linux-x86-64.so.2"
+          ],
+          "rpath": [],
+          "runpath": [],
+          "soname": null,
+          "requiredVersions": {
+            "libdl.so.2": [
+              "GLIBC_2.2.5"
+            ],
+            "librt.so.1": [
+              "GLIBC_2.2.5"
+            ],
+            "ld-linux-x86-64.so.2": [
+              "GLIBC_2.3"
+            ],
+            "libgcc_s.so.1": [
+              "GCC_4.2.0",
+              "GCC_3.0",
+              "GCC_3.3"
+            ],
+            "libpthread.so.0": [
+              "GLIBC_2.12",
+              "GLIBC_2.2.5"
+            ],
+            "libm.so.6": [
+              "GLIBC_2.2.5"
+            ],
+            "libc.so.6": [
+              "GLIBC_2.14",
+              "GLIBC_2.3",
+              "GLIBC_2.3.4",
+              "GLIBC_2.2.5"
+            ]
+          },
+          "providedVersions": []
+        }
+      }
+    ]
+  }
+]

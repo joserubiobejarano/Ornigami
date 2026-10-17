@@ -1,0 +1,8 @@
+{
+  "release": "v3.1.3",
+  "releaseURL": "https://github.com/sigstore/cosign/releases/tag/v3.1.3",
+  "asset": "cosign-windows-amd64.exe",
+  "sha256": "9fe59be0eca1271873ce019061335eb1ac419b7059202e797828467ddabe33be",
+  "bytes": 198819314,
+  "bootstrap": "Official GitHub release digest and checksum file; publisher bundle verification follows separately."
+}

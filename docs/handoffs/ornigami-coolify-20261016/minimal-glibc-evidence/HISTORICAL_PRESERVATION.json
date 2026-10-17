@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-17T01:41:30.265Z",
+  "results": [
+    {
+      "directory": "framework-decision-evidence",
+      "verifiedFiles": 13,
+      "result": "passed",
+      "manifestSha256": "60c255b1061174ec4aad5021167b94297960c0c30c877ac864893b656eff2d97"
+    },
+    {
+      "directory": "framework-prototype-evidence",
+      "verifiedFiles": 158,
+      "result": "passed",
+      "manifestSha256": "e6f17cbd03f5d4ef44caa426e5cb5596a117b6d11d821ca3326bde9d988b8748"
+    },
+    {
+      "directory": "portable-repair-evidence",
+      "verifiedFiles": 57,
+      "result": "passed",
+      "manifestSha256": "7e06ce6034c0bd690a8ab5d652d2cd26d727f205914aa1f812aee4ae253f2328"
+    },
+    {
+      "directory": "external-trial-38964204005",
+      "verifiedFiles": 52,
+      "result": "passed",
+      "manifestSha256": "81b5feaf54e5d89a21c8116a3d98617dae23c7c12e9628e462a776a742d90918"
+    },
+    {
+      "directory": "external-trial-38976049055",
+      "verifiedFiles": 85,
+      "result": "passed",
+      "manifestSha256": "0ac91fdf5cd106c91cf4c7adb605a7786027b7c424ea1f5a503afa3deb1c5afc"
+    },
+    {
+      "directory": "remediation-preparation-evidence",
+      "verifiedFiles": 31,
+      "result": "passed",
+      "manifestSha256": "75aa8a0045fed6cc8778d905117a2ba43608c67576aa39ca57efa36721e171d2"
+    }
+  ]
+}

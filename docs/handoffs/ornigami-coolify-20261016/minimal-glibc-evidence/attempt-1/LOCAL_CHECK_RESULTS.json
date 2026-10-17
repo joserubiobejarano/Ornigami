@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-17T01:09:50.302Z",
+  "receipts": [
+    {
+      "name": "focused-tests",
+      "exit": 0,
+      "signal": null,
+      "durationMs": 26813
+    },
+    {
+      "name": "actionlint",
+      "exit": 0,
+      "signal": null,
+      "durationMs": 97
+    },
+    {
+      "name": "actual-static-closure",
+      "exit": 0,
+      "signal": null,
+      "durationMs": 2565
+    },
+    {
+      "name": "windows-codecs",
+      "exit": 1,
+      "error": "Required native image format unavailable: avif"
+    }
+  ],
+  "syntax": {
+    "bashBlocks": 19,
+    "pythonBlocks": 4,
+    "dockerNodeSnippets": 3,
+    "errors": [],
+    "existingColdSecurityAssertionsUnchanged": true
+  }
+}

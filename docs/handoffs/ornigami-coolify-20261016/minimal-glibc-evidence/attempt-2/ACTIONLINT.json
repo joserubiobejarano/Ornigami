@@ -1,0 +1,6 @@
+{
+  "version": "1.7.12",
+  "officialArchiveSha256": "6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f6e9",
+  "exit": 0,
+  "note": "Actions YAML/context/expression validation; optional unavailable shellcheck/pyflakes adapters disabled. All extracted Bash/Python blocks are checked independently."
+}

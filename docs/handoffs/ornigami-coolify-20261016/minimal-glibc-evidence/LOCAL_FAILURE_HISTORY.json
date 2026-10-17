@@ -1,0 +1,21 @@
+{
+  "preBoundedCheck": {
+    "result": "failed",
+    "test": "resource assessment retains valid counters after build failure",
+    "reason": "New required observer receipt absent from test fixture; fixture repaired, production requirement retained",
+    "rawOutput": "session tool output only; no invented durable raw receipt"
+  },
+  "firstBoundedCheck": {
+    "result": "failed",
+    "unitTests": "73 passed",
+    "codecError": "Required native image format unavailable: avif",
+    "diagnosis": "Sharp exposes AVIF capability under heif with output alias avif, not format.avif; repaired selection and added actual AV1 metadata rejection",
+    "preserved": "attempt-1 and checks-1"
+  },
+  "publisherInitialHypothesis": {
+    "result": "rejected before verification",
+    "reason": "Certificate SAN differed from initial assumed GitHub workflow identity. Official documented Google signer was then checked exactly, with normal issuer/transparency verification.",
+    "final": "cosign-publisher.receipt.json"
+  },
+  "final": "79 focused tests, static native closure and seven real Windows codec checks passed; no Linux build/runtime/image scan performed"
+}

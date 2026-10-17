@@ -1,0 +1,5 @@
+{"name":"focused-tests","exit":0,"signal":null,"durationMs":25964}
+{"name":"actionlint","exit":0,"signal":null,"durationMs":115}
+{"name":"actual-static-closure","exit":0,"signal":null,"durationMs":2743}
+{"bashBlocks":19,"pythonBlocks":4,"dockerNodeSnippets":4,"errors":[],"existingColdSecurityAssertionsUnchanged":true}
+Windows codec checks: 7 passed

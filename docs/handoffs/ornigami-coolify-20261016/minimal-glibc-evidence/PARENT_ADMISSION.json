@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-17T00:08:39.399Z",
+  "signatures": "Both pinned OCI indexes verified by cosign with exact Distroless keyless identity/issuer and transparency proof; amd64 manifests/config/layers hash-bound to indexes.",
+  "cosignPublisher": "verified official Sigstore project Google identity/issuer; bootstrap official GitHub release digest",
+  "nodeVersion": "v22.23.3",
+  "nodeOpenSSL": "3.5.8",
+  "nodeModulesABI": "127",
+  "officialNodeArchiveSha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de",
+  "officialNodeBinarySha256": "fde6a4bf8d0562f7751d1a2d6cb9b417c4cfe107bbcb0aa3e9a24e125e348f48",
+  "parentBinaryMatch": "both exact; no Node patch change",
+  "runtimeExecution": "not performed; Linux version recheck required in future trial",
+  "nativeClosure": "pending local ELF inspection before Dockerfile pins"
+}

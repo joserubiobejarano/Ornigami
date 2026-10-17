@@ -1,0 +1,15 @@
+{
+  "exit": 0,
+  "args": [
+    "verify",
+    "--certificate-identity",
+    "keyless@distroless.iam.gserviceaccount.com",
+    "--certificate-oidc-issuer",
+    "https://accounts.google.com",
+    "--output",
+    "json",
+    "gcr.io/distroless/nodejs22-debian13@sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce"
+  ],
+  "at": "2026-10-17T00:08:19.042Z",
+  "publisherIdentity": "keyless@projectsigstore.iam.gserviceaccount.com"
+}

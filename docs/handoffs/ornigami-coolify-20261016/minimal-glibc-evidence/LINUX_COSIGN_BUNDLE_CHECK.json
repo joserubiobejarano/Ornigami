@@ -1,0 +1,5 @@
+{
+  "source": "https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64.sigstore.json",
+  "sha256": "e16547fbee348eb23bd7e5a4d542b540395faea2e7bb1d18da01bbc3cc74d57d",
+  "linuxExecutable": "future pinned download and actual verification required; Windows publisher/parent crypto receipts were actually verified locally"
+}

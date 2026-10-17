@@ -1,0 +1,15 @@
+{
+  "exit": 0,
+  "args": [
+    "verify-blob",
+    "--bundle",
+    "cosign-publisher.sigstore.json",
+    "--certificate-identity",
+    "keyless@projectsigstore.iam.gserviceaccount.com",
+    "--certificate-oidc-issuer",
+    "https://accounts.google.com",
+    "cosign-windows-amd64.exe"
+  ],
+  "at": "2026-10-17T00:08:13.672Z",
+  "publisherIdentity": "keyless@projectsigstore.iam.gserviceaccount.com"
+}
