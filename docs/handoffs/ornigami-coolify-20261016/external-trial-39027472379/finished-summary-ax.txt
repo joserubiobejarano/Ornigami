@@ -1,0 +1,223 @@
+Browser tab: 9, Title: "Request one diagnostic minimal glibc Linux trial for 5d1659d · joserubiobejarano/Ornigami@d2bbe3a", URL: "https://github.com/joserubiobejarano/Ornigami/actions/runs/39027472379".
+0 AXWebArea Request one diagnostic minimal glibc Linux trial for 5d1659d · joserubiobejarano/Ornigami@d2bbe3a, URL: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379
+	1 container
+		2 link Description: Skip to content, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379#start-of-content
+		3 container Global navigation menu
+			4 pop up button Open menu
+			5 link Description: Homepage ( g then d ), Value: github.com/
+			6 container Breadcrumbs
+				7 content list
+					8 container
+						9 link Description: joserubiobejarano, Value: github.com/joserubiobejarano
+					10 container
+						11 link Description: Ornigami, Value: github.com/joserubiobejarano/Ornigami
+						12 pop up button (collapsed) Switch repository ( alt shift r ), Secondary Actions: Expand
+			13 button Open quick search dialog, type / to search
+				14 text Type 
+				15 text /
+				16 text  to search
+			17 link Description: Chat with Copilot, Value: github.com/copilot
+			18 pop up button (collapsed) Description: Open Copilot…, Secondary Actions: Expand
+			19 pop up button (collapsed) Create new..., Secondary Actions: Expand
+			20 link Description: All issues, Value: github.com/issues
+			21 link Description: All pull requests, Value: github.com/pulls
+			22 link Description: All repositories, Value: github.com/repos
+			23 pop up button Open user navigation menu
+				24 image Jose Rubio
+			25 heading Repository navigation, Value: 2
+				26 text Repository navigation
+			27 container Repository
+				28 content list
+					29 link Description: Code, Value: github.com/joserubiobejarano/Ornigami
+					30 link Description: Issues, Value: github.com/joserubiobejarano/Ornigami/issues
+					31 link Description: Pull requests, Value: github.com/joserubiobejarano/Ornigami/pulls
+					32 link Description: Actions, Value: github.com/joserubiobejarano/Ornigami/actions
+					33 link Description: Projects, Value: github.com/joserubiobejarano/Ornigami/projects
+					34 link Description: Wiki, Value: github.com/joserubiobejarano/Ornigami/wiki
+					35 link Description: Security and quality, Value: github.com/joserubiobejarano/Ornigami/security
+					36 link Description: Insights, Value: github.com/joserubiobejarano/Ornigami/pulse
+					37 link Description: Settings, Value: github.com/joserubiobejarano/Ornigami/settings
+	38 container repo-content-turbo-frame
+		39 link Description: Ornigami image build and validation rehearsal, Value: github.com/joserubiobejarano/Ornigami/actions/workflows/ornigami-image-rehearsal.yml
+		40 image failed: 
+		41 heading Request one diagnostic minimal glibc Linux trial for 5d1659d #6, Value: 1
+			42 text Request one diagnostic minimal glibc Linux trial for 5d1659d  #6
+		43 pop up button (collapsed) Re-run jobs, ID: action-menu-c5b83b50-29ee-487d-88c7-b7b836559e7e-button, Secondary Actions: Expand
+		44 pop up button (collapsed) Workflow run options, ID: action-menu-9c37587e-fcd7-41d1-bcf1-f736c8141e26-button, Secondary Actions: Expand
+		45 container Workflow run
+			46 content list
+				205 link Description: Summary, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379
+				48 heading All jobs, Value: 4
+					206 text All jobs
+				49 pop up button (collapsed) Filter by job status, Secondary Actions: Expand
+				207 content list
+					208 link Description: Build, runtime acceptance, and vulnerability scans, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/job/117381191077
+				50 container
+					51 heading Run details, Value: 3
+						209 text Run details
+					52 content list Run details
+						210 link Description: Usage, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/usage
+						211 link Description: Workflow file, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/workflow
+						212 link Description: Lockfile, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/lockfile
+		56 container Workflow run summary
+			57 text Triggered via push 
+			58 container Oct 17, 2026, 1:07 PM GMT+2
+				59 text 2 minutes ago
+			60 link Description: @joserubiobejarano joserubiobejarano, Value: github.com/joserubiobejarano
+			61 text pushed
+			62 link Description:  d2bbe3a, Value: github.com/joserubiobejarano/Ornigami/commit/d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba
+			63 link Description: codex/ornigami-sri-local-prototype-f-20261016, Value: github.com/joserubiobejarano/Ornigami/tree/refs/heads/codex/ornigami-sri-local-prototype-f-20261016
+			64 text Status Failure Total duration
+			65 link Description: 1m 21s, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/usage
+			66 text Artifacts
+			67 link Description: 1, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379#artifacts
+		68 container Workflow run graph
+			69 container
+				70 container
+					71 heading ornigami-image-rehearsal.yml, Value: 2
+						72 link Description: ornigami-image-rehearsal.yml, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/workflow
+					73 text on: push
+				74 link Description: failed: Build, runtime acceptance, and vulnerability scans 1m 18s, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/job/117381191077, ID: workflow-job-name-build-validate-scan
+				75 button (disabled) Fit to window, ID: icon-button-58911ec8-1584-47f7-a172-36aa3facf574
+				76 button (disabled) Zoom out, ID: icon-button-85b904ba-474c-457e-bc28-578a694d0e60
+				77 button (disabled) Zoom in, ID: icon-button-c4d5ad66-5434-4a7f-8640-65d6660f060a
+		78 container summary-117381191077
+			79 heading Build, runtime acceptance, and vulnerability scans summary, Value: 2
+				80 link Description: Build, runtime acceptance, and vulnerability scans summary, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379#summary-117381191077
+			81 pop up button (collapsed) Description: job summary options, Secondary Actions: Expand
+			82 heading Ornigami diagnostic evidence, Value: 1
+				83 text Ornigami diagnostic evidence
+			84 text Run 39027472379 / attempt 1; request d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba.
+			85 heading Build request admission, Value: 3
+				86 text Build request admission
+			87 content list
+				88 container
+					89 AXListMarker • 
+					90 text Request commit:  d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba
+				91 container
+					92 AXListMarker • 
+					93 text Commit:  5d1659d6fcce05be476d6bd8ab1932f9448db031
+				94 container
+					95 AXListMarker • 
+					96 text Committed package-lock.json SHA-256:  4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815
+				97 container
+					98 AXListMarker • 
+					99 text Detached checkout package-lock.json SHA-256:  4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815
+				100 container
+					101 AXListMarker • 
+					102 text Request marker: exact source and lock fields; only marker changed in single-parent request commit
+				103 container
+					104 AXListMarker • 
+					105 text Workflow blob: identical at candidate and request commits
+				106 container
+					107 AXListMarker • 
+					108 text Candidate is an ancestor of the request commit
+				109 container
+					110 AXListMarker • 
+					111 text Checkout: detached exact candidate; clean before build
+			112 heading Runner preflight, Value: 3
+				113 text Runner preflight
+			114 content list
+				115 container
+					116 AXListMarker • 
+					117 text Online CPUs: 4 (minimum 4)
+				118 container
+					119 AXListMarker • 
+					120 text Total memory: 15988 MiB (minimum 14336 MiB)
+				121 container
+					122 AXListMarker • 
+					123 text Available memory before build: 14533 MiB (minimum 12288 MiB)
+				124 container
+					125 AXListMarker • 
+					126 text Free runner disk before build: 91896475648 bytes (minimum 10737418240)
+			127 heading Scanner verification, Value: 3
+				128 text Scanner verification
+			129 content list
+				130 container
+					131 AXListMarker • 
+					132 text Trivy 0.76.0 Linux amd64 archive checksum verified against the official release checksum file:
+					133 link Description: https://github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt, Value: github.com/aquasecurity/trivy/releases/download/v0.76.0/trivy_0.76.0_checksums.txt
+			134 heading Downloadable evidence bundle, Value: 3
+				135 text Downloadable evidence bundle
+			136 content list
+				137 container
+					138 AXListMarker • 
+					139 text Upload status: success
+				140 container
+					141 AXListMarker • 
+					142 text Artifact: 
+					143 link Description: https://github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/artifacts/12098614820, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/artifacts/12098614820
+				144 container
+					145 AXListMarker • 
+					146 text Retention requested: 30 days (subject to repository policy)
+				147 container
+					148 AXListMarker • 
+					149 text The local image archive is excluded; scan JSON and sanitized runtime/resource receipts are retained when produced.
+			150 heading Disk and Docker usage before cleanup, Value: 3
+				151 text Disk and Docker usage before cleanup
+			152 container
+				153 text Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 65810657280 89066754048      43% /
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          10        0         2.446GB   2.446GB (100%)
+Containers      0         0         0B        0B
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+56843481	/home/runner/work/_temp/source
+1628446873	/home/runner/work/_temp/trivy-cache
+
+				154 button Copy code to clipboard
+			155 heading Final builder cgroup counters, Value: 3
+				156 text Final builder cgroup counters
+			157 content list
+				158 container
+					159 AXListMarker • 
+					160 text Unavailable: the exact BuildKit container created by this run was not present and running for capture.
+			161 heading Disk after cleanup, Value: 3
+				162 text Disk after cleanup
+			163 container
+				164 text Filesystem         1-blocks        Used   Available Capacity Mounted on
+/dev/root      154894188544 65810657280 89066754048      43% /
+
+				165 button Copy code to clipboard
+			166 text [{"stage":"original-base","result":"removed exact claimed image","exit":0},{"stage":"original-runtime-base","result":"removed exact claimed image","exit":0},{"stage":"buildkit","result":"removed exact claimed image","exit":0},{"stage":"dockerfile-frontend","result":"removed exact claimed image","exit":0}]
+			167 link Description: Job summary generated at run-time, Value: docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
+		168 container Annotations
+			169 heading Annotations, Value: 2
+				170 text Annotations
+			171 text 2 errors
+			172 table
+				173 row
+					174 cell
+						175 link Description: Build, runtime acceptance, and vulnerability scans, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/job/117381191077#step:14:13
+						176 text Process completed with exit code 1.
+				177 row
+					178 cell
+						179 link Description: Build, runtime acceptance, and vulnerability scans, Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/job/117381191077#step:7:20
+						180 text Process completed with exit code 1.
+		181 container Description: Artifacts, ID: artifacts
+			182 heading Artifacts, Value: 2
+				183 text Artifacts
+			184 text Produced during runtime
+			185 table
+				186 row
+					187 cell
+						188 text Name
+					189 cell
+						190 text Size
+					191 cell
+						192 text Digest
+				193 row
+					194 cell
+						195 link Description: Download ornigami-rehearsal-39027472379-1 (opens in a new tab), Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/artifacts/12098614820
+						196 link Description: Download ornigami-rehearsal-39027472379-1 (opens in a new tab), Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/artifacts/12098614820
+					197 cell
+						198 text 255 KB
+					199 cell
+						200 text sha256:8ecc367200984d4719cf8231fb7858a8701de495b5be88d6ed0c205bebf84881
+						201 button Copy artifact digest
+					202 cell
+						203 link Description: Download ornigami-rehearsal-39027472379-1 (opens in a new tab), Value: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379/artifacts/12098614820, ID: icon-button-86ac8026-a926-4bb0-a1f0-97ba3377b3b4
+						204 button Delete ornigami-rehearsal-39027472379-1, ID: icon-button-b3704011-98aa-4632-958b-3526b2856bf5
+
+The focused UI element is 0 AXWebArea Request one diagnostic minimal glibc Linux trial for 5d1659d · joserubiobejarano/Ornigami@d2bbe3a, URL: github.com/joserubiobejarano/Ornigami/actions/runs/39027472379

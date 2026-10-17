@@ -1,0 +1,110 @@
+Browser tab: 8, Title: "locallift – Git – Vercel", URL: "https://vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git".
+1 AXWebArea locallift – Git – Vercel, URL: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git
+	2 container
+		3 link Description: Skip to content, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git#geist-skip-nav
+		4 container
+			5 container
+				6 link Description: Jose Rubio's projects Hobby, Value: vercel.com/jose-rubios-projects-acf385c1
+				7 button
+					8 image
+				9 button Find F
+					10 image
+					11 text Find
+					12 text F
+				13 container
+					14 button Settings
+						15 image
+						16 text Settings
+					17 link Description: General, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/general
+					18 link Description: Build and Deployment, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/build-and-deployment
+					19 link Description: Environments, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/environments
+					20 link Description: Git, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git
+					21 link Description: Deployment Protection, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/deployment-protection
+					22 link Description: Passport, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/passport
+					23 link Description: Functions, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/functions
+					24 link Description: Sandboxes, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/sandboxes
+					25 link Description: Cron Jobs, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/cron-jobs
+					26 link Description: Microfrontends, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/microfrontends
+					27 link Description: Project Members, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/project-members
+					28 link Description: Drains, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/drains
+					29 link Description: Alerts, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/alerts
+					30 link Description: Tracing, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/tracing
+					31 link Description: Security, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/security
+					32 link Description: Networking, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/networking
+					33 link Description: Activity, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/activity
+					34 link Description: Advanced, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/advanced
+				35 pop up button (collapsed) Avatar for joserubiobejarano-6707 joserubiobejarano-6707, Secondary Actions: Expand
+					36 container Avatar for joserubiobejarano-6707
+					37 text joserubiobejarano-6707
+					38 image
+				76 pop up button (collapsed) Description: 268 unseen notifications, Secondary Actions: Expand
+					77 image
+					78 image
+			40 container
+				41 link Description: locallift, Value: vercel.com/jose-rubios-projects-acf385c1/locallift
+				42 button
+					43 image
+				44 link Description: Back to team view, Value: vercel.com/jose-rubios-projects-acf385c1/~/settings
+			45 container Breadcrumb
+				46 link Description: Project Settings, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings
+				47 text Git
+			79 button Vercel Agent is available on Pro
+				80 image
+				81 text Agent
+			48 container
+				49 container
+					50 heading Connected Git Repository, Value: 4
+						51 link Description: Connected Git Repository, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git#connected-git-repository
+						52 image
+					53 text Seamlessly create Deployments for any commits pushed to your Git repository.
+					82 container
+						83 button Origin
+							84 image
+							85 text Origin
+						86 button github GitHub
+							87 image github
+							88 text GitHub
+						89 button gitlab GitLab
+							90 image gitlab
+							91 text GitLab
+						92 button Bitbucket
+							93 image
+							94 text Bitbucket
+						95 link Description: Manage Login Connections →, Value: vercel.com/account/authentication
+					54 container
+						55 text Toggle  Pull Request Comments Pull Request Comments
+						56 image
+						57 container Toggle Pull Request Comments
+							58 checkbox (disabled, settable, integer) Description: Toggle Pull Request Comments, Value: 1
+					59 container
+						60 text Toggle  Commit Comments Commit Comments
+						61 image
+						62 container Toggle Commit Comments
+							63 checkbox (disabled, settable, integer) Description: Toggle Commit Comments, Value: 0
+					96 container
+						97 text Learn more about
+						98 link Description: Vercel for Git, Value: vercel.com/docs/git
+				64 container
+					65 heading Git Large File Storage (LFS), Value: 4
+						66 link Description: Git Large File Storage (LFS), Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git#git-large-file-storage-(lfs)
+						67 image
+					68 text Git LFS replaces large files such as audio samples, videos, datasets, and graphics with text pointers inside Git, while storing the file contents on a remote server like GitHub.com or GitHub Enterprise.
+					99 container
+						100 text Disabled
+						101 checkbox (settable, integer) Disabled, Value: 0
+					102 container
+						103 text Learn more about
+						104 link Description: Git LFS, Value: vercel.com/docs/project-configuration/git-settings#git-large-file-storage-lfs
+					105 button (disabled) Save
+				69 container
+					70 heading Deploy Hooks, Value: 4
+						71 link Description: Deploy Hooks, Value: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git#deploy-hooks
+						72 image
+					73 text Deploy hooks are unique URLs that allow you to trigger a deployment of a given branch.
+					74 container
+						75 text This Project is not connected to a Git repository. To be able to set up a Deploy Hook, you need to set up a new connection in the  "Connected Git Repository" section above.
+					106 container
+						107 text Learn more about
+						108 link Description: Deploy Hooks, Value: vercel.com/docs/deploy-hooks
+
+The focused UI element is 1 AXWebArea locallift – Git – Vercel, URL: vercel.com/jose-rubios-projects-acf385c1/locallift/settings/git

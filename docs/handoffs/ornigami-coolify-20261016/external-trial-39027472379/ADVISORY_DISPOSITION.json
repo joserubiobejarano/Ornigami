@@ -1,0 +1,19 @@
+{
+  "newCandidate": {
+    "counts": null,
+    "status": "unverified; no complete vulnerability scan executed",
+    "reason": "All four parent/tool scanner preflights rejected DB time metadata; no new finding may be marked fixed or zero"
+  },
+  "historical": {
+    "base": {
+      "critical": 0,
+      "high": 54
+    },
+    "final": {
+      "critical": 0,
+      "high": 43
+    },
+    "status": "failed security gates preserved, separate prior image/run; 43 Debian highs unresolved"
+  },
+  "remediation": "Review strict frozen-DB admission and retain rejected metadata/hash, actual scanner clock and distinct reasons; add cross-role fail-fast and Linux failure-path coverage locally under separate approval. No suppression, threshold relaxation or retry."
+}

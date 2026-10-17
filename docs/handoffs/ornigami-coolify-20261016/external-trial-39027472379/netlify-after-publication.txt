@@ -1,0 +1,54 @@
+Browser tab: 6, Title: "Builds | joserubiobejarano | Netlify", URL: "https://app.netlify.com/teams/joserubiobejarano/builds".
+1 AXWebArea Builds | joserubiobejarano | Netlify, URL: app.netlify.com/teams/joserubiobejarano/builds
+	2 container
+		3 container root
+			4 container
+				5 link Description: Skip to main content ↓, Value: app.netlify.com/teams/joserubiobejarano/builds#main
+				6 container
+					7 link Description: Netlify, Value: app.netlify.com/teams/joserubiobejarano
+					8 checkbox Description: Collapse team navigation, Value: 0
+						9 image Toggle Navigation
+					10 button SearchNetlify… Ctrl K
+						11 text Search
+						12 text Netlify…
+						13 text Ctrl
+						14 text K
+					15 content list Breadcrumb
+						16 container
+							17 link Description: joserubiobejarano’s team, Value: app.netlify.com/teams/joserubiobejarano/overview
+							18 pop up button (collapsed) Description: Switch teams. Open menu, Secondary Actions: Expand
+					19 container Description: Team navigation, ID: app-secondary-navigation
+						20 content list
+							21 link Description: Projects, Value: app.netlify.com/teams/joserubiobejarano/projects, ID: projects-secondary-nav-item
+							22 link Description: Builds, Value: app.netlify.com/teams/joserubiobejarano/builds, ID: builds-secondary-nav-item
+							23 link Description: Usage & billing, Value: app.netlify.com/teams/joserubiobejarano/billing, ID: billing-secondary-nav-item
+							24 link Description: Team settings, Value: app.netlify.com/teams/joserubiobejarano/settings, ID: settings-secondary-nav-item
+							25 link Description: Visual editor dashboard, Value: create.netlify.com/team/6ad256b0275be4684c3ea1ae, ID: team-create-secondary-nav-item
+					26 link Description: Upgrade, Value: app.netlify.com/teams/joserubiobejarano/billing/pricing
+					27 pop up button (collapsed) Description: User [owner-email-redacted]. Open menu, Help: false[owner-email-redacted], Secondary Actions: Expand
+						28 text [owner-email-redacted]
+				29 container
+					30 combo box (collapsed) News. Open menu, Secondary Actions: Expand
+						31 pop up button Description: News. Open menu, ID: downshift-6-label
+					32 combo box (collapsed) Support. Open menu, Secondary Actions: Expand
+						33 pop up button Description: Support. Open menu, ID: downshift-7-label
+					34 container Description: Builds, ID: main
+						35 container
+							36 heading Builds, Value: 1
+								37 text Builds
+							38 text Keep track of build activity across your whole team. Netlify can automate builds of your project each time you push a change to your Git repo. Once your team starts deploying, you will see a summary of your team activity, a list of deployed builds and their status here. Use the power of deploy previews, staging projects for each branch, and custom webhook integrations—all included with your account.
+							39 link Description: Learn more about builds →, Value: netlify.com/products/build
+							40 link Description: New project from Git, Value: app.netlify.com/start
+					41 container
+						42 content list External links
+							43 link Description: Docs, Value: docs.netlify.com/
+							44 link Description: Pricing, Value: netlify.com/pricing/
+							45 link Description: Support, Value: netlify.com/support/
+							46 link Description: Blog, Value: netlify.com/blog/
+							47 link Description: Changelog, Value: netlify.com/changelog/
+							48 link Description: Terms, Value: netlify.com/legal/terms-of-use/
+						49 text ©  2026
+						50 link Description: Netlify, Value: netlify.com/
+			51 container Notifications alt+T
+
+The focused UI element is 1 AXWebArea Builds | joserubiobejarano | Netlify, URL: app.netlify.com/teams/joserubiobejarano/builds

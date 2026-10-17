@@ -1,0 +1,417 @@
+{
+  "source": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "request": "d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba",
+  "lock": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "run": 39027472379,
+  "attempt": 1,
+  "conclusion": "failure",
+  "image": {
+    "created": false,
+    "retained": false,
+    "accepted": false,
+    "published": false
+  },
+  "failure": {
+    "stage": "original parent/tool vulnerability scan preflight",
+    "message": "Database metadata missing, future-dated or expired; prepare a fresh frozen database first",
+    "exactCause": "unproven: metadata payload not retained",
+    "behavior": "All four planned parent/tool role inventories completed; each role hit the same DB guard. Driver continued the other distinct roles rather than stopping globally on the first DB rejection; no role was retried. No BuildKit builder or compilation started."
+  },
+  "roles": [
+    {
+      "stage": "original-base",
+      "result": "failed",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/original-base/scan/index.json'",
+      "scanError": "sudo exit=1 signal=",
+      "imageId": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842",
+      "archiveSha256": "b6e9ab10895117c43a1f3508705b1ed1833ccf665ddb6651dfb099dc4e7e209c",
+      "archiveBytes": 155540480
+    },
+    {
+      "stage": "original-runtime-base",
+      "result": "failed",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/original-runtime-base/scan/index.json'",
+      "scanError": "sudo exit=1 signal=",
+      "imageId": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320",
+      "archiveSha256": "0b53fad354bc4ec9c8ac1458482b7289152c753ede2222c16097a67d3c349cf1",
+      "archiveBytes": 154163712
+    },
+    {
+      "stage": "build-base",
+      "result": "skipped",
+      "error": null,
+      "scanError": null,
+      "imageId": null,
+      "archiveSha256": null,
+      "archiveBytes": null
+    },
+    {
+      "stage": "deps",
+      "result": "skipped",
+      "error": null,
+      "scanError": null,
+      "imageId": null,
+      "archiveSha256": null,
+      "archiveBytes": null
+    },
+    {
+      "stage": "builder",
+      "result": "skipped",
+      "error": null,
+      "scanError": null,
+      "imageId": null,
+      "archiveSha256": null,
+      "archiveBytes": null
+    },
+    {
+      "stage": "prod-deps",
+      "result": "skipped",
+      "error": null,
+      "scanError": null,
+      "imageId": null,
+      "archiveSha256": null,
+      "archiveBytes": null
+    },
+    {
+      "stage": "runner",
+      "result": "skipped",
+      "error": null,
+      "scanError": null,
+      "imageId": null,
+      "archiveSha256": null,
+      "archiveBytes": null
+    },
+    {
+      "stage": "buildkit",
+      "result": "failed",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/buildkit/scan/index.json'",
+      "scanError": "sudo exit=1 signal=",
+      "imageId": "sha256:27933730df224df80c41f4e5a9b33fa78831a79fd31903df3bb7deb49363422f",
+      "archiveSha256": "88c01a6a0540a086d491dd551a889200547608a0079ce6e1545ce3168102a319",
+      "archiveBytes": 249874944
+    },
+    {
+      "stage": "dockerfile-frontend",
+      "result": "failed",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/dockerfile-frontend/scan/index.json'",
+      "scanError": "sudo exit=1 signal=",
+      "imageId": "sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4",
+      "archiveSha256": "a6653cc208736f83f93e5b7ea69ae9f6979bc46f93bc1660b4f54a2d8bebe822",
+      "archiveBytes": 23787520
+    }
+  ],
+  "inventories": [
+    {
+      "stage": "original-base",
+      "result": "passed",
+      "files": 2142,
+      "nativeFiles": 285,
+      "packages": 0,
+      "hasOsPackageDatabase": true,
+      "imageId": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842"
+    },
+    {
+      "stage": "original-runtime-base",
+      "result": "passed",
+      "files": 1759,
+      "nativeFiles": 284,
+      "packages": 0,
+      "hasOsPackageDatabase": true,
+      "imageId": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320"
+    },
+    {
+      "stage": "buildkit",
+      "result": "passed",
+      "files": 1134,
+      "nativeFiles": 291,
+      "packages": 0,
+      "hasOsPackageDatabase": true,
+      "imageId": "sha256:27933730df224df80c41f4e5a9b33fa78831a79fd31903df3bb7deb49363422f"
+    },
+    {
+      "stage": "dockerfile-frontend",
+      "result": "passed",
+      "files": 2,
+      "nativeFiles": 1,
+      "packages": 0,
+      "hasOsPackageDatabase": false,
+      "imageId": "sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4"
+    }
+  ],
+  "resources": {
+    "phases": [
+      {
+        "phase": "stage-scans/buildkit/filesystem-resources.json",
+        "result": "passed",
+        "resourceResult": "passed",
+        "exit": 0,
+        "startedAt": "2026-10-17T11:08:09.147Z",
+        "finishedAt": "2026-10-17T11:08:10.869Z",
+        "peakBytes": 625180672,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 1792992\nuser_usec 1426429\nsystem_usec 366562\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 18\nnr_throttled 17\nthrottled_usec 665234\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/buildkit/vulnerabilities-resources.json",
+        "result": "failed",
+        "resourceResult": "passed",
+        "exit": 1,
+        "startedAt": "2026-10-17T11:08:11.105Z",
+        "finishedAt": "2026-10-17T11:08:11.425Z",
+        "peakBytes": 44740608,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 371398\nuser_usec 288309\nsystem_usec 83089\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 4\nnr_throttled 3\nthrottled_usec 69516\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/database-resources.json",
+        "result": "passed",
+        "resourceResult": "passed",
+        "exit": 0,
+        "startedAt": "2026-10-17T11:07:29.787Z",
+        "finishedAt": "2026-10-17T11:07:43.897Z",
+        "peakBytes": 1996271616,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 4100354\nuser_usec 3096516\nsystem_usec 1003837\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 73\nnr_throttled 26\nthrottled_usec 39283\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/dockerfile-frontend/filesystem-resources.json",
+        "result": "passed",
+        "resourceResult": "passed",
+        "exit": 0,
+        "startedAt": "2026-10-17T11:08:12.822Z",
+        "finishedAt": "2026-10-17T11:08:13.059Z",
+        "peakBytes": 107483136,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 278953\nuser_usec 211016\nsystem_usec 67937\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 3\nnr_throttled 2\nthrottled_usec 42510\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/dockerfile-frontend/vulnerabilities-resources.json",
+        "result": "failed",
+        "resourceResult": "passed",
+        "exit": 1,
+        "startedAt": "2026-10-17T11:08:13.300Z",
+        "finishedAt": "2026-10-17T11:08:13.609Z",
+        "peakBytes": 45432832,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 367936\nuser_usec 280332\nsystem_usec 87603\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 4\nnr_throttled 3\nthrottled_usec 61373\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/original-base/filesystem-resources.json",
+        "result": "passed",
+        "resourceResult": "passed",
+        "exit": 0,
+        "startedAt": "2026-10-17T11:07:52.887Z",
+        "finishedAt": "2026-10-17T11:07:54.269Z",
+        "peakBytes": 483221504,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 1429098\nuser_usec 1128182\nsystem_usec 300916\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 15\nnr_throttled 14\nthrottled_usec 500762\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/original-base/vulnerabilities-resources.json",
+        "result": "failed",
+        "resourceResult": "passed",
+        "exit": 1,
+        "startedAt": "2026-10-17T11:07:54.531Z",
+        "finishedAt": "2026-10-17T11:07:54.856Z",
+        "peakBytes": 45039616,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 381615\nuser_usec 301221\nsystem_usec 80393\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 4\nnr_throttled 3\nthrottled_usec 65201\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/original-runtime-base/filesystem-resources.json",
+        "result": "passed",
+        "resourceResult": "passed",
+        "exit": 0,
+        "startedAt": "2026-10-17T11:08:00.620Z",
+        "finishedAt": "2026-10-17T11:08:01.988Z",
+        "peakBytes": 486637568,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 1414033\nuser_usec 1099025\nsystem_usec 315007\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 15\nnr_throttled 13\nthrottled_usec 478321\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      },
+      {
+        "phase": "stage-scans/original-runtime-base/vulnerabilities-resources.json",
+        "result": "failed",
+        "resourceResult": "passed",
+        "exit": 1,
+        "startedAt": "2026-10-17T11:08:02.212Z",
+        "finishedAt": "2026-10-17T11:08:02.525Z",
+        "peakBytes": 46030848,
+        "memoryEvents": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        },
+        "cpuStat": "usage_usec 375350\nuser_usec 304145\nsystem_usec 71204\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 3\nnr_throttled 2\nthrottled_usec 78731\nnr_bursts 0\nburst_usec 0",
+        "memoryMax": 2147483648,
+        "swapMax": 0,
+        "cpuMax": "100000 100000"
+      }
+    ],
+    "maximumObservedSingleScopePeakBytes": 1996271616,
+    "allScopeLimitsPassed": true,
+    "oom": 0,
+    "oomKills": 0,
+    "memoryLimitEvents": 0,
+    "globalPeak": "not measured; single-scope peak is not whole-run memory",
+    "build": "untested; no compiler/BuildKit peak, limits unchanged",
+    "runtime": "untested; no app"
+  },
+  "runner": {
+    "cpuCount": 4,
+    "totalMiB": 15988,
+    "availableMiB": 14533,
+    "initialDiskFreeBytes": 91896475648,
+    "diskSnapshots": [
+      {
+        "filesystemBytes": 154894188544,
+        "usedBytes": 65810657280,
+        "availableBytes": 89066754048
+      },
+      {
+        "filesystemBytes": 154894188544,
+        "usedBytes": 65810657280,
+        "availableBytes": 89066754048
+      }
+    ],
+    "note": "after-cleanup disk snapshot precedes four claimed-image removals; no final post-all-removals filesystem measurement"
+  },
+  "completeness": {
+    "artifactFileHashCoverage": "passed",
+    "listedFiles": 82,
+    "totalArtifactFiles": 83,
+    "exactSourceBinding": "passed",
+    "persistentSummary": "passed nonempty",
+    "naturalFailedScanSkippedRuntimeCapture": "passed: scan errors/resources and all-nine explicit status inventory retained; runtime phases marked unavailable, not passed",
+    "workflowCaptureCompleteness": "passed",
+    "fullSecurityEvidenceCompleteness": "failed: no vulnerability scan JSON/inventory for any role; five roles skipped",
+    "forensicGap": "Rejected database metadata/hash and precise rejection branch were not saved before the scanner threw; downloaded frozen DB timestamps cannot be independently assessed from retained files",
+    "forcedHttpBuildFailureFixtures": "untested: fixture step skipped before app compilation",
+    "custody": "passed independently after digest/durable read-back; no completeness/security claim"
+  },
+  "cleanup": {
+    "jobStep": "passed",
+    "claimedImages": [
+      {
+        "stage": "original-base",
+        "result": "removed exact claimed image",
+        "exit": 0
+      },
+      {
+        "stage": "original-runtime-base",
+        "result": "removed exact claimed image",
+        "exit": 0
+      },
+      {
+        "stage": "buildkit",
+        "result": "removed exact claimed image",
+        "exit": 0
+      },
+      {
+        "stage": "dockerfile-frontend",
+        "result": "removed exact claimed image",
+        "exit": 0
+      }
+    ],
+    "finalOwnedInventory": "not retained; deletion exit codes confirm exact image references only",
+    "spools": "filesystem analyzers recorded own spools outside artifact and completed cleanup; no orphan spool deletion was reported"
+  },
+  "gates": {
+    "prepublication": "passed",
+    "sourceRunnerParentProvenance": "passed",
+    "nativeParentStaticInventory": "passed for four roles; no runtime loading proof",
+    "security": "failed/unverified, not zero findings",
+    "build": "untested",
+    "runtimeBrowserPersistence": "untested",
+    "capture": "passed for natural failed/skipped path; full security and forensic completeness failed",
+    "custody": "passed independently",
+    "deployment": "closed",
+    "provider": "closed",
+    "cron": "closed for trial/proposed VPS; existing production runtime jobs preserved",
+    "registry": "closed",
+    "frameworkAdoption": "not accepted"
+  },
+  "authorization": "Exactly one trial and one run-specific acknowledgment consumed; no retry or additional trial authorized"
+}

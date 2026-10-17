@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-17T11:06:02.773Z",
+  "result": "passed for exact publication and one trial",
+  "sourceSha": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "lockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "branch": "refs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "remoteBefore": "496b57d147bc2a63182e3489583bb3532d28cfc2\trefs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "holds": "Ornigami Vercel Git disconnected in owner UI; API omits link property (not interpreted as null). Zero active Vercel ops and unchanged production. All four Netlify repositories not linked; no team build activity. Coolify app project has zero resources; no app watcher/operations resource exists.",
+  "otherIntegrations": "Exactly CodeRabbit, Vercel, Netlify; no repository webhooks or Pages; branch-excluding CI/security and request-only image trigger verified in exact source. No push event on CodeRabbit. Cron dispatch workflows not invoked; scheduled monitor is read-only health.",
+  "capacity": {
+    "plan": "GitHub Free",
+    "actionsMinutes": "82/2000 included used",
+    "actionsStorage": "0.1/0.5 GB included used",
+    "artifactCount": 2,
+    "artifactBytes": 375018,
+    "publicStandardRunner": "ubuntu-24.04 x64, 4 CPU/16 GB RAM; standard public use free. Official listed SSD 14 GB; actual free space remains a mandatory allocated-runner admission (candidate stops under its disk reserve). No larger/paid fallback.",
+    "source": "https://docs.github.com/en/actions/reference/runners/github-hosted-runners"
+  },
+  "localHelperNotes": [
+    "Windows direct .cmd spawn failed; same installed official CLI invoked with pinned local Node, no package install/change.",
+    "Strict local API helper rejected missing link property; owner UI supplied explicit disconnected proof. No setting changed or security assertion waived."
+  ],
+  "noChanges": "No hold, deployment, provider, shared-host or QR change; candidate/request not published at this receipt."
+}

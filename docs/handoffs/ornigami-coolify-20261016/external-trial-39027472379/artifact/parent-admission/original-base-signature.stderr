@@ -1,0 +1,6 @@
+
+Verification for gcr.io/distroless/nodejs22-debian13@sha256:73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The code-signing certificate was verified using trusted certificate authority certificates

@@ -1,0 +1,14 @@
+{
+  "stage": "dockerfile-frontend",
+  "result": "failed",
+  "startedAt": "2026-10-17T11:08:11.452Z",
+  "reference": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+  "preexistingImage": false,
+  "imageId": "sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4",
+  "ownedImage": true,
+  "archiveSha256": "a6653cc208736f83f93e5b7ea69ae9f6979bc46f93bc1660b4f54a2d8bebe822",
+  "archiveBytes": 23787520,
+  "scanError": "sudo exit=1 signal=",
+  "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/dockerfile-frontend/scan/index.json'",
+  "finishedAt": "2026-10-17T11:08:13.616Z"
+}

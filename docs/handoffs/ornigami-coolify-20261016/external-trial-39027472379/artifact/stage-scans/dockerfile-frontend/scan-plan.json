@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "sourceSha": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "trivy": {
+    "path": "/home/runner/work/_temp/trivy",
+    "sha256": "1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19",
+    "cacheDirectory": "/home/runner/work/_temp/trivy-cache"
+  },
+  "images": [
+    {
+      "stage": "dockerfile-frontend",
+      "archive": "/home/runner/work/_temp/ornigami-stage-dockerfile-frontend.tar",
+      "archiveSha256": "a6653cc208736f83f93e5b7ea69ae9f6979bc46f93bc1660b4f54a2d8bebe822",
+      "imageId": "sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4",
+      "filesystemReceipt": "/home/runner/work/_temp/ornigami-evidence/stage-scans/dockerfile-frontend/filesystem/result.json",
+      "filesystemReceiptSha256": "2bba173d26359f070a5ae2cc73ba4c58261daffadb299ca8bd1d42dc614757eb"
+    }
+  ]
+}

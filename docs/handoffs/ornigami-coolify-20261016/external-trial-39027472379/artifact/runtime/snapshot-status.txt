@@ -1,0 +1,5 @@
+runtime_step_outcome=skipped
+runtime-first-cgroup.txt=unavailable
+runtime-after-restart-cgroup.txt=unavailable
+runtime-after-recreate-cgroup.txt=unavailable
+native-image-formats.json=unavailable

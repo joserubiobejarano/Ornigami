@@ -1,0 +1,13 @@
+{
+  "artifactFileHashCoverage": "passed",
+  "listedFiles": 82,
+  "totalArtifactFiles": 83,
+  "exactSourceBinding": "passed",
+  "persistentSummary": "passed nonempty",
+  "naturalFailedScanSkippedRuntimeCapture": "passed: scan errors/resources and all-nine explicit status inventory retained; runtime phases marked unavailable, not passed",
+  "workflowCaptureCompleteness": "passed",
+  "fullSecurityEvidenceCompleteness": "failed: no vulnerability scan JSON/inventory for any role; five roles skipped",
+  "forensicGap": "Rejected database metadata/hash and precise rejection branch were not saved before the scanner threw; downloaded frozen DB timestamps cannot be independently assessed from retained files",
+  "forcedHttpBuildFailureFixtures": "untested: fixture step skipped before app compilation",
+  "custody": "passed independently after digest/durable read-back; no completeness/security claim"
+}

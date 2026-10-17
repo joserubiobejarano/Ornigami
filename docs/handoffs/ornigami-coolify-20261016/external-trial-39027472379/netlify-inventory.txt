@@ -1,0 +1,122 @@
+Browser tab: 6, Title: "Projects | joserubiobejarano | Netlify", URL: "https://app.netlify.com/teams/joserubiobejarano/projects".
+0 AXWebArea Projects | joserubiobejarano | Netlify, URL: app.netlify.com/teams/joserubiobejarano/projects
+	1 container
+		2 container root
+			3 container
+				4 link Description: Skip to main content ↓, Value: app.netlify.com/teams/joserubiobejarano/projects#main
+				5 container
+					6 link Description: Netlify, Value: app.netlify.com/teams/joserubiobejarano
+					7 checkbox Description: Collapse team navigation, Value: 0
+						8 image Toggle Navigation
+					9 button SearchNetlify… Ctrl K
+						10 text Search
+						11 text Netlify…
+						12 text Ctrl
+						13 text K
+					14 content list Breadcrumb
+						15 container
+							16 link Description: joserubiobejarano’s team, Value: app.netlify.com/teams/joserubiobejarano/overview
+							17 pop up button (collapsed) Description: Switch teams. Open menu, Secondary Actions: Expand
+					18 container Description: Team navigation, ID: app-secondary-navigation
+						19 content list
+							20 link Description: Projects, Value: app.netlify.com/teams/joserubiobejarano/projects, ID: projects-secondary-nav-item
+							21 link Description: Builds, Value: app.netlify.com/teams/joserubiobejarano/builds, ID: builds-secondary-nav-item
+							22 link Description: Usage & billing, Value: app.netlify.com/teams/joserubiobejarano/billing, ID: billing-secondary-nav-item
+							23 link Description: Team settings, Value: app.netlify.com/teams/joserubiobejarano/settings, ID: settings-secondary-nav-item
+							24 link Description: Visual editor dashboard, Value: create.netlify.com/team/6ad256b0275be4684c3ea1ae, ID: team-create-secondary-nav-item
+					25 link Description: Upgrade, Value: app.netlify.com/teams/joserubiobejarano/billing/pricing
+					26 pop up button (collapsed) Description: User [owner-email-redacted]. Open menu, Help: false[owner-email-redacted], Secondary Actions: Expand
+						27 text [owner-email-redacted]
+				28 container
+					29 heading Projects, Value: 1
+						30 text Projects
+					31 combo box (collapsed) News. Open menu, Secondary Actions: Expand
+						32 pop up button Description: News. Open menu, ID: downshift-6-label
+					33 combo box (collapsed) Support. Open menu, Secondary Actions: Expand
+						34 pop up button Description: Support. Open menu, ID: downshift-7-label
+					35 container Description: Projects, ID: main
+						36 container
+							37 container
+								38 container
+									39 text Search projects
+									40 search text field (settable) Search projects
+									41 button Search
+										42 image Search
+								43 link Description: Add new project, Value: app.netlify.com/start
+							44 container
+								45 definition list applied-filters
+									46 container Owned by
+										47 text Owned by
+									48 text This team
+									49 container Created by
+										50 text Created by
+									51 text Anyone
+									52 container Access
+										53 text Access
+									54 text Any
+								55 pop up button (collapsed) Edit filters, Secondary Actions: Expand
+							56 pop up button (collapsed) Description: Last published. Open menu, Secondary Actions: Expand
+							57 container
+								58 switch Description: List view, Value: 1
+									59 image List view
+								60 switch Description: Grid view, Value: 0
+									61 image Grid view
+							62 content list
+								63 container
+									64 heading elastic-bartik-99fd7d, Value: 3
+										65 link Description: elastic-bartik-99fd7d, Value: app.netlify.com/projects/elastic-bartik-99fd7d/
+									66 text Last deployed from  Netlify Drop Owned by
+									67 link Description: joserubiobejarano's team, Value: app.netlify.com/teams/joserubiobejarano
+									68 container Description: Published on Apr 4, 2020, Help: Sat, Apr 4, 2020 at 8:12 PM
+										69 text Published on Apr 4, 2020  ( 7 years ago )
+									70 checkbox Description: Favorite project, Value: 0
+										71 image Favorite project
+								72 container
+									73 heading distracted-joliot-36e072, Value: 3
+										74 link Description: distracted-joliot-36e072, Value: app.netlify.com/projects/distracted-joliot-36e072/
+									75 text Last deployed from  Netlify Drop Owned by
+									76 link Description: joserubiobejarano's team, Value: app.netlify.com/teams/joserubiobejarano
+									77 container Description: Published on Mar 24, 2020, Help: Tue, Mar 24, 2020 at 3:27 PM
+										78 text Published on Mar 24, 2020  ( 7 years ago )
+									79 checkbox Description: Favorite project, Value: 0
+										80 image Favorite project
+								81 container
+									82 heading eloquent-curran-4666ab, Value: 3
+										83 link Description: eloquent-curran-4666ab, Value: app.netlify.com/projects/eloquent-curran-4666ab/
+									84 text Last deployed from  Netlify Drop Owned by
+									85 link Description: joserubiobejarano's team, Value: app.netlify.com/teams/joserubiobejarano
+									86 container Description: Published on Mar 4, 2020, Help: Wed, Mar 4, 2020 at 12:00 AM
+										87 text Published on Mar 4, 2020  ( 7 years ago )
+									88 checkbox Description: Favorite project, Value: 0
+										89 image Favorite project
+								90 container
+									91 heading elastic-beaver-e31029, Value: 3
+										92 link Description: elastic-beaver-e31029, Value: app.netlify.com/projects/elastic-beaver-e31029/
+									93 text Last deployed from  Netlify Drop Owned by
+									94 link Description: joserubiobejarano's team, Value: app.netlify.com/teams/joserubiobejarano
+									95 container Description: Published on Mar 2, 2020, Help: Mon, Mar 2, 2020 at 11:12 PM
+										96 text Published on Mar 2, 2020  ( 7 years ago )
+									97 checkbox Description: Favorite project, Value: 0
+										98 image Favorite project
+							99 text Want to deploy a new project? Drag and drop your folder here.
+							100 container
+								101 text Drag and drop your  project folder, zip file,  or a single HTML file to deploy instantly.
+							102 container
+								103 text Or browse files to upload
+								104 button browse files to upload, ID: dropzone-file-upload
+								105 text or choose a folder
+								106 button choose a folder, ID: dropzone-folder-upload
+								107 text .
+					108 container
+						109 content list External links
+							110 link Description: Docs, Value: docs.netlify.com/
+							111 link Description: Pricing, Value: netlify.com/pricing/
+							112 link Description: Support, Value: netlify.com/support/
+							113 link Description: Blog, Value: netlify.com/blog/
+							114 link Description: Changelog, Value: netlify.com/changelog/
+							115 link Description: Terms, Value: netlify.com/legal/terms-of-use/
+						116 text ©  2026
+						117 link Description: Netlify, Value: netlify.com/
+			118 container Notifications alt+T
+
+The focused UI element is 0 AXWebArea Projects | joserubiobejarano | Netlify, URL: app.netlify.com/teams/joserubiobejarano/projects

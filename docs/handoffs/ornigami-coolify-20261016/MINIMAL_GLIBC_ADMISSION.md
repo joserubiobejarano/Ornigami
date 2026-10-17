@@ -1,5 +1,7 @@
 # Authorized minimal glibc trial: admission blocked — 17 October 2026
 
+Superseded checkpoint: after the owner restored private tunnel access, complete admission passed and the [single authorized Linux trial ran and failed before compilation](./MINIMAL_GLIBC_LINUX_TRIAL.md). The trial and acknowledgment authorization are now consumed. The blocked-admission evidence below remains unchanged historical evidence.
+
 The owner authorized exact candidate `5d1659d6fcce05be476d6bd8ab1932f9448db031`, application lock `4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815`, one separate matching request-only commit, exactly one diagnostic Linux trial and one run-specific custody acknowledgment after verified durable download/read-back. This authorization preserves all limits, strict security gates, integration holds and QR staging. It grants no deployment, registry/VPS operation, framework adoption, capacity increase or retry.
 
 **Stopped before either push. The private Coolify dashboard connection was refused at `http://127.0.0.1:18000`.** Browser navigation to the existing project returned `net::ERR_CONNECTION_REFUSED`. The current existing Ornigami project/environment resource inventory, deployment watchers and active operations therefore cannot be freshly established. Historical empty-environment receipts cannot substitute for this live check. No SSH/tunnel startup, host operation or integration change was attempted to work around the failed admission.

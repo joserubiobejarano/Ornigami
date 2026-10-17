@@ -1,0 +1,14 @@
+{
+  "stage": "original-runtime-base",
+  "result": "failed",
+  "startedAt": "2026-10-17T11:07:54.876Z",
+  "reference": "gcr.io/distroless/nodejs22-debian13@sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
+  "preexistingImage": false,
+  "imageId": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320",
+  "ownedImage": true,
+  "archiveSha256": "0b53fad354bc4ec9c8ac1458482b7289152c753ede2222c16097a67d3c349cf1",
+  "archiveBytes": 154163712,
+  "scanError": "sudo exit=1 signal=",
+  "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/original-runtime-base/scan/index.json'",
+  "finishedAt": "2026-10-17T11:08:02.532Z"
+}

@@ -1,0 +1,14 @@
+{
+  "stage": "buildkit",
+  "result": "failed",
+  "startedAt": "2026-10-17T11:08:02.545Z",
+  "reference": "moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+  "preexistingImage": false,
+  "imageId": "sha256:27933730df224df80c41f4e5a9b33fa78831a79fd31903df3bb7deb49363422f",
+  "ownedImage": true,
+  "archiveSha256": "88c01a6a0540a086d491dd551a889200547608a0079ce6e1545ce3168102a319",
+  "archiveBytes": 249874944,
+  "scanError": "sudo exit=1 signal=",
+  "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/buildkit/scan/index.json'",
+  "finishedAt": "2026-10-17T11:08:11.431Z"
+}

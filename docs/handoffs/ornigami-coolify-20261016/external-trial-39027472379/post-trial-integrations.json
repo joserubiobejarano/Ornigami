@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-17T11:10:45.892Z",
+  "requestSha": "d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba",
+  "exactlyOneRun": true,
+  "attempt": 1,
+  "deployments": [],
+  "vercel": {
+    "linkPropertyPresent": false,
+    "hold": "API no Git link, independently verified owner UI",
+    "production": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+    "latest": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+    "activeOperations": 0
+  },
+  "custodyAcks": 1,
+  "limits": "unchanged; no retries, paid fallback, registry or VPS action",
+  "qr": "not touched"
+}

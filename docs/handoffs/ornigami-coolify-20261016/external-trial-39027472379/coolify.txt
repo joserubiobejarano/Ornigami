@@ -1,0 +1,56 @@
+Browser tab: 4, Title: "fictional-... > Resources | Coolify", URL: "http://127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is".
+0 AXWebArea fictional-... > Resources | Coolify, URL: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is
+	1 container
+		2 link Description: Coolify, Value: 127.0.0.1:18000/
+		3 link Description: v4.4.6, Value: github.com/coollabsio/coolify/releases/tag/v4.4.6
+		4 button Root Team, Help: Switch team
+			5 text Root Team
+			6 image
+		7 text /
+		8 button Ornigami, Help: Switch project
+			9 text Ornigami
+			10 image
+		11 text /
+		12 button fictional-staging, Help: Switch environment
+			13 text fictional-staging
+			14 image
+	15 container
+		16 button Search Ctrl+K, Help: Search (Press / or Ctrl+K)
+			17 text Search
+			18 text Ctrl+K
+		19 content list
+			20 text Workspace
+			21 link Description: Dashboard, Value: 127.0.0.1:18000/
+			22 link Description: Projects, Value: 127.0.0.1:18000/projects
+			23 link Description: Analytics, Value: 127.0.0.1:18000/analytics
+			24 link Description: Terminal, Value: 127.0.0.1:18000/terminal
+			25 link Description: Servers, Value: 127.0.0.1:18000/servers
+			26 link Description: Sources, Value: 127.0.0.1:18000/sources
+			27 link Description: Destinations, Value: 127.0.0.1:18000/destinations
+			28 link Description: Registries, Value: 127.0.0.1:18000/registries
+			29 link Description: S3 Storage, Value: 127.0.0.1:18000/storages
+			30 link Description: Shared Variables, Help: Shared variables, Value: 127.0.0.1:18000/shared-variables
+			31 link Description: Team, Value: 127.0.0.1:18000/team
+			32 link Description: Notifications, Value: 127.0.0.1:18000/notifications/email
+			33 link Description: Keys & Tokens, Value: 127.0.0.1:18000/security/private-key
+			34 link Description: Tags, Value: 127.0.0.1:18000/tags
+			35 link Description: Settings, Value: 127.0.0.1:18000/settings
+		36 button Description: Account menu for qrl-owner, Help: qrl-owner
+			37 text Q
+			38 text qrl-owner
+		39 button Toggle sidebar
+			40 image
+	41 container
+		42 heading fictional-staging, Value: 1
+			43 text fictional-staging
+		44 container
+			45 text 0 resources  in Ornigami
+		46 link Description: Shared variables for fictional-staging, Value: 127.0.0.1:18000/shared-variables/environments/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is
+		47 link Description: Open settings for fictional-staging, Value: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/edit
+		48 link Description: New Resource, Value: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/new
+		49 heading No resources yet, Value: 2
+			50 text No resources yet
+		51 text Add an application, database, or service to this environment.
+		52 link Description: Add Resource, Value: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/new
+
+The focused UI element is 0 AXWebArea fictional-... > Resources | Coolify, URL: 127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is

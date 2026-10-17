@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "sourceSha": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "trivy": {
+    "path": "/home/runner/work/_temp/trivy",
+    "sha256": "1f889576636db0623539cb339df7d06c40ebf39e7919489eafa1160e29808f19",
+    "cacheDirectory": "/home/runner/work/_temp/trivy-cache"
+  },
+  "images": [
+    {
+      "stage": "original-base",
+      "archive": "/home/runner/work/_temp/ornigami-stage-original-base.tar",
+      "archiveSha256": "b6e9ab10895117c43a1f3508705b1ed1833ccf665ddb6651dfb099dc4e7e209c",
+      "imageId": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842",
+      "filesystemReceipt": "/home/runner/work/_temp/ornigami-evidence/stage-scans/original-base/filesystem/result.json",
+      "filesystemReceiptSha256": "cc7ba5ab520e324cf9847cc96761fa773cd799de0e96973c9ca17fefa47580bf"
+    }
+  ]
+}

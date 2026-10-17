@@ -1,0 +1,464 @@
+Browser tab: 6, Title: "Developer settings | Project configuration | distracted-joliot-36e072 | Netlify", URL: "https://app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-settings".
+1 AXWebArea Developer settings | Project configuration | distracted-joliot-36e072 | Netlify, URL: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+	2 container
+		3 container root
+			4 container
+				5 link Description: Skip to main content ↓, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+				6 container
+					7 link Description: Netlify, Value: app.netlify.com/teams/joserubiobejarano
+					8 checkbox Description: Collapse team navigation, Value: 1
+						9 image Toggle Navigation
+					10 button Search Netlify
+					11 content list Breadcrumb
+						12 container
+							13 link Description: joserubiobejarano’s team, Value: app.netlify.com/teams/joserubiobejarano/overview
+							14 pop up button (collapsed) Description: Switch teams. Open menu, Secondary Actions: Expand
+					15 container Description: Team navigation, ID: app-secondary-navigation
+						16 content list
+							17 link Description: Projects, Value: app.netlify.com/teams/joserubiobejarano/projects, ID: projects-secondary-nav-item
+							18 link Description: Builds, Value: app.netlify.com/teams/joserubiobejarano/builds, ID: builds-secondary-nav-item
+							19 link Description: Usage & billing, Value: app.netlify.com/teams/joserubiobejarano/billing, ID: billing-secondary-nav-item
+							20 link Description: Team settings, Value: app.netlify.com/teams/joserubiobejarano/settings, ID: settings-secondary-nav-item
+							21 link Description: Visual editor dashboard, Value: create.netlify.com/team/6ad256b0275be4684c3ea1ae, ID: team-create-secondary-nav-item
+					22 link Description: Upgrade, Value: app.netlify.com/teams/joserubiobejarano/billing/pricing
+					23 pop up button (collapsed) Description: User [owner-email-redacted]. Open menu, Help: false[owner-email-redacted], Secondary Actions: Expand
+						24 text [owner-email-redacted]
+				25 container
+					26 content list
+						27 link Description: Projects, Value: app.netlify.com/teams/joserubiobejarano/projects
+						28 container
+							29 link Description: distracted-joliot-36e072, Value: app.netlify.com/projects/distracted-joliot-36e072
+							30 pop up button (collapsed) Description: Switch projects. Open menu, Secondary Actions: Expand
+					31 container
+						32 combo box (collapsed) News. Open menu, Secondary Actions: Expand
+							33 pop up button Description: News. Open menu, ID: downshift-6-label
+						34 combo box (collapsed) Support. Open menu, Secondary Actions: Expand
+							35 pop up button Description: Support. Open menu, ID: downshift-7-label
+					36 container Description: Developer settings, ID: main
+						37 container
+							38 link Description: Skip to content, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+							39 link Description: Project overview, Value: app.netlify.com/projects/distracted-joliot-36e072
+							40 heading Project configuration, Value: 1
+								41 text Project configuration
+							42 container Project configuration
+								43 link Description: General, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/general
+								44 link Description: Environment variables, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/env
+								45 link Description: Developer settings, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+								46 link Description: Notifications, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/notifications
+								47 link Description: Security, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/security
+								48 link Description: Configuration, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/project
+								49 link Description: Visual editor, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/visual-editor
+								50 link Description: Emails, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/emails
+							51 container Sections
+								52 content list
+									53 link Description: Repository, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+									54 link Description: Deploy status badge, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+									55 link Description: Automatic deploy deletion, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+									56 link Description: Snippet injection, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+									57 link Description: Pretty URLs, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+									58 link Description: Split Testing, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+									59 link Description: Build plugins, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+							60 container
+								61 heading Developer settings, Value: 1
+									62 text Developer settings
+								63 container section-continuous-deployment
+									64 container
+										65 heading Continuous deployment, Value: 2
+											66 link Description: Continuous deployment, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										67 text Configuration for continuous deployment from a Git repository
+									68 container Repository
+										69 heading Repository, Value: 3, ID: card-title-Repository
+											70 link Description: Repository, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										71 text Continuous deployment works by connecting a Git repository to your Netlify project and keeping the two in sync. When you push to Git, we run your build tool of choice on our servers and deploy the result.
+										72 definition list
+											73 container Current repository:
+												74 text Current repository :
+											75 text Not linked
+										76 link Description: Learn more about continuous deployment in the docs →, Value: docs.netlify.com/site-deploys/create-deploys/
+										77 pop up button (collapsed) Description: Link repository. Open menu, Secondary Actions: Expand
+									78 container Deploy status badge
+										79 heading Deploy status badge, Value: 3, ID: card-title-Deploy-status-badge
+											80 link Description: Deploy status badge, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										81 container
+											82 text This image automatically updates to reflect the current state of your latest production deploy. To create a status badge for a deployed branch, add the  ?branch=  query parameter to the badge URL. You can use the markdown snippet below to add it to your project README.
+										83 image Deploy status badge
+										84 container
+											85 text [![Netlify Status](https://api.netlify.com/api/v1/badges/d4b2cd51-4a99-46ff-b01f-c5e7559a83e1/deploy-status)](https://app.netlify.com/projects/distracted-joliot-36e072/deploys)
+											86 button Copy Status badge markdown snippet to clipboard
+										87 link Description: Learn more about status badges in the docs →, Value: docs.netlify.com/monitor-sites/status-badges/
+									88 container Automatic deploy deletion
+										89 container
+											90 image
+											91 image Locked
+										92 heading Automatic deploy deletion, Value: 3, ID: card-title-Automatic-deploy-deletion
+											93 link Description: Automatic deploy deletion, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										94 text Control when deploys are automatically deleted. Netlify will not automatically delete the deploy currently published on your project, nor the most recent successful deploy from a Git branch.
+										95 definition list
+											96 container Delete deploys after:
+												97 text Delete deploys after :
+											98 container
+												99 text 30 days
+										100 link Description: Learn more about deploy deletion in the docs →, Value: docs.netlify.com/site-deploys/manage-deploys/
+										101 link Description: Upgrade to customize automatic deploy deletion, Value: app.netlify.com/teams/joserubiobejarano/billing/payment
+								102 container section-post-processing
+									103 container
+										104 heading Post processing, Value: 2
+											105 link Description: Post processing, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										106 text Control the post processing and optimizations Netlify can do for you
+									107 container Snippet injection
+										108 heading Snippet injection, Value: 3, ID: card-title-Snippet-injection
+											109 link Description: Snippet injection, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										110 text Inject analytics or other scripts into the HTML of your project.
+										111 link Description: Learn more about snippet injection in the docs →, Value: docs.netlify.com/site-deploys/post-processing/snippet-injection/
+										112 button Add snippet
+									113 container Pretty URLs
+										114 heading Pretty URLs, Value: 3, ID: card-title-Pretty-URLs
+											115 link Description: Pretty URLs, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										116 container
+											117 text Pretty URLs are enabled.  ✓
+										118 link Description: Learn more about Pretty URLs in the docs →, Value: docs.netlify.com/site-deploys/post-processing/
+										119 button Configure
+								120 container section-split-testing
+									121 container
+										122 heading Split Testing Beta, Value: 2
+											123 link Description: Split Testing Beta, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										124 text Simple yet powerful split testing at the edge node. Test alternate designs or gradually roll out features by serving multiple Branch Deploys and distributing them across users.
+										125 link Description: Learn more about Split Testing in the docs →, Value: docs.netlify.com/site-deploys/split-testing/
+									126 container
+										127 heading Get started with Split Testing, Value: 3
+											128 text Get started with Split Testing
+										129 container
+											130 text This feature requires connecting a Git repository for 
+											131 link Description: continuous deployment →, Value: docs.netlify.com/site-deploys/create-deploys/
+										132 link Description: Connect to repository, Value: app.netlify.com/projects/distracted-joliot-36e072/link
+								133 container section-build-plugins
+									134 container
+										135 heading Build plugins, Value: 2
+											136 link Description: Build plugins, Value: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…
+										137 text Discover and configure build plugins
+										138 link Description: Learn more about build plugins in the docs →, Value: docs.netlify.com/integrations/build-plugins/
+									139 container
+										140 container
+											141 text Search build plugins
+											142 search text field (settable) Search build plugins
+											143 button Search
+												144 image Search
+										145 pop up button (collapsed) Description: All. Open menu, Secondary Actions: Expand
+										146 heading 21YunBox, Value: 3
+											147 text 21YunBox
+										148 text by 21YunBox Deploy to China straight from your Netlify Dashboard
+										149 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/@21yunbox/netlify-plugin-21yunb…
+										150 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										151 heading Algolia Crawler, Value: 3
+											152 text Algolia Crawler
+										153 text by Netlify Automatically crawls your website and generates an Algolia Search index.
+										154 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/@algolia/netlify-plugin-crawler…
+										155 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										156 heading Visual Diff (Applitools), Value: 3
+											157 text Visual Diff (Applitools)
+										158 text by Applitools Require visual changes on production to be manually approved before going live!
+										159 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-plugin-visual-diff/inst…
+										160 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										161 heading Auth0 extension, Value: 3
+											162 text Auth0 extension
+										163 text by Netlify Connect your Netlify account to Auth0
+										164 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/@netlify/auth0/install
+										165 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										166 heading Cloudflare cache purge, Value: 3
+											167 text Cloudflare cache purge
+										168 text by Chris Muktar Clear Cloudflare cache when build completes.
+										169 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-purge-cloudflare-on-dep…
+										170 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										171 heading Cloudinary, Value: 3
+											172 text Cloudinary
+										173 text by Cloudinary Automatically optimize your Netlify site images and deliver them in modern formats with Cloudinary.
+										174 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-plugin-cloudinary/insta…
+										175 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										176 heading CommandBar, Value: 3
+											177 text CommandBar
+										178 text by CommandBar CommandBar plugin for websites deployed to Netlify.
+										179 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/@commandbar/netlify-plugin-comm…
+										180 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										181 heading Cypress, Value: 3
+											182 text Cypress
+										183 text by Cypress Runs Cypress end-to-end tests after Netlify builds the site.
+										184 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-plugin-cypress/install
+										185 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										186 heading DebugBear web performance, Value: 3
+											187 text DebugBear web performance
+										188 text by DebugBear Run tests on DebugBear to see how your deployments affect page performance and Lighthouse scores
+										189 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-build-plugin-debugbear/…
+										190 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										191 heading Formspree, Value: 3
+											192 text Formspree
+										193 text by Formspree Deploy React forms with formspree.json
+										194 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-plugin-formspree/install
+										195 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										196 heading Ghost Inspector, Value: 3
+											197 text Ghost Inspector
+										198 text by Ghost Inspector Run Ghost Inspector automated browser tests on your Netlify deploys.
+										199 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-plugin-ghost-inspector/…
+										200 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										201 heading Inngest, Value: 3
+											202 text Inngest
+										203 text by Inngest Automatically deploy Inngest functions to Netlify’s platform.
+										204 link Description: Enable, Value: app.netlify.com/teams/joserubiobejarano/plugins/netlify-plugin-inngest/install
+										205 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										206 heading Lighthouse, Value: 3
+											207 text Lighthouse
+										208 text by Netlify Automatically run a Lighthouse audit on your website after every build.
+										209 link Description: Enable, Value: …
+										210 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										211 heading a11y, Value: 3
+											212 text a11y
+										213 text by sw-yx Build a more accessible web! Run your critical pages through pa11y and fail build if accessibility failures are found.
+										214 link Description: Enable, Value: …
+										215 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										216 heading Airbrake, Value: 3
+											217 text Airbrake
+										218 text by Bharathvaj Ganesan Automatically notifies Airbrake of new site deploys.
+										219 link Description: Enable, Value: …
+										220 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										221 heading AMP server-side rendering, Value: 3
+											222 text AMP server-side rendering
+										223 text by Martin Bean A Netlify plugin to server-side render your AMP pages.
+										224 link Description: Enable, Value: …
+										225 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										226 heading Build Logger, Value: 3
+											227 text Build Logger
+										228 text by Amar Parmar Send build events to a logging service.
+										229 link Description: Enable, Value: …
+										230 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										231 heading Cecil cache, Value: 3
+											232 text Cecil cache
+										233 text by Arnaud Ligny Persist the Cecil cache between Netlify builds.
+										234 link Description: Enable, Value: …
+										235 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										236 heading Checklinks, Value: 3
+											237 text Checklinks
+										238 text by Peter Müller Checklinks helps you keep all your asset references correct and avoid embarrassing broken links to your internal pages, or even to external pages you link out to.
+										239 link Description: Enable, Value: …
+										240 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										241 heading Chromium, Value: 3
+											242 text Chromium
+										243 text by soofka Installs Chromium (installs NPM Chromium package and sets environment variable to location of binaries); useful for other tools requiring Chromium to run, e.g. Lighthouse CI.
+										244 link Description: Enable, Value: …
+										245 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										246 heading Contextual ENV, Value: 3
+											247 text Contextual ENV
+										248 text by Chris Ball Replaces ENV vars with ENV vars that are prefixed/suffixed with the context or branch name.
+										249 link Description: Enable, Value: …
+										250 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										251 heading Dareboost, Value: 3
+											252 text Dareboost
+										253 text by Boris Schapira After a successful build, create an event in your Dareboost monitoring. If you have subscribed to API credits, you can automatically launch analyses.
+										254 link Description: Enable, Value: …
+										255 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										256 heading Debug cache, Value: 3
+											257 text Debug cache
+										258 text by Netlify Debug & verify the contents of your Netlify build cache.
+										259 link Description: Enable, Value: …
+										260 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										261 heading Fetch feeds, Value: 3
+											262 text Fetch feeds
+										263 text by Phil Hawksworth A Netlify plugin to fetch and cache content from remote feeds including RSS and JSON.
+										264 link Description: Enable, Value: …
+										265 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										266 heading Flutter SDK, Value: 3
+											267 text Flutter SDK
+										268 text by Ben Evans Install the Flutter SDK for Building and Deploying Flutter Web Apps.
+										269 link Description: Enable, Value: …
+										270 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										271 heading Ghost Markdown, Value: 3
+											272 text Ghost Markdown
+										273 text by David Darnes Generates posts, pages, tag pages and author pages from a Ghost publication as markdown files, using the Ghost Content API.
+										274 link Description: Enable, Value: …
+										275 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										276 heading Gridsome Cache, Value: 3
+											277 text Gridsome Cache
+										278 text by Eric McCormick Persist the Gridsome cache between Netlify builds for huge speed improvements!
+										279 link Description: Enable, Value: …
+										280 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										281 heading Hashfiles, Value: 3
+											282 text Hashfiles
+										283 text by Peter Müller Hashfiles sets you up with an optimal caching strategy for static sites, where static assets across pages are cached for as long as possible in the visitors browser and never have to be re-requested.
+										284 link Description: Enable, Value: …
+										285 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										286 heading HTML Validate, Value: 3
+											287 text HTML Validate
+										288 text by Oliver Roick Validate HTML generated by your build.
+										289 link Description: Enable, Value: …
+										290 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										291 heading Hugo Cache Resources, Value: 3
+											292 text Hugo Cache Resources
+										293 text by Cassius Persist Hugo resources folder between Netlify builds for huge build speed improvements!
+										294 link Description: Enable, Value: …
+										295 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										296 heading Image Optim, Value: 3
+											297 text Image Optim
+										298 text by Chris Draycott-Wheatley Optimize images as part of your Netlify build process.
+										299 link Description: Enable, Value: …
+										300 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										301 heading Inline Critical CSS, Value: 3
+											302 text Inline Critical CSS
+										303 text by Tom Bonnike Automatically extract and inline the critical CSS of your pages in order to render content to the user as fast as possible.
+										304 link Description: Enable, Value: …
+										305 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										306 heading Inline Functions Environment Variables, Value: 3
+											307 text Inline Functions Environment Variables
+										308 text by Zhenhua Ben Cao Inline process.env.VARIABLE in netlify functions with netlify build time environment variables.
+										309 link Description: Enable, Value: …
+										310 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										311 heading Inline Source, Value: 3
+											312 text Inline Source
+										313 text by Tom Bonnike Improve your site’s performance by inlining some of your assets/sources, reducing the number of HTTP requests your users need to make.
+										314 link Description: Enable, Value: …
+										315 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										316 heading Is Website Vulnerable, Value: 3
+											317 text Is Website Vulnerable
+										318 text by Erez Rokah A Netlify plugin that uses Snyk to test for security vulnerabilities in a website's JavaScript libraries.
+										319 link Description: Enable, Value: …
+										320 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										321 heading JavaScript Obfuscator, Value: 3
+											322 text JavaScript Obfuscator
+										323 text by Anish Roy An obfuscator for your JavaScript source code.
+										324 link Description: Enable, Value: …
+										325 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										326 heading Jekyll Cache, Value: 3
+											327 text Jekyll Cache
+										328 text Persist the Jekyll cache between Netlify builds.
+										329 link Description: Enable, Value: …
+										330 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										331 heading Minify HTML, Value: 3
+											332 text Minify HTML
+										333 text by Phil Hawksworth A plugin to add HTML minification as a post-processing optimisation in Netlify.
+										334 link Description: Enable, Value: …
+										335 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										336 heading Netlify Bundle ENV, Value: 3
+											337 text Netlify Bundle ENV
+										338 text by Hrishikesh Kokate A Netlify Build Plugin to inject environment variables in Netlify Functions during Netlify Builds.
+										339 link Description: Enable, Value: …
+										340 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										341 heading No More 404, Value: 3
+											342 text No More 404
+										343 text by sw-yx Check that you preserve your own internal URL structure between builds, accounting for Netlify Redirects. Don't break the web!
+										344 link Description: Enable, Value: …
+										345 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										346 heading Pushover Notification, Value: 3
+											347 text Pushover Notification
+										348 text by Ashik Nesin Send real time notification to your devices on build success/error via Pushover.net.
+										349 link Description: Enable, Value: …
+										350 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										351 heading Replace, Value: 3
+											352 text Replace
+										353 text Replace ENV variables in your publish directory.
+										354 link Description: Enable, Value: …
+										355 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										356 heading Sitemap, Value: 3
+											357 text Sitemap
+										358 text by Netlify Automatically generate a sitemap for your website after it finishes building in Netlify.
+										359 link Description: Enable, Value: …
+										360 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										361 heading Skip nx, Value: 3
+											362 text Skip nx
+										363 text by Fahd Allebdi Skip not affected apps in a nx monorepo.
+										364 link Description: Enable, Value: …
+										365 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										366 heading Subfont, Value: 3
+											367 text Subfont
+										368 text by Peter Müller Subfont post-processes your web page to analyse you usage of web fonts, then reworks your webpage to use an optimal font loading strategy for the best performance.
+										369 link Description: Enable, Value: …
+										370 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										371 heading Submit Sitemap, Value: 3
+											372 text Submit Sitemap
+										373 text by Cassius Automatically submit your sitemap to Google and Yandex after every production build!
+										374 link Description: Enable, Value: …
+										375 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										376 heading Use Env in Runtime, Value: 3
+											377 text Use Env in Runtime
+										378 text by Ben Lmsc Make some environment variables available only at build time in the runtime of your app.
+										379 link Description: Enable, Value: …
+										380 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										381 heading Webmentions, Value: 3
+											382 text Webmentions
+										383 text by Luke Bonaccorsi Automatically discover any webmentions and send them after every production build.
+										384 link Description: Enable, Value: …
+										385 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										386 heading New Relic, Value: 3
+											387 text New Relic
+										388 text by Aaron Bassett Automatically notifies New Relic of Netlify build events and installs the New Relic browser agent to monitor your sites.
+										389 link Description: Enable, Value: …
+										390 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										391 heading Nimbella, Value: 3
+											392 text Nimbella
+										393 text by Nimbella Nimbella plugin to extend Netlify Sites with stateful and portable serverless APIs.
+										394 link Description: Enable, Value: …
+										395 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										396 heading PerfBeacon, Value: 3
+											397 text PerfBeacon
+										398 text by OnlineOrNot Tell PerfBeacon to measure page speed after a successful build.
+										399 link Description: Enable, Value: …
+										400 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										401 heading PageWatch Audit, Value: 3
+											402 text PageWatch Audit
+										403 text by PageWatch Check your site for layout errors, spelling mistakes, broken links and performance issues on every build.
+										404 link Description: Enable, Value: …
+										405 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										406 heading QA Wolf, Value: 3
+											407 text QA Wolf
+										408 text by QA Wolf Run QA Wolf end-to-end tests on Netlify deployments.
+										409 link Description: Enable, Value: …
+										410 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										411 heading Sentry, Value: 3
+											412 text Sentry
+										413 text by Sentry The Sentry integration on Netlify helps you quickly identify how code errors and performance issues impact your users.
+										414 link Description: Enable, Value: …
+										415 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										416 heading Snaplet, Value: 3
+											417 text Snaplet
+										418 text by Snaplet Bootstrap preview databases with your deploy previews on Netlify without affecting production.
+										419 link Description: Enable, Value: …
+										420 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										421 heading Snyk Security, Value: 3
+											422 text Snyk Security
+										423 text by Snyk A Snyk Netlify plugin to find and monitor new security vulnerabilities in JavaScript libraries.
+										424 link Description: Enable, Value: …
+										425 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										426 heading Speedcurve, Value: 3
+											427 text Speedcurve
+										428 text by Andy Davies After a successful build, tell SpeedCurve you've deployed and trigger a round of testing.
+										429 link Description: Enable, Value: …
+										430 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										431 heading StepZen, Value: 3
+											432 text StepZen
+										433 text by StepZen Deploy a StepZen (http://stepzen.com) GraphQL API with any Netlify build.
+										434 link Description: Enable, Value: …
+										435 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										436 heading Strapi, Value: 3
+											437 text Strapi
+										438 text by Strapi Strapi v4 plugin to trigger, monitor, and cancel deployments on one or more Netlify sites
+										439 link Description: Enable, Value: …
+										440 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										441 heading TakeShape, Value: 3
+											442 text TakeShape
+										443 text by TakeShape Automatically create and configure a TakeShape project for use with your Netlify site.
+										444 link Description: Enable, Value: …
+										445 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+										446 heading Very Good Security, Value: 3
+											447 text Very Good Security
+										448 text by Very Good Security Securely collect and use sensitive data without having it ever touch your systems.
+										449 link Description: Enable, Value: …
+										450 pop up button (collapsed) Description: Options. Open menu, Secondary Actions: Expand
+					451 container
+						452 content list External links
+							453 link Description: Docs, Value: …
+							454 link Description: Pricing, Value: …
+							455 link Description: Support, Value: …
+							456 link Description: Blog, Value: …
+							457 link Description: Changelog, Value: …
+							458 link Description: Terms, Value: …
+						459 text ©  2026
+						460 link Description: Netlify, Value: …
+			461 container Notifications alt+T
+
+The focused UI element is 1 AXWebArea Developer settings | Project configuration | distracted-joliot-36e072 | Netlify, URL: app.netlify.com/projects/distracted-joliot-36e072/configuration/developer-setti…

@@ -1,0 +1,447 @@
+{
+  "admission_outcome": "success",
+  "all_stage_evidence_status": "failed",
+  "all_stage_gate_outcome": "failure",
+  "base_gate_outcome": "skipped",
+  "base_scan_outcome": "failure",
+  "capture_completeness_status": "passed",
+  "custody_status": "not-assessed-by-capture",
+  "event": "push",
+  "expected_lock_sha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "files": [
+    {
+      "bytes": 108,
+      "path": "README.txt",
+      "sha256": "1edef77d0d42d4c2da5a1790ad2c20dc61bb7126aafd9abea831eed291bbda7b"
+    },
+    {
+      "bytes": 45,
+      "path": "browser/workflow-status.txt",
+      "sha256": "4c9e4619198a85afc0e98526ce6413f99c47f900106fa1a3d9c0c575918155ee"
+    },
+    {
+      "bytes": 45,
+      "path": "build/workflow-status.txt",
+      "sha256": "4c9e4619198a85afc0e98526ce6413f99c47f900106fa1a3d9c0c575918155ee"
+    },
+    {
+      "bytes": 6406,
+      "path": "parent-admission/cosign-publisher.sigstore.json",
+      "sha256": "e16547fbee348eb23bd7e5a4d542b540395faea2e7bb1d18da01bbc3cc74d57d"
+    },
+    {
+      "bytes": 12,
+      "path": "parent-admission/cosign-publisher.stderr",
+      "sha256": "80a53f76c7ed6969dade3b6ee47cdb753162db7c00be625448999d08bae77ed8"
+    },
+    {
+      "bytes": 0,
+      "path": "parent-admission/cosign-publisher.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 5048,
+      "path": "parent-admission/original-base-config.json",
+      "sha256": "bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842"
+    },
+    {
+      "bytes": 1514,
+      "path": "parent-admission/original-base-index.json",
+      "sha256": "73a255525458f934d622761475d87348af94e5e1e9dd9b380ae8b861e67df9ce"
+    },
+    {
+      "bytes": 4830,
+      "path": "parent-admission/original-base-manifest.json",
+      "sha256": "b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5"
+    },
+    {
+      "bytes": 3088,
+      "path": "parent-admission/original-base-signature.json",
+      "sha256": "87592d251bab79be6726d3e1dabcb8dca071ceb8c8569834dbe772f5aa0d0942"
+    },
+    {
+      "bytes": 399,
+      "path": "parent-admission/original-base-signature.stderr",
+      "sha256": "c933334390dab13b325b87e65113aed141834e354be962d895b565889cf6d647"
+    },
+    {
+      "bytes": 4833,
+      "path": "parent-admission/original-runtime-base-config.json",
+      "sha256": "d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320"
+    },
+    {
+      "bytes": 1514,
+      "path": "parent-admission/original-runtime-base-index.json",
+      "sha256": "ec2313763dd43931543bd03830466e0c409ce73a487e8d46f10db72d3b816c1c"
+    },
+    {
+      "bytes": 4639,
+      "path": "parent-admission/original-runtime-base-manifest.json",
+      "sha256": "7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c"
+    },
+    {
+      "bytes": 3088,
+      "path": "parent-admission/original-runtime-base-signature.json",
+      "sha256": "9f99b33570fae790a709c80975a47263d80f5a83002acb9bbeae8e21a27846cc"
+    },
+    {
+      "bytes": 399,
+      "path": "parent-admission/original-runtime-base-signature.stderr",
+      "sha256": "b39b37bf4198645d34b510efc1cfe69b5b964268c3b85cd9b12bcc1766f772e5"
+    },
+    {
+      "bytes": 1138,
+      "path": "parent-admission/results.json",
+      "sha256": "c8bbfb73ebdb49645bc63dc0e06d8b6f08a6ccb1ddbb989fad861272b6824ca4"
+    },
+    {
+      "bytes": 158,
+      "path": "run-identity.txt",
+      "sha256": "d10b13c1cdc176f8b24983918affa3c8c99dc52937c4c56f132fb4755b5f52e4"
+    },
+    {
+      "bytes": 45,
+      "path": "runner/builder-before-cleanup-status.txt",
+      "sha256": "f3dae742d75d2ea3b6e14239536b2d71b6359860cee4ae9da7510aa0992b37f1"
+    },
+    {
+      "bytes": 79,
+      "path": "runner/owned-resources.txt",
+      "sha256": "5d8546c9a4ea3fdaec4b0088b7cb2aab7cf5c78b90433415576638b1bd1b7dfb"
+    },
+    {
+      "bytes": 652,
+      "path": "runner/pre-cleanup-usage.txt",
+      "sha256": "66ab73f39d4cfdcb339863bff92efda74b28d4b4ea8edf68895a2358744c9738"
+    },
+    {
+      "bytes": 44,
+      "path": "runtime/runtime-evidence-status.txt",
+      "sha256": "38d5e0cb26be4ff11e184563cd53c36dd4b632da0cd1497c9c574626843bba57"
+    },
+    {
+      "bytes": 195,
+      "path": "runtime/snapshot-status.txt",
+      "sha256": "25e71f3bfc755f96ff598a10869740f9704ec9e9dd810a8f688a8eb88c136d61"
+    },
+    {
+      "bytes": 16,
+      "path": "scans/trivy-version.txt",
+      "sha256": "caeca6a0f6641907faa757b0975d2edcf05fe6ca9b724a7f86e36fe0626f4441"
+    },
+    {
+      "bytes": 489,
+      "path": "source-identity.txt",
+      "sha256": "cbb4c02cc9b42679c94be3c3f8c3e87b6c1d7c09359bfdd8c2e495554cfd3e6b"
+    },
+    {
+      "bytes": 675,
+      "path": "stage-scans/buildkit/driver.json",
+      "sha256": "d9d179ce1b08172f85fcf028903bad71d1153b3d85d74c4a3556a08368fd73f1"
+    },
+    {
+      "bytes": 303658,
+      "path": "stage-scans/buildkit/filesystem/filesystem.json",
+      "sha256": "365c10b4591a04b535f8a338b7e23ce5e4838d82c4ea3286f7f8a00dffe00b46"
+    },
+    {
+      "bytes": 108936,
+      "path": "stage-scans/buildkit/filesystem/native-closure.json",
+      "sha256": "cc76f8c2547080893b17d90c27419b951ceba0a51727f69a2130fe5e53afac2e"
+    },
+    {
+      "bytes": 3,
+      "path": "stage-scans/buildkit/filesystem/package-manifests.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 9503,
+      "path": "stage-scans/buildkit/filesystem/result.json",
+      "sha256": "35967ba3cce28733954552f0ab9ad7b2b6dd900887604e5d4e0375b5ebb1aff2"
+    },
+    {
+      "bytes": 251,
+      "path": "stage-scans/buildkit/filesystem/spool-ownership.json",
+      "sha256": "6e42e8f4835980e4c46d4125d0949696995dfc19ed06781c9dc36090393d446f"
+    },
+    {
+      "bytes": 4270,
+      "path": "stage-scans/buildkit/filesystem-resources.json",
+      "sha256": "a5bce444a3c136896952f23393d7a46d4fa5771b1ea1ae775fa97a8daef20d2e"
+    },
+    {
+      "bytes": 8004,
+      "path": "stage-scans/buildkit/filesystem.log",
+      "sha256": "d92c37b9e515bead4d3d751b8a6f789a63dbbe1f42129fa8c45166ea6e87571f"
+    },
+    {
+      "bytes": 1352,
+      "path": "stage-scans/buildkit/pull.log",
+      "sha256": "f87ff5eb80fac5e8e2f39482cbafcba4936599fa720090acf18d38932ca618ff"
+    },
+    {
+      "bytes": 0,
+      "path": "stage-scans/buildkit/save.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 811,
+      "path": "stage-scans/buildkit/scan-plan.json",
+      "sha256": "63f53e5762eee15ac58c55b695c4421001221006aba949f52562c6d9920e26b7"
+    },
+    {
+      "bytes": 4236,
+      "path": "stage-scans/buildkit/vulnerabilities-resources.json",
+      "sha256": "463c5f3254d9597db37fd79a87424618c8d66cf6f95cc2646ac9883e2fba8503"
+    },
+    {
+      "bytes": 90,
+      "path": "stage-scans/buildkit/vulnerabilities.log",
+      "sha256": "ca172778cd81583a499692a87738f2d9cb80d6a97f44eb65581e37a5d464b6e9"
+    },
+    {
+      "bytes": 7,
+      "path": "stage-scans/completeness-status.txt",
+      "sha256": "2700165975f68815c97d605c56eca8e90d497ade1264b6282401d13fee99ac27"
+    },
+    {
+      "bytes": 4087,
+      "path": "stage-scans/database-resources.json",
+      "sha256": "8f2dbcdfcc09665897cbefc541c66252a45944173eb5fe260f0eb423c723cec8"
+    },
+    {
+      "bytes": 696,
+      "path": "stage-scans/dockerfile-frontend/driver.json",
+      "sha256": "9eaa3eaada40f575048736ae643166395d963f968ce35b1f65cc5996d9d9c7c3"
+    },
+    {
+      "bytes": 508,
+      "path": "stage-scans/dockerfile-frontend/filesystem/filesystem.json",
+      "sha256": "b582f5daa99ab6ad09cc45ee47e990e57ddc392fc89a13f162f8c579744c182b"
+    },
+    {
+      "bytes": 486,
+      "path": "stage-scans/dockerfile-frontend/filesystem/native-closure.json",
+      "sha256": "1949fce4870608cea58022abe662ff3adf1baf943833501ff21b1883b48540aa"
+    },
+    {
+      "bytes": 3,
+      "path": "stage-scans/dockerfile-frontend/filesystem/package-manifests.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 473,
+      "path": "stage-scans/dockerfile-frontend/filesystem/result.json",
+      "sha256": "2bba173d26359f070a5ae2cc73ba4c58261daffadb299ca8bd1d42dc614757eb"
+    },
+    {
+      "bytes": 251,
+      "path": "stage-scans/dockerfile-frontend/filesystem/spool-ownership.json",
+      "sha256": "48c1a6e0a2b7109d62c82fc0528115af099d6a2a3f56aece1f341dba18c2e542"
+    },
+    {
+      "bytes": 4295,
+      "path": "stage-scans/dockerfile-frontend/filesystem-resources.json",
+      "sha256": "245c528fd53f0eb03a39dc1712d0e81229548ff4454c4aabdb453260adaec4ff"
+    },
+    {
+      "bytes": 424,
+      "path": "stage-scans/dockerfile-frontend/filesystem.log",
+      "sha256": "24e797f4803e1cdc311ac3fb31a33fbac6dd881b97dfc0465355098d3d75c707"
+    },
+    {
+      "bytes": 565,
+      "path": "stage-scans/dockerfile-frontend/pull.log",
+      "sha256": "56c39a5f5a0c140002de53e3ef86216a63d24244432018a05331e2350c4a78fd"
+    },
+    {
+      "bytes": 0,
+      "path": "stage-scans/dockerfile-frontend/save.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 844,
+      "path": "stage-scans/dockerfile-frontend/scan-plan.json",
+      "sha256": "f46284dd7f9bd5538d0e9ea036ef39cb02ff7e85246474cbd2f9dda5d67626fe"
+    },
+    {
+      "bytes": 4259,
+      "path": "stage-scans/dockerfile-frontend/vulnerabilities-resources.json",
+      "sha256": "8cb7a7d8b92a66e3af6aa43306971b39d0d71bbb2aab0881a6ebb0d9b5f11480"
+    },
+    {
+      "bytes": 90,
+      "path": "stage-scans/dockerfile-frontend/vulnerabilities.log",
+      "sha256": "ca172778cd81583a499692a87738f2d9cb80d6a97f44eb65581e37a5d464b6e9"
+    },
+    {
+      "bytes": 3906,
+      "path": "stage-scans/index.json",
+      "sha256": "2bcf0398dce54633d1f83867d7eb94617f3628313b984b43085767d46def7944"
+    },
+    {
+      "bytes": 699,
+      "path": "stage-scans/original-base/driver.json",
+      "sha256": "4f05529f21e76b518934b159c32867632338970cbf8189270b4a67cfe141c51e"
+    },
+    {
+      "bytes": 617322,
+      "path": "stage-scans/original-base/filesystem/filesystem.json",
+      "sha256": "ab632ef766e5f35143bed19662845ced50bb794c4a071747500555a5b0d1de5b"
+    },
+    {
+      "bytes": 152210,
+      "path": "stage-scans/original-base/filesystem/native-closure.json",
+      "sha256": "9e5c287ad0dea2bb843a7d8208dbcb4b0792104da2a1ebc7ac12dde35776b2f1"
+    },
+    {
+      "bytes": 3,
+      "path": "stage-scans/original-base/filesystem/package-manifests.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 14467,
+      "path": "stage-scans/original-base/filesystem/result.json",
+      "sha256": "cc7ba5ab520e324cf9847cc96761fa773cd799de0e96973c9ca17fefa47580bf"
+    },
+    {
+      "bytes": 251,
+      "path": "stage-scans/original-base/filesystem/spool-ownership.json",
+      "sha256": "5b24f8286b69b833113d915215bb61d96f0ddf5a40e9555e4c69cb704338b7a5"
+    },
+    {
+      "bytes": 4306,
+      "path": "stage-scans/original-base/filesystem-resources.json",
+      "sha256": "a8faf72ddcb985c3c1a8f7b539e990c67c85a0b0a5196c732ea546a09ec3e297"
+    },
+    {
+      "bytes": 12998,
+      "path": "stage-scans/original-base/filesystem.log",
+      "sha256": "e86eb4bcf4e9694cd471ebc43c50f2af2cd2580cb27c00a68c93c2a0130feef7"
+    },
+    {
+      "bytes": 3719,
+      "path": "stage-scans/original-base/pull.log",
+      "sha256": "9beccbb107c6508ca800070ba2a8c7165f5dfc9a9b5e94e8297737a821cd4dc3"
+    },
+    {
+      "bytes": 0,
+      "path": "stage-scans/original-base/save.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 826,
+      "path": "stage-scans/original-base/scan-plan.json",
+      "sha256": "28df58ab5eba4f5635294b6b3138345f8273b64124d5ef837640ac9f8aefa849"
+    },
+    {
+      "bytes": 4246,
+      "path": "stage-scans/original-base/vulnerabilities-resources.json",
+      "sha256": "3eaf75c9bfc7fc87de29ec1dbb12c6740c68e443aefd04f92b694db6a782cd4d"
+    },
+    {
+      "bytes": 90,
+      "path": "stage-scans/original-base/vulnerabilities.log",
+      "sha256": "ca172778cd81583a499692a87738f2d9cb80d6a97f44eb65581e37a5d464b6e9"
+    },
+    {
+      "bytes": 715,
+      "path": "stage-scans/original-runtime-base/driver.json",
+      "sha256": "50b6829474ba263943aebf39e9341cb499d6f8419e2d84c67fef437bc8c3dd55"
+    },
+    {
+      "bytes": 525032,
+      "path": "stage-scans/original-runtime-base/filesystem/filesystem.json",
+      "sha256": "ebc3a0457a0e8bc630df2eb8436f107b70fb6f8c15a9f1c160acdd4d82dd7c97"
+    },
+    {
+      "bytes": 151961,
+      "path": "stage-scans/original-runtime-base/filesystem/native-closure.json",
+      "sha256": "2efe660c65b328833d80636c6582971d6e2b503bf2e7b3f6a0758183e43727f2"
+    },
+    {
+      "bytes": 3,
+      "path": "stage-scans/original-runtime-base/filesystem/package-manifests.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 14452,
+      "path": "stage-scans/original-runtime-base/filesystem/result.json",
+      "sha256": "cd91e53d17be98cf972404ce1900108b5f7cafff96bedabed6e3aa9e1ad8b76e"
+    },
+    {
+      "bytes": 251,
+      "path": "stage-scans/original-runtime-base/filesystem/spool-ownership.json",
+      "sha256": "1cba41389ddb043cceae979f9ee926fdd95fecfafcffd9f7b18ef787d02add7c"
+    },
+    {
+      "bytes": 4311,
+      "path": "stage-scans/original-runtime-base/filesystem-resources.json",
+      "sha256": "975f1c2e72970b8cc3f4c9d624e53f3a04b052ee02e6f221dfee85e549192f63"
+    },
+    {
+      "bytes": 12988,
+      "path": "stage-scans/original-runtime-base/filesystem.log",
+      "sha256": "7db6dd78a073fcaee978e26877ed9c50839eab04ced420d197fc55075b0d909c"
+    },
+    {
+      "bytes": 2107,
+      "path": "stage-scans/original-runtime-base/pull.log",
+      "sha256": "2e1fa336f524166963c7e7d48b691dedcc23bcb3a9905b97a914214b4f7ae554"
+    },
+    {
+      "bytes": 0,
+      "path": "stage-scans/original-runtime-base/save.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 850,
+      "path": "stage-scans/original-runtime-base/scan-plan.json",
+      "sha256": "03f5381658a3408890414419ce3b3157bdaa2a536c93d33173a7a21f71a4e663"
+    },
+    {
+      "bytes": 4262,
+      "path": "stage-scans/original-runtime-base/vulnerabilities-resources.json",
+      "sha256": "bfbb24171594c3f28cd45dc56f52ec2ab672704f9cc05afb46f700c99b8db04f"
+    },
+    {
+      "bytes": 90,
+      "path": "stage-scans/original-runtime-base/vulnerabilities.log",
+      "sha256": "ca172778cd81583a499692a87738f2d9cb80d6a97f44eb65581e37a5d464b6e9"
+    },
+    {
+      "bytes": 1186,
+      "path": "step-summary.md",
+      "sha256": "80a609f6c4f48afcb06ad1510e942b77401a574a6ecf397ed3620bed71841b1f"
+    },
+    {
+      "bytes": 47,
+      "path": "summary-status.txt",
+      "sha256": "6a47a1a6d983662c9a96d207ecac1175bfa64b6b9420648bbf4b969ab41f55d2"
+    }
+  ],
+  "final_scan_outcome": "skipped",
+  "framework_browser_exit_code": "",
+  "framework_browser_outcome": "skipped",
+  "image_build_exit_code": "",
+  "image_build_outcome": "skipped",
+  "ref": "refs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "request_sha": "d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba",
+  "resource_outcome": "skipped",
+  "run_attempt": "1",
+  "run_id": "39027472379",
+  "runner_preflight_outcome": "success",
+  "runtime_evidence_status": "not-run",
+  "runtime_exit_code": "",
+  "runtime_outcome": "skipped",
+  "runtime_snapshot_status": [
+    "runtime_step_outcome=skipped",
+    "runtime-first-cgroup.txt=unavailable",
+    "runtime-after-restart-cgroup.txt=unavailable",
+    "runtime-after-recreate-cgroup.txt=unavailable",
+    "native-image-formats.json=unavailable"
+  ],
+  "schema": 1,
+  "source_sha": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "summary_evidence_status": "collected"
+}

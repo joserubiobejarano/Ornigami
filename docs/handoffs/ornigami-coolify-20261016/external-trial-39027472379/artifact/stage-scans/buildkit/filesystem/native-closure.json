@@ -1,0 +1,4548 @@
+{
+  "result": "passed",
+  "roots": [
+    "bin/busybox",
+    "bin/getopt",
+    "bin/ionice",
+    "bin/more",
+    "bin/mountpoint",
+    "bin/rev",
+    "lib/ld-musl-x86_64.so.1",
+    "sbin/apk",
+    "sbin/blkdiscard",
+    "sbin/blockdev",
+    "sbin/fdisk",
+    "sbin/findfs",
+    "sbin/fsck",
+    "sbin/hwclock",
+    "sbin/mkswap",
+    "sbin/pivot_root",
+    "sbin/swapoff",
+    "sbin/swapon",
+    "sbin/switch_root",
+    "usr/bin/cal",
+    "usr/bin/eject",
+    "usr/bin/fallocate",
+    "usr/bin/getconf",
+    "usr/bin/getent",
+    "usr/bin/iconv",
+    "usr/bin/ipcrm",
+    "usr/bin/ipcs",
+    "usr/bin/mesg",
+    "usr/bin/nsenter",
+    "usr/bin/renice",
+    "usr/bin/scanelf",
+    "usr/bin/setsid",
+    "usr/bin/ssl_client",
+    "usr/bin/unshare",
+    "usr/lib/engines-3/afalg.so",
+    "usr/lib/engines-3/capi.so",
+    "usr/lib/engines-3/loader_attic.so",
+    "usr/lib/engines-3/padlock.so",
+    "usr/lib/libapk.so.3.0.0",
+    "usr/lib/libcrypto.so.3",
+    "usr/lib/libssl.so.3",
+    "usr/lib/libz.so.1.3.2",
+    "usr/lib/ossl-modules/legacy.so",
+    "usr/sbin/rfkill",
+    "bin/lsfd",
+    "bin/pipesz",
+    "bin/wdctl",
+    "sbin/blkpr",
+    "sbin/blkzone",
+    "sbin/chcpu",
+    "sbin/ctrlaltdel",
+    "sbin/fsck.cramfs",
+    "sbin/fsck.minix",
+    "sbin/fsfreeze",
+    "sbin/mkfs",
+    "sbin/mkfs.bfs",
+    "sbin/mkfs.cramfs",
+    "sbin/mkfs.minix",
+    "sbin/swaplabel",
+    "sbin/zramctl",
+    "usr/bin/bits",
+    "usr/bin/chmem",
+    "usr/bin/choom",
+    "usr/bin/chrt",
+    "usr/bin/colcrt",
+    "usr/bin/colrm",
+    "usr/bin/column",
+    "usr/bin/coresched",
+    "usr/bin/econftool",
+    "usr/bin/enosys",
+    "usr/bin/exch",
+    "usr/bin/fadvise",
+    "usr/bin/fincore",
+    "usr/bin/fusermount3",
+    "usr/bin/git",
+    "usr/bin/git-shell",
+    "usr/bin/hardlink",
+    "usr/bin/ipcmk",
+    "usr/bin/irqtop",
+    "usr/bin/isosize",
+    "usr/bin/look",
+    "usr/bin/lsclocks",
+    "usr/bin/lsipc",
+    "usr/bin/lsirq",
+    "usr/bin/lslocks",
+    "usr/bin/lsmem",
+    "usr/bin/lsns",
+    "usr/bin/lzmadec",
+    "usr/bin/lzmainfo",
+    "usr/bin/namei",
+    "usr/bin/openssl",
+    "usr/bin/pigz",
+    "usr/bin/prlimit",
+    "usr/bin/rename",
+    "usr/bin/scp",
+    "usr/bin/script",
+    "usr/bin/scriptlive",
+    "usr/bin/scriptreplay",
+    "usr/bin/setarch",
+    "usr/bin/setpgid",
+    "usr/bin/setterm",
+    "usr/bin/sftp",
+    "usr/bin/ssh",
+    "usr/bin/ssh-add",
+    "usr/bin/ssh-agent",
+    "usr/bin/ssh-keygen",
+    "usr/bin/ssh-keyscan",
+    "usr/bin/ssh-pkcs11-helper",
+    "usr/bin/taskset",
+    "usr/bin/uclampset",
+    "usr/bin/ul",
+    "usr/bin/utmpdump",
+    "usr/bin/uuidparse",
+    "usr/bin/waitpid",
+    "usr/bin/wall",
+    "usr/bin/whereis",
+    "usr/bin/xz",
+    "usr/bin/xzdec",
+    "usr/lib/libblkid.so.1.1.0",
+    "usr/lib/libbrotlicommon.so.1.2.0",
+    "usr/lib/libbrotlidec.so.1.2.0",
+    "usr/lib/libbrotlienc.so.1.2.0",
+    "usr/lib/libcares.so.2.19.7",
+    "usr/lib/libcurl.so.4.8.0",
+    "usr/lib/libeconf.so.0.8.3",
+    "usr/lib/libedit.so.0.0.76",
+    "usr/lib/libexpat.so.1.12.5",
+    "usr/lib/libfdisk.so.1.1.0",
+    "usr/lib/libfuse3.so.3.18.3",
+    "usr/lib/libidn2.so.0.4.0",
+    "usr/lib/liblzma.so.5.8.4",
+    "usr/lib/libmnl.so.0.2.0",
+    "usr/lib/libmount.so.1.1.0",
+    "usr/lib/libncursesw.so.6.5",
+    "usr/lib/libnftnl.so.11.6.0",
+    "usr/lib/libnghttp2.so.14.29.4",
+    "usr/lib/libpcre2-8.so.0.16.0",
+    "usr/lib/libpcre2-posix.so.3.0.8",
+    "usr/lib/libpsl.so.5.3.5",
+    "usr/lib/libskarnet.so.2.14.4.0",
+    "usr/lib/libsmartcols.so.1.1.0",
+    "usr/lib/libunistring.so.5.2.1",
+    "usr/lib/libutmps.so.0.1.3.1",
+    "usr/lib/libuuid.so.1.3.0",
+    "usr/lib/libxtables.so.12.7.0",
+    "usr/lib/libzstd.so.1.5.7",
+    "usr/lib/ssh/sftp-server",
+    "usr/lib/ssh/ssh-pkcs11-helper",
+    "usr/lib/ssh/sshd-auth",
+    "usr/lib/ssh/sshd-session",
+    "usr/lib/xtables/libarpt_mangle.so",
+    "usr/lib/xtables/libebt_802_3.so",
+    "usr/lib/xtables/libebt_among.so",
+    "usr/lib/xtables/libebt_arp.so",
+    "usr/lib/xtables/libebt_arpreply.so",
+    "usr/lib/xtables/libebt_dnat.so",
+    "usr/lib/xtables/libebt_ip.so",
+    "usr/lib/xtables/libebt_ip6.so",
+    "usr/lib/xtables/libebt_log.so",
+    "usr/lib/xtables/libebt_mark.so",
+    "usr/lib/xtables/libebt_mark_m.so",
+    "usr/lib/xtables/libebt_nflog.so",
+    "usr/lib/xtables/libebt_pkttype.so",
+    "usr/lib/xtables/libebt_redirect.so",
+    "usr/lib/xtables/libebt_snat.so",
+    "usr/lib/xtables/libebt_stp.so",
+    "usr/lib/xtables/libebt_vlan.so",
+    "usr/lib/xtables/libip6t_DNPT.so",
+    "usr/lib/xtables/libip6t_HL.so",
+    "usr/lib/xtables/libip6t_NETMAP.so",
+    "usr/lib/xtables/libip6t_REJECT.so",
+    "usr/lib/xtables/libip6t_SNPT.so",
+    "usr/lib/xtables/libip6t_ah.so",
+    "usr/lib/xtables/libip6t_dst.so",
+    "usr/lib/xtables/libip6t_eui64.so",
+    "usr/lib/xtables/libip6t_frag.so",
+    "usr/lib/xtables/libip6t_hbh.so",
+    "usr/lib/xtables/libip6t_hl.so",
+    "usr/lib/xtables/libip6t_icmp6.so",
+    "usr/lib/xtables/libip6t_ipv6header.so",
+    "usr/lib/xtables/libip6t_mh.so",
+    "usr/lib/xtables/libip6t_rt.so",
+    "usr/lib/xtables/libip6t_srh.so",
+    "usr/lib/xtables/libipt_CLUSTERIP.so",
+    "usr/lib/xtables/libipt_ECN.so",
+    "usr/lib/xtables/libipt_NETMAP.so",
+    "usr/lib/xtables/libipt_REJECT.so",
+    "usr/lib/xtables/libipt_TTL.so",
+    "usr/lib/xtables/libipt_ULOG.so",
+    "usr/lib/xtables/libipt_ah.so",
+    "usr/lib/xtables/libipt_icmp.so",
+    "usr/lib/xtables/libipt_realm.so",
+    "usr/lib/xtables/libipt_ttl.so",
+    "usr/lib/xtables/libxt_AUDIT.so",
+    "usr/lib/xtables/libxt_CHECKSUM.so",
+    "usr/lib/xtables/libxt_CLASSIFY.so",
+    "usr/lib/xtables/libxt_CONNMARK.so",
+    "usr/lib/xtables/libxt_CONNSECMARK.so",
+    "usr/lib/xtables/libxt_CT.so",
+    "usr/lib/xtables/libxt_DSCP.so",
+    "usr/lib/xtables/libxt_HMARK.so",
+    "usr/lib/xtables/libxt_IDLETIMER.so",
+    "usr/lib/xtables/libxt_LED.so",
+    "usr/lib/xtables/libxt_LOG.so",
+    "usr/lib/xtables/libxt_MARK.so",
+    "usr/lib/xtables/libxt_NAT.so",
+    "usr/lib/xtables/libxt_NFLOG.so",
+    "usr/lib/xtables/libxt_NFQUEUE.so",
+    "usr/lib/xtables/libxt_RATEEST.so",
+    "usr/lib/xtables/libxt_SECMARK.so",
+    "usr/lib/xtables/libxt_SET.so",
+    "usr/lib/xtables/libxt_SYNPROXY.so",
+    "usr/lib/xtables/libxt_TCPMSS.so",
+    "usr/lib/xtables/libxt_TCPOPTSTRIP.so",
+    "usr/lib/xtables/libxt_TEE.so",
+    "usr/lib/xtables/libxt_TOS.so",
+    "usr/lib/xtables/libxt_TPROXY.so",
+    "usr/lib/xtables/libxt_TRACE.so",
+    "usr/lib/xtables/libxt_addrtype.so",
+    "usr/lib/xtables/libxt_bpf.so",
+    "usr/lib/xtables/libxt_cgroup.so",
+    "usr/lib/xtables/libxt_cluster.so",
+    "usr/lib/xtables/libxt_comment.so",
+    "usr/lib/xtables/libxt_connbytes.so",
+    "usr/lib/xtables/libxt_connlimit.so",
+    "usr/lib/xtables/libxt_connmark.so",
+    "usr/lib/xtables/libxt_conntrack.so",
+    "usr/lib/xtables/libxt_cpu.so",
+    "usr/lib/xtables/libxt_dccp.so",
+    "usr/lib/xtables/libxt_devgroup.so",
+    "usr/lib/xtables/libxt_dscp.so",
+    "usr/lib/xtables/libxt_ecn.so",
+    "usr/lib/xtables/libxt_esp.so",
+    "usr/lib/xtables/libxt_hashlimit.so",
+    "usr/lib/xtables/libxt_helper.so",
+    "usr/lib/xtables/libxt_ipcomp.so",
+    "usr/lib/xtables/libxt_iprange.so",
+    "usr/lib/xtables/libxt_ipvs.so",
+    "usr/lib/xtables/libxt_length.so",
+    "usr/lib/xtables/libxt_limit.so",
+    "usr/lib/xtables/libxt_mac.so",
+    "usr/lib/xtables/libxt_mark.so",
+    "usr/lib/xtables/libxt_multiport.so",
+    "usr/lib/xtables/libxt_nfacct.so",
+    "usr/lib/xtables/libxt_osf.so",
+    "usr/lib/xtables/libxt_owner.so",
+    "usr/lib/xtables/libxt_physdev.so",
+    "usr/lib/xtables/libxt_pkttype.so",
+    "usr/lib/xtables/libxt_policy.so",
+    "usr/lib/xtables/libxt_quota.so",
+    "usr/lib/xtables/libxt_rateest.so",
+    "usr/lib/xtables/libxt_recent.so",
+    "usr/lib/xtables/libxt_rpfilter.so",
+    "usr/lib/xtables/libxt_sctp.so",
+    "usr/lib/xtables/libxt_set.so",
+    "usr/lib/xtables/libxt_socket.so",
+    "usr/lib/xtables/libxt_standard.so",
+    "usr/lib/xtables/libxt_statistic.so",
+    "usr/lib/xtables/libxt_string.so",
+    "usr/lib/xtables/libxt_tcp.so",
+    "usr/lib/xtables/libxt_tcpmss.so",
+    "usr/lib/xtables/libxt_time.so",
+    "usr/lib/xtables/libxt_tos.so",
+    "usr/lib/xtables/libxt_u32.so",
+    "usr/lib/xtables/libxt_udp.so",
+    "usr/libexec/git-core/git-http-fetch",
+    "usr/libexec/git-core/git-http-push",
+    "usr/libexec/git-core/git-remote-http",
+    "usr/libexec/git-core/git-sh-i18n--envsubst",
+    "usr/sbin/addpart",
+    "usr/sbin/delpart",
+    "usr/sbin/ldattach",
+    "usr/sbin/mount.fuse3",
+    "usr/sbin/readprofile",
+    "usr/sbin/resizepart",
+    "usr/sbin/rtcwake",
+    "usr/sbin/sshd",
+    "usr/sbin/xtables-nft-multi",
+    "usr/bin/buildctl",
+    "usr/bin/buildkit-cni-bridge",
+    "usr/bin/buildkit-cni-firewall",
+    "usr/bin/buildkit-cni-host-local",
+    "usr/bin/buildkit-cni-loopback",
+    "usr/bin/buildkit-qemu-aarch64",
+    "usr/bin/buildkit-qemu-arm",
+    "usr/bin/buildkit-qemu-i386",
+    "usr/bin/buildkit-qemu-ppc64le",
+    "usr/bin/buildkit-qemu-riscv64",
+    "usr/bin/buildkit-qemu-s390x",
+    "usr/bin/buildkit-runc",
+    "usr/bin/buildkitd"
+  ],
+  "nodes": {
+    "bin/busybox": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "bin/getopt": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "bin/ionice": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "bin/more": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "bin/mountpoint": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libmount.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libmount.so.1": [
+          "MOUNT_2.24",
+          "MOUNT_2.19"
+        ]
+      },
+      "providedVersions": []
+    },
+    "bin/rev": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "lib/ld-musl-x86_64.so.1": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libc.musl-x86_64.so.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/apk": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libapk.so.3.0.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/blkdiscard": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libblkid.so.1": [
+          "BLKID_2.17",
+          "BLKID_2.15"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/blockdev": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/fdisk": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libfdisk.so.1",
+        "libsmartcols.so.1",
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.41",
+          "SMARTCOLS_2.25"
+        ],
+        "libfdisk.so.1": [
+          "FDISK_2.38",
+          "FDISK_2_41",
+          "FDISK_2.40",
+          "FDISK_2.28",
+          "FDISK_2.30",
+          "FDISK_2.32",
+          "FDISK_2.31",
+          "FDISK_2.36",
+          "FDISK_2.33",
+          "FDISK_2.27",
+          "FDISK_2.29",
+          "FDISK_2.26"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/findfs": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libblkid.so.1": [
+          "BLKID_2.15"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/fsck": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libmount.so.1",
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libblkid.so.1": [
+          "BLKID_1.0",
+          "BLKID_2.17"
+        ],
+        "libmount.so.1": [
+          "MOUNT_2_38",
+          "MOUNT_2.24",
+          "MOUNT_2_39",
+          "MOUNT_2.20",
+          "MOUNT_2.19",
+          "MOUNT_2.21"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/hwclock": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/mkswap": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libuuid.so.1",
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libuuid.so.1": [
+          "UUID_1.0"
+        ],
+        "libblkid.so.1": [
+          "BLKID_2.17",
+          "BLKID_2.15",
+          "BLKID_2.21"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/pivot_root": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/swapoff": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libmount.so.1",
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libblkid.so.1": [
+          "BLKID_1.0",
+          "BLKID_2.15",
+          "BLKID_2.17"
+        ],
+        "libmount.so.1": [
+          "MOUNT_2.21",
+          "MOUNT_2.24",
+          "MOUNT_2.22",
+          "MOUNT_2.19"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/swapon": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libblkid.so.1",
+        "libmount.so.1",
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libblkid.so.1": [
+          "BLKID_2.15",
+          "BLKID_2.17"
+        ],
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.25"
+        ],
+        "libmount.so.1": [
+          "MOUNT_2.21",
+          "MOUNT_2.24",
+          "MOUNT_2.22",
+          "MOUNT_2.20",
+          "MOUNT_2.19"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/switch_root": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/cal": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/eject": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libmount.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libmount.so.1": [
+          "MOUNT_2.24",
+          "MOUNT_2.19"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/fallocate": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/getconf": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/getent": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/iconv": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/ipcrm": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/ipcs": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/mesg": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/nsenter": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/renice": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/scanelf": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/setsid": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/ssl_client": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ],
+        "libssl.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/unshare": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/engines-3/afalg.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/engines-3/capi.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/engines-3/loader_attic.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.3",
+          "OPENSSL_3.2.0",
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/engines-3/padlock.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/libapk.so.3.0.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libapk.so.3.0.0",
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ],
+        "libssl.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/libcrypto.so.3": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libcrypto.so.3",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libcrypto.so.3",
+        "OPENSSL_3.0.0",
+        "OPENSSL_3.0.3",
+        "OPENSSL_3.0.8",
+        "OPENSSL_3.0.9",
+        "OPENSSL_3.1.0",
+        "OPENSSL_3.2.0",
+        "OPENSSL_3.3.0",
+        "OPENSSL_3.4.0",
+        "OPENSSL_3.5.0"
+      ]
+    },
+    "usr/lib/libssl.so.3": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libssl.so.3",
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.3.0",
+          "OPENSSL_3.4.0",
+          "OPENSSL_3.0.3",
+          "OPENSSL_3.2.0",
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": [
+        "libssl.so.3",
+        "OPENSSL_3.0.0",
+        "OPENSSL_3.2.0",
+        "OPENSSL_3.3.0",
+        "OPENSSL_3.4.0",
+        "OPENSSL_3.5.0"
+      ]
+    },
+    "usr/lib/libz.so.1.3.2": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libz.so.1",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libz.so.1",
+        "ZLIB_1.2.0",
+        "ZLIB_1.2.0.2",
+        "ZLIB_1.2.0.8",
+        "ZLIB_1.2.2",
+        "ZLIB_1.2.2.3",
+        "ZLIB_1.2.2.4",
+        "ZLIB_1.2.3.3",
+        "ZLIB_1.2.3.4",
+        "ZLIB_1.2.3.5",
+        "ZLIB_1.2.5.1",
+        "ZLIB_1.2.5.2",
+        "ZLIB_1.2.7.1",
+        "ZLIB_1.2.9",
+        "ZLIB_1.2.12",
+        "ZLIB_1.3.1.2",
+        "ZLIB_1.3.2"
+      ]
+    },
+    "usr/lib/ossl-modules/legacy.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.3",
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/sbin/rfkill": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "bin/lsfd": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.41",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.39",
+          "SMARTCOLS_2.40",
+          "SMARTCOLS_2.29",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "bin/pipesz": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "bin/wdctl": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/blkpr": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/blkzone": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/chcpu": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/ctrlaltdel": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/fsck.cramfs": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/fsck.minix": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/fsfreeze": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/mkfs": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/mkfs.bfs": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/mkfs.cramfs": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/mkfs.minix": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "sbin/swaplabel": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libblkid.so.1",
+        "libuuid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libuuid.so.1": [
+          "UUID_1.0"
+        ],
+        "libblkid.so.1": [
+          "BLKID_2.15",
+          "BLKID_2.17"
+        ]
+      },
+      "providedVersions": []
+    },
+    "sbin/zramctl": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/bits": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/chmem": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/choom": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/chrt": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/colcrt": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/colrm": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/column": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.38",
+          "SMARTCOLS_2.30",
+          "SMARTCOLS_2.29",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.31",
+          "SMARTCOLS_2.39",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/coresched": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/econftool": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libeconf.so.0",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libeconf.so.0": [
+          "LIBECONF_0.7",
+          "LIBECONF_0.6",
+          "LIBECONF_ALPHA",
+          "LIBECONF_0.2",
+          "LIBECONF_0.4"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/enosys": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/exch": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/fadvise": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/fincore": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/fusermount3": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/git": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.2",
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/git-shell": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/hardlink": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/ipcmk": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/irqtop": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.41",
+          "SMARTCOLS_2.28",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25",
+          "SMARTCOLS_2.33"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/isosize": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/look": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/lsclocks": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.41",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/lsipc": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.38",
+          "SMARTCOLS_2.41",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/lsirq": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/lslocks": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libmount.so.1",
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libmount.so.1": [
+          "MOUNT_2.19",
+          "MOUNT_2.24",
+          "MOUNT_2.22"
+        ],
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25",
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.29"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/lsmem": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/lsns": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libmount.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libmount.so.1": [
+          "MOUNT_2.19"
+        ],
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.39",
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.40",
+          "SMARTCOLS_2.25",
+          "SMARTCOLS_2.33",
+          "SMARTCOLS_2.29"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/lzmadec": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "liblzma.so.5",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/lzmainfo": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "liblzma.so.5",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/namei": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/openssl": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libssl.so.3": [
+          "OPENSSL_3.4.0",
+          "OPENSSL_3.2.0",
+          "OPENSSL_3.0.0"
+        ],
+        "libcrypto.so.3": [
+          "OPENSSL_3.3.0",
+          "OPENSSL_3.0.3",
+          "OPENSSL_3.5.0",
+          "OPENSSL_3.0.9",
+          "OPENSSL_3.2.0",
+          "OPENSSL_3.4.0",
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/pigz": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.5.1",
+          "ZLIB_1.2.0.8",
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/prlimit": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/rename": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/scp": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/script": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/scriptlive": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/scriptreplay": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/setarch": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/setpgid": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/setterm": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/sftp": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libedit.so.0",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/ssh": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/ssh-add": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/ssh-agent": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/ssh-keygen": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/ssh-keyscan": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/ssh-pkcs11-helper": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/taskset": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/uclampset": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/ul": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/utmpdump": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/uuidparse": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libuuid.so.1",
+        "libsmartcols.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libuuid.so.1": [
+          "UUID_1.0"
+        ],
+        "libsmartcols.so.1": [
+          "SMARTCOLS_2.27",
+          "SMARTCOLS_2.25"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/waitpid": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/wall": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libutmps.so.0.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/whereis": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/xz": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "liblzma.so.5",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/xzdec": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "liblzma.so.5",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libblkid.so.1.1.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libeconf.so.0",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libblkid.so.1",
+      "requiredVersions": {
+        "libeconf.so.0": [
+          "LIBECONF_0.6",
+          "LIBECONF_0.2"
+        ]
+      },
+      "providedVersions": [
+        "libblkid.so.1",
+        "BLKID_1.0",
+        "BLKID_2.15",
+        "BLKID_2.17",
+        "BLKID_2.18",
+        "BLKID_2.20",
+        "BLKID_2.21",
+        "BLKID_2.23",
+        "BLKID_2.25",
+        "BLKID_2.30",
+        "BLKID_2_31",
+        "BLKID_2_36",
+        "BLKID_2_37",
+        "BLKID_2_39",
+        "BLKID_2_40"
+      ]
+    },
+    "usr/lib/libbrotlicommon.so.1.2.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libbrotlicommon.so.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libbrotlidec.so.1.2.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libbrotlicommon.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libbrotlidec.so.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libbrotlienc.so.1.2.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libbrotlicommon.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libbrotlienc.so.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libcares.so.2.19.7": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libcares.so.2",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libcurl.so.4.8.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libcares.so.2",
+        "libnghttp2.so.14",
+        "libidn2.so.0",
+        "libpsl.so.5",
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libzstd.so.1",
+        "libbrotlidec.so.1",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libcurl.so.4",
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.3.4"
+        ],
+        "libidn2.so.0": [
+          "IDN2_0.0.0"
+        ],
+        "libssl.so.3": [
+          "OPENSSL_3.2.0",
+          "OPENSSL_3.0.0"
+        ],
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/libeconf.so.0.8.3": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libeconf.so.0",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libeconf.so.0",
+        "LIBECONF_0.2",
+        "LIBECONF_ALPHA",
+        "LIBECONF_0.3",
+        "LIBECONF_0.4",
+        "LIBECONF_0.5",
+        "LIBECONF_0.6",
+        "LIBECONF_0.7",
+        "LIBECONF_0.8"
+      ]
+    },
+    "usr/lib/libedit.so.0.0.76": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libncursesw.so.6",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libedit.so.0",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libexpat.so.1.12.5": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libexpat.so.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libfdisk.so.1.1.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libuuid.so.1",
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libfdisk.so.1",
+      "requiredVersions": {
+        "libuuid.so.1": [
+          "UUID_1.0"
+        ],
+        "libblkid.so.1": [
+          "BLKID_2.30",
+          "BLKID_2_40",
+          "BLKID_2.15",
+          "BLKID_2.17"
+        ]
+      },
+      "providedVersions": [
+        "libfdisk.so.1",
+        "FDISK_2.26",
+        "FDISK_2.27",
+        "FDISK_2.28",
+        "FDISK_2.29",
+        "FDISK_2.30",
+        "FDISK_2.31",
+        "FDISK_2.32",
+        "FDISK_2.33",
+        "FDISK_2.35",
+        "FDISK_2.36",
+        "FDISK_2.38",
+        "FDISK_2.40",
+        "FDISK_2_41"
+      ]
+    },
+    "usr/lib/libfuse3.so.3.18.3": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libfuse3.so.4",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libfuse3.so.4",
+        "FUSE_3.0",
+        "FUSE_3.1",
+        "FUSE_3.2",
+        "FUSE_3.3",
+        "FUSE_3.4",
+        "FUSE_3.7",
+        "FUSE_3.12",
+        "FUSE_3.17",
+        "FUSE_3.17.3",
+        "FUSE_3.18"
+      ]
+    },
+    "usr/lib/libidn2.so.0.4.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libunistring.so.5",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libidn2.so.0",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libidn2.so.0",
+        "IDN2_0.0.0",
+        "IDN2_2.1.0",
+        "IDN2_2.3.5"
+      ]
+    },
+    "usr/lib/liblzma.so.5.8.4": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "liblzma.so.5",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libmnl.so.0.2.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libmnl.so.0",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libmnl.so.0",
+        "LIBMNL_1.0",
+        "LIBMNL_1.1",
+        "LIBMNL_1.2"
+      ]
+    },
+    "usr/lib/libmount.so.1.1.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libblkid.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libmount.so.1",
+      "requiredVersions": {
+        "libblkid.so.1": [
+          "BLKID_2.15",
+          "BLKID_1.0",
+          "BLKID_2.17"
+        ]
+      },
+      "providedVersions": [
+        "libmount.so.1",
+        "MOUNT_2.19",
+        "MOUNT_2.20",
+        "MOUNT_2.21",
+        "MOUNT_2.22",
+        "MOUNT_2.23",
+        "MOUNT_2.24",
+        "MOUNT_2.25",
+        "MOUNT_2.26",
+        "MOUNT_2.28",
+        "MOUNT_2.30",
+        "MOUNT_2.33",
+        "MOUNT_2.34",
+        "MOUNT_2_35",
+        "MOUNT_2_37",
+        "MOUNT_2_38",
+        "MOUNT_2_39",
+        "MOUNT_2_40",
+        "MOUNT_2_41"
+      ]
+    },
+    "usr/lib/libncursesw.so.6.5": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libncursesw.so.6",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libnftnl.so.11.6.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libmnl.so.0",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libnftnl.so.11",
+      "requiredVersions": {
+        "libmnl.so.0": [
+          "LIBMNL_1.0"
+        ]
+      },
+      "providedVersions": [
+        "libnftnl.so.11",
+        "LIBNFTNL_11",
+        "LIBNFTNL_12",
+        "LIBNFTNL_13",
+        "LIBNFTNL_14",
+        "LIBNFTNL_15",
+        "LIBNFTNL_16",
+        "LIBNFTNL_17"
+      ]
+    },
+    "usr/lib/libnghttp2.so.14.29.4": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libnghttp2.so.14",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libpcre2-8.so.0.16.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libpcre2-8.so.0",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libpcre2-posix.so.3.0.8": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libpcre2-8.so.0",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libpcre2-posix.so.3",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libpsl.so.5.3.5": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libidn2.so.0",
+        "libunistring.so.5",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libpsl.so.5",
+      "requiredVersions": {
+        "libidn2.so.0": [
+          "IDN2_0.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/libskarnet.so.2.14.4.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [
+        "/usr/lib"
+      ],
+      "soname": "libskarnet.so.2.14",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libsmartcols.so.1.1.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libsmartcols.so.1",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libsmartcols.so.1",
+        "SMARTCOLS_2.25",
+        "SMARTCOLS_2.27",
+        "SMARTCOLS_2.28",
+        "SMARTCOLS_2.29",
+        "SMARTCOLS_2.30",
+        "SMARTCOLS_2.31",
+        "SMARTCOLS_2.33",
+        "SMARTCOLS_2.34",
+        "SMARTCOLS_2.35",
+        "SMARTCOLS_2.38",
+        "SMARTCOLS_2.39",
+        "SMARTCOLS_2.40",
+        "SMARTCOLS_2.41"
+      ]
+    },
+    "usr/lib/libunistring.so.5.2.1": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libunistring.so.5",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libutmps.so.0.1.3.1": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libskarnet.so.2.14",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [
+        "/usr/lib"
+      ],
+      "soname": "libutmps.so.0.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libuuid.so.1.3.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libuuid.so.1",
+      "requiredVersions": {},
+      "providedVersions": [
+        "libuuid.so.1",
+        "UUID_1.0",
+        "UUID_2.20",
+        "UUID_2.31",
+        "UUID_2.36",
+        "UUID_2.40",
+        "UUID_2.41",
+        "UUIDD_PRIVATE"
+      ]
+    },
+    "usr/lib/libxtables.so.12.7.0": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libxtables.so.12",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/libzstd.so.1.5.7": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": "libzstd.so.1",
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/ssh/sftp-server": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/ssh/ssh-pkcs11-helper": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/ssh/sshd-auth": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/ssh/sshd-session": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libarpt_mangle.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_802_3.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_among.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_arp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_arpreply.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_dnat.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_ip.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_ip6.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_log.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_mark.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_mark_m.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_nflog.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_pkttype.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_redirect.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_snat.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_stp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libebt_vlan.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_DNPT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_HL.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_NETMAP.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_REJECT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_SNPT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_ah.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_dst.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_eui64.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_frag.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_hbh.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_hl.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_icmp6.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_ipv6header.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_mh.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_rt.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libip6t_srh.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_CLUSTERIP.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_ECN.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_NETMAP.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_REJECT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_TTL.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_ULOG.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_ah.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_icmp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_realm.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libipt_ttl.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_AUDIT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_CHECKSUM.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_CLASSIFY.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_CONNMARK.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_CONNSECMARK.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_CT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_DSCP.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_HMARK.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_IDLETIMER.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_LED.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_LOG.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_MARK.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_NAT.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_NFLOG.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_NFQUEUE.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_RATEEST.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_SECMARK.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_SET.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_SYNPROXY.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_TCPMSS.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_TCPOPTSTRIP.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_TEE.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_TOS.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_TPROXY.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_TRACE.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_addrtype.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_bpf.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_cgroup.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_cluster.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_comment.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_connbytes.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_connlimit.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_connmark.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_conntrack.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_cpu.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_dccp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_devgroup.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_dscp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_ecn.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_esp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_hashlimit.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_helper.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_ipcomp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_iprange.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_ipvs.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_length.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_limit.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_mac.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_mark.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_multiport.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_nfacct.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_osf.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_owner.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_physdev.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_pkttype.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_policy.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_quota.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_rateest.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_recent.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_rpfilter.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_sctp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_set.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_socket.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_standard.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_statistic.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_string.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_tcp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_tcpmss.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_time.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_tos.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_u32.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/lib/xtables/libxt_udp.so": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [
+        "libxtables.so.12",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/libexec/git-core/git-http-fetch": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcurl.so.4",
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/libexec/git-core/git-http-push": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcurl.so.4",
+        "libexpat.so.1",
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/libexec/git-core/git-remote-http": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcurl.so.4",
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/libexec/git-core/git-sh-i18n--envsubst": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libz.so.1": [
+          "ZLIB_1.2.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/sbin/addpart": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/sbin/delpart": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/sbin/ldattach": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/sbin/mount.fuse3": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libfuse3.so.4",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libfuse3.so.4": [
+          "FUSE_3.3"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/sbin/readprofile": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/sbin/resizepart": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/sbin/rtcwake": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/sbin/sshd": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libcrypto.so.3",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libcrypto.so.3": [
+          "OPENSSL_3.0.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/sbin/xtables-nft-multi": {
+      "machine": "amd64",
+      "interpreter": "/lib/ld-musl-x86_64.so.1",
+      "needed": [
+        "libxtables.so.12",
+        "libmnl.so.0",
+        "libnftnl.so.11",
+        "libc.musl-x86_64.so.1"
+      ],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {
+        "libnftnl.so.11": [
+          "LIBNFTNL_13",
+          "LIBNFTNL_12",
+          "LIBNFTNL_11"
+        ],
+        "libmnl.so.0": [
+          "LIBMNL_1.0"
+        ]
+      },
+      "providedVersions": []
+    },
+    "usr/bin/buildctl": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-cni-bridge": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-cni-firewall": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-cni-host-local": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-cni-loopback": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-qemu-aarch64": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-qemu-arm": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-qemu-i386": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-qemu-ppc64le": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-qemu-riscv64": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-qemu-s390x": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkit-runc": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    },
+    "usr/bin/buildkitd": {
+      "machine": "amd64",
+      "interpreter": null,
+      "needed": [],
+      "rpath": [],
+      "runpath": [],
+      "soname": null,
+      "requiredVersions": {},
+      "providedVersions": []
+    }
+  },
+  "errors": [],
+  "scope": "Static ELF/interpreter/DT_NEEDED/symbol-version closure only; no Linux dlopen, CPU, image codec, TLS/DNS or runtime execution proof"
+}

@@ -1,0 +1,122 @@
+Browser tab: 5, Title: "GitHub Apps", URL: "https://github.com/joserubiobejarano/Ornigami/settings/installations".
+0 AXWebArea GitHub Apps, URL: github.com/joserubiobejarano/Ornigami/settings/installations
+	1 container
+		2 link Description: Skip to content, Value: github.com/joserubiobejarano/Ornigami/settings/installations#start-of-content
+		3 container Global navigation menu
+			4 pop up button Open menu
+			5 link Description: Homepage ( g then d ), Value: github.com/
+			6 container Breadcrumbs
+				7 content list
+					8 container
+						9 link Description: joserubiobejarano, Value: github.com/joserubiobejarano
+					10 container
+						11 link Description: Ornigami, Value: github.com/joserubiobejarano/Ornigami
+						12 pop up button (collapsed) Switch repository ( alt shift r ), Secondary Actions: Expand
+			13 button Open quick search dialog, type / to search
+				14 text Type 
+				15 text /
+				16 text  to search
+			17 link Description: Chat with Copilot, Value: github.com/copilot
+			18 pop up button (collapsed) Description: Open Copilot…, Secondary Actions: Expand
+			19 pop up button (collapsed) Create new..., Secondary Actions: Expand
+			20 link Description: All issues, Value: github.com/issues
+			21 link Description: All pull requests, Value: github.com/pulls
+			22 link Description: All repositories, Value: github.com/repos
+			23 pop up button Open user navigation menu
+				24 image Jose Rubio
+			25 heading Repository navigation, Value: 2
+				26 text Repository navigation
+			27 container Repository
+				28 content list
+					29 link Description: Code, Value: github.com/joserubiobejarano/Ornigami
+					30 link Description: Issues, Value: github.com/joserubiobejarano/Ornigami/issues
+					31 link Description: Pull requests, Value: github.com/joserubiobejarano/Ornigami/pulls
+					32 link Description: Actions, Value: github.com/joserubiobejarano/Ornigami/actions
+					33 link Description: Projects, Value: github.com/joserubiobejarano/Ornigami/projects
+					34 link Description: Wiki, Value: github.com/joserubiobejarano/Ornigami/wiki
+					35 link Description: Security and quality, Value: github.com/joserubiobejarano/Ornigami/security
+					36 link Description: Insights, Value: github.com/joserubiobejarano/Ornigami/pulse
+					37 link Description: Settings, Value: github.com/joserubiobejarano/Ornigami/settings
+	38 container repo-content-pjax-container
+		39 heading Settings: joserubiobejarano/Ornigami, Value: 1
+			40 text Settings: joserubiobejarano/Ornigami
+		41 container General settings
+			42 content list
+				43 link Description: General, Value: github.com/joserubiobejarano/Ornigami/settings, ID: item-58e53647-f9d0-4683-9b2c-8c8bfdedf946
+				44 container
+					45 heading Access, Value: 2, ID: heading-title-beb5229a-fbbd-40ba-be1f-e141c4bcafce
+						46 text Access
+					47 content list Access, ID: group-85450163-6316-4cbb-ae2b-5a05b7a5c570
+						48 link Description: Collaborators, Value: github.com/joserubiobejarano/Ornigami/settings/access, ID: item-77a26a8f-5647-4071-b2e2-b47e3dc6f852
+						49 button (collapsed) Moderation, ID: item-d442b27c-193d-4943-a7ef-8d6a866b69da, Secondary Actions: Expand
+				50 container
+					51 heading Code, planning, and automation, Value: 2, ID: heading-title-56123c2b-9d50-474d-b356-eaa357d6d272
+						52 text Code, planning, and automation
+					53 content list Code, planning, and automation, ID: group-df5551e8-75f8-46ff-953b-073e17dc4d21
+						54 button (collapsed) Rulesets, ID: repo_rules, Secondary Actions: Expand
+						55 link Description: Branches, Value: github.com/joserubiobejarano/Ornigami/settings/branches, ID: item-64fdb88d-d1e6-4783-9c00-c7bccc256253
+						56 link Description: Tags, Value: github.com/joserubiobejarano/Ornigami/settings/tag_protection, ID: item-c1bcb9e2-3200-40ef-ab63-1aa8d12e4171
+						57 button (collapsed) Actions, ID: item-95ed4560-28ae-4921-90b9-6f4fd7d51680, Secondary Actions: Expand
+						58 link Description: Webhooks, Value: github.com/joserubiobejarano/Ornigami/settings/hooks, ID: item-72c36e00-74c0-4dc4-bb39-0e11b90f2e5b
+						59 button (collapsed) Copilot, ID: item-696999e4-c2b0-4d3d-9418-ef57655af7a7, Secondary Actions: Expand
+						60 button (collapsed) Planning, ID: repo_planning, Secondary Actions: Expand
+						61 link Description: Environments, Value: github.com/joserubiobejarano/Ornigami/settings/environments, ID: item-d11e4151-0b03-4376-8650-50d2548c1bb0
+						62 link Description: Codespaces, Value: github.com/joserubiobejarano/Ornigami/settings/codespaces, ID: item-9c60b96d-5e54-448f-98c2-7825389e9615
+						63 link Description: Pages, Value: github.com/joserubiobejarano/Ornigami/settings/pages, ID: item-649eca64-aef5-49a4-9f68-962d03b34b05
+				64 container
+					65 heading Security and quality, Value: 2, ID: heading-title-6677470f-7b52-4d2f-95ab-413242d937e0
+						66 text Security and quality
+					67 content list Security and quality, ID: group-d7096d8a-d1f1-42e3-935a-0b6883e27cf6
+						68 link Description: Advanced Security, Value: github.com/joserubiobejarano/Ornigami/settings/security_analysis, ID: item-735f437c-1bf3-4066-868f-1785843b4951
+						69 link Description: Deploy keys, Value: github.com/joserubiobejarano/Ornigami/settings/keys, ID: item-d21eb4a1-84fd-4483-8eba-b3c1b29a0b90
+						70 button (collapsed) Secrets and variables, ID: item-a05fc9ab-810b-41f6-aef3-d387c78e3fca, Secondary Actions: Expand
+				71 container
+					72 heading Integrations, Value: 2, ID: heading-title-1260a6be-e113-4f8a-b1b8-ea55c604a475
+						73 text Integrations
+					74 content list Integrations, ID: group-ef35e562-f6e4-4864-8c6a-6dd2ad905313
+						75 link Description: GitHub Apps, Value: github.com/joserubiobejarano/Ornigami/settings/installations, ID: item-a55b69ae-9997-4445-aa04-39fe97b6cd41
+		76 heading Installed GitHub Apps, Value: 3
+			77 text Installed GitHub Apps
+		78 text GitHub Apps augment and extend your workflows on GitHub with commercial, open source, and homegrown tools.
+		79 content list
+			80 container
+				81 image coderabbitai
+				82 text coderabbitai Developed by 
+				83 link Description: coderabbitai, Value: github.com/coderabbitai
+				84 button (disabled) Loading ...
+					85 text Loading
+					86 text ...
+			87 container
+				88 image Netlify
+				89 text Netlify Developed by 
+				90 link Description: netlify, Value: github.com/netlify
+				91 button (disabled) Loading ...
+					92 text Loading
+					93 text ...
+			94 container
+				95 image Vercel
+				96 text Vercel Developed by 
+				97 link Description: vercel, Value: github.com/vercel
+				98 button (disabled) Loading ...
+					99 text Loading
+					100 text ...
+	101 container
+		102 heading Footer, Value: 2
+			103 text Footer
+		104 link Description: GitHub Homepage, Value: github.com/
+		105 text © 2026 GitHub, Inc.
+		106 container Footer
+			107 heading Footer navigation, Value: 3, ID: sr-footer-heading
+				108 text Footer navigation
+			109 content list Footer navigation
+				110 link Description: Terms, Value: docs.github.com/site-policy/github-terms/github-terms-of-service
+				111 link Description: Privacy, Value: docs.github.com/site-policy/privacy-policies/github-privacy-statement
+				112 link Description: Security, Value: github.com/security
+				113 link Description: Status, Value: githubstatus.com/
+				114 link Description: Community, Value: github.community/
+				115 link Description: Docs, Value: docs.github.com/
+				116 link Description: Contact, Value: support.github.com/?tags=dotcom-footer
+				117 button Manage cookies
+				118 button Do not share my personal information
+
+The focused UI element is 0 AXWebArea GitHub Apps, URL: github.com/joserubiobejarano/Ornigami/settings/installations

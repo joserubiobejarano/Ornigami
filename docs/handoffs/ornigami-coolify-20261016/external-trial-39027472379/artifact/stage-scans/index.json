@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "sourceSha": "5d1659d6fcce05be476d6bd8ab1932f9448db031",
+  "expectedStages": [
+    "original-base",
+    "original-runtime-base",
+    "build-base",
+    "deps",
+    "builder",
+    "prod-deps",
+    "runner",
+    "buildkit",
+    "dockerfile-frontend"
+  ],
+  "stages": [
+    {
+      "stage": "original-base",
+      "result": "failed",
+      "startedAt": "2026-10-17T11:07:43.973Z",
+      "reference": "gcr.io/distroless/nodejs22-debian13@sha256:b4b14a0dec7ab24661758de61f452cc1bed82619b8cf744000f2aae05c22aeb5",
+      "preexistingImage": false,
+      "imageId": "sha256:bccd7d5c6c7e9a762de640b034567d1e49ca6f99901149d6229f9fade37dd842",
+      "ownedImage": true,
+      "archiveSha256": "b6e9ab10895117c43a1f3508705b1ed1833ccf665ddb6651dfb099dc4e7e209c",
+      "archiveBytes": 155540480,
+      "scanError": "sudo exit=1 signal=",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/original-base/scan/index.json'",
+      "finishedAt": "2026-10-17T11:07:54.863Z"
+    },
+    {
+      "stage": "original-runtime-base",
+      "result": "failed",
+      "startedAt": "2026-10-17T11:07:54.876Z",
+      "reference": "gcr.io/distroless/nodejs22-debian13@sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c",
+      "preexistingImage": false,
+      "imageId": "sha256:d094b1aa3d90097a21276aa79ae72f3ddd0a946ee116f80debe5cd6c82450320",
+      "ownedImage": true,
+      "archiveSha256": "0b53fad354bc4ec9c8ac1458482b7289152c753ede2222c16097a67d3c349cf1",
+      "archiveBytes": 154163712,
+      "scanError": "sudo exit=1 signal=",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/original-runtime-base/scan/index.json'",
+      "finishedAt": "2026-10-17T11:08:02.532Z"
+    },
+    {
+      "stage": "build-base",
+      "result": "skipped",
+      "reason": "phase did not produce a receipt"
+    },
+    {
+      "stage": "deps",
+      "result": "skipped",
+      "reason": "phase did not produce a receipt"
+    },
+    {
+      "stage": "builder",
+      "result": "skipped",
+      "reason": "phase did not produce a receipt"
+    },
+    {
+      "stage": "prod-deps",
+      "result": "skipped",
+      "reason": "phase did not produce a receipt"
+    },
+    {
+      "stage": "runner",
+      "result": "skipped",
+      "reason": "phase did not produce a receipt"
+    },
+    {
+      "stage": "buildkit",
+      "result": "failed",
+      "startedAt": "2026-10-17T11:08:02.545Z",
+      "reference": "moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+      "preexistingImage": false,
+      "imageId": "sha256:27933730df224df80c41f4e5a9b33fa78831a79fd31903df3bb7deb49363422f",
+      "ownedImage": true,
+      "archiveSha256": "88c01a6a0540a086d491dd551a889200547608a0079ce6e1545ce3168102a319",
+      "archiveBytes": 249874944,
+      "scanError": "sudo exit=1 signal=",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/buildkit/scan/index.json'",
+      "finishedAt": "2026-10-17T11:08:11.431Z"
+    },
+    {
+      "stage": "dockerfile-frontend",
+      "result": "failed",
+      "startedAt": "2026-10-17T11:08:11.452Z",
+      "reference": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+      "preexistingImage": false,
+      "imageId": "sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4",
+      "ownedImage": true,
+      "archiveSha256": "a6653cc208736f83f93e5b7ea69ae9f6979bc46f93bc1660b4f54a2d8bebe822",
+      "archiveBytes": 23787520,
+      "scanError": "sudo exit=1 signal=",
+      "error": "ENOENT: no such file or directory, open '/home/runner/work/_temp/ornigami-evidence/stage-scans/dockerfile-frontend/scan/index.json'",
+      "finishedAt": "2026-10-17T11:08:13.616Z"
+    }
+  ],
+  "result": "failed"
+}

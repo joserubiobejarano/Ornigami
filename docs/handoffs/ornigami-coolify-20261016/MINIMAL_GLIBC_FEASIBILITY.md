@@ -1,5 +1,7 @@
 # Minimal Debian 13/glibc feasibility — 17 October 2026
 
+Latest result: [one authorized minimal glibc Linux trial completed with failure before compilation](./MINIMAL_GLIBC_LINUX_TRIAL.md). Fresh admission/publication passed; DB time admission prevented vulnerability scans and no app image/build/runtime validation occurred. The trial and custody approval are consumed. All historical highs remain unresolved; no retry is approved. Preparation and earlier admission checkpoints below retain their original scope.
+
 Subsequent status: the owner authorized this exact trial, but [fresh admission stopped before either push because the private Coolify dashboard was unreachable](./MINIMAL_GLIBC_ADMISSION.md). The proposal/approval language below records the earlier preparation checkpoint. No trial has started or consumed the one-run authorization.
 
 **Implemented and committed locally; no full build, cold installation, push, external trial, registry publication, VPS operation, deployment or provider activation occurred.** Existing deployment holds were left unchanged, not freshly queried; they must be freshly proven before any future publication. QR staging was untouched. No custody acknowledgment was performed. Framework adoption and maintenance ownership remain unaccepted.

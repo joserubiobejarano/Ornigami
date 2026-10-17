@@ -1,0 +1,12 @@
+{
+  "downloadedAt": "2026-10-17T11:13:07.164Z",
+  "source": "Finished GitHub run/attempt logs, after custody and cleanup",
+  "rawLogZip": {
+    "bytes": 37260,
+    "sha256": "4b417c2ede7e1664819a2fc6dfb1ec2a33a8f80f90d0919104aa47477a604286",
+    "location": ".local/minimal-glibc-live-5d1659-20261017/run-logs.zip"
+  },
+  "rawTextSha256": "8fefe7aa064df41e580955065b2046c9ecfac50e34ba2750447757b3edbb4854",
+  "sanitization": "GitHub masks run token; owner email replaced if present. Billing receipt excludes unrelated spend.",
+  "artifact": "Exact original zip preserved unchanged; extracted artifact original bytes and manifest preserved."
+}
