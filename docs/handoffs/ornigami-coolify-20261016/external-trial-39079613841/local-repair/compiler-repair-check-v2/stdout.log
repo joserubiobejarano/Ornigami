@@ -1,0 +1,262 @@
+TAP version 13
+# Subtest: bounded ET_REL parser reports valid amd64 section, symbol, and relocation tables
+ok 1 - bounded ET_REL parser reports valid amd64 section, symbol, and relocation tables
+  ---
+  duration_ms: 3.5557
+  type: 'test'
+  ...
+# Subtest: ET_REL parser rejects invalid object headers and foreign architectures
+ok 2 - ET_REL parser rejects invalid object headers and foreign architectures
+  ---
+  duration_ms: 1.2207
+  type: 'test'
+  ...
+# Subtest: ET_REL parser rejects invalid section headers and string tables
+ok 3 - ET_REL parser rejects invalid section headers and string tables
+  ---
+  duration_ms: 1.993
+  type: 'test'
+  ...
+# Subtest: ET_REL parser rejects malformed symbol and relocation tables
+ok 4 - ET_REL parser rejects malformed symbol and relocation tables
+  ---
+  duration_ms: 1.4853
+  type: 'test'
+  ...
+# Subtest: ET_REL parser validates compressed debug sections against their logical size
+ok 5 - ET_REL parser validates compressed debug sections against their logical size
+  ---
+  duration_ms: 5.4502
+  type: 'test'
+  ...
+# Subtest: compiler archive classifier admits only matching compiler object locations
+ok 6 - compiler archive classifier admits only matching compiler object locations
+  ---
+  duration_ms: 2.1625
+  type: 'test'
+  ...
+# Subtest: all nine distinct parent/intermediate/final/tool roles are required independently
+ok 7 - all nine distinct parent/intermediate/final/tool roles are required independently
+  ---
+  duration_ms: 2.2827
+  type: 'test'
+  ...
+# Subtest: cached target export rejects a started uncached RUN instead of retrying compilation
+ok 8 - cached target export rejects a started uncached RUN instead of retrying compilation
+  ---
+  duration_ms: 205.6615
+  type: 'test'
+  ...
+# Subtest: work deadline cannot be missing, exhausted or extended by an invalid value
+ok 9 - work deadline cannot be missing, exhausted or extended by an invalid value
+  ---
+  duration_ms: 0.5245
+  type: 'test'
+  ...
+# Subtest: final observer enforces original limits and OOM counters; pressure is not headroom
+ok 10 - final observer enforces original limits and OOM counters; pressure is not headroom
+  ---
+  duration_ms: 0.3278
+  type: 'test'
+  ...
+# Subtest: streamed tar inventory hashes file bytes and retains ELF without extracting host paths
+ok 11 - streamed tar inventory hashes file bytes and retains ELF without extracting host paths
+  ---
+  duration_ms: 218.6474
+  type: 'test'
+  ...
+# Subtest: path traversal, malformed headers and hidden trailing payload are refused
+ok 12 - path traversal, malformed headers and hidden trailing payload are refused
+  ---
+  duration_ms: 1.6025
+  type: 'test'
+  ...
+# Subtest: whiteouts remove prior layer content but preserve new same-layer entries
+ok 13 - whiteouts remove prior layer content but preserve new same-layer entries
+  ---
+  duration_ms: 0.4673
+  type: 'test'
+  ...
+# Subtest: virtual image symlinks stay in image namespace and cycles cannot resolve
+ok 14 - virtual image symlinks stay in image namespace and cycles cannot resolve
+  ---
+  duration_ms: 1.0152
+  type: 'test'
+  ...
+# Subtest: wrong architecture, truncated ELF and missing native providers fail compatibility
+ok 15 - wrong architecture, truncated ELF and missing native providers fail compatibility
+  ---
+  duration_ms: 0.5316
+  type: 'test'
+  ...
+# Subtest: DT_NEEDED providers must resolve through real search paths and supply exact symbol versions
+ok 16 - DT_NEEDED providers must resolve through real search paths and supply exact symbol versions
+  ---
+  duration_ms: 2.3114
+  type: 'test'
+  ...
+# Subtest: a missing dynamic interpreter fails even if every needed library is present
+ok 17 - a missing dynamic interpreter fails even if every needed library is present
+  ---
+  duration_ms: 0.4508
+  type: 'test'
+  ...
+# Subtest: Docker archive layer identity binds exact static filesystem
+ok 18 - Docker archive layer identity binds exact static filesystem
+  ---
+  duration_ms: 34.7259
+  type: 'test'
+  ...
+# Subtest: Docker archive layer identity mismatch fails
+ok 19 - Docker archive layer identity mismatch fails
+  ---
+  duration_ms: 24.6404
+  type: 'test'
+  ...
+# Subtest: reviewed actual recipe pins eight binaries and compiler/runtime roles
+ok 20 - reviewed actual recipe pins eight binaries and compiler/runtime roles
+  ---
+  duration_ms: 4.7569
+  type: 'test'
+  ...
+# Subtest: contract rejects tampered module bytes even when outer recipe is untouched
+ok 21 - contract rejects tampered module bytes even when outer recipe is untouched
+  ---
+  duration_ms: 99.737
+  type: 'test'
+  ...
+# Subtest: contract rejects a source/package substitution despite recomputed contract hash
+ok 22 - contract rejects a source/package substitution despite recomputed contract hash
+  ---
+  duration_ms: 96.7189
+  type: 'test'
+  ...
+# Subtest: output binds stopped compiler, complete bootstrap scans, source and OCI content
+ok 23 - output binds stopped compiler, complete bootstrap scans, source and OCI content
+  ---
+  duration_ms: 124.9492
+  type: 'test'
+  ...
+# Subtest: output rejects malformed source/run before loading evidence
+ok 24 - output rejects malformed source/run before loading evidence
+  ---
+  duration_ms: 0.4799
+  type: 'test'
+  ...
+# Subtest: SDK data classification is restricted to supplemental compiler roles
+ok 25 - SDK data classification is restricted to supplemental compiler roles
+  ---
+  duration_ms: 0.2619
+  type: 'test'
+  ...
+# Subtest: compatibility probe exercises external frontend and a network-free native RUN
+ok 26 - compatibility probe exercises external frontend and a network-free native RUN
+  ---
+  duration_ms: 0.447
+  type: 'test'
+  ...
+# Subtest: bounded input download refuses content drift and existing destination
+ok 27 - bounded input download refuses content drift and existing destination
+  ---
+  duration_ms: 277.6105
+  type: 'test'
+  ...
+# Subtest: all nine stages retain complete inventories and explicit unchanged scan coverage
+ok 28 - all nine stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 179.8433
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 29 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 144.6675
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 30 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 377.1657
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 31 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 144.8099
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 32 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 136.1727
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 33 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 137.9586
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 34 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 49.5427
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 35 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 72.6506
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 36 - historical output destination is never overwritten
+  ---
+  duration_ms: 51.7584
+  type: 'test'
+  ...
+# Subtest: replacing admitted metadata with expired metadata fails frozen identity before scans
+ok 37 - replacing admitted metadata with expired metadata fails frozen identity before scans
+  ---
+  duration_ms: 54.7077
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 38 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 145.3682
+  type: 'test'
+  ...
+# Subtest: scanner image identity mismatch is not accepted as a clean report
+ok 39 - scanner image identity mismatch is not accepted as a clean report
+  ---
+  duration_ms: 145.3044
+  type: 'test'
+  ...
+# Subtest: explicit single-stage collection remains partial and cannot claim aggregate coverage
+ok 40 - explicit single-stage collection remains partial and cannot claim aggregate coverage
+  ---
+  duration_ms: 67.8033
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+ok 41 - bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+  ---
+  duration_ms: 128.7878
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+ok 42 - bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+  ---
+  duration_ms: 127.0204
+  type: 'test'
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 42
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2318.7548
