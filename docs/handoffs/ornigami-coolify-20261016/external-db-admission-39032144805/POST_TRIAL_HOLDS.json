@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-17T12:23:25.137Z",
+  "result": "passed",
+  "requestRuns": 1,
+  "attempt": 1,
+  "candidateRuns": 0,
+  "requestDeployments": 0,
+  "remote": "97fc2b86f2efe55683242e8b20a38a79fdebfb1e\trefs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "vercel": {
+    "production": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+    "hasLinkProperty": false,
+    "uiExplicitlyDisconnected": true,
+    "activeOperations": 0,
+    "latestDeployments": [
+      {
+        "id": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+        "readyState": "READY",
+        "target": "production"
+      },
+      {
+        "id": "dpl_2YnaauwVvEDHy7uV1okbN3GPtF1y",
+        "readyState": "READY",
+        "target": "production"
+      }
+    ]
+  },
+  "coolify": "exact Ornigami environment empty",
+  "netlify": "no builds; repositories held unlinked",
+  "changes": "none; QR/shared VPS/deployments/providers untouched; no hold restored"
+}

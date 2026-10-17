@@ -1,0 +1,640 @@
+- status
+- link "Skip to main content ↓":
+  - /url: "#main"
+  - generic: Skip to main content
+  - text: ↓
+- link "Netlify":
+  - /url: /teams/joserubiobejarano
+  - img "Netlify"
+- button "Collapse team navigation" [pressed]:
+  - img "Toggle Navigation"
+- button "Search Netlify":
+- list "Breadcrumb":
+  - link "joserubiobejarano’s team":
+    - /url: /teams/joserubiobejarano/overview
+    - generic: J
+    - generic: joserubiobejarano’s team
+  - button "Switch teams. Open menu":
+    - generic: Switch teams
+- navigation "Team navigation":
+  - list:
+    - link "Projects":
+      - /url: /teams/joserubiobejarano/projects
+      - generic: Projects
+    - link "Builds":
+      - /url: /teams/joserubiobejarano/builds
+      - generic: Builds
+    - link "Usage & billing":
+      - /url: /teams/joserubiobejarano/billing
+      - generic: Usage & billing
+    - link "Team settings":
+      - /url: /teams/joserubiobejarano/settings
+      - generic: Team settings
+    - link "Visual editor dashboard":
+      - /url: https://create.netlify.com/team/6ad256b0275be4684c3ea1ae
+      - generic: Visual editor dashboard
+- link "Upgrade":
+  - /url: /teams/joserubiobejarano/billing/pricing
+- button "User joserubiobejarano@gmail.com. Open menu":
+  - generic "joserubiobejarano@gmail.com"
+  - generic: joserubiobejarano@gmail.com
+- list:
+  - link "Projects":
+    - /url: /teams/joserubiobejarano/projects
+  - link "elastic-bartik-99fd7d":
+    - /url: /projects/elastic-bartik-99fd7d
+    - generic: elastic-bartik-99fd7d
+  - button "Switch projects. Open menu":
+    - generic: Switch projects
+  - text: →
+- combobox "News. Open menu":
+  - button "News. Open menu":
+    - generic: News
+- combobox "Support. Open menu":
+  - button "Support. Open menu":
+    - generic: Support
+- main "Developer settings":
+  - link "Skip to content":
+    - /url: "#content"
+  - link "Project overview":
+    - /url: /projects/elastic-bartik-99fd7d
+    - text: Project overview
+  - heading "Project configuration" [level=1]
+  - navigation "Project configuration":
+    - link "General":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/general
+    - link "Environment variables":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/env
+    - link "Developer settings":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings
+    - link "Notifications":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/notifications
+    - link "Security":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/security
+    - link "Configuration":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/project
+    - link "Visual editor":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/visual-editor
+    - link "Emails":
+      - /url: /projects/elastic-bartik-99fd7d/configuration/emails
+  - navigation "Sections":
+    - list:
+      - link "Repository":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#repository
+      - link "Deploy status badge":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#deploy-status-badge
+      - link "Automatic deploy deletion":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#automatic-deploy-deletion
+      - link "Snippet injection":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#snippet-injection
+      - link "Pretty URLs":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#pretty-urls
+      - link "Split Testing":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#split-testing
+      - link "Build plugins":
+        - /url: /projects/elastic-bartik-99fd7d/configuration/developer-settings#build-plugins
+  - article:
+    - heading "Developer settings" [level=1]
+    - heading "Continuous deployment" [level=2]:
+      - link "Continuous deployment":
+        - /url: "#continuous-deployment"
+    - paragraph: Configuration for continuous deployment from a Git repository
+    - region "Repository":
+      - heading "Repository" [level=3]:
+        - link "Repository":
+          - /url: "#repository"
+      - generic: Continuous deployment works by connecting a Git repository to your Netlify project and keeping the two in sync. When you push to Git, we run your build tool of choice on our servers and deploy the result.
+      - term: "Current repository:"
+      - definition: Not linked
+      - paragraph:
+        - link "Learn more about continuous deployment in the docs →":
+          - /url: https://docs.netlify.com/site-deploys/create-deploys/#deploy-with-git
+      - button "Link repository. Open menu":
+        - text: Link repository
+    - region "Deploy status badge":
+      - heading "Deploy status badge" [level=3]:
+        - link "Deploy status badge":
+          - /url: "#deploy-status-badge"
+      - paragraph:
+        - text: This image automatically updates to reflect the current state of your latest production deploy. To create a status badge for a deployed branch, add the
+        - code: "?branch="
+        - text: query parameter to the badge URL. You can use the markdown snippet below to add it to your project README.
+      - img "Deploy status badge"
+      - code: "[![Netlify Status](https://api.netlify.com/api/v1/badges/a3cf6adc-8d6b-4592-b07c-85bcc7a61628/deploy-status)](https://app.netlify.com/projects/elastic-bartik-99fd7d/deploys)"
+      - button "Copy Status badge markdown snippet to clipboard":
+      - paragraph:
+        - link "Learn more about status badges in the docs →":
+          - /url: https://docs.netlify.com/monitor-sites/status-badges/
+    - region "Automatic deploy deletion":
+      - img "Locked"
+      - heading "Automatic deploy deletion" [level=3]:
+        - link "Automatic deploy deletion":
+          - /url: "#automatic-deploy-deletion"
+      - generic: Control when deploys are automatically deleted. Netlify will not automatically delete the deploy currently published on your project, nor the most recent successful deploy from a Git branch.
+      - term: "Delete deploys after:"
+      - definition: 30 days
+      - paragraph:
+        - link "Learn more about deploy deletion in the docs →":
+          - /url: https://docs.netlify.com/site-deploys/manage-deploys/#automatic-deploy-deletion
+      - link "Upgrade to customize automatic deploy deletion":
+        - /url: /teams/joserubiobejarano/billing/payment?plan=enterprise
+        - text: Upgrade to customize
+        - generic: automatic deploy deletion
+    - heading "Post processing" [level=2]:
+      - link "Post processing":
+        - /url: "#post-processing"
+    - paragraph: Control the post processing and optimizations Netlify can do for you
+    - region "Snippet injection":
+      - heading "Snippet injection" [level=3]:
+        - link "Snippet injection":
+          - /url: "#snippet-injection"
+      - generic: Inject analytics or other scripts into the HTML of your project.
+      - paragraph:
+        - link "Learn more about snippet injection in the docs →":
+          - /url: https://docs.netlify.com/site-deploys/post-processing/snippet-injection/
+      - button "Add snippet"
+    - region "Pretty URLs":
+      - heading "Pretty URLs" [level=3]:
+        - link "Pretty URLs":
+          - /url: "#pretty-urls"
+      - paragraph:
+        - strong: Pretty URLs are enabled. ✓
+      - paragraph:
+        - link "Learn more about Pretty URLs in the docs →":
+          - /url: https://docs.netlify.com/site-deploys/post-processing/
+      - button "Configure"
+    - heading "Split Testing Beta" [level=2]:
+      - link "Split Testing Beta":
+        - /url: "#split-testing"
+        - text: Split Testing
+        - superscript: Beta
+    - paragraph: Simple yet powerful split testing at the edge node. Test alternate designs or gradually roll out features by serving multiple Branch Deploys and distributing them across users.
+    - paragraph:
+      - link "Learn more about Split Testing in the docs →":
+        - /url: https://docs.netlify.com/site-deploys/split-testing/
+    - heading "Get started with Split Testing" [level=3]
+    - status:
+      - paragraph:
+        - text: This feature requires connecting a Git repository for
+        - link "continuous deployment →":
+          - /url: https://docs.netlify.com/site-deploys/create-deploys/#deploy-with-git
+    - link "Connect to repository":
+      - /url: /projects/elastic-bartik-99fd7d/link
+    - heading "Build plugins" [level=2]:
+      - link "Build plugins":
+        - /url: "#build-plugins"
+    - paragraph: Discover and configure build plugins
+    - paragraph:
+      - link "Learn more about build plugins in the docs →":
+        - /url: https://docs.netlify.com/integrations/build-plugins/
+    - generic: Search build plugins
+    - searchbox "Search build plugins"
+    - button "Search":
+      - img "Search"
+    - button "All. Open menu":
+      - text: All
+    - heading "21YunBox" [level=3]
+    - generic: by 21YunBox
+    - paragraph: Deploy to China straight from your Netlify Dashboard
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@21yunbox/netlify-plugin-21yunbox-deploy-to-china-cdn/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Algolia Crawler" [level=3]
+    - generic: by Netlify
+    - paragraph: Automatically crawls your website and generates an Algolia Search index.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@algolia/netlify-plugin-crawler/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Visual Diff (Applitools)" [level=3]
+    - generic: by Applitools
+    - paragraph: Require visual changes on production to be manually approved before going live!
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-visual-diff/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Auth0 extension" [level=3]
+    - generic: by Netlify
+    - paragraph: Connect your Netlify account to Auth0
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@netlify/auth0/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Cloudflare cache purge" [level=3]
+    - generic: by Chris Muktar
+    - paragraph: Clear Cloudflare cache when build completes.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-purge-cloudflare-on-deploy/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Cloudinary" [level=3]
+    - generic: by Cloudinary
+    - paragraph: Automatically optimize your Netlify site images and deliver them in modern formats with Cloudinary.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-cloudinary/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "CommandBar" [level=3]
+    - generic: by CommandBar
+    - paragraph: CommandBar plugin for websites deployed to Netlify.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@commandbar/netlify-plugin-commandbar/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Cypress" [level=3]
+    - generic: by Cypress
+    - paragraph: Runs Cypress end-to-end tests after Netlify builds the site.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-cypress/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "DebugBear web performance" [level=3]
+    - generic: by DebugBear
+    - paragraph: Run tests on DebugBear to see how your deployments affect page performance and Lighthouse scores
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-build-plugin-debugbear/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Formspree" [level=3]
+    - generic: by Formspree
+    - paragraph: Deploy React forms with formspree.json
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-formspree/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Ghost Inspector" [level=3]
+    - generic: by Ghost Inspector
+    - paragraph: Run Ghost Inspector automated browser tests on your Netlify deploys.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-ghost-inspector/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Inngest" [level=3]
+    - generic: by Inngest
+    - paragraph: Automatically deploy Inngest functions to Netlify’s platform.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-inngest/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Lighthouse" [level=3]
+    - generic: by Netlify
+    - paragraph: Automatically run a Lighthouse audit on your website after every build.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@netlify/plugin-lighthouse/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "a11y" [level=3]
+    - generic: by sw-yx
+    - paragraph: Build a more accessible web! Run your critical pages through pa11y and fail build if accessibility failures are found.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-a11y/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Airbrake" [level=3]
+    - generic: by Bharathvaj Ganesan
+    - paragraph: Automatically notifies Airbrake of new site deploys.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@bharathvaj/netlify-plugin-airbrake/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "AMP server-side rendering" [level=3]
+    - generic: by Martin Bean
+    - paragraph: A Netlify plugin to server-side render your AMP pages.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-amp-server-side-rendering/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Build Logger" [level=3]
+    - generic: by Amar Parmar
+    - paragraph: Send build events to a logging service.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-build-logger/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Cecil cache" [level=3]
+    - generic: by Arnaud Ligny
+    - paragraph: Persist the Cecil cache between Netlify builds.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-cecil-cache/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Checklinks" [level=3]
+    - generic: by Peter Müller
+    - paragraph: Checklinks helps you keep all your asset references correct and avoid embarrassing broken links to your internal pages, or even to external pages you link out to.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-checklinks/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Chromium" [level=3]
+    - generic: by soofka
+    - paragraph: Installs Chromium (installs NPM Chromium package and sets environment variable to location of binaries); useful for other tools requiring Chromium to run, e.g. Lighthouse CI.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-chromium/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Contextual ENV" [level=3]
+    - generic: by Chris Ball
+    - paragraph: Replaces ENV vars with ENV vars that are prefixed/suffixed with the context or branch name.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-contextual-env/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Dareboost" [level=3]
+    - generic: by Boris Schapira
+    - paragraph: After a successful build, create an event in your Dareboost monitoring. If you have subscribed to API credits, you can automatically launch analyses.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-build-plugin-dareboost/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Debug cache" [level=3]
+    - generic: by Netlify
+    - paragraph: Debug & verify the contents of your Netlify build cache.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-debug-cache/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Fetch feeds" [level=3]
+    - generic: by Phil Hawksworth
+    - paragraph: A Netlify plugin to fetch and cache content from remote feeds including RSS and JSON.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-fetch-feeds/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Flutter SDK" [level=3]
+    - generic: by Ben Evans
+    - paragraph: Install the Flutter SDK for Building and Deploying Flutter Web Apps.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-flutter/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Ghost Markdown" [level=3]
+    - generic: by David Darnes
+    - paragraph: Generates posts, pages, tag pages and author pages from a Ghost publication as markdown files, using the Ghost Content API.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-ghost-markdown/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Gridsome Cache" [level=3]
+    - generic: by Eric McCormick
+    - paragraph: Persist the Gridsome cache between Netlify builds for huge speed improvements!
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-gridsome-cache/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Hashfiles" [level=3]
+    - generic: by Peter Müller
+    - paragraph: Hashfiles sets you up with an optimal caching strategy for static sites, where static assets across pages are cached for as long as possible in the visitors browser and never have to be re-requested.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-hashfiles/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "HTML Validate" [level=3]
+    - generic: by Oliver Roick
+    - paragraph: Validate HTML generated by your build.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-html-validate/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Hugo Cache Resources" [level=3]
+    - generic: by Cassius
+    - paragraph: Persist Hugo resources folder between Netlify builds for huge build speed improvements!
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-hugo-cache-resources/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Image Optim" [level=3]
+    - generic: by Chris Draycott-Wheatley
+    - paragraph: Optimize images as part of your Netlify build process.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-image-optim/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Inline Critical CSS" [level=3]
+    - generic: by Tom Bonnike
+    - paragraph: Automatically extract and inline the critical CSS of your pages in order to render content to the user as fast as possible.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-inline-critical-css/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Inline Functions Environment Variables" [level=3]
+    - generic: by Zhenhua Ben Cao
+    - paragraph: Inline process.env.VARIABLE in netlify functions with netlify build time environment variables.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-inline-functions-env/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Inline Source" [level=3]
+    - generic: by Tom Bonnike
+    - paragraph: Improve your site’s performance by inlining some of your assets/sources, reducing the number of HTTP requests your users need to make.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-inline-source/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Is Website Vulnerable" [level=3]
+    - generic: by Erez Rokah
+    - paragraph: A Netlify plugin that uses Snyk to test for security vulnerabilities in a website's JavaScript libraries.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-is-website-vulnerable/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "JavaScript Obfuscator" [level=3]
+    - generic: by Anish Roy
+    - paragraph: An obfuscator for your JavaScript source code.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-js-obfuscator/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Jekyll Cache" [level=3]
+    - paragraph: Persist the Jekyll cache between Netlify builds.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-jekyll-cache/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Minify HTML" [level=3]
+    - generic: by Phil Hawksworth
+    - paragraph: A plugin to add HTML minification as a post-processing optimisation in Netlify.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-minify-html/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Netlify Bundle ENV" [level=3]
+    - generic: by Hrishikesh Kokate
+    - paragraph: A Netlify Build Plugin to inject environment variables in Netlify Functions during Netlify Builds.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-bundle-env/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "No More 404" [level=3]
+    - generic: by sw-yx
+    - paragraph: Check that you preserve your own internal URL structure between builds, accounting for Netlify Redirects. Don't break the web!
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-no-more-404/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Pushover Notification" [level=3]
+    - generic: by Ashik Nesin
+    - paragraph: Send real time notification to your devices on build success/error via Pushover.net.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-pushover/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Replace" [level=3]
+    - paragraph: Replace ENV variables in your publish directory.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@helloample/netlify-plugin-replace/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Sitemap" [level=3]
+    - generic: by Netlify
+    - paragraph: Automatically generate a sitemap for your website after it finishes building in Netlify.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@netlify/plugin-sitemap/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Skip nx" [level=3]
+    - generic: by Fahd Allebdi
+    - paragraph: Skip not affected apps in a nx monorepo.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-nx-skip-build/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Subfont" [level=3]
+    - generic: by Peter Müller
+    - paragraph: Subfont post-processes your web page to analyse you usage of web fonts, then reworks your webpage to use an optimal font loading strategy for the best performance.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-subfont/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Submit Sitemap" [level=3]
+    - generic: by Cassius
+    - paragraph: Automatically submit your sitemap to Google and Yandex after every production build!
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-submit-sitemap/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Use Env in Runtime" [level=3]
+    - generic: by Ben Lmsc
+    - paragraph: Make some environment variables available only at build time in the runtime of your app.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-use-env-in-runtime/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Webmentions" [level=3]
+    - generic: by Luke Bonaccorsi
+    - paragraph: Automatically discover any webmentions and send them after every production build.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-webmentions/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "New Relic" [level=3]
+    - generic: by Aaron Bassett
+    - paragraph: Automatically notifies New Relic of Netlify build events and installs the New Relic browser agent to monitor your sites.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@newrelic/netlify-plugin/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Nimbella" [level=3]
+    - generic: by Nimbella
+    - paragraph: Nimbella plugin to extend Netlify Sites with stateful and portable serverless APIs.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-nimbella/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "PerfBeacon" [level=3]
+    - generic: by OnlineOrNot
+    - paragraph: Tell PerfBeacon to measure page speed after a successful build.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-build-plugin-perfbeacon/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "PageWatch Audit" [level=3]
+    - generic: by PageWatch
+    - paragraph: Check your site for layout errors, spelling mistakes, broken links and performance issues on every build.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-pagewatch/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "QA Wolf" [level=3]
+    - generic: by QA Wolf
+    - paragraph: Run QA Wolf end-to-end tests on Netlify deployments.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-qawolf/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Sentry" [level=3]
+    - generic: by Sentry
+    - paragraph: The Sentry integration on Netlify helps you quickly identify how code errors and performance issues impact your users.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@sentry/netlify-build-plugin/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Snaplet" [level=3]
+    - generic: by Snaplet
+    - paragraph: Bootstrap preview databases with your deploy previews on Netlify without affecting production.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@snaplet/netlify-preview-database-plugin/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Snyk Security" [level=3]
+    - generic: by Snyk
+    - paragraph: A Snyk Netlify plugin to find and monitor new security vulnerabilities in JavaScript libraries.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-snyk/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Speedcurve" [level=3]
+    - generic: by Andy Davies
+    - paragraph: After a successful build, tell SpeedCurve you've deployed and trigger a round of testing.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-build-plugin-speedcurve/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "StepZen" [level=3]
+    - generic: by StepZen
+    - paragraph: Deploy a StepZen (http://stepzen.com) GraphQL API with any Netlify build.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/netlify-plugin-stepzen/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Strapi" [level=3]
+    - generic: by Strapi
+    - paragraph: Strapi v4 plugin to trigger, monitor, and cancel deployments on one or more Netlify sites
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/strapi-plugin-netlify-deployments/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "TakeShape" [level=3]
+    - generic: by TakeShape
+    - paragraph: Automatically create and configure a TakeShape project for use with your Netlify site.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@takeshape/netlify-plugin-takeshape/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+    - heading "Very Good Security" [level=3]
+    - generic: by Very Good Security
+    - paragraph: Securely collect and use sensitive data without having it ever touch your systems.
+    - link "Enable":
+      - /url: /teams/joserubiobejarano/plugins/@vgs/netlify-plugin-vgs/install?project=elastic-bartik-99fd7d
+    - button "Options. Open menu":
+      - text: Options
+- contentinfo:
+  - navigation:
+    - list "External links":
+      - link "Docs":
+        - /url: https://docs.netlify.com/
+      - link "Pricing":
+        - /url: https://www.netlify.com/pricing/
+      - link "Support":
+        - /url: https://www.netlify.com/support/
+      - link "Blog":
+        - /url: https://www.netlify.com/blog/
+      - link "Changelog":
+        - /url: https://www.netlify.com/changelog/
+      - link "Terms":
+        - /url: https://www.netlify.com/legal/terms-of-use/
+  - paragraph:
+    - text: © 2026
+    - link "Netlify":
+      - /url: https://www.netlify.com
+- region "Notifications alt+T"

@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-17T12:19:20.575Z",
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "result": "candidate published without either marker change; zero candidate runs/deployments after independent observations; provider holds/app environment unchanged",
+  "requestNotPushed": true
+}

@@ -1,0 +1,12 @@
+{
+  "source": "finished job log; produced after immutable artifact",
+  "receipt": {
+    "result": "passed",
+    "removed": "/home/runner/work/_temp/ornigami-db-only-39032144805-1-tVOu4m",
+    "freeBefore": 89993617408,
+    "freeAfter": 92116877312,
+    "existsAfter": false,
+    "at": "2026-10-17T12:21:25.651055+00:00"
+  },
+  "lineSha256": "8e287869f569e11095ebffb2d172d3017462735e7e185f763dc171eaadbd13c6"
+}

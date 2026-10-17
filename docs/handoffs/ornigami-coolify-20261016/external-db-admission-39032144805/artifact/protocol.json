@@ -1,0 +1,8 @@
+{
+  "requestSha": "97fc2b86f2efe55683242e8b20a38a79fdebfb1e",
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "packageLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "workflowBlob": "0c586a048fc3055b675ba9fbf242cf48917f335a",
+  "workflowSha": "97fc2b86f2efe55683242e8b20a38a79fdebfb1e",
+  "workflowRef": "joserubiobejarano/Ornigami/.github/workflows/ornigami-db-admission-only.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016"
+}

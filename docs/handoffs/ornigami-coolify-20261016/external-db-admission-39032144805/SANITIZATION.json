@@ -1,0 +1,5 @@
+{
+  "result": "passed",
+  "check": "No credential/private-key patterns found in local receipts or nested original ZIP contents. API project data projected to non-secret fields; browser checks used public configuration/billing summaries; no secrets/env pages inspected. Original evidence is preserved byte-for-byte.",
+  "source": "run-only authorized receipts; no protected access files copied"
+}

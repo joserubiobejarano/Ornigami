@@ -1,0 +1,118 @@
+{
+  "at": "2026-10-17T12:16:22.291Z",
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "branch": "codex/ornigami-db-admission-only-20261017",
+  "tree": "a11153448904e21c82bea866663dd663f49c0921",
+  "baseSourceSha": "4a555d43e5ae26ca6bdfe229a5215c62577c3077",
+  "parent": "cf30f4ddbf538bd7c836438dea11fcd03f4e146f",
+  "published": false,
+  "requestMarkerIncluded": false,
+  "fullMarkerUnchanged": true,
+  "files": {
+    ".github/workflows/ornigami-image-rehearsal.yml": {
+      "sha256": "cfe3a0766d70e83d2974fab9b748c36ce300177ad0a6a30c24cd80d27595fbe9",
+      "gitBlob": "4da1bd0cb47c82c6d72c66b8aeb682ab7cf93f59",
+      "bytes": 66050
+    },
+    "scripts/framework-prototype/frozen-db-admission.mjs": {
+      "sha256": "eca21565887cdbf39261d50a563651d3fafcef7a26e80af0698a67790fd65fc8",
+      "gitBlob": "720a0f6c8351581f4ee0d93d56c15b8bee2ee2b0",
+      "bytes": 10675
+    },
+    "scripts/framework-prototype/trivy-metadata-contract.json": {
+      "sha256": "d51e94b11d46357ee7c8ce77bfe583729ceac78fd5fbdd4579d7d26d80b0c195",
+      "gitBlob": "980a2348de5aef258cdf436dd78362d55e0a3cdd",
+      "bytes": 3193
+    },
+    "scripts/framework-prototype/scan-image-stages.mjs": {
+      "sha256": "d243da529906dafc5d31e32f5979f2037011385b3cd0791ef384991944921521",
+      "gitBlob": "b3e7432ca5de4116ac1600620568e5b1b802064d",
+      "bytes": 11298
+    },
+    "scripts/framework-prototype/serial-scan-driver.mjs": {
+      "sha256": "d0dc6ee8cb15c0e9068522f495b3512cdc26e7988ff7e55e46caa840079a9455",
+      "gitBlob": "61c0e84bfd6cece7166cf3754362129d3e1c16f4",
+      "bytes": 16195
+    },
+    "Dockerfile": {
+      "sha256": "8ae41b498623c21533aee300f5c74af3c93d36a8d4d2e7a8251a0b6f3565f9d5",
+      "gitBlob": "662d7218e429d3dbc1d856e19bf1ced8498b574e",
+      "bytes": 6209
+    },
+    "package-lock.json": {
+      "sha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+      "gitBlob": "a9db529a0bdb7d4f61776ac9ea55302ea78d1f78",
+      "bytes": 496110
+    },
+    "vendor/framework/next-16.4.2-ornigami-sri.2.tgz": {
+      "sha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+      "gitBlob": "20dd66b5e924a0e0e16181953f2d4f5aa9bdf846",
+      "bytes": 44857205
+    },
+    "scripts/framework-prototype/next-16.4.2-sri.patch": {
+      "sha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+      "gitBlob": "09b0e99ec285c1d30bcb9034397ad5ba416615cf",
+      "bytes": 22865
+    },
+    "vendor/build-tools/npm-11.21.1.tgz": {
+      "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+      "gitBlob": "2ef8673d6f721febd81bbadf07a2ee8a2a297dc1",
+      "bytes": 3329270
+    },
+    ".github/build-requests/ornigami.json": {
+      "sha256": "fede7ba833abd87e813168412a1e798bdd2ac6c480689dd42d7c785c2f00f676",
+      "gitBlob": "9106cae8d5f388ffc5c62fb4ba503c567a0ab52a",
+      "bytes": 153
+    },
+    ".github/workflows/ornigami-db-admission-only.yml": {
+      "sha256": "d9fbe748cd8df38b89d9b177edc62323c720bc92f9a774911e9cb7d3d5c7fdeb",
+      "gitBlob": "0c586a048fc3055b675ba9fbf242cf48917f335a",
+      "bytes": 11617
+    },
+    "scripts/framework-prototype/admission-only.mjs": {
+      "sha256": "97b941309e6d06f7776eb6cd2f7d59c934426e07472564e00463db1f18ee9edc",
+      "gitBlob": "9bad716f73605616789b2236e9856bd9ca780f97",
+      "bytes": 6335
+    },
+    "scripts/framework-prototype/admission-only-worker.mjs": {
+      "sha256": "0c2c8886920e8565a6894e2f5fa96ac0119f6c29c86cf394f1d991b5321b0259",
+      "gitBlob": "66f3aa350643e6142ff9f432d7e4e4e07e94f576",
+      "bytes": 3150
+    },
+    "scripts/framework-prototype/admission-only-bootstrap.sh": {
+      "sha256": "2f8b3babb920973171bc10ef991e5cf987e48e8077e6aafcd96beac4348bc582",
+      "gitBlob": "65c35c6588d8fd7372ba031c5a9cbbc09f84604e",
+      "bytes": 2135
+    },
+    "scripts/framework-prototype/admission-only-capture.py": {
+      "sha256": "3c864f83d48d3218346fa4da9c3ce087da35846ddf48cfad4d30a054b99e1461",
+      "gitBlob": "9c3d6b6bcd7fddea8dd06b33a712885f7c685831",
+      "bytes": 8363
+    },
+    "scripts/framework-prototype/retain-db-admission-evidence.mjs": {
+      "sha256": "4fb9f48c140949d59228153275d63d044af26440bd1717d077446c8616d9df60",
+      "gitBlob": "6623207fcf7a3ea647b679615baec9052afb9e00",
+      "bytes": 1757
+    },
+    "scripts/framework-prototype/DB_ADMISSION_ONLY.md": {
+      "sha256": "ea6f6e442c0e2e7e944f5f999898b47edfeb7f5a66db2ee57e7cb435fe0dbee2",
+      "gitBlob": "4c1b0b02fecb80810b32919ae2aa58f5499c3022",
+      "bytes": 10329
+    },
+    "scripts/framework-prototype/bounded-local.ps1": {
+      "sha256": "b15613195f8bcefb3e84075cda497549c5c61179c84ccfba83293c140a45deaf",
+      "gitBlob": "26cacfca6b07a4358eda889047bd89a65377a52b",
+      "bytes": 6963
+    },
+    "tests/admission-only.test.mjs": {
+      "sha256": "e3ad0a1e86c49f17c4a3b98b11f24b8ce6dc01ba8b6de0e2a968bfd0338cfbd5",
+      "gitBlob": "470fc6b19d413fe415dcdd69e451ebc174e65ec8",
+      "bytes": 18186
+    }
+  },
+  "verifiedFiles": 20,
+  "remoteBefore": "d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba\trefs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "markerChanges": false,
+  "requestPreviewVerified": true,
+  "result": "passed"
+}

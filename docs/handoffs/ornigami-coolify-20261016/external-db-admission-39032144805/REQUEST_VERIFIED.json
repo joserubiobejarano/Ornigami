@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-17T12:19:58.620Z",
+  "requestSha": "97fc2b86f2efe55683242e8b20a38a79fdebfb1e",
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "packageLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+  "workflowBlob": "0c586a048fc3055b675ba9fbf242cf48917f335a",
+  "requestPreviewSha256": "1e2aa1f555db9f6169402de942fc5e134a903aaa364a5b2dc38d5d9a667e151e",
+  "onlyChangedPath": ".github/build-requests/ornigami-db-admission.json",
+  "fullMarkerUnchanged": true,
+  "workflowBlobsMatch": true,
+  "result": "passed"
+}

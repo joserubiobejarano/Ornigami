@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-17T12:17:58.845Z",
+  "result": "passed for exact candidate publication and ONE matching admission-only diagnostic attempt",
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "remoteBefore": "d2bbe3ad0a7eb1019e369d279dfbc1ea7430dfba\trefs/heads/codex/ornigami-sri-local-prototype-f-20261016",
+  "requestPath": ".github/build-requests/ornigami-db-admission.json",
+  "requestPreviewSha256": "1e2aa1f555db9f6169402de942fc5e134a903aaa364a5b2dc38d5d9a667e151e",
+  "workflowSha256": "d9fbe748cd8df38b89d9b177edc62323c720bc92f9a774911e9cb7d3d5c7fdeb",
+  "holds": "All current owner UI/API receipts checked; Vercel Git disconnected, production unchanged, zero active operations; Netlify four sites unlinked/no builds; Ornigami exact Coolify environment empty/no app watcher or operation target; only three known GitHub Apps, CodeRabbit no push subscription, no hooks/Pages; exact source branch trigger exclusions verified.",
+  "capacity": {
+    "plan": "GitHub Free",
+    "minutesUsed": 86,
+    "minutesIncluded": 2000,
+    "actionsStorage": "0.1 GB used/0.5 GB included",
+    "artifactCount": 3,
+    "artifactBytes": 635855,
+    "runner": "standard public ubuntu-24.04 only; no paid/larger fallback",
+    "runnerDisk": "20 GiB reserve remains actual allocated-runner admission; insufficient disk stops before diagnostic"
+  },
+  "changes": "read-only until publication; no hold restoration/shared-host/QR/deployment/provider changes",
+  "custody": "one owner status authorized only after exact artifact/digest/durable download/read-back; completeness independent"
+}

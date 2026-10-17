@@ -1,0 +1,164 @@
+{
+  "runId": "39032144805",
+  "attempt": 1,
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "requestSha": "97fc2b86f2efe55683242e8b20a38a79fdebfb1e",
+  "workflowSha256": "d9fbe748cd8df38b89d9b177edc62323c720bc92f9a774911e9cb7d3d5c7fdeb",
+  "phases": {
+    "download": {
+      "result": "passed",
+      "startedAt": "2026-10-17T12:20:52.563Z",
+      "command": "trivy",
+      "arguments": [
+        "image",
+        "--download-db-only",
+        "--no-progress",
+        "--db-repository",
+        "ghcr.io/aquasecurity/trivy-db:2",
+        "--cache-dir",
+        "/home/runner/work/_temp/ornigami-db-only-39032144805-1-tVOu4m/cache"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "finishedAt": "2026-10-17T12:20:59.034Z"
+    },
+    "admission": {
+      "result": "failed",
+      "startedAt": "2026-10-17T12:20:59.035Z",
+      "errors": [
+        {
+          "code": "NextUpdate-expired"
+        }
+      ],
+      "finishedAt": "2026-10-17T12:21:01.339Z"
+    },
+    "fixtures": {
+      "result": "skipped",
+      "reason": "download or shared admission failed; no dependent work"
+    }
+  },
+  "admissionRejection": {
+    "code": "NextUpdate-expired",
+    "updatedAt": "2026-10-16T01:13:54.947090392Z",
+    "nextUpdate": "2026-10-17T01:13:54.947090202Z",
+    "downloadedAt": "2026-10-17T12:20:59.030530208Z",
+    "actualGuardClock": "2026-10-17T12:21:01.336Z",
+    "expiredByMilliseconds": 40026389,
+    "previousRejectionCause": "not recovered; no retrospective attribution"
+  },
+  "resources": {
+    "result": "passed",
+    "workerWallSeconds": 8.839,
+    "samples": 11,
+    "memoryPeakBytes": 2014834688,
+    "memoryLimitBytes": 2147483648,
+    "swapMaxBytes": 0,
+    "cpuMax": "100000 100000",
+    "heapMiB": 512,
+    "memoryEvents": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "minimumFreeDiskBytes": 89852461056,
+    "cpuStat": "usage_usec 6522566\nuser_usec 5090676\nsystem_usec 1431890\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 77\nnr_throttled 56\nthrottled_usec 1024913\nnr_bursts 0\nburst_usec 0",
+    "compilerHeadroom": "not measured"
+  },
+  "completeness": {
+    "zipDigest": "260a9652c4814e0653ce360abb03211f7b48bbd865e214bbd0ed246bbb9fbc27",
+    "archiveBytes": 9995,
+    "verifiedManifestFiles": 22,
+    "exactFileSet": true,
+    "runnerCapture": {
+      "result": "passed",
+      "errors": [],
+      "at": "2026-10-17T12:21:01.409959+00:00",
+      "custody": "not-assessed"
+    },
+    "custody": "verified independently; does not establish completeness/security"
+  },
+  "custody": {
+    "result": "passed independent of admission/completeness",
+    "artifactId": "12100568577",
+    "archiveBytes": 9995,
+    "sha256": "260a9652c4814e0653ce360abb03211f7b48bbd865e214bbd0ed246bbb9fbc27",
+    "downloadedReadBackAt": "2026-10-17T12:21:15.064Z",
+    "statusCreatedAt": "2026-10-17T12:21:16Z",
+    "owner": "joserubiobejarano",
+    "matchingStatusCount": 1
+  },
+  "cleanup": {
+    "source": "finished job log; produced after immutable artifact",
+    "receipt": {
+      "result": "passed",
+      "removed": "/home/runner/work/_temp/ornigami-db-only-39032144805-1-tVOu4m",
+      "freeBefore": 89993617408,
+      "freeAfter": 92116877312,
+      "existsAfter": false,
+      "at": "2026-10-17T12:21:25.651055+00:00"
+    },
+    "lineSha256": "8e287869f569e11095ebffb2d172d3017462735e7e185f763dc171eaadbd13c6"
+  },
+  "runnerSteps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:20:43Z",
+      "completed_at": "2026-10-17T12:20:44Z"
+    },
+    {
+      "name": "Initialize run-owned evidence",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:20:44Z",
+      "completed_at": "2026-10-17T12:20:44Z"
+    },
+    {
+      "name": "Verify request-only child and exact workflow binding",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:20:44Z",
+      "completed_at": "2026-10-17T12:20:47Z"
+    },
+    {
+      "name": "Bounded pinned tool preparation",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:20:47Z",
+      "completed_at": "2026-10-17T12:20:52Z"
+    },
+    {
+      "name": "One DB download and one shared admission then controlled fixtures",
+      "conclusion": "failure",
+      "started_at": "2026-10-17T12:20:52Z",
+      "completed_at": "2026-10-17T12:21:01Z"
+    },
+    {
+      "name": "Capture complete or explicit failed and skipped evidence",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:21:01Z",
+      "completed_at": "2026-10-17T12:21:01Z"
+    },
+    {
+      "name": "Upload immutable admission evidence",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:21:01Z",
+      "completed_at": "2026-10-17T12:21:02Z"
+    },
+    {
+      "name": "Require owner verified durable custody",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:21:02Z",
+      "completed_at": "2026-10-17T12:21:25Z"
+    },
+    {
+      "name": "Scoped cleanup and finished observations",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:21:25Z",
+      "completed_at": "2026-10-17T12:21:25Z"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success",
+      "started_at": "2026-10-17T12:21:25Z",
+      "completed_at": "2026-10-17T12:21:25Z"
+    }
+  ],
+  "scope": "Exactly one DB invocation; no replacement/retry/scans/install/build/image/registry/VPS/deployment/provider operation. Controlled Linux fixtures skipped after failed shared admission.",
+  "security": "all historical findings unresolved; no image or release acceptance",
+  "authorization": "one trial and one custody acknowledgment consumed; no additional trial authorized"
+}

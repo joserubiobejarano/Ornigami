@@ -1,0 +1,39 @@
+{
+  "sourceSha": "2ae7f60ce8edd1880b24924a0e213f34abd97ed1",
+  "phases": {
+    "download": {
+      "result": "passed",
+      "startedAt": "2026-10-17T12:20:52.563Z",
+      "command": "trivy",
+      "arguments": [
+        "image",
+        "--download-db-only",
+        "--no-progress",
+        "--db-repository",
+        "ghcr.io/aquasecurity/trivy-db:2",
+        "--cache-dir",
+        "/home/runner/work/_temp/ornigami-db-only-39032144805-1-tVOu4m/cache"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "finishedAt": "2026-10-17T12:20:59.034Z"
+    },
+    "admission": {
+      "result": "failed",
+      "startedAt": "2026-10-17T12:20:59.035Z",
+      "errors": [
+        {
+          "code": "NextUpdate-expired"
+        }
+      ],
+      "finishedAt": "2026-10-17T12:21:01.339Z"
+    },
+    "fixtures": {
+      "result": "skipped",
+      "reason": "download or shared admission failed; no dependent work"
+    }
+  },
+  "imageWork": "out-of-scope",
+  "custody": "not-assessed"
+}

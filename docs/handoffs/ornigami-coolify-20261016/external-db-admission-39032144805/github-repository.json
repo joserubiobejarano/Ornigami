@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-17T12:16:11.846Z",
+  "id": 1098540125,
+  "full_name": "joserubiobejarano/Ornigami",
+  "private": false,
+  "default_branch": "main",
+  "permissions": {
+    "admin": true,
+    "maintain": true,
+    "push": true,
+    "triage": true,
+    "pull": true
+  }
+}

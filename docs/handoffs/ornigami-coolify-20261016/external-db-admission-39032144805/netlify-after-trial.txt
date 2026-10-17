@@ -1,0 +1,79 @@
+- status
+- link "Skip to main content ↓":
+  - /url: "#main"
+  - generic: Skip to main content
+  - text: ↓
+- link "Netlify":
+  - /url: /teams/joserubiobejarano
+  - img "Netlify"
+- button "Collapse team navigation":
+  - img "Toggle Navigation"
+- button "Search Netlify… Ctrl K":
+  - generic: Search Netlify…
+  - generic: Ctrl
+  - generic: K
+- list "Breadcrumb":
+  - link "joserubiobejarano’s team":
+    - /url: /teams/joserubiobejarano/overview
+    - generic: J
+    - generic: joserubiobejarano’s team
+  - button "Switch teams. Open menu":
+    - generic: Switch teams
+- navigation "Team navigation":
+  - list:
+    - link "Projects":
+      - /url: /teams/joserubiobejarano/projects
+      - generic: Projects
+    - link "Builds":
+      - /url: /teams/joserubiobejarano/builds
+      - generic: Builds
+    - link "Usage & billing":
+      - /url: /teams/joserubiobejarano/billing
+      - generic: Usage & billing
+    - link "Team settings":
+      - /url: /teams/joserubiobejarano/settings
+      - generic: Team settings
+    - link "Visual editor dashboard":
+      - /url: https://create.netlify.com/team/6ad256b0275be4684c3ea1ae
+      - generic: Visual editor dashboard
+- link "Upgrade":
+  - /url: /teams/joserubiobejarano/billing/pricing
+- button "User joserubiobejarano@gmail.com. Open menu":
+  - generic "joserubiobejarano@gmail.com"
+  - generic: joserubiobejarano@gmail.com
+- combobox "News. Open menu":
+  - button "News. Open menu":
+    - generic: News
+- combobox "Support. Open menu":
+  - button "Support. Open menu":
+    - generic: Support
+- main "Builds":
+  - heading "Builds" [level=1]
+  - paragraph: Keep track of build activity across your whole team.
+  - paragraph: Netlify can automate builds of your project each time you push a change to your Git repo. Once your team starts deploying, you will see a summary of your team activity, a list of deployed builds and their status here.
+  - paragraph: Use the power of deploy previews, staging projects for each branch, and custom webhook integrations—all included with your account.
+  - paragraph:
+    - link "Learn more about builds →":
+      - /url: https://www.netlify.com/products/build
+  - link "New project from Git":
+    - /url: /start
+- contentinfo:
+  - navigation:
+    - list "External links":
+      - link "Docs":
+        - /url: https://docs.netlify.com/
+      - link "Pricing":
+        - /url: https://www.netlify.com/pricing/
+      - link "Support":
+        - /url: https://www.netlify.com/support/
+      - link "Blog":
+        - /url: https://www.netlify.com/blog/
+      - link "Changelog":
+        - /url: https://www.netlify.com/changelog/
+      - link "Terms":
+        - /url: https://www.netlify.com/legal/terms-of-use/
+  - paragraph:
+    - text: © 2026
+    - link "Netlify":
+      - /url: https://www.netlify.com
+- region "Notifications alt+T"

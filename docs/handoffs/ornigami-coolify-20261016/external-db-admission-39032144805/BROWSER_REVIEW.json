@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-17T12:17:26.496Z",
+  "coolify": "Ornigami fictional-staging exact IDs; zero resources, no application watcher/operation target",
+  "vercel": "owner UI explicitly not connected; API production unchanged and zero active operations",
+  "netlify": "four projects each not linked; team build inventory reviewed",
+  "githubApps": "exactly CodeRabbit, Netlify, Vercel",
+  "capacity": "GitHub Free;86/2000 minutes;0.1/0.5 GB Actions storage; public standard runner only",
+  "changes": "read-only; no configuration edits"
+}

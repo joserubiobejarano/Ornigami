@@ -1,0 +1,215 @@
+- link "Skip to content":
+  - /url: "#geist-skip-nav"
+- main:
+  - link "Jose Rubio's projects Hobby":
+    - /url: /jose-rubios-projects-acf385c1
+    - generic: Jose Rubio's projects
+    - generic: Hobby
+  - button:
+  - button "Find F":
+    - generic: Find
+    - generic: F
+  - navigation:
+    - link "Overview":
+      - /url: /jose-rubios-projects-acf385c1/locallift
+      - generic: Overview
+    - link "Deployments":
+      - /url: /jose-rubios-projects-acf385c1/locallift/deployments
+      - generic: Deployments
+    - link "Logs":
+      - /url: /jose-rubios-projects-acf385c1/locallift/logs
+      - generic: Logs
+    - link "Analytics":
+      - /url: /jose-rubios-projects-acf385c1/locallift/analytics
+      - generic: Analytics
+    - link "Speed Insights":
+      - /url: /jose-rubios-projects-acf385c1/locallift/speed-insights
+      - generic: Speed Insights
+    - link "Observability":
+      - /url: /jose-rubios-projects-acf385c1/locallift/observability
+      - generic: Observability
+    - link "Firewall":
+      - /url: /jose-rubios-projects-acf385c1/locallift/firewall
+      - generic: Firewall
+    - link "CDN":
+      - /url: /jose-rubios-projects-acf385c1/locallift/cdn
+      - generic: CDN
+    - separator
+    - link "Environment Variables 9":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/environment-variables
+      - generic: Environment Variables
+      - generic: "9"
+    - link "Domains":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/domains
+      - generic: Domains
+    - link "Connect":
+      - /url: /jose-rubios-projects-acf385c1/locallift/connect
+      - generic: Connect
+    - link "Integrations":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/integrations
+      - generic: Integrations
+    - link "Storage":
+      - /url: /jose-rubios-projects-acf385c1/locallift/stores
+      - generic: Storage
+    - link "Flags":
+      - /url: /jose-rubios-projects-acf385c1/locallift/flags
+      - generic: Flags
+    - link "Agent":
+      - /url: /jose-rubios-projects-acf385c1/locallift/agent
+      - generic: Agent
+    - link "AI Gateway":
+      - /url: /jose-rubios-projects-acf385c1/locallift/ai-gateway
+      - generic: AI Gateway
+    - link "Sandboxes":
+      - /url: /jose-rubios-projects-acf385c1/locallift/sandboxes
+      - generic: Sandboxes
+    - link "Workflows":
+      - /url: /jose-rubios-projects-acf385c1/locallift/workflows
+      - generic: Workflows
+    - link "Images":
+      - /url: /jose-rubios-projects-acf385c1/locallift/images
+      - generic: Images
+    - link "Daemons":
+      - /url: /jose-rubios-projects-acf385c1/locallift/daemons
+      - generic: Daemons
+    - separator
+    - link "Usage":
+      - /url: /jose-rubios-projects-acf385c1/locallift/usage
+      - generic: Usage
+    - link "Support":
+      - /url: /jose-rubios-projects-acf385c1/locallift/support
+      - generic: Support
+    - link "Settings":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings
+      - generic: Settings
+    - button "Settings":
+      - generic: Settings
+    - link "General":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/general
+      - generic: General
+    - link "Build and Deployment":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/build-and-deployment
+      - generic: Build and Deployment
+    - link "Environments":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/environments
+      - generic: Environments
+    - link "Git":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/git
+      - generic: Git
+    - link "Deployment Protection":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/deployment-protection
+      - generic: Deployment Protection
+    - link "Passport":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/passport
+      - generic: Passport
+    - link "Functions":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/functions
+      - generic: Functions
+    - link "Sandboxes":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/sandboxes
+      - generic: Sandboxes
+    - link "Cron Jobs":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/cron-jobs
+      - generic: Cron Jobs
+    - link "Microfrontends":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/microfrontends
+      - generic: Microfrontends
+    - link "Project Members":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/project-members
+      - generic: Project Members
+    - link "Drains":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/drains
+      - generic: Drains
+    - link "Alerts":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/alerts
+      - generic: Alerts
+    - link "Tracing":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/tracing
+      - generic: Tracing
+    - link "Security":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/security
+      - generic: Security
+    - link "Networking":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/networking
+      - generic: Networking
+    - link "Activity":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/activity
+      - generic: Activity
+    - link "Advanced":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings/advanced
+      - generic: Advanced
+  - button "Avatar for joserubiobejarano-6707 joserubiobejarano-6707":
+    - img "Avatar for joserubiobejarano-6707":
+      - img "Avatar for joserubiobejarano-6707"
+    - generic: joserubiobejarano-6707
+  - button "268 unseen notifications":
+  - button:
+  - link "locallift":
+    - /url: /jose-rubios-projects-acf385c1/locallift
+    - generic: locallift
+  - button:
+  - link "Back to team view":
+    - /url: /jose-rubios-projects-acf385c1/~/settings
+  - navigation "Breadcrumb":
+    - link "Project Settings":
+      - /url: /jose-rubios-projects-acf385c1/locallift/settings
+      - generic: Project Settings
+    - generic: Git
+  - button "Vercel Agent is available on Pro":
+    - generic: Agent
+  - heading "Connected Git Repository" [level=4]:
+    - link "Connected Git Repository":
+      - /url: "#connected-git-repository"
+      - generic: Connected Git Repository
+  - paragraph: Seamlessly create Deployments for any commits pushed to your Git repository.
+  - button "Origin":
+    - text: Origin
+  - button "github GitHub":
+    - img "github"
+    - text: GitHub
+  - button "gitlab GitLab":
+    - img "gitlab"
+    - text: GitLab
+  - button "Bitbucket":
+    - text: Bitbucket
+  - link "Manage Login Connections →":
+    - /url: /account/authentication
+  - generic: Toggle Pull Request Comments
+  - generic: Pull Request Comments
+  - generic "Toggle Pull Request Comments":
+    - checkbox "Toggle Pull Request Comments" [checked] [disabled]
+  - generic: Toggle Commit Comments
+  - generic: Commit Comments
+  - generic "Toggle Commit Comments":
+    - checkbox "Toggle Commit Comments" [disabled]
+  - paragraph:
+    - text: Learn more about
+    - link "Vercel for Git":
+      - /url: /docs/git
+      - text: Vercel for Git
+  - heading "Git Large File Storage (LFS)" [level=4]:
+    - link "Git Large File Storage (LFS)":
+      - /url: "#git-large-file-storage-(lfs)"
+      - generic: Git Large File Storage (LFS)
+  - paragraph: Git LFS replaces large files such as audio samples, videos, datasets, and graphics with text pointers inside Git, while storing the file contents on a remote server like GitHub.com or GitHub Enterprise.
+  - generic: Disabled
+  - checkbox "Disabled"
+  - paragraph:
+    - text: Learn more about
+    - link "Git LFS":
+      - /url: /docs/project-configuration/git-settings#git-large-file-storage-lfs
+      - text: Git LFS
+  - button "Save" [disabled]:
+    - generic: Save
+  - heading "Deploy Hooks" [level=4]:
+    - link "Deploy Hooks":
+      - /url: "#deploy-hooks"
+      - generic: Deploy Hooks
+  - paragraph: Deploy hooks are unique URLs that allow you to trigger a deployment of a given branch.
+  - paragraph: This Project is not connected to a Git repository. To be able to set up a Deploy Hook, you need to set up a new connection in the "Connected Git Repository" section above.
+  - paragraph:
+    - text: Learn more about
+    - link "Deploy Hooks":
+      - /url: /docs/deploy-hooks
+      - text: Deploy Hooks
+- alert

@@ -1,0 +1,90 @@
+- banner:
+  - link "Coolify":
+    - /url: /
+    - generic: Coolify
+  - link "v4.4.6":
+    - /url: https://github.com/coollabsio/coolify/releases/tag/v4.4.6
+  - generic "No upgrade available"
+  - button "Root Team":
+    - generic: Root Team
+  - generic: /
+  - button "Ornigami":
+    - generic: Ornigami
+  - generic: /
+  - button "fictional-staging":
+    - generic: fictional-staging
+- navigation:
+  - button "Search Ctrl+K":
+    - generic: Search
+    - generic: Ctrl+K
+  - list:
+    - listitem: Workspace
+    - link "Dashboard":
+      - /url: /
+      - generic: Dashboard
+    - link "Projects":
+      - /url: /projects
+      - generic: Projects
+    - link "Analytics":
+      - /url: http://127.0.0.1:18000/analytics
+      - generic: Analytics
+    - link "Terminal":
+      - /url: http://127.0.0.1:18000/terminal
+      - generic: Terminal
+    - listitem: Infrastructure
+    - link "Servers":
+      - /url: /servers
+      - generic: Servers
+    - link "Sources":
+      - /url: http://127.0.0.1:18000/sources
+      - generic: Sources
+    - link "Destinations":
+      - /url: http://127.0.0.1:18000/destinations
+      - generic: Destinations
+    - link "Registries":
+      - /url: http://127.0.0.1:18000/registries
+      - generic: Registries
+    - link "S3 Storage":
+      - /url: http://127.0.0.1:18000/storages
+      - generic: S3 Storage
+    - link "Shared Variables":
+      - /url: http://127.0.0.1:18000/shared-variables
+      - generic: Shared Variables
+    - listitem: Manage
+    - link "Team":
+      - /url: http://127.0.0.1:18000/team
+      - generic: Team
+    - link "Notifications":
+      - /url: http://127.0.0.1:18000/notifications/email
+      - generic: Notifications
+    - link "Keys & Tokens":
+      - /url: http://127.0.0.1:18000/security/private-key
+      - generic: Keys & Tokens
+    - link "Tags":
+      - /url: http://127.0.0.1:18000/tags
+      - generic: Tags
+    - link "Settings":
+      - /url: http://127.0.0.1:18000/settings
+      - generic: Settings
+  - button "Account menu for qrl-owner":
+    - generic: Q
+    - generic: qrl-owner
+  - button "Toggle sidebar":
+- main:
+  - heading "fictional-staging" [level=1]
+  - paragraph: 0 resources in Ornigami
+  - link "Shared variables for fictional-staging":
+    - /url: http://127.0.0.1:18000/shared-variables/environments/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is
+    - text: Shared variables
+  - link "Open settings for fictional-staging":
+    - /url: http://127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/edit
+    - text: Settings
+  - link "New resource":
+    - /url: http://127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/new
+    - text: New resource
+  - heading "No resources yet" [level=2]
+  - paragraph: Add an application, database, or service to this environment.
+  - link "Add resource":
+    - /url: http://127.0.0.1:18000/project/vqkyv5dpjpjazuknkgyunioi/environment/d9ixeysd9tajcavvibltt3is/new
+    - text: Add resource
+- list

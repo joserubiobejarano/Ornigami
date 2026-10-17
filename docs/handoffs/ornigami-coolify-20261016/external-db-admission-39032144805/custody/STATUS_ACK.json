@@ -1,0 +1,33 @@
+{
+  "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/statuses/97fc2b86f2efe55683242e8b20a38a79fdebfb1e",
+  "avatar_url": "https://avatars.githubusercontent.com/oa/1157143?v=4",
+  "id": 56592353113,
+  "node_id": "SC_kwDOQXpkXc8AAAANLSrHWQ",
+  "state": "success",
+  "description": "artifact=12100568577;sha256=260a9652c4814e0653ce360abb03211f7b48bbd865e214bbd0ed246bbb9fbc27",
+  "target_url": null,
+  "context": "ornigami/evidence-local/39032144805/1",
+  "created_at": "2026-10-17T12:21:16Z",
+  "updated_at": "2026-10-17T12:21:16Z",
+  "creator": {
+    "login": "joserubiobejarano",
+    "id": 54319214,
+    "node_id": "MDQ6VXNlcjU0MzE5MjE0",
+    "avatar_url": "https://avatars.githubusercontent.com/u/54319214?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/joserubiobejarano",
+    "html_url": "https://github.com/joserubiobejarano",
+    "followers_url": "https://api.github.com/users/joserubiobejarano/followers",
+    "following_url": "https://api.github.com/users/joserubiobejarano/following{/other_user}",
+    "gists_url": "https://api.github.com/users/joserubiobejarano/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/joserubiobejarano/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/joserubiobejarano/subscriptions",
+    "organizations_url": "https://api.github.com/users/joserubiobejarano/orgs",
+    "repos_url": "https://api.github.com/users/joserubiobejarano/repos",
+    "events_url": "https://api.github.com/users/joserubiobejarano/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/joserubiobejarano/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  }
+}

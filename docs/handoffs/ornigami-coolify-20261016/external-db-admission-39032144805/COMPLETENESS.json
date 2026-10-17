@@ -1,0 +1,13 @@
+{
+  "zipDigest": "260a9652c4814e0653ce360abb03211f7b48bbd865e214bbd0ed246bbb9fbc27",
+  "archiveBytes": 9995,
+  "verifiedManifestFiles": 22,
+  "exactFileSet": true,
+  "runnerCapture": {
+    "result": "passed",
+    "errors": [],
+    "at": "2026-10-17T12:21:01.409959+00:00",
+    "custody": "not-assessed"
+  },
+  "custody": "verified independently; does not establish completeness/security"
+}

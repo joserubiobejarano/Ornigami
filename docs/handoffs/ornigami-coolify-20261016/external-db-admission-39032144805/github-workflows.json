@@ -1,0 +1,77 @@
+{
+  "total_count": 6,
+  "workflows": [
+    {
+      "id": 334201790,
+      "node_id": "W_kwDOQXpkXc4T64O-",
+      "name": "Quality checks",
+      "path": ".github/workflows/ci.yml",
+      "state": "active",
+      "created_at": "2026-08-14T11:42:10.000+02:00",
+      "updated_at": "2026-08-14T11:42:10.000+02:00",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/workflows/334201790",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/blob/main/.github/workflows/ci.yml",
+      "badge_url": "https://github.com/joserubiobejarano/Ornigami/workflows/Quality%20checks/badge.svg"
+    },
+    {
+      "id": 373650638,
+      "node_id": "W_kwDOQXpkXc4WRXTO",
+      "name": "Cron health monitor",
+      "path": ".github/workflows/cron-health.yml",
+      "state": "active",
+      "created_at": "2026-10-03T05:15:24.000+02:00",
+      "updated_at": "2026-10-03T17:30:05.000+02:00",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/workflows/373650638",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/blob/main/.github/workflows/cron-health.yml",
+      "badge_url": "https://github.com/joserubiobejarano/Ornigami/workflows/Cron%20health%20monitor/badge.svg"
+    },
+    {
+      "id": 331451371,
+      "node_id": "W_kwDOQXpkXc4TwYvr",
+      "name": "cron-review-booster",
+      "path": ".github/workflows/cron-review-booster.yml",
+      "state": "active",
+      "created_at": "2026-08-10T23:37:26.000+02:00",
+      "updated_at": "2026-10-03T17:30:03.000+02:00",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/workflows/331451371",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/blob/main/.github/workflows/cron-review-booster.yml",
+      "badge_url": "https://github.com/joserubiobejarano/Ornigami/workflows/cron-review-booster/badge.svg"
+    },
+    {
+      "id": 331451372,
+      "node_id": "W_kwDOQXpkXc4TwYvs",
+      "name": "cron-review-replies",
+      "path": ".github/workflows/cron-review-replies.yml",
+      "state": "active",
+      "created_at": "2026-08-10T23:37:26.000+02:00",
+      "updated_at": "2026-10-03T17:30:04.000+02:00",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/workflows/331451372",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/blob/main/.github/workflows/cron-review-replies.yml",
+      "badge_url": "https://github.com/joserubiobejarano/Ornigami/workflows/cron-review-replies/badge.svg"
+    },
+    {
+      "id": 386922679,
+      "node_id": "W_kwDOQXpkXc4XD_i3",
+      "name": "Ornigami image build and validation rehearsal",
+      "path": ".github/workflows/ornigami-image-rehearsal.yml",
+      "state": "active",
+      "created_at": "2026-10-16T19:00:34.000+02:00",
+      "updated_at": "2026-10-16T19:00:34.000+02:00",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/workflows/386922679",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/blob/main/.github/workflows/ornigami-image-rehearsal.yml",
+      "badge_url": "https://github.com/joserubiobejarano/Ornigami/workflows/Ornigami%20image%20build%20and%20validation%20rehearsal/badge.svg"
+    },
+    {
+      "id": 332611218,
+      "node_id": "W_kwDOQXpkXc4T0z6S",
+      "name": "Security checks",
+      "path": ".github/workflows/security.yml",
+      "state": "active",
+      "created_at": "2026-08-12T11:10:56.000+02:00",
+      "updated_at": "2026-08-12T11:10:56.000+02:00",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/workflows/332611218",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/blob/main/.github/workflows/security.yml",
+      "badge_url": "https://github.com/joserubiobejarano/Ornigami/workflows/Security%20checks/badge.svg"
+    }
+  ]
+}

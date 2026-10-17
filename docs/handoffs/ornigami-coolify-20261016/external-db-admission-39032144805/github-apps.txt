@@ -1,0 +1,168 @@
+- link "Skip to content":
+  - /url: "#start-of-content"
+- banner "Global navigation menu":
+  - button "Open menu":
+  - link "Homepage (g then d)":
+    - /url: /
+  - navigation "Breadcrumbs":
+    - list:
+      - link "joserubiobejarano":
+        - /url: /joserubiobejarano
+        - generic: joserubiobejarano
+      - link "Ornigami":
+        - /url: /joserubiobejarano/Ornigami
+      - button "Switch repository (alt shift r)":
+  - button "Open quick search dialog, type / to search":
+    - text: Type
+    - generic: /
+    - text: to search
+  - link "Chat with Copilot":
+    - /url: /copilot
+  - button "Open Copilot…":
+  - button "Create new...":
+  - link "All issues":
+    - /url: /issues
+  - link "All pull requests":
+    - /url: /pulls
+  - link "All repositories":
+    - /url: /repos
+  - button "Open user navigation menu":
+    - img "Jose Rubio"
+  - heading "Repository navigation" [level=2]
+  - navigation "Repository":
+    - list:
+      - link "Code":
+        - /url: /joserubiobejarano/Ornigami
+        - generic: Code
+      - link "Issues":
+        - /url: /joserubiobejarano/Ornigami/issues
+        - generic: Issues
+      - link "Pull requests":
+        - /url: /joserubiobejarano/Ornigami/pulls
+        - generic: Pull requests
+      - link "Actions":
+        - /url: /joserubiobejarano/Ornigami/actions
+        - generic: Actions
+      - link "Projects":
+        - /url: /joserubiobejarano/Ornigami/projects
+        - generic: Projects
+      - link "Wiki":
+        - /url: /joserubiobejarano/Ornigami/wiki
+        - generic: Wiki
+      - link "Security and quality":
+        - /url: /joserubiobejarano/Ornigami/security
+        - generic: Security and quality
+      - link "Insights":
+        - /url: /joserubiobejarano/Ornigami/pulse
+        - generic: Insights
+      - link "Settings":
+        - /url: /joserubiobejarano/Ornigami/settings
+        - generic: Settings
+- main:
+  - 'heading "Settings: joserubiobejarano/Ornigami" [level=1]'
+  - navigation "General settings":
+    - list:
+      - link "General":
+        - /url: /joserubiobejarano/Ornigami/settings
+        - generic: General
+      - heading "Access" [level=2]
+      - list "Access":
+        - link "Collaborators":
+          - /url: /joserubiobejarano/Ornigami/settings/access
+          - generic: Collaborators
+        - button "Moderation":
+          - generic: Moderation
+      - heading "Code, planning, and automation" [level=2]
+      - list "Code, planning, and automation":
+        - button "Rulesets":
+          - generic: Rulesets
+        - link "Branches":
+          - /url: /joserubiobejarano/Ornigami/settings/branches
+          - generic: Branches
+        - link "Tags":
+          - /url: /joserubiobejarano/Ornigami/settings/tag_protection
+          - generic: Tags
+        - button "Actions":
+          - generic: Actions
+        - link "Webhooks":
+          - /url: /joserubiobejarano/Ornigami/settings/hooks
+          - generic: Webhooks
+        - button "Copilot":
+          - generic: Copilot
+        - button "Planning":
+          - generic: Planning
+        - link "Environments":
+          - /url: /joserubiobejarano/Ornigami/settings/environments
+          - generic: Environments
+        - link "Codespaces":
+          - /url: /joserubiobejarano/Ornigami/settings/codespaces
+          - generic: Codespaces
+        - link "Pages":
+          - /url: /joserubiobejarano/Ornigami/settings/pages
+          - generic: Pages
+      - heading "Security and quality" [level=2]
+      - list "Security and quality":
+        - link "Advanced Security":
+          - /url: /joserubiobejarano/Ornigami/settings/security_analysis
+          - generic: Advanced Security
+        - link "Deploy keys":
+          - /url: /joserubiobejarano/Ornigami/settings/keys
+          - generic: Deploy keys
+        - button "Secrets and variables":
+          - generic: Secrets and variables
+      - heading "Integrations" [level=2]
+      - list "Integrations":
+        - link "GitHub Apps":
+          - /url: /joserubiobejarano/Ornigami/settings/installations
+          - generic: GitHub Apps
+  - heading "Installed GitHub Apps" [level=3]
+  - generic: GitHub Apps augment and extend your workflows on GitHub with commercial, open source, and homegrown tools.
+  - list:
+    - img "coderabbitai"
+    - strong: coderabbitai
+    - text: Developed by
+    - link "coderabbitai":
+      - /url: /coderabbitai
+    - link "Configure":
+      - /url: /settings/installations/84505349
+      - generic: Configure
+    - img "Netlify"
+    - strong: Netlify
+    - text: Developed by
+    - link "netlify":
+      - /url: /netlify
+    - link "Configure":
+      - /url: /settings/installations/7102738
+      - generic: Configure
+    - img "Vercel"
+    - strong: Vercel
+    - text: Developed by
+    - link "vercel":
+      - /url: /vercel
+    - link "Configure":
+      - /url: /settings/installations/80672078
+      - generic: Configure
+- contentinfo:
+  - heading "Footer" [level=2]
+  - link "GitHub Homepage":
+    - /url: https://github.com
+  - generic: © 2026 GitHub, Inc.
+  - navigation "Footer":
+    - heading "Footer navigation" [level=3]
+    - list "Footer navigation":
+      - link "Terms":
+        - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+      - link "Privacy":
+        - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+      - link "Security":
+        - /url: https://github.com/security
+      - link "Status":
+        - /url: https://www.githubstatus.com/
+      - link "Community":
+        - /url: https://github.community/
+      - link "Docs":
+        - /url: https://docs.github.com/
+      - link "Contact":
+        - /url: https://support.github.com?tags=dotcom-footer
+      - button "Manage cookies"
+      - button "Do not share my personal information"

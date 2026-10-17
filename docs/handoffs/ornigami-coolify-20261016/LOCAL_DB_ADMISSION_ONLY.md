@@ -1,5 +1,7 @@
 # Dedicated Linux DB admission-only preparation — 17 October 2026
 
+Execution follow-up: the subsequently approved exact publication, one request/attempt and one owner custody acknowledgment are consumed. See [Linux result: expired DB rejected, complete diagnostics retained](./DB_ADMISSION_ONLY_LINUX_TRIAL.md). No further trial is approved. The local preparation/proposed scope below is historical.
+
 Local preparation is complete. **No publication, registration, request commit, DB download, external runner, acknowledgment, scan, build, registry/VPS/deployment/provider operation occurred.** Holds were not altered; their effective live state was not freshly rechecked for this local-only task. QR staging and unrelated work were preserved. A future run requires separate approval and fresh admission.
 
 ## Exact candidate and identities

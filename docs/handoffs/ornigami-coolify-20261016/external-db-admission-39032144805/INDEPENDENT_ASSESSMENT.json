@@ -1,0 +1,14 @@
+{
+  "result": "passed",
+  "originalMetadataBytes": 153,
+  "originalMetadataSha256": "b5a896b8af7c6235ce5ea8e55d91d8df95ce6f292dbdc171acbad0335c2bfb10",
+  "rawAndParsedTimestampsMatch": true,
+  "expiryRejectionIndependentlyRecomputed": true,
+  "sourceRequestExecutedWorkflowMatch": true,
+  "summaryBytes": 237,
+  "downloadInvocationCount": 1,
+  "fixtures": "explicitly skipped; not a Linux pass",
+  "custody": "separate owner receipt",
+  "DBContents": "Not retained; runner hash receipt only; no local rehash of actual DB claimed",
+  "previousRejectionCause": "not recoverable from historical missing metadata"
+}

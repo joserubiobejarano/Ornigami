@@ -1,0 +1,167 @@
+{
+  "startedAt": "2026-10-17T12:20:52.507Z",
+  "result": "failed",
+  "resourceResult": "passed",
+  "resourceErrors": [],
+  "samples": [
+    {
+      "at": "2026-10-17T12:20:52.508Z",
+      "monotonicNs": "107132776669",
+      "diskFreeBytes": "91622248448",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "11145216",
+        "memory.peak": "11145216",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 51150\nuser_usec 40329\nsystem_usec 10820\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 1\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:53.513Z",
+      "monotonicNs": "108137852880",
+      "diskFreeBytes": "91373432832",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "309989376",
+        "memory.peak": "310251520",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 751317\nuser_usec 402369\nsystem_usec 348947\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 10\nnr_throttled 4\nthrottled_usec 260132\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:54.512Z",
+      "monotonicNs": "109137599079",
+      "diskFreeBytes": "90720100352",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "983957504",
+        "memory.peak": "983957504",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 1749425\nuser_usec 1093523\nsystem_usec 655902\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 20\nnr_throttled 12\nthrottled_usec 279237\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:55.514Z",
+      "monotonicNs": "110139442134",
+      "diskFreeBytes": "90487586816",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1225388032",
+        "memory.peak": "1225388032",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 2157347\nuser_usec 1407787\nsystem_usec 749560\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 26\nnr_throttled 16\nthrottled_usec 286769\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:56.516Z",
+      "monotonicNs": "111140949531",
+      "diskFreeBytes": "90487586816",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1225641984",
+        "memory.peak": "1225646080",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 2159454\nuser_usec 1409162\nsystem_usec 750292\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 30\nnr_throttled 16\nthrottled_usec 286769\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:57.516Z",
+      "monotonicNs": "112141396753",
+      "diskFreeBytes": "90135248896",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1592901632",
+        "memory.peak": "1592901632",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 2682100\nuser_usec 1751192\nsystem_usec 930907\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 39\nnr_throttled 19\nthrottled_usec 289853\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:58.518Z",
+      "monotonicNs": "113143177502",
+      "diskFreeBytes": "89852461056",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1883877376",
+        "memory.peak": "1883877376",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 3684599\nuser_usec 2625961\nsystem_usec 1058638\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 49\nnr_throttled 29\nthrottled_usec 303613\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:20:59.519Z",
+      "monotonicNs": "114143964790",
+      "diskFreeBytes": "89993756672",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1727401984",
+        "memory.peak": "2014834688",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 4696396\nuser_usec 3491386\nsystem_usec 1205010\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 59\nnr_throttled 38\nthrottled_usec 517243\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:21:00.520Z",
+      "monotonicNs": "115144895567",
+      "diskFreeBytes": "89993756672",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1726472192",
+        "memory.peak": "2014834688",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 5693393\nuser_usec 4365586\nsystem_usec 1327807\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 69\nnr_throttled 48\nthrottled_usec 805222\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:21:01.346Z",
+      "monotonicNs": "115970824268",
+      "diskFreeBytes": "89993744384",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1689079808",
+        "memory.peak": "2014834688",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 6521874\nuser_usec 5090676\nsystem_usec 1431198\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 77\nnr_throttled 56\nthrottled_usec 1024913\nnr_bursts 0\nburst_usec 0"
+      }
+    },
+    {
+      "at": "2026-10-17T12:21:01.346Z",
+      "monotonicNs": "115971273109",
+      "diskFreeBytes": "89993744384",
+      "cgroup": {
+        "memory.max": "2147483648",
+        "memory.swap.max": "0",
+        "memory.current": "1689047040",
+        "memory.peak": "2014834688",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "cpu.max": "100000 100000",
+        "cpu.stat": "usage_usec 6522566\nuser_usec 5090676\nsystem_usec 1431890\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 77\nnr_throttled 56\nthrottled_usec 1024913\nnr_bursts 0\nburst_usec 0"
+      }
+    }
+  ],
+  "node": "v22.23.3",
+  "nodeHeapMiB": 512,
+  "exit": 1,
+  "signal": null,
+  "finishedAt": "2026-10-17T12:21:01.346Z"
+}

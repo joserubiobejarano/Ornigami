@@ -1,0 +1,2 @@
+To https://github.com/joserubiobejarano/Ornigami
+   2ae7f60..97fc2b8  97fc2b86f2efe55683242e8b20a38a79fdebfb1e -> codex/ornigami-sri-local-prototype-f-20261016

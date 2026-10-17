@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-17T12:20:34.184Z",
+  "hasLinkProperty": false,
+  "link": null,
+  "productionDeploymentId": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+  "latestDeployments": [
+    {
+      "id": "dpl_AXyNVgUpoPPhczSUjpxrURtp9JfE",
+      "readyState": "READY",
+      "target": "production"
+    },
+    {
+      "id": "dpl_2YnaauwVvEDHy7uV1okbN3GPtF1y",
+      "readyState": "READY",
+      "target": "production"
+    }
+  ],
+  "activeOperations": [],
+  "operationsPagination": {
+    "count": 0,
+    "next": null,
+    "prev": null
+  }
+}

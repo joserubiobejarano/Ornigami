@@ -1,0 +1,157 @@
+- status
+- link "Skip to main content ↓":
+  - /url: "#main"
+  - generic: Skip to main content
+  - text: ↓
+- link "Netlify":
+  - /url: /teams/joserubiobejarano
+  - img "Netlify"
+- button "Collapse team navigation":
+  - img "Toggle Navigation"
+- button "Search Netlify… Ctrl K":
+  - generic: Search Netlify…
+  - generic: Ctrl
+  - generic: K
+- list "Breadcrumb":
+  - link "joserubiobejarano’s team":
+    - /url: /teams/joserubiobejarano/overview
+    - generic: J
+    - generic: joserubiobejarano’s team
+  - button "Switch teams. Open menu":
+    - generic: Switch teams
+- navigation "Team navigation":
+  - list:
+    - link "Projects":
+      - /url: /teams/joserubiobejarano/projects
+      - generic: Projects
+    - link "Builds":
+      - /url: /teams/joserubiobejarano/builds
+      - generic: Builds
+    - link "Usage & billing":
+      - /url: /teams/joserubiobejarano/billing
+      - generic: Usage & billing
+    - link "Team settings":
+      - /url: /teams/joserubiobejarano/settings
+      - generic: Team settings
+    - link "Visual editor dashboard":
+      - /url: https://create.netlify.com/team/6ad256b0275be4684c3ea1ae
+      - generic: Visual editor dashboard
+- link "Upgrade":
+  - /url: /teams/joserubiobejarano/billing/pricing
+- button "User joserubiobejarano@gmail.com. Open menu":
+  - generic "joserubiobejarano@gmail.com"
+  - generic: joserubiobejarano@gmail.com
+- heading "Projects" [level=1]
+- combobox "News. Open menu":
+  - button "News. Open menu":
+    - generic: News
+- combobox "Support. Open menu":
+  - button "Support. Open menu":
+    - generic: Support
+- main "Projects":
+  - generic: Search projects
+  - searchbox "Search projects"
+  - button "Search":
+    - img "Search"
+  - link "Add new project":
+    - /url: /start
+  - term: Owned by
+  - definition: This team
+  - term: Created by
+  - definition: Anyone
+  - term: Access
+  - definition: Any
+  - button "Edit filters"
+  - button "Last published. Open menu":
+    - text: Last published
+  - switch "List view" [checked]:
+    - img "List view"
+  - switch "Grid view":
+    - img "Grid view"
+  - list:
+    - heading "elastic-bartik-99fd7d" [level=3]:
+      - link "elastic-bartik-99fd7d":
+        - /url: /projects/elastic-bartik-99fd7d/
+    - generic: Last deployed from Netlify Drop
+    - paragraph:
+      - text: Owned by
+      - link "joserubiobejarano's team":
+        - /url: /teams/joserubiobejarano
+    - paragraph:
+      - time:
+        - text: Published on Apr 4, 2020
+        - generic: (7 years ago)
+    - button "Favorite project":
+      - img "Favorite project"
+    - heading "distracted-joliot-36e072" [level=3]:
+      - link "distracted-joliot-36e072":
+        - /url: /projects/distracted-joliot-36e072/
+    - generic: Last deployed from Netlify Drop
+    - paragraph:
+      - text: Owned by
+      - link "joserubiobejarano's team":
+        - /url: /teams/joserubiobejarano
+    - paragraph:
+      - time:
+        - text: Published on Mar 24, 2020
+        - generic: (7 years ago)
+    - button "Favorite project":
+      - img "Favorite project"
+    - heading "eloquent-curran-4666ab" [level=3]:
+      - link "eloquent-curran-4666ab":
+        - /url: /projects/eloquent-curran-4666ab/
+    - generic: Last deployed from Netlify Drop
+    - paragraph:
+      - text: Owned by
+      - link "joserubiobejarano's team":
+        - /url: /teams/joserubiobejarano
+    - paragraph:
+      - time:
+        - text: Published on Mar 4, 2020
+        - generic: (7 years ago)
+    - button "Favorite project":
+      - img "Favorite project"
+    - heading "elastic-beaver-e31029" [level=3]:
+      - link "elastic-beaver-e31029":
+        - /url: /projects/elastic-beaver-e31029/
+    - generic: Last deployed from Netlify Drop
+    - paragraph:
+      - text: Owned by
+      - link "joserubiobejarano's team":
+        - /url: /teams/joserubiobejarano
+    - paragraph:
+      - time:
+        - text: Published on Mar 2, 2020
+        - generic: (7 years ago)
+    - button "Favorite project":
+      - img "Favorite project"
+  - paragraph: Want to deploy a new project? Drag and drop your folder here.
+  - paragraph: Drag and drop your project folder, zip file, or a single HTML file to deploy instantly.
+  - paragraph:
+    - text: Or
+    - text: browse files to upload
+    - button "browse files to upload"
+    - text: or
+    - text: choose a folder
+    - button "choose a folder"
+    - text: .
+- contentinfo:
+  - navigation:
+    - list "External links":
+      - link "Docs":
+        - /url: https://docs.netlify.com/
+      - link "Pricing":
+        - /url: https://www.netlify.com/pricing/
+      - link "Support":
+        - /url: https://www.netlify.com/support/
+      - link "Blog":
+        - /url: https://www.netlify.com/blog/
+      - link "Changelog":
+        - /url: https://www.netlify.com/changelog/
+      - link "Terms":
+        - /url: https://www.netlify.com/legal/terms-of-use/
+  - paragraph:
+    - text: © 2026
+    - link "Netlify":
+      - /url: https://www.netlify.com
+- region "Notifications alt+T"
