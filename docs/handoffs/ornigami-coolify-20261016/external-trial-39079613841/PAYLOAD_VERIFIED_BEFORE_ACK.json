@@ -1,0 +1,9 @@
+{
+  "payloadHashes": "passed",
+  "files": 115,
+  "bytes": 13181493,
+  "capture": "passed",
+  "custody": "not yet acknowledged",
+  "securityAcceptance": false,
+  "coverageHold": true
+}

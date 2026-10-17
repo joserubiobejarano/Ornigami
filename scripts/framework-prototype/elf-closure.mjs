@@ -1,4 +1,55 @@
 import path from 'node:path';
+import {inflateSync} from 'node:zlib';
+
+// Compiler startup/link inputs have sections and relocations, not a process
+// image. Keep this separate from the unchanged executable dependency checker.
+// ELF gABI: https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.sheader.html
+export function inspectRelocatableElf(bytes) {
+  if(bytes.length<64||bytes.length>64*1024*1024||bytes.subarray(0,4).toString('hex')!=='7f454c46'||bytes[4]!==2||bytes[5]!==1||bytes[6]!==1||![0,3].includes(bytes[7])||bytes.readUInt16LE(16)!==1||bytes.readUInt16LE(18)!==62||bytes.readUInt32LE(20)!==1||bytes.readUInt16LE(52)!==64)throw Error('Expected bounded Linux amd64 ELF64 ET_REL link object');
+  const u64=at=>{const n=bytes.readBigUInt64LE(at);if(n>BigInt(Number.MAX_SAFE_INTEGER))throw Error('Link object integer exceeds bounds');return Number(n);};
+  const bounded=(offset,size)=>{if(!Number.isSafeInteger(offset)||!Number.isSafeInteger(size)||offset<0||size<0||offset>bytes.length-size)throw Error('Link object section range out of bounds');};
+  if(u64(24)!==0||u64(32)!==0||bytes.readUInt16LE(54)!==0||bytes.readUInt16LE(56)!==0)throw Error('Link object must have no entry point or program headers');
+  const offset=u64(40),entrySize=bytes.readUInt16LE(58),count=bytes.readUInt16LE(60),names=bytes.readUInt16LE(62);
+  if(offset<64||entrySize!==64||count<1||count>4096||names>=count)throw Error('Invalid link object section table');bounded(offset,entrySize*count);
+  const sections=[];
+  for(let index=0;index<count;index++){
+    const at=offset+index*entrySize,s={index,name:bytes.readUInt32LE(at),type:bytes.readUInt32LE(at+4),flags:u64(at+8),offset:u64(at+24),size:u64(at+32),link:bytes.readUInt32LE(at+40),info:bytes.readUInt32LE(at+44),align:u64(at+48),entrySize:u64(at+56)};
+    if(index===0){if(s.type!==0||s.size!==0)throw Error('Unsupported extended/null section');sections.push(s);continue;}
+    if(s.link>=count||(s.flags&64)&&s.info>=count||s.align>1&&(BigInt(s.align)&BigInt(s.align-1))!==0n||s.entrySize&&s.size%s.entrySize)throw Error('Invalid link object section alignment/index/entry size');
+    if([6,11,18].includes(s.type))throw Error('Unsupported dynamic/extended link object section');
+    if(s.type!==8){bounded(s.offset,s.size);if(s.size&&(s.offset<64||s.offset<offset+entrySize*count&&s.offset+s.size>offset))throw Error('Link object section overlaps headers');}
+    s.logicalSize=s.size;
+    if(s.flags&0x800){
+      if(s.type!==1||(s.flags&2)||s.size<24||bytes.readUInt32LE(s.offset)!==1||bytes.readUInt32LE(s.offset+4)!==0)throw Error('Unsupported compressed link object section');
+      const logical=u64(s.offset+8),alignment=u64(s.offset+16);
+      if(logical>64*1024*1024||alignment>1&&(BigInt(alignment)&BigInt(alignment-1))!==0n)throw Error('Compressed link object section bound/alignment invalid');
+      const expanded=inflateSync(bytes.subarray(s.offset+24,s.offset+s.size),{maxOutputLength:64*1024*1024});
+      if(expanded.length!==logical)throw Error('Compressed link object section size mismatch');s.logicalSize=logical;
+    }
+    sections.push(s);
+  }
+  const occupied=sections.filter(s=>s.type!==0&&s.type!==8&&s.size).sort((a,b)=>a.offset-b.offset);
+  for(let i=1;i<occupied.length;i++)if(occupied[i].offset<occupied[i-1].offset+occupied[i-1].size)throw Error('Overlapping link object sections');
+  const strings=new Map();
+  function string(table,index){
+    if(table?.type!==3||index>=table.size)throw Error('Link object string index invalid');const key=table.index+':'+index;if(strings.has(key))return;
+    const end=bytes.indexOf(0,table.offset+index);if(end<0||end>=table.offset+table.size)throw Error('Unterminated link object string');strings.set(key,true);
+  }
+  if(names){for(const section of sections)string(sections[names],section.name);}
+  let symbols=0,symbolTables=0,relocations=0;
+  for(const s of sections.filter(s=>s.type===2)){
+    if(s.entrySize!==24||s.size%24||s.info>s.size/24||sections[s.link]?.type!==3)throw Error('Invalid link object symbol table');
+    symbols+=s.size/24;if(symbols>1000000)throw Error('Link object symbol bound');symbolTables++;
+    for(let at=s.offset;at<s.offset+s.size;at+=24){string(sections[s.link],bytes.readUInt32LE(at));const index=bytes.readUInt16LE(at+6);if(index>=count&&![0xfff1,0xfff2].includes(index))throw Error('Invalid link object symbol section');}
+  }
+  for(const s of sections.filter(s=>s.type===4||s.type===9)){
+    const size=s.type===4?24:16,symtab=sections[s.link],target=sections[s.info];
+    if(s.entrySize!==size||s.size%size||symtab?.type!==2||!target||!s.info)throw Error('Invalid link object relocation table');
+    relocations+=s.size/size;if(relocations>1000000)throw Error('Link object relocation bound');
+    for(let at=s.offset;at<s.offset+s.size;at+=size){const symbol=Number(bytes.readBigUInt64LE(at+8)>>32n);if(symbol>=symtab.size/24||u64(at)>target.logicalSize)throw Error('Link object relocation symbol/offset out of bounds');}
+  }
+  return {machine:'amd64',type:'ET_REL',sections:count,symbolTables,symbols,relocations,compressedSections:sections.filter(s=>s.flags&0x800).length};
+}
 
 export function inspectElf(bytes) {
   if (bytes.subarray(0,4).toString('hex') !== '7f454c46') return null;

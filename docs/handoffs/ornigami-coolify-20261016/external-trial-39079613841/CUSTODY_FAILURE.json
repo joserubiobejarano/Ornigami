@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-17T23:38:04.820Z",
+  "error": "Command failed: gh api --hostname github.com user\ngh: To use GitHub CLI in automation, set the GH_TOKEN environment variable.\n",
+  "postCount": 0,
+  "automaticRetry": false
+}

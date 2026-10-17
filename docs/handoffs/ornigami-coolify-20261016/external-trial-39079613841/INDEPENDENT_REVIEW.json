@@ -1,0 +1,286 @@
+{
+  "result": "failed tooling diagnostic; failure evidence complete",
+  "sourceSha": "bfc0cdec1dddd15b36fe154433871f95f0957404",
+  "requestSha": "7a241565d667455d47968bef269691617cb3f5d9",
+  "runId": 39079613841,
+  "attempt": 1,
+  "artifact": {
+    "repo": "joserubiobejarano/Ornigami",
+    "runId": "39079613841",
+    "attempt": "1",
+    "requestSha": "7a241565d667455d47968bef269691617cb3f5d9",
+    "artifactId": "12118611517",
+    "sha256": "a094504d11c5b0eff5376c8d0604282953ed3ba00035e8380bfa2b5e76e49f6c",
+    "bytes": 1822604,
+    "downloadedAtUtc": "2026-10-17T23:38:40.437Z",
+    "payloadVerifiedBeforeAck": true,
+    "securityAcceptance": false
+  },
+  "captureCompleteness": "passed",
+  "payload": {
+    "payloadHashes": "passed",
+    "files": 115,
+    "bytes": 13181493,
+    "capture": "passed",
+    "custody": "not yet acknowledged",
+    "securityAcceptance": false,
+    "coverageHold": true
+  },
+  "sharedDbAdmission": "passed unchanged strict actual-clock/content policy",
+  "passedBootstrapScans": [
+    {
+      "stage": "toolchain-go-base",
+      "imageId": "sha256:5264a43183bc8e2ca53e96cad003b69d2b0e10e4f32ba5d415e19f9dbccb3650",
+      "archiveSha256": "9f536291b7bf19096540ded7f84c64de9f9e136742db4b85c28332075bb128a4",
+      "scanResult": {
+        "stage": "toolchain-go-base",
+        "result": "passed",
+        "coverage": "complete reported OS/library inventory; not proof of every embedded binary",
+        "archiveSha256": "9f536291b7bf19096540ded7f84c64de9f9e136742db4b85c28332075bb128a4",
+        "imageId": "sha256:5264a43183bc8e2ca53e96cad003b69d2b0e10e4f32ba5d415e19f9dbccb3650",
+        "scannerExit": 0,
+        "packageCount": 27,
+        "counts": {
+          "MEDIUM": 1
+        },
+        "osCoverage": "OS package inventory present",
+        "upgradedNpmPackageCount": 0
+      },
+      "result": "passed"
+    },
+    {
+      "stage": "toolchain-runtime-base",
+      "imageId": "sha256:f6d31b983274a75183386cda3aac54849498fac0fc3e0d98f92ff56ed517d92b",
+      "archiveSha256": "22dad6c023dc50c6794407838e9cf237b88b9d9eb085197692d35042c1bf7aff",
+      "scanResult": {
+        "stage": "toolchain-runtime-base",
+        "result": "passed",
+        "coverage": "complete reported OS/library inventory; not proof of every embedded binary",
+        "archiveSha256": "22dad6c023dc50c6794407838e9cf237b88b9d9eb085197692d35042c1bf7aff",
+        "imageId": "sha256:f6d31b983274a75183386cda3aac54849498fac0fc3e0d98f92ff56ed517d92b",
+        "scannerExit": 0,
+        "packageCount": 16,
+        "counts": {
+          "MEDIUM": 1
+        },
+        "osCoverage": "OS package inventory present",
+        "upgradedNpmPackageCount": 0
+      },
+      "result": "passed"
+    }
+  ],
+  "failedPhase": "scan-toolchain-compiler",
+  "failureClass": "18 valid compiler ET_REL startup/link inputs wrongly sent to executable program-header validator",
+  "failedObjects": [
+    {
+      "file": "usr/lib/Scrt1.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/crt1.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/crti.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/crtn.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtbegin.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtbeginS.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtbeginT.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtend.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtendS.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtfastmath.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtprec32.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtprec64.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtprec80.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/libasan_preinit.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/libhwasan_preinit.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/liblsan_preinit.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/libtsan_preinit.o",
+      "error": "Malformed ELF program headers"
+    },
+    {
+      "file": "usr/lib/rcrt1.o",
+      "error": "Malformed ELF program headers"
+    }
+  ],
+  "compilerStarted": false,
+  "toolBinariesBuilt": 0,
+  "applicationBuild": "skipped",
+  "applicationScanRoles": [
+    {
+      "stage": "original-base",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "original-runtime-base",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "build-base",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "deps",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "builder",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "prod-deps",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "runner",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "buildkit",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    },
+    {
+      "stage": "dockerfile-frontend",
+      "result": "skipped",
+      "reason": "pipeline unavailable before capture"
+    }
+  ],
+  "resourceReceipts": {
+    "toolchain/toolchain-compiler/filesystem-resources.json": {
+      "result": "failed",
+      "resourceResult": "passed",
+      "peakBytes": "1035075584",
+      "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "toolchain/toolchain-go-base/filesystem-resources.json": {
+      "result": "passed",
+      "resourceResult": "passed",
+      "peakBytes": "510791680",
+      "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "toolchain/toolchain-go-base/vulnerabilities-resources.json": {
+      "result": "passed",
+      "resourceResult": "passed",
+      "peakBytes": "158781440",
+      "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "toolchain/toolchain-runtime-base/filesystem-resources.json": {
+      "result": "passed",
+      "resourceResult": "passed",
+      "peakBytes": "67629056",
+      "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "toolchain/toolchain-runtime-base/vulnerabilities-resources.json": {
+      "result": "passed",
+      "resourceResult": "passed",
+      "peakBytes": "89530368",
+      "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+    }
+  },
+  "apkInstallReceipts": [
+    {
+      "file": "toolchain/011-docker.stdout",
+      "summary": [
+        "OK: 281.9 MiB in 43 packages"
+      ]
+    }
+  ],
+  "cleanup": {
+    "toolchainCleanup": "passed",
+    "results": [
+      {
+        "id": "e99c232fae811debf04e60ed6ffbdaf147824d588f152023267ca91766d7b716",
+        "result": "removed exact owned container",
+        "absenceVerified": true,
+        "removalExit": 0
+      },
+      {
+        "stage": "ornigami-tool-compiler:bfc0cdec1dddd15b36fe154433871f95f0957404",
+        "imageId": "sha256:6e73bef5f1d24cb06604b57bb479a663b2d514213946e81d8f989da0a4480570",
+        "reference": "ornigami-tool-compiler:bfc0cdec1dddd15b36fe154433871f95f0957404",
+        "result": "removed exact claimed image",
+        "removalExit": 0,
+        "removalSignal": null,
+        "absenceVerified": true
+      },
+      {
+        "stage": "toolchain-runtime-original",
+        "imageId": "sha256:f6d31b983274a75183386cda3aac54849498fac0fc3e0d98f92ff56ed517d92b",
+        "reference": "docker.io/library/alpine@sha256:1f3591b8a02ea153f41c5bba878ad477f63ab3d19349762cb77504db02a23e15",
+        "result": "removed exact claimed image",
+        "removalExit": 0,
+        "removalSignal": null,
+        "absenceVerified": true
+      },
+      {
+        "stage": "toolchain-compiler-original",
+        "imageId": "sha256:5264a43183bc8e2ca53e96cad003b69d2b0e10e4f32ba5d415e19f9dbccb3650",
+        "reference": "docker.io/library/golang@sha256:929e6c7d2f48657a580141155579281939296b952d6426846149fa40a7d090a1",
+        "result": "removed exact claimed image",
+        "removalExit": 0,
+        "removalSignal": null,
+        "absenceVerified": true
+      }
+    ],
+    "ownedRootRemoved": true
+  },
+  "daemonProjectionReadBack": "unchanged",
+  "custodyStatuses": 1,
+  "runnerSeconds": 206.0,
+  "chargedMinutes": 4,
+  "accountBillableMs": 0,
+  "securityAcceptance": false,
+  "coverageHold": true,
+  "retainedImage": false,
+  "deployment": false
+}

@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-17T23:34:06.150Z",
+  "result": "passed for exact source forward publication and one tooling-only diagnostic",
+  "source": "bfc0cdec1dddd15b36fe154433871f95f0957404",
+  "baseline": "bc4e3b1fcaec11d32187a532611e98e16478d079",
+  "tree": "1570b5a0d8e8db5c389471dac8700013b07b7f58",
+  "scope": "tooling; no app compilation/upload/deployment",
+  "reserveMinutes": 40,
+  "minutesUsed": 172,
+  "storageUsedGB": 0.1,
+  "artifactBytes": 11914241,
+  "sharedReservedMinutes": 0,
+  "paidUsage": "blocked; unchanged zero-dollar limits",
+  "securityAcceptance": false,
+  "coverageHold": true,
+  "sourceIdentityReference": "C:\\Users\\joser\\Desktop\\VPS\\evidence\\ornigami\\tooling-bfc0cde-20261018/SOURCE_IDENTITIES.json"
+}

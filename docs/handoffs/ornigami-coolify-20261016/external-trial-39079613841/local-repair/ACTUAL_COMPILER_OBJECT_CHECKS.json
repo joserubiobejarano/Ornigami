@@ -1,0 +1,313 @@
+{
+  "result": "passed",
+  "objects": 18,
+  "scope": "exact18Linuxfailure objects; hash-matched pinned APK and image inventory; no executable/security waiver",
+  "reports": [
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtbegin.o",
+      "file": "8a441b732abda29e5af86708b93ca26223aef571aac3cf6593e5326cd91dcd3c.o",
+      "bytes": 2992,
+      "sha256": "8a441b732abda29e5af86708b93ca26223aef571aac3cf6593e5326cd91dcd3c",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 17,
+        "symbolTables": 1,
+        "symbols": 23,
+        "relocations": 19,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtbeginS.o",
+      "file": "21cc007ae9682cad220f2bd0c0475e483f6ef12204f65e99c464f6caf7eb0766.o",
+      "bytes": 3256,
+      "sha256": "21cc007ae9682cad220f2bd0c0475e483f6ef12204f65e99c464f6caf7eb0766",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 19,
+        "symbolTables": 1,
+        "symbols": 24,
+        "relocations": 21,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtbeginT.o",
+      "file": "8a441b732abda29e5af86708b93ca26223aef571aac3cf6593e5326cd91dcd3c.o",
+      "bytes": 2992,
+      "sha256": "8a441b732abda29e5af86708b93ca26223aef571aac3cf6593e5326cd91dcd3c",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 17,
+        "symbolTables": 1,
+        "symbols": 23,
+        "relocations": 19,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtend.o",
+      "file": "55b3c5c22ed779fb9a3ffb3cf9e878eceb9c97cfc6e7f58c0273bacae7ccd54e.o",
+      "bytes": 1168,
+      "sha256": "55b3c5c22ed779fb9a3ffb3cf9e878eceb9c97cfc6e7f58c0273bacae7ccd54e",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 12,
+        "symbolTables": 1,
+        "symbols": 4,
+        "relocations": 0,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtendS.o",
+      "file": "55b3c5c22ed779fb9a3ffb3cf9e878eceb9c97cfc6e7f58c0273bacae7ccd54e.o",
+      "bytes": 1168,
+      "sha256": "55b3c5c22ed779fb9a3ffb3cf9e878eceb9c97cfc6e7f58c0273bacae7ccd54e",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 12,
+        "symbolTables": 1,
+        "symbols": 4,
+        "relocations": 0,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtfastmath.o",
+      "file": "36f596af83375b0e1c07af0627f8da53481e1397739f90743eafde7db46e08fb.o",
+      "bytes": 3856,
+      "sha256": "36f596af83375b0e1c07af0627f8da53481e1397739f90743eafde7db46e08fb",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 28,
+        "symbolTables": 1,
+        "symbols": 11,
+        "relocations": 23,
+        "compressedSections": 5
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtprec32.o",
+      "file": "ef3ff6a3bcf1ec363a28546722e06ec1ead62554cd92270d36f29e657aa2ef82.o",
+      "bytes": 3528,
+      "sha256": "ef3ff6a3bcf1ec363a28546722e06ec1ead62554cd92270d36f29e657aa2ef82",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 26,
+        "symbolTables": 1,
+        "symbols": 10,
+        "relocations": 19,
+        "compressedSections": 4
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtprec64.o",
+      "file": "0f4fca2f2c067a1f3065608bee796c65876ce26bdcc5c708ad7c226ec66f4c42.o",
+      "bytes": 3544,
+      "sha256": "0f4fca2f2c067a1f3065608bee796c65876ce26bdcc5c708ad7c226ec66f4c42",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 26,
+        "symbolTables": 1,
+        "symbols": 10,
+        "relocations": 19,
+        "compressedSections": 4
+      }
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-alpine-linux-musl/15.2.0/crtprec80.o",
+      "file": "64afbd1cc532349809a945538fe6ea5317402f304d1cc1dc8c196a3872a6f790.o",
+      "bytes": 3528,
+      "sha256": "64afbd1cc532349809a945538fe6ea5317402f304d1cc1dc8c196a3872a6f790",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 26,
+        "symbolTables": 1,
+        "symbols": 10,
+        "relocations": 19,
+        "compressedSections": 4
+      }
+    },
+    {
+      "path": "usr/lib/libasan_preinit.o",
+      "file": "a9ae2da4255c8bd3f9e498b6c856b4cf0c717944bd846916e14cfadb6734af98.o",
+      "bytes": 1352,
+      "sha256": "a9ae2da4255c8bd3f9e498b6c856b4cf0c717944bd846916e14cfadb6734af98",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 12,
+        "symbolTables": 1,
+        "symbols": 7,
+        "relocations": 1,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/libhwasan_preinit.o",
+      "file": "6110d40bda0a571c99f5a5db4bb656d7dfc1de5d4460fadbbd3d36cfb11651e3.o",
+      "bytes": 1200,
+      "sha256": "6110d40bda0a571c99f5a5db4bb656d7dfc1de5d4460fadbbd3d36cfb11651e3",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 12,
+        "symbolTables": 1,
+        "symbols": 4,
+        "relocations": 1,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/liblsan_preinit.o",
+      "file": "319a59ecfb3480eae60d7af3c81078174c80261b3ef7e0966fdd5b055bb0428e.o",
+      "bytes": 1200,
+      "sha256": "319a59ecfb3480eae60d7af3c81078174c80261b3ef7e0966fdd5b055bb0428e",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 12,
+        "symbolTables": 1,
+        "symbols": 4,
+        "relocations": 1,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/libtsan_preinit.o",
+      "file": "afa678a481922d984f62015ddebd949fd6e7d04e9bc612dfe6021ae9daa0b0f1.o",
+      "bytes": 1200,
+      "sha256": "afa678a481922d984f62015ddebd949fd6e7d04e9bc612dfe6021ae9daa0b0f1",
+      "apk": "gcc-15.2.0-r2.apk",
+      "apkSha256": "039886b6ad6e36a040a18db0ffa898f8ad1d0fc69eadd49d3c77270eafdc5e7e",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 12,
+        "symbolTables": 1,
+        "symbols": 4,
+        "relocations": 1,
+        "compressedSections": 0
+      }
+    },
+    {
+      "path": "usr/lib/Scrt1.o",
+      "file": "8aa978aae4db79b50714678faa569be6977557dadf0109523b16ad88f462ba99.o",
+      "bytes": 5096,
+      "sha256": "8aa978aae4db79b50714678faa569be6977557dadf0109523b16ad88f462ba99",
+      "apk": "musl-dev-1.2.5-r23.apk",
+      "apkSha256": "2ea566b665ebaea4f84cee1e4b7ef093b0aa67356006e84deb26d9bd7a716c6b",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 28,
+        "symbolTables": 1,
+        "symbols": 19,
+        "relocations": 47,
+        "compressedSections": 6
+      }
+    },
+    {
+      "path": "usr/lib/crt1.o",
+      "file": "4ba4f059d999b47718448a929f60af011dcdf258b153902d0c66b7058e59a645.o",
+      "bytes": 5088,
+      "sha256": "4ba4f059d999b47718448a929f60af011dcdf258b153902d0c66b7058e59a645",
+      "apk": "musl-dev-1.2.5-r23.apk",
+      "apkSha256": "2ea566b665ebaea4f84cee1e4b7ef093b0aa67356006e84deb26d9bd7a716c6b",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 28,
+        "symbolTables": 1,
+        "symbols": 19,
+        "relocations": 47,
+        "compressedSections": 6
+      }
+    },
+    {
+      "path": "usr/lib/crti.o",
+      "file": "47625ab743667d464ee4b4e159bcfd9d0167846ba075b2d71b6c6ae018c6f203.o",
+      "bytes": 2792,
+      "sha256": "47625ab743667d464ee4b4e159bcfd9d0167846ba075b2d71b6c6ae018c6f203",
+      "apk": "musl-dev-1.2.5-r23.apk",
+      "apkSha256": "2ea566b665ebaea4f84cee1e4b7ef093b0aa67356006e84deb26d9bd7a716c6b",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 22,
+        "symbolTables": 1,
+        "symbols": 11,
+        "relocations": 17,
+        "compressedSections": 2
+      }
+    },
+    {
+      "path": "usr/lib/crtn.o",
+      "file": "17933b2225cadc3dc0034099fbc78b109c69e3c7697a5af251d2b074912deb9b.o",
+      "bytes": 2736,
+      "sha256": "17933b2225cadc3dc0034099fbc78b109c69e3c7697a5af251d2b074912deb9b",
+      "apk": "musl-dev-1.2.5-r23.apk",
+      "apkSha256": "2ea566b665ebaea4f84cee1e4b7ef093b0aa67356006e84deb26d9bd7a716c6b",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 22,
+        "symbolTables": 1,
+        "symbols": 9,
+        "relocations": 17,
+        "compressedSections": 2
+      }
+    },
+    {
+      "path": "usr/lib/rcrt1.o",
+      "file": "67f189ffa928d2d3268087a860a4d7e1b6c34843c76327b3a3d320c861977f3c.o",
+      "bytes": 10360,
+      "sha256": "67f189ffa928d2d3268087a860a4d7e1b6c34843c76327b3a3d320c861977f3c",
+      "apk": "musl-dev-1.2.5-r23.apk",
+      "apkSha256": "2ea566b665ebaea4f84cee1e4b7ef093b0aa67356006e84deb26d9bd7a716c6b",
+      "report": {
+        "machine": "amd64",
+        "type": "ET_REL",
+        "sections": 30,
+        "symbolTables": 1,
+        "symbols": 21,
+        "relocations": 168,
+        "compressedSections": 8
+      }
+    }
+  ]
+}
