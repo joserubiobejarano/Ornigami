@@ -1,0 +1,196 @@
+TAP version 13
+# Subtest: all nine distinct parent/intermediate/final/tool roles are required independently
+ok 1 - all nine distinct parent/intermediate/final/tool roles are required independently
+  ---
+  duration_ms: 2.2846
+  type: 'test'
+  ...
+# Subtest: cached target export rejects a started uncached RUN instead of retrying compilation
+ok 2 - cached target export rejects a started uncached RUN instead of retrying compilation
+  ---
+  duration_ms: 0.3933
+  type: 'test'
+  ...
+# Subtest: work deadline cannot be missing, exhausted or extended by an invalid value
+ok 3 - work deadline cannot be missing, exhausted or extended by an invalid value
+  ---
+  duration_ms: 0.6401
+  type: 'test'
+  ...
+# Subtest: final observer enforces original limits and OOM counters; pressure is not headroom
+ok 4 - final observer enforces original limits and OOM counters; pressure is not headroom
+  ---
+  duration_ms: 0.4039
+  type: 'test'
+  ...
+# Subtest: official manifest binds exact publication and layer without granting coverage acceptance
+ok 5 - official manifest binds exact publication and layer without granting coverage acceptance
+  ---
+  duration_ms: 11.5157
+  type: 'test'
+  ...
+# Subtest: changed manifest bytes fail before a download can be selected
+ok 6 - changed manifest bytes fail before a download can be selected
+  ---
+  duration_ms: 1.2619
+  type: 'test'
+  ...
+# Subtest: real CLI records exact source before yielding a single immutable repository; refuses replay
+ok 7 - real CLI records exact source before yielding a single immutable repository; refuses replay
+  ---
+  duration_ms: 619.3483
+  type: 'test'
+  ...
+# Subtest: reviewed actual recipe pins eight binaries and compiler/runtime roles
+ok 8 - reviewed actual recipe pins eight binaries and compiler/runtime roles
+  ---
+  duration_ms: 84.392
+  type: 'test'
+  ...
+# Subtest: contract rejects tampered module bytes even when outer recipe is untouched
+ok 9 - contract rejects tampered module bytes even when outer recipe is untouched
+  ---
+  duration_ms: 130.0494
+  type: 'test'
+  ...
+# Subtest: contract rejects a source/package substitution despite recomputed contract hash
+ok 10 - contract rejects a source/package substitution despite recomputed contract hash
+  ---
+  duration_ms: 370.2514
+  type: 'test'
+  ...
+# Subtest: output binds stopped compiler, complete bootstrap scans, source and OCI content
+ok 11 - output binds stopped compiler, complete bootstrap scans, source and OCI content
+  ---
+  duration_ms: 145.4178
+  type: 'test'
+  ...
+# Subtest: output rejects malformed source/run before loading evidence
+ok 12 - output rejects malformed source/run before loading evidence
+  ---
+  duration_ms: 0.4503
+  type: 'test'
+  ...
+# Subtest: tooling gate CLI writes tooling prerequisites and skips dependent stages without accepting aggregate
+ok 13 - tooling gate CLI writes tooling prerequisites and skips dependent stages without accepting aggregate
+  ---
+  duration_ms: 691.5541
+  type: 'test'
+  ...
+# Subtest: SDK data classification is restricted to supplemental compiler roles
+ok 14 - SDK data classification is restricted to supplemental compiler roles
+  ---
+  duration_ms: 0.219
+  type: 'test'
+  ...
+# Subtest: compatibility probe exercises external frontend and a network-free native RUN
+ok 15 - compatibility probe exercises external frontend and a network-free native RUN
+  ---
+  duration_ms: 0.3394
+  type: 'test'
+  ...
+# Subtest: bounded input download refuses content drift and existing destination
+ok 16 - bounded input download refuses content drift and existing destination
+  ---
+  duration_ms: 103.7451
+  type: 'test'
+  ...
+# Subtest: all nine stages retain complete inventories and explicit unchanged scan coverage
+ok 17 - all nine stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 567.792
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 18 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 447.6309
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 19 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 162.5015
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 20 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 190.6522
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 21 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 296.3032
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 22 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 147.8945
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 23 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 51.9689
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 24 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 80.6601
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 25 - historical output destination is never overwritten
+  ---
+  duration_ms: 69.6202
+  type: 'test'
+  ...
+# Subtest: replacing admitted metadata with expired metadata fails frozen identity before scans
+ok 26 - replacing admitted metadata with expired metadata fails frozen identity before scans
+  ---
+  duration_ms: 61.7234
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 27 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 235.2094
+  type: 'test'
+  ...
+# Subtest: scanner image identity mismatch is not accepted as a clean report
+ok 28 - scanner image identity mismatch is not accepted as a clean report
+  ---
+  duration_ms: 154.3301
+  type: 'test'
+  ...
+# Subtest: explicit single-stage collection remains partial and cannot claim aggregate coverage
+ok 29 - explicit single-stage collection remains partial and cannot claim aggregate coverage
+  ---
+  duration_ms: 67.4083
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+ok 30 - bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+  ---
+  duration_ms: 159.6725
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+ok 31 - bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+  ---
+  duration_ms: 156.6248
+  type: 'test'
+  ...
+1..31
+# tests 31
+# suites 0
+# pass 31
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3055.2205

@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {loadToolchainRecipe,downloadPinnedFile} from '../scripts/framework-prototype/toolchain-contract.mjs';
 import {contractDigest,writeFrontendImage,sha256} from '../scripts/framework-prototype/tool-image.mjs';
 import {loadToolchainOutput} from '../scripts/framework-prototype/toolchain-runtime.mjs';
 import {compilerSdkData} from '../scripts/framework-prototype/analyze-docker-archive.mjs';
 import {compatibilityDockerfile} from '../scripts/framework-prototype/toolchain-probe.mjs';
+import {requiredStages} from '../scripts/framework-prototype/scan-image-stages.mjs';
 
 const recipeDirectory=fileURLToPath(new URL('../deploy/coolify/toolchain/',import.meta.url));
 const save=(file,x)=>fs.writeFileSync(file,JSON.stringify(x));
@@ -51,6 +53,42 @@ test('output binds stopped compiler, complete bootstrap scans, source and OCI co
 test('output rejects malformed source/run before loading evidence',()=>{
   assert.throws(()=>loadToolchainOutput({sourceSha:undefined,runId:undefined,attempt:undefined}),/source\/run/);
 });
+test('tooling gate CLI writes tooling prerequisites and skips dependent stages without accepting aggregate',()=>sandbox(root=>{
+  const f=fixture(root),repo=path.join(root,'repo'),scripts=path.join(repo,'scripts/framework-prototype'),toolchain=path.join(repo,'deploy/coolify/toolchain');
+  fs.mkdirSync(path.dirname(scripts),{recursive:true});fs.cpSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../scripts/framework-prototype'),scripts,{recursive:true});
+  fs.mkdirSync(path.dirname(toolchain),{recursive:true});fs.cpSync(f.recipeDir,toolchain,{recursive:true});
+  const scans=path.join(f.evidence,'stage-scans');
+  const parentStages=['original-base','original-runtime-base','buildkit','dockerfile-frontend'];
+  const records=parentStages.map(stage=>({stage,result:'passed',collectionComplete:true,scanResult:{result:'passed'}}));
+  for(const record of records){const dir=path.join(scans,record.stage);fs.mkdirSync(dir,{recursive:true});save(path.join(dir,'driver.json'),record);}
+  save(path.join(scans,'index.json'),{schema:1,sourceSha:f.options.sourceSha,result:'passed',stages:records});
+  const env={...process.env,RUNNER_TEMP:root,ORNIGAMI_EVIDENCE_DIR:f.evidence,SOURCE_SHA:f.options.sourceSha,GITHUB_RUN_ID:f.options.runId,GITHUB_RUN_ATTEMPT:f.options.attempt};
+  const cli=path.join(scripts,'toolchain-runtime.mjs');
+  const result=spawnSync(process.execPath,[cli,'gate'],{encoding:'utf8',env,timeout:15000,windowsHide:true});
+  assert.equal(result.status,0,`${result.stdout}\n${result.stderr}`);
+  assert.equal(result.signal,null);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.evidence,'toolchain/prerequisites.json'))),{
+    sourceSha:f.options.sourceSha,runId:f.options.runId,attempt:f.options.attempt,contractSha256:f.recipe.buildContractSha256,
+    result:'passed tooling prerequisites only',securityAcceptance:false,coverageHold:true,scope:'tooling'
+  });
+  const skipped=['build-base','deps','builder','prod-deps','runner'];
+  for(const stage of skipped){
+    const record=JSON.parse(fs.readFileSync(path.join(scans,stage,'driver.json')));
+    assert.equal(record.result,'skipped');
+    assert.match(record.reason,/tooling-only preflight/);
+  }
+  const index=JSON.parse(fs.readFileSync(path.join(scans,'index.json')));
+  assert.equal(index.result,'failed');
+  assert.deepEqual(index.expectedStages,requiredStages);
+  assert.deepEqual(index.stages.filter(x=>x.result==='skipped').map(x=>x.stage).sort(),skipped.sort());
+  assert.deepEqual(index.stages.filter(x=>x.result==='passed').map(x=>x.stage).sort(),parentStages.sort());
+  fs.rmSync(path.join(f.evidence,'toolchain/prerequisites.json'));
+  save(path.join(scans,'index.json'),{...index,stages:index.stages.filter(x=>x.stage!=='original-runtime-base')});
+  const missingParent=spawnSync(process.execPath,[cli,'gate'],{encoding:'utf8',env,timeout:15000,windowsHide:true});
+  assert.equal(missingParent.status,1,`${missingParent.stdout}\n${missingParent.stderr}`);
+  assert.match(missingParent.stderr,/parent scan\/native\/resource gates/);
+  assert.equal(fs.existsSync(path.join(f.evidence,'toolchain/prerequisites.json')),false);
+}));
 test('SDK data classification is restricted to supplemental compiler roles',()=>{
   const sample='usr/local/go/src/debug/elf/testdata/foreign';assert.equal(compilerSdkData('toolchain-go-base',sample),true);assert.equal(compilerSdkData('toolchain-compiler','usr/local/go/src/runtime/race_linux_arm64.syso'),true);
   for(const stage of ['runner','builder','buildkit','dockerfile-frontend','toolchain-runtime-base'])assert.equal(compilerSdkData(stage,sample),false);

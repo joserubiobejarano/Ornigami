@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-18T00:14:43.805Z",
+  "source": "7e73ed6f29e7341382c6781c4565d23a2f016fa7",
+  "run": 39081325144,
+  "advisory": "GO-2026-5932",
+  "primarySource": "https://vuln.go.dev/ID/GO-2026-5932.json",
+  "records": [
+    {
+      "name": "buildkitd",
+      "bytes": 80221545,
+      "sha256": "7d9263283a69949cffc3965095987eda246bd9ee969c143bf8724c3e3dd3533e",
+      "exactPrefixOccurrences": {
+        "golang.org/x/crypto/ssh": 799,
+        "golang.org/x/crypto/openpgp": 0
+      }
+    },
+    {
+      "name": "buildctl",
+      "bytes": 35434599,
+      "sha256": "96a5b00bc9ec46aae000af2e2e042dfa421fa9f67ef14eaf96d31478a5360c65",
+      "exactPrefixOccurrences": {
+        "golang.org/x/crypto/ssh": 623,
+        "golang.org/x/crypto/openpgp": 0
+      }
+    },
+    {
+      "name": "dockerfile-frontend",
+      "bytes": 29683007,
+      "sha256": "4c827ee5910208a1c8a530b8509d6a512e70a26b4ddb523efdcd7492669d84fc",
+      "exactPrefixOccurrences": {
+        "golang.org/x/crypto/ssh": 789,
+        "golang.org/x/crypto/openpgp": 0
+      }
+    }
+  ],
+  "interpretation": "Coarse binary-string check of local binaries hash-identical to Linux outputs, with SSH positive control. No OpenPGP prefix was found if the corresponding count is zero. This is not a complete package/callgraph/reachability proof and grants no advisory exemption. Original UNKNOWN scanner findings remain retained. The full nm attempt hit its bounded child timeout and is preserved separately.",
+  "securityAcceptance": false,
+  "coverageHold": true
+}
