@@ -835,3 +835,154 @@ Changed file: `tests/coolify-runtime-acceptance.test.mjs` (same commit `bffe572`
 - Commits this follow-up: reviewer-note retention `6a8b194`, B1.1+B1.2 fix `bffe572`, and this
   response (tip; exact sha in the delivery message).
 - Worktree clean at close; handoff path `docs/handoffs/ORNIGAMI_STAGING_READINESS_20261018.md`.
+
+## Block 2 response — 18 October 2026
+
+Addresses R3 only, on the reviewed baseline `24c1003bb5b109266a06d6a834db467e1dea7b91`.
+Prior review notes retained verbatim. R4–R6 remain open, and **preparing full scope authorizes
+no execution**: no push, merge, dispatch, image build, registry, credential, DNS, SQL, host or
+provider action was performed; the request file still binds the historical tooling-only source.
+
+### R3 — full combined scope selected on the candidate
+
+- `deploy/coolify/toolchain/recipe.json` (`0f755e8`): `"trialScope": "tooling"` → `"full"` — a
+  single-field change. `buildContractSha256` is untouched (`contractDigest` covers only the
+  `contract` object), all pinned bases/binaries/apk/frontend expectations are untouched, and
+  `loadToolchainRecipe` validates `full` as an allowed value
+  (`scripts/framework-prototype/toolchain-contract.mjs:9`).
+- `tests/toolchain-contract.test.mjs`: the real-recipe pin now asserts `trialScope === 'full'`
+  (test renamed "…pins full combined scope…"), and `fixture()` forces the fixture recipe back to
+  `trialScope = 'tooling'` before saving, so the historical tooling-only gate-CLI behaviour —
+  `passed tooling prerequisites only` prerequisites, `tooling-only preflight` skipped
+  application stages, aggregate still `failed` — remains covered on the fixture boundary.
+- No workflow change is needed. The scope is derived inside `Validate inputs` from the
+  **candidate tree** (`workflow:95–99`: default `full` when the recipe file is absent;
+  `jq -er '.trialScope | select(. == "tooling" or . == "full")'` otherwise), so a marker-only
+  request child cannot carry scope; the marker can only point at a source commit. With the
+  candidate recipe at `full`, every application phase activates exactly as written:
+  image build (`:318`), disconnected Linux runtime acceptance (`:409`), bounded browser
+  regressions (`:449`), intermediate nine-role scan collection (`:573`), the complete all-stage
+  security/native/resource aggregate gate (`:584`), build-resource cgroup rejection (`:592`),
+  base advisory threshold (`:679`), evidence capture (`:691`), custody verification (`:928`)
+  and owned cleanup (`:954`). The tooling-only branches (`tooling probe :306`, disabled
+  application roles) remain available for any future tooling-only recipe value, and the
+  `tooling-scope-status.txt` record (`:727`) continues to state
+  `security_acceptance=false` / `coverage_hold=true` across scopes by design: the holds are in
+  force regardless of trial outcome and are not claims about the aggregate gates.
+
+### Enforcement preservation and verification (task 3)
+
+Missing or failed required evidence cannot become a pass; this was verified by execution of the
+existing candidate tests rather than new special cases:
+
+- Aggregate admission: all nine required stages (`original-base`, `original-runtime-base`,
+  `build-base`, `deps`, `builder`, `prod-deps`, `runner`, `buildkit`, `dockerfile-frontend`)
+  must exist exactly once with unique valid names; every stage needs zero HIGH/CRITICAL with no
+  suppressions; a missing parent scan stage fails the gate (`toolchain-contract.test.mjs`
+  "parent scan/native/resource gates" failure test); step-gate steps run under `always()` with
+  set -e so a failed collection fails the job instead of the summary.
+- Runtime evidence: on a successful runtime outcome a missing/empty `runtime-http.json` or
+  `native-image-formats.json` (plus the three cgroup files) marks `runtime_evidence_missing=1`
+  (`workflow:751–773`) and fails; failure outcomes additionally require failure diagnostics
+  (`:774–781`); Block 1 (B1.1/B1.2) guarantees the native receipt and its real diagnostic.
+- Scan/resource/custody gates: zero-CRITICAL/HIGH base advisory threshold (`:689`), build-OOM
+  and cgroup counter rejection (`:677`), owner local evidence custody check must pass before
+  cleanup (`:928`), and owned builder/image cleanup is verified rather than assumed (`:954`).
+- Historical tooling-only behaviour preserved: `tooling` remains a valid recipe value, the
+  tooling probe and tooling-prerequisite writes branch on it, and the fixture-level test asserts
+  the skip logic; the trigger branch and its historical trial evidence remain untouched.
+
+### Focused results (verification)
+
+- `bash`/JSON syntax: recipe parses as valid JSON; no shell files changed this block, so no new
+  `bash -n` surface (Block 1's `bash -n` evidence is unaffected and unchanged).
+- `node --test tests/toolchain-contract.test.mjs tests/coolify-rehearsal-workflow.test.mjs`
+  → 52 passed, 0 failed, 0 skipped (contract 9 + workflow 43).
+- Block 1 runtime/workflow evidence is reused unchanged: no runtime harness, probe or test file
+  was modified in Block 2.
+
+### Exact candidate identities (for a future trial decision)
+
+- Recipe: new sha256 `ff6d35d96897a4a13b564a387d689b9aa32e7c2c0328650e5018e1aa7be9a9a9`
+  (prior `505476d99302f481cf408ef85a70bef679b7651b102f590dbfa2db9737353548`);
+  trialScope now `full`; all other recipe fields unchanged.
+- Package lock: `4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815` — unchanged,
+  so the existing lock binding remains valid for the candidate.
+- Workflow blob (git): `5013b5ef82e36c29105b821dc13cf93b842fa25e` — unchanged by this block.
+- Build request file `.github/build-requests/ornigami.json`: unchanged, still
+  `{sourceSha: 65ccca1d534f5951120b5ddfe9d04b9288745d7e, packageLockSha256: 4591e2dd…815}`
+  binding the historical tooling-only source; Block 2 does not move it.
+- Full-scope candidate commit: `0f755e8950f8c1c2cb9d40a2164fbf286c3f80b1` on
+  `codex/ornigami-staging-readiness-20261018` (parent `24c1003…`). Later docs-only commits do
+  not alter recipe/lock/workflow identities; the exact trial-time candidate is chosen by the
+  authorizing owner at that point and bound into the marker.
+
+### Future source/publication/request ancestry plan (documented, NOT executed)
+
+All of the following is owner-authorized work in the future; nothing here has been executed.
+
+1. Prerequisites before ANY preparation of a dispatch: explicit new dispatch authority
+   (7/7 dispatches and 39/300 minutes consumed; 0 reserved; no automatic extension), an
+   owner-decision path to resolve the CVE-2026-111142/111141 Debian coverage hold (fresh
+   timestamps or zero counts do not waive it; no suppression/filter/mirror), the R4
+   image-retention decision (private GHCR destination/access model and publication gates), and
+   the R5 maintenance/solo-operator go/no-go. The delivery plan requires the combined trial
+   "only after prerequisites and new dispatch authority", and the security closure explicitly
+   notes no full trial is justified until those are resolved.
+2. Candidate publication: publish the candidate commit (tree = this branch's reviewed tip at
+   authorization time, including the full-scope recipe) to the trigger branch
+   `codex/ornigami-sri-local-prototype-f-20261016`. A branch move that does not change
+   `.github/build-requests/ornigami.json` does not trigger the workflow (paths filter
+   `workflow:7–8`), so publishing the candidate is dispatch-inert.
+3. Request commit: a single-parent, marker-only child R of the candidate that changes ONLY
+   `.github/build-requests/ornigami.json`, with exact keys
+   `{sourceSha: <candidate 40-hex sha>, packageLockSha256: 4591e2dd…815}`. Pushing R to the
+   trigger branch is the only dispatch trigger. The workflow then enforces, at admission
+   (`workflow:50–87,88–116`): push event on exactly that branch; `event.created == false`;
+   repository `joserubiobejarano/Ornigami` public; `run_attempt == 1`; `github.workflow_ref`
+   equals the workflow on that branch at that commit; request sha equals `github.sha`; request
+   commit has exactly one parent equal to `sourceSha` and changes only the request file;
+   `sourceSha` is an ancestor of the request; the committed package-lock blob hash equals the
+   request value; candidate and request commit carry an identical workflow blob; detached exact
+   candidate checkout is clean; required files present; recipe scope re-derived from the
+   candidate (`full` now). Permissions stay `statuses: read` only
+   (`workflow:10–11`); concurrency single-run group (`:13–15`).
+4. Capacity and gate constraints carried into the trial: 8 GiB/3 CPU tooling build, 2 GiB/1 CPU
+   serial diagnostics, 768 MiB/0.75 CPU runtime, zero swap, the 300-minute total ceiling,
+   frozen-DB admission with zero-HIGH/CRITICAL thresholds and no suppression; role coverage is
+   all nine scan roles, seven native image-format checks, nine browser groups,
+   SRI/corruption and HTTP/auth checks, restart/recreation/cache identity, resources, custody,
+   failure evidence and owned cleanup (delivery-plan acceptance exit).
+
+### Work deadline versus job timeout (task 5)
+
+- `timeout-minutes: 40` (`workflow:22`) is the hard job ceiling for everything, including
+  cleanup and evidence upload.
+- The 24-minute work deadline (`workflow:39`, `ORNIGAMI_WORK_DEADLINE_EPOCH = start + 1440s`)
+  bounds only the resource-consuming work window: the BuildKit image build is launched with
+  `build_timeout = deadline − now` (`:336`); the runtime acceptance step refuses to start with
+  under 150 s remaining (`:416`, so a too-late run cannot starve collection); the browser
+  regression is capped at `min(deadline − now, 900 s)` with an explicit ≥60 s floor
+  (`:465–467`).
+- Cleanup and evidence collection remain bounded after the work window: the evidence-capture,
+  summary, upload, custody-verification and owned-cleanup steps run regardless of earlier
+  outcomes (`always()`), are individually bounded (storage probes use `timeout 15s`), and are
+  ordered so artifacts are uploaded before destructive cleanup; a run whose gates already
+  failed reports unavailability truthfully (`snapshot-status.txt`) instead of fabricating
+  evidence. If a run's tail ever exceeded the job ceiling, the 40-minute kill would end it with
+  gates already decided; the work deadline exists precisely so productive phases cannot consume
+  that tail.
+
+### Remaining gates
+
+- R4 (accepted-image retention), R5 (maintenance go/no-go) and R6 (raw recovery evidence
+  tracking) are open and were not addressed.
+- The coverage/adoption holds, exhausted dispatch allowance, provider/host/deployment
+  boundaries and the 300-minute ceiling remain exactly as before; nothing in this block implies
+  that preparing full scope, or this document, authorizes executing the plan above.
+
+### Block 2 state
+
+- Branch: `codex/ornigami-staging-readiness-20261018`.
+- Commits: R3 selection `0f755e8`, this response (tip; exact sha in the delivery message).
+- Worktree clean at close; handoff path `docs/handoffs/ORNIGAMI_STAGING_READINESS_20261018.md`.
