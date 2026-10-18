@@ -1077,3 +1077,112 @@ review notes retained verbatim in a separate retention commit.
 - Verification: `git diff --check` clean; no test rerun (documentation-only change). No push,
   merge, dispatch, build, registry, deployment or provider action; R4–R6 and the
   coverage/adoption/dispatch holds remain open.
+
+## Block 3 proposal — R4 conditional accepted-image retention
+
+**Scope and status.** This is a documentation-only proposal for review. It addresses R4 only; R5 maintenance/go-no-go and R6 raw-recovery-evidence tracking remain open. It does not authorize a build, dispatch, registry operation, credential/account/package change, deployment or provider action. Campaign allowance remains exhausted at 7/7 dispatches, 39/300 charged minutes and zero reserved; coverage/adoption holds remain in force.
+
+### Established facts
+
+- The current rehearsal workflow has no registry publication or image-retention path and removes owned images. Its workflow-level permission is only `statuses: read` (`.github/workflows/ornigami-image-rehearsal.yml`). It does not declare `packages: write` or `packages: read`; there is no publication identity or separate pull identity in the workflow.
+- Prior planning records say the existing CLI authentication lacks `read:packages` and `write:packages`; a package-list request returned 403. That does not establish package visibility or access. No token value was read or exposed, and no permission was changed.
+- No accepted application image exists, and there is no verified rollback image. The previously observed 1.70 GB uncompressed image / 1.74 GB Docker archive is not a compressed-transfer measurement.
+- B2.1 establishes that runtime is admitted once at a ≥150-second remaining-work threshold but has no overall timeout/deadline; the 40-minute job ceiling is the only overall bound on runtime overrun and tail work. `always()` does not reserve tail time or guarantee evidence upload, custody, cleanup or completion. Only two storage probes are individually bounded at 15 seconds; owned cleanup has direct Docker commands without per-command timeouts. On forced termination, custody and owned-resource absence remain unproved.
+
+### Proposed choices (not verified access or approval)
+
+- Destination: dedicated private package `ghcr.io/joserubiobejarano/ornigami-staging`, Linux/amd64, with immutable digest as the retained/deployment reference. Keep package access granular and owner-controlled. Because the source repository is public, do not rely on repository-linked inherited access; verify the package's explicit access list and anonymous pull rejection before any future eligible run. Proposed access is not evidence that the package exists, is private, or is accessible as intended.
+- Publisher: the exact approved GitHub Actions workflow run using its repository-scoped `GITHUB_TOKEN`; the package ACL must explicitly allow the repository, while the reviewed workflow/job code constrains where that token is exercised. Add only `packages: write` at publication-job scope and `contents: read` only if the chosen checkout/action path requires it. Keep other jobs at their existing minimum permission. A protected, scoped publication credential is a fallback only if owner-approved and separately configured; never request or record its value. The current `statuses: read` permission is insufficient for publication and must not be changed under this review.
+- Independent reader: a distinct owner-controlled, read-only deployment identity with package read access, kept outside the publisher job (prefer the eventual protected deployment secret/reference). For a clean independent pull-verification context, grant only `packages: read` to that identity. Do not reuse the publisher identity as proof of independent access.
+- Conditional publication: owner approval must explicitly cover publishing and retaining the one exact image produced by the exact reviewed source tree, workflow, recipe, lock/tool/framework inputs and approved runtime origin, conditional on every gate below passing. The final digest may be unknown at approval time; the approval must name the immutable candidate contract and authorize only that single accepted output. No tag-only promotion, rejected diagnostic/tooling image, retry rebuilt from changed inputs, or unreviewed rebuild is covered.
+- Publication gates, all required before upload: fresh compatible official vulnerability database with required coverage/adoption holds resolved; all nine required scan roles and seven image-format checks pass with zero HIGH/CRITICAL; production npm audit passes; complete native, HTTP/auth, CSP/SRI and corruption checks pass; all nine browser groups pass; restart/recreation/cache-persistence and resource limits pass; runtime/profile/source identities match the reviewed candidate; evidence is captured and failure state is clear. Historical tooling-only or earlier application passes do not substitute for this combined acceptance. A failed, incomplete, interrupted or rejected run may preserve non-image failure evidence under its separate custody rules but must not publish an application image.
+- Bounds: at most 2 GiB cumulative compressed layer bytes transferred across publication and independent pull, measured from exact compressed layer blobs (sum of descriptor sizes; count every retransmission/retry again) and checked against the actual registry manifest before push and the pull plan before independent retrieval. At most 4 GiB retained in total across the newly accepted image and one compatible, independently verified rollback. Measure retained bytes by summing unique compressed layer blob sizes referenced by the retained manifests, plus manifest/config objects for quota accounting; check both byte totals and registry/package included quota/cost state before and after transfer. Check current included runner/artifact allowance and current GHCR policy at implementation time; historical “free” observations are not a current price/quota guarantee. Abort before transfer if either bound, quota, access, or zero-dollar condition cannot be verified; abort/stop if actual transfer or retention exceeds a bound or incurs/risks unapproved cost. Do not put image layers in Actions artifacts. Do not delete a rollback automatically to make room.
+- Equivalence evidence: before upload, record the tested image ID, semantic config, local manifest/platform, each uncompressed layer diffID, compressed layer size/digest and source/build identity. After upload, record the immutable registry manifest digest, config digest, compressed layer digests/sizes, and compare semantic config and every uncompressed diffID to the tested image; verify each compressed blob digest against the published manifest. This links tested config/layers to published manifest without trusting a mutable tag. Separately preserve scan/SBOM, source, lock, framework/tool, DB, clock and recipe evidence.
+- Independent verification: use the separate read-only identity in a clean isolated runner context to pull by immutable digest, check manifest/config/platform/layer digests and diffIDs, then run only a bounded smoke of the accepted runtime/native startup path without rebuilding. Bound the pull and smoke to an explicit implementation-time deadline inside the job budget. A tag lookup, publisher-side pull, or smoke against a rebuilt image is not independent proof.
+- Ordering — **corrected per B3.1**: **Before dispatch**, resolve coverage/adoption and profile/source prerequisites, freeze the exact reviewed candidate contract, verify the planned transfer/retention maxima and pre-run access/quota/cost checks, and obtain explicit conditional owner authorization for that candidate contract, required gates, maximum bounds, publication and independent pull. Do not dispatch without that authorization. **During the run**, complete all acceptance gates and capture tested-image identities; measure actual compressed transfer, retained total, quota/cost and remaining bounded runtime/tail budget; then verify the already-existing authorization covers this exact candidate, every required gate and these measured bounds. If authorization is absent, ambiguous or does not cover them, do not publish and do not wait for approval: enter the failure path. Only after this match may the exact accepted image be published; then independently pull by digest and verify equivalence plus bounded smoke; durably record publication/pull evidence and verify durable custody; only on success follow the success cleanup sequence below. If a gate, publication, pull, smoke or custody check fails, use the failure sequence below. Keep the accepted image and any compatible verified rollback; no unattended deletion or global cleanup.
+- Failure/abort behavior — **corrected per B3.2**: on failed acceptance, authorization mismatch, upload/publication, independent pull, digest/config/diffID comparison or smoke, immediately prohibit deployment/promotion and any changed-input retry. Record the exact candidate, known publication state/digest (or that it is unknown), measured transfer/quota state and bounded sanitized failure evidence. Within the pre-reserved tail window, attempt durable evidence custody and record whether it succeeded. After that attempt terminates, run the separately approved exact-owned ephemeral cleanup sequence below even when acceptance or retention failed; cleanup does not depend on a successful pull or new owner approval. **Ordinary retention failure with custody present:** clean only positively identified run-owned ephemeral containers, networks, volumes and failed/unaccepted local image/build resources covered by prior cleanup authorization; verify absence by exact IDs/ownership labels and record receipts. **Missing custody:** make the bounded custody attempt, preserve local evidence through that attempt, then perform only safe, positively identified exact-owned cleanup if already authorized; mark custody and cleanup receipt status explicitly, and do not claim durable preservation or success when absent. **Uncertain ownership:** do not remove the ambiguous resource; retain its identifiers and observations in available evidence, report cleanup unresolved, and leave it for separately authorized recovery. **Interrupted execution/job ceiling:** no further sequence step is guaranteed; missing publication, custody, cleanup or absence receipts remain unproved, and later recovery must use a separately authorized exact-owner path. This cleanup never deletes remote package versions or any accepted current/rollback image; record any known remote residue and its bytes as retained/unverified for later disposition. If there is no verified compatible rollback, record rollback unavailable; do not fabricate one, exceed the 4-GiB cap, or implicitly delete an existing accepted/rollback image to make room. If the cap cannot accommodate the proposed retained set, stop before upload for a new owner decision.
+- B2.1 dependency: before implementation or any dispatch, a separately reviewed engineering change must establish an enforceable runtime bound and bounded/reserved collection, upload, independent-pull, custody and cleanup windows that fit the 40-minute ceiling. A one-time 150-second admission check is insufficient. Conditional approval must be decided before the runner starts; never wait indefinitely for chat/owner approval on a paid or expiring runner. If no safe remaining tail window exists, skip publication and preserve the retention failure as unresolved rather than weakening acceptance or claiming `always()` guarantees completion.
+- Cleanup sequence (B3.2; success and failure): perform exactly one pass within the implementation's separately reviewed, explicitly reserved tail deadline: no promotion/publication retries, one bounded evidence-custody attempt on failure, at most one removal attempt per exact-owned ephemeral resource, and one absence read-back per target. Every operation must have an enforceable per-command timeout and stop by the reserved tail deadline; timeout is an incomplete result, not success. First stop promotion/publication retries and ensure bounded sanitized outcome facts are in the evidence bundle; second confirm and record the durable evidence/custody result (the failure path has already made its one custody attempt) while preserving the local evidence bundle through that attempt; third compare candidate cleanup targets against the run's pre-recorded exact resource IDs/ownership labels and the already-approved cleanup scope; fourth remove only matching ephemeral runner-owned resources; fifth read back those exact IDs/labels to verify absence and record each outcome. Never include registry package/version deletion, or deletion of any accepted current image or compatible rollback image (local or remote), in this sequence. On the successful path, enter this sequence only after acceptance, publication, independent pull/smoke and durable custody all pass; on the failure path, run it after the bounded custody attempt regardless of that attempt result. If custody fails, ownership is ambiguous, a command times out, or the job is interrupted, preserve available evidence, mark the affected receipt/unresolved resource explicitly, and make no success claim. Cleanup remains subject to B2.1's unresolved engineering risk; this proposal does not claim the current workflow can guarantee the sequence completes.
+
+### Missing evidence and owner approvals
+
+- Verify whether the proposed GHCR package exists; its private visibility, explicit granular ACL, owner control, anonymous pull rejection, publisher write access and independent reader access. None is established by the old CLI/API observations.
+- Owner must approve the exact package/destination and ACL model; conditional single-image publication and independent read verification; the minimal job permission grant (`packages: write`, plus only necessary `contents: read`); the independent read identity and its protected reference; zero-dollar/quota criteria; exact cleanup behavior; and treatment of a run with no verified rollback. Any credential/account/package creation or ACL change is a separately scoped future action, not approved here.
+- Before that approval is actionable, resolve the active security coverage/adoption holds, candidate/runtime profile and combined acceptance prerequisites; produce a reviewed source/workflow/recipe identity; and close the B2.1 runtime/tail-budget design. Current package size, included quota, billing state and policy must be checked at that time.
+
+### Approval checklist
+
+- [ ] Exact private GHCR destination, owner control, granular ACL, anonymous denial, and publisher/read identities verified.
+- [ ] Owner approves the single-output conditional publication contract, required minimal permission change, separate read identity, no-cost/quota gates and bounded exact-owned cleanup.
+- [ ] Security coverage/adoption and all combined application acceptance prerequisites are closed for the exact reviewed candidate.
+- [ ] 2-GiB compressed-transfer and 4-GiB retained-image calculations, registry quota/cost and rollback compatibility are evidenced.
+- [ ] B2.1 runtime and tail work have enforceable bounds; no runner approval wait is required.
+- [ ] Independent digest pull, equivalence evidence, bounded smoke, durable custody and interruption behavior are reviewed.
+
+### Future implementation checklist (separate scope; not authorized by this proposal)
+
+- [ ] Review and approve exact source/workflow/recipe/profile identities and the minimal per-job permissions; implement publication and separate read-verification identity paths only in a reviewed change.
+- [ ] Add preflight gates for acceptance receipts, exact image identity, compressed transfer, total retained bytes, access, current quota/cost and remaining bounded job/tail time; fail closed.
+- [ ] Implement immutable-digest publication, manifest/config/layer/diffID evidence, separate-identity digest pull and bounded no-rebuild smoke.
+- [ ] Implement durable evidence/custody receipts and exact-owned cleanup with explicit interruption outcomes; do not treat `always()` as a completion guarantee.
+- [ ] Review focused workflow/contract tests and all failure-path evidence before any dispatch; obtain fresh owner dispatch and registry-operation authority after existing holds are resolved.
+- [ ] Stop before any registry/account/credential/package operation unless its separately required owner authorization is in place. No registry operation, build, dispatch or test is part of Block 3.
+
+## Block 3 independent review — 19 October 2026
+
+Reviewed the uncommitted 49-line Block 3 proposal on HEAD
+`430fa7bc1d1e0219f129a42f403accf6288e3b4e`. Only the handoff was modified before review;
+`git diff --check` passed. The proposal covers the R4 destination/access, acceptance gates,
+transfer/retention limits, image equivalence, independent pull, custody and implementation
+dependencies. No tests, build, registry/account inspection or external mutation was performed.
+Primary GitHub Container Registry/access documentation was read; actual package access and
+credentials remain unverified. **Disposition: two documentation corrections before closing R4.**
+
+### B3.1 [P2] Put conditional approval before the runner in the ordered procedure
+
+The Ordering bullet currently puts passing acceptance at step 2 and obtaining conditional
+approval at step 4, while the B2.1 dependency correctly requires approval before the runner starts.
+The procedure is therefore inconsistent and could recreate an approval wait after an ephemeral
+image is built. "Already-scoped" approval does not resolve the difference between obtaining
+authorization and checking that existing authorization covers the exact tested output.
+
+Required: separate pre-run prerequisites/owner authorization from in-run execution. Obtain
+conditional authority against the exact reviewed candidate contract before dispatch; during the
+run, verify that existing authority still matches the candidate, gates and measured bounds. If it
+does not, do not publish or wait for new approval. Stop through the documented failure path.
+The final image digest may be recorded after build; no human approval wait is introduced.
+
+### B3.2 [P2] Define bounded cleanup when acceptance or retention fails
+
+The happy-path ordering allows exact-owned cleanup "only then" after successful independent
+pull and custody, but the failure bullet does not specify a terminal path for an ordinary,
+completed upload/pull/smoke failure while the runner remains available. It discusses diagnostics
+and interruption recovery, leaving the reader to infer whether cleanup must wait for successful
+retention or a later authorization. Successful retention is impossible on that branch.
+
+Required: add an explicit failure sequence: prohibit deployment/promotion; record exact known
+publication state and bounded sanitized failure evidence; attempt the separately required durable
+evidence/custody checks within the reserved budget; perform already-authorized, exact-owned
+ephemeral-resource cleanup and read back absence, without waiting for successful pull or a new
+owner decision. Distinguish failure/missing custody and ambiguous resource ownership from ordinary
+retention failure; preserve evidence and report unresolved states under the existing custody
+policy rather than inventing a success. Do not implicitly delete remote package versions or an
+accepted/rollback image. Registry residue must be recorded as unverified, with its accounting and
+later disposition explicit. A job killed before receipts still leaves outcomes unproved.
+
+### Next bounded task
+
+Correct B3.1/B3.2 in the proposal and append a short response. Preserve existing proposal and
+review provenance through explicit correction markers/Git history. Documentation only: no
+implementation, tests, registry operation, credential change, dispatch, build or deployment.
+Keep R5/R6, B2.1 engineering risk and all coverage/adoption/dispatch holds open. Commit the
+reviewed proposal plus corrections/review notes and stop for review. No new owner decision is
+needed to prepare these corrections; actual external authority remains a future decision.
+
+## Block 3 corrections response — B3.1/B3.2
+
+Documentation-only corrections to the R4 proposal, preserving the independent review notes above:
+
+- **B3.1 corrected:** conditional owner authorization is now a pre-dispatch prerequisite against the exact reviewed candidate contract, gates and proposed bounds. In-run checks compare that existing authorization with the exact candidate and measured bounds; a mismatch stops publication through the failure path, without waiting for a runner-side decision.
+- **B3.2 corrected:** success and failure paths now have distinct, bounded evidence/custody and exact-owned ephemeral-cleanup sequences. Ordinary retention failure does not block already-authorized cleanup; missing custody is recorded as unproved; uncertain ownership is left untouched for separately authorized recovery; interrupted execution leaves absent receipts unproved. Remote package versions and accepted/rollback images are explicitly excluded from cleanup.
+- B2.1 runtime/tail engineering risk remains unresolved. R5–R6, coverage/adoption holds and the exhausted 7/7 dispatch, 39/300 charged-minute, zero-reserved campaign allowance remain open. No workflow, registry, credential, build, dispatch, deployment or provider action was taken; no tests were run.
