@@ -628,10 +628,14 @@ was weakened or duplicated.
 3. Identity: logged uid probe; `1000` passes, `1001` exits with the UID error.
 4. Disk evidence: logged disk probe; in-container `df -Pk` asserted absent; failing probe
    exits nonzero.
-5. Native evidence: seven modes end-to-end — pass, empty stdout, non-JSON, fewer than seven
-   formats, a failed format entry, foreign platform, probe exit 3 — each asserting the failure
-   receipt, `native_formats_failed=true`, sanitized error evidence, and no raw stderr left;
-   pass mode asserts exact receipt and no fabricated error evidence.
+5. Native evidence: eight modes end-to-end — one executed passing receipt plus empty stdout,
+   non-JSON, fewer than seven formats, a failed format entry, foreign platform, a probe exit 3
+   with stderr, and a silent probe exit 7 — each asserting the failure receipt,
+   `native_formats_failed=true`, a real nonempty sanitized diagnostic that the receipt reference
+   resolves to, and no raw stderr left; the pass mode asserts the byte-preserved receipt, passed
+   status, an unchanged false failure flag, successful continuation and no fabricated error
+   evidence. *(Corrected in the Block 1 close-out below: the original text listed a pass mode and
+   "seven modes" that were not executed and omitted the silent probe case.)*
 6. Final gate: native-format failure alone exits nonzero with the retained-observations
    message; a fully checked pass completes.
 
@@ -652,8 +656,10 @@ was weakened or duplicated.
   remain **not performed**.
 - The probe's in-image behaviour (including `sharp`'s native binding under the `nonroot` user
   and glibc/SSE4.2 reporting) is exercised by probes and validated structurally, but was not
-  executed against a real Distroless image here; that remains part of the still-authorized
-  combined trial decision.
+  executed against a real Distroless image here; exercising it belongs to a future combined
+  trial. **No combined trial is authorized: dispatch allowance is exhausted at 7/7 and any
+  future combined trial requires explicit new owner authorization.** *(Phrase corrected from
+  "still-authorized combined trial decision" in the Block 1 close-out below.)*
 
 ### Superseded reconciliation statements
 
@@ -739,3 +745,93 @@ results; preserve all prior review notes. Do not start Block 2/R3 yet. Correct t
 "still-authorized combined trial decision" above to make clear that a future combined trial still
 requires new authorization; the allowance remains exhausted at 7/7 dispatches. No image build,
 external trial, publication, registry action, deployment or provider action is authorized here.
+
+## Block 1 close-out response — 18 October 2026
+
+This response closes B1.1 and B1.2 only, on the baseline `f6cfd8dec46fc2290e2314cb28c9696adba1d7c1`.
+Reviewer notes above are retained verbatim (commit `6a8b194`). Block 2 and R3–R6 remain open.
+
+### B1.1 — failed receipts now resolve to a real diagnostic (fixed)
+
+Changed file: `deploy/coolify/linux-runtime-acceptance.sh` (close-out commit `bffe572`).
+
+- The Python receipt validator now captures its own stderr to
+  `native-format-validation.err` (`:624`), so a validator rejection retains its reason instead of
+  emitting it only to the outer harness stderr.
+- After the block: probe stderr (if any) is sanitized into `native-image-formats-error.txt`; the
+  validator reason (if any) is sanitized and appended to the same file; if a failed receipt would
+  still reference a nonexistent diagnostic (validator exit with no captured reason, or a silent
+  nonzero probe), the harness synthesizes one truthful bounded line —
+  `Native image format validation rejected the receipt; no reason line was captured
+  (validator exit N).` or `Native image format probe failed with exit status N and wrote no
+  diagnostic output.` — and routes it through the same `sanitize_file` bounding/redaction.
+- Every failure branch therefore ends with `native-image-formats-error.txt` real, nonempty and
+  sanitized, so each `{result:"failed", exitStatus, diagnostic:"native-image-formats-error.txt"}`
+  reference resolves; the receipt overwrite on failure replaces invalid probe output with the
+  truthful failure receipt while the validator's reason is retained in the diagnostic.
+- Fail-closed behaviour unchanged: any failure still sets `native_formats_failed=true` and blocks
+  the final gate; nothing on the success path changes to passed. Raw `native-image-formats.stderr`
+  and `native-format-validation.err` are always removed after sanitization; the collected
+  `native-image-formats-error.txt` stays bounded by `sanitize_file` (64 KiB read, 120 lines ×
+  2000 chars) and the synthesized text is a fixed short template plus an exit status.
+- Surfacing preserved: a nonempty diagnostic is still printed to the console once; probes that
+  fail with stderr behave exactly as before.
+
+### B1.2 — the passing receipt is now executed (fixed)
+
+Changed file: `tests/coolify-runtime-acceptance.test.mjs` (same commit `bffe572`).
+
+- The native-evidence regression (renamed "native image evidence executes the passing receipt and
+  gates every failure mode") now runs eight scenarios through the actual extracted native block:
+  `evidence-passed` (the valid seven-format receipt), the five validator rejections
+  (empty, non-JSON, missing formats, failed format, foreign platform), a probe exit 3 with stderr,
+  and a new silent probe exit 7 with no stderr.
+- The pass path now asserts, as required: the valid receipt is byte-preserved
+  (`readFileSync(...) === nativePassing`) and parses to the same object; the report records
+  `native_image_formats=passed`; `native_formats_failed` stays `false` (flag marker asserted);
+  execution continues past the block (`native_block_continued=true` asserted); no error evidence
+  file is fabricated; no raw stderr/validation file remains.
+- The failure paths now assert the diagnostic resolution required by B1.1: the error file exists,
+  is nonempty, is bounded, and matches each scenario's specific reason (per-scenario patterns
+  pin the validator messages and the synthesized silent-probe wording); the failure receipt's
+  `exitStatus` matches the actual exit (1 for validator rejections, 3 and 7 for probes).
+- Existing negative cases are retained: the still-sampled cgroup/identity/disk contract tests,
+  the final gate test (native failure alone blocks; all-pass completes), the static no-shell
+  contract, and the original phase/exit tests are unchanged and passing.
+
+### Handoff corrections applied
+
+- Regressions list item 5 corrected in place: it previously claimed "seven modes … pass" that were
+  not executed; it now lists the eight executed modes and flags the correction.
+- The phrase "still-authorized combined trial decision" in the Explicit limits section is
+  corrected in place: no combined trial is authorized; the dispatch allowance remains exhausted
+  at 7/7 and any future combined trial requires explicit new owner authorization.
+- The "93 passed, 0 failed" claim remains accurate: the suite count is unchanged (11 tests in the
+  runtime-acceptance file; the same scenario loop now runs 8 native modes).
+
+### Executed checks
+
+- `bash -n deploy/coolify/linux-runtime-acceptance.sh` → syntax OK.
+- Focused: `node --test tests/coolify-runtime-acceptance.test.mjs tests/coolify-rehearsal-workflow.test.mjs`
+  → 54 passed, 0 failed, 0 skipped (11 runtime-acceptance + 43 workflow).
+- Broadened because the harness blob changed: the nine candidate-scope suites
+  (`tests/{build-profile,toolchain-contract,tool-image,cleanup-owned-images,owned-observation-race,toolchain-cache-cleanup,compiler-link-objects,coolify-rehearsal-workflow,coolify-runtime-acceptance}.test.mjs`)
+  → 93 passed, 0 failed, 0 skipped.
+- No Linux image built, no container executed, no actual-host acceptance, no external actions;
+  campaign counters remain 7/7 dispatches and 39/300 minutes with no further dispatch authorized.
+
+### Remaining limits
+
+- The in-image probe behaviour (sharp native binding, glibc/SSE4.2 reporting) is still verified
+  only against fixture receipts and static extracts; exercising it needs a future combined trial
+  under new authorization.
+- B1.1's silent-probe synthesis is covered by the new exit-7 regression at the block level; the
+  final gate and restart/recreate behavior are covered by their existing tests.
+- Block 2 (R3–R6 responses) is not started in this close-out.
+
+### Block 1 close-out state
+
+- Branch: `codex/ornigami-staging-readiness-20261018`.
+- Commits this follow-up: reviewer-note retention `6a8b194`, B1.1+B1.2 fix `bffe572`, and this
+  response (tip; exact sha in the delivery message).
+- Worktree clean at close; handoff path `docs/handoffs/ORNIGAMI_STAGING_READINESS_20261018.md`.
