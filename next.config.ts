@@ -6,6 +6,15 @@ import {
 } from "./src/lib/security-headers";
 
 const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+const containerBuild = process.env.ORNIGAMI_CONTAINER_BUILD === "true";
+const buildMemoryOptimizations =
+  containerBuild && process.env.ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS === "true";
+const buildWebpackWorker =
+  containerBuild && process.env.ORNIGAMI_BUILD_WEBPACK_WORKER === "true";
+const buildDisableSourceMaps =
+  containerBuild &&
+  process.env.ORNIGAMI_BUILD_DISABLE_SOURCEMAPS === "true" &&
+  !process.env.SENTRY_AUTH_TOKEN;
 if (process.env.VERCEL_ENV === "production" && configuredAppUrl !== "https://ornigami.com") {
   throw new Error("NEXT_PUBLIC_APP_URL must be https://ornigami.com in Vercel production.");
 }
@@ -14,6 +23,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     sri: { algorithm: "sha256" },
+    ...(containerBuild
+      ? {
+          cpus: 1,
+          ...(buildMemoryOptimizations ? { webpackMemoryOptimizations: true } : {}),
+          ...(buildWebpackWorker ? { webpackBuildWorker: true } : {}),
+        }
+      : {}),
   },
   async headers() {
     const headers = [
@@ -49,4 +65,5 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: true,
   widenClientFileUpload: true,
+  ...(buildDisableSourceMaps ? { sourcemaps: { disable: true } } : {}),
 });

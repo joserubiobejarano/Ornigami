@@ -12,6 +12,8 @@ Audits/licenses/** -text -whitespace
 scripts/framework-prototype/** text eol=lf
 scripts/framework-prototype/*.patch -text -whitespace
 deploy/coolify/toolchain/** text eol=lf
+vendor/framework/*.tgz -text
+package-lock.json text eol=lf
 
 docs/handoffs/ornigami-coolify-20261016/external-trial-39082300586/** -text -whitespace
 docs/handoffs/ornigami-coolify-20261016/build-profile-local-evidence/** -text -whitespace
