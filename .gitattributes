@@ -11,6 +11,7 @@ Audits/licenses/** -text -whitespace
 
 scripts/framework-prototype/** text eol=lf
 scripts/framework-prototype/*.patch -text -whitespace
+scripts/framework-prototype/official-db-manifest.json -text
 deploy/coolify/toolchain/** text eol=lf
 vendor/framework/*.tgz -text
 package-lock.json text eol=lf

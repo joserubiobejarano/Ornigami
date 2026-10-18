@@ -1,0 +1,8 @@
+{
+  "name": "ornigami-sri-browser-tools",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "playwright": "1.61.0"
+  }
+}
