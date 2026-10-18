@@ -1387,5 +1387,5 @@ All coverage/adoption/dispatch holds and the separate outer tail-budget risk rem
   remain active and campaign allowance remains exhausted at 7/7 dispatches, 39/300 charged minutes,
   zero reserved.
 
-Implementation commit: to be recorded after commit. This correction response is committed separately;
-the independent review notes above are preserved.
+Implementation commit: `5ba6b65`. Handoff/review-notes commit: `766a104`; the independent review
+notes above are preserved.
