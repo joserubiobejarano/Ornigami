@@ -1,0 +1,214 @@
+TAP version 13
+# Subtest: all nine distinct parent/intermediate/final/tool roles are required independently
+ok 1 - all nine distinct parent/intermediate/final/tool roles are required independently
+  ---
+  duration_ms: 2.1394
+  type: 'test'
+  ...
+# Subtest: cached target export rejects a started uncached RUN instead of retrying compilation
+ok 2 - cached target export rejects a started uncached RUN instead of retrying compilation
+  ---
+  duration_ms: 0.3346
+  type: 'test'
+  ...
+# Subtest: work deadline cannot be missing, exhausted or extended by an invalid value
+ok 3 - work deadline cannot be missing, exhausted or extended by an invalid value
+  ---
+  duration_ms: 0.5409
+  type: 'test'
+  ...
+# Subtest: final observer enforces original limits and OOM counters; pressure is not headroom
+ok 4 - final observer enforces original limits and OOM counters; pressure is not headroom
+  ---
+  duration_ms: 0.5092
+  type: 'test'
+  ...
+# Subtest: a disappearing /proc sample is marked while complete cgroup inventory succeeds
+ok 5 - a disappearing /proc sample is marked while complete cgroup inventory succeeds
+  ---
+  duration_ms: 3435.0907
+  type: 'test'
+  ...
+# Subtest: a failed mandatory cgroup cat remains fatal
+ok 6 - a failed mandatory cgroup cat remains fatal
+  ---
+  duration_ms: 1560.337
+  type: 'test'
+  ...
+# Subtest: a smaps read race retains its stderr diagnostic and does not fail complete cgroup metrics
+ok 7 - a smaps read race retains its stderr diagnostic and does not fail complete cgroup metrics
+  ---
+  duration_ms: 1950.0417
+  type: 'test'
+  ...
+# Subtest: compiler cannot create host bind-cache files as root or accept an ambiguous cleanup identity
+ok 8 - compiler cannot create host bind-cache files as root or accept an ambiguous cleanup identity
+  ---
+  duration_ms: 3.4282
+  type: 'test'
+  ...
+# Subtest: root permission failure preserves removal read-backs before and after exception
+ok 9 - root permission failure preserves removal read-backs before and after exception
+  ---
+  duration_ms: 31.9677
+  type: 'test'
+  ...
+# Subtest: unverified resource absence prevents root deletion and remains a failed receipt
+ok 10 - unverified resource absence prevents root deletion and remains a failed receipt
+  ---
+  duration_ms: 7.0897
+  type: 'test'
+  ...
+# Subtest: successful exact root removal is independently read back
+ok 11 - successful exact root removal is independently read back
+  ---
+  duration_ms: 15.2506
+  type: 'test'
+  ...
+# Subtest: reviewed actual recipe pins eight binaries and compiler/runtime roles
+ok 12 - reviewed actual recipe pins eight binaries and compiler/runtime roles
+  ---
+  duration_ms: 94.1374
+  type: 'test'
+  ...
+# Subtest: contract rejects tampered module bytes even when outer recipe is untouched
+ok 13 - contract rejects tampered module bytes even when outer recipe is untouched
+  ---
+  duration_ms: 404.4378
+  type: 'test'
+  ...
+# Subtest: contract rejects a source/package substitution despite recomputed contract hash
+ok 14 - contract rejects a source/package substitution despite recomputed contract hash
+  ---
+  duration_ms: 105.8703
+  type: 'test'
+  ...
+# Subtest: output binds stopped compiler, complete bootstrap scans, source and OCI content
+ok 15 - output binds stopped compiler, complete bootstrap scans, source and OCI content
+  ---
+  duration_ms: 143.0275
+  type: 'test'
+  ...
+# Subtest: output rejects malformed source/run before loading evidence
+ok 16 - output rejects malformed source/run before loading evidence
+  ---
+  duration_ms: 0.4586
+  type: 'test'
+  ...
+# Subtest: SDK data classification is restricted to supplemental compiler roles
+ok 17 - SDK data classification is restricted to supplemental compiler roles
+  ---
+  duration_ms: 0.2117
+  type: 'test'
+  ...
+# Subtest: compatibility probe exercises external frontend and a network-free native RUN
+ok 18 - compatibility probe exercises external frontend and a network-free native RUN
+  ---
+  duration_ms: 0.3475
+  type: 'test'
+  ...
+# Subtest: bounded input download refuses content drift and existing destination
+ok 19 - bounded input download refuses content drift and existing destination
+  ---
+  duration_ms: 384.2044
+  type: 'test'
+  ...
+# Subtest: all nine stages retain complete inventories and explicit unchanged scan coverage
+ok 20 - all nine stages retain complete inventories and explicit unchanged scan coverage
+  ---
+  duration_ms: 420.3566
+  type: 'test'
+  ...
+# Subtest: base/final highs fail independently while every tooling stage is still scanned
+ok 21 - base/final highs fail independently while every tooling stage is still scanned
+  ---
+  duration_ms: 457.8839
+  type: 'test'
+  ...
+# Subtest: scanner error preserves exact exit/log and later stage results
+ok 22 - scanner error preserves exact exit/log and later stage results
+  ---
+  duration_ms: 460.5307
+  type: 'test'
+  ...
+# Subtest: missing upgraded npm is a coverage failure, not a zero-finding pass
+ok 23 - missing upgraded npm is a coverage failure, not a zero-finding pass
+  ---
+  duration_ms: 168.266
+  type: 'test'
+  ...
+# Subtest: absent OS inventory cannot pass as a clean image
+ok 24 - absent OS inventory cannot pass as a clean image
+  ---
+  duration_ms: 389.7618
+  type: 'test'
+  ...
+# Subtest: identity mismatch fails that stage while preserving other scans
+ok 25 - identity mismatch fails that stage while preserving other scans
+  ---
+  duration_ms: 168.0212
+  type: 'test'
+  ...
+# Subtest: missing stage rejects an incomplete plan before scanning
+ok 26 - missing stage rejects an incomplete plan before scanning
+  ---
+  duration_ms: 66.0174
+  type: 'test'
+  ...
+# Subtest: database drift fails even when every fake scan reports zero findings
+ok 27 - database drift fails even when every fake scan reports zero findings
+  ---
+  duration_ms: 94.222
+  type: 'test'
+  ...
+# Subtest: historical output destination is never overwritten
+ok 28 - historical output destination is never overwritten
+  ---
+  duration_ms: 66.1549
+  type: 'test'
+  ...
+# Subtest: replacing admitted metadata with expired metadata fails frozen identity before scans
+ok 29 - replacing admitted metadata with expired metadata fails frozen identity before scans
+  ---
+  duration_ms: 214.9095
+  type: 'test'
+  ...
+# Subtest: an additional runtime parent is scanned and cannot silently escape its high gate
+ok 30 - an additional runtime parent is scanned and cannot silently escape its high gate
+  ---
+  duration_ms: 188.6965
+  type: 'test'
+  ...
+# Subtest: scanner image identity mismatch is not accepted as a clean report
+ok 31 - scanner image identity mismatch is not accepted as a clean report
+  ---
+  duration_ms: 163.9666
+  type: 'test'
+  ...
+# Subtest: explicit single-stage collection remains partial and cannot claim aggregate coverage
+ok 32 - explicit single-stage collection remains partial and cannot claim aggregate coverage
+  ---
+  duration_ms: 231.0039
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+ok 33 - bare-Go frontend requires hash-bound complete native coverage (matching targets retain highs)
+  ---
+  duration_ms: 184.1287
+  type: 'test'
+  ...
+# Subtest: bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+ok 34 - bare-Go frontend requires hash-bound complete native coverage (unmatched ELF fails)
+  ---
+  duration_ms: 172.981
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7060.3767

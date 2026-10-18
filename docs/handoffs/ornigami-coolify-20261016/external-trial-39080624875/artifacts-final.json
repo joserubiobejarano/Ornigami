@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 12118746653,
+      "node_id": "MDg6QXJ0aWZhY3QxMjExODc0NjY1Mw==",
+      "name": "ornigami-rehearsal-39080624875-1",
+      "size_in_bytes": 1960718,
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/artifacts/12118746653",
+      "archive_download_url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/artifacts/12118746653/zip",
+      "expired": false,
+      "digest": "sha256:c140680b6cc01953b3260cd0e47f4908c0f37daeea2277759c3f4272acb7c21b",
+      "created_at": "2026-10-17T23:55:36Z",
+      "updated_at": "2026-10-17T23:55:36Z",
+      "expires_at": "2026-11-16T23:55:35Z",
+      "workflow_run": {
+        "id": 39080624875,
+        "repository_id": 1098540125,
+        "head_repository_id": 1098540125,
+        "head_branch": "codex/ornigami-sri-local-prototype-f-20261016",
+        "head_sha": "88fb66569c8b68c7fa60a98ccac49e6cb97b860e"
+      }
+    }
+  ]
+}

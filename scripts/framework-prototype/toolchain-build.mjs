@@ -11,6 +11,16 @@ import {cleanupOwnedImages} from './cleanup-owned-images.mjs';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const writeJSON=(file,value)=>fs.writeFileSync(file,JSON.stringify(value,null,2)+'\n');
 const isId=value=>/^[0-9a-f]{64}$/.test(value??'');
+export function compilerIdentity(uid,gid){if(!Number.isSafeInteger(uid)||uid<=0||!Number.isSafeInteger(gid)||gid<=0)throw Error('Non-root runner compiler UID/GID required');return uid+':'+gid;}
+export function compilerCacheCleanupArguments(id){if(!isId(id))throw Error('Exact owned compiler ID required');return ['exec','--env','GOMODCACHE=/cache/mod','--env','GOCACHE=/cache/build','--env','GOENV=off','--env','GOTOOLCHAIN=local',id,'go','clean','-modcache'];}
+export function finishOwnedToolRoot(root,evidence,sourceSha,results,{remove=fs.rmSync}={}){
+  const receipt={sourceSha,results,ownedRootRemoved:false,result:'failed'},file=path.join(evidence,'cleanup.json');
+  writeJSON(file,receipt);
+  if(results.every(r=>r.absenceVerified===true&&['already absent','removed exact owned container','removed exact claimed image'].includes(r.result))){
+    try{remove(root,{recursive:true,force:false});receipt.ownedRootRemoved=!fs.existsSync(root);if(!receipt.ownedRootRemoved)throw Error('Owned tool root remains after removal');receipt.result='passed';}catch(error){receipt.rootRemovalError=error.message;}
+  }
+  writeJSON(file,receipt);return receipt;
+}
 async function fileHash(file){const h=createHash('sha256');for await(const b of fs.createReadStream(file))h.update(b);return h.digest('hex');}
 
 export async function buildToolchain() {
@@ -52,7 +62,7 @@ export async function buildToolchain() {
   function assertTagUnused(tag){if(imageExists(tag))throw Error('Refusing pre-existing experimental image tag');}
   function inspectContainer(container) {
     const rows=JSON.parse(docker(['inspect',container.id],{log:false})),r=rows[0],h=r?.HostConfig;
-    if(r?.Id!==container.id||r.Name!=='/'+container.name||r.Config?.Labels?.['org.ornigami.toolchain.run']!==runId||r.Config?.Labels?.['org.ornigami.toolchain.source']!==source||h?.Memory!==container.memory||h.MemorySwap!==container.memory||h.NanoCpus!==container.cpus*1e9)throw Error('Owned tool container identity/resource drift');
+    if(r?.Id!==container.id||r.Name!=='/'+container.name||r.Config?.Labels?.['org.ornigami.toolchain.run']!==runId||r.Config?.Labels?.['org.ornigami.toolchain.source']!==source||h?.Memory!==container.memory||h.MemorySwap!==container.memory||h.NanoCpus!==container.cpus*1e9||container.user&&r.Config.User!==container.user)throw Error('Owned tool container identity/resource drift');
     return r;
   }
   function metrics(container,name) {
@@ -71,14 +81,28 @@ export async function buildToolchain() {
     const memory=compiler?8589934592:2147483648,cpus=compiler?3:1;
     state.pendingContainer={name,role};save();
     const args=['run','--detach','--name',name,'--memory='+memory,'--memory-swap='+memory,'--cpus='+cpus,'--pids-limit='+(compiler?512:128),'--security-opt','no-new-privileges:true','--network',network,'--label','org.ornigami.toolchain.run='+runId,'--label','org.ornigami.toolchain.source='+source];
+    const user=compiler?compilerIdentity(process.getuid(),process.getgid()):null;
+    if(user)args.push('--user',user);
     for(const mount of mounts)args.push('--mount',mount);
     args.push('--entrypoint','sh',image,'-c','sleep 1800');
     const id=docker(args);if(!isId(id))throw Error('Tool container ID unavailable after create; preserve pending ownership');
-    const container={role,name,id,memory,cpus,running:true};state.containers.push(container);delete state.pendingContainer;save();metrics(container,role+'-before');return container;
+    const container={role,name,id,memory,cpus,user,running:true};state.containers.push(container);delete state.pendingContainer;save();metrics(container,role+'-before');return container;
   }
   function stopContainer(container) {
     if(!container.running)return;
     let metricError;try{metrics(container,container.role+'-after');}catch(error){metricError=error;}
+    if(container.role==='compile'){
+      // Go deliberately makes downloaded module directories read-only. Its
+      // supported cleanup operates only on this container's owned cache mount.
+      try{
+        const inspected=inspectContainer(container);
+        if(!inspected.Mounts?.some(m=>m.Type==='bind'&&m.Source===path.join(root,'cache')&&m.Destination==='/cache'&&m.RW===true))throw Error('Compiler cache mount identity drift');
+        const cleaned=spawnSync('docker',compilerCacheCleanupArguments(container.id),{encoding:'utf8',timeout:30000,maxBuffer:1024*1024});
+        container.moduleCacheCleanup={exit:cleaned.status,signal:cleaned.signal,error:cleaned.error?.message??null};
+        fs.writeFileSync(path.join(evidence,'compiler-cache-cleanup.stdout'),cleaned.stdout??'');fs.writeFileSync(path.join(evidence,'compiler-cache-cleanup.stderr'),cleaned.stderr??'');save();
+        if(cleaned.status!==0||cleaned.signal||cleaned.error)throw Error('Owned compiler module-cache cleanup failed');
+      }catch(error){metricError??=error;}
+    }
     // Stop the exact recorded immutable ID even after a work deadline/OOM.
     // This is bounded failure cleanup, never a retry or new work phase.
     const stopped=spawnSync('docker',['stop','--time','10',container.id],{encoding:'utf8',timeout:30000,maxBuffer:1024*1024});
@@ -216,11 +240,10 @@ export function cleanupToolchain() {
   results.push(...cleanupOwnedImages([...state.images].reverse()));
   if(state.pendingContainer)results.push({result:'pending container ownership unresolved; preserved',name:state.pendingContainer.name});
   if(state.pendingImage)results.push({result:'pending image ownership unresolved; preserved',reference:state.pendingImage.reference});
-  const passed=results.every(r=>r.absenceVerified===true&&['already absent','removed exact owned container','removed exact claimed image'].includes(r.result));
-  if(passed){const root=fs.realpathSync(state.root);fs.rmSync(root,{recursive:true,force:false});if(fs.existsSync(root))throw Error('Owned tool root remains after removal');}
-  writeJSON(path.join(evidence,'cleanup.json'),{sourceSha:state.sourceSha,results,ownedRootRemoved:passed&&!fs.existsSync(state.root),result:passed?'passed':'failed'});
-  console.log(JSON.stringify({toolchainCleanup:passed?'passed':'failed',results,ownedRootRemoved:passed&&!fs.existsSync(state.root)}));
-  if(!passed)process.exitCode=1;
+  // Persist exact removal read-backs before a filesystem exception can occur.
+  const receipt=finishOwnedToolRoot(fs.realpathSync(state.root),evidence,state.sourceSha,results);
+  console.log(JSON.stringify({toolchainCleanup:receipt.result,...receipt}));
+  if(receipt.result!=='passed')process.exitCode=1;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   try{if(process.argv[2]==='build')await buildToolchain();else if(process.argv[2]==='cleanup')cleanupToolchain();else throw Error('Expected build or cleanup');}catch(error){console.error(error.message);process.exitCode=1;}
