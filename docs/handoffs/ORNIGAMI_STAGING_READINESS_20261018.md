@@ -1305,3 +1305,87 @@ No application tests were needed. No R6-adjacent implementation, provider, regis
 - **Remaining limitation:** B2.1 remains open. The new reserve does not prove that workflow-level evidence capture, artifact upload, custody, or later owned cleanup complete within the 40-minute job ceiling; `always()` is not a completion guarantee. An interrupted runner may still leave those receipts missing. No tail-budget redesign or retry behavior is included.
 
 Implementation commit: `1c6348f941f5b1f5aa42523f578ba0b2cd621496`. This Block 5A handoff update is committed separately; both commit IDs are reported in the final status. Coverage/adoption holds remain active, campaign allowance remains exhausted at 7/7 dispatches, 39/300 charged minutes, zero reserved, and no actual Linux-image acceptance is claimed.
+
+## Block 5A independent review — 19 October 2026
+
+Reviewed HEAD `62e3efb2b8cec245bd3f9b88003e4e7a9ee51012` against `a7dc37c`.
+Initial worktree clean. Independently reproduced 58/58 runtime/workflow tests with zero
+failures/skips; both Bash syntax checks and the whitespace check passed. No Docker daemon,
+container/image, external workflow, provider or registry action was used in this review.
+Only these review notes were edited. **Disposition: implementation follow-up required.**
+
+### B5A.1 [P1] Per-Docker-call timeouts do not enforce an overall phase deadline
+
+`runtime-deadline.sh` computes cutoffs but has no phase-wide watchdog/supervisor. Only callers
+of `ornigami_deadline_run` are interrupted. In the harness, Docker and the health-check sleep
+use that helper; host-side Python validation/receipt generation, sanitization, host filesystem
+commands and other shell work do not. An unresponsive host-side child can therefore run beyond
+the runtime cutoff or the claimed 120-second harness cleanup cutoff. The final runtime check
+only detects lateness if execution eventually reaches it. In cleanup, setting the helper phase
+does not bound the intervening Python/sanitization work either. This is distinct from the already
+deferred outer workflow tail: the harness itself is not globally bounded yet.
+
+Required: enforce a real overall runtime cutoff and a bounded harness termination/cleanup window,
+covering host-side work and child processes as well as Docker CLI calls. Preserve identity-fenced
+cleanup and truthful missing-receipt outcomes when a hard stop prevents completion. Do not assert
+that killing a Docker client proves its daemon-side exec stopped or that resources were removed;
+use exact-owned cleanup/read-back or record those facts as unproved. Add short, real-child
+regressions for stuck host-side work during acceptance and cleanup, not only a direct helper
+invocation. Keep outer workflow tail redesign outside this follow-up.
+
+### B5A.2 [P2] Timeout accounting is lost across command substitutions
+
+The timeout helper sets shell variables, but many actual invocations execute under `$(...)`,
+including image/identity inspection, health state and cleanup inventories. Bash runs these in
+subshells; their variable assignments do not update the parent. A local reproduction using the
+actual helper and a one-second cap produced:
+
+`substitution_exit=124 parent_command_timeout=false parent_deadline_timeout=false`
+
+The existing TERM-resistant-child regression invokes the helper directly, so it does not detect
+this. Required command failures may still fail acceptance through their exit status, but timeout
+flags written to the report/cleanup receipt can falsely remain clear. Do not equate this with
+proof of a passing acceptance; it is a concrete timeout-accounting/diagnostic defect.
+
+Required: propagate timeout observations reliably to the parent across the actual invocation
+forms, preserving stdout for JSON/identity output. Add regressions for a timed-out command
+substitution and an actual harness receipt/failure path, alongside successful substitutions.
+Keep ordinary tolerated command errors distinct from timeouts and preserve fail-closed behavior.
+
+### Required bounded follow-up
+
+Address B5A.1/B5A.2 only on this branch; append a response with focused checks, changed behavior,
+commits and remaining limitations. Preserve previous review notes. No new external action,
+image build, workflow dispatch, registry operation, resource/policy expansion or deployment.
+All coverage/adoption/dispatch holds and the separate outer tail-budget risk remain active.
+
+## Block 5A corrections response — B5A.1/B5A.2
+
+- **B5A.1 corrected:** the harness now runs its complete acceptance worker under a phase-wide
+  supervisor. It reserves the existing 120-second harness cleanup window and bounds worker
+  termination with TERM followed by KILL. Host-side work and child processes are in the supervised
+  process group; the cleanup phase itself is included. Forced termination fails acceptance. If a
+  Docker CLI operation times out, cleanup receipts mark affected resource absence as unproved:
+  killing the client does not establish that daemon-side work stopped. Exact identity-fenced cleanup
+  and daemon read-back remain required where execution permits.
+- **B5A.2 corrected:** command and supervisor timeout observations are appended to a private
+  out-of-band state file and synchronized by the parent, so command substitutions retain their
+  stdout while timeout accounting survives subshells. Ordinary nonzero exits, including an ordinary
+  exit code 124, remain distinct from timeout events. Timeout/interruption fields reach failure and
+  cleanup receipts when those writers can complete.
+- **Focused verification:** `node --test tests/coolify-runtime-acceptance.test.mjs
+  tests/coolify-rehearsal-workflow.test.mjs` passed **61/61** (17 runtime and 44 workflow tests),
+  including real stuck children during acceptance and cleanup, stdout/timeout substitution cases,
+  ordinary failure distinction, and a timed-out substitution producing a truthful cleanup receipt
+  with absence unproved. Bash syntax checks passed for both runtime shell files; `git diff --check`
+  passed. No application tests, external image build, dispatch, deployment, registry or provider
+  action was run.
+- **Limitations and holds:** B2.1's outer workflow tail-budget engineering risk remains unresolved;
+  this change bounds the harness, not later evidence collection/upload or all workflow cleanup.
+  Forced termination can prevent custody and authoritative absence read-back; those outcomes remain
+  unproved and acceptance fails. No actual Linux-image acceptance is claimed. Coverage/adoption holds
+  remain active and campaign allowance remains exhausted at 7/7 dispatches, 39/300 charged minutes,
+  zero reserved.
+
+Implementation commit: to be recorded after commit. This correction response is committed separately;
+the independent review notes above are preserved.
