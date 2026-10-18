@@ -18,6 +18,31 @@ assert.ok(receiptWriter, "runtime receipt Python writer must be present");
 assert.ok(failureWriter, "failure receipt Python writer must be present");
 assert.ok(cleanupFailureWriter, "late cleanup failure receipt writer must be present");
 
+// R1/R2 regression extractors: the harness must drive the Distroless runtime through the
+// shipped Node probes (`runtime-probes.mjs`), never through shell utilities, and must
+// gate acceptance on complete native image-format evidence.
+const captureCgroupSlice = harness.slice(harness.indexOf("capture_cgroup() {"), harness.indexOf("\nassert_cgroup_metrics() {"));
+const identitySlice = harness.slice(harness.indexOf('runtime_uid=$(docker exec "$name"'), harness.indexOf("readonly_result="));
+const diskProbeInvocation = harness.match(/docker exec "\$name" node \/app\/deploy\/coolify\/runtime-probes\.mjs disk >"\$report_dir\/runtime-disk\.txt" 2>&1/)?.[0] ?? "";
+const nativeBlockStart = harness.indexOf('if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats');
+const nativeBlock = nativeBlockStart >= 0
+  ? harness.slice(nativeBlockStart, harness.indexOf('rm -f -- "$report_dir/native-image-formats.stderr"', nativeBlockStart) + 'rm -f -- "$report_dir/native-image-formats.stderr"'.length)
+  : "";
+const sanitizeFileSlice = harness.slice(harness.indexOf("sanitize_file() {"), harness.indexOf("\ncapture_cgroup() {"));
+const finalGateSlice = harness.slice(harness.indexOf("if [[ $cold_http_failed == true ||"), harness.indexOf("finished_epoch=$(date +%s)"));
+const runtimePython = (() => {
+  const result = spawnSync(python, ["-c", "import sys; print(sys.executable)"], { encoding: "utf8" });
+  const executable = (result.stdout ?? "").trim().split(/\r|\n/)[0]?.trim() ?? "";
+  return executable || python;
+})();
+
+assert.ok(captureCgroupSlice.startsWith("capture_cgroup() {") && captureCgroupSlice.includes('docker exec "$target" node /app/deploy/coolify/runtime-probes.mjs cgroup'), "cgroup capture must invoke the runtime cgroup probe");
+assert.ok(identitySlice.startsWith('runtime_uid=$(docker exec "$name"') && identitySlice.includes('docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs uid') && identitySlice.trim().endsWith("exit 1; }"), "identity slice must run the UID probe and gate on 1000:1000");
+assert.ok(diskProbeInvocation.length > 0, "disk evidence must be captured by the runtime disk probe");
+assert.ok(nativeBlock.startsWith('if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats') && nativeBlock.endsWith('rm -f -- "$report_dir/native-image-formats.stderr"') && nativeBlock.includes("native_formats_failed=true"), "native image format evidence block must be extractable");
+assert.ok(sanitizeFileSlice.startsWith("sanitize_file() {"), "sanitize_file must be extractable for evidence tests");
+assert.ok(finalGateSlice.includes("$native_formats_failed == true") && finalGateSlice.includes("native_formats_failed=%s"), "final acceptance gate must consult native format failure");
+
 test("owned resource cleanup requires removal and authoritative absence readback", (t) => {
   if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted cleanup test");
   const start = harness.indexOf("cleanup_owned_resources() {");
@@ -262,4 +287,233 @@ test("cold HTTP failure still runs restart and recreate checks and exits nonzero
   assert.match(report, /next_image_cache_recreate=true/);
   assert.match(report, /cold_http_failed=true/, `${result.stdout}\n${result.stderr}`);
   assert.equal(report.includes("restart_http=200_with_csp"), false);
+});
+
+test("runtime command contract drives the Distroless runtime through Node probes only", () => {
+  assert.match(harness, /docker exec "\$target" node \/app\/deploy\/coolify\/runtime-probes\.mjs cgroup >"/);
+  assert.match(harness, /docker exec "\$name" node \/app\/deploy\/coolify\/runtime-probes\.mjs uid\)/);
+  assert.match(harness, /docker exec "\$name" node \/app\/deploy\/coolify\/runtime-probes\.mjs disk >"/);
+  assert.match(harness, /docker exec "\$name" node \/app\/deploy\/coolify\/runtime-probes\.mjs image-formats >"/);
+  assert.doesNotMatch(harness, /docker exec "(?:\$name|\$target)" sh\b/);
+  assert.doesNotMatch(harness, /docker exec "\$name" id -u\b/);
+  assert.doesNotMatch(harness, /docker exec "\$name" df\b/);
+});
+
+test("cgroup capture invokes the runtime cgroup probe and requires every metric", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted cgroup test");
+  const fullFixture = [
+    "==memory.max==\n805306368\n",
+    "==memory.swap.max==\n0\n",
+    "==memory.current==\n123456789\n",
+    "==memory.peak==\n234567890\n",
+    "==memory.events==\nlow 0\nhigh 0\nmax 0\noom 0\noom_kill 0\n",
+    "==memory.stat==\nanon 0\nfile 0\n",
+    "==memory.pressure==\navg10=0.00 avg60=0.00 avg300=0.00\n",
+    "==cpu.max==\n75000 100000\n",
+    "==cpu.stat==\nusage_usec 1234567\nuser_usec 1234567\nsystem_usec 0\n",
+    "==pids.max==\n128\n",
+  ].join("");
+  const scenarios = [
+    ["complete-counters", fullFixture, 0, false, "runtime-first-cgroup.txt"],
+    ["missing-required-metric", fullFixture.replace("==cpu.max==\n75000 100000\n", ""), 0, true, "runtime-first-cgroup.txt"],
+    ["probe-failure", "", 1, true, "runtime-first-cgroup.txt"],
+  ];
+  for (const [scenario, fixture, exitCode, shouldFail, reportFile] of scenarios) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-runtime-cgroup-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    writeFileSync(join(root, "probe-stdout.txt"), fixture);
+    const shell = [
+      "set -Eeuo pipefail",
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      "name=runtime-test",
+      `exit_code=${exitCode}`,
+      "docker() { printf '%s\\n' \"$*\" >>\"$report_dir/exec-calls.txt\"; if [[ $1 == exec ]]; then if [[ $exit_code -ne 0 ]]; then printf '%s\\n' 'probe could not read cgroup metrics' >&2; return $exit_code; fi; cat \"$report_dir/probe-stdout.txt\"; return 0; fi; return 1; }",
+      captureCgroupSlice,
+      'capture_cgroup "$name" runtime-first',
+      'printf \'capture_survived=true\\n\'',
+    ].join("\n");
+    const shellPath = join(root, "cgroup-capture-test.sh");
+    writeFileSync(shellPath, shell);
+    const result = spawnSync(bash, [shellPath], { encoding: "utf8" });
+    if (shouldFail) {
+      assert.notEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    } else {
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      assert.equal(readFileSync(join(root, reportFile), "utf8"), fixture);
+      assert.match(readFileSync(join(root, "exec-calls.txt"), "utf8"), /exec runtime-test node \/app\/deploy\/coolify\/runtime-probes\.mjs cgroup/);
+    }
+    if (scenario === "missing-required-metric") assert.match(result.stderr, /Cgroup metric cpu\.max is missing/);
+    if (scenario === "probe-failure") assert.match(result.stderr, /Cgroup capture failed/);
+  }
+});
+
+test("runtime identity uses the UID/GID probe contract and rejects other users", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted identity test");
+  for (const [scenario, fakeUid, shouldFail] of [["runtime-node-user", "1000", false], ["foreign-user", "1001", true]]) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-runtime-identity-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const shell = [
+      "set -Eeuo pipefail",
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      "name=runtime-test",
+      `fake_uid=${fakeUid}`,
+      "docker() { printf '%s\\n' \"$*\" >>\"$report_dir/exec-calls.txt\"; if [[ $1 == exec ]]; then printf '%s\\n' \"$fake_uid\"; return 0; fi; return 1; }",
+      identitySlice,
+      'printf \'identity_survived=true\\n\'',
+    ].join("\n");
+    const shellPath = join(root, "identity-test.sh");
+    writeFileSync(shellPath, shell);
+    const result = spawnSync(bash, [shellPath], { encoding: "utf8" });
+    assert.match(readFileSync(join(root, "exec-calls.txt"), "utf8"), /exec runtime-test node \/app\/deploy\/coolify\/runtime-probes\.mjs uid/);
+    if (shouldFail) {
+      assert.notEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      assert.match(result.stderr, /Runtime UID is not 1000/);
+    } else {
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      assert.match(result.stdout, /identity_survived=true/);
+    }
+  }
+});
+
+test("runtime disk evidence uses the statfs probe and fails closed", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted disk test");
+  const diskFixture = JSON.stringify([
+    { path: "/", blockSize: "4096", totalBytes: "80530636800", freeBytes: "40265318400", availableBytes: "40265318400" },
+    { path: "/tmp", blockSize: "4096", totalBytes: "68719476736", freeBytes: "51539607552", availableBytes: "51539607552" },
+    { path: "/app/.next/cache", blockSize: "4096", totalBytes: "21474836480", freeBytes: "10737418240", availableBytes: "10737418240" },
+  ]);
+  for (const [scenario, exitCode, shouldFail] of [["statfs-probe", 0, false], ["probe-failure", 1, true]]) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-runtime-disk-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    writeFileSync(join(root, "probe-stdout.txt"), diskFixture);
+    const shell = [
+      "set -Eeuo pipefail",
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      "name=runtime-test",
+      `exit_code=${exitCode}`,
+      "docker() { printf '%s\\n' \"$*\" >>\"$report_dir/exec-calls.txt\"; if [[ $1 == exec ]]; then if [[ $exit_code -ne 0 ]]; then printf '%s\\n' 'statfs unavailable in runtime' >&2; return $exit_code; fi; cat \"$report_dir/probe-stdout.txt\"; return 0; fi; return 1; }",
+      diskProbeInvocation,
+      'printf \'disk_survived=true\\n\'',
+    ].join("\n");
+    const shellPath = join(root, "disk-test.sh");
+    writeFileSync(shellPath, shell);
+    const result = spawnSync(bash, [shellPath], { encoding: "utf8" });
+    const calls = readFileSync(join(root, "exec-calls.txt"), "utf8");
+    assert.match(calls, /exec runtime-test node \/app\/deploy\/coolify\/runtime-probes\.mjs disk/);
+    assert.equal(calls.includes("df -Pk"), false, `in-container df must not reappear: ${calls}`);
+    if (shouldFail) {
+      assert.notEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    } else {
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      assert.equal(readFileSync(join(root, "runtime-disk.txt"), "utf8"), diskFixture);
+    }
+  }
+});
+
+test("native image format evidence gates acceptance on every failure mode", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted native evidence test");
+  assert.ok(runtimePython, "a Python executable is required for python3 shimmed evidence validation");
+  const nativePassing = JSON.stringify({
+    result: "passed",
+    versions: { sharp: "0.35.5", vips: "8.18.0" },
+    checks: [
+      { format: "png", inputBytes: 100, outputBytes: 80, width: 4, height: 4, result: "passed" },
+      { format: "jpeg", inputBytes: 100, outputBytes: 80, width: 4, height: 4, result: "passed" },
+      { format: "webp", inputBytes: 100, outputBytes: 80, width: 4, height: 4, result: "passed" },
+      { format: "avif", inputBytes: 100, outputBytes: 80, width: 4, height: 4, result: "passed" },
+      { format: "gif", inputBytes: 100, outputBytes: 80, width: 4, height: 4, result: "passed" },
+      { format: "tiff", inputBytes: 100, outputBytes: 80, width: 4, height: 4, result: "passed" },
+      { format: "svg-input", inputBytes: 96, outputBytes: 60, result: "passed" },
+    ],
+    runtime: { platform: "linux/amd64", node: "v22.23.3", openssl: "3.5.8", glibc: "2.41", sse4_2: true },
+    loadedNativeObjects: ["/nodejs/bin/node", "/app/node_modules/sharp/build/Release/sharp-linux-x64.node"],
+  });
+  const nativeObject = JSON.parse(nativePassing);
+  const failureScenarios = [
+    ["empty-output", ""],
+    ["non-json-output", "not-json"],
+    ["missing-formats", JSON.stringify({ ...nativeObject, checks: nativeObject.checks.slice(0, 6) })],
+    ["failed-format", JSON.stringify({ ...nativeObject, checks: nativeObject.checks.map((check, index) => (index === 3 ? { ...check, result: "failed" } : check)) })],
+    ["foreign-platform", JSON.stringify({ ...nativeObject, runtime: { ...nativeObject.runtime, platform: "linux/arm64" } })],
+  ];
+  for (const [scenario, payload, exitCode] of [
+    ...failureScenarios.map(([name, payload]) => [name, payload, 0]),
+    ["probe-failure", "", 3],
+  ]) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-runtime-native-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    writeFileSync(join(root, "probe-stdout.txt"), payload);
+    const shouldFail = scenario !== "passed";
+    const shell = [
+      "set -Eeuo pipefail",
+      `PYBIN='${runtimePython.replaceAll("'", "'\\''")}'`,
+      'python3() { "$PYBIN" "$@"; }',
+      "record_error_context() { :; }",
+      sanitizeFileSlice,
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      'report="$report_dir/report.txt"',
+      ': >"$report"',
+      "name=runtime-test",
+      `probe_exit=${exitCode}`,
+      "docker() { if [[ $1 == exec ]]; then if [[ $probe_exit -ne 0 ]]; then printf '%s\\n' 'Required native image format unavailable: avif' >&2; return $probe_exit; fi; cat \"$report_dir/probe-stdout.txt\"; return 0; fi; return 1; }",
+      nativeBlock,
+      'printf \'native_formats_failed=%s\\n\' "$native_formats_failed"',
+    ].join("\n");
+    const shellPath = join(root, "native-evidence-test.sh");
+    writeFileSync(shellPath, shell);
+    const result = spawnSync(bash, [shellPath], { encoding: "utf8" });
+    assert.equal(result.status, 0, `${scenario}: ${result.stdout}\n${result.stderr}`);
+    assert.equal(existsSync(join(root, "native-image-formats.stderr")), false, `raw stderr retained: ${scenario}`);
+    const report = readFileSync(join(root, "report.txt"), "utf8");
+    if (shouldFail) {
+      const expectedExit = exitCode === 0 ? 1 : exitCode;
+      assert.deepEqual(JSON.parse(readFileSync(join(root, "native-image-formats.json"), "utf8")), { result: "failed", exitStatus: expectedExit, diagnostic: "native-image-formats-error.txt" });
+      assert.match(report, /^native_image_formats=failed$/m);
+      assert.match(result.stdout, /^native_formats_failed=true$/m);
+    } else {
+      assert.equal(readFileSync(join(root, "native-image-formats.json"), "utf8"), nativePassing);
+      assert.deepEqual(JSON.parse(readFileSync(join(root, "native-image-formats.json"), "utf8")), nativeObject);
+      assert.match(report, /^native_image_formats=passed$/m);
+    }
+    if (exitCode !== 0) {
+      assert.match(readFileSync(join(root, "native-image-formats-error.txt"), "utf8"), /Required native image format unavailable: avif/);
+    } else {
+      assert.equal(existsSync(join(root, "native-image-formats-error.txt")), false, `error evidence fabricated: ${scenario}`);
+    }
+  }
+});
+
+test("final acceptance gate rejects native format failure and completes a fully checked pass", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted gate test");
+  for (const [scenario, cold, cache, native, expectExit] of [
+    ["all-foundations-passed", "false", "false", "false", 0],
+    ["native-formats-failed", "false", "false", "true", 1],
+    ["cold-http-failed", "true", "false", "false", 1],
+  ]) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-runtime-gate-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const shell = [
+      "set -Eeuo pipefail",
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      'report="$report_dir/report.txt"',
+      ': >"$report"',
+      `cold_http_failed=${cold}`,
+      `cache_check_failed=${cache}`,
+      `native_formats_failed=${native}`,
+      finalGateSlice,
+      'printf \'gate_survived=true\\n\'',
+    ].join("\n");
+    const shellPath = join(root, "gate-test.sh");
+    writeFileSync(shellPath, shell);
+    const result = spawnSync(bash, [shellPath], { encoding: "utf8" });
+    assert.equal(result.status, expectExit, `${result.stdout}\n${result.stderr}`);
+    const report = readFileSync(join(root, "report.txt"), "utf8");
+    if (expectExit === 0) {
+      assert.equal(report, "");
+      assert.match(result.stdout, /gate_survived=true/);
+    } else {
+      assert.match(report, /^native_formats_failed=/m);
+      assert.match(result.stderr, /Runtime acceptance failed: cold HTTP, image-cache persistence, or native image-format checks failed/);
+    }
+  }
 });

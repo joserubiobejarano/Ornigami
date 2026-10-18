@@ -86,6 +86,7 @@ owned_container_id=
 final_result=failed
 cold_http_failed=false
 cache_check_failed=false
+native_formats_failed=false
 restart_http_passed=false
 recreate_http_passed=false
 restart_cache_passed=false
@@ -128,11 +129,7 @@ PY
 
 capture_cgroup() {
   local target=$1 prefix=$2
-  if ! docker exec "$target" sh -c '
-    for path in memory.max memory.swap.max memory.current memory.peak memory.events memory.stat memory.pressure cpu.max cpu.stat pids.max; do
-      if [ -r "/sys/fs/cgroup/$path" ]; then printf "==%s==\n" "$path"; cat "/sys/fs/cgroup/$path"; fi
-    done
-  ' >"$report_dir/${prefix}-cgroup.txt" 2>&1; then
+  if ! docker exec "$target" node /app/deploy/coolify/runtime-probes.mjs cgroup >"$report_dir/${prefix}-cgroup.txt" 2>&1; then
     printf 'Cgroup capture failed for %s.\n' "$target" >&2
     return 1
   fi
@@ -613,7 +610,7 @@ verify_runtime_config() {
 
 verify_runtime_config
 wait_for_health
-runtime_uid=$(docker exec "$name" id -u)
+runtime_uid=$(docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs uid)
 [[ $runtime_uid == 1000 ]] || { printf 'Runtime UID is not 1000.\n' >&2; exit 1; }
 readonly_result=$(docker exec "$name" node -e '
   const fs = require("node:fs");
@@ -622,6 +619,43 @@ readonly_result=$(docker exec "$name" node -e '
 ' && printf rejected || printf writable)
 [[ $readonly_result == rejected ]] || { printf 'Runtime root filesystem accepted a write.\n' >&2; exit 1; }
 docker exec "$name" node -e 'require("node:fs").writeFileSync("/tmp/rehearsal-write-probe", "ok")'
+
+if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats >"$report_dir/native-image-formats.json" 2>"$report_dir/native-image-formats.stderr"; then
+  if python3 - "$report_dir/native-image-formats.json" <<'PY'
+import json, sys
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report.get("result") == "passed", "native image format probe did not report passed"
+checks = report.get("checks")
+expected = ["png", "jpeg", "webp", "avif", "gif", "tiff", "svg-input"]
+assert isinstance(checks, list) and len(checks) == 7, "seven native image format checks are required"
+assert [check.get("format") for check in checks] == expected, "native image format set mismatch"
+assert all(check.get("result") == "passed" for check in checks), "a native image format check failed"
+runtime = report.get("runtime")
+assert isinstance(runtime, dict) and runtime.get("platform") == "linux/amd64", "native runtime platform evidence missing"
+assert all(bool(runtime.get(key)) for key in ("node", "openssl", "glibc")), "native runtime version evidence missing"
+objects = report.get("loadedNativeObjects")
+assert isinstance(objects, list) and len(objects) > 0, "loaded native object evidence missing"
+PY
+  then
+    printf 'native_image_formats=passed\n' >>"$report"
+  else
+    record_error_context 1 "$LINENO" 'native image format evidence validation'
+    native_formats_failed=true
+    printf '{"result":"failed","exitStatus":1,"diagnostic":"native-image-formats-error.txt"}\n' >"$report_dir/native-image-formats.json"
+    printf 'native_image_formats=failed\n' >>"$report"
+  fi
+else
+  native_status=$?
+  record_error_context "$native_status" "$LINENO" 'native image format probes'
+  native_formats_failed=true
+  printf '{"result":"failed","exitStatus":%s,"diagnostic":"native-image-formats-error.txt"}\n' "$native_status" >"$report_dir/native-image-formats.json"
+  printf 'native_image_formats=failed\n' >>"$report"
+fi
+if [[ -s "$report_dir/native-image-formats.stderr" ]]; then
+  sanitize_file "$report_dir/native-image-formats.stderr" >"$report_dir/native-image-formats-error.txt"
+  cat "$report_dir/native-image-formats-error.txt" >&2
+fi
+rm -f -- "$report_dir/native-image-formats.stderr"
 
 runtime_limits=$(docker inspect --format '{{.HostConfig.Memory}}|{{.HostConfig.MemorySwap}}|{{.HostConfig.NanoCpus}}|{{.HostConfig.PidsLimit}}|{{.HostConfig.ReadonlyRootfs}}|{{.HostConfig.NetworkMode}}|{{json .HostConfig.PortBindings}}|{{json .HostConfig.CapDrop}}|{{json .HostConfig.SecurityOpt}}' "$name")
 expected_limits_prefix='805306368|805306368|750000000|128|true|none|'
@@ -1052,7 +1086,7 @@ printf 'container_id_after_recreate=%s\ncontainer_identity_check=restart_same_re
 printf 'recreate_http=%s\nnext_image_cache_recreate=%s\n' "$recreate_http_passed" "$recreate_cache_passed" >>"$report"
 capture_cgroup "$name" runtime-after-recreate
 assert_cgroup_metrics "$report_dir/runtime-after-recreate-cgroup.txt"
-docker exec "$name" df -Pk / /tmp /app/.next/cache >"$report_dir/runtime-disk.txt" 2>&1 || true
+docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs disk >"$report_dir/runtime-disk.txt" 2>&1
 df -Pk / "$report_root" >"$report_dir/host-disk-after.txt" 2>&1 || true
 
 if grep -Eq '^oom_kill[[:space:]]+([1-9][0-9]*)$' "$report_dir/runtime-first-cgroup.txt" "$report_dir/runtime-after-restart-cgroup.txt" "$report_dir/runtime-after-recreate-cgroup.txt"; then
@@ -1060,13 +1094,13 @@ if grep -Eq '^oom_kill[[:space:]]+([1-9][0-9]*)$' "$report_dir/runtime-first-cgr
   exit 1
 fi
 printf 'cache_persistence_scope=next_image_cache_volume_only;does_not_accept_database_or_media_storage\n' >>"$report"
-if [[ $cold_http_failed == true || $cache_check_failed == true ]]; then
-  printf 'cold_http_failed=%s\ncache_check_failed=%s\n' "$cold_http_failed" "$cache_check_failed" >>"$report"
-  printf 'Runtime acceptance failed: cold HTTP or image-cache persistence checks failed; restart/recreate observations were retained.\n' >&2
+if [[ $cold_http_failed == true || $cache_check_failed == true || $native_formats_failed == true ]]; then
+  printf 'cold_http_failed=%s\ncache_check_failed=%s\nnative_formats_failed=%s\n' "$cold_http_failed" "$cache_check_failed" "$native_formats_failed" >>"$report"
+  printf 'Runtime acceptance failed: cold HTTP, image-cache persistence, or native image-format checks failed; restart/recreate observations were retained.\n' >&2
   exit 1
 fi
 finished_epoch=$(date +%s)
 printf 'finished_at_utc=%s\nruntime_elapsed_seconds=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$((finished_epoch - started_epoch))" >>"$report"
-printf 'result=passed\nruntime_cgroup_metrics=runtime-first-cgroup.txt,runtime-after-restart-cgroup.txt,runtime-after-recreate-cgroup.txt\n' >>"$report"
+printf 'result=passed\nruntime_cgroup_metrics=runtime-first-cgroup.txt,runtime-after-restart-cgroup.txt,runtime-after-recreate-cgroup.txt\nnative_image_formats_evidence=native-image-formats.json\n' >>"$report"
 final_result=passed
 printf 'Linux runtime acceptance passed for %s. Local image retained; runtime container and cache volume will be removed.\n' "$image"
