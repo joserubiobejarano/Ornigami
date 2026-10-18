@@ -1,0 +1,70 @@
+# Inactive preparation; do not deploy before image/security/runtime acceptance.
+# Instructions and open gates: deploy/vps/README.md (Coolify preparation profile).
+services:
+  app:
+    image: ${ORNIGAMI_IMAGE:?Set the immutable image reference}
+    platform: linux/amd64
+    init: true
+    restart: unless-stopped
+    read_only: true
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 768m
+    memswap_limit: 768m
+    cpus: 0.75
+    stop_grace_period: 45s
+    deploy:
+      replicas: 1
+    labels:
+      traefik.enable: "false"
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      NODE_OPTIONS: --max-old-space-size=512
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_APP_URL: ${ORNIGAMI_PUBLIC_ORIGIN:?Set the approved application origin}
+      AUTH_URL: ${ORNIGAMI_PUBLIC_ORIGIN:?Set the approved application origin}
+      DATABASE_URL: ${DATABASE_URL:?Set the dedicated staging database URL}
+      AUTH_SECRET: ${AUTH_SECRET:?Set the deployment auth secret}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?Set the deployment token encryption key}
+      REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ${REVIEW_BOOSTER_UNSUBSCRIBE_SECRET:?Set the unsubscribe signing secret}
+      CRON_SECRET: ${CRON_SECRET:?Set the deployment cron secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set the approved Google OAuth client ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set the approved Google OAuth client secret}
+      OPENAI_ENABLED: "false"
+      ORNIGAMI_COOLIFY_CRON_ENABLED: "false"
+      ORNIGAMI_COOLIFY_CRON_REVIEW_BOOSTER_ENABLED: "false"
+      ORNIGAMI_COOLIFY_CRON_REVIEW_REPLIES_ENABLED: "false"
+      ORNIGAMI_COOLIFY_CRON_PRIVACY_ENABLED: "false"
+      ORNIGAMI_COOLIFY_REPLIES_ACCEPTED: "false"
+      RESEND_RECONCILIATION_ENABLED: "false"
+      PRIVACY_ACCOUNT_DELETION_ENABLED: "false"
+      PRIVACY_RETENTION_ENABLED: "false"
+      PRIVACY_RETENTION_APPLY: "false"
+    tmpfs:
+      - /tmp:size=32m,mode=1777,noexec,nosuid,nodev
+    volumes:
+      - next-cache:/app/.next/cache
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/robots.txt',{redirect:'manual',signal:AbortSignal.timeout(1500)}).then(async r=>{await r.body?.cancel();process.exit(r.status===200?0:1)}).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  next-cache:

@@ -3,3 +3,6 @@
 migration-sources/** -text -whitespace
 tests/fixtures/contracts/*.sql text eol=lf
 scripts/sql/*.sql text eol=lf
+
+scripts/*.sh text eol=lf
+deploy/coolify/*.sh text eol=lf
