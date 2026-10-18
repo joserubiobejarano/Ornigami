@@ -3,3 +3,4 @@ migration-sources/**
 assets/brand-originals/**
 # Local recovery/evidence must never enter a CLI deployment.
 .local/**
+Audits/**

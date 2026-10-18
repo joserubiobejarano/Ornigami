@@ -22,6 +22,7 @@ Relevant checks are `npm run lint`, `npm run typegen`, `npx tsc --noEmit`, `npm 
 The current guides are:
 
 - [Roadmap](./docs/ROADMAP.md): current backlog, release gates and branch coordination.
+- [Audits](./Audits/README.md): expanded project scenarios, historical-evidence reuse and staged verification before VPS/customer activation.
 - [Product contracts](./docs/PRODUCT_CONTRACTS.md): current/approved/proposed commercial, trial, quota and workflow rules.
 - [Operations](./docs/OPERATIONS.md): environment, deployment, support/privacy, Google/provider runbooks, scheduling, retention and rollback.
 - [Technical reference](./docs/TECHNICAL_REFERENCE.md): architecture, API families, schema and durable security/provider contracts.

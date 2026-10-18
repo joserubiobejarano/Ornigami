@@ -18,6 +18,14 @@ Defer new modules, Speed to Lead, Replies/Complete expansion, billable AI and ex
 
 Private staging uses fictional accounts/data and agreed login flows, with all automatic jobs, live payments/provider sends/registrations and destructive/guarded features disabled. Customer mail requires the separately reviewed authority enrollments and fresh reports below. If the deadline is missed, follow the portfolio's all-three-app Vercel transition decision with a concrete transition scope; do not extend VPS effort automatically or change live services through this plan.
 
+## Expanded audit coverage
+
+The owner requested expanded scenarios from the reusable audit library. [Audits](../Audits/README.md) is the single project audit entry point; its source index inventories 341 files, 4,003 checklist controls and 4,058 worksheet rows without treating templates as results. The [158-case register](../Audits/scenarios.csv) supplies paired permitted/denied operations, forbidden-effect checks, tenant/role boundaries, replay/concurrency/expiry, recovery and actual-target evidence. All cases begin Not verified; candidate test paths and historical receipts are reuse leads, not new passes.
+
+Use the existing P0 windows: review/reuse/expand 81 G1 local candidate families during 18–24 October; cover 10 G2 full-Linux families in the separately admitted 24–26 October candidate; close 42 G3 actual-host families during 25–31 October after accepted artifact and exact access/SQL/deployment scopes. Shared-host controls may inherit fresh scoped evidence; app isolation and critical journeys still require their own proof. The 16 G4 first-customer families follow private staging; eight G5 future-activation families do not expand the staging feature scope; one G6 family governs staged operating expansion.
+
+Reuse exact unchanged facts from A02–A24 and the recorded Linux trials. Inspect actual assertions, add or rerun only missing variants/changed boundaries, and reverify image/host facts on the actual candidate/target. Do not automatically repeat every old audit or make all library controls P0. Record sanitized results in the existing release ledger and deduplicate findings into this backlog; raw evidence stays private. Applicable critical failures or unresolved required evidence block their affected gate, not an unrelated future feature. Audit planning grants no new dispatches, provider sends, jobs or deployment authority and does not extend the 31 October cutoff.
+
 ## Current decision and release boundary
 
 The owner **restored the established trial policy on October 4, 2026**: one 14-day trial per business **and billing owner**, unknown legacy history requires reconciliation, no card at trial entry, no payment method at expiry cancels, no repeated/reset trial or quota reset on conversion. The temporary paid-only/no-new-trials proposal and A21 removal task are cancelled. Customers pay after the established trial; no additional free production plan or manual free entitlement is approved. Existing implementation is retained.
@@ -57,7 +65,7 @@ Start with one business; expand to three and five after at least seven consecuti
 | Destructive account deletion | Shared lifecycle/auth/billing/Google fences and guarded retention source are integrated, but controlled provider cancellation/revocation/erasure, portal/concurrency/recovery and operator activation remain. Retention deployment/activation is separate. Keep deletion disabled until those gates close; use the assisted request process. |
 | Unknown provider reconciliation | Durable unknown-send/post reservations stay fenced. Controlled authorized provider lookup/permission/payload/UI and operator recovery proof remain before enabling reconciliation. No blind retry or releasing a fence on lease expiry. |
 | Lead and legacy cutover | A14 lead module/provider/pricing and A15 actual database/export/customer URL/scheduler cutover are deferred. Keep legacy source/recovery records and disable lead sales. Production cutover requires its separately explicit instruction. |
-| Later hardening/improvements | Trusted Types enforcement after observed sinks/provider acceptance; strict inline-style feasibility; Auth.js stable migration when verified available; throughput/onboarding/customer domains and future QR/agency/Local SEO scope. None adds a new broad Booster audit. |
+| Later hardening/improvements | Trusted Types enforcement after observed sinks/provider acceptance; strict inline-style feasibility; Auth.js stable migration when verified available; throughput/onboarding/customer domains and future QR/agency/Local SEO scope. Use the expanded scenario register for relevant missing/changed boundaries; do not repeat unrelated completed Booster audits. |
 
 ## Closed evidence to consume
 
