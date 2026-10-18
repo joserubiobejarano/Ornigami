@@ -23,7 +23,9 @@ function fixture(root){
   const binary=Buffer.alloc(64);binary.write('7f454c46',0,'hex');binary[4]=2;binary[5]=1;binary[6]=1;binary.writeUInt16LE(62,18);
   // Synthetic ELF tests controller identity/serialization, not native closure or Linux execution.
   const frontend=writeFrontendImage(binary,recipe.contract,path.join(owned,'frontend'),'ornigami-tool-frontend:'+sourceSha);
-  recipe.expectedFrontend=Object.fromEntries(['binarySha256','configDigest','manifestDigest','layerDigest'].map(k=>[k,frontend[k]]));save(path.join(recipeDir,'recipe.json'),recipe);
+  recipe.expectedFrontend=Object.fromEntries(['binarySha256','configDigest','manifestDigest','layerDigest'].map(k=>[k,frontend[k]]));
+  recipe.trialScope='tooling'; // Preserve the historical tooling-only gate CLI behavior at the fixture boundary; the real candidate recipe selects full scope.
+  save(path.join(recipeDir,'recipe.json'),recipe);
   const imageId='sha256:'+'b'.repeat(64);
   const state={root:owned,sourceSha,runId,attempt,contractSha256:recipe.buildContractSha256,result:'constructed-not-security-accepted',containers:['prepare','compile','runtime'].map(role=>({role,running:false,stopVerified:true})),binaries:recipe.contract.binaries.map(b=>({name:b.name,sha256:'c'.repeat(64),bytes:64}))};
   const output={schema:1,root:owned,sourceSha,runId,attempt,contractSha256:recipe.buildContractSha256,securityAcceptance:false,coverageHold:true,buildkit:{reference:'ornigami-tool-buildkit:'+sourceSha,imageId,ownedImage:true},frontend:{reference:'ornigami-tool-frontend:'+sourceSha,imageId:frontend.configDigest,ownedImage:true,ociDirectory:path.join(owned,'frontend/oci'),manifestDigest:frontend.manifestDigest,binarySha256:frontend.binarySha256},supplemental:['toolchain-go-base','toolchain-compiler','toolchain-runtime-base','toolchain-runtime-base-installed'].map(stage=>({stage,result:'passed',scanResult:{result:'passed',counts:{HIGH:0,CRITICAL:0}}}))};
@@ -31,8 +33,8 @@ function fixture(root){
   save(path.join(evidence,'toolchain/state.json'),state);save(path.join(evidence,'toolchain/output.json'),output);
   return {recipeDir,recipe,state,output,evidence,owned,options:{temp:root,evidence,sourceSha,runId,attempt,recipeDirectory:recipeDir}};
 }
-test('reviewed actual recipe pins eight binaries and compiler/runtime roles',()=>{
-  const recipe=loadToolchainRecipe(recipeDirectory);assert.equal(recipe.trialScope,'tooling');assert.equal(recipe.contract.binaries.length,8);assert.equal(recipe.contract.compiler.memoryBytes,8589934592);assert.equal(recipe.apk.packages.length,75);
+test('reviewed actual recipe pins full combined scope, eight binaries and compiler/runtime roles',()=>{
+  const recipe=loadToolchainRecipe(recipeDirectory);assert.equal(recipe.trialScope,'full');assert.equal(recipe.contract.binaries.length,8);assert.equal(recipe.contract.compiler.memoryBytes,8589934592);assert.equal(recipe.apk.packages.length,75);
 });
 test('contract rejects tampered module bytes even when outer recipe is untouched',()=>sandbox(root=>{
   const f=fixture(root);fs.appendFileSync(path.join(f.recipeDir,'locks/buildkit.go.mod'),'\n// drift\n');assert.throws(()=>loadToolchainRecipe(f.recipeDir),/lock identity/);

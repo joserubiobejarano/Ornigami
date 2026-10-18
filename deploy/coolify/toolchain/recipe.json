@@ -191,5 +191,5 @@
   },
   "experimental": true,
   "schema": 1,
-  "trialScope": "tooling"
+  "trialScope": "full"
 }
