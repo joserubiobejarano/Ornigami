@@ -4,15 +4,8 @@ const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
 import{admitFrozenDatabase,requireFrozenDatabase}from'./frozen-db-admission.mjs';
 import{cleanupOwnedImages}from'./cleanup-owned-images.mjs';
 import{loadToolchainOutput}from'./toolchain-runtime.mjs';
-export function skipDependentStages(root,sourceSha,reason){
-  fs.mkdirSync(root,{recursive:true});const records=[];
-  for(const stage of requiredStages){const dir=path.join(root,stage),file=path.join(dir,'driver.json');
-    if(!fs.existsSync(file)){fs.mkdirSync(dir,{recursive:true});save(file,{stage,result:'skipped',collectionComplete:false,reason,prerequisite:'shared frozen database admission',recordedAt:new Date().toISOString()});}
-    records.push(JSON.parse(fs.readFileSync(file)));
-  }
-  save(path.join(root,'index.json'),aggregate(records,sourceSha));return records;
-}
-export function aggregate(records,sourceSha){return{schema:1,...(sourceSha?{sourceSha}:{}),expectedStages:requiredStages,stages:requiredStages.map(stage=>records.find(x=>x.stage===stage)??{stage,result:'skipped',reason:'phase did not produce a receipt'}),result:requiredStages.every(s=>records.some(x=>x.stage===s&&x.result==='passed'))?'passed':'failed'};}
+import{aggregate,skipDependentStages}from'./stage-index.mjs';
+export{aggregate,skipDependentStages}from'./stage-index.mjs';
 export function rejectReexecution(event){return(event.vertexes??[event]).some(v=>/\bRUN\b/.test(v.name??'')&&(v.started||v.completed)&&v.cached!==true);}
 export function cachedTargetRun(event,target){return(event.vertexes??[event]).some(v=>v.name?.startsWith('['+target+' ')&&/\bRUN\b/.test(v.name)&&v.cached===true);}
 export function remainingSeconds(deadline){const n=Math.floor(Number(deadline)-Date.now()/1000);if(!Number.isFinite(n)||n<1)throw Error('Work deadline exhausted/invalid; no retry');return n;}

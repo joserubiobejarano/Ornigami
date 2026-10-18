@@ -3,6 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {loadToolchainRecipe} from './toolchain-contract.mjs';
 import {sha256} from './tool-image.mjs';
+import {skipDependentStages} from './stage-index.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 export function loadToolchainOutput({temp=process.env.RUNNER_TEMP,evidence=process.env.ORNIGAMI_EVIDENCE_DIR,sourceSha=process.env.SOURCE_SHA,runId=process.env.GITHUB_RUN_ID,attempt=process.env.GITHUB_RUN_ATTEMPT,recipeDirectory=path.resolve(here,'../../deploy/coolify/toolchain')}={}) {
@@ -42,7 +43,6 @@ export async function gateTooling() {
   const parents=['original-base','original-runtime-base','buildkit','dockerfile-frontend'];
   if(index.sourceSha!==output.sourceSha||!parents.every(stage=>index.stages.some(x=>x.stage===stage&&x.result==='passed'&&x.collectionComplete===true&&x.scanResult?.result==='passed')))throw Error('Both tooling and signed parent scan/native/resource gates must pass before BuildKit execution');
   if(output.recipe.trialScope==='tooling'){
-    const {skipDependentStages}=await import('./serial-scan-driver.mjs');
     skipDependentStages(root,output.sourceSha,'Intentional tooling-only preflight; application compilation and dependent stages not requested');
   }
   fs.writeFileSync(path.join(process.env.ORNIGAMI_EVIDENCE_DIR,'toolchain/prerequisites.json'),JSON.stringify({sourceSha:output.sourceSha,runId:output.runId,attempt:output.attempt,contractSha256:output.contractSha256,result:'passed tooling prerequisites only',securityAcceptance:false,coverageHold:true,scope:output.recipe.trialScope},null,2)+'\n',{flag:'wx'});
