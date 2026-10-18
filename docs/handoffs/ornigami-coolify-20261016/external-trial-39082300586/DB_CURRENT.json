@@ -1,0 +1,47 @@
+{
+  "at": "2026-10-18T00:17:25.028Z",
+  "publication": {
+    "repository": "ghcr.io/aquasecurity/trivy-db@sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "manifestDigest": "sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+    "manifestBytes": 616,
+    "manifest": {
+      "schemaVersion": 2,
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "artifactType": "application/vnd.aquasec.trivy.config.v1+json",
+      "config": {
+        "mediaType": "application/vnd.oci.empty.v1+json",
+        "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "size": 2,
+        "data": "e30="
+      },
+      "layers": [
+        {
+          "mediaType": "application/vnd.aquasec.trivy.db.layer.v1.tar+gzip",
+          "digest": "sha256:3fb08347d6ef5444dd6bb3ef718204fbf8f2f609f681e18f5eee8177f524d85c",
+          "size": 134666882,
+          "annotations": {
+            "org.opencontainers.image.title": "db.tar.gz"
+          }
+        }
+      ],
+      "annotations": {
+        "org.opencontainers.image.created": "2026-10-17T18:43:51Z"
+      }
+    },
+    "publisherRun": 39056570786,
+    "publisherSource": "cbebf2ecd6df42d36463844a45e689afee51c70f",
+    "provenance": "official successful upload log binds manifest digest; no signature attestation claimed",
+    "coverage": "HOLD: read-only query of exact published DB confirms global CVE-2026-111142 record but no Debian 12/13/14 zziplib advisory; corrected current source is undetermined; exact mutable publisher input snapshot remains unestablished; freshness/tooling diagnostics do not grant security acceptance",
+    "freshness": "must independently pass strict internal metadata admission against actual clock"
+  },
+  "metadata": {
+    "Version": 2,
+    "NextUpdate": "2026-10-18T18:34:28.174846475Z",
+    "UpdatedAt": "2026-10-17T18:34:28.174846796Z",
+    "DownloadedAt": "0001-01-01T00:00:00Z"
+  },
+  "metadataSha256": "17cbf633dd4873bfedfaa7f16a72c9739d1ecacafffecdf5572b36e8eebc905a",
+  "unchanged": true,
+  "coverageHold": true,
+  "noBlobDownload": true
+}

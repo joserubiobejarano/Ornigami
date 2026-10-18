@@ -23,6 +23,30 @@ if [[ -n $source_sha && ! $source_sha =~ ^[0-9a-f]{40}$ ]]; then
 fi
 command -v docker >/dev/null || { printf 'Docker CLI is required.\n' >&2; exit 1; }
 command -v python3 >/dev/null || { printf 'Python 3 is required for sanitized acceptance receipts.\n' >&2; exit 1; }
+profile_file="$(dirname -- "${BASH_SOURCE[0]}")/build-profile.json"
+approved_origin=$(python3 - "$profile_file" <<'PY'
+import json, sys
+
+def unique_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError('duplicate profile key')
+        value[key] = item
+    return value
+
+try:
+    with open(sys.argv[1], encoding='utf-8') as profile_file:
+        profile = json.load(profile_file, object_pairs_hook=unique_object)
+    if (type(profile) is not dict or set(profile) != {'schema', 'origin'} or
+            type(profile['schema']) is not int or profile['schema'] != 1 or
+            profile['origin'] != 'https://staging.ornigami.com'):
+        raise ValueError('invalid build profile')
+except Exception:
+    raise SystemExit('Approved build profile is missing or invalid.')
+print(profile['origin'])
+PY
+)
 docker info >/dev/null || { printf 'Docker daemon is unavailable.\n' >&2; exit 1; }
 
 image_id=$(docker image inspect --format '{{.Id}}' "$image")
@@ -40,8 +64,8 @@ if [[ -n $source_sha && $image_revision != "$source_sha" ]]; then
   printf 'Image revision label does not match SOURCE_SHA.\n' >&2
   exit 1
 fi
-[[ $image_origin == https://rehearsal.invalid ]] || {
-  printf 'Image origin label must be the fictional rehearsal origin.\n' >&2
+[[ $image_origin == "$approved_origin" ]] || {
+  printf 'Image origin label does not match the approved build profile.\n' >&2
   exit 1
 }
 
@@ -494,8 +518,8 @@ runtime_args=(
   --env PORT=3000
   --env NODE_OPTIONS=--max-old-space-size=512
   --env NEXT_TELEMETRY_DISABLED=1
-  --env NEXT_PUBLIC_APP_URL=https://rehearsal.invalid
-  --env AUTH_URL=https://rehearsal.invalid
+  --env "NEXT_PUBLIC_APP_URL=$approved_origin"
+  --env "AUTH_URL=$approved_origin"
   --env AUTH_SECRET=rehearsal-only-synthetic-auth-secret-not-for-use
   --env GOOGLE_CLIENT_ID=rehearsal.invalid
   --env GOOGLE_CLIENT_SECRET=rehearsal-only-placeholder-not-a-provider-credential
@@ -624,6 +648,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const base = "http://127.0.0.1:3000";
+const canonicalOrigin = process.env.NEXT_PUBLIC_APP_URL;
+assert.equal(new URL(canonicalOrigin).origin, canonicalOrigin, "runtime canonical origin must be an origin");
 const diagnosticHeaderNames = [
   "cache-control", "content-length", "content-security-policy", "content-type",
   "location", "permissions-policy", "referrer-policy", "server",
@@ -696,7 +722,7 @@ async function expectLoginRedirect(path, init) {
   const response = await request(path, init);
   assert.ok([302, 303, 307, 308].includes(response.status), `${path} expected login redirect, got ${response.status}`);
   const location = new URL(response.headers.get("location"), base);
-  assert.equal(location.origin, "https://rehearsal.invalid", `${path} did not use the configured canonical origin`);
+  assert.equal(location.origin, canonicalOrigin, `${path} did not use the configured canonical origin`);
   assert.equal(location.pathname, "/login", `${path} did not redirect to login`);
   await response.body?.cancel();
 }
@@ -807,7 +833,7 @@ const hostileDashboard = await rawRequest("/dashboard", {
 });
 assert.ok([302, 303, 307, 308].includes(hostileDashboard.status), "hostile forwarded host request must remain a login redirect");
 const hostileLocation = new URL(hostileDashboard.headers.location, base);
-assert.equal(hostileLocation.origin, "https://rehearsal.invalid", "application redirect accepted hostile host/protocol headers");
+assert.equal(hostileLocation.origin, canonicalOrigin, "application redirect accepted hostile host/protocol headers");
 assert.equal(hostileLocation.pathname, "/login");
 const robots = await expectStatus("/robots.txt", 200);
 await robots.body?.cancel();
@@ -872,7 +898,7 @@ static_csp_count=$(sed -n 's/^static_csp_hash_count=//p' "$report_dir/http-cold.
 sri_assets_verified=$(sed -n 's/^sri_assets_verified=//p' "$report_dir/http-cold.txt")
 cold_image_hash=$(sed -n 's/^image_cache_body_sha256=//p' "$report_dir/http-cold.txt")
 hostile_origin=$(sed -n 's/^hostile_forwarded_redirect_origin=//p' "$report_dir/http-cold.txt")
-[[ $static_csp_count =~ ^[1-9][0-9]*$ && $sri_assets_verified =~ ^[1-9][0-9]*$ && $cold_image_hash =~ ^[0-9a-f]{64}$ && $hostile_origin == https://rehearsal.invalid ]] || {
+[[ $static_csp_count =~ ^[1-9][0-9]*$ && $sri_assets_verified =~ ^[1-9][0-9]*$ && $cold_image_hash =~ ^[0-9a-f]{64}$ && $hostile_origin == "$approved_origin" ]] || {
   printf 'Cold HTTP acceptance metrics were missing or invalid.\n' >&2
   record_error_context 1 "$LINENO" 'cold HTTP output metrics'
   cold_http_failed=true

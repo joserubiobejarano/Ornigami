@@ -1,0 +1,177 @@
+{
+  "sourceSha": "65ccca1d534f5951120b5ddfe9d04b9288745d7e",
+  "tree": "176006ccda8fa213132d7a3ead12a569774d6a89",
+  "localBranch": "codex/ornigami-db-publisher-investigation-20261017",
+  "remotePublicationBaseline": "ee9232408d6e95758b9fb89633c829cf06f5cb69",
+  "files": {
+    ".github/workflows/ornigami-db-admission-only.yml": {
+      "bytes": 11617,
+      "sha256": "d9fbe748cd8df38b89d9b177edc62323c720bc92f9a774911e9cb7d3d5c7fdeb",
+      "gitBlob": "0c586a048fc3055b675ba9fbf242cf48917f335a"
+    },
+    ".github/workflows/ornigami-image-rehearsal.yml": {
+      "bytes": 75607,
+      "sha256": "4a86a7050371aa82199dadce985808d8da2ebe0aa6e65fb463ae4f2132d572eb",
+      "gitBlob": "0fdd1583e5a2a2627391a80ff1ef687e7444f589"
+    },
+    ".github/build-requests/ornigami-db-admission.json": {
+      "bytes": 199,
+      "sha256": "5fa8bcebc5157fad1856b69a2f1c2a43c81c1b953c141ec4b55523c2d6ba3c0b",
+      "gitBlob": "5935bfeb9b7d6d63e9228a1d50b2154a51230cab"
+    },
+    ".github/build-requests/ornigami.json": {
+      "bytes": 153,
+      "sha256": "58fc3569a3e5e512694f88eabce30c9935198ef8667b910914cd1968b4749ae7",
+      "gitBlob": "d79a8888337118239e1cc8ccb8009ca54216dd0e"
+    },
+    "package.json": {
+      "bytes": 2459,
+      "sha256": "cbaa1926668da0a71bddfd12e9363833016b47c5e78d978bfb4df92977828f04",
+      "gitBlob": "9d84f04385fe706eee32306e931ccc4fe08f84ab"
+    },
+    "package-lock.json": {
+      "bytes": 496110,
+      "sha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+      "gitBlob": "a9db529a0bdb7d4f61776ac9ea55302ea78d1f78"
+    },
+    "Dockerfile": {
+      "bytes": 6420,
+      "sha256": "53c102068c2c821b8ed8c08d854149bf463405bdf9c26df5017fa4c1816732c3",
+      "gitBlob": "b67678583eec4108212d8c96419baf7cdeddbcf3"
+    },
+    "scripts/framework-prototype/official-db-publication.mjs": {
+      "bytes": 2771,
+      "sha256": "0616cec760cdaa031c720acd922eee77d1efe20348ec5e61a934e32de7ca9361",
+      "gitBlob": "bf39642287694471a58a210947c221d15c8b08b6"
+    },
+    "scripts/framework-prototype/official-db-manifest.json": {
+      "bytes": 616,
+      "sha256": "10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730",
+      "gitBlob": "809e4e0fb2940cc361d37655969389128748f223"
+    },
+    "scripts/framework-prototype/frozen-db-admission.mjs": {
+      "bytes": 10675,
+      "sha256": "eca21565887cdbf39261d50a563651d3fafcef7a26e80af0698a67790fd65fc8",
+      "gitBlob": "720a0f6c8351581f4ee0d93d56c15b8bee2ee2b0"
+    },
+    "scripts/framework-prototype/serial-scan-driver.mjs": {
+      "bytes": 16142,
+      "sha256": "09005fcff2078b7d7327674d293386a3e1cb0c06e87675f02beed7b7f5228537",
+      "gitBlob": "fb2458ccecb0f4de49bbb60b318a8b32f9b64bba"
+    },
+    "scripts/framework-prototype/stage-index.mjs": {
+      "bytes": 1322,
+      "sha256": "5d15c452f93f8407a290f5d9de33cda468efceedd09d045baf5841eb58f18b9b",
+      "gitBlob": "d51ff57c776d5916ed6597fc9ad52394fa4077a8"
+    },
+    "scripts/framework-prototype/analyze-docker-archive.mjs": {
+      "bytes": 8580,
+      "sha256": "e0cebe2d4ce87e4bf42f678f2c8a56c88b5a3c1ebb6e84c9deaaa83d0054fdf7",
+      "gitBlob": "07456793f0af733183aeacde3f536625cff75b89"
+    },
+    "scripts/framework-prototype/elf-closure.mjs": {
+      "bytes": 11366,
+      "sha256": "fe4ef7733982e8580c1ca1f7924e178d1ee023075eb65f64e1ed7bbbea0fe9e8",
+      "gitBlob": "11ea5a01fbeefa676871b20e3751bc5d2263f05c"
+    },
+    "scripts/framework-prototype/observe-buildkit.mjs": {
+      "bytes": 2632,
+      "sha256": "b0b393cfe50cebe27379b56b4ca5518dca2cc7717b7d427861f9ea1b35a126ee",
+      "gitBlob": "8e8504a7131410bc03d55de03df292387bb5f1ef"
+    },
+    "scripts/framework-prototype/cleanup-owned-images.mjs": {
+      "bytes": 2337,
+      "sha256": "4bd056453ff33ad2c639805219c188cc27559ce92216c09bd411194da334cc48",
+      "gitBlob": "c63b27a4124f09bc0ac7e650a3b44fb723fea2b6"
+    },
+    "scripts/framework-prototype/extract-tool-sources.py": {
+      "bytes": 2777,
+      "sha256": "8e174b8e763581670b09e69974f3d0436eb9b69af9fc70941d017571f2673b1b",
+      "gitBlob": "9112bd125e1486e334cdb1003b44294bc2c0a98f"
+    },
+    "scripts/framework-prototype/tool-image.mjs": {
+      "bytes": 5160,
+      "sha256": "ef4c6a026417a152eccd33677cb1302e2694525334526ba5c957e4b6bc46b477",
+      "gitBlob": "fdc188b00e5ca9d53ec515739f7980bf8860ad17"
+    },
+    "scripts/framework-prototype/toolchain-build.mjs": {
+      "bytes": 25191,
+      "sha256": "aaa40abab668aba1f2912172485e0d01a465d5ba3aadda3cf2c74b4d8533395f",
+      "gitBlob": "15ff9971c789fbf16fb0fe7597e4b32eb5328358"
+    },
+    "scripts/framework-prototype/toolchain-contract.mjs": {
+      "bytes": 5971,
+      "sha256": "f519105b45bbe6ac98bc22dfb7fe5290617fcf7fb71975116958a0cf1f47680a",
+      "gitBlob": "d4aaf56610b6a90e0964cf185ad615b1b76e5e0c"
+    },
+    "scripts/framework-prototype/toolchain-runtime.mjs": {
+      "bytes": 7023,
+      "sha256": "fdfd0a988be04f5c1b321e90d317013c84a3fc3dc959b2ddc0b3da725a3a9794",
+      "gitBlob": "e767eccb124a85c5dfe8fff5c728b91b4a7bce02"
+    },
+    "scripts/framework-prototype/toolchain-probe.mjs": {
+      "bytes": 6194,
+      "sha256": "dc44dc49ec25a117a543acf4e69f1a81c5bf8112cd412775561ca79631d55737",
+      "gitBlob": "5e9a53fe3b42c1c4646f5f705565a45d67a836b1"
+    },
+    "scripts/framework-prototype/next-16.4.2-sri.patch": {
+      "bytes": 22865,
+      "sha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
+      "gitBlob": "09b0e99ec285c1d30bcb9034397ad5ba416615cf"
+    },
+    "vendor/framework/next-16.4.2-ornigami-sri.2.tgz": {
+      "bytes": 44857205,
+      "sha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+      "gitBlob": "20dd66b5e924a0e0e16181953f2d4f5aa9bdf846"
+    },
+    "vendor/build-tools/npm-11.21.1.tgz": {
+      "bytes": 3329270,
+      "sha256": "dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b",
+      "gitBlob": "2ef8673d6f721febd81bbadf07a2ee8a2a297dc1"
+    },
+    "deploy/coolify/toolchain/recipe.json": {
+      "bytes": 8473,
+      "sha256": "505476d99302f481cf408ef85a70bef679b7651b102f590dbfa2db9737353548",
+      "gitBlob": "0bddab3d53bcef3c3728e7ba6ff1b1efe17dead9"
+    },
+    "deploy/coolify/toolchain/apk-lock.json": {
+      "bytes": 51666,
+      "sha256": "8c399fa5ff05ba2e457e131ba457e7ede365314e656208ff7d48209be1e233dd",
+      "gitBlob": "e9c0cfc76808e0ecaea201d8e0acfa90b5615229"
+    },
+    "deploy/coolify/toolchain/locks/buildkit.go.mod": {
+      "bytes": 12526,
+      "sha256": "014c3b0c23b0bbd6acc9e1139334fd17e09f772a043e680b3d120c115c7206d0",
+      "gitBlob": "ad3b25812f3b994842ec3c7b27d9e4cc55a06321"
+    },
+    "deploy/coolify/toolchain/locks/buildkit.go.sum": {
+      "bytes": 62863,
+      "sha256": "d40412f5434135074fa85bb1b78e9a9cde508e878572ad3939482183425b726c",
+      "gitBlob": "1c996f7418f0f4871a1d25ca3567b86bd85769bc"
+    },
+    "deploy/coolify/toolchain/locks/runc.go.mod": {
+      "bytes": 1157,
+      "sha256": "70292419f5c176b4799a69310914534623833fedcb0e71c290762dda4e236e1c",
+      "gitBlob": "550c5541596c5da981602ab608aab0f4e3c6d2cd"
+    },
+    "deploy/coolify/toolchain/locks/runc.go.sum": {
+      "bytes": 8033,
+      "sha256": "7ba3a64b71b454005fb051aa13c3586fd44afea43b8e507f36ec127ed2d3a186",
+      "gitBlob": "0d6624e53c8b6b64bebd8672616bfbf3965738b0"
+    },
+    "deploy/coolify/toolchain/locks/cni.go.mod": {
+      "bytes": 2326,
+      "sha256": "c3ae49c9c82de44d3af192997e7bca9a66c9b5b5a61069d977456b7596527c15",
+      "gitBlob": "ff5a1081361a4ce6595aa15a5084c55869499789"
+    },
+    "deploy/coolify/toolchain/locks/cni.go.sum": {
+      "bytes": 23697,
+      "sha256": "6a5c9a01cf07ad995e068e6d41d0260317cf4d66a43b7e3bed06547973de7557",
+      "gitBlob": "de7243e90f7eb8cb1350bca000b3e3f9c032db48"
+    }
+  },
+  "scope": "tooling-only; not overall security acceptance",
+  "coverageHold": true,
+  "at": "2026-10-18T00:15:49.991Z",
+  "toolchainContract": "d37daa5bedc8ee357bea90f02ac2f8e34b8af243f1c16a149334dd3b666531e1"
+}

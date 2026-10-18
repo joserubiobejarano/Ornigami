@@ -4,6 +4,7 @@ const save=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n');
 import{admitFrozenDatabase,requireFrozenDatabase}from'./frozen-db-admission.mjs';
 import{cleanupOwnedImages}from'./cleanup-owned-images.mjs';
 import{loadToolchainOutput}from'./toolchain-runtime.mjs';
+import{loadBuildProfile}from'./build-profile.mjs';
 import{aggregate,skipDependentStages}from'./stage-index.mjs';
 export{aggregate,skipDependentStages}from'./stage-index.mjs';
 export function rejectReexecution(event){return(event.vertexes??[event]).some(v=>/\bRUN\b/.test(v.name??'')&&(v.started||v.completed)&&v.cached!==true);}
@@ -35,6 +36,7 @@ async function main(){
   const policy=JSON.parse(fs.readFileSync(path.join(here,'minimal-parent-policy.json'))),node=process.execPath,cache=path.join(temp,'trivy-cache'),trivy=path.join(temp,'trivy');
   const parents=Object.fromEntries(policy.parents.map(x=>[x.role,'gcr.io/distroless/nodejs22-debian13@'+x.amd64Digest]));
   const toolchain=loadToolchainOutput();
+  const approvedOrigin=loadBuildProfile().origin;
   parents.buildkit=toolchain.buildkit.reference;parents['dockerfile-frontend']=toolchain.frontend.reference;
   const stages=mode==='parents'?['original-base','original-runtime-base','buildkit','dockerfile-frontend']:mode==='final'?['runner']:['build-base','deps','builder','prod-deps'];
   const run=(command,args,{log,timeout=180000}={})=>{const r=spawnSync(command,args,{encoding:'utf8',maxBuffer:8*1024*1024,timeout:Math.min(timeout,remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH)*1000),windowsHide:true});if(log)fs.writeFileSync(log,(r.stdout??'')+(r.stderr??''));if(r.status!==0)throw Error(`${path.basename(command)} exit=${r.status} signal=${r.signal??''}`);return r.stdout;};
@@ -69,7 +71,7 @@ async function main(){
           if(fs.existsSync(archive))throw Error('Refusing preexisting stage archive');ownedArchive=true;
           const builder=JSON.parse(run('docker',['inspect',process.env.OWNED_BUILDER_CONTAINER_ID]));const host=builder[0]?.HostConfig;
           if(host?.Memory!==8589934592||host.MemorySwap!==8589934592||host.CpuQuota!==300000||host.CpuPeriod!==100000||builder[0]?.Name!=='/buildx_buildkit_ornigami-external-rehearsal0')throw Error('Owned bounded BuildKit configuration drift');
-          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64',...toolchain.frontendBuildArguments,'--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),'--build-arg','NEXT_PUBLIC_APP_URL=https://rehearsal.invalid','--build-arg','ORNIGAMI_SOURCE_SHA='+source,'--build-arg','ORNIGAMI_BUILD_HEAP_MIB=4096','--build-arg','ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true','--build-arg','ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false','--build-arg','ORNIGAMI_BUILD_WEBPACK_WORKER=false',path.join(temp,'source')];
+          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64',...toolchain.frontendBuildArguments,'--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),'--build-arg','NEXT_PUBLIC_APP_URL='+approvedOrigin,'--build-arg','ORNIGAMI_SOURCE_SHA='+source,'--build-arg','ORNIGAMI_BUILD_HEAP_MIB=4096','--build-arg','ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true','--build-arg','ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false','--build-arg','ORNIGAMI_BUILD_WEBPACK_WORKER=false',path.join(temp,'source')];
           const stop=path.join(dir,'observer.stop'),observations=path.join(dir,'builder-observations.jsonl');const observer=spawn(node,[path.join(here,'observe-buildkit.mjs'),process.env.OWNED_BUILDER_CONTAINER_ID,observations,stop],{stdio:'ignore'});const observerDone=new Promise(r=>{observer.once('error',r);observer.once('close',r);});
           const child=spawn('docker',args,{stdio:['ignore','pipe','pipe']});let buffer='',cacheMiss=false,provenCachedRun=false,killer;const log=fs.createWriteStream(path.join(dir,'cache-export.log'),{flags:'wx'});let malformed=false;
           const abort=()=>{child.kill('SIGTERM');killer??=setTimeout(()=>child.kill('SIGKILL'),10000);};

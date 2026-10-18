@@ -87,7 +87,7 @@ jobs:
           actual_sha=$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)
           [[ "$actual_sha" == "$SOURCE_SHA" ]]
           [[ -z "$(git -C "$RUNNER_TEMP/source" status --porcelain --untracked-files=all)" ]]
-          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh; do
+          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh deploy/coolify/build-profile.json scripts/framework-prototype/build-profile.mjs; do
             [[ -f "$RUNNER_TEMP/source/$required" ]]
           done
           checkout_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
@@ -335,6 +335,7 @@ jobs:
           trap 'touch "$stop_file"; wait "$observer_pid" || true' EXIT
           build_timeout=$(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) ))
           [[ "$build_timeout" -gt 0 ]]
+          approved_origin=$(node "$RUNNER_TEMP/source/scripts/framework-prototype/build-profile.mjs" origin)
           node "$RUNNER_TEMP/source/scripts/framework-prototype/toolchain-runtime.mjs" verify
           mapfile -d '' -t frontend_args < "$RUNNER_TEMP/ornigami-frontend-args.nul"
           [[ "${#frontend_args[@]}" -eq 2 ]]
@@ -346,7 +347,7 @@ jobs:
             "${frontend_args[@]}" \
             --load \
             --tag "ornigami:rehearsal-${SOURCE_SHA}" \
-            --build-arg NEXT_PUBLIC_APP_URL=https://rehearsal.invalid \
+            --build-arg "NEXT_PUBLIC_APP_URL=${approved_origin}" \
             --build-arg "ORNIGAMI_SOURCE_SHA=${SOURCE_SHA}" \
             --build-arg ORNIGAMI_BUILD_HEAP_MIB=4096 \
             --build-arg ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true \

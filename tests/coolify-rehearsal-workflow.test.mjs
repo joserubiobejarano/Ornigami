@@ -158,7 +158,10 @@ function fakeEnvironment(root, overrides = {}) {
   writeFileSync(summary, "fake workflow summary\n");
   const stepSummary = join(root, "step-local-summary.md");
   writeFileSync(stepSummary, "");
-  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","cleanup-owned-images.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs","toolchain-runtime.mjs","toolchain-contract.mjs","tool-image.mjs","toolchain-build.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","cleanup-owned-images.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs","toolchain-runtime.mjs","toolchain-contract.mjs","tool-image.mjs","toolchain-build.mjs","build-profile.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+  const profileDir=join(runnerTemp,'source/deploy/coolify');mkdirSync(profileDir,{recursive:true});
+  copyFileSync(join(repositoryRoot,'deploy/coolify/build-profile.json'),join(profileDir,'build-profile.json'));
+  copyFileSync(join(repositoryRoot,'scripts/framework-prototype/stage-index.mjs'),join(sourceDir,'stage-index.mjs'));
   const cleanupNode=join(runnerTemp,'node-v22.23.3-linux-x64/bin');mkdirSync(cleanupNode,{recursive:true});
   writeExecutable(join(cleanupNode,'node'),'#!/usr/bin/env bash\nexec "$TEST_REAL_NODE" "$@"\n');
   writeFileSync(join(runnerTemp,'ornigami-daemon-before.txt'),'fixture-daemon\n');

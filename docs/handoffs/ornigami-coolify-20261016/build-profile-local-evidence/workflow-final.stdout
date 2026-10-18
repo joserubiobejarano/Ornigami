@@ -1,0 +1,268 @@
+TAP version 13
+# Subtest: full DB download block success: real publication CLI, recorded scope arguments, no scanner/network
+ok 1 - full DB download block success: real publication CLI, recorded scope arguments, no scanner/network
+  ---
+  duration_ms: 416.2451
+  type: 'test'
+  ...
+# Subtest: full DB download block download-failure: real publication CLI, recorded scope arguments, no scanner/network
+ok 2 - full DB download block download-failure: real publication CLI, recorded scope arguments, no scanner/network
+  ---
+  duration_ms: 402.2573
+  type: 'test'
+  ...
+# Subtest: full DB download block manifest-drift: real publication CLI, recorded scope arguments, no scanner/network
+ok 3 - full DB download block manifest-drift: real publication CLI, recorded scope arguments, no scanner/network
+  ---
+  duration_ms: 271.5331
+  type: 'test'
+  ...
+# Subtest: initialization exports a persistent summary path rather than a step-local summary
+ok 4 - initialization exports a persistent summary path rather than a step-local summary
+  ---
+  duration_ms: 188.1662
+  type: 'test'
+  ...
+# Subtest: failed initialization with neither exported path still retains a failed capture manifest
+ok 5 - failed initialization with neither exported path still retains a failed capture manifest
+  ---
+  duration_ms: 761.4608
+  type: 'test'
+  ...
+# Subtest: evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+ok 6 - evidence capture retains a hashed safe bundle and fails if an attempted runtime has no structured receipt
+  ---
+  duration_ms: 855.1614
+  type: 'test'
+  ...
+# Subtest: success evidence capture hashes scan/runtime receipts and excludes the image archive
+ok 7 - success evidence capture hashes scan/runtime receipts and excludes the image archive
+  ---
+  duration_ms: 871.0627
+  type: 'test'
+  ...
+# Subtest: cold failure before runtime creates every directory and a complete skipped-stage manifest
+ok 8 - cold failure before runtime creates every directory and a complete skipped-stage manifest
+  ---
+  duration_ms: 713.8753
+  type: 'test'
+  ...
+# Subtest: cold attempted-runtime failure retains manifest and fails without structured assertions
+ok 9 - cold attempted-runtime failure retains manifest and fails without structured assertions
+  ---
+  duration_ms: 723.8862
+  type: 'test'
+  ...
+# Subtest: failed build retains combined stdout/stderr and exact exit before runtime exists
+ok 10 - failed build retains combined stdout/stderr and exact exit before runtime exists
+  ---
+  duration_ms: 617.849
+  type: 'test'
+  ...
+# Subtest: runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+ok 11 - runtime receipt copy uses qualified report paths despite a decoy glob in cwd
+  ---
+  duration_ms: 1590.5948
+  type: 'test'
+  ...
+# Subtest: failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+ok 12 - failed runtime preserves available snapshots, exact assertion/status/body/log/exit before manifest
+  ---
+  duration_ms: 1443.681
+  type: 'test'
+  ...
+# Subtest: successful runtime missing phase snapshots fails capture but retains its manifest
+ok 13 - successful runtime missing phase snapshots fails capture but retains its manifest
+  ---
+  duration_ms: 751.7117
+  type: 'test'
+  ...
+# Subtest: skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+ok 14 - skipped stages with empty persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 696.4534
+  type: 'test'
+  ...
+# Subtest: skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+ok 15 - skipped stages with missing persistent summary fail capture with nonempty diagnostic and manifest
+  ---
+  duration_ms: 732.5447
+  type: 'test'
+  ...
+# Subtest: resource gate runs after an available builder even when image build failed
+ok 16 - resource gate runs after an available builder even when image build failed
+  ---
+  duration_ms: 0.3051
+  type: 'test'
+  ...
+# Subtest: shared DB success capture keeps manifest and custody separate
+ok 17 - shared DB success capture keeps manifest and custody separate
+  ---
+  duration_ms: 744.0637
+  type: 'test'
+  ...
+# Subtest: shared DB failure capture keeps manifest and custody separate
+ok 18 - shared DB failure capture keeps manifest and custody separate
+  ---
+  duration_ms: 735.9642
+  type: 'test'
+  ...
+# Subtest: shared DB skipped capture keeps manifest and custody separate
+ok 19 - shared DB skipped capture keeps manifest and custody separate
+  ---
+  duration_ms: 775.4938
+  type: 'test'
+  ...
+# Subtest: shared DB missing-diagnostics capture keeps manifest and custody separate
+ok 20 - shared DB missing-diagnostics capture keeps manifest and custody separate
+  ---
+  duration_ms: 765.579
+  type: 'test'
+  ...
+# Subtest: shared DB tampered-original capture keeps manifest and custody separate
+ok 21 - shared DB tampered-original capture keeps manifest and custody separate
+  ---
+  duration_ms: 822.455
+  type: 'test'
+  ...
+# Subtest: shared DB missing-publication capture keeps manifest and custody separate
+ok 22 - shared DB missing-publication capture keeps manifest and custody separate
+  ---
+  duration_ms: 836.2654
+  type: 'test'
+  ...
+# Subtest: shared DB mutable-download capture keeps manifest and custody separate
+ok 23 - shared DB mutable-download capture keeps manifest and custody separate
+  ---
+  duration_ms: 802.3615
+  type: 'test'
+  ...
+# Subtest: shared DB publication-source-drift capture keeps manifest and custody separate
+ok 24 - shared DB publication-source-drift capture keeps manifest and custody separate
+  ---
+  duration_ms: 801.5655
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on truncated
+ok 25 - scan capture preserves manifest and fails on truncated
+  ---
+  duration_ms: 825.4737
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on wrong-type
+ok 26 - scan capture preserves manifest and fails on wrong-type
+  ---
+  duration_ms: 822.9012
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on wrong-source
+ok 27 - scan capture preserves manifest and fails on wrong-source
+  ---
+  duration_ms: 893.1119
+  type: 'test'
+  ...
+# Subtest: scan capture preserves manifest and fails on missing-receipts
+ok 28 - scan capture preserves manifest and fails on missing-receipts
+  ---
+  duration_ms: 816.8786
+  type: 'test'
+  ...
+# Subtest: resource assessment retains valid counters after build failure
+ok 29 - resource assessment retains valid counters after build failure
+  ---
+  duration_ms: 471.6421
+  type: 'test'
+  ...
+# Subtest: resource assessment retains OOM after build failure
+ok 30 - resource assessment retains OOM after build failure
+  ---
+  duration_ms: 496.6086
+  type: 'test'
+  ...
+# Subtest: resource assessment retains reset CPU counters
+ok 31 - resource assessment retains reset CPU counters
+  ---
+  duration_ms: 461.1115
+  type: 'test'
+  ...
+# Subtest: resource assessment retains missing counter sections
+ok 32 - resource assessment retains missing counter sections
+  ---
+  duration_ms: 463.7424
+  type: 'test'
+  ...
+# Subtest: missing after-build counters are an explicit resource failure
+ok 33 - missing after-build counters are an explicit resource failure
+  ---
+  duration_ms: 159.5893
+  type: 'test'
+  ...
+# Subtest: builder creation refuses a pre-existing state volume before creating or claiming resources
+ok 34 - builder creation refuses a pre-existing state volume before creating or claiming resources
+  ---
+  duration_ms: 246.3892
+  type: 'test'
+  ...
+# Subtest: builder creation does not claim a similarly named foreign container
+ok 35 - builder creation does not claim a similarly named foreign container
+  ---
+  duration_ms: 414.1509
+  type: 'test'
+  ...
+# Subtest: builder creation uses anchored exact-name and state-volume checks
+ok 36 - builder creation uses anchored exact-name and state-volume checks
+  ---
+  duration_ms: 0.4863
+  type: 'test'
+  ...
+# Subtest: cleanup preserves foreign builder, state volume, and image IDs
+ok 37 - cleanup preserves foreign builder, state volume, and image IDs
+  ---
+  duration_ms: 1628.997
+  type: 'test'
+  ...
+# Subtest: cleanup removes only exact owned builder, unattached state volume, and matching image ID
+ok 38 - cleanup removes only exact owned builder, unattached state volume, and matching image ID
+  ---
+  duration_ms: 1789.8907
+  type: 'test'
+  ...
+# Subtest: actual cleanup workflow fails on successful no-op deletion
+ok 39 - actual cleanup workflow fails on successful no-op deletion
+  ---
+  duration_ms: 1655.7692
+  type: 'test'
+  ...
+# Subtest: actual cleanup workflow fails on removal error
+ok 40 - actual cleanup workflow fails on removal error
+  ---
+  duration_ms: 1824.8515
+  type: 'test'
+  ...
+# Subtest: actual cleanup workflow fails on unavailable resource inventory
+ok 41 - actual cleanup workflow fails on unavailable resource inventory
+  ---
+  duration_ms: 1763.2945
+  type: 'test'
+  ...
+# Subtest: actual cleanup workflow fails on daemon configuration drift
+ok 42 - actual cleanup workflow fails on daemon configuration drift
+  ---
+  duration_ms: 1970.3222
+  type: 'test'
+  ...
+# Subtest: actual cleanup workflow fails on unavailable daemon
+ok 43 - actual cleanup workflow fails on unavailable daemon
+  ---
+  duration_ms: 1719.2045
+  type: 'test'
+  ...
+1..43
+# tests 43
+# suites 0
+# pass 43
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 35975.6494

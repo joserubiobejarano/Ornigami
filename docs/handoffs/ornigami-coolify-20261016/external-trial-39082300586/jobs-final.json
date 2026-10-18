@@ -1,0 +1,257 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 117541591561,
+      "run_id": 39082300586,
+      "workflow_name": "Ornigami image build and validation rehearsal",
+      "head_branch": "codex/ornigami-sri-local-prototype-f-20261016",
+      "run_url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/runs/39082300586",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQXpkXc8AAAAbXgZaCQ",
+      "head_sha": "7c03441e0872e0417762ea96d3b60a97be98a413",
+      "url": "https://api.github.com/repos/joserubiobejarano/Ornigami/actions/jobs/117541591561",
+      "html_url": "https://github.com/joserubiobejarano/Ornigami/actions/runs/39082300586/job/117541591561",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-18T00:18:51Z",
+      "started_at": "2026-10-18T00:18:52Z",
+      "completed_at": "2026-10-18T00:25:40Z",
+      "name": "Build, runtime acceptance, and vulnerability scans",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-18T00:18:53Z",
+          "completed_at": "2026-10-18T00:18:54Z"
+        },
+        {
+          "name": "Initialize evidence bundle",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-18T00:18:54Z",
+          "completed_at": "2026-10-18T00:18:54Z"
+        },
+        {
+          "name": "Validate inputs and fetch exact public source",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-18T00:18:54Z",
+          "completed_at": "2026-10-18T00:18:57Z"
+        },
+        {
+          "name": "Verify runner and Docker Buildx",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-18T00:18:57Z",
+          "completed_at": "2026-10-18T00:18:58Z"
+        },
+        {
+          "name": "Download and verify pinned Trivy scanner",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-18T00:18:58Z",
+          "completed_at": "2026-10-18T00:18:59Z"
+        },
+        {
+          "name": "Prepare pinned host Node and verify signed minimal parents",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-18T00:18:59Z",
+          "completed_at": "2026-10-18T00:19:05Z"
+        },
+        {
+          "name": "Download bounded frozen database once",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-18T00:19:05Z",
+          "completed_at": "2026-10-18T00:19:13Z"
+        },
+        {
+          "name": "Retain and validate shared frozen database before dependent work",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-18T00:19:13Z",
+          "completed_at": "2026-10-18T00:19:15Z"
+        },
+        {
+          "name": "Construct bounded experimental tooling after strict DB admission",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-18T00:19:15Z",
+          "completed_at": "2026-10-18T00:23:48Z"
+        },
+        {
+          "name": "Collect complete signed parent and constructed tool scans",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-18T00:23:48Z",
+          "completed_at": "2026-10-18T00:24:38Z"
+        },
+        {
+          "name": "Require both tooling security gates before BuildKit execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-18T00:24:38Z",
+          "completed_at": "2026-10-18T00:24:38Z"
+        },
+        {
+          "name": "Require shared database lease before BuildKit probe or application compilation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-18T00:24:38Z",
+          "completed_at": "2026-10-18T00:24:41Z"
+        },
+        {
+          "name": "Create bounded serial BuildKit builder",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-18T00:24:41Z",
+          "completed_at": "2026-10-18T00:24:42Z"
+        },
+        {
+          "name": "Probe constructed tooling without application compilation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-18T00:24:42Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Build local Linux amd64 image",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Run disconnected Linux runtime acceptance",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 16,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Run bounded Linux framework browser regressions",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 17,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Scan local image archive for OS and language vulnerabilities",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 18,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Collect serial bounded intermediate native and vulnerability evidence",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 19,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Enforce complete all-stage security native and resource gates",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 20,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Reject build-time OOM or invalid cgroup counters",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 21,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Enforce pinned base image advisory threshold",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:48Z"
+        },
+        {
+          "name": "Capture evidence bundle before cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-10-18T00:24:48Z",
+          "completed_at": "2026-10-18T00:24:49Z"
+        },
+        {
+          "name": "Upload rehearsal evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-10-18T00:24:49Z",
+          "completed_at": "2026-10-18T00:24:50Z"
+        },
+        {
+          "name": "Report downloadable evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-10-18T00:24:50Z",
+          "completed_at": "2026-10-18T00:24:50Z"
+        },
+        {
+          "name": "Require verified owner local evidence custody before cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-10-18T00:24:50Z",
+          "completed_at": "2026-10-18T00:25:32Z"
+        },
+        {
+          "name": "Remove temporary builder and local image",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-10-18T00:25:32Z",
+          "completed_at": "2026-10-18T00:25:38Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-10-18T00:25:38Z",
+          "completed_at": "2026-10-18T00:25:38Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/joserubiobejarano/Ornigami/check-runs/117541591561",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000001819,
+      "runner_name": "GitHub Actions 1000001819",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

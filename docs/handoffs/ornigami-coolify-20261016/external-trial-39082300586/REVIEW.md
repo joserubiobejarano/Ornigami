@@ -1,0 +1,13 @@
+# Trial 7: both replacement tools verified on Linux
+
+Run 39082300586, attempt 1, succeeded for source `65ccca1d534f5951120b5ddfe9d04b9288745d7e`, request `7c03441e0872e0417762ea96d3b60a97be98a413`. This consumed the owner's one-dispatch extension. Both signed parents, all four supplemental bootstrap roles, all eight constructed binary identities, both final tool native inventories and unfiltered scans passed. Both tools report zero HIGH/CRITICAL. BuildKit retains 2 UNKNOWN, 1 MEDIUM and 1 LOW; frontend retains 1 UNKNOWN. No findings were suppressed or reclassified.
+
+The real external frontend and rebuilt BuildKit/runc executed the bounded native Alpine RUN probe with network disabled; its scratch-export marker passed. BuildKit image config is `sha256:8dca6c9a2a63c363f6a946b28ee3d1dcdb7f45248e470ac3608ea156a848dc1b`. Frontend config is `sha256:d63b52477262e8a132e3c20e061134eea067a1b7c506e4c68b848bdeb1f6c345`; frontend OCI manifest is `sha256:57122ca6b725a0c96f2202b1a52ea896f8b470654a839e21990e02d6d872208c`.
+
+Compiler peak was 2,848,010,240 bytes; compatibility probe peak was 126,009,344 bytes. Both passed the exact 8 GiB/3 CPU/zero-swap limits and zero limit/OOM event gates. Serial diagnostics passed 2 GiB/1 CPU bounds. These observations do not guarantee headroom. Actual compiler UID/GID 1001:1001 and module-cache cleanup exit 0 were verified. Final read-backs independently established exact owned builder, state volume, tool containers/images and root absence, with unchanged daemon projection.
+
+Original artifact: 2,504,167 bytes, SHA256 `c1d0207428326204f71d4c70e8fc424404d5c3e2a56bd9dd2645656d0d6dd5ca`. All 331 payload files / 18,408,011 bytes were hash/source/request/workflow bound before exactly one owner custody acknowledgement. Original ZIP, receipts, finished logs and independent review are retained here. The payload's pre-ack custody field is a historical snapshot; consult the separate completed-custody and confirmed-status receipts for the subsequent acknowledgement.
+
+410 runner seconds charged 7 minutes. Campaign: 7/7 dispatches, 39/300 minutes, no reservation; zero dispatches and 261 minutes remain. No active job or repeated trial is authorized.
+
+This is tooling-only evidence. Five application-dependent roles were deliberately skipped; the nine-role aggregate and overall security acceptance remain false. Strict official DB internal freshness passed, but the Debian zziplib advisory-coverage hold remains. No application build, accepted retained image, registry upload, operational adoption or deployment follows. Earlier failures remain unchanged.
