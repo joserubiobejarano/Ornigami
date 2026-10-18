@@ -1,0 +1,29 @@
+{
+  "services": {
+    "app": {
+      "networks": ["default", "coolify"],
+      "labels": {
+        "traefik.enable": "true",
+        "traefik.docker.network": "coolify",
+        "traefik.http.routers.ornigami-private.rule": "Host(`staging.ornigami.com`)",
+        "traefik.http.routers.ornigami-private.entrypoints": "https",
+        "traefik.http.routers.ornigami-private.tls": "true",
+        "traefik.http.routers.ornigami-private.tls.certresolver": "letsencrypt",
+        "traefik.http.routers.ornigami-private.service": "ornigami-private",
+        "traefik.http.routers.ornigami-private.middlewares": "ornigami-private-auth@docker,ornigami-private-request-headers@docker",
+        "traefik.http.services.ornigami-private.loadbalancer.server.port": "3000",
+        "traefik.http.middlewares.ornigami-private-auth.basicauth.users": "${ORNIGAMI_PRIVATE_AUTH_USERS:?Set the approved staging-only bcrypt access record}",
+        "traefik.http.middlewares.ornigami-private-auth.basicauth.removeheader": "true",
+        "traefik.http.middlewares.ornigami-private-request-headers.headers.customrequestheaders.X-Real-IP": "",
+        "traefik.http.middlewares.ornigami-private-request-headers.headers.customrequestheaders.X-Vercel-Forwarded-For": "",
+        "traefik.http.middlewares.ornigami-private-request-headers.headers.customrequestheaders.CF-Connecting-IP": "",
+        "traefik.http.middlewares.ornigami-private-request-headers.headers.customrequestheaders.Forwarded": "",
+        "traefik.http.middlewares.ornigami-private-request-headers.headers.customrequestheaders.X-Forwarded-Host": "staging.ornigami.com",
+        "traefik.http.middlewares.ornigami-private-request-headers.headers.customrequestheaders.X-Forwarded-Proto": "https"
+      }
+    }
+  },
+  "networks": {
+    "coolify": {"external": true, "name": "coolify"}
+  }
+}
