@@ -689,3 +689,53 @@ limit in force.
 - Final HEAD: the commit appending this response is the worktree tip at close; its exact sha is
   in the Block 1 delivery message above the two pinned commit hashes. Worktree clean at close.
 - Handoff path: `docs/handoffs/ORNIGAMI_STAGING_READINESS_20261018.md`.
+
+## Block 1 independent follow-up review — 18 October 2026
+
+Reviewed HEAD `f6cfd8dec46fc2290e2314cb28c9696adba1d7c1` against `0f86241`.
+Initial worktree clean; changed implementation/test scope is limited to the runtime harness and
+its tests. The Node-based cgroup/identity/disk calls repair the identified Distroless command
+mismatch, and actual image-format execution plus the final native failure gate are restored.
+R3–R6 remain open. **Disposition: two small follow-ups required to close Block 1.**
+
+Independent verification: Bash syntax check passed; the nine candidate-scope test files passed
+93/93, zero failures/skips, exit 0. This review did not repeat the broader 135-test run, build an
+image, execute a runtime container or perform external actions. Only these review notes were edited.
+
+### B1.1 [P2] Failure receipt can point to a nonexistent diagnostic
+
+At `deploy/coolify/linux-runtime-acceptance.sh:644` and `:651`, failure receipts always name
+`native-image-formats-error.txt`. That file is created at lines 654–657 only if the Docker probe
+wrote nonempty stderr. With an exit-0 probe returning empty/malformed/partial/wrong-platform JSON,
+the Python validator emits its reason to the outer harness stderr rather than the probe stderr
+file. The failed native receipt therefore points to an absent file, and the invalid JSON is
+overwritten. A probe exiting nonzero without stderr has the same dangling reference.
+
+Required: retain a bounded, sanitized reason for both validator failures and silent probe failures,
+and make each diagnostic reference resolve to a real nonempty file (or use an explicit truthful
+alternative). Preserve existing sanitization and the fail-closed gate. Update the regression that
+currently asserts the diagnostic file is absent for validation failures. Verify a silent nonzero
+probe as well as malformed/partial evidence. No actual acceptance result should change to passed.
+
+### B1.2 [P2] Claimed native-evidence success case is not executed
+
+In `tests/coolify-runtime-acceptance.test.mjs`, the test named "native image format evidence gates
+acceptance on every failure mode" builds `nativePassing` but its scenario loop includes only five
+invalid-output cases and one nonzero probe case. It never includes a `passed` scenario.
+Consequently `scenario !== "passed"` is always true and the success assertions are unreachable.
+The separate final-gate test simply presets failure flags; it does not execute the successful
+native producer/validator path. The Block 1 response's claim of seven modes including a pass is
+therefore inaccurate.
+
+Required: execute a valid seven-format receipt through the actual extracted native block, with
+`native_formats_failed=false` initialized as in the real harness. Assert preservation of the valid
+receipt, the passed status, an unchanged false failure flag, no fabricated error file, and successful
+continuation. Retain the negative cases and correct the handoff's claims to match executed checks.
+
+### Next bounded task
+
+Address only B1.1 and B1.2 on the current branch. Append a short response with commits and focused
+results; preserve all prior review notes. Do not start Block 2/R3 yet. Correct the phrase
+"still-authorized combined trial decision" above to make clear that a future combined trial still
+requires new authorization; the allowance remains exhausted at 7/7 dispatches. No image build,
+external trial, publication, registry action, deployment or provider action is authorized here.
