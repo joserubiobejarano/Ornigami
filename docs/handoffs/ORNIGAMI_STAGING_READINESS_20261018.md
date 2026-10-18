@@ -442,3 +442,120 @@ external-campaign edits, and require the owner's action before landing.
 - Deployment gates and rollback: Section 7.
 - Trial grid and campaign budget facts: Section 8.
 - Dependency-ordered blockers: Section 9.
+
+## Independent review notes — 18 October 2026
+
+Review baseline: branch `codex/ornigami-staging-readiness-20261018`, HEAD `0f86241`.
+**Disposition: changes required before merge or any further external trial.** These notes do not
+authorize implementation, publication, dispatch, registry, DNS, SQL, deployment or provider actions.
+The reviewer changed only this appended section; the original handoff remains above for provenance.
+
+### Verified facts and review limits
+
+- Initial working tree was clean. The selected operative-path comparison against `658537c` listed in
+  Section 3 is empty. The recovered custody subtree contains 28 tracked files. The image workflow
+  has a push/path/ref restriction to the historical prototype branch and no workflow_dispatch or
+  schedule trigger. No local review finding contradicts those specific claims.
+- Independently reran the nine test files listed in Section 6: 87 passed, 0 failed, 0 skipped,
+  exit 0. These tests do not establish candidate runtime-image compatibility or combined acceptance.
+- No image build, Linux trial, actual-host check, remote-publication audit or provider action was
+  performed. This is a focused source/contract review, not an exhaustive review of every recovered
+  toolchain implementation or archived payload.
+- Fresh primary-source reads still show both Debian CVEs as undetermined:
+  https://security-tracker.debian.org/tracker/CVE-2026-111142 and
+  https://security-tracker.debian.org/tracker/CVE-2026-111141.
+  This does not freshly verify the contents of any particular Trivy DB artifact.
+
+### R1 [P1] Runtime acceptance is incompatible with the selected final image
+
+`Dockerfile` selects the non-debug `distroless/nodejs22-debian13:nonroot` runner, while
+`deploy/coolify/linux-runtime-acceptance.sh:131` executes `sh -c`, line 616 executes `id -u`,
+and line 1055 executes `df` inside it. The runner stage does not copy these utilities from the
+debug build stage. The UID command is an unconditional failure before the HTTP/native acceptance
+can complete; cgroup capture also cannot run as written. Keeping main's old mechanics is not a
+valid reconciliation for this changed runtime base.
+
+Required: make the harness operate against the selected image using the existing Node probes or
+an equivalently justified mechanism, preserving strict metrics, UID/GID and failure evidence.
+Do not add shell utilities or change the image/security policy merely to hide the mismatch.
+Add a meaningful regression for the actual harness-to-runtime command contract, including failures.
+Source: https://github.com/GoogleContainerTools/distroless#debug-images.
+
+### R2 [P1] Seven-format native acceptance was removed but remains required
+
+The recovered `runtime-probes.mjs` implements `image-formats`, but the active runtime harness
+never calls it and has no native-format failure gate. The workflow still requires
+`runtime/native-image-formats.json` at `.github/workflows/ornigami-image-rehearsal.yml:766`.
+Consequently, even after R1 is fixed, a successful harness cannot supply the required evidence and
+the full workflow must reject it. Existing tests pass because fixtures synthesize this report or
+stub runtime commands; their pass does not verify the producer/consumer contract.
+
+Required: restore actual seven-format execution, platform/native evidence and failure propagation
+on the candidate; cover missing/failed format evidence without weakening the workflow's gate.
+Do not present removed checks as an intentional acceptable reconciliation in Sections 3/7.
+
+### R3 [P1] Proposed combined trial still selects tooling-only execution
+
+`deploy/coolify/toolchain/recipe.json:194` has `trialScope: tooling`; workflow lines 94–99 derive
+the trial scope from that recipe, and application build/runtime/browser/aggregate steps require
+`full`. Section 8's sourceSha-only request proposal against this HEAD therefore skips the intended
+application acceptance. `tests/toolchain-contract.test.mjs` also pins the actual recipe to tooling.
+The request contract additionally requires sourceSha to equal the request commit's first parent;
+publishing an arbitrary sourceSha on the existing prototype head is not sufficient.
+
+Required: prepare a reviewed full-scope successor (or a precise separately reviewable patch if
+blocked), update relevant contract tests, enumerate every required role, and document an executable
+source/publication/request ancestry plan. Distinguish the 24-minute work deadline from the 40-minute
+job timeout. Keep all publication/dispatch gates closed and counters unchanged.
+
+### R4 [P1] Evidence custody is not an accepted-image retention proposal
+
+Section 8 item 3 retains logs and custody records; it never specifies retention of the accepted
+application image. The current workflow has no registry publication path and cleans owned images.
+The campaign therefore still lacks a concrete mechanism to preserve a passing ephemeral image and
+independently pull it. This was an explicit deliverable, not a task to defer until after success.
+
+Required: reconcile `ORNIGAMI_STAGING_DECISIONS.md` and the delivery plan into an exact conditional
+image-retention proposal: private GHCR destination/access model, scoped publication/read identities,
+explicit permissions and visibility, 2 GiB transferred/4 GiB retained bounds, all acceptance gates
+before publication, tested-to-published config/layer/manifest equivalence, independent digest pull
+and smoke checks, failure cleanup, and rollback availability. Keep evidence custody separate.
+Prepare local code only where justified; do not create credentials, publish or pull registry images
+under this review. Record exactly what owner authorization would later be needed.
+
+### R5 [P1] Operational maintenance/recovery decision is still missing
+
+Section 4 substitutes an upstream-message draft for operational ownership; Section 9 omits the
+independent adoption hold. `ORNIGAMI_MAINTENANCE_DECISION.md` explicitly leaves backup operation and
+security/advisory response unassigned. Filing an upstream report does not resolve those duties.
+The active package replacement also remains an experiment, not accepted ongoing maintenance.
+
+Required: assess a realistic solo-operator path, identify concrete duties, protected references,
+restore/security-response gaps and supported fallback options, and record an explicit go/no-go.
+Do not invent staff, unattended agent monitoring, an SLA, adoption approval or a mandatory new hire.
+Reconcile stale framework/patch identities in external planning documents through proposed corrections
+in this handoff, without editing external records. Coverage closure must retain all allowed routes
+in `ORNIGAMI_SECURITY_CLOSURE.md`, including authoritative corrected/withdrawn/not-affected evidence;
+do not claim an upstream release plus Debian update is the only possible resolution.
+
+### R6 [P2] Raw recovery evidence was reintroduced into the tracked candidate
+
+The branch adds `docs/handoffs/ornigami-coolify-20261016/**` with raw `run.log`, stdout/stderr and
+ZIP custody payloads. The current roadmap says raw evidence stays private, and the original task
+required references to protected evidence rather than copying raw material into Git. Historical
+tracking at the experiment ref does not authorize restoring it to the consolidated candidate.
+This finding is about the storage contract; no secret leak is asserted by this review.
+
+Required: preserve and byte-verify necessary evidence in an owner-restricted Git-ignored location,
+retain sanitized summaries/hashes/provenance pointers, and remove newly restored raw payloads from
+the proposed tracked tree. Do not destroy the historical bundle, rewrite Git history or upload it.
+Update custody statements to distinguish historical refs, private recovery and sanitized documents.
+
+### Required follow-up handoff
+
+Keep working on this branch. Address R1–R6 separately with focused checks, then append a response
+mapping each finding to changed files, commits, verification and remaining external blockers.
+Do not erase these review notes or turn an unresolved item into a pass. Retain the original deadline,
+coverage/adoption holds, exhausted 7/7 dispatch allowance and provider/job/deployment boundaries.
+The next reviewer needs exact final HEAD and candidate identities, a bounded proposal ready for
+decision, and a clear statement that no combined image or actual-host acceptance is yet established.
