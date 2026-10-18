@@ -60,6 +60,23 @@ function bashPath() {
 
 const bash = bashPath();
 
+test("admitted runtime workflow rejects missing, invalid, and exhausted work deadlines", () => withSandbox(root => {
+  const cases = [
+    ["missing", undefined],
+    ["invalid", "not-an-epoch"],
+    ["exhausted", "1"],
+    ["below-floor", String(Math.floor(Date.now() / 1000) + 149)],
+  ];
+  for (const [name, deadline] of cases) {
+    const env = { ...process.env };
+    if (deadline === undefined) delete env.ORNIGAMI_WORK_DEADLINE_EPOCH;
+    else env.ORNIGAMI_WORK_DEADLINE_EPOCH = deadline;
+    const result = runShell(root, runBlock("runtime_acceptance"), env);
+    assert.notEqual(result.status, 0, name);
+    assert.match(result.stderr, /Runtime acceptance (requires|work budget)/, name);
+  }
+}));
+
 function withSandbox(callback) {
   const root = mkdtempSync(join(tmpdir(), "ornigami-rehearsal-workflow-"));
   try {

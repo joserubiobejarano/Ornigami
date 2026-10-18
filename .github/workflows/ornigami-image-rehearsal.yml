@@ -87,7 +87,7 @@ jobs:
           actual_sha=$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)
           [[ "$actual_sha" == "$SOURCE_SHA" ]]
           [[ -z "$(git -C "$RUNNER_TEMP/source" status --porcelain --untracked-files=all)" ]]
-          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh deploy/coolify/build-profile.json scripts/framework-prototype/build-profile.mjs; do
+          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh deploy/coolify/runtime-deadline.sh deploy/coolify/build-profile.json scripts/framework-prototype/build-profile.mjs; do
             [[ -f "$RUNNER_TEMP/source/$required" ]]
           done
           checkout_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
@@ -413,7 +413,15 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          [[ $(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) )) -ge 150 ]]
+          [[ ${ORNIGAMI_WORK_DEADLINE_EPOCH:-} =~ ^[0-9]{1,12}$ ]] || {
+            echo 'Runtime acceptance requires a valid ORNIGAMI_WORK_DEADLINE_EPOCH.' >&2
+            exit 1
+          }
+          runtime_budget_remaining=$(( ORNIGAMI_WORK_DEADLINE_EPOCH - $(date +%s) ))
+          (( runtime_budget_remaining >= 150 )) || {
+            echo 'Runtime acceptance work budget is exhausted or below its 150-second admission floor.' >&2
+            exit 1
+          }
           image="ornigami:rehearsal-${SOURCE_SHA}"
           runtime_rc=0
           bash "$RUNNER_TEMP/source/deploy/coolify/linux-runtime-acceptance.sh" "$image" > "$RUNNER_TEMP/runtime-acceptance.log" 2>&1 || runtime_rc=$?

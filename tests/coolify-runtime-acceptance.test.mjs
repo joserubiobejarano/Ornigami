@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 
 const harnessPath = resolve("deploy/coolify/linux-runtime-acceptance.sh");
+const deadlinePath = resolve("deploy/coolify/runtime-deadline.sh");
 const harness = readFileSync(harnessPath, "utf8");
 const pythonBlocks = [...harness.matchAll(/<<'PY'\n([\s\S]*?)\nPY/g)].map((match) => match[1]);
 const receiptWriter = pythonBlocks.find((block) => block.includes('"runtime-http.json"'));
@@ -62,8 +63,11 @@ test("owned resource cleanup requires removal and authoritative absence readback
       "container_created=true",
       "volume_created=true",
       "owned_container_id=owned-id",
+      "run_id=run-test",
+      "ORNIGAMI_DEADLINE_TIMED_OUT=false",
+      "ORNIGAMI_COMMAND_TIMED_OUT=false",
       `scenario=${scenario}`,
-      "docker() { case \"$1\" in inspect) [[ $scenario == drift ]] && printf foreign-id || printf owned-id;; rm) printf 'cleanup_test_docker_rm=%s\\n' \"$*\" >>\"$report\"; [[ $scenario == remove ]] && return 1; return 0;; ps) [[ $scenario == inventory ]] && return 1; if [[ $scenario == noop || $scenario == remove ]]; then printf owned-id; elif [[ $scenario == drift ]]; then printf foreign-id; fi; return 0;; volume) case \"$2\" in rm) [[ $scenario == remove ]] && return 1; return 0;; ls) [[ $scenario == inventory ]] && return 1; [[ $scenario == noop || $scenario == remove ]] && printf runtime-cache; return 0;; esac;; esac; }",
+      "docker() { case \"$1\" in inspect) [[ $scenario == drift ]] && printf foreign-id || printf owned-id;; rm) printf 'cleanup_test_docker_rm=%s\\n' \"$*\" >>\"$report\"; [[ $scenario == remove ]] && return 1; return 0;; ps) [[ $scenario == inventory ]] && return 1; if [[ $scenario == noop || $scenario == remove ]]; then printf owned-id; elif [[ $scenario == drift ]]; then printf foreign-id; fi; return 0;; volume) case \"$2\" in inspect) printf run-test;; rm) [[ $scenario == remove ]] && return 1; return 0;; ls) [[ $scenario == inventory ]] && return 1; [[ $scenario == noop || $scenario == remove ]] && printf runtime-cache; return 0;; esac;; esac; }",
       cleanupResources,
       "cleanup_owned_resources",
       "result=$?",
@@ -93,6 +97,93 @@ test("owned resource cleanup requires removal and authoritative absence readback
       assert.equal(rmCall.includes("runtime-test"), false);
     }
   }
+});
+
+test("interrupted container creation is removed only after run-label and image identity recovery", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for interrupted cleanup checks");
+  const start = harness.indexOf("cleanup_owned_resources() {");
+  const end = harness.indexOf("\ncleanup() {", start);
+  const cleanupResources = harness.slice(start, end);
+  for (const scenario of ["matching", "mismatch"]) {
+    const root = mkdtempSync(join(tmpdir(), `ornigami-interrupted-container-${scenario}-`));
+    t.after(() => rmSync(root, { recursive: true, force: true }));
+    const script = [
+      "set -u",
+      `report_dir='${root.replaceAll("'", "'\\''")}'`,
+      `report='${join(root, "report.txt").replaceAll("'", "'\\''")}'`,
+      "name=runtime-test",
+      "cache_volume=runtime-cache",
+      "container_created=true",
+      "volume_created=false",
+      "owned_container_id=",
+      "run_id=run-test",
+      "image_id=image-test",
+      "ORNIGAMI_DEADLINE_TIMED_OUT=false",
+      "ORNIGAMI_COMMAND_TIMED_OUT=false",
+      "container_cleanup_log=",
+      `scenario=${scenario}`,
+      "docker() { case \"$1\" in inspect) if [[ \"$*\" == *org.ornigami.acceptance.run* ]]; then if [[ $scenario == matching ]]; then printf 'owned-id|run-test|image-test'; else printf 'foreign-id|other-run|image-test'; fi; else printf owned-id; fi;; rm) container_cleanup_log=\"$*\"; return 0;; ps) return 0;; esac; }",
+      cleanupResources,
+      "if cleanup_owned_resources; then result=0; else result=1; fi",
+      "printf 'status=%s\\nremove=%s\\n' \"$result\" \"$container_cleanup_log\"",
+    ].join("\n");
+    const path = join(root, "cleanup.sh");
+    writeFileSync(path, script);
+    const result = spawnSync(bash, [path], { encoding: "utf8" });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    if (scenario === "matching") {
+      assert.match(result.stdout, /status=0/);
+      assert.match(result.stdout, /remove=rm -f owned-id/);
+      assert.match(readFileSync(join(root, "report.txt"), "utf8"), /cleanup_container_absence_verified=true/);
+    } else {
+      assert.match(result.stdout, /status=1/);
+      assert.match(result.stdout, /remove=$/m);
+      assert.match(readFileSync(join(root, "report.txt"), "utf8"), /cleanup_container=identity_mismatch_preserved/);
+    }
+  }
+});
+
+test("runtime deadline helper accepts normal work and rejects missing, invalid, or exhausted budgets", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for runtime deadline checks");
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const source = `source ${quote(deadlinePath)}; ornigami_deadline_init`;
+  for (const [name, value] of [["missing", undefined], ["invalid", "tomorrow"], ["exhausted", "1"], ["below-floor", String(Math.floor(Date.now() / 1000) + 149)]]) {
+    const env = { ...process.env };
+    if (value === undefined) delete env.ORNIGAMI_WORK_DEADLINE_EPOCH;
+    else env.ORNIGAMI_WORK_DEADLINE_EPOCH = value;
+    const result = spawnSync(bash, ["-c", source], { encoding: "utf8", env, timeout: 5000 });
+    assert.notEqual(result.status, 0, `${name} deadline must be rejected`);
+  }
+  const env = { ...process.env, ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 300) };
+  const normal = spawnSync(bash, ["-c", `${source}; ornigami_deadline_run bash -c 'printf normal-completion'`], { encoding: "utf8", env, timeout: 5000 });
+  assert.equal(normal.status, 0, normal.stderr);
+  assert.match(normal.stdout, /normal-completion/);
+  const expiredCheck = spawnSync(bash, ["-c", `${source}; ORNIGAMI_RUNTIME_DEADLINE_EPOCH=$(( $(date +%s) - 1 )); if ornigami_deadline_check_runtime; then exit 9; else rc=$?; fi; printf 'check_exit=%s deadline=%s command=%s\\n' "$rc" "$ORNIGAMI_DEADLINE_TIMED_OUT" "$ORNIGAMI_COMMAND_TIMED_OUT"`], { encoding: "utf8", env, timeout: 5000 });
+  assert.equal(expiredCheck.status, 0, expiredCheck.stderr);
+  assert.match(expiredCheck.stdout, /check_exit=124 deadline=true command=true/);
+});
+
+test("runtime deadline terminates a TERM-resistant child process", (t) => {
+  const capabilities = spawnSync(bash, ["-c", "command -v timeout >/dev/null"], { encoding: "utf8" });
+  if (capabilities.status !== 0) return t.skip("GNU timeout is unavailable");
+  const root = mkdtempSync(join(tmpdir(), "ornigami-runtime-deadline-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const pidFile = join(root, "child.pid");
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const script = [
+    `source ${quote(deadlinePath)}`,
+    "ornigami_deadline_init",
+    "ORNIGAMI_RUNTIME_DEADLINE_EPOCH=$(( $(date +%s) + 4 ))",
+    `if ornigami_deadline_run bash -c 'echo \\"$$\\" > \\"$1\\"; trap \\"\\" TERM; while :; do sleep 1; done' bash ${quote(pidFile)}; then exit 9; else rc=$?; fi`,
+    `child_pid=$(cat ${quote(pidFile)}); if kill -0 "$child_pid" 2>/dev/null; then kill -KILL "$child_pid" 2>/dev/null || true; echo child_still_alive=true; else echo child_terminated=true; fi`,
+    "printf 'child_exit=%s timed_out=%s\\n' \"$rc\" \"$ORNIGAMI_COMMAND_TIMED_OUT\"",
+  ].join("; ");
+  const env = { ...process.env, ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 300) };
+  const result = spawnSync(bash, ["-c", script], { encoding: "utf8", env, timeout: 10_000 });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /child_exit=(124|137) timed_out=true/);
+  assert.match(result.stdout, /child_terminated=true/);
+  assert.doesNotMatch(result.stdout, /child_still_alive=true/);
 });
 
 function runPython(block, args) {
@@ -510,6 +601,9 @@ test("final acceptance gate rejects native format failure and completes a fully 
       `cold_http_failed=${cold}`,
       `cache_check_failed=${cache}`,
       `native_formats_failed=${native}`,
+      "ORNIGAMI_COMMAND_TIMED_OUT=false",
+      "ORNIGAMI_DEADLINE_TIMED_OUT=false",
+      "ornigami_deadline_check_runtime() { return 0; }",
       finalGateSlice,
       'printf \'gate_survived=true\\n\'',
     ].join("\n");

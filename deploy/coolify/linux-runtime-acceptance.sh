@@ -4,24 +4,30 @@ umask 077
 
 usage() {
   printf 'Usage: %s IMAGE\n' "$0" >&2
+  printf 'ORNIGAMI_WORK_DEADLINE_EPOCH is required (Unix epoch seconds); standalone runs reserve 120 seconds for harness cleanup.\n' >&2
   printf 'Optional SOURCE_SHA must match the image OCI revision label. No secrets or network access are used.\n' >&2
   exit 2
 }
 
 if [[ $# -eq 1 && $1 == --help ]]; then
   printf 'Usage: %s IMAGE\n' "$0"
+  printf 'ORNIGAMI_WORK_DEADLINE_EPOCH is required (Unix epoch seconds); standalone runs reserve 120 seconds for harness cleanup.\n'
   printf 'Optional SOURCE_SHA must match the image OCI revision label. No secrets or network access are used.\n'
   exit 0
 fi
 [[ $# -eq 1 ]] || usage
 image=$1
 [[ $image =~ ^[A-Za-z0-9][A-Za-z0-9._/:@-]*$ ]] || usage
+source "$(dirname -- "${BASH_SOURCE[0]}")/runtime-deadline.sh"
+ornigami_deadline_init || exit $?
 source_sha=${SOURCE_SHA:-}
 if [[ -n $source_sha && ! $source_sha =~ ^[0-9a-f]{40}$ ]]; then
   printf 'SOURCE_SHA must be a full lowercase 40-character SHA.\n' >&2
   exit 2
 fi
 command -v docker >/dev/null || { printf 'Docker CLI is required.\n' >&2; exit 1; }
+docker_bin=$(type -P docker)
+docker() { ornigami_deadline_run "$docker_bin" "$@"; }
 command -v python3 >/dev/null || { printf 'Python 3 is required for sanitized acceptance receipts.\n' >&2; exit 1; }
 profile_file="$(dirname -- "${BASH_SOURCE[0]}")/build-profile.json"
 approved_origin=$(python3 - "$profile_file" <<'PY'
@@ -181,10 +187,20 @@ capture_runtime_state() {
 cleanup_owned_resources() {
   local cleanup_failed=false container_cleanup=not_created volume_cleanup=not_created
   local container_remove_failed=false volume_remove_failed=false
-  local current_id inventory_ids inventory_volumes
+  local current_id current_identity current_run_id current_image_id volume_run_id inventory_ids inventory_volumes
   local container_absence_verified=false volume_absence_verified=false
   if [[ $container_created == true ]]; then
     container_cleanup=failed
+    if [[ -z $owned_container_id ]]; then
+      if current_identity=$(docker inspect --format '{{.Id}}|{{index .Config.Labels "org.ornigami.acceptance.run"}}|{{.Image}}' "$name" 2>/dev/null); then
+        IFS='|' read -r current_id current_run_id current_image_id <<<"$current_identity"
+        if [[ -n $current_id && $current_run_id == "$run_id" && $current_image_id == "$image_id" ]]; then
+          owned_container_id=$current_id
+        else
+          container_cleanup=identity_mismatch_preserved
+        fi
+      fi
+    fi
     if [[ -n $owned_container_id ]]; then
       if current_id=$(docker inspect --format '{{.Id}}' "$name" 2>/dev/null); then
         if [[ $current_id == "$owned_container_id" ]]; then
@@ -205,36 +221,50 @@ cleanup_owned_resources() {
         container_cleanup=inventory_unavailable
       fi
       if [[ $container_absence_verified != true || $container_remove_failed == true || $container_cleanup == identity_drift_preserved ]]; then cleanup_failed=true; fi
-    else
+    elif [[ $container_cleanup != identity_mismatch_preserved ]]; then
       container_cleanup=identity_unavailable
+      cleanup_failed=true
+    else
       cleanup_failed=true
     fi
   fi
   if [[ $volume_created == true ]]; then
-    volume_cleanup=failed
-    if docker volume rm "$cache_volume" >/dev/null 2>&1; then volume_cleanup=removed; else volume_remove_failed=true; fi
-    if inventory_volumes=$(docker volume ls --format '{{.Name}}' 2>/dev/null); then
-      if grep -Fxq -- "$cache_volume" <<<"$inventory_volumes"; then volume_cleanup=present_after_cleanup
+    volume_cleanup=identity_unavailable
+    if volume_run_id=$(docker volume inspect --format '{{index .Labels "org.ornigami.acceptance.run"}}' "$cache_volume" 2>/dev/null); then
+      if [[ $volume_run_id == "$run_id" ]]; then
+        volume_cleanup=failed
+        if docker volume rm "$cache_volume" >/dev/null 2>&1; then volume_cleanup=removed; else volume_remove_failed=true; fi
       else
-        volume_absence_verified=true
-        if [[ $volume_remove_failed == true ]]; then volume_cleanup=remove_error_absent
-        elif [[ $volume_cleanup == removed || $volume_cleanup == failed ]]; then volume_cleanup=absent
-        fi
+        volume_cleanup=identity_mismatch_preserved
       fi
-    else
-      volume_cleanup=inventory_unavailable
     fi
-    if [[ $volume_absence_verified != true || $volume_remove_failed == true ]]; then cleanup_failed=true; fi
+    if [[ $volume_cleanup != identity_mismatch_preserved && $volume_cleanup != identity_unavailable ]]; then
+      if inventory_volumes=$(docker volume ls --format '{{.Name}}' 2>/dev/null); then
+        if grep -Fxq -- "$cache_volume" <<<"$inventory_volumes"; then volume_cleanup=present_after_cleanup
+        else
+          volume_absence_verified=true
+          if [[ $volume_remove_failed == true ]]; then volume_cleanup=remove_error_absent
+          elif [[ $volume_cleanup == removed || $volume_cleanup == failed ]]; then volume_cleanup=absent
+          fi
+        fi
+      else
+        volume_cleanup=inventory_unavailable
+      fi
+    fi
+    if [[ $volume_absence_verified != true || $volume_remove_failed == true || $volume_cleanup == identity_mismatch_preserved || $volume_cleanup == identity_unavailable ]]; then cleanup_failed=true; fi
   fi
-  printf 'cleanup_container=%s\ncleanup_container_absence_verified=%s\ncleanup_container_remove_error=%s\ncleanup_cache_volume=%s\ncleanup_cache_volume_absence_verified=%s\ncleanup_cache_volume_remove_error=%s\n' \
+  printf 'runtime_deadline_exceeded=%s\nbounded_command_timed_out=%s\ncleanup_container=%s\ncleanup_container_absence_verified=%s\ncleanup_container_remove_error=%s\ncleanup_cache_volume=%s\ncleanup_cache_volume_absence_verified=%s\ncleanup_cache_volume_remove_error=%s\n' \
+    "$ORNIGAMI_DEADLINE_TIMED_OUT" "$ORNIGAMI_COMMAND_TIMED_OUT" \
     "$container_cleanup" "$container_absence_verified" "$container_remove_failed" \
     "$volume_cleanup" "$volume_absence_verified" "$volume_remove_failed" >>"$report"
-  if ! python3 - "$report_dir/cleanup.json" "$container_cleanup" "$container_absence_verified" "$container_remove_failed" "$volume_cleanup" "$volume_absence_verified" "$volume_remove_failed" <<'PY'
+  if ! python3 - "$report_dir/cleanup.json" "$container_cleanup" "$container_absence_verified" "$container_remove_failed" "$volume_cleanup" "$volume_absence_verified" "$volume_remove_failed" "$ORNIGAMI_DEADLINE_TIMED_OUT" "$ORNIGAMI_COMMAND_TIMED_OUT" <<'PY'
 import json, pathlib, sys
 pathlib.Path(sys.argv[1]).write_text(json.dumps({
     "schemaVersion": 1,
     "container": {"outcome": sys.argv[2], "absenceVerified": sys.argv[3] == "true", "removeError": sys.argv[4] == "true"},
     "cacheVolume": {"outcome": sys.argv[5], "absenceVerified": sys.argv[6] == "true", "removeError": sys.argv[7] == "true"},
+    "runtimeDeadlineExceeded": sys.argv[8] == "true",
+    "boundedCommandTimedOut": sys.argv[9] == "true",
 }, indent=2) + "\n", encoding="utf-8")
 PY
   then
@@ -249,6 +279,7 @@ cleanup() {
   local cleanup_failed=false
   trap - EXIT INT TERM ERR
   set +e
+  ornigami_deadline_set_cleanup
   exec 2>&3
   capture_runtime_state
   if docker container inspect "$name" >/dev/null 2>&1; then
@@ -437,6 +468,9 @@ PY
       "$report_dir/container-logs.raw" "$report_dir/container-state-final.raw"
   fi
   cleanup_owned_resources || cleanup_failed=true
+  if [[ $ORNIGAMI_COMMAND_TIMED_OUT == true || $ORNIGAMI_DEADLINE_TIMED_OUT == true ]]; then
+    cleanup_failed=true
+  fi
   if [[ $cleanup_failed == true ]]; then
     [[ $status != 0 ]] || status=1
     final_result=failed
@@ -491,6 +525,8 @@ trap 'exit 143' TERM
 
 printf 'image=%s\nimage_id=%s\nimage_size_bytes=%s\nimage_platform=%s\nimage_user=%s\nimage_revision=%s\nimage_origin=%s\nstarted_at_utc=%s\n' \
   "$image" "$image_id" "$image_size" "$image_platform" "$image_user" "$image_revision" "$image_origin" "$started_at" >"$report"
+printf 'runtime_deadline_epoch=%s\ncleanup_deadline_epoch=%s\nruntime_cleanup_reserve_seconds=%s\n' \
+  "$ORNIGAMI_RUNTIME_DEADLINE_EPOCH" "$ORNIGAMI_CLEANUP_DEADLINE_EPOCH" "$ORNIGAMI_RUNTIME_CLEANUP_RESERVE_SECONDS" >>"$report"
 df -Pk / "$report_root" >"$report_dir/host-disk-before.txt" 2>&1 || true
 
 runtime_args=(
@@ -498,6 +534,7 @@ runtime_args=(
   --name "$name"
   --stop-timeout 45
   --label "org.ornigami.acceptance.revision=$image_revision"
+  --label "org.ornigami.acceptance.run=$run_id"
   --network none
   --read-only
   --user 1000:1000
@@ -536,8 +573,8 @@ runtime_args=(
   "$image"
 )
 
-docker volume create "$cache_volume" >/dev/null
 volume_created=true
+docker volume create --label "org.ornigami.acceptance.run=$run_id" "$cache_volume" >/dev/null
 container_created=true
 docker run "${runtime_args[@]}" >/dev/null
 owned_container_id=$(docker inspect --format '{{.Id}}' "$name")
@@ -557,7 +594,7 @@ wait_for_health() {
       docker logs --tail 40 "$name" >&2 || true
       return 1
     fi
-    sleep 2
+    ornigami_deadline_run sleep 2
   done
   printf 'Application did not become healthy within 120 seconds.\n' >&2
   docker logs --tail 40 "$name" >&2 || true
@@ -1112,6 +1149,14 @@ printf 'cache_persistence_scope=next_image_cache_volume_only;does_not_accept_dat
 if [[ $cold_http_failed == true || $cache_check_failed == true || $native_formats_failed == true ]]; then
   printf 'cold_http_failed=%s\ncache_check_failed=%s\nnative_formats_failed=%s\n' "$cold_http_failed" "$cache_check_failed" "$native_formats_failed" >>"$report"
   printf 'Runtime acceptance failed: cold HTTP, image-cache persistence, or native image-format checks failed; restart/recreate observations were retained.\n' >&2
+  exit 1
+fi
+if [[ $ORNIGAMI_COMMAND_TIMED_OUT == true || $ORNIGAMI_DEADLINE_TIMED_OUT == true ]]; then
+  printf 'Runtime acceptance failed because a bounded command or the runtime deadline timed out.\n' >&2
+  exit 1
+fi
+if ! ornigami_deadline_check_runtime; then
+  printf 'Runtime acceptance failed because its overall runtime deadline was reached.\n' >&2
   exit 1
 fi
 finished_epoch=$(date +%s)
