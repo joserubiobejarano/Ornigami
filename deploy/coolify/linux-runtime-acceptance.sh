@@ -620,8 +620,9 @@ readonly_result=$(docker exec "$name" node -e '
 [[ $readonly_result == rejected ]] || { printf 'Runtime root filesystem accepted a write.\n' >&2; exit 1; }
 docker exec "$name" node -e 'require("node:fs").writeFileSync("/tmp/rehearsal-write-probe", "ok")'
 
+native_validation_status=
 if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats >"$report_dir/native-image-formats.json" 2>"$report_dir/native-image-formats.stderr"; then
-  if python3 - "$report_dir/native-image-formats.json" <<'PY'
+  if python3 - "$report_dir/native-image-formats.json" 2>"$report_dir/native-format-validation.err" <<'PY'
 import json, sys
 report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report.get("result") == "passed", "native image format probe did not report passed"
@@ -639,9 +640,10 @@ PY
   then
     printf 'native_image_formats=passed\n' >>"$report"
   else
-    record_error_context 1 "$LINENO" 'native image format evidence validation'
+    native_validation_status=$?
+    record_error_context "$native_validation_status" "$LINENO" 'native image format evidence validation'
     native_formats_failed=true
-    printf '{"result":"failed","exitStatus":1,"diagnostic":"native-image-formats-error.txt"}\n' >"$report_dir/native-image-formats.json"
+    printf '{"result":"failed","exitStatus":%s,"diagnostic":"native-image-formats-error.txt"}\n' "$native_validation_status" >"$report_dir/native-image-formats.json"
     printf 'native_image_formats=failed\n' >>"$report"
   fi
 else
@@ -653,9 +655,22 @@ else
 fi
 if [[ -s "$report_dir/native-image-formats.stderr" ]]; then
   sanitize_file "$report_dir/native-image-formats.stderr" >"$report_dir/native-image-formats-error.txt"
+fi
+if [[ -s "$report_dir/native-format-validation.err" ]]; then
+  sanitize_file "$report_dir/native-format-validation.err" >>"$report_dir/native-image-formats-error.txt"
+fi
+if [[ $native_formats_failed == true && ! -s "$report_dir/native-image-formats-error.txt" ]]; then
+  if [[ -n $native_validation_status ]]; then
+    printf 'Native image format validation rejected the receipt; no reason line was captured (validator exit %s).\n' "$native_validation_status" >"$report_dir/native-image-formats.stderr"
+  else
+    printf 'Native image format probe failed with exit status %s and wrote no diagnostic output.\n' "$native_status" >"$report_dir/native-image-formats.stderr"
+  fi
+  sanitize_file "$report_dir/native-image-formats.stderr" >"$report_dir/native-image-formats-error.txt"
+fi
+if [[ -s "$report_dir/native-image-formats-error.txt" ]]; then
   cat "$report_dir/native-image-formats-error.txt" >&2
 fi
-rm -f -- "$report_dir/native-image-formats.stderr"
+rm -f -- "$report_dir/native-image-formats.stderr" "$report_dir/native-format-validation.err"
 
 runtime_limits=$(docker inspect --format '{{.HostConfig.Memory}}|{{.HostConfig.MemorySwap}}|{{.HostConfig.NanoCpus}}|{{.HostConfig.PidsLimit}}|{{.HostConfig.ReadonlyRootfs}}|{{.HostConfig.NetworkMode}}|{{json .HostConfig.PortBindings}}|{{json .HostConfig.CapDrop}}|{{json .HostConfig.SecurityOpt}}' "$name")
 expected_limits_prefix='805306368|805306368|750000000|128|true|none|'

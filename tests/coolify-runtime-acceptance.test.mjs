@@ -24,9 +24,10 @@ assert.ok(cleanupFailureWriter, "late cleanup failure receipt writer must be pre
 const captureCgroupSlice = harness.slice(harness.indexOf("capture_cgroup() {"), harness.indexOf("\nassert_cgroup_metrics() {"));
 const identitySlice = harness.slice(harness.indexOf('runtime_uid=$(docker exec "$name"'), harness.indexOf("readonly_result="));
 const diskProbeInvocation = harness.match(/docker exec "\$name" node \/app\/deploy\/coolify\/runtime-probes\.mjs disk >"\$report_dir\/runtime-disk\.txt" 2>&1/)?.[0] ?? "";
-const nativeBlockStart = harness.indexOf('if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats');
+const nativeBlockStart = harness.indexOf("native_validation_status=");
+const nativeDiagnosticRm = 'rm -f -- "$report_dir/native-image-formats.stderr" "$report_dir/native-format-validation.err"';
 const nativeBlock = nativeBlockStart >= 0
-  ? harness.slice(nativeBlockStart, harness.indexOf('rm -f -- "$report_dir/native-image-formats.stderr"', nativeBlockStart) + 'rm -f -- "$report_dir/native-image-formats.stderr"'.length)
+  ? harness.slice(nativeBlockStart, harness.indexOf(nativeDiagnosticRm, nativeBlockStart) + nativeDiagnosticRm.length)
   : "";
 const sanitizeFileSlice = harness.slice(harness.indexOf("sanitize_file() {"), harness.indexOf("\ncapture_cgroup() {"));
 const finalGateSlice = harness.slice(harness.indexOf("if [[ $cold_http_failed == true ||"), harness.indexOf("finished_epoch=$(date +%s)"));
@@ -39,7 +40,7 @@ const runtimePython = (() => {
 assert.ok(captureCgroupSlice.startsWith("capture_cgroup() {") && captureCgroupSlice.includes('docker exec "$target" node /app/deploy/coolify/runtime-probes.mjs cgroup'), "cgroup capture must invoke the runtime cgroup probe");
 assert.ok(identitySlice.startsWith('runtime_uid=$(docker exec "$name"') && identitySlice.includes('docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs uid') && identitySlice.trim().endsWith("exit 1; }"), "identity slice must run the UID probe and gate on 1000:1000");
 assert.ok(diskProbeInvocation.length > 0, "disk evidence must be captured by the runtime disk probe");
-assert.ok(nativeBlock.startsWith('if docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats') && nativeBlock.endsWith('rm -f -- "$report_dir/native-image-formats.stderr"') && nativeBlock.includes("native_formats_failed=true"), "native image format evidence block must be extractable");
+assert.ok(nativeBlock.startsWith("native_validation_status=") && nativeBlock.includes('docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats') && nativeBlock.endsWith(nativeDiagnosticRm) && nativeBlock.includes("native_formats_failed=true"), "native image format evidence block must be extractable");
 assert.ok(sanitizeFileSlice.startsWith("sanitize_file() {"), "sanitize_file must be extractable for evidence tests");
 assert.ok(finalGateSlice.includes("$native_formats_failed == true") && finalGateSlice.includes("native_formats_failed=%s"), "final acceptance gate must consult native format failure");
 
@@ -410,7 +411,7 @@ test("runtime disk evidence uses the statfs probe and fails closed", (t) => {
   }
 });
 
-test("native image format evidence gates acceptance on every failure mode", (t) => {
+test("native image evidence executes the passing receipt and gates every failure mode", (t) => {
   if (!existsSync(bash)) return t.skip("Bash is unavailable for the extracted native evidence test");
   assert.ok(runtimePython, "a Python executable is required for python3 shimmed evidence validation");
   const nativePassing = JSON.stringify({
@@ -429,21 +430,23 @@ test("native image format evidence gates acceptance on every failure mode", (t) 
     loadedNativeObjects: ["/nodejs/bin/node", "/app/node_modules/sharp/build/Release/sharp-linux-x64.node"],
   });
   const nativeObject = JSON.parse(nativePassing);
-  const failureScenarios = [
-    ["empty-output", ""],
-    ["non-json-output", "not-json"],
-    ["missing-formats", JSON.stringify({ ...nativeObject, checks: nativeObject.checks.slice(0, 6) })],
-    ["failed-format", JSON.stringify({ ...nativeObject, checks: nativeObject.checks.map((check, index) => (index === 3 ? { ...check, result: "failed" } : check)) })],
-    ["foreign-platform", JSON.stringify({ ...nativeObject, runtime: { ...nativeObject.runtime, platform: "linux/arm64" } })],
+  // [scenario, probe stdout, probe exit code, probe stderr, sanitized diagnostic reason]
+  const validatorRejections = [
+    ["empty-output", "", /Expecting value/],
+    ["non-json-output", "not-json", /Expecting value/],
+    ["missing-formats", JSON.stringify({ ...nativeObject, checks: nativeObject.checks.slice(0, 6) }), /seven native image format checks are required/],
+    ["failed-format", JSON.stringify({ ...nativeObject, checks: nativeObject.checks.map((check, index) => (index === 3 ? { ...check, result: "failed" } : check)) }), /a native image format check failed/],
+    ["foreign-platform", JSON.stringify({ ...nativeObject, runtime: { ...nativeObject.runtime, platform: "linux/arm64" } }), /native runtime platform evidence missing/],
   ];
-  for (const [scenario, payload, exitCode] of [
-    ...failureScenarios.map(([name, payload]) => [name, payload, 0]),
-    ["probe-failure", "", 3],
+  for (const [scenario, payload, exitCode, probeStderr, diagnosticReason] of [
+    ["evidence-passed", nativePassing, 0, "", null],
+    ...validatorRejections.map(([name, rejectionPayload, reason]) => [name, rejectionPayload, 0, "", reason]),
+    ["probe-failure", "", 3, "Required native image format unavailable: avif", /Required native image format unavailable: avif/],
+    ["silent-probe-failure", "", 7, "", /Native image format probe failed with exit status 7 and wrote no diagnostic output/],
   ]) {
     const root = mkdtempSync(join(tmpdir(), `ornigami-runtime-native-${scenario}-`));
     t.after(() => rmSync(root, { recursive: true, force: true }));
     writeFileSync(join(root, "probe-stdout.txt"), payload);
-    const shouldFail = scenario !== "passed";
     const shell = [
       "set -Eeuo pipefail",
       `PYBIN='${runtimePython.replaceAll("'", "'\\''")}'`,
@@ -455,30 +458,37 @@ test("native image format evidence gates acceptance on every failure mode", (t) 
       ': >"$report"',
       "name=runtime-test",
       `probe_exit=${exitCode}`,
-      "docker() { if [[ $1 == exec ]]; then if [[ $probe_exit -ne 0 ]]; then printf '%s\\n' 'Required native image format unavailable: avif' >&2; return $probe_exit; fi; cat \"$report_dir/probe-stdout.txt\"; return 0; fi; return 1; }",
+      `probe_stderr='${probeStderr.replaceAll("'", "'\\''")}'`,
+      "docker() { if [[ $1 == exec ]]; then if [[ $probe_exit -ne 0 ]]; then if [[ -n $probe_stderr ]]; then printf '%s\\n' \"$probe_stderr\" >&2; fi; return $probe_exit; fi; cat \"$report_dir/probe-stdout.txt\"; return 0; fi; return 1; }",
+      "native_formats_failed=false",
       nativeBlock,
       'printf \'native_formats_failed=%s\\n\' "$native_formats_failed"',
+      'printf \'native_block_continued=true\\n\'',
     ].join("\n");
     const shellPath = join(root, "native-evidence-test.sh");
     writeFileSync(shellPath, shell);
     const result = spawnSync(bash, [shellPath], { encoding: "utf8" });
     assert.equal(result.status, 0, `${scenario}: ${result.stdout}\n${result.stderr}`);
-    assert.equal(existsSync(join(root, "native-image-formats.stderr")), false, `raw stderr retained: ${scenario}`);
+    assert.equal(existsSync(join(root, "native-image-formats.stderr")), false, `raw probe stderr retained: ${scenario}`);
+    assert.equal(existsSync(join(root, "native-format-validation.err")), false, `raw validator stderr retained: ${scenario}`);
+    assert.match(result.stdout, /^native_block_continued=true$/m);
     const report = readFileSync(join(root, "report.txt"), "utf8");
-    if (shouldFail) {
+    const diagnosticPath = join(root, "native-image-formats-error.txt");
+    if (diagnosticReason === null) {
+      assert.equal(readFileSync(join(root, "native-image-formats.json"), "utf8"), nativePassing);
+      assert.deepEqual(JSON.parse(readFileSync(join(root, "native-image-formats.json"), "utf8")), nativeObject);
+      assert.match(report, /^native_image_formats=passed$/m);
+      assert.match(result.stdout, /^native_formats_failed=false$/m);
+      assert.equal(existsSync(diagnosticPath), false, "error evidence fabricated on the passing path");
+    } else {
       const expectedExit = exitCode === 0 ? 1 : exitCode;
       assert.deepEqual(JSON.parse(readFileSync(join(root, "native-image-formats.json"), "utf8")), { result: "failed", exitStatus: expectedExit, diagnostic: "native-image-formats-error.txt" });
       assert.match(report, /^native_image_formats=failed$/m);
       assert.match(result.stdout, /^native_formats_failed=true$/m);
-    } else {
-      assert.equal(readFileSync(join(root, "native-image-formats.json"), "utf8"), nativePassing);
-      assert.deepEqual(JSON.parse(readFileSync(join(root, "native-image-formats.json"), "utf8")), nativeObject);
-      assert.match(report, /^native_image_formats=passed$/m);
-    }
-    if (exitCode !== 0) {
-      assert.match(readFileSync(join(root, "native-image-formats-error.txt"), "utf8"), /Required native image format unavailable: avif/);
-    } else {
-      assert.equal(existsSync(join(root, "native-image-formats-error.txt")), false, `error evidence fabricated: ${scenario}`);
+      assert.equal(existsSync(diagnosticPath), true, `failed receipt must reference a real diagnostic: ${scenario}`);
+      const diagnostic = readFileSync(diagnosticPath, "utf8");
+      assert.ok(diagnostic.length > 0 && diagnostic.length <= 200000, `diagnostic must be real and bounded: ${scenario}`);
+      assert.match(diagnostic, diagnosticReason);
     }
   }
 });
