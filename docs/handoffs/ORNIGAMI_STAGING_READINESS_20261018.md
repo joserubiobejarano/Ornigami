@@ -559,3 +559,133 @@ Do not erase these review notes or turn an unresolved item into a pass. Retain t
 coverage/adoption holds, exhausted 7/7 dispatch allowance and provider/job/deployment boundaries.
 The next reviewer needs exact final HEAD and candidate identities, a bounded proposal ready for
 decision, and a clear statement that no combined image or actual-host acceptance is yet established.
+
+## Block 1 response — 18 October 2026
+
+This block addresses findings R1 and R2 only. Baseline: `0f86241` plus the reviewer notes above
+(retained verbatim as commit `355c408`). No trial scope, runtime base, security gate, credential,
+publication or provider state was altered. R3–R6 remain open and unimplemented.
+
+### R1 — runtime command contract repaired
+
+Changed file: `deploy/coolify/linux-runtime-acceptance.sh` (repair commit `82efefb`).
+
+- Cgroup capture (`:132`): replaced the in-container `sh -c 'for path in …'` loop with
+  `docker exec … node /app/deploy/coolify/runtime-probes.mjs cgroup`. The probe emits all ten
+  `==key==\n<value>` metrics and exits nonzero when any is missing or empty. The post-capture
+  required-metric check and `assert_cgroup_metrics` limits validation
+  (`memory.max=805306368`, `memory.swap.max=0`, `cpu.max="75000 100000"`, `pids.max=128`,
+  `oom/oom_kill=0`, positive peak) are unchanged.
+- Runtime identity (`:613`): replaced `docker exec … id -u` with the `uid` probe, which fails
+  unless runtime UID **and GID** are exactly 1000:1000; the `== 1000` host-side check remains.
+- Runtime disk evidence (`:1089`): replaced in-container `df -Pk / /tmp /app/.next/cache … || true`
+  with the `disk` probe (`fs.statfsSync` over `/`, `/tmp`, `/app/.next/cache`); the stale
+  `|| true` was dropped so a failed in-container disk probe now fails the run. The host-side
+  `df -Pk / "$report_root"` capture (runner VM, not the image) is unchanged.
+- No in-container `sh`, `id` or `df` invocation remains; every other in-container command was
+  already `node`-based and stays so.
+- Preserved unchanged: container creation/restart/recreate sequence, cache-volume identity and
+  persistence checks, Docker limit/security assertions, error-context recording, sanitized failure
+  evidence (`failure.json`, `failure-evidence.txt`), receipt redaction, cleanup receipts and
+  owned-resource removal.
+
+### R2 — seven-format native acceptance restored
+
+Changed file: `deploy/coolify/linux-runtime-acceptance.sh`. No workflow change; no workflow gate
+was weakened or duplicated.
+
+- New block (`:623–658`, after the tmp-write probe, before the inspect-limits check):
+  runs `docker exec "$name" node /app/deploy/coolify/runtime-probes.mjs image-formats >…/native-image-formats.json 2>…/native-image-formats.stderr`,
+  then sanitizes non-empty stderr into `native-image-formats-error.txt` and removes the raw file.
+- Host-side structural validation of the receipt: `result=passed`; exactly seven checks in the
+  order `png, jpeg, webp, avif, gif, tiff, svg-input`, each `passed`; runtime platform evidence
+  `linux/amd64` plus node/openssl/glibc versions; non-empty `loadedNativeObjects`.
+- Missing, empty, malformed, partial, failed or wrong-platform evidence each: record error
+  context, write a `{result:"failed", exitStatus, diagnostic:"native-image-formats-error.txt"}`
+  receipt over the invalid file, and set `native_formats_failed=true`.
+- The final acceptance gate (`:1097`) now blocks on `native_formats_failed` in addition to
+  cold-HTTP and image-cache persistence; the pass report records
+  `native_image_formats_evidence=native-image-formats.json`.
+- The semantics: `image-formats` performs six real encode→resize→decode round trips
+  (png/jpeg/webp/avif/gif/tiff; AVIF additionally verifies AV1-in-HEIF metadata), one SVG-input
+  transform, and platform evidence from process report plus `/proc/cpuinfo` (glibc, SSE4.2).
+- Consumer contract: the workflow's `runtime/native-image-formats.json` collection-and-success
+  requirement at `ornigami-image-rehearsal.yml:766` is preserved exactly; the harness now produces
+  the required file so the gate no longer fails every successful run.
+- Shipping path: the probe is copied into the runner at `Dockerfile:95`
+  (`COPY … /app/deploy/coolify/runtime-probes.mjs`), is the only `deploy/coolify/**` object
+  whitelisted by `.dockerignore`, and `sharp` (`package.json:61`) ships with the prod deps copied
+  at `Dockerfile:85`.
+
+### Regressions added
+
+`tests/coolify-runtime-acceptance.test.mjs` (six new tests; file now has 11):
+
+1. Static contract: the four probe invocations must exist, and in-container `sh`, `id -u`, `df`
+   must not reappear.
+2. Cgroup capture: logged probe invocation; complete counters pass; a metric lost from the
+   output fails with `Cgroup metric … is missing`; a failing probe fails the capture.
+3. Identity: logged uid probe; `1000` passes, `1001` exits with the UID error.
+4. Disk evidence: logged disk probe; in-container `df -Pk` asserted absent; failing probe
+   exits nonzero.
+5. Native evidence: seven modes end-to-end — pass, empty stdout, non-JSON, fewer than seven
+   formats, a failed format entry, foreign platform, probe exit 3 — each asserting the failure
+   receipt, `native_formats_failed=true`, sanitized error evidence, and no raw stderr left;
+   pass mode asserts exact receipt and no fabricated error evidence.
+6. Final gate: native-format failure alone exits nonzero with the retained-observations
+   message; a fully checked pass completes.
+
+### Checks and results
+
+- `bash -n deploy/coolify/linux-runtime-acceptance.sh` → syntax OK.
+- Nine candidate-scope suites, the same files the reviewer ran: `node --test
+  tests/{build-profile,toolchain-contract,tool-image,cleanup-owned-images,owned-observation-race,toolchain-cache-cleanup,compiler-link-objects,coolify-rehearsal-workflow,coolify-runtime-acceptance}.test.mjs`
+  → 93 passed, 0 failed, 0 skipped (review baseline 87 + 6 new regressions).
+- Full tree `node --test tests/*.test.mjs` → 135 passed, 0 failed (the 41 external-scope tests
+  from main included).
+
+### Explicit limits
+
+- **No Linux image was built and no container was executed in this block.** The runtime
+  compatibility fix and native acceptance restore are contract restorations verified against
+  deterministic probes and static extracts; Linux-image acceptance and actual-host acceptance
+  remain **not performed**.
+- The probe's in-image behaviour (including `sharp`'s native binding under the `nonroot` user
+  and glibc/SSE4.2 reporting) is exercised by probes and validated structurally, but was not
+  executed against a real Distroless image here; that remains part of the still-authorized
+  combined trial decision.
+
+### Superseded reconciliation statements
+
+- Original Section 3 recorded `deploy/coolify/linux-runtime-acceptance.sh` as intentionally
+  diverging from `658537c` (main's in-container cgroup/id/df mechanics). R1 reverses that
+  element: the harness once again uses the candidate's probe mechanics for cgroup, uid and disk.
+  Post-fix differences versus `658537c` are strictly additive: (a) added host-side structural
+  validation of native evidence (the candidate marked any exit-0 probe output as passed),
+  (b) failure-gate label/message wording and a pass-path evidence pointer, (c) cosmetic flag
+  ordering. The `.dockerignore` divergence remains unchanged.
+- Original Section 7 listed the unused `deploy/coolify/runtime-probes.mjs` in the image as
+  documented debt for the next trial. The harness half of that debt closes here; the remaining
+  trial debt is unchanged and tracked under R3/R4.
+
+### Remaining review findings (unchanged; not implemented in Block 1)
+
+- R3 — `deploy/coolify/toolchain/recipe.json:194` still selects `trialScope: tooling`, so the
+  Section 8 combined-trial proposal would still skip application acceptance; a reviewed
+  full-scope successor plus request-ancestry plan is still required.
+- R4 — no accepted-image retention mechanism yet (private GHCR destination/access model,
+  publication gates, transfer/retention bounds).
+- R5 — operational maintenance/recovery go/no-go owner decision still missing.
+- R6 — raw recovery evidence remains newly tracked under `docs/handoffs/ornigami-coolify-20261016/**`.
+
+No new external residue was introduced: no dispatch, no image, no registry, no provider access;
+campaign counters remain 7/7 dispatches and 39/300 minutes consumed with the no-further-dispatch
+limit in force.
+
+### Block 1 state
+
+- Branch: `codex/ornigami-staging-readiness-20261018`.
+- Commits this block: repair `82efefb`, reviewer-note retention `355c408`, this response (tip).
+- Final HEAD: the commit appending this response is the worktree tip at close; its exact sha is
+  in the Block 1 delivery message above the two pinned commit hashes. Worktree clean at close.
+- Handoff path: `docs/handoffs/ORNIGAMI_STAGING_READINESS_20261018.md`.
