@@ -8,3 +8,7 @@ scripts/*.sh text eol=lf
 deploy/coolify/*.sh text eol=lf
 Audits/*.csv text eol=lf
 Audits/licenses/** -text -whitespace
+
+scripts/framework-prototype/** text eol=lf
+scripts/framework-prototype/*.patch -text -whitespace
+deploy/coolify/toolchain/** text eol=lf
