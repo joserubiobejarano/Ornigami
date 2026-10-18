@@ -91,7 +91,7 @@ Totals: **109 files changed, 14,170 insertions, 245 deletions.**
 | Tree | Files | Delta |
 |---|---|---|
 | `scripts/framework-prototype/` | 48 | +3,969 |
-| `docs/handoffs/ornigami-coolify-20261016/` (retained custody) | 28 | +4,077 |
+| `docs/handoffs/ornigami-coolify-20261016/` (28 at historical composition; 3 sanitized files remain tracked after Block 4B) | 28 historical | +4,077 historical |
 | `deploy/coolify/` | 13 | +3,401 / −10 |
 | `tests/` | 9 | +1,262 |
 | `.github/` (workflow + build request) | 2 | +1,099 |
@@ -146,20 +146,17 @@ Only three operative files differ, by design:
    `tests/fixtures/contracts/*.sql`, `scripts/sql/*.sql`) kept; vendor/lock rules
    (`vendor/framework/*.tgz -text`, `package-lock.json text eol=lf`) kept.
 
-### Retained evidence custody (28 files, byte-identical to 658537c)
+### Evidence custody — current tracking corrected per Block 4B
 
-- `docs/handoffs/ornigami-coolify-20261016/TOOLCHAIN_LINUX_RESULT.md` — trials 4–7 narrative (also serves
-  trial-3 context pointer; trial-3 details remain at origin `7c03441`).
-- `docs/handoffs/ornigami-coolify-20261016/external-trial-39082300586/` — 18 files: `SOURCE_IDENTITIES.json`,
-  `INDEPENDENT_REVIEW.json`, custody receipts (`custody/evidence.zip`, `custody/STATUS_ACK.json`,
-  `custody/DOWNLOAD_RECEIPT.json`, `custody-status-confirmed.json`, `CUSTODY_COMPLETED.json`,
-  `FINISHED_RECOVERY.json`, `PAYLOAD_VERIFIED_BEFORE_ACK.json`, `REQUEST_DISPATCH_RECORDED.json`),
-  run records (`run-final.json`, `jobs-final.json`, `timing-final.json`, `artifacts-final.json`,
-  `DB_CURRENT.json`, `run.log`, `run-logs.zip`, `REVIEW.md`).
-- `docs/handoffs/ornigami-coolify-20261016/build-profile-local-evidence/` — 9 files (REVIEW + SYNTAX +
-  combined-review and workflow-final logs/resources).
-- 1,508 further evidence paths present at `658537c` (trials 4–6 custody, `toolchain-local-evidence`,
-  older per-commit evidence) are intentionally excluded; they persist on origin `7c03441`.
+At the reviewed starting HEAD the directory contained 28 tracked files. After Block 4B, only three reviewed sanitized Markdown summaries/reviews remain tracked. The other 25 original files were first copied byte-for-byte to owner-restricted, Git-ignored private custody, verified, and then removed from the worktree: 18 structured JSON execution/provenance/custody/API/resource records, one raw run log, two stdout captures, two zero-byte stderr files and two ZIP archives. The Markdown summaries are not presumed safe by extension; each retained narrative was reviewed, and its custody claims were corrected to point to the protected copy.
+
+- Tracked sanitized trial narrative: `docs/handoffs/ornigami-coolify-20261016/TOOLCHAIN_LINUX_RESULT.md` (trials 4–7 and trial-3 context pointer).
+- Tracked sanitized staging-profile review: `docs/handoffs/ornigami-coolify-20261016/build-profile-local-evidence/REVIEW.md`.
+- Tracked sanitized trial-7 review: `docs/handoffs/ornigami-coolify-20261016/external-trial-39082300586/REVIEW.md`.
+- Protected private copy of all 28 original files, preserving the original relative tree: `.local/recovery/ornigami-r6-private-evidence-20261019/original-tree/`. Its private `INDEX.json` maps each original absolute/relative path to its protected destination, original worktree SHA-256, protected-copy SHA-256, byte count, reviewed Git blob object ID, path-filtered Git object ID, text attribute, classification and verification result. The index also records ZIP member counts/aggregate metadata without exposing member contents.
+- Private-copy verification: all 28/28 SHA-256 and byte-count comparisons passed. Destination and index inherit an owner-only ACL (one allow entry for the current account); `/.local/` ignore coverage was verified. The source checkout directory had broader inherited ACLs. Git object IDs are recorded separately from worktree SHA-256: the two evidence subtrees are marked `-text`; the top-level trial Markdown uses default text handling with `core.autocrlf=true`, so its normalized Git blob identity is not represented as its raw-byte SHA-256.
+- Historical Git objects, old refs and existing recovery bundles/archives were not rewritten, deleted or pruned. The private copy is additional custody; the three Markdown files are the current tracked sanitized documentation. Later references in this handoff to raw filenames such as `SOURCE_IDENTITIES.json` and `INDEPENDENT_REVIEW.json` are historical provenance pointers to entries in the private index, not claims that those JSON files remain tracked.
+- Other older evidence was already excluded from this 28-file restored tree and remains only at the historical origin/recovery sources described in prior notes; Block 4B does not broaden that recovery set.
 
 ## 4. Coverage and maintenance findings (CVE-2026-111142 / CVE-2026-111141)
 
@@ -229,10 +226,7 @@ request `7c03441e0872e0417762ea96d3b60a97be98a413`) identity:
   `sha256:fc20ac93782a4fe3ddb38c1387af8defa85b26a1559635d8dac1c9aeb41d2fc5` for the same assembled tooling.
 - Eight compiled binaries hash-bound in `INDEPENDENT_REVIEW.json` (`compiledBinaries`): `buildkitd`,
   `buildctl`, `dockerfile-frontend`, `buildkit-cni-{bridge,firewall,host-local,loopback}`, `buildkit-runc`.
-- Custody artifact: 2,504,167 bytes, SHA-256
-  `c1d0207428326204f71d4c70e8fc424404d5c3e2a56bd9dd2645656d0d6dd5ca`, artifactId `12120080254`,
-  331 payload files / 18,408,011 bytes verified before exactly one owner custody acknowledgement;
-  completed-custody and confirmed-status receipts retained.
+- Historical custody receipt summary (sanitized): the original archive was 2,504,167 bytes; 331 payload files / 18,408,011 bytes were hash/source/request/workflow bound before one owner custody acknowledgement. Exact archive digest, platform artifact identifier, per-file hashes and completed/status receipts remain in the protected private inventory/copies, not tracked documentation.
 - Scope flags: `"scope": "tooling-only; not overall security acceptance"`, `"coverageHold": true`,
   `securityAcceptance: false` (in both custody records); observerRows 62; compiler peak
   2,848,010,240 bytes within 8 GiB/3 CPU/zero-swap; compatibility probe peak 126,009,344 bytes;
@@ -436,7 +430,7 @@ external-campaign edits, and require the owner's action before landing.
 
 - Branch mapping/identity commands: Sections 2 and 6.
 - Provenance hash table: Section 5.
-- Custody map: Section 3 ("Retained evidence custody"); origin-held remainder at `7c03441`.
+- Custody map: Section 3 ("Evidence custody — current tracking corrected per Block 4B"); origin-held remainder at `7c03441`.
 - CVE details and scanner-gap evidence: Section 4.
 - Workflow non-dispatch proof: Section 2 ("Workflow dispatch surface").
 - Deployment gates and rollback: Section 7.
@@ -682,7 +676,7 @@ was weakened or duplicated.
 - R4 — no accepted-image retention mechanism yet (private GHCR destination/access model,
   publication gates, transfer/retention bounds).
 - R5 — operational maintenance/recovery go/no-go owner decision still missing.
-- R6 — raw recovery evidence remains newly tracked under `docs/handoffs/ornigami-coolify-20261016/**`.
+- R6 — current storage correction is recorded in Block 4B: three sanitized Markdown files remain tracked; 25 raw/structured payloads have verified owner-restricted private copies. Historical Git objects remain intact.
 
 No new external residue was introduced: no dispatch, no image, no registry, no provider access;
 campaign counters remain 7/7 dispatches and 39/300 minutes consumed with the no-further-dispatch
@@ -1284,3 +1278,17 @@ Documentation-only corrections to the R5 assessment; the independent review note
 - **B4A.1 corrected:** replaced the second-person-or-fallback framing with a concrete solo-operator option, including weekly manual advisory/health reviews, pre-change encrypted off-host backup and integrity checks, quarterly isolated restore checks, protected key custody, distinct technical access roles, stop-exposure triggers, and explicit absence/incapacity limits. The existing hold/upstream/Vercel fallback remains available. No duties are assigned to Jose; the NO-GO remains until the owner explicitly accepts the duties/risks and required recovery/adoption evidence exists. The portfolio instruction does not require different people; technical and evidence independence is distinguished from human separation.
 - **B4A.2 corrected:** recorded the stale hashes in `vendor/framework/README.md` and proposed exact verified replacements. The README, package bytes and external planning records were not changed. The statement about the four external planning records remains limited to those records.
 - R6, B2.1 engineering risk, coverage/adoption holds and exhausted campaign allowance remain open. No tests or external actions were performed.
+
+## Block 4B — R6 response
+
+**Disposition: current-tree storage correction completed; historical evidence preserved.** This block addresses only R6 storage in the proposed tracked tree. The 28 files present at the reviewed starting HEAD were classified by content and type; all were copied before removal.
+
+- **Retained tracked:** three reviewed Markdown summaries/reviews: `docs/handoffs/ornigami-coolify-20261016/TOOLCHAIN_LINUX_RESULT.md`, `build-profile-local-evidence/REVIEW.md`, and `external-trial-39082300586/REVIEW.md`. Their custody wording now points to protected copies. Exact private archive digest and platform artifact ID were removed from the tracked custody summary; sanitized trial counts/results and scoped source provenance remain.
+- **Removed from current tracking after copy verification:** 25 files: 18 structured JSON execution/provenance/custody/API/resource records, one `.log`, two `.stdout`, two empty `.stderr`, and two `.zip` payload archives. No JSON was retained solely because it was JSON; the reviewed narrative files are the only items retained under the evidence subtrees.
+- **Protected custody:** `C:\Users\joser\Desktop\Projects\Ornigami\.local\recovery\ornigami-r6-private-evidence-20261019\original-tree\` preserves the original relative paths and all 28 original files. `INDEX.json` in the same private root maps original paths to protected destinations and stores per-file byte counts, worktree SHA-256 values, Git blob/path-filter object IDs, text attributes, content classification, copy verification and aggregate ZIP member metadata. It contains no payload contents and is Git-ignored.
+- **Verification:** all 28 original-to-copy byte counts and SHA-256 values matched before deletion and were rechecked after deletion. The source was the absolute workspace path `C:\Users\joser\Desktop\Projects\Ornigami\docs\handoffs\ornigami-coolify-20261016\`. The protected destination resolved inside `.local/recovery`; its directory, copied files and index have an owner-only ACL with one allow entry for the current account. The source tree had broader inherited ACLs. `git check-ignore` confirmed the root `.gitignore` rule `/.local/` covers the private files and index.
+- **Git identity distinction:** worktree SHA-256 is the byte-copy check. Git blob object IDs and path-filtered IDs are separately recorded in the private index. The two nested evidence subtrees have `.gitattributes` `-text`; the top-level `TOOLCHAIN_LINUX_RESULT.md` uses default text handling with `core.autocrlf=true`. No Git blob ID is presented as a worktree SHA-256.
+- **Historical provenance:** the starting commit and prior Git objects/refs, experiment-origin evidence, recovery bundles and existing archives were not rewritten, deleted or pruned. Raw material may still be reachable through those historical refs by design; this R6 response only removes it from the current proposed tracked tree. References in earlier handoff notes to original receipts/files are historical pointers; the Section 3 custody map distinguishes the current tracked summaries from the new private copies.
+- **Sanitized result and limitations:** 3 narrative/review files remain tracked; 25 raw/structured files have verified private copies. This is a same-workstation, owner-ACL copy; device encryption, off-host replication, future readability and independent human verification were not established. The protected inventory is the detailed private path/hash record. The roadmap and external campaign records were not changed.
+
+No application tests were needed. No R6-adjacent implementation, provider, registry, dispatch or deployment action occurred. Coverage/adoption holds and the exhausted 7/7 dispatch, 39/300 charged-minute, zero-reserved campaign allowance remain active. R5, R4 and B2.1 remain as previously recorded.
