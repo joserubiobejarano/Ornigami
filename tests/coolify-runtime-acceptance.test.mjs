@@ -66,6 +66,9 @@ test("owned resource cleanup requires removal and authoritative absence readback
       "run_id=run-test",
       "ORNIGAMI_DEADLINE_TIMED_OUT=false",
       "ORNIGAMI_COMMAND_TIMED_OUT=false",
+      "ORNIGAMI_DOCKER_TIMED_OUT=false",
+      "ORNIGAMI_SUPERVISOR_TERMINATED=false",
+      "ornigami_deadline_sync_state() { return 0; }",
       `scenario=${scenario}`,
       "docker() { case \"$1\" in inspect) [[ $scenario == drift ]] && printf foreign-id || printf owned-id;; rm) printf 'cleanup_test_docker_rm=%s\\n' \"$*\" >>\"$report\"; [[ $scenario == remove ]] && return 1; return 0;; ps) [[ $scenario == inventory ]] && return 1; if [[ $scenario == noop || $scenario == remove ]]; then printf owned-id; elif [[ $scenario == drift ]]; then printf foreign-id; fi; return 0;; volume) case \"$2\" in inspect) printf run-test;; rm) [[ $scenario == remove ]] && return 1; return 0;; ls) [[ $scenario == inventory ]] && return 1; [[ $scenario == noop || $scenario == remove ]] && printf runtime-cache; return 0;; esac;; esac; }",
       cleanupResources,
@@ -120,6 +123,9 @@ test("interrupted container creation is removed only after run-label and image i
       "image_id=image-test",
       "ORNIGAMI_DEADLINE_TIMED_OUT=false",
       "ORNIGAMI_COMMAND_TIMED_OUT=false",
+      "ORNIGAMI_DOCKER_TIMED_OUT=false",
+      "ORNIGAMI_SUPERVISOR_TERMINATED=false",
+      "ornigami_deadline_sync_state() { return 0; }",
       "container_cleanup_log=",
       `scenario=${scenario}`,
       "docker() { case \"$1\" in inspect) if [[ \"$*\" == *org.ornigami.acceptance.run* ]]; then if [[ $scenario == matching ]]; then printf 'owned-id|run-test|image-test'; else printf 'foreign-id|other-run|image-test'; fi; else printf owned-id; fi;; rm) container_cleanup_log=\"$*\"; return 0;; ps) return 0;; esac; }",
@@ -161,6 +167,136 @@ test("runtime deadline helper accepts normal work and rejects missing, invalid, 
   const expiredCheck = spawnSync(bash, ["-c", `${source}; ORNIGAMI_RUNTIME_DEADLINE_EPOCH=$(( $(date +%s) - 1 )); if ornigami_deadline_check_runtime; then exit 9; else rc=$?; fi; printf 'check_exit=%s deadline=%s command=%s\\n' "$rc" "$ORNIGAMI_DEADLINE_TIMED_OUT" "$ORNIGAMI_COMMAND_TIMED_OUT"`], { encoding: "utf8", env, timeout: 5000 });
   assert.equal(expiredCheck.status, 0, expiredCheck.stderr);
   assert.match(expiredCheck.stdout, /check_exit=124 deadline=true command=true/);
+});
+
+test("runtime supervisor bounds stuck acceptance and cleanup children", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for runtime supervisor checks");
+  const capabilities = spawnSync(bash, ["-c", "command -v timeout >/dev/null"], { encoding: "utf8" });
+  if (capabilities.status !== 0) return t.skip("GNU timeout is unavailable");
+  const root = mkdtempSync(join(tmpdir(), "ornigami-runtime-supervisor-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const worker = join(root, "worker.sh");
+  writeFileSync(worker, `#!/usr/bin/env bash
+set +e
+mode=$1; pid_file=$2; completion=$3; progress=$4
+cleanup() {
+  if [[ $mode == cleanup ]]; then
+    bash -c 'echo "$$" > "$1"; trap "" TERM; while :; do printf . >>"$2"; sleep 0.2; done' bash "$pid_file" "$progress" &
+    cleanup_pid=$!
+    printf started >"$completion.started"
+    wait "$cleanup_pid"
+    printf verified >"$completion"
+  fi
+}
+trap cleanup EXIT
+if [[ $mode == acceptance ]]; then
+  bash -c 'echo "$$" > "$1"; trap "" TERM; while :; do printf . >>"$2"; sleep 0.2; done' bash "$pid_file" "$progress" &
+  child_pid=$!
+  wait "$child_pid"
+else
+  trap 'exit 0' TERM
+  sleep 30
+fi
+`);
+  for (const mode of ["acceptance", "cleanup"]) {
+    const pidFile = join(root, `${mode}.pid`);
+    const completion = join(root, `${mode}.complete`);
+    const progress = join(root, `${mode}.progress`);
+    const source = [
+      `source ${quote(deadlinePath)}`,
+      "ornigami_deadline_init",
+      "ORNIGAMI_RUNTIME_CLEANUP_RESERVE_SECONDS=2",
+      "export ORNIGAMI_RUNTIME_CLEANUP_RESERVE_SECONDS",
+      `ornigami_deadline_supervise 2 bash ${quote(worker)} ${mode} ${quote(pidFile)} ${quote(completion)} ${quote(progress)}`,
+      "rc=$?",
+      "ornigami_deadline_sync_state",
+      `child_pid=$(cat ${quote(pidFile)})`,
+      `before=$(cat ${quote(progress)} 2>/dev/null || true)`,
+      "sleep 0.5",
+      `after=$(cat ${quote(progress)} 2>/dev/null || true)`,
+      "if [[ $before == \"$after\" ]]; then alive=false; else alive=true; fi",
+      "printf 'rc=%s deadline=%s alive=%s pid=%s\\n' \"$rc\" \"$ORNIGAMI_DEADLINE_TIMED_OUT\" \"$alive\" \"$child_pid\"",
+    ].join("; ");
+    const env = { ...process.env, ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 300) };
+    const result = spawnSync(bash, ["-c", source], { encoding: "utf8", env, timeout: 8000 });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(result.stdout, /rc=124 deadline=true alive=false/);
+    if (mode === "cleanup") {
+      assert.equal(existsSync(`${completion}.started`), true);
+      assert.equal(existsSync(completion), false, "forced cleanup termination leaves absence proof unavailable");
+    }
+  }
+});
+
+test("command substitutions preserve stdout and parent timeout accounting distinguishes ordinary errors", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for substitution accounting checks");
+  const root = mkdtempSync(join(tmpdir(), "ornigami-runtime-substitution-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const jsonCommand = `printf '%s' '${JSON.stringify({ id: "fixture" })}'`;
+  const script = [
+    `source ${quote(deadlinePath)}`,
+    "ornigami_deadline_init",
+    `ORNIGAMI_DEADLINE_STATE_FILE=${quote(join(root, "deadline.state"))}`,
+    ": >\"$ORNIGAMI_DEADLINE_STATE_FILE\"",
+    "ORNIGAMI_COMMAND_TIMEOUT_CAP_SECONDS=1",
+    `success=$(ornigami_deadline_run bash -c ${quote(jsonCommand)})`,
+    "ornigami_deadline_sync_state",
+    "printf 'success=%s flags=%s,%s\\n' \"$success\" \"$ORNIGAMI_COMMAND_TIMED_OUT\" \"$ORNIGAMI_DEADLINE_TIMED_OUT\"",
+    "if ordinary=$(ornigami_deadline_run bash -c 'exit 7'); then ordinary_rc=0; else ordinary_rc=$?; fi",
+    "ornigami_deadline_sync_state",
+    "printf 'ordinary_rc=%s flags=%s,%s\\n' \"$ordinary_rc\" \"$ORNIGAMI_COMMAND_TIMED_OUT\" \"$ORNIGAMI_DEADLINE_TIMED_OUT\"",
+    "if code124=$(ornigami_deadline_run bash -c 'exit 124'); then ordinary124_rc=0; else ordinary124_rc=$?; fi",
+    "ornigami_deadline_sync_state",
+    "printf 'ordinary124_rc=%s flags=%s,%s\\n' \"$ordinary124_rc\" \"$ORNIGAMI_COMMAND_TIMED_OUT\" \"$ORNIGAMI_DEADLINE_TIMED_OUT\"",
+    "if timed=$(ornigami_deadline_run bash -c 'sleep 20; printf late'); then timed_rc=0; else timed_rc=$?; fi",
+    "ornigami_deadline_sync_state",
+    "printf 'timed_rc=%s flags=%s,%s\\n' \"$timed_rc\" \"$ORNIGAMI_COMMAND_TIMED_OUT\" \"$ORNIGAMI_DEADLINE_TIMED_OUT\"",
+  ].join("; ");
+  const env = { ...process.env, ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 400) };
+  const result = spawnSync(bash, ["-c", script], { encoding: "utf8", env, timeout: 10000 });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /success=\{"id":"fixture"\} flags=false,false/);
+  assert.match(result.stdout, /ordinary_rc=7 flags=false,false/);
+  assert.match(result.stdout, /ordinary124_rc=124 flags=false,false/);
+  assert.match(result.stdout, /timed_rc=(124|137) flags=true,false/);
+});
+
+test("timed-out command substitution produces truthful cleanup receipt and unproved absence", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for cleanup receipt checks");
+  const start = harness.indexOf("cleanup_owned_resources() {");
+  const end = harness.indexOf("\ncleanup() {", start);
+  const cleanupResources = harness.slice(start, end);
+  const root = mkdtempSync(join(tmpdir(), "ornigami-runtime-timeout-receipt-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const script = [
+    "set +e",
+    `source ${quote(deadlinePath)}`,
+    "ornigami_deadline_init",
+    `ORNIGAMI_DEADLINE_STATE_FILE=${quote(join(root, "deadline.state"))}`,
+    ": >\"$ORNIGAMI_DEADLINE_STATE_FILE\"",
+    "ORNIGAMI_COMMAND_TIMEOUT_CAP_SECONDS=1",
+    `report_dir=${quote(root)}`,
+    `report=${quote(join(root, "report.txt"))}`,
+    "name=runtime-test; cache_volume=runtime-cache; container_created=true; volume_created=false",
+    "owned_container_id=owned-id; run_id=run-test; image_id=image-test",
+    "docker() { case \"$1\" in inspect) printf owned-id;; rm) return 0;; ps) ORNIGAMI_DEADLINE_OPERATION=docker ornigami_deadline_run bash -c 'sleep 20';; esac; }",
+    cleanupResources,
+    "if cleanup_owned_resources; then cleanup_rc=0; else cleanup_rc=$?; fi",
+    "printf 'cleanup_rc=%s\\n' \"$cleanup_rc\"",
+  ].join("\n");
+  const scriptPath = join(root, "receipt-test.sh");
+  writeFileSync(scriptPath, script);
+  const result = spawnSync(bash, [scriptPath], { encoding: "utf8", timeout: 8000 });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /cleanup_rc=1/);
+  const receipt = JSON.parse(readFileSync(join(root, "cleanup.json"), "utf8"));
+  assert.equal(receipt.boundedCommandTimedOut, true);
+  assert.equal(receipt.dockerOperationTimedOut, true);
+  assert.equal(receipt.container.absenceVerified, false);
+  assert.equal(receipt.container.outcome, "daemon_operation_unproved");
 });
 
 test("runtime deadline terminates a TERM-resistant child process", (t) => {
@@ -603,7 +739,9 @@ test("final acceptance gate rejects native format failure and completes a fully 
       `native_formats_failed=${native}`,
       "ORNIGAMI_COMMAND_TIMED_OUT=false",
       "ORNIGAMI_DEADLINE_TIMED_OUT=false",
+      "ORNIGAMI_SUPERVISOR_TERMINATED=false",
       "ornigami_deadline_check_runtime() { return 0; }",
+      "ornigami_deadline_sync_state() { return 0; }",
       finalGateSlice,
       'printf \'gate_survived=true\\n\'',
     ].join("\n");
