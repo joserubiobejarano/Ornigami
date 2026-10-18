@@ -954,24 +954,45 @@ All of the following is owner-authorized work in the future; nothing here has be
    SRI/corruption and HTTP/auth checks, restart/recreation/cache identity, resources, custody,
    failure evidence and owned cleanup (delivery-plan acceptance exit).
 
-### Work deadline versus job timeout (task 5)
+### Work deadline versus job timeout (task 5) — corrected per B2.1
 
-- `timeout-minutes: 40` (`workflow:22`) is the hard job ceiling for everything, including
-  cleanup and evidence upload.
-- The 24-minute work deadline (`workflow:39`, `ORNIGAMI_WORK_DEADLINE_EPOCH = start + 1440s`)
-  bounds only the resource-consuming work window: the BuildKit image build is launched with
-  `build_timeout = deadline − now` (`:336`); the runtime acceptance step refuses to start with
-  under 150 s remaining (`:416`, so a too-late run cannot starve collection); the browser
-  regression is capped at `min(deadline − now, 900 s)` with an explicit ≥60 s floor
-  (`:465–467`).
-- Cleanup and evidence collection remain bounded after the work window: the evidence-capture,
-  summary, upload, custody-verification and owned-cleanup steps run regardless of earlier
-  outcomes (`always()`), are individually bounded (storage probes use `timeout 15s`), and are
-  ordered so artifacts are uploaded before destructive cleanup; a run whose gates already
-  failed reports unavailability truthfully (`snapshot-status.txt`) instead of fabricating
-  evidence. If a run's tail ever exceeded the job ceiling, the 40-minute kill would end it with
-  gates already decided; the work deadline exists precisely so productive phases cannot consume
-  that tail.
+*(Corrected in place on 18 October 2026 per review finding B2.1. The superseded wording is
+recoverable at commit `5085938` and is described in the review notes below.)*
+
+- **Enforced phase bounds.** The 24-minute work deadline (`workflow:39`,
+  `ORNIGAMI_WORK_DEADLINE_EPOCH = start + 1440 s`) is consumed as a hard, enforced bound by
+  the BuildKit image build — `build_timeout = deadline − now` asserted positive (`:336–337`)
+  and applied through `timeout --signal=TERM --kill-after=30s` (`:344`); the browser
+  regression — `min(deadline − now, 900 s)` with an explicit ≥60 s floor (`:465–467`) applied
+  through `timeout --signal=TERM --kill-after=20s` (`:477`); and the scan stages —
+  `serial-scan-driver.mjs` bounds every spawned scan command by
+  `min(180 s, remaining deadline)` and hard-fails when the deadline is missing, invalid or
+  exhausted (`serial-scan-driver.mjs:12`, `:42`, with additional deadline-clamped ≤180 s
+  waits at `:44` and `:79` and a hard-fail disk-reserve check at `:50`); the tooling probe
+  bounds each wait the same way (`toolchain-probe.mjs:34`).
+- **The runtime start check is not a timeout.** `workflow:416` checks once that ≥150 s remain
+  before the runtime step may start — a pre-start admission condition that fails the step when
+  violated — and then `:419` invokes the harness with no overall timeout or deadline argument.
+  The harness does not consult `ORNIGAMI_WORK_DEADLINE_EPOCH`, and its per-request and
+  per-operation timeouts are not an overall runtime budget: a slow or hung native probe or
+  Docker operation inside the runtime phase can continue past the work deadline, bounded only
+  by the job ceiling below.
+- **The 40-minute job ceiling.** `timeout-minutes: 40` (`workflow:22`) is the only bound that
+  covers everything the phase bounds do not: runtime overrun, and every tail step (evidence
+  capture, summary, upload, custody verification, cleanup).
+- **Cleanup and custody outcomes are execution-conditioned, not guaranteed.** `always()` on
+  the tail steps expresses when they may run, not a reserved budget or a completion
+  guarantee. Only two tail commands are individually bounded (`timeout 15s docker system df`,
+  `:793`; `timeout 15s du -sb`, `:797`); the owned-cleanup step runs direct Docker
+  inventory/removal commands without per-command timeouts. If the job is terminated at the
+  40-minute ceiling, the artifact-upload, owner-custody and owned-resource-absence receipts
+  are unproved and must remain unproved — they are missing, not satisfied.
+
+Unresolved pre-dispatch risk (recorded, not fixed): runtime and tail budgeting are
+unresolved. An overall runtime budget, per-step tail bounds or an explicitly reserved
+collection window would be engineering changes to the harness or workflow and would require a
+separately reviewed scope before any future run. This block implements none of them, and
+nothing here authorizes a dispatch.
 
 ### Remaining gates
 
@@ -1021,3 +1042,38 @@ guarantees cleanup time. Keep the successful scope selection and 52-test evidenc
 
 No timeout implementation or dispatch is requested by this finding. Append a short response and
 stop for review. R4–R6 and all existing coverage/adoption/dispatch holds remain open.
+
+## B2.1 response — 18 October 2026
+
+Documentation only, on the reviewed baseline `508593892bf472b1802f9647d897fd24215a3f6b`;
+review notes retained verbatim in a separate retention commit.
+
+- Corrected in place: the "Work deadline versus job timeout (task 5)" section of the Block 2
+  response now carries a correction marker at its heading, and the superseded wording remains
+  recoverable at commit `5085938`.
+- The corrected statements were re-verified against the implementation this round:
+  enforced build/browser/scan bounds (build `timeout` at `workflow:344`; browser `timeout` at
+  `:477` with floor/cap at `:465–467`; scan commands deadline-clamped to ≤180 s each with a
+  hard fail on a missing, invalid or exhausted deadline, `serial-scan-driver.mjs:12`/`:42`,
+  additional clamped waits `:44`/`:79` and the disk-reserve hard fail `:50`;
+  `toolchain-probe.mjs:34`) are now distinguished from the runtime start check — a one-time
+  ≥150 s admission condition (`:416`) followed by a harness invocation with no overall timeout
+  (`:419`), with the harness consulting no work deadline and per-request timeouts not
+  constituting an overall budget — and from the 40-minute job ceiling (`:22`), which is the
+  only bound on runtime overrun and on every tail step.
+- Removed claims: that the runtime start threshold prevents starvation of collection, that
+  every tail operation is individually bounded, and that the work deadline keeps productive
+  phases out of the tail. The tail is now described truthfully: `always()` conditions are not
+  budgets, only the two 15 s storage probes (`:793`, `:797`) are individually bounded, the
+  owned-cleanup step runs direct Docker commands without per-command timeouts, and
+  upload/custody/cleanup receipts must remain unproved if the job is terminated at the
+  ceiling.
+- Runtime/tail budgeting is recorded as an unresolved pre-dispatch risk; correcting it would
+  be an engineering change requiring a separately reviewed scope before any future run. No
+  timeout implementation was made in this block and none is requested by the finding.
+- The full-scope scope selection (`0f755e8`) and the 52/52 focused contract/workflow evidence
+  are untouched: no code, workflow, harness or test file changed in this correction, and the
+  Block 1/B1.1 close-out evidence is unaffected.
+- Verification: `git diff --check` clean; no test rerun (documentation-only change). No push,
+  merge, dispatch, build, registry, deployment or provider action; R4–R6 and the
+  coverage/adoption/dispatch holds remain open.
