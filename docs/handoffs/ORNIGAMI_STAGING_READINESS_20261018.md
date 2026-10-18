@@ -986,3 +986,38 @@ All of the following is owner-authorized work in the future; nothing here has be
 - Branch: `codex/ornigami-staging-readiness-20261018`.
 - Commits: R3 selection `0f755e8`, this response (tip; exact sha in the delivery message).
 - Worktree clean at close; handoff path `docs/handoffs/ORNIGAMI_STAGING_READINESS_20261018.md`.
+
+## Block 2 independent review — 18 October 2026
+
+Reviewed HEAD `508593892bf472b1802f9647d897fd24215a3f6b` against `24c1003`.
+The full-scope field change is correct; the contract hash and other recipe inputs are unchanged,
+and the historical tooling-only fixture remains covered. Independently reproduced 52/52 focused
+contract/workflow tests, zero failures/skips, exit 0; whitespace check passed. Recipe/lock SHA-256
+and workflow Git blob match the Block 2 identities above. Initial working tree was clean. No
+external action or implementation change was made in this review; only these notes were appended.
+
+### B2.1 [P2] Timing/cleanup guarantees exceed what the workflow enforces
+
+The Block 2 timing section says the 24-minute deadline bounds the resource-consuming window,
+that the runtime start check prevents starvation of collection, that tail steps are individually
+bounded, and that productive phases cannot consume the tail. These are stronger guarantees than
+the implementation provides:
+
+- `.github/workflows/ornigami-image-rehearsal.yml:416` checks for 150 seconds remaining once, then
+  line 419 invokes the runtime harness without an overall timeout or deadline argument. The harness
+  does not consult `ORNIGAMI_WORK_DEADLINE_EPOCH`; per-request HTTP timeouts are not an overall runtime
+  budget. A slow/hung native probe or Docker operation can continue past the work deadline.
+- Tail storage probes sometimes use `timeout 15s`, but not every collection/cleanup command does.
+  The owned-cleanup step includes direct Docker commands. `always()` expresses execution conditions,
+  not a reserved execution budget or a guarantee that cleanup completes before job termination.
+- The 40-minute job ceiling bounds the job; a forced termination does not prove artifact custody,
+  owned-resource absence or an orderly cleanup. Those receipts must remain unproved if interrupted.
+
+Required follow-up is documentation only in this block: qualify the timing section to describe
+the actual enforced bounds, identify runtime/tail budgeting as an unresolved pre-dispatch risk,
+and state that any required engineering correction needs a separately reviewed scope before a
+future run. Do not claim all tail steps are individually bounded or that the start threshold
+guarantees cleanup time. Keep the successful scope selection and 52-test evidence intact.
+
+No timeout implementation or dispatch is requested by this finding. Append a short response and
+stop for review. R4–R6 and all existing coverage/adoption/dispatch holds remain open.
