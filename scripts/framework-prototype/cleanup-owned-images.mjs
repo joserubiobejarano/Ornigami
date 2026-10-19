@@ -34,7 +34,7 @@ export function workflowCleanupDocker(args,{invoke=spawnSync,now=Date.now}={}) {
   const options={encoding:'utf8',timeout,maxBuffer:1024*1024,windowsHide:true};
   if(deadline!==null)options.killSignal='SIGKILL';
   const result=invoke(command,commandArgs,options);
-  if(deadline!==null&&(result.error||result.signal||result.status===null))markCleanupUnproved('docker-client-timeout-or-interruption');
+  if(deadline!==null&&(result.error||result.signal||result.status===null||result.status===124||result.status===137))markCleanupUnproved('docker-client-timeout-or-interruption');
   return result;
 }
 const validId = value => /^sha256:[0-9a-f]{64}$/.test(value ?? '');
@@ -63,6 +63,12 @@ export function cleanupOwnedImages(records, invoke = workflowCleanupDocker) {
         // Remove by immutable ID, never a mutable reference that could drift.
         const removed = invoke(['image','rm',record.imageId]);
         result.removalExit = removed.status; result.removalSignal = removed.signal ?? null;
+        // A timed-out daemon operation is uncertain. The shared marker also
+        // fences later records, so do not issue an inventory read-back here.
+        if (cleanupAlreadyUnproved()) {
+          result.absenceVerified = false;
+          throw Error('Image removal outcome uncertain; absence unproved');
+        }
         result.absenceVerified = !inventory().has(record.imageId);
         if (removed.status !== 0 || removed.error || removed.signal) throw Error('Image removal failed');
         if (!result.absenceVerified) throw Error('Claimed image remains after removal');

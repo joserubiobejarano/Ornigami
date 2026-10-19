@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import {workflowCleanupDocker} from '../scripts/framework-prototype/cleanup-owned-images.mjs';
+import {cleanupOwnedImages,workflowCleanupDocker} from '../scripts/framework-prototype/cleanup-owned-images.mjs';
 import {recordOfficialPublication,databaseRepository} from '../scripts/framework-prototype/official-db-publication.mjs';
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -1077,6 +1077,89 @@ test("descendant cleanup Docker calls stay within ten seconds and the finalizati
     const stopped=workflowCleanupDocker(['image','rm','sha256:'+ 'a'.repeat(64)],{now:()=>deadline*1000-29000,invoke:()=>assert.fail('operation must not start inside the finalization reserve')});
     assert.notEqual(stopped.status,0);
     assert.match(readFileSync(marker,'utf8'),/docker_unproved=insufficient-time-before-finalization-reserve/);
+  } finally {
+    if(previousDeadline===undefined)delete process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;else process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=previousDeadline;
+    if(previousMarker===undefined)delete process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;else process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=previousMarker;
+  }
+}));
+
+test("descendant cleanup records GNU timeout statuses and preserves ordinary outcomes", () => withSandbox(root => {
+  const previousDeadline=process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;
+  const previousMarker=process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;
+  try {
+    const deadline=Math.ceil(Date.now()/1000)+60;
+    process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=String(deadline);
+    for(const status of [124,137]){
+      const marker=join(root,`docker-unproved-${status}.txt`);writeFileSync(marker,'');
+      process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=marker;
+      let invoked=0;
+      const timedOut=workflowCleanupDocker(['image','rm','sha256:'+ 'a'.repeat(64)],{invoke:()=>{invoked++;return {status,signal:null,error:null,stdout:'',stderr:''};}});
+      assert.equal(timedOut.status,status);
+      assert.equal(readFileSync(marker,'utf8'),'docker_unproved=docker-client-timeout-or-interruption\n');
+      const fenced=workflowCleanupDocker(['image','ls'],{invoke:()=>{invoked++;assert.fail('marked uncertainty must fence later Docker work');}});
+      assert.notEqual(fenced.status,0);
+      assert.equal(invoked,1);
+    }
+
+    const successMarker=join(root,'docker-success.txt');writeFileSync(successMarker,'');
+    process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=successMarker;
+    const success=workflowCleanupDocker(['image','ls'],{invoke:()=>({status:0,signal:null,error:null,stdout:'',stderr:''})});
+    assert.equal(success.status,0);
+    assert.equal(readFileSync(successMarker,'utf8'),'');
+
+    const errorMarker=join(root,'docker-ordinary-error.txt');writeFileSync(errorMarker,'');
+    process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=errorMarker;
+    const ordinaryError=workflowCleanupDocker(['image','ls'],{invoke:()=>({status:1,signal:null,error:null,stdout:'',stderr:'ordinary Docker failure'})});
+    assert.equal(ordinaryError.status,1);
+    assert.equal(readFileSync(errorMarker,'utf8'),'');
+
+    // Without a work deadline the helper invokes Docker directly; a numeric
+    // command failure remains a caller-visible failure and is not GNU-timeout custody.
+    delete process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;
+    const standalone=workflowCleanupDocker(['image','ls'],{invoke:(bin)=>{assert.equal(bin,'docker');return {status:124,signal:null,error:null,stdout:'',stderr:''};}});
+    assert.equal(standalone.status,124);
+    assert.equal(readFileSync(errorMarker,'utf8'),'');
+  } finally {
+    if(previousDeadline===undefined)delete process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;else process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=previousDeadline;
+    if(previousMarker===undefined)delete process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;else process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=previousMarker;
+  }
+}));
+
+test("owned-image cleanup stops after a GNU timeout without claiming absence", () => withSandbox(root => {
+  const previousDeadline=process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;
+  const previousMarker=process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;
+  const marker=join(root,'docker-unproved.txt');writeFileSync(marker,'');
+  const first='sha256:'+ 'a'.repeat(64),second='sha256:'+ 'b'.repeat(64);
+  const calls=[];
+  try {
+    process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=String(Math.ceil(Date.now()/1000)+60);
+    process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=marker;
+    const fakeDocker=(bin,args)=>{
+      assert.equal(bin,'timeout');
+      const operation=['docker',...args.slice(4)].join(' ');calls.push(operation);
+      if(operation==='docker image ls --all --quiet --no-trunc')return {status:0,signal:null,error:null,stdout:`${first}\n${second}\n`,stderr:''};
+      if(operation===`docker image inspect ornigami:first --format {{.Id}}`)return {status:0,signal:null,error:null,stdout:`${first}\n`,stderr:''};
+      if(operation===`docker image rm ${first}`)return {status:124,signal:null,error:null,stdout:'',stderr:''};
+      assert.fail(`unexpected Docker invocation after uncertainty: ${operation}`);
+    };
+    const invoke=args=>workflowCleanupDocker(args,{invoke:fakeDocker});
+    const results=cleanupOwnedImages([
+      {stage:'first',ownedImage:true,imageId:first,reference:'ornigami:first'},
+      {stage:'second',ownedImage:true,imageId:second,reference:'ornigami:second'},
+    ],invoke);
+    assert.match(readFileSync(marker,'utf8'),/^docker_unproved=docker-client-timeout-or-interruption\ndocker_unproved=prior-timeout-or-invalid-deadline\n$/);
+    assert.deepEqual(calls,[
+      'docker image ls --all --quiet --no-trunc',
+      'docker image inspect ornigami:first --format {{.Id}}',
+      `docker image rm ${first}`,
+    ]);
+    assert.equal(results[0].result,'failed');
+    assert.equal(results[0].removalExit,124);
+    assert.equal(results[0].absenceVerified,false);
+    assert.match(results[0].error,/uncertain; absence unproved/);
+    assert.equal(results[1].result,'failed');
+    assert.equal(results[1].absenceVerified,undefined);
+    assert.match(results[1].error,/Image inventory unavailable/);
   } finally {
     if(previousDeadline===undefined)delete process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;else process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=previousDeadline;
     if(previousMarker===undefined)delete process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;else process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=previousMarker;

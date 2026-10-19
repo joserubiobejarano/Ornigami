@@ -1677,3 +1677,30 @@ build, live provider/API operation, push, merge or deployment occurred.
 
 **Commit:** pending local commit of the bounded workflow cleanup implementation, regressions and
 this response.
+
+## B5B2C.1 response — GNU timeout classification
+
+In the deadline-enabled path, `workflowCleanupDocker` now treats numeric GNU `timeout` statuses
+124 and 137 as uncertain even when Node reports no `error` or `signal`. It appends the existing
+shared `ORNIGAMI_CLEANUP_UNPROVED_FILE` marker; later helper calls are fenced before invoking
+Docker. `cleanupOwnedImages` records `absenceVerified: false` and stops before inventory read-back
+when the marker shows uncertain work. The toolchain cleanup imports this helper and assigns it to
+its Docker invoker, so the same classification and fence apply there.
+
+Successful deadline-enabled calls remain successful without a marker. Ordinary non-timeout
+nonzero results remain caller-visible failures and do not create the timeout marker; existing
+removal handling/read-back behavior remains in force for those results. Standalone calls without
+`ORNIGAMI_CLEANUP_DEADLINE_EPOCH` continue invoking `docker` directly and do not classify a
+numeric status as GNU-timeout evidence.
+
+Focused cleanup/workflow regressions passed **10/10** (including status 124/137 with null
+error/signal, success, ordinary failure, standalone behavior, existing ownership/no-op/inventory/
+daemon checks, and the actual timed-out owned-image fencing/receipt path). `node --check` passed for
+the helper, toolchain module and test file. Source inspection confirmed toolchain cleanup uses the
+corrected helper. `git diff --check` passed. No actual Docker, provider, registry, hosted workflow
+or deployment operation occurred. Hosted timing, daemon-side cancellation and live cleanup remain
+unverified; timeout leaves absence unproved, and B2.1, R4, coverage/adoption and dispatch holds
+remain open.
+
+The correction, focused regressions and this response are included in the local commit reported
+below.
