@@ -9,16 +9,33 @@ async function readConfig(name) {
   return JSON.parse(await readFile(resolve(root, name), "utf8"));
 }
 
-const production = await readConfig("vercel.json");
-const staging = await readConfig("vercel.staging.json");
-const expectedProductionCrons = [
-  { path: "/api/cron/privacy", schedule: "0 3 * * *" },
-  { path: "/api/cron/review-booster", schedule: "7 * * * *" },
-  { path: "/api/cron/review-replies", schedule: "11 */4 * * *" },
-];
+export function validateGitConfig(gitConfig, stagingReference) {
+  assert.equal(
+    Object.hasOwn(gitConfig, "crons"),
+    false,
+    "Git-consumed root vercel.json must not declare cron schedules",
+  );
+  assert.deepEqual(
+    Object.keys(gitConfig),
+    ["$schema"],
+    "Git-consumed root vercel.json must remain minimal and schedule-free",
+  );
+  assert.deepEqual(
+    gitConfig,
+    stagingReference,
+    "Git-consumed root vercel.json must match the reviewed staging reference",
+  );
+}
 
-assert.deepEqual(production.crons, expectedProductionCrons, "default production schedules changed");
-assert.equal(Object.hasOwn(staging, "crons"), false, "staging config must not declare cron schedules");
-assert.deepEqual(Object.keys(staging), ["$schema"], "staging config must remain schedule-free and minimal");
+async function main() {
+  const gitConfig = await readConfig("vercel.json");
+  const stagingReference = await readConfig("vercel.staging.json");
 
-console.log("PASS: default schedules are preserved; selected staging config declares no crons.");
+  validateGitConfig(gitConfig, stagingReference);
+
+  console.log("PASS: Git-consumed root vercel.json matches the minimal schedule-free staging reference.");
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}
