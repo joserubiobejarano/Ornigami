@@ -1,0 +1,2730 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-19T21:51:13Z",
+  "purpose": "Sanitized retained evidence for one isolated local build of the exact application candidate; not hosted acceptance.",
+  "candidate": {
+    "branch": "codex/ornigami-staging-readiness-20261018",
+    "commit": "71af037843847f75831c28422906a26e1a7e5f45",
+    "detachedCheckout": true
+  },
+  "historicalRun": {
+    "result": "Prior task recorded npm run build exit 0 in 54.967 seconds.",
+    "runnerAndPerPathArtifactEvidence": "Unavailable after prior task-scoped cleanup; no raw diagnostics reopened and no hashes inferred from aggregate counts.",
+    "relationship": "The measurements below are a distinct rerun, not a recovery of the historical runner output."
+  },
+  "temporaryRoot": {
+    "path": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-evidence-71af037843847f75831c28422906a26e1a7e5f45-rerun-20261019",
+    "checkout": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-evidence-71af037843847f75831c28422906a26e1a7e5f45-rerun-20261019\\checkout",
+    "checkoutCreatedFromCandidateCommit": true,
+    "preinstallAbsences": [
+      ".env",
+      ".env.local",
+      ".vercel",
+      ".next",
+      "node_modules",
+      "private evidence"
+    ],
+    "trackedDotEnvTemplate": "Only tracked .env.example was present; it was not used for values."
+  },
+  "dependencyIdentity": {
+    "node": "v24.11.1",
+    "npm": "11.6.2",
+    "next": "16.4.2",
+    "react": "19.2.9",
+    "reactDom": "19.2.9",
+    "typescript": "5.9.3",
+    "lockfileVersion": 3,
+    "packageLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+    "nextPackage": {
+      "resolved": "file:vendor/framework/next-16.4.2-ornigami-sri.2.tgz",
+      "integrity": "sha512-17BrG8dBp5eMwEyf8YEr2+bSB94tOFV3DVcDkBEIi91FM40Va7Dzsa0OK2jIEBQHhaNqjbSxdG0lb/sIlmIwEA==",
+      "archiveBytes": 44857205,
+      "archiveSha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+      "archiveSha512Integrity": "sha512-17BrG8dBp5eMwEyf8YEr2+bSB94tOFV3DVcDkBEIi91FM40Va7Dzsa0OK2jIEBQHhaNqjbSxdG0lb/sIlmIwEA==",
+      "archiveIntegrityMatchesLock": true
+    }
+  },
+  "guidesRead": [
+    "node_modules/next/dist/docs/01-app/02-guides/building.md",
+    "node_modules/next/dist/docs/01-app/02-guides/environment-variables.md",
+    "node_modules/next/dist/docs/01-app/01-getting-started/13-fonts.md"
+  ],
+  "reproducibleRecipe": {
+    "inheritedProcessEnvironmentNameAllowlist": [
+      "PATH",
+      "SystemRoot",
+      "WINDIR",
+      "SystemDrive",
+      "TEMP",
+      "TMP",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "ProgramFiles",
+      "ProgramFiles(x86)",
+      "CommonProgramFiles",
+      "ComSpec",
+      "PATHEXT"
+    ],
+    "explicitRunnerEnvironmentNameAllowlist": [
+      "VERCEL_ENV",
+      "VERCEL_GIT_COMMIT_REF",
+      "VERCEL_GIT_COMMIT_SHA",
+      "ORNIGAMI_PRIVATE_STAGING_MODE",
+      "AUTH_SECRET",
+      "NEXT_PUBLIC_APP_URL",
+      "NEXT_PUBLIC_SENTRY_DSN",
+      "SENTRY_DSN",
+      "SENTRY_ORG",
+      "SENTRY_PROJECT",
+      "NEXT_TELEMETRY_DISABLED",
+      "NODE_OPTIONS",
+      "HTTP_PROXY",
+      "HTTPS_PROXY",
+      "http_proxy",
+      "https_proxy",
+      "NO_PROXY",
+      "no_proxy",
+      "NPM_CONFIG_USERCONFIG",
+      "NPM_CONFIG_GLOBALCONFIG",
+      "NPM_CONFIG_CACHE",
+      "NPM_CONFIG_REGISTRY",
+      "NPM_CONFIG_AUDIT",
+      "NPM_CONFIG_FUND",
+      "NPM_CONFIG_UPDATE_NOTIFIER",
+      "NPM_CONFIG_PROXY",
+      "NPM_CONFIG_HTTPS_PROXY"
+    ],
+    "syntheticConfiguration": {
+      "VERCEL_ENV": "preview",
+      "VERCEL_GIT_COMMIT_REF": "codex/ornigami-staging-readiness-20261018",
+      "VERCEL_GIT_COMMIT_SHA": "71af037843847f75831c28422906a26e1a7e5f45",
+      "ORNIGAMI_PRIVATE_STAGING_MODE": "true",
+      "AUTH_SECRET": "One-run random 32-byte base64url value; generated in memory; value not retained.",
+      "NEXT_PUBLIC_APP_URL": "https://ornigami-preview.invalid",
+      "NEXT_PUBLIC_SENTRY_DSN": "Synthetic .invalid DSN only; no credential.",
+      "SENTRY_DSN": "Synthetic .invalid DSN only; no credential.",
+      "SENTRY_ORG": "synthetic-private-preview",
+      "SENTRY_PROJECT": "synthetic",
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NODE_OPTIONS": "--use-env-proxy",
+      "HTTP_PROXY": "http://127.0.0.1:18762",
+      "HTTPS_PROXY": "http://127.0.0.1:18762",
+      "http_proxy": "http://127.0.0.1:18762",
+      "https_proxy": "http://127.0.0.1:18762",
+      "NO_PROXY": "127.0.0.1,localhost",
+      "no_proxy": "127.0.0.1,localhost"
+    },
+    "explicitlyAbsentEnvironmentNames": [
+      "DATABASE_URL",
+      "SENTRY_AUTH_TOKEN",
+      "Google credentials",
+      "hosted/provider credentials"
+    ],
+    "npmConfiguration": {
+      "NPM_CONFIG_USERCONFIG": "task-root/npm-user-empty.rc",
+      "NPM_CONFIG_GLOBALCONFIG": "task-root/npm-global-empty.rc",
+      "NPM_CONFIG_CACHE": "task-root/npm-cache",
+      "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/",
+      "NPM_CONFIG_AUDIT": "false",
+      "NPM_CONFIG_FUND": "false",
+      "NPM_CONFIG_UPDATE_NOTIFIER": "false",
+      "NPM_CONFIG_PROXY": "http://127.0.0.1:18762",
+      "NPM_CONFIG_HTTPS_PROXY": "http://127.0.0.1:18762",
+      "npmLifecycleEnvironment": "npm injects its own lifecycle metadata into script children; no ambient environment is inherited beyond the allowlist above."
+    },
+    "npmCliPath": "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js",
+    "npmCiSpawn": "node <npm-cli.js> ci --no-audit --no-fund --loglevel=error",
+    "buildSpawn": "node <npm-cli.js> run build; package script unchanged",
+    "runnerControlEnvironmentNames": [
+      "TASK_ROOT",
+      "TASK_CHECKOUT",
+      "TASK_REPO",
+      "EVIDENCE_PROXY_EVENTS"
+    ],
+    "runnerControlNamesNotForwardedToBuild": true
+  },
+  "limitations": [
+    "SRI digest mismatch remains unresolved and is reported without waiver.",
+    "Proxy evidence does not prove system-wide egress absence or telemetry execution.",
+    "Local build does not establish hosted Vercel behavior or acceptance.",
+    "No application/framework setting, provider, credential, database, deployment, push or guard was changed."
+  ],
+  "cleanup": {
+    "status": "completed",
+    "taskRootPath": "C:/Users/joser/AppData/Local/Temp/ornigami-private-preview-evidence-71af037843847f75831c28422906a26e1a7e5f45-rerun-20261019",
+    "checkoutPath": "C:/Users/joser/AppData/Local/Temp/ornigami-private-preview-evidence-71af037843847f75831c28422906a26e1a7e5f45-rerun-20261019/checkout",
+    "containmentValidated": true,
+    "initialGitWorktreeRemoval": {
+      "status": "failed",
+      "reason": "Windows Git returned Filename too long while deleting the task-owned node_modules tree; it removed the worktree registration before returning failure."
+    },
+    "fallbackRemoval": {
+      "targetWasRevalidatedAsExactDirectChildOfTaskRoot": true,
+      "method": "PowerShell Remove-Item -LiteralPath -Recurse -Force after confirming worktree registration was absent",
+      "checkoutRemoved": true
+    },
+    "taskRootRemoved": true,
+    "worktreeRegistrationAbsent": true,
+    "unrelatedWorktreesPreserved": [
+      "C:/Users/joser/.local/share/opencode/worktree/7bfa2f/glowing-planet"
+    ]
+  },
+  "commands": {
+    "npmCi": {
+      "phase": "ci",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund",
+        "--loglevel=error"
+      ],
+      "status": "ok",
+      "exitCode": 0,
+      "signal": null,
+      "launchStatus": null,
+      "elapsedMs": 48613,
+      "timeoutMs": 1800000,
+      "timeoutCleanup": {
+        "configured": "taskkill.exe /PID <pid> /T /F, 10000ms, then direct-child kill fallback",
+        "triggered": false,
+        "taskkillExit": null
+      },
+      "capturedOutputBytes": 27,
+      "outputPersisted": false,
+      "databaseUrlAbsent": true,
+      "hostedCredentialNamesAbsent": true
+    },
+    "normalBuild": {
+      "phase": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "status": "ok",
+      "exitCode": 0,
+      "signal": null,
+      "launchStatus": null,
+      "elapsedMs": 55434,
+      "timeoutMs": 900000,
+      "timeoutCleanup": {
+        "configured": "taskkill.exe /PID <pid> /T /F, 10000ms, then direct-child kill fallback",
+        "triggered": false,
+        "taskkillExit": null
+      },
+      "capturedOutputBytes": 3556,
+      "outputPersisted": false,
+      "databaseUrlAbsent": true,
+      "hostedCredentialNamesAbsent": true
+    },
+    "buildPackageScript": "next build --webpack && node scripts/generate-static-csp-hashes.mjs",
+    "runnerBehavior": "Direct Node/npm CLI child; output held in memory only and not persisted; output cap 64 MiB; 30-minute npm-ci timeout; 15-minute build timeout; on timeout/cap use taskkill.exe /PID <pid> /T /F with 10-second bound then direct child kill fallback. Cleanup was configured but not triggered."
+  },
+  "network": {
+    "proxyImplementation": "Task-local Node loopback HTTP CONNECT observer/forwarder; permits only HTTPS port 443 to the exact allowlist below and denies all other CONNECT hosts. Logs timestamp, hostname, port and outcome only; never URL path, request body or environment values.",
+    "proxyAddress": "127.0.0.1:18762",
+    "allowlist": [
+      "registry.npmjs.org:443",
+      "fonts.googleapis.com:443",
+      "fonts.gstatic.com:443"
+    ],
+    "observedEventCount": 53,
+    "firstObservedAt": "2026-10-19T21:48:31.548Z",
+    "lastObservedAt": "2026-10-19T21:49:54.632Z",
+    "destinationCounts": [
+      {
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect",
+        "count": 6,
+        "phase": "npm run build"
+      },
+      {
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect",
+        "count": 32,
+        "phase": "npm run build"
+      },
+      {
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect",
+        "count": 15,
+        "phase": "npm ci"
+      }
+    ],
+    "deniedOrUnexpectedEventCount": 0,
+    "events": [
+      {
+        "observedAt": "2026-10-19T21:48:31.548Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.550Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.551Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.551Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.551Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.552Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.552Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.553Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.553Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.553Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.553Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.554Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.554Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.554Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:48:31.555Z",
+        "host": "registry.npmjs.org",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.344Z",
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.345Z",
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.346Z",
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.510Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.511Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.511Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.512Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.512Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.512Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.513Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.513Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.513Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.514Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.514Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.515Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.515Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.515Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.516Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:34.516Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.350Z",
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.351Z",
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.351Z",
+        "host": "fonts.googleapis.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.549Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.549Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.549Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.550Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.551Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.551Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.551Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.552Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.552Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.552Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.630Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.630Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.631Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.631Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.631Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      },
+      {
+        "observedAt": "2026-10-19T21:49:54.632Z",
+        "host": "fonts.gstatic.com",
+        "port": 443,
+        "result": "allowed_connect"
+      }
+    ],
+    "scopeLimit": "Covers only processes honoring npm proxy configuration or Node --use-env-proxy. It is not system-wide egress enforcement and cannot rule out direct connections from processes bypassing it."
+  },
+  "artifacts": {
+    "distDirectory": ".next",
+    "manifestPath": ".next/server/subresource-integrity-manifest.json",
+    "manifestEntryCount": 258,
+    "presentEntryCount": 258,
+    "missingEntryCount": 0,
+    "matchingDigestCount": 257,
+    "digestMismatchCount": 1,
+    "missing": [],
+    "mismatches": [
+      {
+        "path": "static/elCCX3U3_2CO5SfXRB4vC/_ssgManifest.js",
+        "expectedIntegrity": "sha256-b1tKoA0vjWrtmTW0cYBr96zvRk0MHTkCYOX+J/gAxn4=",
+        "actualIntegrity": "sha256-Z49s4suAsf5y/GfnQSvm4qtq2ggxEbZPfEDTXjy6XgA=",
+        "exists": true,
+        "matches": false,
+        "status": "digest_mismatch"
+      }
+    ],
+    "sriEntries": [
+      {
+        "path": "static/media/93a6e477e1480c92-s.woff2",
+        "expectedIntegrity": "sha256-6haUjUqRt3Ih8RmtJ9SsenWByYz5kHEgR/iaUxpJ7yg=",
+        "actualIntegrity": "sha256-6haUjUqRt3Ih8RmtJ9SsenWByYz5kHEgR/iaUxpJ7yg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/c7e0cf6c760983e7-s.woff2",
+        "expectedIntegrity": "sha256-oiyZeolDd/NtgckEFj4MBfu80y8Moue+7bhrOb4SlqE=",
+        "actualIntegrity": "sha256-oiyZeolDd/NtgckEFj4MBfu80y8Moue+7bhrOb4SlqE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/9d5a263311222317-s.p.woff2",
+        "expectedIntegrity": "sha256-T9SLLBqyciDnHxX5kFUCYbNSRcO9/Y2AJbS9rARZ7i0=",
+        "actualIntegrity": "sha256-T9SLLBqyciDnHxX5kFUCYbNSRcO9/Y2AJbS9rARZ7i0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/21350d82a1f187e9-s.woff2",
+        "expectedIntegrity": "sha256-rr8qtKTOaBDXPBrHvnyvtOXsTO4tbbX7PglpF0fsS9Y=",
+        "actualIntegrity": "sha256-rr8qtKTOaBDXPBrHvnyvtOXsTO4tbbX7PglpF0fsS9Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/ba9851c3c22cd980-s.woff2",
+        "expectedIntegrity": "sha256-/MypGP6kAInaytxwRYYTFNGmvJHx8yPMHusi682zIbU=",
+        "actualIntegrity": "sha256-/MypGP6kAInaytxwRYYTFNGmvJHx8yPMHusi682zIbU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/c5fe6dc8356a8c31-s.woff2",
+        "expectedIntegrity": "sha256-ouLHg8pvnCBIboHnKieSA+hnMLv48B/2pe6dvQnhwnE=",
+        "actualIntegrity": "sha256-ouLHg8pvnCBIboHnKieSA+hnMLv48B/2pe6dvQnhwnE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/19cfc7226ec3afaa-s.woff2",
+        "expectedIntegrity": "sha256-Rt1M3KWMJq6HzGknZXv4Oy6Kv8Of/QqxduMBqNKNIr8=",
+        "actualIntegrity": "sha256-Rt1M3KWMJq6HzGknZXv4Oy6Kv8Of/QqxduMBqNKNIr8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/df0a9ae256c0569c-s.woff2",
+        "expectedIntegrity": "sha256-jbAP9Gxnsizai+2GWs9wd2UcrI0oQdW0CYBVa0iWGTE=",
+        "actualIntegrity": "sha256-jbAP9Gxnsizai+2GWs9wd2UcrI0oQdW0CYBVa0iWGTE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/e4af272ccee01ff0-s.p.woff2",
+        "expectedIntegrity": "sha256-yUB2RZPQ/l1Za+MnynVYhV4BgDn7eFCaohkh/TZEw+Q=",
+        "actualIntegrity": "sha256-yUB2RZPQ/l1Za+MnynVYhV4BgDn7eFCaohkh/TZEw+Q=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/8e9860b6e62d6359-s.woff2",
+        "expectedIntegrity": "sha256-oo6208y1NK4MlMqZk3HfAkqrYLCMPIpXIO6eMvoPqqI=",
+        "actualIntegrity": "sha256-oo6208y1NK4MlMqZk3HfAkqrYLCMPIpXIO6eMvoPqqI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/013b72fa676f92e0-s.woff2",
+        "expectedIntegrity": "sha256-4n9lfjjVKIe6o7ay+BK++T3901bwgQ5A7dTuKEzH6fY=",
+        "actualIntegrity": "sha256-4n9lfjjVKIe6o7ay+BK++T3901bwgQ5A7dTuKEzH6fY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/e038a29029a234f2-s.woff2",
+        "expectedIntegrity": "sha256-FuHUi23SnrJArsXbNhhOsYKTPAgs1D3n81r2htWAh9I=",
+        "actualIntegrity": "sha256-FuHUi23SnrJArsXbNhhOsYKTPAgs1D3n81r2htWAh9I=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/7d4881bb7e1bf84d-s.p.woff2",
+        "expectedIntegrity": "sha256-Xz1q1g8p1stwhBTsaIcWPWO/GXN371QX0kg/8xrObDs=",
+        "actualIntegrity": "sha256-Xz1q1g8p1stwhBTsaIcWPWO/GXN371QX0kg/8xrObDs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/2b5b02fc7e511755-s.woff2",
+        "expectedIntegrity": "sha256-dFmUtc2VDsIBtmUmN18FfVQIR8zPxw9PJPX1cdJtOSM=",
+        "actualIntegrity": "sha256-dFmUtc2VDsIBtmUmN18FfVQIR8zPxw9PJPX1cdJtOSM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/b9408752a0c24fb9-s.woff2",
+        "expectedIntegrity": "sha256-dbO+2+vDXzR8CuO0FqqHGUFVU1fnsPg3Z+tZh4dVie0=",
+        "actualIntegrity": "sha256-dbO+2+vDXzR8CuO0FqqHGUFVU1fnsPg3Z+tZh4dVie0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/65f03d54ccadf4a8-s.woff2",
+        "expectedIntegrity": "sha256-1n5KlLpJhjX3ZN3KfR7EJx9WQvAy6yS0JnZEgPZvhJc=",
+        "actualIntegrity": "sha256-1n5KlLpJhjX3ZN3KfR7EJx9WQvAy6yS0JnZEgPZvhJc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/polyfills-42372ed130431b0a.js",
+        "expectedIntegrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "actualIntegrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "react-loadable-manifest.json",
+        "expectedIntegrity": "sha256-WZMqBW6+vlPchrMsnrwbNtEj/CIRr0t+l/t27BH5Xy0=",
+        "actualIntegrity": "sha256-WZMqBW6+vlPchrMsnrwbNtEj/CIRr0t+l/t27BH5Xy0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/middleware-react-loadable-manifest.js",
+        "expectedIntegrity": "sha256-Z/jqW54KFjKcgUmIdc5924DFRzwsU1mAdY5vftjw0/s=",
+        "actualIntegrity": "sha256-Z/jqW54KFjKcgUmIdc5924DFRzwsU1mAdY5vftjw0/s=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/elCCX3U3_2CO5SfXRB4vC/_ssgManifest.js",
+        "expectedIntegrity": "sha256-b1tKoA0vjWrtmTW0cYBr96zvRk0MHTkCYOX+J/gAxn4=",
+        "actualIntegrity": "sha256-Z49s4suAsf5y/GfnQSvm4qtq2ggxEbZPfEDTXjy6XgA=",
+        "exists": true,
+        "matches": false,
+        "status": "digest_mismatch"
+      },
+      {
+        "path": "build-manifest.json",
+        "expectedIntegrity": "sha256-+Dbi52s1SwgkqSnAPB4ye1kO2jtDQsblYw3GhhMej+w=",
+        "actualIntegrity": "sha256-+Dbi52s1SwgkqSnAPB4ye1kO2jtDQsblYw3GhhMej+w=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/middleware-build-manifest.js",
+        "expectedIntegrity": "sha256-Q8SbvnAHtwXfYvon2v2ZHIwhAoP2t9D1b/0dq/vfJVs=",
+        "actualIntegrity": "sha256-Q8SbvnAHtwXfYvon2v2ZHIwhAoP2t9D1b/0dq/vfJVs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/elCCX3U3_2CO5SfXRB4vC/_buildManifest.js",
+        "expectedIntegrity": "sha256-z2YYqch+Rem4Tool6fYLUsys+Wl2SGUpjWJD/Hjuy7k=",
+        "actualIntegrity": "sha256-z2YYqch+Rem4Tool6fYLUsys+Wl2SGUpjWJD/Hjuy7k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/next-font-manifest.js",
+        "expectedIntegrity": "sha256-LA9bu3nQff6kBRRqYtfhWnqeiQ0p44t9smMfz25IDag=",
+        "actualIntegrity": "sha256-LA9bu3nQff6kBRRqYtfhWnqeiQ0p44t9smMfz25IDag=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/next-font-manifest.json",
+        "expectedIntegrity": "sha256-km53LTSlPypNmxYHHdbqd7BRsresxJ2RZXI96+P7vg8=",
+        "actualIntegrity": "sha256-km53LTSlPypNmxYHHdbqd7BRsresxJ2RZXI96+P7vg8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/main-f8ef8b8b780fb248.js",
+        "expectedIntegrity": "sha256-mU+sSw7v1LgrBAjv0nhgtZdcdGVrjtZf+BLajF+TDYo=",
+        "actualIntegrity": "sha256-mU+sSw7v1LgrBAjv0nhgtZdcdGVrjtZf+BLajF+TDYo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/main-app-890b45864c05d93b.js",
+        "expectedIntegrity": "sha256-pGADzI5w9QODxtdME/DCVe7rsUXC9MiNaBK1ATAqC4I=",
+        "actualIntegrity": "sha256-pGADzI5w9QODxtdME/DCVe7rsUXC9MiNaBK1ATAqC4I=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/_not-found/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/_global-error/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/not-found-fcf82feb1311a900.js",
+        "expectedIntegrity": "sha256-eTxShb/XA1S8BvJHD/MkKKs75LXBOiQ6z9AujVwDiPg=",
+        "actualIntegrity": "sha256-eTxShb/XA1S8BvJHD/MkKKs75LXBOiQ6z9AujVwDiPg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/layout-4043f57f69de78b2.js",
+        "expectedIntegrity": "sha256-C/uMzA9JABba65OmnhyaMt9rlXlXYH0ZkpksPllOwZA=",
+        "actualIntegrity": "sha256-C/uMzA9JABba65OmnhyaMt9rlXlXYH0ZkpksPllOwZA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/error-9f3c12e5942ad747.js",
+        "expectedIntegrity": "sha256-L4EIWKGXz9Vk8SPmf33cdA17GX2fsJzEOCu2izlkxyw=",
+        "actualIntegrity": "sha256-L4EIWKGXz9Vk8SPmf33cdA17GX2fsJzEOCu2izlkxyw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/global-error-6b8add65627c0cd4.js",
+        "expectedIntegrity": "sha256-8TgjA6mj9YESvTQ3Oax7Jo5PneKNpHJV9S4QuIRWvWg=",
+        "actualIntegrity": "sha256-8TgjA6mj9YESvTQ3Oax7Jo5PneKNpHJV9S4QuIRWvWg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/forbidden-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/unauthorized-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/app-error-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/change-plan/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/robots.txt/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/sitemap.xml/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api-public-demo-review-booster/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/audit/free-profile/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/[...nextauth]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/forgot-password/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/register/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/resend-verification/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/reset-password/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/signout/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/verify-email/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/health/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/privacy/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/review-booster/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/csp-report/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/review-replies/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/dashboard/summary/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/feedback/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/connection/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/disconnect/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/list/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/selection/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/sync/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/oauth/callback/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/oauth/start/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/replies/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/reviews/process-pending/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/reviews/sync/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/leads/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/openai/review-reply/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/privacy/delete/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/privacy/export/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/private-preview/database-identity/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/projects/[id]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/projects/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/booking-credentials/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/deliveries/[deliveryId]/reconcile/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/run-now/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/settings/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/unsubscribe/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/upload/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/visits/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/reviews/draft/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/reviews/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/settings/reply/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/portal/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/webhook/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/checkout/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/team/invitations/[token]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/team/members/[userId]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/team/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/user/plan/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/webhooks/booking/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/webhooks/resend/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/opengraph-image/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/r/[token]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/about/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/account/deletion/page-80b1aeb8665f1603.js",
+        "expectedIntegrity": "sha256-FVP50j0w26rFsYYCWK12trhlD6CtZJwZK3GGqEfYXbA=",
+        "actualIntegrity": "sha256-FVP50j0w26rFsYYCWK12trhlD6CtZJwZK3GGqEfYXbA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/contact/page-660e83739f4f2bdd.js",
+        "expectedIntegrity": "sha256-7wFwCzDlfYuB0uI0tnhF5isTTCHNPf48HUWbeFA6ims=",
+        "actualIntegrity": "sha256-7wFwCzDlfYuB0uI0tnhF5isTTCHNPf48HUWbeFA6ims=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/demo-review-booster/page-b3a468b28bb25bf7.js",
+        "expectedIntegrity": "sha256-SPkLZSCWltbIzXYo49JX/OASJYVQA0BhTAMeS1tx+2s=",
+        "actualIntegrity": "sha256-SPkLZSCWltbIzXYo49JX/OASJYVQA0BhTAMeS1tx+2s=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/demo-review-replies/page-47c89a9c367c62e9.js",
+        "expectedIntegrity": "sha256-EguOisd7VjiCvSAdFMas2oT1VARgEOUifo8rpYfR/Do=",
+        "actualIntegrity": "sha256-EguOisd7VjiCvSAdFMas2oT1VARgEOUifo8rpYfR/Do=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/demo/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/feedback/page-26847e5f4c6f8cb2.js",
+        "expectedIntegrity": "sha256-I29G6RB+FqwR9FpbGyjCoj0aiwnQDqCDzwlPagRkCMU=",
+        "actualIntegrity": "sha256-I29G6RB+FqwR9FpbGyjCoj0aiwnQDqCDzwlPagRkCMU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/free-audit/page-e29a76520bd0e6f5.js",
+        "expectedIntegrity": "sha256-f7nUzJT4jc1GfZKoIRLsyaj91UTM98QQizs8QLrteuo=",
+        "actualIntegrity": "sha256-f7nUzJT4jc1GfZKoIRLsyaj91UTM98QQizs8QLrteuo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/legal/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/local-seo/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/pricing/page-5c0fa5b351d054b9.js",
+        "expectedIntegrity": "sha256-H9L7N1wG4SMzul1X+YzYQnd39JFeXMu0m7NnS+TW3ac=",
+        "actualIntegrity": "sha256-H9L7N1wG4SMzul1X+YzYQnd39JFeXMu0m7NnS+TW3ac=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/privacy/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/review-booster/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/review-replies/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/team/invite/[token]/page-924fdd476f7b1eab.js",
+        "expectedIntegrity": "sha256-buDFLvK6BktVGfSNXwd7l3rhuN4sCo4XBPChONX8WbA=",
+        "actualIntegrity": "sha256-buDFLvK6BktVGfSNXwd7l3rhuN4sCo4XBPChONX8WbA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/terms/page-a422ba3c3df0e4fa.js",
+        "expectedIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "actualIntegrity": "sha256-8Un/crS0NSXULOLQJN76oufaK5wzcIUqLuGY0FN48W8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/layout-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/forgot-password/page-c035149fca92ba47.js",
+        "expectedIntegrity": "sha256-3N7X/Xk4ZWfRweK9YKlTpKhw+TtxtmKOb/VO/06l7zo=",
+        "actualIntegrity": "sha256-3N7X/Xk4ZWfRweK9YKlTpKhw+TtxtmKOb/VO/06l7zo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/login/page-4fd2fec85578330c.js",
+        "expectedIntegrity": "sha256-iQpOJ07auOKLWHVrjcwzlKvBXct7qJDdD7l0Tgh9ero=",
+        "actualIntegrity": "sha256-iQpOJ07auOKLWHVrjcwzlKvBXct7qJDdD7l0Tgh9ero=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/resend-verification/page-cf7d73ebf0f6deb2.js",
+        "expectedIntegrity": "sha256-XgvUkE/DtnNLuO2KdJbe3jIKuYzw/95QVozr0bWDHXI=",
+        "actualIntegrity": "sha256-XgvUkE/DtnNLuO2KdJbe3jIKuYzw/95QVozr0bWDHXI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/reset-password/page-bc9f151e986b6960.js",
+        "expectedIntegrity": "sha256-iNNzKILM+AAzQvLm10zruEufahKQSmqKStO6m6U+EeI=",
+        "actualIntegrity": "sha256-iNNzKILM+AAzQvLm10zruEufahKQSmqKStO6m6U+EeI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/signup/page-72e69b1eccb4f138.js",
+        "expectedIntegrity": "sha256-vCvMKb5fChPcU4uA2gefewcXN/UFweCZEm308GbvUEU=",
+        "actualIntegrity": "sha256-vCvMKb5fChPcU4uA2gefewcXN/UFweCZEm308GbvUEU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/layout-46eb4e5216c6e052.js",
+        "expectedIntegrity": "sha256-6X6oiEjl+DRUQI9vJihxrPDW9BU+wCME66ZZgEX0jFA=",
+        "actualIntegrity": "sha256-6X6oiEjl+DRUQI9vJihxrPDW9BU+wCME66ZZgEX0jFA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/loading-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/connect/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/error-405bcf2eec69f2a6.js",
+        "expectedIntegrity": "sha256-nd1tJzBRUuLaZFmfvJxXg4gCxwdtEi7gglbFIiyUAQw=",
+        "actualIntegrity": "sha256-nd1tJzBRUuLaZFmfvJxXg4gCxwdtEi7gglbFIiyUAQw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/loading-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/new/page-dfaaedfc5982bfc8.js",
+        "expectedIntegrity": "sha256-hmPrcuNOEYtkdIpeP9EX0XlghZM73yWzrlR0nQnyExc=",
+        "actualIntegrity": "sha256-hmPrcuNOEYtkdIpeP9EX0XlghZM73yWzrlR0nQnyExc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/page-854e7162ae782d67.js",
+        "expectedIntegrity": "sha256-s3Nl1W+WZEgzU5UNlTCFxGKkvswnMc2UAPiiqKuLeM0=",
+        "actualIntegrity": "sha256-s3Nl1W+WZEgzU5UNlTCFxGKkvswnMc2UAPiiqKuLeM0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/settings/page-d07697af480905c1.js",
+        "expectedIntegrity": "sha256-DmXnBnMcWUIXeMTlzEM/piTa3Gpdfghuaf41ku19WoA=",
+        "actualIntegrity": "sha256-DmXnBnMcWUIXeMTlzEM/piTa3Gpdfghuaf41ku19WoA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/upload/page-0717c65640f05b6f.js",
+        "expectedIntegrity": "sha256-3GtS0gxJacs0HayrgGJvdH4NoOQAoMD1U3ddlePsm1c=",
+        "actualIntegrity": "sha256-3GtS0gxJacs0HayrgGJvdH4NoOQAoMD1U3ddlePsm1c=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/billing/page-6c5194f4add036dd.js",
+        "expectedIntegrity": "sha256-z3H616WlHtICHkSEpdRdjN8vBk+t1ClI55pcclPZI8c=",
+        "actualIntegrity": "sha256-z3H616WlHtICHkSEpdRdjN8vBk+t1ClI55pcclPZI8c=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/page-ec48496f3067d516.js",
+        "expectedIntegrity": "sha256-1T4qbVZr1y2kfARwnvTkgXpQxiJ8xhB9CHb3Z7AP/M0=",
+        "actualIntegrity": "sha256-1T4qbVZr1y2kfARwnvTkgXpQxiJ8xhB9CHb3Z7AP/M0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/settings/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/layout-fcf82feb1311a900.js",
+        "expectedIntegrity": "sha256-eTxShb/XA1S8BvJHD/MkKKs75LXBOiQ6z9AujVwDiPg=",
+        "actualIntegrity": "sha256-eTxShb/XA1S8BvJHD/MkKKs75LXBOiQ6z9AujVwDiPg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/loading-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/google-connection/page-71e05757e3eeb180.js",
+        "expectedIntegrity": "sha256-vIRyimkQEr9NHa1cvqatqLNqkph3fFBQU9JNrFyenU8=",
+        "actualIntegrity": "sha256-vIRyimkQEr9NHa1cvqatqLNqkph3fFBQU9JNrFyenU8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/page-1a0bb99a7b68b06b.js",
+        "expectedIntegrity": "sha256-AacSTTbFhWkiPW1i739VioGVRhFn+1sLCuqVBF7u/5w=",
+        "actualIntegrity": "sha256-AacSTTbFhWkiPW1i739VioGVRhFn+1sLCuqVBF7u/5w=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/reviews/page-d18380d53d465caf.js",
+        "expectedIntegrity": "sha256-krzCkbms5APpfwgnZvOGdVMyQ66hywA4jSPIJCBXVIs=",
+        "actualIntegrity": "sha256-krzCkbms5APpfwgnZvOGdVMyQ66hywA4jSPIJCBXVIs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/settings/page-c19c4e5b51da28bf.js",
+        "expectedIntegrity": "sha256-TFxI78maNE0Az0J1qQpIvMdBf+SfLJtmYuCxgUPV+7k=",
+        "actualIntegrity": "sha256-TFxI78maNE0Az0J1qQpIvMdBf+SfLJtmYuCxgUPV+7k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/layout-fcf82feb1311a900.js",
+        "expectedIntegrity": "sha256-eTxShb/XA1S8BvJHD/MkKKs75LXBOiQ6z9AujVwDiPg=",
+        "actualIntegrity": "sha256-eTxShb/XA1S8BvJHD/MkKKs75LXBOiQ6z9AujVwDiPg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/webpack-6cadabf2c60b9ff8.js",
+        "expectedIntegrity": "sha256-d3/aZAv8Bu1kJKqaackLaLJKbyaN+7OWfScY+T5CR1Y=",
+        "actualIntegrity": "sha256-d3/aZAv8Bu1kJKqaackLaLJKbyaN+7OWfScY+T5CR1Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5563.8ef324387a9f6623.js",
+        "expectedIntegrity": "sha256-fye8DWqWsDsjfRqUMdlBs3q6LPUboORc/YaTGZUFtJ8=",
+        "actualIntegrity": "sha256-fye8DWqWsDsjfRqUMdlBs3q6LPUboORc/YaTGZUFtJ8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/971.1d64b0790cb4d04a.js",
+        "expectedIntegrity": "sha256-EsTisMFyvPIcnbH98qnWoJCrcYUNJhNgiO+q3Zs7zgU=",
+        "actualIntegrity": "sha256-EsTisMFyvPIcnbH98qnWoJCrcYUNJhNgiO+q3Zs7zgU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3342.0a1c2833d7450d08.js",
+        "expectedIntegrity": "sha256-YQAUiUDAQemob6M04DcDEwgZgY5pEj2r+qFuGZRJD90=",
+        "actualIntegrity": "sha256-YQAUiUDAQemob6M04DcDEwgZgY5pEj2r+qFuGZRJD90=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3684.9906bb5329f266f3.js",
+        "expectedIntegrity": "sha256-i2B8Qv9hEafur0AvADnVUndUbhSDy/aXGQWjOeA9yiM=",
+        "actualIntegrity": "sha256-i2B8Qv9hEafur0AvADnVUndUbhSDy/aXGQWjOeA9yiM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/css/da7208232ee3766e.css",
+        "expectedIntegrity": "sha256-naWPXBRQ37X68x9k9Q1vClD5H5Zle4QAAzf5f9l+4v4=",
+        "actualIntegrity": "sha256-naWPXBRQ37X68x9k9Q1vClD5H5Zle4QAAzf5f9l+4v4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/framework-ebab8c483d944e88.js",
+        "expectedIntegrity": "sha256-cianFzxh+7+bzyWcQScZ2XupQGBMGLYqZhl3AB9o0yk=",
+        "actualIntegrity": "sha256-cianFzxh+7+bzyWcQScZ2XupQGBMGLYqZhl3AB9o0yk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/4a7b0c69.b60fb5cd91258c5e.js",
+        "expectedIntegrity": "sha256-G7woFlwkUl4iAS+zwY++QT1Wz1R2NybiSOFHadTnM28=",
+        "actualIntegrity": "sha256-G7woFlwkUl4iAS+zwY++QT1Wz1R2NybiSOFHadTnM28=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5d015edf.2a6b1ccfb05ae688.js",
+        "expectedIntegrity": "sha256-FYZYTAnqJLjZYKoQbHZnTcW1kEqp1HJgLw1Kmn5bKcU=",
+        "actualIntegrity": "sha256-FYZYTAnqJLjZYKoQbHZnTcW1kEqp1HJgLw1Kmn5bKcU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5f8dfda4.5847f4732d2130af.js",
+        "expectedIntegrity": "sha256-z+qVl+IqKm5TDJCAI8JSvz4JpLTn5MS2vgaE77yr79E=",
+        "actualIntegrity": "sha256-z+qVl+IqKm5TDJCAI8JSvz4JpLTn5MS2vgaE77yr79E=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/dc9729d2.40afd1c0c1c56f6b.js",
+        "expectedIntegrity": "sha256-sCT9K10+i41exVXl34LnGZ2u8dfyLVcyMf8F1KhrTqs=",
+        "actualIntegrity": "sha256-sCT9K10+i41exVXl34LnGZ2u8dfyLVcyMf8F1KhrTqs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "expectedIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "actualIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5930-f579d9ef15ff4eec.js",
+        "expectedIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "actualIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9441-1da2035333621b8b.js",
+        "expectedIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "actualIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/1970-99e23101c30350e9.js",
+        "expectedIntegrity": "sha256-3DL1xHMhdSofS0GuR/BRi4P72Ja2Fb85mhilI1IbEKc=",
+        "actualIntegrity": "sha256-3DL1xHMhdSofS0GuR/BRi4P72Ja2Fb85mhilI1IbEKc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/1518-572421f9b706fac1.js",
+        "expectedIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "actualIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5815-d2131b6234ad2ea8.js",
+        "expectedIntegrity": "sha256-qGHG+8yJHLkdc79SNIusw1qJEVlXeEbxUKVTdUJpF9o=",
+        "actualIntegrity": "sha256-qGHG+8yJHLkdc79SNIusw1qJEVlXeEbxUKVTdUJpF9o=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9094-3ee0a8e960d65574.js",
+        "expectedIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "actualIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3981-857a4d53de12141d.js",
+        "expectedIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "actualIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/1527-894b8f7c3bc378a6.js",
+        "expectedIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "actualIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9826-1dce46968528014c.js",
+        "expectedIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "actualIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9522-3f44693a000991cb.js",
+        "expectedIntegrity": "sha256-Amlh5Ek+KQ6HpQBOZCF87kHW91nfpgiFxO3EbPrm2OM=",
+        "actualIntegrity": "sha256-Amlh5Ek+KQ6HpQBOZCF87kHW91nfpgiFxO3EbPrm2OM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5326-b1324cf76b2f72b1.js",
+        "expectedIntegrity": "sha256-nizvqP3ta09800FIrgUdtWyh0QnhGXkguVQYftZJkaw=",
+        "actualIntegrity": "sha256-nizvqP3ta09800FIrgUdtWyh0QnhGXkguVQYftZJkaw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/2914-95d49c25cd7c3de9.js",
+        "expectedIntegrity": "sha256-A5TbY0nNNPpkd7Lx6BIXRD4rgpKLCHVa8YQNjaSuqAg=",
+        "actualIntegrity": "sha256-A5TbY0nNNPpkd7Lx6BIXRD4rgpKLCHVa8YQNjaSuqAg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/743-224baeea1bee4137.js",
+        "expectedIntegrity": "sha256-mW3m16bwNEx1wXjrX/WLnahWucY1sVsSsyryXn047dc=",
+        "actualIntegrity": "sha256-mW3m16bwNEx1wXjrX/WLnahWucY1sVsSsyryXn047dc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3138-64e678f960936580.js",
+        "expectedIntegrity": "sha256-SOQzRU7x+4aof2ZY+4EEWWbP+Mdbdjd94H/ucrQkiiE=",
+        "actualIntegrity": "sha256-SOQzRU7x+4aof2ZY+4EEWWbP+Mdbdjd94H/ucrQkiiE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/_not-found/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-2Jfl0NENl/ZYz+Cn54axGOHRoYZg4VU8lMxWpJFIez4=",
+        "actualIntegrity": "sha256-2Jfl0NENl/ZYz+Cn54axGOHRoYZg4VU8lMxWpJFIez4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/_global-error/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-0BXYIbhmmbrnkZdLhpe/L0tBF4IIFV1QlS9doTVAhmI=",
+        "actualIntegrity": "sha256-0BXYIbhmmbrnkZdLhpe/L0tBF4IIFV1QlS9doTVAhmI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/change-plan/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-zOg5KHMNE9K1CsvRuqwBlD+hkhb8Sh6A8gOukOTCR2M=",
+        "actualIntegrity": "sha256-zOg5KHMNE9K1CsvRuqwBlD+hkhb8Sh6A8gOukOTCR2M=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/robots.txt/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-vaqTPT5D2p+JKBSfWB0HM2LX+SdE9HsOBNXJ+3PxUYI=",
+        "actualIntegrity": "sha256-vaqTPT5D2p+JKBSfWB0HM2LX+SdE9HsOBNXJ+3PxUYI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/sitemap.xml/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-YrRHhd3nGOAckoNP3CjuPg/hkmKsWEh/ZatLD1+0TZc=",
+        "actualIntegrity": "sha256-YrRHhd3nGOAckoNP3CjuPg/hkmKsWEh/ZatLD1+0TZc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api-public-demo-review-booster/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-x9CV+Pnk7zPOkJdxj3sdXL7EQB4ANoJYJ2fINrH+ELg=",
+        "actualIntegrity": "sha256-x9CV+Pnk7zPOkJdxj3sdXL7EQB4ANoJYJ2fINrH+ELg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/audit/free-profile/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-IzsTp3MjmchBz+TepK5f1mc5n1YUpE2iixBkr2hvD3w=",
+        "actualIntegrity": "sha256-IzsTp3MjmchBz+TepK5f1mc5n1YUpE2iixBkr2hvD3w=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/[...nextauth]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-QBPtCS/p784ukd1rK3Y/A0nSvyK/4Fl5qtFiFvYZS9s=",
+        "actualIntegrity": "sha256-QBPtCS/p784ukd1rK3Y/A0nSvyK/4Fl5qtFiFvYZS9s=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/forgot-password/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-1zGhRvXkO0CGAHHCd6XDdeNHo+FT8iahs1ua+9dnVeE=",
+        "actualIntegrity": "sha256-1zGhRvXkO0CGAHHCd6XDdeNHo+FT8iahs1ua+9dnVeE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/register/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-91B3tuNI6zt2OEomVy7McRVIpD55oEez3oXlEGPN1G8=",
+        "actualIntegrity": "sha256-91B3tuNI6zt2OEomVy7McRVIpD55oEez3oXlEGPN1G8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/resend-verification/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-PT2tZJZXhrkqvsAYhHUxSdWsnpw/Pj+0u914TKAK5f8=",
+        "actualIntegrity": "sha256-PT2tZJZXhrkqvsAYhHUxSdWsnpw/Pj+0u914TKAK5f8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/reset-password/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-TT3BZ+N/hugZ9qoEf2dQeMbs96d+o62Uzurl/Kk63Kc=",
+        "actualIntegrity": "sha256-TT3BZ+N/hugZ9qoEf2dQeMbs96d+o62Uzurl/Kk63Kc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/signout/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-rE04HX7hs/eO84dokujLGfbKByL02XthjzbzuoicdwI=",
+        "actualIntegrity": "sha256-rE04HX7hs/eO84dokujLGfbKByL02XthjzbzuoicdwI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/verify-email/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-gTZbYbj2tlWabHd4vf4l4UQILm6OU/ENwyVxgeFPo0c=",
+        "actualIntegrity": "sha256-gTZbYbj2tlWabHd4vf4l4UQILm6OU/ENwyVxgeFPo0c=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/health/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-yTIZH017lHJFn2+RMJqs3fQ67KjrNmPCHpegodhkcJs=",
+        "actualIntegrity": "sha256-yTIZH017lHJFn2+RMJqs3fQ67KjrNmPCHpegodhkcJs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/privacy/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-qLXXUhzO38uVl8SATX0KBHdzLzN0smdOxtYTgzrZ5UM=",
+        "actualIntegrity": "sha256-qLXXUhzO38uVl8SATX0KBHdzLzN0smdOxtYTgzrZ5UM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/review-booster/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-bd5klIKDjui9TglCDs9U9YzwD1AbmN2ZyUuwPPw1K2Y=",
+        "actualIntegrity": "sha256-bd5klIKDjui9TglCDs9U9YzwD1AbmN2ZyUuwPPw1K2Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/csp-report/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-UCBVveARgVYkj0+Ga/9ioWej4pfUTMz7qWXQ3bEswgs=",
+        "actualIntegrity": "sha256-UCBVveARgVYkj0+Ga/9ioWej4pfUTMz7qWXQ3bEswgs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/review-replies/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ANpFF3Z59B42gPm0FKu660HFLy0sQSwwBA0udn5CmnA=",
+        "actualIntegrity": "sha256-ANpFF3Z59B42gPm0FKu660HFLy0sQSwwBA0udn5CmnA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/dashboard/summary/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-rgqrLzHkAqGikEuYQaj28tDq2ebl6ZzcGT/UhMMU4wY=",
+        "actualIntegrity": "sha256-rgqrLzHkAqGikEuYQaj28tDq2ebl6ZzcGT/UhMMU4wY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/feedback/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-fkhabWxev1pjxaZT4CfrhCAczcTXTEQmkzzGKe7fxvc=",
+        "actualIntegrity": "sha256-fkhabWxev1pjxaZT4CfrhCAczcTXTEQmkzzGKe7fxvc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/connection/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-/DlfRrPL2Zuf3ynLOFjFMr93oZHOHYexH2O0pjpzMKE=",
+        "actualIntegrity": "sha256-/DlfRrPL2Zuf3ynLOFjFMr93oZHOHYexH2O0pjpzMKE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/disconnect/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-VBRWX/dHe3vjlFyJPM7OPORz83J7VgI96gP7wRMAQ4E=",
+        "actualIntegrity": "sha256-VBRWX/dHe3vjlFyJPM7OPORz83J7VgI96gP7wRMAQ4E=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/list/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-beHM7az0B9vQgeYH2vaL+3XpDQPuRxLdOQO+iqVXuf8=",
+        "actualIntegrity": "sha256-beHM7az0B9vQgeYH2vaL+3XpDQPuRxLdOQO+iqVXuf8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-qAV2f+/DXKRZbbntAoEtmQ2JJceIzvgTRC2RkMCBgw0=",
+        "actualIntegrity": "sha256-qAV2f+/DXKRZbbntAoEtmQ2JJceIzvgTRC2RkMCBgw0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/selection/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-clcKCzYzAkmknznkIAcwkj6PONu4EMdnwc5A2P9H1jA=",
+        "actualIntegrity": "sha256-clcKCzYzAkmknznkIAcwkj6PONu4EMdnwc5A2P9H1jA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/sync/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-DtiO5YWF4m2/SYlNSveWFR4jKD0xlhXHGNdLt3Dm23E=",
+        "actualIntegrity": "sha256-DtiO5YWF4m2/SYlNSveWFR4jKD0xlhXHGNdLt3Dm23E=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/oauth/callback/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-n9gx/M1wx2Dp2B/U/kICZjkbFluCltxxKxkfhgt80Do=",
+        "actualIntegrity": "sha256-n9gx/M1wx2Dp2B/U/kICZjkbFluCltxxKxkfhgt80Do=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/oauth/start/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-5z+KqVKTEE9IbJVGGCNzI2d3UHaSS+SkGN8OA4tswwE=",
+        "actualIntegrity": "sha256-5z+KqVKTEE9IbJVGGCNzI2d3UHaSS+SkGN8OA4tswwE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/replies/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-B5pHvW4kdaXdUQUF60cmw0BXcxr9zffBseAR2p+o1Ts=",
+        "actualIntegrity": "sha256-B5pHvW4kdaXdUQUF60cmw0BXcxr9zffBseAR2p+o1Ts=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/reviews/process-pending/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-HCRoAWqNMc9zvh8oVl66cJ6EXNZL8Vk9K3vNgNvCoIM=",
+        "actualIntegrity": "sha256-HCRoAWqNMc9zvh8oVl66cJ6EXNZL8Vk9K3vNgNvCoIM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/reviews/sync/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ZBulC/uHGlHcZHKCfdYSz1LA2oUIouaHwy4609Y0cCo=",
+        "actualIntegrity": "sha256-ZBulC/uHGlHcZHKCfdYSz1LA2oUIouaHwy4609Y0cCo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/leads/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ha6NtVsvGuKwMbN1ZxczGs/9ry1jdNZM40oh9qKQOHs=",
+        "actualIntegrity": "sha256-ha6NtVsvGuKwMbN1ZxczGs/9ry1jdNZM40oh9qKQOHs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/openai/review-reply/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-bMfu3SlzpwK8IcQdFekYX/REPbV50naMpNORD5+BNJ0=",
+        "actualIntegrity": "sha256-bMfu3SlzpwK8IcQdFekYX/REPbV50naMpNORD5+BNJ0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/privacy/delete/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-SZu089Yyxog6C6duMzWV0rsFF2pPYO2Mi53t4g90smw=",
+        "actualIntegrity": "sha256-SZu089Yyxog6C6duMzWV0rsFF2pPYO2Mi53t4g90smw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/privacy/export/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Ivj3LI13kYnz/8ZiHSfbmRDyY3J4t/0oM2eE+/ZIx3Y=",
+        "actualIntegrity": "sha256-Ivj3LI13kYnz/8ZiHSfbmRDyY3J4t/0oM2eE+/ZIx3Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/private-preview/database-identity/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-YWQeE4cOoT7WVvFc0uYiEkwTEnU9PJJgLU2tNArlBsQ=",
+        "actualIntegrity": "sha256-YWQeE4cOoT7WVvFc0uYiEkwTEnU9PJJgLU2tNArlBsQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/projects/[id]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-r7/SyOsTcR6POP+u0ypLEdL/5yoPUdaMQ40UBgiSFoE=",
+        "actualIntegrity": "sha256-r7/SyOsTcR6POP+u0ypLEdL/5yoPUdaMQ40UBgiSFoE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/projects/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-kXNWqgULPcSkhY050Ztm5RMbejaGIdOgRx99jOlLHak=",
+        "actualIntegrity": "sha256-kXNWqgULPcSkhY050Ztm5RMbejaGIdOgRx99jOlLHak=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/booking-credentials/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-XhPwFegF96tjg0w3LUaPktQAT5y6OqKjLh5w72OK9rw=",
+        "actualIntegrity": "sha256-XhPwFegF96tjg0w3LUaPktQAT5y6OqKjLh5w72OK9rw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/deliveries/[deliveryId]/reconcile/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-xKAtNUn8D0+pSLYL8PPGeAbGjbNwg9O+Nz5qqjEy5T8=",
+        "actualIntegrity": "sha256-xKAtNUn8D0+pSLYL8PPGeAbGjbNwg9O+Nz5qqjEy5T8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/run-now/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-l1WxtE8a86m9mpMScdLm/uS5+khA1OGYHPnikEMuyPM=",
+        "actualIntegrity": "sha256-l1WxtE8a86m9mpMScdLm/uS5+khA1OGYHPnikEMuyPM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/settings/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-77q1b5e7rPDHuK3OpB/5dCy25ulGxqXcRU5LJuCgYcQ=",
+        "actualIntegrity": "sha256-77q1b5e7rPDHuK3OpB/5dCy25ulGxqXcRU5LJuCgYcQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/unsubscribe/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-JsTOoQBWU7E0c3qyW0oujv4wM4aOEACqMr4LCXBYKSQ=",
+        "actualIntegrity": "sha256-JsTOoQBWU7E0c3qyW0oujv4wM4aOEACqMr4LCXBYKSQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/upload/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-3Cklpn4kdM8fkqr3ov0rqtg6ovyhUyET/ensQLU+hFQ=",
+        "actualIntegrity": "sha256-3Cklpn4kdM8fkqr3ov0rqtg6ovyhUyET/ensQLU+hFQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/visits/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-s18LNDcq8naZPazil4lTr4x6k/+LMfT8OXCGwrC2o9o=",
+        "actualIntegrity": "sha256-s18LNDcq8naZPazil4lTr4x6k/+LMfT8OXCGwrC2o9o=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/reviews/draft/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-E/Yqq0deWlGY341+tyAn316oX3l84DQS69jUWeIwUdE=",
+        "actualIntegrity": "sha256-E/Yqq0deWlGY341+tyAn316oX3l84DQS69jUWeIwUdE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/reviews/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Z1X7uHzxltKF/umo4fZofMlVebfp5IwpIipxY5q4nGo=",
+        "actualIntegrity": "sha256-Z1X7uHzxltKF/umo4fZofMlVebfp5IwpIipxY5q4nGo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/settings/reply/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-362Qd7TXb9TCMsFLaDcEzR+X7D0n0Fy6zuWGDQLVDVg=",
+        "actualIntegrity": "sha256-362Qd7TXb9TCMsFLaDcEzR+X7D0n0Fy6zuWGDQLVDVg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/portal/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-xx4dxHSj22UL3ZXxuSbbnD/QL/hS8m6lxQ7KKDkS6fw=",
+        "actualIntegrity": "sha256-xx4dxHSj22UL3ZXxuSbbnD/QL/hS8m6lxQ7KKDkS6fw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/webhook/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-EzB5EWBRsbsQSqxR0LgelgZjiQ64uQ2rFgteGBBUl7c=",
+        "actualIntegrity": "sha256-EzB5EWBRsbsQSqxR0LgelgZjiQ64uQ2rFgteGBBUl7c=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/checkout/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-VroeGKO59XXdV9tGTSEO0fG8pipjOah9r8TJWq29VHg=",
+        "actualIntegrity": "sha256-VroeGKO59XXdV9tGTSEO0fG8pipjOah9r8TJWq29VHg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/team/invitations/[token]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-PsBpZRUnreklcDJAUF7TFdPxtRuOVb4uPhOluIAiSIQ=",
+        "actualIntegrity": "sha256-PsBpZRUnreklcDJAUF7TFdPxtRuOVb4uPhOluIAiSIQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/team/members/[userId]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-MqVvBk7ZT/768RTFBA7oXjG9vrvwedxmwQ7aHFN30QY=",
+        "actualIntegrity": "sha256-MqVvBk7ZT/768RTFBA7oXjG9vrvwedxmwQ7aHFN30QY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/team/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-8MLDdDdDOssjfnqxp/hlrEim6sxVASxOGFoNvM/B9aY=",
+        "actualIntegrity": "sha256-8MLDdDdDOssjfnqxp/hlrEim6sxVASxOGFoNvM/B9aY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/user/plan/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-MzOH6kYJ8oeJVXd7U4992LJ1FmOgs9SGWcZC5SocBEY=",
+        "actualIntegrity": "sha256-MzOH6kYJ8oeJVXd7U4992LJ1FmOgs9SGWcZC5SocBEY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/webhooks/booking/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-OYW7Sr/1abiABWbpdywnmlOI7PwboiFPb1fzwfPZqeU=",
+        "actualIntegrity": "sha256-OYW7Sr/1abiABWbpdywnmlOI7PwboiFPb1fzwfPZqeU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/webhooks/resend/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-CLMKdjIRnqFuLL9293jxhD9onWf9ewZgq0nv2RzxClQ=",
+        "actualIntegrity": "sha256-CLMKdjIRnqFuLL9293jxhD9onWf9ewZgq0nv2RzxClQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/opengraph-image/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-KIbW9NWAIORYl7nhnWU12CraWvfL2q29bPFCE7cnvWE=",
+        "actualIntegrity": "sha256-KIbW9NWAIORYl7nhnWU12CraWvfL2q29bPFCE7cnvWE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/r/[token]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Wu95moxerfAGn9BO0Igg3ZPvs0izzweMxhcbvS1LZ4Q=",
+        "actualIntegrity": "sha256-Wu95moxerfAGn9BO0Igg3ZPvs0izzweMxhcbvS1LZ4Q=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/about/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-E5yRNdZkkcD8XS4kmBJIQtYRvOe8lD9J25skG0v8Lzk=",
+        "actualIntegrity": "sha256-E5yRNdZkkcD8XS4kmBJIQtYRvOe8lD9J25skG0v8Lzk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/account/deletion/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-XaFD2HdRf7cXUp70ma44QOvR1QXKog+wZNIx7NuYjOc=",
+        "actualIntegrity": "sha256-XaFD2HdRf7cXUp70ma44QOvR1QXKog+wZNIx7NuYjOc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/contact/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-IJ4mMigQwTzdMc0RBWbb006ZsgnKxUvPtE0r0TK+0Ps=",
+        "actualIntegrity": "sha256-IJ4mMigQwTzdMc0RBWbb006ZsgnKxUvPtE0r0TK+0Ps=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/demo-review-booster/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ON5Sde5RdJsqcyxH/fA6Bn5NiXoiah+eo3HZzcODnH0=",
+        "actualIntegrity": "sha256-ON5Sde5RdJsqcyxH/fA6Bn5NiXoiah+eo3HZzcODnH0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/demo-review-replies/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-G7+Ut2BJ/v0zI5QoFSwRVZLXIO4A8MPURgp1XKBAuug=",
+        "actualIntegrity": "sha256-G7+Ut2BJ/v0zI5QoFSwRVZLXIO4A8MPURgp1XKBAuug=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/demo/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-rJ2XZxGsQmC1CqoaYPl1CX9DOscmYpcXIEKcYlt+ZXs=",
+        "actualIntegrity": "sha256-rJ2XZxGsQmC1CqoaYPl1CX9DOscmYpcXIEKcYlt+ZXs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/feedback/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-3c9LJeO6Xz/0Dnyo87B0p7KLb1KPEYJy84yHl4UlXVw=",
+        "actualIntegrity": "sha256-3c9LJeO6Xz/0Dnyo87B0p7KLb1KPEYJy84yHl4UlXVw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/free-audit/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-4BKexk2WWtkQEWm3IEzfbxLGMPIz2KkEiLxPaMbDj+g=",
+        "actualIntegrity": "sha256-4BKexk2WWtkQEWm3IEzfbxLGMPIz2KkEiLxPaMbDj+g=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/legal/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-daoWiyEQXHzbHM4ST+VduBaJEkfHfP8Jfqqt9CnE5aI=",
+        "actualIntegrity": "sha256-daoWiyEQXHzbHM4ST+VduBaJEkfHfP8Jfqqt9CnE5aI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/local-seo/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-z70YBRLbFTXABUvmlvDTGXcBEESTQS8Vml1a6PIBXqw=",
+        "actualIntegrity": "sha256-z70YBRLbFTXABUvmlvDTGXcBEESTQS8Vml1a6PIBXqw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/pricing/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-TdTIokXrm48sdEm3TEVFj/tLbfTHlayJ0y6poq8xXw4=",
+        "actualIntegrity": "sha256-TdTIokXrm48sdEm3TEVFj/tLbfTHlayJ0y6poq8xXw4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-f94L4pOZKMdkJTB1sLJjJk8OrPZICbTZVFpaFZkLO1Q=",
+        "actualIntegrity": "sha256-f94L4pOZKMdkJTB1sLJjJk8OrPZICbTZVFpaFZkLO1Q=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/privacy/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-UW0MMa9TAtWJsv0O2svH2gVMxUX/8ccxqaI2iBxaydo=",
+        "actualIntegrity": "sha256-UW0MMa9TAtWJsv0O2svH2gVMxUX/8ccxqaI2iBxaydo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/review-booster/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-7r7C/vHCWEZr+i0s56x4jORasyv7wUlGpN+jVA+n93k=",
+        "actualIntegrity": "sha256-7r7C/vHCWEZr+i0s56x4jORasyv7wUlGpN+jVA+n93k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/review-replies/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-QsnItRsA7GFjI325VusTl+gaviOy07XnsLb04q2c1m0=",
+        "actualIntegrity": "sha256-QsnItRsA7GFjI325VusTl+gaviOy07XnsLb04q2c1m0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/team/invite/[token]/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-DSaHt4peAgLyD8VB1QXL8SVDaUueAGmzUnAWNVYpqnc=",
+        "actualIntegrity": "sha256-DSaHt4peAgLyD8VB1QXL8SVDaUueAGmzUnAWNVYpqnc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/terms/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-wzUj/dZrZNzvE2O89298TLJjjSrEIzH+DjaWKyDBD9A=",
+        "actualIntegrity": "sha256-wzUj/dZrZNzvE2O89298TLJjjSrEIzH+DjaWKyDBD9A=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/forgot-password/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-acBHfmaavmWoxzJzVgtT1GYx6yvuLEDVM/XtDctXM3g=",
+        "actualIntegrity": "sha256-acBHfmaavmWoxzJzVgtT1GYx6yvuLEDVM/XtDctXM3g=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/login/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-kN/0QQBbDKmo5hahyLE34kk/JRIB+jf/ckpHiJGv9qU=",
+        "actualIntegrity": "sha256-kN/0QQBbDKmo5hahyLE34kk/JRIB+jf/ckpHiJGv9qU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/resend-verification/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-KxYH5rK95jwv33SYPc/jUdTMpyJFcniktQazRnJ4idM=",
+        "actualIntegrity": "sha256-KxYH5rK95jwv33SYPc/jUdTMpyJFcniktQazRnJ4idM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/reset-password/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-PaVTsBrlbjN2XhWnNVmAJfoXLS1BKFAcIfXhqKmowuA=",
+        "actualIntegrity": "sha256-PaVTsBrlbjN2XhWnNVmAJfoXLS1BKFAcIfXhqKmowuA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/signup/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-CYqDuF8G9iZgBOXB+9+P3pz/6XzscJtfd7UexAl8zJU=",
+        "actualIntegrity": "sha256-CYqDuF8G9iZgBOXB+9+P3pz/6XzscJtfd7UexAl8zJU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/connect/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-yl0yB+C+TIHmhc/DMK6rfu6c9jP1SeWFtcSzzMBqVs0=",
+        "actualIntegrity": "sha256-yl0yB+C+TIHmhc/DMK6rfu6c9jP1SeWFtcSzzMBqVs0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/new/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-mju07fAfLCvLWdBXDxApY6CDfE6J6HnPch9UpTj70Xw=",
+        "actualIntegrity": "sha256-mju07fAfLCvLWdBXDxApY6CDfE6J6HnPch9UpTj70Xw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-g+g8cAJ5AJxM5QuEu4udmKowPzPDs79NGEa0KMAt/QE=",
+        "actualIntegrity": "sha256-g+g8cAJ5AJxM5QuEu4udmKowPzPDs79NGEa0KMAt/QE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/settings/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Rw4EP3pdJa/6dBG/aFj/TbNC9JgQcZchnX0g6Tquj4U=",
+        "actualIntegrity": "sha256-Rw4EP3pdJa/6dBG/aFj/TbNC9JgQcZchnX0g6Tquj4U=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/upload/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-v5Y7Uzoq1UCZNR7DpQMSQZAF+naizXm0LGIMFH+za7k=",
+        "actualIntegrity": "sha256-v5Y7Uzoq1UCZNR7DpQMSQZAF+naizXm0LGIMFH+za7k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/billing/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Qt/TSdmVGgp0EnOh6SFjMkDHHr30Xf3+6DNCU0rFKQA=",
+        "actualIntegrity": "sha256-Qt/TSdmVGgp0EnOh6SFjMkDHHr30Xf3+6DNCU0rFKQA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-2A55FYD72LjUrMMDlfcnQOn45JQNGM5V5tYFqDoJCmo=",
+        "actualIntegrity": "sha256-2A55FYD72LjUrMMDlfcnQOn45JQNGM5V5tYFqDoJCmo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/settings/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ILhNGqBx5r7+y6bfhQd1tHSGZFgV5BmTWCaC7XBcnnI=",
+        "actualIntegrity": "sha256-ILhNGqBx5r7+y6bfhQd1tHSGZFgV5BmTWCaC7XBcnnI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/google-connection/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ji7LNbyuG7AWRBWDKxsfhj737vw1sp5Zz6PgYRJLxW4=",
+        "actualIntegrity": "sha256-ji7LNbyuG7AWRBWDKxsfhj737vw1sp5Zz6PgYRJLxW4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-gvGGSv2Amta+uiLmoZxsuEfXB6kwLbCSibpNZZdPlU0=",
+        "actualIntegrity": "sha256-gvGGSv2Amta+uiLmoZxsuEfXB6kwLbCSibpNZZdPlU0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/reviews/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-gPA08SbJfIg6vC4pjY1lPcDVhIw0y2iqIyKXWflzuOE=",
+        "actualIntegrity": "sha256-gPA08SbJfIg6vC4pjY1lPcDVhIw0y2iqIyKXWflzuOE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/settings/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-AB+W4JWm3Rra3v8XwTAycm1zDOXoWqG85Ga9zWDCH3w=",
+        "actualIntegrity": "sha256-AB+W4JWm3Rra3v8XwTAycm1zDOXoWqG85Ga9zWDCH3w=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/reviews/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-5IJ9weDGs2aIZuKapWI/aybbHbCBJ7JMYP7llZwcY2I=",
+        "actualIntegrity": "sha256-5IJ9weDGs2aIZuKapWI/aybbHbCBJ7JMYP7llZwcY2I=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      }
+    ],
+    "companionManifest": {
+      "path": ".next/server/subresource-integrity-manifest.js",
+      "assignmentParsed": true,
+      "equalsJsonManifest": true
+    },
+    "sourceMaps": {
+      "emittedCount": 0,
+      "emittedPaths": [],
+      "missingSriMapCount": 0,
+      "missingSriMapPaths": []
+    },
+    "staticCsp": {
+      "staticHtmlPageCount": 1,
+      "staticHtmlPaths": [
+        "server/app/_global-error.html"
+      ],
+      "declaredHashCount": 2,
+      "recomputedHashCount": 2,
+      "hashesEqual": true,
+      "declaredHashes": [
+        "OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=",
+        "bo6WCqrnNntsZ6zTNfofjtGbs1tu9f9dpRW0YFgx09k="
+      ],
+      "recomputedHashes": [
+        "OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=",
+        "bo6WCqrnNntsZ6zTNfofjtGbs1tu9f9dpRW0YFgx09k="
+      ]
+    },
+    "sentryArtifacts": {
+      "filenamesContainingSentryCount": 0,
+      "filenamesContainingSentry": [],
+      "instrumentationArtifactPresent": true,
+      "javascriptFilesContainingSentryStringsCount": 18,
+      "javascriptFilesContainingSentryStrings": [
+        "required-server-files.js",
+        "server/app/api/cron/health/route.js",
+        "server/app/privacy/page.js",
+        "server/app/terms/page.js",
+        "server/chunks/1261.js",
+        "server/chunks/1601.js",
+        "server/chunks/2263.js",
+        "server/chunks/3576.js",
+        "server/chunks/5591.js",
+        "server/instrumentation.js",
+        "server/middleware-react-loadable-manifest.js",
+        "server/middleware.js",
+        "static/chunks/3684.9906bb5329f266f3.js",
+        "static/chunks/4a7b0c69.b60fb5cd91258c5e.js",
+        "static/chunks/5563.8ef324387a9f6623.js",
+        "static/chunks/5d015edf.2a6b1ccfb05ae688.js",
+        "static/chunks/5f8dfda4.5847f4732d2130af.js",
+        "static/chunks/dc9729d2.40afd1c0c1c56f6b.js"
+      ],
+      "telemetryExecutionEstablished": false
+    }
+  },
+  "artifactChecker": {
+    "source": "scripts/verification/ornigami-build-artifact-inventory.mjs",
+    "command": "node scripts/verification/ornigami-build-artifact-inventory.mjs <isolated-checkout>/.next",
+    "exitCode": 0,
+    "outputRetainedInThisEvidenceFile": true,
+    "rawArtifactBytesRetained": false
+  }
+}
