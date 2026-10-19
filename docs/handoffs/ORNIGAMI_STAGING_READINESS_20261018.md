@@ -2012,3 +2012,38 @@ present that history as current provider verification or target intent. The next
 60-minute offline provenance/static-compatibility check; only portfolio/target selection, spend approval before
 paid action, and project/data binding before provider connection or migration remain decision gates. No
 implementation or provider action occurred. NO-GO and all existing holds remain active.
+
+## Block 6D — offline Ornigami fallback compatibility assessment
+
+**Scope.** Local-only review of package metadata, application source/configuration and installed Next.js guidance
+at HEAD `44e741e5cc646dcd20dbab1b47833b3344b4e01f`. No build, test, provider lookup, database access or target
+selection was performed. The checks below establish source/configuration behavior only; they do not establish
+Vercel compatibility, hosted headers, private access or runtime acceptance.
+
+| Area | Verified local evidence | Compatibility constraint / missing proof |
+| --- | --- | --- |
+| Framework bytes | `package.json` and `package-lock.json` resolve `node_modules/next` to `vendor/framework/next-16.4.2-ornigami-sri.2.tgz`. Recomputed archive SHA-512 integrity matched the lock metadata. Its previously recorded SHA-256 disagreement with `vendor/framework/README.md` remains the documented provenance discrepancy, not a lock-integrity mismatch. The patch is at `scripts/framework-prototype/next-16.4.2-sri.patch`; its reproducibility relationship to the archive has not been demonstrated. | Lock integrity proves the archive bytes match the lock's integrity value; it does not prove the patch can reproduce those bytes or establish platform support for this modified framework. Do not treat prior README checksum findings as newly discovered blockers. |
+| Origin and auth | `next.config.ts` rejects `VERCEL_ENV=production` unless `NEXT_PUBLIC_APP_URL` is exactly `https://ornigami.com`. `src/lib/app-base-url.ts` prefers that configured URL, otherwise derives an origin from forwarded host/protocol or request URL. `src/auth.ts` restricts Auth.js redirect destinations to the base origin and sanitized return paths. | A Vercel production environment targeting `staging.ornigami.com` would hit the guard. A preview environment or production origin has not been selected. Correct forwarded-origin handling, Auth.js base URL, OAuth callback registration, cookie behavior and private-access policy require target-specific verification. No origin or guard change is proposed. |
+| CSP, Trusted Types and SRI | `src/proxy.ts` creates a per-request nonce and sets enforced `Content-Security-Policy` on request and response for matched requests. `next.config.ts` adds `Content-Security-Policy-Report-Only` containing the Trusted Types policy in production. It enables `experimental.sri.algorithm = sha256`. `package.json` build script explicitly invokes `next build --webpack` before the static CSP-hash generator. Installed docs `node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md` label SRI experimental, document App Router availability, and describe Proxy-generated nonces for dynamic rendering; the installed Proxy guide says Proxy defaults to Node.js and cannot set a route `runtime` option. | These local statements do not prove deployment headers or that target build behavior preserves SRI, generated hashes, nonce propagation, dynamic rendering, or report-only reporting. The installed docs contain framework guidance, not Vercel platform acceptance. Verify the exact chosen build command/output and request/response headers in a later authorized target-specific step. |
+| Scheduled jobs and guards | `vercel.json` declares privacy at `0 3 * * *`, Booster at `7 * * * *`, and Replies at `11 */4 * * *`. Each route checks `CRON_SECRET`; Replies additionally returns unavailable when `OPENAI_ENABLED` is not true. Privacy applies deletion only when both `PRIVACY_RETENTION_ENABLED` and `PRIVACY_RETENTION_APPLY` are true (and its cleanup has further internal guards). `OPENAI_ENABLED=false` and the two retention flags are default-off in `.env.example`; Coolify's separate schedule inventory remains disabled. | `CRON_SECRET` authenticates a request; it does not remove or disable a declared schedule. The retention flags prevent apply-mode cleanup but do not prevent scheduled invocation. `OPENAI_ENABLED=false` closes the Replies handler but does not disable its Vercel schedule. Booster has no equivalent global private-staging schedule-off flag in the inspected route; its route-level auth, DB lease and business eligibility checks are not a global staging kill switch. Preventing automatic private-staging runs therefore requires a separately reviewed target schedule configuration that omits/disables all three jobs, or a separately reviewed and verified environment-level gate covering every route. No such change is made here. |
+
+**Assessment.** The local framework archive/lock identity check passed. The patch-to-archive reproducibility remains
+unproved; the README checksum discrepancies remain previously recorded. The production origin guard, target-specific
+Auth.js/OAuth settings, emitted security headers/SRI behavior and automatic scheduler suppression are concrete
+compatibility items. The actual target is unselected. No claim is made that any of these controls work on a Vercel
+deployment. All coverage, adoption, campaign, provider and NO-GO holds remain active.
+
+**Unresolved questions.** The owner has not selected the portfolio fallback or the Ornigami target role/origin.
+The related Block 6C decisions remain: preserve existing services/data; approve spend before any paid action; and
+approve exact project/data binding before provider connection or migration. None is needed for the local assessment
+above, and none is granted by it.
+
+**Proposed next block.** After independent review, a bounded local-only implementation/verification block may
+prepare a target-neutral staging profile that keeps all three cron declarations inactive, then verify the exact
+framework/build provenance and origin/auth/CSP/Trusted Types/SRI behavior with focused local checks. It must not
+change the production origin guard without a separate decision and must stop before provider configuration,
+database access or deployment. Target-specific host/runtime acceptance remains a later separately authorized gate.
+
+**Verification record.** Archive SHA-512 matched `package-lock.json`; prior SHA-256 discrepancies were reused as
+known findings. Relevant installed framework docs and local routes/config were inspected. `git diff --check`
+passed; no tests, build or external action was needed. Review remains bounded by static/local evidence only.
