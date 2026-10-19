@@ -1455,3 +1455,35 @@ real hung capture and cleanup children, timed-out Docker inventory/removal with 
 interrupted/missing upload and custody receipts, successful exact-owned read-back, and workflow step
 timeouts/order. Do not include R4 publication/pull implementation until separately budgeted and
 approved. No workflow or script changes, tests, dispatch or external action were made in Block 5B1.
+
+## Block 5B2A — bounded evidence capture
+
+- **Deadline foundation:** the initialization step still creates the existing 24-minute
+  `ORNIGAMI_WORK_DEADLINE_EPOCH` once. It now writes a small mode-restricted helper and exports
+  fixed absolute offsets from that cutoff for capture (+3m), upload (+5m), custody (+10m), cleanup
+  (+12m) and the nominal reserved end (+16m). The helper validates the epoch and GNU `timeout`,
+  rejects malformed/exhausted budgets, and resolves a phase deadline as the earlier of its local
+  cap and its absolute cutoff-relative deadline. Later phases can source the same helper/deadlines;
+  they are not bounded by this change.
+- **Evidence capture:** the capture step has an Actions three-minute outer timeout and runs its
+  complete host-side capture body and descendants under a process-group supervisor. Its cutoff is
+  `min(capture start + 180s, work cutoff + 180s)`. Twenty seconds remain inside that deadline for
+  TERM/KILL and a bounded failure receipt. A timeout fails the step, preserves any available files,
+  moves a prior manifest to `manifest.partial.json`, and writes an explicit failed manifest stating
+  that partial evidence is unverified. Capture manifest validation, redaction, private evidence
+  boundaries and required-receipt gates remain in place.
+- **Verification:** `node --test tests/coolify-runtime-acceptance.test.mjs
+  tests/coolify-rehearsal-workflow.test.mjs` passed **65/65** (17 runtime and 48 workflow tests).
+  Regressions exercised deadline initialization/offsets, missing/malformed/exhausted input, early
+  and late resolution, the absolute cutoff, normal capture, missing evidence, and a real
+  TERM-resistant child hung during host-side capture. The hung-child path terminated the child and
+  retained an explicit failed partial-evidence receipt. Workflow test execution syntax-checked the
+  extracted initialization and capture Bash scripts. `git diff --check` passed. No image build,
+  dispatch or external operation occurred.
+- **Scope remaining:** upload, custody polling and workflow-owned cleanup still have no new bounds
+  or verification from this block. R4 publication, independent pull and smoke remain unimplemented
+  and unbudgeted. **B2.1 remains open** until those tail phases are separately implemented,
+  tested and shown to fit; no actual Linux-image acceptance is claimed. The 40-minute job ceiling,
+  campaign exhaustion and coverage/adoption holds are unchanged.
+
+Implementation commit: `f190c7c`. This handoff response is committed separately.
