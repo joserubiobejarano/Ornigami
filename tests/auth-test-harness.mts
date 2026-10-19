@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import vm from "node:vm";
 import ts from "typescript";
 
@@ -17,9 +17,14 @@ export function loadTs<T>(relativePath: string, options: HarnessOptions = {}): T
   const overrides = options.overrides ?? {};
   const localProcess = { ...process, env: { ...process.env, ...options.env } };
   const localFetch: typeof fetch = options.fetch ?? (async () => { throw new Error("test harness blocks network access"); });
-  const resolveModule = (id: string): unknown => {
+  const resolveModule = (id: string, parentPath: string): unknown => {
     if (Object.hasOwn(overrides, id)) return overrides[id];
     if (id.startsWith("@/")) return loadFile(join(projectRoot, "src", `${id.slice(2)}.ts`));
+    if (id.startsWith(".")) {
+      const resolvedPath = resolve(dirname(parentPath), id);
+      if (/\.tsx?$/.test(resolvedPath)) return loadFile(resolvedPath);
+      return createRequire(parentPath)(id);
+    }
     return nativeRequire(id);
   };
   const loadFile = (absolutePath: string): Record<string, unknown> => {
@@ -32,7 +37,7 @@ export function loadTs<T>(relativePath: string, options: HarnessOptions = {}): T
     type CjsModule = { exports: Record<string, unknown> };
     const mod: CjsModule = { exports: {} };
     cache.set(key, mod);
-    const req = (id: string) => resolveModule(id);
+    const req = (id: string) => resolveModule(id, key);
     const run = vm.runInNewContext(`(function(exports, require, module) { ${js}\n})`, {
       URL, URLSearchParams, Headers, Request, Response, TextEncoder, TextDecoder, Buffer, AbortSignal,
       ReadableStream, WritableStream, Blob, process: localProcess, fetch: localFetch, console,

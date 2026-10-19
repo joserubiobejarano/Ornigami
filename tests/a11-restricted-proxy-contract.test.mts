@@ -17,7 +17,13 @@ test("restricted session reaches recovery, deletion retry, and Auth.js only", as
     "@/lib/db/access": { getMiddlewareAccessState: async () => ({ hasGbp: false, hasRepliesAccess: false }) },
     "@/lib/safe-logger": { safeLogger: { error: () => {} } },
     "@/lib/disconnected-access-policy": { shouldRedirectToGoogleConnect: () => false, shouldRedirectAfterAccessResolutionError: () => false },
-    "@/lib/security-headers": { buildContentSecurityPolicy: () => "default-src 'self'" },
+    "@/lib/security-headers": {
+      buildContentSecurityPolicy: () => "default-src 'self'",
+      applyProxySecurityHeaders: (headers: Headers) => {
+        headers.set("Content-Security-Policy", "default-src 'self'");
+        headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+      },
+    },
   } });
   const request = (path: string, method = "GET") => ({
     url: `https://app.example.test${path}`, method, nextUrl: new URL(`https://app.example.test${path}`),

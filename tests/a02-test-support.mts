@@ -3,6 +3,8 @@ import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import vm from "node:vm";
 import ts from "typescript";
+import { isRestrictedDeletionSession, withPrivatePreviewIdentityPreflight } from "../src/lib/private-preview-database-identity-proxy.ts";
+import { preflightPrivatePreviewDatabaseIdentity, privatePreviewDatabaseIdentityHttpResponse } from "../src/lib/private-preview-database-identity.ts";
 
 export type SqlCall = { query: string; values: unknown[] };
 export function fakeSql(getRows: (query: string, values: unknown[]) => unknown[]) {
@@ -27,6 +29,8 @@ export function loadTs<T>(relative: string, mocks: Record<string, unknown>): T {
   const nativeRequire = createRequire(filename);
   const localRequire = (id: string): unknown => {
     if (Object.hasOwn(mocks, id)) return mocks[id];
+    if (id === "@/lib/private-preview-database-identity-proxy") return { isRestrictedDeletionSession, withPrivatePreviewIdentityPreflight };
+    if (id === "@/lib/private-preview-database-identity") return { preflightPrivatePreviewDatabaseIdentity, privatePreviewDatabaseIdentityHttpResponse };
     if (id === "@/lib/db/deadline") return { withDatabaseDeadline: (_deadline: Date | number, callback: () => unknown) => callback() };
     if (id === "@/lib/account-lifecycle") return {
       beginAccountLifecycleOperation: async () => ({ result: "claimed", token: "11111111-1111-4111-8111-111111111111" }),

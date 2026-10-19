@@ -76,7 +76,13 @@ function loadProxy(env: Record<string, string | undefined>) {
         shouldRedirectToGoogleConnect: () => false,
         shouldRedirectAfterAccessResolutionError: () => false,
       },
-      "@/lib/security-headers": { buildContentSecurityPolicy: () => "default-src 'self'" },
+      "@/lib/security-headers": {
+        buildContentSecurityPolicy: () => "default-src 'self'",
+        applyProxySecurityHeaders: (headers: Headers) => {
+          headers.set("Content-Security-Policy", "default-src 'self'");
+          headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+        },
+      },
     },
   });
   return { proxy: proxyModule.proxy, get accessLookups() { return accessLookups; } };

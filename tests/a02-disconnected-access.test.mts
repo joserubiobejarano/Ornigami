@@ -24,7 +24,13 @@ function loadProxy(access: Access | Error) {
     "@/lib/app-base-url": { getAppBaseUrl: (req: Req) => req.nextUrl.origin },
     "@/lib/db/access": { getMiddlewareAccessState: async (id: string) => { calls.push(id); if (access instanceof Error) throw access; return access; } },
     "@/lib/safe-logger": { safeLogger: { error() {} } },
-    "@/lib/security-headers": { buildContentSecurityPolicy: (nonce: string) => `default-src 'self'; script-src 'self' 'nonce-${nonce}'` },
+    "@/lib/security-headers": (() => {
+      const buildContentSecurityPolicy = (nonce: string) => `default-src 'self'; script-src 'self' 'nonce-${nonce}'`;
+      return { buildContentSecurityPolicy, applyProxySecurityHeaders: (headers: Headers, nonce: string) => {
+        headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
+        headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+      } };
+    })(),
     "@/lib/private-preview": { isPrivatePreviewMode: () => false },
     "@/lib/disconnected-access-policy": { isGoogleDependentRepliesPath, shouldRedirectToGoogleConnect, shouldRedirectAfterAccessResolutionError },
   });
