@@ -7,6 +7,7 @@ import { getMiddlewareAccessState } from "@/lib/db/access";
 import { safeLogger } from "@/lib/safe-logger";
 import { shouldRedirectToGoogleConnect, shouldRedirectAfterAccessResolutionError } from "@/lib/disconnected-access-policy";
 import { buildContentSecurityPolicy } from "@/lib/security-headers";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
 
 function isProtectedAppPage(pathname: string): boolean {
   const prefixes = [
@@ -57,6 +58,15 @@ const proxy = auth(async (req) => {
       return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
     }
     return withSecurityHeaders(NextResponse.redirect(new URL("/account/deletion", getAppBaseUrl(req)), 302), nonce);
+  }
+
+  // Keep the lifecycle restriction above authoritative, then stop authenticated
+  // Google/GBP operations before their route handlers can read or mutate integrations.
+  if (sessionUser && isPrivatePreviewMode() && (pathname === "/api/google" || pathname.startsWith("/api/google/"))) {
+    return withSecurityHeaders(NextResponse.json(
+      { error: "Google integrations are disabled in private staging." },
+      { status: 503 },
+    ), nonce);
   }
 
   if (pathname === "/demo/review-replies") {
@@ -121,7 +131,7 @@ const proxy = auth(async (req) => {
   const userId = sessionUser?.id;
 
 
-  if (userId && (isProtectedAppPage(pathname) || pathname === "/connect" || pathname.startsWith("/connect/"))) {
+  if (userId && !isPrivatePreviewMode() && (isProtectedAppPage(pathname) || pathname === "/connect" || pathname.startsWith("/connect/"))) {
     try {
       const { hasGbp, hasRepliesAccess } = await getMiddlewareAccessState(userId);
 

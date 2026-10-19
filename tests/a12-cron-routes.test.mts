@@ -117,7 +117,7 @@ test("Booster rotates past a large interrupted first business so the later tenan
   assert.equal(resumedFirst.checkpoints[0]?.cursor && (resumedFirst.checkpoints[0].cursor as { businessId: string }).businessId, BUSINESS);
 });
 
-function repliesRoute(options: { rows?: unknown[] | ((businessId: string, afterReviewId: unknown) => unknown[]); draft?: (...args: unknown[]) => Promise<unknown>; cursor?: unknown; checkpointError?: boolean; locations?: unknown[]; pending?: boolean; sync?: () => Promise<unknown[]> }) {
+function repliesRoute(options: { rows?: unknown[] | ((businessId: string, afterReviewId: unknown) => unknown[]); draft?: (...args: unknown[]) => Promise<unknown>; cursor?: unknown; checkpointError?: boolean; locations?: unknown[]; pending?: boolean; sync?: () => Promise<unknown[]>; privatePreview?: boolean; authorized?: boolean }) {
   const checkpoints: Array<Record<string, unknown>> = [];
   const finishes: Array<Record<string, unknown>> = [];
   const queries: string[] = [];
@@ -139,8 +139,9 @@ function repliesRoute(options: { rows?: unknown[] | ((businessId: string, afterR
     "@/lib/reply-profile-defaults": { getProfileReplyDefaults: async () => null },
     "@/lib/review-draft-processing": { processReviewDraft: async (...args: unknown[]) => { draftCalls.push(args); return options.draft ? options.draft(...args) : { outcome: "saved", draft: {}, posted: false }; } },
     "@/lib/openai-feature": { isOpenAIEnabled: () => true },
+    "@/lib/private-preview": { isPrivatePreviewMode: () => options.privatePreview ?? false },
     "@/lib/safe-logger": { safeLogger: { error() {}, warn() {} } },
-    "@/lib/cron-auth": { isAuthorizedCronRequest: () => true },
+    "@/lib/cron-auth": { isAuthorizedCronRequest: () => options.authorized ?? true },
     "@/lib/review-alerts": { sendNewReviewAlert: async () => undefined },
     "@/lib/account-lifecycle": {
       beginAccountLifecycleOperation: async (input: Record<string, unknown>) => { lifecycleBegins.push(input); return { result: "claimed", token: "lifecycle-token" }; },
@@ -156,6 +157,20 @@ function repliesRoute(options: { rows?: unknown[] | ((businessId: string, afterR
   });
   return { cron, checkpoints, finishes, queries, lifecycleBegins, lifecycleFinishes, syncCalls, draftCalls };
 }
+
+test("private Preview blocks Google-backed replies cron before database or provider work, after cron authentication", async () => {
+  const route = repliesRoute({ privatePreview: true });
+  const response = await route.cron.GET({});
+  assert.equal(response.status, 503);
+  assert.equal(route.queries.length, 0);
+  assert.equal(route.syncCalls.length, 0);
+  assert.equal(route.draftCalls.length, 0);
+  assert.equal(route.lifecycleBegins.length, 0);
+
+  const unauthorized = repliesRoute({ privatePreview: true, authorized: false });
+  assert.equal((await unauthorized.cron.GET({})).status, 401);
+  assert.equal(unauthorized.queries.length, 0);
+});
 
 test("Replies cron checkpoints each settled draft and reports successful work", async () => {
   const route = repliesRoute({ rows: [{ id: 7, google_review_id: "review_7", comment: "Nice", star_rating: 5 }] });

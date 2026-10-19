@@ -15,9 +15,11 @@ import { getDashboardMetrics } from "@/lib/dashboard-metrics";
 import { isPlanId, type BillingPeriod, type PlanId } from "@/lib/billing/plans";
 import { getDashboardAgentAccess } from "@/lib/dashboard-access";
 import { getBusinessPlanInfo } from "@/lib/plan-server";
+import { getDashboardGoogleStep, isPrivatePreviewMode } from "@/lib/private-preview";
 
 export default async function DashboardPageRoute() {
   const session = await requireUser();
+  const privatePreview = isPrivatePreviewMode();
   const metrics = await getDashboardMetrics();
 
   let businessName: string | null = null;
@@ -54,7 +56,7 @@ export default async function DashboardPageRoute() {
       ? await sql`SELECT count(*)::int AS count FROM public.followup_visits WHERE business_id = ${business.id}`
       : [];
     const hasVisits = Number((visitRows[0] as { count?: number } | undefined)?.count ?? 0) > 0;
-    const hasGbp = hasReplies ? await userHasGbpConnection(context.integrationOwnerUserId) : false;
+    const hasGbp = !privatePreview && hasReplies ? await userHasGbpConnection(context.integrationOwnerUserId) : false;
     hasWorkspaceContext = true;
     if (hasBooster || hasReplies) {
       activationSteps = [
@@ -78,17 +80,7 @@ export default async function DashboardPageRoute() {
           : []),
         ...(hasReplies
           ? [
-              {
-                label: hasGbp ? "Google profile connected" : "Connect your Google profile",
-                description: hasGbp
-                  ? "The workspace owner has connected Google Business Profile."
-                  : isWorkspaceOwner
-                    ? "Connect Google Business Profile so Review Replies can sync and draft replies."
-                    : "Ask the workspace owner to connect Google Business Profile so Review Replies can sync and draft replies.",
-                complete: hasGbp,
-                href: isWorkspaceOwner ? "/connect" : undefined,
-                actionLabel: isWorkspaceOwner ? "Connect Google" : undefined,
-              },
+              getDashboardGoogleStep({ privatePreview, hasGbp, isWorkspaceOwner }),
               {
                 label: "Set your reply tone",
                 description: isWorkspaceOwner

@@ -15,13 +15,16 @@ import { isValidAuthPassword } from "@/lib/auth-password-policy";
 import { sanitizeAuthReturnPath } from "@/lib/auth-return-path";
 import { getTrustedRequestIp } from "@/lib/trusted-request-ip";
 import { EmailSchema } from "@/lib/validators";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+
+const privatePreview = isPrivatePreviewMode();
 
 export const authConfig = {
   providers: [
-    Google({
+    ...(!privatePreview ? [Google({
       clientId: getRequiredEnv("GOOGLE_CLIENT_ID"),
       clientSecret: getRequiredEnv("GOOGLE_CLIENT_SECRET"),
-    }),
+    })] : []),
     Credentials({
       id: "credentials",
       name: "credentials",

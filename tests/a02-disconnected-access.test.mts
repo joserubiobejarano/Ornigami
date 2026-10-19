@@ -25,6 +25,7 @@ function loadProxy(access: Access | Error) {
     "@/lib/db/access": { getMiddlewareAccessState: async (id: string) => { calls.push(id); if (access instanceof Error) throw access; return access; } },
     "@/lib/safe-logger": { safeLogger: { error() {} } },
     "@/lib/security-headers": { buildContentSecurityPolicy: (nonce: string) => `default-src 'self'; script-src 'self' 'nonce-${nonce}'` },
+    "@/lib/private-preview": { isPrivatePreviewMode: () => false },
     "@/lib/disconnected-access-policy": { isGoogleDependentRepliesPath, shouldRedirectToGoogleConnect, shouldRedirectAfterAccessResolutionError },
   });
   return { proxy: mod.proxy, calls };
