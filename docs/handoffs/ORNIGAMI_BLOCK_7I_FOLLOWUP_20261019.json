@@ -62,7 +62,48 @@
       "exitCode": 0,
       "timedOut": false,
       "script": "next build --webpack && node scripts/generate-static-csp-hashes.mjs",
-      "runnerNote": "build child exited 0 and result was written; local runner then required force-stop after proxy sockets remained open; verified no child remained"
+      "runnerNote": "build child exited 0 and result was written; local runner then required force-stop after proxy sockets remained open; verified no child remained",
+      "childEnvironmentNames": [
+        "PATH",
+        "SystemRoot",
+        "WINDIR",
+        "ComSpec",
+        "TEMP",
+        "TMP",
+        "HOME",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "NPM_CONFIG_USERCONFIG",
+        "NPM_CONFIG_GLOBALCONFIG",
+        "NPM_CONFIG_CACHE",
+        "NPM_CONFIG_AUDIT",
+        "NPM_CONFIG_FUND",
+        "NPM_CONFIG_UPDATE_NOTIFIER",
+        "CI",
+        "NEXT_TELEMETRY_DISABLED",
+        "VERCEL_ENV",
+        "VERCEL_GIT_COMMIT_REF",
+        "ORNIGAMI_PRIVATE_STAGING_MODE",
+        "AUTH_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "OPENAI_ENABLED",
+        "QR_MAIL_ENABLED",
+        "AUTH_SECRET",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "https_proxy",
+        "http_proxy",
+        "NO_PROXY",
+        "no_proxy",
+        "NODE_USE_ENV_PROXY"
+      ],
+      "proxyPolicy": "Loopback HTTP CONNECT proxy; allowlist fonts.googleapis.com:443 and fonts.gstatic.com:443, deny all other CONNECT targets; ephemeral port/value not retained",
+      "networkEvents": {
+        "fontConnectEvents": 0,
+        "deniedConnectEvents": 6,
+        "scope": "proxy event log only"
+      }
     },
     {
       "command": "node --experimental-strip-types --test tests/private-preview-google-gate.test.mts tests/vercel-preview-origin.test.mts tests/validate-vercel-staging-config.test.mjs tests/sri-production-check.test.mjs",
@@ -148,11 +189,24 @@
           ]
         }
       ],
-      "blockedEgressAttempts": []
+      "observedProxyEvents": [],
+      "scope": {
+        "httpResponses": 2,
+        "initialScriptReferences": 31,
+        "browserExecution": false,
+        "hydration": false,
+        "clientNavigation": false,
+        "dynamicChunkTrace": false,
+        "fullApplicationAcceptance": false,
+        "description": "Inspection of two HTTP HTML responses and fetching/checking bytes referenced by their initial same-origin script tags only."
+      },
+      "interpretation": "Both HTML responses and their 31 initial same-origin script references passed the recorded checks. This did not execute a browser and does not cover hydration, navigation, dynamic/lazy chunks, other requests or full application acceptance.",
+      "checkerSource": "scripts/sri-production-check.mjs (analyzeScriptTags, requiredHeaders, parseCspNonce)",
+      "temporaryInspectionWrapperRetained": false
     }
   ],
   "network": {
-    "buildProxyPolicy": "allow only fonts.googleapis.com:443 and fonts.gstatic.com:443; deny and record all others; NODE_USE_ENV_PROXY=1",
+    "buildProxyPolicy": "Recorded build runner policy: loopback proxy allowed CONNECT only to fonts.googleapis.com:443 and fonts.gstatic.com:443 and denied other CONNECT destinations; NODE_USE_ENV_PROXY=1 was recorded. Event outcomes below are proxy observations, not system-wide egress enforcement.",
     "fontProxyConnections": [],
     "deniedBuildAttempts": [
       {
@@ -180,7 +234,64 @@
         "port": 443
       }
     ],
-    "interpretation": "No public Google font network request occurred; six Sentry ingest connection attempts were denied. Runtime check had zero blocked egress attempts."
+    "interpretation": "Observed proxy events only: zero CONNECT events were recorded for the two font hosts; six CONNECT events for o1.ingest.sentry.io:443 were denied by the proxy. No direct/system-wide egress trace is retained, so these events do not prove that all outbound access was blocked or rule out proxy bypass. Runtime proxy recorded zero events during the two HTTP inspections.",
+    "proxyConfiguration": {
+      "recordedChildEnvironmentNames": [
+        "PATH",
+        "SystemRoot",
+        "WINDIR",
+        "ComSpec",
+        "TEMP",
+        "TMP",
+        "HOME",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "NPM_CONFIG_USERCONFIG",
+        "NPM_CONFIG_GLOBALCONFIG",
+        "NPM_CONFIG_CACHE",
+        "NPM_CONFIG_AUDIT",
+        "NPM_CONFIG_FUND",
+        "NPM_CONFIG_UPDATE_NOTIFIER",
+        "CI",
+        "NEXT_TELEMETRY_DISABLED",
+        "VERCEL_ENV",
+        "VERCEL_GIT_COMMIT_REF",
+        "ORNIGAMI_PRIVATE_STAGING_MODE",
+        "AUTH_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "OPENAI_ENABLED",
+        "QR_MAIL_ENABLED",
+        "AUTH_SECRET",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "https_proxy",
+        "http_proxy",
+        "NO_PROXY",
+        "no_proxy",
+        "NODE_USE_ENV_PROXY"
+      ],
+      "recordedProxyEnvironmentNames": [
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "https_proxy",
+        "http_proxy",
+        "NO_PROXY",
+        "no_proxy",
+        "NODE_USE_ENV_PROXY"
+      ],
+      "proxyValuesAndEphemeralPortRetained": false,
+      "loopbackProxy": true,
+      "allowConnectHosts": [
+        "fonts.googleapis.com:443",
+        "fonts.gstatic.com:443"
+      ],
+      "otherConnectsDenied": true,
+      "systemWideEgressEnforcementEvidence": false,
+      "fullRunnerSourceRetained": false,
+      "runnerEnvironmentNamesProvenance": "Recovered from the sanitized temporary runner configuration inspected during the earlier execution; that temporary runner source is no longer retained.",
+      "temporaryRunnerSourceRetained": false
+    }
   },
   "artifacts": {
     "buildId": "rTxqHisr3zO3jgLrcC-MD",
@@ -2654,8 +2765,8 @@
         "match": true
       }
     ],
-    "sourceMapInterpretation": "All 66 missing entries are client static .js.map files (the complete missing paths are above). Next 16.4.2 productionBrowserSourceMaps guide says production maps are disabled by default and emitted beside JS only when enabled. Maps are non-executable and none appeared as runtime script sources. There were 144 map files across the full .next tree; these 66 expected manifest entries are the absent client static map entries.",
-    "ssgManifestInterpretation": "_ssgManifest.js is generated after webpack compilation by Next build finalization; its emitted digest differs from the compilation-time SRI entry. The app uses App Router only (no pages directory), and neither / nor /login referenced or requested it. Do not weaken executable-asset SRI; no correction is justified for this build-only/non-requested file.",
+    "sourceMapInterpretation": "The 66 absent SRI-manifest entries are 65 .js.map files and one .css.map file, all under .next/static. Separately, 144 source-map files were counted as present in the completed .next tree; their individual paths/types were not retained. Local next.config.ts uses withSentryConfig with widenClientFileUpload:true and no deleteSourcemapsAfterUpload override. Locked and locally installed @sentry/nextjs is 10.69.0: webpack.js enables server source-map/client hidden-source-map production devtools when not disabled and defaults client deleteSourcemapsAfterUpload to true when unset; getBuildPluginOptions selects .next/static/**/* source-map extensions for deletion after upload. This source behavior is consistent with the missing static maps but no retained trace proves upload/deletion occurred. The maps are non-executable. The Next default alone does not explain these missing files.",
+    "ssgManifestInterpretation": "_ssgManifest.js is generated after webpack compilation by Next build finalization; its emitted digest differs from the compilation-time SRI entry. The app uses App Router only (no pages directory), and it was absent from the two inspected HTTP responses and their initial script references. Do not weaken executable-asset SRI; the artifact mismatch remains unresolved and no correction is justified by the inspected runtime scope.",
     "staticCsp": {
       "manifestHashes": [
         "MHxzEiOdQlsOGQD51fL9ou7jZPJIS+nGQzDl2ta2WcM=",
@@ -2668,7 +2779,12 @@
       ],
       "allHtmlHashesIncluded": true,
       "manifestHashesUsedByHtml": 2
-    }
+    },
+    "missingSourceMapsByExtension": {
+      "js.map": 65,
+      "css.map": 1
+    },
+    "presentSourceMapCount": 144
   },
   "guideRead": {
     "exactVersion": "Next.js 16.4.2 installed copy",
@@ -2681,18 +2797,65 @@
   },
   "previousPrepAttempt": {
     "root": "%TEMP%/ornigami-block7i-4cc2b9ee467d4fbda8ec54476bfd19d8",
-    "classification": "preparatory install/checks only; runner had no build mode; used npm ci --ignore-scripts, 600000 ms timeout, and a different check selection; no final build/artifact report survived there",
+    "classification": "preparatory install/check evidence only; runner accepted install, build and checks modes, but the retained stdout/stderr were only from install; used npm ci --ignore-scripts, a 600000 ms bound, and a check selection different from the final rerun; no build or artifact result survived there",
     "installLog": "added 655 packages in 59s; stderr empty",
     "runnerSha256": "15ABC95177023DD5CC33F47EE78565D1785121CBEECAFFD12DD6F59E88595542",
     "stdoutSha256": "7C27D14C891F92AFB67D4C4715F47BA567BAB2C7BC3E3F484A2C8A1DEAB9D499",
     "stderrSha256": "E3B0C44298FC1C149BF4C8996FB92427AE41E4649B934CA495991B7852B855",
-    "cleanup": "validated path within identified block root; removed its exact worktree and root; verified absent"
+    "cleanup": "validated path within identified block root; removed its exact worktree and root; verified absent",
+    "modes": [
+      "install",
+      "build",
+      "checks"
+    ]
   },
-  "correction": "The prior Block 7I statement that all temporary resources were removed was overbroad: the separate preparatory root remained. This follow-up removes that prep root and records a distinct bounded final rerun. The previous final-run evidence was unavailable; this rerun is the retained source of final evidence.",
+  "correction": "[Correction R7I.3/R7I.4] Corrects the preparatory runner mode history, records 65 .js.map plus 1 .css.map, and explains the plausible source-map mechanism from the configured Sentry wrapper without asserting an observed upload/deletion. Narrows network results to observed proxy events and runtime results to two HTTP responses and their 31 initial script references. The original artifact inventory and unresolved _ssgManifest.js digest mismatch are preserved.",
   "limits": [
     "Local isolated result only; no hosted build/deployment or acceptance.",
     "No database URL or hosted credentials; login, secret binding, recovery, rollback, privacy acceptance and staging acceptance remain unverified.",
-    "No app/framework fix: runtime executable SRI and CSP checks pass; mismatch is a non-requested App Router build artifact and absent files are non-executable maps.",
-    "Remote Vercel “Don’t build anything” / exit 0 guard remains untouched and active; all previous holds remain."
-  ]
+    "Remote Vercel “Don’t build anything” / exit 0 guard remains untouched and active; all previous holds remain.",
+    "No app/framework fix: the two inspected HTTP responses and their 31 initial script references passed recorded SRI/CSP checks; this is not browser execution, dynamic-chunk coverage or full application acceptance.",
+    "Network findings are proxy events only; no system-wide egress enforcement or complete direct-connection trace is retained."
+  ],
+  "configurationSourceInspection": {
+    "sentry": {
+      "packageVersion": "10.69.0",
+      "lockIntegrity": "sha512-48eYXezKAmSlSWtBsvwXvdHHHavXRDVIVZ3mI5vidhJwhqSs0ekwG0ZsPG3xNdaJLmnNEmavHEVupSbuuOTZZA==",
+      "files": [
+        "next.config.ts:2,61-69",
+        "node_modules/@sentry/nextjs/build/cjs/config/webpack.js:221-237",
+        "node_modules/@sentry/nextjs/build/cjs/config/getBuildPluginOptions.js:47,125-135,181"
+      ],
+      "observations": [
+        "withSentryConfig is configured; widenClientFileUpload:true",
+        "no deleteSourcemapsAfterUpload override is set",
+        "client deletion defaults true when unset and enabled; source pattern selects .next/static/**/*.{js.map,mjs.map,cjs.map,css.map}",
+        "source-level behavior only; no retained upload/deletion trace",
+        "next.config.ts only supplies sourcemaps.disable through its container-build conditional; the retained run was documented as the normal non-container build"
+      ],
+      "projectCheckerSourceRetained": true,
+      "projectCheckerSource": "scripts/sri-production-check.mjs (project checker source retained; the temporary runtime wrapper script was not retained)"
+    },
+    "nextFontFetcher": {
+      "file": "node_modules/next/dist/compiled/@next/font/dist/google/get-proxy-agent.js:13-22",
+      "environmentLookupOrder": [
+        "https_proxy",
+        "HTTPS_PROXY",
+        "http_proxy",
+        "HTTP_PROXY"
+      ],
+      "actualPerVariableValuesRetained": false
+    }
+  },
+  "runtimeVerification": {
+    "scope": "two HTTP HTML responses and their initial same-origin script references only",
+    "browserExecution": false,
+    "hydration": false,
+    "clientNavigation": false,
+    "dynamicChunkTrace": false,
+    "fullApplicationAcceptance": false,
+    "temporaryWrapperRetained": false,
+    "projectCheckerSourceRetained": true,
+    "projectCheckerSource": "scripts/sri-production-check.mjs"
+  }
 }
