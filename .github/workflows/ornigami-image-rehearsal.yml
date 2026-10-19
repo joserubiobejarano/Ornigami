@@ -36,7 +36,103 @@ jobs:
           printf 'run_id=%s\nrun_attempt=%s\nrequest_sha=%s\nref=%s\nevent=%s\n' \
             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" > "$evidence_dir/run-identity.txt"
           echo "ORNIGAMI_EVIDENCE_DIR=$evidence_dir" >> "$GITHUB_ENV"
-          echo "ORNIGAMI_WORK_DEADLINE_EPOCH=$(( $(date +%s) + 1440 ))" >> "$GITHUB_ENV"
+          work_deadline=$(( $(date +%s) + 1440 ))
+          echo "ORNIGAMI_WORK_DEADLINE_EPOCH=$work_deadline" >> "$GITHUB_ENV"
+          tail_helper="$RUNNER_TEMP/ornigami-tail-deadline.sh"
+          cat > "$tail_helper" <<'TAIL_HELPER'
+          # Shared absolute tail deadlines. Offsets are always based on the existing work cutoff.
+          ornigami_tail_validate() {
+            local work=${ORNIGAMI_WORK_DEADLINE_EPOCH:-} work_epoch now
+            [[ $work =~ ^[0-9]{1,12}$ ]] || { printf 'ORNIGAMI_WORK_DEADLINE_EPOCH must be a Unix epoch in seconds.\n' >&2; return 2; }
+            command -v timeout >/dev/null || { printf 'GNU timeout is required for bounded evidence capture.\n' >&2; return 2; }
+            work_epoch=$((10#$work))
+            now=$(date +%s) || return 2
+            (( now < work_epoch + 960 )) || { printf 'Workflow tail budget is exhausted.\n' >&2; return 124; }
+          }
+          ornigami_tail_init() {
+            local work=${ORNIGAMI_WORK_DEADLINE_EPOCH:-} work_epoch
+            ornigami_tail_validate || return $?
+            work_epoch=$((10#$work))
+            ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH=$((work_epoch + 180))
+            ORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH=$((work_epoch + 300))
+            ORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH=$((work_epoch + 600))
+            ORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH=$((work_epoch + 720))
+            ORNIGAMI_TAIL_RESERVED_END_EPOCH=$((work_epoch + 960))
+            ORNIGAMI_TAIL_EVENT_FILE=${ORNIGAMI_TAIL_EVENT_FILE:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/ornigami-tail-events.state}
+            : >> "$ORNIGAMI_TAIL_EVENT_FILE" || return 2
+            chmod 600 -- "$ORNIGAMI_TAIL_EVENT_FILE" || return 2
+            export ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH ORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH
+            export ORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH ORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH
+            export ORNIGAMI_TAIL_RESERVED_END_EPOCH ORNIGAMI_TAIL_EVENT_FILE
+          }
+          ornigami_tail_resolve_phase() {
+            local phase=$1 cap=$2 offset=$3 reserve=$4 now absolute local_deadline work_epoch cap_n offset_n reserve_n
+            [[ $cap =~ ^[1-9][0-9]{0,3}$ && $offset =~ ^[1-9][0-9]{0,3}$ && $reserve =~ ^[1-9][0-9]{0,2}$ ]] || return 2
+            ornigami_tail_validate || return $?
+            cap_n=$((10#$cap)); offset_n=$((10#$offset)); reserve_n=$((10#$reserve))
+            work_epoch=$((10#$ORNIGAMI_WORK_DEADLINE_EPOCH))
+            now=$(date +%s) || return 2
+            absolute=$((work_epoch + offset_n))
+            local_deadline=$((now + cap_n))
+            ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH=$local_deadline
+            (( absolute >= local_deadline )) || ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH=$absolute
+            (( ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now > reserve_n )) || {
+              printf 'Workflow tail phase %s has no bounded work window remaining.\n' "$phase" >&2
+              return 124
+            }
+            ORNIGAMI_TAIL_PHASE_WORK_SECONDS=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now - reserve_n))
+            ORNIGAMI_TAIL_PHASE_NAME=$phase
+            export ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH ORNIGAMI_TAIL_PHASE_WORK_SECONDS ORNIGAMI_TAIL_PHASE_NAME
+          }
+          ornigami_tail_supervise() {
+            local phase=$1 deadline=$2 reserve=$3 work_seconds kill_grace now status wrapper
+            shift 3
+            now=$(date +%s) || return 125
+            work_seconds=$((deadline - now - reserve))
+            (( reserve >= 2 && work_seconds > 0 )) || return 124
+            kill_grace=$((reserve / 2))
+            wrapper='set +e
+          state=$1; phase=$2; grace=$3; shift 3
+          worker_pid=; kill_timer_pid=
+          on_term() {
+            trap "" TERM
+            printf "%s|timeout\\n" "$phase" >> "$state"
+            if [[ -n $worker_pid ]]; then
+              kill -TERM -- "-$worker_pid" 2>/dev/null || kill -TERM "$worker_pid" 2>/dev/null || true
+              (trap "" TERM; sleep "$((grace - 1))"; kill -KILL -- "-$worker_pid" 2>/dev/null || kill -KILL "$worker_pid" 2>/dev/null || true) &
+              kill_timer_pid=$!
+            fi
+          }
+          trap on_term TERM
+          set -m
+          "$@" &
+          worker_pid=$!
+          while :; do
+            wait "$worker_pid"; status=$?
+            if ! kill -0 "$worker_pid" 2>/dev/null; then break; fi
+          done
+          if [[ -n $kill_timer_pid ]]; then kill "$kill_timer_pid" 2>/dev/null || true; wait "$kill_timer_pid" 2>/dev/null || true; fi
+          exit "$status"'
+            if timeout --signal=TERM --kill-after="${kill_grace}s" "${work_seconds}s" bash -c "$wrapper" tail-worker \
+              "$ORNIGAMI_TAIL_EVENT_FILE" "$phase" "$kill_grace" "$@"; then
+              return 0
+            else
+              status=$?
+            fi
+            if grep -Fqx -- "$phase|timeout" "$ORNIGAMI_TAIL_EVENT_FILE"; then return 124; fi
+            return "$status"
+          }
+          TAIL_HELPER
+          chmod 600 -- "$tail_helper"
+          echo "ORNIGAMI_TAIL_HELPER=$tail_helper" >> "$GITHUB_ENV"
+          ORNIGAMI_TAIL_HELPER=$tail_helper
+          ORNIGAMI_WORK_DEADLINE_EPOCH=$work_deadline
+          export ORNIGAMI_TAIL_HELPER ORNIGAMI_WORK_DEADLINE_EPOCH RUNNER_TEMP
+          source "$tail_helper"
+          ornigami_tail_init
+          printf 'ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH=%s\nORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH=%s\nORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH=%s\nORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH=%s\nORNIGAMI_TAIL_RESERVED_END_EPOCH=%s\nORNIGAMI_TAIL_EVENT_FILE=%s\n' \
+            "$ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH" \
+            "$ORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_RESERVED_END_EPOCH" "$ORNIGAMI_TAIL_EVENT_FILE" >> "$GITHUB_ENV"
 
       - name: Validate inputs and fetch exact public source
         id: validate_inputs
@@ -700,6 +796,7 @@ jobs:
         id: evidence_capture
         if: always()
         shell: bash
+        timeout-minutes: 3
         env:
           ADMISSION_OUTCOME: ${{ steps.validate_inputs.outcome }}
           RUNNER_PREFLIGHT_OUTCOME: ${{ steps.runner_preflight.outcome }}
@@ -725,6 +822,49 @@ jobs:
           OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
         run: |
           set -Eeuo pipefail
+          tail_helper=${ORNIGAMI_TAIL_HELPER:-"$RUNNER_TEMP/ornigami-tail-deadline.sh"}
+          [[ -r "$tail_helper" ]] || { printf 'Tail deadline helper is unavailable; evidence capture cannot be bounded.\n' >&2; exit 2; }
+          source "$tail_helper"
+          if [[ ${ORNIGAMI_EVIDENCE_CAPTURE_SUPERVISED:-false} != true ]]; then
+            capture_failure_reason=''
+            if ornigami_tail_resolve_phase capture 180 180 20; then
+              capture_deadline=$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
+            else
+              deadline_status=$?
+              capture_deadline=''
+              if (( deadline_status == 124 )); then capture_failure_reason=deadline_exhausted; else capture_failure_reason=invalid_budget; fi
+            fi
+            if [[ -n "$capture_deadline" ]]; then
+              export ORNIGAMI_EVIDENCE_CAPTURE_SUPERVISED=true
+              set +e
+              ornigami_tail_supervise capture "$capture_deadline" 20 "$BASH" "$0"
+              capture_status=$?
+              set -e
+              if grep -Fqx -- 'capture|timeout' "$ORNIGAMI_TAIL_EVENT_FILE"; then capture_failure_reason=supervisor_timeout; fi
+            else
+              capture_status=$deadline_status
+            fi
+            if [[ $capture_failure_reason == supervisor_timeout ]]; then
+              set +e
+              timeout --signal=TERM --kill-after=1s 5s bash -c '
+                set -e
+                evidence=$1
+                mkdir -p "$evidence"
+                if [[ -f "$evidence/manifest.json" ]]; then mv -- "$evidence/manifest.json" "$evidence/manifest.partial.json"; fi
+                printf "status=failed\\nreason=%s\\ndeadline_epoch=%s\\n" "$2" "$3" > "$evidence/capture-supervision-status.txt"
+                cat > "$evidence/manifest.json" <<EOF
+          {"schema":1,"capture_completeness_status":"failed","capture_supervisor_status":"$2","partial_evidence":"retained_unverified","files":[]}
+          EOF
+              ' tail-failure-receipt "$ORNIGAMI_EVIDENCE_DIR" "$capture_failure_reason" "${capture_deadline:-unavailable}"
+              receipt_status=$?
+              set -e
+              printf 'Evidence capture failed: %s (receipt_writer_exit=%s). Partial files, if present, are unverified.\n' "$capture_failure_reason" "$receipt_status" >&2
+              printf 'Evidence capture status: failed (%s); partial files, if present, remain unverified.\n' "$capture_failure_reason" >> "$GITHUB_STEP_SUMMARY"
+            elif [[ -n "$capture_failure_reason" ]]; then
+              printf 'Evidence capture stopped before worker start: %s. No complete-capture claim is made.\n' "$capture_failure_reason" >&2
+            fi
+            exit "$capture_status"
+          fi
           ORNIGAMI_JOB_SUMMARY=${ORNIGAMI_JOB_SUMMARY:-"$RUNNER_TEMP/ornigami-job-summary.md"}
           ORNIGAMI_EVIDENCE_DIR=${ORNIGAMI_EVIDENCE_DIR:-"$RUNNER_TEMP/ornigami-evidence"}
           mkdir -p "$ORNIGAMI_EVIDENCE_DIR/scans" "$ORNIGAMI_EVIDENCE_DIR/runner" "$ORNIGAMI_EVIDENCE_DIR/runtime" "$ORNIGAMI_EVIDENCE_DIR/build" "$ORNIGAMI_EVIDENCE_DIR/browser"
@@ -829,6 +969,8 @@ jobs:
           metadata["summary_evidence_status"] = (root / "summary-status.txt").read_text(encoding="utf-8").splitlines()[0].split("=", 1)[1]
           metadata["runtime_snapshot_status"] = (root / "runtime/snapshot-status.txt").read_text(encoding="utf-8").splitlines()
           metadata["capture_completeness_status"] = __import__("os").environ["CAPTURE_COMPLETENESS"]
+          metadata["capture_deadline_epoch"] = __import__("os").environ.get("ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH", "unavailable")
+          metadata["capture_supervision"] = "bounded process-group supervisor"
           metadata["custody_status"] = "not-assessed-by-capture"
           metadata["all_stage_gate_outcome"] = __import__("os").environ.get("ALL_STAGE_OUTCOME", "unknown")
           metadata["database_admission_outcome"] = __import__("os").environ.get("DATABASE_ADMISSION_OUTCOME", "unknown")

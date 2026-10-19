@@ -99,6 +99,27 @@ function runShell(root, script, env) {
   return spawnSync(bash, [scriptPath], { encoding: "utf8", windowsHide: true, env, timeout: 20_000 });
 }
 
+function initializeTailEnvironment(root, env) {
+  env.GITHUB_ENV ??= join(root, "github-env.txt");
+  const windowsInstall = process.platform === "win32"
+    ? `install() { [[ "$1" == -d && "$2" == -m && "$3" == 700 ]] || return 97; shift 3; mkdir -p -- "$@"; }\n`
+    : "";
+  const initialized = runShell(root, windowsInstall + runBlock("evidence_initialize"), env);
+  assert.equal(initialized.status, 0, initialized.stderr || "tail deadline helper initialization failed");
+  for (const line of readFileSync(env.GITHUB_ENV, "utf8").split(/\r?\n/)) {
+    const separator = line.indexOf("=");
+    if (separator > 0) env[line.slice(0, separator)] = line.slice(separator + 1);
+  }
+  return initialized;
+}
+
+function runEvidenceCapture(root, env, { script = runBlock("evidence_capture"), afterInitialize = () => {} } = {}) {
+  initializeTailEnvironment(root, env);
+  writeFileSync(env.ORNIGAMI_JOB_SUMMARY, "fake workflow summary\n");
+  afterInitialize();
+  return runShell(root, script, env);
+}
+
 function fakeDocker(root) {
   const bin = join(root, "fake-bin");
   mkdirSync(bin, { recursive: true });
@@ -127,6 +148,11 @@ case "$command_name" in
     ;;
   inspect)
     target=\${1:-}; shift || true
+    if [[ \${FAKE_DOCKER_HANG_INSPECT:-0} == 1 ]]; then
+      printf '%s\\n' "$$" > "$FAKE_DOCKER_HANG_PID"
+      trap '' TERM
+      while :; do printf x >> "$FAKE_DOCKER_HANG_PROGRESS"; sleep 0.1; done
+    fi
     [[ \${1:-} == --format ]] && format=\${2:-} || format=''
     case "$format" in
       '{{.Id}}') if [[ "$target" == "$FAKE_BUILDER_ID" ]]; then printf '%s\\n' "$FAKE_INSPECTED_BUILDER_ID"; else printf '%s\\n' "$FAKE_INSPECTED_IMAGE_ID"; fi ;;
@@ -259,6 +285,8 @@ function verifyManifest(evidenceDirectory) {
   assert.equal(manifest.image_build_exit_code, "0");
   assert.equal(manifest.runtime_exit_code, "0");
   assert.equal(manifest.capture_completeness_status, "passed");
+  assert.equal(manifest.capture_supervision, "bounded process-group supervisor");
+  assert.ok(Number.isSafeInteger(Number(manifest.capture_deadline_epoch)));
   assert.equal(manifest.custody_status, "not-assessed-by-capture");
   assert.ok(!manifest.files.some((item) => item.path.includes("image.tar")));
   assert.ok(!manifest.files.some((item) => /\.raw$/.test(item.path)));
@@ -282,13 +310,115 @@ test('initialization exports a persistent summary path rather than a step-local 
   if (process.platform === 'win32') assert.match(readFileSync(join(env.RUNNER_TEMP, 'install-arguments.txt'), 'utf8'), /^-d -m 700 /);
   assert.match(readFileSync(env.GITHUB_ENV, 'utf8'), /ORNIGAMI_JOB_SUMMARY=.*ornigami-job-summary.md/);
   assert.match(readFileSync(join(env.RUNNER_TEMP, 'ornigami-job-summary.md'), 'utf8'), /Ornigami diagnostic evidence/);
+  const initialized = Object.fromEntries(readFileSync(env.GITHUB_ENV, 'utf8').trim().split(/\r?\n/).map(line => { const i=line.indexOf('='); return [line.slice(0,i),line.slice(i+1)]; }));
+  assert.ok(existsSync(initialized.ORNIGAMI_TAIL_HELPER));
+  const workDeadline = Number(initialized.ORNIGAMI_WORK_DEADLINE_EPOCH);
+  assert.equal(Number(initialized.ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH), workDeadline + 180);
+  assert.equal(Number(initialized.ORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH), workDeadline + 300);
+  assert.equal(Number(initialized.ORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH), workDeadline + 600);
+  assert.equal(Number(initialized.ORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH), workDeadline + 720);
+  assert.equal(Number(initialized.ORNIGAMI_TAIL_RESERVED_END_EPOCH), workDeadline + 960);
   assert.equal(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), '');
+}));
+
+test("tail deadline helper validates budgets and selects the earlier local or absolute deadline", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  const script = `source "$ORNIGAMI_TAIL_HELPER"
+if ornigami_tail_validate; then valid_rc=0; else valid_rc=$?; fi
+now=$(date +%s)
+ORNIGAMI_WORK_DEADLINE_EPOCH=$((now + 100))
+ornigami_tail_resolve_phase capture 6 180 3
+early=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now))
+now=$(date +%s)
+ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 10))
+ornigami_tail_resolve_phase capture 6 180 3
+late=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now))
+now=$(date +%s)
+ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 175))
+ornigami_tail_resolve_phase capture 180 180 2
+absolute=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now))
+printf 'valid=%s early=%s late=%s absolute=%s\\n' "$valid_rc" "$early" "$late" "$absolute"
+`;
+  const valid = runShell(root, script, env);
+  assert.equal(valid.status, 0, valid.stderr);
+  assert.match(valid.stdout, /valid=0 early=6 late=6 absolute=[45]/);
+  for (const [label, deadline, expected] of [
+    ["missing", undefined, 2],
+    ["malformed", "not-an-epoch", 2],
+    ["exhausted", String(Math.floor(Date.now() / 1000) - 961), 124],
+  ]) {
+    const invalidEnv = { ...env };
+    if (deadline === undefined) delete invalidEnv.ORNIGAMI_WORK_DEADLINE_EPOCH;
+    else invalidEnv.ORNIGAMI_WORK_DEADLINE_EPOCH = deadline;
+    const result = runShell(root, `source "$ORNIGAMI_TAIL_HELPER"; ornigami_tail_resolve_phase capture 180 180 20`, invalidEnv);
+    assert.equal(result.status, expected, `${label}: ${result.stderr}`);
+  }
+}));
+
+test("tail supervisor enforces the absolute deadline and terminates a TERM-resistant real child", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  env.TAIL_CHILD_PROGRESS = join(root, "tail-child.progress");
+  const script = `source "$ORNIGAMI_TAIL_HELPER"
+now=$(date +%s)
+ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 175))
+ornigami_tail_resolve_phase capture 180 180 4
+deadline=$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
+if ornigami_tail_supervise capture "$deadline" 4 bash -c 'trap "" TERM; while :; do printf x >> "$TAIL_CHILD_PROGRESS"; sleep 0.1; done'; then rc=0; else rc=$?; fi
+printf 'rc=%s event=%s\\n' "$rc" "$(tail -n 1 "$ORNIGAMI_TAIL_EVENT_FILE")"
+`;
+  const result = runShell(root, script, env);
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /rc=124 event=capture\|timeout/);
+  const before = readFileSync(env.TAIL_CHILD_PROGRESS, "utf8").length;
+  spawnSync(bash, ["-c", "sleep 0.25"]);
+  assert.equal(readFileSync(env.TAIL_CHILD_PROGRESS, "utf8").length, before);
+}));
+
+test("evidence capture bounds a hung host-side Docker child and retains an explicit partial-failure receipt", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root, { FAKE_DOCKER_HANG_INSPECT: "1" });
+  env.FAKE_DOCKER_HANG_PID = join(root, "hung-docker.pid");
+  env.FAKE_DOCKER_HANG_PROGRESS = join(root, "hung-docker.progress");
+  const shortened = runBlock("evidence_capture")
+    .replace("ornigami_tail_resolve_phase capture 180 180 20", "ornigami_tail_resolve_phase capture 6 180 3")
+    .replace('ornigami_tail_supervise capture "$capture_deadline" 20', 'ornigami_tail_supervise capture "$capture_deadline" 3')
+    .replace("--kill-after=1s 5s bash -c", "--kill-after=1s 1s bash -c");
+  assert.notEqual(shortened, runBlock("evidence_capture"));
+  const result = runEvidenceCapture(root, env, { script: shortened });
+  assert.equal(result.status, 124, `${result.stdout}\n${result.stderr}`);
+  const evidence = env.ORNIGAMI_EVIDENCE_DIR;
+  assert.match(readFileSync(join(evidence, "capture-supervision-status.txt"), "utf8"), /status=failed\nreason=supervisor_timeout/);
+  const manifest = JSON.parse(readFileSync(join(evidence, "manifest.json"), "utf8"));
+  assert.equal(manifest.capture_completeness_status, "failed");
+  assert.equal(manifest.capture_supervisor_status, "supervisor_timeout");
+  assert.ok(existsSync(join(evidence, "runner/owned-resources.txt")), "available partial evidence is retained");
+  const before = readFileSync(env.FAKE_DOCKER_HANG_PROGRESS, "utf8").length;
+  spawnSync(bash, ["-c", "sleep 0.25"]);
+  assert.equal(readFileSync(env.FAKE_DOCKER_HANG_PROGRESS, "utf8").length, before);
+}));
+
+test("evidence capture rejects malformed and exhausted tail inputs before capture", () => withSandbox(root => {
+  for (const [label, workDeadline, expected, reason] of [
+    ["malformed", "invalid", 2, "invalid_budget"],
+    ["exhausted", String(Math.floor(Date.now() / 1000) - 961), 124, "deadline_exhausted"],
+  ]) {
+    const caseRoot = join(root, label);
+    mkdirSync(caseRoot, { recursive: true });
+    const { env } = fakeEnvironment(caseRoot);
+    const result = runEvidenceCapture(caseRoot, env, { afterInitialize: () => { env.ORNIGAMI_WORK_DEADLINE_EPOCH = workDeadline; } });
+    assert.equal(result.status, expected, `${label}: ${result.stderr}`);
+    const evidence = env.ORNIGAMI_EVIDENCE_DIR;
+    assert.equal(existsSync(join(evidence, "manifest.json")), false, `${label} must stop before claiming a captured manifest`);
+    assert.equal(existsSync(join(evidence, "capture-supervision-status.txt")), false);
+    assert.match(result.stderr, new RegExp(`stopped before worker start: ${reason}`));
+  }
 }));
 
 test('failed initialization with neither exported path still retains a failed capture manifest', () => withSandbox(root => {
   const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME:'skipped', IMAGE_BUILD_OUTCOME:'skipped', ADMISSION_OUTCOME:'skipped' });
   delete env.ORNIGAMI_EVIDENCE_DIR; delete env.ORNIGAMI_JOB_SUMMARY;
-  const result = runShell(root, runBlock('evidence_capture'), env);
+  const result = runEvidenceCapture(root, env, { afterInitialize: () => rmSync(join(env.RUNNER_TEMP, "ornigami-job-summary.md"), { force: true }) });
   assert.equal(result.status, 1, result.stderr);
   const evidence = join(env.RUNNER_TEMP,'ornigami-evidence');
   const manifest = JSON.parse(readFileSync(join(evidence,'manifest.json'),'utf8'));
@@ -305,7 +435,7 @@ test("evidence capture retains a hashed safe bundle and fails if an attempted ru
     writeFileSync(join(runnerTemp, "trivy.json"), "final report fixture\n");
     writeFileSync(join(runnerTemp, "ornigami-image.tar"), "image archive sentinel; must never enter artifact");
     writeFileSync(join(runnerTemp, "runtime-acceptance.log"), "runtime harness failed before receipt\n");
-    const result = runShell(root, runBlock("evidence_capture"), env);
+    const result = runEvidenceCapture(root, env);
     assert.equal(result.status, 1, result.stderr);
     const status = readFileSync(join(evidence, "runtime", "runtime-evidence-status.txt"), "utf8");
     assert.match(status, /status=missing/);
@@ -329,7 +459,7 @@ test("success evidence capture hashes scan/runtime receipts and excludes the ima
       writeFileSync(join(evidence, "runtime", file), counters());
     }
     writeFileSync(join(evidence,"runtime/native-image-formats.json"),JSON.stringify({result:"passed"}));
-    const result = runShell(root, runBlock("evidence_capture"), env);
+    const result = runEvidenceCapture(root, env);
     assert.equal(result.status, 0, result.stderr);
     verifyManifest(evidence);
     assert.ok(existsSync(join(evidence, "scans", "base-trivy.json")));
@@ -345,7 +475,7 @@ test("cold failure before runtime creates every directory and a complete skipped
   withSandbox(root => {
     const {env}=fakeEnvironment(root,{IMAGE_BUILD_OUTCOME:'failure',IMAGE_BUILD_EXIT_CODE:'17',RUNTIME_OUTCOME:'skipped',RUNTIME_EXIT_CODE:'',FINAL_SCAN_OUTCOME:'skipped',FRAMEWORK_BROWSER_OUTCOME:'skipped'});
     assert.ok(!existsSync(env.ORNIGAMI_EVIDENCE_DIR));
-    const result=runShell(root,runBlock('evidence_capture'),env);
+    const result=runEvidenceCapture(root,env);
     assert.equal(result.status,0,result.stderr);
     const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
     assert.equal(manifest.runtime_evidence_status,'not-run');
@@ -363,7 +493,7 @@ test("cold failure before runtime creates every directory and a complete skipped
 test("cold attempted-runtime failure retains manifest and fails without structured assertions",()=>{
   withSandbox(root=>{
     const {env}=fakeEnvironment(root,{RUNTIME_OUTCOME:'failure',RUNTIME_EXIT_CODE:'23'});
-    const result=runShell(root,runBlock('evidence_capture'),env);
+    const result=runEvidenceCapture(root,env);
     assert.equal(result.status,1,result.stderr);
     const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
     assert.equal(manifest.runtime_evidence_status,'missing');
@@ -420,7 +550,7 @@ test('runtime receipt copy uses qualified report paths despite a decoy glob in c
   const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
   for (const phase of ['first', 'after-restart', 'after-recreate', 'final']) assert.ok(existsSync(join(runtime, `runtime-${phase}-cgroup.txt`)));
   assert.ok(!existsSync(join(runtime, 'runtime-poison-cgroup.txt')));
-  const captured = runShell(root, runBlock('evidence_capture'), env);
+  const captured = runEvidenceCapture(root, env);
   assert.equal(captured.status, 0, captured.stderr);
   verifyManifest(env.ORNIGAMI_EVIDENCE_DIR);
 }));
@@ -430,7 +560,7 @@ test('failed runtime preserves available snapshots, exact assertion/status/body/
   fixtureRuntime(root, env, { failure: true });
   const runtimeResult = runShell(root, runBlock('runtime_acceptance'), env);
   assert.equal(runtimeResult.status, 23, runtimeResult.stderr);
-  const captured = runShell(root, runBlock('evidence_capture'), env);
+  const captured = runEvidenceCapture(root, env);
   assert.equal(captured.status, 0, captured.stderr); // successful collection of a failed acceptance
   const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
   const diagnostic = JSON.parse(readFileSync(join(runtime, 'failure.json'), 'utf8'));
@@ -448,15 +578,16 @@ test('successful runtime missing phase snapshots fails capture but retains its m
   const { env } = fakeEnvironment(root); const runtime = join(env.ORNIGAMI_EVIDENCE_DIR, 'runtime');
   mkdirSync(runtime, { recursive: true });
   writeFileSync(join(runtime, 'runtime-http.json'), '{"result":"passed"}');
-  assert.equal(runShell(root, runBlock('evidence_capture'), env).status, 1);
+  assert.equal(runEvidenceCapture(root, env).status, 1);
   const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
   assert.ok(manifest.runtime_snapshot_status.includes('runtime-after-restart-cgroup.txt=unavailable'));
 }));
 
 for (const missing of [false, true]) test(`skipped stages with ${missing ? 'missing' : 'empty'} persistent summary fail capture with nonempty diagnostic and manifest`, () => withSandbox(root => {
   const { env } = fakeEnvironment(root, { RUNTIME_OUTCOME: 'skipped', IMAGE_BUILD_OUTCOME: 'skipped' });
-  if (missing) rmSync(env.ORNIGAMI_JOB_SUMMARY); else writeFileSync(env.ORNIGAMI_JOB_SUMMARY, '');
-  const result = runShell(root, runBlock('evidence_capture'), env);
+  const result = runEvidenceCapture(root, env, { afterInitialize: () => {
+    if (missing) rmSync(env.ORNIGAMI_JOB_SUMMARY); else writeFileSync(env.ORNIGAMI_JOB_SUMMARY, '');
+  } });
   assert.equal(result.status, 1, result.stderr);
   const manifest = JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR, 'manifest.json'), 'utf8'));
   assert.equal(manifest.summary_evidence_status, 'missing-or-empty'); assert.equal(manifest.runtime_evidence_status, 'not-run');
@@ -482,7 +613,7 @@ for(const outcome of ['success','failure','skipped','missing-diagnostics','tampe
   writeFileSync(join(dir,'index.json'),JSON.stringify({phase:'complete',sourceSha:env.SOURCE_SHA,result:outcome==='success'?'passed':'failed',metadataIdentity:{sha256:createHash(raw),bytes:Buffer.byteLength(raw),retainedBytes:Buffer.byteLength(raw),retainedSha256:createHash(raw),truncated:false}}));
   if(outcome==='tampered-original')writeFileSync(join(dir,'metadata.original.bin'),raw+'tampered');
  }
- const result=runShell(root,runBlock('evidence_capture'),env);assert.equal(result.status,bad?1:0,result.stderr);
+ const result=runEvidenceCapture(root,env);assert.equal(result.status,bad?1:0,result.stderr);
  const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));assert.equal(manifest.custody_status,'not-assessed-by-capture');
  assert.equal(manifest.capture_completeness_status,bad?'failed':'passed');assert.match(manifest.database_diagnostics_status,outcome==='skipped'?/not-run/:bad?/failed:/:/collected/);
  for(const file of manifest.files)assert.equal(createHash(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,file.path))),file.sha256);
@@ -495,7 +626,7 @@ for (const scenario of ['truncated', 'wrong-type', 'wrong-source', 'missing-rece
   const data={schema:1,sourceSha:scenario==='wrong-source'?'c'.repeat(40):env.SOURCE_SHA,expectedStages:expected,result:'failed',stages:expected.map(stage=>({stage,result:'failed',collectionComplete:scenario==='missing-receipts'}))};
   const original=scenario==='truncated'?'{"stages":[':scenario==='wrong-type'?'[]':JSON.stringify(data);
   writeFileSync(join(dir,'index.json'),original);
-  const result=runShell(root,runBlock('evidence_capture'),env);assert.equal(result.status,1,result.stderr);
+  const result=runEvidenceCapture(root,env);assert.equal(result.status,1,result.stderr);
   assert.equal(readFileSync(join(dir,'invalid-index-preserved.txt'),'utf8'),original);
   const manifest=JSON.parse(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'manifest.json'),'utf8'));
   assert.equal(manifest.capture_completeness_status,'failed');assert.equal(manifest.custody_status,'not-assessed-by-capture');
