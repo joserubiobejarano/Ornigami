@@ -289,9 +289,20 @@ test("A11 deletion helper refuses provider cancellation after its renewal fence 
 test("webhook route only acknowledges duplicates or completed reconciliation", async () => {
   const loadRoute = (options: { configured?: boolean; signatureValid?: boolean; outcome?: "processed" | "duplicate" | Error }) => {
     const eventValue = event("evt-route");
+    class StripeMock {
+      static webhooks = {
+        constructEvent: () => {
+          if (!options.signatureValid) throw new Error("bad signature");
+          return eventValue;
+        },
+      };
+    }
     const route = loadTs<{ POST(request: { text(): Promise<string>; headers: Headers }): Promise<{ status: number; body: unknown }> }>("src/app/api/stripe/webhook/route.ts", {
       "next/server": { NextResponse: { json: (body: unknown, init?: { status?: number }) => ({ status: init?.status ?? 200, body }) } },
-      "@/lib/stripe": { stripe: { webhooks: { constructEvent: () => { if (!options.signatureValid) throw new Error("bad signature"); return eventValue; } }, subscriptions: { retrieve: async () => subscription() } } },
+      stripe: { __esModule: true, default: StripeMock },
+      "@/lib/stripe": { stripe: { subscriptions: { retrieve: async () => subscription() } } },
+      "@/lib/private-preview": { isPrivatePreviewMode: () => false },
+      "@/lib/private-preview-operation": { privatePreviewOperationDisabledResponse: () => ({ status: 503, body: { error: "This operation is unavailable in private Preview." } }) },
       "@/lib/env": { getRequiredEnv: () => { if (options.configured === false) throw new Error("missing secret"); return "whsec_test"; } },
       "@/lib/safe-logger": { safeLogger: { error() {} } },
       "@/lib/billing/reconciliation": { reconcileStripeEvent: async () => { if (options.outcome instanceof Error) throw options.outcome; return options.outcome ?? "processed"; } },
