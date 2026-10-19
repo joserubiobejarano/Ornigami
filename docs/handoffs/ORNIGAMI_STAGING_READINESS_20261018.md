@@ -1632,3 +1632,48 @@ build, registry, provider, deployment, push or merge occurred.
 
 **Commit:** pending local commit of workflow supervisor/report changes, focused regressions and this
 response.
+
+## Block 5B2C — bounded workflow cleanup
+
+The workflow-owned cleanup step now resolves its deadline from the existing
+`ORNIGAMI_WORK_DEADLINE_EPOCH`: it uses the earlier of the two-minute local cap and the absolute
+work cutoff plus twelve minutes, while reserving 30 seconds. Its two-minute Actions timeout remains
+an outer guard. The initial private receipt setup is bounded; the complete cleanup worker, including
+host commands and both child cleanup scripts, runs under the tail supervisor. The supervisor
+reserves up to 15 seconds for TERM/KILL escalation, leaving time for a bounded failure receipt
+writer. If startup budget is exhausted, the worker is interrupted, or final receipt evidence is
+missing, cleanup fails and resource absence/daemon state is recorded as unproved.
+
+Every workflow-shell Docker call is limited to at most ten seconds plus a two-second TERM/KILL
+allowance, further shortened to fit the remaining deadline and reserve. The child image cleanup
+helper and toolchain cleanup share the same absolute cutoff and a ten-second maximum per Docker
+call; they use bounded GNU `timeout` with TERM, two-second KILL escalation and an outer process
+timeout. A mode-restricted runner-temp marker survives command substitutions and tells later
+cleanup code to stop issuing Docker calls after timeout/interruption. It prevents absence read-back
+from being recorded as verified after uncertain daemon work. Inventory failure, removal no-op,
+identity drift and daemon configuration mismatch continue to fail cleanup. Exact IDs, labels,
+attached-volume checks and daemon identity/configuration comparison remain in force. No global
+prune, ambiguous resource removal or remote package deletion was added.
+
+The cleanup receipt and Docker uncertainty marker are local runner-temp outcomes, outside the
+already-uploaded evidence directory. Cleanup records the prior custody step outcome; it follows the
+bounded custody attempt and does not wait for a second acknowledgment. A failed or skipped custody
+step remains a failed/absent gate in the workflow result even if local cleanup succeeds.
+
+Verification:
+
+- Focused cleanup/workflow regressions: `node --test --test-timeout=30000 --test-name-pattern='cleanup preserves foreign|cleanup removes only exact|actual cleanup workflow fails on|cleanup stops a TERM-resistant|cleanup supervisor terminates hung host|descendant cleanup Docker calls|cleanup supervisor bounds an interrupted tooling|cleanup fails closed|cleanup treats a worker interrupted|upload and custody workflow retains' tests/coolify-rehearsal-workflow.test.mjs` — **14/14 passed**. This covers normal exact-owned cleanup, ownership mismatch, no-op removal, unavailable inventory, hung Docker/host/tooling children, exhausted absolute budget and interrupted finalization.
+- Unfiltered runtime/workflow suite: `node --test --test-timeout=180000 tests/coolify-runtime-acceptance.test.mjs tests/coolify-rehearsal-workflow.test.mjs` — **78/78 passed**, 121.2 seconds.
+- JavaScript syntax: `node --check scripts/framework-prototype/cleanup-owned-images.mjs`, `node --check scripts/framework-prototype/toolchain-build.mjs`, and `node --check tests/coolify-rehearsal-workflow.test.mjs` — passed. Workflow shell blocks exercised by the workflow harness passed `bash -n`.
+- `git diff --check` — passed.
+
+The bounds and failure paths were exercised locally on Windows with Git Bash and fake Docker/tooling
+children. Hosted Actions scheduling, Docker daemon behavior on the staging runner, and combined
+end-to-end tail timing remain unverified; the two-minute Actions limit is only an outer guard, not
+proof a forcibly terminated runner writes receipts. B2.1 stays open pending authorized hosted timing
+evidence. R4 accepted-image publication, independent pull and smoke verification remain
+unimplemented and unbudgeted. Coverage/adoption and campaign holds remain active. No dispatch, image
+build, live provider/API operation, push, merge or deployment occurred.
+
+**Commit:** pending local commit of the bounded workflow cleanup implementation, regressions and
+this response.

@@ -1,11 +1,47 @@
 import {spawnSync} from 'node:child_process';
+import fs from 'node:fs';
 
-const docker = args => spawnSync('docker', args, {encoding:'utf8', timeout:30000, maxBuffer:1024*1024, windowsHide:true});
+const cleanupDeadline = () => {
+  const value=process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;
+  if(value===undefined)return null;
+  if(!/^\d{1,12}$/.test(value))return NaN;
+  return Number(value)*1000;
+};
+function markCleanupUnproved(reason) {
+  const file=process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;
+  if(file){try{fs.appendFileSync(file,`docker_unproved=${reason}\n`,{mode:0o600});}catch{}}
+}
+function cleanupAlreadyUnproved() {
+  const file=process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;
+  if(!file)return false;
+  try{return fs.readFileSync(file,'utf8').length>0;}catch{return true;}
+}
+export function workflowCleanupDocker(args,{invoke=spawnSync,now=Date.now}={}) {
+  const deadline=cleanupDeadline();
+  if(deadline!==null&&(!Number.isFinite(deadline)||cleanupAlreadyUnproved())){
+    markCleanupUnproved('prior-timeout-or-invalid-deadline');
+    return {status:null,signal:null,error:{code:'ORNIGAMI_CLEANUP_UNPROVED'},stdout:'',stderr:''};
+  }
+  const remaining=deadline===null?30000:deadline-now()-30000;
+  const callSeconds=deadline===null?30:Math.min(10,Math.floor(remaining/1000)-3);
+  if(callSeconds<1){
+    markCleanupUnproved('insufficient-time-before-finalization-reserve');
+    return {status:null,signal:null,error:{code:'ETIMEDOUT'},stdout:'',stderr:''};
+  }
+  const command=deadline===null?'docker':'timeout';
+  const commandArgs=deadline===null?args:['--signal=TERM','--kill-after=2s',`${callSeconds}s`,'docker',...args];
+  const timeout=deadline===null?30000:(callSeconds+3)*1000;
+  const options={encoding:'utf8',timeout,maxBuffer:1024*1024,windowsHide:true};
+  if(deadline!==null)options.killSignal='SIGKILL';
+  const result=invoke(command,commandArgs,options);
+  if(deadline!==null&&(result.error||result.signal||result.status===null))markCleanupUnproved('docker-client-timeout-or-interruption');
+  return result;
+}
 const validId = value => /^sha256:[0-9a-f]{64}$/.test(value ?? '');
 
 // A successful removal command is insufficient. Only a successful subsequent
 // daemon inventory establishes absence; an inspect error never does.
-export function cleanupOwnedImages(records, invoke = docker) {
+export function cleanupOwnedImages(records, invoke = workflowCleanupDocker) {
   const results = [];
   const inventory = () => {
     const response = invoke(['image','ls','--all','--quiet','--no-trunc']);

@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import {workflowCleanupDocker} from '../scripts/framework-prototype/cleanup-owned-images.mjs';
 import {recordOfficialPublication,databaseRepository} from '../scripts/framework-prototype/official-db-publication.mjs';
 
 const repositoryRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -118,6 +119,20 @@ function runEvidenceCapture(root, env, { script = runBlock("evidence_capture"), 
   writeFileSync(env.ORNIGAMI_JOB_SUMMARY, "fake workflow summary\n");
   afterInitialize();
   return runShell(root, script, env);
+}
+
+function runCleanup(root, env, script = runBlock("cleanup"), { initialize = true } = {}) {
+  if (initialize) initializeTailEnvironment(root, env);
+  const windowsInstall = process.platform === "win32"
+    ? `install() { [[ "$1" == -d && "$2" == -m && "$3" == 700 ]] || return 97; shift 3; mkdir -p -- "$@"; }\n`
+    : "";
+  return runShell(root, windowsInstall + script, env);
+}
+
+function shortCleanupBudget(script, cap = 8, reserve = 2) {
+  return script
+    .replace("ornigami_tail_resolve_phase cleanup 120 720 30", `ornigami_tail_resolve_phase cleanup ${cap} 720 ${reserve}`)
+    .replace('ornigami_tail_supervise cleanup "$cleanup_deadline" 30', `ornigami_tail_supervise cleanup "$cleanup_deadline" ${reserve}`);
 }
 
 function fakeDocker(root) {
@@ -418,6 +433,13 @@ test("upload and custody workflow retains the artifact identity gate, stable sou
   assert.match(workflow.slice(custody, cleanup), /steps\.evidence_upload\.outcome == 'success'/);
   assert.match(workflow.slice(custody, cleanup), /\.context == \$context and \.description == \$description and \.state == "success" and \.creator\.login == \$owner/);
   assert.match(workflow.slice(custody, cleanup), /timeout --signal=TERM --kill-after=2s/);
+  const cleanupStep=workflow.slice(cleanup);
+  assert.match(cleanupStep,/timeout-minutes: 2/);
+  assert.match(cleanupStep,/ornigami_tail_resolve_phase cleanup 120 720 30/);
+  assert.match(cleanupStep,/ornigami_tail_supervise cleanup "\$cleanup_deadline" 30/);
+  assert.match(cleanupStep,/call_seconds=10/);
+  assert.match(cleanupStep,/CUSTODY_STEP_OUTCOME: \$\{\{ steps\.evidence_custody\.outcome \}\}/);
+  assert.doesNotMatch(cleanupStep,/docker (?:system )?prune|gh api .*packages|delete-package-version/);
 });
 
 test("upload action outcomes require both success and identity outputs; later receipts stay outside the uploaded snapshot", () => withSandbox(root => {
@@ -961,7 +983,7 @@ test("cleanup preserves foreign builder, state volume, and image IDs", () => {
   withSandbox((root) => {
     const { env, dockerLog, runnerTemp } = fakeEnvironment(root);
     writeFileSync(join(runnerTemp, "ornigami-image.tar"), "local-only archive");
-    const result = runShell(root, runBlock("cleanup"), env);
+    const result = runCleanup(root, env);
     assert.equal(result.status, 1, result.stderr);
     const log = readFileSync(dockerLog, "utf8");
     assert.doesNotMatch(log, /<rm><-f><owned-builder-id>/);
@@ -978,13 +1000,14 @@ test("cleanup removes only exact owned builder, unattached state volume, and mat
       FAKE_INSPECTED_IMAGE_ID: "owned-image-id",
     });
     writeFileSync(join(runnerTemp, "ornigami-image.tar"), "local-only archive");
-    const result = runShell(root, runBlock("cleanup"), env);
+    const result = runCleanup(root, env);
     assert.equal(result.status, 0, result.stderr);
     const log = readFileSync(dockerLog, "utf8");
     assert.match(log, /<rm><-f><owned-builder-id>/);
     assert.match(log, /<volume><rm><buildx_buildkit_ornigami-external-rehearsal0_state>/);
     assert.match(log, /<image><rm><owned-image-id>/);
     assert.doesNotMatch(log, /<buildx><rm>/);
+    assert.match(readFileSync(join(runnerTemp,"ornigami-tail-outcomes.local","workflow-cleanup-final.txt"),"utf8"),/cleanup_status=passed/);
   });
 });
 
@@ -996,9 +1019,113 @@ for (const [name, overrides, expected] of [
   ['unavailable daemon', {FAKE_DAEMON_INFO_FAIL:'1'}, /daemon.*unavailable/],
 ]) test(`actual cleanup workflow fails on ${name}`, () => withSandbox(root => {
   const {env}=fakeEnvironment(root, {FAKE_INSPECTED_BUILDER_ID:'owned-builder-id',FAKE_INSPECTED_IMAGE_ID:'owned-image-id',...overrides});
-  const result=runShell(root,runBlock('cleanup'),env);
+  const result=runCleanup(root,env);
   assert.equal(result.status,1,result.stderr);
   assert.match(result.stdout,expected);
   assert.match(result.stdout,/cleanup_readback=result=1/);
   assert.doesNotMatch(readFileSync(env.FAKE_DOCKER_LOG,'utf8'), /<prune>|<buildx><rm>/);
+}));
+
+test("cleanup stops a TERM-resistant Docker client and leaves absence unproved", () => withSandbox(root => {
+  const {env}=fakeEnvironment(root,{FAKE_INSPECTED_BUILDER_ID:'owned-builder-id',FAKE_INSPECTED_IMAGE_ID:'owned-image-id',FAKE_DOCKER_HANG_INSPECT:'1'});
+  env.FAKE_DOCKER_HANG_PID=join(root,'cleanup-docker.pid');
+  env.FAKE_DOCKER_HANG_PROGRESS=join(root,'cleanup-docker.progress');
+  const script=runBlock('cleanup').replace('call_seconds=10','call_seconds=1');
+  assert.notEqual(script,runBlock('cleanup'));
+  const result=runCleanup(root,env,script);
+  assert.equal(result.status,1,result.stderr);
+  assert.match(readFileSync(env.RUNNER_TEMP+'/ornigami-cleanup-docker-unproved.txt','utf8'),/docker_unproved=client_timeout_or_interruption/);
+  assert.match(readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8'),/cleanup_status=failed/);
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY,'utf8'),/absence unproved after Docker timeout/);
+  const before=readFileSync(env.FAKE_DOCKER_HANG_PROGRESS,'utf8').length;
+  spawnSync(bash,['-c','sleep 0.25']);
+  assert.equal(readFileSync(env.FAKE_DOCKER_HANG_PROGRESS,'utf8').length,before);
+}));
+
+test("cleanup supervisor terminates hung host-side work and records interrupted finalization", () => withSandbox(root => {
+  const {env}=fakeEnvironment(root);
+  env.CLEANUP_HOST_PROGRESS=join(root,'cleanup-host.progress');
+  const script=shortCleanupBudget(runBlock('cleanup'))
+    .replace('cleanup_record() {', `cleanup_record() { bash -c 'trap "" TERM; while :; do printf x >> "$CLEANUP_HOST_PROGRESS"; sleep 0.1; done'`);
+  assert.notEqual(script,runBlock('cleanup'));
+  const result=runCleanup(root,env,script);
+  assert.equal(result.status,1,result.stderr);
+  const receipt=readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8');
+  assert.match(receipt,/cleanup_status=failed/);
+  assert.match(receipt,/reason=supervisor_timeout/);
+  assert.match(receipt,/resource_absence=unproved_after_interruption/);
+  const before=readFileSync(env.CLEANUP_HOST_PROGRESS,'utf8').length;
+  spawnSync(bash,['-c','sleep 0.25']);
+  assert.equal(readFileSync(env.CLEANUP_HOST_PROGRESS,'utf8').length,before);
+}));
+
+test("descendant cleanup Docker calls stay within ten seconds and the finalization reserve", () => withSandbox(root => {
+  const marker=join(root,'docker-unproved.txt');writeFileSync(marker,'');
+  const previousDeadline=process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;
+  const previousMarker=process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;
+  try {
+    const deadline=Math.ceil(Date.now()/1000)+60;
+    process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=String(deadline);
+    process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=marker;
+    let command,args,options;
+    const completed=workflowCleanupDocker(['image','ls'],{now:()=>deadline*1000-39000,invoke:(bin,argv,opts)=>{command=bin;args=argv;options=opts;return {status:0,signal:null,error:null,stdout:'',stderr:''};}});
+    assert.equal(completed.status,0);
+    assert.equal(options.timeout,9000);
+    assert.equal(options.killSignal,'SIGKILL');
+    assert.equal(command,'timeout');
+    assert.deepEqual(args.slice(0,4),['--signal=TERM','--kill-after=2s','6s','docker']);
+    const stopped=workflowCleanupDocker(['image','rm','sha256:'+ 'a'.repeat(64)],{now:()=>deadline*1000-29000,invoke:()=>assert.fail('operation must not start inside the finalization reserve')});
+    assert.notEqual(stopped.status,0);
+    assert.match(readFileSync(marker,'utf8'),/docker_unproved=insufficient-time-before-finalization-reserve/);
+  } finally {
+    if(previousDeadline===undefined)delete process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH;else process.env.ORNIGAMI_CLEANUP_DEADLINE_EPOCH=previousDeadline;
+    if(previousMarker===undefined)delete process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE;else process.env.ORNIGAMI_CLEANUP_UNPROVED_FILE=previousMarker;
+  }
+}));
+
+test("cleanup supervisor bounds an interrupted tooling child without treating partial receipts as success", () => withSandbox(root => {
+  const {env,runnerTemp}=fakeEnvironment(root);
+  env.FAKE_HANG_TOOL_CLEANUP='1';
+  env.FAKE_TOOL_PROGRESS=join(root,'cleanup-tool.progress');
+  const nodeShim=join(runnerTemp,'node-v22.23.3-linux-x64','bin','node');
+  writeExecutable(nodeShim,`#!/usr/bin/env bash
+for arg in "$@"; do
+  if [[ "$arg" == *toolchain-build.mjs && \${FAKE_HANG_TOOL_CLEANUP:-0} == 1 ]]; then
+    trap '' TERM
+    while :; do printf x >> "$FAKE_TOOL_PROGRESS"; sleep 0.1; done
+  fi
+done
+exec "$TEST_REAL_NODE" "$@"
+`);
+  const result=runCleanup(root,env,shortCleanupBudget(runBlock('cleanup')));
+  assert.equal(result.status,1,result.stderr);
+  assert.match(readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8'),/reason=supervisor_timeout/,`${result.stdout}\n${readFileSync(env.GITHUB_STEP_SUMMARY,'utf8')}`);
+  assert.doesNotMatch(readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8'),/cleanup_status=passed/);
+  const before=readFileSync(env.FAKE_TOOL_PROGRESS,'utf8').length;
+  spawnSync(bash,['-c','sleep 0.25']);
+  assert.equal(readFileSync(env.FAKE_TOOL_PROGRESS,'utf8').length,before);
+}));
+
+test("cleanup fails closed when its absolute phase deadline is exhausted", () => withSandbox(root => {
+  const {env,dockerLog}=fakeEnvironment(root);
+  initializeTailEnvironment(root,env);
+  env.ORNIGAMI_WORK_DEADLINE_EPOCH=String(Math.floor(Date.now()/1000)-721);
+  const result=runCleanup(root,env,runBlock('cleanup'),{initialize:false});
+  assert.equal(result.status,1,result.stderr);
+  assert.match(readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8'),/reason=insufficient_or_invalid_budget/);
+  assert.equal(existsSync(dockerLog),false,'no Docker operation starts after the absolute cleanup deadline');
+}));
+
+test("cleanup treats a worker interrupted during receipt finalization as unproved", () => withSandbox(root => {
+  const {env}=fakeEnvironment(root,{FAKE_INSPECTED_BUILDER_ID:'owned-builder-id',FAKE_INSPECTED_IMAGE_ID:'owned-image-id'});
+  const script=runBlock('cleanup').replace(
+    'mv -f -- "$cleanup_final.tmp" "$cleanup_final"\nexit "$cleanup_failed"',
+    'kill -KILL "$BASHPID"\n          exit "$cleanup_failed"',
+  );
+  assert.notEqual(script,runBlock('cleanup'));
+  const result=runCleanup(root,env,script);
+  assert.equal(result.status,1,result.stderr);
+  const receipt=readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8');
+  assert.match(receipt,/cleanup_status=failed/);
+  assert.match(receipt,/resource_absence=unproved_after_interruption/);
 }));

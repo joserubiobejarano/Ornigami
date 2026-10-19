@@ -1294,6 +1294,7 @@ jobs:
       - name: Remove temporary builder and local image
         id: cleanup
         if: always()
+        timeout-minutes: 2
         shell: bash
         env:
           OWNED_BUILDER_NAME: ${{ steps.buildkit.outputs.builder_name }}
@@ -1301,20 +1302,114 @@ jobs:
           OWNED_BUILDER_STATE_VOLUME: ${{ steps.buildkit.outputs.builder_state_volume }}
           OWNED_IMAGE_TAG: ${{ steps.image_build.outputs.image_tag }}
           OWNED_IMAGE_ID: ${{ steps.image_build.outputs.image_id }}
+          CUSTODY_STEP_OUTCOME: ${{ steps.evidence_custody.outcome }}
         run: |
+          set -Eeuo pipefail
+          source "$ORNIGAMI_TAIL_HELPER"
+          outcome_dir="$RUNNER_TEMP/ornigami-tail-outcomes.local"
+          cleanup_receipt="$outcome_dir/workflow-cleanup.txt"
+          cleanup_final="$outcome_dir/workflow-cleanup-final.txt"
+          cleanup_unproved_file="$RUNNER_TEMP/ornigami-cleanup-docker-unproved.txt"
+          cleanup_finalize_failure() {
+            local reason="$1" status="$2" message="$3"
+            timeout --signal=TERM --kill-after=2s 8s "$BASH" -c '
+              set -e
+              final=$1; reason=$2; status=$3; custody=$4; summary=$5; message=$6
+              mkdir -p -- "${final%/*}"
+              chmod 700 "${final%/*}"
+              printf "cleanup_status=failed\\nreason=%s\\nsupervisor_exit=%s\\ncustody_step_outcome=%s\\nresource_absence=unproved_after_interruption\\ndaemon_state=unproved\\n" \
+                "$reason" "$status" "$custody" > "$final.tmp"
+              chmod 600 "$final.tmp"
+              mv -f -- "$final.tmp" "$final"
+              printf "%s\\n" "$message" >> "$summary"
+            ' cleanup-finalizer "$cleanup_final" "$reason" "$status" "${CUSTODY_STEP_OUTCOME:-unavailable}" "$GITHUB_STEP_SUMMARY" "$message"
+          }
+          if [[ ${ORNIGAMI_CLEANUP_SUPERVISED:-false} != true ]]; then
+            if ! ornigami_tail_resolve_phase cleanup 120 720 30; then
+              cleanup_finalize_failure insufficient_or_invalid_budget 124 \
+                'Workflow cleanup could not start inside its bounded deadline; resource absence remains unproved.' || true
+              exit 1
+            fi
+            cleanup_deadline=$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
+            export cleanup_deadline cleanup_receipt cleanup_final cleanup_unproved_file
+            export ORNIGAMI_CLEANUP_DEADLINE_EPOCH="$cleanup_deadline"
+            export ORNIGAMI_CLEANUP_UNPROVED_FILE="$cleanup_unproved_file"
+            export ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH="$cleanup_deadline"
+            if ! timeout --signal=TERM --kill-after=2s 5s "$BASH" -c '
+              set -e
+              outcome_dir=$1; receipt=$2; final=$3; unproved=$4; custody=$5
+              mkdir -p -- "$outcome_dir"
+              chmod 700 "$outcome_dir"
+              rm -f -- "$receipt" "$receipt.tmp" "$final" "$final.tmp" "$unproved"
+              printf "cleanup_status=unproved\\nreason=not_yet_finished\\ncustody_step_outcome=%s\\n" "$custody" > "$receipt.tmp"
+              chmod 600 "$receipt.tmp"
+              mv -f -- "$receipt.tmp" "$receipt"
+              : > "$unproved"
+              chmod 600 "$unproved"
+            ' cleanup-bootstrap "$outcome_dir" "$cleanup_receipt" "$cleanup_final" "$cleanup_unproved_file" "${CUSTODY_STEP_OUTCOME:-unavailable}"; then
+              cleanup_finalize_failure bootstrap_failed 124 'Workflow cleanup receipt setup failed; resource absence remains unproved.' || true
+              exit 1
+            fi
+            export -f ornigami_tail_validate ornigami_tail_init ornigami_tail_resolve_phase ornigami_tail_supervise
+            if ornigami_tail_supervise cleanup "$cleanup_deadline" 30 env ORNIGAMI_CLEANUP_SUPERVISED=true "$BASH" "$0"; then
+              if grep -Fqx 'cleanup_status=passed' "$cleanup_final"; then exit 0; fi
+              cleanup_finalize_failure missing_or_incomplete_final_receipt 0 'Workflow cleanup worker exited without a successful final receipt; absence remains unproved.' || true
+              exit 1
+            else
+              supervisor_status=$?
+              if [[ ${ORNIGAMI_TAIL_LAST_OUTCOME:-} == timed_out* || ${ORNIGAMI_TAIL_LAST_OUTCOME:-} == deadline_exhausted_before_start ]]; then
+                reason=supervisor_timeout
+              else
+                reason=worker_failure
+              fi
+              if [[ ! -s "$cleanup_final" || "$reason" == supervisor_timeout ]]; then
+                cleanup_finalize_failure "$reason" "$supervisor_status" \
+                  "Workflow cleanup failed ($reason); interrupted or uncertain resource absence and daemon state remain unproved." || true
+              fi
+              exit 1
+            fi
+          fi
           set +e
           set -o pipefail
           cleanup_failed=0
-          cleanup_record() { printf 'cleanup_readback=%s\n' "$1" | tee -a "$GITHUB_STEP_SUMMARY"; }
+          cleanup_docker_bin=$(type -P docker 2>/dev/null || true)
+          if [[ -z "$cleanup_docker_bin" ]]; then printf 'docker_unproved=client_unavailable\n' >> "$cleanup_unproved_file"; fi
+          cleanup_record() {
+            printf 'cleanup_readback=%s\n' "$1" | tee -a "$GITHUB_STEP_SUMMARY"
+            printf 'cleanup_readback=%s\n' "$1" >> "$cleanup_receipt"
+          }
+          docker() {
+            local now remaining call_seconds status
+            if [[ -s "$cleanup_unproved_file" ]]; then return 124; fi
+            now=$(date +%s) || { printf 'docker_unproved=clock_unavailable\n' >> "$cleanup_unproved_file"; return 124; }
+            remaining=$((cleanup_deadline - now - 30 - 2))
+            if (( remaining < 1 )); then
+              printf 'docker_unproved=insufficient_phase_budget\n' >> "$cleanup_unproved_file"
+              return 124
+            fi
+            call_seconds=10
+            (( call_seconds <= remaining )) || call_seconds=$remaining
+            timeout --signal=TERM --kill-after=2s "${call_seconds}s" "$cleanup_docker_bin" "$@"
+            status=$?
+            if (( status == 124 || status == 137 )); then
+              printf 'docker_unproved=client_timeout_or_interruption\n' >> "$cleanup_unproved_file"
+              return 124
+            fi
+            return "$status"
+          }
           verify_absent() {
             local kind="$1" identity="$2" inventory
+            if [[ -s "$cleanup_unproved_file" ]]; then
+              cleanup_record "$kind absence unproved after Docker timeout/interruption: $identity"
+              return 1
+            fi
             case "$kind" in
               container) inventory=$(docker ps --all --quiet --no-trunc) ;;
               volume) inventory=$(docker volume ls --format '{{.Name}}') ;;
               image) inventory=$(docker image ls --all --quiet --no-trunc) ;;
               *) return 1 ;;
             esac
-            if [[ $? -ne 0 || -z "$identity" ]]; then
+            if [[ $? -ne 0 || -s "$cleanup_unproved_file" || -z "$identity" ]]; then
               cleanup_record "$kind inventory unavailable; absence unproven"
               return 1
             fi
@@ -1431,5 +1526,14 @@ jobs:
             cleanup_failed=1
             cleanup_record 'daemon identity/configuration verification unavailable or drifted'
           fi
+          if [[ -s "$cleanup_unproved_file" ]]; then
+            cleanup_failed=1
+            unproved_reason=$(<"$cleanup_unproved_file")
+            cleanup_record "Docker cleanup unproved ($unproved_reason); later resource absence and daemon completion are not claimed."
+          fi
           cleanup_record "result=$cleanup_failed (0 requires successful owned-resource absence and daemon read-back)"
+          printf 'cleanup_status=%s\ncleanup_exit=%s\ncustody_step_outcome=%s\ndocker_unproved=%s\n' \
+            "$([[ $cleanup_failed -eq 0 ]] && printf passed || printf failed)" "$cleanup_failed" "${CUSTODY_STEP_OUTCOME:-unavailable}" "${unproved_reason:-none}" > "$cleanup_final.tmp"
+          chmod 600 "$cleanup_final.tmp"
+          mv -f -- "$cleanup_final.tmp" "$cleanup_final"
           exit "$cleanup_failed"

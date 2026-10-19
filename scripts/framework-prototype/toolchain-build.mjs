@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {loadToolchainRecipe,downloadPinnedFile} from './toolchain-contract.mjs';
 import {writeFrontendImage,sha256} from './tool-image.mjs';
 import {requireFrozenDatabase} from './frozen-db-admission.mjs';
-import {cleanupOwnedImages} from './cleanup-owned-images.mjs';
+import {cleanupOwnedImages,workflowCleanupDocker} from './cleanup-owned-images.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const writeJSON=(file,value)=>fs.writeFileSync(file,JSON.stringify(value,null,2)+'\n');
@@ -225,7 +225,7 @@ export function cleanupToolchain() {
   if(!fs.existsSync(file)){console.log('Toolchain construction not started; no ownership claims');return;}
   const state=JSON.parse(fs.readFileSync(file)),temp=fs.realpathSync(process.env.RUNNER_TEMP);
   if(state.sourceSha!==process.env.SOURCE_SHA||state.runId!==process.env.GITHUB_RUN_ID||state.attempt!==process.env.GITHUB_RUN_ATTEMPT||state.parent!==temp||path.dirname(fs.realpathSync(state.root))!==temp||!path.basename(state.root).startsWith('ornigami-toolchain-'+state.runId+'-'+state.attempt+'-')||fs.statSync(state.root).uid!==process.getuid())throw Error('Toolchain cleanup ownership mismatch');
-  const invoke=args=>spawnSync('docker',args,{encoding:'utf8',timeout:30000,maxBuffer:1024*1024});
+  const invoke=workflowCleanupDocker;
   const results=[];
   for(const c of state.containers){
     const list=invoke(['ps','--all','--quiet','--no-trunc']);
