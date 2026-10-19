@@ -107,6 +107,33 @@ test("explicit execution, owner-held custody and endpoint guards run before prom
   assert.deepEqual([prompts, hashes, launches], [0, 0, 0]);
 });
 
+test("rejected password entry preserves fixed pre-write statuses without hashing or launching", async () => {
+  const cases = [
+    { name: "confirmation mismatch", readValue: (() => { const values = [PASSWORD, "different-synthetic-value"]; return async () => values.shift(); })(), status: "confirmation_mismatch" },
+    { name: "policy rejection", readValue: async () => "short", status: "password_invalid" },
+    { name: "input failure", readValue: async () => { throw new Error("synthetic secret-bearing input failure"); }, status: "input_failed" },
+    { name: "timeout", readValue: async () => { throw new Error("input_timeout"); }, status: "input_timeout" },
+    { name: "cancellation", readValue: async () => { throw new Error("input_cancelled"); }, status: "input_cancelled" },
+  ];
+  for (const entry of cases) {
+    let hashes = 0;
+    let launches = 0;
+    const result = await runOwnerSuppliedPasswordProvisioning({
+      approvedEndpointFingerprint: FINGERPRINT,
+      endpointForm: "direct",
+      executionAuthorized: true,
+      ownerHeldPasswordApproved: true,
+      env: ENV,
+      readValue: entry.readValue,
+      hashPassword: async () => { hashes += 1; return HASH; },
+      runProvisioner: async () => { launches += 1; return { status: "credential_write_applied" }; },
+    });
+    assert.deepEqual(result, { status: entry.status }, entry.name);
+    assert.deepEqual([hashes, launches], [0, 0], entry.name);
+    assert.doesNotMatch(JSON.stringify(result), /secret|synthetic/);
+  }
+});
+
 test("only a synthetic cost-10 hash reaches the provisioner; password stays out of args and environment", async () => {
   let receivedHash;
   let receivedOptions;
@@ -126,7 +153,14 @@ test("only a synthetic cost-10 hash reaches the provisioner; password stays out 
     runProvisioner: async (hash, options) => {
       receivedHash = hash;
       receivedOptions = options;
-      return { status: "credential_write_applied", arbitrary: PASSWORD };
+      return {
+        status: "credential_write_applied",
+        checks: {
+          identityMatch: true, passwordHashAbsent: true, emailUnverified: true,
+          deletionClear: true, authVersionExpected: true, noVerificationToken: true, noResetToken: true,
+        },
+        arbitrary: PASSWORD,
+      };
     },
   });
   assert.equal(hashRounds, 10);
@@ -152,7 +186,14 @@ test("provisioner handoff sends the hash only on stdin and strips unrelated envi
   const spawnImpl = (command, args, options) => {
     captured = { command, args, options };
     setImmediate(() => {
-      child.stdout.emit("data", Buffer.from('{"status":"credential_write_applied","checks":{"identityMatch":true},"secret":"suppressed"}\n'));
+      child.stdout.emit("data", Buffer.from(JSON.stringify({
+        status: "credential_write_applied",
+        checks: {
+          identityMatch: true, passwordHashAbsent: true, emailUnverified: true,
+          deletionClear: true, authVersionExpected: true, noVerificationToken: true, noResetToken: true,
+        },
+        secret: "suppressed",
+      }) + "\n"));
       child.emit("close", 0);
     });
     return child;
@@ -166,12 +207,12 @@ test("provisioner handoff sends the hash only on stdin and strips unrelated envi
   assert.equal(result.status, "credential_write_applied");
   assert.deepEqual(result.checks, {
     identityMatch: true,
-    passwordHashAbsent: false,
-    emailUnverified: false,
-    deletionClear: false,
-    authVersionExpected: false,
-    noVerificationToken: false,
-    noResetToken: false,
+    passwordHashAbsent: true,
+    emailUnverified: true,
+    deletionClear: true,
+    authVersionExpected: true,
+    noVerificationToken: true,
+    noResetToken: true,
   });
   assert.ok(captured.args.includes("--owner-held-password-approved"));
   assert.ok(captured.args.includes(FINGERPRINT));
@@ -181,6 +222,38 @@ test("provisioner handoff sends the hash only on stdin and strips unrelated envi
   assert.equal(captured.options.env.ORNIGAMI_PREVIEW_DB_EXPECTED_NAME, "ornigami_staging");
   assert.equal(child.stdin.received.toString("utf8"), `${HASH}\n`);
   assert.doesNotMatch(JSON.stringify(result), /secret|\$2b\$10\$/);
+});
+
+test("subprocess success requires all seven true checks and exit zero", async (t) => {
+  const keys = ["identityMatch", "passwordHashAbsent", "emailUnverified", "deletionClear", "authVersionExpected", "noVerificationToken", "noResetToken"];
+  const allTrue = Object.fromEntries(keys.map((key) => [key, true]));
+  const cases = [
+    { name: "complete success", checks: allTrue, exitCode: 0, expected: "credential_write_applied" },
+    { name: "missing check", checks: Object.fromEntries(keys.slice(0, -1).map((key) => [key, true])), exitCode: 0, expected: "write_outcome_uncertain" },
+    { name: "false check", checks: { ...allTrue, emailUnverified: false }, exitCode: 0, expected: "write_outcome_uncertain" },
+    { name: "wrong-type check", checks: { ...allTrue, noResetToken: "true" }, exitCode: 0, expected: "write_outcome_uncertain" },
+    { name: "nonzero exit", checks: allTrue, exitCode: 1, expected: "write_outcome_uncertain" },
+    { name: "signal or unavailable exit status", checks: allTrue, exitCode: null, expected: "write_outcome_uncertain" },
+  ];
+  for (const item of cases) await t.test(item.name, async () => {
+    const child = new EventEmitter();
+    child.stdout = new EventEmitter();
+    child.stderr = new EventEmitter();
+    child.stdin = { end(_buffer, callback) { callback?.(); } };
+    const spawnImpl = () => {
+      setImmediate(() => {
+        child.stdout.emit("data", Buffer.from(JSON.stringify({ status: "credential_write_applied", checks: item.checks, secret: "suppressed" }) + "\n"));
+        child.emit("close", item.exitCode);
+      });
+      return child;
+    };
+    const result = await runProvisionerWithHash(HASH, {
+      approvedEndpointFingerprint: FINGERPRINT, endpointForm: "direct", spawnImpl, env: ENV,
+    });
+    assert.equal(result.status, item.expected);
+    if (item.expected === "credential_write_applied") assert.deepEqual(result.checks, allTrue);
+    assert.doesNotMatch(JSON.stringify(result), /secret|suppressed|\$2b\$10\$/);
+  });
 });
 
 test("uncertain or secret-bearing provisioner output is reduced to a fixed uncertain status", async () => {

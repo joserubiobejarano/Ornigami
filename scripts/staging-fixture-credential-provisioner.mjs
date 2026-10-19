@@ -56,8 +56,16 @@ function fixedResult(status, checks) {
 
 function sanitizeProvisioningResult(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fixedResult("write_outcome_uncertain");
-  if (value.status === "credential_state_not_ready" || value.status === "concurrent_state_change"
-    || value.status === "credential_write_applied") return fixedResult(value.status, value.checks);
+  if (value.status === "credential_write_applied") {
+    const checks = value.checks;
+    const completeSuccess = checks && typeof checks === "object" && !Array.isArray(checks)
+      && FIXTURE_STATE_CHECK_KEYS.every((key) => checks[key] === true);
+    if (!completeSuccess) return fixedResult("write_outcome_uncertain");
+    return fixedResult(value.status, checks);
+  }
+  if (value.status === "credential_state_not_ready" || value.status === "concurrent_state_change") {
+    return fixedResult(value.status, value.checks);
+  }
   return fixedResult(value.status);
 }
 

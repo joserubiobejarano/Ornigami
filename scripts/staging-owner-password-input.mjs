@@ -12,6 +12,12 @@ const EXPECTED_ENV = Object.freeze({
 const FIXTURE_RESULTS = new Set([
   "execution_not_authorized",
   "credential_custody_approval_required",
+  "confirmation_mismatch",
+  "password_invalid",
+  "input_failed",
+  "input_timeout",
+  "input_cancelled",
+  "input_too_large",
   "credential_hash_invalid",
   "configuration_invalid",
   "endpoint_mismatch",
@@ -123,8 +129,12 @@ export async function readConfirmedPassword({ readValue = readMaskedValue } = {}
     if (password !== confirmation) return { status: "confirmation_mismatch" };
     if (!isValidAuthPassword(password)) return { status: "password_invalid" };
     return { status: "confirmed", password };
-  } catch {
-    return { status: "input_failed" };
+  } catch (error) {
+    const status = error && typeof error.message === "string" && FIXTURE_RESULTS.has(error.message)
+      && ["input_failed", "input_timeout", "input_cancelled", "input_too_large"].includes(error.message)
+      ? error.message
+      : "input_failed";
+    return { status };
   } finally {
     password = "";
     confirmation = "";
@@ -147,7 +157,13 @@ function sanitizeProvisionerResult(parsed, exitCode = 0) {
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || !FIXTURE_RESULTS.has(parsed.status)) {
     return fixedResult("write_outcome_uncertain");
   }
-  if (parsed.status === "credential_write_applied" && exitCode !== 0) return fixedResult("write_outcome_uncertain");
+  if (parsed.status === "credential_write_applied") {
+    const checks = parsed.checks;
+    const completeSuccess = exitCode === 0
+      && checks && typeof checks === "object" && !Array.isArray(checks)
+      && CHECK_KEYS.every((key) => checks[key] === true);
+    if (!completeSuccess) return fixedResult("write_outcome_uncertain");
+  }
   const result = { status: parsed.status };
   if (["credential_state_not_ready", "concurrent_state_change", "credential_write_applied"].includes(parsed.status)) {
     const checks = parsed.checks && typeof parsed.checks === "object" ? parsed.checks : {};

@@ -317,3 +317,32 @@ test("approved one-shot path preserves fixed output and does not expose unexpect
   assert.deepEqual(result.checks, READY);
   assert.doesNotMatch(JSON.stringify(result), /secret-marker|\$2b\$10\$/);
 });
+
+test("provisioner result sanitizer rejects incomplete or contradictory success checks", async (t) => {
+  const cases = [
+    { name: "missing check", checks: Object.fromEntries(FIXTURE_STATE_CHECK_KEYS.slice(0, -1).map((key) => [key, true])) },
+    { name: "false check", checks: { ...READY, deletionClear: false } },
+    { name: "wrong-type check", checks: { ...READY, authVersionExpected: 1 } },
+  ];
+  for (const item of cases) await t.test(item.name, async () => {
+    let provisionCalls = 0;
+    const createLauncher = (options) => async ({ approvedEndpointFingerprint, endpointForm, env }) => options.sanitizeResult(await options.runPreflight({
+      env: { ...ENV, ...env, DATABASE_URL }, approvedEndpointFingerprint, endpointForm,
+    }));
+    const provisionOnce = createOneShotFixtureCredentialProvisioner({
+      createLauncher,
+      runIdentityPreflight: async () => ({ status: "verified" }),
+      provision: async () => {
+        provisionCalls += 1;
+        return { status: "credential_write_applied", checks: item.checks, secret: "suppressed" };
+      },
+    });
+    const result = await provisionOnce({
+      executionAuthorized: true, deliveryPlanApproved: true,
+      approvedEndpointFingerprint: FINGERPRINT, endpointForm: "direct", passwordHash: HASH, env: ENV,
+    });
+    assert.deepEqual(result, { status: "write_outcome_uncertain" });
+    assert.equal(provisionCalls, 1);
+    assert.doesNotMatch(JSON.stringify(result), /secret|suppressed|\$2b\$10\$/);
+  });
+});
