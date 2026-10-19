@@ -329,20 +329,20 @@ if ornigami_tail_validate; then valid_rc=0; else valid_rc=$?; fi
 now=$(date +%s)
 ORNIGAMI_WORK_DEADLINE_EPOCH=$((now + 100))
 ornigami_tail_resolve_phase capture 6 180 3
-early=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now))
+early_work=$ORNIGAMI_TAIL_PHASE_WORK_SECONDS
 now=$(date +%s)
 ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 10))
 ornigami_tail_resolve_phase capture 6 180 3
-late=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now))
+late_work=$ORNIGAMI_TAIL_PHASE_WORK_SECONDS
 now=$(date +%s)
 ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 175))
 ornigami_tail_resolve_phase capture 180 180 2
 absolute=$((ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now))
-printf 'valid=%s early=%s late=%s absolute=%s\\n' "$valid_rc" "$early" "$late" "$absolute"
+printf 'valid=%s early_work=%s late_work=%s absolute=%s\\n' "$valid_rc" "$early_work" "$late_work" "$absolute"
 `;
   const valid = runShell(root, script, env);
   assert.equal(valid.status, 0, valid.stderr);
-  assert.match(valid.stdout, /valid=0 early=6 late=6 absolute=[45]/);
+  assert.match(valid.stdout, /valid=0 early_work=3 late_work=3 absolute=[45]/);
   for (const [label, deadline, expected] of [
     ["missing", undefined, 2],
     ["malformed", "not-an-epoch", 2],
@@ -480,6 +480,40 @@ esac
   assert.ok(reportDeadline <= Math.floor(Date.now() / 1000) + 300);
 }));
 
+test("report supervisor stops a hung child inside its one-minute guard and preserves shared custody deadline", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  env.UPLOAD_OUTCOME = "success";
+  env.EVIDENCE_URL = "https://example.invalid/artifact";
+  env.REPORT_HANG_PROGRESS = join(root, "report-hang.progress");
+  env.REPORT_SHARED_DEADLINE_BEFORE = join(root, "report-shared-deadline.before");
+  const original = runBlock("evidence_report");
+  const shortened = original
+    .replace("report_deadline=$((report_now + 45))", "report_deadline=$((report_now + 6))")
+    .replace("report_deadline - report_now <= 15", "report_deadline - report_now <= 2")
+    .replace('ornigami_tail_supervise upload-report "$report_deadline" 15', 'ornigami_tail_supervise upload-report "$report_deadline" 2')
+    .replace("report_worker() {", `report_worker() {\n  bash -c 'trap "" TERM; while :; do printf x >> "$REPORT_HANG_PROGRESS"; sleep 0.1; done'`)
+    .replace(
+      'if ! ornigami_tail_supervise upload-report "$report_deadline" 2 bash -c report_worker; then',
+      'printf "%s\\n" "$shared_deadline" > "$REPORT_SHARED_DEADLINE_BEFORE"\nif ! ornigami_tail_supervise upload-report "$report_deadline" 2 bash -c report_worker; then',
+    );
+  assert.notEqual(shortened, original, "short test budget and hung child must be injected into the actual report step");
+  const result = runTailShell(root, shortened, env);
+  assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
+  const receiptPath = join(env.RUNNER_TEMP, "ornigami-tail-outcomes.local", "upload-report.txt");
+  const receipt = readFileSync(receiptPath, "utf8");
+  assert.match(receipt, /report_status=failed/);
+  assert.match(receipt, /reason=supervisor_timeout/);
+  assert.match(receipt, /custody_status=pending/);
+  const sharedBefore = readFileSync(env.REPORT_SHARED_DEADLINE_BEFORE, "utf8").trim();
+  const sharedAfter = readFileSync(env.GITHUB_ENV, "utf8").split(/\r?\n/).filter(line => line.startsWith("ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH=")).at(-1).split("=")[1];
+  assert.equal(sharedAfter, sharedBefore, "the report-local deadline must not move the shared report/custody deadline");
+  assert.doesNotMatch(readFileSync(env.GITHUB_ENV, "utf8"), /ORNIGAMI_TAIL_REPORT_PHASE_DEADLINE/);
+  const before = readFileSync(env.REPORT_HANG_PROGRESS, "utf8").length;
+  spawnSync(bash, ["-c", "sleep 0.3"]);
+  assert.equal(readFileSync(env.REPORT_HANG_PROGRESS, "utf8").length, before, "hung report child cannot continue after supervision");
+}));
+
 test("bounded custody requires the exact successful owner tuple and records only local outcomes", () => withSandbox(root => {
   const { env } = fakeEnvironment(root);
   initializeTailEnvironment(root, env);
@@ -552,18 +586,57 @@ test("tail supervisor enforces the absolute deadline and terminates a TERM-resis
   env.TAIL_CHILD_PROGRESS = join(root, "tail-child.progress");
   const script = `source "$ORNIGAMI_TAIL_HELPER"
 now=$(date +%s)
-ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 175))
+ORNIGAMI_WORK_DEADLINE_EPOCH=$((now - 168))
 ornigami_tail_resolve_phase capture 180 180 4
 deadline=$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
 if ornigami_tail_supervise capture "$deadline" 4 bash -c 'trap "" TERM; while :; do printf x >> "$TAIL_CHILD_PROGRESS"; sleep 0.1; done'; then rc=0; else rc=$?; fi
-printf 'rc=%s event=%s\\n' "$rc" "$(tail -n 1 "$ORNIGAMI_TAIL_EVENT_FILE")"
+printf 'rc=%s outcome=%s event=%s\\n' "$rc" "$ORNIGAMI_TAIL_LAST_OUTCOME" "$(tail -n 1 "$ORNIGAMI_TAIL_EVENT_FILE")"
 `;
   const result = runShell(root, script, env);
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-  assert.match(result.stdout, /rc=124 event=capture\|timeout/);
+  assert.match(result.stdout, /rc=124 outcome=timed_out event=capture\|timeout\|/);
   const before = readFileSync(env.TAIL_CHILD_PROGRESS, "utf8").length;
   spawnSync(bash, ["-c", "sleep 0.25"]);
   assert.equal(readFileSync(env.TAIL_CHILD_PROGRESS, "utf8").length, before);
+}));
+
+test("tail supervisor classifies late starts and worker exit 124 without stale timeout events", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  env.TAIL_CHILD_STARTED = join(root, "late-child.started");
+  const script = `source "$ORNIGAMI_TAIL_HELPER"
+now=$(date +%s)
+if ornigami_tail_supervise capture "$((now + 20))" 4 bash -c 'exit 124'; then normal_rc=0; else normal_rc=$?; fi
+normal_outcome=$ORNIGAMI_TAIL_LAST_OUTCOME
+normal_event=$(tail -n 1 "$ORNIGAMI_TAIL_EVENT_FILE")
+now=$(date +%s)
+if ornigami_tail_supervise capture "$((now + 1))" 2 bash -c 'touch "$TAIL_CHILD_STARTED"'; then late_rc=0; else late_rc=$?; fi
+printf 'normal_rc=%s normal_outcome=%s normal_event=%s late_rc=%s late_outcome=%s late_event=%s child_started=%s\\n' \\
+  "$normal_rc" "$normal_outcome" "$normal_event" "$late_rc" "$ORNIGAMI_TAIL_LAST_OUTCOME" "$(tail -n 1 "$ORNIGAMI_TAIL_EVENT_FILE")" \\
+  "$(test -e "$TAIL_CHILD_STARTED" && printf yes || printf no)"
+`;
+  const result = runShell(root, script, env);
+  assert.equal(result.status, 0, `${result.stdout}\\n${result.stderr}`);
+  assert.match(result.stdout, /normal_rc=124 normal_outcome=worker_exit normal_event=capture\|worker-exit\|124\|/);
+  assert.match(result.stdout, /late_rc=124 late_outcome=deadline_exhausted_before_start late_event=capture\|timeout\|[^ ]+\|before_start child_started=no/);
+}));
+
+test("markerless supervisor timeout becomes a failed capture manifest", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  const realTimeout = spawnSync(bash, ["-c", "command -v timeout"], { encoding: "utf8", env });
+  assert.equal(realTimeout.status, 0, realTimeout.stderr);
+  env.FAKE_REAL_TIMEOUT = realTimeout.stdout.trim();
+  const script = `timeout() { for arg in "$@"; do [[ "$arg" == tail-worker ]] && return 124; done; "$FAKE_REAL_TIMEOUT" "$@"; }
+export -f timeout
+${runBlock("evidence_capture")}`;
+  const result = runEvidenceCapture(root, env, { script });
+  assert.equal(result.status, 124, `${result.stdout}\\n${result.stderr}\\nevents=${existsSync(env.ORNIGAMI_TAIL_EVENT_FILE) ? readFileSync(env.ORNIGAMI_TAIL_EVENT_FILE, "utf8") : "missing"}`);
+  const evidence = env.ORNIGAMI_EVIDENCE_DIR;
+  assert.match(readFileSync(join(evidence, "capture-supervision-status.txt"), "utf8"), /status=failed\nreason=supervisor_timeout/);
+  const manifest = JSON.parse(readFileSync(join(evidence, "manifest.json"), "utf8"));
+  assert.equal(manifest.capture_completeness_status, "failed");
+  assert.equal(manifest.capture_supervisor_status, "supervisor_timeout");
+  assert.match(readFileSync(env.ORNIGAMI_TAIL_EVENT_FILE, "utf8"), /capture\|timeout\|[^|]+\|marker_missing/);
 }));
 
 test("evidence capture bounds a hung host-side Docker child and retains an explicit partial-failure receipt", () => withSandbox(root => {

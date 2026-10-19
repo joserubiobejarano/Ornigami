@@ -85,18 +85,27 @@ jobs:
             export ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH ORNIGAMI_TAIL_PHASE_WORK_SECONDS ORNIGAMI_TAIL_PHASE_NAME
           }
           ornigami_tail_supervise() {
-            local phase=$1 deadline=$2 reserve=$3 work_seconds kill_grace now status wrapper
+            local phase=$1 deadline=$2 reserve=$3 work_seconds kill_grace now status wrapper event_lines invocation events worker_exit
             shift 3
             now=$(date +%s) || return 125
             work_seconds=$((deadline - now - reserve))
-            (( reserve >= 2 && work_seconds > 0 )) || return 124
+            (( reserve >= 2 )) || { ORNIGAMI_TAIL_LAST_OUTCOME=invalid_reserve; return 2; }
+            event_lines=$(wc -l < "$ORNIGAMI_TAIL_EVENT_FILE") || { ORNIGAMI_TAIL_LAST_OUTCOME=event_state_unavailable; return 125; }
+            invocation="${BASHPID:-$$}.${RANDOM}.${now}"
+            if (( work_seconds <= 0 )); then
+              printf '%s|timeout|%s|before_start\n' "$phase" "$invocation" >> "$ORNIGAMI_TAIL_EVENT_FILE"
+              ORNIGAMI_TAIL_LAST_OUTCOME=deadline_exhausted_before_start
+              return 124
+            fi
             kill_grace=$((reserve / 2))
             wrapper='set +e
           state=$1; phase=$2; grace=$3; shift 3
-          worker_pid=; kill_timer_pid=
+          invocation=$1; shift
+          worker_pid=; kill_timer_pid=; timed_out=false
           on_term() {
             trap "" TERM
-            printf "%s|timeout\\n" "$phase" >> "$state"
+            timed_out=true
+            printf "%s|timeout|%s\\n" "$phase" "$invocation" >> "$state"
             if [[ -n $worker_pid ]]; then
               kill -TERM -- "-$worker_pid" 2>/dev/null || kill -TERM "$worker_pid" 2>/dev/null || true
               (trap "" TERM; sleep "$((grace - 1))"; kill -KILL -- "-$worker_pid" 2>/dev/null || kill -KILL "$worker_pid" 2>/dev/null || true) &
@@ -112,14 +121,34 @@ jobs:
             if ! kill -0 "$worker_pid" 2>/dev/null; then break; fi
           done
           if [[ -n $kill_timer_pid ]]; then kill "$kill_timer_pid" 2>/dev/null || true; wait "$kill_timer_pid" 2>/dev/null || true; fi
+          if [[ $timed_out != true ]]; then printf "%s|worker-exit|%s|%s\\n" "$phase" "$status" "$invocation" >> "$state"; fi
           exit "$status"'
             if timeout --signal=TERM --kill-after="${kill_grace}s" "${work_seconds}s" bash -c "$wrapper" tail-worker \
-              "$ORNIGAMI_TAIL_EVENT_FILE" "$phase" "$kill_grace" "$@"; then
+              "$ORNIGAMI_TAIL_EVENT_FILE" "$phase" "$kill_grace" "$invocation" "$@"; then
+              ORNIGAMI_TAIL_LAST_OUTCOME=worker_success
               return 0
             else
               status=$?
             fi
-            if grep -Fqx -- "$phase|timeout" "$ORNIGAMI_TAIL_EVENT_FILE"; then return 124; fi
+            events=$(tail -n +"$((event_lines + 1))" "$ORNIGAMI_TAIL_EVENT_FILE" 2>/dev/null || true)
+            if grep -Fq -- "$phase|timeout|$invocation" <<< "$events"; then
+              ORNIGAMI_TAIL_LAST_OUTCOME=timed_out
+              return 124
+            fi
+            worker_exit=$(awk -F'|' -v phase="$phase" -v invocation="$invocation" '$1 == phase && $2 == "worker-exit" && $4 == invocation { print $3 }' <<< "$events")
+            if [[ -n $worker_exit ]]; then
+              ORNIGAMI_TAIL_LAST_OUTCOME=worker_exit
+              return "$status"
+            fi
+            if (( status == 124 || status == 137 )); then
+              # GNU timeout can fire before the wrapper installs its TERM trap.
+              # A missing marker is therefore timeout evidence only when the
+              # wrapper also did not record a normal worker exit.
+              printf '%s|timeout|%s|marker_missing\n' "$phase" "$invocation" >> "$ORNIGAMI_TAIL_EVENT_FILE"
+              ORNIGAMI_TAIL_LAST_OUTCOME=timed_out_marker_missing
+              return 124
+            fi
+            ORNIGAMI_TAIL_LAST_OUTCOME=worker_error
             return "$status"
           }
           TAIL_HELPER
@@ -840,7 +869,11 @@ jobs:
               ornigami_tail_supervise capture "$capture_deadline" 20 "$BASH" "$0"
               capture_status=$?
               set -e
-              if grep -Fqx -- 'capture|timeout' "$ORNIGAMI_TAIL_EVENT_FILE"; then capture_failure_reason=supervisor_timeout; fi
+              if [[ ${ORNIGAMI_TAIL_LAST_OUTCOME:-} == timed_out* || ${ORNIGAMI_TAIL_LAST_OUTCOME:-} == deadline_exhausted_before_start ]]; then
+                capture_failure_reason=supervisor_timeout
+              elif (( capture_status != 0 )); then
+                capture_failure_reason=worker_error
+              fi
             else
               capture_status=$deadline_status
             fi
@@ -860,6 +893,8 @@ jobs:
               set -e
               printf 'Evidence capture failed: %s (receipt_writer_exit=%s). Partial files, if present, are unverified.\n' "$capture_failure_reason" "$receipt_status" >&2
               printf 'Evidence capture status: failed (%s); partial files, if present, remain unverified.\n' "$capture_failure_reason" >> "$GITHUB_STEP_SUMMARY"
+            elif [[ $capture_failure_reason == worker_error ]]; then
+              printf 'Evidence capture worker failed (exit=%s). Any available manifest remains diagnostic and acceptance fails.\n' "$capture_status" >&2
             elif [[ -n "$capture_failure_reason" ]]; then
               printf 'Evidence capture stopped before worker start: %s. No complete-capture claim is made.\n' "$capture_failure_reason" >&2
             fi
@@ -1113,8 +1148,18 @@ jobs:
           fi
           # One shared five-minute window begins with upload reporting. Custody
           # may use only its remainder, never a fresh five-minute allowance.
-          printf 'ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH=%s\n' \
-            "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" >> "$GITHUB_ENV"
+          shared_deadline=$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
+          printf 'ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH=%s\n' "$shared_deadline" >> "$GITHUB_ENV"
+          report_now=$(date +%s)
+          report_deadline=$((report_now + 45))
+          if (( shared_deadline < report_deadline )); then report_deadline=$shared_deadline; fi
+          if (( report_deadline - report_now <= 15 )); then
+            custody_status=pending
+            [[ "${UPLOAD_OUTCOME:-unavailable}" == success ]] || custody_status=unavailable
+            printf 'report_status=failed\nreason=insufficient_local_report_window\nupload_outcome=%s\ncustody_status=%s\n' \
+              "${UPLOAD_OUTCOME:-unavailable}" "$custody_status" > "$outcome_file"
+            exit 1
+          fi
           report_worker() {
             {
               printf '\n### Downloadable evidence bundle\n\n'
@@ -1138,9 +1183,13 @@ jobs:
           }
           export outcome_file
           export -f report_worker
-          if ! ornigami_tail_supervise upload-report "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" 15 bash -c report_worker; then
-            printf 'report_status=failed\nreason=supervisor_timeout_or_worker_failure\nupload_outcome=%s\n' \
-              "${UPLOAD_OUTCOME:-unavailable}" > "$outcome_file"
+          if ! ornigami_tail_supervise upload-report "$report_deadline" 15 bash -c report_worker; then
+            reason=supervisor_timeout_or_worker_failure
+            [[ ${ORNIGAMI_TAIL_LAST_OUTCOME:-} == timed_out* ]] || reason=worker_failure
+            custody_status=pending
+            [[ "${UPLOAD_OUTCOME:-unavailable}" == success ]] || custody_status=unavailable
+            printf 'report_status=failed\nreason=%s\nupload_outcome=%s\ncustody_status=%s\n' \
+              "$reason" "${UPLOAD_OUTCOME:-unavailable}" "$custody_status" > "$outcome_file"
             chmod 600 "$outcome_file"
             exit 1
           fi
@@ -1187,7 +1236,7 @@ jobs:
               exit 0
             else
               supervisor_status=$?
-              if tail -n +"$((event_lines + 1))" "$ORNIGAMI_TAIL_EVENT_FILE" | grep -Fqx 'custody|timeout'; then
+              if tail -n +"$((event_lines + 1))" "$ORNIGAMI_TAIL_EVENT_FILE" | grep -Fq 'custody|timeout|'; then
                 printf 'custody_status=unproved\nreason=supervisor_timeout\n' > "$custody_receipt"
               elif grep -Fqx 'reason=not_yet_verified' "$custody_receipt"; then
                 printf 'custody_status=unproved\nreason=worker_failure_%s\n' "$supervisor_status" > "$custody_receipt"

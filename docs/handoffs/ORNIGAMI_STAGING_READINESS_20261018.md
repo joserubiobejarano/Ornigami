@@ -1531,3 +1531,104 @@ approved. No workflow or script changes, tests, dispatch or external action were
   `6067f2aefa151aa7c640d043ace182b36504b96a`.
 
 Implementation commit: `f190c7c`. This handoff response is committed separately.
+
+## Block 5B2B independent review — 19 October 2026
+
+Reviewed HEAD `54712b48ede007e6a072991b468971c6287042fb` against `d95d37c`.
+Initial working tree clean; whitespace check passed. Exact custody matching and separation of
+post-upload local receipts from the uploaded directory are preserved in source. No live upload,
+API call, container/image or external action was performed. Only these notes were edited.
+**Disposition: follow-up required before closing this block.**
+
+### B5B2B.1 [P2] Report supervisor can outlive its one-minute Actions guard
+
+The `Report downloadable evidence` step declares `timeout-minutes: 1`, but resolves
+`upload-report 300 600 15` and passes that shared deadline directly to
+`ornigami_tail_supervise`. On an early start, its worker may run for about 285 seconds before
+the internal termination handling starts. A hung summary/file operation therefore reaches the
+Actions one-minute kill first, bypassing the proposed orderly report termination and final
+failure receipt. The shared five-minute report/custody window is correct; using that entire
+window as the report's own internal work timeout is not.
+
+Required: preserve the original shared report/custody deadline, but give reporting a separate
+local deadline inside its one-minute Actions limit, including bounded termination and receipt
+finalization. Custody must still consume only the original shared window's remainder; do not
+restart the five-minute allowance after reporting. Test a genuinely stuck reporting child and
+assert bounded termination, truthful report outcome and an unchanged shared custody deadline.
+
+### B5B2B.2 [P2] Broader focused verification is not green; investigate markerless timeout
+
+Independent command:
+`node --test --test-timeout=90000 tests/coolify-runtime-acceptance.test.mjs tests/coolify-rehearsal-workflow.test.mjs`
+exited 1. The test `tail supervisor enforces the absolute deadline and terminates a TERM-resistant
+real child` failed at `tests/coolify-rehearsal-workflow.test.mjs:563`: expected
+`rc=124 event=capture|timeout`, actual `rc=124 event=`. An isolated rerun of that same test passed
+(1/1), establishing an intermittent failure rather than a consistently reproducible assertion.
+This review did not reproduce the agent's exact Windows stall, and does not claim this block
+introduced the supervisor behavior.
+
+Required: diagnose why an expired supervisor can return without the expected out-of-band event
+under the full test context, including late starts/worker initialization races. Verify that a
+missing event cannot leave timed-out capture presented as complete; the capture fallback currently
+selects `supervisor_timeout` from that event. Preserve the distinction from ordinary worker errors
+and exit 124. Fix the implementation or test setup as evidence warrants; do not merely remove the
+assertion, hide failed tests behind a name filter or enlarge production budgets. Run the broader
+runtime/workflow set with bounded execution and retain sanitized results. If a platform limitation
+remains, describe its precise scope and why the required behavior is still unverified.
+
+### Next bounded task
+
+Address B5B2B.1/B5B2B.2 only, then append a response with commits, exact test commands/results and
+remaining limits. Do not start workflow-cleanup or registry implementation. All existing holds,
+resource/job ceilings and the unverified combined tail-budget status remain in force. No live
+upload/API operation, owner acknowledgment, dispatch, build, publication or deployment is authorized.
+
+## B5B2B.1/B5B2B.2 response — 19 October 2026
+
+### B5B2B.1 — report deadline
+
+The report step now saves the original `upload-report` phase deadline as the shared report/custody
+cutoff, then independently bounds report work to the earlier of `report start + 45 seconds` and
+that shared cutoff. The supervisor reserves 15 seconds from its active-work window and bounds
+termination escalation to at most seven additional seconds. The resulting 45-second report
+envelope leaves at least eight seconds for final receipt writing and 15 seconds before the
+one-minute Actions guard. The shared five-minute cutoff is unchanged; custody reads and consumes
+only its remainder. Insufficient local time produces a failed report receipt and leaves custody
+pending/unavailable.
+
+A real child-process regression hangs inside report-worker code while ignoring TERM. It verifies
+the child stops, the report receipt records supervisor timeout, and the shared deadline exported
+for custody is identical before and after report execution.
+
+### B5B2B.2 — markerless timeout and late-start handling
+
+The supervisor now scopes events to a unique invocation, records normal worker exits separately
+from timeout events, and records an explicit before-start timeout when its budget is already
+exhausted. If GNU `timeout` returns 124/137 without either marker, the parent records
+`marker_missing` and classifies the outcome as timed out. A normal worker exit 124 remains a worker
+failure, not a timeout. Capture uses this parent outcome rather than searching for a possibly
+missing/stale event, so markerless timeouts produce a failed capture receipt/manifest and cannot be
+reported complete. A regression injects the markerless return into the actual capture step and
+checks the failed manifest. The real-child deadline test also uses a 12-second test-only budget;
+the previous five-second setup left roughly one second after reserve and raced child initialization.
+Production deadlines were not enlarged.
+
+The first unfiltered suite run exposed a separate stale-clock assertion in the phase-budget test
+(71/72): it computed elapsed budget from a timestamp captured before resolver startup. The test now
+checks its invariant directly through reserved work seconds and retains the original absolute-cutoff
+fixture. The rerun passed.
+
+Checks executed:
+
+- Focused regressions: `node --test --test-timeout=90000 --test-name-pattern='report supervisor stops|tail supervisor enforces|tail supervisor classifies|markerless supervisor timeout|evidence capture bounds|bounded custody' tests/coolify-rehearsal-workflow.test.mjs` — **6/6 passed**.
+- Broader runtime/workflow set: `node --test --test-timeout=90000 tests/coolify-runtime-acceptance.test.mjs tests/coolify-rehearsal-workflow.test.mjs` — **72/72 passed**, 87.7 seconds.
+- `git diff --check` — passed. Workflow shell blocks exercised by the suite passed their `bash -n` checks.
+
+The suite runs locally on Windows with Git Bash and fixture/fake Actions interfaces. It does not
+verify a hosted Actions runner's exact timeout scheduling, a Linux staging image, or combined live
+tail timing. B2.1 remains open for workflow cleanup and combined tail-budget verification. Existing
+coverage/adoption/dispatch holds remain active. No live upload/API call, acknowledgment, dispatch,
+build, registry, provider, deployment, push or merge occurred.
+
+**Commit:** pending local commit of workflow supervisor/report changes, focused regressions and this
+response.
