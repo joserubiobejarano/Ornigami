@@ -2522,3 +2522,69 @@ The migration manifest and fixture hashes are unchanged and remain verified by B
 **Single missing evidence item.** Obtain one authoritative Neon/account-administration clarification package that (a) defines whether the 20 GB Free Postgres storage total applies per organization/billing account or across organizations under a Neon user/account, and (b) gives the timestamped total storage used by every Free project included in that scope, explicitly accounting for inactive projects and metric lag. The B6S organization view (0.06 GB reported since Oct 13, up to one-hour lag, inactive-project metrics not updated, and project storage fields unavailable) is not a substitute for that complete evidence.
 
 Until that evidence is supplied and establishes headroom, the bounded migration/fixture request is not ready for execution. Its existing exact target, 39 verified migration hashes, fixture hash, stop conditions, separate owner write approval and sequencing-exception requirement are unchanged. No SQL, provider action, message, credential access or spending occurred. All existing holds remain active.
+
+## Block 6V — initialize isolated synthetic staging database (2026-10-19)
+
+**Authorization and scope.** The owner explicitly approved the database-only initialization of the existing target and the sequencing exception to run before accepted-image review. This authorization covered only the 39 frozen canonical migrations followed by the one synthetic fixture. It did not authorize project/provider changes, login or integration credential provisioning, Vercel binding, schedules, deployment, DNS, restore, deletion, paid actions, Local Lift access, or any waiver of readiness policy. Coverage, adoption, campaign, security, privacy, maintenance, accepted-image and deployment holds remain active.
+
+**Fresh preflight.** At approximately **15:38 UTC** (17:38 Europe/Madrid), the authenticated Neon Dashboard showed **Ornigami LLC / `ornigami-fictional-staging` / `fictional-staging`**, Frankfurt, Free plan, PostgreSQL 17, one branch and one database. The SQL Editor was scoped to **`ornigami_staging`**; a bounded read-only query returned database `ornigami_staging`, PostgreSQL **17.11** (`170011`). The same `public`-only application catalog baseline was refreshed under a read-only transaction with a five-second statement timeout: **0 non-system relations, 0 non-system routines and 0 custom types**, with only the provider/default `plpgsql` extension. The organization, project, branch and database names remained consistent throughout the run.
+
+The project usage panel before writes reported since Oct 13: **30.92 MB Postgres storage, 7.83 MB history, 0.03 CU-hours and 0 kB network**; the Free project storage cap is 1 GB. The panel showed no limit warning. B6U’s conservative account inventory bound remains at most **7 GB** across the seven visible Free projects against the documented 20 GB aggregate ceiling; it includes this project once. The Dashboard panel has up-to-one-hour lag and does not update inactive projects, so these figures are observations rather than reserved capacity.
+
+**Frozen input verification.** Immediately before execution, the full handoff table was parsed before digest validation and matched all **39 unique migration paths** to the numeric-order filesystem list, with no omissions, duplicates or extras. Every digest was 64 lowercase hexadecimal characters and matched file bytes. The fixture digest `2d53d5a6f0be9aab44151f6ceda2b8a4c7ac8e09965742ad865b72f1ba05283e` also matched. No migration or fixture file changed. The offline validator passed **9/9 tests before migration execution and again 9/9 after all migrations succeeded**.
+
+**Per-file hosted outcomes.** Each file was submitted once as a separate SQL Editor execution, in the listed order, using its complete reviewed script; each returned “Statement executed successfully.” The frozen manifest above is the exact digest mapping for every filename below. No error, timeout or uncertain execution occurred; the sequence stopped only after all 39 successes.
+
+| Order | Migration | Outcome |
+|---:|---|---|
+| 1 | `001_initial.sql` | Succeeded |
+| 2 | `002_auto_reply_profiles.sql` | Succeeded |
+| 3 | `003_business_foundation.sql` | Succeeded |
+| 4 | `004_review_booster_tables.sql` | Succeeded |
+| 5 | `005_business_agent_billing_fields.sql` | Succeeded |
+| 6 | `006_public_demo_events.sql` | Succeeded |
+| 7 | `007_review_booster_unsubscribes.sql` | Succeeded |
+| 8 | `008_pricing_plans.sql` | Succeeded |
+| 9 | `009_review_booster_error_reason.sql` | Succeeded |
+| 10 | `010_review_booster_retries.sql` | Succeeded |
+| 11 | `011_review_link_clicks.sql` | Succeeded |
+| 12 | `012_cron_runs.sql` | Succeeded |
+| 13 | `013_review_business_tenancy.sql` | Succeeded |
+| 14 | `014_security_hardening.sql` | Succeeded |
+| 15 | `015_stripe_usage_periods.sql` | Succeeded |
+| 16 | `016_remove_legacy_plan_taxonomy.sql` | Succeeded |
+| 17 | `017_team_invitations.sql` | Succeeded |
+| 18 | `019_billing_lifecycle.sql` | Succeeded |
+| 19 | `020_account_recovery.sql` | Succeeded |
+| 20 | `021_workspace_invitations.sql` | Succeeded |
+| 21 | `022_booster_delivery_quotas.sql` | Succeeded |
+| 22 | `023_booking_intake.sql` | Succeeded |
+| 23 | `024_review_draft_policy.sql` | Succeeded |
+| 24 | `025_email_delivery_events.sql` | Succeeded |
+| 25 | `026_privacy_account_lifecycle.sql` | Succeeded |
+| 26 | `027_cron_operations.sql` | Succeeded |
+| 27 | `028_dashboard_pagination.sql` | Succeeded |
+| 28 | `031_google_location_selection.sql` | Succeeded |
+| 29 | `032_workspace_bootstrap.sql` | Succeeded |
+| 30 | `033_account_lifecycle_auth_team.sql` | Succeeded |
+| 31 | `034_account_lifecycle_billing.sql` | Succeeded |
+| 32 | `035_account_lifecycle_replies.sql` | Succeeded |
+| 33 | `036_account_lifecycle_booster.sql` | Succeeded |
+| 34 | `037_account_lifecycle_finalization.sql` | Succeeded |
+| 35 | `038_booster_intake_lifecycle.sql` | Succeeded |
+| 36 | `039_billing_lease_duplicate_alias.sql` | Succeeded |
+| 37 | `040_permission_evidence.sql` | Succeeded |
+| 38 | `041_guarded_retention.sql` | Succeeded |
+| 39 | `042_cron_expected_jobs.sql` | Succeeded |
+
+Migration `018` remains intentionally unused; `029`–`030` remain reserved as documented. No migrations were retried or edited.
+
+**Fixture and bounded read-back.** After all migrations succeeded, the same validator passed 9/9, then the hash-matched `neon/fixtures/ornigami-staging-synthetic.sql` was submitted **once** with its complete explicit transaction. SQL Editor reported success. A five-second read-only transaction returned only aggregate counts and reference checks: **1 user, 1 profile, 1 business, 1 owner membership and 1 review**, plus one complete user/profile/business/owner-membership/review reference chain. The exact synthetic user row had **no password hash**; its password-reset and email-verification-token counts were zero. No credential or row values were returned.
+
+Database-only isolation counts were all zero: Google connection/location/selected-location rows; booking credentials; Stripe customer bindings, provisioning, checkout intents and subscriptions; active/trialing/past-due business-agent rows; follow-up visits/messages; durable Booster delivery rows; review replies; pending invitations; unresolved checkout work; running cron runs; active cron leases; and cron-unit cursors. The seeded account therefore has no password credential and the database contains no integration bindings or actionable delivery work in these inspected tables. Migrations 001 and 014 create the schema and set legacy verification defaults; no login was provisioned or tested. External environment variables/provider credentials and hosted Vercel schedule state were not inspected. SQL shows no active database job/lease/cursor; it does not prove external schedule configuration or hosted behavior.
+
+**Post-write usage and schema evidence.** The refreshed Dashboard panel after writes still displayed **30.92 MB Postgres storage, 7.83 MB history, 0.03 CU-hours and 0 kB network** since Oct 13. It was unchanged from preflight and remains subject to the one-hour metric lag; it is not evidence of zero storage growth. A separate read-only SQL measurement after writes returned `pg_database_size` **10,616,832 bytes**, with **60 public relations, 121 public routines and 2 installed extensions**. This is a database-local size measurement, not Neon’s billed storage metric; no comparable database-size query was taken before writes. The read-only transactions were rolled back/closed. No restore point was tested, and no recovery claim is made.
+
+**Verification, limitations and next step.** The exact database identity/version was rechecked in the final read-only SQL result. No database content rows or secrets were exposed, and no other project was accessed. These results establish successful SQL initialization and synthetic structural read-back only. They do not establish login, application behavior, Vercel binding, hosted access privacy, runtime/security acceptance, backup/restore, accepted-image review, or operational adoption. Independently review this initialization record and manifest linkage next; any login credential, integration, Vercel binding or deployment requires a separate reviewed scope. Keep NO-GO and every existing hold in force.
+
+Local verification: `node --test tests/staging-synthetic-fixture.test.mjs` passed 9/9 before and after migration execution; `git diff --check` is run for this handoff. No application build/tests, production access, provider setting changes, deployment, DNS, restore, deletion or spending occurred. Database-only SQL writes were the sole hosted changes in Block 6V.
