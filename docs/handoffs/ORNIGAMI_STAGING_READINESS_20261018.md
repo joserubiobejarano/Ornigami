@@ -1389,3 +1389,69 @@ All coverage/adoption/dispatch holds and the separate outer tail-budget risk rem
 
 Implementation commit: `5ba6b65`. Handoff/review-notes commit: `766a104`; the independent review
 notes above are preserved.
+
+## Block 5B1 — tail-budget design
+
+**Status: design only; current tail is not bounded and feasibility is not established.** The existing
+24-minute work deadline is anchored in `Initialize evidence bundle`; the job ceiling remains 40
+minutes. The following is a proposed envelope from that work cutoff (`T0`), not measured performance:
+
+| Remaining phase | Deadline from T0 | Termination allowance | Required evidence | Failure behavior |
+|---|---:|---:|---|---|
+| Evidence capture and manifest validation | T0+3m | 15s inside phase; shell children TERM/KILL | Bounded failure/success manifest, required receipts and safe-file hashes | Incomplete capture fails; retain any manifest/partial receipts; continue only to bounded upload attempt. |
+| Artifact upload | T0+5m (2m phase) | 15s internal stop allowance; 2m Actions step cap is final guard | Successful action outcome, artifact ID and digest | Interrupted/failed upload means no durable artifact/custody claim; no retry in this block; retain runner evidence until teardown. |
+| Upload report and owner custody gate | T0+10m (5m phase) | 30s for final bounded API call/write | Exact run/attempt/request/artifact/digest owner acknowledgment and status receipt | Stop polling at deadline; absent/mismatched acknowledgment is custody-unproved and acceptance fails. |
+| Workflow-owned cleanup and read-back | T0+12m (2m phase) | 30s finalization; per Docker call at most 10s plus TERM/KILL allowance | Exact IDs/labels, removal outcomes, absence read-back and daemon identity/configuration comparison | On timeout or uncertain identity, preserve the resource; record cleanup/absence unproved and fail. Never infer daemon completion from a killed client. |
+| Runner/action overhead margin | T0+12m to T0+16m | 4m unallocated | Tail summary and job result where available | No new work; if the hard job ceiling interrupts this margin, every missing result stays unproved. |
+
+The four phase caps total 12 minutes, leaving a nominal four minutes before `T0+16m`. All
+termination allowances are inside their phase caps. Use one absolute deadline source and monotonic
+remaining-time checks; stop starting a phase or operation unless its worst-case command allowance,
+termination allowance and finalization margin fit. Shell work and each child command need explicit
+timeouts with TERM then bounded KILL. Actions steps need positive integer `timeout-minutes` as an
+outer guard; the design should keep shell/API internal deadlines earlier, since an Actions step kill
+does not guarantee its own cleanup or produce a completion receipt. Current GitHub documentation
+allows `timeout-minutes` on `run` and `uses` steps and specifies process termination at the step
+limit ([workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax));
+it does not turn a killed step into proof of completed upload or cleanup.
+
+**Evidence and feasibility basis.** The private recovered `external-trial-39082300586/timing-final.json`
+records 410 runner seconds for the whole historical run (charged as seven minutes). It contains no
+per-phase tail durations. Local resource-review receipts report about 36–40 seconds for their
+individual synthetic checks; those are not end-to-end workflow or tail timings. Thus all phase caps
+above are estimates, not timing proof. The current workflow gives custody polling up to ten minutes
+(60 ten-second waits), leaving at most six nominal minutes for capture, upload, cleanup and overhead
+in the 16-minute interval; current Docker inventory/removal and tooling cleanup calls have no
+per-command caps. The proposed reduction to a five-minute custody window and the 12-minute tail may
+be implementable, but neither owner response latency nor capture/upload/cleanup completion within
+these budgets is evidenced. Runner startup and action overhead also consume the nominal margin.
+Treat feasibility as **unverified / no-go for dispatch** until the implementation proves deadline
+arithmetic and a later authorized run produces phase timing receipts; existing campaign and
+coverage/adoption holds prohibit that run now.
+
+**Failure ordering.** Capture a bounded failure manifest before cleanup when time permits; missing
+receipts, failed manifest validation or interrupted upload never become a pass. Attempt custody only
+against verified artifact identity; if upload failed there is no artifact custody to acknowledge,
+so record custody unavailable and preserve the local bundle through the bounded attempt/runner
+teardown. Then perform only the already-authorized workflow-owned cleanup against recorded exact
+IDs and labels. A hung Docker inventory/removal, missing read-back or identity drift leaves the
+resource present/absence unknown and cleanup failed; do not remove ambiguous resources. Preserve the
+existing owner custody-before-cleanup ordering and exact-owned checks. Stop early if the remaining
+budget cannot fit the next bounded phase plus its termination/finalization reserve.
+
+**R4 dependency.** The conditional accepted-image publication, independent digest pull and bounded
+smoke verification in the R4 proposal are not present in this workflow and have no allocation in
+this tail envelope. Before any future dispatch, they require their own measured transfer/pull/smoke
+budgets, evidence and failure handling within the same job ceiling. If those cannot fit without
+reducing other acceptance gates or consuming the cleanup/overhead reserve, the combined workflow is
+infeasible and publication must remain disabled; no registry behavior is authorized here.
+
+**Smallest next implementation block (proposed Block 5B2):** add a shared absolute tail deadline
+and per-phase deadline/remaining-budget helper; wire it only into evidence capture, upload, custody
+polling and existing exact-owned cleanup, preserving the 40-minute ceiling and all gates. Bound
+every shell/API/Docker/tooling child, reserve termination time, and fail closed on timeout, missing
+custody or uncertain ownership. Focused tests should cover budget arithmetic/early-stop decisions,
+real hung capture and cleanup children, timed-out Docker inventory/removal with absence unproved,
+interrupted/missing upload and custody receipts, successful exact-owned read-back, and workflow step
+timeouts/order. Do not include R4 publication/pull implementation until separately budgeted and
+approved. No workflow or script changes, tests, dispatch or external action were made in Block 5B1.
