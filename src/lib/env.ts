@@ -3,6 +3,9 @@ import { z } from "zod";
 const ServerEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().url().optional(),
+  ORNIGAMI_PREVIEW_DB_EXPECTED_ENDPOINT_SHA256: z.string().optional(),
+  ORNIGAMI_PREVIEW_DB_EXPECTED_NAME: z.string().optional(),
+  ORNIGAMI_PREVIEW_DB_EXPECTED_ROLE: z.string().optional(),
   OPENAI_ENABLED: z.string().optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
   STRIPE_SECRET_KEY: z.string().min(1).optional(),
