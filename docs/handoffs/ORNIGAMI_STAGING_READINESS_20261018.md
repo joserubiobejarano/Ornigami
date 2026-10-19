@@ -1780,3 +1780,43 @@ unimplemented and unbudgeted; coverage/adoption and campaign holds remain active
 
 **Commit:** the combined test, preserved independent-review notes and this verification record are
 included in the local commit reported below.
+
+## B5C.1 response — combined failure sequences
+
+The combined fixture is now reusable across failure paths. It runs the actual capture, upload
+admission, report, custody and cleanup blocks; the fake upload action’s exit/outputs determine the
+upload outcome, custody runs only when the observed upload action succeeds, its result determines
+the cleanup custody input, and cleanup follows the workflow’s unconditional cleanup condition.
+No Actions engine or production code was added or changed.
+
+Combined coverage now includes: failed capture followed by successful diagnostic upload and exact
+custody (the manifest remains incomplete and failed, and the report says diagnostic custody is not
+application acceptance); failed upload and admission-skipped upload (custody remains skipped or
+unavailable); successful action with missing artifact identity (custody fails before API lookup);
+missing, mismatched and timed-out owner acknowledgments (unproved custody followed by cleanup); a
+fake-clock report/custody cutoff exhaustion followed by cleanup admission failure (no new shared
+deadline, API lookup or cleanup Docker operation starts); and a bounded Docker child timeout after
+successful earlier phases (cleanup fails, and its receipt says later resource absence and daemon
+completion are not claimed). Failure-path report, custody and cleanup receipts are asserted outside
+the evidence directory and any fake uploaded snapshot.
+
+The controlled tests shorten the original work cutoff while retaining the same derived offsets;
+custody uses the existing short-budget fixture, and timed cleanup retains the 30-second
+finalization reserve and 10-second Docker call limit. The shared report/custody deadline is checked
+across phases, and cleanup is checked for a second custody/API wait. Existing phase-level tests
+remain responsible for detailed capture interruption/markerless timeout, upload interruption,
+supervisor termination, ownership mismatch, exact removal/read-back, and individual budget
+boundaries. The combined test adds cross-phase propagation and ordering evidence rather than
+replacing those checks.
+
+Verification:
+
+- Combined success and failure sequences: `node --test --test-timeout=240000 --test-name-pattern='combined local tail preserves one deadline|combined failure sequence' tests/coolify-rehearsal-workflow.test.mjs` — **10/10 passed**, zero skips, 79.3 seconds.
+- Unfiltered suite: `node --test --test-timeout=300000 tests/coolify-runtime-acceptance.test.mjs tests/coolify-rehearsal-workflow.test.mjs` — **90/90 passed**, zero skips, 209.9 seconds.
+- `node --check tests/coolify-rehearsal-workflow.test.mjs` and `git diff --check` — passed.
+
+No production defect was found. These are local sequencing checks with fake upload, owner API and
+Docker services. Hosted scheduling/timing, real upload/API behavior, daemon-side cancellation and
+Linux-image acceptance remain unverified. B2.1, R4 publication/pull/smoke, coverage/adoption and
+campaign holds remain open. This response and its focused test are included in the local commit
+reported for B5C.1.

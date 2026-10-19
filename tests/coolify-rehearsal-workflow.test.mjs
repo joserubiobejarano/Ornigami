@@ -128,6 +128,119 @@ function runEvidenceCapture(root, env, { script = runBlock("evidence_capture"), 
   return runShell(root, script, env);
 }
 
+function prepareCombinedTail(root,{captureFailure=false}={}) {
+  const overrides={
+    FAKE_INSPECTED_BUILDER_ID:"owned-builder-id",
+    FAKE_INSPECTED_IMAGE_ID:"owned-image-id",
+    GITHUB_REPOSITORY:"owner/Ornigami",
+    GITHUB_REPOSITORY_OWNER:"owner",
+  };
+  if(captureFailure)Object.assign(overrides,{RUNTIME_OUTCOME:"failure",RUNTIME_EXIT_CODE:"23"});
+  const {env,runnerTemp,dockerLog}=fakeEnvironment(root,overrides);
+  const workDeadline=Math.floor(Date.now()/1000)-120;
+  const evidence=env.ORNIGAMI_EVIDENCE_DIR;
+  if(!captureFailure){
+    mkdirSync(join(evidence,"runtime"),{recursive:true});
+    writeFileSync(join(runnerTemp,"base-trivy.json"),"base scan fixture\n");
+    writeFileSync(join(runnerTemp,"trivy.json"),"final scan fixture\n");
+    writeFileSync(join(runnerTemp,"ornigami-image.tar"),"archive excluded from evidence\n");
+    writeFileSync(join(runnerTemp,"runtime-acceptance.log"),"runtime accepted by local fixture\n");
+    writeFileSync(join(evidence,"runtime/runtime-http.json"),JSON.stringify({schemaVersion:1,result:"passed",exitStatus:0,httpObservations:[]}));
+    for(const file of ["runtime-first-cgroup.txt","runtime-after-restart-cgroup.txt","runtime-after-recreate-cgroup.txt"])writeFileSync(join(evidence,`runtime/${file}`),counters());
+    writeFileSync(join(evidence,"runtime/native-image-formats.json"),JSON.stringify({result:"passed"}));
+  }
+  const captureStarted=Math.floor(Date.now()/1000);
+  const captureResult=runEvidenceCapture(root,env,{afterInitialize:()=>{
+    env.ORNIGAMI_WORK_DEADLINE_EPOCH=String(workDeadline);
+    writeFileSync(env.GITHUB_ENV,`ORNIGAMI_WORK_DEADLINE_EPOCH=${workDeadline}\n`,{flag:"a"});
+    const reset=runShell(root,`source "$ORNIGAMI_TAIL_HELPER"; ornigami_tail_init; printf 'ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_RESERVED_END_EPOCH=%s\\n' "$ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_RESERVED_END_EPOCH" >> "$GITHUB_ENV"`,env);
+    assert.equal(reset.status,0,reset.stderr);
+    applyGithubEnv(env);
+  }});
+  applyGithubEnv(env);
+  const manifest=existsSync(join(evidence,"manifest.json"))?JSON.parse(readFileSync(join(evidence,"manifest.json"),"utf8")):null;
+  return {env,runnerTemp,dockerLog,evidence,workDeadline,captureStarted,captureResult,manifest};
+}
+
+function setCombinedClock(root,env,epoch) {
+  const located=env.REAL_DATE_BIN?null:runShell(root,"type -P date",env);
+  if(located)assert.equal(located.status,0,located.stderr);
+  const clockFile=join(root,"combined-fake-clock.sh");
+  env.REAL_DATE_BIN??=located.stdout.trim();
+  env.FAKE_CLOCK_EPOCH=String(epoch);
+  writeFileSync(clockFile,'date() { if [[ "$#" == 1 && "$1" == +%s && -n "${FAKE_CLOCK_EPOCH:-}" ]]; then printf "%s\\n" "$FAKE_CLOCK_EPOCH"; else "$REAL_DATE_BIN" "$@"; fi; }\n');
+  env.BASH_ENV=clockFile;
+  const observed=runShell(root,"date +%s",env);
+  assert.equal(observed.status,0,observed.stderr);
+  assert.equal(observed.stdout.trim(),String(epoch),"the shell phase uses the controlled local clock");
+}
+
+function runCombinedUpload(root,env,{mode="success",clockEpoch}={}) {
+  if(clockEpoch!==undefined)setCombinedClock(root,env,clockEpoch);
+  env.GITHUB_OUTPUT=join(root,"combined-upload-admission.txt");
+  const admission=runShell(root,runBlock("evidence_upload_admission"),env);
+  const admitted=readFileSync(env.GITHUB_OUTPUT,"utf8").includes("admitted=true");
+  let action=null,outcome="skipped";
+  const artifactStore=join(root,"combined-artifact-store"),output=join(root,"combined-upload-output.txt");
+  env.FAKE_ARTIFACT_STORE=artifactStore;env.UPLOAD_SOURCE=env.ORNIGAMI_EVIDENCE_DIR;env.FAKE_UPLOAD_OUTPUT=output;env.FAKE_UPLOAD_MODE=mode;
+  if(admitted){
+    const script=join(root,"combined-fake-upload.sh");
+    writeExecutable(script,`#!/usr/bin/env bash\nset -Eeuo pipefail\nmkdir -p "$FAKE_ARTIFACT_STORE"\ncp -R "$UPLOAD_SOURCE/." "$FAKE_ARTIFACT_STORE/"\ncase "$FAKE_UPLOAD_MODE" in\n  success) printf 'artifact-id=123\\nartifact-digest=%s\\n' '${"d".repeat(64)}' > "$FAKE_UPLOAD_OUTPUT" ;;\n  missing-identity) : ;;\n  fail) exit 17 ;;\n  *) exit 90 ;;\nesac\n`);
+    action=runShell(root,'"$FAKE_UPLOAD_SCRIPT"',{...env,FAKE_UPLOAD_SCRIPT:script});
+    outcome=action.status===0?"success":"failure";
+  }
+  const outputs=existsSync(output)?readFileSync(output,"utf8"):"";
+  env.UPLOAD_OUTCOME=outcome;
+  env.ARTIFACT_ID=outputs.match(/^artifact-id=(\d+)$/m)?.[1]??"";
+  env.ARTIFACT_DIGEST=outputs.match(/^artifact-digest=([0-9a-f]{64})$/m)?.[1]??"";
+  env.EVIDENCE_URL=outcome==="success"&&env.ARTIFACT_ID&&env.ARTIFACT_DIGEST?"https://example.invalid/fake-artifact":"";
+  return {admission,admitted,action,outcome,artifactStore,outputs};
+}
+
+function configureCombinedOwnerApi(root,env,mode) {
+  const ghBin=join(root,"combined-fake-gh-bin");mkdirSync(ghBin,{recursive:true});
+  const jqScript=join(root,"combined-fake-jq.mjs");
+  writeFileSync(jqScript,`const args=process.argv.slice(2),named={};for(let i=0;i<args.length;i++)if(args[i]==="--arg")named[args[++i]]=args[++i];let input="";process.stdin.setEncoding("utf8");process.stdin.on("data",chunk=>input+=chunk);process.stdin.on("end",()=>{try{const rows=JSON.parse(input);process.exitCode=rows.some(row=>row.context===named.context&&row.description===named.description&&row.state==="success"&&row.creator?.login===named.owner)?0:1}catch{process.exitCode=4}});\n`);
+  env.FAKE_COMBINED_JQ=jqScript;env.FAKE_COMBINED_GH_MODE=mode;env.FAKE_COMBINED_GH_LOG=join(root,"combined-gh.log");
+  writeExecutable(join(ghBin,"jq"),'#!/usr/bin/env bash\nexec "$TEST_REAL_NODE" "$FAKE_COMBINED_JQ" "$@"\n');
+  const context=`ornigami/evidence-local/${env.GITHUB_RUN_ID}/${env.GITHUB_RUN_ATTEMPT}`;
+  const description=`artifact=${env.ARTIFACT_ID};sha256=${env.ARTIFACT_DIGEST}`;
+  const response=mode==="success"?`[{"context":"${context}","description":"${description}","state":"success","creator":{"login":"owner"}}]`
+    :mode==="mismatch"?'[{"context":"wrong","description":"wrong","state":"success","creator":{"login":"other"}}]':'[]';
+  writeExecutable(join(ghBin,"gh"),`#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "$FAKE_COMBINED_GH_LOG"\ncase "$FAKE_COMBINED_GH_MODE" in\n  hang) trap '' TERM; while :; do sleep 1; done ;;\n  *) printf '%s\\n' '${response}' ;;\nesac\n`);
+  env.PATH=`${ghBin}${delimiter}${env.PATH}`;
+}
+
+function runCombinedReport(root,env) {
+  const result=runTailShell(root,runBlock("evidence_report"),env);
+  applyGithubEnv(env);
+  return result;
+}
+
+function runCombinedCustody(root,env,mode="success") {
+  if(env.UPLOAD_OUTCOME!=="success"){
+    env.CUSTODY_STEP_OUTCOME="skipped";
+    return {status:null,skipped:true};
+  }
+  configureCombinedOwnerApi(root,env,mode);
+  const script=mode==="success"?runBlock("evidence_custody"):shortCustody(runBlock("evidence_custody"));
+  const result=runTailShell(root,script,env);
+  env.CUSTODY_STEP_OUTCOME=result.status===0?"success":"failure";
+  return result;
+}
+
+function runCombinedCleanup(root,env,{script=runBlock("cleanup"),initialize=false}={}) {
+  return runCleanup(root,env,script,{initialize});
+}
+
+function assertCombinedReceiptsLocal(env,artifactStore) {
+  const names=["upload-report.txt","custody-outcome.txt","workflow-cleanup.txt","workflow-cleanup-final.txt"];
+  for(const name of names){
+    assert.equal(existsSync(join(env.ORNIGAMI_EVIDENCE_DIR,name)),false,`${name} stays outside capture evidence`);
+    if(existsSync(artifactStore))assert.equal(existsSync(join(artifactStore,name)),false,`${name} stays outside uploaded snapshot`);
+  }
+}
+
 function runCleanup(root, env, script = runBlock("cleanup"), { initialize = true } = {}) {
   if (initialize) initializeTailEnvironment(root, env);
   const windowsInstall = process.platform === "win32"
@@ -610,36 +723,10 @@ esac
 }));
 
 test("combined local tail preserves one deadline through capture, upload, custody and exact cleanup", () => withSandbox(root => {
-  const {env,runnerTemp,dockerLog}=fakeEnvironment(root,{
-    FAKE_INSPECTED_BUILDER_ID:"owned-builder-id",
-    FAKE_INSPECTED_IMAGE_ID:"owned-image-id",
-    GITHUB_REPOSITORY:"owner/Ornigami",
-    GITHUB_REPOSITORY_OWNER:"owner",
-  });
-  // Make the original work cutoff past while leaving a bounded capture window;
-  // every later absolute cutoff remains derived from this same source.
-  const workDeadline=Math.floor(Date.now()/1000)-120;
+  const {env,runnerTemp,dockerLog,workDeadline,captureStarted,captureResult,manifest}=prepareCombinedTail(root);
+  let result=captureResult;
   const evidence=env.ORNIGAMI_EVIDENCE_DIR;
-  mkdirSync(join(evidence,"runtime"),{recursive:true});
-  writeFileSync(join(runnerTemp,"base-trivy.json"),"base scan fixture\n");
-  writeFileSync(join(runnerTemp,"trivy.json"),"final scan fixture\n");
-  writeFileSync(join(runnerTemp,"ornigami-image.tar"),"archive excluded from evidence\n");
-  writeFileSync(join(runnerTemp,"runtime-acceptance.log"),"runtime accepted by local fixture\n");
-  writeFileSync(join(evidence,"runtime/runtime-http.json"),JSON.stringify({schemaVersion:1,result:"passed",exitStatus:0,httpObservations:[]}));
-  for(const file of ["runtime-first-cgroup.txt","runtime-after-restart-cgroup.txt","runtime-after-recreate-cgroup.txt"])writeFileSync(join(evidence,`runtime/${file}`),counters());
-  writeFileSync(join(evidence,"runtime/native-image-formats.json"),JSON.stringify({result:"passed"}));
-
-  const captureStarted=Math.floor(Date.now()/1000);
-  let result=runEvidenceCapture(root,env,{afterInitialize:()=>{
-    env.ORNIGAMI_WORK_DEADLINE_EPOCH=String(workDeadline);
-    writeFileSync(env.GITHUB_ENV,`ORNIGAMI_WORK_DEADLINE_EPOCH=${workDeadline}\n`,{flag:"a"});
-    const reset=runShell(root,`source "$ORNIGAMI_TAIL_HELPER"; ornigami_tail_init; printf 'ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH=%s\\nORNIGAMI_TAIL_RESERVED_END_EPOCH=%s\\n' "$ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_UPLOAD_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_CUSTODY_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_CLEANUP_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_RESERVED_END_EPOCH" >> "$GITHUB_ENV"`,env);
-    assert.equal(reset.status,0,reset.stderr);
-    applyGithubEnv(env);
-  }});
   assert.equal(result.status,0,`${result.stdout}\n${result.stderr}`);
-  applyGithubEnv(env);
-  const manifest=JSON.parse(readFileSync(join(evidence,"manifest.json"),"utf8"));
   assert.equal(manifest.capture_completeness_status,"passed");
   assert.equal(Number(manifest.capture_deadline_epoch),workDeadline+180);
   assert.ok(Number(manifest.capture_deadline_epoch)<=captureStarted+180);
@@ -654,40 +741,26 @@ test("combined local tail preserves one deadline through capture, upload, custod
   };
   assert.deepEqual(cutoffs,{capture:workDeadline+180,upload:workDeadline+300,custody:workDeadline+600,cleanup:workDeadline+720,reserved:workDeadline+960});
 
-  env.GITHUB_OUTPUT=join(root,"upload-admission-output.txt");
+  // Actual admission and the fake action result drive every later gate.
   const uploadStarted=Math.floor(Date.now()/1000);
-  result=runShell(root,runBlock("evidence_upload_admission"),env);
+  const upload=runCombinedUpload(root,env);
+  result=upload.admission;
   assert.equal(result.status,0,`${result.stdout}\n${result.stderr}`);
-  const admission=readFileSync(env.GITHUB_OUTPUT,"utf8");
-  assert.match(admission,/admitted=true\ntimeout_minutes=1/);
+  assert.equal(upload.admitted,true);
+  assert.match(readFileSync(env.GITHUB_OUTPUT,"utf8"),/admitted=true\ntimeout_minutes=1/);
   const admissionReceipt=readFileSync(join(env.RUNNER_TEMP,"ornigami-upload-admission.local.txt"),"utf8");
   const uploadPhaseDeadline=Number(admissionReceipt.match(/phase_deadline_epoch=(\d+)/)?.[1]);
   const uploadWorkSeconds=Number(admissionReceipt.match(/work_seconds=(\d+)/)?.[1]);
   assert.ok(uploadPhaseDeadline<=Math.min(workDeadline+300,uploadStarted+125),"the measured cap allows only local process-start granularity");
   assert.ok(uploadWorkSeconds>0&&uploadWorkSeconds<=105,"the 15-second reserve is inside the two-minute upload cap");
   assert.equal(cutoffs.upload,workDeadline+300,"admission uses the original absolute work cutoff");
-
-  // Fake the pinned artifact action locally; only its immutable evidence input
-  // is copied. Later receipts are written elsewhere by the real workflow steps.
-  const artifactStore=join(root,"fake-artifact-store");
-  const uploadOutput=join(root,"fake-upload-output.txt");
-  const artifactId="123",artifactDigest="d".repeat(64);
-  env.FAKE_ARTIFACT_STORE=artifactStore;
-  env.UPLOAD_SOURCE=evidence;
-  env.FAKE_UPLOAD_OUTPUT=uploadOutput;
-  const fakeUpload=join(root,"fake-upload.sh");
-  writeExecutable(fakeUpload,`#!/usr/bin/env bash\nset -Eeuo pipefail\nmkdir -p "$FAKE_ARTIFACT_STORE"\ncp -R "$UPLOAD_SOURCE/." "$FAKE_ARTIFACT_STORE/"\nprintf 'artifact-id=%s\\nartifact-digest=%s\\n' '${artifactId}' '${artifactDigest}' > "$FAKE_UPLOAD_OUTPUT"\n`);
-  const admitted=/admitted=true/.test(admission);
-  assert.equal(admitted,true);
-  result=runShell(root,'"$FAKE_UPLOAD"', {...env,FAKE_UPLOAD:fakeUpload});
-  assert.equal(result.status,0,result.stderr);
-  const uploadOutputs=readFileSync(uploadOutput,"utf8");
-  env.ARTIFACT_ID=uploadOutputs.match(/^artifact-id=(\d+)$/m)?.[1]??"";
-  env.ARTIFACT_DIGEST=uploadOutputs.match(/^artifact-digest=([0-9a-f]{64})$/m)?.[1]??"";
-  assert.equal(env.ARTIFACT_ID,artifactId);
-  assert.equal(env.ARTIFACT_DIGEST,artifactDigest);
-  env.UPLOAD_OUTCOME="success";
-  env.EVIDENCE_URL="https://example.invalid/local-artifact";
+  assert.equal(upload.action.status,0,upload.action.stderr);
+  assert.equal(env.UPLOAD_OUTCOME,upload.outcome);
+  assert.equal(upload.outcome,"success");
+  const artifactStore=upload.artifactStore;
+  const artifactId=env.ARTIFACT_ID,artifactDigest=env.ARTIFACT_DIGEST;
+  assert.equal(artifactId,"123");
+  assert.equal(artifactDigest,"d".repeat(64));
   const uploadedManifest=JSON.parse(readFileSync(join(artifactStore,"manifest.json"),"utf8"));
   assert.deepEqual(uploadedManifest,manifest);
   for(const entry of manifest.files){
@@ -698,34 +771,24 @@ test("combined local tail preserves one deadline through capture, upload, custod
   assert.equal(existsSync(join(artifactStore,"custody-outcome.txt")),false);
 
   const reportStarted=Math.floor(Date.now()/1000);
-  result=runTailShell(root,runBlock("evidence_report"),env);
+  result=runCombinedReport(root,env);
   assert.equal(result.status,0,`${result.stdout}\n${result.stderr}`);
-  applyGithubEnv(env);
   const sharedDeadline=Number(env.ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH);
-  assert.equal(sharedDeadline,Math.min(reportStarted+300,cutoffs.custody),"the shared report/custody deadline is the earlier local cap or original absolute cutoff");
+  const earliestReportCutoff=Math.min(reportStarted+300,cutoffs.custody);
+  assert.ok(sharedDeadline>=earliestReportCutoff&&sharedDeadline<=Math.min(reportStarted+302,cutoffs.custody),"the shared report/custody deadline is the earlier local cap or original absolute cutoff, allowing process-start second granularity");
   assert.match(readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/upload-report.txt"),"utf8"),/report_status=passed\nupload_outcome=success\n.*custody_status=pending/s);
 
-  const ghBin=join(root,"fake-gh-bin");mkdirSync(ghBin,{recursive:true});
-  const jqScript=join(root,"fake-jq.mjs");
-  writeFileSync(jqScript,`const args=process.argv.slice(2),named={};for(let i=0;i<args.length;i++)if(args[i]==="--arg")named[args[++i]]=args[++i];let input="";process.stdin.setEncoding("utf8");process.stdin.on("data",chunk=>input+=chunk);process.stdin.on("end",()=>{try{const rows=JSON.parse(input);process.exitCode=rows.some(row=>row.context===named.context&&row.description===named.description&&row.state==="success"&&row.creator?.login===named.owner)?0:1}catch{process.exitCode=4}});\n`);
-  env.FAKE_JQ_SCRIPT=jqScript;
-  writeExecutable(join(ghBin,"jq"),'#!/usr/bin/env bash\nexec "$TEST_REAL_NODE" "$FAKE_JQ_SCRIPT" "$@"\n');
-  const context=`ornigami/evidence-local/${env.GITHUB_RUN_ID}/${env.GITHUB_RUN_ATTEMPT}`;
-  const description=`artifact=${artifactId};sha256=${artifactDigest}`;
-  env.FAKE_GH_LOG=join(root,"fake-gh.log");
-  writeExecutable(join(ghBin,"gh"),`#!/usr/bin/env bash\nprintf '%s\\n' "$*" >> "$FAKE_GH_LOG"\nprintf '%s\\n' '[{"context":"${context}","description":"${description}","state":"success","creator":{"login":"owner"}}]'\n`);
-  env.PATH=`${ghBin}${delimiter}${env.PATH}`;
-  result=runTailShell(root,runBlock("evidence_custody"),env);
+  result=runCombinedCustody(root,env);
   assert.equal(result.status,0,`${result.stdout}\n${result.stderr}`);
   const custodyReceipt=readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/custody-outcome.txt"),"utf8");
+  assert.equal(env.CUSTODY_STEP_OUTCOME,"success");
   assert.match(custodyReceipt,/custody_status=verified/);
-  assert.match(readFileSync(env.FAKE_GH_LOG,"utf8"),new RegExp(`api --hostname github\\.com repos/${env.GITHUB_REPOSITORY}/commits/${env.GITHUB_SHA}/statuses\\?per_page=100`));
+  assert.match(readFileSync(env.FAKE_COMBINED_GH_LOG,"utf8"),new RegExp(`api --hostname github\\.com repos/${env.GITHUB_REPOSITORY}/commits/${env.GITHUB_SHA}/statuses\\?per_page=100`));
   assert.match(custodyReceipt,new RegExp(`run_id=${env.GITHUB_RUN_ID}\\nrun_attempt=${env.GITHUB_RUN_ATTEMPT}\\nrequest_sha=${env.GITHUB_SHA}\\nartifact_id=${artifactId}\\nartifact_digest=${artifactDigest}\\nowner=owner`));
   assert.equal(Number(env.ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH),sharedDeadline,"custody consumes the report's shared absolute deadline");
   assert.equal(existsSync(join(artifactStore,"custody-outcome.txt")),false);
 
-  env.CUSTODY_STEP_OUTCOME="success";
-  result=runCleanup(root,env,runBlock("cleanup"),{initialize:false});
+  result=runCombinedCleanup(root,env,{script:runBlock("cleanup"),initialize:false});
   assert.equal(result.status,0,`${result.stdout}\n${result.stderr}`);
   applyGithubEnv(env);
   assert.deepEqual({
@@ -745,6 +808,124 @@ test("combined local tail preserves one deadline through capture, upload, custod
   assert.equal(existsSync(join(evidence,"upload-report.txt")),false);
   assert.equal(existsSync(join(evidence,"custody-outcome.txt")),false);
   assert.equal(existsSync(join(evidence,"workflow-cleanup-final.txt")),false);
+}));
+
+for(const scenario of [
+  {name:"failed capture remains failed despite diagnostic custody",captureFailure:true,upload:"success",custody:"success"},
+  {name:"failed upload reports failure and skips custody",upload:"fail",custody:"skipped"},
+  {name:"upload admission exhaustion skips upload",upload:"skipped",custody:"skipped"},
+  {name:"missing artifact identity fails custody",upload:"missing-identity",custody:"missing"},
+  {name:"missing owner acknowledgment fails custody",upload:"success",custody:"missing"},
+  {name:"mismatched owner acknowledgment fails custody",upload:"success",custody:"mismatch"},
+  {name:"timed-out owner lookup fails custody",upload:"success",custody:"hang"},
+  {name:"downstream budget exhaustion stops before report custody and cleanup work",upload:"success",custody:"failure",exhausted:true},
+  {name:"cleanup child timeout leaves owned-resource absence unproved",upload:"success",custody:"success",cleanupTimeout:true},
+])test(`combined failure sequence: ${scenario.name}`,()=>withSandbox(root=>{
+  const fixture=prepareCombinedTail(root,{captureFailure:scenario.captureFailure});
+  const {env,evidence,workDeadline,captureResult,manifest}=fixture;
+  assert.ok(manifest,"capture must leave a manifest, including failure cases");
+  if(scenario.captureFailure){
+    assert.notEqual(captureResult.status,0);
+    assert.equal(manifest.capture_completeness_status,"failed");
+    assert.equal(manifest.security_acceptance,false);
+  }else{
+    assert.equal(captureResult.status,0);
+    assert.equal(manifest.capture_completeness_status,"passed");
+  }
+
+  const upload=runCombinedUpload(root,env,{mode:scenario.upload,clockEpoch:scenario.upload==="skipped"?workDeadline+300:undefined});
+  if(scenario.upload==="skipped"){
+    assert.notEqual(upload.admission.status,0);
+    assert.equal(upload.admitted,false);
+    assert.equal(upload.action,null,"the fake action must not start without admission");
+  }else if(scenario.upload==="fail"){
+    assert.equal(upload.admission.status,0);
+    assert.equal(upload.action.status,17);
+    assert.equal(upload.outcome,"failure");
+  }else{
+    assert.equal(upload.admission.status,0);
+    assert.equal(upload.action.status,0);
+    assert.equal(upload.outcome,"success");
+  }
+  if(scenario.upload==="missing-identity")assert.equal(env.ARTIFACT_ID,"");
+
+  let report;
+  if(scenario.exhausted){
+    // Upload already happened under the same work cutoff; move only the fake
+    // wall clock to the shared report/custody boundary to test late admission.
+    setCombinedClock(root,env,workDeadline+600);
+    report=runCombinedReport(root,env);
+    assert.notEqual(report.status,0);
+    const reportReceipt=readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/upload-report.txt"),"utf8");
+    assert.match(reportReceipt,/report_status=failed\nreason=insufficient_or_invalid_budget/);
+    assert.equal(/ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH=/.test(readFileSync(env.GITHUB_ENV,"utf8")),false,"late reporting cannot mint a fresh shared deadline");
+  }else{
+    report=runCombinedReport(root,env);
+    assert.equal(report.status,0,`${report.stdout}\n${report.stderr}`);
+    const reportReceipt=readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/upload-report.txt"),"utf8");
+    assert.match(reportReceipt,new RegExp(`upload_outcome=${upload.outcome}`));
+    if(upload.outcome!=="success")assert.match(reportReceipt,/custody_status=unavailable/);
+  }
+
+  let custody;
+  if(scenario.exhausted){
+    custody=runCombinedCustody(root,env,"success");
+    assert.notEqual(custody.status,0,"custody after an exhausted shared cutoff must not start a lookup");
+    assert.match(readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/custody-outcome.txt"),"utf8"),/custody_status=unproved\nreason=insufficient_or_invalid_budget/);
+  }else{
+    custody=runCombinedCustody(root,env,scenario.custody);
+    if(scenario.custody==="skipped")assert.equal(custody.skipped,true);
+    else if(scenario.custody==="success")assert.equal(custody.status,0);
+    else assert.notEqual(custody.status,0);
+  }
+  const custodyReceipt=join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/custody-outcome.txt");
+  if(scenario.custody==="success")assert.match(readFileSync(custodyReceipt,"utf8"),/custody_status=verified/);
+  if(["missing","mismatch","hang"].includes(scenario.custody))assert.match(readFileSync(custodyReceipt,"utf8"),/custody_status=unproved/);
+
+  const sharedBeforeCleanup=env.ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH??"";
+  const apiCallsBeforeCleanup=env.FAKE_COMBINED_GH_LOG&&existsSync(env.FAKE_COMBINED_GH_LOG)?readFileSync(env.FAKE_COMBINED_GH_LOG,"utf8").split(/\r?\n/).filter(Boolean).length:0;
+  if(scenario.exhausted)setCombinedClock(root,env,workDeadline+719);
+  const dockerLogBeforeCleanup=existsSync(fixture.dockerLog)?readFileSync(fixture.dockerLog,"utf8"):"";
+  let cleanupScript=runBlock("cleanup");
+  if(scenario.cleanupTimeout){
+    env.FAKE_DOCKER_HANG_INSPECT="1";
+    env.FAKE_DOCKER_HANG_PID=join(root,"combined-cleanup-hang.pid");
+    env.FAKE_DOCKER_HANG_PROGRESS=join(root,"combined-cleanup-hang.progress");
+    // Retain the production Docker-call and 30-second finalization reserve;
+    // the 50-second fixture cap lets one 10-second command time out cleanly.
+    cleanupScript=shortCleanupBudget(cleanupScript,50,30);
+  }
+  const cleanup=runCombinedCleanup(root,env,{script:cleanupScript});
+  if(scenario.exhausted||scenario.cleanupTimeout)assert.notEqual(cleanup.status,0,`${cleanup.stdout}\n${cleanup.stderr}`);
+  else assert.equal(cleanup.status,0,`${cleanup.stdout}\n${cleanup.stderr}`);
+  const finalCleanup=readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/workflow-cleanup-final.txt"),"utf8");
+  if(scenario.exhausted){
+    assert.match(finalCleanup,/cleanup_status=failed/);
+    assert.match(finalCleanup,/resource_absence=unproved_after_interruption/);
+    assert.equal(existsSync(fixture.dockerLog)?readFileSync(fixture.dockerLog,"utf8"):"",dockerLogBeforeCleanup,"no cleanup Docker operation starts after its cutoff");
+  }else if(scenario.cleanupTimeout){
+    assert.match(finalCleanup,/cleanup_status=failed/);
+    assert.match(finalCleanup,/docker_unproved=.*client_timeout_or_interruption/);
+    assert.match(readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/workflow-cleanup.txt"),"utf8"),/later resource absence and daemon completion are not claimed/);
+    const before=readFileSync(env.FAKE_DOCKER_HANG_PROGRESS,"utf8").length;
+    spawnSync(bash,["-c","sleep 0.25"]);
+    assert.equal(readFileSync(env.FAKE_DOCKER_HANG_PROGRESS,"utf8").length,before,"timed-out Docker child cannot continue after cleanup returns");
+  }else assert.match(finalCleanup,/cleanup_status=passed/);
+  assert.equal(env.CUSTODY_STEP_OUTCOME,scenario.custody==="skipped"?"skipped":scenario.custody==="success"?"success":"failure");
+  assert.equal(env.ORNIGAMI_WORK_DEADLINE_EPOCH,String(workDeadline));
+  assert.equal(env.ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH??"",sharedBeforeCleanup,"cleanup must not reset the report/custody allowance");
+  const apiCallsAfterCleanup=env.FAKE_COMBINED_GH_LOG&&existsSync(env.FAKE_COMBINED_GH_LOG)?readFileSync(env.FAKE_COMBINED_GH_LOG,"utf8").split(/\r?\n/).filter(Boolean).length:0;
+  assert.equal(apiCallsAfterCleanup,apiCallsBeforeCleanup,"cleanup performs no second custody wait");
+  assertCombinedReceiptsLocal(env,upload.artifactStore);
+  if(scenario.captureFailure){
+    assert.equal(manifest.capture_completeness_status,"failed","later diagnostic custody and cleanup cannot change the earlier capture gate");
+    assert.equal(JSON.parse(readFileSync(join(upload.artifactStore,"manifest.json"),"utf8")).capture_completeness_status,"failed");
+    assert.match(readFileSync(env.GITHUB_STEP_SUMMARY,"utf8"),/Diagnostic evidence only; this artifact does not establish application acceptance/);
+    const applicationAccepted=captureResult.status===0&&manifest.capture_completeness_status==="passed"&&upload.action?.status===0&&custody.status===0;
+    assert.equal(applicationAccepted,false,"diagnostic custody is not application acceptance");
+  }
+  if(scenario.upload==="fail")assert.match(finalCleanup,/custody_step_outcome=skipped/);
+  if(scenario.upload==="skipped")assert.match(readFileSync(join(env.RUNNER_TEMP,"ornigami-tail-outcomes.local/upload-report.txt"),"utf8"),/upload_outcome=skipped[\s\S]*custody_status=unavailable/);
 }));
 
 test("tail supervisor enforces the absolute deadline and terminates a TERM-resistant real child", () => withSandbox(root => {
