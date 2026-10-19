@@ -1678,6 +1678,49 @@ build, live provider/API operation, push, merge or deployment occurred.
 **Commit:** pending local commit of the bounded workflow cleanup implementation, regressions and
 this response.
 
+## Block 5B2C independent review — 19 October 2026
+
+Reviewed HEAD `bd84490e7dbff66f615341f9a3c93139f2d6365f` against `a9b97d2`.
+Initial worktree clean. Independently ran the unfiltered runtime/workflow suites plus the directly
+affected owned-image and toolchain-cache cleanup suites: **93/93 passed**, zero failures/skips,
+exit 0 (111.5 seconds). Both changed JavaScript modules passed `node --check`; whitespace check
+passed. No actual Docker, registry, provider, hosted workflow or deployment action occurred.
+Only these notes were edited. **Disposition: one implementation correction required.**
+
+### B5B2C.1 [P1] Child cleanup ignores ordinary GNU timeout exit statuses
+
+`scripts/framework-prototype/cleanup-owned-images.mjs`, `workflowCleanupDocker`, marks uncertainty
+only for `result.error`, `result.signal` or a null status. GNU `timeout` normally reports an expired
+command as numeric status 124 (or 137 after KILL), with Node's `error` and `signal` both null.
+Those cases therefore return without updating `ORNIGAMI_CLEANUP_UNPROVED_FILE`.
+
+Independent local fixture reproductions against the actual helper showed:
+
+- Direct helper: `exitStatus=124`, `timeoutRecorded=false`.
+- Through actual `cleanupOwnedImages`: `removalExit=124`, `absenceVerified=true`,
+  `timeoutRecorded=false`, with one further Docker inventory call after the timed-out removal.
+
+The overall image-removal result still fails; this review does not claim it became a successful
+cleanup. The defect is that uncertain daemon work does not fence subsequent child cleanup calls,
+and a receipt can claim verified absence contrary to the required timeout policy. The shell
+wrapper already handles numeric 124/137; the child helper used by image/toolchain cleanup does not.
+Existing green tests do not exercise this status-only child-helper timeout path.
+
+Required: classify GNU timeout status 124/137 as uncertain in the deadline-enabled child helper,
+persist the shared marker, and prevent subsequent Docker operations/read-backs from claiming
+absence. Keep normal non-timeout errors and standalone behavior explicitly defined. Add tests
+for status 124 and 137 with null error/signal, a successful call, a normal non-timeout error, and
+the actual owned-image cleanup receipt/fencing path. Verify that the toolchain cleanup uses the
+same corrected helper. Do not weaken existing failure or exact-ownership checks.
+
+### Next bounded task
+
+Address B5B2C.1 only. Preserve all prior notes and append a response with changed behavior,
+commits, focused checks and remaining limitations. No new tail phase, registry implementation,
+resource/permission/job-limit change or external operation is requested. B2.1 live feasibility,
+R4 implementation and all coverage/adoption/dispatch holds remain open. Local code/tests and
+commits are authorized by the follow-up prompt; this review itself changes no implementation.
+
 ## B5B2C.1 response — GNU timeout classification
 
 In the deadline-enabled path, `workflowCleanupDocker` now treats numeric GNU `timeout` statuses
@@ -1704,3 +1747,36 @@ remain open.
 
 The correction, focused regressions and this response are included in the local commit reported
 below.
+
+## Block 5C — combined local tail verification
+
+Added one end-to-end local workflow test using the real capture, upload-admission, report, custody
+and cleanup shell blocks with fake upload, owner API, and Docker services. It verifies the captured
+manifest and file hashes, copies only the captured evidence into the fake artifact snapshot,
+requires an exact successful owner tuple for that artifact, and then checks exact-owned container,
+volume, image, and daemon read-backs. Report, custody, and cleanup receipts remain in runner-temp
+outcomes and are absent from both the uploaded snapshot and capture evidence.
+
+For a bounded integration fixture, the existing work cutoff is advanced to 120 seconds before the
+test’s phase work begins. The initialized helper then derives the expected fixed cutoffs from that
+same source: capture +180s, upload +300s, custody +600s, cleanup +720s, reserved end +960s. The test
+checks the upload phase’s two-minute cap and 15-second reserve, and checks that reporting sets one
+shared report/custody deadline equal to the earlier of its local five-minute cap and the original
+work-cutoff-plus-ten-minute deadline. Custody consumes that value; cleanup reuses the same work
+cutoff and does not reinitialize or extend it. Existing focused regressions continue to exercise
+report/custody and child cleanup termination reserves, late starts, exhausted budgets and timeout
+receipts.
+
+Verification:
+
+- Combined sequence: `node --test --test-timeout=60000 --test-name-pattern='combined local tail preserves one deadline' tests/coolify-rehearsal-workflow.test.mjs` — **1/1 passed**.
+- Unfiltered suite: `node --test --test-timeout=240000 tests/coolify-runtime-acceptance.test.mjs tests/coolify-rehearsal-workflow.test.mjs` — **81/81 passed**, zero failures/skips, 128.7 seconds. This includes capture failure/timeout, upload failure/missing outputs/interruption, missing/mismatched/timed-out custody, late/exhausted phase budgets, and cleanup timeout with absence unproved.
+- `node --check tests/coolify-rehearsal-workflow.test.mjs` and `git diff --check` — passed. Workflow blocks exercised by the harness pass `bash -n` before execution.
+
+This is local sequencing evidence with fake services. It does not verify hosted Actions scheduling,
+real upload/API behavior, daemon cancellation, hosted timing, or actual Linux-image acceptance.
+No production feature or budget changed. B2.1 remains open; R4 publication/pull/smoke remains
+unimplemented and unbudgeted; coverage/adoption and campaign holds remain active.
+
+**Commit:** the combined test, preserved independent-review notes and this verification record are
+included in the local commit reported below.
