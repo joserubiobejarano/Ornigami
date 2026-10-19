@@ -1,0 +1,2698 @@
+{
+  "record": "ORNIGAMI_BLOCK_7I_FOLLOWUP_20261019",
+  "source": {
+    "repository": "C:/Users/joser/Desktop/Projects/Ornigami",
+    "branch": "codex/ornigami-staging-readiness-20261018",
+    "sourceSha": "f55170f5ec7e9472e4726e422943570690a874b3",
+    "publishedCandidateSha": "62e03a3b3233d9b5e15aa7dfe778901c7952d431",
+    "applicationTreeMatchesPublishedCandidate": true,
+    "changesSincePublishedCandidate": "handoff documentation only"
+  },
+  "isolation": {
+    "worktreePath": "%TEMP%/ornigami-block7i-rerun-20261019/candidate",
+    "initiallyAbsent": [
+      ".env",
+      ".env.local",
+      ".env.production",
+      ".env.production.local",
+      ".vercel",
+      ".next",
+      "node_modules"
+    ],
+    "childEnvironmentAllowlisted": true,
+    "previewSettings": {
+      "VERCEL_ENV": "preview",
+      "VERCEL_GIT_COMMIT_REF": "codex/ornigami-staging-readiness-20261018",
+      "ORNIGAMI_PRIVATE_STAGING_MODE": "true",
+      "AUTH_URL": "https://staging.ornigami.com",
+      "NEXT_PUBLIC_APP_URL": "https://staging.ornigami.com",
+      "OPENAI_ENABLED": "false",
+      "QR_MAIL_ENABLED": "false",
+      "AUTH_SECRET": "disposable random value; not retained"
+    },
+    "databaseUrlSupplied": false,
+    "hostedCredentialNamesSupplied": [],
+    "npmLifecycleScriptsEnabled": true
+  },
+  "toolchain": {
+    "node": "v24.11.1",
+    "npm": "11.6.2",
+    "next": "16.4.2",
+    "react": "19.2.9",
+    "reactDom": "19.2.9",
+    "typescript": "5.9.3",
+    "nextArchive": {
+      "path": "vendor/framework/next-16.4.2-ornigami-sri.2.tgz",
+      "bytes": 44857205,
+      "sha512": "17BrG8dBp5eMwEyf8YEr2+bSB94tOFV3DVcDkBEIi91FM40Va7Dzsa0OK2jIEBQHhaNqjbSxdG0lb/sIlmIwEA==",
+      "lockIntegrityMatches": true
+    }
+  },
+  "commands": [
+    {
+      "command": "npm ci --no-audit --no-fund",
+      "timeoutMs": 900000,
+      "exitCode": 0,
+      "timedOut": false,
+      "notes": "655 packages; standard lifecycle scripts enabled; isolated npm config/cache"
+    },
+    {
+      "command": "npm run build",
+      "timeoutMs": 900000,
+      "exitCode": 0,
+      "timedOut": false,
+      "script": "next build --webpack && node scripts/generate-static-csp-hashes.mjs",
+      "runnerNote": "build child exited 0 and result was written; local runner then required force-stop after proxy sockets remained open; verified no child remained"
+    },
+    {
+      "command": "node --experimental-strip-types --test tests/private-preview-google-gate.test.mts tests/vercel-preview-origin.test.mts tests/validate-vercel-staging-config.test.mjs tests/sri-production-check.test.mjs",
+      "timeoutMs": 180000,
+      "exitCode": 0,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --experimental-strip-types --test --test-name-pattern=private Preview blocks Google-backed replies cron tests/a12-cron-routes.test.mts",
+      "timeoutMs": 180000,
+      "exitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 43183",
+      "timeoutMs": 90000,
+      "exitCode": 0,
+      "timedOut": false,
+      "routes": [
+        {
+          "path": "/",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "securityHeaderIssues": [],
+          "sri": {
+            "scriptTags": 19,
+            "sameOrigin": 15,
+            "external": 0,
+            "issues": []
+          },
+          "cspNonceValid": true,
+          "scriptSources": [
+            "/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js",
+            "/_next/static/chunks/9826-f01c0143669cade1.js",
+            "/_next/static/chunks/main-app-33fc10521f0733a4.js",
+            "/_next/static/chunks/5930-0a7517faad12a649.js",
+            "/_next/static/chunks/9441-5bc7bdd6d4037f75.js",
+            "/_next/static/chunks/1518-823041558f779953.js",
+            "/_next/static/chunks/9094-95036afb52c6fa42.js",
+            "/_next/static/chunks/3981-4aef9ab29528d497.js",
+            "/_next/static/chunks/1527-9d57fe7667d0a582.js",
+            "/_next/static/chunks/app/layout-5f9f21fb358a4caa.js",
+            "/_next/static/chunks/app/error-bd14fcf1cf65474f.js",
+            "/_next/static/chunks/app/page-668008deb42a7e1a.js",
+            "/_next/static/chunks/app/global-error-67129407ea82d49c.js",
+            "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+            "/_next/static/chunks/webpack-eab1c43c4f96fbb5.js"
+          ]
+        },
+        {
+          "path": "/login",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "securityHeaderIssues": [],
+          "sri": {
+            "scriptTags": 19,
+            "sameOrigin": 16,
+            "external": 0,
+            "issues": []
+          },
+          "cspNonceValid": true,
+          "scriptSources": [
+            "/_next/static/chunks/4bd1b696-5ab16a6c4e2cbd21.js",
+            "/_next/static/chunks/9826-f01c0143669cade1.js",
+            "/_next/static/chunks/main-app-33fc10521f0733a4.js",
+            "/_next/static/chunks/5930-0a7517faad12a649.js",
+            "/_next/static/chunks/9441-5bc7bdd6d4037f75.js",
+            "/_next/static/chunks/1518-823041558f779953.js",
+            "/_next/static/chunks/9094-95036afb52c6fa42.js",
+            "/_next/static/chunks/3981-4aef9ab29528d497.js",
+            "/_next/static/chunks/1527-9d57fe7667d0a582.js",
+            "/_next/static/chunks/app/layout-5f9f21fb358a4caa.js",
+            "/_next/static/chunks/app/error-bd14fcf1cf65474f.js",
+            "/_next/static/chunks/app/page-668008deb42a7e1a.js",
+            "/_next/static/chunks/app/(auth)/login/page-e464456366dec8d0.js",
+            "/_next/static/chunks/app/global-error-67129407ea82d49c.js",
+            "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+            "/_next/static/chunks/webpack-eab1c43c4f96fbb5.js"
+          ]
+        }
+      ],
+      "blockedEgressAttempts": []
+    }
+  ],
+  "network": {
+    "buildProxyPolicy": "allow only fonts.googleapis.com:443 and fonts.gstatic.com:443; deny and record all others; NODE_USE_ENV_PROXY=1",
+    "fontProxyConnections": [],
+    "deniedBuildAttempts": [
+      {
+        "host": "o1.ingest.sentry.io",
+        "port": 443
+      },
+      {
+        "host": "o1.ingest.sentry.io",
+        "port": 443
+      },
+      {
+        "host": "o1.ingest.sentry.io",
+        "port": 443
+      },
+      {
+        "host": "o1.ingest.sentry.io",
+        "port": 443
+      },
+      {
+        "host": "o1.ingest.sentry.io",
+        "port": 443
+      },
+      {
+        "host": "o1.ingest.sentry.io",
+        "port": 443
+      }
+    ],
+    "interpretation": "No public Google font network request occurred; six Sentry ingest connection attempts were denied. Runtime check had zero blocked egress attempts."
+  },
+  "artifacts": {
+    "buildId": "rTxqHisr3zO3jgLrcC-MD",
+    "sriManifestPath": ".next/server/subresource-integrity-manifest.json",
+    "manifestCount": 322,
+    "existingEntries": 256,
+    "matchingExistingEntries": 255,
+    "missingCount": 66,
+    "missingFiles": [
+      {
+        "path": "static/chunks/main-d476c45ca31d8308.js.map",
+        "exists": false,
+        "expected": "sha256-LTtwSorB5MZIIbFINxhbfcprImcGeADqMhiYhGawQ0c="
+      },
+      {
+        "path": "static/chunks/main-app-33fc10521f0733a4.js.map",
+        "exists": false,
+        "expected": "sha256-heMpJr2baNCoojfGWr81iFkFxRSBleq1VneeGMxgVCA="
+      },
+      {
+        "path": "static/chunks/app/not-found-ae8c51587cad59f3.js.map",
+        "exists": false,
+        "expected": "sha256-0pJNpVUhDl2hJGXl+wxAWMt4DKh7YUWtB6IGR9+fI2Q="
+      },
+      {
+        "path": "static/chunks/app/layout-5f9f21fb358a4caa.js.map",
+        "exists": false,
+        "expected": "sha256-k4D/1je0oFotIr/fFXgmi7N0Smi9suYKBJdhu0ci9Dc="
+      },
+      {
+        "path": "static/chunks/app/error-bd14fcf1cf65474f.js.map",
+        "exists": false,
+        "expected": "sha256-fPaoyYUuztChf2RBRbU7Rmq/VHzZwnguU4+fAwZx280="
+      },
+      {
+        "path": "static/chunks/app/global-error-67129407ea82d49c.js.map",
+        "exists": false,
+        "expected": "sha256-uqbAn+xovqVsSzS9ae65arFE9W0wGu4poOcRbtnArnQ="
+      },
+      {
+        "path": "static/chunks/app/about/page-66b41ae58507624e.js.map",
+        "exists": false,
+        "expected": "sha256-CuCkDNQxFEssRWUNwEkgVHSQ09vTYRodTXpTSl9bY7A="
+      },
+      {
+        "path": "static/chunks/app/account/deletion/page-aaf29e668507b598.js.map",
+        "exists": false,
+        "expected": "sha256-02vz74Ex6LG1C+D9owBiWBfEjabEwkmWirNU1UYto9o="
+      },
+      {
+        "path": "static/chunks/app/demo-review-booster/page-09975f14a79f8fc6.js.map",
+        "exists": false,
+        "expected": "sha256-szoc0zH8YubK7k2P4w5MkwW8kfAw0UeIx2d/xCxVzVc="
+      },
+      {
+        "path": "static/chunks/app/demo-review-replies/page-feea2d8db0d74187.js.map",
+        "exists": false,
+        "expected": "sha256-ctBtbX/rt6ruY/eOa9yoeiTtSyUsq8NHjLudg+QzHgg="
+      },
+      {
+        "path": "static/chunks/app/demo/page-45fde02d8ab97938.js.map",
+        "exists": false,
+        "expected": "sha256-YOwbXourske7SMn2YqmLcy74jq6tXcFYm2rhggUDtWM="
+      },
+      {
+        "path": "static/chunks/app/free-audit/page-8b2f31213f0c0312.js.map",
+        "exists": false,
+        "expected": "sha256-NO6Xst0i46Npsit6t4OjxcSsptP67QjzMmnlODrlyZ4="
+      },
+      {
+        "path": "static/chunks/app/legal/page-d488944e9bed3ad6.js.map",
+        "exists": false,
+        "expected": "sha256-LgrLX68nIE9wah3VnuhFusYPfv6mv49+SqQL/PvEFk8="
+      },
+      {
+        "path": "static/chunks/app/local-seo/page-681ced91c453ec18.js.map",
+        "exists": false,
+        "expected": "sha256-U97a9iA79mxdD/GvgamO8OIeWPRKRZZ+gZTwinJlk8k="
+      },
+      {
+        "path": "static/chunks/app/pricing/page-8cf92e6616787f1a.js.map",
+        "exists": false,
+        "expected": "sha256-z6E1CcSynlNHjQcEB+8RB9ycifZIxp5ZYng95JorDdI="
+      },
+      {
+        "path": "static/chunks/app/page-668008deb42a7e1a.js.map",
+        "exists": false,
+        "expected": "sha256-JzVI9kbQDGNBB+3ReghYg+lZHdAmTgWkwal+qvLO+3o="
+      },
+      {
+        "path": "static/chunks/app/privacy/page-09653fd811f0b166.js.map",
+        "exists": false,
+        "expected": "sha256-o5gp5eHfcUbNiwQXzYX+a7JtG12TRtkSc1VuMLfdDnk="
+      },
+      {
+        "path": "static/chunks/app/review-booster/page-af75735ca95e4477.js.map",
+        "exists": false,
+        "expected": "sha256-zyz5cPLopmHWFCOIBtW3AaQshADmt2BIUNvLdbHn5fk="
+      },
+      {
+        "path": "static/chunks/app/review-replies/page-8284e76560f1f5da.js.map",
+        "exists": false,
+        "expected": "sha256-TT3T7ETiHL/grfW53yDM6gO0tXKLK7YupGhEH1l9MLs="
+      },
+      {
+        "path": "static/chunks/app/team/invite/[token]/page-9e00a1806c5e12c0.js.map",
+        "exists": false,
+        "expected": "sha256-biflZO3DlSqIIWf8h5z28Zm/KwXcQup+MpoNG2z9H6I="
+      },
+      {
+        "path": "static/chunks/app/terms/page-c8df08627962f13c.js.map",
+        "exists": false,
+        "expected": "sha256-9gVzMh/8QTSjMlddJphECtKeZZ63TLoKxzeEM++lW1Q="
+      },
+      {
+        "path": "static/chunks/app/(auth)/forgot-password/page-3d73cf041b27ee16.js.map",
+        "exists": false,
+        "expected": "sha256-huB2LM3OKDxqKM/ajAuemJnR74+bNiJoUMe0y2ZI3sk="
+      },
+      {
+        "path": "static/chunks/app/(auth)/login/page-e464456366dec8d0.js.map",
+        "exists": false,
+        "expected": "sha256-YrXTVp9uvaq8QhMNeVSJTNFj8Wp5LmxNV6zk4DnWnCo="
+      },
+      {
+        "path": "static/chunks/app/(auth)/resend-verification/page-03526b820248527f.js.map",
+        "exists": false,
+        "expected": "sha256-/TPGG5ogGNElalYOeSKE/CndVXtmLlmF3exHQnf0LUI="
+      },
+      {
+        "path": "static/chunks/app/(auth)/reset-password/page-85555f53eb41e535.js.map",
+        "exists": false,
+        "expected": "sha256-f3wqiXMhpE8/zprCaYCcLVHM/oznGVOUoRjgONfsClM="
+      },
+      {
+        "path": "static/chunks/app/(auth)/signup/page-4b73fdb2488a8427.js.map",
+        "exists": false,
+        "expected": "sha256-qnKYZlXJXpl4hrsHtf85HCB6fxW1Iole4e9n89DQSIo="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/layout-376f5cf29b1eac3d.js.map",
+        "exists": false,
+        "expected": "sha256-mjbaV1iKM/LQODb4W/ZTYXD2/YC1Bc/1/nzCOLsN0bU="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/error-50bacfdf84ee9137.js.map",
+        "exists": false,
+        "expected": "sha256-pXKYojCqaUOu9dqM17cvSQAOeqGD1KOXeJyw1lpq2v0="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/new/page-9e17f968b3de4860.js.map",
+        "exists": false,
+        "expected": "sha256-kqWP4hi/tazrIjGegtoMvBiB+fhfsY0qRDNR5JUSjtA="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/page-815fbc3c3d962531.js.map",
+        "exists": false,
+        "expected": "sha256-9ovjPhY/MRq2lC2w84JgNZ8pPNNTkAqDyBsJDkhiobY="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/settings/page-20a005d1807b20db.js.map",
+        "exists": false,
+        "expected": "sha256-bRfkJFPeaWDG7qhFRWE2y7lOYWglKXsu3pSRN/GquPk="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/upload/page-776fd781814548dd.js.map",
+        "exists": false,
+        "expected": "sha256-nDaXN4Kk9egGj4HN62niHNjyyUR4HXsY4kypFjZoU4Q="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/billing/page-5be86df9b73ec8ff.js.map",
+        "exists": false,
+        "expected": "sha256-qgTIZXrX6H6nYDCmTPwEOYdY3mIJKMXa3GYyl0gDvPM="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/page-74d4b50ea0a1f41f.js.map",
+        "exists": false,
+        "expected": "sha256-fAtXq/BiELP7jlXmxNaUkbZ0gRciRj1eQzU+mcsxXLQ="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/layout-7196c08a209f2fdf.js.map",
+        "exists": false,
+        "expected": "sha256-FCuUrhKcH2gO/Si2impZXVkhuWZYRbGXvCXeth/9nLQ="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/google-connection/page-d2ee15995fa87dbb.js.map",
+        "exists": false,
+        "expected": "sha256-Gz7WK1aWsN+kgmyuJIeVOXHeuHsWO0rjGUDppNTmt1k="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/page-0fe5bd0e20a3fd03.js.map",
+        "exists": false,
+        "expected": "sha256-4ji5OPWhCiSGjMEjOm/A8U8FB1iqKKcHtbtd87n10XQ="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/reviews/page-d7e92c55f85b719b.js.map",
+        "exists": false,
+        "expected": "sha256-f1yIIeCHQeX7Ygeha7NVSksgE4IW+4LIpUkXjjwoS9Y="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/settings/page-e03c61dc90194c51.js.map",
+        "exists": false,
+        "expected": "sha256-XX3MHQ9L30IOjLpVj6GvaX2G2dquzsuM47ezhFRBrfs="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/layout-7c6e8a707bd1e63b.js.map",
+        "exists": false,
+        "expected": "sha256-/4gd08v0V07UCAFlUBUeWdJ/ECYCDpS07Un+GNP+8YE="
+      },
+      {
+        "path": "static/chunks/webpack-eab1c43c4f96fbb5.js.map",
+        "exists": false,
+        "expected": "sha256-9UZHPhqYwKkbQFo2MP41qKddwYaw+W82sD3ZNXqN3jw="
+      },
+      {
+        "path": "static/chunks/5563.a7e494931ec86cf7.js.map",
+        "exists": false,
+        "expected": "sha256-T+U6AAM5++VyNFAqyYUX9JT6bEKP/SKX8aayAqa15mk="
+      },
+      {
+        "path": "static/chunks/971.51d5586ac9dca9f9.js.map",
+        "exists": false,
+        "expected": "sha256-NE2/RYp1/yPQ7a9J9gkugxsynIRGz/vb4m8lGbfbNkQ="
+      },
+      {
+        "path": "static/chunks/3342.e27e173243d6e3cb.js.map",
+        "exists": false,
+        "expected": "sha256-JZbuWEYqBCBpJV3QopyjI90TanVR+NQ4IhQagFsgrNI="
+      },
+      {
+        "path": "static/chunks/3684.4ae1431a432f9400.js.map",
+        "exists": false,
+        "expected": "sha256-njcQ9Bpk95QKzlw7m2k/eoZ+wpfKX0HmhAGV9BoCMVs="
+      },
+      {
+        "path": "static/css/27f0ccbdac66f318.css.map",
+        "exists": false,
+        "expected": "sha256-2FBz0S3o4S8DI+uDscl/CsFIsVihk89evhL3fa82EMk="
+      },
+      {
+        "path": "static/chunks/framework-e697163c1446e434.js.map",
+        "exists": false,
+        "expected": "sha256-edvStr9pkRrJivgsDsKVLmy4qdTnGTSntg/2skzVGUA="
+      },
+      {
+        "path": "static/chunks/4a7b0c69.7000e687e988fab4.js.map",
+        "exists": false,
+        "expected": "sha256-pVpsmpd0nLHuPnu0Maq1DiG30R43BvpHENU93q6gGdM="
+      },
+      {
+        "path": "static/chunks/5d015edf.fa1c4c43c49bc3c5.js.map",
+        "exists": false,
+        "expected": "sha256-1dHEUZljTTB7FM7mwf83UZAqro1mKtxsPMHodWyxwpU="
+      },
+      {
+        "path": "static/chunks/5f8dfda4.207a0a6a19fd2f49.js.map",
+        "exists": false,
+        "expected": "sha256-oVQ8PvHgqV6rBBeGxC9B+jsTLg6WFjjCmcjr4qfsY40="
+      },
+      {
+        "path": "static/chunks/dc9729d2.143c6edf6c64aee1.js.map",
+        "exists": false,
+        "expected": "sha256-bP72e5qx4scuXTkkkpEefbzjYtSFGhw/uFyUgjjiIUM="
+      },
+      {
+        "path": "static/chunks/4bd1b696-5ab16a6c4e2cbd21.js.map",
+        "exists": false,
+        "expected": "sha256-Sxh6yK7f1CYKT9jkSoggYa+bZ1LghNa7lf+r4BJQPLY="
+      },
+      {
+        "path": "static/chunks/5930-0a7517faad12a649.js.map",
+        "exists": false,
+        "expected": "sha256-Znoo7jKTA4cLRpPhJYnRTrwu88aNBxbnaftwvsjdHyI="
+      },
+      {
+        "path": "static/chunks/9441-5bc7bdd6d4037f75.js.map",
+        "exists": false,
+        "expected": "sha256-b8VfXjtx/NagVcVtxVvOEMzAMs6HOG8r02mV0m9QE9Y="
+      },
+      {
+        "path": "static/chunks/1970-0e740bf6ccb7c5c2.js.map",
+        "exists": false,
+        "expected": "sha256-PJ5vw9PaeBf+0dTRJBO329d8R1XI1jfPT2uqsPfVJx0="
+      },
+      {
+        "path": "static/chunks/1518-823041558f779953.js.map",
+        "exists": false,
+        "expected": "sha256-436GUPf39Lk9eosWeTJPhSINlgsTjEfzuKvziLxOZmw="
+      },
+      {
+        "path": "static/chunks/5815-413c1359196658d8.js.map",
+        "exists": false,
+        "expected": "sha256-NS1QA4RTH3bWkE77bRForC13xScfuf3JU+66ge5Hlro="
+      },
+      {
+        "path": "static/chunks/9094-95036afb52c6fa42.js.map",
+        "exists": false,
+        "expected": "sha256-VZkK1TmVcHPdGwD1+zjP8yWHtnHsUYMc4TrFYe0SnXI="
+      },
+      {
+        "path": "static/chunks/3981-4aef9ab29528d497.js.map",
+        "exists": false,
+        "expected": "sha256-UU6swBw+EybRsaewxpjc6kP6yPfyH05NTMXPpITIzYQ="
+      },
+      {
+        "path": "static/chunks/1527-9d57fe7667d0a582.js.map",
+        "exists": false,
+        "expected": "sha256-8UByn5YMIh0EBvye34juP5GMyIa3JH69qqR6FQB1R+A="
+      },
+      {
+        "path": "static/chunks/9826-f01c0143669cade1.js.map",
+        "exists": false,
+        "expected": "sha256-s5ETaOrwP4JhN3kDLdjdL8pOAS5bmU+ASukrH5T4v+U="
+      },
+      {
+        "path": "static/chunks/9522-c0e9a1659a5fffc8.js.map",
+        "exists": false,
+        "expected": "sha256-57h7oOeNT2ILM77Ts8LFJ+pNwt1gH3A5EpKYLjZR850="
+      },
+      {
+        "path": "static/chunks/5326-34ae642e673b3acb.js.map",
+        "exists": false,
+        "expected": "sha256-Lc2UwkdTw4hvj69K3pAFxys48K7XvhSsXxtpgFcFgD4="
+      },
+      {
+        "path": "static/chunks/2914-4d23b1dd9fbdf5db.js.map",
+        "exists": false,
+        "expected": "sha256-ZesFSelKcVTtRzgfl5PPfgj/E1rJuUEnoYNPwPDx9Z0="
+      },
+      {
+        "path": "static/chunks/743-296ce6d05db5355c.js.map",
+        "exists": false,
+        "expected": "sha256-It1RMHa64DJ/JEofpUBq/TiNzcz5AaN/0zjusXkDYsk="
+      },
+      {
+        "path": "static/chunks/6126-b8275bb839f21071.js.map",
+        "exists": false,
+        "expected": "sha256-OQJjrrhc//g58FvAhA3pemtpKqRVlthTr/9JbcqGbiw="
+      }
+    ],
+    "digestMismatches": [
+      {
+        "path": "static/rTxqHisr3zO3jgLrcC-MD/_ssgManifest.js",
+        "exists": true,
+        "expected": "sha256-b1tKoA0vjWrtmTW0cYBr96zvRk0MHTkCYOX+J/gAxn4=",
+        "actual": "sha256-Z49s4suAsf5y/GfnQSvm4qtq2ggxEbZPfEDTXjy6XgA=",
+        "match": false
+      }
+    ],
+    "allManifestEntries": [
+      {
+        "path": "static/media/93a6e477e1480c92-s.woff2",
+        "exists": true,
+        "expected": "sha256-6haUjUqRt3Ih8RmtJ9SsenWByYz5kHEgR/iaUxpJ7yg=",
+        "actual": "sha256-6haUjUqRt3Ih8RmtJ9SsenWByYz5kHEgR/iaUxpJ7yg=",
+        "match": true
+      },
+      {
+        "path": "static/media/c7e0cf6c760983e7-s.woff2",
+        "exists": true,
+        "expected": "sha256-oiyZeolDd/NtgckEFj4MBfu80y8Moue+7bhrOb4SlqE=",
+        "actual": "sha256-oiyZeolDd/NtgckEFj4MBfu80y8Moue+7bhrOb4SlqE=",
+        "match": true
+      },
+      {
+        "path": "static/media/9d5a263311222317-s.p.woff2",
+        "exists": true,
+        "expected": "sha256-T9SLLBqyciDnHxX5kFUCYbNSRcO9/Y2AJbS9rARZ7i0=",
+        "actual": "sha256-T9SLLBqyciDnHxX5kFUCYbNSRcO9/Y2AJbS9rARZ7i0=",
+        "match": true
+      },
+      {
+        "path": "static/media/ba9851c3c22cd980-s.woff2",
+        "exists": true,
+        "expected": "sha256-/MypGP6kAInaytxwRYYTFNGmvJHx8yPMHusi682zIbU=",
+        "actual": "sha256-/MypGP6kAInaytxwRYYTFNGmvJHx8yPMHusi682zIbU=",
+        "match": true
+      },
+      {
+        "path": "static/media/21350d82a1f187e9-s.woff2",
+        "exists": true,
+        "expected": "sha256-rr8qtKTOaBDXPBrHvnyvtOXsTO4tbbX7PglpF0fsS9Y=",
+        "actual": "sha256-rr8qtKTOaBDXPBrHvnyvtOXsTO4tbbX7PglpF0fsS9Y=",
+        "match": true
+      },
+      {
+        "path": "static/media/c5fe6dc8356a8c31-s.woff2",
+        "exists": true,
+        "expected": "sha256-ouLHg8pvnCBIboHnKieSA+hnMLv48B/2pe6dvQnhwnE=",
+        "actual": "sha256-ouLHg8pvnCBIboHnKieSA+hnMLv48B/2pe6dvQnhwnE=",
+        "match": true
+      },
+      {
+        "path": "static/media/19cfc7226ec3afaa-s.woff2",
+        "exists": true,
+        "expected": "sha256-Rt1M3KWMJq6HzGknZXv4Oy6Kv8Of/QqxduMBqNKNIr8=",
+        "actual": "sha256-Rt1M3KWMJq6HzGknZXv4Oy6Kv8Of/QqxduMBqNKNIr8=",
+        "match": true
+      },
+      {
+        "path": "static/media/df0a9ae256c0569c-s.woff2",
+        "exists": true,
+        "expected": "sha256-jbAP9Gxnsizai+2GWs9wd2UcrI0oQdW0CYBVa0iWGTE=",
+        "actual": "sha256-jbAP9Gxnsizai+2GWs9wd2UcrI0oQdW0CYBVa0iWGTE=",
+        "match": true
+      },
+      {
+        "path": "static/media/8e9860b6e62d6359-s.woff2",
+        "exists": true,
+        "expected": "sha256-oo6208y1NK4MlMqZk3HfAkqrYLCMPIpXIO6eMvoPqqI=",
+        "actual": "sha256-oo6208y1NK4MlMqZk3HfAkqrYLCMPIpXIO6eMvoPqqI=",
+        "match": true
+      },
+      {
+        "path": "static/media/e4af272ccee01ff0-s.p.woff2",
+        "exists": true,
+        "expected": "sha256-yUB2RZPQ/l1Za+MnynVYhV4BgDn7eFCaohkh/TZEw+Q=",
+        "actual": "sha256-yUB2RZPQ/l1Za+MnynVYhV4BgDn7eFCaohkh/TZEw+Q=",
+        "match": true
+      },
+      {
+        "path": "static/media/013b72fa676f92e0-s.woff2",
+        "exists": true,
+        "expected": "sha256-4n9lfjjVKIe6o7ay+BK++T3901bwgQ5A7dTuKEzH6fY=",
+        "actual": "sha256-4n9lfjjVKIe6o7ay+BK++T3901bwgQ5A7dTuKEzH6fY=",
+        "match": true
+      },
+      {
+        "path": "static/media/b9408752a0c24fb9-s.woff2",
+        "exists": true,
+        "expected": "sha256-dbO+2+vDXzR8CuO0FqqHGUFVU1fnsPg3Z+tZh4dVie0=",
+        "actual": "sha256-dbO+2+vDXzR8CuO0FqqHGUFVU1fnsPg3Z+tZh4dVie0=",
+        "match": true
+      },
+      {
+        "path": "static/media/65f03d54ccadf4a8-s.woff2",
+        "exists": true,
+        "expected": "sha256-1n5KlLpJhjX3ZN3KfR7EJx9WQvAy6yS0JnZEgPZvhJc=",
+        "actual": "sha256-1n5KlLpJhjX3ZN3KfR7EJx9WQvAy6yS0JnZEgPZvhJc=",
+        "match": true
+      },
+      {
+        "path": "static/media/e038a29029a234f2-s.woff2",
+        "exists": true,
+        "expected": "sha256-FuHUi23SnrJArsXbNhhOsYKTPAgs1D3n81r2htWAh9I=",
+        "actual": "sha256-FuHUi23SnrJArsXbNhhOsYKTPAgs1D3n81r2htWAh9I=",
+        "match": true
+      },
+      {
+        "path": "static/media/2b5b02fc7e511755-s.woff2",
+        "exists": true,
+        "expected": "sha256-dFmUtc2VDsIBtmUmN18FfVQIR8zPxw9PJPX1cdJtOSM=",
+        "actual": "sha256-dFmUtc2VDsIBtmUmN18FfVQIR8zPxw9PJPX1cdJtOSM=",
+        "match": true
+      },
+      {
+        "path": "static/media/7d4881bb7e1bf84d-s.p.woff2",
+        "exists": true,
+        "expected": "sha256-Xz1q1g8p1stwhBTsaIcWPWO/GXN371QX0kg/8xrObDs=",
+        "actual": "sha256-Xz1q1g8p1stwhBTsaIcWPWO/GXN371QX0kg/8xrObDs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/polyfills-42372ed130431b0a.js",
+        "exists": true,
+        "expected": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "actual": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "match": true
+      },
+      {
+        "path": "react-loadable-manifest.json",
+        "exists": true,
+        "expected": "sha256-EkF6sed4CRL7OsxrllpnH5hk6cBAMvwbL4ZDyPhRyg8=",
+        "actual": "sha256-EkF6sed4CRL7OsxrllpnH5hk6cBAMvwbL4ZDyPhRyg8=",
+        "match": true
+      },
+      {
+        "path": "server/middleware-react-loadable-manifest.js",
+        "exists": true,
+        "expected": "sha256-FcDgLHFZj8lsy48I7f7ny+Vj82ZXLSCZtWQonTrfMC0=",
+        "actual": "sha256-FcDgLHFZj8lsy48I7f7ny+Vj82ZXLSCZtWQonTrfMC0=",
+        "match": true
+      },
+      {
+        "path": "static/rTxqHisr3zO3jgLrcC-MD/_ssgManifest.js",
+        "exists": true,
+        "expected": "sha256-b1tKoA0vjWrtmTW0cYBr96zvRk0MHTkCYOX+J/gAxn4=",
+        "actual": "sha256-Z49s4suAsf5y/GfnQSvm4qtq2ggxEbZPfEDTXjy6XgA=",
+        "match": false
+      },
+      {
+        "path": "build-manifest.json",
+        "exists": true,
+        "expected": "sha256-wEqglXUsOExSQq5Z/Y0SHm68SYx84cwhLUygeP/bX7M=",
+        "actual": "sha256-wEqglXUsOExSQq5Z/Y0SHm68SYx84cwhLUygeP/bX7M=",
+        "match": true
+      },
+      {
+        "path": "server/middleware-build-manifest.js",
+        "exists": true,
+        "expected": "sha256-BTxmvhFWxuy+nLjBD1twV0TFNSmC//8zDFVnJGHFNzQ=",
+        "actual": "sha256-BTxmvhFWxuy+nLjBD1twV0TFNSmC//8zDFVnJGHFNzQ=",
+        "match": true
+      },
+      {
+        "path": "static/rTxqHisr3zO3jgLrcC-MD/_buildManifest.js",
+        "exists": true,
+        "expected": "sha256-Yz/oxHO2M5muPpjMZwEkEglPxyq0iL/nfXfABgWfMJ0=",
+        "actual": "sha256-Yz/oxHO2M5muPpjMZwEkEglPxyq0iL/nfXfABgWfMJ0=",
+        "match": true
+      },
+      {
+        "path": "server/next-font-manifest.js",
+        "exists": true,
+        "expected": "sha256-LA9bu3nQff6kBRRqYtfhWnqeiQ0p44t9smMfz25IDag=",
+        "actual": "sha256-LA9bu3nQff6kBRRqYtfhWnqeiQ0p44t9smMfz25IDag=",
+        "match": true
+      },
+      {
+        "path": "server/next-font-manifest.json",
+        "exists": true,
+        "expected": "sha256-km53LTSlPypNmxYHHdbqd7BRsresxJ2RZXI96+P7vg8=",
+        "actual": "sha256-km53LTSlPypNmxYHHdbqd7BRsresxJ2RZXI96+P7vg8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/main-d476c45ca31d8308.js",
+        "exists": true,
+        "expected": "sha256-ICFmv1sqGz5WMALgqz4xzb8wAudIx2A/aFfp98tk0GA=",
+        "actual": "sha256-ICFmv1sqGz5WMALgqz4xzb8wAudIx2A/aFfp98tk0GA=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/main-app-33fc10521f0733a4.js",
+        "exists": true,
+        "expected": "sha256-qJ+lVvYaLuEyIp7jAgJqgFC+Yf0UtCQ6DxLx69JiO2A=",
+        "actual": "sha256-qJ+lVvYaLuEyIp7jAgJqgFC+Yf0UtCQ6DxLx69JiO2A=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/_not-found/page-9f080952a6a5cfac.js",
+        "exists": true,
+        "expected": "sha256-8wI7EaBeJ3MeOwHdHVXkU4PwddXkldgeIMPojHOKe4g=",
+        "actual": "sha256-8wI7EaBeJ3MeOwHdHVXkU4PwddXkldgeIMPojHOKe4g=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/_global-error/page-a6fe4e1e276995c4.js",
+        "exists": true,
+        "expected": "sha256-moA1hV434ezPNq/V1eL8RyPSV/EF176U48KQtKVZDlI=",
+        "actual": "sha256-moA1hV434ezPNq/V1eL8RyPSV/EF176U48KQtKVZDlI=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/not-found-ae8c51587cad59f3.js",
+        "exists": true,
+        "expected": "sha256-DbmFFt3zG1+nPIPxubALHs95Q93a7Sidiy1+n0PK8Fs=",
+        "actual": "sha256-DbmFFt3zG1+nPIPxubALHs95Q93a7Sidiy1+n0PK8Fs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/layout-5f9f21fb358a4caa.js",
+        "exists": true,
+        "expected": "sha256-HMbbOhV/T2uX+JyB8XKLAEf89+TIJdFabe8JSUD4lVw=",
+        "actual": "sha256-HMbbOhV/T2uX+JyB8XKLAEf89+TIJdFabe8JSUD4lVw=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/error-bd14fcf1cf65474f.js",
+        "exists": true,
+        "expected": "sha256-0Z7+iOhhduO/zOgGM9LzakY/1dRC8tgqgOmbw+HoYNw=",
+        "actual": "sha256-0Z7+iOhhduO/zOgGM9LzakY/1dRC8tgqgOmbw+HoYNw=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/global-error-67129407ea82d49c.js",
+        "exists": true,
+        "expected": "sha256-2Svko7dfgOYLtF5Y1DaWWf3yhRX2ZiSLiHGCxJhmD9w=",
+        "actual": "sha256-2Svko7dfgOYLtF5Y1DaWWf3yhRX2ZiSLiHGCxJhmD9w=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/forbidden-79c51669a7a8c1c7.js",
+        "exists": true,
+        "expected": "sha256-wDXRJRg+o513JM8FM9k79DU1IJ5jej8DalyIzotNE9A=",
+        "actual": "sha256-wDXRJRg+o513JM8FM9k79DU1IJ5jej8DalyIzotNE9A=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/unauthorized-cf154cf6a5e45544.js",
+        "exists": true,
+        "expected": "sha256-JcKIaGayqwphg17XU/lSWzdba6mdUoI7AjIvewObIwM=",
+        "actual": "sha256-JcKIaGayqwphg17XU/lSWzdba6mdUoI7AjIvewObIwM=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/app-error-79bfb2d643149d68.js",
+        "exists": true,
+        "expected": "sha256-tl49vrUIH9diBWMl1f1fEosXRUst99H0uiBZnbCeiSs=",
+        "actual": "sha256-tl49vrUIH9diBWMl1f1fEosXRUst99H0uiBZnbCeiSs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/stripe/change-plan/route-8999039d17f45f5b.js",
+        "exists": true,
+        "expected": "sha256-zh/3AL8l8fNl5QzQyxISfYcGm4xBBCWxLlwToIjbhX0=",
+        "actual": "sha256-zh/3AL8l8fNl5QzQyxISfYcGm4xBBCWxLlwToIjbhX0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/opengraph-image/route-2ab11c092d0ce156.js",
+        "exists": true,
+        "expected": "sha256-s2VF5QgQAKZvvKoSjLA4MtZuov93q2+hpYVVMd30BU0=",
+        "actual": "sha256-s2VF5QgQAKZvvKoSjLA4MtZuov93q2+hpYVVMd30BU0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/robots.txt/route-e1d0a7a9946ed401.js",
+        "exists": true,
+        "expected": "sha256-wIifxg3Q8/+ybp6kt0sOV1jzP401hJ7Z1gH6uXwHODg=",
+        "actual": "sha256-wIifxg3Q8/+ybp6kt0sOV1jzP401hJ7Z1gH6uXwHODg=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/sitemap.xml/route-f272b59096e7578e.js",
+        "exists": true,
+        "expected": "sha256-vtjVU+40ZnD2AsvHBFQVaVjXeFFDBMbpOLoOkCZER+A=",
+        "actual": "sha256-vtjVU+40ZnD2AsvHBFQVaVjXeFFDBMbpOLoOkCZER+A=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api-public-demo-review-booster/route-85fa85c0f1798ba1.js",
+        "exists": true,
+        "expected": "sha256-fQAe72GAQ1qH1fBWzNSJG7oRgWavnjD9ONhrm+xmjpk=",
+        "actual": "sha256-fQAe72GAQ1qH1fBWzNSJG7oRgWavnjD9ONhrm+xmjpk=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/audit/free-profile/route-36d2c97db6e99dee.js",
+        "exists": true,
+        "expected": "sha256-e3Ms/QenS1jdnH1FzDgKllvhvnvTAmHI+BTENSJYKkY=",
+        "actual": "sha256-e3Ms/QenS1jdnH1FzDgKllvhvnvTAmHI+BTENSJYKkY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/[...nextauth]/route-0f3afac5fd35ec1f.js",
+        "exists": true,
+        "expected": "sha256-B2wclJOJk86OjkyuEs1MtFx7WPz9Utsuzvb3zz03Mg0=",
+        "actual": "sha256-B2wclJOJk86OjkyuEs1MtFx7WPz9Utsuzvb3zz03Mg0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/forgot-password/route-24f3283b9c916d1e.js",
+        "exists": true,
+        "expected": "sha256-KtNvS7m6ntJFufEJpzLnq/WRPUUXksEBBKiic/4qbhk=",
+        "actual": "sha256-KtNvS7m6ntJFufEJpzLnq/WRPUUXksEBBKiic/4qbhk=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/register/route-8b12e82ef8162a60.js",
+        "exists": true,
+        "expected": "sha256-5lcBtnnv8WTyMVxR6Nf9fGpCsGqr/DF2+Qs0vT5Kq5Y=",
+        "actual": "sha256-5lcBtnnv8WTyMVxR6Nf9fGpCsGqr/DF2+Qs0vT5Kq5Y=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/resend-verification/route-c07d029f6d58bd11.js",
+        "exists": true,
+        "expected": "sha256-7ZqJ8jM8Nopuvmc8CJx7auOK30+Wm2hVqkiA4SgD/ec=",
+        "actual": "sha256-7ZqJ8jM8Nopuvmc8CJx7auOK30+Wm2hVqkiA4SgD/ec=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/reset-password/route-47e5fc2ee006dd97.js",
+        "exists": true,
+        "expected": "sha256-eMGvEB6e1qh0fFQI/H2SVi1J57ZrdUP2enjct8DRtBk=",
+        "actual": "sha256-eMGvEB6e1qh0fFQI/H2SVi1J57ZrdUP2enjct8DRtBk=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/signout/route-3cdbce10b976adeb.js",
+        "exists": true,
+        "expected": "sha256-7kObCgPrcro8mwHhbZECk+3Zl1aMRgTURkLiuxcjqGU=",
+        "actual": "sha256-7kObCgPrcro8mwHhbZECk+3Zl1aMRgTURkLiuxcjqGU=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/auth/verify-email/route-7a8d82463f5fc5ed.js",
+        "exists": true,
+        "expected": "sha256-uz0MlUrLhOmURVpkLoo/b6XF1SWb57mH41Ih1w8U6MA=",
+        "actual": "sha256-uz0MlUrLhOmURVpkLoo/b6XF1SWb57mH41Ih1w8U6MA=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/cron/health/route-ca5cb1787c176cd7.js",
+        "exists": true,
+        "expected": "sha256-r34Yd2JY/QIK6s3yX+8pfamTX6w1hSEd5etT4QWh/q0=",
+        "actual": "sha256-r34Yd2JY/QIK6s3yX+8pfamTX6w1hSEd5etT4QWh/q0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/cron/privacy/route-22110932e87115f9.js",
+        "exists": true,
+        "expected": "sha256-fAufosQ4ARKAtvMg6m4cwq1oXh/uwN4HQy+BTiwHne0=",
+        "actual": "sha256-fAufosQ4ARKAtvMg6m4cwq1oXh/uwN4HQy+BTiwHne0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/cron/review-booster/route-379eef867d65dad1.js",
+        "exists": true,
+        "expected": "sha256-fUJE36HkinoaC0EnXK32TJz8NNZ+0bbFJZ8bSodvOXU=",
+        "actual": "sha256-fUJE36HkinoaC0EnXK32TJz8NNZ+0bbFJZ8bSodvOXU=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/csp-report/route-fdee472d5b0597c5.js",
+        "exists": true,
+        "expected": "sha256-mySz1KdZwQ0aapjMeh6ab5RuJphDl2ngiNrspgNV//0=",
+        "actual": "sha256-mySz1KdZwQ0aapjMeh6ab5RuJphDl2ngiNrspgNV//0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/dashboard/summary/route-a540615f7ca66f63.js",
+        "exists": true,
+        "expected": "sha256-/oBJBjWCuymFb/z7tOYl2A45Oez4sDmM1UO7ATBQmLc=",
+        "actual": "sha256-/oBJBjWCuymFb/z7tOYl2A45Oez4sDmM1UO7ATBQmLc=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/cron/review-replies/route-c762f42b120c947d.js",
+        "exists": true,
+        "expected": "sha256-5n1LI26UQBWSx8MmqS4kAlSA7QtFDfuIxlMGR752gto=",
+        "actual": "sha256-5n1LI26UQBWSx8MmqS4kAlSA7QtFDfuIxlMGR752gto=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/feedback/route-55bc21f57904aeda.js",
+        "exists": true,
+        "expected": "sha256-Uq8nQgMMa/I+atg+XzqFZUS15YYW95dfllmerB6ej9U=",
+        "actual": "sha256-Uq8nQgMMa/I+atg+XzqFZUS15YYW95dfllmerB6ej9U=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/connection/route-5ad17aeea8b35581.js",
+        "exists": true,
+        "expected": "sha256-RNRlvdZAGFqlo+r67wQbd0J9c/ZAJwW3xQSdoRo/OiQ=",
+        "actual": "sha256-RNRlvdZAGFqlo+r67wQbd0J9c/ZAJwW3xQSdoRo/OiQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/disconnect/route-2dbe1df56740ff93.js",
+        "exists": true,
+        "expected": "sha256-rKT2TWuwOHBhJ8REU823z/lniytNvXS81ulgfz/Vuis=",
+        "actual": "sha256-rKT2TWuwOHBhJ8REU823z/lniytNvXS81ulgfz/Vuis=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/list/route-e339fe40e2ae0dbf.js",
+        "exists": true,
+        "expected": "sha256-ylQy13CfuXYSiHceQTSq7icCovNfkC8V7o/kr0D9hB4=",
+        "actual": "sha256-ylQy13CfuXYSiHceQTSq7icCovNfkC8V7o/kr0D9hB4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/route-14acf93a9604c71e.js",
+        "exists": true,
+        "expected": "sha256-wn7jiD15h6ahGaRuaMuG/TpaqWobDaULR/QXOoYtpQQ=",
+        "actual": "sha256-wn7jiD15h6ahGaRuaMuG/TpaqWobDaULR/QXOoYtpQQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/selection/route-b8b5c6fc3c408ef8.js",
+        "exists": true,
+        "expected": "sha256-t95adYM7u19VOXHbYvDl97z3Iw2+unguIh7GsJGIgIw=",
+        "actual": "sha256-t95adYM7u19VOXHbYvDl97z3Iw2+unguIh7GsJGIgIw=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/sync/route-a7975503494cd3a9.js",
+        "exists": true,
+        "expected": "sha256-lcTdDINRoFOML+YqkIkST4C8qtL/C8WfTFTomGtUz9c=",
+        "actual": "sha256-lcTdDINRoFOML+YqkIkST4C8qtL/C8WfTFTomGtUz9c=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/oauth/callback/route-09cd4d2908572d47.js",
+        "exists": true,
+        "expected": "sha256-c/69JXXhw9QrCOG7oJMxnzuf0wSZiQwA6KPbwT+kaww=",
+        "actual": "sha256-c/69JXXhw9QrCOG7oJMxnzuf0wSZiQwA6KPbwT+kaww=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/oauth/start/route-533e4ecbbd34c55b.js",
+        "exists": true,
+        "expected": "sha256-7awFXLWR6YUsCeMoekiKQtwW0hFlyds2iZ/Rt6Zfw7Y=",
+        "actual": "sha256-7awFXLWR6YUsCeMoekiKQtwW0hFlyds2iZ/Rt6Zfw7Y=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/replies/route-73e6e46dbbf78266.js",
+        "exists": true,
+        "expected": "sha256-V7LXr7BHFqsghAIV6adfotIsPOj+AHeEnI6TnHTxcGs=",
+        "actual": "sha256-V7LXr7BHFqsghAIV6adfotIsPOj+AHeEnI6TnHTxcGs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/reviews/process-pending/route-b7a093c276c66cd6.js",
+        "exists": true,
+        "expected": "sha256-1QPY5lelR3fGYrN6pmLiBMfrRswyPDR/daK4y8SaHkM=",
+        "actual": "sha256-1QPY5lelR3fGYrN6pmLiBMfrRswyPDR/daK4y8SaHkM=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/google/reviews/sync/route-afb71c4fbb9cf405.js",
+        "exists": true,
+        "expected": "sha256-LO4nyj4VV3Vdv+eyhGIYpWSsiWwWv6ve/wgS68e1ULg=",
+        "actual": "sha256-LO4nyj4VV3Vdv+eyhGIYpWSsiWwWv6ve/wgS68e1ULg=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/leads/route-77cb73c87469b5cd.js",
+        "exists": true,
+        "expected": "sha256-/Z4bjmCxbtDtKRsZ6fAzOG67k/j6pWk1O7kMuL4DWu4=",
+        "actual": "sha256-/Z4bjmCxbtDtKRsZ6fAzOG67k/j6pWk1O7kMuL4DWu4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/privacy/delete/route-bd3c4e66678437ea.js",
+        "exists": true,
+        "expected": "sha256-Lb09Qi+Zjp/f6SUdiVmVMva9Pom+uVItRy8LUzhXVEI=",
+        "actual": "sha256-Lb09Qi+Zjp/f6SUdiVmVMva9Pom+uVItRy8LUzhXVEI=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/openai/review-reply/route-cc44e4fc526be628.js",
+        "exists": true,
+        "expected": "sha256-VBdhCGaeMgSs8VVBz4Xd3kiC9q+bqO2gWpAJ5vxbKAU=",
+        "actual": "sha256-VBdhCGaeMgSs8VVBz4Xd3kiC9q+bqO2gWpAJ5vxbKAU=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/privacy/export/route-4bfcec5b371dbe58.js",
+        "exists": true,
+        "expected": "sha256-RO4QKhjFyA4g0y7UQMrg6+ENUbeWwZ+EtN73wlgQFeQ=",
+        "actual": "sha256-RO4QKhjFyA4g0y7UQMrg6+ENUbeWwZ+EtN73wlgQFeQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/projects/[id]/route-deb2d802b43cee78.js",
+        "exists": true,
+        "expected": "sha256-ZqWanQfXe1lTTt8aJFrKsEOdNqWP627v8FSWugYS5rQ=",
+        "actual": "sha256-ZqWanQfXe1lTTt8aJFrKsEOdNqWP627v8FSWugYS5rQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/projects/route-cc0a1000bb9c0aeb.js",
+        "exists": true,
+        "expected": "sha256-vT7Wwm4sWub+iiBNK1Xa6rcewOtzev/wfNcrAHD2uh8=",
+        "actual": "sha256-vT7Wwm4sWub+iiBNK1Xa6rcewOtzev/wfNcrAHD2uh8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/booking-credentials/route-ee4a8106683f16f2.js",
+        "exists": true,
+        "expected": "sha256-BEXwTAQgnLkqzrFiqgk89PFw1pph5drcSooOe7BSOVQ=",
+        "actual": "sha256-BEXwTAQgnLkqzrFiqgk89PFw1pph5drcSooOe7BSOVQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/deliveries/[deliveryId]/reconcile/route-da5a6dfd289bf239.js",
+        "exists": true,
+        "expected": "sha256-xHDXCzAmW1hTH1/W4ZkO494M43uu0TGRwV2JwZu6fUQ=",
+        "actual": "sha256-xHDXCzAmW1hTH1/W4ZkO494M43uu0TGRwV2JwZu6fUQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/run-now/route-534afb79f172899c.js",
+        "exists": true,
+        "expected": "sha256-fMzopFrTKwS2uYlrmTF+PZOc4BCZUCS4mOotSckASic=",
+        "actual": "sha256-fMzopFrTKwS2uYlrmTF+PZOc4BCZUCS4mOotSckASic=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/settings/route-3de92087caffb2d9.js",
+        "exists": true,
+        "expected": "sha256-QPKYjCBEDWmqA5ADAStDSKCPhC7n2DW4f+OkZioGuAc=",
+        "actual": "sha256-QPKYjCBEDWmqA5ADAStDSKCPhC7n2DW4f+OkZioGuAc=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/unsubscribe/route-5e7115ebbe2d7ba6.js",
+        "exists": true,
+        "expected": "sha256-I+IljTN0RGDyVD5BVENq+csI0UbQPxuEIXvuMcUwv14=",
+        "actual": "sha256-I+IljTN0RGDyVD5BVENq+csI0UbQPxuEIXvuMcUwv14=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/upload/route-182c29934ead694a.js",
+        "exists": true,
+        "expected": "sha256-gR/p7tpgbWSGsyoMxZb5LHZXezgQ1Op8eUJjMFPqGak=",
+        "actual": "sha256-gR/p7tpgbWSGsyoMxZb5LHZXezgQ1Op8eUJjMFPqGak=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/visits/route-c4e12af29dad08c1.js",
+        "exists": true,
+        "expected": "sha256-wHeWYdNy+w5jZ8RzRB0xxw+mmECdEbKC7ZVQFIdvj/g=",
+        "actual": "sha256-wHeWYdNy+w5jZ8RzRB0xxw+mmECdEbKC7ZVQFIdvj/g=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/reviews/draft/route-06d4e13eb5dc34b0.js",
+        "exists": true,
+        "expected": "sha256-K0rXexIoe8vF4jwAc9cBzhpPj6u94KKc38c2WhOrF78=",
+        "actual": "sha256-K0rXexIoe8vF4jwAc9cBzhpPj6u94KKc38c2WhOrF78=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/reviews/route-746b313f2334d62e.js",
+        "exists": true,
+        "expected": "sha256-FHht0mgOKuOzholbWrvoMPiMGZV75xvSsbYPF+mvMQs=",
+        "actual": "sha256-FHht0mgOKuOzholbWrvoMPiMGZV75xvSsbYPF+mvMQs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/settings/reply/route-bc7cc688b0c30ae0.js",
+        "exists": true,
+        "expected": "sha256-WTCJv+AkU37pn/dZKQzUdjuQzoGPL33VAE3HBqpjRkQ=",
+        "actual": "sha256-WTCJv+AkU37pn/dZKQzUdjuQzoGPL33VAE3HBqpjRkQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/stripe/portal/route-8770ea5b1fec2178.js",
+        "exists": true,
+        "expected": "sha256-0I2bequPiUX5rUeTPVPX5u0hQCgrYwsfXn0p7f7xicw=",
+        "actual": "sha256-0I2bequPiUX5rUeTPVPX5u0hQCgrYwsfXn0p7f7xicw=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/stripe/webhook/route-a85ce79c115b94ee.js",
+        "exists": true,
+        "expected": "sha256-63booxadXkGADdIAndQFmYOnxgRA2wRN+Xf6PwVm8FA=",
+        "actual": "sha256-63booxadXkGADdIAndQFmYOnxgRA2wRN+Xf6PwVm8FA=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/stripe/checkout/route-bbe3a6a85e0a030a.js",
+        "exists": true,
+        "expected": "sha256-GLP6g90eSNxSSS75J0IvaGlphWLM98b0v9av3s7WZiA=",
+        "actual": "sha256-GLP6g90eSNxSSS75J0IvaGlphWLM98b0v9av3s7WZiA=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/team/invitations/[token]/route-02d89b62eb1547af.js",
+        "exists": true,
+        "expected": "sha256-v0XtYi1+ODkPoccJ0d4ncIhCqBKQnPGcjxbnLAIhkbw=",
+        "actual": "sha256-v0XtYi1+ODkPoccJ0d4ncIhCqBKQnPGcjxbnLAIhkbw=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/team/members/[userId]/route-f665eb9f2f465356.js",
+        "exists": true,
+        "expected": "sha256-pOkPl3XhzquLLI6rHHpWj4i1D7f/eL73PXLD7teau/c=",
+        "actual": "sha256-pOkPl3XhzquLLI6rHHpWj4i1D7f/eL73PXLD7teau/c=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/team/route-5ed9f8bd456dc282.js",
+        "exists": true,
+        "expected": "sha256-+jBf8NNUJjx/UlOWTdouKjyjpV8J9jblsMnHAB4bz9c=",
+        "actual": "sha256-+jBf8NNUJjx/UlOWTdouKjyjpV8J9jblsMnHAB4bz9c=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/user/plan/route-de9c9ef03d44fe16.js",
+        "exists": true,
+        "expected": "sha256-XzvI8iso/1/MdgdB5i8pxrpVBm8kGo93meyfpe7l+Hc=",
+        "actual": "sha256-XzvI8iso/1/MdgdB5i8pxrpVBm8kGo93meyfpe7l+Hc=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/webhooks/booking/route-a7e0e03ef75d1ce7.js",
+        "exists": true,
+        "expected": "sha256-jICaruYTsDhVejS7bOS8Dssgya+WU/X8s1BqYDM4uCo=",
+        "actual": "sha256-jICaruYTsDhVejS7bOS8Dssgya+WU/X8s1BqYDM4uCo=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/api/webhooks/resend/route-46ae44dd1c368bb8.js",
+        "exists": true,
+        "expected": "sha256-p3+r0OOYM0ep/L09H3Jp+St6LuMLmh81hGE0mRBCdNk=",
+        "actual": "sha256-p3+r0OOYM0ep/L09H3Jp+St6LuMLmh81hGE0mRBCdNk=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/r/[token]/route-b5d3f0814398225f.js",
+        "exists": true,
+        "expected": "sha256-tG4YbU2YaXRdHmrnLCRkou15iZeOPy1Bh38IZERjfS0=",
+        "actual": "sha256-tG4YbU2YaXRdHmrnLCRkou15iZeOPy1Bh38IZERjfS0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/about/page-66b41ae58507624e.js",
+        "exists": true,
+        "expected": "sha256-zaNaqGRYORFhb64zz7Ou9pxEfSk7erVZO0Pqtj/0YUQ=",
+        "actual": "sha256-zaNaqGRYORFhb64zz7Ou9pxEfSk7erVZO0Pqtj/0YUQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/account/deletion/page-aaf29e668507b598.js",
+        "exists": true,
+        "expected": "sha256-bV4ZMY8dsdwii3Z9gD1gwcybgD3RLHl5ok22aP0bSxM=",
+        "actual": "sha256-bV4ZMY8dsdwii3Z9gD1gwcybgD3RLHl5ok22aP0bSxM=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/contact/page-bdf6491f4664432a.js",
+        "exists": true,
+        "expected": "sha256-k1gK1psNjFPPgFz5UP/uUsvV/baQ30q2j0yr7XNDjPs=",
+        "actual": "sha256-k1gK1psNjFPPgFz5UP/uUsvV/baQ30q2j0yr7XNDjPs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/demo-review-booster/page-09975f14a79f8fc6.js",
+        "exists": true,
+        "expected": "sha256-DjnOx8hTapi+OyO8lWtW4wQByHp3o+pG6yBPvBULJyQ=",
+        "actual": "sha256-DjnOx8hTapi+OyO8lWtW4wQByHp3o+pG6yBPvBULJyQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/demo-review-replies/page-feea2d8db0d74187.js",
+        "exists": true,
+        "expected": "sha256-XhOi117w5fISU3jGCxyMGsWGPXgC7OaPo9yUYq4kmY4=",
+        "actual": "sha256-XhOi117w5fISU3jGCxyMGsWGPXgC7OaPo9yUYq4kmY4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/demo/page-45fde02d8ab97938.js",
+        "exists": true,
+        "expected": "sha256-tos8XIM6WmC01/AODX2wzocj1+snGSlntFzYEJeaKFg=",
+        "actual": "sha256-tos8XIM6WmC01/AODX2wzocj1+snGSlntFzYEJeaKFg=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/feedback/page-0ff85c2ba9ab7f9b.js",
+        "exists": true,
+        "expected": "sha256-cas2Eg2uyXCRV7j+vAo3Z2n+0R2RcyWKTMX9AyefL5k=",
+        "actual": "sha256-cas2Eg2uyXCRV7j+vAo3Z2n+0R2RcyWKTMX9AyefL5k=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/free-audit/page-8b2f31213f0c0312.js",
+        "exists": true,
+        "expected": "sha256-foiZQlxBMBoKbiccZTJrhOrv24Sj4AQ6Yvz85U9W2Oc=",
+        "actual": "sha256-foiZQlxBMBoKbiccZTJrhOrv24Sj4AQ6Yvz85U9W2Oc=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/legal/page-d488944e9bed3ad6.js",
+        "exists": true,
+        "expected": "sha256-uB0FccDXuij6fP6PruXW6Zpiq0rvjbEXNVhluihpd5s=",
+        "actual": "sha256-uB0FccDXuij6fP6PruXW6Zpiq0rvjbEXNVhluihpd5s=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/local-seo/page-681ced91c453ec18.js",
+        "exists": true,
+        "expected": "sha256-aLC6myYaLr+FAId7GCC2mLPx01ehn5S6zVlLU33xpjY=",
+        "actual": "sha256-aLC6myYaLr+FAId7GCC2mLPx01ehn5S6zVlLU33xpjY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/pricing/page-8cf92e6616787f1a.js",
+        "exists": true,
+        "expected": "sha256-UWVctxj4ZhvzG8gQwueF45Og4GVU0ESN0aJMBL6UUv4=",
+        "actual": "sha256-UWVctxj4ZhvzG8gQwueF45Og4GVU0ESN0aJMBL6UUv4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/page-668008deb42a7e1a.js",
+        "exists": true,
+        "expected": "sha256-sDm7/a0GQoQ854x3O7YuJGRYmmzvpe7QsiVld6u9sZU=",
+        "actual": "sha256-sDm7/a0GQoQ854x3O7YuJGRYmmzvpe7QsiVld6u9sZU=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/privacy/page-09653fd811f0b166.js",
+        "exists": true,
+        "expected": "sha256-HTjDBLoleI8afvz/u+8TQR6Jjp8ue/dZGscPKEgu5E0=",
+        "actual": "sha256-HTjDBLoleI8afvz/u+8TQR6Jjp8ue/dZGscPKEgu5E0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/review-booster/page-af75735ca95e4477.js",
+        "exists": true,
+        "expected": "sha256-MSsuW2O8yMU8gPbiOgA0C3LbKv3Kc35Elw04QhgspjE=",
+        "actual": "sha256-MSsuW2O8yMU8gPbiOgA0C3LbKv3Kc35Elw04QhgspjE=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/review-replies/page-8284e76560f1f5da.js",
+        "exists": true,
+        "expected": "sha256-KjVFNqqVIvxTLnb/G8IR4J4BvRhjPSYItWrZX8OrLAA=",
+        "actual": "sha256-KjVFNqqVIvxTLnb/G8IR4J4BvRhjPSYItWrZX8OrLAA=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/team/invite/[token]/page-9e00a1806c5e12c0.js",
+        "exists": true,
+        "expected": "sha256-JqQehQjpzV7Aw81wz7MUEJDHVmyhsVu5PgYM44DUbW4=",
+        "actual": "sha256-JqQehQjpzV7Aw81wz7MUEJDHVmyhsVu5PgYM44DUbW4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/terms/page-c8df08627962f13c.js",
+        "exists": true,
+        "expected": "sha256-oTIShx0tWDkBrEz3Sze1+JzrtGzhwuRqYu+hy6KI+f4=",
+        "actual": "sha256-oTIShx0tWDkBrEz3Sze1+JzrtGzhwuRqYu+hy6KI+f4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(auth)/layout-f03cc33baf095f5b.js",
+        "exists": true,
+        "expected": "sha256-OBhjERp5+eSH/Zm11BxuEVZH1OUDKXb7/H4ipuodjWY=",
+        "actual": "sha256-OBhjERp5+eSH/Zm11BxuEVZH1OUDKXb7/H4ipuodjWY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(auth)/forgot-password/page-3d73cf041b27ee16.js",
+        "exists": true,
+        "expected": "sha256-ZDPwdc6joohe+PxhSXOZyCqv0QPvx/JjRAMU0mO6Oj4=",
+        "actual": "sha256-ZDPwdc6joohe+PxhSXOZyCqv0QPvx/JjRAMU0mO6Oj4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(auth)/login/page-e464456366dec8d0.js",
+        "exists": true,
+        "expected": "sha256-tHoFJETDXQziPgyvRpBGCfeWMJ9kCqjMg/WCj9SZ0YU=",
+        "actual": "sha256-tHoFJETDXQziPgyvRpBGCfeWMJ9kCqjMg/WCj9SZ0YU=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(auth)/resend-verification/page-03526b820248527f.js",
+        "exists": true,
+        "expected": "sha256-5d28TJmaEaEt9BJ/GmM6HoBYM3RvHr59csxuLc3ZAhg=",
+        "actual": "sha256-5d28TJmaEaEt9BJ/GmM6HoBYM3RvHr59csxuLc3ZAhg=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(auth)/reset-password/page-85555f53eb41e535.js",
+        "exists": true,
+        "expected": "sha256-oJa33ZR1crY37ju7vQugJj1gSosQQPBrRn9eoruYvUY=",
+        "actual": "sha256-oJa33ZR1crY37ju7vQugJj1gSosQQPBrRn9eoruYvUY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(auth)/signup/page-4b73fdb2488a8427.js",
+        "exists": true,
+        "expected": "sha256-BRYHMHJ0Q4nxIwDU5TwGCYW0JSpoY0fTOEeAPFho2g8=",
+        "actual": "sha256-BRYHMHJ0Q4nxIwDU5TwGCYW0JSpoY0fTOEeAPFho2g8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/layout-376f5cf29b1eac3d.js",
+        "exists": true,
+        "expected": "sha256-kBIXdAFUHez0ZxC6Gvz09OGnjr8WHlta0YDBrEZiqCQ=",
+        "actual": "sha256-kBIXdAFUHez0ZxC6Gvz09OGnjr8WHlta0YDBrEZiqCQ=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/loading-fcd6f3cb7424a94e.js",
+        "exists": true,
+        "expected": "sha256-+Jl8VmmZPgs1Nei7h11c2mTQPYjQPi9wLlJPDRrRSsY=",
+        "actual": "sha256-+Jl8VmmZPgs1Nei7h11c2mTQPYjQPi9wLlJPDRrRSsY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/connect/page-2003f74c3fedef85.js",
+        "exists": true,
+        "expected": "sha256-xHXEnidJCOOCreJ/PyBQWroFJS0QawcJKgLXgl6H1Ow=",
+        "actual": "sha256-xHXEnidJCOOCreJ/PyBQWroFJS0QawcJKgLXgl6H1Ow=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/error-50bacfdf84ee9137.js",
+        "exists": true,
+        "expected": "sha256-nzNAaEkcX6CCE3ASq+ssUe+8gPik1NGZQgKHPKckaII=",
+        "actual": "sha256-nzNAaEkcX6CCE3ASq+ssUe+8gPik1NGZQgKHPKckaII=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/loading-f4a8ff422777f575.js",
+        "exists": true,
+        "expected": "sha256-yXBNtcG6uMOZbS6B71Vf3v775fNkO+dOijbbpKOGWd8=",
+        "actual": "sha256-yXBNtcG6uMOZbS6B71Vf3v775fNkO+dOijbbpKOGWd8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/new/page-9e17f968b3de4860.js",
+        "exists": true,
+        "expected": "sha256-g6ZdvjN9/Er4fvVlxGkN/88mHyLvlNbt3Vs6LCnCjH8=",
+        "actual": "sha256-g6ZdvjN9/Er4fvVlxGkN/88mHyLvlNbt3Vs6LCnCjH8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/page-815fbc3c3d962531.js",
+        "exists": true,
+        "expected": "sha256-7zSTas9v0FI0aXCDtP3k6l1I8Oc6wasCBVTLygQWuS0=",
+        "actual": "sha256-7zSTas9v0FI0aXCDtP3k6l1I8Oc6wasCBVTLygQWuS0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/settings/page-20a005d1807b20db.js",
+        "exists": true,
+        "expected": "sha256-LW52inPulmFaY+E2lz0a8PI1oowLyFviotccLzGf/wI=",
+        "actual": "sha256-LW52inPulmFaY+E2lz0a8PI1oowLyFviotccLzGf/wI=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/upload/page-776fd781814548dd.js",
+        "exists": true,
+        "expected": "sha256-BkdcMkI7c9eTPcV+pnKcQFKekm+2TC3i1oEN8JDxk2Y=",
+        "actual": "sha256-BkdcMkI7c9eTPcV+pnKcQFKekm+2TC3i1oEN8JDxk2Y=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/billing/page-5be86df9b73ec8ff.js",
+        "exists": true,
+        "expected": "sha256-xe3sr11CzhEkuI18Grm8epFqBQ1Iq0FJx0k4bKWyjTo=",
+        "actual": "sha256-xe3sr11CzhEkuI18Grm8epFqBQ1Iq0FJx0k4bKWyjTo=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/page-74d4b50ea0a1f41f.js",
+        "exists": true,
+        "expected": "sha256-6rhUyQTSxgN1sma7EIH3qsev+NSHz3Z+fjwkuSFRBr8=",
+        "actual": "sha256-6rhUyQTSxgN1sma7EIH3qsev+NSHz3Z+fjwkuSFRBr8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/settings/page-7b0903fb09f6b29f.js",
+        "exists": true,
+        "expected": "sha256-viHbjuGD1uEDbeSOTu9GNA+9pLYrKcOLNtWpJd1m9S8=",
+        "actual": "sha256-viHbjuGD1uEDbeSOTu9GNA+9pLYrKcOLNtWpJd1m9S8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/layout-7196c08a209f2fdf.js",
+        "exists": true,
+        "expected": "sha256-SwoN3E7Tt+uPKiGb9EbydtXTeZuRPF7C9SA03t4QC70=",
+        "actual": "sha256-SwoN3E7Tt+uPKiGb9EbydtXTeZuRPF7C9SA03t4QC70=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/loading-7491f8ff53488841.js",
+        "exists": true,
+        "expected": "sha256-N/Ukn6eJOd1PaWgfThN+QhEasT1EWw5VzSwsc43pF4g=",
+        "actual": "sha256-N/Ukn6eJOd1PaWgfThN+QhEasT1EWw5VzSwsc43pF4g=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/google-connection/page-d2ee15995fa87dbb.js",
+        "exists": true,
+        "expected": "sha256-K2yEhPcCr4BeZNNOTwQV36DSGqedp2oIxSXJ/UNXkt0=",
+        "actual": "sha256-K2yEhPcCr4BeZNNOTwQV36DSGqedp2oIxSXJ/UNXkt0=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/page-0fe5bd0e20a3fd03.js",
+        "exists": true,
+        "expected": "sha256-+AOwrzLgkVRRvNY2YwLcRjSGeCLdo9G+0BkW3iS5uGs=",
+        "actual": "sha256-+AOwrzLgkVRRvNY2YwLcRjSGeCLdo9G+0BkW3iS5uGs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/reviews/page-d7e92c55f85b719b.js",
+        "exists": true,
+        "expected": "sha256-bIoLfCGdUTrrsM9Yq44/0WaJARCaudPPevYOgha2Tr8=",
+        "actual": "sha256-bIoLfCGdUTrrsM9Yq44/0WaJARCaudPPevYOgha2Tr8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/settings/page-e03c61dc90194c51.js",
+        "exists": true,
+        "expected": "sha256-1O6GRNtAIVJO3mgRNAFwNLF0Jye79c3sIrUmYyVqD74=",
+        "actual": "sha256-1O6GRNtAIVJO3mgRNAFwNLF0Jye79c3sIrUmYyVqD74=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/layout-7c6e8a707bd1e63b.js",
+        "exists": true,
+        "expected": "sha256-7U9fPY3mAggaX6Hs4h8yr8zilD+TjkcJHnZhRJHfcCg=",
+        "actual": "sha256-7U9fPY3mAggaX6Hs4h8yr8zilD+TjkcJHnZhRJHfcCg=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/page-e226106736a828f0.js",
+        "exists": true,
+        "expected": "sha256-A+Z+usjYCzzk55m/lGyGQU3aZg/3O+7ESIroQJ9gqto=",
+        "actual": "sha256-A+Z+usjYCzzk55m/lGyGQU3aZg/3O+7ESIroQJ9gqto=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/webpack-eab1c43c4f96fbb5.js",
+        "exists": true,
+        "expected": "sha256-DflLoqj1aJHsN/ZYfj3Aq2twaO47h/WwGSYx0IpD7sY=",
+        "actual": "sha256-DflLoqj1aJHsN/ZYfj3Aq2twaO47h/WwGSYx0IpD7sY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/5563.a7e494931ec86cf7.js",
+        "exists": true,
+        "expected": "sha256-bfMUEczLh4q/Z73UbPhwWD/ZytOuHPJ+62rxzRMC/34=",
+        "actual": "sha256-bfMUEczLh4q/Z73UbPhwWD/ZytOuHPJ+62rxzRMC/34=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/971.51d5586ac9dca9f9.js",
+        "exists": true,
+        "expected": "sha256-s4xQNpv7l525CpDMevFucq0y/EWcsHVJZ/NV9DBNxAs=",
+        "actual": "sha256-s4xQNpv7l525CpDMevFucq0y/EWcsHVJZ/NV9DBNxAs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/3342.e27e173243d6e3cb.js",
+        "exists": true,
+        "expected": "sha256-RVCFrqAnYA25BiaOqY/gIaLAizXRXC32+3H8Hk999Fw=",
+        "actual": "sha256-RVCFrqAnYA25BiaOqY/gIaLAizXRXC32+3H8Hk999Fw=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/3684.4ae1431a432f9400.js",
+        "exists": true,
+        "expected": "sha256-tbVmioxldHPF8t122n4LZobGVvY1B+6Ox+OYByf4cds=",
+        "actual": "sha256-tbVmioxldHPF8t122n4LZobGVvY1B+6Ox+OYByf4cds=",
+        "match": true
+      },
+      {
+        "path": "static/css/27f0ccbdac66f318.css",
+        "exists": true,
+        "expected": "sha256-VcFPNreUSJvlwk9bWZwyznFyBwHT/kjkFhCfTlRv/Bo=",
+        "actual": "sha256-VcFPNreUSJvlwk9bWZwyznFyBwHT/kjkFhCfTlRv/Bo=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/framework-e697163c1446e434.js",
+        "exists": true,
+        "expected": "sha256-NIJ8d6qHrDrt1AgNvK1uofUgqpaYPOP5+2pR2PAnLnI=",
+        "actual": "sha256-NIJ8d6qHrDrt1AgNvK1uofUgqpaYPOP5+2pR2PAnLnI=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/4a7b0c69.7000e687e988fab4.js",
+        "exists": true,
+        "expected": "sha256-P6G5lBoz2CRaiC3GLcpJFzf1RNzAk5dYy9bVZnKuex8=",
+        "actual": "sha256-P6G5lBoz2CRaiC3GLcpJFzf1RNzAk5dYy9bVZnKuex8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/5d015edf.fa1c4c43c49bc3c5.js",
+        "exists": true,
+        "expected": "sha256-n6G4bfv/Brjfy+rHvbsTb6I7p0s9obq363SoUYY/dX8=",
+        "actual": "sha256-n6G4bfv/Brjfy+rHvbsTb6I7p0s9obq363SoUYY/dX8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/5f8dfda4.207a0a6a19fd2f49.js",
+        "exists": true,
+        "expected": "sha256-rW3iOA/2ne0mj+wqvm5dSU9oi8s3u750zHp65H4n9pc=",
+        "actual": "sha256-rW3iOA/2ne0mj+wqvm5dSU9oi8s3u750zHp65H4n9pc=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/dc9729d2.143c6edf6c64aee1.js",
+        "exists": true,
+        "expected": "sha256-cL9uMjxjIjuQa9NQW34RuQrICcDJaFwmnTKWsoDqJkA=",
+        "actual": "sha256-cL9uMjxjIjuQa9NQW34RuQrICcDJaFwmnTKWsoDqJkA=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/4bd1b696-5ab16a6c4e2cbd21.js",
+        "exists": true,
+        "expected": "sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=",
+        "actual": "sha256-bELiCD+0lPfUR5CV3ulJTme4mSz2eeMzL41NwjGyTHM=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/5930-0a7517faad12a649.js",
+        "exists": true,
+        "expected": "sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=",
+        "actual": "sha256-4ZHWtPttZhdo/H5Mo62VgoPO0itkA6BnKC+cbVpij0I=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/9441-5bc7bdd6d4037f75.js",
+        "exists": true,
+        "expected": "sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=",
+        "actual": "sha256-l2i9vLLJ6j77d2YPCseM6sNNogNtrMw7/PuA7nwhPPI=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/1970-0e740bf6ccb7c5c2.js",
+        "exists": true,
+        "expected": "sha256-2cvCeIGKp4eWzMr7ZQh1CAE1rT2VhLDSvQ5JhmU6q88=",
+        "actual": "sha256-2cvCeIGKp4eWzMr7ZQh1CAE1rT2VhLDSvQ5JhmU6q88=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/1518-823041558f779953.js",
+        "exists": true,
+        "expected": "sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=",
+        "actual": "sha256-mrwLXIsWDXrSH7oos/UUxnYmYee7bbPJT5PUz0KF5Rk=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/5815-413c1359196658d8.js",
+        "exists": true,
+        "expected": "sha256-GDOa0wUKzoTOw+p8YNsDo71PTGb8jRuqLXOYMA8nC68=",
+        "actual": "sha256-GDOa0wUKzoTOw+p8YNsDo71PTGb8jRuqLXOYMA8nC68=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/9094-95036afb52c6fa42.js",
+        "exists": true,
+        "expected": "sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=",
+        "actual": "sha256-0j2wXjOcN/faOfxnXLJwfQ7OnaKIa4vU/op0V9UnIMs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/3981-4aef9ab29528d497.js",
+        "exists": true,
+        "expected": "sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=",
+        "actual": "sha256-pfjuPViOaZpD7vekMAWXOup46V2fb30N7GmsHuHucT8=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/1527-9d57fe7667d0a582.js",
+        "exists": true,
+        "expected": "sha256-Pk82ge9a+T0go2cIYubvANv52nyNtFydDLUkwReUCN4=",
+        "actual": "sha256-Pk82ge9a+T0go2cIYubvANv52nyNtFydDLUkwReUCN4=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/9826-f01c0143669cade1.js",
+        "exists": true,
+        "expected": "sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=",
+        "actual": "sha256-Cp/tOfE3odxzd0eEDc5o3ICJlQpKohFMDuMYlCt3YVs=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/9522-c0e9a1659a5fffc8.js",
+        "exists": true,
+        "expected": "sha256-upo9DZRaRnqUYBybRE7M0Ho67mT5olIwVZSTN0spnwI=",
+        "actual": "sha256-upo9DZRaRnqUYBybRE7M0Ho67mT5olIwVZSTN0spnwI=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/5326-34ae642e673b3acb.js",
+        "exists": true,
+        "expected": "sha256-sBh1GvUpr5XBM5JqGBXkL+PgYJXbOWrPskP0qN7jryY=",
+        "actual": "sha256-sBh1GvUpr5XBM5JqGBXkL+PgYJXbOWrPskP0qN7jryY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/2914-4d23b1dd9fbdf5db.js",
+        "exists": true,
+        "expected": "sha256-0dHPVDA/HtO8YG6zxHyQ8UNUnzU/Y1GpZLfGfVlVMjU=",
+        "actual": "sha256-0dHPVDA/HtO8YG6zxHyQ8UNUnzU/Y1GpZLfGfVlVMjU=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/743-296ce6d05db5355c.js",
+        "exists": true,
+        "expected": "sha256-QrtN0fRzDF4AQ5YJVMdjXAeYKHRQl8cxdvv7forBahk=",
+        "actual": "sha256-QrtN0fRzDF4AQ5YJVMdjXAeYKHRQl8cxdvv7forBahk=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/6126-b8275bb839f21071.js",
+        "exists": true,
+        "expected": "sha256-O9EmU1vIt2H94YdUT1AB6fIaOl3I7W8z2kfa843L0wY=",
+        "actual": "sha256-O9EmU1vIt2H94YdUT1AB6fIaOl3I7W8z2kfa843L0wY=",
+        "match": true
+      },
+      {
+        "path": "static/chunks/main-d476c45ca31d8308.js.map",
+        "exists": false,
+        "expected": "sha256-LTtwSorB5MZIIbFINxhbfcprImcGeADqMhiYhGawQ0c="
+      },
+      {
+        "path": "static/chunks/main-app-33fc10521f0733a4.js.map",
+        "exists": false,
+        "expected": "sha256-heMpJr2baNCoojfGWr81iFkFxRSBleq1VneeGMxgVCA="
+      },
+      {
+        "path": "static/chunks/app/not-found-ae8c51587cad59f3.js.map",
+        "exists": false,
+        "expected": "sha256-0pJNpVUhDl2hJGXl+wxAWMt4DKh7YUWtB6IGR9+fI2Q="
+      },
+      {
+        "path": "static/chunks/app/layout-5f9f21fb358a4caa.js.map",
+        "exists": false,
+        "expected": "sha256-k4D/1je0oFotIr/fFXgmi7N0Smi9suYKBJdhu0ci9Dc="
+      },
+      {
+        "path": "static/chunks/app/error-bd14fcf1cf65474f.js.map",
+        "exists": false,
+        "expected": "sha256-fPaoyYUuztChf2RBRbU7Rmq/VHzZwnguU4+fAwZx280="
+      },
+      {
+        "path": "static/chunks/app/global-error-67129407ea82d49c.js.map",
+        "exists": false,
+        "expected": "sha256-uqbAn+xovqVsSzS9ae65arFE9W0wGu4poOcRbtnArnQ="
+      },
+      {
+        "path": "static/chunks/app/about/page-66b41ae58507624e.js.map",
+        "exists": false,
+        "expected": "sha256-CuCkDNQxFEssRWUNwEkgVHSQ09vTYRodTXpTSl9bY7A="
+      },
+      {
+        "path": "static/chunks/app/account/deletion/page-aaf29e668507b598.js.map",
+        "exists": false,
+        "expected": "sha256-02vz74Ex6LG1C+D9owBiWBfEjabEwkmWirNU1UYto9o="
+      },
+      {
+        "path": "static/chunks/app/demo-review-booster/page-09975f14a79f8fc6.js.map",
+        "exists": false,
+        "expected": "sha256-szoc0zH8YubK7k2P4w5MkwW8kfAw0UeIx2d/xCxVzVc="
+      },
+      {
+        "path": "static/chunks/app/demo-review-replies/page-feea2d8db0d74187.js.map",
+        "exists": false,
+        "expected": "sha256-ctBtbX/rt6ruY/eOa9yoeiTtSyUsq8NHjLudg+QzHgg="
+      },
+      {
+        "path": "static/chunks/app/demo/page-45fde02d8ab97938.js.map",
+        "exists": false,
+        "expected": "sha256-YOwbXourske7SMn2YqmLcy74jq6tXcFYm2rhggUDtWM="
+      },
+      {
+        "path": "static/chunks/app/free-audit/page-8b2f31213f0c0312.js.map",
+        "exists": false,
+        "expected": "sha256-NO6Xst0i46Npsit6t4OjxcSsptP67QjzMmnlODrlyZ4="
+      },
+      {
+        "path": "static/chunks/app/legal/page-d488944e9bed3ad6.js.map",
+        "exists": false,
+        "expected": "sha256-LgrLX68nIE9wah3VnuhFusYPfv6mv49+SqQL/PvEFk8="
+      },
+      {
+        "path": "static/chunks/app/local-seo/page-681ced91c453ec18.js.map",
+        "exists": false,
+        "expected": "sha256-U97a9iA79mxdD/GvgamO8OIeWPRKRZZ+gZTwinJlk8k="
+      },
+      {
+        "path": "static/chunks/app/pricing/page-8cf92e6616787f1a.js.map",
+        "exists": false,
+        "expected": "sha256-z6E1CcSynlNHjQcEB+8RB9ycifZIxp5ZYng95JorDdI="
+      },
+      {
+        "path": "static/chunks/app/page-668008deb42a7e1a.js.map",
+        "exists": false,
+        "expected": "sha256-JzVI9kbQDGNBB+3ReghYg+lZHdAmTgWkwal+qvLO+3o="
+      },
+      {
+        "path": "static/chunks/app/privacy/page-09653fd811f0b166.js.map",
+        "exists": false,
+        "expected": "sha256-o5gp5eHfcUbNiwQXzYX+a7JtG12TRtkSc1VuMLfdDnk="
+      },
+      {
+        "path": "static/chunks/app/review-booster/page-af75735ca95e4477.js.map",
+        "exists": false,
+        "expected": "sha256-zyz5cPLopmHWFCOIBtW3AaQshADmt2BIUNvLdbHn5fk="
+      },
+      {
+        "path": "static/chunks/app/review-replies/page-8284e76560f1f5da.js.map",
+        "exists": false,
+        "expected": "sha256-TT3T7ETiHL/grfW53yDM6gO0tXKLK7YupGhEH1l9MLs="
+      },
+      {
+        "path": "static/chunks/app/team/invite/[token]/page-9e00a1806c5e12c0.js.map",
+        "exists": false,
+        "expected": "sha256-biflZO3DlSqIIWf8h5z28Zm/KwXcQup+MpoNG2z9H6I="
+      },
+      {
+        "path": "static/chunks/app/terms/page-c8df08627962f13c.js.map",
+        "exists": false,
+        "expected": "sha256-9gVzMh/8QTSjMlddJphECtKeZZ63TLoKxzeEM++lW1Q="
+      },
+      {
+        "path": "static/chunks/app/(auth)/forgot-password/page-3d73cf041b27ee16.js.map",
+        "exists": false,
+        "expected": "sha256-huB2LM3OKDxqKM/ajAuemJnR74+bNiJoUMe0y2ZI3sk="
+      },
+      {
+        "path": "static/chunks/app/(auth)/login/page-e464456366dec8d0.js.map",
+        "exists": false,
+        "expected": "sha256-YrXTVp9uvaq8QhMNeVSJTNFj8Wp5LmxNV6zk4DnWnCo="
+      },
+      {
+        "path": "static/chunks/app/(auth)/resend-verification/page-03526b820248527f.js.map",
+        "exists": false,
+        "expected": "sha256-/TPGG5ogGNElalYOeSKE/CndVXtmLlmF3exHQnf0LUI="
+      },
+      {
+        "path": "static/chunks/app/(auth)/reset-password/page-85555f53eb41e535.js.map",
+        "exists": false,
+        "expected": "sha256-f3wqiXMhpE8/zprCaYCcLVHM/oznGVOUoRjgONfsClM="
+      },
+      {
+        "path": "static/chunks/app/(auth)/signup/page-4b73fdb2488a8427.js.map",
+        "exists": false,
+        "expected": "sha256-qnKYZlXJXpl4hrsHtf85HCB6fxW1Iole4e9n89DQSIo="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/layout-376f5cf29b1eac3d.js.map",
+        "exists": false,
+        "expected": "sha256-mjbaV1iKM/LQODb4W/ZTYXD2/YC1Bc/1/nzCOLsN0bU="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/error-50bacfdf84ee9137.js.map",
+        "exists": false,
+        "expected": "sha256-pXKYojCqaUOu9dqM17cvSQAOeqGD1KOXeJyw1lpq2v0="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/new/page-9e17f968b3de4860.js.map",
+        "exists": false,
+        "expected": "sha256-kqWP4hi/tazrIjGegtoMvBiB+fhfsY0qRDNR5JUSjtA="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/page-815fbc3c3d962531.js.map",
+        "exists": false,
+        "expected": "sha256-9ovjPhY/MRq2lC2w84JgNZ8pPNNTkAqDyBsJDkhiobY="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/settings/page-20a005d1807b20db.js.map",
+        "exists": false,
+        "expected": "sha256-bRfkJFPeaWDG7qhFRWE2y7lOYWglKXsu3pSRN/GquPk="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/upload/page-776fd781814548dd.js.map",
+        "exists": false,
+        "expected": "sha256-nDaXN4Kk9egGj4HN62niHNjyyUR4HXsY4kypFjZoU4Q="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/billing/page-5be86df9b73ec8ff.js.map",
+        "exists": false,
+        "expected": "sha256-qgTIZXrX6H6nYDCmTPwEOYdY3mIJKMXa3GYyl0gDvPM="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/page-74d4b50ea0a1f41f.js.map",
+        "exists": false,
+        "expected": "sha256-fAtXq/BiELP7jlXmxNaUkbZ0gRciRj1eQzU+mcsxXLQ="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/layout-7196c08a209f2fdf.js.map",
+        "exists": false,
+        "expected": "sha256-FCuUrhKcH2gO/Si2impZXVkhuWZYRbGXvCXeth/9nLQ="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/google-connection/page-d2ee15995fa87dbb.js.map",
+        "exists": false,
+        "expected": "sha256-Gz7WK1aWsN+kgmyuJIeVOXHeuHsWO0rjGUDppNTmt1k="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/page-0fe5bd0e20a3fd03.js.map",
+        "exists": false,
+        "expected": "sha256-4ji5OPWhCiSGjMEjOm/A8U8FB1iqKKcHtbtd87n10XQ="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/reviews/page-d7e92c55f85b719b.js.map",
+        "exists": false,
+        "expected": "sha256-f1yIIeCHQeX7Ygeha7NVSksgE4IW+4LIpUkXjjwoS9Y="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/settings/page-e03c61dc90194c51.js.map",
+        "exists": false,
+        "expected": "sha256-XX3MHQ9L30IOjLpVj6GvaX2G2dquzsuM47ezhFRBrfs="
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/layout-7c6e8a707bd1e63b.js.map",
+        "exists": false,
+        "expected": "sha256-/4gd08v0V07UCAFlUBUeWdJ/ECYCDpS07Un+GNP+8YE="
+      },
+      {
+        "path": "static/chunks/webpack-eab1c43c4f96fbb5.js.map",
+        "exists": false,
+        "expected": "sha256-9UZHPhqYwKkbQFo2MP41qKddwYaw+W82sD3ZNXqN3jw="
+      },
+      {
+        "path": "static/chunks/5563.a7e494931ec86cf7.js.map",
+        "exists": false,
+        "expected": "sha256-T+U6AAM5++VyNFAqyYUX9JT6bEKP/SKX8aayAqa15mk="
+      },
+      {
+        "path": "static/chunks/971.51d5586ac9dca9f9.js.map",
+        "exists": false,
+        "expected": "sha256-NE2/RYp1/yPQ7a9J9gkugxsynIRGz/vb4m8lGbfbNkQ="
+      },
+      {
+        "path": "static/chunks/3342.e27e173243d6e3cb.js.map",
+        "exists": false,
+        "expected": "sha256-JZbuWEYqBCBpJV3QopyjI90TanVR+NQ4IhQagFsgrNI="
+      },
+      {
+        "path": "static/chunks/3684.4ae1431a432f9400.js.map",
+        "exists": false,
+        "expected": "sha256-njcQ9Bpk95QKzlw7m2k/eoZ+wpfKX0HmhAGV9BoCMVs="
+      },
+      {
+        "path": "static/css/27f0ccbdac66f318.css.map",
+        "exists": false,
+        "expected": "sha256-2FBz0S3o4S8DI+uDscl/CsFIsVihk89evhL3fa82EMk="
+      },
+      {
+        "path": "static/chunks/framework-e697163c1446e434.js.map",
+        "exists": false,
+        "expected": "sha256-edvStr9pkRrJivgsDsKVLmy4qdTnGTSntg/2skzVGUA="
+      },
+      {
+        "path": "static/chunks/4a7b0c69.7000e687e988fab4.js.map",
+        "exists": false,
+        "expected": "sha256-pVpsmpd0nLHuPnu0Maq1DiG30R43BvpHENU93q6gGdM="
+      },
+      {
+        "path": "static/chunks/5d015edf.fa1c4c43c49bc3c5.js.map",
+        "exists": false,
+        "expected": "sha256-1dHEUZljTTB7FM7mwf83UZAqro1mKtxsPMHodWyxwpU="
+      },
+      {
+        "path": "static/chunks/5f8dfda4.207a0a6a19fd2f49.js.map",
+        "exists": false,
+        "expected": "sha256-oVQ8PvHgqV6rBBeGxC9B+jsTLg6WFjjCmcjr4qfsY40="
+      },
+      {
+        "path": "static/chunks/dc9729d2.143c6edf6c64aee1.js.map",
+        "exists": false,
+        "expected": "sha256-bP72e5qx4scuXTkkkpEefbzjYtSFGhw/uFyUgjjiIUM="
+      },
+      {
+        "path": "static/chunks/4bd1b696-5ab16a6c4e2cbd21.js.map",
+        "exists": false,
+        "expected": "sha256-Sxh6yK7f1CYKT9jkSoggYa+bZ1LghNa7lf+r4BJQPLY="
+      },
+      {
+        "path": "static/chunks/5930-0a7517faad12a649.js.map",
+        "exists": false,
+        "expected": "sha256-Znoo7jKTA4cLRpPhJYnRTrwu88aNBxbnaftwvsjdHyI="
+      },
+      {
+        "path": "static/chunks/9441-5bc7bdd6d4037f75.js.map",
+        "exists": false,
+        "expected": "sha256-b8VfXjtx/NagVcVtxVvOEMzAMs6HOG8r02mV0m9QE9Y="
+      },
+      {
+        "path": "static/chunks/1970-0e740bf6ccb7c5c2.js.map",
+        "exists": false,
+        "expected": "sha256-PJ5vw9PaeBf+0dTRJBO329d8R1XI1jfPT2uqsPfVJx0="
+      },
+      {
+        "path": "static/chunks/1518-823041558f779953.js.map",
+        "exists": false,
+        "expected": "sha256-436GUPf39Lk9eosWeTJPhSINlgsTjEfzuKvziLxOZmw="
+      },
+      {
+        "path": "static/chunks/5815-413c1359196658d8.js.map",
+        "exists": false,
+        "expected": "sha256-NS1QA4RTH3bWkE77bRForC13xScfuf3JU+66ge5Hlro="
+      },
+      {
+        "path": "static/chunks/9094-95036afb52c6fa42.js.map",
+        "exists": false,
+        "expected": "sha256-VZkK1TmVcHPdGwD1+zjP8yWHtnHsUYMc4TrFYe0SnXI="
+      },
+      {
+        "path": "static/chunks/3981-4aef9ab29528d497.js.map",
+        "exists": false,
+        "expected": "sha256-UU6swBw+EybRsaewxpjc6kP6yPfyH05NTMXPpITIzYQ="
+      },
+      {
+        "path": "static/chunks/1527-9d57fe7667d0a582.js.map",
+        "exists": false,
+        "expected": "sha256-8UByn5YMIh0EBvye34juP5GMyIa3JH69qqR6FQB1R+A="
+      },
+      {
+        "path": "static/chunks/9826-f01c0143669cade1.js.map",
+        "exists": false,
+        "expected": "sha256-s5ETaOrwP4JhN3kDLdjdL8pOAS5bmU+ASukrH5T4v+U="
+      },
+      {
+        "path": "static/chunks/9522-c0e9a1659a5fffc8.js.map",
+        "exists": false,
+        "expected": "sha256-57h7oOeNT2ILM77Ts8LFJ+pNwt1gH3A5EpKYLjZR850="
+      },
+      {
+        "path": "static/chunks/5326-34ae642e673b3acb.js.map",
+        "exists": false,
+        "expected": "sha256-Lc2UwkdTw4hvj69K3pAFxys48K7XvhSsXxtpgFcFgD4="
+      },
+      {
+        "path": "static/chunks/2914-4d23b1dd9fbdf5db.js.map",
+        "exists": false,
+        "expected": "sha256-ZesFSelKcVTtRzgfl5PPfgj/E1rJuUEnoYNPwPDx9Z0="
+      },
+      {
+        "path": "static/chunks/743-296ce6d05db5355c.js.map",
+        "exists": false,
+        "expected": "sha256-It1RMHa64DJ/JEofpUBq/TiNzcz5AaN/0zjusXkDYsk="
+      },
+      {
+        "path": "static/chunks/6126-b8275bb839f21071.js.map",
+        "exists": false,
+        "expected": "sha256-OQJjrrhc//g58FvAhA3pemtpKqRVlthTr/9JbcqGbiw="
+      },
+      {
+        "path": "server/app/_not-found/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-PchNbjt/Y0g/feSF46IrBEsFMn8vMSki9TWjRseJr3U=",
+        "actual": "sha256-PchNbjt/Y0g/feSF46IrBEsFMn8vMSki9TWjRseJr3U=",
+        "match": true
+      },
+      {
+        "path": "server/app/_global-error/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-iFiWttN4PaxEHAp5TzTW5ZsksUaVF74KiRjbkTnbhH8=",
+        "actual": "sha256-iFiWttN4PaxEHAp5TzTW5ZsksUaVF74KiRjbkTnbhH8=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/stripe/change-plan/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-0Jcclx7QraYRVnc08eViG6Do28v3W/z06zRXOb3bWVE=",
+        "actual": "sha256-0Jcclx7QraYRVnc08eViG6Do28v3W/z06zRXOb3bWVE=",
+        "match": true
+      },
+      {
+        "path": "server/app/opengraph-image/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-VN2VNa3g0o3WjUkDEAVOohBu84xzPSUxiUIFduw5Bl8=",
+        "actual": "sha256-VN2VNa3g0o3WjUkDEAVOohBu84xzPSUxiUIFduw5Bl8=",
+        "match": true
+      },
+      {
+        "path": "server/app/robots.txt/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-TZ4DBFzy4keJFEzh2vOGA7/5UwcjHsm3WrPuwL1SmfQ=",
+        "actual": "sha256-TZ4DBFzy4keJFEzh2vOGA7/5UwcjHsm3WrPuwL1SmfQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/sitemap.xml/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-yhctzug37cTOzK536nXLrZDocfXh2x6mc5Y0kIIVhwo=",
+        "actual": "sha256-yhctzug37cTOzK536nXLrZDocfXh2x6mc5Y0kIIVhwo=",
+        "match": true
+      },
+      {
+        "path": "server/app/api-public-demo-review-booster/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-LC2qfg+/zH70HT/hAvukdDkUK6fnVo0NxvDjIErtHrA=",
+        "actual": "sha256-LC2qfg+/zH70HT/hAvukdDkUK6fnVo0NxvDjIErtHrA=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/audit/free-profile/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-QUQ24Gc7siAggZC2y1ggoO8KM8NWHhnkx67b5ZLtd4c=",
+        "actual": "sha256-QUQ24Gc7siAggZC2y1ggoO8KM8NWHhnkx67b5ZLtd4c=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/[...nextauth]/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-zApdUIXgzxO8eU03xp/7l/F2qgSeuQ7siOuGxdJxf38=",
+        "actual": "sha256-zApdUIXgzxO8eU03xp/7l/F2qgSeuQ7siOuGxdJxf38=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/forgot-password/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-zn4NJddLrKV5LxBDbUJ+RUdqZBW7naOjMrdXDD/W224=",
+        "actual": "sha256-zn4NJddLrKV5LxBDbUJ+RUdqZBW7naOjMrdXDD/W224=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/register/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-B59oCXxTGlonunu64BPk199EYDsTAiEHHhNcvAtuf2U=",
+        "actual": "sha256-B59oCXxTGlonunu64BPk199EYDsTAiEHHhNcvAtuf2U=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/resend-verification/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-BUYr1O2qM/H2zGIvBgRVM4cwhIU6aq+tIVDmtiaaxUI=",
+        "actual": "sha256-BUYr1O2qM/H2zGIvBgRVM4cwhIU6aq+tIVDmtiaaxUI=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/reset-password/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-7HxmmAH843CY4YkJvvH0KDLa7JETByxFsTkNrICTumg=",
+        "actual": "sha256-7HxmmAH843CY4YkJvvH0KDLa7JETByxFsTkNrICTumg=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/signout/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-4WsSg9oj6S8iUIw790WKhF6/cwojRujsG1i0K/3CNiA=",
+        "actual": "sha256-4WsSg9oj6S8iUIw790WKhF6/cwojRujsG1i0K/3CNiA=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/auth/verify-email/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-Rc/GXxsaLqf7eV3BlajXm1VJxMe7eQGPRCjJOlmTIFo=",
+        "actual": "sha256-Rc/GXxsaLqf7eV3BlajXm1VJxMe7eQGPRCjJOlmTIFo=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/cron/health/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-WHzg97k59G0tvcT3JIydGdk2Z2pN0d57DHqp9jzjvK4=",
+        "actual": "sha256-WHzg97k59G0tvcT3JIydGdk2Z2pN0d57DHqp9jzjvK4=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/cron/privacy/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-kBVhHz/tZFZFXyXfuC580zFfOk4PP3HdFQssdOHBW3I=",
+        "actual": "sha256-kBVhHz/tZFZFXyXfuC580zFfOk4PP3HdFQssdOHBW3I=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/cron/review-booster/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-uw3erILKM/S8GOFblkxz5tt6o43Lz/9Omzit+i1loeE=",
+        "actual": "sha256-uw3erILKM/S8GOFblkxz5tt6o43Lz/9Omzit+i1loeE=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/csp-report/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-eKCJdaEA9Duce5u/Ng6TSuxRyZQXlnfcpLGHKIke9lI=",
+        "actual": "sha256-eKCJdaEA9Duce5u/Ng6TSuxRyZQXlnfcpLGHKIke9lI=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/dashboard/summary/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-F93xRZBwoFIpgPEFYKbG/195InYCeYy58FBoeBixgUg=",
+        "actual": "sha256-F93xRZBwoFIpgPEFYKbG/195InYCeYy58FBoeBixgUg=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/cron/review-replies/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-xGMVxjVDb1sCErOX9zlzSt/LVQGm/lHgRxOaDwqCcxQ=",
+        "actual": "sha256-xGMVxjVDb1sCErOX9zlzSt/LVQGm/lHgRxOaDwqCcxQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/feedback/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-tXS4AJFndlcNm1BETD0uf1T8cKE8/mOkYe8/WSG5mNw=",
+        "actual": "sha256-tXS4AJFndlcNm1BETD0uf1T8cKE8/mOkYe8/WSG5mNw=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/connection/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-FLG+kQBNx7z3Z3YuW6G/p5QTyNLTGGKIx0Cb8CK/2C0=",
+        "actual": "sha256-FLG+kQBNx7z3Z3YuW6G/p5QTyNLTGGKIx0Cb8CK/2C0=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/disconnect/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-qPU/9npY40+VAcLyQLAe0BbWqBYNgU7bAKnooG6yI9Y=",
+        "actual": "sha256-qPU/9npY40+VAcLyQLAe0BbWqBYNgU7bAKnooG6yI9Y=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/locations/list/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-Sza9jNbrv94AiMmImp7lSAawkFwfdjhskoTBghznQDo=",
+        "actual": "sha256-Sza9jNbrv94AiMmImp7lSAawkFwfdjhskoTBghznQDo=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/locations/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-JxWBaXZvVrTASe7aUYf7VNAk8e1xCBaiwMQ1nEBFNzw=",
+        "actual": "sha256-JxWBaXZvVrTASe7aUYf7VNAk8e1xCBaiwMQ1nEBFNzw=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/locations/selection/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-FB9hkuRQD+NHjs175wSTq59QWEGLzf+K+wGDMBuR9u0=",
+        "actual": "sha256-FB9hkuRQD+NHjs175wSTq59QWEGLzf+K+wGDMBuR9u0=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/locations/sync/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-X8JnByDtbUWnFUv7H+/cT+5mexBoYxBOdbe5N0qyhlQ=",
+        "actual": "sha256-X8JnByDtbUWnFUv7H+/cT+5mexBoYxBOdbe5N0qyhlQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/oauth/callback/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-sXeU4E7dlrElsd0gZqhCBpwoxK+ZjubezP8MMTWcvt4=",
+        "actual": "sha256-sXeU4E7dlrElsd0gZqhCBpwoxK+ZjubezP8MMTWcvt4=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/oauth/start/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-AHqn5TtRWt14diHGcnPdH0m0MclA5kyzXke91e5oA5I=",
+        "actual": "sha256-AHqn5TtRWt14diHGcnPdH0m0MclA5kyzXke91e5oA5I=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/replies/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-dVVvDg7+dk6TRjs2I4YlDq1U/aKshcLgbfb3DsOOfh4=",
+        "actual": "sha256-dVVvDg7+dk6TRjs2I4YlDq1U/aKshcLgbfb3DsOOfh4=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/reviews/process-pending/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-fVvc0hUDkNqP4e6yFifTJbXwpap9kOo4HSp/ELdZANY=",
+        "actual": "sha256-fVvc0hUDkNqP4e6yFifTJbXwpap9kOo4HSp/ELdZANY=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/google/reviews/sync/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-qB/Kr25tQgwUGvoNMKYDviDyv9aXFTOMG2yH6KvBe2k=",
+        "actual": "sha256-qB/Kr25tQgwUGvoNMKYDviDyv9aXFTOMG2yH6KvBe2k=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/leads/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-K1U1eZ6KrD8t90aSBnoC+43OatnnpOClzjRaW4mm3bU=",
+        "actual": "sha256-K1U1eZ6KrD8t90aSBnoC+43OatnnpOClzjRaW4mm3bU=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/privacy/delete/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-fHlw4VyWdTalDWG61hhY0PasM36dna3MvfcMdV5hn9c=",
+        "actual": "sha256-fHlw4VyWdTalDWG61hhY0PasM36dna3MvfcMdV5hn9c=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/openai/review-reply/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-feNvv5NxsFIR1jmSh8gN64cZUJcgWPNgWIRmlWdFIks=",
+        "actual": "sha256-feNvv5NxsFIR1jmSh8gN64cZUJcgWPNgWIRmlWdFIks=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/privacy/export/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-KZw8ePVegBNeLlV4i3OZoTgM1Lg/W6yay3VcGUH1h14=",
+        "actual": "sha256-KZw8ePVegBNeLlV4i3OZoTgM1Lg/W6yay3VcGUH1h14=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/projects/[id]/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-mUBtTaObGjl2rl7+wMTzjGAzd3+TI5hCMmW72oH+V/4=",
+        "actual": "sha256-mUBtTaObGjl2rl7+wMTzjGAzd3+TI5hCMmW72oH+V/4=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/projects/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-/uH4YjyKR+l8O09jQszfz7kRTlJNg+w715bfJveleU0=",
+        "actual": "sha256-/uH4YjyKR+l8O09jQszfz7kRTlJNg+w715bfJveleU0=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/booking-credentials/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-saWcOchP34Hlq0wpp+vL9ccVQpBWsL/brJ4qD719GI8=",
+        "actual": "sha256-saWcOchP34Hlq0wpp+vL9ccVQpBWsL/brJ4qD719GI8=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/deliveries/[deliveryId]/reconcile/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-gN1rkzn70er04Rk0mI0lKvyFvJl/ylTsNXawpkw6dec=",
+        "actual": "sha256-gN1rkzn70er04Rk0mI0lKvyFvJl/ylTsNXawpkw6dec=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/run-now/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-/M38Exb3kFKeK1heng4qdEsSMzboAwqiwAnYbU5PqkI=",
+        "actual": "sha256-/M38Exb3kFKeK1heng4qdEsSMzboAwqiwAnYbU5PqkI=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/settings/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-LzUjZ2+5tbwXlARhpW8Bwd7bxnFozo+op9fk/djIPHM=",
+        "actual": "sha256-LzUjZ2+5tbwXlARhpW8Bwd7bxnFozo+op9fk/djIPHM=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/unsubscribe/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-9ktlhvVBh+gGGZpA6Y3otWEXwjP3KHNMLVH69xWq9X4=",
+        "actual": "sha256-9ktlhvVBh+gGGZpA6Y3otWEXwjP3KHNMLVH69xWq9X4=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/upload/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-vEYEZDOsilsQaJVjDSQmFWaKGn4NlS46isEyunP1P9o=",
+        "actual": "sha256-vEYEZDOsilsQaJVjDSQmFWaKGn4NlS46isEyunP1P9o=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/review-booster/visits/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-bVo5Z3LLQK9QQzfZiSylnt5pmk/SPaghdENMAcxPI7Y=",
+        "actual": "sha256-bVo5Z3LLQK9QQzfZiSylnt5pmk/SPaghdENMAcxPI7Y=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/reviews/draft/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-cTMI+jqLrRUkGMnKr3vruC7XH8tCqcRKCoqJ613fx7w=",
+        "actual": "sha256-cTMI+jqLrRUkGMnKr3vruC7XH8tCqcRKCoqJ613fx7w=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/reviews/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-s9AVbxKgkPTgI3PREycHu4zns0gRw4cToRQdj7J9+dU=",
+        "actual": "sha256-s9AVbxKgkPTgI3PREycHu4zns0gRw4cToRQdj7J9+dU=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/settings/reply/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-P23ZyF4UVwn3ajhni/7mvrOARMzddRqcjgO7D27J4Y8=",
+        "actual": "sha256-P23ZyF4UVwn3ajhni/7mvrOARMzddRqcjgO7D27J4Y8=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/stripe/portal/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-Bs7UDXfozFE6g0WRMER7x2GCxN+CXjpzXhO4vRpM3uM=",
+        "actual": "sha256-Bs7UDXfozFE6g0WRMER7x2GCxN+CXjpzXhO4vRpM3uM=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/stripe/webhook/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-rVOSjCy9PrLU4a7CYZLw5GzXCLL3dsNCT0ItoOwhoek=",
+        "actual": "sha256-rVOSjCy9PrLU4a7CYZLw5GzXCLL3dsNCT0ItoOwhoek=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/stripe/checkout/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-sZ5zMJmFuMaNrIPX7TdlfHcex24u54Zd8nX3gbdQogA=",
+        "actual": "sha256-sZ5zMJmFuMaNrIPX7TdlfHcex24u54Zd8nX3gbdQogA=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/team/invitations/[token]/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-bGpH/ppVALxA2lbIi/+ILZ7FxEzSnWz8NARGUv5qzUQ=",
+        "actual": "sha256-bGpH/ppVALxA2lbIi/+ILZ7FxEzSnWz8NARGUv5qzUQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/team/members/[userId]/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-IkS9nhXfI3kH8RzXYwbcU+Bfxhp4EZFkUAP59Kj8d60=",
+        "actual": "sha256-IkS9nhXfI3kH8RzXYwbcU+Bfxhp4EZFkUAP59Kj8d60=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/team/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-a6LBIre2Xe3rKBxHFuV+ENUlMSiHUBlXpctD1Kw3ins=",
+        "actual": "sha256-a6LBIre2Xe3rKBxHFuV+ENUlMSiHUBlXpctD1Kw3ins=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/user/plan/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-T6d3W4rjAg9nKpApHDS2pCMqeSzzMDgcZoVsZ6jjlKQ=",
+        "actual": "sha256-T6d3W4rjAg9nKpApHDS2pCMqeSzzMDgcZoVsZ6jjlKQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/webhooks/booking/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-SD+pi/qJ9YIFNf9Ei0E/0HvBCfu4EVOqwGOGsyYuwq4=",
+        "actual": "sha256-SD+pi/qJ9YIFNf9Ei0E/0HvBCfu4EVOqwGOGsyYuwq4=",
+        "match": true
+      },
+      {
+        "path": "server/app/api/webhooks/resend/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-m0vST0TxaRLayPQWIX9jKNd4XkSIDhT2K3CM1QV7xY4=",
+        "actual": "sha256-m0vST0TxaRLayPQWIX9jKNd4XkSIDhT2K3CM1QV7xY4=",
+        "match": true
+      },
+      {
+        "path": "server/app/r/[token]/route_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-ugAtv8H7i8xZzZ/3SEe4gcbHIig+6X/xQg1TTnT0q2Y=",
+        "actual": "sha256-ugAtv8H7i8xZzZ/3SEe4gcbHIig+6X/xQg1TTnT0q2Y=",
+        "match": true
+      },
+      {
+        "path": "server/app/about/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-Euo024f6FWoVyoZeDGYQvKfx7cDMDZIzdz7I8lJ2rhg=",
+        "actual": "sha256-Euo024f6FWoVyoZeDGYQvKfx7cDMDZIzdz7I8lJ2rhg=",
+        "match": true
+      },
+      {
+        "path": "server/app/account/deletion/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-g3+KO0Fjr7x8/8MSomtVXt2Xkx7+MEbRy5uqz+z6Was=",
+        "actual": "sha256-g3+KO0Fjr7x8/8MSomtVXt2Xkx7+MEbRy5uqz+z6Was=",
+        "match": true
+      },
+      {
+        "path": "server/app/contact/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-EfH35LtCM5qX9GX2e45PhRAhl5JxIc5+qhIzkpbVEQk=",
+        "actual": "sha256-EfH35LtCM5qX9GX2e45PhRAhl5JxIc5+qhIzkpbVEQk=",
+        "match": true
+      },
+      {
+        "path": "server/app/demo-review-booster/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-mmmvHYDLdhKIhQg8bhgV7upB3YDMtL7XqUOpV0O67DQ=",
+        "actual": "sha256-mmmvHYDLdhKIhQg8bhgV7upB3YDMtL7XqUOpV0O67DQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/demo-review-replies/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-S0Y4nfMd+Db9AXifN+/4vcokOyeHgtyhM8U7dJ5XuKg=",
+        "actual": "sha256-S0Y4nfMd+Db9AXifN+/4vcokOyeHgtyhM8U7dJ5XuKg=",
+        "match": true
+      },
+      {
+        "path": "server/app/demo/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-zUruEZpx8Wdzu53JMrJK4VFGvu+GxkRAj/TVZrU3zvo=",
+        "actual": "sha256-zUruEZpx8Wdzu53JMrJK4VFGvu+GxkRAj/TVZrU3zvo=",
+        "match": true
+      },
+      {
+        "path": "server/app/feedback/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-qhss050RvvpOjWZB0iiRo1rvXSea/aLApkhv8j1f9CI=",
+        "actual": "sha256-qhss050RvvpOjWZB0iiRo1rvXSea/aLApkhv8j1f9CI=",
+        "match": true
+      },
+      {
+        "path": "server/app/free-audit/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-X6iYzSDvCAESvW+ZYwNNjjUCoGdxn/oyxRtLHA/rPw8=",
+        "actual": "sha256-X6iYzSDvCAESvW+ZYwNNjjUCoGdxn/oyxRtLHA/rPw8=",
+        "match": true
+      },
+      {
+        "path": "server/app/legal/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-nF5q9VQmitp1Re4tavCSZisb/6BuEhTFta3c+jZs8CM=",
+        "actual": "sha256-nF5q9VQmitp1Re4tavCSZisb/6BuEhTFta3c+jZs8CM=",
+        "match": true
+      },
+      {
+        "path": "server/app/local-seo/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-H3fmHI8qZp3s0A7MmIg8ZmTdsQ/2xGycVS6AbMSwab8=",
+        "actual": "sha256-H3fmHI8qZp3s0A7MmIg8ZmTdsQ/2xGycVS6AbMSwab8=",
+        "match": true
+      },
+      {
+        "path": "server/app/pricing/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-TdJQ8jvpbDIHS6Jp/+dNSy3XslRWRCT5Ut9kWsqpOuc=",
+        "actual": "sha256-TdJQ8jvpbDIHS6Jp/+dNSy3XslRWRCT5Ut9kWsqpOuc=",
+        "match": true
+      },
+      {
+        "path": "server/app/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-pzu2FLJ+GT6kJl/b0uWwV12vuDaR85G6YMmf+n0Nrmc=",
+        "actual": "sha256-pzu2FLJ+GT6kJl/b0uWwV12vuDaR85G6YMmf+n0Nrmc=",
+        "match": true
+      },
+      {
+        "path": "server/app/privacy/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-f/WdueagblTw01Nh8Gt2m+D2AA1SJC+AIqLXO8WevUQ=",
+        "actual": "sha256-f/WdueagblTw01Nh8Gt2m+D2AA1SJC+AIqLXO8WevUQ=",
+        "match": true
+      },
+      {
+        "path": "server/app/review-booster/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-5+3Kr7/jQdmRcK9nw3c++iFZK3Jeuu6B2hGJE5P9rvc=",
+        "actual": "sha256-5+3Kr7/jQdmRcK9nw3c++iFZK3Jeuu6B2hGJE5P9rvc=",
+        "match": true
+      },
+      {
+        "path": "server/app/review-replies/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-1kZ4s3tNlK918OBHCN8+krfU5PT5+REGvm8+itb7P6o=",
+        "actual": "sha256-1kZ4s3tNlK918OBHCN8+krfU5PT5+REGvm8+itb7P6o=",
+        "match": true
+      },
+      {
+        "path": "server/app/team/invite/[token]/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-DbJ5en95dR8Le6iBt8Yb7Je3Zv72Ei0aGO5iGiAP22c=",
+        "actual": "sha256-DbJ5en95dR8Le6iBt8Yb7Je3Zv72Ei0aGO5iGiAP22c=",
+        "match": true
+      },
+      {
+        "path": "server/app/terms/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-3aIEy4gYNZJAFJMgSBOwViWw/jf4OodqG9q7ii0az0w=",
+        "actual": "sha256-3aIEy4gYNZJAFJMgSBOwViWw/jf4OodqG9q7ii0az0w=",
+        "match": true
+      },
+      {
+        "path": "server/app/(auth)/forgot-password/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-JwGtk29P8AYcMA+eloZ4inwRe/V/NI7obdfTPQ4EeD0=",
+        "actual": "sha256-JwGtk29P8AYcMA+eloZ4inwRe/V/NI7obdfTPQ4EeD0=",
+        "match": true
+      },
+      {
+        "path": "server/app/(auth)/login/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-l3voLKfjJhN+W1XOfdz4fmis2n0IOeNJLjTw2INXni0=",
+        "actual": "sha256-l3voLKfjJhN+W1XOfdz4fmis2n0IOeNJLjTw2INXni0=",
+        "match": true
+      },
+      {
+        "path": "server/app/(auth)/resend-verification/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-cxZ4LHlvrhtywvQhCYEOPYrz6+ELdQeenGFJQ0gpcCU=",
+        "actual": "sha256-cxZ4LHlvrhtywvQhCYEOPYrz6+ELdQeenGFJQ0gpcCU=",
+        "match": true
+      },
+      {
+        "path": "server/app/(auth)/reset-password/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-bXkkmHGeamPBagKImxEUyWsDRQDWFjwm6l4+bX4+TMo=",
+        "actual": "sha256-bXkkmHGeamPBagKImxEUyWsDRQDWFjwm6l4+bX4+TMo=",
+        "match": true
+      },
+      {
+        "path": "server/app/(auth)/signup/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-mNtRy7spmaVU411cBcS+m473ModvbrY3CWNma1G1Sno=",
+        "actual": "sha256-mNtRy7spmaVU411cBcS+m473ModvbrY3CWNma1G1Sno=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/connect/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-cfzG6DYBogLNEVvlX43ykMcIPO5SxFRBFiE2NM1YGSE=",
+        "actual": "sha256-cfzG6DYBogLNEVvlX43ykMcIPO5SxFRBFiE2NM1YGSE=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/new/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-mhgg+3cG+wXpqdHXQr3yWRYrcf6OoUx41GVduFvqIBA=",
+        "actual": "sha256-mhgg+3cG+wXpqdHXQr3yWRYrcf6OoUx41GVduFvqIBA=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-SjMtkaWrYJGW/nMBDV/YM6kigjAsVVGKVEwxTd2Xcdc=",
+        "actual": "sha256-SjMtkaWrYJGW/nMBDV/YM6kigjAsVVGKVEwxTd2Xcdc=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/settings/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-GEnxOWW7eHS6bfCnCcxxqx0kt+0NlJpBelVnlsFKPXw=",
+        "actual": "sha256-GEnxOWW7eHS6bfCnCcxxqx0kt+0NlJpBelVnlsFKPXw=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/upload/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-gviMV7YVweh7Bmrrvmq2f1nTK5B1hCQ7kjd9WM+XQEg=",
+        "actual": "sha256-gviMV7YVweh7Bmrrvmq2f1nTK5B1hCQ7kjd9WM+XQEg=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/billing/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-OnMXhTXfmuOSQtT6fGSZ3QxNocMTbn39GQ3tf00KlEE=",
+        "actual": "sha256-OnMXhTXfmuOSQtT6fGSZ3QxNocMTbn39GQ3tf00KlEE=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-P5+GNYCcbzPtf45y1rXCkD2nIt4pMYAO7TtO0HauFWY=",
+        "actual": "sha256-P5+GNYCcbzPtf45y1rXCkD2nIt4pMYAO7TtO0HauFWY=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/settings/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-KRj/vIYXvipThCc9OfyCGP4pebRoeS0WCyQIP7sZ60c=",
+        "actual": "sha256-KRj/vIYXvipThCc9OfyCGP4pebRoeS0WCyQIP7sZ60c=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/google-connection/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-JnvnLGr9fCzqHwqApYCdDDxQSHXXljMxOXttfOK5F0o=",
+        "actual": "sha256-JnvnLGr9fCzqHwqApYCdDDxQSHXXljMxOXttfOK5F0o=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-POSaa3AVMgCg2FesFtskalIDVYh9OWxyE1AR5R1rZpY=",
+        "actual": "sha256-POSaa3AVMgCg2FesFtskalIDVYh9OWxyE1AR5R1rZpY=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/reviews/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-4uIbynDbm5TCqRYFTIRF53JaGrfsq5XSCxCiLeh0Wag=",
+        "actual": "sha256-4uIbynDbm5TCqRYFTIRF53JaGrfsq5XSCxCiLeh0Wag=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/settings/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-mHx1TZd01Oy0JxvMpIO3PrNp6/phGtcUa5cSdRFj98Q=",
+        "actual": "sha256-mHx1TZd01Oy0JxvMpIO3PrNp6/phGtcUa5cSdRFj98Q=",
+        "match": true
+      },
+      {
+        "path": "server/app/(dashboard)/reviews/page_client-reference-manifest.js",
+        "exists": true,
+        "expected": "sha256-kDMLyE5AKhH30f4uZXpYl6Aw1NlLmt47S2FG1XiOL/M=",
+        "actual": "sha256-kDMLyE5AKhH30f4uZXpYl6Aw1NlLmt47S2FG1XiOL/M=",
+        "match": true
+      }
+    ],
+    "sourceMapInterpretation": "All 66 missing entries are client static .js.map files (the complete missing paths are above). Next 16.4.2 productionBrowserSourceMaps guide says production maps are disabled by default and emitted beside JS only when enabled. Maps are non-executable and none appeared as runtime script sources. There were 144 map files across the full .next tree; these 66 expected manifest entries are the absent client static map entries.",
+    "ssgManifestInterpretation": "_ssgManifest.js is generated after webpack compilation by Next build finalization; its emitted digest differs from the compilation-time SRI entry. The app uses App Router only (no pages directory), and neither / nor /login referenced or requested it. Do not weaken executable-asset SRI; no correction is justified for this build-only/non-requested file.",
+    "staticCsp": {
+      "manifestHashes": [
+        "MHxzEiOdQlsOGQD51fL9ou7jZPJIS+nGQzDl2ta2WcM=",
+        "OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo="
+      ],
+      "htmlCount": 1,
+      "htmlInlineScriptHashes": [
+        "OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=",
+        "MHxzEiOdQlsOGQD51fL9ou7jZPJIS+nGQzDl2ta2WcM="
+      ],
+      "allHtmlHashesIncluded": true,
+      "manifestHashesUsedByHtml": 2
+    }
+  },
+  "guideRead": {
+    "exactVersion": "Next.js 16.4.2 installed copy",
+    "paths": [
+      "node_modules/next/dist/docs/01-app/02-guides/building.md",
+      "node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md",
+      "node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/productionBrowserSourceMaps.md"
+    ],
+    "sourceMapFinding": "production browser source maps are off by default unless productionBrowserSourceMaps is true"
+  },
+  "previousPrepAttempt": {
+    "root": "%TEMP%/ornigami-block7i-4cc2b9ee467d4fbda8ec54476bfd19d8",
+    "classification": "preparatory install/checks only; runner had no build mode; used npm ci --ignore-scripts, 600000 ms timeout, and a different check selection; no final build/artifact report survived there",
+    "installLog": "added 655 packages in 59s; stderr empty",
+    "runnerSha256": "15ABC95177023DD5CC33F47EE78565D1785121CBEECAFFD12DD6F59E88595542",
+    "stdoutSha256": "7C27D14C891F92AFB67D4C4715F47BA567BAB2C7BC3E3F484A2C8A1DEAB9D499",
+    "stderrSha256": "E3B0C44298FC1C149BF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "cleanup": "validated path within identified block root; removed its exact worktree and root; verified absent"
+  },
+  "correction": "The prior Block 7I statement that all temporary resources were removed was overbroad: the separate preparatory root remained. This follow-up removes that prep root and records a distinct bounded final rerun. The previous final-run evidence was unavailable; this rerun is the retained source of final evidence.",
+  "limits": [
+    "Local isolated result only; no hosted build/deployment or acceptance.",
+    "No database URL or hosted credentials; login, secret binding, recovery, rollback, privacy acceptance and staging acceptance remain unverified.",
+    "No app/framework fix: runtime executable SRI and CSP checks pass; mismatch is a non-requested App Router build artifact and absent files are non-executable maps.",
+    "Remote Vercel “Don’t build anything” / exit 0 guard remains untouched and active; all previous holds remain."
+  ]
+}
