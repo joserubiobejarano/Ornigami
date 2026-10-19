@@ -17,7 +17,7 @@ const EXPECTED_ENV = Object.freeze({
 
 export const FIXTURE_PROVISIONING_STATUSES = Object.freeze([
   "execution_not_authorized",
-  "delivery_plan_required",
+  "credential_custody_approval_required",
   "credential_hash_invalid",
   "configuration_invalid",
   "endpoint_mismatch",
@@ -114,6 +114,10 @@ function endpointConfigurationMatches(env, approvedEndpointFingerprint, endpoint
     && ["direct", "pooled"].includes(endpointForm);
 }
 
+function custodyApprovalValid({ deliveryPlanApproved, ownerHeldPasswordApproved }) {
+  return (deliveryPlanApproved === true) !== (ownerHeldPasswordApproved === true);
+}
+
 function endpointFingerprint(databaseUrl) {
   try {
     const parsed = new URL(databaseUrl);
@@ -150,11 +154,14 @@ export async function inspectAndProvisionExistingFixture({
   passwordHash,
   executionAuthorized,
   deliveryPlanApproved,
+  ownerHeldPasswordApproved,
   env = process.env,
   createClient,
 } = {}) {
   if (executionAuthorized !== true) return fixedResult("execution_not_authorized");
-  if (deliveryPlanApproved !== true) return fixedResult("delivery_plan_required");
+  if (!custodyApprovalValid({ deliveryPlanApproved, ownerHeldPasswordApproved })) {
+    return fixedResult("credential_custody_approval_required");
+  }
   if (!endpointConfigurationMatches(env, approvedEndpointFingerprint, endpointForm)) {
     return fixedResult("configuration_invalid");
   }
@@ -221,6 +228,7 @@ export function createOneShotFixtureCredentialProvisioner({
 } = {}) {
   let attempted = false;
   let activeHash = "";
+  let activeCustodyMode = "";
   const launch = createLauncher({
     ...launcherOptions,
     sanitizeResult: sanitizeProvisioningResult,
@@ -233,7 +241,8 @@ export function createOneShotFixtureCredentialProvisioner({
         endpointForm,
         passwordHash: activeHash,
         executionAuthorized: true,
-        deliveryPlanApproved: true,
+        deliveryPlanApproved: activeCustodyMode === "delivery",
+        ownerHeldPasswordApproved: activeCustodyMode === "owner-held",
         env,
       });
     },
@@ -244,22 +253,27 @@ export function createOneShotFixtureCredentialProvisioner({
     endpointForm,
     passwordHash,
     deliveryPlanApproved,
+    ownerHeldPasswordApproved,
     executionAuthorized,
     env = process.env,
   } = {}) {
     if (attempted) return fixedResult("already_attempted");
     attempted = true;
     if (executionAuthorized !== true) return fixedResult("execution_not_authorized");
-    if (deliveryPlanApproved !== true) return fixedResult("delivery_plan_required");
+    if (!custodyApprovalValid({ deliveryPlanApproved, ownerHeldPasswordApproved })) {
+      return fixedResult("credential_custody_approval_required");
+    }
     if (!endpointConfigurationMatches(env, approvedEndpointFingerprint, endpointForm)) {
       return fixedResult("configuration_invalid");
     }
     if (!isBcryptCost10Hash(passwordHash)) return fixedResult("credential_hash_invalid");
     activeHash = passwordHash;
+    activeCustodyMode = ownerHeldPasswordApproved ? "owner-held" : "delivery";
     try {
       return await launch({ approvedEndpointFingerprint, endpointForm, env });
     } finally {
       activeHash = "";
+      activeCustodyMode = "";
     }
   };
 }
@@ -330,8 +344,10 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  if (!argPresent(args, "--delivery-plan-approved")) {
-    process.stdout.write('{"status":"delivery_plan_required"}\n');
+  const deliveryPlanApproved = argPresent(args, "--delivery-plan-approved");
+  const ownerHeldPasswordApproved = argPresent(args, "--owner-held-password-approved");
+  if (!custodyApprovalValid({ deliveryPlanApproved, ownerHeldPasswordApproved })) {
+    process.stdout.write('{"status":"credential_custody_approval_required"}\n');
     process.exitCode = 1;
     return;
   }
@@ -356,7 +372,8 @@ async function main() {
       approvedEndpointFingerprint: argValue(args, "--approved-endpoint-fingerprint"),
       endpointForm,
       passwordHash: hash,
-      deliveryPlanApproved: true,
+      deliveryPlanApproved,
+      ownerHeldPasswordApproved,
       executionAuthorized: true,
     });
     process.stdout.write(`${JSON.stringify(result)}\n`);

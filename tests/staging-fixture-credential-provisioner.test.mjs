@@ -63,6 +63,15 @@ test("CLI entrypoint is inert without explicit execution and target guards", () 
   assert.equal(noTarget.status, 1);
   assert.equal(noTarget.stdout.trim(), '{"status":"configuration_invalid"}');
   assert.equal(noTarget.stderr, "");
+  const conflictingCustody = spawnSync(process.execPath, [
+    script,
+    "--execute-existing-fixture-write",
+    "--delivery-plan-approved",
+    "--owner-held-password-approved",
+  ], { encoding: "utf8", env, input: "" });
+  assert.equal(conflictingCustody.status, 1);
+  assert.equal(conflictingCustody.stdout.trim(), '{"status":"credential_custody_approval_required"}');
+  assert.equal(conflictingCustody.stderr, "");
 });
 
 test("endpoint, expected target and malformed hash guards reject before client construction", async () => {
@@ -84,7 +93,7 @@ test("endpoint, expected target and malformed hash guards reject before client c
   assert.equal((await invoke({ databaseUrl: `postgresql://ornigami_staging_owner:synthetic-password@${HOST}/wrong-db` })).status, "target_mismatch");
   assert.equal((await invoke({ passwordHash: "plaintext" })).status, "credential_hash_invalid");
   assert.equal((await invoke({ executionAuthorized: false })).status, "execution_not_authorized");
-  assert.equal((await invoke({ deliveryPlanApproved: false })).status, "delivery_plan_required");
+  assert.equal((await invoke({ deliveryPlanApproved: false })).status, "credential_custody_approval_required");
   assert.equal(clientCalls, 0);
 });
 
@@ -247,17 +256,30 @@ test("one-shot wrapper requires execution and delivery approvals and runs identi
     runIdentityPreflight: async () => { order.push("identity"); return { status: "verified", checks: {} }; },
     provision: async (input) => { order.push("write"); assert.equal(input.passwordHash, HASH); return { status: "credential_write_applied", checks: READY, secret: "suppressed" }; },
   });
-  assert.equal((await deniedDelivery({ executionAuthorized: true, deliveryPlanApproved: false })).status, "delivery_plan_required");
+  assert.equal((await deniedDelivery({ executionAuthorized: true, deliveryPlanApproved: false })).status, "credential_custody_approval_required");
   assert.deepEqual(order, []);
+
+  const deniedBothCustodyModes = createOneShotFixtureCredentialProvisioner({ createLauncher });
+  assert.equal((await deniedBothCustodyModes({
+    executionAuthorized: true,
+    deliveryPlanApproved: true,
+    ownerHeldPasswordApproved: true,
+  })).status, "credential_custody_approval_required");
 
   const provisionApproved = createOneShotFixtureCredentialProvisioner({
     createLauncher,
     runIdentityPreflight: async () => { order.push("identity"); return { status: "verified", checks: {} }; },
-    provision: async (input) => { order.push("write"); assert.equal(input.passwordHash, HASH); return { status: "credential_write_applied", checks: READY, secret: "suppressed" }; },
+    provision: async (input) => {
+      order.push("write");
+      assert.equal(input.passwordHash, HASH);
+      assert.equal(input.ownerHeldPasswordApproved, true);
+      assert.equal(input.deliveryPlanApproved, false);
+      return { status: "credential_write_applied", checks: READY, secret: "suppressed" };
+    },
   });
   const result = await provisionApproved({
     executionAuthorized: true,
-    deliveryPlanApproved: true,
+    ownerHeldPasswordApproved: true,
     approvedEndpointFingerprint: FINGERPRINT,
     endpointForm: "direct",
     passwordHash: HASH,
