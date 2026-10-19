@@ -2047,3 +2047,43 @@ database access or deployment. Target-specific host/runtime acceptance remains a
 **Verification record.** Archive SHA-512 matched `package-lock.json`; prior SHA-256 discrepancies were reused as
 known findings. Relevant installed framework docs and local routes/config were inspected. `git diff --check`
 passed; no tests, build or external action was needed. Review remains bounded by static/local evidence only.
+
+## Block 6E — explicit schedule-free private-staging config
+
+**Official support check (2026-10-19).** Vercel's [CLI global options](https://vercel.com/docs/cli/global-options)
+document `--local-config` as selecting a local `vercel.json` path and list it as a global CLI option. The
+[project configuration reference](https://vercel.com/docs/project-configuration/vercel-json) defines `crons` as
+optional configuration. Vercel's [Cron Jobs overview](https://vercel.com/docs/cron-jobs) says schedules can be
+declared in `vercel.json` or through the Build Output API and are invoked against the production deployment.
+Its [management guide](https://vercel.com/docs/cron-jobs/manage-cron-jobs) says cron jobs can be deleted by
+removing configuration and redeploying, or disabled in project settings. This supports an explicitly selected
+alternate local config with no `crons` declaration. It does **not** let this repository prove or change remote
+schedule state; selection for a Git-connected deployment was not established here.
+
+**Files and selection.** Added `vercel.staging.json`, containing only the Vercel schema reference and no
+`crons` property. Default `vercel.json` and all three existing schedules are unchanged. The documented future
+CLI selection form is `vercel --local-config vercel.staging.json ...`; it was not executed and is not a deployment
+authorization. The CLI option selects config only, not project identity. Since ignored `.vercel/project.json`
+contains the historical LocalLift linkage, any future authorized CLI operation must also specify the separately
+owner-approved target explicitly (for example with `--project`); this block does not name or expose that target.
+The file itself does not configure a private domain, access protection, environment variables or origin.
+
+**Local validation.** Added `scripts/validate-vercel-staging-config.mjs`. It checks that the default config still
+contains exactly the three accepted path/schedule pairs and that the staging config contains no `crons` property
+and remains minimal. `node scripts/validate-vercel-staging-config.mjs` passed.
+`node --check scripts/validate-vercel-staging-config.mjs` passed. `git diff --check` passed. No build, provider request,
+deployment, project change, cron mutation, or route call was made.
+
+**Limits and remaining decisions.** No `crons` property in this selected file means no automatic schedule is
+declared by this local config. It does not disable schedules already registered remotely, prevent manual calls to
+the routes, or prove that a later deployment uses this file. The handlers' `CRON_SECRET` checks authorize calls;
+they are not schedule switches. The official docs also identify dashboard disablement and redeployment-based
+removal as remote controls; neither was used. Although no active Build Output API cron declaration was found in
+the inspected tracked repository paths, no build output was generated, so none is evaluated. A selected staging
+deployment must not be assumed to preserve the existing production project's cron state; target separation and
+remote schedule read-back require a separately reviewed, explicitly authorized operation. NO-GO and all existing
+coverage, adoption, campaign, provider and deployment holds remain active.
+
+Owner decisions remain the Block 6C/6D items: whether/when to select the portfolio fallback; the Ornigami target
+role/origin and exact Vercel project; approval of any spend before paid action; and project/data binding before any
+provider connection or migration. No owner decision is required to run the local configuration validator.
