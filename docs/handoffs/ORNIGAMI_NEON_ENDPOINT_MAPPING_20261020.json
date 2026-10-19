@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "assessment": "read_only_neon_endpoint_identity",
+  "startedAt": "2026-10-19T22:36:39.161Z",
+  "completedAt": "2026-10-19T22:36:46.487Z",
+  "cli": {
+    "name": "neon",
+    "version": "4.14.3",
+    "entry": "C:/Users/joser/AppData/Roaming/npm/node_modules/neon/dist/cli.js",
+    "helpExitCode": 0,
+    "helpStdoutBytes": 0,
+    "helpStderrBytesSuppressed": 6491,
+    "metadataMethod": "authenticated neon api GET with fixed --output json, --no-analytics, and pinned official API/OAuth hosts; stdout/stderr captured privately and projected in memory",
+    "apiHost": "https://console.neon.tech/api/v2",
+    "oauthHost": "https://oauth2.neon.tech",
+    "analyticsDisabled": true,
+    "priorUnflaggedCalls": "Earlier help/metadata invocations used default CLI analytics and did not pin API/OAuth host overrides. Local source shows analytics can send CLI Started telemetry and inspect stored auth attribution; effective destinations and completion are unknown because no transport evidence was retained and override values were not inspected.",
+    "maximumCaptureBytesPerStream": 1048576,
+    "timeoutMillisecondsPerCommand": 20000,
+    "windowsTimeoutCleanup": "taskkill /T /F with child-kill fallback"
+  },
+  "providerOperations": [
+    { "operation": "project_get", "method": "GET", "status": "matched", "exitCode": 0 },
+    { "operation": "branch_get", "method": "GET", "status": "matched", "exitCode": 0 },
+    { "operation": "branch_endpoints_list", "method": "GET", "status": "matched", "exitCode": 0 },
+    { "operation": "endpoint_detail_get", "method": "GET", "count": 1, "status": "matched", "exitCode": 0 }
+  ],
+  "target": {
+    "organizationId": "org-orange-band-18388903",
+    "projectId": "dawn-lake-13525647",
+    "projectName": "ornigami-fictional-staging",
+    "branchId": "br-young-voice-bamzc53o",
+    "branchName": "fictional-staging",
+    "databaseName": "ornigami_staging",
+    "roleName": "ornigami_staging_owner",
+    "regionId": "aws-eu-central-1"
+  },
+  "project": {
+    "status": "matched",
+    "id": "dawn-lake-13525647",
+    "name": "ornigami-fictional-staging",
+    "orgId": "org-orange-band-18388903",
+    "regionId": "aws-eu-central-1"
+  },
+  "branch": {
+    "status": "matched",
+    "id": "br-young-voice-bamzc53o",
+    "name": "fictional-staging",
+    "default": true,
+    "currentState": "ready",
+    "parentId": null
+  },
+  "endpoint": {
+    "listStatus": "matched",
+    "detailStatus": "matched",
+    "id": "ep-green-firefly-baf4aa20",
+    "projectId": "dawn-lake-13525647",
+    "branchId": "br-young-voice-bamzc53o",
+    "host": "ep-green-firefly-baf4aa20.c-8.eu-central-1.aws.neon.tech",
+    "type": "read_write",
+    "regionId": "aws-eu-central-1",
+    "currentState": "idle",
+    "poolerEnabled": false
+  },
+  "fingerprints": {
+    "direct": {
+      "status": "derived_from_verified_endpoint_host_and_documented_default_port",
+      "host": "ep-green-firefly-baf4aa20.c-8.eu-central-1.aws.neon.tech",
+      "effectivePort": 5432,
+      "inputRule": "SHA-256(lowercase(hostname + ':' + effectivePort))",
+      "sha256": "96acb55ea0fc6bbf35fe992be70a05ee9ba87fceb4f5fa9b66be74be5be063d1"
+    },
+    "pooled": {
+      "status": "not_derived_pooler_disabled",
+      "host": null,
+      "effectivePort": null,
+      "sha256": null
+    }
+  },
+  "applicationBinding": {
+    "deployedDatabaseUrlSelection": "not_observed",
+    "databaseUrlRetrieved": false,
+    "databaseConnectionOrSql": false,
+    "expectedValueSettingsConfigured": false
+  },
+  "sanitizer": {
+    "source": "../../scripts/neon/endpoint-metadata-sanitizer.mjs",
+    "tests": "../../tests/neon-endpoint-metadata-sanitizer.test.mjs",
+    "syntheticTestCount": 8,
+    "syntheticTestsPassed": 8,
+    "initialNarrowHostSchemaAttempt": "schema_invalid; only fixed field-presence diagnostics emitted; then corrected locally and repeated pinned GETs",
+    "dummyStalledChild": { "status": "timeout", "capturedStdoutBytes": 0, "capturedStderrBytes": 0, "taskRootRemoved": true },
+    "rawProviderStdoutRetained": false,
+    "rawProviderStderrRetained": false,
+    "rawProviderErrorsEmitted": false,
+    "credentialsOrConnectionUrisRetrieved": false
+  }
+}
