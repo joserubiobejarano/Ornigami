@@ -1781,6 +1781,48 @@ unimplemented and unbudgeted; coverage/adoption and campaign holds remain active
 **Commit:** the combined test, preserved independent-review notes and this verification record are
 included in the local commit reported below.
 
+## Block 5C independent review — 19 October 2026
+
+Reviewed HEAD `c6d43cc78708937783cb4544ba9361cdbc12dbad` against `39d7be3`.
+Initial working tree clean; only tests and the handoff changed. Independently reran the new
+combined sequence: 1/1 passed, exit 0. JavaScript syntax and whitespace checks passed. The prior
+review notes are now committed. The reported unfiltered 81-test run was not repeated in this
+review; no production files changed. Only these notes were edited. **Disposition: combined
+happy-path verification accepted; required combined failure coverage remains incomplete.**
+
+### B5C.1 [P2] Exercise failure propagation through the combined sequence
+
+The new test at `tests/coolify-rehearsal-workflow.test.mjs:612` exercises one successful sequence.
+It explicitly sets `UPLOAD_OUTCOME=success` and later `CUSTODY_STEP_OUTCOME=success`. Existing
+phase-level negative tests remain valuable, but do not exercise the cross-step environment,
+outcome propagation, shared deadline and cleanup ordering after an earlier phase fails. Block 5C
+was explicitly requested to verify those combinations as well as success.
+
+Required: reuse the combined fixture for a small parameterized set of actual-workflow failure
+sequences, without building a new Actions engine or changing production features:
+
+- Failed/interrupted capture followed by a bounded diagnostic upload/custody/cleanup path.
+  Diagnostic custody may be verified, but the failed capture gate must remain failed; it must
+  never be represented as application or complete-capture acceptance.
+- Failed/skipped upload or missing artifact identity: reporting reflects the observed outcome,
+  no fake verified custody is assigned, and bounded exact-owned cleanup still follows the
+  existing workflow conditions/failure policy.
+- Missing/mismatched/timed-out custody: propagate its real failure/skipped outcome into cleanup,
+  retain unproved custody, and verify no second wait or fresh shared budget is introduced.
+- A late/exhausted downstream budget and a cleanup timeout reached after earlier phases:
+  preserve the original work cutoff, do not start unsafe work, and leave affected absence
+  receipts unproved. Use controlled short fixture clocks/budgets, not long real waits.
+
+Drive downstream outcomes from the observed phase results and existing workflow conditions,
+rather than assigning success unconditionally. Check that post-upload local outcome receipts
+stay outside the uploaded snapshot on both successful and failing paths. Keep inherited
+negative unit tests; the task is to close the missing sequence-level assertions, not rerun
+every old audit. Correct the handoff to distinguish newly integrated failure coverage from
+phase-level coverage. If a production defect is found, document it and stop as originally scoped.
+
+No live operation, registry implementation, production-budget change or dispatch is authorized.
+All existing holds and unverified hosted timing/image-acceptance boundaries remain active.
+
 ## B5C.1 response — combined failure sequences
 
 The combined fixture is now reusable across failure paths. It runs the actual capture, upload
@@ -1820,3 +1862,70 @@ Docker services. Hosted scheduling/timing, real upload/API behavior, daemon-side
 Linux-image acceptance remain unverified. B2.1, R4 publication/pull/smoke, coverage/adoption and
 campaign holds remain open. This response and its focused test are included in the local commit
 reported for B5C.1.
+
+## Block 6A — coverage checkpoint
+
+**Checked:** 2026-10-19 10:32–10:33 UTC (12:32–12:33 Europe/Madrid). This bounded, read-only
+checkpoint did not run scans, pull/publish a database, contact maintainers, or change policy.
+
+**Primary source findings (current pages checked at the time above):**
+
+- [Debian tracker: CVE-2026-111142](https://security-tracker.debian.org/tracker/CVE-2026-111142),
+  [CVE-2026-111141](https://security-tracker.debian.org/tracker/CVE-2026-111141), and the
+  [zziplib package tracker](https://security-tracker.debian.org/tracker/source-package/zziplib)
+  show bookworm 0.13.72+dfsg.1-1.1, trixie 0.13.78+dfsg.1-0.1 and forky/sid
+  0.13.78+dfsg.1-0.2 as **undetermined for both CVEs**. These are Debian's current package
+  status and versions; they do not assert affected or not affected.
+- The existing third-party [Trivy DB #701 discussion](https://github.com/aquasecurity/trivy-db/pull/701)
+  (not Ornigami's local draft/report) records its
+  closure on 19 October after Debian corrected the malformed 111142 tracker annotation from a
+  bare `undetermined` value to `<undetermined>` (Salsa commit `9e144b7b`). The Trivy maintainer
+  says the corrected feed is in vuln-list-debian and scheduled builds pass. The same maintainer
+  states that trivy-db skips `<undetermined>` entries; #701's proposed behavior to retain an
+  unknown/unfixed package advisory was closed because it changes that policy. Thus the correction
+  fixes feed/build handling, not the unresolved package applicability or scanner routing. CVE-111141
+  was already represented as `<undetermined>` in the Debian feed according to the
+  [related Trivy DB #700 discussion](https://github.com/aquasecurity/trivy-db/pull/700).
+- The official [scheduled Trivy DB run 39208577322](https://github.com/aquasecurity/trivy-db/actions/runs/39208577322)
+  on `main` (`cbebf2e`) was triggered 19 October at 06:12 UTC and reports **Success**. Its
+  [workflow definition](https://github.com/aquasecurity/trivy-db/blob/cbebf2e/.github/workflows/cron.yml)
+  schedules six-hour builds and publishes to registries when `skip_publish` is false. Since this
+  was a scheduled trigger, the input was not set and its default is false; the successful run is
+  evidence that the scheduled workflow, including its upload step, completed. The run page exposes
+  no resulting manifest/layer digest or package-record readback. Publication success and freshness
+  therefore establish neither that these package records were included nor that scanners can route
+  them.
+- The [upstream zziplib repository](https://github.com/gdraheim/zziplib) and immutable source
+  references in the CVE records were checked for relevant current advisories/releases. No upstream
+  corrected, withdrawn, not-affected, or fixed-release determination for these CVEs was found in
+  this bounded review. This absence is not a vendor determination. CVE.org's record page did not
+  expose readable record data in this browser check; Debian's tracker remains the authoritative
+  package-status source used here.
+
+**Comparison with closure requirements and exact-database evidence:** Debian has corrected the
+111142 feed syntax, but both CVEs remain undetermined in Debian's current tracker. The upstream
+proposal to put undetermined advisories into the official DB was not accepted; no authoritative
+assessment now resolves the package as affected, fixed, withdrawn, or not affected. The historical
+read-only exact-DB inspection documented above remains bound to the previously inspected digest
+`sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730`; it found no zziplib
+advisory routing for 111142 in Debian 12/13/14. It is not evidence about the 19 October publication
+or the current tag. **Exact-current-DB verification was not performed**: no registry read/pull or
+database query was run in this checkpoint. No fresh timestamp or zero-finding scan is treated as
+coverage.
+
+**Conclusion — HOLD REMAINS.** The fresh evidence removes the reported malformed-feed/build failure
+for CVE-2026-111142, but does not close advisory coverage for either CVE. The missing evidence is
+either (a) authoritative Debian/upstream corrected applicability, fixed, withdrawn, or not-affected
+status that resolves the exact package/version scope without suppressing a finding; or (b) an
+officially accepted coverage-preserving handling of undetermined entries, followed by a successful
+official publication and independent read-only verification of the exact manifest/layer and
+Debian package/vulnerability records for all relevant releases. Preserve every original finding
+and the strict freshness gate. Do not adopt PR #701's rejected semantics, suppress either CVE, or
+infer coverage from the successful scheduled run.
+
+**Next action:** retain the hold and do not repeat a trial. At the next authorized checkpoint, use a
+safe read-only method to bind the current official DB digest and query both zziplib package buckets
+and CVE records for Debian 12/13/14; in parallel, accept only authoritative status or an official
+publisher-supported resolution. Keep the draft upstream report local under the existing owner
+decision. Adoption/dispatch holds remain active; allowance is 7/7 dispatches, 39/300 charged
+minutes and zero reserved. Private staging deadline remains 31 October 2026, 23:59 Europe/Madrid.
