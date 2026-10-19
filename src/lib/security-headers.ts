@@ -1,11 +1,9 @@
-import { getOptionalEnv } from "./env.ts";
-
 export const TRUSTED_TYPES_REPORTING_ENDPOINT = 'csp-endpoint="/api/csp-report"';
 export const TRUSTED_TYPES_REPORT_ONLY_POLICY =
   "require-trusted-types-for 'script'; trusted-types default; report-to csp-endpoint";
 
 export function buildContentSecurityPolicy(nonce: string): string {
-  const developmentScriptPolicy = getOptionalEnv("NODE_ENV") !== "production" ? " 'unsafe-eval'" : "";
+  const developmentScriptPolicy = process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
     "base-uri 'self'",
@@ -19,4 +17,9 @@ export function buildContentSecurityPolicy(nonce: string): string {
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://www.google.com",
     "object-src 'none'",
   ].join("; ");
+}
+
+export function applyProxySecurityHeaders(headers: Headers, nonce: string): void {
+  headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
+  headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 }

@@ -6,8 +6,16 @@ import { getAppBaseUrl } from "@/lib/app-base-url";
 import { getMiddlewareAccessState } from "@/lib/db/access";
 import { safeLogger } from "@/lib/safe-logger";
 import { shouldRedirectToGoogleConnect, shouldRedirectAfterAccessResolutionError } from "@/lib/disconnected-access-policy";
-import { buildContentSecurityPolicy } from "@/lib/security-headers";
+import { applyProxySecurityHeaders, buildContentSecurityPolicy } from "@/lib/security-headers";
 import { isPrivatePreviewMode } from "@/lib/private-preview";
+import {
+  isRestrictedDeletionSession,
+  withPrivatePreviewIdentityPreflight,
+} from "@/lib/private-preview-database-identity-proxy";
+import {
+  preflightPrivatePreviewDatabaseIdentity,
+  privatePreviewDatabaseIdentityHttpResponse,
+} from "@/lib/private-preview-database-identity";
 
 function isProtectedAppPage(pathname: string): boolean {
   const prefixes = [
@@ -20,18 +28,14 @@ function isProtectedAppPage(pathname: string): boolean {
 }
 
 function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
-  response.headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
-  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  applyProxySecurityHeaders(response.headers, nonce);
   return response;
 }
 
-const proxy = auth(async (req) => {
+const authenticatedProxy = auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
-  const isRestrictedDeletionSession =
-    req.auth?.accountLifecycle === "deleting" &&
-    typeof req.auth.deletionUserId === "string" &&
-    !sessionUser?.id;
+  const restrictedDeletionSession = isRestrictedDeletionSession(req.auth);
 
   const nonce = randomBytes(16).toString("base64url");
   const requestHeaders = new Headers(req.headers);
@@ -40,7 +44,7 @@ const proxy = auth(async (req) => {
   // hydration scripts. The response CSP alone is too late for those scripts.
   requestHeaders.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
 
-  if (isRestrictedDeletionSession) {
+  if (restrictedDeletionSession) {
     // Only Auth.js session/sign-in plumbing and the recovery screen remain
     // reachable while deletion is pending.
     const isAuthJsEndpoint = /^\/api\/auth\/(?:csrf|providers|session|signin(?:\/.*)?|callback(?:\/.*)?|signout|error|verify-request)$/.test(pathname);
@@ -165,7 +169,19 @@ const proxy = auth(async (req) => {
   }), nonce);
 });
 
-export { proxy };
+export const proxy = withPrivatePreviewIdentityPreflight({
+  authenticatedProxy,
+  pathname: (req) => req.nextUrl.pathname,
+  preflight: () => preflightPrivatePreviewDatabaseIdentity(process.env, isPrivatePreviewMode()),
+  reject: (status) => {
+    const nonce = randomBytes(16).toString("base64url");
+    const response = privatePreviewDatabaseIdentityHttpResponse(status);
+    return withSecurityHeaders(NextResponse.json(response.body, {
+      status: response.status,
+      headers: response.headers,
+    }), nonce);
+  },
+});
 
 export const config = {
   matcher: [
