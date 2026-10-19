@@ -356,6 +356,196 @@ printf 'valid=%s early=%s late=%s absolute=%s\\n' "$valid_rc" "$early" "$late" "
   }
 }));
 
+function shortUploadAdmission(script) {
+  return script.replace("ornigami_tail_resolve_phase upload 120 300 15", "ornigami_tail_resolve_phase upload 8 300 2");
+}
+
+function shortCustody(script) {
+  return script
+    .replace("ornigami_tail_resolve_phase custody 300 600 40", "ornigami_tail_resolve_phase custody 8 600 2")
+    .replace("ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now <= 40", "ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now <= 2")
+    .replace('ornigami_tail_supervise custody "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" 40', 'ornigami_tail_supervise custody "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" 2')
+    .replace("phase_deadline - now - 40 - 2", "phase_deadline - now - 2 - 1")
+    .replace("phase_deadline - now - 40", "phase_deadline - now - 2")
+    .replace("api_seconds=15", "api_seconds=2")
+    .replace("sleep_seconds=10", "sleep_seconds=1")
+    .replace("--kill-after=2s", "--kill-after=1s");
+}
+
+function runTailShell(root, script, env) {
+  const windowsInstall = process.platform === "win32"
+    ? `install() { [[ "$1" == -d && "$2" == -m && "$3" == 700 ]] || return 97; shift 3; mkdir -p -- "$@"; }\n`
+    : "";
+  return runShell(root, windowsInstall + script, env);
+}
+
+test("bounded upload admission uses the existing absolute deadline and skips unsafe whole-minute windows", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  env.GITHUB_OUTPUT = join(root, "upload-output.txt");
+  env.ORNIGAMI_WORK_DEADLINE_EPOCH = String(Math.floor(Date.now() / 1000) + 150);
+  let result = runShell(root, runBlock("evidence_upload_admission"), env);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(readFileSync(env.GITHUB_OUTPUT, "utf8"), /admitted=true\ntimeout_minutes=1/);
+  assert.match(readFileSync(join(env.RUNNER_TEMP, "ornigami-upload-admission.local.txt"), "utf8"), /upload_admission=passed/);
+
+  env.GITHUB_OUTPUT = join(root, "upload-short-output.txt");
+  env.ORNIGAMI_WORK_DEADLINE_EPOCH = String(Math.floor(Date.now() / 1000) - 235);
+  result = runShell(root, shortUploadAdmission(runBlock("evidence_upload_admission")), env);
+  assert.notEqual(result.status, 0, "less than 60 work seconds plus the 15-second reserve is rejected");
+  assert.match(readFileSync(env.GITHUB_OUTPUT, "utf8"), /admitted=false/);
+  assert.match(readFileSync(join(env.RUNNER_TEMP, "ornigami-upload-admission.local.txt"), "utf8"), /less_than_one_safe_actions_minute/);
+
+  env.GITHUB_OUTPUT = join(root, "upload-exhausted-output.txt");
+  env.ORNIGAMI_WORK_DEADLINE_EPOCH = String(Math.floor(Date.now() / 1000) - 961);
+  result = runShell(root, runBlock("evidence_upload_admission"), env);
+  assert.notEqual(result.status, 0);
+  assert.match(readFileSync(env.GITHUB_OUTPUT, "utf8"), /admitted=false/);
+}));
+
+test("upload and custody workflow retains the artifact identity gate, stable source and shared report deadline", () => {
+  const admission = workflow.indexOf("id: evidence_upload_admission");
+  const upload = workflow.indexOf("id: evidence_upload", admission + "id: evidence_upload_admission".length);
+  const report = workflow.indexOf("id: evidence_report", upload);
+  const custody = workflow.indexOf("id: evidence_custody", report);
+  const cleanup = workflow.indexOf("id: cleanup", custody);
+  assert.ok(admission >= 0 && admission < upload && upload < report && report < custody && custody < cleanup);
+  assert.match(workflow.slice(admission, upload), /ornigami_tail_resolve_phase upload 120 300 15/);
+  assert.match(workflow.slice(upload, report), /timeout-minutes: 1/);
+  assert.match(workflow.slice(upload, report), /steps\.evidence_upload_admission\.outputs\.admitted == 'true'/);
+  assert.match(workflow.slice(upload, report), /path: \$\{\{ runner\.temp \}\}\/ornigami-evidence\//);
+  assert.match(workflow.slice(report, custody), /ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH/);
+  assert.match(workflow.slice(custody, cleanup), /steps\.evidence_upload\.outcome == 'success'/);
+  assert.match(workflow.slice(custody, cleanup), /\.context == \$context and \.description == \$description and \.state == "success" and \.creator\.login == \$owner/);
+  assert.match(workflow.slice(custody, cleanup), /timeout --signal=TERM --kill-after=2s/);
+});
+
+test("upload action outcomes require both success and identity outputs; later receipts stay outside the uploaded snapshot", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  const evidence = env.ORNIGAMI_EVIDENCE_DIR;
+  mkdirSync(evidence, { recursive: true });
+  writeFileSync(join(evidence, "manifest.json"), '{"diagnostic":true}\n');
+  env.UPLOAD_SOURCE = evidence;
+  env.FAKE_ARTIFACT_STORE = join(root, "fake-artifact");
+  env.FAKE_UPLOAD_MODE = "success";
+  env.FAKE_UPLOAD_TIMEOUT = "2s";
+  const fakeAction = join(root, "fake-upload-action.sh");
+  writeExecutable(fakeAction, `#!/usr/bin/env bash
+set -Eeuo pipefail
+mkdir -p "$FAKE_ARTIFACT_STORE"
+cp -R "$UPLOAD_SOURCE/." "$FAKE_ARTIFACT_STORE/"
+case "$FAKE_UPLOAD_MODE" in
+  success) printf 'artifact-id=123\nartifact-digest=%s\n' "${"e".repeat(64)}" > "$FAKE_ACTION_OUTPUT" ;;
+  missing-outputs) : ;;
+  fail) exit 17 ;;
+  hang) trap '' TERM; while :; do sleep 1; done ;;
+esac
+`);
+  env.FAKE_ACTION_OUTPUT = join(root, "fake-action-output.txt");
+  env.FAKE_UPLOAD_SCRIPT = fakeAction;
+  const sourceBefore = createHashImpl("sha256").update(readFileSync(join(evidence, "manifest.json"))).digest("hex");
+  let action = runShell(root, 'timeout --signal=TERM --kill-after=1s "$FAKE_UPLOAD_TIMEOUT" "$FAKE_UPLOAD_SCRIPT"', env);
+  assert.equal(action.status, 0, action.stderr);
+  const outputs = readFileSync(env.FAKE_ACTION_OUTPUT, "utf8");
+  assert.match(outputs, /artifact-id=123/);
+  assert.equal(createHashImpl("sha256").update(readFileSync(join(env.FAKE_ARTIFACT_STORE, "manifest.json"))).digest("hex"), sourceBefore);
+
+  env.FAKE_UPLOAD_MODE = "missing-outputs";
+  rmSync(env.FAKE_ACTION_OUTPUT, { force: true });
+  action = runShell(root, '"$FAKE_UPLOAD_SCRIPT"', env);
+  assert.equal(action.status, 0);
+  assert.equal(existsSync(env.FAKE_ACTION_OUTPUT), false, "missing action outputs cannot mint an artifact identity");
+  env.FAKE_UPLOAD_MODE = "fail";
+  writeFileSync(env.FAKE_ACTION_OUTPUT, outputs);
+  action = runShell(root, '"$FAKE_UPLOAD_SCRIPT"', env);
+  assert.equal(action.status, 17);
+  env.FAKE_UPLOAD_MODE = "hang";
+  env.FAKE_UPLOAD_TIMEOUT = "0.2s";
+  action = runShell(root, 'timeout --signal=TERM --kill-after=1s "$FAKE_UPLOAD_TIMEOUT" "$FAKE_UPLOAD_SCRIPT"', env);
+  assert.ok([124, 137].includes(action.status), "hung upload action is not a successful upload");
+
+  env.EVIDENCE_URL = "";
+  env.ORNIGAMI_WORK_DEADLINE_EPOCH = String(Math.floor(Date.now() / 1000) + 1440);
+  for (const outcome of ["failure", "skipped"]) {
+    env.UPLOAD_OUTCOME = outcome;
+    const report = runTailShell(root, runBlock("evidence_report"), env);
+    assert.equal(report.status, 0, report.stderr);
+    assert.match(readFileSync(join(env.RUNNER_TEMP, "ornigami-tail-outcomes.local", "upload-report.txt"), "utf8"), new RegExp(`upload_outcome=${outcome}`));
+    assert.match(readFileSync(join(env.RUNNER_TEMP, "ornigami-tail-outcomes.local", "upload-report.txt"), "utf8"), /custody_status=unavailable/);
+  }
+  assert.equal(existsSync(join(evidence, "upload-report.txt")), false, "post-upload receipt is outside the uploaded snapshot");
+  const reportDeadline = Number(readFileSync(env.GITHUB_ENV, "utf8").match(/ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH=(\d+)/)?.[1]);
+  assert.ok(reportDeadline > Math.floor(Date.now() / 1000));
+  assert.ok(reportDeadline <= Math.floor(Date.now() / 1000) + 300);
+}));
+
+test("bounded custody requires the exact successful owner tuple and records only local outcomes", () => withSandbox(root => {
+  const { env } = fakeEnvironment(root);
+  initializeTailEnvironment(root, env);
+  const ghBin = join(root, "fake-gh-bin");
+  mkdirSync(ghBin, { recursive: true });
+  const jqScript = join(root, "fake-jq.mjs");
+  writeFileSync(jqScript, `const args=process.argv.slice(2); const named={}; for(let i=0;i<args.length;i++) if(args[i]==='--arg') named[args[++i]]=args[++i]; let input=''; process.stdin.setEncoding('utf8'); process.stdin.on('data',chunk=>input+=chunk); process.stdin.on('end',()=>{ try { const rows=JSON.parse(input); const match=rows.some(row=>row.context===named.context && row.description===named.description && row.state==='success' && row.creator?.login===named.owner); process.exitCode=match?0:1; } catch { process.exitCode=4; } });\n`);
+  env.FAKE_JQ_SCRIPT = jqScript;
+  writeExecutable(join(ghBin, "jq"), '#!/usr/bin/env bash\nexec "$TEST_REAL_NODE" "$FAKE_JQ_SCRIPT" "$@"\n');
+  const gh = join(ghBin, "gh");
+  const success = `[{
+  "context":"ornigami/evidence-local/77/1",
+  "description":"artifact=123;sha256=${"d".repeat(64)}",
+  "state":"success",
+  "creator":{"login":"owner"}
+}]`;
+  writeExecutable(gh, `#!/usr/bin/env bash
+case "$FAKE_GH_MODE" in
+  success) printf '%s\\n' '${success}' ;;
+  mismatch) printf '%s\\n' '[{"context":"wrong","description":"wrong","state":"failure","creator":{"login":"other"}}]' ;;
+  empty) printf '%s\\n' '[]' ;;
+  hang) trap '' TERM; (sleep 0.2; printf x >> "$FAKE_GH_PROGRESS") & while :; do sleep 1; done ;;
+esac
+`);
+  env.PATH = `${ghBin}${delimiter}${env.PATH}`;
+  env.FAKE_GH_PROGRESS = join(root, "fake-gh-progress.txt");
+  env.GITHUB_RUN_ID = "77";
+  env.GITHUB_RUN_ATTEMPT = "1";
+  env.GITHUB_SHA = "a".repeat(40);
+  env.GITHUB_REPOSITORY = "owner/Ornigami";
+  env.GITHUB_REPOSITORY_OWNER = "owner";
+  env.ARTIFACT_ID = "123";
+  env.ARTIFACT_DIGEST = "d".repeat(64);
+  env.FAKE_GH_MODE = "success";
+  const runCustody = () => {
+    env.ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH = String(Math.floor(Date.now() / 1000) + 8);
+    return runTailShell(root, shortCustody(runBlock("evidence_custody")), env);
+  };
+  let result = runCustody();
+  const receipt = join(env.RUNNER_TEMP, "ornigami-tail-outcomes.local", "custody-outcome.txt");
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}\n${readFileSync(receipt, "utf8")}`);
+  assert.match(readFileSync(receipt, "utf8"), /custody_status=verified/);
+  assert.match(readFileSync(receipt, "utf8"), /run_id=77\nrun_attempt=1\nrequest_sha=a{40}\nartifact_id=123/);
+  assert.match(readFileSync(receipt, "utf8"), /artifact_digest=d{64}/);
+  assert.match(readFileSync(receipt, "utf8"), /owner=owner/);
+
+  env.FAKE_GH_MODE = "mismatch";
+  result = runCustody();
+  assert.notEqual(result.status, 0, "mismatched owner receipt cannot acknowledge custody");
+  assert.match(readFileSync(receipt, "utf8"), /custody_status=unproved/);
+
+  env.ARTIFACT_ID = "";
+  result = runCustody();
+  assert.notEqual(result.status, 0);
+  assert.match(readFileSync(receipt, "utf8"), /missing_or_invalid_upload_identity/);
+  env.ARTIFACT_ID = "123";
+  env.FAKE_GH_MODE = "hang";
+  result = runCustody();
+  assert.notEqual(result.status, 0, "hung API cannot establish custody");
+  assert.match(readFileSync(receipt, "utf8"), /custody_status=unproved/);
+  const before = existsSync(env.FAKE_GH_PROGRESS) ? readFileSync(env.FAKE_GH_PROGRESS, "utf8").length : 0;
+  spawnSync(bash, ["-c", "sleep 0.3"]);
+  const after = existsSync(env.FAKE_GH_PROGRESS) ? readFileSync(env.FAKE_GH_PROGRESS, "utf8").length : 0;
+  assert.equal(after, before, "timed-out API descendants cannot continue after the custody attempt");
+}));
+
 test("tail supervisor enforces the absolute deadline and terminates a TERM-resistant real child", () => withSandbox(root => {
   const { env } = fakeEnvironment(root);
   initializeTailEnvironment(root, env);

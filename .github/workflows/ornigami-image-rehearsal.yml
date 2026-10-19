@@ -44,7 +44,7 @@ jobs:
           ornigami_tail_validate() {
             local work=${ORNIGAMI_WORK_DEADLINE_EPOCH:-} work_epoch now
             [[ $work =~ ^[0-9]{1,12}$ ]] || { printf 'ORNIGAMI_WORK_DEADLINE_EPOCH must be a Unix epoch in seconds.\n' >&2; return 2; }
-            command -v timeout >/dev/null || { printf 'GNU timeout is required for bounded evidence capture.\n' >&2; return 2; }
+            command -v timeout >/dev/null || { printf 'GNU timeout is required for bounded workflow tail phases.\n' >&2; return 2; }
             work_epoch=$((10#$work))
             now=$(date +%s) || return 2
             (( now < work_epoch + 960 )) || { printf 'Workflow tail budget is exhausted.\n' >&2; return 124; }
@@ -1050,9 +1050,39 @@ jobs:
             exit 1
           fi
 
+      - name: Admit bounded evidence upload
+        id: evidence_upload_admission
+        if: always()
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          source "$ORNIGAMI_TAIL_HELPER"
+          if ! ornigami_tail_resolve_phase upload 120 300 15; then
+            printf 'admitted=false\ntimeout_minutes=1\n' >> "$GITHUB_OUTPUT"
+            printf 'upload_admission=failed\nreason=insufficient_or_invalid_budget\n' > "$RUNNER_TEMP/ornigami-upload-admission.local.txt"
+            chmod 600 "$RUNNER_TEMP/ornigami-upload-admission.local.txt"
+            exit 1
+          fi
+          # Actions accepts positive whole minutes only. Require the one-minute
+          # action timeout plus the 15-second termination/finalization reserve.
+          if (( ORNIGAMI_TAIL_PHASE_WORK_SECONDS < 60 )); then
+            printf 'admitted=false\ntimeout_minutes=1\n' >> "$GITHUB_OUTPUT"
+            printf 'upload_admission=failed\nreason=less_than_one_safe_actions_minute\n' > "$RUNNER_TEMP/ornigami-upload-admission.local.txt"
+            chmod 600 "$RUNNER_TEMP/ornigami-upload-admission.local.txt"
+            printf '%s\n' 'Upload skipped: the remaining safe window cannot fit a one-minute Actions timeout and termination reserve.' >&2
+            exit 1
+          fi
+          printf 'admitted=true\ntimeout_minutes=1\n' > "$GITHUB_OUTPUT"
+          printf 'upload_admission=passed\nphase_deadline_epoch=%s\nwork_seconds=%s\n' \
+            "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" "$ORNIGAMI_TAIL_PHASE_WORK_SECONDS" \
+            > "$RUNNER_TEMP/ornigami-upload-admission.local.txt"
+          chmod 600 "$RUNNER_TEMP/ornigami-upload-admission.local.txt"
+
       - name: Upload rehearsal evidence
         id: evidence_upload
-        if: always()
+        if: ${{ always() && steps.evidence_upload_admission.outputs.admitted == 'true' }}
+        timeout-minutes: 1
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ornigami-rehearsal-${{ github.run_id }}-${{ github.run_attempt }}
@@ -1061,22 +1091,64 @@ jobs:
           retention-days: 30
 
       - name: Report downloadable evidence
+        id: evidence_report
         if: always()
+        timeout-minutes: 1
         shell: bash
         env:
           EVIDENCE_URL: ${{ steps.evidence_upload.outputs.artifact-url }}
           UPLOAD_OUTCOME: ${{ steps.evidence_upload.outcome }}
         run: |
-          {
-            printf '\n### Downloadable evidence bundle\n\n'
-            printf '%s\n' "- Upload status: ${UPLOAD_OUTCOME:-unavailable}"
-            if [[ -n "${EVIDENCE_URL:-}" ]]; then printf '%s\n' "- Artifact: ${EVIDENCE_URL}"; fi
-            printf '%s\n' '- Retention requested: 30 days (subject to repository policy)'
-            printf '%s\n' '- The local image archive is excluded; scan JSON and sanitized runtime/resource receipts are retained when produced.'
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -Eeuo pipefail
+          source "$ORNIGAMI_TAIL_HELPER"
+          outcome_dir="$RUNNER_TEMP/ornigami-tail-outcomes.local"
+          install -d -m 700 "$outcome_dir"
+          outcome_file="$outcome_dir/upload-report.txt"
+          printf 'report_status=unavailable\n' > "$outcome_file"
+          chmod 600 "$outcome_file"
+          if ! ornigami_tail_resolve_phase upload-report 300 600 15; then
+            printf 'report_status=failed\nreason=insufficient_or_invalid_budget\nupload_outcome=%s\n' \
+              "${UPLOAD_OUTCOME:-unavailable}" > "$outcome_file"
+            exit 1
+          fi
+          # One shared five-minute window begins with upload reporting. Custody
+          # may use only its remainder, never a fresh five-minute allowance.
+          printf 'ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH=%s\n' \
+            "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" >> "$GITHUB_ENV"
+          report_worker() {
+            {
+              printf '\n### Downloadable evidence bundle\n\n'
+              printf '%s\n' "- Upload status: ${UPLOAD_OUTCOME:-unavailable}"
+              if [[ -n "${EVIDENCE_URL:-}" ]]; then printf '%s\n' "- Artifact: ${EVIDENCE_URL}"; fi
+              printf '%s\n' '- Retention requested: 30 days (subject to repository policy)'
+              printf '%s\n' '- Scan JSON and sanitized runtime/resource receipts are retained when produced.'
+              printf '%s\n' '- Diagnostic evidence only; this artifact does not establish application acceptance.'
+              printf '%s\n' '- The image archive is excluded. This report and later custody outcome receipts are local runner receipts and are not part of the uploaded snapshot.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            printf 'report_status=passed\nupload_outcome=%s\nartifact_url_present=%s\n' \
+              "${UPLOAD_OUTCOME:-unavailable}" "$([[ -n "${EVIDENCE_URL:-}" ]] && printf true || printf false)" \
+              > "$outcome_file.tmp"
+            if [[ "${UPLOAD_OUTCOME:-unavailable}" == success ]]; then
+              printf 'custody_status=pending\n' >> "$outcome_file.tmp"
+            else
+              printf 'custody_status=unavailable\nreason=upload_not_successful\n' >> "$outcome_file.tmp"
+            fi
+            chmod 600 "$outcome_file.tmp"
+            mv -f -- "$outcome_file.tmp" "$outcome_file"
+          }
+          export outcome_file
+          export -f report_worker
+          if ! ornigami_tail_supervise upload-report "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" 15 bash -c report_worker; then
+            printf 'report_status=failed\nreason=supervisor_timeout_or_worker_failure\nupload_outcome=%s\n' \
+              "${UPLOAD_OUTCOME:-unavailable}" > "$outcome_file"
+            chmod 600 "$outcome_file"
+            exit 1
+          fi
 
       - name: Require verified owner local evidence custody before cleanup
+        id: evidence_custody
         if: ${{ always() && steps.evidence_upload.outcome == 'success' }}
+        timeout-minutes: 5
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -1084,21 +1156,90 @@ jobs:
           ARTIFACT_DIGEST: ${{ steps.evidence_upload.outputs.artifact-digest }}
         run: |
           set -Eeuo pipefail
-          [[ "$ARTIFACT_ID" =~ ^[0-9]+$ && "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]
+          source "$ORNIGAMI_TAIL_HELPER"
+          outcome_dir="$RUNNER_TEMP/ornigami-tail-outcomes.local"
+          install -d -m 700 "$outcome_dir"
+          custody_receipt="$outcome_dir/custody-outcome.txt"
+          printf 'custody_status=unproved\nreason=not_yet_verified\n' > "$custody_receipt"
+          chmod 600 "$custody_receipt"
+          if [[ ${ORNIGAMI_CUSTODY_SUPERVISED:-false} != true ]]; then
+            if ! ornigami_tail_resolve_phase custody 300 600 40; then
+              printf 'custody_status=unproved\nreason=insufficient_or_invalid_budget\n' > "$custody_receipt"
+              exit 1
+            fi
+            shared_deadline=${ORNIGAMI_TAIL_REPORT_CUSTODY_DEADLINE_EPOCH:-}
+            if [[ ! "$shared_deadline" =~ ^[0-9]{1,12}$ ]]; then
+              printf 'custody_status=unproved\nreason=shared_report_custody_deadline_missing\n' > "$custody_receipt"
+              exit 1
+            fi
+            shared_deadline=$((10#$shared_deadline))
+            if (( shared_deadline < ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH )); then
+              ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH=$shared_deadline
+            fi
+            now=$(date +%s)
+            if (( ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH - now <= 40 )); then
+              printf 'custody_status=unproved\nreason=shared_report_custody_budget_exhausted\n' > "$custody_receipt"
+              exit 1
+            fi
+            export ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
+            event_lines=$(wc -l < "$ORNIGAMI_TAIL_EVENT_FILE")
+            if ornigami_tail_supervise custody "$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH" 40 env ORNIGAMI_CUSTODY_SUPERVISED=true "$BASH" "$0"; then
+              exit 0
+            else
+              supervisor_status=$?
+              if tail -n +"$((event_lines + 1))" "$ORNIGAMI_TAIL_EVENT_FILE" | grep -Fqx 'custody|timeout'; then
+                printf 'custody_status=unproved\nreason=supervisor_timeout\n' > "$custody_receipt"
+              elif grep -Fqx 'reason=not_yet_verified' "$custody_receipt"; then
+                printf 'custody_status=unproved\nreason=worker_failure_%s\n' "$supervisor_status" > "$custody_receipt"
+              fi
+              chmod 600 "$custody_receipt"
+              exit 1
+            fi
+          fi
+          if [[ ! "$ARTIFACT_ID" =~ ^[0-9]+$ || ! "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]; then
+            printf 'custody_status=unproved\nreason=missing_or_invalid_upload_identity\n' > "$custody_receipt"
+            chmod 600 "$custody_receipt"
+            exit 1
+          fi
           context="ornigami/evidence-local/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
           description="artifact=${ARTIFACT_ID};sha256=${ARTIFACT_DIGEST}"
-          printf 'Awaiting approved local download receipt: run=%s attempt=%s request=%s artifact=%s digest=%s\n' \
-            "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST"
-          for observation in $(seq 1 60); do
-            statuses=$(gh api --hostname github.com "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100")
-            if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" \
-              'any(.[]; .context == $context and .description == $description and .state == "success" and .creator.login == $owner)' <<< "$statuses" >/dev/null; then
-              printf '%s\n' 'Owner checksum-verified local custody acknowledged before cleanup.'
-              exit 0
+          phase_deadline=$ORNIGAMI_TAIL_PHASE_DEADLINE_EPOCH
+          api_timed_out=false
+          while :; do
+            now=$(date +%s)
+            remaining=$((phase_deadline - now - 40))
+            (( remaining > 3 )) || break
+            api_seconds=15
+            (( api_seconds < remaining - 2 )) || api_seconds=$((remaining - 2))
+            if statuses=$(timeout --signal=TERM --kill-after=2s "${api_seconds}s" gh api --hostname github.com "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses?per_page=100"); then
+              if jq -e --arg context "$context" --arg description "$description" --arg owner "$GITHUB_REPOSITORY_OWNER" \
+                'any(.[]; .context == $context and .description == $description and .state == "success" and .creator.login == $owner)' <<< "$statuses" >/dev/null; then
+                printf 'custody_status=verified\nrun_id=%s\nrun_attempt=%s\nrequest_sha=%s\nartifact_id=%s\nartifact_digest=%s\nowner=%s\n' \
+                  "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST" "$GITHUB_REPOSITORY_OWNER" \
+                  > "$custody_receipt.tmp"
+                chmod 600 "$custody_receipt.tmp"
+                mv -f -- "$custody_receipt.tmp" "$custody_receipt"
+                printf '%s\n' 'Owner checksum-verified local custody acknowledged before cleanup; local receipt is not part of the already-uploaded snapshot.'
+                exit 0
+              fi
+            else
+              api_status=$?
+              if (( api_status == 124 || api_status == 137 )); then api_timed_out=true; fi
             fi
-            sleep 10
+            now=$(date +%s)
+            remaining=$((phase_deadline - now - 40 - 2))
+            (( remaining > 0 )) || break
+            sleep_seconds=10
+            (( sleep_seconds < remaining )) || sleep_seconds=$remaining
+            sleep "$sleep_seconds"
           done
-          printf '%s\n' 'Local-download gate failed: no matching owner receipt in ten minutes. Uploaded failure evidence remains retained; no acceptance claim.' >&2
+          reason=no_matching_owner_acknowledgment
+          [[ "$api_timed_out" == false ]] || reason=api_timeout_or_no_matching_owner_acknowledgment
+          printf 'custody_status=unproved\nreason=%s\nrun_id=%s\nrun_attempt=%s\nrequest_sha=%s\nartifact_id=%s\nartifact_digest=%s\n' \
+            "$reason" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$ARTIFACT_ID" "$ARTIFACT_DIGEST" \
+            > "$custody_receipt"
+          chmod 600 "$custody_receipt"
+          printf '%s\n' 'Local-download gate failed: no exact successful owner receipt was observed before the bounded deadline. No acceptance claim.' >&2
           exit 1
 
       - name: Remove temporary builder and local image

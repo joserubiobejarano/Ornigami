@@ -1486,4 +1486,46 @@ approved. No workflow or script changes, tests, dispatch or external action were
   tested and shown to fit; no actual Linux-image acceptance is claimed. The 40-minute job ceiling,
   campaign exhaustion and coverage/adoption holds are unchanged.
 
+## Block 5B2B — bounded upload and custody
+
+- **Upload admission and limit:** the workflow reuses the initialization-time
+  `ORNIGAMI_WORK_DEADLINE_EPOCH` and resolves upload to the earlier of the local two-minute cap
+  and work-cutoff+five-minutes, reserving 15 seconds for termination/finalization. GitHub Actions
+  accepts positive whole-minute step timeouts, so the upload action uses a conservative one-minute
+  limit; admission requires that full minute plus the reserve to fit and otherwise fails with
+  `admitted=false`, skipping upload. This avoids rounding a fractional remainder upward. The
+  supported whole-minute constraint is documented in [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps-timeout-minutes).
+- **Report and custody window:** report and custody share one deadline set at report start:
+  `min(report start + 300 seconds, work cutoff + 600 seconds)`. Custody uses only the remainder;
+  it does not receive a fresh five-minute window. The report step has a one-minute Actions outer
+  timeout plus the shared supervisor with its 15-second termination reserve. Custody has a
+  five-minute Actions outer timeout, while the supervisor, API calls and sleeps obey the shared
+  absolute deadline and reserve 40 seconds for stopping and final outcome recording. Each `gh api`
+  call has a 15-second cap and two-second KILL allowance; polling sleeps are at most ten seconds and
+  are clamped to the remaining worker window.
+- **Custody identity and outcome:** custody still runs only after successful upload and requires
+  numeric artifact ID and lowercase SHA-256 digest. It polls the existing commit-status endpoint
+  for the exact run/attempt context, request commit, artifact ID/digest description, successful
+  state and repository-owner creator. No acknowledgment is written by the workflow. API errors,
+  hung calls, missing outputs, mismatches, skipped/failed uploads and deadline exhaustion fail
+  closed; no matching owner receipt means custody remains unproved. The uploaded diagnostic
+  artifact is never an application-acceptance result.
+- **Snapshot and local receipts:** capture finishes before upload and the artifact input directory
+  is not changed by later steps. Upload reporting and custody outcomes are written under a separate
+  runner-local mode-700 directory with mode-600 files, and summary text is appended only to the
+  step summary. These later receipts are not represented as uploaded contents. When a failure or
+  skip reaches the report step, it records custody unavailable; if runner interruption prevents
+  finalization, absent receipts remain unproved.
+- **Verification:** 12 focused runtime/workflow tests passed, including the new admission, fake
+  upload-action, immutable-snapshot, failed/skipped/missing-output, exact/mismatched-owner,
+  short-deadline and hung-API cases, plus existing real-child deadline and capture regressions.
+  The workflow test harness syntax-checks the extracted Bash scripts before execution. `git diff
+  --check` passed. Only fake local actions/APIs were used; no live upload or API request occurred.
+- **Limitations:** upload/custody durations have no live timing evidence. The artifact is diagnostic
+  only. Workflow-owned cleanup is unchanged and still lacks its own bounded implementation and
+  verification; combined tail feasibility remains unproved. **B2.1 remains open** pending cleanup
+  implementation and combined tail-budget verification. R4 publication/pull/smoke remains out of
+  scope and unbudgeted. Campaign allowance remains exhausted (7/7 dispatches, 39/300 charged
+  minutes, zero reserved); coverage/adoption holds remain active. No image acceptance is claimed.
+
 Implementation commit: `f190c7c`. This handoff response is committed separately.
