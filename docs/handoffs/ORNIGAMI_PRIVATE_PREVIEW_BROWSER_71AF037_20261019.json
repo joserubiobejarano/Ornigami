@@ -1,0 +1,3796 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-19T22:08:33.980Z",
+  "purpose": "Sanitized local browser SRI/CSP evidence for the exact application candidate; not hosted acceptance.",
+  "candidate": {
+    "branch": "codex/ornigami-staging-readiness-20261018",
+    "commit": "71af037843847f75831c28422906a26e1a7e5f45",
+    "isolatedDetachedWorktree": true
+  },
+  "startingRepository": {
+    "requiredHead": "869edcfa03cc9f004199967ecb3b847baedadd66",
+    "actualHead": "869edcfa03cc9f004199967ecb3b847baedadd66",
+    "branch": "codex/ornigami-staging-readiness-20261018"
+  },
+  "dependencyIdentity": {
+    "node": "v24.11.1",
+    "npm": "11.6.2",
+    "packageLockSha256": "4591e2dd1a858104f9a388dcbe5ccf5d50383b847553e13117061c646238e815",
+    "next": "16.4.2",
+    "nextResolved": "file:vendor/framework/next-16.4.2-ornigami-sri.2.tgz",
+    "nextIntegrity": "sha512-17BrG8dBp5eMwEyf8YEr2+bSB94tOFV3DVcDkBEIi91FM40Va7Dzsa0OK2jIEBQHhaNqjbSxdG0lb/sIlmIwEA==",
+    "nextArchiveBytes": 44857205,
+    "nextArchiveSha256": "ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f",
+    "nextArchiveSha512Integrity": "sha512-17BrG8dBp5eMwEyf8YEr2+bSB94tOFV3DVcDkBEIi91FM40Va7Dzsa0OK2jIEBQHhaNqjbSxdG0lb/sIlmIwEA==",
+    "nextArchiveMatchesLock": true
+  },
+  "guidesRead": [
+    {
+      "path": "node_modules/next/dist/docs/01-app/02-guides/building.md",
+      "bytes": 22331,
+      "sha256": "bb9e2396c9e1651081438773e7537e91d59cba3c3cef1cdc7159a6601098e4da"
+    },
+    {
+      "path": "node_modules/next/dist/docs/01-app/02-guides/environment-variables.md",
+      "bytes": 11492,
+      "sha256": "089542c335bc9da8799e86a1696a3941a3b46d0cbedc01ebd234c3a1a2c587c2"
+    },
+    {
+      "path": "node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md",
+      "bytes": 21130,
+      "sha256": "c5de325cbd9f711cd7fac87e36781c132c7b86def73aab7516c3e107b0ed21e8"
+    },
+    {
+      "path": "node_modules/next/dist/docs/01-app/02-guides/testing/playwright.md",
+      "bytes": 5322,
+      "sha256": "900a9d4fd28a8908ea26ec1b229998edeb2c9f8ca7af94cf27868fb5471b3ddd"
+    },
+    {
+      "path": "node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md",
+      "bytes": 17604,
+      "sha256": "46d7a0901380c739e25bfe31714ea1a72755e791d925ae236f3dba1ad93bbb2b"
+    },
+    {
+      "path": "node_modules/next/dist/docs/01-app/01-getting-started/13-fonts.md",
+      "bytes": 8705,
+      "sha256": "31841f92ea277df1ff74493fcd2f4d7c5ebff598e71a88a19eef1de326913dfc"
+    }
+  ],
+  "environment": {
+    "inheritedProcessEnvironmentNameAllowlist": [
+      "PATH",
+      "SystemRoot",
+      "WINDIR",
+      "SystemDrive",
+      "TEMP",
+      "TMP",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "ProgramFiles",
+      "ProgramFiles(x86)",
+      "CommonProgramFiles",
+      "ComSpec",
+      "PATHEXT"
+    ],
+    "explicitChildEnvironmentNameAllowlist": [
+      "VERCEL_ENV",
+      "VERCEL_GIT_COMMIT_REF",
+      "VERCEL_GIT_COMMIT_SHA",
+      "ORNIGAMI_PRIVATE_STAGING_MODE",
+      "AUTH_SECRET",
+      "NEXT_PUBLIC_APP_URL",
+      "NEXT_PUBLIC_SENTRY_DSN",
+      "SENTRY_DSN",
+      "SENTRY_ORG",
+      "SENTRY_PROJECT",
+      "NEXT_TELEMETRY_DISABLED",
+      "NODE_OPTIONS",
+      "HTTP_PROXY",
+      "HTTPS_PROXY",
+      "http_proxy",
+      "https_proxy",
+      "NO_PROXY",
+      "no_proxy",
+      "NPM_CONFIG_USERCONFIG",
+      "NPM_CONFIG_GLOBALCONFIG",
+      "NPM_CONFIG_CACHE",
+      "NPM_CONFIG_REGISTRY",
+      "NPM_CONFIG_AUDIT",
+      "NPM_CONFIG_FUND",
+      "NPM_CONFIG_UPDATE_NOTIFIER",
+      "NPM_CONFIG_PROXY",
+      "NPM_CONFIG_HTTPS_PROXY"
+    ],
+    "syntheticValues": {
+      "VERCEL_ENV": "preview",
+      "VERCEL_GIT_COMMIT_REF": "codex/ornigami-staging-readiness-20261018",
+      "VERCEL_GIT_COMMIT_SHA": "71af037843847f75831c28422906a26e1a7e5f45",
+      "ORNIGAMI_PRIVATE_STAGING_MODE": "true",
+      "AUTH_SECRET": "one-run random 32-byte base64url value, in-memory only; not retained",
+      "NEXT_PUBLIC_APP_URL": "https://ornigami-preview.invalid",
+      "NEXT_PUBLIC_SENTRY_DSN": "synthetic .invalid DSN",
+      "SENTRY_DSN": "synthetic .invalid DSN",
+      "SENTRY_ORG": "synthetic-private-preview",
+      "SENTRY_PROJECT": "synthetic",
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NODE_OPTIONS": "--use-env-proxy",
+      "HTTP_PROXY": "task-scoped loopback proxy URL",
+      "HTTPS_PROXY": "task-scoped loopback proxy URL",
+      "http_proxy": "http://127.0.0.1:60045",
+      "https_proxy": "http://127.0.0.1:60045",
+      "NO_PROXY": "task-scoped loopback proxy URL",
+      "no_proxy": "127.0.0.1,localhost",
+      "NPM_CONFIG_USERCONFIG": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG\\npm-user-empty.rc",
+      "NPM_CONFIG_GLOBALCONFIG": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG\\npm-global-empty.rc",
+      "NPM_CONFIG_CACHE": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG\\npm-cache",
+      "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/",
+      "NPM_CONFIG_AUDIT": "false",
+      "NPM_CONFIG_FUND": "false",
+      "NPM_CONFIG_UPDATE_NOTIFIER": "false",
+      "NPM_CONFIG_PROXY": "task-scoped loopback proxy URL",
+      "NPM_CONFIG_HTTPS_PROXY": "task-scoped loopback proxy URL"
+    },
+    "explicitlyAbsent": [
+      "DATABASE_URL",
+      "SENTRY_AUTH_TOKEN",
+      "Google credentials",
+      "hosted/provider credentials"
+    ],
+    "npmUserAndGlobalConfig": "empty files under the task temporary root",
+    "npmCache": "task temporary root",
+    "proxyDestinationAllowlist": [
+      "fonts.googleapis.com",
+      "fonts.gstatic.com",
+      "registry.npmjs.org"
+    ],
+    "childReceivesOnlyAllowlistedInheritedAndExplicitNames": true
+  },
+  "network": {
+    "scope": "Node/npm build child traffic that honors the configured local proxy only; not system-wide enforcement.",
+    "events": [
+      {
+        "at": "2026-10-19T22:02:14.138Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.140Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:02:14.141Z",
+        "hostname": "registry.npmjs.org",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:01.900Z",
+        "hostname": "fonts.googleapis.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:01.900Z",
+        "hostname": "fonts.googleapis.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:01.900Z",
+        "hostname": "fonts.googleapis.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.315Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.583Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.584Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.584Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.621Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.621Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.621Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.621Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.621Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:02.621Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.065Z",
+        "hostname": "fonts.googleapis.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.148Z",
+        "hostname": "fonts.googleapis.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.148Z",
+        "hostname": "fonts.googleapis.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.392Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.392Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.392Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.498Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      },
+      {
+        "at": "2026-10-19T22:03:22.499Z",
+        "hostname": "fonts.gstatic.com",
+        "port": "443",
+        "decision": "allowed"
+      }
+    ],
+    "counts": {
+      "fonts.googleapis.com": 6,
+      "fonts.gstatic.com": 32,
+      "registry.npmjs.org": 15
+    },
+    "deniedCount": 0
+  },
+  "commands": [
+    {
+      "label": "npm_ci",
+      "executable": "node",
+      "args": [
+        "<npm-cli.js>",
+        "ci",
+        "--no-audit",
+        "--no-fund",
+        "--loglevel=error"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 43503,
+      "timeoutMs": 1800000,
+      "timedOut": false,
+      "timeoutCleanup": "not_needed"
+    },
+    {
+      "label": "npm_run_build",
+      "executable": "node",
+      "args": [
+        "<npm-cli.js>",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 56743,
+      "timeoutMs": 900000,
+      "timedOut": false,
+      "timeoutCleanup": "not_needed"
+    },
+    {
+      "label": "artifact_inventory",
+      "executable": "node",
+      "args": [
+        "scripts/verification/ornigami-build-artifact-inventory.mjs",
+        ".next"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "timeoutMs": 120000,
+      "timedOut": false,
+      "timeoutCleanup": "node child process; bounded 120000 ms"
+    },
+    {
+      "label": "local_browser_harness",
+      "executable": "node",
+      "args": [
+        "C:\\Users\\joser\\Desktop\\Projects\\Ornigami\\scripts\\verification\\private-preview-browser-acceptance.mjs",
+        "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG\\browser-result.json"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 4399,
+      "timeoutMs": 240000,
+      "timedOut": false,
+      "timeoutCleanup": "not_needed"
+    },
+    {
+      "label": "local_browser_harness_corrected_capture",
+      "executable": "node",
+      "args": [
+        "C:\\Users\\joser\\Desktop\\Projects\\Ornigami\\scripts\\verification\\private-preview-browser-acceptance.mjs",
+        "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG\\browser-result.json"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 4609,
+      "timeoutMs": 240000,
+      "timedOut": false,
+      "timeoutCleanup": "not_needed"
+    }
+  ],
+  "artifactInventory": {
+    "distDirectory": ".next",
+    "manifestPath": ".next/server/subresource-integrity-manifest.json",
+    "manifestEntryCount": 258,
+    "presentEntryCount": 258,
+    "missingEntryCount": 0,
+    "matchingDigestCount": 257,
+    "digestMismatchCount": 1,
+    "missing": [],
+    "mismatches": [
+      {
+        "path": "static/Edtswx6-UOHYWsmObknzU/_ssgManifest.js",
+        "expectedIntegrity": "sha256-b1tKoA0vjWrtmTW0cYBr96zvRk0MHTkCYOX+J/gAxn4=",
+        "actualIntegrity": "sha256-Z49s4suAsf5y/GfnQSvm4qtq2ggxEbZPfEDTXjy6XgA=",
+        "exists": true,
+        "matches": false,
+        "status": "digest_mismatch"
+      }
+    ],
+    "sriEntries": [
+      {
+        "path": "static/media/9d5a263311222317-s.p.woff2",
+        "expectedIntegrity": "sha256-T9SLLBqyciDnHxX5kFUCYbNSRcO9/Y2AJbS9rARZ7i0=",
+        "actualIntegrity": "sha256-T9SLLBqyciDnHxX5kFUCYbNSRcO9/Y2AJbS9rARZ7i0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/93a6e477e1480c92-s.woff2",
+        "expectedIntegrity": "sha256-6haUjUqRt3Ih8RmtJ9SsenWByYz5kHEgR/iaUxpJ7yg=",
+        "actualIntegrity": "sha256-6haUjUqRt3Ih8RmtJ9SsenWByYz5kHEgR/iaUxpJ7yg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/c7e0cf6c760983e7-s.woff2",
+        "expectedIntegrity": "sha256-oiyZeolDd/NtgckEFj4MBfu80y8Moue+7bhrOb4SlqE=",
+        "actualIntegrity": "sha256-oiyZeolDd/NtgckEFj4MBfu80y8Moue+7bhrOb4SlqE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/c5fe6dc8356a8c31-s.woff2",
+        "expectedIntegrity": "sha256-ouLHg8pvnCBIboHnKieSA+hnMLv48B/2pe6dvQnhwnE=",
+        "actualIntegrity": "sha256-ouLHg8pvnCBIboHnKieSA+hnMLv48B/2pe6dvQnhwnE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/21350d82a1f187e9-s.woff2",
+        "expectedIntegrity": "sha256-rr8qtKTOaBDXPBrHvnyvtOXsTO4tbbX7PglpF0fsS9Y=",
+        "actualIntegrity": "sha256-rr8qtKTOaBDXPBrHvnyvtOXsTO4tbbX7PglpF0fsS9Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/19cfc7226ec3afaa-s.woff2",
+        "expectedIntegrity": "sha256-Rt1M3KWMJq6HzGknZXv4Oy6Kv8Of/QqxduMBqNKNIr8=",
+        "actualIntegrity": "sha256-Rt1M3KWMJq6HzGknZXv4Oy6Kv8Of/QqxduMBqNKNIr8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/ba9851c3c22cd980-s.woff2",
+        "expectedIntegrity": "sha256-/MypGP6kAInaytxwRYYTFNGmvJHx8yPMHusi682zIbU=",
+        "actualIntegrity": "sha256-/MypGP6kAInaytxwRYYTFNGmvJHx8yPMHusi682zIbU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/df0a9ae256c0569c-s.woff2",
+        "expectedIntegrity": "sha256-jbAP9Gxnsizai+2GWs9wd2UcrI0oQdW0CYBVa0iWGTE=",
+        "actualIntegrity": "sha256-jbAP9Gxnsizai+2GWs9wd2UcrI0oQdW0CYBVa0iWGTE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/8e9860b6e62d6359-s.woff2",
+        "expectedIntegrity": "sha256-oo6208y1NK4MlMqZk3HfAkqrYLCMPIpXIO6eMvoPqqI=",
+        "actualIntegrity": "sha256-oo6208y1NK4MlMqZk3HfAkqrYLCMPIpXIO6eMvoPqqI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/e4af272ccee01ff0-s.p.woff2",
+        "expectedIntegrity": "sha256-yUB2RZPQ/l1Za+MnynVYhV4BgDn7eFCaohkh/TZEw+Q=",
+        "actualIntegrity": "sha256-yUB2RZPQ/l1Za+MnynVYhV4BgDn7eFCaohkh/TZEw+Q=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/e038a29029a234f2-s.woff2",
+        "expectedIntegrity": "sha256-FuHUi23SnrJArsXbNhhOsYKTPAgs1D3n81r2htWAh9I=",
+        "actualIntegrity": "sha256-FuHUi23SnrJArsXbNhhOsYKTPAgs1D3n81r2htWAh9I=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/7d4881bb7e1bf84d-s.p.woff2",
+        "expectedIntegrity": "sha256-Xz1q1g8p1stwhBTsaIcWPWO/GXN371QX0kg/8xrObDs=",
+        "actualIntegrity": "sha256-Xz1q1g8p1stwhBTsaIcWPWO/GXN371QX0kg/8xrObDs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/65f03d54ccadf4a8-s.woff2",
+        "expectedIntegrity": "sha256-1n5KlLpJhjX3ZN3KfR7EJx9WQvAy6yS0JnZEgPZvhJc=",
+        "actualIntegrity": "sha256-1n5KlLpJhjX3ZN3KfR7EJx9WQvAy6yS0JnZEgPZvhJc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/013b72fa676f92e0-s.woff2",
+        "expectedIntegrity": "sha256-4n9lfjjVKIe6o7ay+BK++T3901bwgQ5A7dTuKEzH6fY=",
+        "actualIntegrity": "sha256-4n9lfjjVKIe6o7ay+BK++T3901bwgQ5A7dTuKEzH6fY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/b9408752a0c24fb9-s.woff2",
+        "expectedIntegrity": "sha256-dbO+2+vDXzR8CuO0FqqHGUFVU1fnsPg3Z+tZh4dVie0=",
+        "actualIntegrity": "sha256-dbO+2+vDXzR8CuO0FqqHGUFVU1fnsPg3Z+tZh4dVie0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/media/2b5b02fc7e511755-s.woff2",
+        "expectedIntegrity": "sha256-dFmUtc2VDsIBtmUmN18FfVQIR8zPxw9PJPX1cdJtOSM=",
+        "actualIntegrity": "sha256-dFmUtc2VDsIBtmUmN18FfVQIR8zPxw9PJPX1cdJtOSM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/polyfills-42372ed130431b0a.js",
+        "expectedIntegrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "actualIntegrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "react-loadable-manifest.json",
+        "expectedIntegrity": "sha256-WZMqBW6+vlPchrMsnrwbNtEj/CIRr0t+l/t27BH5Xy0=",
+        "actualIntegrity": "sha256-WZMqBW6+vlPchrMsnrwbNtEj/CIRr0t+l/t27BH5Xy0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/middleware-react-loadable-manifest.js",
+        "expectedIntegrity": "sha256-Z/jqW54KFjKcgUmIdc5924DFRzwsU1mAdY5vftjw0/s=",
+        "actualIntegrity": "sha256-Z/jqW54KFjKcgUmIdc5924DFRzwsU1mAdY5vftjw0/s=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/Edtswx6-UOHYWsmObknzU/_ssgManifest.js",
+        "expectedIntegrity": "sha256-b1tKoA0vjWrtmTW0cYBr96zvRk0MHTkCYOX+J/gAxn4=",
+        "actualIntegrity": "sha256-Z49s4suAsf5y/GfnQSvm4qtq2ggxEbZPfEDTXjy6XgA=",
+        "exists": true,
+        "matches": false,
+        "status": "digest_mismatch"
+      },
+      {
+        "path": "build-manifest.json",
+        "expectedIntegrity": "sha256-63ISG+0mwPH5t07d7fnrBHL8RJu4uBJoWoSRJzV6WwA=",
+        "actualIntegrity": "sha256-63ISG+0mwPH5t07d7fnrBHL8RJu4uBJoWoSRJzV6WwA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/middleware-build-manifest.js",
+        "expectedIntegrity": "sha256-5nJCDxAWBPe9xQqn+C4JYCDHN/VdX54dE2QwMrgTsmg=",
+        "actualIntegrity": "sha256-5nJCDxAWBPe9xQqn+C4JYCDHN/VdX54dE2QwMrgTsmg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/Edtswx6-UOHYWsmObknzU/_buildManifest.js",
+        "expectedIntegrity": "sha256-z2YYqch+Rem4Tool6fYLUsys+Wl2SGUpjWJD/Hjuy7k=",
+        "actualIntegrity": "sha256-z2YYqch+Rem4Tool6fYLUsys+Wl2SGUpjWJD/Hjuy7k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/next-font-manifest.js",
+        "expectedIntegrity": "sha256-LA9bu3nQff6kBRRqYtfhWnqeiQ0p44t9smMfz25IDag=",
+        "actualIntegrity": "sha256-LA9bu3nQff6kBRRqYtfhWnqeiQ0p44t9smMfz25IDag=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/next-font-manifest.json",
+        "expectedIntegrity": "sha256-km53LTSlPypNmxYHHdbqd7BRsresxJ2RZXI96+P7vg8=",
+        "actualIntegrity": "sha256-km53LTSlPypNmxYHHdbqd7BRsresxJ2RZXI96+P7vg8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/main-f8ef8b8b780fb248.js",
+        "expectedIntegrity": "sha256-mU+sSw7v1LgrBAjv0nhgtZdcdGVrjtZf+BLajF+TDYo=",
+        "actualIntegrity": "sha256-mU+sSw7v1LgrBAjv0nhgtZdcdGVrjtZf+BLajF+TDYo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/main-app-dd6305b409632d9d.js",
+        "expectedIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "actualIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/_not-found/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/_global-error/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/not-found-e5d1639768b6ad9c.js",
+        "expectedIntegrity": "sha256-3ZXnbkIXJ0fnNhlC/n2w4R8NN51Vq9VpHovze7zS/JQ=",
+        "actualIntegrity": "sha256-3ZXnbkIXJ0fnNhlC/n2w4R8NN51Vq9VpHovze7zS/JQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/layout-a53917a8cfcd2f60.js",
+        "expectedIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "actualIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/error-20fd6a34b5e2294b.js",
+        "expectedIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "actualIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/global-error-e4970c58ee9786da.js",
+        "expectedIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "actualIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/forbidden-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/unauthorized-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/next/dist/client/components/builtin/app-error-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/change-plan/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/robots.txt/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/sitemap.xml/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/audit/free-profile/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api-public-demo-review-booster/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/[...nextauth]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/forgot-password/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/register/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/resend-verification/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/reset-password/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/signout/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/auth/verify-email/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/health/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/privacy/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/review-booster/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/csp-report/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/cron/review-replies/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/dashboard/summary/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/feedback/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/connection/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/disconnect/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/list/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/selection/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/locations/sync/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/oauth/callback/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/oauth/start/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/replies/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/reviews/process-pending/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/google/reviews/sync/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/leads/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/openai/review-reply/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/privacy/delete/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/privacy/export/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/private-preview/database-identity/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/projects/[id]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/projects/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/booking-credentials/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/deliveries/[deliveryId]/reconcile/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/run-now/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/settings/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/unsubscribe/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/upload/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/review-booster/visits/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/reviews/draft/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/reviews/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/settings/reply/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/portal/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/webhook/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/stripe/checkout/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/team/invitations/[token]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/team/members/[userId]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/team/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/user/plan/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/webhooks/booking/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/api/webhooks/resend/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/opengraph-image/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/r/[token]/route-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/about/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/account/deletion/page-cd27050f36e717a4.js",
+        "expectedIntegrity": "sha256-eGXfuq9uFWu/I0OWJ91VBv2iaQvjZhvK5JsTqk8mMx4=",
+        "actualIntegrity": "sha256-eGXfuq9uFWu/I0OWJ91VBv2iaQvjZhvK5JsTqk8mMx4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/contact/page-4e8e1323047bb7a9.js",
+        "expectedIntegrity": "sha256-dLSc+rfc2Bm3TBSOqeZThFslObEZ4ksGPKO50c7eaag=",
+        "actualIntegrity": "sha256-dLSc+rfc2Bm3TBSOqeZThFslObEZ4ksGPKO50c7eaag=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/demo-review-booster/page-e13678062779a863.js",
+        "expectedIntegrity": "sha256-hOk7v37QyDtNi2nBioCkC1pulu17SszLv4t7E6DNJek=",
+        "actualIntegrity": "sha256-hOk7v37QyDtNi2nBioCkC1pulu17SszLv4t7E6DNJek=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/demo-review-replies/page-066ccd7980b73474.js",
+        "expectedIntegrity": "sha256-vgGrnOcRflEZ9qhRdAv0FlYLtllSkvm02myHVoahKc4=",
+        "actualIntegrity": "sha256-vgGrnOcRflEZ9qhRdAv0FlYLtllSkvm02myHVoahKc4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/demo/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/feedback/page-b02abdad29547f68.js",
+        "expectedIntegrity": "sha256-z75my0s4nfKg4M5tbMaSxt79oiNrd/2ICyA4Wy8AZa4=",
+        "actualIntegrity": "sha256-z75my0s4nfKg4M5tbMaSxt79oiNrd/2ICyA4Wy8AZa4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/free-audit/page-dd8ca8babea2d085.js",
+        "expectedIntegrity": "sha256-8JbZcawh+rSg9/6vkqJyNKi2gCisgSY+kFeApuTmIJs=",
+        "actualIntegrity": "sha256-8JbZcawh+rSg9/6vkqJyNKi2gCisgSY+kFeApuTmIJs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/legal/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/local-seo/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/pricing/page-b5ad39a441be540b.js",
+        "expectedIntegrity": "sha256-6Vswdu7X+RYVyj3VaZiU64G9A/CFp88tf/7t+d2JSzo=",
+        "actualIntegrity": "sha256-6Vswdu7X+RYVyj3VaZiU64G9A/CFp88tf/7t+d2JSzo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/privacy/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/review-booster/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/review-replies/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/team/invite/[token]/page-65acd57b878fe3c5.js",
+        "expectedIntegrity": "sha256-T7wSZtCTEcVBjoxpBDwf/oMBvBXgZeh7Glax1k6LZq4=",
+        "actualIntegrity": "sha256-T7wSZtCTEcVBjoxpBDwf/oMBvBXgZeh7Glax1k6LZq4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/terms/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/layout-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/forgot-password/page-f4d1915b30526404.js",
+        "expectedIntegrity": "sha256-wY4NYR0CaHnex4DUZ1d/tBJvdM8RNpc1lpkodUD9zm8=",
+        "actualIntegrity": "sha256-wY4NYR0CaHnex4DUZ1d/tBJvdM8RNpc1lpkodUD9zm8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+        "expectedIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "actualIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/resend-verification/page-b2f7d58cace86319.js",
+        "expectedIntegrity": "sha256-/9dCIMNVDkPKn4vnJ+Qo2UhS5CCRek+8G4XDSBQw1EM=",
+        "actualIntegrity": "sha256-/9dCIMNVDkPKn4vnJ+Qo2UhS5CCRek+8G4XDSBQw1EM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/reset-password/page-d5f1199e0027902c.js",
+        "expectedIntegrity": "sha256-XJOiYVRGtJiV6LvuOKUS/K6jLaNOr1LKpTSkpWu8Xe0=",
+        "actualIntegrity": "sha256-XJOiYVRGtJiV6LvuOKUS/K6jLaNOr1LKpTSkpWu8Xe0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(auth)/signup/page-ae8ff3fea12b4ab8.js",
+        "expectedIntegrity": "sha256-LyasS+fRNvqYybsnmwVcEdhfWAx4s9ICh+2l6l6EzK4=",
+        "actualIntegrity": "sha256-LyasS+fRNvqYybsnmwVcEdhfWAx4s9ICh+2l6l6EzK4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/layout-5b6b60df7ec3c00d.js",
+        "expectedIntegrity": "sha256-qFCay/ZhLvBK6qkU5Ngxm4dfJdRPUmI9CyEiNpuLt8I=",
+        "actualIntegrity": "sha256-qFCay/ZhLvBK6qkU5Ngxm4dfJdRPUmI9CyEiNpuLt8I=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/loading-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/connect/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/error-25c62dad34cc27e9.js",
+        "expectedIntegrity": "sha256-znCixG/6Y+EgTndHdL5C6w/6pNvBBb1N7QPj7p6Ug8k=",
+        "actualIntegrity": "sha256-znCixG/6Y+EgTndHdL5C6w/6pNvBBb1N7QPj7p6Ug8k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/loading-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/new/page-18a21b90534ab042.js",
+        "expectedIntegrity": "sha256-rtEUDUAUA17pCoFMthRMZbyy9pVHa8eX0cjnWdTGjTA=",
+        "actualIntegrity": "sha256-rtEUDUAUA17pCoFMthRMZbyy9pVHa8eX0cjnWdTGjTA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/page-0c227fab1749526a.js",
+        "expectedIntegrity": "sha256-pRqHU3cWv7mLMLPA27xD91mX6iAKpGK7KC8YjJRLac8=",
+        "actualIntegrity": "sha256-pRqHU3cWv7mLMLPA27xD91mX6iAKpGK7KC8YjJRLac8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/settings/page-5bdcb680e9d6ad97.js",
+        "expectedIntegrity": "sha256-bpzX4bK/bKdYfQiC1BdlDJdvdieGNJgb5+ahudc/6cw=",
+        "actualIntegrity": "sha256-bpzX4bK/bKdYfQiC1BdlDJdvdieGNJgb5+ahudc/6cw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-booster/upload/page-7f86488c77a50c04.js",
+        "expectedIntegrity": "sha256-HzyyQZ4liYFTyQKBYjTJ8S/CprHj/919AdbXDB8jHg4=",
+        "actualIntegrity": "sha256-HzyyQZ4liYFTyQKBYjTJ8S/CprHj/919AdbXDB8jHg4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/billing/page-1c5b56035eed0aa7.js",
+        "expectedIntegrity": "sha256-KMkortfzCPW21qy8663tE51HsJfGYk37YKJJ3eoCWe4=",
+        "actualIntegrity": "sha256-KMkortfzCPW21qy8663tE51HsJfGYk37YKJJ3eoCWe4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/page-553ea81dc881194a.js",
+        "expectedIntegrity": "sha256-VmL7u2Woe8pC10Nkyf+DtmIHOfgBioM0cj+EK/sOEUo=",
+        "actualIntegrity": "sha256-VmL7u2Woe8pC10Nkyf+DtmIHOfgBioM0cj+EK/sOEUo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/settings/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/layout-e5d1639768b6ad9c.js",
+        "expectedIntegrity": "sha256-3ZXnbkIXJ0fnNhlC/n2w4R8NN51Vq9VpHovze7zS/JQ=",
+        "actualIntegrity": "sha256-3ZXnbkIXJ0fnNhlC/n2w4R8NN51Vq9VpHovze7zS/JQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/loading-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/google-connection/page-16b8fe0658e74065.js",
+        "expectedIntegrity": "sha256-d8vgrJigWbagCLwOqla3sutqkxSQms0PIevc+A3VY00=",
+        "actualIntegrity": "sha256-d8vgrJigWbagCLwOqla3sutqkxSQms0PIevc+A3VY00=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/page-95c56717dd9b21dc.js",
+        "expectedIntegrity": "sha256-V49NsPwxwQT592DHt6H4KWzxri29P1+j2SNs52m+oNY=",
+        "actualIntegrity": "sha256-V49NsPwxwQT592DHt6H4KWzxri29P1+j2SNs52m+oNY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/reviews/page-126bb3cf1b11632a.js",
+        "expectedIntegrity": "sha256-M3bXzPmBtf5DTWOuB/Uoh4WOt1sj6tGHMeFHh6iomcs=",
+        "actualIntegrity": "sha256-M3bXzPmBtf5DTWOuB/Uoh4WOt1sj6tGHMeFHh6iomcs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/dashboard/agents/review-replies/settings/page-ead9c0e1abc55453.js",
+        "expectedIntegrity": "sha256-F5ti7UiRqrqXhphj6CPw6BkFstwpTdBZ/D+ZuSh71eU=",
+        "actualIntegrity": "sha256-F5ti7UiRqrqXhphj6CPw6BkFstwpTdBZ/D+ZuSh71eU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/layout-e5d1639768b6ad9c.js",
+        "expectedIntegrity": "sha256-3ZXnbkIXJ0fnNhlC/n2w4R8NN51Vq9VpHovze7zS/JQ=",
+        "actualIntegrity": "sha256-3ZXnbkIXJ0fnNhlC/n2w4R8NN51Vq9VpHovze7zS/JQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/app/(dashboard)/reviews/page-8787036978c132ed.js",
+        "expectedIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "actualIntegrity": "sha256-F23zZRXW1w1q6ZgLkfkefb3z3d+ZV+CLkZBkM+Rqrso=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/webpack-0fa0d77127c46143.js",
+        "expectedIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "actualIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5563.8ef324387a9f6623.js",
+        "expectedIntegrity": "sha256-fye8DWqWsDsjfRqUMdlBs3q6LPUboORc/YaTGZUFtJ8=",
+        "actualIntegrity": "sha256-fye8DWqWsDsjfRqUMdlBs3q6LPUboORc/YaTGZUFtJ8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/971.1d64b0790cb4d04a.js",
+        "expectedIntegrity": "sha256-EsTisMFyvPIcnbH98qnWoJCrcYUNJhNgiO+q3Zs7zgU=",
+        "actualIntegrity": "sha256-EsTisMFyvPIcnbH98qnWoJCrcYUNJhNgiO+q3Zs7zgU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3342.0a1c2833d7450d08.js",
+        "expectedIntegrity": "sha256-YQAUiUDAQemob6M04DcDEwgZgY5pEj2r+qFuGZRJD90=",
+        "actualIntegrity": "sha256-YQAUiUDAQemob6M04DcDEwgZgY5pEj2r+qFuGZRJD90=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3684.9906bb5329f266f3.js",
+        "expectedIntegrity": "sha256-i2B8Qv9hEafur0AvADnVUndUbhSDy/aXGQWjOeA9yiM=",
+        "actualIntegrity": "sha256-i2B8Qv9hEafur0AvADnVUndUbhSDy/aXGQWjOeA9yiM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/css/da7208232ee3766e.css",
+        "expectedIntegrity": "sha256-naWPXBRQ37X68x9k9Q1vClD5H5Zle4QAAzf5f9l+4v4=",
+        "actualIntegrity": "sha256-naWPXBRQ37X68x9k9Q1vClD5H5Zle4QAAzf5f9l+4v4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/framework-ebab8c483d944e88.js",
+        "expectedIntegrity": "sha256-cianFzxh+7+bzyWcQScZ2XupQGBMGLYqZhl3AB9o0yk=",
+        "actualIntegrity": "sha256-cianFzxh+7+bzyWcQScZ2XupQGBMGLYqZhl3AB9o0yk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/4a7b0c69.b60fb5cd91258c5e.js",
+        "expectedIntegrity": "sha256-G7woFlwkUl4iAS+zwY++QT1Wz1R2NybiSOFHadTnM28=",
+        "actualIntegrity": "sha256-G7woFlwkUl4iAS+zwY++QT1Wz1R2NybiSOFHadTnM28=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5d015edf.2a6b1ccfb05ae688.js",
+        "expectedIntegrity": "sha256-FYZYTAnqJLjZYKoQbHZnTcW1kEqp1HJgLw1Kmn5bKcU=",
+        "actualIntegrity": "sha256-FYZYTAnqJLjZYKoQbHZnTcW1kEqp1HJgLw1Kmn5bKcU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5f8dfda4.5847f4732d2130af.js",
+        "expectedIntegrity": "sha256-z+qVl+IqKm5TDJCAI8JSvz4JpLTn5MS2vgaE77yr79E=",
+        "actualIntegrity": "sha256-z+qVl+IqKm5TDJCAI8JSvz4JpLTn5MS2vgaE77yr79E=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/dc9729d2.40afd1c0c1c56f6b.js",
+        "expectedIntegrity": "sha256-sCT9K10+i41exVXl34LnGZ2u8dfyLVcyMf8F1KhrTqs=",
+        "actualIntegrity": "sha256-sCT9K10+i41exVXl34LnGZ2u8dfyLVcyMf8F1KhrTqs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "expectedIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "actualIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5930-f579d9ef15ff4eec.js",
+        "expectedIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "actualIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9441-1da2035333621b8b.js",
+        "expectedIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "actualIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/1970-99e23101c30350e9.js",
+        "expectedIntegrity": "sha256-3DL1xHMhdSofS0GuR/BRi4P72Ja2Fb85mhilI1IbEKc=",
+        "actualIntegrity": "sha256-3DL1xHMhdSofS0GuR/BRi4P72Ja2Fb85mhilI1IbEKc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/1518-572421f9b706fac1.js",
+        "expectedIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "actualIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5815-d2131b6234ad2ea8.js",
+        "expectedIntegrity": "sha256-qGHG+8yJHLkdc79SNIusw1qJEVlXeEbxUKVTdUJpF9o=",
+        "actualIntegrity": "sha256-qGHG+8yJHLkdc79SNIusw1qJEVlXeEbxUKVTdUJpF9o=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9094-3ee0a8e960d65574.js",
+        "expectedIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "actualIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/3981-857a4d53de12141d.js",
+        "expectedIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "actualIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/1527-894b8f7c3bc378a6.js",
+        "expectedIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "actualIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9826-1dce46968528014c.js",
+        "expectedIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "actualIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/9522-3f44693a000991cb.js",
+        "expectedIntegrity": "sha256-Amlh5Ek+KQ6HpQBOZCF87kHW91nfpgiFxO3EbPrm2OM=",
+        "actualIntegrity": "sha256-Amlh5Ek+KQ6HpQBOZCF87kHW91nfpgiFxO3EbPrm2OM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/5326-b1324cf76b2f72b1.js",
+        "expectedIntegrity": "sha256-nizvqP3ta09800FIrgUdtWyh0QnhGXkguVQYftZJkaw=",
+        "actualIntegrity": "sha256-nizvqP3ta09800FIrgUdtWyh0QnhGXkguVQYftZJkaw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/2914-95d49c25cd7c3de9.js",
+        "expectedIntegrity": "sha256-A5TbY0nNNPpkd7Lx6BIXRD4rgpKLCHVa8YQNjaSuqAg=",
+        "actualIntegrity": "sha256-A5TbY0nNNPpkd7Lx6BIXRD4rgpKLCHVa8YQNjaSuqAg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/743-224baeea1bee4137.js",
+        "expectedIntegrity": "sha256-mW3m16bwNEx1wXjrX/WLnahWucY1sVsSsyryXn047dc=",
+        "actualIntegrity": "sha256-mW3m16bwNEx1wXjrX/WLnahWucY1sVsSsyryXn047dc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "static/chunks/7430-3bd4051a3d103206.js",
+        "expectedIntegrity": "sha256-VKwiWYh6yQA6HZao1jeIcQYrmBsE9ZYuQhRIPXakOnc=",
+        "actualIntegrity": "sha256-VKwiWYh6yQA6HZao1jeIcQYrmBsE9ZYuQhRIPXakOnc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/_not-found/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-tRmaYZvHDFFZ6ZDE3aBxoggX2oRCEdMHQYPwlKVylUQ=",
+        "actualIntegrity": "sha256-tRmaYZvHDFFZ6ZDE3aBxoggX2oRCEdMHQYPwlKVylUQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/_global-error/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-nBiQI5AtRa51Qlo11dgaJXqJNyLdU+5vj5oi/+t2WMM=",
+        "actualIntegrity": "sha256-nBiQI5AtRa51Qlo11dgaJXqJNyLdU+5vj5oi/+t2WMM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/change-plan/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-N1ppEPugMI0MTw838Rxw/R/K8H9g5jjP1CzMCsnHPBE=",
+        "actualIntegrity": "sha256-N1ppEPugMI0MTw838Rxw/R/K8H9g5jjP1CzMCsnHPBE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/robots.txt/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-3nfHTFQK9M2iSI6YnuMVnl6XZvMPRIPS4+SebZTEXkU=",
+        "actualIntegrity": "sha256-3nfHTFQK9M2iSI6YnuMVnl6XZvMPRIPS4+SebZTEXkU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/sitemap.xml/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-3jG7AyESPnsaD+VFFF+zyOHXNitgJNW7o+3vbONrUis=",
+        "actualIntegrity": "sha256-3jG7AyESPnsaD+VFFF+zyOHXNitgJNW7o+3vbONrUis=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/audit/free-profile/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-KNgyP6qTvJAz4PutBZEqCIn4Kp5Z5OjkOHWuPLxWGUE=",
+        "actualIntegrity": "sha256-KNgyP6qTvJAz4PutBZEqCIn4Kp5Z5OjkOHWuPLxWGUE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api-public-demo-review-booster/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-TA40Rf/udZDnplaQfLYQJMyR7A/HkRN138OogIC51TY=",
+        "actualIntegrity": "sha256-TA40Rf/udZDnplaQfLYQJMyR7A/HkRN138OogIC51TY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/[...nextauth]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-16A4V/pUKizRtBQsR7qHdqxuAPg2gCJfI05xrtVqzp8=",
+        "actualIntegrity": "sha256-16A4V/pUKizRtBQsR7qHdqxuAPg2gCJfI05xrtVqzp8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/forgot-password/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-2WJX3OqjqRm1eFU8ZKhsGiXYHDlatACmAfgKLqIGYF0=",
+        "actualIntegrity": "sha256-2WJX3OqjqRm1eFU8ZKhsGiXYHDlatACmAfgKLqIGYF0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/register/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-H79CVaBznX4Iex1ufAmWeR+nEYyOSxZc+ZHP439p+eg=",
+        "actualIntegrity": "sha256-H79CVaBznX4Iex1ufAmWeR+nEYyOSxZc+ZHP439p+eg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/resend-verification/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ZYS9qVXoQr4M1thJLEB+i3qh38Kz2y4P6YPZHI1s95M=",
+        "actualIntegrity": "sha256-ZYS9qVXoQr4M1thJLEB+i3qh38Kz2y4P6YPZHI1s95M=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/reset-password/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-GkwX13fLyV4dw7N9wq1vK7PiqEVo9bMAdfYyaTpUp8w=",
+        "actualIntegrity": "sha256-GkwX13fLyV4dw7N9wq1vK7PiqEVo9bMAdfYyaTpUp8w=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/signout/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Rr5F0GOshk7oakUEre1SxfUwjUDZT5TNhPMVQw94YmQ=",
+        "actualIntegrity": "sha256-Rr5F0GOshk7oakUEre1SxfUwjUDZT5TNhPMVQw94YmQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/auth/verify-email/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-73zq9mZ/pbgYlieAe202tTDiE6rXEmAzyDoWTcHhZUU=",
+        "actualIntegrity": "sha256-73zq9mZ/pbgYlieAe202tTDiE6rXEmAzyDoWTcHhZUU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/health/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-qodgK4cvKpZK+mLRB++hlzCBOMKEeZ2srcmpnIlEP5Q=",
+        "actualIntegrity": "sha256-qodgK4cvKpZK+mLRB++hlzCBOMKEeZ2srcmpnIlEP5Q=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/privacy/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-IgsQkdt5NmD/FY0NEfRuNr+l/7IAAIsSc8bezK7RiwE=",
+        "actualIntegrity": "sha256-IgsQkdt5NmD/FY0NEfRuNr+l/7IAAIsSc8bezK7RiwE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/review-booster/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-HPs5weq463RdzQgxz+CaJ1DkC8qOdot0TyNoTbNSmVg=",
+        "actualIntegrity": "sha256-HPs5weq463RdzQgxz+CaJ1DkC8qOdot0TyNoTbNSmVg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/csp-report/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-fTWzG2Ta9R7aEQpdsfQYONztTGb+Qt28awZyROZo/Kw=",
+        "actualIntegrity": "sha256-fTWzG2Ta9R7aEQpdsfQYONztTGb+Qt28awZyROZo/Kw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/cron/review-replies/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-xsLclCf3kby5EVXFUlF247D+4e41w2G68TdhcvgSorM=",
+        "actualIntegrity": "sha256-xsLclCf3kby5EVXFUlF247D+4e41w2G68TdhcvgSorM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/dashboard/summary/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-cWWtWYsWxIAbo5/qOBaDDY5SAYTp7vxeuTfzK+IIOI0=",
+        "actualIntegrity": "sha256-cWWtWYsWxIAbo5/qOBaDDY5SAYTp7vxeuTfzK+IIOI0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/feedback/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-CHTNC21yrgCS6FFgbNHy7w8UTWXDJ3X5BTCeuJ/UmB4=",
+        "actualIntegrity": "sha256-CHTNC21yrgCS6FFgbNHy7w8UTWXDJ3X5BTCeuJ/UmB4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/connection/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-nfYBLxgQT/HN7kKVy6tB/s8tdTva+If+hO3Mp9/MoSA=",
+        "actualIntegrity": "sha256-nfYBLxgQT/HN7kKVy6tB/s8tdTva+If+hO3Mp9/MoSA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/disconnect/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-t7AohstxAC1kXuMabyqh5dbkAe8XRG2V0t1FppMQREg=",
+        "actualIntegrity": "sha256-t7AohstxAC1kXuMabyqh5dbkAe8XRG2V0t1FppMQREg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/list/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-nCEDrDwlWzn5OvxN3O5BoYvi9GKrO+3FLYTWJLRWGb8=",
+        "actualIntegrity": "sha256-nCEDrDwlWzn5OvxN3O5BoYvi9GKrO+3FLYTWJLRWGb8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-n9AofveiovdMGXcooYvuIgcZMdApe0QZG//4xobN+I8=",
+        "actualIntegrity": "sha256-n9AofveiovdMGXcooYvuIgcZMdApe0QZG//4xobN+I8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/selection/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-/sqqfqog/sKw0TwJvg5Ff/He8IoyUxeQJe2viYlaGGA=",
+        "actualIntegrity": "sha256-/sqqfqog/sKw0TwJvg5Ff/He8IoyUxeQJe2viYlaGGA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/locations/sync/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-bfKTfozFYenipxp/ozM3XKaDZhO6+5J8cj746mj/fd8=",
+        "actualIntegrity": "sha256-bfKTfozFYenipxp/ozM3XKaDZhO6+5J8cj746mj/fd8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/oauth/callback/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Oe1G8WetupTY+9t/66G3JM93C5UNuI9W53ybIwldfA8=",
+        "actualIntegrity": "sha256-Oe1G8WetupTY+9t/66G3JM93C5UNuI9W53ybIwldfA8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/oauth/start/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-2QwC9Hp4EaPT4XJFr0/uK4kLEIsVrY+3EYTX84aUkEY=",
+        "actualIntegrity": "sha256-2QwC9Hp4EaPT4XJFr0/uK4kLEIsVrY+3EYTX84aUkEY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/replies/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-pJ09L5g/AUP+Z7FujDp6j6ltlIvYsacaUbbp1zN72bY=",
+        "actualIntegrity": "sha256-pJ09L5g/AUP+Z7FujDp6j6ltlIvYsacaUbbp1zN72bY=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/reviews/process-pending/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-6hcQNXbjFMsY0GWekm2dbtJTBsxL5zZYclo98WWV6Po=",
+        "actualIntegrity": "sha256-6hcQNXbjFMsY0GWekm2dbtJTBsxL5zZYclo98WWV6Po=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/google/reviews/sync/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-AhSWN1LDgoHsFQRipl9JMqbQFoEKaDig9NC0hpxw/zQ=",
+        "actualIntegrity": "sha256-AhSWN1LDgoHsFQRipl9JMqbQFoEKaDig9NC0hpxw/zQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/leads/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-dVj2OqzfRkKWNFp7Q3yleEYewTbvPCE6GVTBb6VajjM=",
+        "actualIntegrity": "sha256-dVj2OqzfRkKWNFp7Q3yleEYewTbvPCE6GVTBb6VajjM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/openai/review-reply/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-0bE8jSyz4m5ejEWcH9gg3jHw28agxkNyWRCxcKQvGbc=",
+        "actualIntegrity": "sha256-0bE8jSyz4m5ejEWcH9gg3jHw28agxkNyWRCxcKQvGbc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/privacy/delete/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-j9KXum0oGpiN9Gvezqo/7PPo3ZyBQ4QH+6TeaEoLdzc=",
+        "actualIntegrity": "sha256-j9KXum0oGpiN9Gvezqo/7PPo3ZyBQ4QH+6TeaEoLdzc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/privacy/export/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-C3Se/nUUGkE7a+mpGI1yp+xm5NasZzLm/YsQUFdcBIM=",
+        "actualIntegrity": "sha256-C3Se/nUUGkE7a+mpGI1yp+xm5NasZzLm/YsQUFdcBIM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/private-preview/database-identity/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-rDjpqhcImXNA+EIbiyRFtUealStvUNzFKQ4Kgj7OYpg=",
+        "actualIntegrity": "sha256-rDjpqhcImXNA+EIbiyRFtUealStvUNzFKQ4Kgj7OYpg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/projects/[id]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-1v3d6sh/DvTi1LvjZm5fx+CFkHvD0rRXoc/+9okDhTg=",
+        "actualIntegrity": "sha256-1v3d6sh/DvTi1LvjZm5fx+CFkHvD0rRXoc/+9okDhTg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/projects/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Ua4YJErW/eHfonlcLmjMJtPfuVRXW1mpVcndJQPhdKQ=",
+        "actualIntegrity": "sha256-Ua4YJErW/eHfonlcLmjMJtPfuVRXW1mpVcndJQPhdKQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/booking-credentials/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-jggPS3KWAU+EaGJpcO6aOE1sI8rKDVEXen5SQmGPhmI=",
+        "actualIntegrity": "sha256-jggPS3KWAU+EaGJpcO6aOE1sI8rKDVEXen5SQmGPhmI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/deliveries/[deliveryId]/reconcile/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-RrOb58xTUK7OA8ZpUXSZ5hDmZVR9Vs8Pcc7hpUyi34Y=",
+        "actualIntegrity": "sha256-RrOb58xTUK7OA8ZpUXSZ5hDmZVR9Vs8Pcc7hpUyi34Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/run-now/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-IpQk0at1sNp3/eD9rAmoFs4aWQ1Yp+egrcUz/3Wg0lw=",
+        "actualIntegrity": "sha256-IpQk0at1sNp3/eD9rAmoFs4aWQ1Yp+egrcUz/3Wg0lw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/settings/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-TaNBmsyMFZ6UZEReuiG5MJWyiU2yZlWjTqlDckxZvkw=",
+        "actualIntegrity": "sha256-TaNBmsyMFZ6UZEReuiG5MJWyiU2yZlWjTqlDckxZvkw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/unsubscribe/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-/dRTEOiMaf3nFyewKaeNcUm0mm0JCxTTAZMhh7aYyEE=",
+        "actualIntegrity": "sha256-/dRTEOiMaf3nFyewKaeNcUm0mm0JCxTTAZMhh7aYyEE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/upload/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-FBojQKlpW3XZ1dR62UreZfY3Tz0+WZ83QQ/6RIXXzCE=",
+        "actualIntegrity": "sha256-FBojQKlpW3XZ1dR62UreZfY3Tz0+WZ83QQ/6RIXXzCE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/review-booster/visits/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Y53kNF0+twy5204OWyvmkKz8dtUjZm2enoqNwzKCtx8=",
+        "actualIntegrity": "sha256-Y53kNF0+twy5204OWyvmkKz8dtUjZm2enoqNwzKCtx8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/reviews/draft/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-4WUVQbmAwq9oyu+yS+CADJZkQmv4BsyafXwg0JcSjFo=",
+        "actualIntegrity": "sha256-4WUVQbmAwq9oyu+yS+CADJZkQmv4BsyafXwg0JcSjFo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/reviews/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-rMv+2uftyjd6d6MpSZgxdmoStkN4IFtYLdvzoPa+C3c=",
+        "actualIntegrity": "sha256-rMv+2uftyjd6d6MpSZgxdmoStkN4IFtYLdvzoPa+C3c=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/settings/reply/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-pEw/ACn8k2QUkejM40MIGLWvhk8r40N2qmD5uKEUdLQ=",
+        "actualIntegrity": "sha256-pEw/ACn8k2QUkejM40MIGLWvhk8r40N2qmD5uKEUdLQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/portal/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-VWOnelu6qOZVCubR2ykZwOegwRCELUen0wKBhavOa/M=",
+        "actualIntegrity": "sha256-VWOnelu6qOZVCubR2ykZwOegwRCELUen0wKBhavOa/M=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/webhook/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-YNk7HfSBfnXv4Xsla5tBpv9At5CbvaaAgMmswrHsIu0=",
+        "actualIntegrity": "sha256-YNk7HfSBfnXv4Xsla5tBpv9At5CbvaaAgMmswrHsIu0=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/stripe/checkout/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-lrZDWfdO3vPt1jIz/6pLITBsQFijCDCsD4o5sAkibxg=",
+        "actualIntegrity": "sha256-lrZDWfdO3vPt1jIz/6pLITBsQFijCDCsD4o5sAkibxg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/team/invitations/[token]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-J4KlUSZHqtXWdqqKbUrt0wyd01n/FnQMSWqVwlvMw/o=",
+        "actualIntegrity": "sha256-J4KlUSZHqtXWdqqKbUrt0wyd01n/FnQMSWqVwlvMw/o=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/team/members/[userId]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-lYw8HRtLUb5ZPWHjs6toOec69A0WWugxbMFLLNoh1mc=",
+        "actualIntegrity": "sha256-lYw8HRtLUb5ZPWHjs6toOec69A0WWugxbMFLLNoh1mc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/team/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-+KdBJuE0eBg14A7nq8UOW+b92tY91mgFwIv8VWYUYEs=",
+        "actualIntegrity": "sha256-+KdBJuE0eBg14A7nq8UOW+b92tY91mgFwIv8VWYUYEs=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/user/plan/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-sHJ3Pktk3c4s9pcChU7Zv7oQlKVTF/Dz6Li3XO+R1KQ=",
+        "actualIntegrity": "sha256-sHJ3Pktk3c4s9pcChU7Zv7oQlKVTF/Dz6Li3XO+R1KQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/webhooks/booking/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-98LUtZGPnI++b3LRewM3LAV8kDPkJ2YnlvHdjW0uVqM=",
+        "actualIntegrity": "sha256-98LUtZGPnI++b3LRewM3LAV8kDPkJ2YnlvHdjW0uVqM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/api/webhooks/resend/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-D0hvuCEJ2YG9MN/mpnI/ebxjIH0HDLoKkH8+P1pasZM=",
+        "actualIntegrity": "sha256-D0hvuCEJ2YG9MN/mpnI/ebxjIH0HDLoKkH8+P1pasZM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/opengraph-image/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-7MZVxkhq+wEJQU+7FwTHptxeOvlAnXqwzX/SQjit048=",
+        "actualIntegrity": "sha256-7MZVxkhq+wEJQU+7FwTHptxeOvlAnXqwzX/SQjit048=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/r/[token]/route_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-MGO0Kzjs6rd8RKNs7xyVhxv0EkhROUSHVRSHmwy9+OQ=",
+        "actualIntegrity": "sha256-MGO0Kzjs6rd8RKNs7xyVhxv0EkhROUSHVRSHmwy9+OQ=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/about/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ZM1+kTAJ36OwhcUoF6yoQzkTYwNKT/vVBxVU8T/rH8A=",
+        "actualIntegrity": "sha256-ZM1+kTAJ36OwhcUoF6yoQzkTYwNKT/vVBxVU8T/rH8A=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/account/deletion/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-ia9E/+VlIekJaqclv/vD63zmmeVB+R9ELg1QMMdIxqA=",
+        "actualIntegrity": "sha256-ia9E/+VlIekJaqclv/vD63zmmeVB+R9ELg1QMMdIxqA=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/contact/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-glcuFNnWGSDrr3ryi4Rq6JH4ZMsb+YPTQRmq2luJbao=",
+        "actualIntegrity": "sha256-glcuFNnWGSDrr3ryi4Rq6JH4ZMsb+YPTQRmq2luJbao=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/demo-review-booster/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-tVMGV3BJ8nNGc49pC5YqwMm+MSQGvIRU9P88QyIUSok=",
+        "actualIntegrity": "sha256-tVMGV3BJ8nNGc49pC5YqwMm+MSQGvIRU9P88QyIUSok=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/demo-review-replies/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-th+gPuhvIxRvzRlU74fs2zV8tXoT69WBOUO6YLMK0fM=",
+        "actualIntegrity": "sha256-th+gPuhvIxRvzRlU74fs2zV8tXoT69WBOUO6YLMK0fM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/demo/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-cOpy891ijrlNUpZnEvr9PuO9/DfahKN3IXT3yUQGyDE=",
+        "actualIntegrity": "sha256-cOpy891ijrlNUpZnEvr9PuO9/DfahKN3IXT3yUQGyDE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/feedback/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-nHr0foLlMRElTwk2tzihEPVP4JxwKScepr+E+AldO10=",
+        "actualIntegrity": "sha256-nHr0foLlMRElTwk2tzihEPVP4JxwKScepr+E+AldO10=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/free-audit/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-dEFWLAKFRHDadR7OL58AABYgOgHjSWNu1oMQyaD3sZU=",
+        "actualIntegrity": "sha256-dEFWLAKFRHDadR7OL58AABYgOgHjSWNu1oMQyaD3sZU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/legal/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-jg0PSbqxJE/OVGROv7AbZ0qe2zrzW2Rb6faV4Argylk=",
+        "actualIntegrity": "sha256-jg0PSbqxJE/OVGROv7AbZ0qe2zrzW2Rb6faV4Argylk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/local-seo/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-YVKJI5DrLx1A1Ce3NBftUhdDuBUbF+bZ2vqCsgJFQlw=",
+        "actualIntegrity": "sha256-YVKJI5DrLx1A1Ce3NBftUhdDuBUbF+bZ2vqCsgJFQlw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-LNp85K0bkl8yxkRv1JIBYoSw8ZitL+wOnwFGWNaNWfg=",
+        "actualIntegrity": "sha256-LNp85K0bkl8yxkRv1JIBYoSw8ZitL+wOnwFGWNaNWfg=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/pricing/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-jqC7I1+P+uF18ulR9solI/Zx/AMY0rw9KsuRqcQhf44=",
+        "actualIntegrity": "sha256-jqC7I1+P+uF18ulR9solI/Zx/AMY0rw9KsuRqcQhf44=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/privacy/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-mobyxIP/7OftmMZG6YPvJnSVWOWLdz0mIk6n3T64zm4=",
+        "actualIntegrity": "sha256-mobyxIP/7OftmMZG6YPvJnSVWOWLdz0mIk6n3T64zm4=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/review-booster/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-1+US/Viu9buL267fZWCa7J5x8p262E/38XmXH+vS8T8=",
+        "actualIntegrity": "sha256-1+US/Viu9buL267fZWCa7J5x8p262E/38XmXH+vS8T8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/review-replies/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-R9IdMOMVIwKdhczU5Yjl+NrDJVOjh/7TBHb8mg+VQrU=",
+        "actualIntegrity": "sha256-R9IdMOMVIwKdhczU5Yjl+NrDJVOjh/7TBHb8mg+VQrU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/team/invite/[token]/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-eZhBu/goEQrc8ONLcREqAd/+MJD/V2zrfrgBtTCuors=",
+        "actualIntegrity": "sha256-eZhBu/goEQrc8ONLcREqAd/+MJD/V2zrfrgBtTCuors=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/terms/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-w/tD2T74tF3Fc2MnC85mG9J8aX4DD3gtEvfQx8dcX6I=",
+        "actualIntegrity": "sha256-w/tD2T74tF3Fc2MnC85mG9J8aX4DD3gtEvfQx8dcX6I=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/forgot-password/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-UTPk1tLF/4XaRnP7i0lZa+9eakTMkGFCG9hO1h3+OA8=",
+        "actualIntegrity": "sha256-UTPk1tLF/4XaRnP7i0lZa+9eakTMkGFCG9hO1h3+OA8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/login/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-5SiUT0+/nXvQJf8bM7ZzgVBLniLopqd0oxrLs04g5Jo=",
+        "actualIntegrity": "sha256-5SiUT0+/nXvQJf8bM7ZzgVBLniLopqd0oxrLs04g5Jo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/resend-verification/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-/Y77SaR5qo0vAh2k1M5lGjatPJn7QbYA8Ub+Dby3oaw=",
+        "actualIntegrity": "sha256-/Y77SaR5qo0vAh2k1M5lGjatPJn7QbYA8Ub+Dby3oaw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/reset-password/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-1p+XizBLDdbYWav9taAcwcRlNOwbHtVbNHWcWg3y28Y=",
+        "actualIntegrity": "sha256-1p+XizBLDdbYWav9taAcwcRlNOwbHtVbNHWcWg3y28Y=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(auth)/signup/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-pKKgxartQiuDM3XQMqNuJiXLIxveQbR8j5QFN+fJIpo=",
+        "actualIntegrity": "sha256-pKKgxartQiuDM3XQMqNuJiXLIxveQbR8j5QFN+fJIpo=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/connect/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-iZLB0ECiejHlrEdLd/iSPkbHKanf8jcYA2Ox6GtfigE=",
+        "actualIntegrity": "sha256-iZLB0ECiejHlrEdLd/iSPkbHKanf8jcYA2Ox6GtfigE=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/new/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-lgpCffWSHjy+3mqU+bGuvWrYLw1D9/ZkxLH3O2MzF2U=",
+        "actualIntegrity": "sha256-lgpCffWSHjy+3mqU+bGuvWrYLw1D9/ZkxLH3O2MzF2U=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-lv4wowZDynV9ubhx7TH9ZHavtSWnzmfQSqUEEc7I2p8=",
+        "actualIntegrity": "sha256-lv4wowZDynV9ubhx7TH9ZHavtSWnzmfQSqUEEc7I2p8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/settings/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-mzH6fHB1qTD2MgNBgAxh2tHGPVfykYBR0cLH87+GIKk=",
+        "actualIntegrity": "sha256-mzH6fHB1qTD2MgNBgAxh2tHGPVfykYBR0cLH87+GIKk=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-booster/upload/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-RhDmKBf+UDPfaJSH3FO/iCLkJnCoNN6ylWbaWsZfvNc=",
+        "actualIntegrity": "sha256-RhDmKBf+UDPfaJSH3FO/iCLkJnCoNN6ylWbaWsZfvNc=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/billing/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-xPo8sG13GM1r+SnKIaJZfKKwsZ341ByEsbSYiu2XOsw=",
+        "actualIntegrity": "sha256-xPo8sG13GM1r+SnKIaJZfKKwsZ341ByEsbSYiu2XOsw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Dff6n6nUFC0wJIHt6F6sriuObCaDKazKIMtarphmD6k=",
+        "actualIntegrity": "sha256-Dff6n6nUFC0wJIHt6F6sriuObCaDKazKIMtarphmD6k=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/settings/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-WEOhRrtf+mqLjS7vaVCZslvubhPv3Wiv9je8sfEDIiI=",
+        "actualIntegrity": "sha256-WEOhRrtf+mqLjS7vaVCZslvubhPv3Wiv9je8sfEDIiI=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/google-connection/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-jTWO3Iy+qMjGlU8SUBvRw23ul2lG7KrLiu+25DdFKsM=",
+        "actualIntegrity": "sha256-jTWO3Iy+qMjGlU8SUBvRw23ul2lG7KrLiu+25DdFKsM=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-P5Y1fyqo5HLkNY5evNz6pUVORddCbP/wEgQKlJD29uw=",
+        "actualIntegrity": "sha256-P5Y1fyqo5HLkNY5evNz6pUVORddCbP/wEgQKlJD29uw=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/reviews/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-gSHPLzuROqkbgoctBIEU8yZtL7r0m5Z9ixfq5o1ZqW8=",
+        "actualIntegrity": "sha256-gSHPLzuROqkbgoctBIEU8yZtL7r0m5Z9ixfq5o1ZqW8=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/dashboard/agents/review-replies/settings/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-Qbobb5yiH2LLUgSMA6mpRFnPOSKJ1MXIKfRhUp9Hm/w=",
+        "actualIntegrity": "sha256-Qbobb5yiH2LLUgSMA6mpRFnPOSKJ1MXIKfRhUp9Hm/w=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      },
+      {
+        "path": "server/app/(dashboard)/reviews/page_client-reference-manifest.js",
+        "expectedIntegrity": "sha256-9IxjzlSMnE2ZQGVkCfaqQqS0UW+OBwOb7KuLp/HSuTU=",
+        "actualIntegrity": "sha256-9IxjzlSMnE2ZQGVkCfaqQqS0UW+OBwOb7KuLp/HSuTU=",
+        "exists": true,
+        "matches": true,
+        "status": "match"
+      }
+    ],
+    "companionManifest": {
+      "path": ".next/server/subresource-integrity-manifest.js",
+      "assignmentParsed": true,
+      "equalsJsonManifest": true
+    },
+    "sourceMaps": {
+      "emittedCount": 0,
+      "emittedPaths": [],
+      "missingSriMapCount": 0,
+      "missingSriMapPaths": []
+    },
+    "staticCsp": {
+      "staticHtmlPageCount": 1,
+      "staticHtmlPaths": [
+        "server/app/_global-error.html"
+      ],
+      "declaredHashCount": 2,
+      "recomputedHashCount": 2,
+      "hashesEqual": true,
+      "declaredHashes": [
+        "OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=",
+        "vClLefgTmJQNwbeTpjkU+xv9F4Lz3MuFcjznGLyulOQ="
+      ],
+      "recomputedHashes": [
+        "OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=",
+        "vClLefgTmJQNwbeTpjkU+xv9F4Lz3MuFcjznGLyulOQ="
+      ]
+    },
+    "sentryArtifacts": {
+      "filenamesContainingSentryCount": 0,
+      "filenamesContainingSentry": [],
+      "instrumentationArtifactPresent": true,
+      "javascriptFilesContainingSentryStringsCount": 18,
+      "javascriptFilesContainingSentryStrings": [
+        "required-server-files.js",
+        "server/app/api/cron/health/route.js",
+        "server/app/privacy/page.js",
+        "server/app/terms/page.js",
+        "server/chunks/1261.js",
+        "server/chunks/1601.js",
+        "server/chunks/2263.js",
+        "server/chunks/3576.js",
+        "server/chunks/5591.js",
+        "server/instrumentation.js",
+        "server/middleware-react-loadable-manifest.js",
+        "server/middleware.js",
+        "static/chunks/3684.9906bb5329f266f3.js",
+        "static/chunks/4a7b0c69.b60fb5cd91258c5e.js",
+        "static/chunks/5563.8ef324387a9f6623.js",
+        "static/chunks/5d015edf.2a6b1ccfb05ae688.js",
+        "static/chunks/5f8dfda4.5847f4732d2130af.js",
+        "static/chunks/dc9729d2.40afd1c0c1c56f6b.js"
+      ],
+      "telemetryExecutionEstablished": false
+    }
+  },
+  "browserEvidence": {
+    "schemaVersion": 1,
+    "candidateCommit": "71af037843847f75831c28422906a26e1a7e5f45",
+    "browser": {
+      "product": "Microsoft Edge",
+      "version": "Edg/155.0.4283.62",
+      "headless": true,
+      "cleanProfile": true,
+      "exitCode": null
+    },
+    "origin": "http://127.0.0.1:62929",
+    "scope": "One clean headless browser context; all browser requests outside this exact loopback origin are failed before dispatch.",
+    "steps": [
+      {
+        "label": "home-initial-load",
+        "path": "/",
+        "titlePresent": true,
+        "bodyPresent": true,
+        "textLength": 5136,
+        "status": "loaded"
+      },
+      {
+        "label": "faq-interaction",
+        "status": "clicked"
+      },
+      {
+        "label": "public-about-link",
+        "status": "clicked"
+      },
+      {
+        "label": "public-about-navigation",
+        "path": "/about",
+        "status": "loaded"
+      },
+      {
+        "label": "login-link-navigation",
+        "path": "/login",
+        "status": "loaded"
+      },
+      {
+        "label": "login-form",
+        "passwordInputPresent": true,
+        "formPresent": true,
+        "status": "present_not_submitted"
+      }
+    ],
+    "requests": {
+      "scripts": [
+        {
+          "path": "/_next/static/chunks/webpack-0fa0d77127c46143.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/9826-1dce46968528014c.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/main-app-dd6305b409632d9d.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/5930-f579d9ef15ff4eec.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/9441-1da2035333621b8b.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/1518-572421f9b706fac1.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/9094-3ee0a8e960d65574.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/3981-857a4d53de12141d.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/1527-894b8f7c3bc378a6.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/app/layout-a53917a8cfcd2f60.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/app/error-20fd6a34b5e2294b.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/app/page-8a92f9e08182a160.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/app/global-error-e4970c58ee9786da.js",
+          "phase": "home-initial-load",
+          "initiator": "parser"
+        },
+        {
+          "path": "/_next/static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+          "phase": "login-link-navigation",
+          "initiator": "script"
+        }
+      ],
+      "blockedOffOrigin": [],
+      "otherLoopback": [
+        {
+          "type": "Image",
+          "path": "/logo-ink.svg",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Image",
+          "path": "/logo-paper.svg",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Stylesheet",
+          "path": "/_next/static/css/da7208232ee3766e.css",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Font",
+          "path": "/_next/static/media/e4af272ccee01ff0-s.p.woff2",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Font",
+          "path": "/_next/static/media/9d5a263311222317-s.p.woff2",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Font",
+          "path": "/_next/static/media/7d4881bb7e1bf84d-s.p.woff2",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Other",
+          "path": "/ornigami-favicon.svg",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/api/auth/session",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/signup",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/demo",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/privacy",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/api/auth/session",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/privacy",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/signup",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/demo",
+          "phase": "home-initial-load"
+        },
+        {
+          "type": "Fetch",
+          "path": "/about",
+          "phase": "faq-interaction"
+        },
+        {
+          "type": "Fetch",
+          "path": "/login",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/forgot-password",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/resend-verification",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/signup",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/forgot-password",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/resend-verification",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/forgot-password",
+          "phase": "login-link-navigation"
+        },
+        {
+          "type": "Fetch",
+          "path": "/resend-verification",
+          "phase": "login-link-navigation"
+        }
+      ]
+    },
+    "scriptResponses": [
+      {
+        "path": "/_next/static/chunks/webpack-0fa0d77127c46143.js",
+        "phase": "home-initial-load",
+        "bytes": 11906,
+        "sha256": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/main-app-dd6305b409632d9d.js",
+        "phase": "home-initial-load",
+        "bytes": 1006,
+        "sha256": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/9826-1dce46968528014c.js",
+        "phase": "home-initial-load",
+        "bytes": 243180,
+        "sha256": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "phase": "home-initial-load",
+        "bytes": 203727,
+        "sha256": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/5930-f579d9ef15ff4eec.js",
+        "phase": "home-initial-load",
+        "bytes": 7672,
+        "sha256": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/9441-1da2035333621b8b.js",
+        "phase": "home-initial-load",
+        "bytes": 28293,
+        "sha256": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/1518-572421f9b706fac1.js",
+        "phase": "home-initial-load",
+        "bytes": 7827,
+        "sha256": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/9094-3ee0a8e960d65574.js",
+        "phase": "home-initial-load",
+        "bytes": 33595,
+        "sha256": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/3981-857a4d53de12141d.js",
+        "phase": "home-initial-load",
+        "bytes": 14790,
+        "sha256": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/app/layout-a53917a8cfcd2f60.js",
+        "phase": "home-initial-load",
+        "bytes": 15582,
+        "sha256": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/1527-894b8f7c3bc378a6.js",
+        "phase": "home-initial-load",
+        "bytes": 117498,
+        "sha256": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/app/error-20fd6a34b5e2294b.js",
+        "phase": "home-initial-load",
+        "bytes": 3538,
+        "sha256": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/app/page-8a92f9e08182a160.js",
+        "phase": "home-initial-load",
+        "bytes": 1313,
+        "sha256": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/app/global-error-e4970c58ee9786da.js",
+        "phase": "home-initial-load",
+        "bytes": 3714,
+        "sha256": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "status": "captured"
+      },
+      {
+        "path": "/_next/static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+        "phase": "login-link-navigation",
+        "bytes": 11395,
+        "sha256": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "status": "captured"
+      }
+    ],
+    "scriptReferences": [
+      {
+        "phase": "home-initial-load",
+        "path": "/_next/static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "integrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "responseCaptured": true,
+        "expectedIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "actualIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "byteLength": 203727,
+        "integrityMatchesCapturedBytes": true
+      },
+      {
+        "phase": "home-initial-load",
+        "path": "/_next/static/chunks/9826-1dce46968528014c.js",
+        "integrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "responseCaptured": true,
+        "expectedIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "actualIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "byteLength": 243180,
+        "integrityMatchesCapturedBytes": true
+      },
+      {
+        "phase": "home-initial-load",
+        "path": "/_next/static/chunks/main-app-dd6305b409632d9d.js",
+        "integrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "responseCaptured": true,
+        "expectedIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "actualIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "byteLength": 1006,
+        "integrityMatchesCapturedBytes": true
+      },
+      {
+        "phase": "home-initial-load",
+        "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+        "integrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "responseCaptured": false,
+        "expectedIntegrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "actualIntegrity": null,
+        "byteLength": null,
+        "integrityMatchesCapturedBytes": null
+      },
+      {
+        "phase": "home-initial-load",
+        "path": "/_next/static/chunks/webpack-0fa0d77127c46143.js",
+        "integrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "responseCaptured": true,
+        "expectedIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "actualIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "byteLength": 11906,
+        "integrityMatchesCapturedBytes": true
+      }
+    ],
+    "observedScriptElements": [
+      {
+        "path": "/_next/static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "integrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/9826-1dce46968528014c.js",
+        "integrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/main-app-dd6305b409632d9d.js",
+        "integrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/5930-f579d9ef15ff4eec.js",
+        "integrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/9441-1da2035333621b8b.js",
+        "integrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/1518-572421f9b706fac1.js",
+        "integrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/9094-3ee0a8e960d65574.js",
+        "integrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/3981-857a4d53de12141d.js",
+        "integrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/1527-894b8f7c3bc378a6.js",
+        "integrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/app/layout-a53917a8cfcd2f60.js",
+        "integrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/app/error-20fd6a34b5e2294b.js",
+        "integrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/app/page-8a92f9e08182a160.js",
+        "integrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/app/global-error-e4970c58ee9786da.js",
+        "integrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+        "integrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/webpack-0fa0d77127c46143.js",
+        "integrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "crossOrigin": null,
+        "phase": "home-initial-load"
+      },
+      {
+        "path": "/_next/static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+        "integrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "crossOrigin": "anonymous",
+        "phase": "login-link-navigation"
+      }
+    ],
+    "documentPolicies": [
+      {
+        "path": "/",
+        "contentSecurityPolicyPresent": true,
+        "reportOnlyPolicyPresent": true,
+        "scriptNonceRequired": true,
+        "directiveNames": [
+          "base-uri",
+          "connect-src",
+          "default-src",
+          "font-src",
+          "form-action",
+          "frame-ancestors",
+          "frame-src",
+          "img-src",
+          "object-src",
+          "script-src",
+          "style-src"
+        ]
+      }
+    ],
+    "cspViolations": [
+      {
+        "phase": "login-link-navigation",
+        "effectiveDirective": "trusted-types",
+        "disposition": "report",
+        "blockedUriClass": "url"
+      }
+    ],
+    "browserFailures": [
+      {
+        "category": "request_cancelled",
+        "path": "/privacy",
+        "phase": "home-initial-load"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/signup",
+        "phase": "home-initial-load"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/demo",
+        "phase": "home-initial-load"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/signup",
+        "phase": "home-initial-load"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/privacy",
+        "phase": "home-initial-load"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/about",
+        "phase": "faq-interaction"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/forgot-password",
+        "phase": "login-link-navigation"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/resend-verification",
+        "phase": "login-link-navigation"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/forgot-password",
+        "phase": "login-link-navigation"
+      },
+      {
+        "category": "request_cancelled",
+        "path": "/forgot-password",
+        "phase": "login-link-navigation"
+      }
+    ],
+    "ssgManifest": {
+      "requested": false,
+      "scriptParsed": false,
+      "runtimeGlobalObserved": false,
+      "requestPaths": [],
+      "observedConclusion": "No _ssgManifest.js request, V8 scriptParsed event, or __SSG_MANIFEST global was observed during the tested /, /about, FAQ and /login flows; this is limited to those routes and interactions."
+    },
+    "coverage": {
+      "hydrationEvidence": [
+        {
+          "label": "home-initial-load",
+          "reactBoundNodes": 580,
+          "observed": true
+        },
+        {
+          "label": "public-about-navigation",
+          "reactBoundNodes": 142,
+          "observed": true
+        },
+        {
+          "label": "login",
+          "reactBoundNodes": 29,
+          "observed": true
+        }
+      ],
+      "dynamicScriptRequestsAfterInitialNavigation": [
+        {
+          "phase": "login-link-navigation",
+          "path": "/_next/static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+          "status": "verified",
+          "responseDigestMatches": true
+        }
+      ],
+      "publicNavigation": true,
+      "requestedPageFlows": [
+        "GET /, hydrated",
+        "FAQ details toggle",
+        "client-side public navigation to /about",
+        "client-side navigation to /login; form observed and not submitted"
+      ],
+      "limits": [
+        "The only full document navigation observed was /; /about and /login were client-side route transitions.",
+        "The /login auth/session UI was not submitted or authenticated.",
+        "No dashboard, authenticated, integration, payment, database, provider, cron or full application acceptance path was exercised.",
+        "One polyfills script element carried integrity metadata but produced no script network request/response bytes in this browser context."
+      ]
+    },
+    "summary": {
+      "scriptRequestCount": 15,
+      "scriptResponseCount": 15,
+      "scriptReferenceCount": 16,
+      "referencesWithCapturedBytes": 15,
+      "referencesWithMatchingIntegrity": 15,
+      "referencesWithMismatchingIntegrity": 0,
+      "dynamicScriptRequestCount": 1,
+      "cspViolationCount": 1,
+      "sriFailureCount": 0,
+      "runtimeFailureCount": 0,
+      "offOriginBrowserAttemptCount": 0,
+      "allOffOriginRequestsBlocked": true,
+      "cspEnforceViolationCount": 0,
+      "cspReportOnlyViolationCount": 1,
+      "documentScriptElementCount": 16,
+      "scriptElementsReferencedButNotRequested": 1
+    },
+    "requestedScriptChecks": [
+      {
+        "path": "/_next/static/chunks/webpack-0fa0d77127c46143.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/webpack-0fa0d77127c46143.js",
+        "expectedIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "observedIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 11906,
+        "actualIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "expectedIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "observedIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 203727,
+        "actualIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/9826-1dce46968528014c.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/9826-1dce46968528014c.js",
+        "expectedIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "observedIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 243180,
+        "actualIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/main-app-dd6305b409632d9d.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/main-app-dd6305b409632d9d.js",
+        "expectedIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "observedIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 1006,
+        "actualIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/5930-f579d9ef15ff4eec.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/5930-f579d9ef15ff4eec.js",
+        "expectedIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "observedIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 7672,
+        "actualIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/9441-1da2035333621b8b.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/9441-1da2035333621b8b.js",
+        "expectedIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "observedIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 28293,
+        "actualIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/1518-572421f9b706fac1.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/1518-572421f9b706fac1.js",
+        "expectedIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "observedIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 7827,
+        "actualIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/9094-3ee0a8e960d65574.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/9094-3ee0a8e960d65574.js",
+        "expectedIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "observedIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 33595,
+        "actualIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/3981-857a4d53de12141d.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/3981-857a4d53de12141d.js",
+        "expectedIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "observedIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 14790,
+        "actualIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/1527-894b8f7c3bc378a6.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/1527-894b8f7c3bc378a6.js",
+        "expectedIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "observedIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 117498,
+        "actualIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/layout-a53917a8cfcd2f60.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/app/layout-a53917a8cfcd2f60.js",
+        "expectedIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "observedIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 15582,
+        "actualIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/error-20fd6a34b5e2294b.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/app/error-20fd6a34b5e2294b.js",
+        "expectedIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "observedIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 3538,
+        "actualIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/page-8a92f9e08182a160.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/app/page-8a92f9e08182a160.js",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "observedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 1313,
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/global-error-e4970c58ee9786da.js",
+        "phase": "home-initial-load",
+        "initiator": "parser",
+        "manifestPath": "static/chunks/app/global-error-e4970c58ee9786da.js",
+        "expectedIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "observedIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 3714,
+        "actualIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+        "phase": "login-link-navigation",
+        "initiator": "script",
+        "manifestPath": "static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+        "expectedIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "observedIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "integrityObserved": true,
+        "responseCaptured": true,
+        "responseBytes": 11395,
+        "actualIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "integrityMatches": true,
+        "responseDigestMatches": true,
+        "status": "verified"
+      }
+    ],
+    "documentScriptElementChecks": [
+      {
+        "path": "/_next/static/chunks/4bd1b696-9e9c7ff1884f6c2e.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "expectedIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-hf9H4qH9gPW3xh3WD1h4HdHz9pbhYTBwLavBWEI+yfk=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/9826-1dce46968528014c.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "expectedIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-KWnIENQjWjCCflMEWtmCBUGX0N8oO4Ho7RzRwIIkpCc=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/main-app-dd6305b409632d9d.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "expectedIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-sBAImJIcudXWFIMm2NxG+QV+aALTM1D/X6jvj+jM4Ek=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/5930-f579d9ef15ff4eec.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "expectedIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-pbMegoVP79++1gBDnDTGZUN2QmVuYDKqvuERYk0rqAc=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/9441-1da2035333621b8b.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "expectedIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-KJ1o5mw4eNv9UOcnyUE0q8ytH7LMJoBHUzW1NtFM3oE=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/1518-572421f9b706fac1.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "expectedIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-yiLJna7yjSUpJM2QeFcNgDa5u9XvvzEZ02aHUCNplHo=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/9094-3ee0a8e960d65574.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "expectedIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-cHsw2bWNagWQikDIHI0tBw6EzVgW3NT9i/ITxD/A7iU=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/3981-857a4d53de12141d.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "expectedIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-wI364MYu6lT4luPvwANRwJ7gRIQVwiMjprZQkbYaohY=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/1527-894b8f7c3bc378a6.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "expectedIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-oY0BoCzulcympn38l0ZZ50jdxyNXaglDLRGbMuswygk=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/layout-a53917a8cfcd2f60.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "expectedIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-2Ns/v9JIsoyKd4M/YKG16qM0imv44S2JunRl67c2fP0=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/error-20fd6a34b5e2294b.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "expectedIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-gyV+mS9AHBImFhmFZaHBgwsw2AENduUlj0LaqUAtsiY=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/page-8a92f9e08182a160.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "expectedIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-fyG3hRIhV9OpG/QdSOY/rg14HbPFNxpLqRPK7/jutEM=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/global-error-e4970c58ee9786da.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "expectedIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-E6vavL8A7dL4ujj7KnxZuLscjmiZg0F/m5n8LVccMD0=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "expectedIntegrity": "sha256-CXPB1kyIrcjjyVBBDLWLKI9yEY1ZZbeASUON648vloM=",
+        "responseCaptured": false,
+        "actualIntegrity": null,
+        "status": "referenced_but_not_requested"
+      },
+      {
+        "path": "/_next/static/chunks/webpack-0fa0d77127c46143.js",
+        "phase": "home-initial-load",
+        "integrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "expectedIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-pgwr40FNhMC3JgDaPuLa0wB1AVOvJWMy9HkG+4ga+9c=",
+        "status": "verified"
+      },
+      {
+        "path": "/_next/static/chunks/app/(auth)/login/page-7fb3b5bf69d9a011.js",
+        "phase": "login-link-navigation",
+        "integrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "expectedIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "responseCaptured": true,
+        "actualIntegrity": "sha256-yFuRN1UXUo6J6uDol7nvEGK0iGl/ejafWsfZzkKoWSY=",
+        "status": "verified"
+      }
+    ]
+  },
+  "temporaryResources": {
+    "root": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG",
+    "checkout": "C:\\Users\\joser\\AppData\\Local\\Temp\\ornigami-private-preview-browser-71af037843847f75831c28422906a26e1a7e5f45-20261019-tea1kG\\checkout",
+    "containmentValidated": true,
+    "worktreeRegistrationInitiallyPresent": true,
+    "worktreeRemoveExitCode": 255,
+    "fallbackMethod": null,
+    "worktreeRegistrationAbsent": true,
+    "checkoutAbsent": true,
+    "rootAbsent": true,
+    "unrelatedWorktreesPreserved": [
+      "C:/Users/joser/.local/share/opencode/worktree/7bfa2f/glowing-planet"
+    ],
+    "cleanupComplete": true,
+    "checkoutCleanupMethod": "node fs.rm after confirming worktree registration was absent",
+    "rootCleanupMethod": "node fs.rm after confirming checkout absence",
+    "cleanupIncomplete": false
+  },
+  "limitations": [
+    "No authenticated session, application writes, provider action, database request, or hosted environment was used."
+  ],
+  "isolatedCheckout": {
+    "commit": "71af037843847f75831c28422906a26e1a7e5f45",
+    "trackedDotEnvTemplate": true,
+    "expectedAbsent": [
+      ".env",
+      ".env.local",
+      ".env.production",
+      ".vercel",
+      ".next",
+      "node_modules",
+      "private evidence"
+    ],
+    "unexpectedlyPresent": []
+  },
+  "serverCleanup": "taskkill_pid_tree",
+  "browserHarnessPassHistory": [
+    {
+      "status": "superseded_incomplete_harness_reference_capture",
+      "buildRerun": false,
+      "summary": {
+        "scriptRequestCount": 15,
+        "scriptResponseCount": 15,
+        "scriptReferenceCount": 6,
+        "referencesWithCapturedBytes": 5,
+        "referencesWithMatchingIntegrity": 5,
+        "referencesWithMismatchingIntegrity": 0,
+        "dynamicScriptRequestCount": 0,
+        "cspViolationCount": 1,
+        "sriFailureCount": 0,
+        "runtimeFailureCount": 0,
+        "offOriginBrowserAttemptCount": 0,
+        "allOffOriginRequestsBlocked": true
+      },
+      "limitation": "The first browser pass captured response bytes but only sampled script nodes remaining after route load; a document-start observer is used in the retained final pass."
+    }
+  ],
+  "serverCleanupAfterBrowserRerun": "taskkill_pid_tree",
+  "localRuntime": {
+    "server": "next start --hostname 127.0.0.1 --port <ephemeral>",
+    "bindingHost": "127.0.0.1",
+    "port": 62929,
+    "databaseUrlConfigured": false,
+    "hostedCredentialsConfigured": false,
+    "applicationIntegrationActionsInvoked": false
+  },
+  "harnessSources": {
+    "runner": {
+      "path": "scripts/verification/run-private-preview-browser-acceptance.mjs",
+      "sha256": "e6de72132816ee448324e8a4f45e520e38f24a9dcaadeb62fd496c337876a1c8"
+    },
+    "browserHarness": {
+      "path": "scripts/verification/private-preview-browser-acceptance.mjs",
+      "sha256": "b3f061e6fceab1e2dd965f8db89ff0d5c836765b6d8f4d86edbd9b964daac49a"
+    },
+    "execution": "Node.js DevTools Protocol; no browser automation dependency added. Runner source is retained as the reproducible build/browser recipe; the browser capture source hash identifies the source used for the corrected pass."
+  }
+}
