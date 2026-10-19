@@ -4,8 +4,10 @@ import {
   TRUSTED_TYPES_REPORT_ONLY_POLICY,
   TRUSTED_TYPES_REPORTING_ENDPOINT,
 } from "./src/lib/security-headers";
+import { isPrivatePreviewMode } from "./src/lib/private-preview";
 
 const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+const privatePreview = isPrivatePreviewMode();
 const containerBuild = process.env.ORNIGAMI_CONTAINER_BUILD === "true";
 const buildMemoryOptimizations =
   containerBuild && process.env.ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS === "true";
@@ -20,6 +22,9 @@ if (process.env.VERCEL_ENV === "production" && configuredAppUrl !== "https://orn
 }
 
 const nextConfig: NextConfig = {
+  // Expose only a single non-secret disable bit in the exact private build;
+  // the branch/ref settings remain server-side and ordinary builds add none.
+  ...(privatePreview ? { env: { NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED: "true" } } : {}),
   reactCompiler: true,
   experimental: {
     sri: { algorithm: "sha256" },
@@ -59,11 +64,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+const sentryConfig = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: true,
   widenClientFileUpload: true,
   ...(buildDisableSourceMaps ? { sourcemaps: { disable: true } } : {}),
-});
+};
+
+// Returning Next's config directly prevents the Sentry wrapper's build-time
+// instrumentation, release hook, source-map upload and plugin telemetry.
+export default privatePreview ? nextConfig : withSentryConfig(nextConfig, sentryConfig);

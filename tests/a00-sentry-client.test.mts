@@ -15,18 +15,22 @@ type MockSentry = {
 };
 type TestModule = { exports: Record<string, unknown> };
 
-function createHarness({ path, dsn, environment = "production", existingClient, failFirstInitialization = false }: {
+function createHarness({ path, dsn, environment = "production", existingClient, failFirstInitialization = false, sentryDisabled = false }: {
   path: string;
   dsn?: string;
   environment?: string;
   existingClient?: object;
   failFirstInitialization?: boolean;
+  sentryDisabled?: boolean;
 }) {
   const environmentVariables = process.env as Record<string, string | undefined>;
   const originalDsn = environmentVariables.NEXT_PUBLIC_SENTRY_DSN;
+  const originalDisabledFlag = environmentVariables.NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED;
   const originalEnvironment = environmentVariables.NODE_ENV;
   if (dsn === undefined) delete environmentVariables.NEXT_PUBLIC_SENTRY_DSN;
   else environmentVariables.NEXT_PUBLIC_SENTRY_DSN = dsn;
+  if (sentryDisabled) environmentVariables.NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED = "true";
+  else delete environmentVariables.NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED;
   environmentVariables.NODE_ENV = environment;
 
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -100,6 +104,8 @@ function createHarness({ path, dsn, environment = "production", existingClient, 
     restore() {
       if (originalDsn === undefined) delete environmentVariables.NEXT_PUBLIC_SENTRY_DSN;
       else environmentVariables.NEXT_PUBLIC_SENTRY_DSN = originalDsn;
+      if (originalDisabledFlag === undefined) delete environmentVariables.NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED;
+      else environmentVariables.NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED = originalDisabledFlag;
       if (originalEnvironment === undefined) delete environmentVariables.NODE_ENV;
       else environmentVariables.NODE_ENV = originalEnvironment;
       if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
@@ -252,6 +258,31 @@ test("public routes and missing DSN do not load the SDK; a pre-existing client i
     assert.equal(JSON.stringify(initializedHarness.transitions), JSON.stringify([["/settings/profile", "traverse"]]));
   } finally {
     initializedHarness.restore();
+  }
+});
+
+test("the exact private Preview build flag prevents browser SDK import and capture even with a DSN", async () => {
+  const harness = createHarness({
+    path: "/dashboard",
+    dsn: "https://synthetic@example.test/42",
+    sentryDisabled: true,
+  });
+  try {
+    const instrumentation = harness.load("instrumentation-client.ts") as {
+      onRouterTransitionStart: (href: string, navigationType: string) => void;
+    };
+    const visibility = harness.load("src/lib/error-visibility.ts") as {
+      captureBoundaryError: (error: Error, boundary: "global") => Promise<void>;
+    };
+    await visibility.captureBoundaryError(new Error("synthetic private error"), "global");
+    instrumentation.onRouterTransitionStart("/dashboard/settings", "push");
+    await Promise.resolve();
+
+    assert.equal(harness.sentryImports, 0);
+    assert.equal(harness.initCalls, 0);
+    assert.deepEqual(harness.transitions, []);
+  } finally {
+    harness.restore();
   }
 });
 

@@ -76,6 +76,7 @@ async function initializeSentryClient(dsn: string): Promise<SentryClient> {
 
 /** Load and initialize the browser SDK once, shared by boundaries and router instrumentation. */
 export function getOrInitializeSentryClient(): Promise<SentryClient | null> {
+  if (process.env.NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED === "true") return Promise.resolve(null);
   const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
   if (!dsn) return Promise.resolve(null);
 

@@ -1,7 +1,7 @@
-import * as Sentry from "@sentry/nextjs";
 import { sql } from "@/lib/db/neon";
 import { isOpenAIEnabled } from "@/lib/openai-feature";
 import { safeLogger } from "@/lib/safe-logger";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
 
 type AlertRow = { alert_key: string; job_name: string; reason: string };
 export type CronAlertEvaluation = { ok: boolean; activeCount: number; transportFailures: number };
@@ -27,6 +27,8 @@ export async function evaluateCronAlerts(): Promise<CronAlertEvaluation> {
 }
 
 async function deliver(alert: AlertRow): Promise<void> {
+  if (isPrivatePreviewMode()) return;
+
   if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
     safeLogger.error("cron.alerts.transport_not_configured", { jobName: alert.job_name, reason: alert.reason, errorCode: "sentry_dsn_missing" });
     try { await sql`UPDATE public.cron_alert_state SET transport_failures = transport_failures + 1,
@@ -38,6 +40,7 @@ async function deliver(alert: AlertRow): Promise<void> {
 
   let transportError = "alert_transport_failed";
   try {
+    const Sentry = await import("@sentry/nextjs");
     const client = Sentry.getClient();
     if (!client) {
       transportError = "alert_sentry_client_missing";

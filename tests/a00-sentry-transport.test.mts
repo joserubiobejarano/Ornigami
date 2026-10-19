@@ -26,6 +26,7 @@ test("cron transport acknowledgement uses the installed SDK hook and emits only 
     const alerts = loadTs<typeof import("../src/lib/cron-alerts.ts")>("src/lib/cron-alerts.ts", {
       "@sentry/nextjs": Sentry,
       "@/lib/openai-feature": { isOpenAIEnabled: () => false },
+      "@/lib/private-preview": { isPrivatePreviewMode: () => false },
       "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
       "@/lib/db/neon": { sql: async (parts: TemplateStringsArray) => {
         const query = parts.join("?");
