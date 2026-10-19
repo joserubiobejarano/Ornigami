@@ -2087,3 +2087,32 @@ coverage, adoption, campaign, provider and deployment holds remain active.
 Owner decisions remain the Block 6C/6D items: whether/when to select the portfolio fallback; the Ornigami target
 role/origin and exact Vercel project; approval of any spend before paid action; and project/data binding before any
 provider connection or migration. No owner decision is required to run the local configuration validator.
+
+## Block 6F — selected staging-origin local verification
+
+**Selected direction.** The owner delegated the choice to the reviewer. Select preparation of the existing
+portfolio Vercel fallback, with Ornigami private staging first at `https://staging.ornigami.com`, using the
+Vercel Preview environment. This is an origin/environment choice only; no existing project is selected or
+approved, and it authorizes no provider connection or deployment. This later selection supersedes the earlier
+Block 6C/6D statement that the direction/origin remained unselected. Preserve current services/data, NO-GO and
+all coverage, adoption, campaign, provider and deployment holds.
+
+**Files and checks.** `tests/vercel-preview-origin.test.mts` loads the actual `next.config.ts` in a VM with
+isolated environment variables and harmless Sentry/security-header stubs. Preview with the selected staging
+origin loads successfully. Production with `https://ornigami.com` loads; Production with the staging origin or
+without an app URL throws the existing canonical-origin error. The existing
+`tests/auth-session-callbacks.test.mts` now uses the selected staging base URL: relative and same-origin
+absolute return paths preserve that origin; external, network-path and unsafe backslash/encoded/path forms
+resolve to the staging dashboard. No production configuration or application logic changed.
+
+Focused verification passed: `node --experimental-strip-types --test tests/auth-session-callbacks.test.mts tests/vercel-preview-origin.test.mts`
+— **3/3 tests passed**; `node --check` passed for both test files;
+`git diff --check` passed. Installed framework guidance under `node_modules/next/dist/docs/` was reviewed;
+no build was run. An initial test assertion failed on cross-realm object prototypes; comparing the relevant
+primitive configuration value fixed the test setup. No application defect was found.
+
+**Limits and unresolved work.** These are local source/configuration tests, not proof of OAuth provider
+callback registration, Preview project settings, private access protection, Vercel compatibility, hosted
+headers, runtime behavior or live sign-in. The Vercel target project remains unselected. Remote cron state,
+database/project binding, recovery, privacy, security/advisory coverage, maintenance, billing and cutover remain
+separate decisions and acceptance gates. No provider, database, network or credential access was used.

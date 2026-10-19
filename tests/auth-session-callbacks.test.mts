@@ -75,7 +75,7 @@ test("auth JWTs bind to credentials and reject stale, deleted, legacy, or unveri
   assert.deepEqual(session.user, { id: "u1", authVersion: 7 });
 
   const redirect = loaded.authConfig.callbacks.redirect;
-  const baseUrl = "https://app.example";
+  const baseUrl = "https://staging.ornigami.com";
   assert.equal(await redirect({ url: "/dashboard/reviews?tab=all#top", baseUrl } as never), `${baseUrl}/dashboard/reviews?tab=all#top`);
   assert.equal(await redirect({ url: `${baseUrl}/dashboard/reviews?tab=all`, baseUrl } as never), `${baseUrl}/dashboard/reviews?tab=all`);
   for (const url of ["https://evil.example/path", "//evil.example/path", "/\\evil.example", "/%5c%5cevil.example", "/foo/..//evil.example"]) {
