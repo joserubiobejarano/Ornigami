@@ -256,6 +256,7 @@ export function createOneShotProvisioningLauncher({
   maxBytesPerStream = LAUNCHER_LIMITS.maxBytesPerStream,
   envSource = process.env,
   runPreflight = runProvisioningPreflight,
+  sanitizeResult = sanitizePreflightResult,
 } = {}) {
   let attempted = false;
   return async function launch({ env = process.env, approvedEndpointFingerprint, endpointForm } = {}) {
@@ -298,8 +299,8 @@ export function createOneShotProvisioningLauncher({
         [DATABASE_NAME_ENV]: PROVISIONING_TARGET.databaseName,
         [ROLE_NAME_ENV]: PROVISIONING_TARGET.roleName,
       };
-      const result = await runPreflight({ env: preflightEnv, approvedEndpointFingerprint });
-      return sanitizePreflightResult(result);
+      const result = await runPreflight({ env: preflightEnv, approvedEndpointFingerprint, endpointForm });
+      return sanitizeResult(result);
     } catch {
       return fixedStatus("verification_failed");
     } finally {
