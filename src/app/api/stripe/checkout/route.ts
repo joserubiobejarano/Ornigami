@@ -17,6 +17,8 @@ import {
   getTrialEligibility,
 } from "@/lib/billing/persistence";
 import { safeLogger } from "@/lib/safe-logger";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 type CheckoutValues = { plan_id?: unknown; billing_period?: unknown; business_id?: unknown; agent_id?: unknown };
 
@@ -242,6 +244,7 @@ export async function POST(request: Request) {
     if (values.business_id !== undefined && typeof values.business_id !== "string") return NextResponse.json({ error: "Invalid business_id" }, { status: 400 });
 
     const context = await requireBusinessOwner(session.user.id, values.business_id as string | undefined);
+    if (isPrivatePreviewMode()) return privatePreviewOperationDisabledResponse();
     const planId = requestedPlan;
     const customerId = await getOwnerCustomer(context.ownerUserId, context.businessId);
     const activeRows = await sql`

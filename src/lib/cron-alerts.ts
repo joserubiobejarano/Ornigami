@@ -9,6 +9,8 @@ const CORE_EXPECTED_JOBS = ["review_booster", "privacy_retention"] as const;
 
 /** Claim/resolution runs under a database advisory lock in one PL/pgSQL call. */
 export async function evaluateCronAlerts(): Promise<CronAlertEvaluation> {
+  if (isPrivatePreviewMode()) return { ok: false, activeCount: 0, transportFailures: 0 };
+
   try {
     const expectedJobs = isOpenAIEnabled()
       ? [...CORE_EXPECTED_JOBS, "review_replies"]

@@ -8,6 +8,8 @@ import { sql } from "@/lib/db/neon";
 import { stripe } from "@/lib/stripe";
 import { safeLogger } from "@/lib/safe-logger";
 import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/billing/persistence";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +18,7 @@ export async function POST(request: Request) {
     if (!session?.user?.id) return NextResponse.redirect(new URL("/login", appUrl));
     const businessId = new URL(request.url).searchParams.get("business_id");
     const context = await requireBusinessOwner(session.user.id, businessId);
+    if (isPrivatePreviewMode()) return privatePreviewOperationDisabledResponse();
 
     const rows = await sql`
       SELECT b.stripe_customer_id AS business_customer_id,

@@ -4,12 +4,15 @@ import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { sql } from "@/lib/db/neon";
 import { evaluateCronAlerts } from "@/lib/cron-alerts";
 import { safeLogger } from "@/lib/safe-logger";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   if (!isAuthorizedCronRequest(request)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (isPrivatePreviewMode()) return privatePreviewOperationDisabledResponse();
   try {
     const monitoring = await evaluateCronAlerts();
     if (!monitoring.ok) throw new Error("health store unavailable");

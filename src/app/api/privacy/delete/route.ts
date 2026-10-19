@@ -17,6 +17,8 @@ import { cancelMappedOwnedBillingSubscriptions } from "@/lib/billing/reconciliat
 import { stripe } from "@/lib/stripe";
 import { isSameOriginMutation } from "@/lib/team-lifecycle";
 import { safeLogger } from "@/lib/safe-logger";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,6 +93,13 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (isPrivatePreviewMode()) {
+      if (isRestrictedResume && !(await getFrozenDeletionOperation(actorUserId))) {
+        return json({ error: "No frozen deletion request can be resumed." }, 403);
+      }
+      return privatePreviewOperationDisabledResponse();
+    }
+
     const frozenOperationId = isRestrictedResume ? await getFrozenDeletionOperation(actorUserId) : null;
     if (isRestrictedResume && !frozenOperationId) return json({ error: "No frozen deletion request can be resumed." }, 403);
     // Restricted sessions must first prove a frozen operation exists. Calling

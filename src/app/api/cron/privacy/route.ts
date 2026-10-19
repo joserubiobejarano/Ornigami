@@ -9,12 +9,15 @@ import {
   finishCronJobRun,
 } from "@/lib/cron-health";
 import { runPrivacyRetentionCleanup } from "@/lib/privacy-retention-cleanup";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function runCron(request: Request) {
   if (!isAuthorizedCronRequest(request)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (isPrivatePreviewMode()) return privatePreviewOperationDisabledResponse();
 
   let run: Awaited<ReturnType<typeof acquireCronJobRun>>;
   try {

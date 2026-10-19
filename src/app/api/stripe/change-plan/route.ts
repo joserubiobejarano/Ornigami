@@ -9,6 +9,8 @@ import { stripePriceId } from "@/lib/billing/plans";
 import { stripe } from "@/lib/stripe";
 import { safeLogger } from "@/lib/safe-logger";
 import { beginAccountLifecycleOperation, finishAccountLifecycleOperation } from "@/lib/billing/persistence";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +27,7 @@ export async function POST(request: Request) {
     }
 
     const context = await requireBusinessOwner(session.user.id, body?.business_id as string | undefined);
+    if (isPrivatePreviewMode()) return privatePreviewOperationDisabledResponse();
     const billingPeriod = (body.billing_period ?? "monthly") as "monthly" | "annual";
     const targetPriceId = stripePriceId(body.plan_id, billingPeriod);
 

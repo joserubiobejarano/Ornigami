@@ -172,7 +172,7 @@ test("ordinary Preview and Production retain runtime Sentry initialization and r
 test("private Preview cron alert delivery never calls Sentry even with DSN and an initialized client", async () => {
   const previousEnv = { ...process.env };
   Object.assign(process.env, privateEnv);
-  const calls = { imports: 0, init: 0, capture: 0, flush: 0 };
+  const calls = { imports: 0, init: 0, capture: 0, flush: 0, database: 0 };
   const sentry = {
     getClient: () => ({ on: () => () => undefined }),
     withScope: async (callback: (scope: Record<string, () => void>) => void) => callback({
@@ -192,6 +192,7 @@ test("private Preview cron alert delivery never calls Sentry even with DSN and a
       "@/lib/openai-feature": { isOpenAIEnabled: () => false },
       "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
       "@/lib/db/neon": { sql: async (parts: TemplateStringsArray) => {
+        calls.database += 1;
         const query = parts.join(" ");
         if (query.includes("claim_cron_alerts")) return [{ alert_key: "privacy_retention:failed", job_name: "privacy_retention", reason: "failed" }];
         if (query.includes("count(*)")) return [{ active_count: 1, transport_failures: 0 }];
@@ -200,8 +201,8 @@ test("private Preview cron alert delivery never calls Sentry even with DSN and a
     };
     Object.defineProperty(mocks, "@sentry/nextjs", { get: () => { calls.imports += 1; return sentry; } });
     const alerts = loadTs<typeof import("../src/lib/cron-alerts.ts")>("src/lib/cron-alerts.ts", mocks);
-    assert.deepEqual(await alerts.evaluateCronAlerts(), { ok: true, activeCount: 1, transportFailures: 0 });
-    assert.deepEqual(calls, { imports: 0, init: 0, capture: 0, flush: 0 });
+    assert.deepEqual(await alerts.evaluateCronAlerts(), { ok: false, activeCount: 0, transportFailures: 0 });
+    assert.deepEqual(calls, { imports: 0, init: 0, capture: 0, flush: 0, database: 0 });
   } finally {
     for (const key of Object.keys(process.env)) if (!(key in previousEnv)) delete process.env[key];
     Object.assign(process.env, previousEnv);

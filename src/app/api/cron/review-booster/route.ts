@@ -8,6 +8,8 @@ import { acquireCronJobRun, checkpointCronJobRun, CronLeaseBusyError, finishCron
 import { providerWindow } from "@/lib/cron-budget";
 import { getReviewBoosterBillingPeriodUsage } from "@/modules/review-booster/services/review-booster-db.service";
 import { createFollowupRunnerDependencies, runEligibleFollowups } from "@/modules/review-booster/services/followup-runner.service";
+import { isPrivatePreviewMode } from "@/lib/private-preview";
+import { privatePreviewOperationDisabledResponse } from "@/lib/private-preview-operation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +59,7 @@ async function persistCheckpoint(input: Parameters<typeof checkpointCronJobRun>[
 
 async function runCron(request: NextRequest) {
   if (!isAuthorizedCronRequest(request)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  if (isPrivatePreviewMode()) return privatePreviewOperationDisabledResponse();
 
   let lease;
   try {

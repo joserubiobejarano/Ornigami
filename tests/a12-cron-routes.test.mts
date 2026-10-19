@@ -25,6 +25,8 @@ function boosterRoute(options: {
     "@/lib/db/neon": { sql: async (parts: TemplateStringsArray) => { queries.push(parts.join(" ")); return options.businesses ?? []; } },
     "@/lib/safe-logger": { safeLogger: { warn() {}, error() {} } },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => options.authorized ?? true },
+    "@/lib/private-preview": { isPrivatePreviewMode: () => false },
+    "@/lib/private-preview-operation": { privatePreviewOperationDisabledResponse: () => Response.json({ error: "This operation is unavailable in private Preview." }, { status: 503 }) },
     "@/lib/cron-budget": { providerWindow: () => 8_000 },
     "@/lib/cron-health": {
       CronLeaseBusyError: BusyError,
