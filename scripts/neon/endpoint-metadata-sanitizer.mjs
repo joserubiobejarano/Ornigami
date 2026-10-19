@@ -102,14 +102,19 @@ export function endpointMetadata(data) {
     const projectId = slug(endpoint.project_id);
     const type = ["read_write", "read_only"].includes(endpoint.type) ? endpoint.type : null;
     const regionId = slug(endpoint.region_id);
-    const poolerEnabled = typeof endpoint.pooler_enabled === "boolean" ? endpoint.pooler_enabled : null;
+    // Neon marks pooler_enabled deprecated. Retain a boolean only as an
+    // observation; it does not control whether a documented hostname form is
+    // derived or establish operational pooler availability.
+    const poolerEnabledDeprecatedObservation = typeof endpoint.pooler_enabled === "boolean"
+      ? endpoint.pooler_enabled
+      : null;
     const currentState = ["init", "active", "idle", "suspended", "failed", "disabled"].includes(endpoint.current_state)
       ? endpoint.current_state
       : null;
     if (!host || !endpointId || !branchId || !projectId || !type || !regionId
-      || poolerEnabled === null || currentState === null) return null;
-    const pooledHost = poolerEnabled ? pooledHostFor(host, endpointId) : null;
-    if (!host.startsWith(`${endpointId.toLowerCase()}.`) || (poolerEnabled && !pooledHost)) return null;
+      || currentState === null) return null;
+    const pooledHostCandidate = pooledHostFor(host, endpointId);
+    if (!host.startsWith(`${endpointId.toLowerCase()}.`) || !pooledHostCandidate) return null;
     return {
       id: endpointId,
       projectId,
@@ -117,13 +122,14 @@ export function endpointMetadata(data) {
       host,
       type,
       regionId,
-      poolerEnabled,
+      poolerEnabledDeprecatedObservation,
+      poolerOperationalAvailability: "not_established",
       currentState,
       directPort: 5432,
       directSha256: endpointDigest(host),
-      pooledHost,
-      pooledPort: pooledHost ? 5432 : null,
-      pooledSha256: pooledHost ? endpointDigest(pooledHost) : null,
+      pooledHostCandidate,
+      pooledPortCandidate: 5432,
+      pooledSha256Candidate: endpointDigest(pooledHostCandidate),
     };
   });
   if (endpoints.some((endpoint) => endpoint === null)) {
@@ -157,7 +163,7 @@ export function endpointSchemaSummary(data) {
       safeHost: directHost(endpoint?.host),
       type: ["read_write", "read_only"].includes(endpoint?.type),
       regionId: Boolean(slug(endpoint?.region_id)),
-      poolerEnabled: typeof endpoint?.pooler_enabled === "boolean",
+      poolerEnabledDeprecatedObservationPresent: typeof endpoint?.pooler_enabled === "boolean",
       currentState: ["init", "active", "idle", "suspended", "failed", "disabled"].includes(endpoint?.current_state),
     })),
   };
@@ -174,17 +180,18 @@ export function projectEndpointMetadata(data, expected) {
     host,
     type: ["read_write", "read_only"].includes(endpoint.type) ? endpoint.type : null,
     regionId: slug(endpoint.region_id),
-    poolerEnabled: typeof endpoint.pooler_enabled === "boolean" ? endpoint.pooler_enabled : null,
+    poolerEnabledDeprecatedObservation: typeof endpoint.pooler_enabled === "boolean"
+      ? endpoint.pooler_enabled
+      : null,
   };
   if (!record.id || !record.host || !record.projectId || !record.branchId || !record.type
-    || !record.regionId || record.poolerEnabled === null || !record.host.startsWith(`${record.id.toLowerCase()}.`)) {
+    || !record.regionId || !record.host.startsWith(`${record.id.toLowerCase()}.`)) {
     return { status: "schema_invalid", metadata: null };
   }
   if (record.id !== expected.id || record.projectId !== PINNED_TARGET.projectId
     || record.branchId !== PINNED_TARGET.branchId || record.host !== expected.host
     || record.type !== expected.type || record.regionId !== PINNED_TARGET.regionId
-    || !record.host.endsWith(`.${REGION_HOST}`)
-    || record.poolerEnabled !== expected.poolerEnabled) {
+    || !record.host.endsWith(`.${REGION_HOST}`)) {
     return { status: "identity_mismatch", metadata: null };
   }
   return { status: "ok", metadata: record };
@@ -367,11 +374,10 @@ export async function runAssessment({ capture = captureCli, cliEntry = cliEntryF
       ...endpoint,
       directPort: 5432,
       directSha256: endpointDigest(endpoint.host),
-      pooledHost: endpoint.poolerEnabled ? pooledHostFor(endpoint.host, endpoint.id) : null,
-      pooledPort: endpoint.poolerEnabled ? 5432 : null,
-      pooledSha256: endpoint.poolerEnabled
-        ? endpointDigest(pooledHostFor(endpoint.host, endpoint.id))
-        : null,
+      pooledHostCandidate: pooledHostFor(endpoint.host, endpoint.id),
+      pooledPortCandidate: 5432,
+      pooledSha256Candidate: endpointDigest(pooledHostFor(endpoint.host, endpoint.id)),
+      poolerOperationalAvailability: "not_established",
     })),
     endpointDetails: verified.map((endpoint) => ({ id: endpoint.id, status: "matched" })),
     deployedDatabaseUrlSelection: "not_observed",

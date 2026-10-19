@@ -51,7 +51,7 @@ const endpoint = {
   "credential=synthetic-secret": "synthetic-secret",
 };
 
-test("projects only pinned project, branch and endpoint metadata; computes direct and pooled fingerprints", () => {
+test("projects pinned mapping and derives direct and pooled candidate fingerprints", () => {
   assert.deepEqual(projectMetadata(project).status, "ok");
   assert.deepEqual(branchMetadata(branch).status, "ok");
   const endpoints = endpointMetadata({ endpoints: [endpoint] });
@@ -63,13 +63,14 @@ test("projects only pinned project, branch and endpoint metadata; computes direc
     host,
     type: "read_write",
     regionId: PINNED_TARGET.regionId,
-    poolerEnabled: true,
+    poolerEnabledDeprecatedObservation: true,
+    poolerOperationalAvailability: "not_established",
     currentState: "idle",
     directPort: 5432,
     directSha256: createHash("sha256").update(`${host}:5432`).digest("hex"),
-    pooledHost: "ep-synthetic-blue-123456-pooler.eu-central-1.aws.neon.tech",
-    pooledPort: 5432,
-    pooledSha256: createHash("sha256")
+    pooledHostCandidate: "ep-synthetic-blue-123456-pooler.eu-central-1.aws.neon.tech",
+    pooledPortCandidate: 5432,
+    pooledSha256Candidate: createHash("sha256")
       .update("ep-synthetic-blue-123456-pooler.eu-central-1.aws.neon.tech:5432")
       .digest("hex"),
   });
@@ -97,7 +98,7 @@ test("fails closed for project, branch or endpoint mapping drift", () => {
   assert.equal(wrongEndpoint.status, "identity_mismatch");
   assert.equal(wrongEndpoint.metadata, null);
   assert.equal(endpointMetadata({ endpoints: [{ ...endpoint, host: `${endpoint.id}.us-east-2.aws.neon.tech` }] }).status, "identity_mismatch");
-  assert.equal(endpointMetadata({ endpoints: [{ ...endpoint, pooler_enabled: "yes" }] }).status, "schema_invalid");
+  assert.equal(endpointMetadata({ endpoints: [{ ...endpoint, pooler_enabled: "yes" }] }).status, "ok");
   const summary = endpointSchemaSummary({ endpoints: [{ ...endpoint, password: "do-not-retain" }] });
   assert.deepEqual(summary.entries[0], {
     object: true,
@@ -108,7 +109,7 @@ test("fails closed for project, branch or endpoint mapping drift", () => {
     safeHost: host,
     type: true,
     regionId: true,
-    poolerEnabled: true,
+    poolerEnabledDeprecatedObservationPresent: true,
     currentState: true,
   });
   assert.equal(JSON.stringify(summary).includes("do-not-retain"), false);
@@ -124,9 +125,26 @@ test("places a supported pooler suffix after endpoint ID while preserving cluste
   };
   const result = endpointMetadata({ endpoints: [clustered] });
   assert.equal(result.status, "ok");
-  assert.equal(result.metadata[0].pooledHost, `${id}-pooler.c-8.eu-central-1.aws.neon.tech`);
-  assert.equal(result.metadata[0].pooledSha256, createHash("sha256")
+  assert.equal(result.metadata[0].pooledHostCandidate, `${id}-pooler.c-8.eu-central-1.aws.neon.tech`);
+  assert.equal(result.metadata[0].pooledSha256Candidate, createHash("sha256")
     .update(`${id}-pooler.c-8.eu-central-1.aws.neon.tech:5432`).digest("hex"));
+});
+
+test("deprecated pooler flag false or absent is observational and does not block candidate derivation", () => {
+  for (const flag of [false, undefined]) {
+    const input = { ...endpoint };
+    if (flag === undefined) delete input.pooler_enabled;
+    else input.pooler_enabled = flag;
+    const list = endpointMetadata({ endpoints: [input] });
+    assert.equal(list.status, "ok");
+    assert.equal(list.metadata[0].poolerEnabledDeprecatedObservation, flag ?? null);
+    assert.equal(list.metadata[0].poolerOperationalAvailability, "not_established");
+    assert.equal(list.metadata[0].pooledHostCandidate,
+      "ep-synthetic-blue-123456-pooler.eu-central-1.aws.neon.tech");
+    const detail = projectEndpointMetadata({ endpoint: input }, list.metadata[0]);
+    assert.equal(detail.status, "ok");
+    assert.equal(detail.metadata.poolerEnabledDeprecatedObservation, flag ?? null);
+  }
 });
 
 test("fixed nonzero and malformed outputs suppress secret-bearing stdout, stderr, and keys", () => {

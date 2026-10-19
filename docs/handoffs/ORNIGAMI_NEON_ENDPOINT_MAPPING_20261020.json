@@ -60,7 +60,7 @@
     "type": "read_write",
     "regionId": "aws-eu-central-1",
     "currentState": "idle",
-    "poolerEnabled": false
+    "poolerEnabledDeprecatedObservation": false
   },
   "fingerprints": {
     "direct": {
@@ -71,10 +71,12 @@
       "sha256": "96acb55ea0fc6bbf35fe992be70a05ee9ba87fceb4f5fa9b66be74be5be063d1"
     },
     "pooled": {
-      "status": "not_derived_pooler_disabled",
-      "host": null,
-      "effectivePort": null,
-      "sha256": null
+      "status": "derived_candidate_from_verified_endpoint_id_and_direct_host",
+      "host": "ep-green-firefly-baf4aa20-pooler.c-8.eu-central-1.aws.neon.tech",
+      "effectivePort": 5432,
+      "inputRule": "SHA-256(lowercase(hostname + ':' + effectivePort))",
+      "sha256": "6a97e2ec4fe5ad5e759fe3a3b79e479d2f7da6036e0b3139886337319fffc510",
+      "operationalAvailability": "not_established"
     }
   },
   "applicationBinding": {
@@ -83,11 +85,22 @@
     "databaseConnectionOrSql": false,
     "expectedValueSettingsConfigured": false
   },
+  "R7S1Correction": {
+    "marker": "CORRECTION: prior not_derived_pooler_disabled interpretation is superseded",
+    "deprecatedFlagMeaning": "pooler_enabled=false is retained only as observational metadata; false or absence does not establish pooled hostname unavailability and is not required for endpoint mapping",
+    "candidateDerivation": "The documented -pooler suffix is inserted after the verified endpoint ID; the remaining cluster labels are preserved from the verified direct hostname",
+    "operationalAvailability": "not_established; no pooled connection URI or endpoint connectivity was requested or tested",
+    "deployedDatabaseUrlSelection": "not_observed",
+    "providerMetadataRefreshed": false,
+    "source": "https://api-docs.neon.tech/reference/getconnectionuri",
+    "focusedSyntheticTests": { "count": 9, "passed": 9 }
+  },
   "sanitizer": {
     "source": "../../scripts/neon/endpoint-metadata-sanitizer.mjs",
     "tests": "../../tests/neon-endpoint-metadata-sanitizer.test.mjs",
     "syntheticTestCount": 8,
     "syntheticTestsPassed": 8,
+    "historicalTestCountNote": "Counts above describe the original provider assessment; R7S.1 correction suite is separately recorded under R7S1Correction.",
     "initialNarrowHostSchemaAttempt": "schema_invalid; only fixed field-presence diagnostics emitted; then corrected locally and repeated pinned GETs",
     "dummyStalledChild": { "status": "timeout", "capturedStdoutBytes": 0, "capturedStderrBytes": 0, "taskRootRemoved": true },
     "rawProviderStdoutRetained": false,
