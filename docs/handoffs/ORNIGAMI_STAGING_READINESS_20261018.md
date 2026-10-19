@@ -1527,5 +1527,7 @@ approved. No workflow or script changes, tests, dispatch or external action were
   implementation and combined tail-budget verification. R4 publication/pull/smoke remains out of
   scope and unbudgeted. Campaign allowance remains exhausted (7/7 dispatches, 39/300 charged
   minutes, zero reserved); coverage/adoption holds remain active. No image acceptance is claimed.
+- **Commit:** workflow changes, focused regressions and this response were first committed as
+  `6067f2aefa151aa7c640d043ace182b36504b96a`.
 
 Implementation commit: `f190c7c`. This handoff response is committed separately.
