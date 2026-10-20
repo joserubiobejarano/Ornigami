@@ -1,10 +1,22 @@
 const PRIVATE_STAGING_BRANCH = "codex/ornigami-staging-readiness-20261018";
+const COOLIFY_PRIVATE_STAGING_ORIGIN = "https://staging.ornigami.com";
 
-/** Enable private staging behavior only for the explicitly selected Preview branch. */
+/** Enable private staging behavior only for the exact Vercel branch or opted-in Coolify profile. */
 export function isPrivatePreviewMode(env: Record<string, string | undefined> = process.env): boolean {
-  return env.VERCEL_ENV === "preview"
+  const vercelPrivatePreview = env.VERCEL_ENV === "preview"
     && env.ORNIGAMI_PRIVATE_STAGING_MODE === "true"
     && env.VERCEL_GIT_COMMIT_REF === PRIVATE_STAGING_BRANCH;
+  if (vercelPrivatePreview) return true;
+
+  const coolifyPrivateStaging = env.ORNIGAMI_PRIVATE_STAGING_PLATFORM === "coolify"
+    && env.ORNIGAMI_PRIVATE_STAGING_MODE === "true"
+    && env.NODE_ENV === "production"
+    && env.VERCEL !== "1"
+    && env.VERCEL_ENV === undefined
+    && env.VERCEL_GIT_COMMIT_REF === undefined
+    && env.NEXT_PUBLIC_APP_URL === COOLIFY_PRIVATE_STAGING_ORIGIN
+    && env.AUTH_URL === COOLIFY_PRIVATE_STAGING_ORIGIN;
+  return coolifyPrivateStaging;
 }
 
 export type DashboardGoogleStep = {

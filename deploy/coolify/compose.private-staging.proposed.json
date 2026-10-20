@@ -1,6 +1,15 @@
 {
   "services": {
     "app": {
+      "environment": {
+        "ORNIGAMI_PRIVATE_STAGING_MODE": "true",
+        "ORNIGAMI_PRIVATE_STAGING_PLATFORM": "coolify",
+        "ORNIGAMI_PREVIEW_DB_EXPECTED_ENDPOINT_SHA256": "96acb55ea0fc6bbf35fe992be70a05ee9ba87fceb4f5fa9b66be74be5be063d1",
+        "ORNIGAMI_PREVIEW_DB_EXPECTED_NAME": "ornigami_staging",
+        "ORNIGAMI_PREVIEW_DB_EXPECTED_ROLE": "ornigami_staging_owner",
+        "GOOGLE_CLIENT_ID": "rehearsal.invalid",
+        "GOOGLE_CLIENT_SECRET": "rehearsal-only-placeholder-not-a-provider-credential"
+      },
       "networks": ["default", "coolify"],
       "labels": {
         "traefik.enable": "true",

@@ -46,10 +46,13 @@ function loadNextConfig(env: Record<string, string | undefined>) {
 }
 
 test("private Preview bypasses the Sentry build wrapper while preserving SRI", () => {
-  const { config, wrapperCalls } = loadNextConfig(privateEnv);
-  assert.equal(wrapperCalls, 0, "no Sentry build plugin, release hook, upload, or build telemetry is installed");
-  assert.equal((config.env as Record<string, string>).NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED, "true");
-  assert.equal((config.experimental as { sri: { algorithm: string } }).sri.algorithm, "sha256");
+  const coolifyEnv = { NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://staging.ornigami.com", NEXT_PUBLIC_SENTRY_DSN: "https://synthetic@example.test/42", SENTRY_AUTH_TOKEN: "synthetic-build-token" };
+  for (const env of [privateEnv, coolifyEnv]) {
+    const { config, wrapperCalls } = loadNextConfig(env);
+    assert.equal(wrapperCalls, 0, "no Sentry build plugin, release hook, upload, or build telemetry is installed");
+    assert.equal((config.env as Record<string, string>).NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED, "true");
+    assert.equal((config.experimental as { sri: { algorithm: string } }).sri.algorithm, "sha256");
+  }
 });
 
 test("missing or mismatched private Preview predicate retains Sentry build behavior", () => {
@@ -59,6 +62,7 @@ test("missing or mismatched private Preview predicate retains Sentry build behav
     { ...privateEnv, VERCEL_GIT_COMMIT_REF: "other-branch" },
     { ...privateEnv, VERCEL_ENV: "production", NEXT_PUBLIC_APP_URL: "https://ornigami.com" },
     { VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "codex/ornigami-staging-readiness-20261018" },
+    { NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://other.example" },
   ];
   for (const env of cases) {
     const { config, wrapperCalls, wrapperOptions } = loadNextConfig(env);
@@ -145,6 +149,12 @@ test("private Preview skips server and edge initialization and request-error tra
     assert.equal(harness.captureCalls, 0);
     assert.equal(harness.flushCalls, 0);
   }
+  const coolifyEnv = { NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://staging.ornigami.com", SENTRY_DSN: "https://synthetic@example.test/42", NEXT_PUBLIC_SENTRY_DSN: "https://synthetic@example.test/42" };
+  const coolifyHarness: RuntimeHarness = createRuntimeHarness(coolifyEnv);
+  const coolifyInstrumentation = coolifyHarness.load("src/instrumentation.ts") as { register: () => Promise<void>; onRequestError: (error: unknown) => Promise<void> };
+  await coolifyInstrumentation.register();
+  await coolifyInstrumentation.onRequestError(new Error("synthetic private Coolify error"));
+  assert.equal(coolifyHarness.initCalls + coolifyHarness.captureCalls + coolifyHarness.flushCalls + coolifyHarness.sdkImports, 0);
 });
 
 test("ordinary Preview and Production retain runtime Sentry initialization and request-error capture", async () => {

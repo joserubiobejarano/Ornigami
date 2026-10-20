@@ -34,8 +34,10 @@ services:
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?Set the deployment token encryption key}
       REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ${REVIEW_BOOSTER_UNSUBSCRIBE_SECRET:?Set the unsubscribe signing secret}
       CRON_SECRET: ${CRON_SECRET:?Set the deployment cron secret}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set the approved Google OAuth client ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set the approved Google OAuth client secret}
+      # Optional so the separate private overlay can run without provider credentials;
+      # normal Auth.js provider construction still fails closed when either is absent.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       OPENAI_ENABLED: "false"
       ORNIGAMI_COOLIFY_CRON_ENABLED: "false"
       ORNIGAMI_COOLIFY_CRON_REVIEW_BOOSTER_ENABLED: "false"

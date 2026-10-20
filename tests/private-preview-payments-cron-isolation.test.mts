@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadTs } from "./auth-test-harness.mts";
+import { isPrivatePreviewMode } from "../src/lib/private-preview.ts";
 
 const BRANCH = "codex/ornigami-staging-readiness-20261018";
 const privateEnv = {
@@ -12,6 +13,7 @@ const privateEnv = {
   NEXT_PUBLIC_SENTRY_DSN: "https://synthetic@example.test/42",
   PRIVACY_ACCOUNT_DELETION_ENABLED: "true",
 };
+const coolifyPrivateEnv = { NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://staging.ornigami.com", STRIPE_SECRET_KEY: "synthetic-stripe-key", STRIPE_WEBHOOK_SECRET: "synthetic-webhook-secret", PRIVACY_ACCOUNT_DELETION_ENABLED: "true" };
 const disabledBody = { error: "This operation is unavailable in private Preview." };
 const ordinaryEnvs = [
   { VERCEL_ENV: "preview", ORNIGAMI_PRIVATE_STAGING_MODE: undefined, VERCEL_GIT_COMMIT_REF: BRANCH },
@@ -83,8 +85,8 @@ async function assertDisabled(response: Response) {
 }
 
 test("private Preview blocks every payment entry point after its authorization boundary and before prohibited work", async () => {
-  for (const kind of ["checkout", "portal", "change-plan", "webhook", "account-deletion"] as const) {
-    const harness = paymentRoute(kind, privateEnv);
+  for (const env of [privateEnv, coolifyPrivateEnv]) for (const kind of ["checkout", "portal", "change-plan", "webhook", "account-deletion"] as const) {
+    const harness = paymentRoute(kind, env);
     await assertDisabled(await harness.route.POST(harness.request));
     if (kind === "webhook") {
       assert.equal(harness.counts.webhookVerification, 1, "signature is verified locally before rejection");
@@ -156,7 +158,7 @@ test("missing/wrong private predicate values and Production preserve payment beh
 });
 
 type CronKind = "review-booster" | "privacy" | "health";
-function cronRoute(kind: CronKind, privatePreview: boolean, authorized: boolean) {
+function cronRoute(kind: CronKind, env: Record<string, string | undefined>, authorized: boolean) {
   const counts = { authorized: 0, sql: 0, acquire: 0, queue: 0, alertEvaluation: 0 };
   const unavailableError = class extends Error { retryAfterSeconds = 3; };
   const sql = async () => { counts.sql += 1; return []; };
@@ -171,7 +173,7 @@ function cronRoute(kind: CronKind, privatePreview: boolean, authorized: boolean)
     "@/lib/db/neon": { sql },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => { counts.authorized += 1; return authorized; } },
     "@/lib/cron-health": cronHealth,
-    "@/lib/private-preview": { isPrivatePreviewMode: () => privatePreview },
+    "@/lib/private-preview": { isPrivatePreviewMode: () => isPrivatePreviewMode(env) },
     "@/lib/private-preview-operation": { privatePreviewOperationDisabledResponse: () => Response.json(disabledBody, { status: 503, headers: { "Cache-Control": "no-store, max-age=0" } }) },
     "@/lib/cron-alerts": { evaluateCronAlerts: async () => { counts.alertEvaluation += 1; return { ok: false, activeCount: 0, transportFailures: 0 }; } },
     "@/lib/safe-logger": { safeLogger: { error() {}, warn() {} } },
@@ -188,15 +190,15 @@ function cronRoute(kind: CronKind, privatePreview: boolean, authorized: boolean)
 }
 
 test("private Preview stops remaining cron, health and alert work after cron authorization", async () => {
-  for (const kind of ["review-booster", "privacy", "health"] as const) {
-    const unauthorized = cronRoute(kind, true, false);
+  for (const env of [privateEnv, coolifyPrivateEnv]) for (const kind of ["review-booster", "privacy", "health"] as const) {
+    const unauthorized = cronRoute(kind, env, false);
     const denied = await unauthorized.route.GET(new Request("https://app.example.test/api/cron"));
     assert.equal(denied.status, 401);
     assert.equal(unauthorized.counts.acquire, 0);
     assert.equal(unauthorized.counts.sql, 0);
     assert.equal(unauthorized.counts.alertEvaluation, 0);
 
-    const authorized = cronRoute(kind, true, true);
+    const authorized = cronRoute(kind, env, true);
     await assertDisabled(await authorized.route.GET(new Request("https://app.example.test/api/cron")));
     assert.equal(authorized.counts.acquire, 0);
     assert.equal(authorized.counts.sql, 0);
@@ -207,7 +209,7 @@ test("private Preview stops remaining cron, health and alert work after cron aut
 
 test("missing/wrong private predicate values preserve authorized cron route behavior", async () => {
   for (const kind of ["review-booster", "privacy", "health"] as const) {
-    const ordinary = cronRoute(kind, false, true);
+    const ordinary = cronRoute(kind, ordinaryEnvs[0], true);
     const response = await ordinary.route.GET(new Request("https://app.example.test/api/cron"));
     assert.notDeepEqual(await response.json(), disabledBody, kind);
     if (kind === "health") assert.equal(ordinary.counts.alertEvaluation, 1);

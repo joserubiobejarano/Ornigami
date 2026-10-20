@@ -37,6 +37,9 @@ test("matching private Preview omits Google Auth.js provider without reading Goo
   const { auth, googleReads } = loadAuth(stagingEnv);
   assert.deepEqual(Array.from(auth.authConfig.providers, ({ id }) => id), ["credentials"]);
   assert.deepEqual(googleReads, []);
+  const coolify = loadAuth({ NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://staging.ornigami.com", GOOGLE_CLIENT_ID: "synthetic.invalid", GOOGLE_CLIENT_SECRET: "synthetic-only" });
+  assert.deepEqual(Array.from(coolify.auth.authConfig.providers, ({ id }) => id), ["credentials"]);
+  assert.deepEqual(coolify.googleReads, []);
 });
 
 test("missing or mismatched mode inputs retain Google in ordinary Preview and Production", () => {
@@ -48,6 +51,7 @@ test("missing or mismatched mode inputs retain Google in ordinary Preview and Pr
     { ORNIGAMI_PRIVATE_STAGING_MODE: "true", VERCEL_GIT_COMMIT_REF: stagingEnv.VERCEL_GIT_COMMIT_REF },
     { ...stagingEnv, VERCEL_ENV: "production" },
     { VERCEL_ENV: "development", ORNIGAMI_PRIVATE_STAGING_MODE: "true", VERCEL_GIT_COMMIT_REF: stagingEnv.VERCEL_GIT_COMMIT_REF },
+    { NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://other.example" },
   ];
   for (const mode of cases) {
     const env = { ...mode, GOOGLE_CLIENT_ID: "fixture-client-id", GOOGLE_CLIENT_SECRET: "fixture-client-secret" };

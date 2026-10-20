@@ -39,6 +39,8 @@ RUN npm ci --os=linux --cpu=x64 --libc=glibc
 FROM deps AS builder
 COPY --chown=1000:1000 . .
 ARG NEXT_PUBLIC_APP_URL
+ARG ORNIGAMI_PRIVATE_STAGING_MODE=false
+ARG ORNIGAMI_PRIVATE_STAGING_PLATFORM=ordinary
 ARG ORNIGAMI_SOURCE_SHA
 ARG ORNIGAMI_BUILD_HEAP_MIB=4096
 ARG ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true
@@ -46,6 +48,9 @@ ARG ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false
 ARG ORNIGAMI_BUILD_WEBPACK_WORKER=false
 LABEL org.opencontainers.image.revision=${ORNIGAMI_SOURCE_SHA}
 ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+    AUTH_URL=${NEXT_PUBLIC_APP_URL} \
+    ORNIGAMI_PRIVATE_STAGING_MODE=${ORNIGAMI_PRIVATE_STAGING_MODE} \
+    ORNIGAMI_PRIVATE_STAGING_PLATFORM=${ORNIGAMI_PRIVATE_STAGING_PLATFORM} \
     ORNIGAMI_CONTAINER_BUILD=true \
     ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=${ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS} \
     ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=${ORNIGAMI_BUILD_DISABLE_SOURCEMAPS} \
@@ -55,7 +60,7 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
     GOOGLE_CLIENT_ID=rehearsal.invalid \
     GOOGLE_CLIENT_SECRET=rehearsal-only-placeholder-not-a-provider-credential \
     NODE_ENV=production
-RUN node -e 'if(!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA??"")||!process.env.NEXT_PUBLIC_APP_URL)throw Error("Build identity/origin missing");if(process.env.ORNIGAMI_BUILD_HEAP_MIB!=="4096"||process.env.ORNIGAMI_BUILD_DISABLE_SOURCEMAPS!=="false"||process.env.ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS!=="true"||process.env.ORNIGAMI_BUILD_WEBPACK_WORKER!=="false")throw Error("Unreviewed build arguments")' \
+RUN node -e 'if(!/^[0-9a-f]{40}$/.test(process.env.ORNIGAMI_SOURCE_SHA??"")||!process.env.NEXT_PUBLIC_APP_URL)throw Error("Build identity/origin missing");if(process.env.ORNIGAMI_BUILD_HEAP_MIB!=="4096"||process.env.ORNIGAMI_BUILD_DISABLE_SOURCEMAPS!=="false"||process.env.ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS!=="true"||process.env.ORNIGAMI_BUILD_WEBPACK_WORKER!=="false")throw Error("Unreviewed build arguments");const p=process.env.ORNIGAMI_PRIVATE_STAGING_PLATFORM,m=process.env.ORNIGAMI_PRIVATE_STAGING_MODE;if(p==="coolify"){if(m!=="true"||process.env.NEXT_PUBLIC_APP_URL!=="https://staging.ornigami.com")throw Error("Invalid private Coolify build profile")}else if(p!=="ordinary"||m!=="false")throw Error("Invalid ordinary build profile")' \
     && npm run build \
     && mkdir -p .next/cache \
     && node -e 'const s=require("node:fs").statSync(".next/cache");if(s.uid!==1000||s.gid!==1000)throw Error("Cache ownership drift")'
@@ -76,6 +81,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOME=/home/node \
     PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin \
+    ORNIGAMI_PRIVATE_STAGING_MODE=false \
+    ORNIGAMI_PRIVATE_STAGING_PLATFORM=ordinary \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
     NODE_OPTIONS=--max-old-space-size=512

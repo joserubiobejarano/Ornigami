@@ -35,6 +35,18 @@ test("the exact private Preview predicate requires all three exact values", () =
   assert.equal(isPrivatePreviewMode({ ...base, VERCEL_ENV: "production" }), false);
   assert.equal(isPrivatePreviewMode({ ...base, ORNIGAMI_PRIVATE_STAGING_MODE: "TRUE" }), false);
   assert.equal(isPrivatePreviewMode({ ...base, VERCEL_GIT_COMMIT_REF: "main" }), false);
+  const coolify = { NODE_ENV: "production", ORNIGAMI_PRIVATE_STAGING_PLATFORM: "coolify", ORNIGAMI_PRIVATE_STAGING_MODE: "true", NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com", AUTH_URL: "https://staging.ornigami.com" };
+  assert.equal(isPrivatePreviewMode(coolify), true);
+  for (const invalid of [
+    { ...coolify, NODE_ENV: "development" },
+    { ...coolify, ORNIGAMI_PRIVATE_STAGING_PLATFORM: "other" },
+    { ...coolify, ORNIGAMI_PRIVATE_STAGING_MODE: "false" },
+    { ...coolify, NEXT_PUBLIC_APP_URL: "https://other.example" },
+    { ...coolify, AUTH_URL: "https://other.example" },
+    { ...coolify, VERCEL: "1" },
+    { ...coolify, VERCEL_ENV: "production" },
+    { ...coolify, VERCEL_GIT_COMMIT_REF: "main" },
+  ]) assert.equal(isPrivatePreviewMode(invalid), false);
 });
 
 test("rejects non-private contexts before authentication or identity query", async () => {
