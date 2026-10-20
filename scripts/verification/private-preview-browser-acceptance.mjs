@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// Bounded local-only browser SRI/CSP acceptance for the fixed Ornigami candidate.
+// Bounded local-only browser SRI/CSP acceptance for an isolated Ornigami build.
 // Requires an already-built isolated checkout and Microsoft Edge/Chromium.
 import { createHash, randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createServer, connect } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 
-const EXPECTED_COMMIT = "71af037843847f75831c28422906a26e1a7e5f45";
+const EXPECTED_COMMIT = process.env.ORNIGAMI_SOURCE_COMMIT || "71af037843847f75831c28422906a26e1a7e5f45";
+const SOURCE_IDENTITY = process.env.ORNIGAMI_SOURCE_IDENTITY || EXPECTED_COMMIT;
 const LOOPBACK_HOST = "127.0.0.1";
 const SAFE_TIMEOUT_MS = 180_000;
 const outputPath = process.argv[2];
@@ -26,6 +27,7 @@ await new Promise((resolve) => browserPortServer.close(resolve));
 const findings = {
   schemaVersion: 1,
   candidateCommit: EXPECTED_COMMIT,
+  sourceIdentity: SOURCE_IDENTITY,
   browser: { product: "Microsoft Edge", version: null, headless: true, cleanProfile: true },
   origin,
   scope: "One clean headless browser context; all browser requests outside this exact loopback origin are failed before dispatch.",
@@ -299,6 +301,20 @@ try {
     await navigate("/login", "login-direct-fallback");
     findings.steps.push({ label: "login-link-navigation", status: "link_not_found_direct_route_used" });
   }
+
+  currentPhase = "off-origin-canary";
+  const blockedBeforeCanary = findings.requests.blockedOffOrigin.length;
+  try {
+    await cdp("Page.navigate", { url: "https://ornigami-off-origin-canary.invalid/" });
+  } catch {}
+  const canaryDeadline = Date.now() + 5_000;
+  while (Date.now() < canaryDeadline && findings.requests.blockedOffOrigin.length === blockedBeforeCanary) await delay(50);
+  const canaryBlocked = findings.requests.blockedOffOrigin.slice(blockedBeforeCanary).some((entry) =>
+    entry.host === "ornigami-off-origin-canary.invalid" && entry.phase === "off-origin-canary" && entry.decision === "blocked-before-dispatch"
+  );
+  findings.steps.push({ label: "off-origin-canary", status: canaryBlocked ? "blocked-before-dispatch" : "not-observed-blocked" });
+  if (!canaryBlocked) throw new Error("off_origin_canary_not_blocked");
+  await navigate("/", "loopback-recovery-after-off-origin-canary");
 
   findings.ssgManifest.runtimeGlobalObserved ||= await evaluate("Boolean(window.__SSG_MANIFEST)").catch(() => false);
   for (const item of findings.scriptReferences) delete item.key;

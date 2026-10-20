@@ -43,6 +43,10 @@ let results = {
 function git(args, cwd = REPO) {
   const result = spawnSync("git", args, { cwd, encoding: "utf8", windowsHide: true });
   if (result.status !== 0) throw new Error("git_precondition_failed");
+  if (args[0] === "status" && args.some((argument) => argument.startsWith("--porcelain"))) {
+    // Keep the leading status column; trim() would shift the first path left.
+    return result.stdout.replace(/(?:\r?\n)+$/, "");
+  }
   return result.stdout.trim();
 }
 

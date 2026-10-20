@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build --webpack && node scripts/generate-static-csp-hashes.mjs",
+    "build": "next build --webpack && node scripts/finalize-sri-manifest.mjs && node scripts/generate-static-csp-hashes.mjs",
         "analyze": "next experimental-analyze --output",
         "start": "next start",
         "lint": "eslint",
