@@ -61,6 +61,34 @@ function bashPath() {
 
 const bash = bashPath();
 
+test("private build request is bound to this candidate branch and matching private runtime profile", () => {
+  const validation = runBlock("validate_inputs");
+  const build = runBlock("image_build");
+  const runtime = readFileSync(resolve("deploy/coolify/linux-runtime-acceptance.sh"), "utf8");
+  const dockerfile = readFileSync(resolve("Dockerfile"), "utf8");
+  const branch = "codex/ornigami-staging-readiness-20261018";
+  const profile = JSON.parse(readFileSync(resolve("deploy/coolify/build-profile.json"), "utf8"));
+  const origin = spawnSync(process.execPath, [resolve("scripts/framework-prototype/build-profile.mjs"), "origin"], { encoding: "utf8" });
+  assert.equal(origin.status, 0, origin.stderr);
+  assert.equal(origin.stdout.trim(), profile.origin);
+  assert.equal(profile.origin, "https://staging.ornigami.com");
+  assert.match(workflow, new RegExp(`branches:\\s+- ${branch}`));
+  assert.match(workflow, new RegExp(`refs/heads/${branch}`));
+  assert.doesNotMatch(workflow, /codex\/ornigami-sri-local-prototype-f-20261016/);
+  assert.match(validation, /changed_paths\[0\].*build-requests\/ornigami\.json/);
+  assert.match(validation, /source_lock_sha/);
+  assert.match(validation, /candidate_workflow_blob.*request_workflow_blob/);
+  assert.match(validation, /RUN_WORKFLOW_SHA.*GITHUB_SHA/);
+  assert.match(build, /approved_origin=\$\(node .*build-profile\.mjs.* origin\)/);
+  assert.match(build, /--build-arg "NEXT_PUBLIC_APP_URL=\$\{approved_origin\}"/);
+  assert.match(build, /--build-arg ORNIGAMI_PRIVATE_STAGING_MODE=true/);
+  assert.match(build, /--build-arg ORNIGAMI_PRIVATE_STAGING_PLATFORM=coolify/);
+  assert.match(dockerfile, /ARG ORNIGAMI_PRIVATE_STAGING_MODE=false/);
+  assert.match(dockerfile, /ARG ORNIGAMI_PRIVATE_STAGING_PLATFORM=ordinary/);
+  assert.match(runtime, /--env ORNIGAMI_PRIVATE_STAGING_MODE=true/);
+  assert.match(runtime, /--env ORNIGAMI_PRIVATE_STAGING_PLATFORM=coolify/);
+});
+
 test("admitted runtime workflow rejects missing, invalid, and exhausted work deadlines", () => withSandbox(root => {
   const cases = [
     ["missing", undefined],

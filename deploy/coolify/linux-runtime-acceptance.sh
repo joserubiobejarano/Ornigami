@@ -655,30 +655,7 @@ cache_listing() {
 
 verify_runtime_config() {
   local observed
-  observed=$(docker exec "$name" node -e '
-    const fs = require("node:fs");
-    const expected = [
-      "ORNIGAMI_PRIVATE_STAGING_MODE", "ORNIGAMI_PRIVATE_STAGING_PLATFORM",
-      "OPENAI_ENABLED", "ORNIGAMI_COOLIFY_CRON_ENABLED",
-      "ORNIGAMI_COOLIFY_CRON_REVIEW_BOOSTER_ENABLED",
-      "ORNIGAMI_COOLIFY_CRON_REVIEW_REPLIES_ENABLED",
-      "ORNIGAMI_COOLIFY_CRON_PRIVACY_ENABLED", "ORNIGAMI_COOLIFY_REPLIES_ACCEPTED",
-      "RESEND_RECONCILIATION_ENABLED", "PRIVACY_ACCOUNT_DELETION_ENABLED",
-      "PRIVACY_RETENTION_ENABLED", "PRIVACY_RETENTION_APPLY",
-    ];
-    if (process.env.ORNIGAMI_PRIVATE_STAGING_MODE !== "true" || process.env.ORNIGAMI_PRIVATE_STAGING_PLATFORM !== "coolify"
-      || process.env.ORNIGAMI_PREVIEW_DB_EXPECTED_ENDPOINT_SHA256 !== "96acb55ea0fc6bbf35fe992be70a05ee9ba87fceb4f5fa9b66be74be5be063d1"
-      || process.env.ORNIGAMI_PREVIEW_DB_EXPECTED_NAME !== "ornigami_staging"
-      || process.env.ORNIGAMI_PREVIEW_DB_EXPECTED_ROLE !== "ornigami_staging_owner") process.exit(4);
-    if (expected.some((name) => process.env[name] !== "false")) process.exit(1);
-    if (["DATABASE_URL", "OPENAI_API_KEY", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "RESEND_API_KEY", "SENTRY_AUTH_TOKEN"].some((name) => process.env[name])) process.exit(2);
-    if (process.env.GOOGLE_CLIENT_ID !== "rehearsal.invalid" || process.env.GOOGLE_CLIENT_SECRET !== "rehearsal-only-placeholder-not-a-provider-credential"
-      || process.env.AUTH_SECRET !== "rehearsal-only-synthetic-auth-secret-not-for-use"
-      || process.env.CRON_SECRET !== "rehearsal-only-synthetic-cron-secret-not-for-use"
-      || process.env.TOKEN_ENCRYPTION_KEY !== "rehearsal-only-synthetic-token-key-not-for-use"
-      || process.env.REVIEW_BOOSTER_UNSUBSCRIBE_SECRET !== "rehearsal-only-synthetic-unsubscribe-secret-not-for-use") process.exit(3);
-    process.stdout.write("all_features_disabled;no_database_or_provider_secrets;synthetic_google_only");
-  ')
+  observed=$(docker exec "$name" node /app/deploy/coolify/verify-runtime-config.mjs)
   printf 'runtime_env=%s\n' "$observed" >>"$report"
 }
 

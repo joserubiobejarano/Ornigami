@@ -3,7 +3,7 @@ name: Ornigami image build and validation rehearsal
 on:
   push:
     branches:
-      - codex/ornigami-sri-local-prototype-f-20261016
+      - codex/ornigami-staging-readiness-20261018
     paths:
       - .github/build-requests/ornigami.json
 
@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build-validate-scan:
     name: Build, runtime acceptance, and vulnerability scans
-    if: github.event.created == false && github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.run_attempt == 1 && github.ref == 'refs/heads/codex/ornigami-sri-local-prototype-f-20261016'
+    if: github.event.created == false && github.repository == 'joserubiobejarano/Ornigami' && github.event.repository.private == false && github.run_attempt == 1 && github.ref == 'refs/heads/codex/ornigami-staging-readiness-20261018'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -173,10 +173,10 @@ jobs:
         run: |
           set -Eeuo pipefail
           [[ "$GITHUB_EVENT_NAME" == push ]]
-          [[ "$GITHUB_REF" == refs/heads/codex/ornigami-sri-local-prototype-f-20261016 ]]
+          [[ "$GITHUB_REF" == refs/heads/codex/ornigami-staging-readiness-20261018 ]]
           [[ "$REQUEST_SHA" =~ ^[0-9a-f]{40}$ && "$REQUEST_SHA" == "$GITHUB_SHA" ]]
           [[ "$GITHUB_RUN_ATTEMPT" == 1 && "$RUN_WORKFLOW_SHA" == "$GITHUB_SHA" ]]
-          [[ "$RUN_WORKFLOW_REF" == 'joserubiobejarano/Ornigami/.github/workflows/ornigami-image-rehearsal.yml@refs/heads/codex/ornigami-sri-local-prototype-f-20261016' ]]
+          [[ "$RUN_WORKFLOW_REF" == 'joserubiobejarano/Ornigami/.github/workflows/ornigami-image-rehearsal.yml@refs/heads/codex/ornigami-staging-readiness-20261018' ]]
           repo_dir="$RUNNER_TEMP/request-repository"
           repo='https://github.com/joserubiobejarano/Ornigami.git'
           mkdir "$repo_dir"
@@ -212,7 +212,7 @@ jobs:
           actual_sha=$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)
           [[ "$actual_sha" == "$SOURCE_SHA" ]]
           [[ -z "$(git -C "$RUNNER_TEMP/source" status --porcelain --untracked-files=all)" ]]
-          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh deploy/coolify/runtime-deadline.sh deploy/coolify/build-profile.json scripts/framework-prototype/build-profile.mjs; do
+          for required in Dockerfile package.json package-lock.json deploy/coolify/linux-runtime-acceptance.sh deploy/coolify/runtime-deadline.sh deploy/coolify/verify-runtime-config.mjs deploy/coolify/build-profile.json scripts/framework-prototype/build-profile.mjs; do
             [[ -f "$RUNNER_TEMP/source/$required" ]]
           done
           checkout_lock_sha=$(sha256sum "$RUNNER_TEMP/source/package-lock.json" | cut -d' ' -f1)
@@ -473,6 +473,8 @@ jobs:
             --load \
             --tag "ornigami:rehearsal-${SOURCE_SHA}" \
             --build-arg "NEXT_PUBLIC_APP_URL=${approved_origin}" \
+            --build-arg ORNIGAMI_PRIVATE_STAGING_MODE=true \
+            --build-arg ORNIGAMI_PRIVATE_STAGING_PLATFORM=coolify \
             --build-arg "ORNIGAMI_SOURCE_SHA=${SOURCE_SHA}" \
             --build-arg ORNIGAMI_BUILD_HEAP_MIB=4096 \
             --build-arg ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true \

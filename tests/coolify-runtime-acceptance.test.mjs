@@ -11,6 +11,34 @@ const harness = readFileSync(harnessPath, "utf8");
 const dockerfile = readFileSync(resolve("Dockerfile"), "utf8");
 const privateOverlay = JSON.parse(readFileSync(resolve("deploy/coolify/compose.private-staging.proposed.json"), "utf8"));
 const privateRuntimeEnv = privateOverlay.services.app.environment;
+const runtimeVerifierPath = resolve("deploy/coolify/verify-runtime-config.mjs");
+const falseIntegrationFlags = [
+  "OPENAI_ENABLED", "ORNIGAMI_COOLIFY_CRON_ENABLED", "ORNIGAMI_COOLIFY_CRON_REVIEW_BOOSTER_ENABLED",
+  "ORNIGAMI_COOLIFY_CRON_REVIEW_REPLIES_ENABLED", "ORNIGAMI_COOLIFY_CRON_PRIVACY_ENABLED",
+  "ORNIGAMI_COOLIFY_REPLIES_ACCEPTED", "RESEND_RECONCILIATION_ENABLED",
+  "PRIVACY_ACCOUNT_DELETION_ENABLED", "PRIVACY_RETENTION_ENABLED", "PRIVACY_RETENTION_APPLY",
+];
+const validVerifierEnv = {
+  NODE_ENV: "production",
+  NEXT_PUBLIC_APP_URL: "https://staging.ornigami.com",
+  AUTH_URL: "https://staging.ornigami.com",
+  ...privateRuntimeEnv,
+  AUTH_SECRET: "rehearsal-only-synthetic-auth-secret-not-for-use",
+  CRON_SECRET: "rehearsal-only-synthetic-cron-secret-not-for-use",
+  TOKEN_ENCRYPTION_KEY: "rehearsal-only-synthetic-token-key-not-for-use",
+  REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: "rehearsal-only-synthetic-unsubscribe-secret-not-for-use",
+  ...Object.fromEntries(falseIntegrationFlags.map((name) => [name, "false"])),
+};
+function runRuntimeVerifier(overrides = {}, remove = []) {
+  const env = {
+    ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+    ...(process.env.WINDIR ? { WINDIR: process.env.WINDIR } : {}),
+    ...validVerifierEnv,
+    ...overrides,
+  };
+  for (const name of remove) delete env[name];
+  return spawnSync(process.execPath, [runtimeVerifierPath], { encoding: "utf8", env, windowsHide: true, timeout: 5_000 });
+}
 assert.match(dockerfile, /ARG ORNIGAMI_PRIVATE_STAGING_MODE=false/);
 assert.match(dockerfile, /ARG ORNIGAMI_PRIVATE_STAGING_PLATFORM=ordinary/);
 assert.match(dockerfile, /Invalid private Coolify build profile/);
@@ -22,14 +50,65 @@ assert.equal(privateRuntimeEnv.ORNIGAMI_PREVIEW_DB_EXPECTED_ROLE, "ornigami_stag
 assert.match(harness, /--env ORNIGAMI_PRIVATE_STAGING_MODE=true/);
 assert.match(harness, /--env ORNIGAMI_PRIVATE_STAGING_PLATFORM=coolify/);
 assert.match(harness, /ORNIGAMI_PREVIEW_DB_EXPECTED_ENDPOINT_SHA256=96acb55e/);
-assert.match(harness, /process\.env\.ORNIGAMI_PRIVATE_STAGING_PLATFORM !== "coolify"/);
+assert.match(harness, /node \/app\/deploy\/coolify\/verify-runtime-config\.mjs/);
+assert.match(readFileSync(resolve("Dockerfile"), "utf8"), /verify-runtime-config\.mjs/);
+
+test("actual runtime verifier passes only the exact private Coolify synthetic profile", () => {
+  const result = runRuntimeVerifier();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "all_features_disabled;no_database_or_provider_secrets;synthetic_google_only\n");
+  assert.equal(result.stderr, "");
+});
+
+test("actual runtime verifier rejects incorrect mode, origin and target identity", () => {
+  const cases = [
+    runRuntimeVerifier({ ORNIGAMI_PRIVATE_STAGING_MODE: "false" }),
+    runRuntimeVerifier({}, ["ORNIGAMI_PRIVATE_STAGING_MODE"]),
+    runRuntimeVerifier({ ORNIGAMI_PRIVATE_STAGING_PLATFORM: "ordinary" }),
+    runRuntimeVerifier({}, ["ORNIGAMI_PRIVATE_STAGING_PLATFORM"]),
+    runRuntimeVerifier({ NEXT_PUBLIC_APP_URL: "https://other.example" }),
+    runRuntimeVerifier({ AUTH_URL: "https://other.example" }),
+    runRuntimeVerifier({ ORNIGAMI_PREVIEW_DB_EXPECTED_ENDPOINT_SHA256: "0".repeat(64) }),
+    runRuntimeVerifier({}, ["ORNIGAMI_PREVIEW_DB_EXPECTED_ENDPOINT_SHA256"]),
+    runRuntimeVerifier({ ORNIGAMI_PREVIEW_DB_EXPECTED_NAME: "other_database" }),
+    runRuntimeVerifier({}, ["ORNIGAMI_PREVIEW_DB_EXPECTED_NAME"]),
+    runRuntimeVerifier({ ORNIGAMI_PREVIEW_DB_EXPECTED_ROLE: "other_role" }),
+    runRuntimeVerifier({}, ["ORNIGAMI_PREVIEW_DB_EXPECTED_ROLE"]),
+    runRuntimeVerifier({ VERCEL_ENV: "production" }),
+  ];
+  for (const result of cases) {
+    assert.notEqual(result.status, 0);
+    assert.equal(result.stdout, "");
+    assert.equal(result.stderr, "");
+  }
+});
+
+test("actual runtime verifier rejects every enabled processing flag", () => {
+  for (const name of falseIntegrationFlags) {
+    const result = runRuntimeVerifier({ [name]: "true" });
+    assert.equal(result.status, 1, name);
+    assert.equal(result.stdout, "", name);
+    assert.equal(result.stderr, "", name);
+  }
+});
+
+test("actual runtime verifier rejects prohibited credentials without echoing values", () => {
+  const prohibited = ["DATABASE_URL", "OPENAI_API_KEY", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "RESEND_API_KEY", "RESEND_WEBHOOK_SECRET", "SENTRY_DSN", "NEXT_PUBLIC_SENTRY_DSN", "SENTRY_AUTH_TOKEN", "QR_MAIL_BOOSTER_AUTHORITY_TOKEN", "QR_MAIL_DIRECT_AUTHORITY_TOKEN"];
+  for (const name of prohibited) {
+    const result = runRuntimeVerifier({ [name]: "synthetic-prohibited-value" });
+    assert.equal(result.status, 2, name);
+    assert.equal(result.stdout, "", name);
+    assert.equal(result.stderr, "", name);
+    assert.doesNotMatch(result.stdout + result.stderr, /synthetic-prohibited-value/);
+  }
+});
+
 const pythonBlocks = [...harness.matchAll(/<<'PY'\n([\s\S]*?)\nPY/g)].map((match) => match[1]);
 const receiptWriter = pythonBlocks.find((block) => block.includes('"runtime-http.json"'));
 const failureWriter = pythonBlocks.find((block) => block.includes('"failure-evidence.txt"'));
 const cleanupFailureWriter = harness.match(/python3 - "\$report" "\$status" "\$report_dir" <<'PY'(?:[ \t]+\|\|[^\r\n]*)?\r?\n([\s\S]*?)\r?\nPY/)?.[1];
 const python = process.env.PYTHON3 ?? (process.platform === "win32" ? "python" : "python3");
 const bash = process.env.BASH ?? (process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash");
-
 assert.ok(receiptWriter, "runtime receipt Python writer must be present");
 assert.ok(failureWriter, "failure receipt Python writer must be present");
 assert.ok(cleanupFailureWriter, "late cleanup failure receipt writer must be present");

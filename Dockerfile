@@ -100,6 +100,7 @@ COPY --from=builder --chown=1000:1000 /app/src/lib/env.ts ./src/lib/env.ts
 COPY --from=builder --chown=1000:1000 /app/scripts/coolify-cron-dispatch.mjs ./scripts/coolify-cron-dispatch.mjs
 COPY --from=builder --chown=1000:1000 /app/scripts/vps-cron-dispatch.mjs ./scripts/vps-cron-dispatch.mjs
 COPY --from=builder --chown=1000:1000 /app/deploy/coolify/runtime-probes.mjs ./deploy/coolify/runtime-probes.mjs
+COPY --from=builder --chown=1000:1000 /app/deploy/coolify/verify-runtime-config.mjs ./deploy/coolify/verify-runtime-config.mjs
 USER 1000:1000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/robots.txt',{redirect:'manual',signal:AbortSignal.timeout(1500)}).then(async r=>{await r.body?.cancel();process.exit(r.status===200?0:1)}).catch(()=>process.exit(1))"]
 ENTRYPOINT ["/nodejs/bin/node"]
