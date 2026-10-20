@@ -28,7 +28,7 @@ function readDemoCookie(): boolean {
 }
 
 export function useReviewReplySettings() {
-  const [isDemo, setIsDemo] = useState(readDemoCookie);
+  const [isDemo] = useState(readDemoCookie);
   const [businessName, setBusinessName] = useState("");
   const [tone, setTone] = useState(DEFAULT_TONE);
   const [ownerName, setOwnerName] = useState("");
@@ -44,12 +44,7 @@ export function useReviewReplySettings() {
   const [canManageAutoReply, setCanManageAutoReply] = useState(false);
 
   useEffect(() => {
-    const isDemoMode = readDemoCookie();
-    setIsDemo(isDemoMode);
-    if (isDemoMode) {
-      setSettingsLoading(false);
-      return;
-    }
+    if (isDemo) return;
 
     let cancelled = false;
     void fetchReplySettings().then((settings) => {
@@ -83,7 +78,7 @@ export function useReviewReplySettings() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isDemo]);
 
   const settingsPayload = {
     ...(businessId ? { businessId } : {}),
@@ -141,7 +136,7 @@ export function useReviewReplySettings() {
     setOwnerName,
     contactPreference,
     setContactPreference,
-    settingsLoading,
+    settingsLoading: isDemo ? false : settingsLoading,
     settingsLoaded,
     settingsError,
     saveState,

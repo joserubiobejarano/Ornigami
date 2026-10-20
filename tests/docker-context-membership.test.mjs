@@ -65,6 +65,55 @@ function operands(tokens) {
   return tokens.slice(1).filter((token) => !token.startsWith("--"));
 }
 
+function localModuleImports(repositoryPath) {
+  const source = readFileSync(path.join(repositoryRoot, repositoryPath), "utf8");
+  const imports = [];
+  const pattern = /\b(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'](\.{1,2}\/[^"']+)["']/gu;
+  for (const match of source.matchAll(pattern)) imports.push(match[1]);
+  return imports;
+}
+
+function resolveLocalModule(importer, specifier) {
+  const base = path.resolve(repositoryRoot, path.dirname(importer), specifier);
+  const extensions = ["", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"];
+  const indexFiles = ["index.ts", "index.tsx", "index.js", "index.jsx", "index.mjs", "index.cjs"];
+  const candidates = [
+    ...extensions.map((extension) => `${base}${extension}`),
+    ...indexFiles.map((file) => path.join(base, file)),
+  ];
+  const resolved = candidates.find((candidate) => existsSync(candidate));
+  assert.ok(resolved, `cannot resolve local import ${specifier} from ${importer}`);
+  const repositoryPath = path.relative(repositoryRoot, resolved).split(path.sep).join("/");
+  assert.ok(!repositoryPath.startsWith("../"), `local import escapes repository: ${specifier}`);
+  return repositoryPath;
+}
+
+function runtimeConfigImportClosure(entry = "next.config.ts") {
+  const pending = [entry];
+  const closure = new Set();
+  while (pending.length > 0) {
+    const repositoryPath = pending.pop();
+    if (closure.has(repositoryPath)) continue;
+    assert.ok(existsSync(path.join(repositoryRoot, repositoryPath)), `runtime config source is missing: ${repositoryPath}`);
+    closure.add(repositoryPath);
+    for (const specifier of localModuleImports(repositoryPath)) {
+      pending.push(resolveLocalModule(repositoryPath, specifier));
+    }
+  }
+  return closure;
+}
+
+function runnerCopies(repositoryPath) {
+  return dockerCopyInstructions().some((instruction) => {
+    const tokens = instructionTokens(instruction);
+    if (!tokens.includes("--from=builder")) return false;
+    const copyOperands = operands(tokens);
+    return copyOperands.length === 2
+      && copyOperands[0] === `/app/${repositoryPath}`
+      && copyOperands[1] === `./${repositoryPath}`;
+  });
+}
+
 test("Docker context includes every source-copy input while excluding private state and evidence", () => {
   const instructions = dockerCopyInstructions();
   assert.ok(instructions.length > 0, "Dockerfile must retain source-copy instructions");
@@ -141,6 +190,25 @@ test("Docker context includes every source-copy input while excluding private st
 
   assert.equal(dockerContextIncludes("src/lib/env.ts"), true, "application source must remain in context");
   assert.equal(dockerContextIncludes("public/robots.txt"), true, "public app assets must remain in context");
+});
+
+test("runner packages the complete transitive local import closure of next.config.ts", () => {
+  const closure = runtimeConfigImportClosure();
+  assert.deepEqual(
+    [...closure].sort(),
+    [
+      "next.config.ts",
+      "src/lib/private-preview.ts",
+      "src/lib/security-headers.ts",
+    ].sort(),
+    "review the runtime config's complete local import closure",
+  );
+  for (const repositoryPath of closure) {
+    assert.ok(
+      runnerCopies(repositoryPath),
+      `runner image does not copy the next.config.ts import closure member ${repositoryPath}`,
+    );
+  }
 });
 
 test("hidden-path counterexamples fail under the former glob model and pass with Docker dot matching", () => {

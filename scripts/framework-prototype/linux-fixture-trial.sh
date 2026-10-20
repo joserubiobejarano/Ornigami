@@ -10,7 +10,10 @@ node_dir=$(realpath "$3")
 evidence_dir=$(realpath "$4")
 [[ ! -e "$work_dir" && -x "$node_dir/bin/node" ]]
 [[ $("$node_dir/bin/node" --version) == v22.23.3 ]]
-mkdir -p "$work_dir" "$evidence_dir"
+mkdir -p "$evidence_dir"
+"$node_dir/bin/node" "$source_dir/scripts/framework-prototype/framework-fixture-input-readiness.mjs" \
+  --candidate "$(git -C "$source_dir" rev-parse HEAD)" "$source_dir" > "$evidence_dir/fixture-input-readiness.json"
+mkdir -p "$work_dir"
 group=$(awk -F: '$1 == "0" { print $3 }' /proc/self/cgroup)
 [[ -n "$group" && "$group" != / ]]
 group_dir="/sys/fs/cgroup$group"

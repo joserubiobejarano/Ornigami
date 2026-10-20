@@ -6,9 +6,10 @@ import{cleanupOwnedImages}from'./cleanup-owned-images.mjs';
 import{loadToolchainOutput}from'./toolchain-runtime.mjs';
 import{loadBuildProfile}from'./build-profile.mjs';
 import{aggregate,skipDependentStages}from'./stage-index.mjs';
+import{intermediateBuildArguments}from'./intermediate-build-args.mjs';
+import{RawJsonProgressTracker}from'./serial-scan-progress.mjs';
 export{aggregate,skipDependentStages}from'./stage-index.mjs';
-export function rejectReexecution(event){return(event.vertexes??[event]).some(v=>/\bRUN\b/.test(v.name??'')&&(v.started||v.completed)&&v.cached!==true);}
-export function cachedTargetRun(event,target){return(event.vertexes??[event]).some(v=>v.name?.startsWith('['+target+' ')&&/\bRUN\b/.test(v.name)&&v.cached===true);}
+export{cachedTargetRun,rejectReexecution}from'./serial-scan-progress.mjs';
 export function remainingSeconds(deadline){const n=Math.floor(Number(deadline)-Date.now()/1000);if(!Number.isFinite(n)||n<1)throw Error('Work deadline exhausted/invalid; no retry');return n;}
 export function validateBuilderObservation(last){if(!last?.final||last.exit!==0)throw Error('Final owned-builder observation unavailable');for(const[key,value]of[['memory.max','8589934592'],['memory.swap.max','0'],['cpu.max','300000 100000']])if(!last.metrics.includes('=='+key+'==\n'+value+'\n'))throw Error('Observed builder limit drift');const events=last.metrics.match(/==memory.events==\n([\s\S]*?)(?=\n==)/)?.[1];if(!events||['oom','oom_kill','oom_group_kill'].some(k=>!events.split('\n').includes(k+' 0')))throw Error('Builder OOM/kill counters nonzero or unavailable');return true;}
 async function fileHash(file){const h=createHash('sha256');for await(const b of fs.createReadStream(file))h.update(b);return h.digest('hex');}
@@ -71,15 +72,16 @@ async function main(){
           if(fs.existsSync(archive))throw Error('Refusing preexisting stage archive');ownedArchive=true;
           const builder=JSON.parse(run('docker',['inspect',process.env.OWNED_BUILDER_CONTAINER_ID]));const host=builder[0]?.HostConfig;
           if(host?.Memory!==8589934592||host.MemorySwap!==8589934592||host.CpuQuota!==300000||host.CpuPeriod!==100000||builder[0]?.Name!=='/buildx_buildkit_ornigami-external-rehearsal0')throw Error('Owned bounded BuildKit configuration drift');
-          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64',...toolchain.frontendBuildArguments,'--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),'--build-arg','NEXT_PUBLIC_APP_URL='+approvedOrigin,'--build-arg','ORNIGAMI_SOURCE_SHA='+source,'--build-arg','ORNIGAMI_BUILD_HEAP_MIB=4096','--build-arg','ORNIGAMI_BUILD_MEMORY_OPTIMIZATIONS=true','--build-arg','ORNIGAMI_BUILD_DISABLE_SOURCEMAPS=false','--build-arg','ORNIGAMI_BUILD_WEBPACK_WORKER=false',path.join(temp,'source')];
+          const args=['buildx','build','--builder','ornigami-external-rehearsal','--platform','linux/amd64',...toolchain.frontendBuildArguments,'--target',stage,'--progress','rawjson','--output','type=docker,dest='+archive,'--label','org.opencontainers.image.revision='+source,'--metadata-file',path.join(dir,'buildkit-metadata.json'),...intermediateBuildArguments({origin:approvedOrigin,sourceSha:source}),path.join(temp,'source')];
           const stop=path.join(dir,'observer.stop'),observations=path.join(dir,'builder-observations.jsonl');const observer=spawn(node,[path.join(here,'observe-buildkit.mjs'),process.env.OWNED_BUILDER_CONTAINER_ID,observations,stop],{stdio:'ignore'});const observerDone=new Promise(r=>{observer.once('error',r);observer.once('close',r);});
-          const child=spawn('docker',args,{stdio:['ignore','pipe','pipe']});let buffer='',cacheMiss=false,provenCachedRun=false,killer;const log=fs.createWriteStream(path.join(dir,'cache-export.log'),{flags:'wx'});let malformed=false;
-          const abort=()=>{child.kill('SIGTERM');killer??=setTimeout(()=>child.kill('SIGKILL'),10000);};
-          const observe=data=>{log.write(data);buffer+=data.toString();let at;while((at=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,at);buffer=buffer.slice(at+1);if(!line.trim())continue;try{const event=JSON.parse(line);provenCachedRun||=cachedTargetRun(event,stage);if(rejectReexecution(event)){cacheMiss=true;abort();}}catch{malformed=true;abort();}}};child.stdout.on('data',observe);child.stderr.on('data',observe);
+          const child=spawn('docker',args,{stdio:['ignore','pipe','pipe']});let killer,abortInitiated=false;const tracker=new RawJsonProgressTracker(stage);const stdoutLog=fs.createWriteStream(path.join(dir,'cache-export.stdout.log'),{flags:'wx'});const stderrLog=fs.createWriteStream(path.join(dir,'cache-export.stderr.log'),{flags:'wx'});
+          const abort=()=>{if(abortInitiated)return;abortInitiated=true;tracker.markAbort();child.kill('SIGTERM');killer=setTimeout(()=>child.kill('SIGKILL'),10000);};
+          const observe=(stream,log)=>(data)=>{log.write(data);tracker.push(stream,data);if(tracker.cacheMiss||tracker.malformed)abort();};child.stdout.on('data',observe('stdout',stdoutLog));child.stderr.on('data',observe('stderr',stderrLog));child.stdout.on('end',()=>tracker.finish('stdout'));child.stderr.on('end',()=>tracker.finish('stderr'));
           const timer=setTimeout(abort,Math.min(180,remainingSeconds(process.env.ORNIGAMI_WORK_DEADLINE_EPOCH))*1000);
-          let code;try{code=await new Promise((ok,bad)=>{child.once('error',bad);child.once('close',ok);});}finally{clearTimeout(timer);clearTimeout(killer);await new Promise(r=>log.end(r));fs.writeFileSync(stop,'stop');await observerDone;}
+          let code;try{code=await new Promise((ok,bad)=>{child.once('error',bad);child.once('close',ok);});}finally{clearTimeout(timer);clearTimeout(killer);await Promise.all([new Promise(r=>stdoutLog.end(r)),new Promise(r=>stderrLog.end(r))]);tracker.finish('stdout');tracker.finish('stderr');fs.writeFileSync(stop,'stop');await observerDone;}
+          record.cacheExportProgress=tracker.summary();
           const last=JSON.parse(fs.readFileSync(observations,'utf8').trim().split('\n').at(-1));validateBuilderObservation(last);record.builderResources='passed OOM/limit gate; pressure and peak retained without headroom claim';
-          if(code!==0||cacheMiss||malformed||!provenCachedRun)throw Error(`Cached export failed; code=${code}; uncached_RUN=${cacheMiss}; cached_target_proven=${provenCachedRun}; malformed_progress=${malformed}; no retry`);
+          if(code!==0||tracker.cacheMiss||tracker.malformed||!tracker.targetCacheProof)throw Error(`Cached export failed; code=${code}; uncached_RUN=${tracker.cacheMiss}; cached_target_proven=${tracker.targetCacheProof}; malformed_progress=${tracker.malformed}; cancellation_diagnostics=${tracker.cancellationDiagnostics.length}; no retry`);
           const metadata=JSON.parse(fs.readFileSync(path.join(dir,'buildkit-metadata.json')));record.imageId=metadata['containerimage.config.digest'];
         }
       }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatProductDate } from "@/lib/format-date";
+import { createClockStore } from "@/lib/clock-store";
 import { MAX_FOLLOWUP_ATTEMPTS } from "@/lib/followup-retry-policy";
 import { StatusBadge } from "@/modules/review-booster/components/status-badge";
 import type { FollowupVisit } from "@/modules/review-booster/types/followup.types";
@@ -69,7 +70,8 @@ export function RecentVisitsTable({
   initialPage: VisitPage;
   reconciliationEnabled?: boolean;
 }) {
-  const [now, setNow] = useState<number | null>(null);
+  const [clock] = useState(() => createClockStore({ serverSnapshot: null, refreshMs: null }));
+  const now = useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getServerSnapshot);
   const [visits, setVisits] = useState(initialVisits);
   const [page, setPage] = useState(initialPage);
   const [pageCursors, setPageCursors] = useState<(string | null)[]>([null]);
@@ -82,11 +84,7 @@ export function RecentVisitsTable({
   const requestRef = useRef(0);
   const navigationRef = useRef(false);
   const reconciliationRef = useRef(false);
-  const failedDirectionRef = useRef<"first" | "previous" | "next" | null>(null);
-
-  useEffect(() => {
-    setNow(Date.now());
-  }, []);
+  const [failedDirection, setFailedDirection] = useState<"first" | "previous" | "next" | null>(null);
 
   async function navigate(direction: "first" | "previous" | "next") {
     if (loading || navigationRef.current || reconciliationRef.current) return;
@@ -97,7 +95,7 @@ export function RecentVisitsTable({
     navigationRef.current = true;
     setLoading(true);
     setError(null);
-    failedDirectionRef.current = null;
+    setFailedDirection(null);
     try {
       const query = new URLSearchParams({ businessId, limit: "50" });
       if (cursor) query.set("cursor", cursor);
@@ -130,7 +128,7 @@ export function RecentVisitsTable({
       }
     } catch (cause) {
       if (requestId === requestRef.current) {
-        failedDirectionRef.current = direction;
+        setFailedDirection(direction);
         setError(cause instanceof Error ? cause.message : "We couldn't load these visits. Please retry.");
       }
     } finally {
@@ -220,7 +218,7 @@ export function RecentVisitsTable({
           </nav>
         )}
       </div>
-      {error && <div className="px-4 pt-4"><div role="alert" className="flex flex-col gap-2 rounded-lg border border-destructive/35 bg-destructive/10 p-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><Button type="button" size="sm" variant="outline" onClick={() => failedDirectionRef.current && void navigate(failedDirectionRef.current)} disabled={loading || !failedDirectionRef.current}>Retry page change</Button></div></div>}
+      {error && <div className="px-4 pt-4"><div role="alert" className="flex flex-col gap-2 rounded-lg border border-destructive/35 bg-destructive/10 p-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><Button type="button" size="sm" variant="outline" onClick={() => failedDirection && void navigate(failedDirection)} disabled={loading || !failedDirection}>Retry page change</Button></div></div>}
       {visits.length === 0 ? (
         <div className="px-4 py-6"><p className="text-sm text-muted-foreground">{pageIndex === 0 ? "No visits yet for this business." : "No visits were returned for this page. The list may have changed; return to the newest visits."}</p>{pageIndex === 0 && <Button asChild className="mt-3"><Link href="/dashboard/agents/review-booster/new">Add your first visit</Link></Button>}</div>
       ) : (

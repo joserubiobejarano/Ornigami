@@ -20,6 +20,7 @@ type DraftScopeCache = {
   snapshots: DraftMap;
   metadata: Record<string, Pick<Review, "draftState" | "draftVersion" | "draftUpdatedAt">>;
 };
+type LocationReadResult = { requestId: number; locations: ReviewLocation[] | null; error: string | null };
 
 const draftScopeKey = (businessId: string | undefined, location: string) => JSON.stringify([businessId ?? null, location]);
 
@@ -71,15 +72,15 @@ function mapSyncError(raw: unknown): string {
 }
 
 export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
-  const [businessId, setBusinessId] = useState<string>();
+  const [businessId, setBusinessIdState] = useState<string>();
   const [settingsReady, setSettingsReady] = useState(false);
   const [initialBootstrapReady, setInitialBootstrapReady] = useState(false);
-  const [initialLoadReady, setInitialLoadReady] = useState(false);
+  const [initialLoadReadyState, setInitialLoadReady] = useState(false);
   const [locations, setLocations] = useState<ReviewLocation[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState("");
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [drafts, setDrafts] = useState<DraftMap>({});
-  const [savedDraftSnapshots, setSavedDraftSnapshots] = useState<DraftMap>({});
+  const [selectedLocation, setSelectedLocationState] = useState("");
+  const [reviews, setReviewsState] = useState<Review[]>([]);
+  const [drafts, setDraftsState] = useState<DraftMap>({});
+  const [savedDraftSnapshots, setSavedDraftSnapshotsState] = useState<DraftMap>({});
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
@@ -88,9 +89,9 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
   const [syncing, setSyncing] = useState(false);
   const [autoReplyAllReviews, setAutoReplyAllReviews] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const draftsRef = useRef(drafts);
-  const snapshotsRef = useRef(savedDraftSnapshots);
-  const reviewsRef = useRef(reviews);
+  const draftsRef = useRef<DraftMap>({});
+  const snapshotsRef = useRef<DraftMap>({});
+  const reviewsRef = useRef<Review[]>([]);
   const loadRequestRef = useRef(0);
   const nextCursorRef = useRef<string | null>(null);
   const currentCursorRef = useRef<string | null>(null);
@@ -101,10 +102,55 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
   const activeScopeRef = useRef({ businessId, selectedLocation });
   const locationsRequestRef = useRef(0);
   const previousScopeRef = useRef({ businessId, selectedLocation });
-  draftsRef.current = drafts;
-  snapshotsRef.current = savedDraftSnapshots;
-  reviewsRef.current = reviews;
-  activeScopeRef.current = { businessId, selectedLocation };
+
+  const setBusinessId = useCallback((nextBusinessId: string | undefined) => {
+    if (nextBusinessId !== activeScopeRef.current.businessId) {
+      activeScopeRef.current = { ...activeScopeRef.current, businessId: nextBusinessId };
+      loadRequestRef.current += 1;
+      setLoading(false);
+      setPageLoading(false);
+      reviewsRef.current = [];
+      setReviewsState([]);
+    }
+    setBusinessIdState(nextBusinessId);
+  }, []);
+
+  const setSelectedLocation = useCallback((update: React.SetStateAction<string>) => {
+    const nextLocation = typeof update === "function" ? update(activeScopeRef.current.selectedLocation) : update;
+    if (nextLocation !== activeScopeRef.current.selectedLocation) {
+      activeScopeRef.current = { ...activeScopeRef.current, selectedLocation: nextLocation };
+      loadRequestRef.current += 1;
+      nextCursorRef.current = null;
+      currentCursorRef.current = null;
+      pageCursorsRef.current = [null];
+      pageIndexRef.current = 0;
+      setLoading(false);
+      setPageLoading(false);
+      reviewsRef.current = [];
+      setReviewsState([]);
+    }
+    setSelectedLocationState(nextLocation);
+  }, []);
+
+  const setDrafts = useCallback((update: React.SetStateAction<DraftMap>) => {
+    const nextDrafts = typeof update === "function" ? update(draftsRef.current) : update;
+    draftsRef.current = nextDrafts;
+    setDraftsState(nextDrafts);
+  }, []);
+
+  const setSavedDraftSnapshots = useCallback((update: React.SetStateAction<DraftMap>) => {
+    const nextSnapshots = typeof update === "function" ? update(snapshotsRef.current) : update;
+    snapshotsRef.current = nextSnapshots;
+    setSavedDraftSnapshotsState(nextSnapshots);
+  }, []);
+
+  const setReviews = useCallback((update: React.SetStateAction<Review[]>) => {
+    const nextReviews = typeof update === "function" ? update(reviewsRef.current) : update;
+    reviewsRef.current = nextReviews;
+    setReviewsState(nextReviews);
+  }, []);
+
+  const initialLoadReady = initialLoadReadyState || (!selectedLocation && settingsReady && initialBootstrapReady);
 
   const rememberDraftMetadata = useCallback((
     reviewId: string,
@@ -228,7 +274,7 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
         setInitialLoadReady(true);
       }
     }
-  }, [businessId]);
+  }, [businessId, setDrafts, setReviews, setSavedDraftSnapshots]);
 
   const loadReviews = useCallback(async (locationName = selectedLocation) => {
     return loadReviewPage(locationName, currentCursorRef.current, "refresh");
@@ -249,33 +295,43 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
     return loadReviewPage(selectedLocation, cursor, "previous");
   }, [loadReviewPage, pageLoading, selectedLocation]);
 
-  const readLocations = useCallback(async (scopeBusinessId?: string): Promise<boolean> => {
+  const requestLocations = useCallback(async (scopeBusinessId?: string): Promise<LocationReadResult> => {
     const requestId = ++locationsRequestRef.current;
-    setLoading(true);
-    setError(null);
     try {
       // This endpoint resolves the caller's authorized default business scope.
       // Settings and locations can load together; scoped review operations still
       // wait for settings and send its explicit businessId.
       const allLocations = await fetchReviewLocations(scopeBusinessId);
-      if (requestId !== locationsRequestRef.current) return true;
-      const nextLocations = allLocations.filter((location) => location.selected === true);
-      setLocations(nextLocations);
-      setSelectedLocation((current) => current && nextLocations.some((item) => item.locationName === current)
-        ? current
-        : nextLocations[0]?.locationName || "");
-      return true;
+      return { requestId, locations: allLocations.filter((location) => location.selected === true), error: null };
     } catch (cause: unknown) {
-      if (requestId !== locationsRequestRef.current) return true;
-      setError(cause instanceof Error ? cause.message : "We couldn't load your locations. Try again in a moment.");
-      return false;
-    } finally {
-      if (requestId === locationsRequestRef.current) setLoading(false);
+      return {
+        requestId,
+        locations: null,
+        error: cause instanceof Error ? cause.message : "We couldn't load your locations. Try again in a moment.",
+      };
     }
   }, []);
+  const applyLocationRead = useCallback((result: LocationReadResult) => {
+    if (result.requestId !== locationsRequestRef.current) return;
+    const locations = result.locations;
+    if (!locations) {
+      setError(result.error ?? "We couldn't load your locations. Try again in a moment.");
+      return;
+    }
+    setError(null);
+    setLocations(locations);
+    setSelectedLocation((current) => current && locations.some((item) => item.locationName === current)
+      ? current
+      : locations[0]?.locationName || "");
+  }, [setSelectedLocation]);
   const loadLocations = useCallback(async () => {
-    await readLocations(businessId);
-  }, [businessId, readLocations]);
+    setLoading(true);
+    setError(null);
+    const result = await requestLocations(businessId);
+    if (result.requestId !== locationsRequestRef.current) return;
+    applyLocationRead(result);
+    setLoading(false);
+  }, [applyLocationRead, businessId, requestLocations]);
 
   const syncReviews = useCallback(async () => {
     if (!selectedLocation) return;
@@ -342,8 +398,11 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
     let cancelled = false;
     // Start both reads together. If locations fail before settings has created
     // a first workspace, retry once with the now-known explicit business scope.
-    const initialLocations = readLocations();
+    const initialLocations = requestLocations();
     const initialLocationsRequest = locationsRequestRef.current;
+    void initialLocations.then((result) => {
+      if (!cancelled) applyLocationRead(result);
+    });
     void (async () => {
       try {
         const settings = await fetchReplySettings();
@@ -354,10 +413,11 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
           setIsOwner(Boolean(settings.isOwner || settings.role === "owner"));
         }
         setSettingsReady(true);
-        const locationsLoaded = await initialLocations;
-        if (settings?.businessId && !locationsLoaded && !cancelled &&
+        const locationsResult = await initialLocations;
+        if (settings?.businessId && !locationsResult.locations && !cancelled &&
           locationsRequestRef.current === initialLocationsRequest) {
-          await readLocations(settings.businessId);
+          setError(null);
+          applyLocationRead(await requestLocations(settings.businessId));
         }
         if (!cancelled) setInitialBootstrapReady(true);
       } catch {
@@ -372,7 +432,7 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
       cancelled = true;
       locationsRequestRef.current += 1;
     };
-  }, [readLocations]);
+  }, [applyLocationRead, requestLocations, setBusinessId]);
 
   useEffect(() => {
     const previous = previousScopeRef.current;
@@ -409,15 +469,8 @@ export function useReviewInboxData(hasPaidAccess: boolean): ReviewInboxData {
       void loadReviews(selectedLocation);
     } else if (!selectedLocation) {
       loadRequestRef.current += 1;
-      setLoading(false);
-      setPageLoading(false);
-      setReviews([]);
     }
-  }, [businessId, loadReviews, selectedLocation, settingsReady]);
-
-  useEffect(() => {
-    if (!selectedLocation && settingsReady && initialBootstrapReady) setInitialLoadReady(true);
-  }, [initialBootstrapReady, selectedLocation, settingsReady]);
+  }, [businessId, loadReviews, selectedLocation, setDrafts, setReviews, setSavedDraftSnapshots, settingsReady]);
 
   return {
     businessId,

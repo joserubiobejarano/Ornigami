@@ -1,13 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createGoogleConnectionRequest,
   createConnectionRequestGuard,
   type GoogleConnectionData,
 } from "@/modules/review-replies/services/google-connection-request";
 
-const createGuard = createConnectionRequestGuard;
+type ConnectionState = {
+  viewScope: object;
+  requestView: object;
+  data: GoogleConnectionData | null;
+  loading: boolean;
+  error: string | null;
+};
 
 export function useGoogleConnection(input: {
   businessId?: string;
@@ -15,75 +21,79 @@ export function useGoogleConnection(input: {
   isDemo?: boolean;
 }) {
   const { businessId, enabled, isDemo = false } = input;
-  const [connectionData, setConnectionData] = useState<GoogleConnectionData | null>(null);
-  const [connectionDataScope, setConnectionDataScope] = useState<string | null>(null);
-  const [connLoading, setConnLoading] = useState(enabled && !isDemo);
-  const [error, setError] = useState<string | null>(null);
-  const hasData = useRef(false);
-  const previousScope = useRef<string | null>(null);
-  const requestConnection = useRef<ReturnType<typeof createGoogleConnectionRequest> | null>(null);
-  if (!requestConnection.current) requestConnection.current = createGoogleConnectionRequest((url) => fetch(url));
-  const guard = useRef<ReturnType<typeof createGuard> | null>(null);
-  if (!guard.current) guard.current = createGuard();
   const scopeKey = businessId ?? "";
-  guard.current.setScope(scopeKey);
+  const viewScope = useMemo(() => ({ scopeKey, isDemo }), [scopeKey, isDemo]);
+  const requestView = useMemo(() => ({ scopeKey, isDemo, enabled }), [scopeKey, isDemo, enabled]);
+  const [requestConnection] = useState(() => createGoogleConnectionRequest((url) => fetch(url)));
+  const guard = useMemo(() => ({ scopeKey, value: createConnectionRequestGuard() }), [scopeKey]).value;
+  const [state, setState] = useState<ConnectionState>(() => ({
+    viewScope,
+    requestView,
+    data: null,
+    loading: enabled && !isDemo && Boolean(businessId),
+    error: null,
+  }));
+
+  const commitData = useCallback((data: GoogleConnectionData, requestSequence: number, requestedScope: string) => {
+    if (guard.isCurrent(requestSequence, requestedScope)) {
+      setState({ viewScope, requestView, data, loading: false, error: null });
+    }
+  }, [guard, requestView, viewScope]);
+
+  const commitError = useCallback((cause: unknown, requestSequence: number, requestedScope: string) => {
+    if (guard.isCurrent(requestSequence, requestedScope)) {
+      setState({
+        viewScope,
+        requestView,
+        data: null,
+        loading: false,
+        error: cause instanceof Error ? cause.message : "We couldn't load your Google connection. Try again in a moment.",
+      });
+    }
+  }, [guard, requestView, viewScope]);
 
   const reload = useCallback(async (options: { force?: boolean } = {}) => {
     if (!enabled || isDemo || !businessId) return;
-    const requestedScope = businessId ?? "";
-    const requestSequence = guard.current!.begin(requestedScope);
-    if (!hasData.current) setConnLoading(true);
-    setError(null);
+    setState((current) => {
+      const currentScope = current.viewScope === viewScope ? current : null;
+      return {
+        viewScope,
+        requestView,
+        data: currentScope?.data ?? null,
+        loading: currentScope?.data ? currentScope.loading : true,
+        error: null,
+      };
+    });
+    const requestedScope = scopeKey;
+    const requestSequence = guard.begin(requestedScope);
     try {
-      const data = await requestConnection.current!(businessId, options);
-      if (guard.current!.isCurrent(requestSequence, requestedScope)) {
-        setConnectionData(data);
-        setConnectionDataScope(requestedScope);
-        hasData.current = true;
-      }
+      commitData(await requestConnection(businessId, options), requestSequence, requestedScope);
     } catch (cause: unknown) {
-      if (guard.current!.isCurrent(requestSequence, requestedScope)) {
-        setError(cause instanceof Error ? cause.message : "We couldn't load your Google connection. Try again in a moment.");
-        setConnectionData(null);
-        setConnectionDataScope(null);
-        hasData.current = false;
-      }
-    } finally {
-      if (guard.current!.isCurrent(requestSequence, requestedScope)) setConnLoading(false);
+      commitError(cause, requestSequence, requestedScope);
     }
-  }, [businessId, enabled, isDemo]);
+  }, [businessId, commitData, commitError, enabled, guard, isDemo, requestConnection, requestView, scopeKey, viewScope]);
 
   useEffect(() => {
-    if (previousScope.current !== scopeKey) {
-      previousScope.current = scopeKey;
-      hasData.current = false;
-      setConnectionData(null);
-      setConnectionDataScope(null);
-      setError(null);
-    }
-    if (isDemo || !enabled) {
-      guard.current!.invalidate();
-      setConnLoading(false);
-      if (isDemo) {
-        setConnectionData(null);
-        setConnectionDataScope(null);
-        hasData.current = false;
-      }
+    if (isDemo || !enabled || !businessId) {
+      guard.invalidate();
       return;
     }
-    if (!businessId) {
-      guard.current!.invalidate();
-      setConnLoading(false);
-      return;
-    }
-    void reload();
-    return () => { guard.current!.invalidate(); };
-  }, [businessId, enabled, isDemo, reload, scopeKey]);
+    const requestedScope = scopeKey;
+    const requestSequence = guard.begin(requestedScope);
+    void requestConnection(businessId).then(
+      (data) => commitData(data, requestSequence, requestedScope),
+      (cause: unknown) => commitError(cause, requestSequence, requestedScope),
+    );
+    return () => { guard.invalidate(); };
+  }, [businessId, commitData, commitError, enabled, guard, isDemo, requestConnection, scopeKey]);
 
+  const current = state.viewScope === viewScope ? state : null;
   return {
-    connectionData: connectionDataScope === scopeKey ? connectionData : null,
-    connLoading,
-    error,
+    connectionData: isDemo ? null : current?.data ?? null,
+    connLoading: isDemo || !enabled || !businessId
+      ? false
+      : current?.requestView === requestView ? current.loading : current?.data ? false : true,
+    error: isDemo ? null : current?.error ?? null,
     reload,
   };
 }

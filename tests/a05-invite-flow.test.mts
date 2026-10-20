@@ -23,15 +23,32 @@ function componentHarness(relativePath: string, overrides: Record<string, unknow
       if (!(index in state)) state[index] = typeof initial === "function" ? (initial as () => T)() : initial;
       return [state[index] as T, (value) => { state[index] = typeof value === "function" ? (value as (current: T) => T)(state[index] as T) : value; }];
     },
+    useCallback<T extends (...args: never[]) => unknown>(callback: T, _deps: unknown[]) {
+      cursor++;
+      void _deps;
+      return callback;
+    },
     useEffect(effect: () => void | (() => void)) {
       const index = cursor++;
       if (!effects[index]) effects[index] = effect;
+    },
+    useSyncExternalStore(_subscribe: (listener: () => void) => () => void, _getSnapshot: () => unknown, getServerSnapshot: () => unknown) {
+      cursor++;
+      return getServerSnapshot();
     },
     Suspense: "suspense",
   };
   const modules: Record<string, unknown> = {
     react: React,
     "react/jsx-runtime": { jsx, jsxs: jsx, Fragment: "fragment" },
+    "@/lib/clock-store": {
+      createClockStore: ({ serverSnapshot }: { serverSnapshot: number | null }) => ({
+        subscribe: () => () => undefined,
+        refresh: () => undefined,
+        getSnapshot: () => serverSnapshot,
+        getServerSnapshot: () => serverSnapshot,
+      }),
+    },
     ...overrides,
   };
   const sourcePath = resolve(process.cwd(), relativePath);

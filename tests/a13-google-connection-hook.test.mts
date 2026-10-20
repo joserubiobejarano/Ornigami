@@ -48,6 +48,11 @@ function hookHarness(fetcher: (url: string) => Promise<Response>) {
       if (!callbacks[index] || !sameDeps(callbacks[index].deps, deps)) callbacks[index] = { deps, value: callback };
       return callbacks[index].value as T;
     },
+    useMemo<T>(factory: () => T, deps: unknown[]) {
+      const index = cursor++;
+      if (!callbacks[index] || !sameDeps(callbacks[index].deps, deps)) callbacks[index] = { deps, value: factory() };
+      return callbacks[index].value as T;
+    },
     useEffect(effect: () => void | (() => void), deps: unknown[]) {
       const index = cursor++;
       if (!effects[index] || !sameDeps(effects[index].deps, deps)) {
@@ -110,8 +115,11 @@ test("connection hook waits for readiness and never issues an unscoped read", as
   await tick();
   assert.deepEqual(urls, []);
 
+  harness.setInput({ enabled: false, businessId: "resolved-business" });
+  assert.equal(harness.render().connLoading, false);
+  harness.runEffects();
   harness.setInput({ enabled: true, businessId: "resolved-business" });
-  harness.render();
+  assert.equal(harness.render().connLoading, true, "a newly ready connection starts in its loading state before the effect runs");
   harness.runEffects();
   await tick();
   assert.deepEqual(urls, ["/api/google/connection?businessId=resolved-business"]);
@@ -193,4 +201,23 @@ test("failed connection reads clear loading and can be retried", async () => {
   assert.equal(attempt, 2);
   assert.equal(harness.render().connectionData?.connected, true);
   assert.equal(harness.render().error, null);
+});
+
+test("demo mode never fetches and a later live scope performs one request", async () => {
+  const urls: string[] = [];
+  const harness = hookHarness(async (url) => { urls.push(url); return ok(true); });
+  harness.setInput({ enabled: true, businessId: "business", isDemo: true });
+  const demo = harness.render();
+  assert.equal(demo.connectionData, null);
+  assert.equal(demo.connLoading, false);
+  harness.runEffects();
+  await tick();
+  assert.deepEqual(urls, []);
+
+  harness.setInput({ enabled: true, businessId: "business", isDemo: false });
+  harness.render();
+  harness.runEffects();
+  await tick();
+  assert.deepEqual(urls, ["/api/google/connection?businessId=business"]);
+  assert.equal(harness.render().connectionData?.connected, true);
 });

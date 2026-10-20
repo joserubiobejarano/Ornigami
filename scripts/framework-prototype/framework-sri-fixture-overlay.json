@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "sourceCommit": "d2b61f61ce30a1fcafcb9dec198fed7496764466",
+  "fixtureRoot": "tests/fixtures/framework-sri",
+  "path": "app/controls.js",
+  "originalBlob": "d10dedf2c8485b5548eee9c204dda1ba1002d352",
+  "reviewedBlob": "7f819e2731a5ec48f3a63d46f228da9008937d8b",
+  "reason": "Rename the dynamic import result from module to loadedModule for the locked Next lint rule; the loaded module and late-chunk SRI rejection behavior are unchanged."
+}

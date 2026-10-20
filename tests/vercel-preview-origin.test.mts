@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import { isPrivatePreviewMode } from "../src/lib/private-preview.ts";
 
 const configSource = readFileSync(new URL("../next.config.ts", import.meta.url), "utf8");
 const compiledConfig = ts.transpileModule(configSource, {
@@ -15,7 +16,7 @@ const compiledConfig = ts.transpileModule(configSource, {
 
 function loadNextConfig(env: Record<string, string | undefined>) {
   const exports: Record<string, unknown> = {};
-  const module = { exports };
+  const vmModule = { exports };
   const require = (specifier: string): unknown => {
     if (specifier === "@sentry/nextjs") {
       return { withSentryConfig: (config: unknown) => config };
@@ -26,11 +27,14 @@ function loadNextConfig(env: Record<string, string | undefined>) {
         TRUSTED_TYPES_REPORTING_ENDPOINT: 'csp-endpoint="/api/csp-report"',
       };
     }
+    if (specifier === "./src/lib/private-preview") {
+      return { isPrivatePreviewMode: () => isPrivatePreviewMode(env) };
+    }
     throw new Error(`Unexpected next.config.ts import: ${specifier}`);
   };
 
-  vm.runInNewContext(compiledConfig, { exports, module, require, process: { env } });
-  return module.exports.default as Record<string, unknown>;
+  vm.runInNewContext(compiledConfig, { exports, module: vmModule, require, process: { env } });
+  return vmModule.exports.default as Record<string, unknown>;
 }
 
 test("Vercel Preview accepts the selected staging origin", () => {

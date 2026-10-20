@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -24,6 +24,11 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { nativeSelectClassName } from "@/lib/form-controls";
 import {
+  getGoogleConnectionUrlError,
+  getGoogleConnectionUrlErrorKey,
+  resolveGoogleConnectionIssue,
+} from "@/modules/review-replies/services/google-connection-error";
+import {
   TONE_OPTIONS,
   useReviewReplySettings,
 } from "@/modules/review-replies/hooks/use-review-reply-settings";
@@ -34,6 +39,7 @@ function SettingsPageContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [dismissedGoogleUrlError, setDismissedGoogleUrlError] = useState<string | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectingLocation, setSelectingLocation] = useState<string | null>(null);
@@ -78,26 +84,28 @@ function SettingsPageContent() {
     reload: reloadConnection,
   } = useGoogleConnection({ businessId, enabled: settingsLoaded && Boolean(businessId), isDemo });
   const connLoading = settingsLoading || connectionLoading;
-  const connectionIssue = error || connectionError;
-  const fetchConnectionData = () => {
+  const googleStatus = searchParams.get("google");
+  const googleReason = searchParams.get("reason");
+  const googleUrlError = getGoogleConnectionUrlError(googleStatus, googleReason);
+  const googleUrlErrorKey = getGoogleConnectionUrlErrorKey(googleStatus, googleReason);
+  const connectionIssue = resolveGoogleConnectionIssue({
+    localError: error,
+    connectionError,
+    urlError: googleUrlError,
+    urlErrorDismissed: googleUrlErrorKey !== null && dismissedGoogleUrlError === googleUrlErrorKey,
+  });
+  const clearConnectionError = () => {
     setError(null);
+    if (googleUrlErrorKey) setDismissedGoogleUrlError(googleUrlErrorKey);
+  };
+  const fetchConnectionData = () => {
+    clearConnectionError();
     return reloadConnection({ force: true });
   };
 
-  useEffect(() => {
-    const googleStatus = searchParams.get("google");
-    const reason = searchParams.get("reason");
-    if (googleStatus !== "error") return;
-    if (reason === "missing_refresh_token") {
-      setError("Google connection failed. Please try again.");
-      return;
-    }
-    setError("Google connection failed. Please try again.");
-  }, [searchParams]);
-
   const handleSyncLocations = async () => {
     setIsSyncing(true);
-    setError(null);
+    clearConnectionError();
     try {
       const res = await fetch("/api/google/locations/sync", {
         method: "POST",
@@ -118,7 +126,7 @@ function SettingsPageContent() {
 
   const handleDisconnect = async () => {
     if (!window.confirm("Disconnect Google? Review syncing and posting will stop until you reconnect.")) return;
-    setError(null);
+    clearConnectionError();
     try {
       const res = await fetch("/api/google/disconnect", {
         method: "POST",
@@ -141,7 +149,7 @@ function SettingsPageContent() {
 
   const handleSelectLocation = async (locationId: string) => {
     setSelectingLocation(locationId);
-    setError(null);
+    clearConnectionError();
     try {
       const res = await fetch("/api/google/locations/selection", {
         method: "POST", headers: { "Content-Type": "application/json" },

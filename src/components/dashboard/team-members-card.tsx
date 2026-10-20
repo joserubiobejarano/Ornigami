@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { DashboardCallout } from "@/components/dashboard/callout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { createClockStore } from "@/lib/clock-store";
 
 type TeamMember = {
   user_id: string;
@@ -38,6 +39,13 @@ function responseError(body: unknown, fallback: string): string {
   return fallback;
 }
 
+async function requestTeam(): Promise<TeamData> {
+  const response = await fetch("/api/team", { credentials: "include" });
+  const body: unknown = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(responseError(body, "We could not load team access."));
+  return body as TeamData;
+}
+
 function invitationExpiry(expiresAt: string): string {
   const timestamp = Date.parse(expiresAt);
   if (!Number.isFinite(timestamp)) return "Expiry date unavailable";
@@ -55,15 +63,12 @@ export function TeamMembersCard() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null);
-  const [now, setNow] = useState(0);
+  const [clock] = useState(() => createClockStore({ serverSnapshot: 0, refreshMs: 60_000 }));
+  const now = useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getServerSnapshot) ?? 0;
 
-  async function loadTeam(showLoading = true) {
-    if (showLoading) setLoading(true);
+  async function fetchTeam(showLoading = true) {
     try {
-      const response = await fetch("/api/team", { credentials: "include" });
-      const body: unknown = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(responseError(body, "We could not load team access."));
-      setData(body as TeamData);
+      setData(await requestTeam());
       setError(null);
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "We could not load team access.");
@@ -72,14 +77,23 @@ export function TeamMembersCard() {
     }
   }
 
-  useEffect(() => {
-    void loadTeam();
-  }, []);
+  async function loadTeam(showLoading = true) {
+    if (showLoading) setLoading(true);
+    await fetchTeam(showLoading);
+  }
 
   useEffect(() => {
-    setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
+    let cancelled = false;
+    void requestTeam().then((team) => {
+      if (cancelled) return;
+      setData(team);
+      setError(null);
+    }).catch((cause: unknown) => {
+      if (!cancelled) setError(cause instanceof Error ? cause.message : "We could not load team access.");
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   async function inviteMember(event: React.FormEvent<HTMLFormElement>) {
@@ -100,7 +114,7 @@ export function TeamMembersCard() {
       setEmail("");
       setInvitationUrl(typeof result.invitationUrl === "string" ? result.invitationUrl : null);
       setNotice(result.sent === true ? "Invitation email sent." : null);
-      setNow(Date.now());
+      clock.refresh();
       await loadTeam(false);
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "The invitation could not be sent.");
@@ -119,7 +133,7 @@ export function TeamMembersCard() {
       if (!response.ok) throw new Error(responseError(body, "Workspace access could not be updated."));
       setConfirmAction(null);
       setNotice(successMessage);
-      setNow(Date.now());
+      clock.refresh();
       await loadTeam(false);
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "Workspace access could not be updated.");

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "sourceCommit": "d2b61f61ce30a1fcafcb9dec198fed7496764466",
+  "fixtureRoot": "tests/fixtures/framework-sri",
+  "files": {
+    "app/controls.js": "d10dedf2c8485b5548eee9c204dda1ba1002d352",
+    "app/error.js": "7601f690ac61b08f0d126f013c0f85cd506035d6",
+    "app/fail/page.js": "a843988fefbf1901faab9a0fdc704f0591f4648d",
+    "app/global-error.js": "760733d03af4931b14a1763f96309c350d9b0ccc",
+    "app/global.css": "bb4867333fb0d47f36b60feb9764394ea639c95f",
+    "app/late.js": "ec3586326cc9d0e24beaab754236bdc57b1c9953",
+    "app/layout.js": "2a94a03fb86d23339b291f294efa850faaa57fd1",
+    "app/loading.js": "eeb9e0f63b342b6601b533c312681d7257f20364",
+    "app/not-found.js": "01afb90933e618151c23145e8e8a2544d2317e9b",
+    "app/other/page.js": "7a9f25acb0b2445dceb8a40a139e0b44dc854c4b",
+    "app/page.js": "06fd09a92445652df6e5919d419be14dd6462deb",
+    "app/slow/page.js": "350f3d6f1f2aaab90bb1a671b0791977fe7fa51b",
+    "next.config.mjs": "5c0d0324bd9fcbb24cb2556a3624dc6ecd43c976",
+    "package-lock.json": "a8149695f89ce73356e6e4133e963c134ea7c783",
+    "package.json": "f8b2f222a951a7eca5f9a212af51f8c3e536e690",
+    "proxy.js": "35fa86aa70e9bf0ae45e4753256eea43e0013554"
+  }
+}

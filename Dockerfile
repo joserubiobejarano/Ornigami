@@ -96,6 +96,7 @@ COPY --from=builder --chown=1000:1000 /app/package.json ./package.json
 COPY --from=builder --chown=1000:1000 /app/next.config.ts ./next.config.ts
 COPY --from=builder --chown=1000:1000 /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=1000:1000 /app/src/lib/security-headers.ts ./src/lib/security-headers.ts
+COPY --from=builder --chown=1000:1000 /app/src/lib/private-preview.ts ./src/lib/private-preview.ts
 COPY --from=builder --chown=1000:1000 /app/src/lib/env.ts ./src/lib/env.ts
 COPY --from=builder --chown=1000:1000 /app/scripts/coolify-cron-dispatch.mjs ./scripts/coolify-cron-dispatch.mjs
 COPY --from=builder --chown=1000:1000 /app/scripts/vps-cron-dispatch.mjs ./scripts/vps-cron-dispatch.mjs
