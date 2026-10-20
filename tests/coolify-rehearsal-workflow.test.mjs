@@ -1376,6 +1376,7 @@ test("cleanup removes only exact owned builder, unattached state volume, and mat
     assert.match(log, /<image><rm><owned-image-id>/);
     assert.doesNotMatch(log, /<buildx><rm>/);
     assert.match(readFileSync(join(runnerTemp,"ornigami-tail-outcomes.local","workflow-cleanup-final.txt"),"utf8"),/cleanup_status=passed/);
+    assert.match(readFileSync(join(runnerTemp,"ornigami-tail-outcomes.local","workflow-cleanup.txt"),"utf8"),/daemon identity\/configuration unchanged/);
   });
 });
 
@@ -1383,8 +1384,8 @@ for (const [name, overrides, expected] of [
   ['successful no-op deletion', {FAKE_REMOVAL_NOOP:'1'}, /still present/],
   ['removal error', {FAKE_REMOVAL_FAIL:'1'}, /builder removal failed/],
   ['unavailable resource inventory', {FAKE_DOCKER_INVENTORY_FAIL:'1'}, /inventory unavailable/],
-  ['daemon configuration drift', {FAKE_DAEMON_INFO:'different-daemon'}, /daemon.*drifted/],
-  ['unavailable daemon', {FAKE_DAEMON_INFO_FAIL:'1'}, /daemon.*unavailable/],
+  ['daemon configuration drift', {FAKE_DAEMON_INFO:'different-daemon'}, /daemon identity\/configuration drifted/],
+  ['unavailable daemon read-back', {FAKE_DAEMON_INFO_FAIL:'1'}, /daemon identity\/configuration read-back unavailable: Docker info failed/],
 ]) test(`actual cleanup workflow fails on ${name}`, () => withSandbox(root => {
   const {env}=fakeEnvironment(root, {FAKE_INSPECTED_BUILDER_ID:'owned-builder-id',FAKE_INSPECTED_IMAGE_ID:'owned-image-id',...overrides});
   const result=runCleanup(root,env);
@@ -1392,6 +1393,16 @@ for (const [name, overrides, expected] of [
   assert.match(result.stdout,expected);
   assert.match(result.stdout,/cleanup_readback=result=1/);
   assert.doesNotMatch(readFileSync(env.FAKE_DOCKER_LOG,'utf8'), /<prune>|<buildx><rm>/);
+}));
+
+test("cleanup reports unavailable daemon read-back when its initial snapshot is missing", () => withSandbox(root => {
+  const {env,runnerTemp}=fakeEnvironment(root,{FAKE_INSPECTED_BUILDER_ID:'owned-builder-id',FAKE_INSPECTED_IMAGE_ID:'owned-image-id'});
+  rmSync(join(runnerTemp,"ornigami-daemon-before.txt"));
+  const result=runCleanup(root,env);
+  assert.equal(result.status,1,result.stderr);
+  assert.match(result.stdout,/daemon identity\/configuration read-back unavailable: initial snapshot missing/);
+  assert.doesNotMatch(readFileSync(env.FAKE_DOCKER_LOG,"utf8"),/<info>/,"read-back must not start without its before snapshot");
+  assert.match(readFileSync(join(runnerTemp,"ornigami-tail-outcomes.local","workflow-cleanup-final.txt"),"utf8"),/cleanup_status=failed/);
 }));
 
 test("cleanup stops a TERM-resistant Docker client and leaves absence unproved", () => withSandbox(root => {
@@ -1404,7 +1415,10 @@ test("cleanup stops a TERM-resistant Docker client and leaves absence unproved",
   assert.equal(result.status,1,result.stderr);
   assert.match(readFileSync(env.RUNNER_TEMP+'/ornigami-cleanup-docker-unproved.txt','utf8'),/docker_unproved=client_timeout_or_interruption/);
   assert.match(readFileSync(env.RUNNER_TEMP+'/ornigami-tail-outcomes.local/workflow-cleanup-final.txt','utf8'),/cleanup_status=failed/);
-  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY,'utf8'),/absence unproved after Docker timeout/);
+  const cleanupReceipt=readFileSync(join(env.RUNNER_TEMP,'ornigami-tail-outcomes.local/workflow-cleanup.txt'),'utf8');
+  assert.match(cleanupReceipt,/daemon identity\/configuration read-back skipped after prior Docker uncertainty; daemon state unproved/);
+  assert.match(cleanupReceipt,/absence unproved after Docker timeout/);
+  assert.doesNotMatch(readFileSync(env.FAKE_DOCKER_LOG,'utf8'),/<info>/,"prior uncertainty fences daemon read-back instead of making another Docker call");
   const before=readFileSync(env.FAKE_DOCKER_HANG_PROGRESS,'utf8').length;
   spawnSync(bash,['-c','sleep 0.25']);
   assert.equal(readFileSync(env.FAKE_DOCKER_HANG_PROGRESS,'utf8').length,before);

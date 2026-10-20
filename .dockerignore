@@ -60,6 +60,7 @@ deploy/*
 !deploy/coolify/
 deploy/coolify/**
 !deploy/coolify/runtime-probes.mjs
+!deploy/coolify/verify-runtime-config.mjs
 tests
 tests/**
 .github

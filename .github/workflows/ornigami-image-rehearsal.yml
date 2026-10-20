@@ -1522,11 +1522,25 @@ jobs:
             cleanup_failed=1
             cleanup_record 'experimental toolchain cleanup unavailable'
           fi
-          if [[ -s "$RUNNER_TEMP/ornigami-daemon-before.txt" ]] && docker info --format '{{.ID}}|{{.Driver}}|{{.CgroupDriver}}|{{.CgroupVersion}}|{{.DockerRootDir}}|{{json .SecurityOptions}}|{{.LiveRestoreEnabled}}' > "$RUNNER_TEMP/ornigami-daemon-after.txt" && cmp -s "$RUNNER_TEMP/ornigami-daemon-before.txt" "$RUNNER_TEMP/ornigami-daemon-after.txt"; then
-            cleanup_record 'daemon identity/configuration unchanged'
+          if [[ -s "$cleanup_unproved_file" ]]; then
+            cleanup_failed=1
+            cleanup_record 'daemon identity/configuration read-back skipped after prior Docker uncertainty; daemon state unproved'
+          elif [[ ! -s "$RUNNER_TEMP/ornigami-daemon-before.txt" ]]; then
+            cleanup_failed=1
+            cleanup_record 'daemon identity/configuration read-back unavailable: initial snapshot missing'
+          elif docker info --format '{{.ID}}|{{.Driver}}|{{.CgroupDriver}}|{{.CgroupVersion}}|{{.DockerRootDir}}|{{json .SecurityOptions}}|{{.LiveRestoreEnabled}}' > "$RUNNER_TEMP/ornigami-daemon-after.txt" 2>/dev/null; then
+            if [[ ! -s "$RUNNER_TEMP/ornigami-daemon-after.txt" ]]; then
+              cleanup_failed=1
+              cleanup_record 'daemon identity/configuration read-back unavailable: empty result'
+            elif cmp -s "$RUNNER_TEMP/ornigami-daemon-before.txt" "$RUNNER_TEMP/ornigami-daemon-after.txt"; then
+              cleanup_record 'daemon identity/configuration unchanged'
+            else
+              cleanup_failed=1
+              cleanup_record 'daemon identity/configuration drifted'
+            fi
           else
             cleanup_failed=1
-            cleanup_record 'daemon identity/configuration verification unavailable or drifted'
+            cleanup_record 'daemon identity/configuration read-back unavailable: Docker info failed'
           fi
           if [[ -s "$cleanup_unproved_file" ]]; then
             cleanup_failed=1
