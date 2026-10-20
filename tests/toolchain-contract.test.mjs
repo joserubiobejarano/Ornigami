@@ -35,6 +35,7 @@ function fixture(root){
 }
 test('reviewed actual recipe pins full combined scope, eight binaries and compiler/runtime roles',()=>{
   const recipe=loadToolchainRecipe(recipeDirectory);assert.equal(recipe.trialScope,'full');assert.equal(recipe.contract.binaries.length,8);assert.equal(recipe.contract.compiler.memoryBytes,8589934592);assert.equal(recipe.apk.packages.length,75);
+  const expat=recipe.apk.packages.find(p=>p.name==='libexpat');assert.equal(expat.version,'2.9.0-r0');assert.equal(expat.bytes,62181);assert.equal(expat.sha256,'42a1cb48e3ef0b5d1744f2b341120369d0c045038cdb6c9d5a6dd5ba7d421910');assert.equal(expat.indexChecksum,'Q1RiVCXcS1QhgNt9xnZpcYRTnjglY=');assert.deepEqual(expat.dependencies,['so:libc.musl-x86_64.so.1']);assert.deepEqual(expat.provides,['so:libexpat.so.1=1.13.0']);assert.ok(recipe.apk.runtimeClosure.includes('libexpat'));assert.deepEqual(recipe.apk.packages.filter(p=>p.dependencies.includes('so:libexpat.so.1')).map(p=>p.name),['git']);assert.ok(recipe.apk.packages.find(p=>p.name==='musl').provides.some(p=>p.startsWith('so:libc.musl-x86_64.so.1=')));
 });
 test('contract rejects tampered module bytes even when outer recipe is untouched',()=>sandbox(root=>{
   const f=fixture(root);fs.appendFileSync(path.join(f.recipeDir,'locks/buildkit.go.mod'),'\n// drift\n');assert.throws(()=>loadToolchainRecipe(f.recipeDir),/lock identity/);

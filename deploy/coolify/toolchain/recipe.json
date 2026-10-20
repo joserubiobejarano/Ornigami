@@ -1,12 +1,12 @@
 {
   "authorization": "Owner approved experimental construction/testing in this chat; no registry/deployment/permanent adoption",
-  "buildContractSha256": "d37daa5bedc8ee357bea90f02ac2f8e34b8af243f1c16a149334dd3b666531e1",
+  "buildContractSha256": "2f37196f665fdd5f262ea63eb9fe48c9a5d85569b02a3f2165c77962220f9b74",
   "contract": {
     "apkLock": {
       "file": "apk-lock.json",
       "maxBytes": 268435456,
       "maxPackages": 100,
-      "sha256": "8c399fa5ff05ba2e457e131ba457e7ede365314e656208ff7d48209be1e233dd"
+      "sha256": "4c629d04fe75ee863fdc01351d9afeb5d7f0e1fb6ae9db9980b823881fa4f70c"
     },
     "bases": {
       "compiler": {
@@ -185,8 +185,8 @@
   },
   "expectedFrontend": {
     "binarySha256": "4c827ee5910208a1c8a530b8509d6a512e70a26b4ddb523efdcd7492669d84fc",
-    "configDigest": "sha256:d63b52477262e8a132e3c20e061134eea067a1b7c506e4c68b848bdeb1f6c345",
-    "manifestDigest": "sha256:57122ca6b725a0c96f2202b1a52ea896f8b470654a839e21990e02d6d872208c",
+    "configDigest": "sha256:2adf3a806c979c155f04248e52e91c5ad69589c28298c4e566f9c650b6869a9c",
+    "manifestDigest": "sha256:bc341c4e57f37fd8276589e2a879e833b889d20010e9c70151af11bf8cc7cc39",
     "layerDigest": "sha256:ef0ce2aacf5a6834bb99bb12b42119b6224e830bc9017134fdfddfb74a1a81d5"
   },
   "experimental": true,
