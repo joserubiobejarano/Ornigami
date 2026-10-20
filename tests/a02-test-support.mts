@@ -5,8 +5,12 @@ import vm from "node:vm";
 import ts from "typescript";
 import { isRestrictedDeletionSession, withPrivatePreviewIdentityPreflight } from "../src/lib/private-preview-database-identity-proxy.ts";
 import { preflightPrivatePreviewDatabaseIdentity, privatePreviewDatabaseIdentityHttpResponse } from "../src/lib/private-preview-database-identity.ts";
+import { privatePreviewOperationDisabledResponse } from "../src/lib/private-preview-operation.ts";
 
 export type SqlCall = { query: string; values: unknown[] };
+export const normalModePrivatePreviewMock = { isPrivatePreviewMode: () => false };
+export const normalModePrivatePreviewOperationMock = { privatePreviewOperationDisabledResponse };
+
 export function fakeSql(getRows: (query: string, values: unknown[]) => unknown[]) {
   const calls: SqlCall[] = [];
   const sql = (parts: TemplateStringsArray, ...values: unknown[]) => {

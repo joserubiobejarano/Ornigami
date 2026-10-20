@@ -214,6 +214,10 @@ test("mail helper requires production HTTPS config and handles Resend rejection"
   const requests: Array<{ url: string; authorization: string; body: { text: string } }> = [];
   const env: Record<string, string | undefined> = { RESEND_API_KEY: "test-key", EMAIL_FROM: "no-reply@example.com", NEXT_PUBLIC_APP_URL: "https://app.example" };
   let providerStatus = 503;
+  const requestFetch: typeof fetch = async (input, init) => {
+    requests.push({ url: String(input), authorization: new Headers(init?.headers).get("authorization") ?? "", body: JSON.parse(String(init?.body)) as { text: string } });
+    return new Response("provider response", { status: providerStatus });
+  };
   const helper = loadTs<typeof import("../src/lib/auth-verification.js")>("src/lib/auth-verification.ts", {
     env: { NODE_ENV: "production" },
     overrides: {
@@ -223,11 +227,21 @@ test("mail helper requires production HTTPS config and handles Resend rejection"
         return statement.includes("auth_create_email_verification_token") ? [{ created: true }] : [];
       } },
       "@/lib/env": { getOptionalEnv: (name: string) => env[name], getServerAppUrl: () => "https://app.example" },
+      "@/lib/qr-mail": {
+        qrMailConfigured: (purpose: string) => purpose === "auth_verification"
+          && Boolean(env.RESEND_API_KEY) && Boolean(env.EMAIL_FROM)
+          && new URL(env.NEXT_PUBLIC_APP_URL ?? "").protocol === "https:",
+        sendAuthorizedResend: async (payload: string, context: { purpose: string }) => {
+          assert.equal(context.purpose, "auth_verification", "the fixture authorizes only verification mail");
+          const response = await requestFetch("https://api.resend.com/emails", {
+            method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}` }, body: payload,
+          });
+          if (!response.ok) throw new Error("synthetic Resend rejection");
+          return "synthetic-provider-id";
+        },
+      },
     },
-    fetch: async (input, init) => {
-      requests.push({ url: String(input), authorization: new Headers(init?.headers).get("authorization") ?? "", body: JSON.parse(String(init?.body)) as { text: string } });
-      return new Response("provider response", { status: providerStatus });
-    },
+    fetch: requestFetch,
   });
   delete env.RESEND_API_KEY;
   assert.equal(helper.authEmailDeliveryAvailable(), false);

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadTs } from "./a02-test-support.mts";
+import { loadTs, normalModePrivatePreviewMock } from "./a02-test-support.mts";
 
 const previousEnabled = process.env.OPENAI_ENABLED;
 const previousKey = process.env.OPENAI_API_KEY;
@@ -243,6 +243,7 @@ test("disabled scheduled replies return unavailable before lease, DB work, or pr
   let providerCalls = 0;
   const route = loadTs<typeof import("../src/app/api/cron/review-replies/route.ts")>("src/app/api/cron/review-replies/route.ts", {
     "next/server": { NextResponse: { json: Response.json } },
+    "@/lib/private-preview": normalModePrivatePreviewMock,
     "@/lib/openai-feature": { isOpenAIEnabled: () => false, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/db/deadline": { withDatabaseDeadline: (_deadline: Date | number, callback: () => unknown) => callback() },
     "@/lib/google-review-sync": { fetchAllGoogleReviews: async () => { providerCalls += 1; throw new Error("unexpected"); } },

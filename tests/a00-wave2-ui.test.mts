@@ -10,6 +10,11 @@ import {
   createConnectionRequestGuard,
   createGoogleConnectionRequest,
 } from "../src/modules/review-replies/services/google-connection-request.ts";
+import {
+  getGoogleConnectionUrlError,
+  getGoogleConnectionUrlErrorKey,
+  resolveGoogleConnectionIssue,
+} from "../src/modules/review-replies/services/google-connection-error.ts";
 
 type Element = { type: unknown; props: Record<string, unknown> };
 function jsx(type: unknown, props: Record<string, unknown>) { return { type, props }; }
@@ -19,6 +24,7 @@ function componentHarness(relativePath: string, overrides: Record<string, unknow
   let cursor = 0;
   const state: unknown[] = [];
   const refs: Array<{ current: unknown }> = [];
+  const memos: Array<{ deps: unknown[]; value: unknown }> = [];
   const callbacks: Array<{ deps: unknown[]; value: unknown }> = [];
   const effects: Array<{ deps: unknown[]; run: () => void | (() => void); cleanup?: () => void }> = [];
   const pendingEffects = new Set<number>();
@@ -33,6 +39,11 @@ function componentHarness(relativePath: string, overrides: Record<string, unknow
       const index = cursor++;
       if (!refs[index]) refs[index] = { current: initial };
       return refs[index] as { current: T };
+    },
+    useMemo<T>(factory: () => T, deps: unknown[] = []) {
+      const index = cursor++;
+      if (!memos[index] || !sameDeps(memos[index].deps, deps)) memos[index] = { deps, value: factory() };
+      return memos[index].value as T;
     },
     useEffect(effect: () => void | (() => void), deps: unknown[] = []) {
       const index = cursor++;
@@ -176,6 +187,12 @@ function settingsHarness(connection: { connected: boolean; canManage: boolean; s
     "@/components/ui/switch": { Switch: "switch" },
     "@/components/ui/skeleton": { Skeleton: "div" },
     "@/lib/form-controls": { nativeSelectClassName: "select" },
+    "@/lib/private-preview": { isPrivatePreviewMode: () => false },
+    "@/modules/review-replies/services/google-connection-error": {
+      getGoogleConnectionUrlError,
+      getGoogleConnectionUrlErrorKey,
+      resolveGoogleConnectionIssue,
+    },
     "@/modules/review-replies/hooks/use-review-reply-settings": {
       TONE_OPTIONS: [],
       useReviewReplySettings: () => ({ isDemo: false, businessId: "workspace-business", readOnly: !connection.canManage, canManageAutoReply: connection.canManage, businessName: "Workspace", setBusinessName() {}, tone: "warm", setTone() {}, ownerName: "Owner", setOwnerName() {}, contactPreference: "email", setContactPreference() {}, settingsLoading: false, settingsLoaded: true, settingsError: null, saveState: "idle", autoReplyAllReviews: false, autoReplySaving: false, saveReplySettings: async () => {}, persistAutoReply: async () => {} }),

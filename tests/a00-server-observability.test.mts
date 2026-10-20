@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadTs } from "./a02-test-support.mts";
+import { loadTs, normalModePrivatePreviewMock } from "./a02-test-support.mts";
 import { createRequire } from "node:module";
 
 const policy = loadTs<typeof import("../src/lib/sentry-server-events.ts")>("src/lib/sentry-server-events.ts", {});
@@ -30,11 +30,13 @@ test("installed server SDK filters source data and acknowledges explicit request
   let options: Parameters<typeof Sentry.init>[0] | undefined;
   const envelopes: unknown[] = []; const updates: string[] = [];
   try {
-    loadTs('sentry.server.config.ts', {
+    const serverConfig = loadTs<typeof import('../sentry.server.config.js')>('sentry.server.config.ts', {
       '@sentry/nextjs': { init: (value: Parameters<typeof Sentry.init>[0]) => { options = value; } },
+      './src/lib/private-preview': normalModePrivatePreviewMock,
       './src/lib/sentry-options': { SENTRY_OPTIONS: { sendDefaultPii: false } },
       './src/lib/sentry-server-events': policy,
     });
+    await serverConfig.registerSentry();
     assert.ok(options);
     Sentry.init({ ...options, sendClientReports: false,
       transport: () => ({ send: async (envelope:unknown) => { envelopes.push(envelope); return { statusCode: 200 }; }, flush: async () => true }),
@@ -45,10 +47,16 @@ test("installed server SDK filters source data and acknowledges explicit request
     Sentry.captureException(new Error('private automatic exception'));
     await Sentry.flush(2_000);
     assert.equal(envelopes.length, 0);
-    const hook = loadTs<typeof import('../src/instrumentation.ts')>('src/instrumentation.ts', { '@sentry/nextjs': Sentry });
+    const hook = loadTs<typeof import('../src/instrumentation.ts')>('src/instrumentation.ts', {
+      '@/lib/private-preview': normalModePrivatePreviewMock,
+      '../sentry.server.config': { registerSentry: async () => undefined },
+      '../sentry.edge.config': { registerSentry: async () => undefined },
+      '@sentry/nextjs': Sentry,
+    });
     await hook.onRequestError(Object.assign(new Error('private request exception'), { digest:'67890' }));
     const alerts = loadTs<typeof import('../src/lib/cron-alerts.ts')>('src/lib/cron-alerts.ts', {
       '@/lib/openai-feature': { isOpenAIEnabled: () => false },
+      '@/lib/private-preview': normalModePrivatePreviewMock,
       '@sentry/nextjs': Sentry, '@/lib/safe-logger': { safeLogger: { error: () => undefined } },
       '@/lib/db/neon': { sql: async (parts:TemplateStringsArray) => {
         const query=parts.join('?');
@@ -77,8 +85,9 @@ test("Next server registration initializes the appropriate runtime and request h
   let nodeLoads = 0; let edgeLoads = 0;
   const captures: unknown[] = []; const tags: Record<string,string> = {}; let cleared = false;
   const hook = loadTs<typeof import("../src/instrumentation.ts")>("src/instrumentation.ts", {
-    get ['../sentry.server.config']() { nodeLoads += 1; return {}; },
-    get ['../sentry.edge.config']() { edgeLoads += 1; return {}; },
+    '@/lib/private-preview': normalModePrivatePreviewMock,
+    get ['../sentry.server.config']() { nodeLoads += 1; return { registerSentry: async () => undefined }; },
+    get ['../sentry.edge.config']() { edgeLoads += 1; return { registerSentry: async () => undefined }; },
     '@sentry/nextjs': {
       withScope: (cb: (scope: unknown) => void) => cb({ clear: () => { cleared = true; },
         setTag: (key:string,value:string) => { tags[key] = value; } }),

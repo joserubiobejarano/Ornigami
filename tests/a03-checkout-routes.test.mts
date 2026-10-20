@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { fakeSql, loadTs } from "./a02-test-support.mts";
+import { fakeSql, loadTs, normalModePrivatePreviewMock, normalModePrivatePreviewOperationMock } from "./a02-test-support.mts";
 
 const ownerId = "11111111-1111-4111-8111-111111111111";
 const businessId = "22222222-2222-4222-8222-222222222222";
@@ -95,6 +95,8 @@ function routeHarness(options: {
   }
   const context = { actorUserId: ownerId, ownerUserId: ownerId, billingOwnerUserId: ownerId, businessId, business: { id: businessId, owner_user_id: ownerId }, role: options.role ?? "owner" };
   const mocks = {
+    "@/lib/private-preview": normalModePrivatePreviewMock,
+    "@/lib/private-preview-operation": normalModePrivatePreviewOperationMock,
     "@/auth": { auth: async () => ({ user: { id: ownerId, email: "session@example.test" } }) },
     "@/lib/business-context": {
       BusinessAccessError,

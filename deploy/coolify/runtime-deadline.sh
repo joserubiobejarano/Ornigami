@@ -168,7 +168,8 @@ on_term() {
   if [[ -n $child_pid ]]; then kill -TERM "$child_pid" 2>/dev/null || true; fi
 }
 trap on_term TERM
-"$@" &
+# Background commands otherwise receive /dev/null on stdin; preserve caller input for bounded transports.
+"$@" <&0 &
 child_pid=$!
 while :; do
   wait "$child_pid"; status=$?

@@ -263,6 +263,30 @@ test("runtime deadline helper accepts normal work and rejects missing, invalid, 
   assert.match(expiredCheck.stdout, /check_exit=124 deadline=true command=true/);
 });
 
+test("runtime deadline command wrapper forwards stdin for Docker exec payloads", (t) => {
+  if (!existsSync(bash)) return t.skip("Bash is unavailable for runtime stdin transport checks");
+  const root = mkdtempSync(join(tmpdir(), "ornigami-runtime-stdin-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const script = [
+    `source ${quote(deadlinePath)}`,
+    "ornigami_deadline_init",
+    `ORNIGAMI_DEADLINE_STATE_FILE=${quote(join(root, "deadline.state"))}`,
+    ": >\"$ORNIGAMI_DEADLINE_STATE_FILE\"",
+    `if ORNIGAMI_DEADLINE_OPERATION=docker ornigami_deadline_run bash -c 'IFS= read -r line || exit 9; printf "payload=%s\\n" "$line"' <<'PAYLOAD'`,
+    "ORNIGAMI_SYNTHETIC_STDIN",
+    "PAYLOAD",
+    "then rc=0; else rc=$?; fi",
+    "printf 'transport_rc=%s\\n' \"$rc\"",
+  ].join("\n");
+  const env = { ...process.env, ORNIGAMI_WORK_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 300) };
+  const result = spawnSync(bash, ["-c", script], { encoding: "utf8", env, timeout: 5_000 });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /payload=ORNIGAMI_SYNTHETIC_STDIN/);
+  assert.match(result.stdout, /transport_rc=0/);
+  assert.equal(result.stderr, "");
+});
+
 test("runtime supervisor bounds stuck acceptance and cleanup children", (t) => {
   if (!existsSync(bash)) return t.skip("Bash is unavailable for runtime supervisor checks");
   const capabilities = spawnSync(bash, ["-c", "command -v timeout >/dev/null"], { encoding: "utf8" });

@@ -272,6 +272,7 @@ test("the optional booking CTA is localized, escaped, and omitted for an invalid
     "src/modules/review-booster/services/resend.provider.ts",
     {
       "@/lib/env": { getRequiredEnv: () => "mail@example.com", getOptionalEnv: () => null },
+      "@/lib/qr-mail": { sendAuthorizedResend: async () => assert.fail("payload preparation must not send mail") },
       "@/modules/review-booster/services/unsubscribe-token.service": { buildUnsubscribeUrl: async () => "https://app.example/unsubscribe" },
       "@/modules/review-booster/services/settings-link-validation": validation,
     },

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadTs } from "./a02-test-support.mts";
+import { loadTs, normalModePrivatePreviewMock, normalModePrivatePreviewOperationMock } from "./a02-test-support.mts";
+import { createClockStore as createClockStoreImpl } from "../src/lib/clock-store.ts";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
@@ -13,6 +14,15 @@ function textContent(value: unknown): string {
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (value && typeof value === "object" && "props" in value) return textContent((value as { props: { children?: unknown } }).props.children);
   return "";
+}
+
+function createFixtureClockStore(options: { serverSnapshot: number | null; refreshMs: number | null }) {
+  return createClockStoreImpl({
+    ...options,
+    now: () => Date.parse("2026-10-02T12:00:00.000Z"),
+    setTimer: () => { throw new Error("the non-refreshing fixture clock must not start a timer"); },
+    clearTimer: () => undefined,
+  });
 }
 
 function renderClientWithHooks<TProps extends object>(component: (props: TProps) => unknown, props: TProps, react: Record<string, unknown>): unknown {
@@ -42,6 +52,12 @@ function renderClientWithHooks<TProps extends object>(component: (props: TProps)
       effectDeps[index] = deps;
       pendingEffects.push(effect);
     }
+  };
+  react.useSyncExternalStore = (subscribe: (listener: () => void) => () => void, getSnapshot: () => unknown) => {
+    const unsubscribe = subscribe(() => undefined);
+    const snapshot = getSnapshot();
+    unsubscribe();
+    return snapshot;
   };
 
   let tree: unknown;
@@ -80,6 +96,8 @@ test("Review Booster cron reports unknown/deferred and accounts for reserved quo
   const businessId = "11111111-1111-4111-8111-111111111111";
   const cron = loadTs<{ GET(request: unknown): Promise<Response> }>("src/app/api/cron/review-booster/route.ts", {
     "next/server": { NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) } },
+    "@/lib/private-preview": normalModePrivatePreviewMock,
+    "@/lib/private-preview-operation": normalModePrivatePreviewOperationMock,
     "@/lib/db/neon": { sql: async () => [{ business_id: businessId }] },
     "@/lib/safe-logger": { safeLogger: { warn: (event: string, values: Record<string, unknown>) => logs.push({ event, values }), error() {} } },
     "@/lib/cron-auth": { isAuthorizedCronRequest: () => true },
@@ -124,6 +142,7 @@ test("Review Booster quota UI uses reserved usage, explains UTC reset and per-vi
       context: { business: { id: "business-1", name: "Shop" }, role: actorRole }, entitlement: { hasAccess: true },
     }) },
     "@/lib/env": { getOptionalEnv: () => reconciliationFlag },
+    "@/lib/private-preview": normalModePrivatePreviewMock,
     "@/lib/format-date": { formatProductDate: (value: string | Date) => String(value) },
     "@/modules/review-booster/components/followups-nav": { FollowupsNav: "nav" },
     "@/modules/review-booster/components/run-followups-button": { RunFollowupsButton: "run-followups" },
@@ -179,6 +198,7 @@ test("Review Booster quota UI uses reserved usage, explains UTC reset and per-vi
     "@/components/ui/button": { Button: "button" },
     "@/lib/format-date": { formatProductDate: (value: string | Date) => String(value) },
     "@/lib/followup-retry-policy": { MAX_FOLLOWUP_ATTEMPTS: 3 },
+    "@/lib/clock-store": { createClockStore: createFixtureClockStore },
     "@/modules/review-booster/components/status-badge": { StatusBadge: ({ status }: { status: string }) => renderNode("badge", { children: status }) },
     "react/jsx-runtime": {
       jsx: (type: unknown, props: Record<string, unknown>) => typeof type === "function" ? (type as (value: Record<string, unknown>) => unknown)(props) : renderNode(type, props),
@@ -236,6 +256,7 @@ test("delivery recovery checks only the existing provider email and refreshes me
     "next/link": { default: "a" },
     "@/components/ui/button": { Button: "button" },
     "@/lib/format-date": { formatProductDate: String },
+    "@/lib/clock-store": { createClockStore: createFixtureClockStore },
     "@/lib/followup-retry-policy": { MAX_FOLLOWUP_ATTEMPTS: 3 },
     "@/modules/review-booster/components/status-badge": { StatusBadge: "badge" },
     "react/jsx-runtime": { jsx: renderNode, jsxs: renderNode, Fragment: "fragment" },

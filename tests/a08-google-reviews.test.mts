@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createRequire } from "node:module";
-import { fakeSql, loadTs } from "./a02-test-support.mts";
+import { fakeSql, loadTs, normalModePrivatePreviewMock } from "./a02-test-support.mts";
 
 const { NextRequest } = createRequire(import.meta.url)("next/server") as typeof import("next/server");
 type TestNextRequest = import("next/server").NextRequest;
@@ -157,7 +157,7 @@ test("review persistence batches recordsets and retains local replied status whe
   const result = await mod.persistGoogleReviews("owner-id", "business-id", locationName, reviews);
   assert.deepEqual(result, {
     synced: 251,
-    newReviews: [{ reviewerName: null, starRating: 5, comment: null }],
+    newReviews: [{ eventId: "review_0", reviewerName: null, starRating: 5, comment: null }],
   });
   assert.equal(statements.length, 2);
   assert.match(statements[0]!.query, /jsonb_to_recordset/);
@@ -346,6 +346,7 @@ test("review reply cron reads selected connected locations only", async () => {
   const statements: string[] = [];
   const cron = loadTs<{ GET(request: TestNextRequest): Promise<Response> }>("src/app/api/cron/review-replies/route.ts", {
     "next/server": { NextResponse: { json: (value: unknown, init?: ResponseInit) => Response.json(value, init) } },
+    "@/lib/private-preview": normalModePrivatePreviewMock,
     "@/lib/openai-feature": { isOpenAIEnabled: () => true, OPENAI_UNAVAILABLE_CODE: "AI_UNAVAILABLE", OPENAI_UNAVAILABLE_MESSAGE: "AI features are currently unavailable." },
     "@/lib/google-review-sync": { fetchAllGoogleReviews: async () => [] },
     "@/lib/google-review-persistence": { persistGoogleReviews: async () => ({ synced: 0, newReviews: [] }) },

@@ -3,7 +3,7 @@ import { createHash as createHashImpl } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join, resolve } from "node:path";
+import { delimiter, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {cleanupOwnedImages,workflowCleanupDocker} from '../scripts/framework-prototype/cleanup-owned-images.mjs';
@@ -123,13 +123,49 @@ function writeExecutable(path, source) {
 function runShell(root, script, env) {
   const scriptPath = join(root, "step.sh");
   writeFileSync(scriptPath, script, "utf8");
-  const syntax = spawnSync(bash, ["-n", scriptPath], { encoding: "utf8", windowsHide: true, env });
+  const shellEnv = Object.fromEntries(Object.entries(env).map(([name, value]) => {
+    if (process.platform !== "win32" || typeof value !== "string") return [name, value];
+    const match = /^([A-Za-z]):[\\/](.*)$/.exec(value);
+    if (!match) return [name, value];
+    return [name, `/${match[1].toLowerCase()}/${match[2].replaceAll("\\", "/")}`];
+  }));
+  const syntax = spawnSync(bash, ["-n", scriptPath], { encoding: "utf8", windowsHide: true, env: shellEnv });
   assert.equal(syntax.status, 0, syntax.stderr || "workflow shell syntax failed");
-  return spawnSync(bash, [scriptPath], { encoding: "utf8", windowsHide: true, env, timeout: 20_000 });
+  return spawnSync(bash, [scriptPath], { encoding: "utf8", windowsHide: true, env: shellEnv, timeout: 20_000 });
+}
+
+function copyLocalModuleClosure(sourceRoot, destinationRoot, entrypoints) {
+  const pending = [...entrypoints];
+  const copied = new Set();
+  const imports = /(?:\bfrom\s*|\bimport\s*)["'](\.{1,2}\/[^"']+)["']|\bimport\s*\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g;
+  while (pending.length) {
+    const relativePath = pending.pop();
+    const source = resolve(sourceRoot, relativePath);
+    const location = relative(sourceRoot, source);
+    assert.ok(location && location !== ".." && !location.startsWith(`..${sep}`), `workflow module must stay under source root: ${relativePath}`);
+    if (copied.has(location)) continue;
+    assert.ok(existsSync(source), `workflow module exists: ${relativePath}`);
+    const sourceText = readFileSync(source, "utf8");
+    copied.add(location);
+    for (const match of sourceText.matchAll(imports)) {
+      const specifier = match[1] ?? match[2];
+      const unresolved = resolve(dirname(source), specifier);
+      const candidates = extname(unresolved)
+        ? [unresolved]
+        : [unresolved, `${unresolved}.mjs`, `${unresolved}.js`, `${unresolved}.cjs`, `${unresolved}.json`, `${unresolved}.ts`, join(unresolved, "index.mjs"), join(unresolved, "index.js")];
+      const dependency = candidates.find((candidate) => existsSync(candidate));
+      assert.ok(dependency, `relative workflow import resolves: ${location} -> ${specifier}`);
+      pending.push(relative(sourceRoot, dependency));
+    }
+    const destination = resolve(destinationRoot, location);
+    mkdirSync(dirname(destination), { recursive: true });
+    copyFileSync(source, destination);
+  }
+  return [...copied].sort();
 }
 
 function initializeTailEnvironment(root, env) {
-  env.GITHUB_ENV ??= join(root, "github-env.txt");
+  env.GITHUB_ENV = join(root, "github-env.txt");
   const windowsInstall = process.platform === "win32"
     ? `install() { [[ "$1" == -d && "$2" == -m && "$3" == 700 ]] || return 97; shift 3; mkdir -p -- "$@"; }\n`
     : "";
@@ -137,15 +173,20 @@ function initializeTailEnvironment(root, env) {
   assert.equal(initialized.status, 0, initialized.stderr || "tail deadline helper initialization failed");
   for (const line of readFileSync(env.GITHUB_ENV, "utf8").split(/\r?\n/)) {
     const separator = line.indexOf("=");
-    if (separator > 0) env[line.slice(0, separator)] = line.slice(separator + 1);
+    if (separator > 0) env[line.slice(0, separator)] = normalizeWorkflowPath(line.slice(separator + 1));
   }
   return initialized;
+}
+
+function normalizeWorkflowPath(value) {
+  const match = process.platform === "win32" ? /^\/([a-z])\/(.*)$/i.exec(value) : null;
+  return match ? `${match[1].toUpperCase()}:\\${match[2].replaceAll("/", "\\")}` : value;
 }
 
 function applyGithubEnv(env) {
   for (const line of readFileSync(env.GITHUB_ENV, "utf8").split(/\r?\n/)) {
     const separator = line.indexOf("=");
-    if (separator > 0) env[line.slice(0, separator)] = line.slice(separator + 1);
+    if (separator > 0) env[line.slice(0, separator)] = normalizeWorkflowPath(line.slice(separator + 1));
   }
 }
 
@@ -364,10 +405,9 @@ function fakeEnvironment(root, overrides = {}) {
   writeFileSync(summary, "fake workflow summary\n");
   const stepSummary = join(root, "step-local-summary.md");
   writeFileSync(stepSummary, "");
-  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});for(const name of ["serial-scan-driver.mjs","cleanup-owned-images.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs","toolchain-runtime.mjs","toolchain-contract.mjs","tool-image.mjs","toolchain-build.mjs","build-profile.mjs"])copyFileSync(join(repositoryRoot,"scripts/framework-prototype",name),join(sourceDir,name));
+  const sourceDir=join(runnerTemp,"source/scripts/framework-prototype");mkdirSync(sourceDir,{recursive:true});const workflowModuleFiles=copyLocalModuleClosure(join(repositoryRoot,"scripts/framework-prototype"),sourceDir,["serial-scan-driver.mjs","cleanup-owned-images.mjs","scan-image-stages.mjs","validate-build-observation.mjs","frozen-db-admission.mjs","toolchain-runtime.mjs","toolchain-contract.mjs","tool-image.mjs","toolchain-build.mjs","build-profile.mjs","stage-index.mjs"]);
   const profileDir=join(runnerTemp,'source/deploy/coolify');mkdirSync(profileDir,{recursive:true});
   copyFileSync(join(repositoryRoot,'deploy/coolify/build-profile.json'),join(profileDir,'build-profile.json'));
-  copyFileSync(join(repositoryRoot,'scripts/framework-prototype/stage-index.mjs'),join(sourceDir,'stage-index.mjs'));
   const cleanupNode=join(runnerTemp,'node-v22.23.3-linux-x64/bin');mkdirSync(cleanupNode,{recursive:true});
   writeExecutable(join(cleanupNode,'node'),'#!/usr/bin/env bash\nexec "$TEST_REAL_NODE" "$@"\n');
   writeFileSync(join(runnerTemp,'ornigami-daemon-before.txt'),'fixture-daemon\n');
@@ -383,7 +423,9 @@ function fakeEnvironment(root, overrides = {}) {
     FAKE_STATE_VOLUME: "buildx_buildkit_ornigami-external-rehearsal0_state",
     FAKE_INSPECTED_IMAGE_ID: "foreign-image-id",
     RUNNER_TEMP: runnerTemp,
+    GITHUB_OUTPUT: join(root, "github-output.txt"),
     GITHUB_STEP_SUMMARY: stepSummary,
+    GITHUB_ENV: join(root, "github-env.txt"),
     ORNIGAMI_JOB_SUMMARY: summary,
     ORNIGAMI_EVIDENCE_DIR: join(runnerTemp, "ornigami-evidence"),
     GITHUB_RUN_ID: "local-test-run",
@@ -415,8 +457,16 @@ function fakeEnvironment(root, overrides = {}) {
     OWNED_IMAGE_ID: "owned-image-id",
     ...overrides,
   };
-  return { env, runnerTemp, summary, dockerLog: env.FAKE_DOCKER_LOG };
+  return { env, runnerTemp, summary, dockerLog: env.FAKE_DOCKER_LOG, workflowModuleFiles };
 }
+
+test("workflow sandbox copies the complete relative import closure", () => withSandbox((root) => {
+  const { runnerTemp, workflowModuleFiles } = fakeEnvironment(root);
+  assert.ok(workflowModuleFiles.includes("serial-scan-progress.mjs"));
+  assert.ok(workflowModuleFiles.includes("intermediate-build-args.mjs"));
+  assert.ok(workflowModuleFiles.every((name) => existsSync(join(runnerTemp, "source/scripts/framework-prototype", name))));
+  assert.equal(workflowModuleFiles.includes("admission-only.mjs"), false, "unrelated framework modules are not copied into the fixture");
+}));
 
 for(const mode of ['success','download-failure','manifest-drift'])test(`full DB download block ${mode}: real publication CLI, recorded scope arguments, no scanner/network`,()=>withSandbox(root=>{
  const {env}=fakeEnvironment(root,{FAKE_DB_EXIT:mode==='download-failure'?'37':'0',REAL_TEST_NODE:process.execPath.replaceAll('\\','/'),FAKE_DB_SCOPE_ARGUMENTS:join(root,'db-scope-args.txt')});
@@ -487,7 +537,7 @@ test('initialization exports a persistent summary path rather than a step-local 
   if (process.platform === 'win32') assert.match(readFileSync(join(env.RUNNER_TEMP, 'install-arguments.txt'), 'utf8'), /^-d -m 700 /);
   assert.match(readFileSync(env.GITHUB_ENV, 'utf8'), /ORNIGAMI_JOB_SUMMARY=.*ornigami-job-summary.md/);
   assert.match(readFileSync(join(env.RUNNER_TEMP, 'ornigami-job-summary.md'), 'utf8'), /Ornigami diagnostic evidence/);
-  const initialized = Object.fromEntries(readFileSync(env.GITHUB_ENV, 'utf8').trim().split(/\r?\n/).map(line => { const i=line.indexOf('='); return [line.slice(0,i),line.slice(i+1)]; }));
+  const initialized = Object.fromEntries(readFileSync(env.GITHUB_ENV, 'utf8').trim().split(/\r?\n/).map(line => { const i=line.indexOf('='); return [line.slice(0,i),normalizeWorkflowPath(line.slice(i+1))]; }));
   assert.ok(existsSync(initialized.ORNIGAMI_TAIL_HELPER));
   const workDeadline = Number(initialized.ORNIGAMI_WORK_DEADLINE_EPOCH);
   assert.equal(Number(initialized.ORNIGAMI_TAIL_CAPTURE_DEADLINE_EPOCH), workDeadline + 180);

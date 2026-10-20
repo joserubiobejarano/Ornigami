@@ -167,7 +167,7 @@ test("production Google review upsert SQL runs against disposable PostgreSQL", a
       { reviewId: "new_review", reviewer: { displayName: "New" }, starRating: "FIVE", comment: "fresh" },
       { reviewId: "local_replied", reviewer: { displayName: "Reviewer updated" }, starRating: "FIVE", comment: "updated from provider" },
     ]);
-    assert.deepEqual(imported, { synced: 2, newReviews: [{ reviewerName: "New", starRating: 5, comment: "fresh" }] });
+    assert.deepEqual(imported, { synced: 2, newReviews: [{ eventId: "new_review", reviewerName: "New", starRating: 5, comment: "fresh" }] });
     assert.match(lastReturned.map((row) => `${row.google_review_id}|${row.was_inserted}`).join("\n"), /new_review\|true/);
     assert.match(lastReturned.map((row) => `${row.google_review_id}|${row.was_inserted}`).join("\n"), /local_replied\|false/);
     assert.equal(psql("SELECT count(*) FROM public.reviews WHERE business_id='00000000-0000-4000-8000-000000000002' AND location_name='accounts/100/locations/200'"), "2");

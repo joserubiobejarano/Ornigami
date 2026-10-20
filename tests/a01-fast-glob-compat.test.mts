@@ -8,7 +8,8 @@ const projectRoot = process.cwd();
 const nextRequire = createRequire(path.join(projectRoot, "node_modules/@next/eslint-plugin-next/dist/utils/get-root-dirs.js"));
 const estreeRequire = createRequire(path.join(projectRoot, "node_modules/@typescript-eslint/typescript-estree/dist/parseSettings/resolveProjectList.js"));
 const nextGlob = nextRequire("fast-glob");
-const estreeGlob = estreeRequire("fast-glob");
+const estreeGlob = estreeRequire("tinyglobby");
+const packageLock = JSON.parse(readFileSync(path.join(projectRoot, "package-lock.json"), "utf8"));
 
 function createFixture() {
   const fixtureParent = path.join(projectRoot, "build/a01-advisory-validation");
@@ -36,18 +37,25 @@ function createFixture() {
   return { root, dispose: () => rmSync(root, { recursive: true, force: true }) };
 }
 
-test("both locked consumers resolve the explicit local adapter API", () => {
-  assert.equal(nextGlob, estreeGlob);
+test("locked glob consumers resolve the APIs used by their installed source", () => {
+  assert.equal(packageLock.packages["node_modules/fast-glob"].resolved, "scripts/vendor/fast-glob-compat");
   assert.deepEqual(Object.keys(nextGlob).sort(), ["globSync", "sync"]);
+  assert.equal(typeof estreeGlob.globSync, "function");
 });
 
 test("locked consumers use only the adapter methods and options covered here", () => {
   const nextSource = readFileSync(nextRequire.resolve("./get-root-dirs.js"), "utf8");
   const estreeSource = readFileSync(estreeRequire.resolve("./resolveProjectList.js"), "utf8");
+  const fastGlobLink = packageLock.packages["node_modules/fast-glob"];
+  assert.equal(nextRequire("fast-glob/package.json").version, packageLock.packages[fastGlobLink.resolved].version);
+  assert.equal(estreeRequire("tinyglobby/package.json").version, packageLock.packages["node_modules/tinyglobby"].version);
+  assert.equal(typeof estreeGlob.isDynamicPattern, "function");
   assert.deepEqual([...nextSource.matchAll(/\b_fastglob\.(\w+)/g)].map((match) => match[1]), ["globSync"]);
   assert.match(nextSource, /globSync\)\(rootDir\.replace\([\s\S]*?onlyDirectories:\s*true/);
-  assert.deepEqual([...estreeSource.matchAll(/\bfast_glob_1\.(\w+)/g)].map((match) => match[1]), ["sync"]);
-  assert.match(estreeSource, /sync\)\(pattern,\s*\{\s*cwd:\s*options\.tsconfigRootDir,\s*ignore:\s*projectFolderIgnoreList/);
+  const estreeCalls = [...estreeSource.matchAll(/\btinyglobby_1\.(\w+)/g)].map((match) => match[1]);
+  assert.equal(estreeCalls.filter((method) => method === "isDynamicPattern").length, 2);
+  assert.ok(estreeCalls.includes("globSync"));
+  assert.match(estreeSource, /globSync\)\(pattern,\s*\{\s*cwd:\s*options\.tsconfigRootDir,\s*expandDirectories:\s*false,\s*ignore:\s*projectFolderIgnoreList/);
 });
 
 test("Next root directory glob preserves absolute paths and directory formatting", (t) => {
@@ -122,10 +130,10 @@ test("TypeScript project discovery excludes nested node_modules", (t) => {
   clearGlobResolutionCache();
 });
 
-test("positive fast-glob ignore patterns exclude matching project files", (t) => {
+test("compatibility adapter positive ignore patterns exclude matching project files", (t) => {
   const fixture = createFixture();
   t.after(fixture.dispose);
-  const found = estreeGlob.sync("packages/*/tsconfig.json", {
+  const found = nextGlob.sync("packages/*/tsconfig.json", {
     cwd: fixture.root,
     ignore: ["packages/second/**"],
   });
@@ -149,11 +157,11 @@ test("TypeScript project discovery keeps configured pattern order and canonical 
   clearGlobResolutionCache();
 });
 
-test("TypeScript-ESTree's negated exclusion syntax remains an exclusion", (t) => {
+test("compatibility adapter preserves TypeScript-ESTree's negated exclusion convention", (t) => {
   const fixture = createFixture();
   t.after(fixture.dispose);
   const nestedPattern = "**/tsconfig.json";
-  const found = estreeGlob.sync(nestedPattern, {
+  const found = nextGlob.sync(nestedPattern, {
     cwd: fixture.root,
     ignore: ["!**/node_modules/**"],
   });
@@ -162,5 +170,5 @@ test("TypeScript-ESTree's negated exclusion syntax remains an exclusion", (t) =>
 
 test("unknown fast-glob options and malformed ignore lists fail instead of being dropped", () => {
   assert.throws(() => nextGlob.sync("src/*", { followSymbolicLinks: false }), /Unsupported fast-glob option/);
-  assert.throws(() => estreeGlob.sync("**/*.json", { ignore: "**/node_modules/**" }), /ignore to be a string array/);
+  assert.throws(() => nextGlob.sync("**/*.json", { ignore: "**/node_modules/**" }), /ignore to be a string array/);
 });

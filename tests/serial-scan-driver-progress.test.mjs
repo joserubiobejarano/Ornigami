@@ -14,6 +14,12 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 
 function event(vertex) { return JSON.stringify({ vertexes: [vertex] }) + '\n'; }
 
+function rawNumericStatusEvent(field, token) {
+  const current = field === 'current' ? token : '0';
+  const total = field === 'total' ? `,"total":${token}` : '';
+  return `{"statuses":[{"id":"raw numeric fixture","current":${current}${total},"timestamp":"2026-10-20T10:00:00Z"}]}\n`;
+}
+
 test('intermediate exports exactly match initial build args, origin, source and frontend identity', () => {
   const origin = loadBuildProfile().origin;
   assert.equal(origin, 'https://staging.ornigami.com');
@@ -108,6 +114,168 @@ test('proof-relevant BuildKit fields follow the pinned schema and completion req
   })));
   assert.equal(completed.malformed, false);
   assert.equal(completed.targetCacheProof, true, 'a completed cached RUN with a valid timestamp proves the target');
+});
+
+test('BuildKit transfer statuses use their own schema and cannot prove cached RUNs', () => {
+  const capturedNamelessStatus = {
+    id: 'resolve docker.io/library/ornigami-frontend',
+    vertex: 'sha256:' + 'c'.repeat(64),
+    current: 1,
+    timestamp: '2026-10-20T10:00:00.000000001Z',
+    started: '2026-10-20T10:00:00Z',
+  };
+  assert.equal(Object.hasOwn(capturedNamelessStatus, 'name'), false);
+  const sequence = new RawJsonProgressTracker('builder');
+  const statusLine = JSON.stringify({ statuses: [capturedNamelessStatus] }) + '\n';
+  sequence.push('stderr', Buffer.from(statusLine.slice(0, 32)));
+  sequence.push('stdout', Buffer.from(event({
+    name: '[builder 8/8] RUN npm run build',
+    completed: '2026-10-20T10:00:01Z',
+    cached: true,
+  })));
+  sequence.push('stderr', Buffer.from(statusLine.slice(32)));
+  sequence.finish('stdout');
+  sequence.finish('stderr');
+  assert.equal(sequence.malformed, false, 'the captured nameless transfer status is valid');
+  assert.equal(sequence.cacheMiss, false, 'status records do not trigger vertex reexecution rules');
+  assert.equal(sequence.targetCacheProof, true, 'only the completed cached target vertex proves the target');
+  assert.deepEqual(sequence.lines, { stdout: 1, stderr: 1 }, 'interleaved streams retain independent line buffers');
+
+  const statusOnly = new RawJsonProgressTracker('builder');
+  statusOnly.push('stderr', Buffer.from(JSON.stringify({ statuses: [{
+    ...capturedNamelessStatus,
+    name: '[builder 8/8] RUN npm run build',
+  }] }) + '\n'));
+  assert.equal(statusOnly.malformed, false);
+  assert.equal(statusOnly.cacheMiss, false, 'a RUN-like status never means the vertex reexecuted');
+  assert.equal(statusOnly.targetCacheProof, false, 'a status never establishes cached target proof');
+
+  const minimalStatus = new RawJsonProgressTracker('builder');
+  minimalStatus.push('stderr', Buffer.from(JSON.stringify({ statuses: [{
+    id: 'exporting frontend',
+    current: 0,
+    timestamp: '2026-10-20T10:00:00Z',
+  }] }) + '\n'));
+  assert.equal(minimalStatus.malformed, false, 'omitempty status fields may be absent');
+  assert.equal(minimalStatus.cacheMiss, false);
+  assert.equal(minimalStatus.targetCacheProof, false);
+
+  const requiredStatus = {
+    id: 'exporting frontend',
+    current: 0,
+    timestamp: '2026-10-20T10:00:00Z',
+  };
+  const invalidStatuses = [
+    ...['id', 'current', 'timestamp'].map((field) => {
+      const missing = { ...requiredStatus };
+      delete missing[field];
+      return missing;
+    }),
+    { ...requiredStatus, timestamp: null },
+    { ...requiredStatus, id: null },
+    { ...requiredStatus, id: 7 },
+    { ...requiredStatus, current: null },
+    { ...requiredStatus, current: '1' },
+    { ...requiredStatus, current: 1.5 },
+    { ...requiredStatus, timestamp: 1760954400 },
+    { ...requiredStatus, timestamp: 'not-a-timestamp' },
+    { ...requiredStatus, timestamp: '2026-02-30T10:00:00Z' },
+    { ...requiredStatus, vertex: null },
+    { ...requiredStatus, name: null },
+    { ...requiredStatus, total: null },
+    { ...requiredStatus, started: null },
+    { ...requiredStatus, completed: null },
+    { ...requiredStatus, started: 'not-a-timestamp' },
+    { ...requiredStatus, completed: '2026-02-30T10:00:01Z' },
+    { ...requiredStatus, cached: true },
+    { ...capturedNamelessStatus, id: 7 },
+    { ...capturedNamelessStatus, vertex: null },
+    { ...capturedNamelessStatus, name: 7 },
+    { ...capturedNamelessStatus, total: '100' },
+    { ...capturedNamelessStatus, current: 1.5 },
+    { ...capturedNamelessStatus, timestamp: 1760954400 },
+    { ...capturedNamelessStatus, started: 'not-a-timestamp' },
+    { ...capturedNamelessStatus, completed: '2026-02-30T10:00:01Z' },
+    { ...capturedNamelessStatus, cached: true },
+  ];
+  for (const status of invalidStatuses) {
+    const tracker = new RawJsonProgressTracker('builder');
+    tracker.push('stdout', Buffer.from(JSON.stringify({ statuses: [status] }) + '\n'));
+    assert.equal(tracker.malformed, true, JSON.stringify(status));
+    assert.equal(tracker.cacheMiss, false, 'invalid statuses still cannot trigger vertex cache policy');
+    assert.equal(tracker.targetCacheProof, false, 'invalid statuses cannot establish target cache proof');
+  }
+});
+
+test('raw status current and total preserve signed int64 values and reject non-serialized forms', () => {
+  // Keep these as JSON token strings: JS numeric literals round the int64 boundaries.
+  const validInt64Tokens = [
+    '-9223372036854775808',
+    '-9007199254740993',
+    '-1',
+    '0',
+    '42',
+    '9007199254740993',
+    '9223372036854775807',
+  ];
+  const invalidInt64Tokens = [
+    '-9223372036854775809',
+    '9223372036854775808',
+    '1.0',
+    '1.25',
+    '1e3',
+    '-1E+3',
+    '-0',
+    'null',
+    'true',
+    'false',
+    '"42"',
+    '{}',
+    '[]',
+  ];
+
+  for (const field of ['current', 'total']) {
+    for (const token of validInt64Tokens) {
+      const tracker = new RawJsonProgressTracker('builder');
+      tracker.push('stdout', Buffer.from(rawNumericStatusEvent(field, token)));
+      assert.equal(tracker.malformed, false, `${field}=${token} is within signed int64`);
+    }
+    for (const token of invalidInt64Tokens) {
+      const tracker = new RawJsonProgressTracker('builder');
+      tracker.push('stdout', Buffer.from(rawNumericStatusEvent(field, token)));
+      assert.equal(tracker.malformed, true, `${field}=${token} must fail the producer int64 contract`);
+      assert.equal(tracker.cacheMiss, false);
+      assert.equal(tracker.targetCacheProof, false);
+    }
+  }
+});
+
+test('invalid numeric statuses block acceptance before and after cached target proof on both streams', () => {
+  const driver = readFileSync(path.join(repositoryRoot, 'scripts/framework-prototype/serial-scan-driver.mjs'), 'utf8');
+  assert.match(driver, /code!==0\|\|tracker\.cacheMiss\|\|tracker\.malformed\|\|!tracker\.targetCacheProof/,
+    'the stage acceptance gate must retain malformed-progress rejection');
+
+  const cachedTarget = event({
+    name: '[builder 8/8] RUN npm run build',
+    completed: '2026-10-20T10:00:01Z',
+    cached: true,
+  });
+  for (const field of ['current', 'total']) {
+    const malformedStatus = rawNumericStatusEvent(field, '9223372036854775808');
+    for (const stream of ['stdout', 'stderr']) {
+      for (const malformedFirst of [true, false]) {
+        const tracker = new RawJsonProgressTracker('builder');
+        const lines = malformedFirst ? [malformedStatus, cachedTarget] : [cachedTarget, malformedStatus];
+        for (const line of lines) tracker.push(stream, Buffer.from(line));
+        tracker.finish(stream);
+        assert.equal(tracker.targetCacheProof, true, `${field}/${stream}, malformedFirst=${malformedFirst}: valid vertex proof is retained`);
+        assert.equal(tracker.malformed, true, `${field}/${stream}, malformedFirst=${malformedFirst}: out-of-range numeric status remains fatal`);
+        assert.equal(tracker.cacheMiss, false);
+        assert.equal(tracker.malformed || tracker.cacheMiss || !tracker.targetCacheProof, true,
+          'malformed progress blocks final acceptance despite valid cached-target proof');
+      }
+    }
+  }
 });
 
 test('opaque output after valid target proof fails closed', () => {

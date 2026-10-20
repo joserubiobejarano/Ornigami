@@ -1,5 +1,8 @@
 const runInstruction = /\bRUN\b/;
 const timestampPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$/;
+const int64Minimum = -9223372036854775808n;
+const int64Maximum = 9223372036854775807n;
+const int64TokenPattern = /^(?:0|-?[1-9]\d*)$/;
 
 function vertices(event) {
   return Array.isArray(event?.vertexes) ? event.vertexes : [];
@@ -39,6 +42,31 @@ function validVertex(vertex) {
   return true;
 }
 
+function validInt64StatusField(status, field, numericSources) {
+  if (typeof status[field] !== 'number') return false;
+  const token = numericSources.get(status)?.[field];
+  if (typeof token !== 'string' || !int64TokenPattern.test(token)) return false;
+  const digits = token[0] === '-' ? token.slice(1) : token;
+  if (digits.length > 19) return false;
+  const exactValue = BigInt(token);
+  return exactValue >= int64Minimum && exactValue <= int64Maximum;
+}
+
+function validStatus(status, numericSources) {
+  const fields = ['id', 'vertex', 'name', 'total', 'current', 'timestamp', 'started', 'completed'];
+  if (Object.keys(status).some((key) => !fields.includes(key))) return false;
+  if (!Object.hasOwn(status, 'id') || !Object.hasOwn(status, 'current') || !Object.hasOwn(status, 'timestamp')) return false;
+  for (const key of ['id', 'vertex', 'name']) {
+    if (Object.hasOwn(status, key) && typeof status[key] !== 'string') return false;
+  }
+  if (!validInt64StatusField(status, 'current', numericSources)) return false;
+  if (Object.hasOwn(status, 'total') && !validInt64StatusField(status, 'total', numericSources)) return false;
+  for (const key of ['timestamp', 'started', 'completed']) {
+    if (Object.hasOwn(status, key) && (status[key] === null || !validTimestamp(status[key]))) return false;
+  }
+  return true;
+}
+
 export function rejectReexecution(event) {
   return vertices(event).some((vertex) => runInstruction.test(vertex.name ?? '')
     && (typeof vertex.started === 'string' || typeof vertex.completed === 'string')
@@ -55,13 +83,13 @@ export function cachedTargetRun(event, target) {
     && vertex.cached === true);
 }
 
-function isProgressEvent(event) {
+function isProgressEvent(event, numericSources) {
   if (event === null || typeof event !== 'object' || Array.isArray(event)
       || !['vertexes', 'statuses', 'logs', 'warnings'].some((key) => Object.hasOwn(event, key))) return false;
   if (Object.keys(event).some((key) => !['vertexes', 'statuses', 'logs', 'warnings'].includes(key))) return false;
   return ['vertexes', 'statuses', 'logs', 'warnings'].every((key) => !Object.hasOwn(event, key)
     || (Array.isArray(event[key]) && event[key].every((entry) => entry !== null && typeof entry === 'object' && !Array.isArray(entry)
-      && (!['vertexes', 'statuses'].includes(key) || validVertex(entry)))));
+      && (key === 'vertexes' ? validVertex(entry) : key === 'statuses' ? validStatus(entry, numericSources) : true))));
 }
 
 function cancellationText(value) {
@@ -104,8 +132,18 @@ export class RawJsonProgressTracker {
     if (!line) return;
     this.lines[stream] += 1;
     let event;
+    const numericSources = new WeakMap();
     try {
-      event = JSON.parse(line);
+      // Capture exact JSON integer tokens; the parsed Number may already be rounded.
+      event = JSON.parse(line, function captureInt64Source(key, value, context) {
+        if ((key === 'current' || key === 'total') && typeof value === 'number'
+            && this !== null && typeof this === 'object') {
+          const fields = numericSources.get(this) ?? Object.create(null);
+          fields[key] = context?.source;
+          numericSources.set(this, fields);
+        }
+        return value;
+      });
     } catch {
       if (stream === 'stderr' && this.abortRequested && line === 'ERROR: context canceled') {
         this.cancellationDiagnostics.push({ stream, kind: 'plain-cancellation' });
@@ -119,7 +157,7 @@ export class RawJsonProgressTracker {
       this.cancellationDiagnostics.push({ stream, kind: 'structured-cancellation' });
       return;
     }
-    if (!isProgressEvent(event)) {
+    if (!isProgressEvent(event, numericSources)) {
       this.malformed = true;
       return;
     }

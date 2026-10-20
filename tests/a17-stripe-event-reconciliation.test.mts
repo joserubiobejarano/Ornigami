@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import test from "node:test";
 import Stripe from "stripe";
 
-import { loadTs } from "./a02-test-support.mts";
+import { loadTs, normalModePrivatePreviewMock, normalModePrivatePreviewOperationMock } from "./a02-test-support.mts";
 import { availablePostgresTestPort } from "./postgres-test-port.mts";
 
 type ProviderSubscription = {
@@ -138,6 +138,9 @@ test("Stripe test snapshots reconcile through the signed Next webhook route into
       },
     };
     const route = loadTs<{ POST(request: Request): Promise<Response> }>("src/app/api/stripe/webhook/route.ts", {
+      "stripe": { default: Stripe },
+      "@/lib/private-preview": normalModePrivatePreviewMock,
+      "@/lib/private-preview-operation": normalModePrivatePreviewOperationMock,
       "@/lib/stripe": { stripe },
       "@/lib/env": { getRequiredEnv: () => webhookSecret },
       "@/lib/safe-logger": { safeLogger: { error: () => undefined } },
