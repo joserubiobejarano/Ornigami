@@ -436,6 +436,20 @@ for(const mode of ['success','download-failure','manifest-drift'])test(`full DB 
  assert.equal(readFileSync(join(env.ORNIGAMI_EVIDENCE_DIR,'stage-scans/database-download-exit.txt'),'utf8').trim(),env.FAKE_DB_EXIT);
 }));
 
+test('official database publication receipt records approved immutable evidence with unverified attribution',()=>withSandbox(root=>{
+ const receipt=recordOfficialPublication('a'.repeat(40),join(root,'db-publication.json'));
+ assert.equal(receipt.repository,'ghcr.io/aquasecurity/trivy-db@sha256:2bfa4ccf12f3243cd7cef40b98465bd2dfd6926816d0210c785ea36c4e94959c');
+ assert.equal(receipt.manifestDigest,'sha256:2bfa4ccf12f3243cd7cef40b98465bd2dfd6926816d0210c785ea36c4e94959c');
+ assert.equal(receipt.manifest.layers.length,1);
+ assert.equal(receipt.manifest.layers[0].digest,'sha256:2661508583e666152f8e84eeafa946d126cb66e285794c6e91e70967ed934852');
+ assert.equal(receipt.manifest.layers[0].size,135366518);
+ assert.equal(receipt.publisherRun,null);assert.equal(receipt.publisherSource,null);assert.equal(receipt.publisherAttribution,'unverified');
+ assert.match(receipt.evidenceBasis,/Owner-approved limited basis/);
+ assert.match(receipt.provenance,/unverified/);assert.match(receipt.provenance,/close timestamps do not establish attribution/);
+ assert.match(receipt.coverage,/HOLD/);assert.doesNotMatch(receipt.coverage,/CVE-2026-111142|zziplib/);
+ assert.match(receipt.freshness,/strict internal metadata admission against actual clock/);
+}));
+
 function verifyManifest(evidenceDirectory) {
   const manifest = JSON.parse(readFileSync(join(evidenceDirectory, "manifest.json"), "utf8"));
   for (const item of manifest.files) {

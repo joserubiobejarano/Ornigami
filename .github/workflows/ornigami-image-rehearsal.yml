@@ -1047,7 +1047,7 @@ jobs:
               try:
                   dbdir=stages.parent/"database-admission"
                   publication=json.loads((stages.parent/"db-publication.json").read_text())
-                  expected_digest="sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730"
+                  expected_digest="sha256:2bfa4ccf12f3243cd7cef40b98465bd2dfd6926816d0210c785ea36c4e94959c"
                   if publication["sourceSha"] != metadata["source_sha"] or publication["manifestDigest"] != expected_digest or publication["repository"] != "ghcr.io/aquasecurity/trivy-db@"+expected_digest:
                       raise ValueError("official DB publication source/digest mismatch")
                   download=json.loads((stages.parent/"database-resources.json").read_text())
