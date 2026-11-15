@@ -106,24 +106,33 @@ draft evaluator and the existing acceptance runner's form checks.
 
 ### UI finding from the existing acceptance runner
 
-The existing runner was run against `http://127.0.0.1:3100` with the approved
-fixture manifest and `--require-approved`:
+The existing runner was run against the long-running flow on port 3100 and
+against a fresh detached worktree at the same commit (`aa2c562`) on port 3200:
 
-- 92 passed, 48 failed, 4 unassessed across sparse/long-copy at 375 and 1440 px.
-- The preview stayed on “Deterministic draft. Generation has not run in this
+- Port 3100, both fixtures: 92 passed, 48 failed, 4 unassessed at 375 and
+  1440 px.
+- Port 3200, sparse only: 54 passed, 16 failed, 2 unassessed at 375 and 1440 px.
+
+Both runs show the same behavior:
+
+- The preview stays on “Deterministic draft. Generation has not run in this
   session.” after clicking **Generate preview**.
-- A direct Playwright probe saw zero requests to `/api/campaign-lab/generate`
-  after the click, no React properties on the button, `window.__next_f.length`
-  of 0, and repeated HMR WebSocket handshake errors. The page chunk returned
-  200, but the client runtime did not hydrate.
-- Form edits also did not change the preview or validation state.
+- A direct Playwright probe sees zero requests to `/api/campaign-lab/generate`
+  after the click, no React props on the app content, and repeated HMR
+  WebSocket handshake errors. The page chunk returns 200 and the Flight array is
+  consumed, but the campaign-lab client subtree does not hydrate.
+- Form edits also do not change the preview or validation state.
 
-This looks like a stale or broken dev-server session rather than a generation
-logic failure: the same API returned a valid generated preview to a direct
-request, and the service modes behaved correctly. Agent 1 should restart the
-dev server or rebuild before treating the UI failures as code failures. Until
-then, approval, CTA destination, asset, and validation checks are unassessed in
-the UI even though the service path works.
+This reproduces on a fresh server, so it is not only a stale dev-server session.
+The generation service and the HTTP route work: a direct `POST` returns a
+generated preview, and the adapter collected sparse, rich, and revision drafts.
+The failure is in the client interaction layer. Approval, CTA destination,
+asset, and validation checks remain unassessed in the UI until it is fixed.
+
+The HMR WebSocket errors may be environmental, but they do not explain the
+missing click handler by themselves. Agent 1 should reproduce on a clean server,
+check the client component's hydration, and rerun the acceptance runner before
+treating the UI failures as template failures.
 
 ## Checks that remain unassessed
 
@@ -146,9 +155,9 @@ the UI even though the service path works.
 
 ## Next steps
 
-1. Restart the flow's dev server or rebuild, then rerun the existing acceptance
-   runner. Re-check that Generate issues a `/api/campaign-lab/generate` request
-   and that approval changes state.
+1. Fix the client hydration on the campaign-lab page. Reproduce on a clean
+   server, confirm that Generate issues a `/api/campaign-lab/generate` request,
+   and rerun the existing acceptance runner. Then rerun this pack.
 2. Add a fixture or an approved-angle input for the intent-change case. Without
    it, the pack cannot tell whether the flow follows a new angle.
 3. Add the Fernway trap fixture or an equivalent asset with a visible label that
