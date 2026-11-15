@@ -44,12 +44,23 @@ intended proof boundary.
 ## Integration run against Agent 1's flow
 
 The flow's HTTP API and generation service were available on
-`http://127.0.0.1:3100`. The draft-level run used the service directly because
-the running UI was not interactive (see the UI finding below). The service path
-is the same path the route calls.
+`http://127.0.0.1:3100`. The committed adapter was run against the real route:
 
-Artifacts: `.local/campaign-eval/agent1-drafts/`
-Report: `.local/campaign-eval/agent1-run/report.md`
+```powershell
+node scripts/campaign-eval-collect-flow.mjs `
+  --url http://127.0.0.1:3100 `
+  --out .local/campaign-eval/agent1-http `
+  --fixtures sparse,long-copy `
+  --revision
+```
+
+The adapter wrote the sparse, rich, and revision artifacts through
+`POST /api/campaign-lab/generate`. The provider-mode table below also exercised
+the service directly so each fallback path could be set without restarting the
+server.
+
+Artifacts: `.local/campaign-eval/agent1-http/`
+Report: `.local/campaign-eval/agent1-http-run/report.md`
 
 | Case | Flow mapping | Result | Verdict |
 | --- | --- | --- | --- |
