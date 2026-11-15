@@ -1,5 +1,11 @@
 # Campaign Lab advertorial — implementation and review
 
+> Refinement 15 November 2026: see
+> [the renderer refinement handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_RENDER_20261115.md)
+> for the current two-layout renderer, proposed copy and sources, before/after
+> captures, visual review, and real-brand test status. The visual review below
+> records the earlier v1.0.0 composition.
+
 Status: implemented for local review; not published. Live model generation is
 out of scope.
 

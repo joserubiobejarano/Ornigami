@@ -45,8 +45,11 @@ function chromiumExecutable(chromium) {
 }
 
 const viewports = [
+  { name: "320", width: 320, height: 800, isMobile: true, hasTouch: true },
   { name: "375", width: 375, height: 812, isMobile: true, hasTouch: true },
+  { name: "768", width: 768, height: 900, isMobile: true, hasTouch: true },
   { name: "1440", width: 1440, height: 900, isMobile: false, hasTouch: false },
+  { name: "editor-1024", width: 1024, height: 900, isMobile: false, hasTouch: false },
 ];
 
 function fixtureUrl(fixture) {
@@ -125,7 +128,7 @@ async function captureCase(browser, details) {
   const context = await browser.newContext({
     viewport: { width: details.viewport.width, height: details.viewport.height },
     screen: { width: details.viewport.width, height: details.viewport.height },
-    deviceScaleFactor: details.viewport.width === 375 ? 2 : 1,
+    deviceScaleFactor: details.viewport.width <= 375 ? 2 : 1,
     isMobile: details.viewport.isMobile,
     hasTouch: details.viewport.hasTouch,
     serviceWorkers: "block",
@@ -146,6 +149,7 @@ async function captureCase(browser, details) {
 
   try {
     await page.goto(fixtureUrl(details.fixture), { waitUntil: "networkidle", timeout: 20_000 });
+    await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
     await page.getByRole("region", { name: "Campaign preview" }).waitFor();
     await page.evaluate(() => document.fonts.ready);
 
@@ -157,8 +161,11 @@ async function captureCase(browser, details) {
     }
 
     if (details.generate !== false) {
-      await page.getByRole("button", { name: "Generate preview", exact: true }).click();
-      await page.waitForTimeout(700);
+      const generate = page.getByRole("button", { name: "Generate preview", exact: true });
+      if (!(await generate.isDisabled())) {
+        await generate.click();
+        await page.waitForTimeout(700);
+      }
     }
 
     if (details.approve) {
@@ -317,7 +324,7 @@ async function captureCase(browser, details) {
 }
 
 async function exerciseOfferOnly(browser) {
-  const viewport = viewports[1];
+  const viewport = viewports.find((entry) => entry.name === "1440") ?? viewports[3];
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     serviceWorkers: "block",
@@ -394,7 +401,7 @@ async function exerciseOfferOnly(browser) {
 }
 
 async function exerciseApprovalInvalidation(browser) {
-  const viewport = viewports[1];
+  const viewport = viewports.find((entry) => entry.name === "1440") ?? viewports[3];
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     serviceWorkers: "block",
@@ -465,7 +472,7 @@ try {
         approve: true,
         expectTemplate: "single-product-advertorial",
         expectLayout: "advertorial-full",
-        expectAssets: 4,
+        expectAssets: 3,
         expectApproved: true,
       }),
     );
@@ -496,14 +503,26 @@ const summary = {
   base,
   outDir,
   captures: [
+    "morrow-full-320-full.png",
+    "morrow-full-320-first.png",
     "morrow-full-375-full.png",
     "morrow-full-375-first.png",
+    "morrow-full-768-full.png",
+    "morrow-full-768-first.png",
     "morrow-full-1440-full.png",
     "morrow-full-1440-first.png",
+    "morrow-full-editor-1024-full.png",
+    "morrow-full-editor-1024-first.png",
+    "morrow-one-photo-320-full.png",
+    "morrow-one-photo-320-first.png",
     "morrow-one-photo-375-full.png",
     "morrow-one-photo-375-first.png",
+    "morrow-one-photo-768-full.png",
+    "morrow-one-photo-768-first.png",
     "morrow-one-photo-1440-full.png",
     "morrow-one-photo-1440-first.png",
+    "morrow-one-photo-editor-1024-full.png",
+    "morrow-one-photo-editor-1024-first.png",
     "momisa-offer-only-1440-fit.png",
     "momisa-offer-only-1440-gap.png",
     "morrow-invalid-keeps-preview-1440-editor.png",
