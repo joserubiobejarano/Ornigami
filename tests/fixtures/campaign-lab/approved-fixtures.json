@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "purpose": "Acceptance metadata for the two fictional Campaign Lab v1 fixtures. The rendered WebP assets were visually checked and hashed independently.",
+  "template": {
+    "id": "single-product-offer",
+    "name": "Single product offer",
+    "source": "src/lib/campaign-lab/fixtures.ts",
+    "version": "1.0.0"
+  },
+  "fixtures": [
+    {
+      "name": "sparse",
+      "url": "/campaign-lab?fixture=sparse",
+      "product": {
+        "name": "Harbor Field travel bottle",
+        "label": "Harbor Field"
+      },
+      "offer": "20% off, 27–30 November 2026",
+      "destination": "https://example.com/harbor-field",
+      "cta": {
+        "name": "Shop on Amazon"
+      },
+      "image": {
+        "path": "/campaign-assets/harbor-field-bottle.webp",
+        "sha256": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2",
+        "label": "Harbor Field",
+        "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+        "note": "Fictional product illustration. Inspect the captured crop for context and visible label."
+      },
+      "copyStress": false
+    },
+    {
+      "name": "long-copy",
+      "url": "/campaign-lab?fixture=long-copy",
+      "product": {
+        "name": "Morrow ceramic pour-over dripper",
+        "label": "Morrow"
+      },
+      "offer": "Free shipping through 30 November 2026",
+      "destination": "https://example.com/morrow",
+      "cta": {
+        "name": "See the dripper"
+      },
+      "image": {
+        "path": "/campaign-assets/morrow-ceramic-dripper.webp",
+        "sha256": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
+        "label": "Morrow",
+        "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+        "note": "Fictional product illustration. Inspect the captured crop for context and visible label."
+      },
+      "copyStress": true
+    }
+  ]
+}

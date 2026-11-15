@@ -48,12 +48,13 @@ Pre-integration self-test (synthetic contract fixture, no app route):
 node tests/support/campaign-lab-contract-self-test.mjs
 ```
 
-After Agent 1's branch is running, or after integration:
+Run against the local Campaign Lab development server:
 
 ```powershell
 node scripts/campaign-lab-acceptance.mjs `
   --url http://127.0.0.1:3000 `
-  --manifest tests/fixtures/campaign-lab/benchmark-proposal.json
+  --manifest tests/fixtures/campaign-lab/approved-fixtures.json `
+  --require-approved
 ```
 
 Use `--require-approved` for the acceptance run. It turns pending
@@ -112,10 +113,11 @@ briefs but has no approved asset files or alt text. Its checks are **pending**,
 not passes. The machine-readable shape is in
 `tests/fixtures/campaign-lab/manifest.schema.json`.
 
-Before integration, confirm the manifest against the fixture source that Agent 1
-owns: brand names, product names, offers, terms, destinations, asset paths,
-asset hashes, visible labels, and alt text. The runner cannot decide whether a
-value is approved; it only proves the route renders what the manifest says.
+The committed `tests/fixtures/campaign-lab/approved-fixtures.json` records the
+verified values and SHA-256 hashes for the two fictional local fixtures. Review
+any fixture update against its rendered product image and approved source
+metadata before updating the manifest. The runner checks what the route renders
+against those inputs.
 
 ## What the runner verifies
 
@@ -141,7 +143,7 @@ For every fixture at 375 px and 1440 px:
   is a resolvable solid colour.
 - Valid generation and approval produce an approved state.
 - Changing only Offer and Destination URL updates both values, preserves the
-  product image source, alt text, rendered size, and pixel hash, preserves
+  product image source, alt text, dimensions, and crop styles, preserves
   unrelated preview copy, and observably invalidates the previous approval.
 - An invalid destination (`example.com/no-scheme`) produces a visible or native
   validation message, blocks approval, and preserves the last valid preview.

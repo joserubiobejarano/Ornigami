@@ -87,7 +87,7 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
     reviewedOn: "2026-11-12",
     source: "Original fictional fixture rendered from assets/campaign-lab/harbor-field-bottle.svg",
     rights: "Original work for this local prototype; fictional brand.",
-    contentHash: "hf-bottle-4f2a1c",
+    contentHash: "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2",
   },
   {
     id: "morrow-ceramic-dripper-front",
@@ -102,7 +102,7 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
     reviewedOn: "2026-11-12",
     source: "Original fictional fixture rendered from assets/campaign-lab/morrow-ceramic-dripper.svg",
     rights: "Original work for this local prototype; fictional brand.",
-    contentHash: "mc-dripper-8b7d30",
+    contentHash: "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
   },
 ];
 
@@ -127,8 +127,6 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
       ],
       copy: {
         lede: "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
-        closingTitle: "The offer ends 30 November.",
-        closingBody: "The discount is applied on Amazon at checkout.",
       },
     },
   },
@@ -154,8 +152,6 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
       copy: {
         headline: "What changes when your first pour is slower, steadier, and entirely your own?",
         lede: "The rib spacing holds the filter clear of the wall, so water moves through the bed at its own pace.",
-        closingTitle: "See how the ribs change the pour.",
-        closingBody: "Shipping is free at checkout through 30 November.",
       },
     },
   },

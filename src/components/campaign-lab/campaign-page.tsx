@@ -87,7 +87,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
         alt={asset.alt}
         width={asset.width}
         height={asset.height}
-        sizes="(min-width: 1024px) 480px, 100vw"
+        unoptimized
         priority
       />
     </figure>
@@ -161,9 +161,8 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
         <section className={styles.close} aria-labelledby="campaign-close-heading">
           <div className={styles.closeCopy}>
             <h2 id="campaign-close-heading" className={styles.closeTitle}>
-              {draft.closingTitle}
+              {brief.productName}
             </h2>
-            <p className={styles.closeBody}>{draft.closingBody}</p>
           </div>
           <div className={styles.closeAction}>
             <Action href={brief.destinationUrl} label={brief.actionLabel} />

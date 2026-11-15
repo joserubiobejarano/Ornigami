@@ -60,8 +60,6 @@ export type ApprovedAsset = {
 export type ApprovedCopy = {
   headline?: string;
   lede: string;
-  closingTitle: string;
-  closingBody: string;
 };
 
 export type CampaignBrief = {
@@ -102,8 +100,6 @@ export type TemplateDraft = {
   headline: string;
   lede: string;
   facts: ProductFact[];
-  closingTitle: string;
-  closingBody: string;
 };
 
 export type TemplateLayoutManifest = {

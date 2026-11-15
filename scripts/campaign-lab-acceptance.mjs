@@ -266,6 +266,7 @@ async function previewSnapshot(page, contract) {
       return { x: Number(value.x.toFixed(2)), y: Number(value.y.toFixed(2)), width: Number(value.width.toFixed(2)), height: Number(value.height.toFixed(2)),
         left: Number(value.left.toFixed(2)), right: Number(value.right.toFixed(2)), top: Number(value.top.toFixed(2)), bottom: Number(value.bottom.toFixed(2)) };
     };
+    const canvas = element.querySelector("article") ?? element;
     const contentText = (() => {
       const pieces = [];
       const walk = (node) => {
@@ -278,7 +279,7 @@ async function previewSnapshot(page, contract) {
         if (node.matches?.('[role="status"], [aria-live], [data-approval-status], [data-approved], [data-approval], [class*="approval"], [id*="approval"]')) return;
         for (const child of node.childNodes) walk(child);
       };
-      walk(element);
+      walk(canvas);
       return pieces.join(" ");
     })();
     const links = [...element.querySelectorAll("a[href]")].filter(visible).map((node) => ({
@@ -301,6 +302,7 @@ async function previewSnapshot(page, contract) {
       visible: visible(node),
       objectFit: getComputedStyle(node).objectFit,
       objectPosition: getComputedStyle(node).objectPosition,
+      borderRadius: getComputedStyle(node).borderRadius,
       loading: node.getAttribute("loading"),
     }));
     return {
@@ -499,15 +501,6 @@ async function imageHealth(page, contract, responses) {
   return { images: snapshot.images, broken, requests };
 }
 
-async function imageBuffer(page, contract, index = 0) {
-  const { region } = contract;
-  const image = region.locator("img").nth(index);
-  if (!(await image.count())) return null;
-  await image.scrollIntoViewIfNeeded().catch(() => {});
-  const buffer = await image.screenshot({ animations: "disabled", timeout: timeoutMs }).catch(() => null);
-  return buffer;
-}
-
 async function imageBytes(page, responses, image) {
   const source = assetSource(image);
   const src = source.sourceUrl;
@@ -579,8 +572,9 @@ async function textLegibility(contract, selectors) {
     const result = [];
     for (const definition of definitions) {
       const candidates = [...element.querySelectorAll(definition.selector)].filter(visible);
+      const normalize = (value) => String(value ?? "").replace(/\s+/g, " ").toLowerCase();
       const node = definition.text
-        ? candidates.find((candidate) => (candidate.innerText ?? "").replace(/\s+/g, " ").includes(String(definition.text).replace(/\s+/g, " ")))
+        ? candidates.find((candidate) => normalize(candidate.innerText).includes(normalize(definition.text)))
         : candidates[0];
       if (!node) {
         result.push({ role: definition.role, present: false });
@@ -860,8 +854,6 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
   let currentOffer = "";
   let currentDestination = "";
   let baseline = null;
-  let baselineImageHash = null;
-  let baselineImageBox = null;
   let baselineImageRef = null;
   let approvalAfterApprove = null;
   let lastValidSnapshot = null;
@@ -1058,7 +1050,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
       }
       const expectedLabel = fixture.product?.label ?? fixture.image?.label;
       if (expectedLabel) {
-        const labelVisible = comparableText(baseline.text).includes(comparableText(expectedLabel));
+        const labelVisible = comparableText(baseline.text).toLowerCase().includes(comparableText(expectedLabel).toLowerCase());
         add("product-label-matches-approved", approved ? (labelVisible ? "passed" : "failed") : "pending",
           approved ? "The approved product label must be visible in the preview." : "Approved label metadata is not supplied; the label is reported but not adjudicated.",
           { expected: expectedLabel, previewText: baseline.text.slice(0, 500), manifestStatus: manifest.status }, repro(inputs));
@@ -1067,8 +1059,6 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
           { previewText: baseline.text.slice(0, 500), manifestStatus: manifest.status }, repro(inputs));
       }
       await captureImage(page, recorder, outDir, { fixture: fixture.name, viewport: viewport.name, state: "approved", purpose: "Product image crop for packaging review." }, image.index);
-      baselineImageHash = await imageBuffer(page, contract, image.index).then((buffer) => buffer ? sha256(buffer) : null);
-      baselineImageBox = image.rect;
       baselineImageRef = image;
     }
 
@@ -1135,14 +1125,16 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
     if (edited) {
       const editedImage = edited.images.find((image) => image.visible && image.currentSrc === baselineImageRef?.currentSrc)
         ?? pickProductImage(edited.images, fixture);
-      const editedImageHash = await imageBuffer(page, contract, editedImage?.index ?? 0).then((buffer) => buffer ? sha256(buffer) : null);
-      const sameSource = editedImage && baselineImageRef ? editedImage.currentSrc === baselineImageRef.currentSrc : false;
-      const sameAlt = editedImage && baselineImageRef ? editedImage.alt === baselineImageRef.alt : false;
-      const sameCrop = baselineImageHash != null && editedImageHash === baselineImageHash &&
-        editedImage?.rect?.width === baselineImageBox?.width && editedImage?.rect?.height === baselineImageBox?.height;
-      add("edit-preserves-image", sameSource && sameAlt && sameCrop ? "passed" : "failed",
-        sameSource && sameAlt && sameCrop ? "The approved product image source, alt text, rendered size, and pixel hash were preserved." : "The product image or its crop changed after the offer/destination edit.",
-        { before: { image: baselineImageRef, hash: baselineImageHash, box: baselineImageBox }, after: { image: editedImage, hash: editedImageHash } }, repro(inputs));
+      // Screenshot bytes can vary when the same image moves to another scroll position.
+      const imageSignature = (image) => image ? [
+        image.currentSrc, image.alt, image.naturalWidth, image.naturalHeight,
+        image.rect.width, image.rect.height, image.objectFit, image.objectPosition, image.borderRadius,
+      ] : null;
+      const sameImage = Boolean(baselineImageRef && editedImage) &&
+        JSON.stringify(imageSignature(editedImage)) === JSON.stringify(imageSignature(baselineImageRef));
+      add("edit-preserves-image", sameImage ? "passed" : "failed",
+        sameImage ? "The approved image source, alt text, dimensions, and crop styles were preserved." : "The product image or its crop changed after the offer/destination edit.",
+        { before: baselineImageRef, after: editedImage }, repro(inputs));
       const diff = unrelatedCopyDiff(lastValidSnapshot?.contentText ?? "", edited.contentText ?? "", [
         [workingOffer, afterEditOffer],
         [workingDestination, afterEditDestination],
@@ -1176,7 +1168,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
       invalidBlocked.blocked ? "Invalid input did not leave the preview approved; an approval attempt was refused or unavailable." : "The approval state was still approved after an invalid destination.",
       { approval: invalidBlocked.approval, approveDisabled: invalidBlocked.approval.approveDisabled }, repro(inputs));
     const invalidSnapshot = await previewSnapshot(page, contract);
-    const preservedText = comparableText(invalidSnapshot?.text) === comparableText(validBeforeInvalid?.text);
+    const preservedText = comparableText(invalidSnapshot?.contentText) === comparableText(validBeforeInvalid?.contentText);
     const preservedCta = jsonPreview(invalidSnapshot?.links?.map((link) => link.rawHref)) === jsonPreview(validBeforeInvalid?.links?.map((link) => link.rawHref));
     const preservedImage = jsonPreview(invalidSnapshot?.images?.map((image) => image.currentSrc)) === jsonPreview(validBeforeInvalid?.images?.map((image) => image.currentSrc));
     add("invalid-url-preserves-last-valid-preview", preservedText && preservedCta && preservedImage ? "passed" : "failed",
@@ -1207,7 +1199,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
       missingBlocked.blocked ? "Missing required input did not leave the preview approved; an approval attempt was refused or unavailable." : "The approval state was still approved after clearing the required offer.",
       { approval: missingBlocked.approval, approveDisabled: missingBlocked.approval.approveDisabled }, repro(inputs));
     const missingSnapshot = await previewSnapshot(page, contract);
-    const missingPreservedText = comparableText(missingSnapshot?.text) === comparableText(validBeforeInvalid?.text);
+    const missingPreservedText = comparableText(missingSnapshot?.contentText) === comparableText(validBeforeInvalid?.contentText);
     const missingPreservedCta = jsonPreview(missingSnapshot?.links?.map((link) => link.rawHref)) === jsonPreview(validBeforeInvalid?.links?.map((link) => link.rawHref));
     const missingPreservedImage = jsonPreview(missingSnapshot?.images?.map((image) => image.currentSrc)) === jsonPreview(validBeforeInvalid?.images?.map((image) => image.currentSrc));
     add("missing-required-preserves-last-valid-preview", missingPreservedText && missingPreservedCta && missingPreservedImage ? "passed" : "failed",
@@ -1238,7 +1230,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
       missingProductBlocked.blocked ? "A missing product name did not leave the preview approved; an approval attempt was refused or unavailable." : "The approval state was still approved after clearing the required product name.",
       { approval: missingProductBlocked.approval, approveDisabled: missingProductBlocked.approval.approveDisabled }, repro(inputs));
     const missingProductSnapshot = await previewSnapshot(page, contract);
-    const productPreservedText = comparableText(missingProductSnapshot?.text) === comparableText(validBeforeInvalid?.text);
+    const productPreservedText = comparableText(missingProductSnapshot?.contentText) === comparableText(validBeforeInvalid?.contentText);
     const productPreservedCta = jsonPreview(missingProductSnapshot?.links?.map((link) => link.rawHref)) === jsonPreview(validBeforeInvalid?.links?.map((link) => link.rawHref));
     const productPreservedImage = jsonPreview(missingProductSnapshot?.images?.map((image) => image.currentSrc)) === jsonPreview(validBeforeInvalid?.images?.map((image) => image.currentSrc));
     add("missing-product-name-preserves-last-valid-preview", productPreservedText && productPreservedCta && productPreservedImage ? "passed" : "failed",

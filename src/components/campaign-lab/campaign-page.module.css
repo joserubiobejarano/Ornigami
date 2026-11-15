@@ -79,7 +79,7 @@
 
 .productLabel {
   color: var(--cp-muted);
-  font-size: 0.66rem;
+  font-size: 0.8rem;
   font-weight: 650;
   letter-spacing: var(--cp-label-tracking);
   line-height: 1.4;
@@ -335,14 +335,6 @@
   letter-spacing: var(--cp-display-tracking);
   line-height: 1;
   text-wrap: balance;
-}
-
-.closeBody {
-  max-width: 44ch;
-  color: var(--cp-muted);
-  font-size: 1rem;
-  line-height: 1.55;
-  text-wrap: pretty;
 }
 
 .closeAction {

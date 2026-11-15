@@ -210,8 +210,6 @@ export function assembleDraft(brief: CampaignBrief, brandId: string): TemplateDr
     headline,
     lede: brief.copy.lede,
     facts: brief.productFacts.map((fact) => ({ ...fact })),
-    closingTitle: brief.copy.closingTitle,
-    closingBody: brief.copy.closingBody,
   };
 }
 
@@ -266,8 +264,6 @@ export function calculateDraftRevision(
       headline: draft.headline,
       lede: draft.lede,
       facts: draft.facts,
-      closingTitle: draft.closingTitle,
-      closingBody: draft.closingBody,
     },
   };
 
