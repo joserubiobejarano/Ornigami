@@ -2,7 +2,6 @@
 
 Branch: `codex/campaign-lab-compare-20261115`
 Base commit: `5118497`
-Comparison commit: `44d494e`
 Template: `single-product-offer` v1.0.0
 Comparison run: offline local-test provider vs provider-off fallback
 
