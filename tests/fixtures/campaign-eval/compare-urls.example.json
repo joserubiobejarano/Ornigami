@@ -1,0 +1,11 @@
+{
+  "$comment": "Shape for scripts/campaign-eval-compare.mjs --urls. Both pages must expose the Campaign Lab preview structure. Omit cases without both rendered states.",
+  "sparse-offer": {
+    "fallback": "http://localhost:3300/campaign-lab?fixture=sparse&state=fallback",
+    "generated": "http://localhost:3100/campaign-lab?fixture=sparse&state=generated"
+  },
+  "rich-angle": {
+    "fallback": "http://localhost:3300/campaign-lab?fixture=long-copy&openingFocus=flow-control&state=fallback",
+    "generated": "http://localhost:3100/campaign-lab?fixture=long-copy&openingFocus=flow-control&state=generated"
+  }
+}

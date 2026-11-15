@@ -122,7 +122,7 @@ function toArtifact(caseId, body, extra = {}) {
   return {
     schemaVersion: 1,
     caseId,
-    source: "generated",
+    source: body.generation?.status === "fallback" ? "baseline" : "generated",
     sourceLabel: `Campaign Lab flow: ${body.generation?.providerLabel ?? body.generation?.provider ?? "unknown"} (${body.generation?.status ?? "unknown"})`,
     template: { id: draft.templateId, version: draft.templateVersion },
     campaign: {
@@ -150,6 +150,7 @@ function toArtifact(caseId, body, extra = {}) {
       revision,
       requestId: body.requestId ?? null,
       asset: { id: asset.id, src: asset.src, alt: asset.alt, contentHash: asset.contentHash },
+      brief: body.preview.brief,
     },
     ...extra,
   };

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "runId": "compare-api",
+  "mode": "artifacts",
+  "seed": "campaign-eval-compare-v1",
+  "pack": {
+    "id": "campaign-lab-eval",
+    "version": "1.0.0"
+  },
+  "template": {
+    "id": "single-product-offer",
+    "name": "Single product offer",
+    "version": "1.0.0",
+    "source": "src/lib/campaign-lab/template.ts"
+  },
+  "flow": {
+    "fallbackOrigin": null,
+    "generatedOrigin": null,
+    "fallbackGenerate": false
+  },
+  "artifacts": {
+    "fallback": "collect-offline (not committed)",
+    "generated": "collect-generated (not committed)"
+  },
+  "urls": null,
+  "cases": [
+    "sparse-offer",
+    "rich-angle",
+    "intent-change"
+  ],
+  "outputs": {
+    "comparisonIndex": "comparison-index.md",
+    "comparison": "comparison.json",
+    "providerMap": "provider-map.json",
+    "blindSheet": "blind-sheet.md",
+    "captures": "captures/"
+  }
+}

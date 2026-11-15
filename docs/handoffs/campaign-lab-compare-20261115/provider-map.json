@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "runId": "compare-api",
+  "mode": "artifacts",
+  "seed": "campaign-eval-compare-v1",
+  "generatedAt": "2026-11-15T17:41:30.542Z",
+  "flowOrigin": null,
+  "fallbackFlowOrigin": null,
+  "generatedFlowOrigin": null,
+  "artifactInputs": {
+    "fallback": "collect-offline (not committed)",
+    "generated": "collect-generated (not committed)"
+  },
+  "urlInput": null,
+  "template": {
+    "id": "single-product-offer",
+    "version": "1.0.0"
+  },
+  "cases": {
+    "sparse-offer": {
+      "fallback": {
+        "label": "A",
+        "role": "fallback",
+        "source": "baseline",
+        "sourceLabel": "Campaign Lab flow: Generation off (fallback)",
+        "provider": "none",
+        "providerLabel": "Generation off",
+        "status": "fallback",
+        "code": "unavailable",
+        "model": null,
+        "angle": null,
+        "layout": "offer-led-one-photo",
+        "sections": [
+          "hero",
+          "hero-facts",
+          "close"
+        ],
+        "factIds": [
+          "capacity",
+          "closure",
+          "material"
+        ],
+        "openingFocus": null,
+        "template": {
+          "id": "single-product-offer",
+          "version": "1.0.0"
+        },
+        "revision": "d6a8ce53112368ff",
+        "artifact": "artifacts/<case>/fallback.json (not committed)"
+      },
+      "generated": {
+        "label": "B",
+        "role": "generated",
+        "source": "generated",
+        "sourceLabel": "Campaign Lab flow: Local test provider (generated)",
+        "provider": "local-test",
+        "providerLabel": "Local test provider",
+        "status": "generated",
+        "code": null,
+        "model": null,
+        "angle": "offer-led",
+        "layout": "offer-led-one-photo",
+        "sections": [
+          "hero",
+          "hero-facts",
+          "close"
+        ],
+        "factIds": [
+          "capacity",
+          "closure"
+        ],
+        "openingFocus": null,
+        "template": {
+          "id": "single-product-offer",
+          "version": "1.0.0"
+        },
+        "revision": "261265eeb1c5a3d3",
+        "artifact": "artifacts/<case>/generated.json (not committed)"
+      }
+    },
+    "rich-angle": {
+      "fallback": {
+        "label": "B",
+        "role": "fallback",
+        "source": "baseline",
+        "sourceLabel": "Campaign Lab flow: Generation off (fallback)",
+        "provider": "none",
+        "providerLabel": "Generation off",
+        "status": "fallback",
+        "code": "unavailable",
+        "model": null,
+        "angle": null,
+        "layout": "editorial-long-copy",
+        "sections": [
+          "hero",
+          "detail",
+          "close"
+        ],
+        "factIds": [
+          "interior",
+          "outlet",
+          "body",
+          "finish"
+        ],
+        "openingFocus": "flow-control",
+        "template": {
+          "id": "single-product-offer",
+          "version": "1.0.0"
+        },
+        "revision": "db41f53a4d32d4b3",
+        "artifact": "artifacts/<case>/fallback.json (not committed)"
+      },
+      "generated": {
+        "label": "A",
+        "role": "generated",
+        "source": "generated",
+        "sourceLabel": "Campaign Lab flow: Local test provider (generated)",
+        "provider": "local-test",
+        "providerLabel": "Local test provider",
+        "status": "generated",
+        "code": null,
+        "model": null,
+        "angle": "story-led",
+        "layout": "editorial-long-copy",
+        "sections": [
+          "hero",
+          "detail",
+          "close"
+        ],
+        "factIds": [
+          "interior",
+          "outlet",
+          "body"
+        ],
+        "openingFocus": "flow-control",
+        "template": {
+          "id": "single-product-offer",
+          "version": "1.0.0"
+        },
+        "revision": "db41f53a4d32d4b3",
+        "artifact": "artifacts/<case>/generated.json (not committed)"
+      }
+    },
+    "intent-change": {
+      "fallback": {
+        "label": "B",
+        "role": "fallback",
+        "source": "baseline",
+        "sourceLabel": "Campaign Lab flow: Generation off (fallback)",
+        "provider": "none",
+        "providerLabel": "Generation off",
+        "status": "fallback",
+        "code": "unavailable",
+        "model": null,
+        "angle": null,
+        "layout": "editorial-long-copy",
+        "sections": [
+          "hero",
+          "detail",
+          "close"
+        ],
+        "factIds": [
+          "interior",
+          "outlet",
+          "body",
+          "finish"
+        ],
+        "openingFocus": "first-pour",
+        "template": {
+          "id": "single-product-offer",
+          "version": "1.0.0"
+        },
+        "revision": "7538cb121e7b938d",
+        "artifact": "artifacts/<case>/fallback.json (not committed)"
+      },
+      "generated": {
+        "label": "A",
+        "role": "generated",
+        "source": "generated",
+        "sourceLabel": "Campaign Lab flow: Local test provider (generated)",
+        "provider": "local-test",
+        "providerLabel": "Local test provider",
+        "status": "generated",
+        "code": null,
+        "model": null,
+        "angle": "story-led",
+        "layout": "editorial-long-copy",
+        "sections": [
+          "hero",
+          "detail",
+          "close"
+        ],
+        "factIds": [
+          "interior",
+          "outlet",
+          "body"
+        ],
+        "openingFocus": "first-pour",
+        "template": {
+          "id": "single-product-offer",
+          "version": "1.0.0"
+        },
+        "revision": "7538cb121e7b938d",
+        "artifact": "artifacts/<case>/generated.json (not committed)"
+      }
+    }
+  }
+}

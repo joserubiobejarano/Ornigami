@@ -13,6 +13,13 @@ The machine-readable source of truth is
 `tests/fixtures/campaign-eval/cases.json`. The artifact shape and fixture layout
 are in `tests/fixtures/campaign-eval/README.md`.
 
+For a same-brief comparison of the deterministic fallback and the configured
+generator, use the separate workflow in
+[`docs/campaign-lab-comparison.md`](./campaign-lab-comparison.md). It writes a
+comparison index, neutral mobile/desktop captures, a separate provider map, and
+a reviewer sheet with approval, first-change, edit-count, and time-to-approval
+fields.
+
 ## The five cases
 
 | Case | Role | What it tests | A good result |
