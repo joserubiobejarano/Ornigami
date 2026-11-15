@@ -192,7 +192,7 @@ one-photo layout.
 - Focused ESLint on changed renderer, library, fixture, test, and script files:
   passed.
 - `node --experimental-strip-types --test tests/campaign-lab-advertorial.test.mts`:
-  11 passed, 0 failed.
+  12 passed, 0 failed.
 - `node scripts/campaign-lab-advertorial-capture.mjs -u http://127.0.0.1:3002`:
   119 checks passed, 0 failed.
 - `node scripts/campaign-lab-advertorial-review.mjs -u http://127.0.0.1:3002 --run after`:

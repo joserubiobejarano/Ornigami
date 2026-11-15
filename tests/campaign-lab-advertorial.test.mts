@@ -146,6 +146,33 @@ test("assembly is deterministic and keeps offer, destination, action and asset i
   assert.equal("assetId" in draft, false);
 });
 
+test("the full and one-photo layouts keep the same story and required facts", () => {
+  const fullItem = fixture("morrow-advertorial-full");
+  const onePhotoItem = fixture("morrow-advertorial-one-photo");
+  const full = buildAdvertorialPreview(fullItem, valuesFor(fullItem));
+  const onePhoto = buildAdvertorialPreview(onePhotoItem, valuesFor(onePhotoItem));
+  assert.equal(full.ok, true);
+  assert.equal(onePhoto.ok, true);
+  if (!full.ok || !onePhoto.ok) return;
+
+  assert.deepEqual(
+    full.preview.draft.story.map((beat) => beat.id),
+    onePhoto.preview.draft.story.map((beat) => beat.id),
+  );
+  assert.deepEqual(
+    full.preview.draft.story.map((beat) => beat.text),
+    onePhoto.preview.draft.story.map((beat) => beat.text),
+  );
+  assert.deepEqual(
+    full.preview.draft.facts.map((fact) => fact.id),
+    onePhoto.preview.draft.facts.map((fact) => fact.id),
+  );
+  assert.deepEqual(
+    full.preview.draft.facts.map((fact) => fact.value),
+    onePhoto.preview.draft.facts.map((fact) => fact.value),
+  );
+});
+
 test("changing a story beat, fact, image or offer produces a new revision", () => {
   const item = fixture("morrow-advertorial-full");
   const values = valuesFor(item);
