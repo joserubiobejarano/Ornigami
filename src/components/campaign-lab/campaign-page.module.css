@@ -121,7 +121,7 @@
 .editorialHero {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 
 .editorialBody {
@@ -130,11 +130,12 @@
 }
 
 .editorialBody .imageFrame {
-  order: 2;
+  order: 1;
 }
 
 .editorialSupport {
-  order: 1;
+  order: 2;
+  gap: 12px;
 }
 
 .productFirst .offerHero .imageFrame {
@@ -181,16 +182,6 @@
   border-left: 3px solid var(--cp-accent);
 }
 
-.offerLabel {
-  margin-bottom: 3px !important;
-  color: var(--cp-muted);
-  font-size: 0.61rem;
-  font-weight: 650;
-  letter-spacing: var(--cp-label-tracking);
-  line-height: 1.4;
-  text-transform: var(--cp-label-case);
-}
-
 .offerText {
   font-size: 1.02rem;
   font-weight: 650;
@@ -231,7 +222,18 @@
   overflow: hidden;
   background: var(--cp-surface);
   border-radius: var(--cp-image-radius);
+  aspect-ratio: var(--cp-image-aspect, 4 / 5);
+}
+
+.arch.blendedImage .imageFrame {
+  max-height: none;
+  padding: clamp(10px, 2cqi, 18px);
   aspect-ratio: 4 / 5;
+  overflow: visible;
+}
+
+.arch.blendedImage .image {
+  border-radius: 4px;
 }
 
 .framed .imageFrame {
@@ -399,6 +401,12 @@
   }
 }
 
+@container campaign (min-width: 480px) {
+  .arch.blendedImage .imageFrame {
+    aspect-ratio: var(--cp-image-aspect, 4 / 5);
+  }
+}
+
 @container campaign (min-width: 720px) {
   .masthead {
     padding: 22px 44px;
@@ -455,6 +463,10 @@
 
   .imageFrame {
     max-height: none;
+  }
+
+  .arch.blendedImage .imageFrame {
+    aspect-ratio: 4 / 5;
   }
 
   .action {
