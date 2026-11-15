@@ -649,6 +649,407 @@ export function evaluateRevision(bundle, caseDef, pack) {
   return checks;
 }
 
+function sectionSnapshot(artifact) {
+  return (artifact.draft?.sections ?? []).map((section) =>
+    typeof section === "string"
+      ? { id: section, heading: "" }
+      : { id: section.id ?? "", heading: normalizeText(section.heading) },
+  );
+}
+
+function factSnapshot(artifact) {
+  return (artifact.draft?.facts ?? []).map((fact) => ({
+    label: normalizeText(fact.label),
+    value: normalizeText(fact.value),
+  }));
+}
+
+function factKey(fact) {
+  return `${comparableText(fact.label)}::${comparableText(fact.value)}`;
+}
+
+function factLabel(fact) {
+  return `${fact.label}: ${fact.value}`;
+}
+
+function assetIds(artifact) {
+  return [...(artifact.draft?.assetIds ?? [])];
+}
+
+function assetHash(artifact, assetId) {
+  return (
+    artifact.flow?.asset?.contentHash ??
+    artifact.draft?.assetSha256?.[assetId] ??
+    null
+  );
+}
+
+function artifactFingerprint(artifact) {
+  const sections = sectionSnapshot(artifact);
+  return JSON.stringify({
+    template: {
+      id: artifact.template?.id ?? null,
+      version: artifact.template?.version ?? null,
+    },
+    campaign: {
+      brandId: artifact.campaign?.brandId ?? null,
+      productName: normalizeText(artifact.campaign?.productName),
+      offer: normalizeText(artifact.campaign?.offer),
+      destinationUrl: normalizeText(artifact.campaign?.destinationUrl),
+      actionLabel: normalizeText(artifact.campaign?.actionLabel),
+    },
+    draft: {
+      layout: artifact.draft?.layout ?? null,
+      headline: normalizeText(artifact.draft?.headline),
+      lede: normalizeText(artifact.draft?.lede),
+      story: normalizeText(artifact.draft?.story),
+      facts: factSnapshot(artifact),
+      sections,
+      assetIds: assetIds(artifact),
+    },
+  });
+}
+
+function diffSequence(left, right, key = (value) => value) {
+  const leftKeys = left.map(key);
+  const rightKeys = right.map(key);
+  return {
+    added: right.filter((value) => !leftKeys.includes(key(value))),
+    removed: left.filter((value) => !rightKeys.includes(key(value))),
+    sameSet:
+      leftKeys.length === rightKeys.length &&
+      leftKeys.every((value) => rightKeys.includes(value)),
+    sameOrder: JSON.stringify(leftKeys) === JSON.stringify(rightKeys),
+  };
+}
+
+/**
+ * Compare the deterministic fallback and the configured generator output for
+ * the same validated brief, asset set, and template version. The comparison
+ * reports identity separately from the concrete opening, section, and evidence
+ * changes, and calls out identical drafts explicitly.
+ */
+export function compareDraftPair(fallback, generated, caseDef, pack) {
+  const checks = [];
+  const fallbackSections = sectionSnapshot(fallback);
+  const generatedSections = sectionSnapshot(generated);
+  const fallbackFacts = factSnapshot(fallback);
+  const generatedFacts = factSnapshot(generated);
+  const fallbackAssets = assetIds(fallback);
+  const generatedAssets = assetIds(generated);
+  const expectedTemplate = caseDef.template ?? pack?.template ?? { id: "single-product-offer", version: "1.0.0" };
+  const expected = caseDef.mustStayExact;
+
+  const templateMatches =
+    fallback.template?.id === expectedTemplate.id &&
+    generated.template?.id === expectedTemplate.id &&
+    fallback.template?.version === expectedTemplate.version &&
+    generated.template?.version === expectedTemplate.version;
+  const campaignFields = ["brandId", "productName", "offer", "destinationUrl", "actionLabel"];
+  const campaignMismatches = campaignFields.filter(
+    (field) =>
+      normalizeText(fallback.campaign?.[field]) !== normalizeText(generated.campaign?.[field]),
+  );
+  const openingFocuses = [
+    fallback.flow?.brief?.openingFocus,
+    generated.flow?.brief?.openingFocus,
+  ].filter((value) => value != null);
+  const openingFocusMismatch =
+    openingFocuses.length === 2 && openingFocuses[0] !== openingFocuses[1];
+  const sameBrief = templateMatches && campaignMismatches.length === 0 && !openingFocusMismatch;
+  checks.push(
+    check(
+      "same-template-and-brief",
+      sameBrief ? "passed" : "failed",
+      sameBrief
+        ? "Both drafts use the same template version, campaign fields, and approved opening focus."
+        : [
+            !templateMatches ? "Template ID or version differs from the approved template." : "",
+            campaignMismatches.length ? `Campaign field(s) differ: ${campaignMismatches.join(", ")}.` : "",
+            openingFocusMismatch ? `Approved opening focus differs: ${openingFocuses.join(" vs ")}.` : "",
+          ].filter(Boolean).join(" "),
+      { templateMatches, campaignMismatches, openingFocuses, openingFocusMismatch },
+    ),
+  );
+
+  const productMatches =
+    normalizeText(fallback.campaign?.productName) === normalizeText(expected.productName) &&
+    normalizeText(generated.campaign?.productName) === normalizeText(expected.productName);
+  checks.push(
+    check(
+      "product-preserved",
+      productMatches ? "passed" : "failed",
+      productMatches
+        ? `Both drafts preserve the product name "${expected.productName}".`
+        : "One or both drafts changed the approved product name.",
+      {
+        expected: expected.productName,
+        fallback: fallback.campaign?.productName,
+        generated: generated.campaign?.productName,
+      },
+    ),
+  );
+
+  const offerMatches =
+    normalizeText(fallback.campaign?.offer) === normalizeText(expected.offer) &&
+    normalizeText(generated.campaign?.offer) === normalizeText(expected.offer);
+  checks.push(
+    check(
+      "offer-preserved",
+      offerMatches ? "passed" : "failed",
+      offerMatches
+        ? `Both drafts preserve the exact offer "${expected.offer}".`
+        : "One or both drafts changed the exact offer.",
+      { expected: expected.offer, fallback: fallback.campaign?.offer, generated: generated.campaign?.offer },
+    ),
+  );
+
+  const destinationMatches =
+    normalizeText(fallback.campaign?.destinationUrl) === normalizeText(expected.destinationUrl) &&
+    normalizeText(generated.campaign?.destinationUrl) === normalizeText(expected.destinationUrl);
+  checks.push(
+    check(
+      "destination-preserved",
+      destinationMatches ? "passed" : "failed",
+      destinationMatches
+        ? `Both drafts preserve the exact destination "${expected.destinationUrl}".`
+        : "One or both drafts changed the exact destination.",
+      {
+        expected: expected.destinationUrl,
+        fallback: fallback.campaign?.destinationUrl,
+        generated: generated.campaign?.destinationUrl,
+      },
+    ),
+  );
+
+  const approvedAssets = new Map(caseDef.approvedAssets.map((asset) => [asset.id, asset]));
+  const fallbackAssetUnknown = fallbackAssets.filter((id) => !approvedAssets.has(id));
+  const generatedAssetUnknown = generatedAssets.filter((id) => !approvedAssets.has(id));
+  const assetSetEqual =
+    fallbackAssets.length === generatedAssets.length &&
+    fallbackAssets.every((id) => generatedAssets.includes(id));
+  const heroId = caseDef.approvedAssets.find((asset) => asset.role === "product-hero")?.id;
+  const heroPresent =
+    !heroId || (fallbackAssets.includes(heroId) && generatedAssets.includes(heroId));
+  const hashChecks = [];
+  for (const id of new Set([...fallbackAssets, ...generatedAssets])) {
+    const fallbackHash = assetHash(fallback, id);
+    const generatedHash = assetHash(generated, id);
+    const expectedHash = caseDef.mustStayExact.assetSha256?.[id] ?? approvedAssets.get(id)?.sha256;
+    if (fallbackHash || generatedHash || expectedHash) {
+      hashChecks.push({
+        id,
+        fallbackHash,
+        generatedHash,
+        expectedHash,
+        pairMatches: !fallbackHash || !generatedHash || fallbackHash === generatedHash,
+        packPinMatches: !expectedHash || !fallbackHash || fallbackHash === expectedHash,
+        observed: Boolean(fallbackHash || generatedHash),
+      });
+    }
+  }
+  const hashMismatch = hashChecks.filter((entry) => !entry.pairMatches);
+  const hashUnassessed = hashChecks.some((entry) => !entry.observed);
+  const packPinMismatch = hashChecks.filter((entry) => entry.observed && !entry.packPinMatches);
+  const imageIdentity =
+    fallbackAssetUnknown.length === 0 &&
+    generatedAssetUnknown.length === 0 &&
+    heroPresent &&
+    hashMismatch.length === 0;
+  checks.push(
+    check(
+      "image-identity",
+      imageIdentity ? "passed" : "failed",
+      imageIdentity
+        ? [
+            `Both drafts preserve the approved product image identity (${heroId ?? "hero"}).`,
+            hashUnassessed ? "A content hash was not supplied for both artifacts, so byte identity remains unassessed here." : "The observed content hashes match between drafts.",
+            packPinMismatch.length ? `The observed app hash differs from the evaluation pack pin for ${packPinMismatch.map((entry) => entry.id).join(", ")}; check asset provenance separately.` : "",
+          ].filter(Boolean).join(" ")
+        : [
+            fallbackAssetUnknown.length || generatedAssetUnknown.length
+              ? `Unapproved asset(s): ${[...fallbackAssetUnknown, ...generatedAssetUnknown].join(", ")}.`
+              : "",
+            !heroPresent ? "The approved product hero is missing from one draft." : "",
+            hashMismatch.length ? `Asset hash differs between drafts: ${hashMismatch.map((entry) => entry.id).join(", ")}.` : "",
+          ].filter(Boolean).join(" "),
+      {
+        expectedHero: heroId,
+        fallbackAssets,
+        generatedAssets,
+        assetSetEqual,
+        hashChecks,
+        hashMismatch,
+        hashUnassessed,
+        packPinMismatch,
+      },
+    ),
+  );
+
+  const approvedFactKeys = new Set([
+    ...caseDef.approvedFacts,
+    ...(fallback.flow?.brief?.productFacts ?? []),
+    ...(generated.flow?.brief?.productFacts ?? []),
+    ...fallbackFacts,
+  ].map(factKey));
+  const fallbackUnapproved = fallbackFacts.filter((fact) => !approvedFactKeys.has(factKey(fact)));
+  const generatedUnapproved = generatedFacts.filter((fact) => !approvedFactKeys.has(factKey(fact)));
+  const requiredFactKeys = (caseDef.expected?.draft?.requiredFactIds ?? [])
+    .map((id) => caseDef.approvedFacts.find((fact) => fact.id === id))
+    .filter(Boolean)
+    .map(factKey);
+  const fallbackMissingRequired = requiredFactKeys.filter(
+    (key) => !fallbackFacts.some((fact) => factKey(fact) === key),
+  );
+  const generatedMissingRequired = requiredFactKeys.filter(
+    (key) => !generatedFacts.some((fact) => factKey(fact) === key),
+  );
+  const factsPreserved =
+    fallbackUnapproved.length === 0 &&
+    generatedUnapproved.length === 0 &&
+    fallbackMissingRequired.length === 0 &&
+    generatedMissingRequired.length === 0;
+  checks.push(
+    check(
+      "approved-facts-preserved",
+      factsPreserved ? "passed" : "failed",
+      factsPreserved
+        ? "Both drafts use only approved facts and keep every required approved fact."
+        : [
+            fallbackUnapproved.length || generatedUnapproved.length
+              ? `Unapproved fact(s): ${[...fallbackUnapproved, ...generatedUnapproved].map(factLabel).join("; ")}.`
+              : "",
+            fallbackMissingRequired.length ? `Fallback is missing required fact(s): ${fallbackMissingRequired.length}.` : "",
+            generatedMissingRequired.length ? `Generated draft is missing required fact(s): ${generatedMissingRequired.length}.` : "",
+          ].filter(Boolean).join(" "),
+      {
+        fallbackFacts,
+        generatedFacts,
+        fallbackUnapproved,
+        generatedUnapproved,
+        fallbackMissingRequired: fallbackMissingRequired.length,
+        generatedMissingRequired: generatedMissingRequired.length,
+      },
+    ),
+  );
+
+  const fallbackClaims = scanClaims(artifactText(fallback), caseDef, pack);
+  const generatedClaims = scanClaims(artifactText(generated), caseDef, pack);
+  const claimsTraceable = fallbackClaims.ok && generatedClaims.ok;
+  checks.push(
+    check(
+      "claims-traceable",
+      claimsTraceable ? "passed" : "failed",
+      claimsTraceable
+        ? "Both drafts keep their narrative claims traceable to the approved corpus."
+        : `Unsupported claims: ${!fallbackClaims.ok ? "fallback" : ""}${!fallbackClaims.ok && !generatedClaims.ok ? " and " : ""}${!generatedClaims.ok ? "generated draft" : ""}.`,
+      { fallback: fallbackClaims, generated: generatedClaims },
+    ),
+  );
+
+  const fallbackFingerprint = artifactFingerprint(fallback);
+  const generatedFingerprint = artifactFingerprint(generated);
+  const identical = fallbackFingerprint === generatedFingerprint;
+
+  const headlineBefore = normalizeText(fallback.draft?.headline);
+  const headlineAfter = normalizeText(generated.draft?.headline);
+  const ledeBefore = normalizeText(fallback.draft?.lede);
+  const ledeAfter = normalizeText(generated.draft?.lede);
+  const sectionDiff = diffSequence(fallbackSections, generatedSections, (section) => section.id);
+  const factDiff = diffSequence(fallbackFacts, generatedFacts, factKey);
+  const assetDiff = diffSequence(fallbackAssets, generatedAssets, (id) => id);
+  const storyBefore = normalizeText(fallback.draft?.story);
+  const storyAfter = normalizeText(generated.draft?.story);
+
+  const opening = {
+    headline: { before: headlineBefore, after: headlineAfter, changed: headlineBefore !== headlineAfter },
+    lede: { before: ledeBefore, after: ledeAfter, changed: ledeBefore !== ledeAfter },
+    headlineSimilarity: jaccard(headlineBefore, headlineAfter),
+    angle: generated.flow?.generation?.angle ?? null,
+    openingFocus:
+      generated.flow?.brief?.openingFocus ??
+      fallback.flow?.brief?.openingFocus ??
+      null,
+    changed: headlineBefore !== headlineAfter || ledeBefore !== ledeAfter,
+  };
+
+  const sections = {
+    before: fallbackSections.map((section) => section.id),
+    after: generatedSections.map((section) => section.id),
+    changed: !sectionDiff.sameOrder,
+    added: sectionDiff.added.map((section) => section.id),
+    removed: sectionDiff.removed.map((section) => section.id),
+    reordered: sectionDiff.sameSet && !sectionDiff.sameOrder,
+  };
+
+  const evidence = {
+    facts: {
+      before: fallbackFacts,
+      after: generatedFacts,
+      added: factDiff.added,
+      removed: factDiff.removed,
+      reordered: factDiff.sameSet && !factDiff.sameOrder,
+      same: factDiff.sameOrder,
+    },
+    assets: {
+      before: fallbackAssets,
+      after: generatedAssets,
+      added: assetDiff.added,
+      removed: assetDiff.removed,
+      reordered: assetDiff.sameSet && !assetDiff.sameOrder,
+      same: assetDiff.sameOrder,
+    },
+    story: { before: storyBefore, after: storyAfter, changed: storyBefore !== storyAfter },
+    layout: {
+      before: fallback.draft?.layout ?? null,
+      after: generated.draft?.layout ?? null,
+      changed: (fallback.draft?.layout ?? null) !== (generated.draft?.layout ?? null),
+    },
+  };
+
+  const changes = [];
+  if (identical) {
+    changes.push("Identical drafts: no change to headline, lede, facts, section order, asset IDs, or template.");
+  } else {
+    if (opening.headline.changed) changes.push(`Headline: "${headlineBefore}" → "${headlineAfter}".`);
+    if (opening.lede.changed) changes.push(`Lede: "${ledeBefore}" → "${ledeAfter}".`);
+    if (sections.changed) {
+      changes.push(
+        `Section order: ${sections.before.join(" → ") || "(none)"} → ${sections.after.join(" → ") || "(none)"}.` +
+          (sections.added.length ? ` Added: ${sections.added.join(", ")}.` : "") +
+          (sections.removed.length ? ` Removed: ${sections.removed.join(", ")}.` : ""),
+      );
+    }
+    if (!factDiff.sameOrder) {
+      changes.push(
+        `Approved facts: ${fallbackFacts.map(factLabel).join("; ") || "(none)"} → ${generatedFacts.map(factLabel).join("; ") || "(none)"}.` +
+          (factDiff.added.length ? ` Added: ${factDiff.added.map(factLabel).join("; ")}.` : "") +
+          (factDiff.removed.length ? ` Removed: ${factDiff.removed.map(factLabel).join("; ")}.` : "") +
+          (factDiff.sameSet ? " Reordered." : ""),
+      );
+    }
+    if (!assetDiff.sameOrder) {
+      changes.push(
+        `Images: ${fallbackAssets.join(", ") || "(none)"} → ${generatedAssets.join(", ") || "(none)"}.` +
+          (assetDiff.added.length ? ` Added: ${assetDiff.added.join(", ")}.` : "") +
+          (assetDiff.removed.length ? ` Removed: ${assetDiff.removed.join(", ")}.` : ""),
+      );
+    }
+    if (evidence.story.changed) changes.push(`Story evidence changed: "${storyBefore}" → "${storyAfter}".`);
+    if (evidence.layout.changed) changes.push(`Layout: ${evidence.layout.before} → ${evidence.layout.after}.`);
+  }
+
+  return {
+    identical,
+    checks,
+    opening,
+    sections,
+    evidence,
+    fingerprint: { fallback: fallbackFingerprint, generated: generatedFingerprint },
+    changes,
+  };
+}
+
 export function compareArtifacts(generated, baseline, referenceGenerated, caseDef) {
   const comparisons = [];
 
@@ -1008,7 +1409,15 @@ export function validatePack(loaded) {
   return { ok: errors.length === 0, errors, warnings, notes: usability.notes };
 }
 
-export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "captures", capturesAvailable = false }) {
+export function buildBlindSheet({
+  loaded,
+  runId,
+  seed,
+  pairs,
+  captureRoot = "captures",
+  capturesAvailable = false,
+  captureFileNames = { "375": "375", "1440": "1440" },
+}) {
   const { pack } = loaded;
   const key = { schemaVersion: 1, runId, seed, cases: {} };
   const labels = ["A", "B", "C", "D"];
@@ -1022,12 +1431,12 @@ export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "cap
   lines.push("");
   lines.push("## How to score");
   lines.push("");
-  lines.push("1. Open each draft's 375 px and 1440 px capture. Do not open `report.md`, `report.json`, or `blind-key.json` yet.");
+  lines.push("1. Open each draft's mobile and desktop capture. Do not open `comparison-index.md`, `comparison.json`, `report.md`, or `blind-key.json` yet. Capture labels are neutral; the provider mapping stays in `provider-map.json`.");
   lines.push("2. Score each visual dimension from 0 to 2: 0 failed or unsupported, 1 workable with edits, 2 ready to use.");
-  lines.push("3. Record the draft you would ship and whether you would fall back to the simpler/deterministic page.");
-  lines.push("4. Only after all visual scores are recorded, open `report.md` and note factual or functional gate failures separately. Never average a gate failure into a visual score.");
+  lines.push("3. Record the page you would approve, the first change you would make, the number of edits to approval, and the time to approval.");
+  lines.push("4. Only after all visual scores are recorded, open the automated comparison and note factual or functional gate failures separately. Never average a gate failure into a visual score.");
   lines.push("");
-  lines.push("Visual preferences are not factual failures. A draft can look better and still fail an exact offer, destination, asset, or claim check.");
+  lines.push("Visual preferences are not factual failures. A draft can look better and still fail an exact offer, destination, asset, or claim check. If the automated comparison says the drafts are identical, say so rather than inventing a preference.");
   lines.push("");
 
   let includedCases = 0;
@@ -1052,6 +1461,10 @@ export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "cap
     }
     lines.push(`**Approved offer.** ${caseDef.campaign.offer} · **Destination.** ${caseDef.campaign.destinationUrl} · **Action.** ${caseDef.campaign.actionLabel}`);
     lines.push("");
+    if (pair.identical) {
+      lines.push("**Automated comparison: the two drafts are identical.** No copy, section-order, or evidence difference was found. Note whether the captures show any difference at all.");
+      lines.push("");
+    }
     lines.push("**What a visitor should see at 375 px**");
     for (const item of caseDef.review["375"]) lines.push(`- ${item}`);
     lines.push("");
@@ -1072,9 +1485,19 @@ export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "cap
     lines.push("- Would you fall back to the other draft? Why?");
     lines.push("- Name one strength to preserve in each draft.");
     lines.push("");
-    lines.push(capturesAvailable ? "Capture slots:" : "Capture slots (run `scripts/campaign-eval-browser.mjs` to fill them):");
+    lines.push("**Reviewer decision (record after visual scoring, before opening the automated index)**");
+    lines.push("");
+    lines.push("- Page I would approve: A / B / neither");
+    lines.push("- What I would change first:");
+    lines.push("- Edits to approval (count):");
+    lines.push("- Time to approval (minutes):");
+    lines.push("- Would I fall back to the other page? Yes / No / Not applicable");
+    lines.push("");
+    lines.push(capturesAvailable
+      ? "Capture slots (neutral labels; provider mapping is in `provider-map.json`):"
+      : "Capture slots (run `scripts/campaign-eval-browser.mjs` or the comparison flow to fill them; provider mapping is in `provider-map.json`):");
     for (const label of Object.keys(mapping)) {
-      lines.push(`- Draft ${label}: \`${captureRoot}/${caseDef.id}/${label}/375.png\`, \`${captureRoot}/${caseDef.id}/${label}/1440.png\``);
+      lines.push(`- Draft ${label}: \`${captureRoot}/${caseDef.id}/${label}/${captureFileNames["375"]}.png\`, \`${captureRoot}/${caseDef.id}/${label}/${captureFileNames["1440"]}.png\``);
     }
     lines.push("");
     key.cases[caseDef.id] = { order: Object.keys(mapping), mapping };

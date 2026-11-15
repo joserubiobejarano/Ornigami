@@ -74,8 +74,19 @@ function renderPage(caseDef, artifact) {
   const draft = artifact.draft;
   const assets = (draft.assetIds ?? []).map((id) => assetFiles.get(id)).filter(Boolean);
   const facts = (draft.facts ?? [])
-    .map((fact) => `<li data-fact><span>${escapeHtml(fact.label)}</span> <span>${escapeHtml(fact.value)}</span></li>`)
+    .map((fact) => {
+      const id = fact.id ?? `${fact.label}-${fact.value}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return `<li data-fact data-fact-id="${escapeHtml(id)}"><span>${escapeHtml(fact.label)}</span> <span>${escapeHtml(fact.value)}</span></li>`;
+    })
     .join("");
+  const sectionOrder = (draft.sections ?? []).map((section) => section.id).join(",");
+  const factIds = (draft.facts ?? []).map((fact) =>
+    fact.id ?? `${fact.label}-${fact.value}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+  ).join(",");
+  const hero = assets.find((asset) => asset.role === "product-hero") ?? assets[0];
+  const generation = artifact.flow?.generation ?? null;
+  const generationStatus = generation?.status ?? (artifact.source === "baseline" ? "idle" : "generated");
+  const generationProvider = generation?.provider ?? (artifact.source === "baseline" ? "deterministic" : "unknown");
   const sections = (draft.sections ?? [])
     .map(
       (section) =>
@@ -120,7 +131,11 @@ function renderPage(caseDef, artifact) {
 </style>
 </head>
 <body>
-<main data-case="${escapeHtml(caseDef.id)}" data-source="${escapeHtml(artifact.source)}" data-revision="${escapeHtml(artifact.approval?.revision ?? "")}">
+<main data-case="${escapeHtml(caseDef.id)}" data-source="${escapeHtml(artifact.source)}" data-revision="${escapeHtml(artifact.approval?.revision ?? "")}"
+  data-template="${escapeHtml(artifact.template?.id ?? "")}" data-template-version="${escapeHtml(artifact.template?.version ?? "")}"
+  data-layout="${escapeHtml(draft.layout ?? "")}" data-section-order="${escapeHtml(sectionOrder)}" data-fact-ids="${escapeHtml(factIds)}"
+  data-asset-id="${escapeHtml(hero?.id ?? "")}" data-generation-status="${escapeHtml(generationStatus)}"
+  data-generation-provider="${escapeHtml(generationProvider)}" data-generation-angle="${escapeHtml(generation?.angle ?? "")}">
   <header><span data-role="brand">${escapeHtml(brandFor(caseDef))}</span></header>
   <div>
     <h1 data-role="headline">${escapeHtml(draft.headline)}</h1>

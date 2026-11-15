@@ -24,6 +24,7 @@ adapter.
   HTML for the focused browser checks. It is not the app renderer.
 - `urls.example.json` — the shape for the focused browser URL map. Replace the
   values with real pages; omit cases the flow cannot express.
+- `compare-urls.example.json` — the shape for comparison `--urls` inputs.
 
 ## Draft artifact shape
 
@@ -96,6 +97,15 @@ case into a directory, using the shape above. Map the flow's rendered values int
 actually rendered something different. If the flow cannot express a case, omit
 that file. The report will mark the case `missing-draft` and list it as
 unassessed rather than pass it.
+
+## Comparing fallback and generator drafts
+
+`scripts/campaign-eval-compare.mjs` consumes the same artifact shape through
+`--fallback` and `--generated`, or drives the real Campaign Lab UI/URLs. It writes
+`comparison-index.md`, `comparison.json`, `provider-map.json`, `blind-sheet.md`,
+`blind-key.json`, `blind-map.json`, `run.json`, and neutral
+`captures/<case>/<label>/mobile.png` / `desktop.png`. See
+`docs/campaign-lab-comparison.md`.
 
 ## Pre-integration verification
 

@@ -21,6 +21,7 @@
         "campaign-eval:validate": "node scripts/campaign-eval.mjs validate",
         "campaign-eval:evaluate": "node scripts/campaign-eval.mjs evaluate",
         "campaign-eval:collect-flow": "node scripts/campaign-eval-collect-flow.mjs",
+        "campaign-eval:compare": "node scripts/campaign-eval-compare.mjs",
         "campaign-eval:browser": "node scripts/campaign-eval-browser.mjs",
         "campaign-eval:browser-self-test": "node tests/support/campaign-eval-browser-self-test.mjs"
     },

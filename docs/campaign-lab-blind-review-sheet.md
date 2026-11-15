@@ -12,24 +12,25 @@ Date:
 
 ## Rules
 
-1. Open each draft's 375 px and 1440 px capture. Do not open `report.md`,
-   `report.json`, or `blind-key.json` yet.
+1. Open each draft's mobile and desktop capture. Do not open `comparison-index.md`,
+   `comparison.json`, `report.md`, or `blind-key.json` yet. The captures use
+   neutral labels; `provider-map.json` stays separate.
 2. Score each visual dimension 0–2: 0 failed or unsupported, 1 workable with
    edits, 2 ready to use.
-3. Record which draft you would ship and whether you would fall back to the
-   other draft.
-4. Only after all visual scores are recorded, open the gate report and fill the
-   separate factual and functional table. Never average a gate failure into a
-   visual score.
+3. Record which draft you would approve, the first change you would make, the
+   number of edits to approval, and the time to approval.
+4. Only after all visual scores are recorded, open the automated comparison and
+   fill the separate factual and functional table. Never average a gate failure
+   into a visual score.
 5. Name one strength to preserve in each draft.
 
 ## Sparse campaign
 
-Expected at 375 px: product, 20% offer, and action readable without horizontal
+Expected at mobile width: product, 20% offer, and action readable without horizontal
 scrolling; offer terms near the action; image does not bury the action; page
 does not read as empty.
 
-Expected at 1440 px: deliberate wide composition; product label crop readable;
+Expected at desktop width: deliberate wide composition; product label crop readable;
 action and terms paired; no competing action; repetition earns its place.
 
 | Draft | Campaign fit | Brand fit | Visual hierarchy | Repetition | Edits to approval | Ship? |
@@ -41,11 +42,11 @@ Fallback preferred? Notes:
 
 ## Richer campaign
 
-Expected at 375 px: product angle on the first screen; extra evidence within the
+Expected at mobile width: product angle on the first screen; extra evidence within the
 first two screens; offer and action not buried by the image stack; longer than
 sparse without becoming a wall of copy.
 
-Expected at 1440 px: image roles read as recognition, evidence, detail, use;
+Expected at desktop width: image roles read as recognition, evidence, detail, use;
 crops preserve the ribs, outlet, or prototype label; width used deliberately;
 offer and action paired.
 
@@ -58,11 +59,11 @@ Fallback preferred? Notes:
 
 ## Intent change
 
-Expected at 375 px: first screen promises the slower first pour, not the rib
+Expected at mobile width: first screen promises the slower first pour, not the rib
 mechanism; offer, destination, action, and image identity unchanged; opening is
 not a synonym swap; page still reads as Morrow.
 
-Expected at 1440 px: section emphasis follows the ritual angle; same product and
+Expected at desktop width: section emphasis follows the ritual angle; same product and
 assets recognizable; offer and action unchanged; the two Morrow pages are not
 duplicates.
 
@@ -75,12 +76,12 @@ Fallback preferred? Notes:
 
 ## Failure and revision
 
-Compare the revised page with the last valid page. Expected at 375 px: the
+Compare the revised page with the last valid page. Expected at mobile width: the
 unsupported-claim error is specific and the previous draft is visible; the
 missing-destination message is next to the field; the revised offer and
 destination are readable and the old values are gone; the page still fits.
 
-Expected at 1440 px: the revision is localized; headline, image, and facts do
+Expected at desktop width: the revision is localized; headline, image, and facts do
 not churn; the old destination is absent from every link; approval visibly
 changes to not approved; no second action or duplicated offer.
 
@@ -90,6 +91,18 @@ changes to not approved; no second action or duplicated offer.
 | B | | | | | | |
 
 Fallback preferred? Notes:
+
+## Reviewer decisions
+
+Record these after visual scoring. Use the neutral capture labels. The provider
+mapping stays in `provider-map.json` and is not part of this decision.
+
+| Case | Page I would approve | First change I would make | Edits to approval | Time to approval (minutes) | Fall back to the other page? |
+| --- | --- | --- | --- | --- | --- |
+| Sparse | A / B / neither | | | | Yes / No / N/A |
+| Richer | A / B / neither | | | | Yes / No / N/A |
+| Intent change | A / B / neither | | | | Yes / No / N/A |
+| Failure and revision | A / B / neither | | | | Yes / No / N/A |
 
 ## Factual and functional gate review
 
