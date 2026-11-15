@@ -176,11 +176,11 @@ async function readArticle(page) {
 
 async function checkFocus(page) {
   const entries = [];
-  for (let index = 0; index < 120 && entries.length < 2; index += 1) {
+  for (let index = 0; index < 120 && entries.length === 0; index += 1) {
     await page.keyboard.press("Tab");
     const active = await page.evaluate(() => {
       const element = document.activeElement;
-      if (!element || !element.closest("[data-preview-canvas] article")) return null;
+      if (!element?.matches("[data-preview-canvas] article [data-advertorial-action]")) return null;
       const computed = getComputedStyle(element);
       return {
         label: element.textContent?.trim() ?? "",
@@ -303,7 +303,7 @@ async function capture(browser, details) {
           article.links.length === 1 &&
           article.links.every((link) => link.href === "https://example.com/morrow"),
         imagesLoaded: article.images.every((image) => image.complete && image.naturalWidth > 0),
-        focusVisible: (focus ?? []).length === 1 && (focus ?? []).every((entry) => entry.focusVisible),
+        focusVisible: (focus ?? []).length === 1 && (focus ?? []).every((entry) => entry.focusVisible && entry.outlineStyle !== "none" && Number.parseFloat(entry.outlineWidth) > 0),
       },
       article,
       focus,
