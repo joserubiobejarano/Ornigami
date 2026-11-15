@@ -147,6 +147,9 @@ The reviewer scores each draft from 0 to 2 on:
 4. repetition
 5. edits to approval
 
+A blank form is in `docs/campaign-lab-blind-review-sheet.md`. The evaluator's
+`blind-sheet.md` is the per-run version with the labels already shuffled.
+
 Then records which draft they would ship and whether the fallback is preferable.
 Only after scoring do they open `report.md` and record gate results in the
 separate “Factual and functional gate review” section. A gate failure is a
