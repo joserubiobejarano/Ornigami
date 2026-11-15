@@ -886,12 +886,13 @@ export function compareDraftPair(fallback, generated, caseDef, pack) {
     ),
   );
 
-  const approvedFactKeys = new Set([
+  const approvedFacts = caseDef.pilot ? caseDef.approvedFacts : [
     ...caseDef.approvedFacts,
     ...(fallback.flow?.brief?.productFacts ?? []),
     ...(generated.flow?.brief?.productFacts ?? []),
     ...fallbackFacts,
-  ].map(factKey));
+  ];
+  const approvedFactKeys = new Set(approvedFacts.map(factKey));
   const fallbackUnapproved = fallbackFacts.filter((fact) => !approvedFactKeys.has(factKey(fact)));
   const generatedUnapproved = generatedFacts.filter((fact) => !approvedFactKeys.has(factKey(fact)));
   const requiredFactKeys = (caseDef.expected?.draft?.requiredFactIds ?? [])

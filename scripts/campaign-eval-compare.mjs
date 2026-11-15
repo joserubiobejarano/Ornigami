@@ -183,6 +183,13 @@ function loadPilotCase(file) {
     },
     approvedAssets: [{ id: asset.id, file: asset.src, sha256: asset.contentHash, role: asset.role, alt: asset.alt }],
     approvedFacts: fixture.brief.productFacts,
+    expected: {
+      draft: {
+        requiredFactIds: [...new Set(
+          (fixture.brief.requiredFactGroups ?? []).flatMap((group) => group.factIds),
+        )],
+      },
+    },
     approvedStory: fixture.openings.flatMap(({ copy }) => [copy.headline, copy.lede]).join("\n"),
     review: {
       "375": ["Check whether the packshot, offer and action are clear on the first screen."],
@@ -427,7 +434,7 @@ async function extractArtifact(page, caseDef, source) {
         },
         asset: {
           id: dataset.assetId ?? form.assetId ?? null,
-          src: image?.currentSrc ?? image?.src ?? null,
+          src: image?.currentSrc || image?.src || null,
           alt: image?.alt ?? null,
           contentHash: null,
         },

@@ -103,6 +103,29 @@ test("an unapproved fact fails the approved-facts check", () => {
   assert.equal(check(result, "approved-facts-preserved").state, "failed");
 });
 
+test("a pilot comparison verifies each draft against its manifest facts", () => {
+  const loaded = loadedPack();
+  const original = loaded.casesById.get("sparse-offer");
+  const fallback = baseline().drafts.get("sparse-offer");
+  const requiredFact = original.approvedFacts.find((fact) =>
+    fallback.draft.facts.some(({ label, value }) => label === fact.label && value === fact.value),
+  );
+  assert.ok(requiredFact);
+  const pilot = {
+    ...original,
+    pilot: true,
+    expected: { draft: { requiredFactIds: [requiredFact.id] } },
+  };
+  const incomplete = structuredClone(fallback);
+  incomplete.draft.facts = incomplete.draft.facts.filter(({ label }) => label !== requiredFact.label);
+  const invented = structuredClone(fallback);
+  invented.draft.facts.push({ label: "Weight", value: "1 kg" });
+
+  assert.equal(check(compareDraftPair(fallback, fallback, pilot, loaded.pack), "approved-facts-preserved").state, "passed");
+  assert.equal(check(compareDraftPair(fallback, incomplete, pilot, loaded.pack), "approved-facts-preserved").state, "failed");
+  assert.equal(check(compareDraftPair(invented, invented, pilot, loaded.pack), "approved-facts-preserved").state, "failed");
+});
+
 test("a different product image fails image identity", () => {
   const loaded = loadedPack();
   const caseDef = loaded.casesById.get("sparse-offer");
