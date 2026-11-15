@@ -27,7 +27,8 @@ const nextConfig: NextConfig = {
   ...(privatePreview ? { env: { NEXT_PUBLIC_ORNIGAMI_SENTRY_DISABLED: "true" } } : {}),
   reactCompiler: true,
   experimental: {
-    sri: { algorithm: "sha256" },
+    // Webpack development does not emit the SRI manifest for dynamic route handlers.
+    ...(process.env.NODE_ENV === "development" ? {} : { sri: { algorithm: "sha256" as const } }),
     ...(containerBuild
       ? {
           cpus: 1,

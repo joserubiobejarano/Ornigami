@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -16,6 +17,16 @@ import type {
 
 const DEFAULT_PILOT_ID = "momisa";
 const PILOT_ASSET_PREFIX = "/campaign-lab-pilots/";
+const PILOT_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+const PILOT_ASSET_PATTERN = /^[a-z0-9][a-z0-9-]*\.(?:jpg|png|webp)$/;
+
+function pilotAssetFile(id: string, src: string): string | null {
+  if (!PILOT_ID_PATTERN.test(id)) return null;
+  const prefix = PILOT_ASSET_PREFIX + id + "/";
+  if (!src.startsWith(prefix)) return null;
+  const filename = src.slice(prefix.length);
+  return PILOT_ASSET_PATTERN.test(filename) ? join(pilotRoot(), id, "assets", filename) : null;
+}
 
 type PilotManifest = {
   schemaVersion: 1;
@@ -111,6 +122,7 @@ function validateManifest(value: unknown): PilotManifest {
     throw new Error("at least one approved asset is required");
   }
 
+  const id = value.pilot.id;
   const assets: ApprovedAsset[] = value.assets.map((asset, index) => {
     if (!isRecord(asset) ||
         !isString(asset.id) ||
@@ -125,18 +137,15 @@ function validateManifest(value: unknown): PilotManifest {
     }
     if (asset.reviewed !== true) throw new Error(`asset[${index}] must be reviewed`);
     if (asset.role !== "product-hero") throw new Error(`asset[${index}] must use the product-hero role`);
-    if (!asset.src.startsWith(PILOT_ASSET_PREFIX) || asset.src.includes("..")) {
-      throw new Error(`asset[${index}] src must stay under ${PILOT_ASSET_PREFIX}`);
-    }
+    const filename = pilotAssetFile(id, asset.src);
+    if (!filename) throw new Error(`asset[${index}] has an invalid local asset URL`);
     if (!/^[a-f0-9]{64}$/i.test(asset.contentHash)) {
       throw new Error(`asset[${index}] contentHash must be a SHA-256 digest`);
     }
     if (typeof asset.width !== "number" || typeof asset.height !== "number" || asset.width <= 0 || asset.height <= 0) {
       throw new Error(`asset[${index}] width and height are required`);
     }
-    if (!existsSync(join(process.cwd(), "public", asset.src.replace(/^\//, "")))) {
-      throw new Error(`asset[${index}] file is missing from public${asset.src}`);
-    }
+    if (!existsSync(filename)) throw new Error(`asset[${index}] file is missing from the local pilot`);
     return asset as ApprovedAsset;
   });
 
@@ -167,11 +176,14 @@ function pilotId(): string {
 /** Loads the optional local pilot package. Missing/invalid data leaves the base lab intact. */
 export function loadLocalPilot(): PilotBundle | null {
   if (process.env.CAMPAIGN_LAB_PILOT_DISABLED === "true") return null;
-  const manifestPath = join(pilotRoot(), pilotId(), "manifest.json");
+  const id = pilotId();
+  if (!PILOT_ID_PATTERN.test(id)) return null;
+  const manifestPath = join(pilotRoot(), id, "manifest.json");
   if (!existsSync(manifestPath)) return null;
 
   try {
     const manifest = validateManifest(JSON.parse(readFileSync(manifestPath, "utf8")) as unknown);
+    if (manifest.pilot.id !== id) throw new Error("pilot manifest ID must match its directory");
     const assetIds = new Set(manifest.assets.map((asset) => asset.id));
     const fixtureId = manifest.fixture.id;
     if (manifest.fixture.brief.productFacts.some((fact, index) =>
@@ -216,6 +228,23 @@ export function loadLocalPilot(): PilotBundle | null {
         error instanceof Error ? error.message : "unknown load error"
       }`,
     );
+    return null;
+  }
+}
+
+export function readLocalPilotAsset(id: string, filename: string): Uint8Array<ArrayBuffer> | null {
+  const pilot = loadLocalPilot();
+  if (!pilot || pilot.pilot.id !== id) return null;
+  const src = PILOT_ASSET_PREFIX + id + "/" + filename;
+  const asset = pilot.assets.find((entry) => entry.src === src);
+  const file = asset && pilotAssetFile(id, asset.src);
+  if (!asset || !file) return null;
+
+  try {
+    const bytes = readFileSync(file);
+    const digest = createHash("sha256").update(bytes).digest("hex");
+    return digest === asset.contentHash.toLowerCase() ? new Uint8Array(bytes) : null;
+  } catch {
     return null;
   }
 }

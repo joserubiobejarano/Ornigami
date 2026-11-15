@@ -2,10 +2,8 @@
 /**
  * Loads a local Campaign Lab pilot package into the editor and renderer.
  *
- * The source brief and rights notes stay under `.local/campaign-lab-pilots/`
- * and the copied assets stay under the Git-ignored
- * `public/campaign-lab-pilots/` path. The app reads the generated manifest
- * server-side and merges it into the reviewed base catalog.
+ * The source brief, rights notes, and copies of the images stay under the
+ * Git-ignored pilot directory. The app reads the generated manifest on the server.
  *
  * Usage:
  *   node scripts/load-campaign-lab-pilot.mjs --pilot momisa
@@ -21,13 +19,14 @@ const { values: cli } = parseArgs({
   options: {
     pilot: { type: "string", short: "p", default: "momisa" },
     "pilot-dir": { type: "string", default: ".local/campaign-lab-pilots" },
-    "public-dir": { type: "string", default: "public/campaign-lab-pilots" },
   },
 });
 
+if (!/^[a-z0-9][a-z0-9-]*$/.test(cli.pilot)) throw new Error("Invalid pilot ID");
+
 const root = process.cwd();
 const pilotDir = path.resolve(root, cli["pilot-dir"], cli.pilot);
-const publicRoot = path.resolve(root, cli["public-dir"], cli.pilot);
+const assetRoot = path.join(pilotDir, "assets");
 const sourcePath = path.join(pilotDir, "pilot.json");
 
 if (!existsSync(sourcePath)) {
@@ -40,10 +39,13 @@ if (!existsSync(sourcePath)) {
     throw new Error("pilot source needs at least one asset");
   }
 
-  mkdirSync(publicRoot, { recursive: true });
+  if (source.pilot?.id !== cli.pilot) throw new Error("Pilot source ID must match its directory");
+
+  mkdirSync(assetRoot, { recursive: true });
   const assets = [];
 
   for (const asset of source.assets) {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(asset.id)) throw new Error("Invalid pilot asset ID");
     const file = path.resolve(root, asset.file);
     if (!existsSync(file)) throw new Error(`Asset not found: ${file}`);
     const bytes = readFileSync(file);
@@ -52,9 +54,10 @@ if (!existsSync(sourcePath)) {
     if (!metadata.width || !metadata.height) {
       throw new Error(`Could not read dimensions for ${file}`);
     }
-    const extension = path.extname(file).toLowerCase() || ".jpg";
+    const extension = { jpeg: ".jpg", png: ".png", webp: ".webp" }[metadata.format];
+    if (!extension) throw new Error("Use a JPEG, PNG, or WebP pilot image");
     const filename = `${asset.id}${extension}`;
-    const destination = path.join(publicRoot, filename);
+    const destination = path.join(assetRoot, filename);
     writeFileSync(destination, bytes);
 
     assets.push({
@@ -71,7 +74,6 @@ if (!existsSync(sourcePath)) {
       rights: asset.rights,
       crop: asset.crop,
       contentHash: digest,
-      sourceFile: file,
     });
   }
 
@@ -91,7 +93,7 @@ if (!existsSync(sourcePath)) {
         status: "loaded",
         pilot: source.pilot.id,
         manifest: manifestPath,
-        publicDirectory: publicRoot,
+        assetDirectory: assetRoot,
         assets: assets.map((asset) => ({
           id: asset.id,
           src: asset.src,

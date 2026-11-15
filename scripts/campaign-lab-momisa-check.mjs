@@ -96,6 +96,21 @@ async function snapshot(page) {
   });
 }
 
+async function generatePreview(page) {
+  const button = page.getByRole("button", { name: "Generate preview", exact: true });
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (result) => new URL(result.url()).pathname === "/api/campaign-lab/generate" &&
+        result.request().method() === "POST",
+      { timeout: 15_000 },
+    ),
+    button.click(),
+  ]);
+  if (!response.ok()) throw new Error("The generate request returned HTTP " + response.status());
+  await button.and(page.locator(":enabled")).waitFor({ timeout: 15_000 });
+  await page.locator('[data-template][data-generation-status="generated"]').waitFor({ timeout: 15_000 });
+}
+
 async function capture(page, out, name, width) {
   await page.addStyleTag({ content: "nextjs-portal{display:none!important}" }).catch(() => {});
   await page.screenshot({ path: path.join(out, `${name}-${width}-full.png`), fullPage: true });
@@ -172,9 +187,7 @@ async function main() {
     check(report, `${width}:first-screen`, firstScreenPass, firstScreen, "headline, offer, action, and packshot inside the first viewport");
     await capture(page, out, "initial", width);
 
-    await page.getByRole("button", { name: "Generate preview", exact: true }).click();
-    await page.waitForFunction(() => document.querySelector("[data-generation-status]")?.getAttribute("data-generation-status") === "generated", null, { timeout: 15_000 });
-    await page.waitForTimeout(250);
+    await generatePreview(page);
     const generated = await snapshot(page);
     check(report, `${width}:generate`, generated.generation === "generated", generated.generation, "generated");
     check(report, `${width}:generated-asset`, generated.image?.src === fixture.image.path, generated.image, fixture.image);
@@ -193,9 +206,7 @@ async function main() {
       const next = options.find((option) => option !== current);
       if (next) {
         await opening.selectOption(next);
-        await page.getByRole("button", { name: "Generate preview", exact: true }).click();
-        await page.waitForFunction(() => document.querySelector("[data-generation-status]")?.getAttribute("data-generation-status") === "generated", null, { timeout: 15_000 });
-        await page.waitForTimeout(250);
+        await generatePreview(page);
         const changed = await snapshot(page);
         check(report, `${width}:opening-changes-headline`, changed.headline !== generated.headline, { before: generated.headline, after: changed.headline }, "different approved opening");
         check(report, `${width}:opening-preserves-offer`, changed.text.includes(fixture.offer), fixture.offer, fixture.offer);
@@ -210,9 +221,7 @@ async function main() {
     const revisedDestination = "https://example.com/momisa-preview-revised";
     await page.getByLabel("Offer", { exact: true }).fill(revisedOffer);
     await page.getByLabel("Destination URL", { exact: true }).fill(revisedDestination);
-    await page.getByRole("button", { name: "Generate preview", exact: true }).click();
-    await page.waitForFunction(() => document.querySelector("[data-generation-status]")?.getAttribute("data-generation-status") === "generated", null, { timeout: 15_000 });
-    await page.waitForTimeout(250);
+    await generatePreview(page);
     const revised = await snapshot(page);
     check(report, `${width}:revision-new-offer`, revised.text.includes(revisedOffer), revisedOffer, revisedOffer);
     check(report, `${width}:revision-old-offer-absent`, !revised.text.includes(fixture.offer), fixture.offer, "absent");

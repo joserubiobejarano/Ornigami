@@ -1459,7 +1459,8 @@ export function buildBlindSheet({
       lines.push("**Compare.** The revised page with the last valid page. Approval behavior is in the gate report, not in the visual score.");
       lines.push("");
     }
-    lines.push(`**Approved offer.** ${caseDef.campaign.offer} · **Destination.** ${caseDef.campaign.destinationUrl} · **Action.** ${caseDef.campaign.actionLabel}`);
+    const offerLabel = caseDef.pilot ? "Preview offer" : "Approved offer";
+    lines.push(`**${offerLabel}.** ${caseDef.campaign.offer} · **Destination.** ${caseDef.campaign.destinationUrl} · **Action.** ${caseDef.campaign.actionLabel}`);
     lines.push("");
     if (pair.identical) {
       lines.push("**Automated comparison: the two drafts are identical.** No copy, section-order, or evidence difference was found. Note whether the captures show any difference at all.");

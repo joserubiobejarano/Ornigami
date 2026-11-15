@@ -140,6 +140,18 @@ Use this when both rendered states are already available as pages. The pages mus
 expose the Campaign Lab preview structure (`[data-template]`, headline, facts,
 sections, and CTA).
 
+For a loaded preview pilot, use its runtime manifest and keep the brand material
+and results under the ignored `.local/` directory.
+
+```powershell
+node scripts/campaign-eval-compare.mjs --flow http://localhost:3100 `
+  --pilot-manifest .local/campaign-lab-pilots/momisa/manifest.json
+```
+
+Pilot mode verifies that the displayed image matches the manifest URL, alt text,
+and served bytes at each width. The comparison uses the manifest's preview terms.
+Commercial approval and packaging identity still require a human review.
+
 ## Outputs
 
 ```

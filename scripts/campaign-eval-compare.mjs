@@ -19,6 +19,7 @@
  *
  * This script does not import the app route, renderer, or provider adapter.
  */
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   existsSync,
@@ -76,6 +77,9 @@ Options:
   --urls <file>          JSON map: { caseId: { fallback: url, generated: url } }.
   --out <dir>            Output directory (default: .local/campaign-eval-compare/<timestamp>).
   --pack <file>          Case pack (default: tests/fixtures/campaign-eval/cases.json).
+  --pilot-manifest <file>
+                         Compare a local preview pilot from its runtime manifest.
+                         Use with --flow. Keep the output in .local/.
   --captures <dir>       Existing neutral capture tree to reuse for review.
   --fixtures <list>      Flow-mode fixtures (default: sparse-offer,rich-angle,intent-change).
   --seed <text>          Blind label seed (default: campaign-eval-compare-v1).
@@ -96,6 +100,7 @@ function parseCli() {
       urls: { type: "string" },
       out: { type: "string" },
       pack: { type: "string" },
+      "pilot-manifest": { type: "string" },
       captures: { type: "string" },
       fixtures: { type: "string" },
       seed: { type: "string" },
@@ -118,6 +123,10 @@ function parseCli() {
   if ((parsed.values.fallback || parsed.values.generated) && !(parsed.values.fallback && parsed.values.generated)) {
     throw new Error("Saved-artifact mode requires both --fallback and --generated.");
   }
+  const pilotManifest = parsed.values["pilot-manifest"];
+  if (pilotManifest && (!parsed.values.flow || parsed.values.fixtures || parsed.values.pack)) {
+    throw new Error("--pilot-manifest requires --flow and supplies its own case.");
+  }
   const selectedFixtures = (parsed.values.fixtures ?? flowCases.map((item) => item.caseId).join(","))
     .split(",")
     .map((value) => value.trim())
@@ -138,8 +147,47 @@ function parseCli() {
     pack: path.resolve(parsed.values.pack ?? defaultPack),
     captures: parsed.values.captures ? path.resolve(parsed.values.captures) : null,
     fixtures: selectedFixtures,
+    pilotManifest: pilotManifest ? path.resolve(pilotManifest) : null,
     seed: parsed.values.seed ?? "campaign-eval-compare-v1",
     headed: parsed.values.headed,
+  };
+}
+
+function loadPilotCase(file) {
+  const { schemaVersion, pilot, brand, fixture, assets } = JSON.parse(readFileSync(file, "utf8"));
+  if (schemaVersion !== 1 || pilot?.status !== "preview" ||
+      !/^[a-z0-9][a-z0-9-]*$/.test(fixture?.id ?? "") ||
+      !brand?.id || !fixture.brief || !fixture.openings?.length || assets?.length !== 1) {
+    throw new Error("Expected a loaded preview pilot manifest with one product image.");
+  }
+  const [asset] = assets;
+  if (!asset.src?.startsWith("/campaign-lab-pilots/" + pilot.id + "/") ||
+      !/^[a-f0-9]{64}$/.test(asset.contentHash ?? "")) {
+    throw new Error("The pilot product image must have a local route and a pinned SHA-256.");
+  }
+  const campaign = {
+    ...fixture.brief,
+    brandId: brand.id,
+    brandName: brand.name,
+    campaignAngle: fixture.openings[0].label,
+  };
+  return {
+    id: fixture.id,
+    title: pilot.label + " (preview terms)",
+    pilot: true,
+    campaign,
+    mustStayExact: {
+      ...campaign,
+      assetIds: [asset.id],
+      assetSha256: { [asset.id]: asset.contentHash },
+    },
+    approvedAssets: [{ id: asset.id, file: asset.src, sha256: asset.contentHash, role: asset.role, alt: asset.alt }],
+    approvedFacts: fixture.brief.productFacts,
+    approvedStory: fixture.openings.flatMap(({ copy }) => [copy.headline, copy.lede]).join("\n"),
+    review: {
+      "375": ["Check whether the packshot, offer and action are clear on the first screen."],
+      "1440": ["Check the opening hierarchy and whether each product fact helps a shopping decision."],
+    },
   };
 }
 
@@ -271,7 +319,7 @@ async function openPage(browser, url, viewport) {
 }
 
 async function extractArtifact(page, caseDef, source) {
-  return page.evaluate(({ caseId, sourceKind, expected, expectedAssets }) => {
+  const artifact = await page.evaluate(({ caseId, sourceKind, expected, expectedAssets }) => {
     const preview = document.querySelector('[data-template]') ?? document.querySelector('[aria-label="Campaign preview"]') ?? document.querySelector("main") ?? document.body;
     const content = preview.querySelector("article") ?? preview;
     const dataset = preview.dataset ?? {};
@@ -386,6 +434,31 @@ async function extractArtifact(page, caseDef, source) {
       },
     };
   }, { caseId: caseDef.id, sourceKind: source, expected: caseDef.campaign, expectedAssets: caseDef.approvedAssets });
+
+  if (caseDef.pilot) {
+    const [expectedAsset] = caseDef.approvedAssets;
+    const observed = artifact.flow.asset;
+    const pageOrigin = new URL(page.url()).origin;
+    if (observed.src !== new URL(expectedAsset.file, pageOrigin).href || observed.alt !== expectedAsset.alt) {
+      throw new Error("The rendered pilot image URL or alt text differs from the manifest.");
+    }
+    const response = await page.request.get(observed.src, { maxRedirects: 0, timeout: timeoutMs });
+    const contentHash = response.ok() ? createHash("sha256").update(await response.body()).digest("hex") : null;
+    if (contentHash !== expectedAsset.sha256) {
+      throw new Error("The served pilot image differs from the pinned manifest bytes.");
+    }
+    observed.contentHash = contentHash;
+    artifact.draft.assetSha256 = { [expectedAsset.id]: contentHash };
+
+    const campaignText = await page.locator("[data-template] article").innerText({ timeout: timeoutMs });
+    const normalize = (value) => value.replace(/\s+/g, " ").trim().toLowerCase();
+    for (const field of ["productName", "offer"]) {
+      if (!normalize(campaignText).includes(normalize(caseDef.campaign[field]))) {
+        throw new Error("The pilot page did not render the expected " + field + ".");
+      }
+    }
+  }
+  return artifact;
 }
 
 async function capture(page, outDir, caseId, label, viewport) {
@@ -393,36 +466,21 @@ async function capture(page, outDir, caseId, label, viewport) {
   mkdirSync(dir, { recursive: true });
   await page.addStyleTag({ content: "nextjs-portal{display:none !important;}" }).catch(() => {});
   const file = capturePath(outDir, caseId, label, viewport.fileName);
-  const article = await page.evaluateHandle(() =>
-    document.querySelector('[data-template] article') ??
-    document.querySelector('[aria-label="Campaign preview"] article') ??
-    document.querySelector("article") ??
-    document.querySelector("main") ??
-    document.body,
-  );
-  const element = article.asElement();
-  if (element) await element.screenshot({ path: file });
-  else await page.screenshot({ path: file, fullPage: true });
-  const images = await page.evaluate(() =>
-    [...document.querySelectorAll("main img, body img")].map((image) => {
-      const rect = image.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-    }),
-  );
+  const campaignArticle = page.locator("[data-template] article").first();
+  const article = page.locator("article").first();
+  const element = await campaignArticle.count() ? campaignArticle :
+    await article.count() ? article : page.locator("body");
+  const productImage = element.locator("img:visible").first();
   let crop = null;
-  const first = images.find((image) => image.width > 0 && image.height > 0);
-  if (first) {
-    crop = path.join(dir, `product-${viewport.fileName}.png`);
-    await page.screenshot({
-      path: crop,
-      fullPage: true,
-      clip: {
-        x: Math.max(0, first.x),
-        y: Math.max(0, first.y),
-        width: Math.min(first.width, viewport.width),
-        height: Math.min(first.height, 2400),
-      },
-    });
+  if (await productImage.count()) {
+    // A lazy packshot can sit below the mobile editor. Decode it before capturing.
+    await productImage.scrollIntoViewIfNeeded({ timeout: timeoutMs });
+    await productImage.evaluate((image) => image.decode());
+  }
+  await element.screenshot({ path: file, timeout: timeoutMs });
+  if (await productImage.count()) {
+    crop = path.join(dir, "product-" + viewport.fileName + ".png");
+    await productImage.screenshot({ path: crop, timeout: timeoutMs });
   }
   return { full: file, crop };
 }
@@ -448,13 +506,10 @@ async function collectFlow({
       }
       if (fallbackGenerate) {
         await fallback.page.getByRole("button", { name: "Generate preview", exact: true }).click({ timeout: timeoutMs });
-        await fallback.page.waitForFunction(() => {
-          const status = document.querySelector('[data-generation-status]')?.getAttribute('data-generation-status');
-          return status === "generated" || status === "fallback";
-        }, { timeout: timeoutMs }).catch(() => {});
-        await fallback.page.waitForTimeout(250);
+        await fallback.page.locator('[data-template][data-generation-status="fallback"]')
+          .waitFor({ state: "visible", timeout: timeoutMs });
       }
-      if (viewport.name === "1440") {
+      if (viewport.name === "1440" || caseDef.pilot) {
         artifacts.fallback = await extractArtifact(fallback.page, caseDef, "fallback");
       }
       await capture(fallback.page, outDir, caseDef.id, labels.fallback, viewport);
@@ -469,12 +524,9 @@ async function collectFlow({
         await generated.page.waitForTimeout(350);
       }
       await generated.page.getByRole("button", { name: "Generate preview", exact: true }).click({ timeout: timeoutMs });
-      await generated.page.waitForFunction(() => {
-        const status = document.querySelector('[data-generation-status]')?.getAttribute('data-generation-status');
-        return status === "generated" || status === "fallback";
-      }, { timeout: timeoutMs }).catch(() => {});
-      await generated.page.waitForTimeout(250);
-      if (viewport.name === "1440") {
+      await generated.page.locator('[data-template]:is([data-generation-status="generated"], [data-generation-status="fallback"])')
+        .waitFor({ state: "visible", timeout: timeoutMs });
+      if (viewport.name === "1440" || caseDef.pilot) {
         artifacts.generated = await extractArtifact(generated.page, caseDef, "generated");
       }
       await capture(generated.page, outDir, caseDef.id, labels.generated, viewport);
@@ -706,7 +758,18 @@ function buildIndex({ loaded, runId, mode, options, cases, comparisons, labelsBy
 
 async function main() {
   const options = parseCli();
-  const loaded = loadPack(options.pack);
+  const pilotCase = options.pilotManifest ? loadPilotCase(options.pilotManifest) : null;
+  const loaded = pilotCase
+    ? {
+        pack: {
+          packId: "local-preview-pilot",
+          packVersion: "1",
+          template: { id: "single-product-offer", version: "1.0.0" },
+          cases: [pilotCase],
+        },
+        casesById: new Map([[pilotCase.id, pilotCase]]),
+      }
+    : loadPack(options.pack);
   const mode = options.flow || options.fallbackFlow || options.generatedFlow ? "flow" : options.urls ? "urls" : "artifacts";
   const outDir = options.out ?? path.join(root, ".local", "campaign-eval-compare", timestamp());
   mkdirSync(outDir, { recursive: true });
@@ -736,7 +799,9 @@ async function main() {
   const fallbackMap = options.fallback ? readArtifactMap(options.fallback) : new Map();
   const generatedMap = options.generated ? readArtifactMap(options.generated) : new Map();
   const urls = options.urls ? JSON.parse(readFileSync(options.urls, "utf8")) : null;
-  const cases = comparisonCases({ loaded, mode, options, fallbackMap, generatedMap, urls });
+  const cases = pilotCase
+    ? [{ caseId: pilotCase.id, fixture: pilotCase.id, openingFocus: null }]
+    : comparisonCases({ loaded, mode, options, fallbackMap, generatedMap, urls });
   if (cases.length === 0) throw new Error("No comparable cases were supplied.");
 
   const fallbackFiles = new Map();

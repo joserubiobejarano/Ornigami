@@ -11,14 +11,13 @@ and acceptance path as the fictional fixtures.
 .local/campaign-lab-pilots/momisa/
   pilot.json       # operator-authored source brief, openings, brand, asset plan
   manifest.json    # generated, hash-pinned runtime manifest
-
-public/campaign-lab-pilots/momisa/
-  momisa-glow-box-front.jpg   # copied, Git-ignored preview asset
+  assets/
+    momisa-glow-box-front.jpg # copied preview asset
 ```
 
-`.local/` and `public/campaign-lab-pilots/` are Git-ignored. The source brief and
-source images stay outside the repository. The app reads only the generated
-manifest and serves the copied preview asset.
+`.local/` is Git-ignored. The app reads the generated manifest and serves only
+listed assets whose bytes match the recorded SHA-256 through the development-only
+pilot asset route. Keep any old loader copies out of `public/`.
 
 ## Load
 
@@ -27,7 +26,7 @@ npm run campaign-lab:pilot:load
 ```
 
 The loader reads `pilot.json`, verifies each source file, computes SHA-256 and
-pixel dimensions, copies the asset to the public pilot path, and writes
+pixel dimensions, copies the image to the pilot's local assets directory, and writes
 `manifest.json`. The command prints the asset ID, source URL, dimensions, hash,
 alt text, and crop note. Re-run it after changing the brief or asset selection.
 
