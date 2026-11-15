@@ -613,7 +613,7 @@ export function validateTemplateDraft(
   return issues;
 }
 
-function hashRevision(value: string): string {
+export function hashRevision(value: string): string {
   let left = 0x811c9dc5;
   let right = 0x01000193;
   for (let index = 0; index < value.length; index += 1) {

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Water poured from a kettle into the Morrow ceramic dripper">
+  <defs>
+    <linearGradient id="room" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#152538"/>
+      <stop offset=".58" stop-color="#223c55"/>
+      <stop offset="1" stop-color="#2c4760"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6c6aa"/>
+      <stop offset="1" stop-color="#a28d6f"/>
+    </linearGradient>
+    <linearGradient id="ceramic" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a38f72"/>
+      <stop offset=".22" stop-color="#e6d7bd"/>
+      <stop offset=".55" stop-color="#f5ead7"/>
+      <stop offset=".82" stop-color="#d3c0a3"/>
+      <stop offset="1" stop-color="#9a866a"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4d5359"/>
+      <stop offset=".28" stop-color="#c3c9cc"/>
+      <stop offset=".5" stop-color="#7d8589"/>
+      <stop offset=".76" stop-color="#d9dde0"/>
+      <stop offset="1" stop-color="#565d62"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7fbff" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#dcebf2" stop-opacity=".35"/>
+    </linearGradient>
+    <filter id="blur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="14" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#room)"/>
+  <path d="M0 640h1600v360H0z" fill="url(#table)"/>
+  <path d="M0 640h1600" stroke="#f2e7d3" stroke-opacity=".3" stroke-width="3"/>
+  <ellipse cx="820" cy="840" rx="360" ry="60" fill="#2b2218" opacity=".3" filter="url(#blur)"/>
+
+  <!-- carafe -->
+  <path d="M660 590c0-18 18-30 40-30h240c22 0 40 12 40 30v160c0 54-38 92-92 92H752c-54 0-92-38-92-92Z" fill="url(#ceramic)"/>
+  <path d="M740 568h200" stroke="#8f7a5e" stroke-opacity=".4" stroke-width="4"/>
+  <path d="M694 610c-8 48-8 108 0 154" fill="none" stroke="#fffaf0" stroke-opacity=".55" stroke-width="22" stroke-linecap="round" filter="url(#blur)"/>
+
+  <!-- dripper -->
+  <path d="M710 330c10 96 42 178 76 218h68c34-40 66-122 76-218Z" fill="url(#ceramic)" stroke="#8c785d" stroke-opacity=".5" stroke-width="3"/>
+  <ellipse cx="800" cy="330" rx="158" ry="38" fill="#3a2b21"/>
+  <ellipse cx="800" cy="330" rx="158" ry="38" fill="none" stroke="#fdf4e4" stroke-opacity=".5" stroke-width="4"/>
+
+  <!-- kettle -->
+  <g transform="rotate(-24 1080 420)">
+    <path d="M900 300c0-26 22-46 50-46h210c28 0 50 20 50 46v190c0 28-22 50-50 50H950c-28 0-50-22-50-50Z" fill="url(#steel)" stroke="#3b4247" stroke-opacity=".5" stroke-width="3"/>
+    <path d="M900 350h310" stroke="#eef2f4" stroke-opacity=".5" stroke-width="10"/>
+    <path d="M1210 380c60 14 92 60 92 118" fill="none" stroke="#5a6267" stroke-width="18" stroke-linecap="round"/>
+    <path d="M1198 372c56 10 88 54 92 108" fill="none" stroke="#cfd4d7" stroke-opacity=".6" stroke-width="7" stroke-linecap="round"/>
+    <path d="M980 254c0-34 26-58 62-58s62 24 62 58" fill="none" stroke="#3b4247" stroke-width="14" stroke-linecap="round"/>
+    <ellipse cx="1060" cy="254" rx="64" ry="16" fill="#6c7478"/>
+    <rect x="1042" y="296" width="40" height="12" rx="6" fill="#2d3337"/>
+  </g>
+
+  <!-- pour -->
+  <path d="M930 400c-80 60-120 140-120 238 0 10 8 18 18 18s18-8 18-18c0-84 34-154 104-210Z" fill="url(#water)" filter="url(#blur)"/>
+  <path d="M846 470c-36 46-54 102-54 160" fill="none" stroke="#f8fcff" stroke-opacity=".75" stroke-width="12" stroke-linecap="round"/>
+  <ellipse cx="800" cy="520" rx="70" ry="18" fill="#e9f3f8" opacity=".4"/>
+  <g fill="#ffffff" opacity=".7">
+    <circle cx="790" cy="560" r="3"/><circle cx="812" cy="590" r="2"/><circle cx="778" cy="610" r="2"/>
+  </g>
+
+  <text x="300" y="880" font-family="Georgia, 'Times New Roman', serif" font-size="30" letter-spacing="10" fill="#5a4632" opacity=".75">MORROW</text>
+  <rect width="1600" height="1000" filter="url(#grain)" opacity=".06" style="mix-blend-mode:multiply"/>
+  <rect width="1600" height="1000" fill="none" stroke="#08121d" stroke-opacity=".2" stroke-width="2"/>
+</svg>

@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  ADVERTORIAL_MANIFEST,
+  assessAdvertorialFit,
+  buildConfiguredPreview,
+} from "@/lib/campaign-lab/advertorial";
+import type {
+  AdvertorialPreviewData,
+  ConfiguredPreviewData,
+} from "@/lib/campaign-lab/advertorial";
+import {
   createFormValues,
   defaultAccent,
   getAsset,
@@ -17,13 +26,14 @@ import { GenerationRequestGate } from "@/lib/campaign-lab/generation/client-gate
 import type { GenerationMetadata } from "@/lib/campaign-lab/generation/types";
 import {
   SINGLE_PRODUCT_OFFER_TEMPLATE,
-  buildCampaignPreview,
   shortRevision,
 } from "@/lib/campaign-lab/template";
 import type { CampaignPreviewData } from "@/lib/campaign-lab/template";
 import type {
+  AdvertorialLayoutId,
   ApprovedAsset,
   CampaignCatalog,
+  CampaignFormat,
   CampaignFormValues,
   FixtureId,
   ValidationField,
@@ -32,6 +42,7 @@ import type {
 import { nativeSelectClassName } from "@/lib/form-controls";
 import { cn } from "@/lib/utils";
 
+import { AdvertorialPage } from "./advertorial-page";
 import { CampaignPage } from "./campaign-page";
 
 type CampaignLabProps = {
@@ -45,6 +56,10 @@ type Approval = {
 };
 
 type GenerationState = { status: "idle" } | GenerationMetadata;
+
+function isAdvertorialPreview(preview: ConfiguredPreviewData): preview is AdvertorialPreviewData {
+  return preview.draft.templateId === ADVERTORIAL_MANIFEST.id;
+}
 
 const ASSET_LABELS: Record<string, string> = {
   "harbor-field-bottle-front": "Harbor Field bottle",
@@ -67,8 +82,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const inFlight = useRef<AbortController | null>(null);
 
   const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture, catalog));
-  const [preview, setPreview] = useState<CampaignPreviewData>(() => {
-    const result = buildCampaignPreview(fixture, createFormValues(fixture, catalog), catalog);
+  const [preview, setPreview] = useState<ConfiguredPreviewData>(() => {
+    const result = buildConfiguredPreview(fixture, createFormValues(fixture, catalog), catalog);
     if (!result.ok) throw new Error(`The ${fixture.label} campaign fixture is invalid.`);
     return result.preview;
   });
@@ -80,11 +95,18 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
 
   const brand = getBrand(values.brandId, catalog);
   const selectedAsset = getAsset(values.assetId, catalog);
+  const advertorialPreview = isAdvertorialPreview(preview) ? preview : null;
+  const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
+  const format: CampaignFormat =
+    values.format ?? (fixture.brief.advertorial ? "advertorial" : "offer");
+  const template = advertorialPreview ? ADVERTORIAL_MANIFEST : SINGLE_PRODUCT_OFFER_TEMPLATE;
+  const layout = advertorialPreview
+    ? ADVERTORIAL_MANIFEST.layouts[advertorialPreview.draft.layout]
+    : SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[(preview as CampaignPreviewData).draft.layout];
   const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
   const approved = approval?.revision === preview.revision && !dirty && !generating;
   const canApprove = editorReady && !dirty && !generating && issues.length === 0 && !approved;
   const revisionLabel = shortRevision(preview.revision);
-  const layout = SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[preview.draft.layout];
 
   const fieldIds: Record<ValidationField, string> = {
     brandId: `${baseId}-brand-style`,
@@ -94,6 +116,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     destinationUrl: `${baseId}-destination-url`,
     assetId: `${baseId}-product-image`,
     openingFocus: `${baseId}-opening-focus`,
+    format: `${baseId}-format`,
+    advertorialLayout: `${baseId}-advertorial-layout`,
   };
 
   const previewHeadingId = `${baseId}-campaign-preview-heading`;
@@ -157,6 +181,60 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     setIssues((current) => current.filter((issue) => issue.field !== "accent"));
   }
 
+  function handleFormatChange(nextFormat: CampaignFormat) {
+    invalidateGenerationRequest();
+    setValues((current) => {
+      const next = { ...current, format: nextFormat };
+      const heroAsset = getAsset(current.assetId, catalog);
+      if (nextFormat === "advertorial" && heroAsset?.role !== "product-hero") {
+        next.assetId =
+          catalog.assets.find((asset) => asset.role === "product-hero" && asset.brandId === current.brandId)?.id ??
+          current.assetId;
+      }
+      if (nextFormat === "advertorial") {
+        const openings = fixture.brief.advertorial?.openings ?? [];
+        if (openings.length > 0 && !openings.some((opening) => opening.id === current.openingFocus)) {
+          next.openingFocus = openings[0].id;
+        }
+      }
+      return next;
+    });
+    setIssues([]);
+    setDirty(true);
+    setApproval(null);
+  }
+
+  function handleUseOfferTemplate() {
+    invalidateGenerationRequest();
+    const next: CampaignFormValues = {
+      ...values,
+      format: "offer",
+      advertorialLayout: "auto",
+    };
+    const heroAsset = getAsset(next.assetId, catalog);
+    if (heroAsset?.role !== "product-hero") {
+      next.assetId =
+        catalog.assets.find((asset) => asset.role === "product-hero" && asset.brandId === next.brandId)?.id ??
+        next.assetId;
+    }
+    setValues(next);
+    setIssues([]);
+    setApproval(null);
+    const result = buildConfiguredPreview(fixture, next, catalog);
+    if (result.ok) {
+      setPreview(result.preview);
+      setDirty(false);
+      setGeneration(
+        deterministicFallback(
+          "The single-product offer template is selected because this brief has no approved advertorial story.",
+        ),
+      );
+    } else {
+      setIssues(result.issues);
+      setDirty(true);
+    }
+  }
+
   function deterministicFallback(
     message: string,
     code: GenerationMetadata["code"] = "unavailable",
@@ -172,7 +250,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
 
   async function handleGenerate() {
     const snapshot = { ...values };
-    const local = buildCampaignPreview(fixture, snapshot, catalog);
+    const local = buildConfiguredPreview(fixture, snapshot, catalog);
     if (!local.ok) {
       invalidateGenerationRequest();
       setIssues(local.issues);
@@ -233,7 +311,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
         return;
       }
 
-      setPreview(payload.preview as CampaignPreviewData);
+      setPreview(payload.preview as ConfiguredPreviewData);
       setGeneration(
         (payload.generation as GenerationMetadata | undefined) ??
           deterministicFallback("The preview was generated without provenance metadata."),
@@ -406,6 +484,93 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
               <legend className="mb-1 text-sm font-semibold">Campaign facts</legend>
 
               <div className="space-y-1.5">
+                <Label htmlFor={fieldIds.format}>Format</Label>
+                <select
+                  id={fieldIds.format}
+                  name="format"
+                  className={nativeSelectClassName}
+                  value={format}
+                  onChange={(event) => handleFormatChange(event.target.value as CampaignFormat)}
+                  aria-invalid={issueByField.has("format")}
+                  aria-describedby={describedBy("format")}
+                >
+                  <option value="offer">
+                    Single-product offer · v{SINGLE_PRODUCT_OFFER_TEMPLATE.version}
+                  </option>
+                  <option value="advertorial">
+                    Single-product advertorial · v{ADVERTORIAL_MANIFEST.version}
+                    {advertorialFit.fit ? "" : " · inputs missing"}
+                  </option>
+                </select>
+                <p className="text-xs text-[#6d6a5f]">
+                  {format === "advertorial"
+                    ? "Approved story, evidence, disclosure and image roles are assembled deterministically."
+                    : "The existing direct-offer workflow. Use it when the brief has no approved story."}
+                </p>
+                {issueByField.has("format") ? (
+                  <p id={`${fieldIds.format}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {issueByField.get("format")}
+                  </p>
+                ) : null}
+              </div>
+
+              {format === "advertorial" ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor={fieldIds.advertorialLayout}>Advertorial layout</Label>
+                  <select
+                    id={fieldIds.advertorialLayout}
+                    name="advertorialLayout"
+                    className={nativeSelectClassName}
+                    value={values.advertorialLayout ?? "auto"}
+                    onChange={(event) =>
+                      handleValueChange(
+                        "advertorialLayout",
+                        event.target.value as AdvertorialLayoutId | "auto",
+                      )
+                    }
+                    aria-invalid={issueByField.has("advertorialLayout")}
+                    aria-describedby={describedBy("advertorialLayout")}
+                  >
+                    <option value="auto">Auto from the approved image set</option>
+                    <option value="advertorial-full">Full advertorial · story, evidence, product</option>
+                    <option value="advertorial-one-photo">One photo · type-led opening</option>
+                  </select>
+                  {issueByField.has("advertorialLayout") ? (
+                    <p
+                      id={`${fieldIds.advertorialLayout}-error`}
+                      className="text-xs font-medium text-[#a2382a]"
+                    >
+                      {issueByField.get("advertorialLayout")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {!advertorialFit.fit ? (
+                <div className="rounded-xl border border-[#b98237] bg-[#fbf3e4] p-3 text-[#6b4918]">
+                  <p className="text-sm font-semibold">Advertorial not ready for this brief</p>
+                  <p className="mt-1 text-xs">
+                    Single-product offer is recommended. The advertorial still needs:
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                    {advertorialFit.missingInputs.slice(0, 6).map((input) => (
+                      <li key={input}>{input}</li>
+                    ))}
+                  </ul>
+                  {format === "advertorial" ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="mt-3 w-full sm:w-auto"
+                      onClick={handleUseOfferTemplate}
+                    >
+                      Use single-product offer
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.productName}>Product name</Label>
                 <Input
                   id={fieldIds.productName}
@@ -505,11 +670,13 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   aria-describedby={describedBy("assetId", assetMetaId)}
                 >
                   <option value="">Select an approved image</option>
-                  {catalog.assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {assetLabel(asset, catalog)} — approved
-                    </option>
-                  ))}
+                  {catalog.assets
+                    .filter((asset) => asset.role === "product-hero")
+                    .map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {assetLabel(asset, catalog)} — approved
+                      </option>
+                    ))}
                 </select>
                 <p id={assetMetaId} className="text-xs text-[#6d6a5f]">
                   {selectedAsset
@@ -769,6 +936,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
           aria-labelledby={previewHeadingId}
           aria-describedby={previewStatusId}
           data-fixture={initialFixtureId}
+          data-format={format}
           data-template={preview.draft.templateId}
           data-template-version={preview.draft.templateVersion}
           data-layout={preview.draft.layout}
@@ -782,6 +950,9 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
           data-generation-angle={generation.status === "generated" ? generation.angle : undefined}
           data-section-order={preview.draft.sections.join(",")}
           data-fact-ids={preview.draft.facts.map((fact) => fact.id).join(",")}
+          data-story-beat-ids={advertorialPreview?.draft.story.map((beat) => beat.id).join(",")}
+          data-disclosure-label={advertorialPreview?.draft.disclosure.label}
+          data-advertorial-fit={advertorialFit.fit ? "true" : "false"}
           data-generation-issues={
             generation.status === "fallback" ? generation.issues?.join(" | ") : undefined
           }
@@ -792,8 +963,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 Campaign preview
               </h2>
               <p className="mt-1 text-xs text-[#6d6a5f]">
-                {SINGLE_PRODUCT_OFFER_TEMPLATE.name} · v
-                {SINGLE_PRODUCT_OFFER_TEMPLATE.version} · {layout.label}
+                {template.name} · v{template.version} · {layout.label}
               </p>
             </div>
             <span
@@ -840,18 +1010,28 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
             )}
             data-preview-canvas
           >
-            <CampaignPage
-              brief={preview.brief}
-              draft={preview.draft}
-              asset={preview.asset}
-              theme={preview.theme}
-              headingId={pageHeadingId}
-              previewLabel={
-                catalog.pilot?.status === "preview"
-                  ? "Preview · offer and destination unconfirmed"
-                  : undefined
-              }
-            />
+            {advertorialPreview ? (
+              <AdvertorialPage
+                brief={advertorialPreview.brief}
+                draft={advertorialPreview.draft}
+                assets={advertorialPreview.assets}
+                theme={advertorialPreview.theme}
+                headingId={pageHeadingId}
+              />
+            ) : (
+              <CampaignPage
+                brief={(preview as CampaignPreviewData).brief}
+                draft={(preview as CampaignPreviewData).draft}
+                asset={preview.asset}
+                theme={preview.theme}
+                headingId={pageHeadingId}
+                previewLabel={
+                  catalog.pilot?.status === "preview"
+                    ? "Preview · offer and destination unconfirmed"
+                    : undefined
+                }
+              />
+            )}
           </div>
         </section>
       </main>

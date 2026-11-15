@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-label="Detail of three interior ribs inside the Morrow ceramic dripper">
+  <defs>
+    <radialGradient id="bowl" cx="46%" cy="34%" r="74%">
+      <stop offset="0" stop-color="#5b4434"/>
+      <stop offset=".5" stop-color="#35261d"/>
+      <stop offset="1" stop-color="#17100c"/>
+    </radialGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1926"/>
+      <stop offset="1" stop-color="#21384f"/>
+    </linearGradient>
+    <linearGradient id="ceramic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbf1de"/>
+      <stop offset=".35" stop-color="#e4d4ba"/>
+      <stop offset="1" stop-color="#b9a689"/>
+    </linearGradient>
+    <linearGradient id="rib" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff9ec"/>
+      <stop offset=".55" stop-color="#dcc8aa"/>
+      <stop offset="1" stop-color="#a48f73"/>
+    </linearGradient>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" seed="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="1500" fill="url(#wall)"/>
+  <rect y="1120" width="1200" height="380" fill="#c9b79a"/>
+  <path d="M0 1120h1200" stroke="#f4e8d4" stroke-opacity=".35" stroke-width="3"/>
+
+  <!-- close-up cone -->
+  <path d="M190 300c26 300 190 560 320 664h180c130-104 294-364 320-664Z" fill="url(#ceramic)" stroke="#8c785d" stroke-opacity=".45" stroke-width="4"/>
+  <ellipse cx="600" cy="300" rx="410" ry="92" fill="url(#bowl)"/>
+  <ellipse cx="600" cy="300" rx="410" ry="92" fill="none" stroke="#fdf4e4" stroke-opacity=".5" stroke-width="6"/>
+  <ellipse cx="600" cy="310" rx="350" ry="70" fill="none" stroke="#cdb897" stroke-opacity=".36" stroke-width="4"/>
+
+  <!-- three raised ribs -->
+  <g fill="url(#rib)" stroke="#8f7a5e" stroke-opacity=".4" stroke-width="2">
+    <path d="M420 340c-14 110-42 220-70 300 26 22 58 30 90 12 32-104 52-214 58-312Z"/>
+    <path d="M598 336c-4 120-10 244-16 340 30 10 62 4 88-14 6-110 8-226 10-326Z"/>
+    <path d="M776 336c16 110 44 216 78 294-26 24-58 34-92 18-34-102-54-206-62-312Z"/>
+  </g>
+  <g fill="none" stroke="#7a6549" stroke-opacity=".45" stroke-width="3">
+    <path d="M446 690c14 22 42 30 66 18M642 700c14 20 44 22 64 6M816 676c-10 24-40 36-66 24"/>
+  </g>
+
+  <path d="M300 420c52 170 148 322 246 420" fill="none" stroke="#fffaf0" stroke-opacity=".38" stroke-width="34" stroke-linecap="round" filter="url(#blur)"/>
+  <path d="M902 430c-40 162-132 312-226 408" fill="none" stroke="#7d684d" stroke-opacity=".26" stroke-width="30" stroke-linecap="round" filter="url(#blur)"/>
+
+  <text x="600" y="1000" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="34" letter-spacing="12" fill="#5e4a36" opacity=".78">MORROW</text>
+  <text x="600" y="1052" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" letter-spacing="7" fill="#6d5841" opacity=".7">THREE INTERIOR RIBS</text>
+
+  <rect width="1200" height="1500" filter="url(#grain)" opacity=".06" style="mix-blend-mode:multiply"/>
+  <rect width="1200" height="1500" fill="none" stroke="#08121d" stroke-opacity=".22" stroke-width="2"/>
+</svg>

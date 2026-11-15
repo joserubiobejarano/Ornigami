@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildAdvertorialPreview } from "@/lib/campaign-lab/advertorial";
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
 import { isFixtureId } from "@/lib/campaign-lab/fixtures";
 import { runCampaignGeneration } from "@/lib/campaign-lab/generation/service";
@@ -24,6 +25,17 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
   const fields = ["brandId", "accent", "productName", "offer", "destinationUrl", "assetId"] as const;
   if (fields.some((field) => typeof record[field] !== "string")) return null;
   if (record.openingFocus !== undefined && typeof record.openingFocus !== "string") return null;
+  if (record.format !== undefined && record.format !== "offer" && record.format !== "advertorial") {
+    return null;
+  }
+  if (
+    record.advertorialLayout !== undefined &&
+    record.advertorialLayout !== "auto" &&
+    record.advertorialLayout !== "advertorial-full" &&
+    record.advertorialLayout !== "advertorial-one-photo"
+  ) {
+    return null;
+  }
   return {
     brandId: record.brandId as CampaignFormValues["brandId"],
     accent: record.accent as string,
@@ -32,6 +44,8 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
     destinationUrl: record.destinationUrl as string,
     assetId: record.assetId as string,
     openingFocus: record.openingFocus,
+    format: record.format as CampaignFormValues["format"],
+    advertorialLayout: record.advertorialLayout as CampaignFormValues["advertorialLayout"],
   };
 }
 
@@ -73,6 +87,28 @@ export async function POST(request: Request) {
     : undefined;
 
   try {
+    const fixture = catalog.fixtures[fixtureId];
+    if (fixture && values.format === "advertorial") {
+      const result = buildAdvertorialPreview(fixture, values, catalog);
+      if (!result.ok) {
+        return json({ ok: false, issues: result.issues, requestId }, 422);
+      }
+      return json(
+        {
+          ok: true,
+          preview: result.preview,
+          generation: {
+            status: "fallback",
+            provider: "deterministic",
+            providerLabel: "Deterministic builder",
+            code: "unavailable",
+            message: "Advertorial drafts are assembled deterministically from approved brief material. Live model generation is out of scope.",
+          },
+          requestId,
+        },
+        200,
+      );
+    }
     const result = await runCampaignGeneration({ fixtureId, values, requestId }, { catalog });
     return json({ ...result, requestId }, result.ok ? 200 : 422);
   } catch {

@@ -1,6 +1,10 @@
 export const CAMPAIGN_LAB_TEMPLATE_ID = "single-product-offer" as const;
 
-export type BaseFixtureId = "sparse" | "long-copy";
+export type BaseFixtureId =
+  | "sparse"
+  | "long-copy"
+  | "morrow-advertorial-full"
+  | "morrow-advertorial-one-photo";
 export type PilotFixtureId = "momisa-glow-box";
 export type FixtureId = BaseFixtureId | PilotFixtureId;
 
@@ -9,7 +13,115 @@ export type PilotBrandId = "momisa";
 export type BrandId = BaseBrandId | PilotBrandId;
 
 export type LayoutId = "offer-led-one-photo" | "editorial-long-copy";
-export type AssetRole = "product-hero";
+export type AssetRole =
+  | "product-hero"
+  | "story-opening"
+  | "product-detail"
+  | "product-in-use"
+  | "product-evidence";
+
+export type CampaignFormat = "offer" | "advertorial";
+
+export type AdvertorialLayoutId = "advertorial-full" | "advertorial-one-photo";
+
+export type AdvertorialSectionId =
+  | "disclosure"
+  | "opening"
+  | "story"
+  | "evidence"
+  | "product"
+  | "close";
+
+export type AdvertorialAssetRole =
+  | "story-opening"
+  | "product-detail"
+  | "product-in-use"
+  | "product-evidence"
+  | "product-hero";
+
+export type AdvertorialOpening = {
+  id: string;
+  headline: string;
+  standfirst: string;
+};
+
+export type ApprovedStoryBeat = {
+  id: string;
+  role: "opening" | "turn" | "resolution";
+  text: string;
+  source: ApprovedFactSource;
+};
+
+export type Disclosure = {
+  label: "Advertisement" | "Advertorial" | "Paid Post" | "Paid content";
+  sponsor: string;
+  explanation: string;
+  repeatAtClose: boolean;
+};
+
+export type AssetAssignment = {
+  role: AdvertorialAssetRole;
+  assetId: string;
+};
+
+export type AdvertorialNarrator = {
+  name: string;
+  role: string;
+  source: string;
+  releaseOnFile: boolean;
+};
+
+/** Approved advertorial material carried alongside the existing campaign brief. */
+export type AdvertorialBriefData = {
+  openings: readonly AdvertorialOpening[];
+  storyBeats: readonly ApprovedStoryBeat[];
+  narrator?: AdvertorialNarrator;
+  disclosure: Disclosure;
+  productTransition: string;
+  assetAssignments: readonly AssetAssignment[];
+  preferredLayout?: AdvertorialLayoutId;
+};
+
+export type AdvertorialBrief = CampaignBrief & {
+  format: "advertorial";
+  advertorial: AdvertorialBriefData;
+};
+
+export type AdvertorialPlan = {
+  openingId: string;
+  layout: AdvertorialLayoutId;
+  sections: AdvertorialSectionId[];
+  storyBeatIds: string[];
+  factIds: string[];
+  assetAssignments: AssetAssignment[];
+};
+
+export type AdvertorialDraft = {
+  templateId: "single-product-advertorial";
+  templateVersion: "1.0.0";
+  layout: AdvertorialLayoutId;
+  layoutReason: string;
+  sections: AdvertorialSectionId[];
+  headline: string;
+  standfirst: string;
+  story: ApprovedStoryBeat[];
+  facts: ProductFact[];
+  productTransition: string;
+  disclosure: Disclosure;
+  assetAssignments: AssetAssignment[];
+};
+
+export type AdvertorialFit = {
+  fit: boolean;
+  recommended: "single-product-offer" | "single-product-advertorial";
+  layout?: AdvertorialLayoutId;
+  missingInputs: string[];
+};
+
+export type AdvertorialSectionIssue = {
+  section: AdvertorialSectionId | "brief" | "layout";
+  message: string;
+};
 
 /**
  * The generator may choose one of these template-supported opening angles.
@@ -93,6 +205,8 @@ export type ApprovedAsset = {
   contentHash: string;
   /** Reviewer note describing the tested crop and what must stay visible. */
   crop?: string;
+  /** A visible caption that names what the image shows, not what it proves. */
+  caption?: string;
 };
 
 export type ApprovedCopy = {
@@ -129,6 +243,8 @@ export type CampaignBrief = {
   requiredFactGroups?: readonly RequiredFactGroup[];
   copy: ApprovedCopy;
   openingFocus?: string;
+  /** Present only when the fixture has approved advertorial material. */
+  advertorial?: AdvertorialBriefData;
 };
 
 export type CampaignFixture = {
@@ -148,6 +264,8 @@ export type CampaignFormValues = {
   destinationUrl: string;
   assetId: string;
   openingFocus?: string;
+  format?: CampaignFormat;
+  advertorialLayout?: AdvertorialLayoutId | "auto";
 };
 
 export type TemplateDraft = {
@@ -219,7 +337,9 @@ export type ValidationField =
   | "offer"
   | "destinationUrl"
   | "assetId"
-  | "openingFocus";
+  | "openingFocus"
+  | "format"
+  | "advertorialLayout";
 
 export type ValidationIssue = {
   field: ValidationField;

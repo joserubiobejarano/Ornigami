@@ -1,5 +1,8 @@
 import type {
+  AdvertorialBriefData,
+  AdvertorialOpening,
   ApprovedAsset,
+  ApprovedStoryBeat,
   BaseBrandId,
   BaseFixtureId,
   BrandDefinition,
@@ -10,6 +13,7 @@ import type {
   CampaignFixture,
   CampaignOpening,
   CampaignFormValues,
+  Disclosure,
   FixtureId,
   PilotBundle,
   ResolvedBrandTheme,
@@ -117,6 +121,54 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
     rights: "Original work for this local prototype; fictional brand.",
     contentHash: "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
   },
+  {
+    id: "morrow-prototype",
+    brandId: "morrow-ceramic",
+    src: "/campaign-assets/morrow-prototype.svg",
+    width: 1200,
+    height: 1200,
+    alt: "Early Morrow ceramic dripper prototype labelled PROTOTYPE 01 on a workbench, with a note reading rib spacing / revised.",
+    role: "product-evidence",
+    reviewed: true,
+    reviewedBy: "Ornigami design review",
+    reviewedOn: "2026-11-15",
+    source: "Original fictional fixture from the approved Morrow review brief",
+    rights: "Original work for this local prototype; fictional brand.",
+    contentHash: "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
+    caption: "PROTOTYPE 01 on the workbench.",
+  },
+  {
+    id: "morrow-ribs",
+    brandId: "morrow-ceramic",
+    src: "/campaign-assets/morrow-ribs.svg",
+    width: 1200,
+    height: 1500,
+    alt: "Close view of the three raised interior ribs inside the Morrow cream ceramic dripper.",
+    role: "product-detail",
+    reviewed: true,
+    reviewedBy: "Ornigami design review",
+    reviewedOn: "2026-11-15",
+    source: "Original fictional fixture from the approved Morrow review brief",
+    rights: "Original work for this local prototype; fictional brand.",
+    contentHash: "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
+    caption: "Three raised interior ribs.",
+  },
+  {
+    id: "morrow-pour",
+    brandId: "morrow-ceramic",
+    src: "/campaign-assets/morrow-pour.svg",
+    width: 1600,
+    height: 1000,
+    alt: "Water poured from a kettle into the Morrow cream ceramic dripper on a dark table.",
+    role: "product-in-use",
+    reviewed: true,
+    reviewedBy: "Ornigami design review",
+    reviewedOn: "2026-11-15",
+    source: "Original fictional fixture from the approved Morrow review brief",
+    rights: "Original work for this local prototype; fictional brand.",
+    contentHash: "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b",
+    caption: "Water poured into the Morrow dripper.",
+  },
 ];
 
 const MORROW_OPENINGS: readonly CampaignOpening[] = [
@@ -137,6 +189,99 @@ const MORROW_OPENINGS: readonly CampaignOpening[] = [
     },
   },
 ];
+
+const MORROW_ADVERTORIAL_OPENINGS: readonly AdvertorialOpening[] = [
+  {
+    id: "flow-control",
+    headline: "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    standfirst: "What changes when your first pour is slower?",
+  },
+];
+
+const MORROW_STORY_BEATS: readonly ApprovedStoryBeat[] = [
+  {
+    id: "prototype-wall",
+    role: "opening",
+    text: "In the first prototype, the filter sat against the wall.",
+    source: {
+      document: "Morrow Ceramic approved flow-control lede",
+      quote: "In the first prototype, the filter sat against the wall.",
+      reviewedBy: "Ornigami content review",
+      reviewedOn: "2026-11-15",
+    },
+  },
+  {
+    id: "rib-revision",
+    role: "turn",
+    text: "Morrow revised the spacing between the three interior ribs.",
+    source: {
+      document: "Morrow Ceramic approved flow-control lede",
+      quote: "Morrow revised the spacing between the three interior ribs.",
+      reviewedBy: "Ornigami content review",
+      reviewedOn: "2026-11-15",
+    },
+  },
+];
+
+const MORROW_DISCLOSURE: Disclosure = {
+  label: "Advertisement",
+  sponsor: "Morrow Ceramic",
+  explanation: "Created by Ornigami for Morrow Ceramic. This is a paid advertisement.",
+  repeatAtClose: true,
+};
+
+const MORROW_PRODUCT_TRANSITION =
+  "A ceramic dripper with three interior ribs and a single outlet.";
+
+const MORROW_ADVERTORIAL_FACTS = [
+  {
+    id: "interior",
+    label: "Interior",
+    value: "Three ribs",
+    source: {
+      document: "Morrow Ceramic approved product sheet",
+      quote: "Interior: three raised ribs that hold the filter clear of the wall.",
+      reviewedBy: "Ornigami content review",
+      reviewedOn: "2026-11-12",
+    },
+  },
+  {
+    id: "outlet",
+    label: "Outlet",
+    value: "Single outlet",
+    source: {
+      document: "Morrow Ceramic approved product sheet",
+      quote: "Outlet: one centred outlet.",
+      reviewedBy: "Ornigami content review",
+      reviewedOn: "2026-11-12",
+    },
+  },
+  {
+    id: "body",
+    label: "Body",
+    value: "Ceramic",
+    source: {
+      document: "Morrow Ceramic approved product sheet",
+      quote: "Body: glazed ceramic.",
+      reviewedBy: "Ornigami content review",
+      reviewedOn: "2026-11-12",
+    },
+  },
+] as const;
+
+function morrowAdvertorialData(
+  assetAssignments: AdvertorialBriefData["assetAssignments"],
+  preferredLayout: AdvertorialBriefData["preferredLayout"],
+): AdvertorialBriefData {
+  return {
+    openings: MORROW_ADVERTORIAL_OPENINGS,
+    storyBeats: MORROW_STORY_BEATS,
+    disclosure: MORROW_DISCLOSURE,
+    productTransition: MORROW_PRODUCT_TRANSITION,
+    assetAssignments,
+    preferredLayout,
+  };
+}
 
 export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
   sparse: {
@@ -257,6 +402,69 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
       copy: MORROW_OPENINGS[0].copy,
     },
   },
+  "morrow-advertorial-full": {
+    id: "morrow-advertorial-full",
+    label: "Morrow advertorial",
+    description: "Approved story, evidence, detail and use images for the full advertorial.",
+    openings: [MORROW_OPENINGS[0]],
+    assetId: "morrow-ceramic-dripper-front",
+    brief: {
+      fixtureId: "morrow-advertorial-full",
+      brandId: "morrow-ceramic",
+      productName: "Morrow ceramic pour-over dripper",
+      offer: "Free shipping through 30 November 2026",
+      destinationUrl: "https://example.com/morrow",
+      assetId: "morrow-ceramic-dripper-front",
+      actionLabel: "See the dripper",
+      productNoun: "pour-over dripper",
+      productFacts: MORROW_ADVERTORIAL_FACTS.map((fact) => ({
+        ...fact,
+        source: { ...fact.source },
+      })),
+      requiredFactGroups: [
+        { id: "rib-design", label: "the rib design", factIds: ["interior", "outlet", "body"] },
+      ],
+      copy: MORROW_OPENINGS[0].copy,
+      advertorial: morrowAdvertorialData(
+        [
+          { role: "product-in-use", assetId: "morrow-pour" },
+          { role: "product-detail", assetId: "morrow-ribs" },
+          { role: "product-evidence", assetId: "morrow-prototype" },
+          { role: "product-hero", assetId: "morrow-ceramic-dripper-front" },
+        ],
+        "advertorial-full",
+      ),
+    },
+  },
+  "morrow-advertorial-one-photo": {
+    id: "morrow-advertorial-one-photo",
+    label: "Morrow one photo",
+    description: "The same approved story with only the product hero available.",
+    openings: [MORROW_OPENINGS[0]],
+    assetId: "morrow-ceramic-dripper-front",
+    brief: {
+      fixtureId: "morrow-advertorial-one-photo",
+      brandId: "morrow-ceramic",
+      productName: "Morrow ceramic pour-over dripper",
+      offer: "Free shipping through 30 November 2026",
+      destinationUrl: "https://example.com/morrow",
+      assetId: "morrow-ceramic-dripper-front",
+      actionLabel: "See the dripper",
+      productNoun: "pour-over dripper",
+      productFacts: MORROW_ADVERTORIAL_FACTS.map((fact) => ({
+        ...fact,
+        source: { ...fact.source },
+      })),
+      requiredFactGroups: [
+        { id: "rib-design", label: "the rib design", factIds: ["interior", "outlet"] },
+      ],
+      copy: MORROW_OPENINGS[0].copy,
+      advertorial: morrowAdvertorialData(
+        [{ role: "product-hero", assetId: "morrow-ceramic-dripper-front" }],
+        "advertorial-one-photo",
+      ),
+    },
+  },
 };
 
 export const BASE_CATALOG: CampaignCatalog = {
@@ -331,6 +539,8 @@ export function createFormValues(
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
     openingFocus: fixture.openings?.[0]?.id,
+    format: fixture.brief.advertorial ? "advertorial" : "offer",
+    advertorialLayout: "auto",
   };
 }
 
