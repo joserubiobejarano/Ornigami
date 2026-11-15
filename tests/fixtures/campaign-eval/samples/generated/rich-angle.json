@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "caseId": "rich-angle",
+  "source": "generated",
+  "sourceLabel": "Sample improved draft for harness verification only",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "morrow-ceramic",
+    "productName": "Morrow ceramic pour-over dripper",
+    "offer": "Free shipping through 30 November 2026",
+    "destinationUrl": "https://example.com/morrow",
+    "actionLabel": "See the dripper"
+  },
+  "draft": {
+    "layout": "editorial-long-copy",
+    "headline": "The ribs hold the filter clear of the wall.",
+    "lede": "Morrow revised the rib spacing after its first prototype pressed the filter against the wall. Three interior ribs now keep the bed open, so the pour moves at its own pace.",
+    "story": "Morrow revised the rib spacing after its first prototype held the filter against the wall.",
+    "facts": [
+      { "label": "Interior", "value": "Three ribs" },
+      { "label": "Outlet", "value": "Single outlet" },
+      { "label": "Body", "value": "Ceramic" }
+    ],
+    "sections": [
+      { "id": "angle", "heading": "The ribs hold the filter clear of the wall.", "emphasis": 1 },
+      { "id": "evidence", "heading": "From the first prototype", "emphasis": 2, "assetId": "morrow-prototype" },
+      { "id": "detail", "heading": "Three ribs, one outlet", "emphasis": 3, "assetId": "morrow-ribs" },
+      { "id": "close", "heading": "See the dripper", "emphasis": 4 }
+    ],
+    "assetIds": [
+      "morrow-ceramic-dripper-front",
+      "morrow-prototype",
+      "morrow-ribs",
+      "morrow-pour"
+    ],
+    "claims": [
+      "The ribs hold the filter clear of the wall.",
+      "Morrow revised the rib spacing after its first prototype pressed the filter against the wall.",
+      "Three interior ribs now keep the bed open, so the pour moves at its own pace."
+    ]
+  },
+  "approval": { "state": "approved", "revision": "generated-rich-001" }
+}

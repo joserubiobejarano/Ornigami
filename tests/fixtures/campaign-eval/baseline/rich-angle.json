@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "caseId": "rich-angle",
+  "source": "baseline",
+  "sourceLabel": "Deterministic single-product template assembly",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "morrow-ceramic",
+    "productName": "Morrow ceramic pour-over dripper",
+    "offer": "Free shipping through 30 November 2026",
+    "destinationUrl": "https://example.com/morrow",
+    "actionLabel": "See the dripper"
+  },
+  "draft": {
+    "layout": "editorial-long-copy",
+    "headline": "What changes when your first pour is slower, steadier, and entirely your own?",
+    "lede": "The rib spacing holds the filter clear of the wall, so water moves through the bed at its own pace.",
+    "facts": [
+      { "label": "Interior", "value": "Three ribs" },
+      { "label": "Outlet", "value": "Single outlet" },
+      { "label": "Body", "value": "Ceramic" }
+    ],
+    "sections": [
+      { "id": "hero", "heading": "What changes when your first pour is slower, steadier, and entirely your own?", "emphasis": 1 },
+      { "id": "detail", "heading": "The ribs are the design.", "emphasis": 2 },
+      { "id": "close", "heading": "Morrow ceramic pour-over dripper", "emphasis": 3 }
+    ],
+    "assetIds": ["morrow-ceramic-dripper-front"],
+    "claims": [
+      "What changes when your first pour is slower, steadier, and entirely your own?",
+      "The rib spacing holds the filter clear of the wall, so water moves through the bed at its own pace."
+    ]
+  },
+  "approval": { "state": "approved", "revision": "baseline-rich-001" }
+}

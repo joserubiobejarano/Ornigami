@@ -1,0 +1,22 @@
+{
+  "$comment": "Replace these URLs with real pages. Omit a case the flow cannot express; the report marks it unassessed rather than passed. For failure-revision, supply before and after pages.",
+  "sparse-offer": {
+    "generated": "http://127.0.0.1:3000/campaign-lab?fixture=sparse",
+    "baseline": "http://127.0.0.1:3000/campaign-lab?fixture=sparse"
+  },
+  "rich-angle": {
+    "generated": "http://127.0.0.1:3000/campaign-lab?fixture=long-copy",
+    "baseline": "http://127.0.0.1:3000/campaign-lab?fixture=long-copy"
+  },
+  "intent-change": {
+    "generated": "http://127.0.0.1:3000/campaign-lab?fixture=your-intent-fixture",
+    "baseline": "http://127.0.0.1:3000/campaign-lab?fixture=your-intent-fixture"
+  },
+  "failure-revision": {
+    "before": "http://127.0.0.1:3000/campaign-lab?fixture=sparse&state=before",
+    "after": "http://127.0.0.1:3000/campaign-lab?fixture=sparse&state=after"
+  },
+  "trap-asset-label": {
+    "generated": "http://127.0.0.1:3000/campaign-lab?fixture=trap-asset-label"
+  }
+}

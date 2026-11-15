@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "caseId": "trap-asset-label",
+  "source": "generated",
+  "sourceLabel": "Sample draft that looks correct to filename-based checks",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "fernway",
+    "productName": "Fernway 1 L stovetop kettle",
+    "offer": "15% off through 31 December 2026",
+    "destinationUrl": "https://example.com/fernway",
+    "actionLabel": "Shop the kettle"
+  },
+  "draft": {
+    "layout": "offer-led-one-photo",
+    "headline": "15% off the Fernway stovetop kettle.",
+    "lede": "A matte steel kettle with a 1 L capacity.",
+    "facts": [
+      { "label": "Capacity", "value": "1 L" },
+      { "label": "Body", "value": "Matte steel" }
+    ],
+    "sections": [
+      { "id": "hero", "heading": "15% off the Fernway stovetop kettle.", "emphasis": 1 },
+      { "id": "close", "heading": "Shop the kettle", "emphasis": 2 }
+    ],
+    "assetIds": ["fernway-kettle-1l"],
+    "claims": ["15% off the Fernway stovetop kettle.", "A matte steel kettle with a 1 L capacity."]
+  },
+  "approval": { "state": "approved", "revision": "generated-trap-001" }
+}

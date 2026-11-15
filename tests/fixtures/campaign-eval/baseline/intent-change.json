@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "caseId": "intent-change",
+  "source": "baseline",
+  "sourceLabel": "Deterministic single-product template assembly with the same approved product defaults",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "morrow-ceramic",
+    "productName": "Morrow ceramic pour-over dripper",
+    "offer": "Free shipping through 30 November 2026",
+    "destinationUrl": "https://example.com/morrow",
+    "actionLabel": "See the dripper"
+  },
+  "draft": {
+    "layout": "editorial-long-copy",
+    "headline": "Morrow ceramic pour-over dripper",
+    "lede": "A ceramic pour-over dripper with three interior ribs and a single outlet.",
+    "facts": [
+      { "label": "Interior", "value": "Three ribs" },
+      { "label": "Outlet", "value": "Single outlet" },
+      { "label": "Body", "value": "Ceramic" }
+    ],
+    "sections": [
+      { "id": "hero", "heading": "Morrow ceramic pour-over dripper", "emphasis": 1 },
+      { "id": "detail", "heading": "The ribs are the design.", "emphasis": 2 },
+      { "id": "close", "heading": "Morrow ceramic pour-over dripper", "emphasis": 3 }
+    ],
+    "assetIds": ["morrow-ceramic-dripper-front"],
+    "claims": [
+      "Morrow ceramic pour-over dripper",
+      "A ceramic pour-over dripper with three interior ribs and a single outlet."
+    ]
+  },
+  "approval": { "state": "approved", "revision": "baseline-intent-001" }
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "caseId": "sparse-offer",
+  "source": "generated",
+  "sourceLabel": "Deliberately unsupported generated content",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "harbor-field",
+    "productName": "Harbor Field travel bottle",
+    "offer": "20% off, 27–30 November 2026",
+    "destinationUrl": "https://example.com/harbor-field",
+    "actionLabel": "Shop on Amazon"
+  },
+  "draft": {
+    "layout": "offer-led-one-photo",
+    "headline": "Keeps drinks cold for 24 hours.",
+    "lede": "★★★★★ 2,400 reviews can’t be wrong. Guaranteed leak-proof for life.",
+    "facts": [
+      { "label": "Capacity", "value": "500 ml" }
+    ],
+    "sections": [
+      { "id": "hero", "heading": "Keeps drinks cold for 24 hours.", "emphasis": 1 },
+      { "id": "proof", "heading": "Loved by 2,400 reviewers", "emphasis": 2 },
+      { "id": "close", "heading": "Shop on Amazon", "emphasis": 3 }
+    ],
+    "assetIds": ["harbor-field-bottle-front"],
+    "claims": [
+      "Keeps drinks cold for 24 hours.",
+      "★★★★★ 2,400 reviews can’t be wrong.",
+      "Guaranteed leak-proof for life."
+    ]
+  },
+  "approval": { "state": "approved", "revision": "unsupported-001" }
+}
