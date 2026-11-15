@@ -89,7 +89,7 @@ async function snapshot(page) {
       sections: document.querySelector("[data-section-order]")?.getAttribute("data-section-order"),
       image: image ? { src: image.getAttribute("src"), alt: image.getAttribute("alt"), complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight } : null,
       imageRect: rect(image),
-      offerRect: rect([...article?.querySelectorAll("p") ?? []].find((node) => node.innerText.includes("OFFER"))),
+      offerRect: rect(article?.querySelector('[data-role="offer"]')),
       actionRect: rect(canvas?.querySelector("a")),
       headlineRect: rect(article?.querySelector("h1")),
       text,
@@ -207,7 +207,7 @@ async function main() {
       const image = canvas?.querySelector("img");
       const h1 = article?.querySelector("h1");
       const action = canvas?.querySelector("a");
-      const offer = [...article?.querySelectorAll("p") ?? []].find((node) => node.innerText.includes("OFFER"));
+      const offer = article?.querySelector('[data-role="offer"]');
       return { viewport: window.innerHeight, h1: rect(h1), image: rect(image), action: rect(action), offer: rect(offer) };
     });
     const firstScreenPass = Boolean(

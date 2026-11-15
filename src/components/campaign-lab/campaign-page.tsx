@@ -43,8 +43,7 @@ function ProductLabel({ productName }: { productName: string }) {
 
 function Offer({ offer }: { offer: string }) {
   return (
-    <div className={styles.offer}>
-      <p className={styles.offerLabel}>Offer</p>
+    <div className={styles.offer} data-role="offer">
       <p className={styles.offerText}>{offer}</p>
     </div>
   );
@@ -52,7 +51,7 @@ function Offer({ offer }: { offer: string }) {
 
 function Action({ href, label }: { href: string; label: string }) {
   return (
-    <a className={styles.action} href={href} target="_blank" rel="nofollow noopener noreferrer">
+    <a className={styles.action} data-role="action" href={href} target="_blank" rel="nofollow noopener noreferrer">
       {label}
       <span className={styles.srOnly}> (opens in a new tab)</span>
     </a>
@@ -65,6 +64,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId, previewLab
   const showHeroFacts = draft.sections.includes("hero-facts");
   const showDetail = draft.sections.includes("detail");
   const isProductFirst = tokens.heroOrder === "product-first";
+  const usesBlendedImage = Boolean(tokens.imageBlend && tokens.imageBlend !== "normal");
   const showProductLabel = !draft.headline
     .toLowerCase()
     .includes(brief.productName.toLowerCase());
@@ -85,6 +85,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId, previewLab
     "--cp-label-tracking": tokens.labelTracking,
     "--cp-image-radius": tokens.imageRadius,
     "--cp-button-radius": tokens.buttonRadius,
+    "--cp-image-aspect": asset.width > 0 && asset.height > 0 ? `${asset.width} / ${asset.height}` : "4 / 5",
     "--cp-detail-bg": tokens.detailBackground,
     "--cp-detail-ink": tokens.detailInk,
     "--cp-image-blend": tokens.imageBlend,
@@ -111,6 +112,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId, previewLab
         isEditorial ? styles.editorial : styles.offerLed,
         isProductFirst ? styles.productFirst : styles.headlineFirst,
         tokens.heroImage === "arch" ? styles.arch : styles.framed,
+        usesBlendedImage ? styles.blendedImage : null,
       ].join(" ")}
       style={style}
       aria-labelledby={headingId}
