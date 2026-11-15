@@ -96,6 +96,14 @@ Reviewer sheet: `.local/campaign-eval/compare-api/blind-sheet.md`
 Captures: `.local/campaign-eval/compare-api/captures/`
 Run metadata: `.local/campaign-eval/compare-api/run.json`
 
+Committed handoff copy:
+
+- `docs/handoffs/campaign-lab-compare-20261115/comparison-index.md`
+- `docs/handoffs/campaign-lab-compare-20261115/blind-sheet.md`
+- `docs/handoffs/campaign-lab-compare-20261115/provider-map.json`
+- `docs/handoffs/campaign-lab-compare-20261115/run.json`
+- `docs/handoffs/campaign-lab-compare-20261115/captures/`
+
 Pre-integration index: `.local/campaign-eval/compare-fixtures/comparison-index.md`
 
 ## Results
