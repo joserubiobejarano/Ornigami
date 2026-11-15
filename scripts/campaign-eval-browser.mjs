@@ -36,7 +36,6 @@ import {
   comparableText,
   jaccard,
   loadPack,
-  normalizeText,
   scanClaims,
 } from "./campaign-eval-core.mjs";
 
