@@ -92,8 +92,8 @@ test("the full Morrow brief assembles the approved reading sequence", () => {
     endsAt: "product",
     primaryAction: { section: "product", count: 1 },
   });
-  assert.equal(draft.headline, "Why the filter sits away from the wall");
-  assert.equal(draft.standfirst, "Three raised interior ribs hold it clear.");
+  assert.equal(draft.headline, "Why this pour-over dripper keeps the filter off the wall");
+  assert.equal(draft.standfirst, "Three raised interior ribs hold the coffee filter clear of the ceramic wall.");
   assert.deepEqual(draft.story.map((beat) => beat.id), ["prototype-wall", "rib-revision"]);
   assert.deepEqual(draft.story.map((beat) => beat.text), [
     "In the first prototype, the filter sat against the wall.",
@@ -102,7 +102,7 @@ test("the full Morrow brief assembles the approved reading sequence", () => {
   assert.deepEqual(draft.facts.map((fact) => fact.id), ["interior", "outlet", "body"]);
   assert.equal(
     draft.productTransition,
-    "The dripper holds the filter clear of the wall the same way.",
+    "The finished dripper uses that revised rib spacing: three interior ribs hold the coffee filter clear of the wall.",
   );
   assert.deepEqual(
     assets.map((entry) => entry.assignment.role),
@@ -578,46 +578,54 @@ test("fit and generation agree for the full brief with full and packshot-only im
   }
 });
 
-test("only image roles with a verified placement enter fit and assembly", () => {
+test("in-use images have a full-layout placement but stay outside the one-photo draft", () => {
   const item = fixture("morrow-advertorial-full");
   const heroAndUse = withAdvertorial(item, {
-    preferredLayout: "advertorial-full",
     assetAssignments: [
       { role: "product-hero", assetId: "morrow-ceramic-dripper-front" },
       { role: "product-in-use", assetId: "morrow-pour" },
     ],
   });
   const catalog = catalogWith(heroAndUse);
-  const autoValues = { ...valuesFor(heroAndUse), advertorialLayout: "auto" as const };
-  const fit = assessAdvertorialFit(heroAndUse, autoValues, catalog);
-  const preview = buildAdvertorialPreview(heroAndUse, autoValues, catalog);
+  const auto = buildAdvertorialPreview(heroAndUse, valuesFor(heroAndUse), catalog);
+  assert.ok(auto.ok);
+  assert.equal(auto.preview.draft.layout, "advertorial-full");
+  assert.deepEqual(auto.preview.assets.map(({ assignment }) => assignment.role), ["product-hero", "product-in-use"]);
+  assert.deepEqual(auto.preview.unusedImages, []);
 
-  assert.equal(fit.fit, true);
-  assert.equal(fit.layout, "advertorial-one-photo");
-  assert.equal(fit.unusedImages.length, 1);
-  assert.equal(fit.unusedImages[0].assetId, "morrow-pour");
-  assert.equal(fit.unusedImages[0].role, "product-in-use");
-  assert.match(fit.unusedImages[0].reason, /one photo places only product-hero/i);
-
-  assert.equal(preview.ok, true);
-  if (!preview.ok) return;
-  assert.deepEqual(
-    preview.preview.assets.map((entry) => entry.asset.id),
-    ["morrow-ceramic-dripper-front"],
+  const onePhoto = buildAdvertorialPreview(
+    heroAndUse, { ...valuesFor(heroAndUse), advertorialLayout: "advertorial-one-photo" }, catalog,
   );
-  assert.deepEqual(
-    preview.preview.assets.map((entry) => entry.assignment.role),
-    ["product-hero"],
-  );
-  assert.equal(preview.preview.unusedImages[0].assetId, "morrow-pour");
+  assert.ok(onePhoto.ok);
+  assert.deepEqual(onePhoto.preview.assets.map(({ assignment }) => assignment.role), ["product-hero"]);
+  assert.equal(onePhoto.preview.unusedImages[0].assetId, "morrow-pour");
+});
 
-  const fullValues = { ...valuesFor(heroAndUse), advertorialLayout: "advertorial-full" as const };
-  const fullFit = assessAdvertorialFit(heroAndUse, fullValues, catalog);
-  const fullPreview = buildAdvertorialPreview(heroAndUse, fullValues, catalog);
-  assert.equal(fullFit.fit, false);
-  assert.equal(fullFit.compatibleLayout, "advertorial-one-photo");
-  assert.ok(fullFit.unusedImages.some((image) => image.assetId === "morrow-pour"));
-  assert.equal(fullPreview.ok, false);
+test("an approved library role without an opening slot is reported as unused", () => {
+  const item = fixture("morrow-advertorial-full");
+  const heroAndOpening = withAdvertorial(item, {
+    assetAssignments: [
+      { role: "product-hero", assetId: "morrow-ceramic-dripper-front" },
+      { role: "story-opening", assetId: "morrow-pour" },
+    ],
+  });
+  const catalog: CampaignCatalog = {
+    ...catalogWith(heroAndOpening),
+    assets: BASE_CATALOG.assets.map((asset) =>
+      asset.id === "morrow-pour" ? { ...asset, role: "story-opening" } : asset,
+    ),
+  };
+  const values = valuesFor(heroAndOpening);
+  const auto = buildAdvertorialPreview(heroAndOpening, values, catalog);
+  assert.ok(auto.ok);
+  assert.equal(auto.preview.draft.layout, "advertorial-one-photo");
+  assert.equal(auto.preview.unusedImages[0].role, "story-opening");
+
+  const explicit = { ...values, advertorialLayout: "advertorial-full" as const };
+  const fit = assessAdvertorialFit(heroAndOpening, explicit, catalog);
+  assert.equal(fit.fit, false);
+  assert.equal(fit.compatibleLayout, "advertorial-one-photo");
+  assert.equal(buildAdvertorialPreview(heroAndOpening, explicit, catalog).ok, false);
 });
 
 test("the advertorial product name is bound to the campaign identity", () => {
@@ -663,8 +671,8 @@ test("opening focus initializes from the selected format's own options", () => {
     openings: [
       {
         id: "advertorial-question",
-        headline: "Why the filter sits away from the wall",
-        standfirst: "Three raised interior ribs hold it clear.",
+        headline: "Why this pour-over dripper keeps the filter off the wall",
+        standfirst: "Three raised interior ribs hold the coffee filter clear of the ceramic wall.",
       },
     ],
   });
@@ -697,7 +705,7 @@ test("opening focus initializes from the selected format's own options", () => {
   );
   assert.equal(preview.ok, true);
   if (!preview.ok) return;
-  assert.equal(preview.preview.draft.headline, "Why the filter sits away from the wall");
+  assert.equal(preview.preview.draft.headline, "Why this pour-over dripper keeps the filter off the wall");
 });
 
 test("one-photo rejects a required group larger than the verified fact presentation", () => {

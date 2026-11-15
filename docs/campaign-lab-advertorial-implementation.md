@@ -1,10 +1,22 @@
 # Campaign Lab advertorial — implementation and review
 
+> Combined local review, 16 November 2026. Full layout supports product-evidence,
+> product-detail and product-in-use in its story image row. One-photo renders
+> the packshot. Story-opening assets are reported as unused. The three-fact
+> limit and single primary action apply to both layouts. The proposed Morrow copy
+> is available in the fictional fixtures for preview. Real-brand review is pending.
+
 > Review fixes 15 November 2026: see
 > [the review-fixes handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_REVIEW_FIXES_20261115.md)
 > for the image-placement contract, product identity binding, format-specific
 > opening state, verified fact presentation, API/DOM evidence, and remaining
 > gaps.
+>
+> Visual review 16 November 2026: see
+> [the review-render handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_REVIEW_RENDER_20261115.md)
+> for the coffee-context opening, the tightened evidence row, the mobile fact
+> separator fix, the proposed local-pilot copy, the long-offer case, and the
+> real-brand test status.
 
 > Refinement 15 November 2026: see
 > [the renderer refinement handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_RENDER_20261115.md)

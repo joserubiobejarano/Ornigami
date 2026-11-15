@@ -136,7 +136,7 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
     source: "Original fictional fixture from the approved Morrow review brief",
     rights: "Original work for this local prototype; fictional brand.",
     contentHash: "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
-    caption: "PROTOTYPE 01 on the workbench.",
+    caption: "Prototype 01 · revised rib spacing.",
   },
   {
     id: "morrow-ribs",
@@ -152,7 +152,7 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
     source: "Original fictional fixture from the approved Morrow review brief",
     rights: "Original work for this local prototype; fictional brand.",
     contentHash: "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
-    caption: "Three raised interior ribs.",
+    caption: "Three interior ribs · finished cone.",
   },
   {
     id: "morrow-pour",
@@ -194,8 +194,8 @@ const MORROW_OPENINGS: readonly CampaignOpening[] = [
 const MORROW_ADVERTORIAL_OPENINGS: readonly AdvertorialOpening[] = [
   {
     id: "flow-control",
-    headline: "Why the filter sits away from the wall",
-    standfirst: "Three raised interior ribs hold it clear.",
+    headline: "Why this pour-over dripper keeps the filter off the wall",
+    standfirst: "Three raised interior ribs hold the coffee filter clear of the ceramic wall.",
   },
 ];
 
@@ -233,7 +233,7 @@ const MORROW_DISCLOSURE: Disclosure = {
 };
 
 const MORROW_PRODUCT_TRANSITION =
-  "The dripper holds the filter clear of the wall the same way.";
+  "The finished dripper uses that revised rib spacing: three interior ribs hold the coffee filter clear of the wall.";
 
 const MORROW_ADVERTORIAL_FACTS = [
   {

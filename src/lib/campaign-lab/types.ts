@@ -85,8 +85,6 @@ export type AdvertorialBriefData = {
 export type AdvertorialImagePlacement = {
   role: AdvertorialAssetRole;
   region: "story" | "product";
-  /** Zero-based story row the image occupies, when region is story. */
-  storyBeatIndex?: number;
 };
 
 export type AdvertorialUnusedImage = {

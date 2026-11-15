@@ -117,8 +117,9 @@ export const ADVERTORIAL_MANIFEST = {
    */
   imagePlacements: {
     "advertorial-full": [
-      { role: "product-evidence", region: "story", storyBeatIndex: 0 },
-      { role: "product-detail", region: "story", storyBeatIndex: 1 },
+      { role: "product-evidence", region: "story" },
+      { role: "product-detail", region: "story" },
+      { role: "product-in-use", region: "story" },
       { role: "product-hero", region: "product" },
     ] as AdvertorialImagePlacement[],
     "advertorial-one-photo": [
