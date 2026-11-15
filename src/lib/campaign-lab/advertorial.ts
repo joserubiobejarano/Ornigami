@@ -265,7 +265,11 @@ export function createAdvertorialBrief(
   };
 }
 
-function advertorialDataMissingInputs(fixture: CampaignFixture): string[] {
+function advertorialDataMissingInputs(
+  fixture: CampaignFixture,
+  catalog: CampaignCatalog,
+): string[] {
+  if (fixture.brief.advertorial) return [];
   const missing = [
     "An approved advertorial opening (headline and standfirst)",
     "Two or three approved story beats with a source quote",
@@ -273,7 +277,12 @@ function advertorialDataMissingInputs(fixture: CampaignFixture): string[] {
     "A product transition sentence",
     "Approved image roles beyond the product packshot",
   ];
-  if (fixture.brief.advertorial) return [];
+  if (catalog.pilot?.status === "preview") {
+    missing.push(
+      "Confirmed final offer and direct destination (current pilot values are preview placeholders)",
+      "Confirmed media rights for the packshot and any supporting image",
+    );
+  }
   return missing;
 }
 
@@ -282,7 +291,7 @@ export function assessAdvertorialFit(
   values: CampaignFormValues,
   catalog: CampaignCatalog = BASE_CATALOG,
 ): AdvertorialFit {
-  const missing = advertorialDataMissingInputs(fixture);
+  const missing = advertorialDataMissingInputs(fixture, catalog);
   if (!fixture.brief.advertorial) {
     return {
       fit: false,

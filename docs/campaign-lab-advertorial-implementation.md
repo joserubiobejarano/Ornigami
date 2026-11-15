@@ -161,7 +161,10 @@ Momisa starts on `single-product-offer`. The advertorial is marked
 - two or three approved story beats with a source quote;
 - a commercial disclosure (label, sponsor, explanation);
 - a product transition sentence;
-- approved image roles beyond the product packshot.
+- approved image roles beyond the product packshot;
+- confirmed final offer and direct destination, because the pilot values are
+  preview placeholders;
+- confirmed media rights for the packshot and any supporting image.
 
 Selecting the advertorial anyway produces a section-labelled error and leaves
 the previous offer preview at the same revision. `Use single-product offer`
