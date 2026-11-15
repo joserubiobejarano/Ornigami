@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "caseId": "failure-revision",
+  "source": "generated",
+  "sourceLabel": "Deliberately stale revision that keeps the old offer and destination",
+  "before": {
+    "schemaVersion": 1,
+    "caseId": "failure-revision",
+    "source": "generated",
+    "sourceLabel": "Last valid draft with the old offer",
+    "template": { "id": "single-product-offer", "version": "1.0.0" },
+    "campaign": {
+      "brandId": "harbor-field",
+      "productName": "Harbor Field travel bottle",
+      "offer": "20% off, 27–30 November 2026",
+      "destinationUrl": "https://example.com/harbor-field",
+      "actionLabel": "Shop on Amazon"
+    },
+    "draft": {
+      "layout": "offer-led-one-photo",
+      "headline": "Harbor Field travel bottle.",
+      "lede": "A 500 ml insulated bottle with a screw cap.",
+      "facts": [
+        { "label": "Capacity", "value": "500 ml" },
+        { "label": "Closure", "value": "Screw cap" }
+      ],
+      "sections": [{ "id": "hero", "heading": "Harbor Field travel bottle.", "emphasis": 1 }],
+      "assetIds": ["harbor-field-bottle-front"],
+      "claims": ["Harbor Field travel bottle.", "A 500 ml insulated bottle with a screw cap."]
+    },
+    "approval": { "state": "approved", "revision": "stale-before-001" }
+  },
+  "after": {
+    "schemaVersion": 1,
+    "caseId": "failure-revision",
+    "source": "generated",
+    "sourceLabel": "Stale draft that still shows the old values",
+    "template": { "id": "single-product-offer", "version": "1.0.0" },
+    "campaign": {
+      "brandId": "harbor-field",
+      "productName": "Harbor Field travel bottle",
+      "offer": "20% off, 27–30 November 2026",
+      "destinationUrl": "https://example.com/harbor-field",
+      "actionLabel": "Shop on Amazon"
+    },
+    "draft": {
+      "layout": "offer-led-one-photo",
+      "headline": "Harbor Field travel bottle.",
+      "lede": "A 500 ml insulated bottle with a screw cap.",
+      "facts": [
+        { "label": "Capacity", "value": "500 ml" },
+        { "label": "Closure", "value": "Screw cap" }
+      ],
+      "sections": [{ "id": "hero", "heading": "Harbor Field travel bottle.", "emphasis": 1 }],
+      "assetIds": ["harbor-field-bottle-front"],
+      "claims": ["Harbor Field travel bottle.", "A 500 ml insulated bottle with a screw cap."]
+    },
+    "approval": { "state": "approved", "revision": "stale-before-001" }
+  },
+  "change": {
+    "fromOffer": "20% off, 27–30 November 2026",
+    "toOffer": "25% off, 27–30 November 2026",
+    "fromDestination": "https://example.com/harbor-field",
+    "toDestination": "https://example.com/harbor-field-offer"
+  }
+}

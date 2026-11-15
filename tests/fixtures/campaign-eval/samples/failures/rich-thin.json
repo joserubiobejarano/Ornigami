@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "caseId": "rich-angle",
+  "source": "generated",
+  "sourceLabel": "Deliberately thin draft that ignores the extra approved evidence",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "morrow-ceramic",
+    "productName": "Morrow ceramic pour-over dripper",
+    "offer": "Free shipping through 30 November 2026",
+    "destinationUrl": "https://example.com/morrow",
+    "actionLabel": "See the dripper"
+  },
+  "draft": {
+    "layout": "editorial-long-copy",
+    "headline": "Morrow ceramic pour-over dripper",
+    "lede": "A ceramic dripper.",
+    "facts": [
+      { "label": "Body", "value": "Ceramic" }
+    ],
+    "sections": [
+      { "id": "hero", "heading": "Morrow ceramic pour-over dripper", "emphasis": 1 },
+      { "id": "close", "heading": "See the dripper", "emphasis": 2 }
+    ],
+    "assetIds": ["morrow-ceramic-dripper-front"],
+    "claims": ["Morrow ceramic pour-over dripper", "A ceramic dripper."]
+  },
+  "approval": { "state": "approved", "revision": "rich-thin-001" }
+}

@@ -1,0 +1,686 @@
+{
+  "schemaVersion": 1,
+  "packId": "campaign-lab-eval",
+  "packVersion": "1.0.0",
+  "purpose": "Repeatable evaluation cases for the existing single-product offer template. The pack records approved facts, approved assets, what must stay exact, what may change, expected draft behavior, and the boundary between automated proof and human visual review.",
+  "template": {
+    "id": "single-product-offer",
+    "name": "Single product offer",
+    "version": "1.0.0",
+    "source": "src/lib/campaign-lab/template.ts"
+  },
+  "reviewViewports": [375, 1440],
+  "reviewViewportNotes": {
+    "375": "Narrow mobile. Confirm the opening promise, product, offer, and primary action are legible and reachable without horizontal scrolling or a buried CTA.",
+    "1440": "Wide desktop. Confirm the composition uses the extra width intentionally, the image crop still reads, and the offer terms stay near the action."
+  },
+  "scoring": {
+    "scale": "0 failed or unsupported, 1 workable with edits, 2 ready to use",
+    "dimensions": [
+      "campaign fit",
+      "brand fit",
+      "visual hierarchy",
+      "repetition",
+      "edits to approval"
+    ],
+    "rule": "Score visual dimensions only after the factual and functional gate report is separated. Never average a gate failure into a visual score."
+  },
+  "globalForbiddenClaims": [
+    "24 hours",
+    "keeps drinks cold",
+    "keeps drinks hot",
+    "leak-proof",
+    "leakproof",
+    "lifetime warranty",
+    "guaranteed",
+    "guarantee",
+    "award-winning",
+    "five-star",
+    "5-star",
+    "reviews",
+    "rating",
+    "best-selling",
+    "bestseller",
+    "dishwasher safe",
+    "BPA-free",
+    "free returns",
+    "money-back"
+  ],
+  "cases": [
+    {
+      "id": "sparse-offer",
+      "title": "Sparse campaign: one photo, few approved facts",
+      "role": "sparse",
+      "purpose": "Prove a good draft stays short and puts the product and offer up front when the asset set and approved facts are thin.",
+      "campaign": {
+        "brandId": "harbor-field",
+        "brandName": "Harbor Field",
+        "productName": "Harbor Field travel bottle",
+        "campaignAngle": "Direct offer",
+        "audience": "People discovering the bottle in a paid social ad on mobile.",
+        "objective": "Send the visitor to the marketplace listing while the 20% offer is clear.",
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "actionLabel": "Shop on Amazon",
+        "productNoun": "travel bottle"
+      },
+      "approvedFacts": [
+        { "id": "capacity", "label": "Capacity", "value": "500 ml" },
+        { "id": "closure", "label": "Closure", "value": "Screw cap" }
+      ],
+      "approvedStory": null,
+      "approvedAssets": [
+        {
+          "id": "harbor-field-bottle-front",
+          "file": "assets/harbor-field-bottle.svg",
+          "sha256": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805",
+          "role": "product-hero",
+          "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+          "visibleLabel": "HARBOR FIELD 500 ML"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "actionLabel": "Shop on Amazon",
+        "productName": "Harbor Field travel bottle",
+        "assetIds": ["harbor-field-bottle-front"],
+        "assetSha256": {
+          "harbor-field-bottle-front": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805"
+        }
+      },
+      "mayChange": [
+        "headline wording inside the approved offer and product facts",
+        "lede wording that stays traceable to the approved facts",
+        "order of the product label, headline, facts, offer, and action within the first screen",
+        "image crop that keeps the visible product label readable",
+        "spacing, type scale, and section rhythm"
+      ],
+      "forbiddenClaims": [],
+      "expected": {
+        "draft": {
+          "maxWords": 90,
+          "minFacts": 2,
+          "maxSections": 3,
+          "openingTerms": ["20%"],
+          "requiredFactIds": ["capacity", "closure"],
+          "allowedLayouts": ["offer-led-one-photo", "editorial-long-copy"]
+        },
+        "differentFrom": null,
+        "openingShift": null,
+        "revision": null
+      },
+      "review": {
+        "375": [
+          "The product name, the 20% offer, and Shop on Amazon are all readable without horizontal scrolling.",
+          "The offer terms sit next to the action, not in a separate footer the visitor must hunt for.",
+          "The single photo does not push the action below the second screen.",
+          "The page does not look empty or over-decorated because only two facts exist."
+        ],
+        "1440": [
+          "The composition uses the wide canvas without stretching the copy into an unreadable measure.",
+          "The product crop keeps the HARBOR FIELD and 500 ML label readable.",
+          "The action and terms remain visually paired; no second competing action appears.",
+          "Any repeated action or offer is short and earns its repeat."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Exact offer string, destination URL, CTA label, product name, asset ID, asset SHA-256, and alt text.",
+          "Approved facts only; no global or case-specific forbidden claim appears in the draft text.",
+          "Draft length, fact count, section count, and opening term budget.",
+          "Rendered overflow, asset load, link destination, keyboard reachability, and approval invalidation at 375 and 1440 px via the existing acceptance runner."
+        ],
+        "humanOnly": [
+          "The crop preserves the product and its visible label.",
+          "The eye reaches the product, the offer, then the action in that order.",
+          "The sparse page reads deliberately, not as a page with missing sections.",
+          "The composition belongs to Harbor Field rather than a generic storefront."
+        ]
+      },
+      "fallback": {
+        "condition": "A generated draft adds evidence, proof, or sections that the brief does not supply.",
+        "expected": "Keep the deterministic baseline: short headline, two facts, one image, one action. A sparse page is not a failed page."
+      }
+    },
+    {
+      "id": "rich-angle",
+      "title": "Richer campaign: different brand, clear product angle, extra evidence",
+      "role": "rich",
+      "purpose": "Prove a good draft uses the extra approved evidence and feels materially different from the sparse page without inventing proof.",
+      "campaign": {
+        "brandId": "morrow-ceramic",
+        "brandName": "Morrow Ceramic",
+        "productName": "Morrow ceramic pour-over dripper",
+        "campaignAngle": "Flow control: the ribs hold the filter clear of the wall",
+        "audience": "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+        "objective": "Explain the rib design and lead to the dripper page.",
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productNoun": "pour-over dripper"
+      },
+      "approvedFacts": [
+        { "id": "ribs", "label": "Interior", "value": "Three ribs" },
+        { "id": "outlet", "label": "Outlet", "value": "Single outlet" },
+        { "id": "body", "label": "Body", "value": "Ceramic" }
+      ],
+      "approvedStory": "Morrow revised the rib spacing after its first prototype held the filter against the wall.",
+      "approvedAssets": [
+        {
+          "id": "morrow-ceramic-dripper-front",
+          "file": "assets/morrow-ceramic-dripper.svg",
+          "sha256": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "role": "product-hero",
+          "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+          "visibleLabel": "MORROW"
+        },
+        {
+          "id": "morrow-prototype",
+          "file": "assets/morrow-prototype.svg",
+          "sha256": "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
+          "role": "product-evidence",
+          "alt": "Early Morrow dripper prototype on a workbench beside a notebook sketch of revised rib spacing.",
+          "visibleLabel": "PROTOTYPE 01"
+        },
+        {
+          "id": "morrow-ribs",
+          "file": "assets/morrow-ribs.svg",
+          "sha256": "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
+          "role": "product-detail",
+          "alt": "Close detail of three raised interior ribs inside the Morrow ceramic dripper.",
+          "visibleLabel": "THREE INTERIOR RIBS"
+        },
+        {
+          "id": "morrow-pour",
+          "file": "assets/morrow-pour.svg",
+          "sha256": "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b",
+          "role": "product-in-use",
+          "alt": "Water poured from a kettle into the Morrow ceramic dripper set on a carafe.",
+          "visibleLabel": "MORROW"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productName": "Morrow ceramic pour-over dripper",
+        "assetIds": [
+          "morrow-ceramic-dripper-front",
+          "morrow-prototype",
+          "morrow-ribs",
+          "morrow-pour"
+        ],
+        "assetSha256": {
+          "morrow-ceramic-dripper-front": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "morrow-prototype": "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
+          "morrow-ribs": "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
+          "morrow-pour": "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b"
+        }
+      },
+      "mayChange": [
+        "headline and lede wording that stays traceable to the approved story and facts",
+        "which approved fact or image leads the argument",
+        "section order among the approved evidence, detail, and close",
+        "image sequence and crop, provided the product and its visible label survive",
+        "type scale, spacing, and composition within the Morrow brand tokens"
+      ],
+      "forbiddenClaims": [
+        "flavor",
+        "taste",
+        "brew time",
+        "brews in",
+        "minutes",
+        "seconds",
+        "faster than",
+        "better than",
+        "even extraction",
+        "handmade",
+        "made in"
+      ],
+      "expected": {
+        "draft": {
+          "maxWords": 180,
+          "minFacts": 3,
+          "maxSections": 5,
+          "openingTerms": [],
+          "requiredFactIds": ["ribs", "outlet", "body"],
+          "allowedLayouts": ["offer-led-one-photo", "editorial-long-copy"],
+          "minEvidenceItems": 3,
+          "focusTerms": ["rib", "ribs", "filter", "wall", "flow"]
+        },
+        "differentFrom": {
+          "caseId": "sparse-offer",
+          "mustDiffer": ["brandId", "productName", "offer", "destinationUrl", "assetIds"],
+          "minEvidenceItemDelta": 1
+        },
+        "openingShift": null,
+        "revision": null
+      },
+      "review": {
+        "375": [
+          "The first screen states a product angle, not a generic brand slogan.",
+          "The extra evidence is visible within the first two screens; it is not hidden behind a tab or a decorative gallery.",
+          "The offer and See the dripper are still reachable without scrolling past an image stack.",
+          "The page reads as longer and more evidence-led than the sparse campaign, without becoming a wall of copy."
+        ],
+        "1440": [
+          "The image sequence has roles: product recognition, then detail or story evidence, then use.",
+          "Crops preserve the ribs, outlet, or prototype label that the copy refers to.",
+          "The editorial composition uses the width for a deliberate measure and image rhythm, not a centered mobile column.",
+          "The offer and action remain visually paired and are not displaced by the added evidence."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Exact offer, destination, action label, product name, asset IDs, asset SHA-256 values, and alt text for every approved asset used.",
+          "Approved facts and approved story only; no forbidden claim appears in the draft text.",
+          "Draft length, fact count, section count, and evidence-item count.",
+          "The campaign differs from the sparse campaign in brand, product, offer, destination, and asset identity.",
+          "The rendered brand tokens differ from the sparse brand in accent, display font family, and hero image treatment."
+        ],
+        "humanOnly": [
+          "The extra evidence supports the stated angle rather than merely filling space.",
+          "The composition is materially different from the sparse page, not the same shell with new words.",
+          "The image sequence advances the argument and the crops remain legible.",
+          "The page still feels like Morrow Ceramic with the logo hidden."
+        ]
+      },
+      "coverageGap": "The v1 template manifest allows only the product-hero role. Supporting assets are approved inputs for this case. If the integrated flow rejects product-evidence, product-detail, or product-in-use, record the richer case as partially supported and judge evidence use on facts and story only. That limitation is a coverage gap, not a pass.",
+      "fallback": {
+        "condition": "The flow cannot place supporting images or the extra evidence makes the first screen bury the offer.",
+        "expected": "Fall back to the hero image plus the approved story and three facts, keeping the offer and action in the first two screens."
+      }
+    },
+    {
+      "id": "intent-change",
+      "title": "Intent change: same brand, product, assets, and offer; different campaign angle",
+      "role": "intent-change",
+      "purpose": "Prove the opening or section emphasis follows a new campaign angle while approved offer, destination, and asset identity stay fixed.",
+      "campaign": {
+        "brandId": "morrow-ceramic",
+        "brandName": "Morrow Ceramic",
+        "productName": "Morrow ceramic pour-over dripper",
+        "campaignAngle": "Ritual: a slower first pour",
+        "audience": "People who want a calmer morning routine and clicked an email about the first pour.",
+        "objective": "Lead with the ritual of the first pour, then connect it to the same rib design.",
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productNoun": "pour-over dripper"
+      },
+      "approvedFacts": [
+        { "id": "ribs", "label": "Interior", "value": "Three ribs" },
+        { "id": "outlet", "label": "Outlet", "value": "Single outlet" },
+        { "id": "body", "label": "Body", "value": "Ceramic" }
+      ],
+      "approvedStory": "Morrow revised the rib spacing after its first prototype held the filter against the wall.",
+      "approvedAssets": [
+        {
+          "id": "morrow-ceramic-dripper-front",
+          "file": "assets/morrow-ceramic-dripper.svg",
+          "sha256": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "role": "product-hero",
+          "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+          "visibleLabel": "MORROW"
+        },
+        {
+          "id": "morrow-prototype",
+          "file": "assets/morrow-prototype.svg",
+          "sha256": "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
+          "role": "product-evidence",
+          "alt": "Early Morrow dripper prototype on a workbench beside a notebook sketch of revised rib spacing.",
+          "visibleLabel": "PROTOTYPE 01"
+        },
+        {
+          "id": "morrow-ribs",
+          "file": "assets/morrow-ribs.svg",
+          "sha256": "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
+          "role": "product-detail",
+          "alt": "Close detail of three raised interior ribs inside the Morrow ceramic dripper.",
+          "visibleLabel": "THREE INTERIOR RIBS"
+        },
+        {
+          "id": "morrow-pour",
+          "file": "assets/morrow-pour.svg",
+          "sha256": "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b",
+          "role": "product-in-use",
+          "alt": "Water poured from a kettle into the Morrow ceramic dripper set on a carafe.",
+          "visibleLabel": "MORROW"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productName": "Morrow ceramic pour-over dripper",
+        "brandId": "morrow-ceramic",
+        "assetIds": [
+          "morrow-ceramic-dripper-front",
+          "morrow-prototype",
+          "morrow-ribs",
+          "morrow-pour"
+        ],
+        "assetSha256": {
+          "morrow-ceramic-dripper-front": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "morrow-prototype": "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
+          "morrow-ribs": "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
+          "morrow-pour": "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b"
+        }
+      },
+      "mayChange": [
+        "headline and lede",
+        "the first section's emphasis and the order of approved sections",
+        "which approved fact or image the opening foregrounds",
+        "image crop among the approved crops",
+        "type scale, spacing, and composition within the Morrow brand tokens"
+      ],
+      "forbiddenClaims": [
+        "flavor",
+        "taste",
+        "brew time",
+        "brews in",
+        "minutes",
+        "seconds",
+        "faster than",
+        "better than",
+        "even extraction",
+        "handmade",
+        "made in"
+      ],
+      "expected": {
+        "draft": {
+          "maxWords": 180,
+          "minFacts": 2,
+          "maxSections": 5,
+          "openingTerms": ["first pour", "morning", "ritual", "slow", "steady", "pace"],
+          "requiredFactIds": ["ribs"],
+          "allowedLayouts": ["offer-led-one-photo", "editorial-long-copy"],
+          "minEvidenceItems": 2,
+          "focusTerms": ["first pour", "morning", "ritual", "slow", "steady", "pace"]
+        },
+        "differentFrom": {
+          "caseId": "rich-angle",
+          "mustDiffer": ["headline", "lede"],
+          "mustNotDiffer": ["brandId", "productName", "offer", "destinationUrl", "actionLabel", "assetIds"],
+          "allowSameOfferAndDestination": true
+        },
+        "openingShift": {
+          "referenceCaseId": "rich-angle",
+          "mustDiffer": ["headline", "lede"],
+          "mustPreserve": [
+            "brandId",
+            "productName",
+            "offer",
+            "destinationUrl",
+            "actionLabel",
+            "assetIds",
+            "assetSha256"
+          ],
+          "openingTerms": ["first pour", "morning", "ritual", "slow", "steady", "pace"],
+          "referenceOpeningTerms": ["rib", "ribs", "filter", "wall", "flow"]
+        },
+        "revision": null
+      },
+      "review": {
+        "375": [
+          "The first screen promises the slower first pour, not the rib mechanism that led the richer campaign.",
+          "The offer, destination, action label, and product image identity are unchanged from the richer campaign.",
+          "The new opening is not a synonym swap; a reader can tell the campaign emphasis changed.",
+          "The page still reads as Morrow Ceramic and does not reuse the richer campaign's first screen."
+        ],
+        "1440": [
+          "Section emphasis follows the ritual angle while the same approved evidence remains available.",
+          "The layout may change, but the same product and assets are recognizable.",
+          "The offer and action are still paired and unchanged.",
+          "The two Morrow pages would not be mistaken for duplicates if placed side by side."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Brand, product, offer, destination, action label, asset IDs, and asset SHA-256 values are identical to the richer campaign.",
+          "Headline and lede differ from the richer campaign.",
+          "The intent-change opening contains at least one approved angle term and the richer opening does not lead with it.",
+          "Approved facts only, no forbidden claim, and the length and section budgets hold."
+        ],
+        "humanOnly": [
+          "The opening promise actually changes the campaign emphasis rather than swapping adjectives.",
+          "The section order supports the new angle.",
+          "The page remains recognizable as the same brand and product.",
+          "A visitor would take the same next action for the same offer."
+        ]
+      },
+      "fallback": {
+        "condition": "The flow ignores the new angle and regenerates the same opening as the richer campaign.",
+        "expected": "Reject the draft as an intent-change failure and keep the richer campaign's approved page. Do not accept a synonym-level edit."
+      }
+    },
+    {
+      "id": "failure-revision",
+      "title": "Failure and revision: unsupported content, missing input, late offer and destination change",
+      "role": "failure-revision",
+      "purpose": "Prove invalid or unsupported generated content and a missing required input are rejected without losing the last valid draft, and prove a late offer and destination change is applied exactly and invalidates approval.",
+      "campaign": {
+        "brandId": "harbor-field",
+        "brandName": "Harbor Field",
+        "productName": "Harbor Field travel bottle",
+        "campaignAngle": "Direct offer",
+        "audience": "People discovering the bottle in a paid social ad on mobile.",
+        "objective": "Send the visitor to the marketplace listing while the 20% offer is clear.",
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "actionLabel": "Shop on Amazon",
+        "productNoun": "travel bottle"
+      },
+      "approvedFacts": [
+        { "id": "capacity", "label": "Capacity", "value": "500 ml" },
+        { "id": "closure", "label": "Closure", "value": "Screw cap" }
+      ],
+      "approvedStory": null,
+      "approvedAssets": [
+        {
+          "id": "harbor-field-bottle-front",
+          "file": "assets/harbor-field-bottle.svg",
+          "sha256": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805",
+          "role": "product-hero",
+          "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+          "visibleLabel": "HARBOR FIELD 500 ML"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "actionLabel": "Shop on Amazon",
+        "productName": "Harbor Field travel bottle",
+        "assetIds": ["harbor-field-bottle-front"],
+        "assetSha256": {
+          "harbor-field-bottle-front": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805"
+        }
+      },
+      "mayChange": [
+        "nothing outside the three prescribed fault and revision steps",
+        "the localized offer and destination strings in the final revision only"
+      ],
+      "forbiddenClaims": [],
+      "expected": {
+        "draft": {
+          "maxWords": 90,
+          "minFacts": 2,
+          "maxSections": 3,
+          "openingTerms": ["20%", "travel bottle"],
+          "requiredFactIds": ["capacity", "closure"],
+          "allowedLayouts": ["offer-led-one-photo", "editorial-long-copy"]
+        },
+        "differentFrom": null,
+        "openingShift": null,
+        "revision": {
+          "from": {
+            "offer": "20% off, 27–30 November 2026",
+            "destinationUrl": "https://example.com/harbor-field",
+            "approvalState": "approved"
+          },
+          "to": {
+            "offer": "25% off, 27–30 November 2026",
+            "destinationUrl": "https://example.com/harbor-field-offer",
+            "approvalState": "not-approved"
+          },
+          "mustPreserve": ["headline", "lede", "facts", "layout", "assetIds", "assetSha256"],
+          "allowedDerivedChanges": [
+            "A headline or lede that repeats the old offer lead may update only that lead, for example 20% off to 25% off."
+          ],
+          "mustDisappear": ["20% off", "https://example.com/harbor-field"],
+          "mustAppear": ["25% off", "https://example.com/harbor-field-offer"]
+        }
+      },
+      "faults": [
+        {
+          "id": "unsupported-generated-content",
+          "input": "A generated draft adds the headline 'Keeps drinks cold for 24 hours.' and the proof line '★★★★★ 2,400 reviews can’t be wrong.'",
+          "expected": "Reject before preview or publication. Name the unsupported claim, keep the previous valid draft usable, and do not display the invented proof as approved content.",
+          "automatedCheck": "claim-traceability"
+        },
+        {
+          "id": "missing-required-input",
+          "input": "The destination URL is cleared while the offer, product name, and approved image remain valid.",
+          "expected": "Show a specific missing-item message, block approval, and keep the last valid preview visible.",
+          "automatedCheck": "required-inputs"
+        },
+        {
+          "id": "late-offer-and-destination-change",
+          "input": "After approval, change the offer to '25% off, 27–30 November 2026' and the destination to https://example.com/harbor-field-offer.",
+          "expected": "Invalidate the previous approval, apply both new values exactly, remove the old offer and old destination from the preview and every link, and preserve the headline, lede, facts, layout, and asset identity.",
+          "automatedCheck": "revision-applied"
+        }
+      ],
+      "review": {
+        "375": [
+          "The unsupported-claim error is specific enough to fix and the previous draft is still visible.",
+          "The missing-destination message appears next to the field and approval is disabled.",
+          "After the late change, the new offer and destination are readable together and the old values are gone.",
+          "The page still fits the narrow viewport after the revision."
+        ],
+        "1440": [
+          "The revision is localized; the headline, image, and facts do not churn.",
+          "The old destination is absent from every visible and hidden link.",
+          "The approval status visibly changes from approved to not approved.",
+          "The revision does not introduce a second action or a duplicated offer paragraph."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Unsupported claims are detected against the approved fact set and forbidden-claim list.",
+          "A missing required input is reported by field, approval is blocked, and the last valid draft remains.",
+          "The revised offer and destination are exact; old values are absent; asset identity and unrelated copy are preserved; approval is invalidated."
+        ],
+        "humanOnly": [
+          "The error message is understandable to the operator.",
+          "The preserved draft still looks like the last approved page.",
+          "The localized revision reads coherently.",
+          "The operator knows which revision they are approving."
+        ]
+      },
+      "fallback": {
+        "condition": "The generator fails or returns unsupported content.",
+        "expected": "Keep the deterministic baseline for the last valid offer and destination. A failed generation must not blank the preview or publish the unsupported draft."
+      }
+    },
+    {
+      "id": "trap-asset-label",
+      "title": "Trap: the image filename disagrees with the visible product label",
+      "role": "trap",
+      "purpose": "Prove the pack never treats an image filename or page label as packaging truth. The automated checks can pass while a human must still compare the pictured label with the approved product.",
+      "campaign": {
+        "brandId": "fernway",
+        "brandName": "Fernway",
+        "productName": "Fernway 1 L stovetop kettle",
+        "campaignAngle": "Direct offer",
+        "audience": "People shopping for a stovetop kettle.",
+        "objective": "Send the visitor to the kettle listing with 15% off.",
+        "offer": "15% off through 31 December 2026",
+        "destinationUrl": "https://example.com/fernway",
+        "actionLabel": "Shop the kettle",
+        "productNoun": "stovetop kettle"
+      },
+      "approvedFacts": [
+        { "id": "capacity", "label": "Capacity", "value": "1 L" },
+        { "id": "body", "label": "Body", "value": "Matte steel" }
+      ],
+      "approvedStory": null,
+      "approvedAssets": [
+        {
+          "id": "fernway-kettle-1l",
+          "file": "assets/fernway-kettle-1l.svg",
+          "sha256": "21ed811b065d8811ac937052be61747efe9fec1d7c9e31fcd157ce0f58bf8441",
+          "role": "product-hero",
+          "alt": "Fernway matte steel stovetop kettle on a light studio backdrop.",
+          "visibleLabel": "FERNWAY STOVETOP KETTLE 0.8 L"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "15% off through 31 December 2026",
+        "destinationUrl": "https://example.com/fernway",
+        "actionLabel": "Shop the kettle",
+        "productName": "Fernway 1 L stovetop kettle",
+        "assetIds": ["fernway-kettle-1l"],
+        "assetSha256": {
+          "fernway-kettle-1l": "21ed811b065d8811ac937052be61747efe9fec1d7c9e31fcd157ce0f58bf8441"
+        }
+      },
+      "mayChange": [
+        "headline and lede wording inside the approved offer and facts",
+        "crop that keeps the visible packaging label readable"
+      ],
+      "forbiddenClaims": ["0.8 L", "800 ml"],
+      "expected": {
+        "draft": {
+          "maxWords": 90,
+          "minFacts": 2,
+          "maxSections": 3,
+          "openingTerms": ["15%"],
+          "requiredFactIds": ["capacity", "body"],
+          "allowedLayouts": ["offer-led-one-photo", "editorial-long-copy"]
+        },
+        "differentFrom": null,
+        "openingShift": null,
+        "revision": null
+      },
+      "trap": {
+        "kind": "filename-label-disagreement",
+        "filename": "fernway-kettle-1l.svg",
+        "filenameImplies": "1 L",
+        "approvedCampaignCapacity": "1 L",
+        "visiblePackagingLabel": "0.8 L",
+        "expectedAutomatedState": "unassessed",
+        "why": "The filename, asset ID, page product name, and alt text can all say 1 L while the pixels show 0.8 L. A byte-correct, alt-correct, page-label-correct asset is still the wrong package.",
+        "humanInstruction": "Open the product crop at 375 and 1440 px. Read the printed label. The page and filename say 1 L; the pictured label says 0.8 L. Do not approve until the packaging reference and asset agree or the campaign product is corrected. Record the finding as a factual packaging failure, not a visual preference."
+      },
+      "review": {
+        "375": [
+          "The printed label on the kettle is readable in the crop at mobile width.",
+          "The printed capacity is compared with the approved 1 L product, not with the filename.",
+          "If the label is unreadable at 375, the reviewer says so and does not infer the capacity from the alt text."
+        ],
+        "1440": [
+          "The full packaging label is readable at desktop width.",
+          "The 0.8 L printing is visible and contradicts the campaign's 1 L product.",
+          "The page's product name and offer are not treated as proof of the pictured package."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "The asset path, bytes, alt text, page product name, offer, and destination can be verified.",
+          "The pack must report packaging truth as unassessed, or as a known conflict when the fixture metadata declares it, but never as passed from filename or page text."
+        ],
+        "humanOnly": [
+          "Read the printed label in the rendered crop.",
+          "Compare the pictured capacity with the approved product and packaging reference.",
+          "Decide whether to fix the asset or the campaign before approval."
+        ]
+      },
+      "fallback": {
+        "condition": "The reviewer cannot read the label at either viewport.",
+        "expected": "Do not approve. Request a crop or a replacement asset where the packaging label is legible; record the check as unassessed."
+      }
+    }
+  ]
+}

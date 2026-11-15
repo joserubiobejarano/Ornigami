@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-label="Fernway matte steel stovetop kettle">
+  <defs>
+    <linearGradient id="backdrop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2f0ea"/>
+      <stop offset="1" stop-color="#d9d6cd"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3c4247"/>
+      <stop offset=".14" stop-color="#9aa1a6"/>
+      <stop offset=".3" stop-color="#e2e6e8"/>
+      <stop offset=".46" stop-color="#6d757a"/>
+      <stop offset=".64" stop-color="#c8cdd0"/>
+      <stop offset=".82" stop-color="#7a8287"/>
+      <stop offset="1" stop-color="#343a3f"/>
+    </linearGradient>
+    <linearGradient id="lid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5b6267"/>
+      <stop offset=".4" stop-color="#d5dadd"/>
+      <stop offset=".7" stop-color="#8b9297"/>
+      <stop offset="1" stop-color="#454b50"/>
+    </linearGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#4a4338" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#4a4338" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" seed="31" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="1500" fill="url(#backdrop)"/>
+  <ellipse cx="610" cy="1240" rx="340" ry="74" fill="url(#shadow)" filter="url(#blur)"/>
+
+  <!-- kettle body -->
+  <path d="M380 620c0-40 28-70 68-70h304c40 0 68 30 68 70v430c0 62-50 110-112 110H492c-62 0-112-48-112-110Z" fill="url(#steel)" stroke="#2f3539" stroke-opacity=".45" stroke-width="3"/>
+  <path d="M392 760h416" stroke="#f2f5f6" stroke-opacity=".38" stroke-width="8"/>
+  <path d="M392 1040h416" stroke="#23282c" stroke-opacity=".32" stroke-width="8"/>
+
+  <!-- spout -->
+  <path d="M808 720c70 8 116 58 134 140l-38 14c-16-66-50-100-104-108Z" fill="url(#steel)" stroke="#2f3539" stroke-opacity=".45" stroke-width="3"/>
+  <path d="M866 812c30 12 50 42 58 82" fill="none" stroke="#eef2f4" stroke-opacity=".5" stroke-width="6"/>
+
+  <!-- handle -->
+  <path d="M370 760c-76 10-118 70-118 150s42 144 118 156" fill="none" stroke="#3a4045" stroke-width="26" stroke-linecap="round"/>
+  <path d="M370 768c-64 12-100 64-100 142s36 132 100 146" fill="none" stroke="#aeb5b9" stroke-opacity=".55" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- lid -->
+  <ellipse cx="600" cy="552" rx="176" ry="36" fill="url(#lid)"/>
+  <path d="M424 552c0 18 78 34 176 34s176-16 176-34" fill="none" stroke="#eef2f4" stroke-opacity=".5" stroke-width="4"/>
+  <path d="M562 520c0-26 16-44 38-44s38 18 38 44" fill="none" stroke="#3a4045" stroke-width="14" stroke-linecap="round"/>
+  <rect x="584" y="506" width="32" height="12" rx="6" fill="#2d3337"/>
+
+  <!-- visible packaging label: deliberately says 0.8 L -->
+  <g>
+    <rect x="470" y="842" width="260" height="150" rx="8" fill="#f4f1e9" stroke="#b9b3a6" stroke-width="2"/>
+    <text x="600" y="890" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" letter-spacing="6" fill="#23262a">FERNWAY</text>
+    <path d="M520 910h160" stroke="#9b9588" stroke-width="2"/>
+    <text x="600" y="942" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="4" fill="#4a4d51">STOVETOP KETTLE</text>
+    <text x="600" y="972" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" letter-spacing="5" fill="#23262a">0.8 L</text>
+  </g>
+
+  <rect width="1200" height="1500" filter="url(#grain)" opacity=".04" style="mix-blend-mode:multiply"/>
+  <rect width="1200" height="1500" fill="none" stroke="#2b261f" stroke-opacity=".08" stroke-width="2"/>
+</svg>

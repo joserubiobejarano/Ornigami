@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "caseId": "sparse-offer",
+  "source": "generated",
+  "sourceLabel": "Sample improved draft for harness verification only",
+  "template": { "id": "single-product-offer", "version": "1.0.0" },
+  "campaign": {
+    "brandId": "harbor-field",
+    "productName": "Harbor Field travel bottle",
+    "offer": "20% off, 27–30 November 2026",
+    "destinationUrl": "https://example.com/harbor-field",
+    "actionLabel": "Shop on Amazon"
+  },
+  "draft": {
+    "layout": "offer-led-one-photo",
+    "headline": "20% off the Harbor Field travel bottle.",
+    "lede": "500 ml, a screw cap, and nothing else to decide. The offer runs 27–30 November.",
+    "facts": [
+      { "label": "Capacity", "value": "500 ml" },
+      { "label": "Closure", "value": "Screw cap" }
+    ],
+    "sections": [
+      { "id": "hero", "heading": "20% off the Harbor Field travel bottle.", "emphasis": 1 },
+      { "id": "hero-facts", "heading": "Facts", "emphasis": 2 },
+      { "id": "close", "heading": "Shop on Amazon", "emphasis": 3 }
+    ],
+    "assetIds": ["harbor-field-bottle-front"],
+    "claims": [
+      "20% off the Harbor Field travel bottle.",
+      "500 ml, a screw cap, and nothing else to decide. The offer runs 27–30 November."
+    ]
+  },
+  "approval": { "state": "approved", "revision": "generated-sparse-001" }
+}
