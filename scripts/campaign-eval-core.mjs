@@ -32,7 +32,8 @@ export const HARD_GATES = new Set([
 const PROOF_PATTERNS = [
   /[★⭐]/u,
   /\b\d[\d,.]*\s*(?:five[- ]star|star|reviews?|ratings?|customers?)\b/i,
-  /\b(?:reviews?|ratings?|testimonials?|verified buyers?)\b/i,
+  /\b(?:customer|verified|product|user)\s+reviews?\b/i,
+  /\b(?:ratings?|testimonials?|verified buyers?)\b/i,
 ];
 
 const ABSOLUTE_PATTERNS = [
@@ -555,7 +556,7 @@ function firstOfferClause(value) {
   return normalizeText(value).split(/[,;.]/)[0]?.trim() ?? normalizeText(value);
 }
 
-function offerRewriteOnly(beforeText, afterText, fromOffer, toOffer) {
+export function offerRewriteOnly(beforeText, afterText, fromOffer, toOffer) {
   const before = normalizeText(beforeText);
   const after = normalizeText(afterText);
   if (before === after) return true;
@@ -1028,9 +1029,11 @@ export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "cap
   lines.push("Visual preferences are not factual failures. A draft can look better and still fail an exact offer, destination, asset, or claim check.");
   lines.push("");
 
-  pack.cases.forEach((caseDef, index) => {
+  let includedCases = 0;
+  pack.cases.forEach((caseDef) => {
     const pair = pairs.find((entry) => entry.caseId === caseDef.id);
     if (!pair) return;
+    includedCases += 1;
     const orderSeed = sha256(`${seed}:${caseDef.id}`);
     const options = [...pair.options].sort((left, right) => {
       const leftKey = sha256(`${orderSeed}:${left.source}`);
@@ -1038,7 +1041,7 @@ export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "cap
       return leftKey.localeCompare(rightKey);
     });
     const mapping = {};
-    lines.push(`## ${index + 1}. ${caseDef.title}`);
+    lines.push(`## ${includedCases}. ${caseDef.title}`);
     lines.push("");
     lines.push(`**Campaign.** ${caseDef.campaign.brandName} · ${caseDef.campaign.productName} · ${caseDef.campaign.campaignAngle}`);
     lines.push("");
@@ -1068,13 +1071,11 @@ export function buildBlindSheet({ loaded, runId, seed, pairs, captureRoot = "cap
     lines.push("- Would you fall back to the other draft? Why?");
     lines.push("- Name one strength to preserve in each draft.");
     lines.push("");
-    if (capturesAvailable) {
-      lines.push("Capture slots:");
-      for (const label of Object.keys(mapping)) {
-        lines.push(`- Draft ${label}: \`${captureRoot}/${caseDef.id}/${label}/375.png\`, \`${captureRoot}/${caseDef.id}/${label}/1440.png\``);
-      }
-      lines.push("");
+    lines.push(capturesAvailable ? "Capture slots:" : "Capture slots (run `scripts/campaign-eval-browser.mjs` to fill them):");
+    for (const label of Object.keys(mapping)) {
+      lines.push(`- Draft ${label}: \`${captureRoot}/${caseDef.id}/${label}/375.png\`, \`${captureRoot}/${caseDef.id}/${label}/1440.png\``);
     }
+    lines.push("");
     key.cases[caseDef.id] = { order: Object.keys(mapping), mapping };
   });
 

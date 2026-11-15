@@ -4,10 +4,11 @@ Branch: `codex/campaign-lab-eval-20261115`
 Base commit: `a29753b`
 Pack: `campaign-lab-eval` v1.0.0
 Template under test: `single-product-offer` v1.0.0
+Flow under test: `feat/campaign-lab-generation` at `aa2c562`
 
-This handoff records the pre-integration verification and the first run against
-Agent 1's generation flow. It does not approve the flow, the template, or the
-generated pages. Visual judgment still needs the blind sheet.
+This handoff records the pre-integration verification and the first full run
+against Agent 1's generation flow. It does not approve the flow, the template, or
+the generated pages. Visual judgment still needs the blind sheet.
 
 ## What this branch owns
 
@@ -21,6 +22,7 @@ generated pages. Visual judgment still needs the blind sheet.
 - `tests/support/campaign-eval-browser-self-test.mjs` — pre-integration
   verification of the focused checks.
 - `docs/campaign-lab-eval-pack.md` — review instructions and proof boundary.
+- `docs/campaign-lab-blind-review-sheet.md` — blank reviewer form.
 
 The app route, renderer, and provider adapter remain Agent 1's. This branch does
 not edit them.
@@ -43,21 +45,23 @@ intended proof boundary.
 
 ## Integration run against Agent 1's flow
 
-The flow's HTTP API and generation service were available on
-`http://127.0.0.1:3100`. The committed adapter was run against the real route:
+The flow was available at `http://localhost:3100`. Use `localhost`, not
+`127.0.0.1`: Next 16 blocks dev resources from the literal loopback address
+unless the app adds it to `allowedDevOrigins`, and the page then does not
+hydrate. The same app works normally through `localhost`.
+
+### Draft artifacts through the real HTTP route
 
 ```powershell
 node scripts/campaign-eval-collect-flow.mjs `
-  --url http://127.0.0.1:3100 `
+  --url http://localhost:3100 `
   --out .local/campaign-eval/agent1-http `
   --fixtures sparse,long-copy `
   --revision
 ```
 
 The adapter wrote the sparse, rich, and revision artifacts through
-`POST /api/campaign-lab/generate`. The provider-mode table below also exercised
-the service directly so each fallback path could be set without restarting the
-server.
+`POST /api/campaign-lab/generate`.
 
 Artifacts: `.local/campaign-eval/agent1-http/`
 Report: `.local/campaign-eval/agent1-http-run/report.md`
@@ -67,28 +71,57 @@ Report: `.local/campaign-eval/agent1-http-run/report.md`
 | `sparse-offer` | `fixture=sparse` | Generated with `offer-led`, sections `hero, hero-facts, close`. Same headline, lede, and two facts as the deterministic baseline. | Both pass the gates. No automated improvement; blind review decides. |
 | `rich-angle` | `fixture=long-copy` | Generated with `story-led`, sections `hero, detail, close`. Identical copy, facts, layout, and asset to the baseline. | Both pass. No automated improvement; the two pages are the same. |
 | `intent-change` | Not expressible | The flow accepts a fixture ID and six form values, not a new approved angle. No artifact was supplied. | `missing-draft`. Unassessed. |
-| `failure-revision` | `fixture=sparse`, before and after | The 25% offer and new destination applied exactly; the old values are absent; facts, sections, layout, and asset identity are preserved. The headline updated only where it repeated the offer lead. | `revision-applied`. Approval invalidation is unassessed in the artifact because approval is UI state; the UI run could not approve anything. |
+| `failure-revision` | `fixture=sparse`, before and after | The 25% offer and new destination applied exactly; the old values are absent; facts, sections, layout, and asset identity are preserved. The headline updated only where it repeated the offer lead. | `revision-applied`. Approval invalidation is observed by the UI runner below and unassessed in the draft artifact. |
 | `trap-asset-label` | Not expressible | The flow has no Fernway fixture or trap asset. | `missing-draft`. Unassessed. |
 
-### Which drafts improved
+### Existing acceptance runner
 
-None on automated evidence. For both fixtures the generated draft is content-
-identical to the deterministic fallback: the local test provider chooses an
-allowed angle, layout, section order, and approved fact IDs, but the headline,
-lede, facts, and asset come from the approved brief. This matches Agent 1's
-documented quality limit: the generator does not author free prose.
+```powershell
+node scripts/campaign-lab-acceptance.mjs `
+  --url http://localhost:3100 `
+  --manifest tests/fixtures/campaign-lab/approved-fixtures.json `
+  --require-approved
+```
 
-The richer case did not get the supporting prototype, rib-detail, or pour
-images. The v1 manifest allows only `product-hero`; that remains a coverage gap.
+Result: **144 passed, 0 failed, 0 pending, 0 unassessed** across sparse and
+long-copy at 375 and 1440 px. This includes overflow, asset bytes, exact CTA
+destination, keyboard activation, legibility, approval, invalid URL, cleared
+offer/product, offer-and-destination edit invalidation, and console errors.
 
-### Where the fallback was preferable
+The earlier run against `http://127.0.0.1:3100` failed 48 checks because the
+client did not hydrate; that is a dev-origin configuration issue, not a failure
+of the route, renderer, or provider adapter. Record the origin in future reports.
 
-No case required the fallback on automated evidence, because the generated and
-fallback drafts are the same. The blind sheet will compare two identical pages
-for sparse and rich, so a reviewer should not claim a visual improvement from
-this run.
+### Focused browser checks through the real UI
 
-### Invalid, timed-out, and unavailable provider behavior
+```powershell
+node scripts/campaign-eval-browser.mjs `
+  --flow http://localhost:3100 `
+  --run .local/campaign-eval/agent1-http-run
+```
+
+The flow mode loads each fixture, captures the deterministic baseline, clicks
+**Generate preview**, captures the generated state at 375 and 1440 px, and then
+performs the late offer/destination revision on the sparse fixture. It uses the
+run's blind map, so captures land under reviewer labels A/B.
+
+Result: **38 passed, 0 failed, 2 unassessed**. The added checks that passed:
+
+- `brand-and-evidence-distinct` — the sparse and richer pages differ in brand
+  type, background, and evidence density.
+- `unsupported-claims-*` — no known unsupported claim, invented proof, or
+  untraceable number appears in any rendered preview.
+- `revision-old-values-absent` — the revised page shows the exact new offer and
+  destination, keeps the old values out of text and links, and preserves the
+  headline apart from the offer lead and the image identity.
+- Generation status is `generated` for both fixtures and for the revision at both
+  widths.
+- No horizontal overflow at either width.
+
+The two unassessed checks are `intent-opening-shift` and
+`packaging-truth-human-only`, because the flow cannot render those cases.
+
+### Execution modes and fallback
 
 The service was run in each provider mode against the sparse fixture:
 
@@ -102,37 +135,26 @@ The service was run in each provider mode against the sparse fixture:
 
 This covers the unsupported-content and provider-failure part of the failure
 case. The missing-destination and late-revision behavior are covered by the
-draft evaluator and the existing acceptance runner's form checks.
+existing acceptance runner's form checks and by the revision checks above.
 
-### UI finding from the existing acceptance runner
+## Which drafts improved
 
-The existing runner was run against the long-running flow on port 3100 and
-against a fresh detached worktree at the same commit (`aa2c562`) on port 3200:
+None on automated evidence. For both fixtures the generated draft is content-
+identical to the deterministic fallback: the local test provider chooses an
+allowed angle, layout, section order, and approved fact IDs, but the headline,
+lede, facts, and asset come from the approved brief. This matches Agent 1's
+documented quality limit: the generator does not author free prose.
 
-- Port 3100, both fixtures: 92 passed, 48 failed, 4 unassessed at 375 and
-  1440 px.
-- Port 3200, sparse only: 54 passed, 16 failed, 2 unassessed at 375 and 1440 px.
+The richer case did not get the supporting prototype, rib-detail, or pour
+images. The v1 manifest allows only `product-hero`; that remains a coverage gap.
 
-Both runs show the same behavior:
+The blind sheet compares two identical pages for sparse and rich. A reviewer
+should not claim a visual improvement from this run.
 
-- The preview stays on “Deterministic draft. Generation has not run in this
-  session.” after clicking **Generate preview**.
-- A direct Playwright probe sees zero requests to `/api/campaign-lab/generate`
-  after the click, no React props on the app content, and repeated HMR
-  WebSocket handshake errors. The page chunk returns 200 and the Flight array is
-  consumed, but the campaign-lab client subtree does not hydrate.
-- Form edits also do not change the preview or validation state.
+## Where the fallback was preferable
 
-This reproduces on a fresh server, so it is not only a stale dev-server session.
-The generation service and the HTTP route work: a direct `POST` returns a
-generated preview, and the adapter collected sparse, rich, and revision drafts.
-The failure is in the client interaction layer. Approval, CTA destination,
-asset, and validation checks remain unassessed in the UI until it is fixed.
-
-The HMR WebSocket errors may be environmental, but they do not explain the
-missing click handler by themselves. Agent 1 should reproduce on a clean server,
-check the client component's hydration, and rerun the acceptance runner before
-treating the UI failures as template failures.
+No case required the fallback on automated evidence, because the generated and
+fallback drafts are the same. The fallback is equally preferable by construction.
 
 ## Checks that remain unassessed
 
@@ -141,23 +163,18 @@ treating the UI failures as template failures.
 - `trap-asset-label`: the flow has no Fernway fixture or trap asset.
 - `packaging-truth`: always human-only; the trap crop was inspected before
   integration, not in the flow.
-- Revision approval invalidation: unassessed in the artifact; the UI run could
-  not observe approval because the client did not hydrate.
-- All five focused browser checks against the real flow: `brand-and-evidence-
-  distinct`, `intent-opening-shift`, `revision-old-values-absent`,
-  `unsupported-claims-*`, and `packaging-truth-human-only`. They passed against
-  the fixture double, not against the flow.
+- Revision approval invalidation in the draft artifact: the UI runner observes
+  it, but the collected artifact marks approval unknown.
 - Live OpenAI quality, latency, cost, and behavior: not exercised.
 - Visual scores for campaign fit, brand fit, hierarchy, repetition, and edits to
-  approval: the blind sheet exists, but the flow produced no distinct drafts for
-  a reviewer to compare.
+  approval: the blind sheet and captures exist, but the flow produced no
+  distinct drafts for a reviewer to compare.
 - Supporting asset roles and the four-image richer composition.
 
 ## Next steps
 
-1. Fix the client hydration on the campaign-lab page. Reproduce on a clean
-   server, confirm that Generate issues a `/api/campaign-lab/generate` request,
-   and rerun the existing acceptance runner. Then rerun this pack.
+1. Use `localhost` for local runs of this Next version, or add `127.0.0.1` to
+   `allowedDevOrigins` in the app. Record the origin in every report.
 2. Add a fixture or an approved-angle input for the intent-change case. Without
    it, the pack cannot tell whether the flow follows a new angle.
 3. Add the Fernway trap fixture or an equivalent asset with a visible label that

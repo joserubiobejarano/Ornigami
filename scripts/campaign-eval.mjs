@@ -257,7 +257,7 @@ function evaluateRun({ loaded, generated, baseline }) {
       unassessed: [...new Set([...generatedUnassessed.map((item) => item.id), ...comparisonUnassessed.map((item) => item.id)])],
     });
 
-    if (generatedArtifact || baselineArtifact) {
+    if (generatedArtifact && baselineArtifact) {
       pairs.push({
         caseId: caseDef.id,
         options: [

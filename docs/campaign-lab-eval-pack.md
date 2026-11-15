@@ -174,7 +174,7 @@ node tests/support/campaign-eval-browser-self-test.mjs
 
 # 4. Optional: collect the flow's generated drafts through its HTTP API.
 node scripts/campaign-eval-collect-flow.mjs `
-  --url http://127.0.0.1:3100 `
+  --url http://localhost:3100 `
   --out .local/campaign-eval/flow `
   --fixtures sparse,long-copy `
   --revision
@@ -184,11 +184,20 @@ node scripts/campaign-eval.mjs evaluate `
   --drafts .local/campaign-eval/flow `
   --out .local/campaign-eval/flow-run
 
-# 6. Optional: run the focused browser checks against real URLs.
+# 6. Optional: run the focused browser checks against real URLs, or drive the
+#    real Campaign Lab UI directly.
 node scripts/campaign-eval-browser.mjs `
   --urls path/to/urls.json `
   --run .local/campaign-eval/flow-run
+
+node scripts/campaign-eval-browser.mjs `
+  --flow http://localhost:3100 `
+  --run .local/campaign-eval/flow-run
 ```
+
+Use `localhost`, not `127.0.0.1`, for this Next version. Next 16 blocks dev
+resources from the literal loopback address unless the app allows it, and the
+page then does not hydrate. The same app works normally through `localhost`.
 
 The browser script needs Playwright and Chromium. It reuses the repository
 browser tooling when installed, or `CAMPAIGN_EVAL_PLAYWRIGHT` and
@@ -226,10 +235,12 @@ main checkout when the worktree has no installed browser tooling.
    If it cannot, leave that case out; the check is unassessed, not passed.
 
 5. Run the focused browser checks with the same run directory so captures land
-   under the blind labels:
+   under the blind labels. Use the URL map when per-case pages exist, or the
+   flow mode to drive Generate preview and the late revision directly:
 
    ```powershell
    node scripts/campaign-eval-browser.mjs --run <run-dir> --urls <urls.json>
+   node scripts/campaign-eval-browser.mjs --run <run-dir> --flow http://localhost:3000
    ```
 
 6. Give the reviewer `blind-sheet.md` and the captures. Keep `report.md` and

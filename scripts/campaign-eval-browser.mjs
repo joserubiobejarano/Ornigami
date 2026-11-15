@@ -36,6 +36,7 @@ import {
   comparableText,
   jaccard,
   loadPack,
+  offerRewriteOnly,
   scanClaims,
 } from "./campaign-eval-core.mjs";
 
@@ -51,10 +52,12 @@ function usage() {
   return `Campaign evaluation focused browser checks
 
 Usage:
-  node scripts/campaign-eval-browser.mjs --urls <urls.json> [options]
+  node scripts/campaign-eval-browser.mjs (--urls <urls.json> | --flow <origin>) [options]
 
 Options:
-  --urls <file>       URL map for the cases (required)
+  --urls <file>       URL map for the cases (required unless --flow is used)
+  --flow <origin>     Drive the real Campaign Lab UI: load each fixture, click
+                      Generate preview, and capture baseline/generated states
   --run <dir>         Existing evaluation run; uses blind-map.json labels and writes captures there
   --out <dir>         Artifact directory (default: .local/campaign-eval-browser/<timestamp>)
   --pack <file>       Case pack (default: tests/fixtures/campaign-eval/cases.json)
@@ -69,6 +72,7 @@ function parseCli() {
     allowPositionals: false,
     options: {
       urls: { type: "string" },
+      flow: { type: "string" },
       run: { type: "string" },
       out: { type: "string" },
       pack: { type: "string" },
@@ -81,9 +85,12 @@ function parseCli() {
     console.log(usage());
     process.exit(0);
   }
-  if (!parsed.values.urls) throw new Error("--urls is required. See the header of scripts/campaign-eval-browser.mjs for the shape.");
+  if (!parsed.values.urls && !parsed.values.flow) {
+    throw new Error("Provide --urls for a URL map or --flow for the real Campaign Lab UI.");
+  }
   return {
-    urls: path.resolve(parsed.values.urls),
+    urls: parsed.values.urls ? path.resolve(parsed.values.urls) : null,
+    flow: parsed.values.flow ? parsed.values.flow.replace(/\/$/, "") : null,
     run: parsed.values.run ? path.resolve(parsed.values.run) : null,
     out: parsed.values.out ? path.resolve(parsed.values.out) : null,
     pack: path.resolve(parsed.values.pack ?? defaultPack),
@@ -148,16 +155,21 @@ function urlFor(caseId, source, urls) {
 
 async function extract(page) {
   return page.evaluate(() => {
-    const main = document.querySelector("main") ?? document.body;
-    const h1 = main.querySelector("h1") ?? document.querySelector("h1");
+    const region = document.querySelector('[aria-label="Campaign preview"]') ?? document.querySelector("main") ?? document.body;
+    const content = region.querySelector("article") ?? region;
+    const h1 = content.querySelector("h1") ?? document.querySelector("h1");
     const h1Style = h1 ? getComputedStyle(h1) : null;
-    const bodyStyle = getComputedStyle(document.body);
-    const links = [...main.querySelectorAll("a[href]")].map((anchor) => ({
+    const contentStyle = getComputedStyle(content);
+    const transparent = (value) => !value || value === "transparent" || value === "rgba(0, 0, 0, 0)";
+    const background = transparent(contentStyle.backgroundColor)
+      ? getComputedStyle(document.body).backgroundColor
+      : contentStyle.backgroundColor;
+    const links = [...content.querySelectorAll("a[href]")].map((anchor) => ({
       text: (anchor.innerText ?? "").trim(),
       href: anchor.href,
       raw: anchor.getAttribute("href"),
     }));
-    const images = [...main.querySelectorAll("img")].map((image) => {
+    const images = [...content.querySelectorAll("img")].map((image) => {
       const rect = image.getBoundingClientRect();
       return {
         src: image.currentSrc || image.src,
@@ -169,16 +181,16 @@ async function extract(page) {
         visible: rect.width > 0 && rect.height > 0,
       };
     });
-    const sections = [...main.querySelectorAll("section")].map((section) => ({
+    const sections = [...content.querySelectorAll("section")].map((section) => ({
       heading: section.querySelector("h2")?.innerText ?? "",
       text: (section.innerText ?? "").slice(0, 200),
     }));
     return {
-      text: (main.innerText ?? "").trim(),
+      text: (content.innerText ?? "").trim(),
       h1: (h1?.innerText ?? "").trim(),
       h1FontFamily: h1Style?.fontFamily ?? "",
       h1FontSize: h1Style?.fontSize ?? "",
-      background: bodyStyle.backgroundColor,
+      background,
       links,
       images,
       sections,
@@ -191,8 +203,20 @@ async function extract(page) {
 async function capturePage(page, outDir, caseId, label, viewportName) {
   const dir = path.join(outDir, "captures", caseId, label);
   mkdirSync(dir, { recursive: true });
+  await page.addStyleTag({ content: "nextjs-portal{display:none !important;}" }).catch(() => {});
   const full = path.join(dir, `${viewportName}.png`);
-  await page.screenshot({ path: full, fullPage: true });
+  const article = await page.evaluateHandle(() =>
+    document.querySelector('[aria-label="Campaign preview"] article') ??
+    document.querySelector("article") ??
+    document.querySelector("main") ??
+    document.body,
+  );
+  const element = article.asElement();
+  if (element) {
+    await element.screenshot({ path: full });
+  } else {
+    await page.screenshot({ path: full, fullPage: true });
+  }
   const images = await page.evaluate(() =>
     [...document.querySelectorAll("main img, body img")].map((image) => {
       const rect = image.getBoundingClientRect();
@@ -440,7 +464,7 @@ function checkRevision({ checks, pages, sources, loaded }) {
   const oldDestinationPresent =
     standalone(revision.from.destinationUrl, afterData.text) ||
     afterData.links.some((link) => link.href === revision.from.destinationUrl || link.raw === revision.from.destinationUrl);
-  const headlinePreserved = comparableText(beforeData.h1) === comparableText(afterData.h1);
+  const headlinePreserved = offerRewriteOnly(beforeData.h1, afterData.h1, revision.from.offer, revision.to.offer);
   const imagesPreserved = JSON.stringify(imageSet(beforeData)) === JSON.stringify(imageSet(afterData));
   const ok = newOfferPresent && newDestinationPresent && !oldOfferPresent && !oldDestinationPresent && headlinePreserved && imagesPreserved;
   add(
@@ -482,11 +506,168 @@ function checkTrap({ checks, pages, loaded }) {
   );
 }
 
+function labelForSource(blindMap, caseId, source) {
+  const mapping = blindMap?.cases?.[caseId]?.mapping;
+  if (!mapping) return null;
+  for (const [label, value] of Object.entries(mapping)) {
+    if (value.source === source) return label;
+  }
+  return null;
+}
+
+async function openFlowPage(browser, origin, fixture, viewport) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    screen: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.deviceScaleFactor,
+    isMobile: viewport.isMobile,
+    hasTouch: viewport.hasTouch,
+    reducedMotion: "reduce",
+    locale: "en-US",
+    timezoneId: "UTC",
+  });
+  const page = await context.newPage();
+  const response = await page.goto(`${origin}/campaign-lab?fixture=${fixture}`, {
+    waitUntil: "domcontentloaded",
+    timeout: timeoutMs,
+  });
+  if (response && !response.ok()) {
+    await context.close();
+    throw new Error(`/campaign-lab?fixture=${fixture} returned HTTP ${response.status()}`);
+  }
+  await page.evaluate(() => document.fonts?.ready ?? Promise.resolve()).catch(() => {});
+  await page.waitForTimeout(300);
+  return { context, page };
+}
+
+async function generateOnPage(page) {
+  await page.getByRole("button", { name: "Generate preview" }).click({ timeout: timeoutMs });
+  await page.waitForFunction(() => {
+    const status = document.querySelector("[data-generation-status]")?.getAttribute("data-generation-status");
+    return status === "generated" || status === "fallback";
+  }, { timeout: timeoutMs }).catch(() => {});
+  await page.waitForTimeout(250);
+}
+
+async function snapshotFlowState({ page, checks, captures, outDir, caseId, label, viewport }) {
+  const data = await extract(page);
+  const capture = await capturePage(page, outDir, caseId, label, viewport.name);
+  captures.push({ caseId, label, source: null, viewport: viewport.name, ...capture });
+  add(checks, `capture-${caseId}-${label}-${viewport.name}`, "passed", `Captured ${caseId}/${label} at ${viewport.width} px.`, capture);
+  const overflow = data.scrollWidth > data.viewportWidth + 1;
+  add(checks, `no-overflow-${caseId}-${label}-${viewport.name}`, overflow ? "failed" : "passed", overflow ? `The page scrolls horizontally at ${viewport.width} px.` : `No horizontal overflow at ${viewport.width} px.`, { scrollWidth: data.scrollWidth, viewportWidth: data.viewportWidth });
+  return data;
+}
+
+async function runFlowPages({ browser, flow, loaded, outDir, blindMap }) {
+  const checks = [];
+  const captures = [];
+  const pages = new Map();
+  const sources = new Map();
+  const state = (caseId, label, source) => {
+    if (!pages.has(caseId)) pages.set(caseId, {});
+    if (!pages.get(caseId)[label]) pages.get(caseId)[label] = {};
+    sources.set(`${caseId}/${label}`, source);
+  };
+
+  for (const [fixture, caseId] of [["sparse", "sparse-offer"], ["long-copy", "rich-angle"]]) {
+    const baselineLabel = labelForSource(blindMap, caseId, "baseline") ?? "baseline";
+    const generatedLabel = labelForSource(blindMap, caseId, "generated") ?? "generated";
+    state(caseId, baselineLabel, "baseline");
+    state(caseId, generatedLabel, "generated");
+    for (const viewport of viewports) {
+      const baseline = await openFlowPage(browser, flow, fixture, viewport);
+      try {
+        pages.get(caseId)[baselineLabel][viewport.name] = await snapshotFlowState({
+          page: baseline.page,
+          checks,
+          captures,
+          outDir,
+          caseId,
+          label: baselineLabel,
+          viewport,
+        });
+      } catch (error) {
+        add(checks, `page-reachable-${caseId}-${viewport.name}`, "failed", error.message, { caseId, fixture, viewport: viewport.name });
+      } finally {
+        await baseline.context.close();
+      }
+
+      const generated = await openFlowPage(browser, flow, fixture, viewport);
+      try {
+        await generateOnPage(generated.page);
+        pages.get(caseId)[generatedLabel][viewport.name] = await snapshotFlowState({
+          page: generated.page,
+          checks,
+          captures,
+          outDir,
+          caseId,
+          label: generatedLabel,
+          viewport,
+        });
+        const status = await generated.page.evaluate(() => document.querySelector("[data-generation-status]")?.getAttribute("data-generation-status"));
+        add(checks, `generation-status-${caseId}-${viewport.name}`, status === "generated" || status === "fallback" ? "passed" : "failed", `Generation status is ${status ?? "missing"}.`, { status });
+      } catch (error) {
+        add(checks, `generation-${caseId}-${viewport.name}`, "failed", error.message, { caseId, fixture, viewport: viewport.name });
+      } finally {
+        await generated.context.close();
+      }
+    }
+  }
+
+  const revisionCase = loaded.casesById.get("failure-revision");
+  const beforeLabel = labelForSource(blindMap, "failure-revision", "baseline") ?? "baseline";
+  const afterLabel = labelForSource(blindMap, "failure-revision", "generated") ?? "generated";
+  state("failure-revision", beforeLabel, "baseline");
+  state("failure-revision", afterLabel, "generated");
+  for (const viewport of viewports) {
+    const revision = await openFlowPage(browser, flow, "sparse", viewport);
+    try {
+      await generateOnPage(revision.page);
+      pages.get("failure-revision")[beforeLabel][viewport.name] = await snapshotFlowState({
+        page: revision.page,
+        checks,
+        captures,
+        outDir,
+        caseId: "failure-revision",
+        label: beforeLabel,
+        viewport,
+      });
+      await revision.page.getByLabel("Offer", { exact: true }).fill("25% off, 27–30 November 2026");
+      await revision.page.getByLabel("Destination URL", { exact: true }).fill("https://example.com/harbor-field-offer");
+      await generateOnPage(revision.page);
+      pages.get("failure-revision")[afterLabel][viewport.name] = await snapshotFlowState({
+        page: revision.page,
+        checks,
+        captures,
+        outDir,
+        caseId: "failure-revision",
+        label: afterLabel,
+        viewport,
+      });
+      const status = await revision.page.evaluate(() => document.querySelector("[data-generation-status]")?.getAttribute("data-generation-status"));
+      add(checks, `revision-generation-status-${viewport.name}`, status === "generated" || status === "fallback" ? "passed" : "failed", `Revision generation status is ${status ?? "missing"}.`, { status });
+    } catch (error) {
+      add(checks, `revision-${viewport.name}`, "failed", error.message, { viewport: viewport.name });
+    } finally {
+      await revision.context.close();
+    }
+  }
+
+  if (!revisionCase) {
+    add(checks, "revision-case", "unassessed", "The pack does not define failure-revision.");
+  }
+
+  return { checks, captures, pages, sources };
+}
 async function main() {
   const options = parseCli();
   const loaded = loadPack(options.pack);
-  if (!existsSync(options.urls)) throw new Error(`URL map not found: ${options.urls}`);
-  const urls = JSON.parse(readFileSync(options.urls, "utf8"));
+  let urls = null;
+  if (options.urls) {
+    if (!existsSync(options.urls)) throw new Error(`URL map not found: ${options.urls}`);
+    urls = JSON.parse(readFileSync(options.urls, "utf8"));
+  }
   const outDir = options.out ?? (options.run ? options.run : path.join(root, ".local", "campaign-eval-browser", timestamp()));
   mkdirSync(outDir, { recursive: true });
   const blindMapPath = options.run ? path.join(options.run, "blind-map.json") : null;
@@ -501,7 +682,9 @@ async function main() {
   let checks = [];
   let captures = [];
   try {
-    const run = await runCheckPages({ browser, urls, loaded, outDir, blindMap });
+    const run = options.flow
+      ? await runFlowPages({ browser, flow: options.flow, loaded, outDir, blindMap })
+      : await runCheckPages({ browser, urls, loaded, outDir, blindMap });
     checks = run.checks;
     captures = run.captures;
     checkClaims({ checks, pages: run.pages, sources: run.sources, loaded });
@@ -515,13 +698,14 @@ async function main() {
 
   const counts = { passed: 0, failed: 0, unassessed: 0 };
   for (const item of checks) counts[item.state] = (counts[item.state] ?? 0) + 1;
-  const report = { schemaVersion: 1, urlMap: options.urls, blindMap: blindMapPath, counts, checks, captures };
+  const report = { schemaVersion: 1, flow: options.flow, urlMap: options.urls, blindMap: blindMapPath, counts, checks, captures };
   writeFileSync(path.join(outDir, "browser-report.json"), `${JSON.stringify(report, null, 2)}\n`);
 
   const lines = [
     "# Campaign evaluation focused browser report",
     "",
-    `- URL map: \`${options.urls}\``,
+    `- Flow: \`${options.flow ?? "(none)"}\``,
+    `- URL map: \`${options.urls ?? "(none)"}\``,
     `- Blind map: \`${blindMapPath ?? "(none)"}\``,
     `- Passed: ${counts.passed} · Failed: ${counts.failed} · Unassessed: ${counts.unassessed}`,
     "",
