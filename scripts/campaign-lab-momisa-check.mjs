@@ -4,8 +4,9 @@
  *
  * It reads the local proposed acceptance manifest, drives the real editor at
  * 375 and 1440 px, verifies the first-screen hierarchy, an approved-opening
- * change, and an offer/destination revision that must be reviewed and approved
- * again. It does not contain pilot copy or assets.
+ * change, required fact group visibility, and an offer/destination revision
+ * that must be reviewed and approved again. It does not contain pilot copy or
+ * assets; required fact values are read from the local pilot manifest.
  *
  * Usage:
  *   node scripts/campaign-lab-momisa-check.mjs `
@@ -22,6 +23,7 @@ const { values: cli } = parseArgs({
   options: {
     url: { type: "string", short: "u", default: "http://localhost:3100" },
     manifest: { type: "string", short: "m", default: ".local/campaign-lab-pilots/momisa/acceptance.json" },
+    "pilot-manifest": { type: "string", default: ".local/campaign-lab-pilots/momisa/manifest.json" },
     out: { type: "string", short: "o" },
   },
 });
@@ -132,12 +134,35 @@ async function main() {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const fixture = manifest.fixtures?.[0];
   if (!fixture) throw new Error("The pilot manifest has no fixture.");
+
+  const pilotManifestPath = path.resolve(root, cli["pilot-manifest"]);
+  const pilotManifest = existsSync(pilotManifestPath)
+    ? JSON.parse(readFileSync(pilotManifestPath, "utf8"))
+    : null;
+  const requiredFactValues = [];
+  if (pilotManifest) {
+    const facts = pilotManifest.fixture?.brief?.productFacts ?? [];
+    for (const group of pilotManifest.fixture?.brief?.requiredFactGroups ?? []) {
+      for (const id of group.factIds) {
+        const fact = facts.find((candidate) => candidate.id === id);
+        if (fact) requiredFactValues.push(fact.value);
+      }
+    }
+  }
   const out = cli.out ? path.resolve(cli.out) : path.join(root, ".local", "momisa-check", timestamp());
   mkdirSync(out, { recursive: true });
 
   const { chromium } = await loadPlaywright();
   const browser = await chromium.launch({ headless: true, executablePath: chromiumExecutable(chromium) });
-  const report = { target: cli.url, manifest: path.relative(root, manifestPath), out, checks: [], widths: {} };
+  const report = {
+    target: cli.url,
+    manifest: path.relative(root, manifestPath),
+    pilotManifest: existsSync(pilotManifestPath) ? path.relative(root, pilotManifestPath) : null,
+    requiredFactValues,
+    out,
+    checks: [],
+    widths: {},
+  };
 
   for (const width of [375, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: width === 375 ? 812 : 900 }, deviceScaleFactor: 1 });
@@ -161,6 +186,13 @@ async function main() {
     check(report, `${width}:initial-idle`, initial.generation === "idle", initial.generation, "idle");
     check(report, `${width}:preview-status`, await page.locator("[data-preview-status]").getAttribute("data-preview-status") === "preview", await page.locator("[data-preview-status]").getAttribute("data-preview-status"), "preview");
     check(report, `${width}:approved-asset`, initial.image?.src === fixture.image.path && initial.image?.alt === fixture.image.alt, initial.image, fixture.image);
+    check(
+      report,
+      `${width}:initial-required-facts`,
+      requiredFactValues.every((value) => initial.text.includes(value)),
+      requiredFactValues,
+      "all required fact values visible in the deterministic draft",
+    );
 
     await page.evaluate(() => {
       const element = document.querySelector("[data-preview-canvas]");
@@ -193,6 +225,13 @@ async function main() {
     check(report, `${width}:generated-asset`, generated.image?.src === fixture.image.path, generated.image, fixture.image);
     check(report, `${width}:generated-offer`, generated.text.includes(fixture.offer), fixture.offer, fixture.offer);
     check(report, `${width}:generated-destination`, generated.links.includes(fixture.destination), generated.links, fixture.destination);
+    check(
+      report,
+      `${width}:generated-required-facts`,
+      requiredFactValues.every((value) => generated.text.includes(value)),
+      requiredFactValues,
+      "all required fact values visible",
+    );
     await page.getByRole("button", { name: "Approve preview", exact: true }).click();
     await page.waitForTimeout(200);
     const approved = await snapshot(page);
@@ -213,6 +252,13 @@ async function main() {
         check(report, `${width}:opening-preserves-destination`, changed.links.includes(fixture.destination), changed.links, fixture.destination);
         check(report, `${width}:opening-preserves-asset`, changed.image?.src === generated.image?.src, changed.image, generated.image);
         check(report, `${width}:opening-invalidates-approval`, changed.approved === "false", changed.approved, "false");
+        check(
+          report,
+          `${width}:opening-required-facts`,
+          requiredFactValues.every((value) => changed.text.includes(value)),
+          requiredFactValues,
+          "all required fact values visible",
+        );
         await capture(page, out, "opening-changed", width);
       }
     }
@@ -230,6 +276,13 @@ async function main() {
     check(report, `${width}:revision-preserves-asset`, revised.image?.src === generated.image?.src, revised.image, generated.image);
     check(report, `${width}:revision-invalidates-approval`, revised.approved === "false", revised.approved, "false");
     check(report, `${width}:revision-needs-approval`, revised.approveDisabled === false, revised.approveDisabled, false);
+    check(
+      report,
+      `${width}:revision-required-facts`,
+      requiredFactValues.every((value) => revised.text.includes(value)),
+      requiredFactValues,
+      "all required fact values visible",
+    );
     await capture(page, out, "revision-pending-approval", width);
     await page.getByRole("button", { name: "Approve preview", exact: true }).click();
     await page.waitForTimeout(200);

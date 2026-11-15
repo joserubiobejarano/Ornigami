@@ -11,6 +11,7 @@ import {
   buildCampaignPreview,
   calculateDraftRevision,
   getAllowedAngles,
+  layoutFactCapacity,
   validateCampaignForm,
   validateTemplateDraft,
 } from "../template.ts";
@@ -51,6 +52,9 @@ function buildGenerationRequest(
       ),
     ]),
   ) as Record<LayoutId, SectionId[][]>;
+  const layoutCapacity = Object.fromEntries(
+    layouts.map((layout) => [layout, layoutFactCapacity(layout)]),
+  ) as Record<LayoutId, number>;
 
   return {
     template: {
@@ -78,8 +82,10 @@ function buildGenerationRequest(
       angles: getAllowedAngles(brief),
       layouts,
       sectionOrders,
+      layoutFactCapacity: layoutCapacity,
       factIds: brief.productFacts.map((fact) => fact.id),
       maxFacts: SINGLE_PRODUCT_OFFER_TEMPLATE.limits.maxFacts,
+      requiredFactGroups: brief.requiredFactGroups ?? [],
     },
     limits: {
       headline: SINGLE_PRODUCT_OFFER_TEMPLATE.limits.headline,

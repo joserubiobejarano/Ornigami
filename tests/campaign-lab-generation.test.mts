@@ -64,8 +64,13 @@ function validRequest(): GenerationRequest {
         "offer-led-one-photo": [["hero", "hero-facts", "close"], ["hero", "close"]],
         "editorial-long-copy": [["hero", "detail", "close"], ["hero", "close"]],
       },
+      layoutFactCapacity: {
+        "offer-led-one-photo": 3,
+        "editorial-long-copy": 3,
+      },
       factIds: ["capacity", "closure"],
       maxFacts: 3,
+      requiredFactGroups: [],
     },
     limits: { headline: 180, lede: 240, factValue: 80 },
   };

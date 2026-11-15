@@ -94,6 +94,22 @@ export function validateGenerationProposal(
     if (validFactIds.length > request.allowed.maxFacts) {
       issues.push(`At most ${request.allowed.maxFacts} approved facts may be selected.`);
     }
+    if (typeof layout === "string" && request.allowed.layouts.includes(layout as LayoutId)) {
+      const capacity = request.allowed.layoutFactCapacity[layout as LayoutId];
+      if (validFactIds.length > capacity) {
+        issues.push(
+          `The selected layout accepts at most ${capacity} facts; the proposal selected ${validFactIds.length}.`,
+        );
+      }
+    }
+    for (const group of request.allowed.requiredFactGroups) {
+      const missing = group.factIds.filter((id) => !validFactIds!.includes(id));
+      if (missing.length > 0) {
+        issues.push(
+          `Required fact group "${group.label || group.id}" is incomplete; missing ${missing.join(", ")}.`,
+        );
+      }
+    }
     if (validSections?.includes("hero-facts") || validSections?.includes("detail")) {
       if (validFactIds.length === 0) {
         issues.push("The selected facts section needs at least one approved fact.");

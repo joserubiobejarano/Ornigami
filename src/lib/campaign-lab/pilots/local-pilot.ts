@@ -103,6 +103,28 @@ function validateManifest(value: unknown): PilotManifest {
       !value.fixture.brief.productFacts.every(isFact)) {
     throw new Error("fixture brief requires approved product facts with source text");
   }
+  if (value.fixture.brief.requiredFactGroups !== undefined) {
+    if (!Array.isArray(value.fixture.brief.requiredFactGroups)) {
+      throw new Error("requiredFactGroups must be an array when supplied");
+    }
+    const factIds = new Set(value.fixture.brief.productFacts.map((fact) => fact.id));
+    const groupIds = new Set<string>();
+    for (const group of value.fixture.brief.requiredFactGroups) {
+      if (!isRecord(group) ||
+          !isString(group.id) ||
+          !isString(group.label) ||
+          !Array.isArray(group.factIds) ||
+          group.factIds.length === 0 ||
+          group.factIds.some((id) => !isString(id) || !factIds.has(id))) {
+        throw new Error("each required fact group needs an id, label, and approved fact IDs");
+      }
+      if (groupIds.has(group.id)) throw new Error(`required fact group "${group.id}" is duplicated`);
+      if (new Set(group.factIds).size !== group.factIds.length) {
+        throw new Error(`required fact group "${group.id}" repeats a fact ID`);
+      }
+      groupIds.add(group.id);
+    }
+  }
   if (value.fixture.openings !== undefined) {
     if (!Array.isArray(value.fixture.openings) || value.fixture.openings.length === 0) {
       throw new Error("openings must be a non-empty array when supplied");

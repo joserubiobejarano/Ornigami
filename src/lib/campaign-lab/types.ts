@@ -106,6 +106,16 @@ export type CampaignOpening = {
   copy: ApprovedCopy;
 };
 
+/**
+ * Facts that must be rendered together. Facts outside a required group remain
+ * optional and may be omitted when the selected layout cannot fit them.
+ */
+export type RequiredFactGroup = {
+  id: string;
+  label: string;
+  factIds: readonly string[];
+};
+
 export type CampaignBrief = {
   fixtureId: FixtureId;
   brandId: BrandId;
@@ -116,6 +126,7 @@ export type CampaignBrief = {
   actionLabel: string;
   productNoun: string;
   productFacts: ProductFact[];
+  requiredFactGroups?: readonly RequiredFactGroup[];
   copy: ApprovedCopy;
   openingFocus?: string;
 };
@@ -166,6 +177,8 @@ export type TemplateLayoutManifest = {
   description: string;
   requiredAssetRoles: readonly AssetRole[];
   allowedSectionOrders: readonly (readonly SectionId[])[];
+  /** Maximum rendered facts for this layout. Falls back to the template limit. */
+  maxFacts?: number;
 };
 
 export type TemplateAngleManifest = {

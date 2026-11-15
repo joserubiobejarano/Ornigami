@@ -8,6 +8,7 @@ import type {
   LayoutId,
   OpeningAngle,
   ProductFact,
+  RequiredFactGroup,
   SectionId,
   ValidationIssue,
 } from "../types.ts";
@@ -35,8 +36,10 @@ export type GenerationRequest = {
     angles: OpeningAngle[];
     layouts: LayoutId[];
     sectionOrders: Record<LayoutId, SectionId[][]>;
+    layoutFactCapacity: Record<LayoutId, number>;
     factIds: string[];
     maxFacts: number;
+    requiredFactGroups: readonly RequiredFactGroup[];
   };
   limits: {
     headline: number;

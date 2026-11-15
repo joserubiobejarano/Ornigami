@@ -36,6 +36,15 @@ IDs, and facts outside a facts section. The draft validator enforces headline,
 lede and fact length limits and verifies that every rendered claim matches its
 approved fact label and value.
 
+A brief may declare `requiredFactGroups`. Every fact in a group must render
+together; facts outside the groups remain optional. The deterministic builder
+puts the required facts first and fills remaining capacity with optional facts.
+The provider validator rejects an incomplete group or a layout whose capacity
+cannot hold the selected facts, then the existing fallback returns a draft that
+includes the full group. If no supported layout can fit a group, the deterministic
+preview returns a clear validation error and the last valid preview stays shown.
+Briefs without groups keep their previous behavior.
+
 For the Morrow fixture, **Opening focus** selects pre-approved copy for the rib
 design or the first-pour story. The server rejects unfamiliar values and holds
 that opening fixed through provider selection and fallback. Selecting a new
@@ -65,7 +74,7 @@ source record (`document`, `quote`, `reviewedBy`, `reviewedOn`). Only facts from
 
 | Configuration | Behaviour |
 | --- | --- |
-| `CAMPAIGN_LAB_GENERATION_PROVIDER=local-test` (default) | Offline provider. Supports `CAMPAIGN_LAB_GENERATION_TEST_MODE=success`, `invalid`, or `timeout`. |
+| `CAMPAIGN_LAB_GENERATION_PROVIDER=local-test` (default) | Offline provider. Supports `CAMPAIGN_LAB_GENERATION_TEST_MODE=success`, `invalid`, `incomplete`, or `timeout`. |
 | `CAMPAIGN_LAB_GENERATION_PROVIDER=off` | Explicitly unavailable; deterministic fallback is returned. |
 | `CAMPAIGN_LAB_GENERATION_PROVIDER=openai` | Reuses the existing server-side OpenAI adapter. Requires **all** of `CAMPAIGN_LAB_GENERATION_LIVE=true`, `OPENAI_ENABLED=true`, and `OPENAI_API_KEY`. Otherwise generation is unavailable and no call is made. |
 
@@ -81,7 +90,8 @@ the preview panel’s `data-generation-status` attribute. Fallback reasons inclu
 
 - `unavailable`: provider off, missing configuration, or provider setup failure;
 - `invalid`: malformed output, unsupported variants/sections/facts, protected
-  fields, or failed slot/length validation;
+  fields, an incomplete required fact group, insufficient layout capacity, or
+  failed slot/length validation;
 - `timeout`: the provider did not answer within the bound;
 - `provider-error`: the provider failed before returning a proposal.
 

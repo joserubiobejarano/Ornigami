@@ -1,6 +1,6 @@
 import type { GenerationEnv } from "./types.ts";
 
-export type LocalTestMode = "success" | "invalid" | "timeout";
+export type LocalTestMode = "success" | "invalid" | "incomplete" | "timeout";
 
 export type ProviderResolution =
   | {
@@ -33,7 +33,7 @@ export function resolveGenerationTimeoutMs(
 
 function resolveLocalTestMode(env: GenerationEnv): LocalTestMode {
   const raw = env.CAMPAIGN_LAB_GENERATION_TEST_MODE?.trim().toLowerCase();
-  if (raw === "invalid" || raw === "timeout" || raw === "success") return raw;
+  if (raw === "invalid" || raw === "incomplete" || raw === "timeout" || raw === "success") return raw;
   return "success";
 }
 

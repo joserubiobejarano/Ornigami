@@ -750,6 +750,16 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
               <p id={generationEditorStatusId} className="mt-2 text-sm font-medium">
                 {generationStatusText}
               </p>
+              {generation.status === "fallback" && generation.issues?.length ? (
+                <ul
+                  className="mt-2 list-disc space-y-1 pl-5 text-xs"
+                  aria-label="Rejected proposal reasons"
+                >
+                  {generation.issues.slice(0, 4).map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </form>
         </aside>
@@ -772,6 +782,9 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
           data-generation-angle={generation.status === "generated" ? generation.angle : undefined}
           data-section-order={preview.draft.sections.join(",")}
           data-fact-ids={preview.draft.facts.map((fact) => fact.id).join(",")}
+          data-generation-issues={
+            generation.status === "fallback" ? generation.issues?.join(" | ") : undefined
+          }
         >
           <div className="flex flex-wrap items-start justify-between gap-3 px-1 pb-3">
             <div>

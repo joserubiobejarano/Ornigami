@@ -41,12 +41,14 @@ export const SINGLE_PRODUCT_OFFER_TEMPLATE: TemplateManifest = {
       description: "A short headline, a single framed product image, and the action close to the offer.",
       requiredAssetRoles: ["product-hero"],
       allowedSectionOrders: [OFFER_LED_SECTIONS, COMPACT_SECTIONS],
+      maxFacts: 3,
     },
     "editorial-long-copy": {
       label: "Editorial, long headline",
       description: "A larger editorial headline field, an arch-cropped product image, and a detail band.",
       requiredAssetRoles: ["product-hero"],
       allowedSectionOrders: [EDITORIAL_SECTIONS, COMPACT_SECTIONS],
+      maxFacts: 3,
     },
   },
   angles: {
@@ -295,6 +297,112 @@ export function layoutReason(layout: LayoutId): string {
     : "The short headline and single image fit the offer-led composition without adding a second section.";
 }
 
+export function layoutFactCapacity(
+  layout: LayoutId,
+  manifest: TemplateManifest = SINGLE_PRODUCT_OFFER_TEMPLATE,
+): number {
+  return manifest.layouts[layout]?.maxFacts ?? manifest.limits.maxFacts;
+}
+
+export function getRequiredFactIds(brief: CampaignBrief): string[] {
+  const ids = new Set<string>();
+  for (const group of brief.requiredFactGroups ?? []) {
+    for (const id of group.factIds) ids.add(id);
+  }
+  return [...ids];
+}
+
+/** Validates the brief's group declarations before any draft is assembled. */
+export function validateBriefFactGroups(brief: CampaignBrief): string[] {
+  const issues: string[] = [];
+  const groups = brief.requiredFactGroups ?? [];
+  const groupIds = new Set<string>();
+  const maxCapacity = Math.max(
+    ...Object.keys(SINGLE_PRODUCT_OFFER_TEMPLATE.layouts).map((layout) =>
+      layoutFactCapacity(layout as LayoutId),
+    ),
+  );
+
+  for (const group of groups) {
+    if (!group.id?.trim()) {
+      issues.push("A required fact group needs an ID.");
+      continue;
+    }
+    if (groupIds.has(group.id)) {
+      issues.push(`Required fact group "${group.id}" is declared more than once.`);
+    }
+    groupIds.add(group.id);
+
+    const label = group.label?.trim() || group.id;
+    if (group.factIds.length === 0) {
+      issues.push(`Required fact group "${label}" must include at least one fact.`);
+    }
+    const seen = new Set<string>();
+    for (const id of group.factIds) {
+      if (seen.has(id)) {
+        issues.push(`Required fact group "${label}" repeats fact "${id}".`);
+      }
+      seen.add(id);
+      if (!brief.productFacts.some((fact) => fact.id === id)) {
+        issues.push(`Required fact group "${label}" references unapproved fact "${id}".`);
+      }
+    }
+    if (seen.size > maxCapacity) {
+      issues.push(
+        `Required fact group "${label}" needs ${seen.size} facts, but no supported layout accepts more than ${maxCapacity}.`,
+      );
+    }
+  }
+
+  const totalRequired = getRequiredFactIds(brief).length;
+  if (groups.length > 1 && totalRequired > maxCapacity) {
+    issues.push(
+      `Required fact groups need ${totalRequired} facts together, but no supported layout accepts more than ${maxCapacity}.`,
+    );
+  }
+
+  return issues;
+}
+
+export type LayoutSelection = {
+  layout: LayoutId;
+  switched: boolean;
+  fits: boolean;
+};
+
+/**
+ * Prefers the normal layout choice, then falls back to any supported layout
+ * whose fact capacity can hold the required group.
+ */
+export function selectLayoutForRequiredFacts(
+  candidate: LayoutId,
+  requiredCount: number,
+  manifest: TemplateManifest = SINGLE_PRODUCT_OFFER_TEMPLATE,
+): LayoutSelection {
+  const layouts = Object.keys(manifest.layouts) as LayoutId[];
+  const ordered = [candidate, ...layouts.filter((layout) => layout !== candidate)];
+  const fitting = ordered.find((layout) => layoutFactCapacity(layout, manifest) >= requiredCount);
+  return fitting
+    ? { layout: fitting, switched: fitting !== candidate, fits: true }
+    : { layout: candidate, switched: false, fits: false };
+}
+
+function selectFactsForBrief(brief: CampaignBrief, capacity: number): ProductFact[] {
+  const requiredIds = new Set(getRequiredFactIds(brief));
+  const requiredFacts = brief.productFacts.filter((fact) => requiredIds.has(fact.id));
+  const selected = requiredFacts.map(cloneFact);
+
+  if (selected.length < capacity) {
+    for (const fact of brief.productFacts) {
+      if (requiredIds.has(fact.id)) continue;
+      if (selected.length >= capacity) break;
+      selected.push(cloneFact(fact));
+    }
+  }
+
+  return selected;
+}
+
 export function resolveApprovedFacts(
   brief: CampaignBrief,
   factIds: readonly string[],
@@ -326,19 +434,23 @@ export function assembleDraft(
   catalog: CampaignCatalog = BASE_CATALOG,
 ): TemplateDraft {
   const headline = buildHeadline(brief, brandId, catalog);
-  const layout = chooseLayout(headline, brandId, catalog);
+  const candidate = chooseLayout(headline, brandId, catalog);
+  const requiredIds = getRequiredFactIds(brief);
+  const selection = selectLayoutForRequiredFacts(candidate, requiredIds.length);
+  const capacity = layoutFactCapacity(selection.layout);
+  const facts = selectFactsForBrief(brief, capacity);
 
   return {
     templateId: SINGLE_PRODUCT_OFFER_TEMPLATE.id,
     templateVersion: SINGLE_PRODUCT_OFFER_TEMPLATE.version,
-    layout,
-    layoutReason: layoutReason(layout),
-    sections: defaultSections(layout, brief.productFacts.length > 0),
+    layout: selection.layout,
+    layoutReason: selection.switched
+      ? `The required facts need more room, so the ${SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[selection.layout].label} layout is used.`
+      : layoutReason(selection.layout),
+    sections: defaultSections(selection.layout, facts.length > 0),
     headline,
     lede: brief.copy.lede,
-    facts: brief.productFacts
-      .slice(0, SINGLE_PRODUCT_OFFER_TEMPLATE.limits.maxFacts)
-      .map(cloneFact),
+    facts,
   };
 }
 
@@ -408,6 +520,25 @@ export function validateTemplateDraft(
         message: `The section order is not supported by ${layout.label}.`,
       });
     }
+
+    const capacity = layoutFactCapacity(draft.layout, manifest);
+    if (draft.facts.length > capacity) {
+      issues.push({
+        slot: "facts",
+        message: `The selected layout accepts at most ${capacity} facts; the draft renders ${draft.facts.length}.`,
+      });
+    }
+  }
+
+  const renderedIds = new Set(draft.facts.map((fact) => fact.id));
+  for (const group of brief.requiredFactGroups ?? []) {
+    const missing = group.factIds.filter((id) => !renderedIds.has(id));
+    if (missing.length > 0) {
+      issues.push({
+        slot: "facts",
+        message: `Required fact group "${group.label || group.id}" is incomplete; missing ${missing.join(", ")}.`,
+      });
+    }
   }
 
   if (hasFactsSection(draft.sections) && draft.facts.length === 0) {
@@ -441,13 +572,6 @@ export function validateTemplateDraft(
     issues.push({
       slot: "lede",
       message: `The lede is ${draft.lede.length} characters. The limit is ${manifest.limits.lede}.`,
-    });
-  }
-
-  if (draft.facts.length > manifest.limits.maxFacts) {
-    issues.push({
-      slot: "facts",
-      message: `This template accepts at most ${manifest.limits.maxFacts} facts.`,
     });
   }
 
@@ -530,6 +654,7 @@ export function calculateDraftRevision(
       actionLabel: brief.actionLabel,
       productNoun: brief.productNoun,
       facts: brief.productFacts,
+      requiredFactGroups: brief.requiredFactGroups ?? [],
       copy: brief.copy,
     },
     asset: {
@@ -592,6 +717,14 @@ export function buildCampaignPreview(
   }
 
   const brief = createCampaignBrief(fixture, values);
+  const groupIssues = validateBriefFactGroups(brief);
+  if (groupIssues.length > 0) {
+    return {
+      ok: false,
+      issues: groupIssues.map((message) => ({ field: "offer", message })),
+    };
+  }
+
   const draft = assembleDraft(brief, values.brandId, catalog);
 
   const draftIssues = validateTemplateDraft(brief, draft);

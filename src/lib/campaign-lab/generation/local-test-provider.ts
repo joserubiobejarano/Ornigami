@@ -1,3 +1,4 @@
+import type { LayoutId, SectionId } from "../types.ts";
 import type { LocalTestMode } from "./provider-config.ts";
 import type {
   CampaignGenerationProvider,
@@ -51,31 +52,54 @@ export class LocalTestGenerationProvider implements CampaignGenerationProvider {
       };
     }
 
-    return this.success(request);
+    const proposal = this.success(request);
+    if (this.mode === "incomplete") {
+      const requiredIds = request.allowed.requiredFactGroups.flatMap((group) => group.factIds);
+      const omitted = proposal.factIds.find((id) => requiredIds.includes(id));
+      if (omitted) proposal.factIds = proposal.factIds.filter((id) => id !== omitted);
+    }
+    return proposal;
   }
 
-  private success(request: GenerationRequest): unknown {
+  private success(request: GenerationRequest): {
+    angle: "offer-led" | "product-led" | "story-led";
+    layout: LayoutId;
+    sections: SectionId[];
+    factIds: string[];
+  } {
     const storyHeadline = request.campaign.storyHeadline?.trim();
     const angle = storyHeadline && request.allowed.angles.includes("story-led")
       ? "story-led"
       : "offer-led";
 
-    const layout = angle === "story-led" ||
+    const candidate: LayoutId = angle === "story-led" ||
       request.campaign.offer.length > 70 ||
       request.campaign.productName.length > 48
       ? "editorial-long-copy"
       : "offer-led-one-photo";
+    const requiredIds = [...new Set(
+      request.allowed.requiredFactGroups.flatMap((group) => group.factIds),
+    )];
+    const layouts: LayoutId[] = [candidate, ...request.allowed.layouts.filter((item) => item !== candidate)];
+    const layout = layouts.find(
+      (item) => request.allowed.layoutFactCapacity[item] >= requiredIds.length,
+    ) ?? candidate;
+    const capacity = request.allowed.layoutFactCapacity[layout];
+    const factLimit = Math.max(
+      requiredIds.length,
+      layout === "editorial-long-copy" ? capacity : 2,
+    );
 
-    const factLimit = layout === "editorial-long-copy" ? request.allowed.maxFacts : 2;
     const emphasis = request.campaign.openingFocus
       ? OPENING_FACT_EMPHASIS[request.campaign.openingFocus] ?? []
       : [];
     const orderedFactIds = [
+      ...requiredIds,
       ...emphasis.filter((id) => request.allowed.factIds.includes(id)),
       ...request.allowed.factIds.filter((id) => !emphasis.includes(id)),
     ];
     const factIds = [...new Set(orderedFactIds)].slice(0, factLimit);
-    const sections = factIds.length > 0
+    const sections: SectionId[] = factIds.length > 0
       ? layout === "editorial-long-copy"
         ? ["hero", "detail", "close"]
         : ["hero", "hero-facts", "close"]

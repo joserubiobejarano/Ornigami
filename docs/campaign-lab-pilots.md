@@ -53,6 +53,20 @@ the header. A preview pilot also shows the note from the manifest and a
 - `schemaVersion` must be `1`.
 - Brand tokens and the fixture brief are required.
 - Approved facts need unique IDs and approved source text.
+- `requiredFactGroups`, when supplied, declare fact IDs that must render
+  together. Group IDs must be unique, every fact ID must reference an approved
+  fact, and the group must fit a supported layout. Facts outside the groups stay
+  optional and may be omitted.
+
+  ```json
+  "requiredFactGroups": [
+    {
+      "id": "complete-set",
+      "label": "the complete set",
+      "factIds": ["fact-a", "fact-b", "fact-c"]
+    }
+  ]
+  ```
 - Openings, when supplied, need unique IDs and approved copy.
 - Every asset must be reviewed, use the `product-hero` role, stay under
   `/campaign-lab-pilots/`, include a SHA-256 hash, dimensions, alt text, source,
@@ -67,6 +81,13 @@ the header. A preview pilot also shows the note from the manifest and a
 node --experimental-strip-types scripts/campaign-lab-generation-check.mjs `
   --url http://localhost:3100 --pilot momisa --opening mask-night --expect generated
 
+# Prove an incomplete provider group falls back through the real route
+$env:CAMPAIGN_LAB_GENERATION_TEST_MODE="incomplete"
+# restart the dev server, then:
+node --experimental-strip-types scripts/campaign-lab-generation-check.mjs `
+  --url http://localhost:3100 --pilot momisa --opening mask-night `
+  --expect fallback --expect-code invalid
+
 # Focused editor checks at 375 and 1440
 $env:CAMPAIGN_LAB_PLAYWRIGHT="C:\Users\joser\Desktop\Projects\Ornigami\scripts\framework-prototype\browser-tools\node_modules\playwright\index.mjs"
 node scripts/campaign-lab-momisa-check.mjs --url http://localhost:3100 `
@@ -80,7 +101,7 @@ node scripts/campaign-lab-acceptance.mjs --url http://localhost:3100 `
 The proposed manifest keeps fixture-dependent checks pending. Do not call a
 pending offer, destination, asset, alt-text, or label check a pass. The focused
 check separately verifies the asset bytes/identity, first-screen hierarchy,
-opening change, revision, and approval reset.
+opening change, required fact group visibility, revision, and approval reset.
 
 ## Current limits
 
