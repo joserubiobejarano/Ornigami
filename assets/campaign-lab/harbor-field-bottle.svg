@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8f3e9"/>
+      <stop offset=".58" stop-color="#eee5d6"/>
+      <stop offset="1" stop-color="#ded0bb"/>
+    </linearGradient>
+    <radialGradient id="light" cx="40%" cy="28%" r="72%">
+      <stop offset="0" stop-color="#fffdf7" stop-opacity=".92"/>
+      <stop offset=".7" stop-color="#fffdf7" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#fffdf7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bottle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1f2327"/>
+      <stop offset=".1" stop-color="#3d4348"/>
+      <stop offset=".25" stop-color="#8d959b"/>
+      <stop offset=".36" stop-color="#aeb5ba"/>
+      <stop offset=".48" stop-color="#666e74"/>
+      <stop offset=".68" stop-color="#343a3f"/>
+      <stop offset=".84" stop-color="#676f75"/>
+      <stop offset="1" stop-color="#181c1f"/>
+    </linearGradient>
+    <linearGradient id="cap" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#737b80"/>
+      <stop offset=".18" stop-color="#d5dadd"/>
+      <stop offset=".36" stop-color="#8b9398"/>
+      <stop offset=".56" stop-color="#eef1f2"/>
+      <stop offset=".75" stop-color="#8b9297"/>
+      <stop offset="1" stop-color="#5c6368"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdbda4" stop-opacity="0"/>
+      <stop offset="1" stop-color="#b7a58a" stop-opacity=".5"/>
+    </linearGradient>
+    <radialGradient id="castShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#4e4233" stop-opacity=".34"/>
+      <stop offset=".55" stop-color="#4e4233" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#4e4233" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur24" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <filter id="blur8" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="12" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <clipPath id="bottleClip">
+      <path d="M470 462c0-41 27-74 68-86V330h124v46c41 12 68 45 68 86v646c0 70-56 122-130 122s-130-52-130-122Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="1500" fill="url(#paper)"/>
+  <rect width="1200" height="1500" fill="url(#light)"/>
+
+  <ellipse cx="612" cy="1234" rx="310" ry="76" fill="url(#castShadow)" filter="url(#blur24)"/>
+  <rect y="1140" width="1200" height="360" fill="url(#floor)"/>
+
+  <g>
+    <path d="M552 330h96v58h-96z" fill="#2d3236"/>
+    <rect x="536" y="255" width="128" height="88" rx="18" fill="url(#cap)" stroke="#5d6469" stroke-opacity=".5"/>
+    <g stroke="#4c5358" stroke-opacity=".55" stroke-width="3">
+      <path d="M548 268v62M562 268v62M576 268v62M590 268v62M604 268v62M618 268v62M632 268v62M646 268v62"/>
+    </g>
+    <rect x="536" y="255" width="128" height="10" rx="5" fill="#f4f6f7" opacity=".55"/>
+    <rect x="536" y="334" width="128" height="6" rx="3" fill="#171a1d" opacity=".55"/>
+
+    <path d="M470 462c0-41 27-74 68-86V330h124v46c41 12 68 45 68 86v646c0 70-56 122-130 122s-130-52-130-122Z" fill="url(#bottle)" stroke="#171a1d" stroke-opacity=".45" stroke-width="3"/>
+
+    <g clip-path="url(#bottleClip)">
+      <ellipse cx="524" cy="700" rx="26" ry="330" fill="#f7fbff" opacity=".26" filter="url(#blur8)"/>
+      <ellipse cx="676" cy="720" rx="12" ry="300" fill="#f7fbff" opacity=".13" filter="url(#blur8)"/>
+      <path d="M736 520c-10 210-10 420 0 620" stroke="#0d1114" stroke-opacity=".34" stroke-width="42" fill="none" filter="url(#blur8)"/>
+      <rect x="494" y="768" width="212" height="252" rx="16" fill="#292e32" opacity=".96"/>
+      <rect x="494" y="768" width="212" height="252" rx="16" fill="none" stroke="#a6acb0" stroke-opacity=".24"/>
+      <text x="600" y="868" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" letter-spacing="7" fill="#e8e1d4">HARBOR</text>
+      <text x="600" y="906" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" letter-spacing="7" fill="#e8e1d4">FIELD</text>
+      <path d="M548 940h104" stroke="#e8e1d4" stroke-opacity=".42" stroke-width="2"/>
+      <text x="600" y="982" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="4" fill="#d6cec0" opacity=".9">500 ML</text>
+      <ellipse cx="600" cy="1209" rx="160" ry="24" fill="#0c0f11" opacity=".28" filter="url(#blur8)"/>
+    </g>
+
+    <path d="M470 1082c0 70 56 122 130 122s130-52 130-122" fill="none" stroke="#f8fbff" stroke-opacity=".16" stroke-width="4"/>
+    <path d="M512 462c0-22 12-42 38-52" fill="none" stroke="#f8fbff" stroke-opacity=".34" stroke-width="4" stroke-linecap="round"/>
+    <path d="M694 458c0-18-9-35-30-45" fill="none" stroke="#f8fbff" stroke-opacity=".12" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <rect width="1200" height="1500" filter="url(#grain)" opacity=".045" style="mix-blend-mode:multiply"/>
+  <rect width="1200" height="1500" fill="none" stroke="#2b261f" stroke-opacity=".08" stroke-width="2"/>
+</svg>

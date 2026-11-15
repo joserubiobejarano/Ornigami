@@ -1,0 +1,606 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  APPROVED_ASSETS,
+  BRANDS,
+  CAMPAIGN_FIXTURES,
+  createFormValues,
+  defaultAccent,
+  getAsset,
+  getBrand,
+  isBrandId,
+} from "@/lib/campaign-lab/fixtures";
+import {
+  SINGLE_PRODUCT_OFFER_TEMPLATE,
+  buildCampaignPreview,
+  shortRevision,
+} from "@/lib/campaign-lab/template";
+import type { CampaignPreviewData } from "@/lib/campaign-lab/template";
+import type {
+  CampaignFormValues,
+  FixtureId,
+  ValidationField,
+  ValidationIssue,
+} from "@/lib/campaign-lab/types";
+import { nativeSelectClassName } from "@/lib/form-controls";
+import { cn } from "@/lib/utils";
+
+import { CampaignPage } from "./campaign-page";
+
+type CampaignLabProps = {
+  initialFixtureId: FixtureId;
+};
+
+type Approval = {
+  revision: string;
+  approvedAt: string;
+};
+
+export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
+  const fixture = CAMPAIGN_FIXTURES[initialFixtureId];
+  const baseId = useId().replace(/:/g, "");
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const previousIssueCount = useRef(0);
+
+  const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture));
+  const [preview, setPreview] = useState<CampaignPreviewData>(() => {
+    const result = buildCampaignPreview(fixture, createFormValues(fixture));
+    if (!result.ok) throw new Error(`The ${fixture.label} campaign fixture is invalid.`);
+    return result.preview;
+  });
+  const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const [dirty, setDirty] = useState(false);
+  const [approval, setApproval] = useState<Approval | null>(null);
+
+  const brand = getBrand(values.brandId);
+  const selectedAsset = getAsset(values.assetId);
+  const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
+  const approved = approval?.revision === preview.revision && !dirty;
+  const canApprove = !dirty && issues.length === 0 && !approved;
+  const revisionLabel = shortRevision(preview.revision);
+  const layout = SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[preview.draft.layout];
+
+  const fieldIds: Record<ValidationField, string> = {
+    brandId: `${baseId}-brand-style`,
+    accent: `${baseId}-accent`,
+    productName: `${baseId}-product-name`,
+    offer: `${baseId}-offer`,
+    destinationUrl: `${baseId}-destination-url`,
+    assetId: `${baseId}-product-image`,
+  };
+
+  const previewHeadingId = `${baseId}-campaign-preview-heading`;
+  const previewStatusId = `${baseId}-campaign-preview-status`;
+  const pageHeadingId = `${baseId}-campaign-page-heading`;
+  const reviewStatusId = `${baseId}-review-status`;
+  const formStatusId = `${baseId}-form-status`;
+  const errorSummaryHeadingId = `${baseId}-error-summary-heading`;
+  const assetMetaId = `${baseId}-asset-meta`;
+  const accentHintId = `${baseId}-accent-hint`;
+
+  useEffect(() => {
+    if (issues.length > previousIssueCount.current) {
+      errorSummaryRef.current?.focus();
+    }
+    previousIssueCount.current = issues.length;
+  }, [issues]);
+
+  function clearChangedState(field?: ValidationField) {
+    setIssues((current) =>
+      field ? current.filter((issue) => issue.field !== field) : current,
+    );
+    setDirty(true);
+    setApproval(null);
+  }
+
+  function handleValueChange<K extends keyof CampaignFormValues>(
+    field: K,
+    value: CampaignFormValues[K],
+  ) {
+    setValues((current) => ({ ...current, [field]: value }));
+    clearChangedState(field as ValidationField);
+  }
+
+  function handleBrandChange(value: string) {
+    if (!isBrandId(value)) return;
+    setValues((current) => ({
+      ...current,
+      brandId: value,
+      accent: defaultAccent(value),
+    }));
+    clearChangedState("brandId");
+    setIssues((current) => current.filter((issue) => issue.field !== "accent"));
+  }
+
+  function handleGenerate() {
+    const result = buildCampaignPreview(fixture, values);
+    if (!result.ok) {
+      setIssues(result.issues);
+      setDirty(true);
+      setApproval(null);
+      return;
+    }
+
+    setPreview(result.preview);
+    setIssues([]);
+    setDirty(false);
+    setApproval(null);
+  }
+
+  function handleApprove() {
+    if (!canApprove) return;
+    setApproval({
+      revision: preview.revision,
+      approvedAt: new Date().toISOString(),
+    });
+  }
+
+  function describedBy(field: ValidationField, extraId?: string): string | undefined {
+    const ids = [
+      issueByField.has(field) ? `${fieldIds[field]}-error` : null,
+      extraId,
+    ].filter(Boolean);
+    return ids.length ? ids.join(" ") : undefined;
+  }
+
+  const previewStatusText = approved
+    ? `Approved locally. Revision ${revisionLabel} matches the preview.`
+    : dirty
+      ? issues.length > 0
+        ? `Preview not updated. Fix ${issues.length} ${issues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
+        : `Preview out of date. Approval is cleared. Showing the last valid preview, revision ${revisionLabel}. Generate a fresh preview to review your edits.`
+      : `Preview ready for local review. Revision ${revisionLabel}.`;
+
+  const reviewStatusText = approved
+    ? `Approved locally — revision ${revisionLabel}.`
+    : dirty
+      ? "Not approved. Changes need a fresh preview."
+      : "Not approved. Preview ready for local review.";
+
+  const reviewTone = approved
+    ? "border-[#3f7a5a] bg-[#eef5ee]"
+    : dirty
+      ? "border-[#b98237] bg-[#fbf3e4]"
+      : "border-[#d8cebd] bg-[#f8f3ea]";
+
+  return (
+    <div className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
+      <header className="border-b border-[#ddd3c2] bg-[#fbf8f1]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-end justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="space-y-1">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#6d6a5f]">
+              Ornigami · campaign workflow
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                Campaign Lab
+              </h1>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#c9bda8] bg-[#efe7d8] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
+                <span className="size-1.5 rounded-full bg-[#9a3f25]" aria-hidden="true" />
+                Local only · not published
+              </span>
+            </div>
+          </div>
+
+          <nav aria-label="Campaign fixtures" className="flex flex-wrap items-center gap-2">
+            {Object.values(CAMPAIGN_FIXTURES).map((item) => {
+              const active = item.id === initialFixtureId;
+              return (
+                <Link
+                  key={item.id}
+                  href={`/campaign-lab?fixture=${item.id}`}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d2a22] focus-visible:ring-offset-2",
+                    active
+                      ? "border-[#1d2a22] bg-[#1d2a22] text-[#fffdf8]"
+                      : "border-[#d4c8b5] bg-[#fffdf8] text-[#4f4a3f] hover:border-[#b8aa93] hover:bg-[#f3ece0]",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </header>
+
+      <main className="mx-auto grid max-w-[1600px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start lg:px-8 lg:py-6">
+        <aside
+          className="rounded-[1.25rem] border border-[#ddd3c2] bg-[#fffdf8] p-4 shadow-[0_20px_60px_-50px_rgba(35,36,32,.55)] lg:sticky lg:top-4"
+          aria-labelledby={`${baseId}-campaign-brief-heading`}
+        >
+          <div className="flex items-start justify-between gap-3 border-b border-[#ebe3d6] pb-3">
+            <div>
+              <h2
+                id={`${baseId}-campaign-brief-heading`}
+                className="text-sm font-semibold tracking-tight"
+              >
+                Campaign brief
+              </h2>
+              <p className="mt-1 text-xs text-[#6d6a5f]">{fixture.description}</p>
+            </div>
+            <span className="shrink-0 rounded-full bg-[#efe7d8] px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
+              {fixture.label}
+            </span>
+          </div>
+
+          <form
+            className="mt-4 space-y-5"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleGenerate();
+            }}
+          >
+            <fieldset className="m-0 space-y-4 border-0 p-0">
+              <legend className="mb-1 text-sm font-semibold">Campaign facts</legend>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={fieldIds.productName}>Product name</Label>
+                <Input
+                  id={fieldIds.productName}
+                  name="productName"
+                  value={values.productName}
+                  onChange={(event) => handleValueChange("productName", event.target.value)}
+                  autoComplete="off"
+                  required
+                  aria-invalid={issueByField.has("productName")}
+                  aria-describedby={describedBy("productName")}
+                />
+                {issueByField.has("productName") ? (
+                  <p id={`${fieldIds.productName}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {issueByField.get("productName")}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={fieldIds.offer}>Offer</Label>
+                <Input
+                  id={fieldIds.offer}
+                  name="offer"
+                  value={values.offer}
+                  onChange={(event) => handleValueChange("offer", event.target.value)}
+                  autoComplete="off"
+                  required
+                  aria-invalid={issueByField.has("offer")}
+                  aria-describedby={describedBy("offer")}
+                />
+                {issueByField.has("offer") ? (
+                  <p id={`${fieldIds.offer}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {issueByField.get("offer")}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={fieldIds.destinationUrl}>Destination URL</Label>
+                <Input
+                  id={fieldIds.destinationUrl}
+                  name="destinationUrl"
+                  type="url"
+                  inputMode="url"
+                  value={values.destinationUrl}
+                  onChange={(event) => handleValueChange("destinationUrl", event.target.value)}
+                  autoComplete="url"
+                  spellCheck={false}
+                  required
+                  aria-invalid={issueByField.has("destinationUrl")}
+                  aria-describedby={describedBy("destinationUrl")}
+                />
+                {issueByField.has("destinationUrl") ? (
+                  <p
+                    id={`${fieldIds.destinationUrl}-error`}
+                    className="text-xs font-medium text-[#a2382a]"
+                  >
+                    {issueByField.get("destinationUrl")}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={fieldIds.assetId}>Product image</Label>
+                <select
+                  id={fieldIds.assetId}
+                  name="assetId"
+                  className={nativeSelectClassName}
+                  value={values.assetId}
+                  onChange={(event) => handleValueChange("assetId", event.target.value)}
+                  required
+                  aria-invalid={issueByField.has("assetId")}
+                  aria-describedby={describedBy("assetId", assetMetaId)}
+                >
+                  <option value="">Select an approved image</option>
+                  {APPROVED_ASSETS.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.brandId === "harbor-field"
+                        ? "Harbor Field bottle"
+                        : "Morrow Ceramic dripper"}{" "}
+                      — approved
+                    </option>
+                  ))}
+                </select>
+                <p id={assetMetaId} className="text-xs text-[#6d6a5f]">
+                  {selectedAsset
+                    ? `${selectedAsset.id} · reviewed ${selectedAsset.reviewedOn}`
+                    : "No approved image selected."}
+                </p>
+                {issueByField.has("assetId") ? (
+                  <p id={`${fieldIds.assetId}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {issueByField.get("assetId")}
+                  </p>
+                ) : null}
+
+                <details className="rounded-lg border border-[#e4dccd] bg-[#f8f3ea] px-3 py-2 text-xs text-[#5f5a4f]">
+                  <summary className="cursor-pointer font-semibold text-[#3f3b33]">
+                    Approved asset record
+                  </summary>
+                  {selectedAsset ? (
+                    <dl className="mt-2 grid gap-1.5">
+                      <div>
+                        <dt className="font-semibold">Asset ID</dt>
+                        <dd>{selectedAsset.id}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold">Alt text</dt>
+                        <dd>{selectedAsset.alt}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold">Reviewed</dt>
+                        <dd>
+                          {selectedAsset.reviewedOn} by {selectedAsset.reviewedBy}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold">Source</dt>
+                        <dd>{selectedAsset.source}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold">Rights</dt>
+                        <dd>{selectedAsset.rights}</dd>
+                      </div>
+                    </dl>
+                  ) : (
+                    <p className="mt-2">No approved image selected.</p>
+                  )}
+                </details>
+              </div>
+            </fieldset>
+
+            <fieldset className="m-0 space-y-4 border-0 p-0">
+              <legend className="mb-1 text-sm font-semibold">Brand styling</legend>
+
+              <div className="flex items-center gap-1.5" aria-hidden="true">
+                {[brand.tokens.page, brand.tokens.surface, brand.tokens.ink, brand.tokens.accent].map(
+                  (color) => (
+                    <span
+                      key={color}
+                      className="size-5 rounded-full border border-[#cbbda8]"
+                      style={{ backgroundColor: color }}
+                    />
+                  ),
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={fieldIds.brandId}>Brand style</Label>
+                <select
+                  id={fieldIds.brandId}
+                  name="brandId"
+                  className={nativeSelectClassName}
+                  value={values.brandId}
+                  onChange={(event) => handleBrandChange(event.target.value)}
+                  required
+                  aria-invalid={issueByField.has("brandId")}
+                  aria-describedby={describedBy("brandId")}
+                >
+                  {Object.values(BRANDS).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} — {item.descriptor}
+                    </option>
+                  ))}
+                </select>
+                {issueByField.has("brandId") ? (
+                  <p id={`${fieldIds.brandId}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {issueByField.get("brandId")}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor={fieldIds.accent}>Accent color</Label>
+                  <code className="text-xs text-[#6d6a5f]">{values.accent}</code>
+                </div>
+                <input
+                  id={fieldIds.accent}
+                  name="accent"
+                  type="color"
+                  value={values.accent}
+                  onChange={(event) => handleValueChange("accent", event.target.value)}
+                  className="h-10 w-16 cursor-pointer rounded-lg border border-[#d8cebd] bg-[#fffdf8] p-1"
+                  aria-invalid={issueByField.has("accent")}
+                  aria-describedby={describedBy("accent", accentHintId)}
+                />
+                <p id={accentHintId} className="text-xs text-[#6d6a5f]">
+                  Used for the offer rule and primary action. Action text contrast adjusts automatically.
+                </p>
+                {issueByField.has("accent") ? (
+                  <p id={`${fieldIds.accent}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {issueByField.get("accent")}
+                  </p>
+                ) : null}
+              </div>
+            </fieldset>
+
+            {issues.length > 0 ? (
+              <div
+                ref={errorSummaryRef}
+                tabIndex={-1}
+                role="group"
+                aria-labelledby={errorSummaryHeadingId}
+                className="rounded-xl border border-[#c65c45] bg-[#fff1ec] p-3 text-[#6d2b20] outline-none focus-visible:ring-2 focus-visible:ring-[#a2382a] focus-visible:ring-offset-2"
+              >
+                <p id={errorSummaryHeadingId} className="text-sm font-semibold">
+                  Preview not generated
+                </p>
+                <p className="mt-1 text-xs">
+                  The last valid preview is still shown. Fix{" "}
+                  {issues.length === 1 ? "this field" : "these fields"}:
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                  {issues.map((issue) => (
+                    <li key={issue.field}>
+                      <a
+                        href={`#${fieldIds[issue.field]}`}
+                        className="underline decoration-[#a2382a]/50 underline-offset-2 hover:decoration-[#a2382a]"
+                      >
+                        {issue.message}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="submit"
+                className="w-full sm:w-auto"
+                aria-describedby={formStatusId}
+              >
+                Generate preview
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={handleApprove}
+                disabled={!canApprove}
+                aria-describedby={previewStatusId}
+              >
+                Approve preview
+              </Button>
+            </div>
+
+            <p
+              id={formStatusId}
+              role="status"
+              aria-live="polite"
+              className={cn(
+                "text-xs font-medium",
+                issues.length > 0
+                  ? "text-[#a2382a]"
+                  : dirty
+                    ? "text-[#7a541d]"
+                    : "text-[#4f6b55]",
+              )}
+            >
+              {issues.length > 0
+                ? `${issues.length} ${issues.length === 1 ? "field needs" : "fields need"} attention.`
+                : dirty
+                  ? "Changes not yet validated. Generate preview to validate."
+                  : "No validation errors."}
+            </p>
+
+            <div className={cn("rounded-xl border p-3", reviewTone)}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#5f5a4f]">
+                  Local review status
+                </p>
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em]",
+                    approved
+                      ? "bg-[#dcecdf] text-[#285a3d]"
+                      : dirty
+                        ? "bg-[#f2e2c4] text-[#7a541d]"
+                        : "bg-[#e9e0d1] text-[#5b5346]",
+                  )}
+                >
+                  {approved ? "Approved" : dirty ? "Needs fresh preview" : "Not approved"}
+                </span>
+              </div>
+              <p id={reviewStatusId} className="mt-2 text-sm font-medium">
+                {reviewStatusText}
+              </p>
+              <p className="mt-1 text-xs text-[#6d6a5f]">
+                Approval applies to revision {revisionLabel}. Editing any field clears it.
+                {approval ? " Recorded locally in this browser session." : ""}
+              </p>
+            </div>
+          </form>
+        </aside>
+
+        <section
+          className="rounded-[1.25rem] border border-[#d8cebd] bg-[#fffdf8] p-3 shadow-[0_20px_60px_-55px_rgba(35,36,32,.55)] sm:p-4"
+          aria-labelledby={previewHeadingId}
+          aria-describedby={previewStatusId}
+          data-fixture={initialFixtureId}
+          data-template={preview.draft.templateId}
+          data-template-version={preview.draft.templateVersion}
+          data-layout={preview.draft.layout}
+          data-revision={preview.revision}
+          data-asset-id={preview.asset.id}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3 px-1 pb-3">
+            <div>
+              <h2 id={previewHeadingId} className="text-sm font-semibold tracking-tight">
+                Campaign preview
+              </h2>
+              <p className="mt-1 text-xs text-[#6d6a5f]">
+                {SINGLE_PRODUCT_OFFER_TEMPLATE.name} · v
+                {SINGLE_PRODUCT_OFFER_TEMPLATE.version} · {layout.label}
+              </p>
+            </div>
+            <span
+              className="rounded-full border border-[#d4c8b5] bg-[#f8f3ea] px-3 py-1 font-mono text-[0.68rem] text-[#5b5346]"
+              title={preview.revision}
+            >
+              Revision {revisionLabel}
+            </span>
+          </div>
+
+          <p
+            id={previewStatusId}
+            role="status"
+            aria-live="polite"
+            className={cn(
+              "mb-3 rounded-lg border px-3 py-2 text-xs font-medium",
+              approved
+                ? "border-[#bcd7c2] bg-[#eef5ee] text-[#285a3d]"
+                : dirty
+                  ? "border-[#e2c99d] bg-[#fbf3e4] text-[#7a541d]"
+                  : "border-[#ddd3c2] bg-[#f8f3ea] text-[#5b5346]",
+            )}
+          >
+            {previewStatusText}
+          </p>
+
+          <div
+            className={cn(
+              "overflow-hidden rounded-xl border bg-white",
+              dirty ? "border-[#c08a3f]" : "border-[#cec3b1]",
+            )}
+            data-preview-canvas
+          >
+            <CampaignPage
+              brief={preview.brief}
+              draft={preview.draft}
+              asset={preview.asset}
+              theme={preview.theme}
+              headingId={pageHeadingId}
+            />
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
