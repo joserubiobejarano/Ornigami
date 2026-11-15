@@ -9,7 +9,7 @@ changes are included.
 
 1. The editor validates the current form locally and keeps the last valid
    preview rendered.
-2. **Generate preview** posts the fixture ID and the six form values to
+2. **Generate preview** posts the fixture ID and the current form values to
    `POST /api/campaign-lab/generate`.
 3. The route validates the form again, builds the validated ``CampaignBrief``
    from the fixture and form values, and builds a deterministic fallback draft.
@@ -35,6 +35,11 @@ unsupported layouts, disallowed section orders, unapproved or duplicate fact
 IDs, and facts outside a facts section. The draft validator enforces headline,
 lede and fact length limits and verifies that every rendered claim matches its
 approved fact label and value.
+
+For the Morrow fixture, **Opening focus** selects pre-approved copy for the rib
+design or the first-pour story. The server rejects unfamiliar values and holds
+that opening fixed through provider selection and fallback. Selecting a new
+focus requires a fresh preview and approval.
 
 ## Material claims
 
@@ -72,8 +77,8 @@ the preview panel’s `data-generation-status` attribute. Fallback reasons inclu
 
 In every fallback case the server returns the deterministic draft built from the
 same validated brief. The last valid preview stays usable until that fallback is
-applied; invalid form input leaves the previous preview and its approval state
-untouched.
+applied. An invalid edit leaves the last valid preview visible and requires a
+fresh valid preview before approval.
 
 ## Approval and revisions
 

@@ -5,7 +5,7 @@
  *
  * This adapter talks to the flow's HTTP API only. It does not import the app
  * route, renderer, or provider adapter. It supports the two fixture IDs the
- * flow exposes today (sparse and long-copy) and maps them to the matching
+ * flow exposes today (sparse and long-copy) and maps their openings to the matching
  * evaluation cases. Cases the flow cannot express are omitted and remain
  * unassessed in the report.
  *
@@ -106,7 +106,7 @@ async function generate(options, fixture, values, requestId) {
   });
   const body = await response.json().catch(() => null);
   if (!response.ok || !body) {
-    throw new Error(`${fixture}: HTTP ${response.status()} ${body?.message ?? "(no JSON body)"}`);
+    throw new Error(`${fixture}: HTTP ${response.status} ${body?.message ?? "(no JSON body)"}`);
   }
   if (!body.ok) {
     throw new Error(`${fixture}: generation rejected: ${JSON.stringify(body.issues ?? body.message ?? body)}`);
@@ -166,10 +166,24 @@ async function main() {
   const collected = [];
   for (const fixture of options.fixtures) {
     const mapping = FIXTURES[fixture];
-    const body = await generate(options, fixture, mapping.values, `${options.requestId}-${fixture}`);
+    const values = fixture === "long-copy"
+      ? { ...mapping.values, openingFocus: "flow-control" }
+      : mapping.values;
+    const body = await generate(options, fixture, values, `${options.requestId}-${fixture}`);
     const artifact = toArtifact(mapping.caseId, body);
     writeJson(options.out, `${mapping.caseId}.json`, artifact);
     collected.push({ fixture, caseId: mapping.caseId, status: body.generation?.status, angle: body.generation?.angle });
+  }
+
+  if (options.fixtures.includes("long-copy")) {
+    const body = await generate(
+      options,
+      "long-copy",
+      { ...FIXTURES["long-copy"].values, openingFocus: "first-pour" },
+      `${options.requestId}-first-pour`,
+    );
+    writeJson(options.out, "intent-change.json", toArtifact("intent-change", body));
+    collected.push({ fixture: "long-copy", caseId: "intent-change", status: body.generation?.status, angle: body.generation?.angle });
   }
 
   if (options.revision) {

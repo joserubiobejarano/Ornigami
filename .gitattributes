@@ -3,6 +3,7 @@
 migration-sources/** -text -whitespace
 tests/fixtures/contracts/*.sql text eol=lf
 tests/fixtures/campaign-lab/assets/** -text -whitespace
+tests/fixtures/campaign-eval/assets/*.svg text eol=lf
 scripts/sql/*.sql text eol=lf
 
 scripts/*.sh text eol=lf

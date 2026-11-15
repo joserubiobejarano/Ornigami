@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,7 @@ type GenerationState = { status: "idle" } | GenerationMetadata;
 
 export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const fixture = CAMPAIGN_FIXTURES[initialFixtureId];
+  const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
   const baseId = useId().replace(/:/g, "");
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const previousIssueCount = useRef(0);
@@ -70,7 +71,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const selectedAsset = getAsset(values.assetId);
   const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
   const approved = approval?.revision === preview.revision && !dirty && !generating;
-  const canApprove = !dirty && !generating && issues.length === 0 && !approved;
+  const canApprove = editorReady && !dirty && !generating && issues.length === 0 && !approved;
   const revisionLabel = shortRevision(preview.revision);
   const layout = SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[preview.draft.layout];
 
@@ -81,6 +82,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
     offer: `${baseId}-offer`,
     destinationUrl: `${baseId}-destination-url`,
     assetId: `${baseId}-product-image`,
+    openingFocus: `${baseId}-opening-focus`,
   };
 
   const previewHeadingId = `${baseId}-campaign-preview-heading`;
@@ -373,6 +375,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
 
           <form
             className="mt-4 space-y-5"
+            method="post"
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
@@ -400,6 +403,30 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                   </p>
                 ) : null}
               </div>
+
+              {fixture.openings ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor={fieldIds.openingFocus}>Opening focus</Label>
+                  <select
+                    id={fieldIds.openingFocus}
+                    name="openingFocus"
+                    className={nativeSelectClassName}
+                    value={values.openingFocus}
+                    onChange={(event) => handleValueChange("openingFocus", event.target.value)}
+                    aria-invalid={issueByField.has("openingFocus")}
+                    aria-describedby={describedBy("openingFocus")}
+                  >
+                    {fixture.openings.map((opening) => (
+                      <option key={opening.id} value={opening.id}>{opening.label}</option>
+                    ))}
+                  </select>
+                  {issueByField.has("openingFocus") ? (
+                    <p id={fieldIds.openingFocus + "-error"} className="text-xs font-medium text-[#a2382a]">
+                      {issueByField.get("openingFocus")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.offer}>Offer</Label>
@@ -614,7 +641,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
               <Button
                 type="submit"
                 className="w-full sm:w-auto"
-                disabled={generating}
+                disabled={!editorReady || generating}
                 aria-busy={generating}
                 aria-describedby={formStatusId}
               >

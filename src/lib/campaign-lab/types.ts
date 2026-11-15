@@ -86,6 +86,12 @@ export type ApprovedCopy = {
   lede: string;
 };
 
+export type CampaignOpening = {
+  id: string;
+  label: string;
+  copy: ApprovedCopy;
+};
+
 export type CampaignBrief = {
   fixtureId: FixtureId;
   brandId: BrandId;
@@ -97,6 +103,7 @@ export type CampaignBrief = {
   productNoun: string;
   productFacts: ProductFact[];
   copy: ApprovedCopy;
+  openingFocus?: string;
 };
 
 export type CampaignFixture = {
@@ -105,6 +112,7 @@ export type CampaignFixture = {
   description: string;
   brief: CampaignBrief;
   assetId: string;
+  openings?: readonly CampaignOpening[];
 };
 
 export type CampaignFormValues = {
@@ -114,6 +122,7 @@ export type CampaignFormValues = {
   offer: string;
   destinationUrl: string;
   assetId: string;
+  openingFocus?: string;
 };
 
 export type TemplateDraft = {
@@ -182,7 +191,8 @@ export type ValidationField =
   | "productName"
   | "offer"
   | "destinationUrl"
-  | "assetId";
+  | "assetId"
+  | "openingFocus";
 
 export type ValidationIssue = {
   field: ValidationField;

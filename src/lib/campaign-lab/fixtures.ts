@@ -5,6 +5,7 @@ import type {
   BrandTokens,
   CampaignBrief,
   CampaignFixture,
+  CampaignOpening,
   CampaignFormValues,
   FixtureId,
   ResolvedBrandTheme,
@@ -106,6 +107,25 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
   },
 ];
 
+const MORROW_OPENINGS: readonly CampaignOpening[] = [
+  {
+    id: "flow-control",
+    label: "Rib design",
+    copy: {
+      headline: "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+      lede: "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs.",
+    },
+  },
+  {
+    id: "first-pour",
+    label: "First pour",
+    copy: {
+      headline: "Start with a slower first pour",
+      lede: "Take your time with that first pour. The ceramic dripper has three interior ribs and a single outlet.",
+    },
+  },
+];
+
 export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
   sparse: {
     id: "sparse",
@@ -165,6 +185,7 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
     id: "long-copy",
     label: "Long headline",
     description: "An editorial identity and a headline that needs room.",
+    openings: MORROW_OPENINGS,
     assetId: "morrow-ceramic-dripper-front",
     brief: {
       fixtureId: "long-copy",
@@ -221,10 +242,7 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
           },
         },
       ],
-      copy: {
-        headline: "What changes when your first pour is slower, steadier, and entirely your own?",
-        lede: "The rib spacing holds the filter clear of the wall, so water moves through the bed at its own pace.",
-      },
+      copy: MORROW_OPENINGS[0].copy,
     },
   },
 };
@@ -262,10 +280,12 @@ export function createFormValues(fixture: CampaignFixture): CampaignFormValues {
     offer: fixture.brief.offer,
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
+    openingFocus: fixture.openings?.[0]?.id,
   };
 }
 
 export function createCampaignBrief(fixture: CampaignFixture, values: CampaignFormValues): CampaignBrief {
+  const opening = fixture.openings?.find((option) => option.id === values.openingFocus);
   return {
     ...fixture.brief,
     brandId: values.brandId,
@@ -273,6 +293,8 @@ export function createCampaignBrief(fixture: CampaignFixture, values: CampaignFo
     offer: values.offer.trim(),
     destinationUrl: values.destinationUrl.trim(),
     assetId: values.assetId,
+    copy: opening?.copy ?? fixture.brief.copy,
+    openingFocus: opening?.id,
   };
 }
 

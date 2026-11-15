@@ -257,6 +257,7 @@ export function buildHeadlineForAngle(brief: CampaignBrief, angle: OpeningAngle)
 
 /** Supported for this brief. A story opening needs approved story copy. */
 export function getAllowedAngles(brief: CampaignBrief): OpeningAngle[] {
+  if (brief.openingFocus && brief.copy.headline?.trim()) return ["story-led"];
   const angles: OpeningAngle[] = ["offer-led", "product-led"];
   if (brief.copy.headline?.trim()) angles.push("story-led");
   return angles;
@@ -564,6 +565,10 @@ export function buildCampaignPreview(
   values: CampaignFormValues,
 ): CampaignPreviewResult {
   const issues = validateCampaignForm(values);
+  if (values.openingFocus !== undefined &&
+      !fixture.openings?.some((option) => option.id === values.openingFocus)) {
+    issues.push({ field: "openingFocus", message: "Choose an approved opening for this campaign." });
+  }
   if (issues.length > 0) {
     return { ok: false, issues };
   }

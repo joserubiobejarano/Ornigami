@@ -66,7 +66,7 @@ test("every generated sample passes its own gates and expected checks", () => {
       : caseDef.expected.openingShift ? samples.drafts.get("rich-angle") : undefined;
     const checks = [
       ...evaluateDraft(artifact, caseDef, loaded.pack),
-      ...compareArtifacts(artifact, baseline().drafts.get(caseDef.id), reference, caseDef, loaded.pack),
+      ...compareArtifacts(artifact, baseline().drafts.get(caseDef.id), reference, caseDef),
     ];
     assert.deepEqual(failedIds(checks), [], `${caseDef.id} failed: ${failedIds(checks).join(", ")}`);
     if (caseDef.role === "trap") {
@@ -124,7 +124,6 @@ test("an unchanged opening fails the intent-change comparison", () => {
     baseline().drafts.get("intent-change"),
     reference,
     loaded.casesById.get("intent-change"),
-    loaded.pack,
   );
   const shift = checks.find((item) => item.id === "opening-shift");
   assert.equal(shift.state, "failed");

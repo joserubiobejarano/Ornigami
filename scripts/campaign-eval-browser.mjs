@@ -536,7 +536,9 @@ async function openFlowPage(browser, origin, fixture, viewport) {
     throw new Error(`/campaign-lab?fixture=${fixture} returned HTTP ${response.status()}`);
   }
   await page.evaluate(() => document.fonts?.ready ?? Promise.resolve()).catch(() => {});
-  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Generate preview", exact: true })
+    .and(page.locator(":enabled"))
+    .waitFor({ state: "visible", timeout: timeoutMs });
   return { context, page };
 }
 
@@ -570,31 +572,36 @@ async function runFlowPages({ browser, flow, loaded, outDir, blindMap }) {
     sources.set(`${caseId}/${label}`, source);
   };
 
-  for (const [fixture, caseId] of [["sparse", "sparse-offer"], ["long-copy", "rich-angle"]]) {
+  for (const [fixture, caseId] of [["sparse", "sparse-offer"], ["long-copy", "rich-angle"], ["long-copy", "intent-change"]]) {
     const baselineLabel = labelForSource(blindMap, caseId, "baseline") ?? "baseline";
     const generatedLabel = labelForSource(blindMap, caseId, "generated") ?? "generated";
-    state(caseId, baselineLabel, "baseline");
+    if (caseId !== "intent-change") state(caseId, baselineLabel, "baseline");
     state(caseId, generatedLabel, "generated");
     for (const viewport of viewports) {
-      const baseline = await openFlowPage(browser, flow, fixture, viewport);
-      try {
-        pages.get(caseId)[baselineLabel][viewport.name] = await snapshotFlowState({
-          page: baseline.page,
-          checks,
-          captures,
-          outDir,
-          caseId,
-          label: baselineLabel,
-          viewport,
-        });
-      } catch (error) {
-        add(checks, `page-reachable-${caseId}-${viewport.name}`, "failed", error.message, { caseId, fixture, viewport: viewport.name });
-      } finally {
-        await baseline.context.close();
+      if (caseId !== "intent-change") {
+        const baseline = await openFlowPage(browser, flow, fixture, viewport);
+        try {
+          pages.get(caseId)[baselineLabel][viewport.name] = await snapshotFlowState({
+            page: baseline.page,
+            checks,
+            captures,
+            outDir,
+            caseId,
+            label: baselineLabel,
+            viewport,
+          });
+        } catch (error) {
+          add(checks, `page-reachable-${caseId}-${viewport.name}`, "failed", error.message, { caseId, fixture, viewport: viewport.name });
+        } finally {
+          await baseline.context.close();
+        }
       }
 
       const generated = await openFlowPage(browser, flow, fixture, viewport);
       try {
+        if (caseId === "intent-change") {
+          await generated.page.getByLabel("Opening focus", { exact: true }).selectOption("first-pour");
+        }
         await generateOnPage(generated.page);
         pages.get(caseId)[generatedLabel][viewport.name] = await snapshotFlowState({
           page: generated.page,

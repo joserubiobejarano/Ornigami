@@ -164,7 +164,7 @@ function evaluateRun({ loaded, generated, baseline }) {
 
     const comparisonChecks =
       generatedArtifact && baselineArtifact
-        ? compareArtifacts(generatedArtifact, baselineArtifact, referenceGenerated, caseDef, pack)
+        ? compareArtifacts(generatedArtifact, baselineArtifact, referenceGenerated, caseDef)
         : [];
     const allGeneratedChecks = [...generatedChecks, ...comparisonChecks];
 

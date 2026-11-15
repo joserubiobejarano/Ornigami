@@ -334,3 +334,42 @@ test("the request gate prevents an older response from replacing newer work", ()
   gate.invalidate();
   assert.equal(gate.isCurrent(second), false);
 });
+
+test("an approved opening focus changes the story and survives provider fallback", async () => {
+  const fixtureId = "long-copy";
+  const values = createFormValues(CAMPAIGN_FIXTURES[fixtureId]);
+  const firstPourValues = { ...values, openingFocus: "first-pour" };
+  const original = await runCampaignGeneration({ fixtureId, values }, { env: env() });
+  const changed = await runCampaignGeneration(
+    { fixtureId, values: firstPourValues }, { env: env() },
+  );
+  assert.equal(original.ok, true);
+  assert.equal(changed.ok, true);
+  if (!original.ok || !changed.ok) return;
+  assert.equal(changed.generation.status, "generated");
+  assert.match(original.preview.draft.headline, /rib spacing/i);
+  assert.match(changed.preview.draft.headline, /slower first pour/i);
+  assert.notEqual(changed.preview.draft.lede, original.preview.draft.lede);
+  assert.equal(changed.preview.brief.offer, original.preview.brief.offer);
+  assert.equal(changed.preview.brief.destinationUrl, original.preview.brief.destinationUrl);
+  assert.deepEqual(changed.preview.asset, original.preview.asset);
+  assert.notEqual(changed.preview.revision, original.preview.revision);
+
+  const fallback = await runCampaignGeneration(
+    { fixtureId, values: firstPourValues },
+    { provider: stubProvider({ angle: "offer-led", layout: "editorial-long-copy", sections: ["hero", "close"], factIds: [] }) },
+  );
+  assert.equal(fallback.ok, true);
+  if (fallback.ok) {
+    assert.equal(fallback.generation.status, "fallback");
+    assert.equal(fallback.preview.draft.headline, changed.preview.draft.headline);
+  }
+
+  const unknown = await runCampaignGeneration(
+    { fixtureId, values: { ...values, openingFocus: "invented" } }, { env: env() },
+  );
+  assert.deepEqual(unknown, {
+    ok: false,
+    issues: [{ field: "openingFocus", message: "Choose an approved opening for this campaign." }],
+  });
+});

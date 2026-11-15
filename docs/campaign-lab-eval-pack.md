@@ -266,9 +266,10 @@ and the exact captures reviewed.
   case approves supporting evidence images. If the integrated flow rejects those
   roles, score evidence use on facts and story and record the image roles as a
   coverage gap.
-- The flow may not expose a way to supply a different approved angle with the
-  same fixed facts. `intent-change` then remains unassessed rather than being
-  approximated by changing the offer or destination.
+- The real flow switches Morrow’s **Opening focus** from **Rib design** to
+  **First pour** for `intent-change`. The test changes the opening while keeping
+  the offer, destination, and product image fixed. The Fernway packaging trap
+  remains an evaluation fixture outside the Campaign Lab UI.
 - The claim scanner cannot verify packaging, image truth, or the meaning of
   approved copy. The trap is the standing reminder.
 - Publishing, persistence, rollback, live URLs, non-Chromium browsers, physical

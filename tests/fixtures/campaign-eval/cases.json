@@ -73,7 +73,7 @@
         {
           "id": "harbor-field-bottle-front",
           "file": "assets/harbor-field-bottle.svg",
-          "sha256": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805",
+          "sha256": "d7c3230a6472308e5842129cd340267b3d6c86ec66145471ec45371e728678c5",
           "role": "product-hero",
           "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
           "visibleLabel": "HARBOR FIELD 500 ML"
@@ -86,7 +86,7 @@
         "productName": "Harbor Field travel bottle",
         "assetIds": ["harbor-field-bottle-front"],
         "assetSha256": {
-          "harbor-field-bottle-front": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805"
+          "harbor-field-bottle-front": "d7c3230a6472308e5842129cd340267b3d6c86ec66145471ec45371e728678c5"
         }
       },
       "mayChange": [
@@ -170,7 +170,7 @@
         {
           "id": "morrow-ceramic-dripper-front",
           "file": "assets/morrow-ceramic-dripper.svg",
-          "sha256": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "sha256": "e55dfa1a7b6b734f5aa01f21db623720c4fe7f7a49af70fa3e00f74ed602054d",
           "role": "product-hero",
           "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
           "visibleLabel": "MORROW"
@@ -212,7 +212,7 @@
           "morrow-pour"
         ],
         "assetSha256": {
-          "morrow-ceramic-dripper-front": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "morrow-ceramic-dripper-front": "e55dfa1a7b6b734f5aa01f21db623720c4fe7f7a49af70fa3e00f74ed602054d",
           "morrow-prototype": "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
           "morrow-ribs": "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
           "morrow-pour": "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b"
@@ -319,7 +319,7 @@
         {
           "id": "morrow-ceramic-dripper-front",
           "file": "assets/morrow-ceramic-dripper.svg",
-          "sha256": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "sha256": "e55dfa1a7b6b734f5aa01f21db623720c4fe7f7a49af70fa3e00f74ed602054d",
           "role": "product-hero",
           "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
           "visibleLabel": "MORROW"
@@ -362,7 +362,7 @@
           "morrow-pour"
         ],
         "assetSha256": {
-          "morrow-ceramic-dripper-front": "96bc2c9ed484c868d869ea77d062ea31824c03c26dba82405fa486519be912e3",
+          "morrow-ceramic-dripper-front": "e55dfa1a7b6b734f5aa01f21db623720c4fe7f7a49af70fa3e00f74ed602054d",
           "morrow-prototype": "340d84ef43beaa1a52c2fb04e376ba716c58988fa07d14117497520fb3e25548",
           "morrow-ribs": "200082d2ee10c8ab17678973db47d6835e8b5550a5fd2f8890ab94394dcdb901",
           "morrow-pour": "c7dfbcace4ff3c2061da9ebe361fafe937eeb9ad945d27885758af770bdca69b"
@@ -481,7 +481,7 @@
         {
           "id": "harbor-field-bottle-front",
           "file": "assets/harbor-field-bottle.svg",
-          "sha256": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805",
+          "sha256": "d7c3230a6472308e5842129cd340267b3d6c86ec66145471ec45371e728678c5",
           "role": "product-hero",
           "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
           "visibleLabel": "HARBOR FIELD 500 ML"
@@ -494,7 +494,7 @@
         "productName": "Harbor Field travel bottle",
         "assetIds": ["harbor-field-bottle-front"],
         "assetSha256": {
-          "harbor-field-bottle-front": "c0d7059ebebf6d213e5adef4be88aae67ebaadfaead2711da1b555705d7e2805"
+          "harbor-field-bottle-front": "d7c3230a6472308e5842129cd340267b3d6c86ec66145471ec45371e728678c5"
         }
       },
       "mayChange": [

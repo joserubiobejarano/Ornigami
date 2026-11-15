@@ -649,7 +649,7 @@ export function evaluateRevision(bundle, caseDef, pack) {
   return checks;
 }
 
-export function compareArtifacts(generated, baseline, referenceGenerated, caseDef, pack) {
+export function compareArtifacts(generated, baseline, referenceGenerated, caseDef) {
   const comparisons = [];
 
   if (caseDef.expected.differentFrom) {
@@ -735,6 +735,7 @@ export function compareArtifacts(generated, baseline, referenceGenerated, caseDe
       const headlineOverlap = jaccard(generated.draft.headline, reference.draft.headline);
       const intendedTerms = caseDef.expected.openingShift.openingTerms ?? caseDef.expected.draft.focusTerms ?? [];
       const angleFound = findPhrases([generated.draft.headline, generated.draft.lede].join(" "), intendedTerms);
+      const sectionChangeRequired = (caseDef.expected.openingShift.mustDiffer ?? []).includes("sections");
       const sectionChanged =
         JSON.stringify((generated.draft.sections ?? []).map((section) => section.id)) !==
         JSON.stringify((reference.draft.sections ?? []).map((section) => section.id));
@@ -744,7 +745,7 @@ export function compareArtifacts(generated, baseline, referenceGenerated, caseDe
         ledeChanged &&
         headlineOverlap < 0.6 &&
         angleFound.length > 0 &&
-        sectionChanged;
+        (!sectionChangeRequired || sectionChanged);
       comparisons.push(
         check(
           "opening-shift",
@@ -757,7 +758,7 @@ export function compareArtifacts(generated, baseline, referenceGenerated, caseDe
                 !ledeChanged ? "The lede is unchanged." : "",
                 headlineOverlap >= 0.6 ? `The headline is too close to the reference (overlap ${headlineOverlap}).` : "",
                 angleFound.length === 0 ? `The opening lacks the new angle terms: ${intendedTerms.join(", ")}.` : "",
-                !sectionChanged ? "Section emphasis is unchanged." : "",
+                sectionChangeRequired && !sectionChanged ? "Section emphasis is unchanged." : "",
               ].filter(Boolean).join(" "),
           {
             referenceCaseId: reference.caseId,
@@ -823,7 +824,7 @@ export function verifyPackUsability(loaded) {
         ? generated.drafts.get("rich-angle")
         : undefined;
     const candidateChecks = evaluateDraft(candidate, caseDef, pack);
-    const comparison = compareArtifacts(candidate, base, reference, caseDef, pack);
+    const comparison = compareArtifacts(candidate, base, reference, caseDef);
     const failures = [...candidateChecks, ...comparison].filter((item) => item.state === "failed");
     if (caseDef.role === "trap") {
       const packaging = candidateChecks.find((item) => item.id === "packaging-truth");
@@ -840,7 +841,7 @@ export function verifyPackUsability(loaded) {
   const intentCase = casesById.get("intent-change");
   const unchanged = loadArtifacts(path.join(fixturesDir, "samples", "failures")).drafts.get("intent-change");
   if (intentCase && unchanged) {
-    const checks = compareArtifacts(unchanged, baseline.drafts.get("intent-change"), generated.drafts.get("rich-angle"), intentCase, pack);
+    const checks = compareArtifacts(unchanged, baseline.drafts.get("intent-change"), generated.drafts.get("rich-angle"), intentCase);
     if (!checks.some((item) => item.id === "opening-shift" && item.state === "failed")) {
       problems.push("samples/failures/intent-unchanged.json should fail the opening-shift check");
     }

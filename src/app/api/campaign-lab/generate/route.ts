@@ -22,6 +22,7 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
   const record = raw as Record<string, unknown>;
   const fields = ["brandId", "accent", "productName", "offer", "destinationUrl", "assetId"] as const;
   if (fields.some((field) => typeof record[field] !== "string")) return null;
+  if (record.openingFocus !== undefined && typeof record.openingFocus !== "string") return null;
   return {
     brandId: record.brandId as CampaignFormValues["brandId"],
     accent: record.accent as string,
@@ -29,6 +30,7 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
     offer: record.offer as string,
     destinationUrl: record.destinationUrl as string,
     assetId: record.assetId as string,
+    openingFocus: record.openingFocus,
   };
 }
 
