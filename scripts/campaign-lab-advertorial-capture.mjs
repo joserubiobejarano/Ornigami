@@ -207,6 +207,15 @@ async function captureCase(browser, details) {
         { images: preview.images.map((image) => ({ src: image.src, alt: image.alt })) },
       );
     }
+    if (details.expectFactIds) {
+      const observed = (preview.factIds ?? "").split(",").filter(Boolean);
+      add(
+        "fact-group",
+        details.expectFactIds.every((id) => observed.includes(id)),
+        `Expected the complete fact group; observed ${observed.join(", ")}.`,
+        { expected: details.expectFactIds, observed },
+      );
+    }
     if (preview.template === "single-product-advertorial") {
       const disclosureBeforeHeadline = Boolean(
         preview.disclosureRect &&
@@ -218,21 +227,28 @@ async function captureCase(browser, details) {
         headlineTop: preview.headlineRect?.top,
       });
       const beforeProduct = preview.sections
-        .filter((section) => section.section !== "product" && section.section !== "close")
+        .filter((section) => section.section !== "product")
         .reduce((total, section) => total + section.actions, 0);
       add("no-early-action", beforeProduct === 0, "No action may appear before the product section.", {
         sections: preview.sections,
       });
       add(
-        "two-actions",
-        preview.links.length === 2,
-        `Expected two actions; observed ${preview.links.length}.`,
+        "one-primary-action",
+        preview.links.length === 1,
+        `Expected one primary action; observed ${preview.links.length}.`,
         { links: preview.links },
+      );
+      add(
+        "ends-at-product",
+        preview.sections.at(-1)?.section === "product" &&
+          !preview.sections.some((section) => section.section === "close"),
+        "The page must end at the product block with no closing-action section.",
+        { sections: preview.sections },
       );
       add(
         "same-destination",
         preview.links.every((link) => link.href === "https://example.com/morrow"),
-        "Both actions must use the exact approved destination.",
+        "The action must use the exact approved destination.",
         { links: preview.links },
       );
       add(
@@ -452,6 +468,128 @@ async function exerciseApprovalInvalidation(browser) {
   }
 }
 
+async function exerciseWrongPackshot(browser) {
+  const viewport = viewports[1];
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    serviceWorkers: "block",
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  const checks = [];
+  const add = (id, ok, detail, evidence = {}) => {
+    checks.push({ id, state: ok ? "passed" : "failed", detail, evidence });
+  };
+  try {
+    await page.goto(fixtureUrl("morrow-advertorial-full"), { waitUntil: "networkidle" });
+    await page.getByRole("region", { name: "Campaign preview" }).waitFor();
+    await page.getByRole("button", { name: "Generate preview", exact: true }).click();
+    await page.waitForTimeout(600);
+    await page.getByRole("button", { name: "Approve preview", exact: true }).click();
+    await page.waitForTimeout(250);
+    const before = await readPreview(page);
+
+    await page.route("**/api/campaign-lab/generate", async (route) => {
+      const body = route.request().postDataJSON();
+      body.values.assetId = "harbor-field-bottle-front";
+      await route.continue({ postData: JSON.stringify(body) });
+    });
+    await page.getByRole("button", { name: "Generate preview", exact: true }).click();
+    await page.waitForTimeout(600);
+    const after = await readPreview(page);
+    const issueVisible = (await page.getByText(/approved packshot/i).count()) > 0;
+
+    add(
+      "wrong-packshot-rejected",
+      issueVisible,
+      "The server rejects a Harbor Field bottle as the Morrow packshot.",
+      { issueVisible },
+    );
+    add(
+      "wrong-packshot-preserves-preview",
+      after?.revision === before?.revision &&
+        after?.assetId === "morrow-ceramic-dripper-front" &&
+        after?.images.every((image) => image.assetId !== "harbor-field-bottle-front"),
+      "The last usable Morrow preview remains in place after the rejected request.",
+      {
+        revisionBefore: before?.revision,
+        revisionAfter: after?.revision,
+        assetBefore: before?.assetId,
+        assetAfter: after?.assetId,
+      },
+    );
+    add(
+      "wrong-packshot-clears-approval",
+      after?.approved === "false",
+      "The rejected edit leaves approval cleared.",
+      { approved: after?.approved },
+    );
+
+    await page.screenshot({
+      path: path.join(outDir, "morrow-wrong-packshot-1440-editor.png"),
+      animations: "disabled",
+      fullPage: false,
+    });
+    return { name: "morrow-wrong-packshot", viewport: "1440", checks };
+  } finally {
+    await context.close();
+  }
+}
+
+async function exerciseCompatibleLayout(browser) {
+  const viewport = viewports[1];
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    serviceWorkers: "block",
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  const checks = [];
+  const add = (id, ok, detail, evidence = {}) => {
+    checks.push({ id, state: ok ? "passed" : "failed", detail, evidence });
+  };
+  try {
+    await page.goto(fixtureUrl("morrow-advertorial-one-photo"), { waitUntil: "networkidle" });
+    await page.getByRole("region", { name: "Campaign preview" }).waitFor();
+    await page.getByLabel("Advertorial layout", { exact: true }).selectOption("advertorial-full");
+    await page.waitForTimeout(200);
+
+    const reasonVisible =
+      (await page.getByText(/This brief fits the Advertorial, one photo layout instead/i).count()) > 0;
+    const switchButton = page.getByRole("button", {
+      name: "Use Advertorial, one photo",
+      exact: true,
+    });
+    add(
+      "incompatible-layout-explained",
+      reasonVisible,
+      "The editor explains why the requested full layout cannot hold one image.",
+      { reasonVisible },
+    );
+    add(
+      "compatible-layout-offered",
+      (await switchButton.count()) > 0,
+      "The editor offers the compatible one-photo layout.",
+    );
+
+    if ((await switchButton.count()) > 0) {
+      await switchButton.click();
+      await page.waitForTimeout(200);
+    }
+    const layoutValue = await page.getByLabel("Advertorial layout", { exact: true }).inputValue();
+    const preview = await readPreview(page);
+    add(
+      "compatible-layout-applied",
+      layoutValue === "advertorial-one-photo" && preview?.layout === "advertorial-one-photo",
+      "The compatible choice applies to the layout control and the rendered preview.",
+      { layoutValue, previewLayout: preview?.layout },
+    );
+    return { name: "morrow-compatible-layout", viewport: "1440", checks };
+  } finally {
+    await context.close();
+  }
+}
+
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch({ headless: true, executablePath: chromiumExecutable(chromium) });
 const results = [];
@@ -484,8 +622,24 @@ try {
       }),
     );
   }
+  for (const viewport of viewports) {
+    results.push(
+      await captureCase(browser, {
+        name: "morrow-full-to-one-photo",
+        fixture: "morrow-advertorial-full",
+        viewport,
+        layout: "advertorial-one-photo",
+        expectTemplate: "single-product-advertorial",
+        expectLayout: "advertorial-one-photo",
+        expectAssets: 1,
+        expectFactIds: ["interior", "outlet", "body"],
+      }),
+    );
+  }
   results.push(await exerciseOfferOnly(browser));
   results.push(await exerciseApprovalInvalidation(browser));
+  results.push(await exerciseWrongPackshot(browser));
+  results.push(await exerciseCompatibleLayout(browser));
 } finally {
   await browser.close();
 }
@@ -504,9 +658,14 @@ const summary = {
     "morrow-one-photo-375-first.png",
     "morrow-one-photo-1440-full.png",
     "morrow-one-photo-1440-first.png",
+    "morrow-full-to-one-photo-375-full.png",
+    "morrow-full-to-one-photo-375-first.png",
+    "morrow-full-to-one-photo-1440-full.png",
+    "morrow-full-to-one-photo-1440-first.png",
     "momisa-offer-only-1440-fit.png",
     "momisa-offer-only-1440-gap.png",
     "morrow-invalid-keeps-preview-1440-editor.png",
+    "morrow-wrong-packshot-1440-editor.png",
   ],
   checks,
   failed: checks.filter((check) => check.state === "failed"),

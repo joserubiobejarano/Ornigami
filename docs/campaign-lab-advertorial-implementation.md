@@ -3,6 +3,14 @@
 Status: implemented for local review; not published. Live model generation is
 out of scope.
 
+> Revision 2: packshot binding, full revision fingerprint, fit/generation parity,
+> atomic required fact groups, local pilot editorial validation, and the
+> product-ending section contract. See
+> [the fixes handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_FIXES_20261115.md) and
+> [the Session 2 section contract](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_SECTION_CONTRACT_20261115.md).
+> The visual review below describes the earlier close-section revision; Session 2
+> owns the review of the product-only ending.
+
 - Branch: `codex/campaign-lab-advertorial-impl-20261115`
 - Implementation commit: `bdce062` (`feat: add versioned single-product advertorial template`)
 - Base: `ba24285` (Session 1 spec and review briefs on top of `bc58db6`)
@@ -89,10 +97,12 @@ All captures are ignored, real-brand/local-review storage:
 - `morrow-invalid-keeps-preview-1440-editor.png` — an invalid offer edit keeps
   the last usable revision and leaves approval cleared
 
-The capture runner completed 53 checks with 0 failures. It checks disclosure
-before the headline, no action before `product`, two actions with the exact
-destination, no horizontal overflow, loaded images, hero asset identity, and
-the approval states. Screenshots use reduced motion.
+The capture runner now completes 87 checks with 0 failures. It checks disclosure
+before the headline, no action before `product`, one primary action in the
+product block, the page ending at `product`, the exact destination, the complete
+required fact group in both layouts, no horizontal overflow, loaded images, hero
+asset identity, wrong-packshot rejection with preview preservation, and the
+approval states. Screenshots use reduced motion.
 
 ## Visual review
 
@@ -116,9 +126,8 @@ Each section gives a reason to continue:
 - `evidence` makes the three approved facts the largest type in the band. The
   `PROTOTYPE 01` image is captioned by its visible label.
 - `product` names the product once, states the approved transition, shows the
-  packshot, and pairs the offer with the first action.
-- `close` repeats only the offer, the same action, and the required
-  disclosure. It does not repeat the product name.
+  approved packshot, and pairs the offer with the page's single primary action.
+  It is the final section; there is no separate close action row.
 
 The transition feels earned on the full brief because the story names the
 prototype problem, the evidence names the ribs/outlet/body, and the product
@@ -131,19 +140,21 @@ intentional rather than a copy defect.
 ### One-photo case
 
 `advertorial-one-photo` keeps the same disclosure, opening, two story beats,
-two facts, product name, offer, and both actions. It drops the evidence band and
-the opening/detail/use images. The packshot appears only in the product block,
-at its natural aspect ratio with `object-fit: contain`; the `MORROW` wordmark
-and printed label remain visible at 375 px. There is no empty image frame and no
-fake lifestyle crop. The page still makes the rib story legible, but it has less
-proof than the full brief; if the story beats were absent, this material should
-use the offer template instead.
+the complete required fact group, product name, offer, and one primary action. It
+drops the evidence band and the opening/detail/use images. The packshot appears
+only in the product block, at its natural aspect ratio with
+`object-fit: contain`; the `MORROW` wordmark and printed label remain visible at
+375 px. There is no empty image frame and no fake lifestyle crop. The required
+fact group renders whole even when it exceeds the layout's optional-fact
+capacity. The page still makes the rib story legible, but it has less proof than
+the full brief; if the story beats were absent, this material should use the
+offer template instead.
 
 ### Repository and standard checks
 
 - `npx tsc --noEmit`: passed.
 - Focused ESLint on the changed files: passed.
-- 56 focused campaign-lab tests: passed.
+- 62 focused campaign-lab tests: passed (revision 2).
 - Offer-page regressions with the approved regression manifest: 144 checks
   passed, 0 failed, 0 pending at 375 px and 1440 px.
 - The older `benchmark-proposal.json` manifest still reports the same five

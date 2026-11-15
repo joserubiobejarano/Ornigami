@@ -115,11 +115,15 @@ export type AdvertorialFit = {
   fit: boolean;
   recommended: "single-product-offer" | "single-product-advertorial";
   layout?: AdvertorialLayoutId;
+  /** Another layout that can hold the same approved brief, when one exists. */
+  compatibleLayout?: AdvertorialLayoutId;
+  /** Why the requested layout cannot render this brief. */
+  layoutReason?: string;
   missingInputs: string[];
 };
 
 export type AdvertorialSectionIssue = {
-  section: AdvertorialSectionId | "brief" | "layout";
+  section: AdvertorialSectionId | "brief" | "layout" | "asset";
   message: string;
 };
 
@@ -173,6 +177,18 @@ export type BrandDefinition = {
 export type ApprovedFactSource = {
   document: string;
   quote: string;
+  reviewedBy: string;
+  reviewedOn: string;
+};
+
+/**
+ * The source campaign artifact the page continues. It is recorded in the
+ * private pilot manifest for editorial review; it is not rendered.
+ */
+export type CampaignSource = {
+  channel: string;
+  promise: string;
+  document: string;
   reviewedBy: string;
   reviewedOn: string;
 };
@@ -245,6 +261,8 @@ export type CampaignBrief = {
   openingFocus?: string;
   /** Present only when the fixture has approved advertorial material. */
   advertorial?: AdvertorialBriefData;
+  /** Private campaign source kept for editorial review. */
+  sourceCampaign?: CampaignSource;
 };
 
 export type CampaignFixture = {

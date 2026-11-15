@@ -84,9 +84,14 @@ test("the full Morrow brief assembles the approved reading sequence", () => {
     "story",
     "evidence",
     "product",
-    "close",
   ]);
   assert.equal(draft.sections[0], "disclosure");
+  assert.equal(draft.sections.at(-1), "product");
+  assert.equal(draft.sections.includes("close"), false);
+  assert.deepEqual(ADVERTORIAL_MANIFEST.sectionContract, {
+    endsAt: "product",
+    primaryAction: { section: "product", count: 1 },
+  });
   assert.equal(
     draft.headline,
     "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
@@ -116,7 +121,8 @@ test("the one-photo brief removes the evidence band and extra image roles", () =
 
   const { draft, assets } = result.preview;
   assert.equal(draft.layout, "advertorial-one-photo");
-  assert.deepEqual(draft.sections, ["disclosure", "opening", "story", "product", "close"]);
+  assert.deepEqual(draft.sections, ["disclosure", "opening", "story", "product"]);
+  assert.equal(draft.sections.at(-1), "product");
   assert.deepEqual(assets.map((entry) => entry.assignment.role), ["product-hero"]);
   assert.equal(draft.story.length, 2);
   assert.deepEqual(draft.facts.map((fact) => fact.id), ["interior", "outlet"]);
@@ -269,7 +275,7 @@ test("the one-photo layout rejects extra roles and the full layout rejects a sin
   const fullFromOne = buildAdvertorialPreview(onePhotoItem, onePhotoValues);
   assert.equal(fullFromOne.ok, false);
   if (!fullFromOne.ok) {
-    assert.ok(fullFromOne.sectionIssues.some((issue) => /full layout needs at least two images/i.test(issue.message)));
+    assert.ok(fullFromOne.sectionIssues.some((issue) => /full layout needs at least two approved images/i.test(issue.message)));
   }
 });
 
@@ -300,6 +306,268 @@ test("pending rights and a missing product hero block the advertorial", () => {
   if (!noHeroResult.ok) {
     assert.ok(noHeroResult.sectionIssues.some((issue) => /product-hero/i.test(issue.message)));
   }
+});
+
+test("the packshot is bound to the campaign's approved assignment", () => {
+  const item = fixture("morrow-advertorial-full");
+  const values = valuesFor(item);
+
+  const wrongPackshot = buildAdvertorialPreview(item, {
+    ...values,
+    assetId: "harbor-field-bottle-front",
+  });
+  assert.equal(wrongPackshot.ok, false);
+  if (!wrongPackshot.ok) {
+    assert.ok(
+      wrongPackshot.issues.some(
+        (issue) =>
+          issue.field === "assetId" &&
+          /approved packshot/i.test(issue.message) &&
+          /harbor-field-bottle-front/.test(issue.message),
+      ),
+    );
+  }
+
+  const wrongFit = assessAdvertorialFit(item, {
+    ...values,
+    assetId: "harbor-field-bottle-front",
+  });
+  assert.equal(wrongFit.fit, false);
+  assert.ok(wrongFit.missingInputs.some((input) => /approved packshot/i.test(input)));
+
+  const edited = buildAdvertorialPreview(item, {
+    ...values,
+    offer: "Free shipping through 31 December 2026",
+    destinationUrl: "https://example.com/morrow-dripper",
+  });
+  assert.equal(edited.ok, true);
+  if (!edited.ok) return;
+  assert.equal(edited.preview.asset.id, "morrow-ceramic-dripper-front");
+  assert.equal(edited.preview.brief.offer, "Free shipping through 31 December 2026");
+  assert.equal(edited.preview.brief.destinationUrl, "https://example.com/morrow-dripper");
+});
+
+test("the revision covers visible copy, presentation and asset content", () => {
+  const item = fixture("morrow-advertorial-full");
+  const result = buildAdvertorialPreview(item, valuesFor(item));
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  const { brief, draft, assets, theme, revision } = result.preview;
+  const plainAssets = assets.map((entry) => entry.asset);
+  const revisionFor = (
+    nextDraft = draft,
+    nextAssets = plainAssets,
+    nextTheme = theme,
+  ) => calculateAdvertorialRevision(brief, nextDraft, nextAssets, nextTheme);
+
+  assert.notEqual(
+    revisionFor({ ...draft, headline: `${draft.headline} (revised)` }),
+    revision,
+  );
+  assert.notEqual(
+    revisionFor({ ...draft, standfirst: `${draft.standfirst} (revised)` }),
+    revision,
+  );
+  assert.notEqual(
+    revisionFor({
+      ...draft,
+      disclosure: { ...draft.disclosure, explanation: "A revised disclosure." },
+    }),
+    revision,
+  );
+  assert.notEqual(
+    revisionFor(draft, plainAssets, {
+      ...theme,
+      tokens: { ...theme.tokens, imageRadius: "0px" },
+    }),
+    revision,
+  );
+  assert.notEqual(
+    revisionFor(
+      draft,
+      plainAssets.map((asset) =>
+        asset.id === "morrow-ceramic-dripper-front"
+          ? { ...asset, width: asset.width + 1 }
+          : asset,
+      ),
+    ),
+    revision,
+  );
+  assert.notEqual(
+    revisionFor(
+      draft,
+      plainAssets.map((asset) =>
+        asset.id === "morrow-ceramic-dripper-front"
+          ? { ...asset, caption: "A revised caption." }
+          : asset,
+      ),
+    ),
+    revision,
+  );
+});
+
+test("approved opening copy and opening focus each produce a new revision", () => {
+  const item = fixture("morrow-advertorial-full");
+  const values = valuesFor(item);
+  const current = item.brief.advertorial!;
+  const base = buildAdvertorialPreview(item, values);
+  assert.equal(base.ok, true);
+  if (!base.ok) return;
+
+  const revisedCopy = withAdvertorial(item, {
+    openings: [
+      {
+        ...current.openings[0],
+        headline: "Why Morrow revised the rib spacing again",
+        standfirst: "What changed in the second pour test?",
+      },
+      ...current.openings.slice(1),
+    ],
+  });
+  const revised = buildAdvertorialPreview(revisedCopy, values, catalogWith(revisedCopy));
+  assert.equal(revised.ok, true);
+  if (!revised.ok) return;
+  assert.equal(revised.preview.draft.headline, "Why Morrow revised the rib spacing again");
+  assert.equal(revised.preview.draft.standfirst, "What changed in the second pour test?");
+  assert.notEqual(revised.preview.revision, base.preview.revision);
+
+  const secondOpening = withAdvertorial(item, {
+    openings: [
+      ...current.openings,
+      {
+        id: "second-opening",
+        headline: "Start with a slower first pour",
+        standfirst: "Three interior ribs and a single outlet.",
+      },
+    ],
+  });
+  const first = buildAdvertorialPreview(secondOpening, values, catalogWith(secondOpening));
+  const second = buildAdvertorialPreview(
+    secondOpening,
+    { ...values, openingFocus: "second-opening" },
+    catalogWith(secondOpening),
+  );
+  assert.equal(first.ok, true);
+  assert.equal(second.ok, true);
+  if (!first.ok || !second.ok) return;
+  assert.equal(first.preview.draft.headline, current.openings[0].headline);
+  assert.equal(second.preview.draft.headline, "Start with a slower first pour");
+  assert.notEqual(second.preview.revision, first.preview.revision);
+});
+
+test("fit and generation agree for the full brief with full and packshot-only imagery", () => {
+  const fullItem = fixture("morrow-advertorial-full");
+  const fullValues = valuesFor(fullItem);
+  const fullFit = assessAdvertorialFit(fullItem, fullValues);
+  const fullPreview = buildAdvertorialPreview(fullItem, fullValues);
+  assert.equal(fullFit.fit, true);
+  assert.equal(fullPreview.ok, true);
+  if (!fullPreview.ok) return;
+  assert.deepEqual(fullPreview.preview.draft.facts.map((fact) => fact.id), [
+    "interior",
+    "outlet",
+    "body",
+  ]);
+  assert.equal(fullPreview.preview.assets.length, 4);
+
+  const packshotOnly = withAdvertorial(fullItem, {
+    assetAssignments: fullItem.brief.advertorial!.assetAssignments.filter(
+      (assignment) => assignment.role === "product-hero",
+    ),
+  });
+  const catalog = catalogWith(packshotOnly);
+  const onePhotoValues = {
+    ...valuesFor(packshotOnly),
+    advertorialLayout: "advertorial-one-photo" as const,
+  };
+  const onePhotoFit = assessAdvertorialFit(packshotOnly, onePhotoValues, catalog);
+  const onePhotoPreview = buildAdvertorialPreview(packshotOnly, onePhotoValues, catalog);
+  assert.equal(onePhotoFit.fit, true);
+  assert.equal(onePhotoFit.layout, "advertorial-one-photo");
+  assert.equal(onePhotoPreview.ok, true);
+  if (!onePhotoPreview.ok) return;
+  assert.deepEqual(onePhotoPreview.preview.draft.facts.map((fact) => fact.id), [
+    "interior",
+    "outlet",
+    "body",
+  ]);
+  assert.equal(onePhotoPreview.preview.assets.length, 1);
+  assert.equal(onePhotoPreview.preview.assets[0].assignment.role, "product-hero");
+  assert.equal(onePhotoPreview.preview.draft.sections.includes("evidence"), false);
+  assert.equal(onePhotoPreview.preview.draft.sections.at(-1), "product");
+
+  const autoValues = { ...valuesFor(packshotOnly), advertorialLayout: "auto" as const };
+  const autoFit = assessAdvertorialFit(packshotOnly, autoValues, catalog);
+  assert.equal(autoFit.fit, true);
+  assert.equal(autoFit.layout, "advertorial-one-photo");
+
+  const noPreference = withAdvertorial(packshotOnly, { preferredLayout: undefined });
+  const noPreferenceFit = assessAdvertorialFit(
+    noPreference,
+    { ...valuesFor(noPreference), advertorialLayout: "auto" as const },
+    catalogWith(noPreference),
+  );
+  assert.equal(noPreferenceFit.fit, true);
+  assert.equal(noPreferenceFit.layout, "advertorial-one-photo");
+
+  const fullRequested = {
+    ...valuesFor(packshotOnly),
+    advertorialLayout: "advertorial-full" as const,
+  };
+  const fullFitFromPackshot = assessAdvertorialFit(packshotOnly, fullRequested, catalog);
+  const fullPreviewFromPackshot = buildAdvertorialPreview(packshotOnly, fullRequested, catalog);
+  assert.equal(fullFitFromPackshot.fit, false);
+  assert.equal(fullFitFromPackshot.compatibleLayout, "advertorial-one-photo");
+  assert.match(fullFitFromPackshot.layoutReason ?? "", /at least two approved images/i);
+  assert.equal(fullPreviewFromPackshot.ok, false);
+  if (!fullPreviewFromPackshot.ok) {
+    assert.ok(
+      fullPreviewFromPackshot.sectionIssues.some((issue) =>
+        /at least two approved images/i.test(issue.message),
+      ),
+    );
+  }
+
+  const sameBriefOnePhoto = assessAdvertorialFit(fullItem, {
+    ...fullValues,
+    advertorialLayout: "advertorial-one-photo",
+  });
+  const sameBriefOnePhotoPreview = buildAdvertorialPreview(fullItem, {
+    ...fullValues,
+    advertorialLayout: "advertorial-one-photo",
+  });
+  assert.equal(sameBriefOnePhoto.fit, true);
+  assert.equal(sameBriefOnePhotoPreview.ok, true);
+  if (sameBriefOnePhotoPreview.ok) {
+    assert.deepEqual(
+      sameBriefOnePhotoPreview.preview.draft.facts.map((fact) => fact.id),
+      ["interior", "outlet", "body"],
+    );
+  }
+});
+
+test("the section contract rejects a closing action after the product block", () => {
+  const item = fixture("morrow-advertorial-full");
+  const brief = createAdvertorialBrief(item, valuesFor(item));
+  assert.ok(brief);
+  if (!brief) return;
+
+  const draft = assembleAdvertorialDraft(brief);
+  draft.sections = [...draft.sections, "close"];
+  const issues = validateAdvertorialDraft(brief, draft);
+  assert.ok(
+    issues.some(
+      (issue) =>
+        issue.section === "layout" &&
+        /closing action section is not part of this template/i.test(issue.message),
+    ),
+  );
+  assert.ok(
+    issues.some(
+      (issue) =>
+        issue.section === "layout" && /must end at the product block/i.test(issue.message),
+    ),
+  );
 });
 
 test("required fact groups stay complete in the advertorial", () => {

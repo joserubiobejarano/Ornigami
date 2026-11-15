@@ -23,6 +23,8 @@ pilot asset route. Keep any old loader copies out of `public/`.
 
 ```powershell
 npm run campaign-lab:pilot:load
+# equivalent:
+node --experimental-strip-types scripts/load-campaign-lab-pilot.mjs --pilot momisa
 ```
 
 The loader reads `pilot.json`, verifies each source file, computes SHA-256 and
@@ -68,11 +70,66 @@ the header. A preview pilot also shows the note from the manifest and a
   ]
   ```
 - Openings, when supplied, need unique IDs and approved copy.
-- Every asset must be reviewed, use the `product-hero` role, stay under
-  `/campaign-lab-pilots/`, include a SHA-256 hash, dimensions, alt text, source,
-  rights note, and reviewer metadata.
-- The fixture references the first approved asset. The generation service still
-  permits only approved fact IDs, layouts, section orders, and lengths.
+- Every asset must be reviewed, use one of the approved roles (`product-hero`,
+  `story-opening`, `product-detail`, `product-in-use`, `product-evidence`), stay
+  under `/campaign-lab-pilots/`, include a SHA-256 hash, dimensions, alt text,
+  source, rights note, and reviewer metadata. `caption` and `crop` are carried
+  into the manifest when supplied.
+- Advertorial editorial is optional. When `fixture.brief.advertorial` is
+  supplied, the source must also provide a `sourceCampaign` record with channel,
+  promise, source document, reviewer, and review date. The loader validates
+  openings, at least two story beats with source quotes, narrator release for
+  first-person copy, disclosure, product transition, preferred layout, and
+  role/asset assignments.
+- The fixture references the approved `product-hero` assignment (or the first
+  hero asset for an offer-only pilot). The generation service still permits only
+  approved fact IDs, layouts, section orders, and lengths.
+- The loader writes `manifest.json` under the same Git-ignored pilot directory.
+  It does not print source file paths, raw source documents, or the source
+  promise; the editor shows the promise only for editorial review.
+
+## Editorial manifest example
+
+```json
+"sourceCampaign": {
+  "channel": "Email",
+  "promise": "What changes when your first pour is slower?",
+  "document": "Approved campaign email",
+  "reviewedBy": "Ornigami content review",
+  "reviewedOn": "2026-11-15"
+},
+"fixture": {
+  "brief": {
+    "advertorial": {
+      "openings": [{ "id": "flow-control", "headline": "…", "standfirst": "…" }],
+      "storyBeats": [
+        {
+          "id": "prototype-wall",
+          "role": "opening",
+          "text": "…",
+          "source": {
+            "document": "…",
+            "quote": "…",
+            "reviewedBy": "…",
+            "reviewedOn": "2026-11-15"
+          }
+        }
+      ],
+      "disclosure": {
+        "label": "Advertisement",
+        "sponsor": "…",
+        "explanation": "…",
+        "repeatAtClose": false
+      },
+      "productTransition": "…",
+      "assetAssignments": [
+        { "role": "product-hero", "assetId": "hero" },
+        { "role": "product-detail", "assetId": "detail" }
+      ]
+    }
+  }
+}
+```
 
 ## Verification
 
@@ -110,5 +167,7 @@ opening change, required fact group visibility, revision, and approval reset.
 - The pilot asset rights note is a local review note, not a signed license.
 - The `preview` status is an operator label. It does not make unconfirmed offer
   terms or a benchmark destination publishable.
-- The single-product template accepts one `product-hero` image; additional pouch
-  or lifestyle roles remain a template coverage gap.
+- The single-product offer template still accepts one `product-hero` image. The
+  advertorial template accepts the approved supporting roles; a pilot without
+  advertorial editorial remains on the offer template. Additional pouch or
+  lifestyle roles outside the approved role list remain a coverage gap.

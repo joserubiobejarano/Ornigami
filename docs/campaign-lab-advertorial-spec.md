@@ -3,6 +3,13 @@
 Status: proposed for implementation. This document defines the template
 contract only; it does not implement the template or claim a conversion effect.
 
+> Revision 2 contract note (15 November 2026): both layouts now end at the
+> `product` block with one primary action. The `close` section and the repeated
+> second action described in this original proposal are superseded. See
+> [the implementation fixes](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_FIXES_20261115.md)
+> and [the Session 2 section contract](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_SECTION_CONTRACT_20261115.md).
+> Everything else in this document remains the design rationale.
+
 - Template ID: `single-product-advertorial`
 - Version: `1.0.0`
 - Format: story-led, single-product advertorial

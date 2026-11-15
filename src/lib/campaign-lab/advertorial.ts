@@ -44,6 +44,10 @@ const DISCLOSURE_LABELS: readonly Disclosure["label"][] = [
   "Paid content",
 ];
 
+/**
+ * The advertorial ends at the product block. The action belongs to that block
+ * and is not repeated in a separate close section.
+ */
 const SECTION_ORDER = {
   full: [
     "disclosure",
@@ -51,21 +55,18 @@ const SECTION_ORDER = {
     "story",
     "evidence",
     "product",
-    "close",
   ] as AdvertorialSectionId[],
   fullWithoutEvidence: [
     "disclosure",
     "opening",
     "story",
     "product",
-    "close",
   ] as AdvertorialSectionId[],
   onePhoto: [
     "disclosure",
     "opening",
     "story",
     "product",
-    "close",
   ] as AdvertorialSectionId[],
 };
 
@@ -100,6 +101,13 @@ export const ADVERTORIAL_MANIFEST = {
     "product-evidence",
     "product-hero",
   ],
+  sectionContract: {
+    endsAt: "product",
+    primaryAction: {
+      section: "product",
+      count: 1,
+    },
+  },
   layouts: {
     "advertorial-full": {
       label: "Advertorial, full material",
@@ -107,6 +115,7 @@ export const ADVERTORIAL_MANIFEST = {
       requiredAssetRoles: ["product-hero"],
       allowedSectionOrders: [SECTION_ORDER.full, SECTION_ORDER.fullWithoutEvidence],
       maxStoryBeats: 3,
+      /** Optional-fact capacity; a required group is always rendered whole. */
       maxFacts: 3,
       maxImages: 4,
     },
@@ -116,6 +125,7 @@ export const ADVERTORIAL_MANIFEST = {
       requiredAssetRoles: ["product-hero"],
       allowedSectionOrders: [SECTION_ORDER.onePhoto],
       maxStoryBeats: 2,
+      /** Optional-fact capacity; a required group is always rendered whole. */
       maxFacts: 2,
       maxImages: 1,
     },
@@ -187,6 +197,8 @@ function selectFacts(brief: CampaignBrief, capacity: number): ProductFact[] {
   const selected: ProductFact[] = [];
   const seen = new Set<string>();
 
+  // A required group is atomic: it renders whole even when that exceeds the
+  // layout's optional-fact capacity. Optional facts then fill up to capacity.
   for (const id of required) {
     const fact = brief.productFacts.find((candidate) => candidate.id === id);
     if (fact && !seen.has(fact.id)) {
@@ -194,13 +206,14 @@ function selectFacts(brief: CampaignBrief, capacity: number): ProductFact[] {
       seen.add(fact.id);
     }
   }
+  const target = Math.max(capacity, selected.length);
   for (const fact of brief.productFacts) {
-    if (selected.length >= capacity) break;
+    if (selected.length >= target) break;
     if (seen.has(fact.id)) continue;
     selected.push(cloneFact(fact));
     seen.add(fact.id);
   }
-  return selected.slice(0, capacity);
+  return selected;
 }
 
 function selectedOpening(brief: AdvertorialBrief) {
@@ -210,31 +223,50 @@ function selectedOpening(brief: AdvertorialBrief) {
   );
 }
 
+function layoutCanUseApprovedAssignments(
+  brief: AdvertorialBrief,
+  layout: AdvertorialLayoutId,
+): boolean {
+  const usable = brief.advertorial.assetAssignments.filter((assignment) =>
+    roleAllowedForLayout(assignment.role, layout),
+  );
+  return layout === "advertorial-full" ? usable.length >= 2 : usable.length >= 1;
+}
+
 function layoutForBrief(
   brief: AdvertorialBrief,
   requested: AdvertorialLayoutId | "auto" = "auto",
 ): AdvertorialLayoutId {
   if (requested !== "auto") return requested;
-  if (brief.advertorial.preferredLayout) return brief.advertorial.preferredLayout;
-  return brief.advertorial.assetAssignments.length >= 2
+  const preferred = brief.advertorial.preferredLayout;
+  if (preferred) {
+    if (layoutCanUseApprovedAssignments(brief, preferred)) return preferred;
+    const fallback =
+      preferred === "advertorial-full" ? "advertorial-one-photo" : "advertorial-full";
+    if (layoutCanUseApprovedAssignments(brief, fallback)) return fallback;
+    return preferred;
+  }
+  return layoutCanUseApprovedAssignments(brief, "advertorial-full")
     ? "advertorial-full"
     : "advertorial-one-photo";
+}
+
+function approvedAssignmentForRole(
+  brief: AdvertorialBrief,
+  role: AssetAssignment["role"],
+): AssetAssignment | undefined {
+  return brief.advertorial.assetAssignments.find((assignment) => assignment.role === role);
 }
 
 function assignmentsForLayout(
   brief: AdvertorialBrief,
   layout: AdvertorialLayoutId,
 ): AssetAssignment[] {
+  // The campaign's approved assignments are the only source of truth. The
+  // editor's selected asset never replaces the approved packshot.
   const assignments = brief.advertorial.assetAssignments
     .filter((assignment) => roleAllowedForLayout(assignment.role, layout))
     .map((assignment) => ({ ...assignment }));
-
-  const heroIndex = assignments.findIndex((assignment) => assignment.role === "product-hero");
-  if (heroIndex >= 0) {
-    assignments[heroIndex] = { role: "product-hero", assetId: brief.assetId };
-  } else {
-    assignments.push({ role: "product-hero", assetId: brief.assetId });
-  }
 
   const seenRoles = new Set<string>();
   return assignments.filter((assignment) => {
@@ -254,6 +286,8 @@ export function createAdvertorialBrief(
   return {
     ...base,
     format: "advertorial",
+    openingFocus: values.openingFocus ?? base.openingFocus,
+    sourceCampaign: base.sourceCampaign ? { ...base.sourceCampaign } : undefined,
     advertorial: {
       ...data,
       openings: data.openings.map((opening) => ({ ...opening })),
@@ -286,35 +320,128 @@ function advertorialDataMissingInputs(
   return missing;
 }
 
+type AdvertorialEvaluation =
+  | {
+      ok: true;
+      brief: AdvertorialBrief;
+      draft: AdvertorialDraft;
+      assets: AdvertorialResolvedAsset[];
+      hero: ApprovedAsset;
+      layout: AdvertorialLayoutId;
+    }
+  | {
+      ok: false;
+      brief: AdvertorialBrief | null;
+      layout: AdvertorialLayoutId;
+      issues: AdvertorialSectionIssue[];
+    };
+
+/**
+ * One pipeline for fit and generation: validate the brief, assemble the draft
+ * for the requested layout, validate that draft, then resolve its assets.
+ */
+function evaluateAdvertorial(
+  fixture: CampaignFixture,
+  values: CampaignFormValues,
+  catalog: CampaignCatalog,
+): AdvertorialEvaluation {
+  const brief = createAdvertorialBrief(fixture, values);
+  if (!brief) {
+    return {
+      ok: false,
+      brief: null,
+      layout: "advertorial-full",
+      issues: [
+        sectionIssue(
+          "brief",
+          "This brief has no approved advertorial story, disclosure, or image roles. Use the single-product offer template.",
+        ),
+      ],
+    };
+  }
+
+  const layout = layoutForBrief(brief, values.advertorialLayout ?? "auto");
+  const briefIssues = validateAdvertorialBrief(brief, catalog, layout);
+  if (briefIssues.length > 0) {
+    return { ok: false, brief, layout, issues: briefIssues };
+  }
+
+  const draft = assembleAdvertorialDraft(brief, layout);
+  const draftIssues = validateAdvertorialDraft(brief, draft, catalog);
+  if (draftIssues.length > 0) {
+    return { ok: false, brief, layout, issues: draftIssues };
+  }
+
+  const resolved = resolveAdvertorialAssets(draft, catalog);
+  if (resolved.issues.length > 0) {
+    return { ok: false, brief, layout, issues: resolved.issues };
+  }
+
+  const hero = resolved.assets.find((entry) => entry.assignment.role === "product-hero")?.asset;
+  if (!hero) {
+    return {
+      ok: false,
+      brief,
+      layout,
+      issues: [sectionIssue("asset", "The advertorial needs one approved product-hero image.")],
+    };
+  }
+
+  return { ok: true, brief, draft, assets: resolved.assets, hero, layout };
+}
+
 export function assessAdvertorialFit(
   fixture: CampaignFixture,
   values: CampaignFormValues,
   catalog: CampaignCatalog = BASE_CATALOG,
 ): AdvertorialFit {
   const missing = advertorialDataMissingInputs(fixture, catalog);
-  if (!fixture.brief.advertorial) {
-    return {
-      fit: false,
-      recommended: "single-product-offer",
-      missingInputs: missing,
-    };
+  const requested = values.advertorialLayout ?? "auto";
+  const evaluation = evaluateAdvertorial(fixture, values, catalog);
+  const layout = evaluation.layout;
+
+  if (!evaluation.ok) {
+    for (const issue of evaluation.issues) {
+      if (!missing.includes(issue.message)) missing.push(issue.message);
+    }
   }
 
-  const brief = createAdvertorialBrief(fixture, values);
-  if (!brief) {
-    return { fit: false, recommended: "single-product-offer", missingInputs: missing };
+  let compatibleLayout: AdvertorialLayoutId | undefined;
+  if (!evaluation.ok && fixture.brief.advertorial) {
+    const alternatives: AdvertorialLayoutId[] = [
+      layout === "advertorial-full" ? "advertorial-one-photo" : "advertorial-full",
+    ];
+    for (const alternative of alternatives) {
+      const candidate = evaluateAdvertorial(
+        fixture,
+        { ...values, advertorialLayout: alternative },
+        catalog,
+      );
+      if (candidate.ok) {
+        compatibleLayout = alternative;
+        break;
+      }
+    }
   }
 
-  const issues = validateAdvertorialBrief(brief, catalog);
-  for (const issue of issues) {
-    if (!missing.includes(issue.message)) missing.push(issue.message);
-  }
+  const layoutReason = evaluation.ok
+    ? undefined
+    : evaluation.issues.find(
+        (issue) => issue.section === "layout" || issue.section === "asset",
+      )?.message ??
+      (requested !== "auto"
+        ? `The ${ADVERTORIAL_MANIFEST.layouts[layout].label} layout cannot render this brief.`
+        : undefined);
 
-  const layout = layoutForBrief(brief, values.advertorialLayout ?? "auto");
   return {
-    fit: issues.length === 0,
-    recommended: issues.length === 0 ? "single-product-advertorial" : "single-product-offer",
+    fit: evaluation.ok,
+    recommended:
+      evaluation.ok || compatibleLayout
+        ? "single-product-advertorial"
+        : "single-product-offer",
     layout,
+    ...(compatibleLayout ? { compatibleLayout } : {}),
+    ...(layoutReason ? { layoutReason } : {}),
     missingInputs: missing,
   };
 }
@@ -322,10 +449,12 @@ export function assessAdvertorialFit(
 export function validateAdvertorialBrief(
   brief: AdvertorialBrief,
   catalog: CampaignCatalog = BASE_CATALOG,
+  requestedLayout: AdvertorialLayoutId = layoutForBrief(brief),
 ): AdvertorialSectionIssue[] {
   const issues: AdvertorialSectionIssue[] = [];
   const data = brief.advertorial;
   const limits = ADVERTORIAL_MANIFEST.limits;
+  const approvedLayout = layoutForBrief(brief);
 
   if (!getBrand(brief.brandId, catalog).tokens) {
     issues.push(sectionIssue("brief", "Choose one of the supported brand styles."));
@@ -376,6 +505,13 @@ export function validateAdvertorialBrief(
   const openings = data.openings ?? [];
   if (openings.length === 0) {
     issues.push(sectionIssue("opening", "Add an approved advertorial opening."));
+  } else if (
+    brief.openingFocus &&
+    !openings.some((candidate) => candidate.id === brief.openingFocus)
+  ) {
+    issues.push(
+      sectionIssue("opening", "Choose an approved advertorial opening for this campaign."),
+    );
   }
   const opening = selectedOpening(brief);
   if (!opening) {
@@ -494,63 +630,83 @@ export function validateAdvertorialBrief(
   const roles = new Set<string>();
   const assetIds = new Set<string>();
   for (const assignment of assignments) {
-    if (!roleAllowedForLayout(assignment.role, layoutForBrief(brief))) {
+    if (!roleAllowedForLayout(assignment.role, approvedLayout)) {
       issues.push(
         sectionIssue(
-          "product",
+          "asset",
           `The ${assignment.role} image role is not available in this layout.`,
         ),
       );
     }
     if (roles.has(assignment.role)) {
       issues.push(
-        sectionIssue("product", `The ${assignment.role} image role is assigned more than once.`),
+        sectionIssue("asset", `The ${assignment.role} image role is assigned more than once.`),
       );
     }
     roles.add(assignment.role);
     if (assetIds.has(assignment.assetId)) {
-      issues.push(sectionIssue("product", `Asset "${assignment.assetId}" is assigned more than once.`));
+      issues.push(sectionIssue("asset", `Asset "${assignment.assetId}" is assigned more than once.`));
     }
     assetIds.add(assignment.assetId);
 
     const asset = getAsset(assignment.assetId, catalog);
     if (!asset) {
       issues.push(
-        sectionIssue("product", `Asset "${assignment.assetId}" is not in the approved asset library.`),
+        sectionIssue("asset", `Asset "${assignment.assetId}" is not in the approved asset library.`),
       );
       continue;
     }
     if (!asset.reviewed) {
-      issues.push(sectionIssue("product", `Asset "${asset.id}" has not been reviewed.`));
+      issues.push(sectionIssue("asset", `Asset "${asset.id}" has not been reviewed.`));
     }
     if (!asset.alt.trim()) {
-      issues.push(sectionIssue("product", `Asset "${asset.id}" needs reviewed alt text.`));
+      issues.push(sectionIssue("asset", `Asset "${asset.id}" needs reviewed alt text.`));
     }
     if (isPendingRights(asset.rights)) {
       issues.push(
-        sectionIssue("product", `Asset "${asset.id}" still has rights pending confirmation.`),
+        sectionIssue("asset", `Asset "${asset.id}" still has rights pending confirmation.`),
       );
     }
     if (!/^[a-f0-9]{64}$/i.test(asset.contentHash)) {
-      issues.push(sectionIssue("product", `Asset "${asset.id}" needs a content hash.`));
+      issues.push(sectionIssue("asset", `Asset "${asset.id}" needs a content hash.`));
     }
     if (asset.role !== assignment.role) {
       issues.push(
         sectionIssue(
-          "product",
+          "asset",
           `Asset "${asset.id}" is approved as ${asset.role}, not ${assignment.role}.`,
+        ),
+      );
+    }
+    if (asset.brandId !== brief.brandId) {
+      issues.push(
+        sectionIssue(
+          "asset",
+          `Asset "${asset.id}" belongs to ${asset.brandId}, not the approved campaign brand ${brief.brandId}.`,
         ),
       );
     }
     if (asset.caption && asset.caption.length > limits.caption) {
       issues.push(
-        sectionIssue("product", `Asset "${asset.id}" caption exceeds ${limits.caption} characters.`),
+        sectionIssue("asset", `Asset "${asset.id}" caption exceeds ${limits.caption} characters.`),
       );
     }
   }
+  const approvedHero = approvedAssignmentForRole(brief, "product-hero");
   if (!roles.has("product-hero")) {
     issues.push(
-      sectionIssue("product", "The advertorial needs one approved product-hero image."),
+      sectionIssue("asset", "The advertorial needs one approved product-hero image."),
+    );
+  } else if (!approvedHero) {
+    issues.push(
+      sectionIssue("asset", "The campaign has no approved product-hero assignment."),
+    );
+  } else if (brief.assetId !== approvedHero.assetId) {
+    issues.push(
+      sectionIssue(
+        "asset",
+        `The selected image "${brief.assetId}" is not the campaign's approved packshot "${approvedHero.assetId}".`,
+      ),
     );
   }
 
@@ -575,7 +731,7 @@ export function validateAdvertorialBrief(
     wordCount(data.productTransition) +
     wordCount(brief.offer);
   const maxWords =
-    layoutForBrief(brief) === "advertorial-full"
+    requestedLayout === "advertorial-full"
       ? limits.maxWordsFull
       : limits.maxWordsOnePhoto;
   if (words > maxWords) {
@@ -668,8 +824,21 @@ export function validateAdvertorialDraft(
   if (draft.sections.indexOf("product") < 0) {
     issues.push(sectionIssue("product", "The advertorial needs a product transition section."));
   }
-  if (draft.sections.indexOf("close") < 0) {
-    issues.push(sectionIssue("close", "The advertorial needs a closing action section."));
+  if (draft.sections[draft.sections.length - 1] !== "product") {
+    issues.push(
+      sectionIssue(
+        "layout",
+        "The advertorial must end at the product block with its one primary action.",
+      ),
+    );
+  }
+  if (draft.sections.includes("close")) {
+    issues.push(
+      sectionIssue(
+        "layout",
+        "The closing action section is not part of this template; the product block carries the single action.",
+      ),
+    );
   }
   if (draft.sections.includes("evidence") && draft.facts.length === 0) {
     issues.push(sectionIssue("evidence", "An evidence section needs at least one approved fact."));
@@ -740,9 +909,14 @@ export function validateAdvertorialDraft(
     lastRole = Math.max(lastRole, roleIndex);
   }
 
-  if (draft.facts.length > layout.maxFacts) {
+  const requiredIds = new Set(requiredFactIds(brief));
+  const optionalFacts = draft.facts.filter((fact) => !requiredIds.has(fact.id));
+  if (optionalFacts.length > layout.maxFacts) {
     issues.push(
-      sectionIssue("evidence", `${layout.label} accepts at most ${layout.maxFacts} facts.`),
+      sectionIssue(
+        "evidence",
+        `${layout.label} accepts at most ${layout.maxFacts} optional facts.`,
+      ),
     );
   }
   const factIds = new Set<string>();
@@ -787,7 +961,7 @@ export function validateAdvertorialDraft(
 
   if (draft.assetAssignments.length > layout.maxImages) {
     issues.push(
-      sectionIssue("product", `${layout.label} accepts at most ${layout.maxImages} images.`),
+      sectionIssue("asset", `${layout.label} accepts at most ${layout.maxImages} images.`),
     );
   }
   const roles = new Set<string>();
@@ -795,49 +969,80 @@ export function validateAdvertorialDraft(
   for (const assignment of draft.assetAssignments) {
     if (!roleAllowedForLayout(assignment.role, draft.layout)) {
       issues.push(
-        sectionIssue("product", `The ${assignment.role} image role is not allowed in this layout.`),
+        sectionIssue("asset", `The ${assignment.role} image role is not allowed in this layout.`),
       );
     }
     if (roles.has(assignment.role)) {
-      issues.push(sectionIssue("product", `The ${assignment.role} role appears more than once.`));
+      issues.push(sectionIssue("asset", `The ${assignment.role} role appears more than once.`));
     }
     roles.add(assignment.role);
     if (assetIds.has(assignment.assetId)) {
-      issues.push(sectionIssue("product", `Asset "${assignment.assetId}" appears more than once.`));
+      issues.push(sectionIssue("asset", `Asset "${assignment.assetId}" appears more than once.`));
     }
     assetIds.add(assignment.assetId);
+
+    const approvedAssignment = brief.advertorial.assetAssignments.find(
+      (candidate) =>
+        candidate.role === assignment.role && candidate.assetId === assignment.assetId,
+    );
+    if (!approvedAssignment) {
+      issues.push(
+        sectionIssue(
+          "asset",
+          `Asset "${assignment.assetId}" is not the campaign's approved ${assignment.role} assignment.`,
+        ),
+      );
+    }
 
     const asset = getAsset(assignment.assetId, catalog);
     if (!asset) {
       issues.push(
-        sectionIssue("product", `Asset "${assignment.assetId}" is not in the approved asset library.`),
+        sectionIssue("asset", `Asset "${assignment.assetId}" is not in the approved asset library.`),
       );
       continue;
     }
     if (!asset.reviewed) {
-      issues.push(sectionIssue("product", `Asset "${asset.id}" has not been reviewed.`));
+      issues.push(sectionIssue("asset", `Asset "${asset.id}" has not been reviewed.`));
     }
     if (!asset.alt.trim()) {
-      issues.push(sectionIssue("product", `Asset "${asset.id}" needs reviewed alt text.`));
+      issues.push(sectionIssue("asset", `Asset "${asset.id}" needs reviewed alt text.`));
     }
     if (isPendingRights(asset.rights)) {
-      issues.push(sectionIssue("product", `Asset "${asset.id}" still has rights pending confirmation.`));
+      issues.push(sectionIssue("asset", `Asset "${asset.id}" still has rights pending confirmation.`));
     }
     if (asset.role !== assignment.role) {
       issues.push(
         sectionIssue(
-          "product",
+          "asset",
           `Asset "${asset.id}" is approved as ${asset.role}, not ${assignment.role}.`,
         ),
       );
     }
+    if (asset.brandId !== brief.brandId) {
+      issues.push(
+        sectionIssue(
+          "asset",
+          `Asset "${asset.id}" belongs to ${asset.brandId}, not the approved campaign brand ${brief.brandId}.`,
+        ),
+      );
+    }
   }
+  const approvedHero = approvedAssignmentForRole(brief, "product-hero");
   if (!roles.has("product-hero")) {
-    issues.push(sectionIssue("product", "The draft has no product-hero image."));
+    issues.push(sectionIssue("asset", "The draft has no product-hero image."));
+  } else if (!approvedHero) {
+    issues.push(sectionIssue("asset", "The campaign has no approved product-hero assignment."));
+  } else if (brief.assetId !== approvedHero.assetId) {
+    issues.push(
+      sectionIssue(
+        "asset",
+        `The draft uses "${brief.assetId}" but the campaign's approved packshot is "${approvedHero.assetId}".`,
+      ),
+    );
   }
   if (draft.layout === "advertorial-one-photo" && draft.assetAssignments.length !== 1) {
     issues.push(
-      sectionIssue("product", "The one-photo layout needs exactly one product-hero image."),
+      sectionIssue("asset", "The one-photo layout needs exactly one product-hero image."),
     );
   }
   if (
@@ -846,8 +1051,8 @@ export function validateAdvertorialDraft(
   ) {
     issues.push(
       sectionIssue(
-        "product",
-        "The full layout needs at least two images; use the one-photo layout for one usable photo.",
+        "asset",
+        "The full layout needs at least two approved images; use the one-photo layout for one usable photo.",
       ),
     );
   }
@@ -891,6 +1096,8 @@ function sectionToField(section: AdvertorialSectionIssue["section"]): Validation
   switch (section) {
     case "layout":
       return "advertorialLayout";
+    case "asset":
+      return "assetId";
     case "product":
       return "offer";
     default:
@@ -919,14 +1126,18 @@ export function calculateAdvertorialRevision(
       version: draft.templateVersion,
     },
     layout: draft.layout,
+    layoutReason: draft.layoutReason,
     sections: draft.sections,
-    theme: {
-      brandId: theme.brand.id,
-      accent: theme.tokens.accent,
-      accentInk: theme.tokens.accentInk,
-      displayFont: theme.tokens.displayFont,
-      bodyFont: theme.tokens.bodyFont,
+    brand: {
+      id: theme.brand.id,
+      name: theme.brand.name,
+      wordmark: theme.brand.wordmark,
+      descriptor: theme.brand.descriptor,
+      headlineMode: theme.brand.headlineMode,
+      detailTitle: theme.brand.detailTitle,
     },
+    // Every token can change a rendered color, type style, crop or label.
+    theme: { ...theme.tokens },
     campaign: {
       fixtureId: brief.fixtureId,
       productName: brief.productName,
@@ -935,7 +1146,11 @@ export function calculateAdvertorialRevision(
       destinationUrl: normalizeDestinationUrl(brief.destinationUrl),
       actionLabel: brief.actionLabel,
       requiredFactGroups: brief.requiredFactGroups ?? [],
+      openingFocus: brief.openingFocus ?? null,
+      sourceCampaign: brief.sourceCampaign ?? null,
     },
+    headline: draft.headline,
+    standfirst: draft.standfirst,
     disclosure: draft.disclosure,
     narrator: brief.advertorial.narrator ?? null,
     story: draft.story,
@@ -944,10 +1159,16 @@ export function calculateAdvertorialRevision(
     assetAssignments: draft.assetAssignments,
     assets: assets.map((asset) => ({
       id: asset.id,
+      brandId: asset.brandId,
       role: asset.role,
+      src: asset.src,
+      width: asset.width,
+      height: asset.height,
       contentHash: asset.contentHash,
       alt: asset.alt,
       caption: asset.caption ?? null,
+      crop: asset.crop ?? null,
+      imageBlend: theme.tokens.imageBlend,
     })),
   };
 
@@ -978,80 +1199,30 @@ export function buildAdvertorialPreview(
   values: CampaignFormValues,
   catalog: CampaignCatalog = BASE_CATALOG,
 ): AdvertorialPreviewResult {
-  const brief = createAdvertorialBrief(fixture, values);
-  if (!brief) {
-    const sectionIssues = [
-      sectionIssue(
-        "brief",
-        "This brief has no approved advertorial story, disclosure, or image roles. Use the single-product offer template.",
-      ),
-    ];
+  const evaluation = evaluateAdvertorial(fixture, values, catalog);
+  if (!evaluation.ok) {
     return {
       ok: false,
-      issues: advertorialIssuesToValidation(sectionIssues),
-      sectionIssues,
-    };
-  }
-
-  const briefIssues = validateAdvertorialBrief(brief, catalog);
-  if (briefIssues.length > 0) {
-    return {
-      ok: false,
-      issues: advertorialIssuesToValidation(briefIssues),
-      sectionIssues: briefIssues,
-    };
-  }
-
-  const draft = assembleAdvertorialDraft(
-    brief,
-    values.advertorialLayout ?? "auto",
-  );
-  const draftIssues = validateAdvertorialDraft(brief, draft, catalog);
-  if (draftIssues.length > 0) {
-    return {
-      ok: false,
-      issues: advertorialIssuesToValidation(draftIssues),
-      sectionIssues: draftIssues,
-    };
-  }
-
-  const resolved = resolveAdvertorialAssets(draft, catalog);
-  if (resolved.issues.length > 0) {
-    return {
-      ok: false,
-      issues: advertorialIssuesToValidation(resolved.issues),
-      sectionIssues: resolved.issues,
-    };
-  }
-
-  const hero = resolved.assets.find((entry) => entry.assignment.role === "product-hero")?.asset;
-  if (!hero) {
-    return {
-      ok: false,
-      issues: advertorialIssuesToValidation([
-        sectionIssue("product", "The advertorial needs one approved product-hero image."),
-      ]),
-      sectionIssues: [
-        sectionIssue("product", "The advertorial needs one approved product-hero image."),
-      ],
+      issues: advertorialIssuesToValidation(evaluation.issues),
+      sectionIssues: evaluation.issues,
     };
   }
 
   const theme = resolveBrandTheme(values.brandId, values.accent, catalog);
   const revision = calculateAdvertorialRevision(
-    brief,
-    draft,
-    resolved.assets.map((entry) => entry.asset),
+    evaluation.brief,
+    evaluation.draft,
+    evaluation.assets.map((entry) => entry.asset),
     theme,
   );
 
   return {
     ok: true,
     preview: {
-      brief,
-      draft,
-      asset: hero,
-      assets: resolved.assets,
+      brief: evaluation.brief,
+      draft: evaluation.draft,
+      asset: evaluation.hero,
+      assets: evaluation.assets,
       theme,
       revision,
     },

@@ -99,6 +99,15 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
   const format: CampaignFormat =
     values.format ?? (fixture.brief.advertorial ? "advertorial" : "offer");
+  const advertorialOpenings = fixture.brief.advertorial?.openings ?? [];
+  const approvedHeroAssignment = fixture.brief.advertorial?.assetAssignments.find(
+    (assignment) => assignment.role === "product-hero",
+  );
+  const heroAssetOptions = catalog.assets.filter((asset) =>
+    format === "advertorial"
+      ? asset.id === approvedHeroAssignment?.assetId
+      : asset.role === "product-hero",
+  );
   const template = advertorialPreview ? ADVERTORIAL_MANIFEST : SINGLE_PRODUCT_OFFER_TEMPLATE;
   const layout = advertorialPreview
     ? ADVERTORIAL_MANIFEST.layouts[advertorialPreview.draft.layout]
@@ -185,23 +194,30 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     invalidateGenerationRequest();
     setValues((current) => {
       const next = { ...current, format: nextFormat };
-      const heroAsset = getAsset(current.assetId, catalog);
-      if (nextFormat === "advertorial" && heroAsset?.role !== "product-hero") {
-        next.assetId =
-          catalog.assets.find((asset) => asset.role === "product-hero" && asset.brandId === current.brandId)?.id ??
-          current.assetId;
-      }
       if (nextFormat === "advertorial") {
+        const approvedHero = fixture.brief.advertorial?.assetAssignments.find(
+          (assignment) => assignment.role === "product-hero",
+        )?.assetId;
+        if (approvedHero) next.assetId = approvedHero;
         const openings = fixture.brief.advertorial?.openings ?? [];
         if (openings.length > 0 && !openings.some((opening) => opening.id === current.openingFocus)) {
           next.openingFocus = openings[0].id;
         }
+      } else if (
+        fixture.openings &&
+        !fixture.openings.some((opening) => opening.id === current.openingFocus)
+      ) {
+        next.openingFocus = fixture.openings[0]?.id;
       }
       return next;
     });
     setIssues([]);
     setDirty(true);
     setApproval(null);
+  }
+
+  function handleUseCompatibleLayout(layout: AdvertorialLayoutId) {
+    handleValueChange("advertorialLayout", layout);
   }
 
   function handleUseOfferTemplate() {
@@ -216,6 +232,12 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
       next.assetId =
         catalog.assets.find((asset) => asset.role === "product-hero" && asset.brandId === next.brandId)?.id ??
         next.assetId;
+    }
+    if (
+      fixture.openings &&
+      !fixture.openings.some((opening) => opening.id === next.openingFocus)
+    ) {
+      next.openingFocus = fixture.openings[0]?.id;
     }
     setValues(next);
     setIssues([]);
@@ -546,26 +568,81 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 </div>
               ) : null}
 
+              {fixture.brief.sourceCampaign ? (
+                <details className="rounded-lg border border-[#e4dccd] bg-[#f8f3ea] px-3 py-2 text-xs text-[#5f5a4f]">
+                  <summary className="cursor-pointer font-semibold text-[#3f3b33]">
+                    Source campaign promise
+                  </summary>
+                  <dl className="mt-2 grid gap-1.5">
+                    <div>
+                      <dt className="font-semibold">Promise</dt>
+                      <dd>{fixture.brief.sourceCampaign.promise}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold">Source</dt>
+                      <dd>
+                        {fixture.brief.sourceCampaign.channel} ·{" "}
+                        {fixture.brief.sourceCampaign.document}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold">Reviewed</dt>
+                      <dd>
+                        {fixture.brief.sourceCampaign.reviewedOn} by{" "}
+                        {fixture.brief.sourceCampaign.reviewedBy}
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className="mt-2 text-[0.68rem] text-[#6d6a5f]">
+                    Recorded for editorial review. The operator&apos;s source material stays
+                    private.
+                  </p>
+                </details>
+              ) : null}
+
               {!advertorialFit.fit ? (
                 <div className="rounded-xl border border-[#b98237] bg-[#fbf3e4] p-3 text-[#6b4918]">
                   <p className="text-sm font-semibold">Advertorial not ready for this brief</p>
-                  <p className="mt-1 text-xs">
-                    Single-product offer is recommended. The advertorial still needs:
-                  </p>
+                  {advertorialFit.layoutReason ? (
+                    <p className="mt-1 text-xs">{advertorialFit.layoutReason}</p>
+                  ) : null}
+                  {advertorialFit.compatibleLayout ? (
+                    <p className="mt-1 text-xs">
+                      This brief fits the{" "}
+                      {ADVERTORIAL_MANIFEST.layouts[advertorialFit.compatibleLayout].label}{" "}
+                      layout instead.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs">
+                      Single-product offer is recommended. The advertorial still needs:
+                    </p>
+                  )}
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
                     {advertorialFit.missingInputs.slice(0, 6).map((input) => (
                       <li key={input}>{input}</li>
                     ))}
                   </ul>
                   {format === "advertorial" ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="mt-3 w-full sm:w-auto"
-                      onClick={handleUseOfferTemplate}
-                    >
-                      Use single-product offer
-                    </Button>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {advertorialFit.compatibleLayout ? (
+                        <Button
+                          type="button"
+                          className="w-full sm:w-auto"
+                          onClick={() => handleUseCompatibleLayout(advertorialFit.compatibleLayout!)}
+                        >
+                          Use{" "}
+                          {ADVERTORIAL_MANIFEST.layouts[advertorialFit.compatibleLayout].label}
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="w-full sm:w-auto"
+                        onClick={handleUseOfferTemplate}
+                      >
+                        Use single-product offer
+                      </Button>
+                    </div>
                   ) : null}
                 </div>
               ) : null}
@@ -589,7 +666,31 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 ) : null}
               </div>
 
-              {fixture.openings ? (
+              {format === "advertorial" && advertorialOpenings.length > 0 ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor={fieldIds.openingFocus}>Advertorial opening</Label>
+                  <select
+                    id={fieldIds.openingFocus}
+                    name="openingFocus"
+                    className={nativeSelectClassName}
+                    value={values.openingFocus}
+                    onChange={(event) => handleValueChange("openingFocus", event.target.value)}
+                    aria-invalid={issueByField.has("openingFocus")}
+                    aria-describedby={describedBy("openingFocus")}
+                  >
+                    {advertorialOpenings.map((opening) => (
+                      <option key={opening.id} value={opening.id}>
+                        {opening.headline}
+                      </option>
+                    ))}
+                  </select>
+                  {issueByField.has("openingFocus") ? (
+                    <p id={fieldIds.openingFocus + "-error"} className="text-xs font-medium text-[#a2382a]">
+                      {issueByField.get("openingFocus")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : fixture.openings ? (
                 <div className="space-y-1.5">
                   <Label htmlFor={fieldIds.openingFocus}>Opening focus</Label>
                   <select
@@ -670,13 +771,11 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   aria-describedby={describedBy("assetId", assetMetaId)}
                 >
                   <option value="">Select an approved image</option>
-                  {catalog.assets
-                    .filter((asset) => asset.role === "product-hero")
-                    .map((asset) => (
-                      <option key={asset.id} value={asset.id}>
-                        {assetLabel(asset, catalog)} — approved
-                      </option>
-                    ))}
+                  {heroAssetOptions.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {assetLabel(asset, catalog)} — approved
+                    </option>
+                  ))}
                 </select>
                 <p id={assetMetaId} className="text-xs text-[#6d6a5f]">
                   {selectedAsset
@@ -953,6 +1052,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
           data-story-beat-ids={advertorialPreview?.draft.story.map((beat) => beat.id).join(",")}
           data-disclosure-label={advertorialPreview?.draft.disclosure.label}
           data-advertorial-fit={advertorialFit.fit ? "true" : "false"}
+          data-advertorial-compatible-layout={advertorialFit.compatibleLayout}
           data-generation-issues={
             generation.status === "fallback" ? generation.issues?.join(" | ") : undefined
           }

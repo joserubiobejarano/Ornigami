@@ -538,7 +538,8 @@ export function createFormValues(
     offer: fixture.brief.offer,
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
-    openingFocus: fixture.openings?.[0]?.id,
+    openingFocus:
+      fixture.openings?.[0]?.id ?? fixture.brief.advertorial?.openings[0]?.id,
     format: fixture.brief.advertorial ? "advertorial" : "offer",
     advertorialLayout: "auto",
   };

@@ -18,7 +18,7 @@
         "campaign-lab:acceptance": "node scripts/campaign-lab-acceptance.mjs",
         "campaign-lab:generation-check": "node --experimental-strip-types scripts/campaign-lab-generation-check.mjs",
         "campaign-lab:momisa-check": "node scripts/campaign-lab-momisa-check.mjs",
-        "campaign-lab:pilot:load": "node scripts/load-campaign-lab-pilot.mjs --pilot momisa",
+        "campaign-lab:pilot:load": "node --experimental-strip-types scripts/load-campaign-lab-pilot.mjs --pilot momisa",
         "campaign-lab:self-test": "node tests/support/campaign-lab-contract-self-test.mjs",
         "campaign-eval:validate": "node scripts/campaign-eval.mjs validate",
         "campaign-eval:evaluate": "node scripts/campaign-eval.mjs evaluate",

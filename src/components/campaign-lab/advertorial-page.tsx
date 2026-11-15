@@ -114,6 +114,7 @@ export function AdvertorialPage({
   const openingBand = storyOpening ?? inUse;
   const storyBand = storyOpening ? inUse : undefined;
   const showEvidence = draft.sections.includes("evidence");
+  const showClose = draft.sections.includes("close");
 
   const style = {
     "--ad-page": tokens.page,
@@ -246,19 +247,21 @@ export function AdvertorialPage({
         </div>
       </section>
 
-      <section className={styles.close} data-advertorial-section="close">
-        <div className={styles.closeCopy}>
-          <Offer offer={brief.offer} />
-          {draft.disclosure.repeatAtClose ? (
-            <p className={styles.closeDisclosure}>
-              {draft.disclosure.label} · {draft.disclosure.sponsor}
-            </p>
-          ) : null}
-        </div>
-        <div className={styles.closeAction}>
-          <Action href={brief.destinationUrl} label={brief.actionLabel} />
-        </div>
-      </section>
+      {showClose ? (
+        <section className={styles.close} data-advertorial-section="close">
+          <div className={styles.closeCopy}>
+            <Offer offer={brief.offer} />
+            {draft.disclosure.repeatAtClose ? (
+              <p className={styles.closeDisclosure}>
+                {draft.disclosure.label} · {draft.disclosure.sponsor}
+              </p>
+            ) : null}
+          </div>
+          <div className={styles.closeAction}>
+            <Action href={brief.destinationUrl} label={brief.actionLabel} />
+          </div>
+        </section>
+      ) : null}
 
       <footer className={styles.footer}>
         <span>{theme.brand.wordmark}</span>
