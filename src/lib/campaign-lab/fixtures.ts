@@ -122,8 +122,39 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
       actionLabel: "Shop on Amazon",
       productNoun: "travel bottle",
       productFacts: [
-        { label: "Capacity", value: "500 ml" },
-        { label: "Closure", value: "Screw cap" },
+        {
+          id: "capacity",
+          label: "Capacity",
+          value: "500 ml",
+          source: {
+            document: "Harbor Field approved product sheet",
+            quote: "Capacity: 500 ml.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
+        {
+          id: "closure",
+          label: "Closure",
+          value: "Screw cap",
+          source: {
+            document: "Harbor Field approved product sheet",
+            quote: "Closure: brushed steel screw cap.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
+        {
+          id: "material",
+          label: "Material",
+          value: "Stainless steel",
+          source: {
+            document: "Harbor Field approved product sheet",
+            quote: "Body material: stainless steel.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
       ],
       copy: {
         lede: "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
@@ -145,9 +176,50 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
       actionLabel: "See the dripper",
       productNoun: "pour-over dripper",
       productFacts: [
-        { label: "Interior", value: "Three ribs" },
-        { label: "Outlet", value: "Single outlet" },
-        { label: "Body", value: "Ceramic" },
+        {
+          id: "interior",
+          label: "Interior",
+          value: "Three ribs",
+          source: {
+            document: "Morrow Ceramic approved product sheet",
+            quote: "Interior: three raised ribs that hold the filter clear of the wall.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
+        {
+          id: "outlet",
+          label: "Outlet",
+          value: "Single outlet",
+          source: {
+            document: "Morrow Ceramic approved product sheet",
+            quote: "Outlet: one centred outlet.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
+        {
+          id: "body",
+          label: "Body",
+          value: "Ceramic",
+          source: {
+            document: "Morrow Ceramic approved product sheet",
+            quote: "Body: glazed ceramic.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
+        {
+          id: "finish",
+          label: "Finish",
+          value: "Matte glaze",
+          source: {
+            document: "Morrow Ceramic approved product sheet",
+            quote: "Finish: matte glaze.",
+            reviewedBy: "Ornigami content review",
+            reviewedOn: "2026-11-12",
+          },
+        },
       ],
       copy: {
         headline: "What changes when your first pour is slower, steadier, and entirely your own?",

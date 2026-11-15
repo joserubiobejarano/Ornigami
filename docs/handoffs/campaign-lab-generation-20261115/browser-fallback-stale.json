@@ -1,0 +1,26 @@
+{
+  "initial": {
+    "status": "idle",
+    "panelText": "Deterministic draft. Generation has not run in this session."
+  },
+  "fallback": {
+    "status": "fallback",
+    "sourceText": "Deterministic fallback -+ The generator did not respond within 250 ms.",
+    "revision": "d6a8ce53112368ff",
+    "links": [
+      "https://example.com/harbor-field",
+      "https://example.com/harbor-field"
+    ],
+    "offer": "20% off, 27GÇô30 November 2026",
+    "approveDisabled": false
+  },
+  "staleCheck": {
+    "status": "fallback",
+    "revision": "ad04ba77c9208195",
+    "showsNewOffer": true,
+    "showsOldOfferOnly": false,
+    "offerField": "25% off, 27GÇô30 November 2026"
+  },
+  "requests": 2,
+  "logs": []
+}

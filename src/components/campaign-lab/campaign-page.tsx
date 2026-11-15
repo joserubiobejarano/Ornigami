@@ -22,7 +22,12 @@ function FactList({ facts, className }: { facts: ProductFact[]; className?: stri
   return (
     <ul className={className}>
       {facts.map((fact) => (
-        <li key={`${fact.label}-${fact.value}`} className={styles.fact}>
+        <li
+          key={fact.id}
+          className={styles.fact}
+          data-fact-id={fact.id}
+          data-fact-source={fact.source.quote}
+        >
           <span className={styles.factLabel}>{fact.label}</span>
           <span className={styles.factValue}>{fact.value}</span>
         </li>
@@ -56,6 +61,8 @@ function Action({ href, label }: { href: string; label: string }) {
 export function CampaignPage({ brief, draft, asset, theme, headingId }: CampaignPageProps) {
   const { tokens } = theme;
   const isEditorial = draft.layout === "editorial-long-copy";
+  const showHeroFacts = draft.sections.includes("hero-facts");
+  const showDetail = draft.sections.includes("detail");
   const isProductFirst = tokens.heroOrder === "product-first";
   const showProductLabel = !draft.headline
     .toLowerCase()
@@ -137,7 +144,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
                 {draft.headline}
               </h1>
               <p className={styles.lede}>{draft.lede}</p>
-              <FactList facts={draft.facts} className={styles.facts} />
+              {showHeroFacts ? <FactList facts={draft.facts} className={styles.facts} /> : null}
               <Offer offer={brief.offer} />
               <Action href={brief.destinationUrl} label={brief.actionLabel} />
             </div>
@@ -145,7 +152,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
           </section>
         )}
 
-        {isEditorial ? (
+        {isEditorial && showDetail ? (
           <section className={styles.detail} aria-labelledby="campaign-detail-heading">
             <div className={styles.detailGrid}>
               <div className={styles.detailCopy}>

@@ -5,6 +5,16 @@ export type BrandId = "harbor-field" | "morrow-ceramic";
 export type LayoutId = "offer-led-one-photo" | "editorial-long-copy";
 export type AssetRole = "product-hero";
 
+/**
+ * The generator may choose one of these template-supported opening angles.
+ * The resulting headline is assembled from approved campaign copy on the
+ * server; the generator never returns headline text directly.
+ */
+export type OpeningAngle = "offer-led" | "product-led" | "story-led";
+
+/** Named sections the versioned template can render, in legal orders. */
+export type SectionId = "hero" | "hero-facts" | "detail" | "close";
+
 export type BrandTokens = {
   page: string;
   surface: string;
@@ -36,9 +46,23 @@ export type BrandDefinition = {
   detailTitle: string;
 };
 
+export type ApprovedFactSource = {
+  document: string;
+  quote: string;
+  reviewedBy: string;
+  reviewedOn: string;
+};
+
+/**
+ * A material claim the template may render. `value` is the claim, and
+ * `source` is the approved source text it was transcribed from. Only facts in
+ * `CampaignBrief.productFacts` can reach the renderer.
+ */
 export type ProductFact = {
+  id: string;
   label: string;
   value: string;
+  source: ApprovedFactSource;
 };
 
 export type ApprovedAsset = {
@@ -97,15 +121,38 @@ export type TemplateDraft = {
   templateVersion: string;
   layout: LayoutId;
   layoutReason: string;
+  sections: SectionId[];
   headline: string;
   lede: string;
   facts: ProductFact[];
+};
+
+/**
+ * A generator proposal after structural validation. It names template
+ * variants and approved fact IDs only; it never carries campaign facts.
+ */
+export type TemplatePlan = {
+  angle: OpeningAngle;
+  layout: LayoutId;
+  sections: SectionId[];
+  factIds: string[];
 };
 
 export type TemplateLayoutManifest = {
   label: string;
   description: string;
   requiredAssetRoles: readonly AssetRole[];
+  allowedSectionOrders: readonly (readonly SectionId[])[];
+};
+
+export type TemplateAngleManifest = {
+  label: string;
+  description: string;
+};
+
+export type TemplateSectionManifest = {
+  label: string;
+  description: string;
 };
 
 export type TemplateManifest = {
@@ -116,10 +163,16 @@ export type TemplateManifest = {
   requiredInputs: readonly string[];
   allowedAssetRoles: readonly AssetRole[];
   layouts: Record<LayoutId, TemplateLayoutManifest>;
+  angles: Record<OpeningAngle, TemplateAngleManifest>;
+  sections: Record<SectionId, TemplateSectionManifest>;
   limits: {
     productName: number;
     offer: number;
     headline: number;
+    lede: number;
+    factLabel: number;
+    factValue: number;
+    maxFacts: number;
   };
 };
 

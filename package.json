@@ -16,6 +16,7 @@
         "test:performance": "node scripts/a23-performance.mjs run",
         "performance:a23:prepare": "node scripts/a23-performance.mjs prepare",
         "campaign-lab:acceptance": "node scripts/campaign-lab-acceptance.mjs",
+        "campaign-lab:generation-check": "node --experimental-strip-types scripts/campaign-lab-generation-check.mjs",
         "campaign-lab:self-test": "node tests/support/campaign-lab-contract-self-test.mjs"
     },
     "dependencies": {

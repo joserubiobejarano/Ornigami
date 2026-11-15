@@ -1,0 +1,35 @@
+{
+  "result": {
+    "status": "generated",
+    "provider": "local-test",
+    "angle": "story-led",
+    "sectionOrder": "hero,detail,close",
+    "factIds": "interior,outlet,body",
+    "sourceText": "Generated with Local test provider. Opening story-led; sections hero GÂ∆ detail GÂ∆ close; facts interior, outlet, body.",
+    "revision": "6b94beb112f9e88d",
+    "links": [
+      "https://example.com/morrow",
+      "https://example.com/morrow"
+    ],
+    "image": "/campaign-assets/morrow-ceramic-dripper.webp",
+    "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+    "factSources": [
+      {
+        "id": "interior",
+        "source": "Interior: three raised ribs that hold the filter clear of the wall.",
+        "text": "INTERIOR\nThree ribs"
+      },
+      {
+        "id": "outlet",
+        "source": "Outlet: one centred outlet.",
+        "text": "OUTLET\nSingle outlet"
+      },
+      {
+        "id": "body",
+        "source": "Body: glazed ceramic.",
+        "text": "BODY\nCeramic"
+      }
+    ]
+  },
+  "logs": []
+}

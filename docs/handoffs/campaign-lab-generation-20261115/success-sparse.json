@@ -1,0 +1,130 @@
+{
+  "target": "http://localhost:3100/api/campaign-lab/generate",
+  "fixture": "sparse",
+  "requestId": "evidence-beda6707-4a61-4c74-907f-1b1e598ed92d",
+  "status": "passed",
+  "generation": {
+    "status": "generated",
+    "provider": "local-test",
+    "providerLabel": "Local test provider",
+    "angle": "offer-led",
+    "layout": "offer-led-one-photo",
+    "sections": [
+      "hero",
+      "hero-facts",
+      "close"
+    ],
+    "factIds": [
+      "capacity",
+      "closure"
+    ]
+  },
+  "revision": "261265eeb1c5a3d3",
+  "draft": {
+    "layout": "offer-led-one-photo",
+    "sections": [
+      "hero",
+      "hero-facts",
+      "close"
+    ],
+    "headline": "20% off the travel bottle.",
+    "factIds": [
+      "capacity",
+      "closure"
+    ]
+  },
+  "checks": [
+    {
+      "name": "http-status",
+      "passed": true,
+      "observed": 200,
+      "expected": 200
+    },
+    {
+      "name": "response-ok",
+      "passed": true,
+      "observed": true,
+      "expected": true
+    },
+    {
+      "name": "request-echo",
+      "passed": true,
+      "observed": "evidence-beda6707-4a61-4c74-907f-1b1e598ed92d",
+      "expected": "evidence-beda6707-4a61-4c74-907f-1b1e598ed92d"
+    },
+    {
+      "name": "generation-status",
+      "passed": true,
+      "observed": "generated",
+      "expected": "generated"
+    },
+    {
+      "name": "product-identity-preserved",
+      "passed": true,
+      "observed": "Harbor Field travel bottle",
+      "expected": "Harbor Field travel bottle"
+    },
+    {
+      "name": "offer-preserved",
+      "passed": true,
+      "observed": "20% off, 27GÇô30 November 2026",
+      "expected": "20% off, 27GÇô30 November 2026"
+    },
+    {
+      "name": "destination-preserved",
+      "passed": true,
+      "observed": "https://example.com/harbor-field",
+      "expected": "https://example.com/harbor-field"
+    },
+    {
+      "name": "asset-id-preserved",
+      "passed": true,
+      "observed": "harbor-field-bottle-front",
+      "expected": "harbor-field-bottle-front"
+    },
+    {
+      "name": "alt-text-preserved",
+      "passed": true,
+      "observed": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+      "expected": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop."
+    },
+    {
+      "name": "facts-are-approved",
+      "passed": true,
+      "observed": [
+        "capacity",
+        "closure"
+      ],
+      "expected": [
+        "capacity",
+        "closure",
+        "material"
+      ]
+    },
+    {
+      "name": "facts-have-approved-source-text",
+      "passed": true,
+      "observed": [
+        "Capacity: 500 ml.",
+        "Closure: brushed steel screw cap."
+      ],
+      "expected": "non-empty approved quotes"
+    },
+    {
+      "name": "sections-valid",
+      "passed": true,
+      "observed": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "expected": "starts with hero and ends with close"
+    },
+    {
+      "name": "revision-present",
+      "passed": true,
+      "observed": "261265eeb1c5a3d3",
+      "expected": "revision hash"
+    }
+  ]
+}

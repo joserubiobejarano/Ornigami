@@ -1,0 +1,140 @@
+{
+  "target": "http://localhost:3100/api/campaign-lab/generate",
+  "fixture": "sparse",
+  "requestId": "evidence-d45ce775-2fec-4d53-bb4e-07e1a507f651",
+  "status": "passed",
+  "generation": {
+    "status": "fallback",
+    "provider": "local-test",
+    "providerLabel": "Local test provider",
+    "code": "invalid",
+    "message": "The generator proposal did not match this template. The deterministic draft is shown.",
+    "issues": [
+      "The generator may not set \"productName\"; campaign facts stay in the validated brief.",
+      "The generator may not set \"offer\"; campaign facts stay in the validated brief.",
+      "The generator may not set \"destinationUrl\"; campaign facts stay in the validated brief.",
+      "The generator may not set \"assetId\"; campaign facts stay in the validated brief.",
+      "The generator may not set \"alt\"; campaign facts stay in the validated brief.",
+      "The opening angle is not supported for this campaign.",
+      "The layout is not a supported template variant.",
+      "Fact \"invented-fact\" is not approved for this campaign."
+    ]
+  },
+  "revision": "d6a8ce53112368ff",
+  "draft": {
+    "layout": "offer-led-one-photo",
+    "sections": [
+      "hero",
+      "hero-facts",
+      "close"
+    ],
+    "headline": "20% off the travel bottle.",
+    "factIds": [
+      "capacity",
+      "closure",
+      "material"
+    ]
+  },
+  "checks": [
+    {
+      "name": "http-status",
+      "passed": true,
+      "observed": 200,
+      "expected": 200
+    },
+    {
+      "name": "response-ok",
+      "passed": true,
+      "observed": true,
+      "expected": true
+    },
+    {
+      "name": "request-echo",
+      "passed": true,
+      "observed": "evidence-d45ce775-2fec-4d53-bb4e-07e1a507f651",
+      "expected": "evidence-d45ce775-2fec-4d53-bb4e-07e1a507f651"
+    },
+    {
+      "name": "generation-status",
+      "passed": true,
+      "observed": "fallback",
+      "expected": "fallback"
+    },
+    {
+      "name": "generation-code",
+      "passed": true,
+      "observed": "invalid",
+      "expected": "invalid"
+    },
+    {
+      "name": "product-identity-preserved",
+      "passed": true,
+      "observed": "Harbor Field travel bottle",
+      "expected": "Harbor Field travel bottle"
+    },
+    {
+      "name": "offer-preserved",
+      "passed": true,
+      "observed": "20% off, 27GÇô30 November 2026",
+      "expected": "20% off, 27GÇô30 November 2026"
+    },
+    {
+      "name": "destination-preserved",
+      "passed": true,
+      "observed": "https://example.com/harbor-field",
+      "expected": "https://example.com/harbor-field"
+    },
+    {
+      "name": "asset-id-preserved",
+      "passed": true,
+      "observed": "harbor-field-bottle-front",
+      "expected": "harbor-field-bottle-front"
+    },
+    {
+      "name": "alt-text-preserved",
+      "passed": true,
+      "observed": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+      "expected": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop."
+    },
+    {
+      "name": "facts-are-approved",
+      "passed": true,
+      "observed": [
+        "capacity",
+        "closure",
+        "material"
+      ],
+      "expected": [
+        "capacity",
+        "closure",
+        "material"
+      ]
+    },
+    {
+      "name": "facts-have-approved-source-text",
+      "passed": true,
+      "observed": [
+        "Capacity: 500 ml.",
+        "Closure: brushed steel screw cap.",
+        "Body material: stainless steel."
+      ],
+      "expected": "non-empty approved quotes"
+    },
+    {
+      "name": "sections-valid",
+      "passed": true,
+      "observed": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "expected": "starts with hero and ends with close"
+    },
+    {
+      "name": "revision-present",
+      "passed": true,
+      "observed": "d6a8ce53112368ff",
+      "expected": "revision hash"
+    }
+  ]
+}

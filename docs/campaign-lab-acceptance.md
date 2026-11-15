@@ -25,6 +25,19 @@ The runner drives the published accessible interface only:
 A mismatch is reported as a check failure or an unassessed check with the
 observed evidence. The runner does not fall back to private component selectors.
 
+## Generation path
+
+**Generate preview** now posts to `POST /api/campaign-lab/generate`. The runner
+still drives only the visible controls and preview; it does not import or mock
+the generation code. Keep the local test provider in success mode for the
+acceptance run so a generated draft, not a fallback, is under test. See
+[`campaign-lab-generation.md`](./campaign-lab-generation.md).
+
+Run the development server at `http://localhost:3000` (or another localhost
+port). Next.js blocks its dev resources when the page is reached through
+`127.0.0.1`, which prevents hydration in this setup. Warm the server once before
+the acceptance run so the page and API chunks are compiled.
+
 ## Prerequisites
 
 - Node.js 24 (the repository baseline).

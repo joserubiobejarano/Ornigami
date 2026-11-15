@@ -1,0 +1,135 @@
+{
+  "target": "http://localhost:3100/api/campaign-lab/generate",
+  "fixture": "long-copy",
+  "requestId": "evidence-a673622e-7f62-42af-b7f0-1adfb694d379",
+  "status": "passed",
+  "generation": {
+    "status": "generated",
+    "provider": "local-test",
+    "providerLabel": "Local test provider",
+    "angle": "story-led",
+    "layout": "editorial-long-copy",
+    "sections": [
+      "hero",
+      "detail",
+      "close"
+    ],
+    "factIds": [
+      "interior",
+      "outlet",
+      "body"
+    ]
+  },
+  "revision": "6b94beb112f9e88d",
+  "draft": {
+    "layout": "editorial-long-copy",
+    "sections": [
+      "hero",
+      "detail",
+      "close"
+    ],
+    "headline": "What changes when your first pour is slower, steadier, and entirely your own?",
+    "factIds": [
+      "interior",
+      "outlet",
+      "body"
+    ]
+  },
+  "checks": [
+    {
+      "name": "http-status",
+      "passed": true,
+      "observed": 200,
+      "expected": 200
+    },
+    {
+      "name": "response-ok",
+      "passed": true,
+      "observed": true,
+      "expected": true
+    },
+    {
+      "name": "request-echo",
+      "passed": true,
+      "observed": "evidence-a673622e-7f62-42af-b7f0-1adfb694d379",
+      "expected": "evidence-a673622e-7f62-42af-b7f0-1adfb694d379"
+    },
+    {
+      "name": "generation-status",
+      "passed": true,
+      "observed": "generated",
+      "expected": "generated"
+    },
+    {
+      "name": "product-identity-preserved",
+      "passed": true,
+      "observed": "Morrow ceramic pour-over dripper",
+      "expected": "Morrow ceramic pour-over dripper"
+    },
+    {
+      "name": "offer-preserved",
+      "passed": true,
+      "observed": "Free shipping through 30 November 2026",
+      "expected": "Free shipping through 30 November 2026"
+    },
+    {
+      "name": "destination-preserved",
+      "passed": true,
+      "observed": "https://example.com/morrow",
+      "expected": "https://example.com/morrow"
+    },
+    {
+      "name": "asset-id-preserved",
+      "passed": true,
+      "observed": "morrow-ceramic-dripper-front",
+      "expected": "morrow-ceramic-dripper-front"
+    },
+    {
+      "name": "alt-text-preserved",
+      "passed": true,
+      "observed": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+      "expected": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall."
+    },
+    {
+      "name": "facts-are-approved",
+      "passed": true,
+      "observed": [
+        "interior",
+        "outlet",
+        "body"
+      ],
+      "expected": [
+        "interior",
+        "outlet",
+        "body",
+        "finish"
+      ]
+    },
+    {
+      "name": "facts-have-approved-source-text",
+      "passed": true,
+      "observed": [
+        "Interior: three raised ribs that hold the filter clear of the wall.",
+        "Outlet: one centred outlet.",
+        "Body: glazed ceramic."
+      ],
+      "expected": "non-empty approved quotes"
+    },
+    {
+      "name": "sections-valid",
+      "passed": true,
+      "observed": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "expected": "starts with hero and ends with close"
+    },
+    {
+      "name": "revision-present",
+      "passed": true,
+      "observed": "6b94beb112f9e88d",
+      "expected": "revision hash"
+    }
+  ]
+}

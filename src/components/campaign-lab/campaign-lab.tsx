@@ -16,6 +16,8 @@ import {
   getBrand,
   isBrandId,
 } from "@/lib/campaign-lab/fixtures";
+import { GenerationRequestGate } from "@/lib/campaign-lab/generation/client-gate";
+import type { GenerationMetadata } from "@/lib/campaign-lab/generation/types";
 import {
   SINGLE_PRODUCT_OFFER_TEMPLATE,
   buildCampaignPreview,
@@ -42,11 +44,15 @@ type Approval = {
   approvedAt: string;
 };
 
+type GenerationState = { status: "idle" } | GenerationMetadata;
+
 export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const fixture = CAMPAIGN_FIXTURES[initialFixtureId];
   const baseId = useId().replace(/:/g, "");
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const previousIssueCount = useRef(0);
+  const requestGate = useRef(new GenerationRequestGate());
+  const inFlight = useRef<AbortController | null>(null);
 
   const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture));
   const [preview, setPreview] = useState<CampaignPreviewData>(() => {
@@ -57,12 +63,14 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [dirty, setDirty] = useState(false);
   const [approval, setApproval] = useState<Approval | null>(null);
+  const [generation, setGeneration] = useState<GenerationState>({ status: "idle" });
+  const [generating, setGenerating] = useState(false);
 
   const brand = getBrand(values.brandId);
   const selectedAsset = getAsset(values.assetId);
   const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
-  const approved = approval?.revision === preview.revision && !dirty;
-  const canApprove = !dirty && issues.length === 0 && !approved;
+  const approved = approval?.revision === preview.revision && !dirty && !generating;
+  const canApprove = !dirty && !generating && issues.length === 0 && !approved;
   const revisionLabel = shortRevision(preview.revision);
   const layout = SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[preview.draft.layout];
 
@@ -80,6 +88,8 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const pageHeadingId = `${baseId}-campaign-page-heading`;
   const reviewStatusId = `${baseId}-review-status`;
   const formStatusId = `${baseId}-form-status`;
+  const generationEditorStatusId = `${baseId}-generation-editor-status`;
+  const generationPreviewStatusId = `${baseId}-generation-preview-status`;
   const errorSummaryHeadingId = `${baseId}-error-summary-heading`;
   const assetMetaId = `${baseId}-asset-meta`;
   const accentHintId = `${baseId}-accent-hint`;
@@ -91,7 +101,23 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
     previousIssueCount.current = issues.length;
   }, [issues]);
 
+  useEffect(() => {
+    const gate = requestGate.current;
+    return () => {
+      gate.invalidate();
+      inFlight.current?.abort();
+    };
+  }, []);
+
+  function invalidateGenerationRequest() {
+    requestGate.current.invalidate();
+    inFlight.current?.abort();
+    inFlight.current = null;
+    setGenerating(false);
+  }
+
   function clearChangedState(field?: ValidationField) {
+    invalidateGenerationRequest();
     setIssues((current) =>
       field ? current.filter((issue) => issue.field !== field) : current,
     );
@@ -118,19 +144,105 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
     setIssues((current) => current.filter((issue) => issue.field !== "accent"));
   }
 
-  function handleGenerate() {
-    const result = buildCampaignPreview(fixture, values);
-    if (!result.ok) {
-      setIssues(result.issues);
+  function deterministicFallback(
+    message: string,
+    code: GenerationMetadata["code"] = "unavailable",
+  ): GenerationMetadata {
+    return {
+      status: "fallback",
+      provider: "deterministic",
+      providerLabel: "Deterministic builder",
+      code,
+      message,
+    };
+  }
+
+  async function handleGenerate() {
+    const snapshot = { ...values };
+    const local = buildCampaignPreview(fixture, snapshot);
+    if (!local.ok) {
+      invalidateGenerationRequest();
+      setIssues(local.issues);
       setDirty(true);
       setApproval(null);
       return;
     }
 
-    setPreview(result.preview);
-    setIssues([]);
-    setDirty(false);
+    const requestId = requestGate.current.begin();
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+    setGenerating(true);
     setApproval(null);
+    setIssues([]);
+
+    try {
+      const response = await fetch("/api/campaign-lab/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fixtureId: fixture.id,
+          values: snapshot,
+          requestId: String(requestId),
+        }),
+        signal: controller.signal,
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!requestGate.current.isCurrent(requestId)) return;
+
+      if (!response.ok || !payload || payload.ok !== true) {
+        if (payload?.issues?.length) {
+          setIssues(payload.issues as ValidationIssue[]);
+          setDirty(true);
+          setApproval(null);
+          return;
+        }
+
+        setPreview(local.preview);
+        setGeneration(
+          deterministicFallback(
+            payload?.message ?? "The generation endpoint did not return a preview.",
+          ),
+        );
+        setIssues([]);
+        setDirty(false);
+        return;
+      }
+
+      if (!payload.preview?.revision) {
+        setPreview(local.preview);
+        setGeneration(
+          deterministicFallback("The generation endpoint returned an unreadable preview."),
+        );
+        setIssues([]);
+        setDirty(false);
+        return;
+      }
+
+      setPreview(payload.preview as CampaignPreviewData);
+      setGeneration(
+        (payload.generation as GenerationMetadata | undefined) ??
+          deterministicFallback("The preview was generated without provenance metadata."),
+      );
+      setIssues([]);
+      setDirty(false);
+    } catch {
+      if (!requestGate.current.isCurrent(requestId)) return;
+      setPreview(local.preview);
+      setGeneration(
+        deterministicFallback(
+          "Generation was unavailable, so this preview uses the deterministic builder.",
+        ),
+      );
+      setIssues([]);
+      setDirty(false);
+    } finally {
+      if (requestGate.current.isCurrent(requestId)) {
+        setGenerating(false);
+        inFlight.current = null;
+      }
+    }
   }
 
   function handleApprove() {
@@ -149,25 +261,53 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
     return ids.length ? ids.join(" ") : undefined;
   }
 
-  const previewStatusText = approved
-    ? `Approved locally. Revision ${revisionLabel} matches the preview.`
-    : dirty
-      ? issues.length > 0
-        ? `Preview not updated. Fix ${issues.length} ${issues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
-        : `Preview out of date. Approval is cleared. Showing the last valid preview, revision ${revisionLabel}. Generate a fresh preview to review your edits.`
-      : `Preview ready for local review. Revision ${revisionLabel}.`;
+  const previewStatusText = generating
+    ? `Generating a fresh preview. Revision ${revisionLabel} stays available until a valid response arrives.`
+    : approved
+      ? `Approved locally. Revision ${revisionLabel} matches the preview.`
+      : dirty
+        ? issues.length > 0
+          ? `Preview not updated. Fix ${issues.length} ${issues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
+          : `Preview out of date. Approval is cleared. Showing the last valid preview, revision ${revisionLabel}. Generate a fresh preview to review your edits.`
+        : `Preview ready for local review. Revision ${revisionLabel}.`;
 
-  const reviewStatusText = approved
-    ? `Approved locally — revision ${revisionLabel}.`
-    : dirty
-      ? "Not approved. Changes need a fresh preview."
-      : "Not approved. Preview ready for local review.";
+  const reviewStatusText = generating
+    ? "Not approved. A fresh preview is being generated."
+    : approved
+      ? `Approved locally — revision ${revisionLabel}.`
+      : dirty
+        ? "Not approved. Changes need a fresh preview."
+        : "Not approved. Preview ready for local review.";
 
   const reviewTone = approved
     ? "border-[#3f7a5a] bg-[#eef5ee]"
-    : dirty
+    : dirty || generating
       ? "border-[#b98237] bg-[#fbf3e4]"
       : "border-[#d8cebd] bg-[#f8f3ea]";
+
+  const generationStatusText = (() => {
+    if (generation.status === "idle") {
+      return "Deterministic draft. Generation has not run in this session.";
+    }
+    if (generation.status === "generated") {
+      const angle = generation.angle ?? "selected angle";
+      const sections = generation.sections?.join(" → ") ?? "selected sections";
+      const facts = generation.factIds?.length
+        ? generation.factIds.join(", ")
+        : "no approved facts";
+      return `Generated with ${generation.providerLabel}${generation.model ? ` (${generation.model})` : ""}. Opening ${angle}; sections ${sections}; facts ${facts}.`;
+    }
+    const detail = generation.issues?.length
+      ? ` ${generation.issues.length} proposal ${generation.issues.length === 1 ? "issue was" : "issues were"} rejected.`
+      : "";
+    return `Deterministic fallback · ${generation.message ?? "generation was unavailable."}${detail}`;
+  })();
+
+  const generationTone = generation.status === "generated"
+    ? "border-[#bcd7c2] bg-[#eef5ee] text-[#285a3d]"
+    : generation.status === "fallback"
+      ? "border-[#e2c99d] bg-[#fbf3e4] text-[#7a541d]"
+      : "border-[#ddd3c2] bg-[#f8f3ea] text-[#5b5346]";
 
   return (
     <div className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
@@ -236,7 +376,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
-              handleGenerate();
+              void handleGenerate();
             }}
           >
             <fieldset className="m-0 space-y-4 border-0 p-0">
@@ -474,9 +614,11 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
               <Button
                 type="submit"
                 className="w-full sm:w-auto"
+                disabled={generating}
+                aria-busy={generating}
                 aria-describedby={formStatusId}
               >
-                Generate preview
+                {generating ? "Generating preview…" : "Generate preview"}
               </Button>
               <Button
                 type="button"
@@ -503,11 +645,13 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                     : "text-[#4f6b55]",
               )}
             >
-              {issues.length > 0
-                ? `${issues.length} ${issues.length === 1 ? "field needs" : "fields need"} attention.`
-                : dirty
-                  ? "Changes not yet validated. Generate preview to validate."
-                  : "No validation errors."}
+              {generating
+                ? "Generating preview. The last valid preview remains available."
+                : issues.length > 0
+                  ? `${issues.length} ${issues.length === 1 ? "field needs" : "fields need"} attention.`
+                  : dirty
+                    ? "Changes not yet validated. Generate preview to validate."
+                    : "No validation errors."}
             </p>
 
             <div className={cn("rounded-xl border p-3", reviewTone)}>
@@ -536,6 +680,27 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                 {approval ? " Recorded locally in this browser session." : ""}
               </p>
             </div>
+
+            <div
+              className={cn("rounded-xl border p-3", generationTone)}
+              data-generation-status={generation.status}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] opacity-80">
+                  Draft source
+                </p>
+                <span className="rounded-full bg-white/55 px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em]">
+                  {generation.status === "generated"
+                    ? generation.providerLabel
+                    : generation.status === "fallback"
+                      ? "Fallback"
+                      : "Not generated"}
+                </span>
+              </div>
+              <p id={generationEditorStatusId} className="mt-2 text-sm font-medium">
+                {generationStatusText}
+              </p>
+            </div>
           </form>
         </aside>
 
@@ -549,6 +714,12 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
           data-layout={preview.draft.layout}
           data-revision={preview.revision}
           data-asset-id={preview.asset.id}
+          data-generation-status={generation.status}
+          data-generation-provider={generation.status === "idle" ? "deterministic" : generation.provider}
+          data-generation-code={generation.status === "fallback" ? generation.code : undefined}
+          data-generation-angle={generation.status === "generated" ? generation.angle : undefined}
+          data-section-order={preview.draft.sections.join(",")}
+          data-fact-ids={preview.draft.facts.map((fact) => fact.id).join(",")}
         >
           <div className="flex flex-wrap items-start justify-between gap-3 px-1 pb-3">
             <div>
@@ -563,10 +734,23 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
             <span
               className="rounded-full border border-[#d4c8b5] bg-[#f8f3ea] px-3 py-1 font-mono text-[0.68rem] text-[#5b5346]"
               title={preview.revision}
+              data-approved={approved ? "true" : "false"}
             >
               Revision {revisionLabel}
             </span>
           </div>
+
+          <p
+            id={generationPreviewStatusId}
+            role="status"
+            aria-live="polite"
+            className={cn(
+              "mb-2 rounded-lg border px-3 py-2 text-xs font-medium",
+              generationTone,
+            )}
+          >
+            {generationStatusText}
+          </p>
 
           <p
             id={previewStatusId}
