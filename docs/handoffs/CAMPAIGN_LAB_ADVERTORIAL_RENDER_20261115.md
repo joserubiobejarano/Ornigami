@@ -203,6 +203,18 @@ one-photo layout.
   pre-existing staging-fixture failures, not campaign-lab advertorial failures.
   The focused campaign-lab tests pass.
 
+## Real-brand test
+
+The second review brief is
+[`docs/campaign-lab-advertorial-review-real-brand.md`](../campaign-lab-advertorial-review-real-brand.md).
+It is **pending**: the documented public cases (Guardian Labs / Sainsbury's,
+NYT / Rolex) supply structure and disclosure observations only, with no media
+licence, product offer, or direct destination. The private Momisa pilot has one
+packshot with pilot-only rights and placeholder offer/destination, but no
+documented story or approved claims. No real-brand fixture or capture was
+produced. The brief records the exact inputs needed and keeps private material
+under ignored `.local/` storage.
+
 ## How to reproduce
 
 ```powershell
