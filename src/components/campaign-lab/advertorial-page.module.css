@@ -115,13 +115,13 @@
 .storyGrid {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
 }
 
-.storyRow {
+.storyCopy {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -130,6 +130,17 @@
   font-size: 1.05rem;
   line-height: 1.65;
   text-wrap: pretty;
+}
+
+.storyEvidence {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.storyEvidence > :only-child {
+  max-width: 560px;
 }
 
 .storyFigure,
@@ -149,13 +160,19 @@
 }
 
 .storyFigure[data-asset-role="product-evidence"] .image {
-  aspect-ratio: 1 / 1;
-  object-position: center;
+  aspect-ratio: 2 / 1;
+  object-position: center 50%;
 }
 
 .storyFigure[data-asset-role="product-detail"] .image {
-  aspect-ratio: 5 / 4;
-  object-position: center 32%;
+  aspect-ratio: 2 / 1;
+  object-position: center 45%;
+}
+
+.storyFigure[data-asset-role="product-in-use"] .image,
+.storyFigure[data-asset-role="story-opening"] .image {
+  aspect-ratio: 2 / 1;
+  object-position: center;
 }
 
 .image {
@@ -172,10 +189,11 @@
 
 .caption {
   max-width: 52ch;
-  margin-top: 7px;
+  margin-top: 5px;
   color: var(--ad-muted);
-  font-size: 0.7rem;
-  line-height: 1.45;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-wrap: pretty;
 }
 
 .evidence {
@@ -194,22 +212,24 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0;
+  gap: 4px 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .fact {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
   min-width: 0;
+  white-space: nowrap;
 }
 
-.fact + .fact {
-  margin-left: 14px;
-  padding-left: 14px;
-  border-left: 1px solid var(--ad-line);
+.fact:not(:last-child)::after {
+  content: "·";
+  margin: 0 10px;
+  color: var(--ad-muted);
+  font-weight: 400;
 }
 
 .factValue {
@@ -335,34 +355,6 @@
   outline-offset: 3px;
 }
 
-.close {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px var(--ad-gutter) 28px;
-  border-top: 1px solid var(--ad-line);
-}
-
-.closeCopy {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.closeDisclosure {
-  color: var(--ad-muted);
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: var(--ad-label-tracking);
-  line-height: 1.4;
-  text-transform: var(--ad-label-case);
-}
-
-.closeAction {
-  width: 100%;
-}
-
 .footer {
   display: flex;
   flex-wrap: wrap;
@@ -405,19 +397,47 @@
     --ad-gutter: 32px;
   }
 
-  .storyRow {
-    display: grid;
-    grid-template-columns: minmax(0, 6fr) minmax(0, 4fr);
-    gap: 32px;
-    align-items: start;
+  .storyGrid {
+    display: block;
   }
 
-  .storyRowTextOnly {
-    display: block;
+  .storyCopy {
+    max-width: 65ch;
+    gap: 18px;
+  }
+
+  .storyEvidence {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 24px;
+    margin-top: 28px;
   }
 
   .storyFigure {
     margin-top: 0;
+  }
+
+  .storyFigure[data-asset-role="product-evidence"] .image {
+    aspect-ratio: 3 / 2;
+    object-position: center 45%;
+  }
+
+  .storyFigure[data-asset-role="product-detail"] .image {
+    aspect-ratio: 4 / 3;
+    object-position: center 38%;
+  }
+
+  .storyFigure[data-asset-role="product-in-use"] .image,
+  .storyFigure[data-asset-role="story-opening"] .image {
+    aspect-ratio: 16 / 9;
+    object-position: center;
+  }
+
+  .onePhoto .storyGrid {
+    display: block;
+  }
+
+  .onePhoto .storyBeat {
+    max-width: 65ch;
   }
 
   .product {
@@ -452,23 +472,6 @@
     width: auto;
     min-width: 210px;
     align-self: flex-start;
-  }
-
-  .close {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 32px;
-    padding: 22px var(--ad-gutter) 26px;
-  }
-
-  .closeCopy {
-    max-width: 56ch;
-  }
-
-  .closeAction {
-    flex: 0 0 auto;
-    width: auto;
   }
 
   .evidenceGrid {
@@ -512,19 +515,26 @@
   }
 
   .storyGrid {
-    gap: 32px;
+    gap: 48px;
   }
 
-  .storyRow {
-    gap: 56px;
+  .storyEvidence {
+    gap: 28px;
+    margin-top: 32px;
+  }
+
+  .fact:not(:last-child)::after {
+    content: none;
+  }
+
+  .fact + .fact {
+    margin-left: 14px;
+    padding-left: 14px;
+    border-left: 1px solid var(--ad-line);
   }
 
   .product {
     padding: 44px var(--ad-gutter) 52px;
-  }
-
-  .close {
-    padding: 24px var(--ad-gutter) 30px;
   }
 }
 

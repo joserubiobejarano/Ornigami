@@ -112,10 +112,17 @@ export function AdvertorialPage({
   const byRole = (role: AdvertorialResolvedAsset["assignment"]["role"]) =>
     assets.find((entry) => entry.assignment.role === role);
   const hero = byRole("product-hero");
+  const storyOpening = byRole("story-opening");
   const prototype = byRole("product-evidence");
   const detail = byRole("product-detail");
+  const inUse = byRole("product-in-use");
   const showEvidence = draft.sections.includes("evidence");
-  const storyFigures = showEvidence ? [undefined, detail] : [prototype, detail];
+  const supporting = [storyOpening, prototype, detail, inUse].filter(
+    (entry): entry is AdvertorialResolvedAsset => Boolean(entry),
+  );
+  const storyFigures = showEvidence
+    ? supporting.filter((entry) => entry.assignment.role !== "product-evidence")
+    : supporting;
 
   const style = {
     "--ad-page": tokens.page,
@@ -175,32 +182,31 @@ export function AdvertorialPage({
 
       <section className={styles.story} data-advertorial-section="story">
         <div className={styles.storyGrid}>
-          {draft.story.map((beat, index) => {
-            const figure = storyFigures[index];
-            return (
-              <div
+          <div className={styles.storyCopy}>
+            {draft.story.map((beat) => (
+              <p
                 key={beat.id}
-                className={[styles.storyRow, figure ? null : styles.storyRowTextOnly]
-                  .filter(Boolean)
-                  .join(" ")}
+                className={styles.storyBeat}
+                data-story-beat-id={beat.id}
+                data-story-beat-source={beat.source.quote}
               >
-                <p
-                  className={styles.storyBeat}
-                  data-story-beat-id={beat.id}
-                  data-story-beat-source={beat.source.quote}
-                >
-                  {beat.text}
-                </p>
-                {figure ? (
-                  <Figure
-                    asset={figure}
-                    className={styles.storyFigure}
-                    priority={index === 0}
-                  />
-                ) : null}
-              </div>
-            );
-          })}
+                {beat.text}
+              </p>
+            ))}
+          </div>
+          {storyFigures.length ? (
+            <div className={styles.storyEvidence} role="group" aria-label="Story evidence">
+              {storyFigures.map((figure, index) => (
+                <Figure
+                  key={figure.asset.id}
+                  asset={figure}
+                  className={styles.storyFigure}
+                  caption={figure.asset.caption}
+                  priority={index === 0}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
 

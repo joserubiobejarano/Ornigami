@@ -11,6 +11,9 @@ const { values } = parseArgs({
     run: { type: "string", default: "review" },
     fixture: { type: "string", default: "morrow-advertorial-full" },
     onePhoto: { type: "string", default: "morrow-advertorial-one-photo" },
+    onePhotoLayout: { type: "string", default: "advertorial-one-photo" },
+    fullRoles: { type: "string", default: "product-evidence,product-detail,product-hero" },
+    onePhotoRoles: { type: "string", default: "product-hero" },
   },
 });
 
@@ -135,19 +138,40 @@ async function readArticle(page) {
     const close = article.querySelector('[data-advertorial-section="close"]');
     const action = article.querySelector("[data-advertorial-action]");
     const pageStyle = getComputedStyle(article);
+    const region = article.closest("section[aria-labelledby]");
+    const sectionNodes = [...article.querySelectorAll("[data-advertorial-section]")];
+    const storyTexts = [...article.querySelectorAll("[data-story-beat-id]")].map((node) =>
+      node.innerText.trim(),
+    );
+    const preProductText = sectionNodes
+      .filter((node) => node.getAttribute("data-advertorial-section") !== "product")
+      .map((node) => node.innerText)
+      .join("\n");
+    const offerText = article.querySelector('[data-role="offer"] p')?.textContent?.trim() ?? null;
     return {
       articleTop: Math.round(articleTop),
       articleWidth: Math.round(rect.width),
       articleHeight: Math.round(rect.height),
+      layout: region?.getAttribute("data-layout") ?? null,
       headline: headline?.textContent?.trim() ?? null,
       headlineRect: headline ? box(headline) : null,
+      storyTexts,
+      preProductText,
+      offerText,
+      actionLabel: links[0]?.label.split(" (opens")[0] ?? null,
+      factIds: [...article.querySelectorAll("[data-fact-id]")].map((node) =>
+        node.getAttribute("data-fact-id"),
+      ),
+      imageRoles: images.map((image) => image.role).filter(Boolean),
       sectionOrder: sections.map((section) => section.section),
+      sectionLast: sections.at(-1)?.section ?? null,
       sections,
       links,
       images,
       firstActionFromArticleTop: links[0]?.top ?? null,
       productFromArticleTop: product ? box(product).top : null,
       closeFromArticleTop: close ? box(close).top : null,
+      disclosureText: disclosure?.innerText.trim() ?? null,
       disclosure: disclosure
         ? {
             ...box(disclosure),
@@ -223,6 +247,12 @@ async function capture(browser, details) {
     });
     await page.getByRole("region", { name: "Campaign preview" }).waitFor();
     await page.evaluate(() => document.fonts.ready);
+    if (details.layout) {
+      await page.getByLabel("Advertorial layout", { exact: true }).selectOption(details.layout);
+    }
+    if (details.offer) {
+      await page.getByLabel("Offer", { exact: true }).fill(details.offer);
+    }
     const generate = page.getByRole("button", { name: "Generate preview", exact: true });
     if (!(await generate.isDisabled())) {
       await generate.click();
@@ -295,13 +325,36 @@ async function capture(browser, details) {
           article.disclosure !== null &&
           article.headlineRect !== null &&
           article.disclosure.top <= article.headlineRect.top,
+        disclosurePresent:
+          Boolean(article.disclosureText) &&
+          article.disclosureText.toLowerCase().includes("advertisement") &&
+          article.disclosureText.includes("Morrow Ceramic") &&
+          article.disclosureText.toLowerCase().includes("paid advertisement") &&
+          article.disclosureText.toLowerCase().includes("illustrations"),
         noEarlyAction:
           article.sections
             .filter((section) => section.section !== "product")
             .reduce((total, section) => total + section.actions, 0) === 0,
+        sectionEndsAtProduct: article.sectionLast === "product",
         primaryAction:
           article.links.length === 1 &&
-          article.links.every((link) => link.href === "https://example.com/morrow"),
+          article.links.every((link) => link.href === "https://example.com/morrow") &&
+          article.actionLabel === (details.expectedActionLabel ?? "See the dripper"),
+        offerExact: !details.expectedOffer || article.offerText === details.expectedOffer,
+        factsComplete:
+          !details.expectedFacts ||
+          (article.factIds.length === details.expectedFacts.length &&
+            details.expectedFacts.every((id) => article.factIds.includes(id))),
+        imageRoles:
+          !details.expectedRoles ||
+          (article.imageRoles.length === details.expectedRoles.length &&
+            details.expectedRoles.every((role) => article.imageRoles.includes(role))),
+        expectedLayout: !details.expectedLayout || article.layout === details.expectedLayout,
+        preProductPromise:
+          Boolean(article.preProductText) &&
+          article.preProductText.includes(article.headline ?? "") &&
+          article.storyTexts.every((text) => article.preProductText.includes(text)) &&
+          !article.preProductText.includes(article.offerText ?? ""),
         imagesLoaded: article.images.every((image) => image.complete && image.naturalWidth > 0),
         focusVisible: (focus ?? []).length === 1 && (focus ?? []).every((entry) => entry.focusVisible && entry.outlineStyle !== "none" && Number.parseFloat(entry.outlineWidth) > 0),
       },
@@ -321,6 +374,13 @@ const browser = await chromium.launch({
   executablePath: chromiumExecutable(chromium),
 });
 const results = [];
+const expectedFacts = ["interior", "outlet", "body"];
+const expectedOffer = "Free shipping through 30 November 2026";
+const expectedActionLabel = "See the dripper";
+const fullRoles = values.fullRoles.split(",").map((role) => role.trim()).filter(Boolean);
+const onePhotoRoles = values.onePhotoRoles.split(",").map((role) => role.trim()).filter(Boolean);
+const longOffer =
+  "Free shipping through 30 November 2026 on the Morrow ceramic pour-over dripper.";
 try {
   for (const viewport of viewports) {
     results.push(
@@ -328,6 +388,11 @@ try {
         name: "morrow-full",
         fixture: values.fixture,
         viewport,
+        expectedLayout: "advertorial-full",
+        expectedFacts,
+        expectedRoles: fullRoles,
+        expectedOffer,
+        expectedActionLabel,
       }),
     );
   }
@@ -337,6 +402,27 @@ try {
         name: "morrow-one-photo",
         fixture: values.onePhoto,
         viewport,
+        layout: values.onePhotoLayout,
+        expectedLayout: "advertorial-one-photo",
+        expectedFacts,
+        expectedRoles: onePhotoRoles,
+        expectedOffer,
+        expectedActionLabel,
+      }),
+    );
+  }
+  for (const viewport of viewports) {
+    results.push(
+      await capture(browser, {
+        name: "morrow-long-offer",
+        fixture: values.fixture,
+        viewport,
+        offer: longOffer,
+        expectedLayout: "advertorial-full",
+        expectedFacts,
+        expectedRoles: fullRoles,
+        expectedOffer: longOffer,
+        expectedActionLabel,
       }),
     );
   }
@@ -344,15 +430,47 @@ try {
   await browser.close();
 }
 
+const parity = viewports.map((viewport) => {
+  const full = results.find((result) => result.name === "morrow-full" && result.viewport === viewport.name);
+  const onePhoto = results.find(
+    (result) => result.name === "morrow-one-photo" && result.viewport === viewport.name,
+  );
+  const sameStory =
+    Boolean(full && onePhoto) &&
+    full.article.headline === onePhoto.article.headline &&
+    JSON.stringify(full.article.storyTexts) === JSON.stringify(onePhoto.article.storyTexts);
+  const sameFacts =
+    Boolean(full && onePhoto) &&
+    JSON.stringify(full.article.factIds) === JSON.stringify(onePhoto.article.factIds);
+  const sameCommercial =
+    Boolean(full && onePhoto) &&
+    full.article.offerText === onePhoto.article.offerText &&
+    full.article.actionLabel === onePhoto.article.actionLabel &&
+    full.article.links[0]?.href === onePhoto.article.links[0]?.href;
+  return {
+    viewport: viewport.name,
+    ok: sameStory && sameFacts && sameCommercial,
+    sameStory,
+    sameFacts,
+    sameCommercial,
+  };
+});
+
 const summary = {
   generatedAt: new Date().toISOString(),
   outDir,
   results,
-  failures: results.flatMap((result) =>
-    Object.entries(result.checks)
-      .filter(([, ok]) => !ok)
-      .map(([check]) => ({ fixture: result.fixture, viewport: result.viewport, check })),
-  ),
+  parity,
+  failures: [
+    ...results.flatMap((result) =>
+      Object.entries(result.checks)
+        .filter(([, ok]) => !ok)
+        .map(([check]) => ({ fixture: result.fixture, viewport: result.viewport, check })),
+    ),
+    ...parity
+      .filter((entry) => !entry.ok)
+      .map((entry) => ({ fixture: "morrow-review", viewport: entry.viewport, check: "layout-parity" })),
+  ],
 };
 writeFileSync(path.join(outDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
 console.log(

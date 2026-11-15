@@ -1,5 +1,11 @@
 # Campaign Lab advertorial — implementation and review
 
+> Visual review 16 November 2026: see
+> [the review-render handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_REVIEW_RENDER_20261115.md)
+> for the coffee-context opening, the tightened evidence row, the mobile fact
+> separator fix, the proposed local-pilot copy, the long-offer case, and the
+> real-brand test status.
+
 > Refinement 15 November 2026: see
 > [the renderer refinement handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_RENDER_20261115.md)
 > for the current two-layout renderer, proposed copy and sources, before/after
