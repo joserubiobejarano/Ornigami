@@ -191,7 +191,13 @@ export function AdvertorialPage({
                 >
                   {beat.text}
                 </p>
-                {figure ? <Figure asset={figure} className={styles.storyFigure} /> : null}
+                {figure ? (
+                  <Figure
+                    asset={figure}
+                    className={styles.storyFigure}
+                    priority={index === 0}
+                  />
+                ) : null}
               </div>
             );
           })}
@@ -215,7 +221,14 @@ export function AdvertorialPage({
             <FactList facts={draft.facts} className={styles.productFacts} />
           ) : null}
         </div>
-        {hero ? <Figure asset={hero} className={styles.productHero} contain /> : null}
+        {hero ? (
+          <Figure
+            asset={hero}
+            className={styles.productHero}
+            priority={draft.layout === "advertorial-one-photo"}
+            contain
+          />
+        ) : null}
         <div className={styles.productAction}>
           <Offer offer={brief.offer} />
           <Action href={brief.destinationUrl} label={brief.actionLabel} />

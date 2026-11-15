@@ -52,6 +52,8 @@ Session 1's shared brief and section contract remain the source of truth in
 - The capture runner now checks 320, 375, 768, 1440, and a 1024 px editor pane,
   and records first-action position, disclosure size, contrast, overflow,
   image count, action count, and keyboard focus.
+- The first above-fold story image and the one-photo packshot use priority
+  loading, removing the Next.js LCP warning without changing the composition.
 
 ## Proposed copy and sources
 
