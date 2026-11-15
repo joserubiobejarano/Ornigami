@@ -22,15 +22,16 @@ type AdvertorialPageProps = {
 
 function FactList({ facts, className }: { facts: ProductFact[]; className?: string }) {
   return (
-    <ul className={className}>
+    <ul className={className} aria-label="Product facts">
       {facts.map((fact) => (
         <li
           key={fact.id}
           className={styles.fact}
           data-fact-id={fact.id}
+          data-fact-label={fact.label}
           data-fact-source={fact.source.quote}
         >
-          <span className={styles.factLabel}>{fact.label}</span>
+          <span className={styles.srOnly}>{fact.label}: </span>
           <span className={styles.factValue}>{fact.value}</span>
         </li>
       ))}
@@ -78,7 +79,11 @@ function Figure({
   contain?: boolean;
 }) {
   return (
-    <figure className={className} data-asset-id={asset.asset.id} data-asset-role={asset.assignment.role}>
+    <figure
+      className={className}
+      data-asset-id={asset.asset.id}
+      data-asset-role={asset.assignment.role}
+    >
       <Image
         className={[styles.image, contain ? styles.containImage : null, imageClassName]
           .filter(Boolean)
@@ -107,14 +112,10 @@ export function AdvertorialPage({
   const byRole = (role: AdvertorialResolvedAsset["assignment"]["role"]) =>
     assets.find((entry) => entry.assignment.role === role);
   const hero = byRole("product-hero");
-  const storyOpening = byRole("story-opening");
-  const inUse = byRole("product-in-use");
+  const prototype = byRole("product-evidence");
   const detail = byRole("product-detail");
-  const evidence = byRole("product-evidence");
-  const openingBand = storyOpening ?? inUse;
-  const storyBand = storyOpening ? inUse : undefined;
   const showEvidence = draft.sections.includes("evidence");
-  const showClose = draft.sections.includes("close");
+  const storyFigures = showEvidence ? [undefined, detail] : [prototype, detail];
 
   const style = {
     "--ad-page": tokens.page,
@@ -148,20 +149,21 @@ export function AdvertorialPage({
       data-advertorial-page
     >
       <div className={styles.topbar}>
-        <div className={styles.disclosure} data-advertorial-section="disclosure">
+        <div
+          className={styles.disclosure}
+          data-advertorial-section="disclosure"
+          role="note"
+          aria-label="Sponsorship disclosure"
+        >
           <p className={styles.disclosureLine}>
+            <span className={styles.wordmark}>
+              {tokens.showWordmarkMark ? <span className={styles.mark} aria-hidden="true" /> : null}
+              {theme.brand.wordmark}
+            </span>
             <span className={styles.disclosureLabel}>{draft.disclosure.label}</span>
-            <span aria-hidden="true"> · </span>
-            <span>{draft.disclosure.sponsor}</span>
           </p>
           <p className={styles.disclosureExplanation}>{draft.disclosure.explanation}</p>
         </div>
-        <header className={styles.masthead}>
-          <p className={styles.wordmark}>
-            {tokens.showWordmarkMark ? <span className={styles.mark} aria-hidden="true" /> : null}
-            {theme.brand.wordmark}
-          </p>
-        </header>
       </div>
 
       <section className={styles.opening} data-advertorial-section="opening">
@@ -171,43 +173,34 @@ export function AdvertorialPage({
         <p className={styles.standfirst}>{draft.standfirst}</p>
       </section>
 
-      {openingBand ? (
-        <Figure
-          asset={openingBand}
-          className={styles.openingBand}
-          caption={openingBand.asset.caption}
-          priority
-        />
-      ) : null}
-
       <section className={styles.story} data-advertorial-section="story">
         <div className={styles.storyGrid}>
-          <div className={styles.storyCopy}>
-            {draft.story.map((beat) => (
-              <p
+          {draft.story.map((beat, index) => {
+            const figure = storyFigures[index];
+            return (
+              <div
                 key={beat.id}
-                className={styles.storyBeat}
-                data-story-beat-id={beat.id}
-                data-story-beat-source={beat.source.quote}
+                className={[styles.storyRow, figure ? null : styles.storyRowTextOnly]
+                  .filter(Boolean)
+                  .join(" ")}
               >
-                {beat.text}
-              </p>
-            ))}
-            {storyBand ? (
-              <Figure
-                asset={storyBand}
-                className={styles.storyUseImage}
-                caption={storyBand.asset.caption}
-              />
-            ) : null}
-          </div>
-          {detail ? (
-            <Figure
-              asset={detail}
-              className={styles.detailImage}
-              caption={detail.asset.caption}
-            />
-          ) : null}
+                <p
+                  className={styles.storyBeat}
+                  data-story-beat-id={beat.id}
+                  data-story-beat-source={beat.source.quote}
+                >
+                  {beat.text}
+                </p>
+                {figure ? (
+                  <Figure
+                    asset={figure}
+                    className={styles.storyFigure}
+                    priority={index === 0}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -215,13 +208,7 @@ export function AdvertorialPage({
         <section className={styles.evidence} data-advertorial-section="evidence">
           <div className={styles.evidenceGrid}>
             <FactList facts={draft.facts} className={styles.facts} />
-            {evidence ? (
-              <Figure
-                asset={evidence}
-                className={styles.evidenceImage}
-                caption={evidence.asset.caption}
-              />
-            ) : null}
+            {prototype ? <Figure asset={prototype} className={styles.evidenceImage} /> : null}
           </div>
         </section>
       ) : null}
@@ -238,7 +225,8 @@ export function AdvertorialPage({
           <Figure
             asset={hero}
             className={styles.productHero}
-            contain={draft.layout === "advertorial-one-photo"}
+            priority={draft.layout === "advertorial-one-photo"}
+            contain
           />
         ) : null}
         <div className={styles.productAction}>
@@ -247,29 +235,9 @@ export function AdvertorialPage({
         </div>
       </section>
 
-      {showClose ? (
-        <section className={styles.close} data-advertorial-section="close">
-          <div className={styles.closeCopy}>
-            <Offer offer={brief.offer} />
-            {draft.disclosure.repeatAtClose ? (
-              <p className={styles.closeDisclosure}>
-                {draft.disclosure.label} · {draft.disclosure.sponsor}
-              </p>
-            ) : null}
-          </div>
-          <div className={styles.closeAction}>
-            <Action href={brief.destinationUrl} label={brief.actionLabel} />
-          </div>
-        </section>
-      ) : null}
-
       <footer className={styles.footer}>
-        <span>{theme.brand.wordmark}</span>
-        <span>
-          {draft.disclosure.label} · {draft.disclosure.sponsor}
-        </span>
-        {previewLabel ? <span className={styles.previewLabel}>{previewLabel}</span> : null}
         <span>© 2026 {theme.brand.name}</span>
+        {previewLabel ? <span className={styles.previewLabel}>{previewLabel}</span> : null}
       </footer>
     </article>
   );

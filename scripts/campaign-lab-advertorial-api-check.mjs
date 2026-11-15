@@ -147,7 +147,7 @@ add(
   full.status === 200 &&
     full.body?.preview?.draft?.layout === "advertorial-full" &&
     full.body?.preview?.draft?.sections?.at(-1) === "product" &&
-    full.body?.preview?.assets?.length === 4 &&
+    full.body?.preview?.assets?.length === 3 &&
     ["interior", "outlet", "body"].every((id) =>
       full.body?.preview?.draft?.facts?.some((fact) => fact.id === id),
     ),

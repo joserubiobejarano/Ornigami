@@ -82,7 +82,6 @@ test("the full Morrow brief assembles the approved reading sequence", () => {
     "disclosure",
     "opening",
     "story",
-    "evidence",
     "product",
   ]);
   assert.equal(draft.sections[0], "disclosure");
@@ -92,20 +91,21 @@ test("the full Morrow brief assembles the approved reading sequence", () => {
     endsAt: "product",
     primaryAction: { section: "product", count: 1 },
   });
-  assert.equal(
-    draft.headline,
-    "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
-  );
-  assert.equal(draft.standfirst, "What changes when your first pour is slower?");
+  assert.equal(draft.headline, "Why the filter sits away from the wall");
+  assert.equal(draft.standfirst, "Three raised interior ribs hold it clear.");
   assert.deepEqual(draft.story.map((beat) => beat.id), ["prototype-wall", "rib-revision"]);
   assert.deepEqual(draft.story.map((beat) => beat.text), [
     "In the first prototype, the filter sat against the wall.",
     "Morrow revised the spacing between the three interior ribs.",
   ]);
   assert.deepEqual(draft.facts.map((fact) => fact.id), ["interior", "outlet", "body"]);
+  assert.equal(
+    draft.productTransition,
+    "The dripper holds the filter clear of the wall the same way.",
+  );
   assert.deepEqual(
     assets.map((entry) => entry.assignment.role),
-    ["product-in-use", "product-detail", "product-evidence", "product-hero"],
+    ["product-detail", "product-evidence", "product-hero"],
   );
   assert.equal(draft.disclosure.label, "Advertisement");
   assert.equal(draft.disclosure.sponsor, "Morrow Ceramic");
@@ -125,7 +125,7 @@ test("the one-photo brief removes the evidence band and extra image roles", () =
   assert.equal(draft.sections.at(-1), "product");
   assert.deepEqual(assets.map((entry) => entry.assignment.role), ["product-hero"]);
   assert.equal(draft.story.length, 2);
-  assert.deepEqual(draft.facts.map((fact) => fact.id), ["interior", "outlet"]);
+  assert.deepEqual(draft.facts.map((fact) => fact.id), ["interior", "outlet", "body"]);
   assert.equal(draft.sections.includes("evidence"), false);
 });
 
@@ -143,13 +143,40 @@ test("assembly is deterministic and keeps offer, destination, action and asset i
   assert.equal(first.preview.brief.destinationUrl, values.destinationUrl);
   assert.equal(first.preview.brief.actionLabel, item.brief.actionLabel);
   assert.equal(first.preview.asset.id, values.assetId);
-  assert.equal(first.preview.assets.length, 4);
+  assert.equal(first.preview.assets.length, 3);
 
   const draft = first.preview.draft as unknown as Record<string, unknown>;
   assert.equal("offer" in draft, false);
   assert.equal("destinationUrl" in draft, false);
   assert.equal("actionLabel" in draft, false);
   assert.equal("assetId" in draft, false);
+});
+
+test("the full and one-photo layouts keep the same story and required facts", () => {
+  const fullItem = fixture("morrow-advertorial-full");
+  const onePhotoItem = fixture("morrow-advertorial-one-photo");
+  const full = buildAdvertorialPreview(fullItem, valuesFor(fullItem));
+  const onePhoto = buildAdvertorialPreview(onePhotoItem, valuesFor(onePhotoItem));
+  assert.equal(full.ok, true);
+  assert.equal(onePhoto.ok, true);
+  if (!full.ok || !onePhoto.ok) return;
+
+  assert.deepEqual(
+    full.preview.draft.story.map((beat) => beat.id),
+    onePhoto.preview.draft.story.map((beat) => beat.id),
+  );
+  assert.deepEqual(
+    full.preview.draft.story.map((beat) => beat.text),
+    onePhoto.preview.draft.story.map((beat) => beat.text),
+  );
+  assert.deepEqual(
+    full.preview.draft.facts.map((fact) => fact.id),
+    onePhoto.preview.draft.facts.map((fact) => fact.id),
+  );
+  assert.deepEqual(
+    full.preview.draft.facts.map((fact) => fact.value),
+    onePhoto.preview.draft.facts.map((fact) => fact.value),
+  );
 });
 
 test("changing a story beat, fact, image or offer produces a new revision", () => {
@@ -468,7 +495,7 @@ test("fit and generation agree for the full brief with full and packshot-only im
     "outlet",
     "body",
   ]);
-  assert.equal(fullPreview.preview.assets.length, 4);
+  assert.equal(fullPreview.preview.assets.length, 3);
 
   const packshotOnly = withAdvertorial(fullItem, {
     assetAssignments: fullItem.brief.advertorial!.assetAssignments.filter(

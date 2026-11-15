@@ -193,8 +193,8 @@ const MORROW_OPENINGS: readonly CampaignOpening[] = [
 const MORROW_ADVERTORIAL_OPENINGS: readonly AdvertorialOpening[] = [
   {
     id: "flow-control",
-    headline: "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
-    standfirst: "What changes when your first pour is slower?",
+    headline: "Why the filter sits away from the wall",
+    standfirst: "Three raised interior ribs hold it clear.",
   },
 ];
 
@@ -226,12 +226,13 @@ const MORROW_STORY_BEATS: readonly ApprovedStoryBeat[] = [
 const MORROW_DISCLOSURE: Disclosure = {
   label: "Advertisement",
   sponsor: "Morrow Ceramic",
-  explanation: "Created by Ornigami for Morrow Ceramic. This is a paid advertisement.",
-  repeatAtClose: true,
+  explanation:
+    "Paid advertisement created by Ornigami for Morrow Ceramic. Images are illustrations.",
+  repeatAtClose: false,
 };
 
 const MORROW_PRODUCT_TRANSITION =
-  "A ceramic dripper with three interior ribs and a single outlet.";
+  "The dripper holds the filter clear of the wall the same way.";
 
 const MORROW_ADVERTORIAL_FACTS = [
   {
@@ -427,7 +428,6 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
       copy: MORROW_OPENINGS[0].copy,
       advertorial: morrowAdvertorialData(
         [
-          { role: "product-in-use", assetId: "morrow-pour" },
           { role: "product-detail", assetId: "morrow-ribs" },
           { role: "product-evidence", assetId: "morrow-prototype" },
           { role: "product-hero", assetId: "morrow-ceramic-dripper-front" },
@@ -456,7 +456,7 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
         source: { ...fact.source },
       })),
       requiredFactGroups: [
-        { id: "rib-design", label: "the rib design", factIds: ["interior", "outlet"] },
+        { id: "rib-design", label: "the rib design", factIds: ["interior", "outlet", "body"] },
       ],
       copy: MORROW_OPENINGS[0].copy,
       advertorial: morrowAdvertorialData(

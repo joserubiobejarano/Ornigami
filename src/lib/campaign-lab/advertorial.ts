@@ -756,7 +756,7 @@ export function assembleAdvertorialDraft(
   const assetAssignments = assignmentsForLayout(brief, layout);
   const sections =
     layout === "advertorial-full"
-      ? [...SECTION_ORDER.full]
+      ? [...SECTION_ORDER.fullWithoutEvidence]
       : [...SECTION_ORDER.onePhoto];
 
   return {
@@ -765,7 +765,7 @@ export function assembleAdvertorialDraft(
     layout,
     layoutReason:
       layout === "advertorial-full"
-        ? "The approved story, facts and supporting images earn the full advertorial sequence."
+        ? "The approved story and its two supporting images earn the full sequence; the facts sit with the product."
         : "One reviewed packshot supports the one-photo composition; the opening stays type-led.",
     sections,
     headline: opening?.headline ?? "",
