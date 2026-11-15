@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed",
+  "purpose": "Proposed acceptance contract derived from docs/design/BENCHMARK.md. The template owner must replace this with the actual approved fixture metadata and set status to \"approved\". Until then, asset, label, alt-text, offer, and exact-destination checks are pending, not passes.",
+  "template": {
+    "id": "campaign-template-v1",
+    "name": "Ornigami first campaign template",
+    "source": "docs/design/BENCHMARK.md"
+  },
+  "fixtures": [
+    {
+      "name": "sparse",
+      "url": "/campaign-lab?fixture=sparse",
+      "product": {
+        "name": "Harbor Field 500 ml insulated travel bottle",
+        "label": "Harbor Field"
+      },
+      "offer": "20% off from 27–30 November 2026, applied on Amazon",
+      "destination": "https://example.com/harbor-field",
+      "cta": {
+        "name": "Shop on Amazon"
+      },
+      "image": {
+        "path": null,
+        "sha256": null,
+        "label": "Harbor Field",
+        "alt": null,
+        "note": "Design brief asset is bottle-front; the approved file, hash and alt text have not been supplied."
+      },
+      "copyStress": false
+    },
+    {
+      "name": "long-copy",
+      "url": "/campaign-lab?fixture=long-copy",
+      "product": {
+        "name": "Morrow Ceramic pour-over dripper",
+        "label": "Morrow Ceramic"
+      },
+      "offer": "Synthetic acceptance offer: 20% off the Morrow ceramic dripper through 30 November 2026",
+      "destination": "https://example.com/morrow",
+      "cta": {
+        "name": "See the dripper"
+      },
+      "image": {
+        "path": null,
+        "sha256": null,
+        "label": "Morrow Ceramic",
+        "alt": null,
+        "note": "Design brief assets are prototype, ribs and pour; the approved one-photo product asset, hash and alt text have not been supplied."
+      },
+      "copyStress": true
+    }
+  ]
+}

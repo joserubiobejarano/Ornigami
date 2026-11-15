@@ -14,7 +14,9 @@
         "typegen": "next typegen",
         "test:build": "node scripts/production-smoke.mjs",
         "test:performance": "node scripts/a23-performance.mjs run",
-        "performance:a23:prepare": "node scripts/a23-performance.mjs prepare"
+        "performance:a23:prepare": "node scripts/a23-performance.mjs prepare",
+        "campaign-lab:acceptance": "node scripts/campaign-lab-acceptance.mjs",
+        "campaign-lab:self-test": "node tests/support/campaign-lab-contract-self-test.mjs"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.0.2",

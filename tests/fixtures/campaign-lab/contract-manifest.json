@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "selfTest": true,
+  "purpose": "Approved metadata for the synthetic contract fixture under tests/fixtures/campaign-lab. This is not the Ornigami campaign-lab fixture metadata.",
+  "template": {
+    "id": "campaign-template-v1-contract",
+    "name": "Synthetic contract fixture for campaign template v1",
+    "source": "tests/fixtures/campaign-lab/server.mjs"
+  },
+  "fixtures": [
+    {
+      "name": "sparse",
+      "url": "/campaign-lab?fixture=sparse",
+      "product": {
+        "name": "Harbor Field 500 ml insulated travel bottle",
+        "label": "Harbor Field"
+      },
+      "offer": "20% off from 27–30 November 2026, applied on Amazon",
+      "destination": "https://example.com/harbor-field",
+      "cta": {
+        "name": "Shop on Amazon"
+      },
+      "image": {
+        "path": "/campaign-lab/assets/harbor-field-bottle-front.svg",
+        "sha256": "9f37361b7e8ea7043dd05f0db03dfffa675c159c3b991a6caf9f32531df27987",
+        "label": "Harbor Field",
+        "alt": "Harbor Field 500 ml insulated travel bottle, centered packshot on a neutral backdrop"
+      },
+      "copyStress": false
+    },
+    {
+      "name": "long-copy",
+      "url": "/campaign-lab?fixture=long-copy",
+      "product": {
+        "name": "Morrow Ceramic pour-over dripper with three interior ribs and a single outlet",
+        "label": "Morrow Ceramic"
+      },
+      "offer": "Synthetic acceptance offer: 20% off the Morrow ceramic dripper through 30 November 2026, with the full campaign copy kept long so the offer wraps on a narrow screen without hiding the action.",
+      "destination": "https://example.com/morrow",
+      "cta": {
+        "name": "See the dripper"
+      },
+      "image": {
+        "path": "/campaign-lab/assets/morrow-ceramic-dripper.svg",
+        "sha256": "56f6593c9df0fbe2dbf4239c0f643fea891be90afd2e5e367cd6e60d43d64cd1",
+        "label": "Morrow Ceramic",
+        "alt": "Morrow Ceramic pour-over dripper, three interior ribs and a single outlet, photographed on a workbench"
+      },
+      "copyStress": true
+    }
+  ]
+}

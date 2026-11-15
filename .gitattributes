@@ -2,6 +2,7 @@
 # New executable code belongs in src and follows the normal repository rules.
 migration-sources/** -text -whitespace
 tests/fixtures/contracts/*.sql text eol=lf
+tests/fixtures/campaign-lab/assets/** -text -whitespace
 scripts/sql/*.sql text eol=lf
 
 scripts/*.sh text eol=lf

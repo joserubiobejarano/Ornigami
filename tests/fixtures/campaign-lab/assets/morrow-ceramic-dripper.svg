@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img" aria-label="Morrow Ceramic dripper contract test packshot">
+  <rect width="800" height="1000" fill="#f4efe4"/>
+  <rect x="60" y="60" width="680" height="880" rx="18" fill="#e9e0d0"/>
+  <ellipse cx="400" cy="842" rx="230" ry="34" fill="#d3c4af"/>
+  <path d="M250 300h300l-54 300c-8 44-45 76-90 76h-12c-45 0-82-32-90-76z" fill="#5b6d75"/>
+  <path d="M275 300h250l-14 76H289z" fill="#455860"/>
+  <path d="M330 376v250M400 376v250M470 376v250" stroke="#3c4d55" stroke-width="8" stroke-linecap="round"/>
+  <path d="M480 440h70c34 0 60 26 60 60s-26 60-60 60h-42" fill="none" stroke="#5b6d75" stroke-width="26" stroke-linecap="round"/>
+  <ellipse cx="400" cy="686" rx="54" ry="14" fill="#2f3a40"/>
+  <rect x="286" y="570" width="228" height="82" rx="8" fill="#f7f2e8"/>
+  <text x="400" y="610" text-anchor="middle" font-family="Georgia, serif" font-size="28" letter-spacing="2" fill="#2b2a27">MORROW</text>
+  <text x="400" y="640" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" letter-spacing="3" fill="#514a42">CERAMIC</text>
+  <text x="400" y="778" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#514a42">POUR-OVER DRIPPER</text>
+  <text x="400" y="950" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#8a7d6f">Synthetic contract fixture · not packaging approval</text>
+</svg>

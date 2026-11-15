@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img" aria-label="Harbor Field travel bottle contract test packshot">
+  <rect width="800" height="1000" fill="#f5f0e7"/>
+  <rect x="60" y="60" width="680" height="880" rx="18" fill="#efe6d8"/>
+  <ellipse cx="400" cy="880" rx="210" ry="30" fill="#d9cbb8"/>
+  <path d="M315 210h170v70c46 20 70 62 70 112v330c0 34-26 58-60 58H305c-34 0-60-24-60-58V392c0-50 24-92 70-112z" fill="#2f3336"/>
+  <rect x="300" y="170" width="200" height="58" rx="16" fill="#1e2123"/>
+  <rect x="282" y="430" width="236" height="270" rx="10" fill="#f9f4ea"/>
+  <text x="400" y="500" text-anchor="middle" font-family="Georgia, serif" font-size="42" letter-spacing="2" fill="#2b2a27">HARBOR</text>
+  <text x="400" y="546" text-anchor="middle" font-family="Georgia, serif" font-size="42" letter-spacing="2" fill="#2b2a27">FIELD</text>
+  <line x1="320" y1="574" x2="480" y2="574" stroke="#a4472c" stroke-width="3"/>
+  <text x="400" y="620" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#514a42">TRAVEL BOTTLE</text>
+  <text x="400" y="660" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#2b2a27">500 ml</text>
+  <text x="400" y="760" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#6a6056">insulated · screw cap</text>
+  <text x="400" y="950" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#8a7d6f">Synthetic contract fixture · not packaging approval</text>
+</svg>
