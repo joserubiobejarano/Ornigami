@@ -88,7 +88,8 @@ export async function POST(request: Request) {
 
   try {
     const fixture = catalog.fixtures[fixtureId];
-    if (fixture && values.format === "advertorial") {
+    const format = values.format ?? (fixture?.brief.advertorial ? "advertorial" : "offer");
+    if (fixture && format === "advertorial") {
       const result = buildAdvertorialPreview(fixture, values, catalog);
       if (!result.ok) {
         return json({ ok: false, issues: result.issues, requestId }, 422);

@@ -18,9 +18,12 @@ import type {
 import {
   createFormValues,
   defaultAccent,
+  defaultFormat,
   getAsset,
   getBrand,
   isBrandId,
+  openingFocusForFormat,
+  openingOptionsForFormat,
 } from "@/lib/campaign-lab/fixtures";
 import { GenerationRequestGate } from "@/lib/campaign-lab/generation/client-gate";
 import type { GenerationMetadata } from "@/lib/campaign-lab/generation/types";
@@ -80,10 +83,14 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const previousIssueCount = useRef(0);
   const requestGate = useRef(new GenerationRequestGate());
   const inFlight = useRef<AbortController | null>(null);
+  const openingByFormat = useRef<Record<CampaignFormat, string | undefined>>({
+    offer: openingFocusForFormat(fixture, "offer"),
+    advertorial: openingFocusForFormat(fixture, "advertorial"),
+  });
 
   const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture, catalog));
   const [preview, setPreview] = useState<ConfiguredPreviewData>(() => {
-    const result = buildConfiguredPreview(fixture, createFormValues(fixture, catalog), catalog);
+    const result = buildConfiguredPreview(fixture, values, catalog);
     if (!result.ok) throw new Error(`The ${fixture.label} campaign fixture is invalid.`);
     return result.preview;
   });
@@ -97,9 +104,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const selectedAsset = getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreview(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
-  const format: CampaignFormat =
-    values.format ?? (fixture.brief.advertorial ? "advertorial" : "offer");
-  const advertorialOpenings = fixture.brief.advertorial?.openings ?? [];
+  const format: CampaignFormat = values.format ?? defaultFormat(fixture);
+  const openingOptions = openingOptionsForFormat(fixture, format);
   const approvedHeroAssignment = fixture.brief.advertorial?.assetAssignments.find(
     (assignment) => assignment.role === "product-hero",
   );
@@ -175,6 +181,9 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     field: K,
     value: CampaignFormValues[K],
   ) {
+    if (field === "openingFocus" && typeof value === "string") {
+      openingByFormat.current[format] = value;
+    }
     setValues((current) => ({ ...current, [field]: value }));
     clearChangedState(field as ValidationField);
   }
@@ -193,22 +202,27 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   function handleFormatChange(nextFormat: CampaignFormat) {
     invalidateGenerationRequest();
     setValues((current) => {
+      const currentFormat = current.format ?? defaultFormat(fixture);
+      const currentOptions = openingOptionsForFormat(fixture, currentFormat);
+      if (
+        current.openingFocus &&
+        currentOptions.some((option) => option.id === current.openingFocus)
+      ) {
+        openingByFormat.current[currentFormat] = current.openingFocus;
+      }
+
       const next = { ...current, format: nextFormat };
       if (nextFormat === "advertorial") {
         const approvedHero = fixture.brief.advertorial?.assetAssignments.find(
           (assignment) => assignment.role === "product-hero",
         )?.assetId;
         if (approvedHero) next.assetId = approvedHero;
-        const openings = fixture.brief.advertorial?.openings ?? [];
-        if (openings.length > 0 && !openings.some((opening) => opening.id === current.openingFocus)) {
-          next.openingFocus = openings[0].id;
-        }
-      } else if (
-        fixture.openings &&
-        !fixture.openings.some((opening) => opening.id === current.openingFocus)
-      ) {
-        next.openingFocus = fixture.openings[0]?.id;
       }
+      next.openingFocus = openingFocusForFormat(
+        fixture,
+        nextFormat,
+        openingByFormat.current[nextFormat],
+      );
       return next;
     });
     setIssues([]);
@@ -233,12 +247,12 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
         catalog.assets.find((asset) => asset.role === "product-hero" && asset.brandId === next.brandId)?.id ??
         next.assetId;
     }
-    if (
-      fixture.openings &&
-      !fixture.openings.some((opening) => opening.id === next.openingFocus)
-    ) {
-      next.openingFocus = fixture.openings[0]?.id;
-    }
+    next.openingFocus = openingFocusForFormat(
+      fixture,
+      "offer",
+      openingByFormat.current.offer,
+    );
+    openingByFormat.current.offer = next.openingFocus;
     setValues(next);
     setIssues([]);
     setApproval(null);
@@ -647,6 +661,20 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 </div>
               ) : null}
 
+              {format === "advertorial" && advertorialFit.unusedImages.length > 0 ? (
+                <div
+                  className="rounded-xl border border-[#c9bda8] bg-[#f8f3ea] p-3 text-[#5b5346]"
+                  data-unused-images
+                >
+                  <p className="text-sm font-semibold">Approved image not used</p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
+                    {advertorialFit.unusedImages.map((image) => (
+                      <li key={`${image.role}:${image.assetId}`}>{image.reason}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
               <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.productName}>Product name</Label>
                 <Input
@@ -666,44 +694,24 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 ) : null}
               </div>
 
-              {format === "advertorial" && advertorialOpenings.length > 0 ? (
+              {openingOptions.length > 0 ? (
                 <div className="space-y-1.5">
-                  <Label htmlFor={fieldIds.openingFocus}>Advertorial opening</Label>
+                  <Label htmlFor={fieldIds.openingFocus}>
+                    {format === "advertorial" ? "Advertorial opening" : "Opening focus"}
+                  </Label>
                   <select
                     id={fieldIds.openingFocus}
                     name="openingFocus"
                     className={nativeSelectClassName}
-                    value={values.openingFocus}
+                    value={values.openingFocus ?? ""}
                     onChange={(event) => handleValueChange("openingFocus", event.target.value)}
                     aria-invalid={issueByField.has("openingFocus")}
                     aria-describedby={describedBy("openingFocus")}
                   >
-                    {advertorialOpenings.map((opening) => (
+                    {openingOptions.map((opening) => (
                       <option key={opening.id} value={opening.id}>
-                        {opening.headline}
+                        {opening.label}
                       </option>
-                    ))}
-                  </select>
-                  {issueByField.has("openingFocus") ? (
-                    <p id={fieldIds.openingFocus + "-error"} className="text-xs font-medium text-[#a2382a]">
-                      {issueByField.get("openingFocus")}
-                    </p>
-                  ) : null}
-                </div>
-              ) : fixture.openings ? (
-                <div className="space-y-1.5">
-                  <Label htmlFor={fieldIds.openingFocus}>Opening focus</Label>
-                  <select
-                    id={fieldIds.openingFocus}
-                    name="openingFocus"
-                    className={nativeSelectClassName}
-                    value={values.openingFocus}
-                    onChange={(event) => handleValueChange("openingFocus", event.target.value)}
-                    aria-invalid={issueByField.has("openingFocus")}
-                    aria-describedby={describedBy("openingFocus")}
-                  >
-                    {fixture.openings.map((opening) => (
-                      <option key={opening.id} value={opening.id}>{opening.label}</option>
                     ))}
                   </select>
                   {issueByField.has("openingFocus") ? (
@@ -1053,6 +1061,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
           data-disclosure-label={advertorialPreview?.draft.disclosure.label}
           data-advertorial-fit={advertorialFit.fit ? "true" : "false"}
           data-advertorial-compatible-layout={advertorialFit.compatibleLayout}
+          data-asset-ids={advertorialPreview?.assets.map((entry) => entry.asset.id).join(",")}
+          data-unused-asset-ids={advertorialFit.unusedImages.map((image) => image.assetId).join(",")}
           data-generation-issues={
             generation.status === "fallback" ? generation.issues?.join(" | ") : undefined
           }

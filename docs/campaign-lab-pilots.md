@@ -74,7 +74,11 @@ the header. A preview pilot also shows the note from the manifest and a
   `story-opening`, `product-detail`, `product-in-use`, `product-evidence`), stay
   under `/campaign-lab-pilots/`, include a SHA-256 hash, dimensions, alt text,
   source, rights note, and reviewer metadata. `caption` and `crop` are carried
-  into the manifest when supplied.
+  into the manifest when supplied. An approved role is not automatically
+  rendered: the advertorial placement contract in
+  `ADVERTORIAL_MANIFEST.imagePlacements` decides which roles enter the API
+  assignments. Unplaced roles are reported in the editor with the asset ID and
+  reason.
 - Advertorial editorial is optional. When `fixture.brief.advertorial` is
   supplied, the source must also provide a `sourceCampaign` record with channel,
   promise, source document, reviewer, and review date. The loader validates

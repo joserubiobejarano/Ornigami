@@ -82,8 +82,23 @@ export type AdvertorialBriefData = {
   preferredLayout?: AdvertorialLayoutId;
 };
 
+export type AdvertorialImagePlacement = {
+  role: AdvertorialAssetRole;
+  region: "story" | "product";
+  /** Zero-based story row the image occupies, when region is story. */
+  storyBeatIndex?: number;
+};
+
+export type AdvertorialUnusedImage = {
+  assetId: string;
+  role: AdvertorialAssetRole;
+  reason: string;
+};
+
 export type AdvertorialBrief = CampaignBrief & {
   format: "advertorial";
+  /** The campaign fixture's approved product identity. */
+  approvedProductName: string;
   advertorial: AdvertorialBriefData;
 };
 
@@ -119,11 +134,13 @@ export type AdvertorialFit = {
   compatibleLayout?: AdvertorialLayoutId;
   /** Why the requested layout cannot render this brief. */
   layoutReason?: string;
+  /** Approved images this layout has no slot for. */
+  unusedImages: AdvertorialUnusedImage[];
   missingInputs: string[];
 };
 
 export type AdvertorialSectionIssue = {
-  section: AdvertorialSectionId | "brief" | "layout" | "asset";
+  section: AdvertorialSectionId | "brief" | "layout" | "asset" | "identity";
   message: string;
 };
 

@@ -16,10 +16,12 @@ import type {
   AdvertorialBrief,
   AdvertorialDraft,
   AdvertorialFit,
+  AdvertorialImagePlacement,
   AdvertorialLayoutId,
   AdvertorialPlan,
   AdvertorialSectionId,
   AdvertorialSectionIssue,
+  AdvertorialUnusedImage,
   ApprovedAsset,
   ApprovedStoryBeat,
   AssetAssignment,
@@ -108,6 +110,30 @@ export const ADVERTORIAL_MANIFEST = {
       count: 1,
     },
   },
+  /**
+   * The only image slots the verified renderer exposes. Any approved image
+   * whose role is absent here is reported as unused instead of entering the
+   * API assignments and disappearing at render time.
+   */
+  imagePlacements: {
+    "advertorial-full": [
+      { role: "product-evidence", region: "story", storyBeatIndex: 0 },
+      { role: "product-detail", region: "story", storyBeatIndex: 1 },
+      { role: "product-hero", region: "product" },
+    ] as AdvertorialImagePlacement[],
+    "advertorial-one-photo": [
+      { role: "product-hero", region: "product" },
+    ] as AdvertorialImagePlacement[],
+  },
+  /** Fit is measured against the fact presentation Session 2 verifies. */
+  factPresentation: {
+    region: "product",
+    maxFacts: 3,
+    maxWords: {
+      "advertorial-full": 420,
+      "advertorial-one-photo": 300,
+    },
+  },
   layouts: {
     "advertorial-full": {
       label: "Advertorial, full material",
@@ -115,7 +141,7 @@ export const ADVERTORIAL_MANIFEST = {
       requiredAssetRoles: ["product-hero"],
       allowedSectionOrders: [SECTION_ORDER.full, SECTION_ORDER.fullWithoutEvidence],
       maxStoryBeats: 3,
-      /** Optional-fact capacity; a required group is always rendered whole. */
+      /** Total facts the product-block fact presentation can hold. */
       maxFacts: 3,
       maxImages: 4,
     },
@@ -125,8 +151,8 @@ export const ADVERTORIAL_MANIFEST = {
       requiredAssetRoles: ["product-hero"],
       allowedSectionOrders: [SECTION_ORDER.onePhoto],
       maxStoryBeats: 2,
-      /** Optional-fact capacity; a required group is always rendered whole. */
-      maxFacts: 2,
+      /** Total facts the product-block fact presentation can hold. */
+      maxFacts: 3,
       maxImages: 1,
     },
   },
@@ -157,9 +183,43 @@ function cloneDisclosure(disclosure: Disclosure): Disclosure {
   return { ...disclosure };
 }
 
+function placementsForLayout(
+  layout: AdvertorialLayoutId,
+): readonly AdvertorialImagePlacement[] {
+  return ADVERTORIAL_MANIFEST.imagePlacements[layout];
+}
+
+function placementForRole(
+  layout: AdvertorialLayoutId,
+  role: AssetAssignment["role"],
+): AdvertorialImagePlacement | undefined {
+  return placementsForLayout(layout).find((placement) => placement.role === role);
+}
+
 function roleAllowedForLayout(role: AssetAssignment["role"], layout: AdvertorialLayoutId): boolean {
-  if (layout === "advertorial-one-photo") return role === "product-hero";
-  return ADVERTORIAL_MANIFEST.allowedAssetRoles.includes(role);
+  return Boolean(placementForRole(layout, role));
+}
+
+function placementSummary(layout: AdvertorialLayoutId): string {
+  return placementsForLayout(layout)
+    .map((placement) => placement.role)
+    .join(", ");
+}
+
+function unusedAssignmentsForLayout(
+  brief: AdvertorialBrief,
+  layout: AdvertorialLayoutId,
+): AdvertorialUnusedImage[] {
+  return brief.advertorial.assetAssignments
+    .filter((assignment) => !roleAllowedForLayout(assignment.role, layout))
+    .map((assignment) => ({
+      assetId: assignment.assetId,
+      role: assignment.role,
+      reason:
+        `Asset "${assignment.assetId}" (${assignment.role}) is unused: ` +
+        `${ADVERTORIAL_MANIFEST.layouts[layout].label} places only ` +
+        `${placementSummary(layout)}.`,
+    }));
 }
 
 function isPendingRights(value: string): boolean {
@@ -197,8 +257,8 @@ function selectFacts(brief: CampaignBrief, capacity: number): ProductFact[] {
   const selected: ProductFact[] = [];
   const seen = new Set<string>();
 
-  // A required group is atomic: it renders whole even when that exceeds the
-  // layout's optional-fact capacity. Optional facts then fill up to capacity.
+  // A required group is atomic. The draft validation rejects a group that is
+  // larger than the verified fact presentation rather than truncating it.
   for (const id of required) {
     const fact = brief.productFacts.find((candidate) => candidate.id === id);
     if (fact && !seen.has(fact.id)) {
@@ -206,9 +266,8 @@ function selectFacts(brief: CampaignBrief, capacity: number): ProductFact[] {
       seen.add(fact.id);
     }
   }
-  const target = Math.max(capacity, selected.length);
   for (const fact of brief.productFacts) {
-    if (selected.length >= target) break;
+    if (selected.length >= capacity) break;
     if (seen.has(fact.id)) continue;
     selected.push(cloneFact(fact));
     seen.add(fact.id);
@@ -286,6 +345,7 @@ export function createAdvertorialBrief(
   return {
     ...base,
     format: "advertorial",
+    approvedProductName: fixture.brief.productName,
     openingFocus: values.openingFocus ?? base.openingFocus,
     sourceCampaign: base.sourceCampaign ? { ...base.sourceCampaign } : undefined,
     advertorial: {
@@ -309,7 +369,6 @@ function advertorialDataMissingInputs(
     "Two or three approved story beats with a source quote",
     "A commercial disclosure (label, sponsor, explanation)",
     "A product transition sentence",
-    "Approved image roles beyond the product packshot",
   ];
   if (catalog.pilot?.status === "preview") {
     missing.push(
@@ -328,12 +387,14 @@ type AdvertorialEvaluation =
       assets: AdvertorialResolvedAsset[];
       hero: ApprovedAsset;
       layout: AdvertorialLayoutId;
+      unusedImages: AdvertorialUnusedImage[];
     }
   | {
       ok: false;
       brief: AdvertorialBrief | null;
       layout: AdvertorialLayoutId;
       issues: AdvertorialSectionIssue[];
+      unusedImages: AdvertorialUnusedImage[];
     };
 
 /**
@@ -351,6 +412,7 @@ function evaluateAdvertorial(
       ok: false,
       brief: null,
       layout: "advertorial-full",
+      unusedImages: [],
       issues: [
         sectionIssue(
           "brief",
@@ -361,20 +423,21 @@ function evaluateAdvertorial(
   }
 
   const layout = layoutForBrief(brief, values.advertorialLayout ?? "auto");
+  const unusedImages = unusedAssignmentsForLayout(brief, layout);
   const briefIssues = validateAdvertorialBrief(brief, catalog, layout);
   if (briefIssues.length > 0) {
-    return { ok: false, brief, layout, issues: briefIssues };
+    return { ok: false, brief, layout, issues: briefIssues, unusedImages };
   }
 
   const draft = assembleAdvertorialDraft(brief, layout);
   const draftIssues = validateAdvertorialDraft(brief, draft, catalog);
   if (draftIssues.length > 0) {
-    return { ok: false, brief, layout, issues: draftIssues };
+    return { ok: false, brief, layout, issues: draftIssues, unusedImages };
   }
 
   const resolved = resolveAdvertorialAssets(draft, catalog);
   if (resolved.issues.length > 0) {
-    return { ok: false, brief, layout, issues: resolved.issues };
+    return { ok: false, brief, layout, issues: resolved.issues, unusedImages };
   }
 
   const hero = resolved.assets.find((entry) => entry.assignment.role === "product-hero")?.asset;
@@ -383,11 +446,12 @@ function evaluateAdvertorial(
       ok: false,
       brief,
       layout,
+      unusedImages,
       issues: [sectionIssue("asset", "The advertorial needs one approved product-hero image.")],
     };
   }
 
-  return { ok: true, brief, draft, assets: resolved.assets, hero, layout };
+  return { ok: true, brief, draft, assets: resolved.assets, hero, layout, unusedImages };
 }
 
 export function assessAdvertorialFit(
@@ -442,6 +506,7 @@ export function assessAdvertorialFit(
     layout,
     ...(compatibleLayout ? { compatibleLayout } : {}),
     ...(layoutReason ? { layoutReason } : {}),
+    unusedImages: evaluation.unusedImages,
     missingInputs: missing,
   };
 }
@@ -454,13 +519,19 @@ export function validateAdvertorialBrief(
   const issues: AdvertorialSectionIssue[] = [];
   const data = brief.advertorial;
   const limits = ADVERTORIAL_MANIFEST.limits;
-  const approvedLayout = layoutForBrief(brief);
 
   if (!getBrand(brief.brandId, catalog).tokens) {
     issues.push(sectionIssue("brief", "Choose one of the supported brand styles."));
   }
   if (!brief.productName.trim()) {
     issues.push(sectionIssue("product", "Add the approved product name."));
+  } else if (brief.productName !== brief.approvedProductName.trim()) {
+    issues.push(
+      sectionIssue(
+        "identity",
+        `The product name "${brief.productName}" does not match this campaign's approved product "${brief.approvedProductName}".`,
+      ),
+    );
   }
   if (!brief.productNoun.trim()) {
     issues.push(sectionIssue("product", "Add the approved product noun."));
@@ -630,14 +701,6 @@ export function validateAdvertorialBrief(
   const roles = new Set<string>();
   const assetIds = new Set<string>();
   for (const assignment of assignments) {
-    if (!roleAllowedForLayout(assignment.role, approvedLayout)) {
-      issues.push(
-        sectionIssue(
-          "asset",
-          `The ${assignment.role} image role is not available in this layout.`,
-        ),
-      );
-    }
     if (roles.has(assignment.role)) {
       issues.push(
         sectionIssue("asset", `The ${assignment.role} image role is assigned more than once.`),
@@ -909,13 +972,25 @@ export function validateAdvertorialDraft(
     lastRole = Math.max(lastRole, roleIndex);
   }
 
-  const requiredIds = new Set(requiredFactIds(brief));
-  const optionalFacts = draft.facts.filter((fact) => !requiredIds.has(fact.id));
-  if (optionalFacts.length > layout.maxFacts) {
+  const oversizedGroup = (brief.requiredFactGroups ?? []).find(
+    (group) => group.factIds.length > layout.maxFacts,
+  );
+  if (oversizedGroup) {
     issues.push(
       sectionIssue(
-        "evidence",
-        `${layout.label} accepts at most ${layout.maxFacts} optional facts.`,
+        "layout",
+        `Required fact group "${oversizedGroup.label || oversizedGroup.id}" has ` +
+          `${oversizedGroup.factIds.length} facts, but the ${layout.label} product block ` +
+          `can present at most ${layout.maxFacts}. Keep the group whole or choose a layout ` +
+          `that supports it.`,
+      ),
+    );
+  } else if (draft.facts.length > layout.maxFacts) {
+    issues.push(
+      sectionIssue(
+        "layout",
+        `The ${layout.label} product block can present at most ${layout.maxFacts} facts; ` +
+          `the draft renders ${draft.facts.length}.`,
       ),
     );
   }
@@ -1084,6 +1159,7 @@ export type AdvertorialPreviewData = {
   draft: AdvertorialDraft;
   asset: ApprovedAsset;
   assets: AdvertorialResolvedAsset[];
+  unusedImages: AdvertorialUnusedImage[];
   theme: ResolvedBrandTheme;
   revision: string;
 };
@@ -1098,6 +1174,8 @@ function sectionToField(section: AdvertorialSectionIssue["section"]): Validation
       return "advertorialLayout";
     case "asset":
       return "assetId";
+    case "identity":
+      return "productName";
     case "product":
       return "offer";
     default:
@@ -1128,6 +1206,8 @@ export function calculateAdvertorialRevision(
     layout: draft.layout,
     layoutReason: draft.layoutReason,
     sections: draft.sections,
+    imagePlacements: ADVERTORIAL_MANIFEST.imagePlacements[draft.layout],
+    factPresentation: ADVERTORIAL_MANIFEST.factPresentation,
     brand: {
       id: theme.brand.id,
       name: theme.brand.name,
@@ -1141,6 +1221,7 @@ export function calculateAdvertorialRevision(
     campaign: {
       fixtureId: brief.fixtureId,
       productName: brief.productName,
+      approvedProductName: brief.approvedProductName,
       productNoun: brief.productNoun,
       offer: brief.offer,
       destinationUrl: normalizeDestinationUrl(brief.destinationUrl),
@@ -1223,6 +1304,7 @@ export function buildAdvertorialPreview(
       draft: evaluation.draft,
       asset: evaluation.hero,
       assets: evaluation.assets,
+      unusedImages: evaluation.unusedImages,
       theme,
       revision,
     },

@@ -74,6 +74,44 @@ add(
   },
 );
 
+const wrongName = await post({
+  fixtureId: "morrow-advertorial-full",
+  values: { ...fullValues, productName: "Harbor Field travel bottle" },
+});
+add(
+  "wrong-product-name-rejected",
+  wrongName.status === 422 &&
+    wrongName.body?.ok === false &&
+    wrongName.body?.preview === undefined &&
+    wrongName.body?.issues?.some(
+      (issue) =>
+        issue.field === "productName" &&
+        /does not match this campaign's approved product/i.test(issue.message),
+    ),
+  "The Morrow advertorial cannot be rendered with a Harbor Field product name.",
+  {
+    status: wrongName.status,
+    issues: wrongName.body?.issues,
+    hasPreview: Boolean(wrongName.body?.preview),
+  },
+);
+
+const implicitWrongName = await post({
+  fixtureId: "morrow-advertorial-full",
+  values: { ...fullValues, format: undefined, productName: "Harbor Field travel bottle" },
+});
+add(
+  "implicit-advertorial-wrong-name-rejected",
+  implicitWrongName.status === 422 &&
+    implicitWrongName.body?.issues?.some(
+      (issue) =>
+        issue.field === "productName" &&
+        /does not match this campaign's approved product/i.test(issue.message),
+    ),
+  "Omitting format does not bypass the advertorial product identity binding.",
+  { status: implicitWrongName.status, issues: implicitWrongName.body?.issues },
+);
+
 const wrongRole = await post({
   fixtureId: "morrow-advertorial-full",
   values: { ...fullValues, assetId: "morrow-ribs" },
@@ -169,6 +207,8 @@ const report = {
   requests: {
     base: base.body,
     wrongPackshot: wrongPackshot.body,
+    wrongName: wrongName.body,
+    implicitWrongName: implicitWrongName.body,
     wrongRole: wrongRole.body,
     edited: edited.body,
     onePhoto: onePhoto.body,

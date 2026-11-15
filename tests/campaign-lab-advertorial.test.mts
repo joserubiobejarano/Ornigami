@@ -17,6 +17,7 @@ import {
   BASE_CATALOG,
   CAMPAIGN_FIXTURES,
   createFormValues,
+  openingFocusForFormat,
 } from "../src/lib/campaign-lab/fixtures.ts";
 import { SINGLE_PRODUCT_OFFER_TEMPLATE } from "../src/lib/campaign-lab/template.ts";
 import type {
@@ -232,6 +233,10 @@ test("an offer-only brief reports the exact advertorial inputs it needs", () => 
   assert.ok(fit.missingInputs.some((input) => /story beats/i.test(input)));
   assert.ok(fit.missingInputs.some((input) => /disclosure/i.test(input)));
   assert.ok(fit.missingInputs.some((input) => /product transition/i.test(input)));
+  assert.equal(
+    fit.missingInputs.some((input) => /beyond the product packshot|supporting image/i.test(input)),
+    false,
+  );
 
   const result = buildConfiguredPreview(sparse, { ...valuesFor(sparse), format: "advertorial" });
   assert.equal(result.ok, false);
@@ -569,6 +574,183 @@ test("fit and generation agree for the full brief with full and packshot-only im
     assert.deepEqual(
       sameBriefOnePhotoPreview.preview.draft.facts.map((fact) => fact.id),
       ["interior", "outlet", "body"],
+    );
+  }
+});
+
+test("only image roles with a verified placement enter fit and assembly", () => {
+  const item = fixture("morrow-advertorial-full");
+  const heroAndUse = withAdvertorial(item, {
+    preferredLayout: "advertorial-full",
+    assetAssignments: [
+      { role: "product-hero", assetId: "morrow-ceramic-dripper-front" },
+      { role: "product-in-use", assetId: "morrow-pour" },
+    ],
+  });
+  const catalog = catalogWith(heroAndUse);
+  const autoValues = { ...valuesFor(heroAndUse), advertorialLayout: "auto" as const };
+  const fit = assessAdvertorialFit(heroAndUse, autoValues, catalog);
+  const preview = buildAdvertorialPreview(heroAndUse, autoValues, catalog);
+
+  assert.equal(fit.fit, true);
+  assert.equal(fit.layout, "advertorial-one-photo");
+  assert.equal(fit.unusedImages.length, 1);
+  assert.equal(fit.unusedImages[0].assetId, "morrow-pour");
+  assert.equal(fit.unusedImages[0].role, "product-in-use");
+  assert.match(fit.unusedImages[0].reason, /one photo places only product-hero/i);
+
+  assert.equal(preview.ok, true);
+  if (!preview.ok) return;
+  assert.deepEqual(
+    preview.preview.assets.map((entry) => entry.asset.id),
+    ["morrow-ceramic-dripper-front"],
+  );
+  assert.deepEqual(
+    preview.preview.assets.map((entry) => entry.assignment.role),
+    ["product-hero"],
+  );
+  assert.equal(preview.preview.unusedImages[0].assetId, "morrow-pour");
+
+  const fullValues = { ...valuesFor(heroAndUse), advertorialLayout: "advertorial-full" as const };
+  const fullFit = assessAdvertorialFit(heroAndUse, fullValues, catalog);
+  const fullPreview = buildAdvertorialPreview(heroAndUse, fullValues, catalog);
+  assert.equal(fullFit.fit, false);
+  assert.equal(fullFit.compatibleLayout, "advertorial-one-photo");
+  assert.ok(fullFit.unusedImages.some((image) => image.assetId === "morrow-pour"));
+  assert.equal(fullPreview.ok, false);
+});
+
+test("the advertorial product name is bound to the campaign identity", () => {
+  const item = fixture("morrow-advertorial-full");
+  const values = valuesFor(item);
+  const swapped = buildAdvertorialPreview(item, {
+    ...values,
+    productName: "Harbor Field travel bottle",
+  });
+  assert.equal(swapped.ok, false);
+  if (!swapped.ok) {
+    assert.ok(
+      swapped.issues.some(
+        (issue) =>
+          issue.field === "productName" &&
+          /does not match this campaign's approved product/i.test(issue.message),
+      ),
+    );
+  }
+
+  const swappedFit = assessAdvertorialFit(item, {
+    ...values,
+    productName: "Harbor Field travel bottle",
+  });
+  assert.equal(swappedFit.fit, false);
+  assert.equal(swappedFit.compatibleLayout, undefined);
+
+  const edited = buildAdvertorialPreview(item, {
+    ...values,
+    offer: "Free shipping through 31 December 2026",
+    destinationUrl: "https://example.com/morrow-dripper",
+  });
+  assert.equal(edited.ok, true);
+  if (!edited.ok) return;
+  assert.equal(edited.preview.brief.productName, item.brief.productName);
+  assert.equal(edited.preview.brief.offer, "Free shipping through 31 December 2026");
+  assert.equal(edited.preview.brief.destinationUrl, "https://example.com/morrow-dripper");
+});
+
+test("opening focus initializes from the selected format's own options", () => {
+  const item = fixture("morrow-advertorial-full");
+  const distinct = withAdvertorial(item, {
+    openings: [
+      {
+        id: "advertorial-question",
+        headline: "Why the filter sits away from the wall",
+        standfirst: "Three raised interior ribs hold it clear.",
+      },
+    ],
+  });
+  const withDistinctOfferOpening: CampaignFixture = {
+    ...distinct,
+    openings: [
+      {
+        id: "offer-rib",
+        label: "Rib design",
+        copy: item.brief.copy,
+      },
+    ],
+  };
+  const values = createFormValues(withDistinctOfferOpening);
+  assert.equal(values.format, "advertorial");
+  assert.equal(values.openingFocus, "advertorial-question");
+  assert.equal(
+    openingFocusForFormat(withDistinctOfferOpening, "offer"),
+    "offer-rib",
+  );
+  assert.equal(
+    openingFocusForFormat(withDistinctOfferOpening, "advertorial"),
+    "advertorial-question",
+  );
+
+  const preview = buildAdvertorialPreview(
+    withDistinctOfferOpening,
+    values,
+    catalogWith(withDistinctOfferOpening),
+  );
+  assert.equal(preview.ok, true);
+  if (!preview.ok) return;
+  assert.equal(preview.preview.draft.headline, "Why the filter sits away from the wall");
+});
+
+test("one-photo rejects a required group larger than the verified fact presentation", () => {
+  const base = fixture("morrow-advertorial-one-photo");
+  const facts = Array.from({ length: 27 }, (_, index) => ({
+    id: `fact-${index + 1}`,
+    label: `Fact ${index + 1}`,
+    value: `Value ${index + 1}`,
+    source: {
+      document: "Stress fixture",
+      quote: `Fact ${index + 1}`,
+      reviewedBy: "Local QA",
+      reviewedOn: "2026-11-15",
+    },
+  }));
+  const stress: CampaignFixture = {
+    ...base,
+    brief: {
+      ...base.brief,
+      productFacts: facts,
+      requiredFactGroups: [
+        { id: "stress", label: "the stress group", factIds: facts.map((fact) => fact.id) },
+      ],
+    },
+  };
+  const catalog = catalogWith(stress);
+  const values = {
+    ...valuesFor(stress),
+    advertorialLayout: "advertorial-one-photo" as const,
+  };
+  const fit = assessAdvertorialFit(stress, values, catalog);
+  const result = buildAdvertorialPreview(stress, values, catalog);
+
+  assert.equal(fit.fit, false);
+  assert.equal(fit.recommended, "single-product-offer");
+  assert.ok(
+    fit.missingInputs.some(
+      (input) =>
+        /the stress group/i.test(input) &&
+        /27 facts/i.test(input) &&
+        /at most 3/i.test(input),
+    ),
+  );
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.ok(
+      result.issues.some(
+        (issue) =>
+          issue.field === "advertorialLayout" &&
+          /the stress group/i.test(issue.message) &&
+          /27 facts/i.test(issue.message) &&
+          /at most 3/i.test(issue.message),
+      ),
     );
   }
 });

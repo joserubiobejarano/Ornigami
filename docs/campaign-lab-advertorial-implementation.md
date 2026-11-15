@@ -1,5 +1,11 @@
 # Campaign Lab advertorial — implementation and review
 
+> Review fixes 15 November 2026: see
+> [the review-fixes handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_REVIEW_FIXES_20261115.md)
+> for the image-placement contract, product identity binding, format-specific
+> opening state, verified fact presentation, API/DOM evidence, and remaining
+> gaps.
+
 > Refinement 15 November 2026: see
 > [the renderer refinement handoff](./handoffs/CAMPAIGN_LAB_ADVERTORIAL_RENDER_20261115.md)
 > for the current two-layout renderer, proposed copy and sources, before/after

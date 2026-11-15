@@ -11,6 +11,7 @@ import type {
   CampaignBrief,
   CampaignCatalog,
   CampaignFixture,
+  CampaignFormat,
   CampaignOpening,
   CampaignFormValues,
   Disclosure,
@@ -527,10 +528,41 @@ export function defaultAccent(
   return getBrand(brandId, catalog).tokens.accent;
 }
 
+export function defaultFormat(fixture: CampaignFixture): CampaignFormat {
+  return fixture.brief.advertorial ? "advertorial" : "offer";
+}
+
+export function openingOptionsForFormat(
+  fixture: CampaignFixture,
+  format: CampaignFormat,
+): readonly { id: string; label: string }[] {
+  if (format === "advertorial") {
+    return (fixture.brief.advertorial?.openings ?? []).map((opening) => ({
+      id: opening.id,
+      label: opening.headline,
+    }));
+  }
+  return (fixture.openings ?? []).map((opening) => ({
+    id: opening.id,
+    label: opening.label,
+  }));
+}
+
+export function openingFocusForFormat(
+  fixture: CampaignFixture,
+  format: CampaignFormat,
+  preferred?: string,
+): string | undefined {
+  const options = openingOptionsForFormat(fixture, format);
+  if (preferred && options.some((option) => option.id === preferred)) return preferred;
+  return options[0]?.id;
+}
+
 export function createFormValues(
   fixture: CampaignFixture,
   catalog: CampaignCatalog = BASE_CATALOG,
 ): CampaignFormValues {
+  const format = defaultFormat(fixture);
   return {
     brandId: fixture.brief.brandId,
     accent: defaultAccent(fixture.brief.brandId, catalog),
@@ -538,9 +570,8 @@ export function createFormValues(
     offer: fixture.brief.offer,
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
-    openingFocus:
-      fixture.openings?.[0]?.id ?? fixture.brief.advertorial?.openings[0]?.id,
-    format: fixture.brief.advertorial ? "advertorial" : "offer",
+    openingFocus: openingFocusForFormat(fixture, format),
+    format,
     advertorialLayout: "auto",
   };
 }
