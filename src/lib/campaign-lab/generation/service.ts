@@ -1,5 +1,5 @@
 import {
-  CAMPAIGN_FIXTURES,
+  BASE_CATALOG,
   createCampaignBrief,
   getAsset,
   getBrand,
@@ -15,7 +15,7 @@ import {
   validateTemplateDraft,
 } from "../template.ts";
 import type { CampaignPreviewData } from "../template.ts";
-import type { LayoutId, SectionId } from "../types.ts";
+import type { CampaignCatalog, LayoutId, SectionId } from "../types.ts";
 import { LocalTestGenerationProvider } from "./local-test-provider.ts";
 import { resolveGenerationProvider, resolveGenerationTimeoutMs } from "./provider-config.ts";
 import type { ProviderResolution } from "./provider-config.ts";
@@ -40,6 +40,7 @@ class GenerationTimeoutError extends Error {
 function buildGenerationRequest(
   fixtureId: string,
   brief: ReturnType<typeof createCampaignBrief>,
+  catalog: CampaignCatalog,
 ): GenerationRequest {
   const layouts = Object.keys(SINGLE_PRODUCT_OFFER_TEMPLATE.layouts) as LayoutId[];
   const sectionOrders = Object.fromEntries(
@@ -58,10 +59,11 @@ function buildGenerationRequest(
     },
     brand: {
       id: brief.brandId,
-      name: getBrand(brief.brandId).name,
+      name: getBrand(brief.brandId, catalog).name,
     },
     campaign: {
       fixtureId: fixtureId as GenerationRequest["campaign"]["fixtureId"],
+      openingFocus: brief.openingFocus ?? null,
       productName: brief.productName,
       productNoun: brief.productNoun,
       offer: brief.offer,
@@ -154,7 +156,8 @@ export async function runCampaignGeneration(
   input: CampaignGenerationInput,
   options: GenerationOptions = {},
 ): Promise<CampaignGenerationResult> {
-  const fixture = CAMPAIGN_FIXTURES[input.fixtureId];
+  const catalog = options.catalog ?? BASE_CATALOG;
+  const fixture = catalog.fixtures[input.fixtureId];
   if (!fixture) {
     return {
       ok: false,
@@ -162,12 +165,12 @@ export async function runCampaignGeneration(
     };
   }
 
-  const formIssues = validateCampaignForm(input.values);
+  const formIssues = validateCampaignForm(input.values, catalog);
   if (formIssues.length > 0) {
     return { ok: false, issues: formIssues };
   }
 
-  const deterministic = buildCampaignPreview(fixture, input.values);
+  const deterministic = buildCampaignPreview(fixture, input.values, catalog);
   if (!deterministic.ok) {
     return deterministic;
   }
@@ -215,7 +218,7 @@ export async function runCampaignGeneration(
   }
 
   const brief = createCampaignBrief(fixture, input.values);
-  const request = buildGenerationRequest(input.fixtureId, brief);
+  const request = buildGenerationRequest(input.fixtureId, brief, catalog);
   const timeoutMs = options.timeoutMs ?? resolveGenerationTimeoutMs(env);
   const controller = new AbortController();
 
@@ -284,7 +287,7 @@ export async function runCampaignGeneration(
     );
   }
 
-  const asset = getAsset(input.values.assetId);
+  const asset = getAsset(input.values.assetId, catalog);
   if (!asset) {
     return failure(
       deterministic.preview,
@@ -295,7 +298,7 @@ export async function runCampaignGeneration(
     );
   }
 
-  const theme = resolveBrandTheme(input.values.brandId, input.values.accent);
+  const theme = resolveBrandTheme(input.values.brandId, input.values.accent, catalog);
   const revision = calculateDraftRevision(brief, planned.draft, asset, theme);
 
   return {

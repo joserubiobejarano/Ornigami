@@ -49,6 +49,7 @@ function validRequest(): GenerationRequest {
     brand: { id: "harbor-field", name: "Harbor Field" },
     campaign: {
       fixtureId: "sparse",
+      openingFocus: null,
       productName: "Harbor Field travel bottle",
       productNoun: "travel bottle",
       offer: "20% off, 27–30 November 2026",

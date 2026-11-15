@@ -38,6 +38,17 @@ port). Next.js blocks its dev resources when the page is reached through
 `127.0.0.1`, which prevents hydration in this setup. Warm the server once before
 the acceptance run so the page and API chunks are compiled.
 
+## Local pilot manifests
+
+A local pilot can supply its own proposed acceptance manifest from
+`.local/campaign-lab-pilots/<pilot>/acceptance.json`. Keep `status` as
+`"proposed"` while the offer, destination, rights, or packaging are unconfirmed.
+The runner still executes the controls, overflow, CTA-to-form, approval, edit,
+and console checks; the fixture-dependent metadata checks remain **pending**, not
+passes. Use the focused pilot check for asset identity, first-screen hierarchy,
+opening changes, old-value removal, and approval reset. See
+[`campaign-lab-pilots.md`](./campaign-lab-pilots.md).
+
 ## Prerequisites
 
 - Node.js 24 (the repository baseline).

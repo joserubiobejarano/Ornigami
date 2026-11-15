@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CampaignLab } from "@/components/campaign-lab/campaign-lab";
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
 import { normalizeFixtureId } from "@/lib/campaign-lab/fixtures";
+import { loadCampaignCatalog } from "@/lib/campaign-lab/pilots/local-pilot";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,8 @@ export default async function CampaignLabPage({ searchParams }: CampaignLabPageP
   }
 
   const { fixture } = await searchParams;
-  const fixtureId = normalizeFixtureId(fixture);
+  const catalog = loadCampaignCatalog();
+  const fixtureId = normalizeFixtureId(fixture, catalog);
 
-  return <CampaignLab key={fixtureId} initialFixtureId={fixtureId} />;
+  return <CampaignLab key={fixtureId} initialFixtureId={fixtureId} catalog={catalog} />;
 }

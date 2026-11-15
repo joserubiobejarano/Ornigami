@@ -6,6 +6,17 @@ import type {
 } from "./types.ts";
 
 /**
+ * Approved-evidence emphasis for known local pilot openings. The provider can
+ * only return IDs; the server still resolves every claim from the validated
+ * brief. Unknown openings fall back to the approved order.
+ */
+const OPENING_FACT_EMPHASIS: Record<string, readonly string[]> = {
+  "mask-night": ["contents", "skin-types", "hyaluronic-acid"],
+  "three-masks": ["vitamin-c", "deep-collagen", "hyaluronic-acid"],
+  "routine": ["contents", "vitamin-c", "hyaluronic-acid"],
+};
+
+/**
  * Offline provider used to exercise the real server path in local development
  * and tests. It never performs network I/O and never returns campaign facts.
  */
@@ -56,7 +67,14 @@ export class LocalTestGenerationProvider implements CampaignGenerationProvider {
       : "offer-led-one-photo";
 
     const factLimit = layout === "editorial-long-copy" ? request.allowed.maxFacts : 2;
-    const factIds = request.allowed.factIds.slice(0, factLimit);
+    const emphasis = request.campaign.openingFocus
+      ? OPENING_FACT_EMPHASIS[request.campaign.openingFocus] ?? []
+      : [];
+    const orderedFactIds = [
+      ...emphasis.filter((id) => request.allowed.factIds.includes(id)),
+      ...request.allowed.factIds.filter((id) => !emphasis.includes(id)),
+    ];
+    const factIds = [...new Set(orderedFactIds)].slice(0, factLimit);
     const sections = factIds.length > 0
       ? layout === "editorial-long-copy"
         ? ["hero", "detail", "close"]

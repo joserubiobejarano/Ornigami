@@ -1,0 +1,298 @@
+{
+    "status":  "passed",
+    "pilot":  "momisa",
+    "focusedChecks":  {
+                          "total":  46,
+                          "failed":  0,
+                          "checks":  [
+                                         {
+                                             "name":  "375:initial-idle",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:preview-status",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:approved-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:first-screen",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:generate",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:generated-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:generated-offer",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:generated-destination",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:approve",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:opening-changes-headline",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:opening-preserves-offer",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:opening-preserves-destination",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:opening-preserves-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:opening-invalidates-approval",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-new-offer",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-old-offer-absent",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-new-destination",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-old-destination-absent",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-preserves-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-invalidates-approval",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-needs-approval",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:revision-approve",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "375:console",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:initial-idle",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:preview-status",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:approved-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:first-screen",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:generate",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:generated-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:generated-offer",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:generated-destination",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:approve",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:opening-changes-headline",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:opening-preserves-offer",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:opening-preserves-destination",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:opening-preserves-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:opening-invalidates-approval",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-new-offer",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-old-offer-absent",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-new-destination",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-old-destination-absent",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-preserves-asset",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-invalidates-approval",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-needs-approval",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:revision-approve",
+                                             "passed":  true
+                                         },
+                                         {
+                                             "name":  "1440:console",
+                                             "passed":  true
+                                         }
+                                     ]
+                      },
+    "firstScreen":  {
+                        "375":  {
+                                    "viewport":  812,
+                                    "h1":  {
+                                               "top":  107,
+                                               "bottom":  177,
+                                               "width":  275,
+                                               "height":  70
+                                           },
+                                    "image":  {
+                                                  "top":  441,
+                                                  "bottom":  771,
+                                                  "width":  275,
+                                                  "height":  330
+                                              },
+                                    "action":  {
+                                                   "top":  367,
+                                                   "bottom":  419,
+                                                   "width":  275,
+                                                   "height":  52
+                                               },
+                                    "offer":  {
+                                                  "top":  277,
+                                                  "bottom":  291,
+                                                  "width":  242,
+                                                  "height":  14
+                                              }
+                                },
+                        "1440":  {
+                                     "viewport":  900,
+                                     "h1":  {
+                                                "top":  142,
+                                                "bottom":  219,
+                                                "width":  759,
+                                                "height":  77
+                                            },
+                                     "image":  {
+                                                   "top":  249,
+                                                   "bottom":  781,
+                                                   "width":  426,
+                                                   "height":  532
+                                               },
+                                     "action":  {
+                                                    "top":  577,
+                                                    "bottom":  629,
+                                                    "width":  210,
+                                                    "height":  52
+                                                },
+                                     "offer":  {
+                                                   "top":  487,
+                                                   "bottom":  501,
+                                                   "width":  319,
+                                                   "height":  14
+                                               }
+                                 }
+                    },
+    "generations":  {
+                        "mask-night":  {
+                                           "status":  "generated",
+                                           "angle":  "story-led",
+                                           "layout":  "editorial-long-copy",
+                                           "sections":  [
+                                                            "hero",
+                                                            "detail",
+                                                            "close"
+                                                        ],
+                                           "factIds":  [
+                                                           "contents",
+                                                           "skin-types",
+                                                           "hyaluronic-acid"
+                                                       ],
+                                           "revision":  "fe0f2da298ac777e"
+                                       },
+                        "three-masks":  {
+                                            "status":  "generated",
+                                            "angle":  "story-led",
+                                            "layout":  "editorial-long-copy",
+                                            "sections":  [
+                                                             "hero",
+                                                             "detail",
+                                                             "close"
+                                                         ],
+                                            "factIds":  [
+                                                            "vitamin-c",
+                                                            "deep-collagen",
+                                                            "hyaluronic-acid"
+                                                        ],
+                                            "revision":  "10c47eed9388fce5"
+                                        }
+                    },
+    "acceptance":  {
+                       "baseApprovedFixture":  {
+                                                   "passed":  144,
+                                                   "failed":  0,
+                                                   "pending":  0,
+                                                   "unassessed":  0
+                                               },
+                       "momisaProposed":  {
+                                              "passed":  58,
+                                              "failed":  0,
+                                              "pending":  14,
+                                              "unassessed":  0
+                                          }
+                   }
+}

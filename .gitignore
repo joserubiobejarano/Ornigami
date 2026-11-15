@@ -24,6 +24,7 @@
 
 # misc
 /.local/
+/public/campaign-lab-pilots/
 .DS_Store
 *.pem
 *.log

@@ -8,9 +8,13 @@
  *
  * Usage:
  *   node --experimental-strip-types scripts/campaign-lab-generation-check.mjs \
- *     --url http://127.0.0.1:3100 --fixture sparse --expect generated
+ *     --url http://localhost:3100 --fixture sparse --expect generated
+ *   node --experimental-strip-types scripts/campaign-lab-generation-check.mjs \
+ *     --url http://localhost:3100 --pilot momisa --opening mask-night --expect generated
  */
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { parseArgs } from "node:util";
 
 import {
@@ -21,21 +25,76 @@ import {
 
 const { values: cli } = parseArgs({
   options: {
-    url: { type: "string", short: "u", default: "http://127.0.0.1:3100" },
-    fixture: { type: "string", short: "f", default: "sparse" },
+    url: { type: "string", short: "u", default: "http://localhost:3100" },
+    fixture: { type: "string", short: "f" },
+    pilot: { type: "string", short: "p" },
+    "pilot-dir": { type: "string", default: ".local/campaign-lab-pilots" },
+    opening: { type: "string" },
     expect: { type: "string", short: "e", default: "generated" },
     "expect-code": { type: "string" },
   },
 });
 
+function loadPilot(pilotId) {
+  const manifestPath = path.resolve(cli["pilot-dir"], pilotId, "manifest.json");
+  if (!existsSync(manifestPath)) {
+    throw new Error(`Pilot manifest not found: ${manifestPath}. Run npm run campaign-lab:pilot:load first.`);
+  }
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const asset = manifest.assets?.[0];
+  const opening = manifest.fixture?.openings?.[0];
+  if (!asset || !manifest.fixture?.brief || !manifest.brand) {
+    throw new Error(`Pilot manifest is incomplete: ${manifestPath}`);
+  }
+  const fixture = {
+    id: manifest.fixture.id,
+    label: manifest.fixture.label,
+    description: manifest.fixture.description,
+    assetId: asset.id,
+    openings: manifest.fixture.openings,
+    brief: {
+      ...manifest.fixture.brief,
+      fixtureId: manifest.fixture.id,
+      brandId: manifest.brand.id,
+      assetId: asset.id,
+      copy: manifest.fixture.brief.copy ?? opening?.copy,
+    },
+  };
+  const values = {
+    brandId: manifest.brand.id,
+    accent: manifest.brand.tokens.accent,
+    productName: manifest.fixture.brief.productName,
+    offer: manifest.fixture.brief.offer,
+    destinationUrl: manifest.fixture.brief.destinationUrl,
+    assetId: asset.id,
+    openingFocus: opening?.id,
+  };
+  return { manifest, fixture, asset, values };
+}
+
 async function main() {
-  const fixture = CAMPAIGN_FIXTURES[cli.fixture];
+  const pilot = cli.pilot ? loadPilot(cli.pilot) : null;
+  const fixture = pilot?.fixture ?? CAMPAIGN_FIXTURES[cli.fixture ?? "sparse"];
   if (!fixture) {
-    console.error(`Unknown fixture "${cli.fixture}". Use sparse or long-copy.`);
+    console.error(`Unknown fixture "${cli.fixture}". Use sparse, long-copy, or --pilot <id>.`);
     return 2;
   }
 
-  const formValues = createFormValues(fixture);
+  const values = pilot?.values ?? createFormValues(fixture);
+  if (cli.opening) {
+    if (!fixture.openings?.some((opening) => opening.id === cli.opening)) {
+      console.error(`Unknown opening "${cli.opening}". Available: ${fixture.openings?.map((opening) => opening.id).join(", ")}`);
+      return 2;
+    }
+    values.openingFocus = cli.opening;
+    const selected = fixture.openings.find((opening) => opening.id === cli.opening);
+    if (selected) {
+      values.productName = fixture.brief.productName;
+      values.offer = fixture.brief.offer;
+      values.destinationUrl = fixture.brief.destinationUrl;
+    }
+  }
+
   const url = new URL("/api/campaign-lab/generate", cli.url);
   const requestId = `evidence-${randomUUID()}`;
 
@@ -46,7 +105,7 @@ async function main() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         fixtureId: fixture.id,
-        values: formValues,
+        values,
         requestId,
       }),
     });
@@ -83,12 +142,12 @@ async function main() {
   const brief = preview?.brief;
   const draft = preview?.draft;
   const asset = preview?.asset;
-  const approvedAsset = getAsset(formValues.assetId);
+  const approvedAsset = pilot?.asset ?? getAsset(values.assetId);
 
-  check("product-identity-preserved", brief?.productName === formValues.productName, brief?.productName, formValues.productName);
-  check("offer-preserved", brief?.offer === formValues.offer, brief?.offer, formValues.offer);
-  check("destination-preserved", brief?.destinationUrl === formValues.destinationUrl, brief?.destinationUrl, formValues.destinationUrl);
-  check("asset-id-preserved", asset?.id === formValues.assetId, asset?.id, formValues.assetId);
+  check("product-identity-preserved", brief?.productName === values.productName, brief?.productName, values.productName);
+  check("offer-preserved", brief?.offer === values.offer, brief?.offer, values.offer);
+  check("destination-preserved", brief?.destinationUrl === values.destinationUrl, brief?.destinationUrl, values.destinationUrl);
+  check("asset-id-preserved", asset?.id === values.assetId, asset?.id, values.assetId);
   check("alt-text-preserved", asset?.alt === approvedAsset?.alt, asset?.alt, approvedAsset?.alt);
 
   const approvedIds = new Set(fixture.brief.productFacts.map((fact) => fact.id));
@@ -116,7 +175,9 @@ async function main() {
   const failed = checks.filter((item) => !item.passed);
   const report = {
     target: url.href,
+    pilot: pilot ? pilot.manifest.pilot : null,
     fixture: fixture.id,
+    openingFocus: values.openingFocus ?? null,
     requestId,
     status: failed.length === 0 ? "passed" : "failed",
     generation: payload?.generation ?? null,

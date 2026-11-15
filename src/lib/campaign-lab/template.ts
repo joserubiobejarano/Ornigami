@@ -1,4 +1,5 @@
 import {
+  BASE_CATALOG,
   createCampaignBrief,
   getAsset,
   getBrand,
@@ -8,6 +9,7 @@ import {
 import type {
   ApprovedAsset,
   CampaignBrief,
+  CampaignCatalog,
   CampaignFixture,
   CampaignFormValues,
   LayoutId,
@@ -128,10 +130,13 @@ export function getDestinationUrlError(value: string): string | null {
   return null;
 }
 
-export function validateCampaignForm(values: CampaignFormValues): ValidationIssue[] {
+export function validateCampaignForm(
+  values: CampaignFormValues,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
-  if (!isBrandId(values.brandId)) {
+  if (!isBrandId(values.brandId, catalog)) {
     issues.push({
       field: "brandId",
       message: "Choose one of the supported brand styles.",
@@ -179,7 +184,7 @@ export function validateCampaignForm(values: CampaignFormValues): ValidationIssu
       message: "Choose an approved product image.",
     });
   } else {
-    const asset = getAsset(values.assetId);
+    const asset = getAsset(values.assetId, catalog);
     if (!asset) {
       issues.push({
         field: "assetId",
@@ -231,8 +236,12 @@ function buildOfferLedHeadline(brief: CampaignBrief): string {
   return offerLed;
 }
 
-export function buildHeadline(brief: CampaignBrief, brandId: string): string {
-  const brand = getBrand(brandId);
+export function buildHeadline(
+  brief: CampaignBrief,
+  brandId: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): string {
+  const brand = getBrand(brandId, catalog);
   if (brief.copy.headline) {
     return brief.copy.headline;
   }
@@ -263,8 +272,12 @@ export function getAllowedAngles(brief: CampaignBrief): OpeningAngle[] {
   return angles;
 }
 
-function chooseLayout(headline: string, brandId: string): LayoutId {
-  const brand = getBrand(brandId);
+function chooseLayout(
+  headline: string,
+  brandId: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): LayoutId {
+  const brand = getBrand(brandId, catalog);
   if (brand.tokens.prefersEditorial || headline.length > 68) {
     return "editorial-long-copy";
   }
@@ -307,9 +320,13 @@ export function resolveApprovedFacts(
   return { facts, issues };
 }
 
-export function assembleDraft(brief: CampaignBrief, brandId: string): TemplateDraft {
-  const headline = buildHeadline(brief, brandId);
-  const layout = chooseLayout(headline, brandId);
+export function assembleDraft(
+  brief: CampaignBrief,
+  brandId: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): TemplateDraft {
+  const headline = buildHeadline(brief, brandId, catalog);
+  const layout = chooseLayout(headline, brandId, catalog);
 
   return {
     templateId: SINGLE_PRODUCT_OFFER_TEMPLATE.id,
@@ -563,8 +580,9 @@ function draftIssuesToFieldIssues(issues: DraftValidationIssue[]): ValidationIss
 export function buildCampaignPreview(
   fixture: CampaignFixture,
   values: CampaignFormValues,
+  catalog: CampaignCatalog = BASE_CATALOG,
 ): CampaignPreviewResult {
-  const issues = validateCampaignForm(values);
+  const issues = validateCampaignForm(values, catalog);
   if (values.openingFocus !== undefined &&
       !fixture.openings?.some((option) => option.id === values.openingFocus)) {
     issues.push({ field: "openingFocus", message: "Choose an approved opening for this campaign." });
@@ -574,7 +592,7 @@ export function buildCampaignPreview(
   }
 
   const brief = createCampaignBrief(fixture, values);
-  const draft = assembleDraft(brief, values.brandId);
+  const draft = assembleDraft(brief, values.brandId, catalog);
 
   const draftIssues = validateTemplateDraft(brief, draft);
   if (draftIssues.length > 0) {
@@ -584,7 +602,7 @@ export function buildCampaignPreview(
     };
   }
 
-  const asset = getAsset(values.assetId);
+  const asset = getAsset(values.assetId, catalog);
   if (!asset) {
     return {
       ok: false,
@@ -592,7 +610,7 @@ export function buildCampaignPreview(
     };
   }
 
-  const theme = resolveBrandTheme(values.brandId, values.accent);
+  const theme = resolveBrandTheme(values.brandId, values.accent, catalog);
   const revision = calculateDraftRevision(brief, draft, asset, theme);
 
   return {

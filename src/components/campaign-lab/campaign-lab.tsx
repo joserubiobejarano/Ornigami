@@ -7,9 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  APPROVED_ASSETS,
-  BRANDS,
-  CAMPAIGN_FIXTURES,
   createFormValues,
   defaultAccent,
   getAsset,
@@ -25,6 +22,8 @@ import {
 } from "@/lib/campaign-lab/template";
 import type { CampaignPreviewData } from "@/lib/campaign-lab/template";
 import type {
+  ApprovedAsset,
+  CampaignCatalog,
   CampaignFormValues,
   FixtureId,
   ValidationField,
@@ -37,6 +36,7 @@ import { CampaignPage } from "./campaign-page";
 
 type CampaignLabProps = {
   initialFixtureId: FixtureId;
+  catalog: CampaignCatalog;
 };
 
 type Approval = {
@@ -46,8 +46,19 @@ type Approval = {
 
 type GenerationState = { status: "idle" } | GenerationMetadata;
 
-export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
-  const fixture = CAMPAIGN_FIXTURES[initialFixtureId];
+const ASSET_LABELS: Record<string, string> = {
+  "harbor-field-bottle-front": "Harbor Field bottle",
+  "morrow-ceramic-dripper-front": "Morrow Ceramic dripper",
+  "momisa-glow-box-front": "Momisa Glow Box packshot",
+};
+
+function assetLabel(asset: ApprovedAsset, catalog: CampaignCatalog): string {
+  return ASSET_LABELS[asset.id] ??
+    `${catalog.brands[asset.brandId]?.name ?? asset.brandId} product image`;
+}
+
+export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
+  const fixture = catalog.fixtures[initialFixtureId];
   const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
   const baseId = useId().replace(/:/g, "");
   const errorSummaryRef = useRef<HTMLDivElement>(null);
@@ -55,9 +66,9 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const requestGate = useRef(new GenerationRequestGate());
   const inFlight = useRef<AbortController | null>(null);
 
-  const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture));
+  const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture, catalog));
   const [preview, setPreview] = useState<CampaignPreviewData>(() => {
-    const result = buildCampaignPreview(fixture, createFormValues(fixture));
+    const result = buildCampaignPreview(fixture, createFormValues(fixture, catalog), catalog);
     if (!result.ok) throw new Error(`The ${fixture.label} campaign fixture is invalid.`);
     return result.preview;
   });
@@ -67,8 +78,8 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   const [generation, setGeneration] = useState<GenerationState>({ status: "idle" });
   const [generating, setGenerating] = useState(false);
 
-  const brand = getBrand(values.brandId);
-  const selectedAsset = getAsset(values.assetId);
+  const brand = getBrand(values.brandId, catalog);
+  const selectedAsset = getAsset(values.assetId, catalog);
   const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
   const approved = approval?.revision === preview.revision && !dirty && !generating;
   const canApprove = editorReady && !dirty && !generating && issues.length === 0 && !approved;
@@ -136,11 +147,11 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
   }
 
   function handleBrandChange(value: string) {
-    if (!isBrandId(value)) return;
+    if (!isBrandId(value, catalog)) return;
     setValues((current) => ({
       ...current,
       brandId: value,
-      accent: defaultAccent(value),
+      accent: defaultAccent(value, catalog),
     }));
     clearChangedState("brandId");
     setIssues((current) => current.filter((issue) => issue.field !== "accent"));
@@ -161,7 +172,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
 
   async function handleGenerate() {
     const snapshot = { ...values };
-    const local = buildCampaignPreview(fixture, snapshot);
+    const local = buildCampaignPreview(fixture, snapshot, catalog);
     if (!local.ok) {
       invalidateGenerationRequest();
       setIssues(local.issues);
@@ -327,11 +338,17 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                 <span className="size-1.5 rounded-full bg-[#9a3f25]" aria-hidden="true" />
                 Local only · not published
               </span>
+              {catalog.pilot ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#b98237] bg-[#fbf3e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a541d]">
+                  {catalog.pilot.label} ·{" "}
+                  {catalog.pilot.status === "preview" ? "preview inputs" : "confirmed inputs"}
+                </span>
+              ) : null}
             </div>
           </div>
 
           <nav aria-label="Campaign fixtures" className="flex flex-wrap items-center gap-2">
-            {Object.values(CAMPAIGN_FIXTURES).map((item) => {
+            {Object.values(catalog.fixtures).map((item) => {
               const active = item.id === initialFixtureId;
               return (
                 <Link
@@ -367,6 +384,9 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                 Campaign brief
               </h2>
               <p className="mt-1 text-xs text-[#6d6a5f]">{fixture.description}</p>
+              {catalog.pilot?.note ? (
+                <p className="mt-1 text-xs font-medium text-[#7a541d]">{catalog.pilot.note}</p>
+              ) : null}
             </div>
             <span className="shrink-0 rounded-full bg-[#efe7d8] px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
               {fixture.label}
@@ -485,12 +505,9 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                   aria-describedby={describedBy("assetId", assetMetaId)}
                 >
                   <option value="">Select an approved image</option>
-                  {APPROVED_ASSETS.map((asset) => (
+                  {catalog.assets.map((asset) => (
                     <option key={asset.id} value={asset.id}>
-                      {asset.brandId === "harbor-field"
-                        ? "Harbor Field bottle"
-                        : "Morrow Ceramic dripper"}{" "}
-                      — approved
+                      {assetLabel(asset, catalog)} — approved
                     </option>
                   ))}
                 </select>
@@ -533,6 +550,12 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                         <dt className="font-semibold">Rights</dt>
                         <dd>{selectedAsset.rights}</dd>
                       </div>
+                      {selectedAsset.crop ? (
+                        <div>
+                          <dt className="font-semibold">Crop</dt>
+                          <dd>{selectedAsset.crop}</dd>
+                        </div>
+                      ) : null}
                     </dl>
                   ) : (
                     <p className="mt-2">No approved image selected.</p>
@@ -568,7 +591,7 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
                   aria-invalid={issueByField.has("brandId")}
                   aria-describedby={describedBy("brandId")}
                 >
-                  {Object.values(BRANDS).map((item) => (
+                  {Object.values(catalog.brands).map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name} — {item.descriptor}
                     </option>
@@ -741,6 +764,8 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
           data-layout={preview.draft.layout}
           data-revision={preview.revision}
           data-asset-id={preview.asset.id}
+          data-pilot={catalog.pilot?.id}
+          data-preview-status={catalog.pilot?.status}
           data-generation-status={generation.status}
           data-generation-provider={generation.status === "idle" ? "deterministic" : generation.provider}
           data-generation-code={generation.status === "fallback" ? generation.code : undefined}
@@ -808,6 +833,11 @@ export function CampaignLab({ initialFixtureId }: CampaignLabProps) {
               asset={preview.asset}
               theme={preview.theme}
               headingId={pageHeadingId}
+              previewLabel={
+                catalog.pilot?.status === "preview"
+                  ? "Preview · offer and destination unconfirmed"
+                  : undefined
+              }
             />
           </div>
         </section>

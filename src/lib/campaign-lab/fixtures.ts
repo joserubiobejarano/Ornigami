@@ -1,13 +1,17 @@
 import type {
   ApprovedAsset,
+  BaseBrandId,
+  BaseFixtureId,
   BrandDefinition,
   BrandId,
   BrandTokens,
   CampaignBrief,
+  CampaignCatalog,
   CampaignFixture,
   CampaignOpening,
   CampaignFormValues,
   FixtureId,
+  PilotBundle,
   ResolvedBrandTheme,
 } from "./types.ts";
 
@@ -30,6 +34,10 @@ const harborTokens: BrandTokens = {
   heroImage: "framed",
   heroOrder: "product-first",
   prefersEditorial: false,
+  detailBackground: "#232420",
+  detailInk: "#f4eee4",
+  imageBlend: "normal",
+  showWordmarkMark: true,
 };
 
 const morrowTokens: BrandTokens = {
@@ -51,9 +59,13 @@ const morrowTokens: BrandTokens = {
   heroImage: "arch",
   heroOrder: "headline-first",
   prefersEditorial: true,
+  detailBackground: "#1d2a3c",
+  detailInk: "#f2ebde",
+  imageBlend: "normal",
+  showWordmarkMark: true,
 };
 
-export const BRANDS: Record<BrandId, BrandDefinition> = {
+export const BRANDS: Record<BaseBrandId, BrandDefinition> = {
   "harbor-field": {
     id: "harbor-field",
     name: "Harbor Field",
@@ -126,7 +138,7 @@ const MORROW_OPENINGS: readonly CampaignOpening[] = [
   },
 ];
 
-export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
+export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
   sparse: {
     id: "sparse",
     label: "Sparse offer",
@@ -247,35 +259,73 @@ export const CAMPAIGN_FIXTURES: Record<FixtureId, CampaignFixture> = {
   },
 };
 
-export function isFixtureId(value: string | null | undefined): value is FixtureId {
-  return value === "sparse" || value === "long-copy";
+export const BASE_CATALOG: CampaignCatalog = {
+  brands: BRANDS,
+  fixtures: CAMPAIGN_FIXTURES,
+  assets: APPROVED_ASSETS,
+};
+
+/** Merges an optional local pilot into the reviewed base catalog. */
+export function createCatalog(pilot?: PilotBundle | null): CampaignCatalog {
+  if (!pilot) return BASE_CATALOG;
+  return {
+    brands: { ...BRANDS, [pilot.brand.id]: pilot.brand },
+    fixtures: { ...CAMPAIGN_FIXTURES, [pilot.fixture.id]: pilot.fixture },
+    assets: [...APPROVED_ASSETS, ...pilot.assets],
+    pilot: pilot.pilot,
+  };
 }
 
-export function normalizeFixtureId(value: string | string[] | undefined): FixtureId {
+export function isFixtureId(
+  value: string | null | undefined,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): value is FixtureId {
+  return typeof value === "string" && Boolean(catalog.fixtures[value]);
+}
+
+export function normalizeFixtureId(
+  value: string | string[] | undefined,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): FixtureId {
   const candidate = Array.isArray(value) ? value[0] : value;
-  return isFixtureId(candidate) ? candidate : "sparse";
+  return isFixtureId(candidate, catalog) ? candidate : "sparse";
 }
 
-export function isBrandId(value: string): value is BrandId {
-  return value === "harbor-field" || value === "morrow-ceramic";
+export function isBrandId(
+  value: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): value is BrandId {
+  return Boolean(catalog.brands[value]);
 }
 
-export function getBrand(brandId: string): BrandDefinition {
-  return BRANDS[isBrandId(brandId) ? brandId : "harbor-field"];
+export function getBrand(
+  brandId: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): BrandDefinition {
+  return catalog.brands[brandId] ?? BRANDS["harbor-field"];
 }
 
-export function getAsset(assetId: string): ApprovedAsset | undefined {
-  return APPROVED_ASSETS.find((asset) => asset.id === assetId);
+export function getAsset(
+  assetId: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): ApprovedAsset | undefined {
+  return catalog.assets.find((asset) => asset.id === assetId);
 }
 
-export function defaultAccent(brandId: BrandId): string {
-  return BRANDS[brandId].tokens.accent;
+export function defaultAccent(
+  brandId: BrandId,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): string {
+  return getBrand(brandId, catalog).tokens.accent;
 }
 
-export function createFormValues(fixture: CampaignFixture): CampaignFormValues {
+export function createFormValues(
+  fixture: CampaignFixture,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): CampaignFormValues {
   return {
     brandId: fixture.brief.brandId,
-    accent: defaultAccent(fixture.brief.brandId),
+    accent: defaultAccent(fixture.brief.brandId, catalog),
     productName: fixture.brief.productName,
     offer: fixture.brief.offer,
     destinationUrl: fixture.brief.destinationUrl,
@@ -327,8 +377,12 @@ export function pickAccentInk(accent: string): string {
   return darkContrast >= lightContrast ? darkInk : lightInk;
 }
 
-export function resolveBrandTheme(brandId: string, accent?: string): ResolvedBrandTheme {
-  const brand = getBrand(brandId);
+export function resolveBrandTheme(
+  brandId: string,
+  accent?: string,
+  catalog: CampaignCatalog = BASE_CATALOG,
+): ResolvedBrandTheme {
+  const brand = getBrand(brandId, catalog);
   const normalizedAccent = parseHexColor(accent ?? "") ? accent!.trim() : brand.tokens.accent;
   return {
     brand,

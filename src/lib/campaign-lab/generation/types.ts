@@ -2,6 +2,7 @@ import type { CampaignPreviewData } from "../template.ts";
 
 export type GenerationEnv = Record<string, string | undefined>;
 import type {
+  CampaignCatalog,
   CampaignFormValues,
   FixtureId,
   LayoutId,
@@ -22,6 +23,7 @@ export type GenerationRequest = {
   };
   campaign: {
     fixtureId: FixtureId;
+    openingFocus: string | null;
     productName: string;
     productNoun: string;
     offer: string;
@@ -97,6 +99,7 @@ export type GenerationOptions = {
   provider?: CampaignGenerationProvider;
   timeoutMs?: number;
   env?: GenerationEnv;
+  catalog?: CampaignCatalog;
 };
 
 export type CampaignGenerationResult =

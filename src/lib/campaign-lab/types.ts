@@ -1,7 +1,13 @@
 export const CAMPAIGN_LAB_TEMPLATE_ID = "single-product-offer" as const;
 
-export type FixtureId = "sparse" | "long-copy";
-export type BrandId = "harbor-field" | "morrow-ceramic";
+export type BaseFixtureId = "sparse" | "long-copy";
+export type PilotFixtureId = "momisa-glow-box";
+export type FixtureId = BaseFixtureId | PilotFixtureId;
+
+export type BaseBrandId = "harbor-field" | "morrow-ceramic";
+export type PilotBrandId = "momisa";
+export type BrandId = BaseBrandId | PilotBrandId;
+
 export type LayoutId = "offer-led-one-photo" | "editorial-long-copy";
 export type AssetRole = "product-hero";
 
@@ -34,6 +40,12 @@ export type BrandTokens = {
   heroImage: "framed" | "arch";
   heroOrder: "product-first" | "headline-first";
   prefersEditorial: boolean;
+  /** The detail band's own surface, so a light editorial brand can stay light. */
+  detailBackground: string;
+  detailInk: string;
+  /** Multiply lets a white-background packshot sit on the brand's art surface. */
+  imageBlend: "normal" | "multiply";
+  showWordmarkMark: boolean;
 };
 
 export type BrandDefinition = {
@@ -79,6 +91,8 @@ export type ApprovedAsset = {
   source: string;
   rights: string;
   contentHash: string;
+  /** Reviewer note describing the tested crop and what must stay visible. */
+  crop?: string;
 };
 
 export type ApprovedCopy = {
@@ -202,4 +216,26 @@ export type ValidationIssue = {
 export type ResolvedBrandTheme = {
   brand: BrandDefinition;
   tokens: BrandTokens;
+};
+
+export type PilotDescriptor = {
+  id: string;
+  label: string;
+  status: "preview" | "confirmed";
+  note?: string;
+};
+
+/** The runtime set of brands, fixtures and assets, including optional local pilots. */
+export type CampaignCatalog = {
+  brands: Record<string, BrandDefinition>;
+  fixtures: Record<string, CampaignFixture>;
+  assets: readonly ApprovedAsset[];
+  pilot?: PilotDescriptor;
+};
+
+export type PilotBundle = {
+  brand: BrandDefinition;
+  fixture: CampaignFixture;
+  assets: ApprovedAsset[];
+  pilot: PilotDescriptor;
 };

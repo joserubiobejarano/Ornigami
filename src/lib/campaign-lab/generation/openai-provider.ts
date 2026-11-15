@@ -33,6 +33,7 @@ function buildUserPrompt(request: GenerationRequest): string {
       template: request.template,
       brand: request.brand,
       campaign: {
+        openingFocus: request.campaign.openingFocus,
         productName: request.campaign.productName,
         productNoun: request.campaign.productNoun,
         offer: request.campaign.offer,

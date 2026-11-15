@@ -253,12 +253,13 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
+  mix-blend-mode: var(--cp-image-blend, normal);
 }
 
 .detail {
   padding: 38px 20px;
-  background: var(--cp-ink);
-  color: var(--cp-page);
+  background: var(--cp-detail-bg);
+  color: var(--cp-detail-ink);
 }
 
 .detailGrid {
@@ -287,7 +288,7 @@
   align-self: start;
   margin: 0;
   padding: 0;
-  border-top: 1px solid color-mix(in srgb, var(--cp-page) 24%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--cp-detail-ink) 24%, transparent);
   list-style: none;
 }
 
@@ -298,11 +299,11 @@
   justify-content: space-between;
   gap: 24px;
   padding: 13px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--cp-page) 24%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--cp-detail-ink) 24%, transparent);
 }
 
 .detailFacts .factLabel {
-  color: color-mix(in srgb, var(--cp-page) 62%, transparent);
+  color: color-mix(in srgb, var(--cp-detail-ink) 62%, transparent);
 }
 
 .detailFacts .factValue {
@@ -351,9 +352,10 @@
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px 16px;
   padding: 15px 20px;
   border-top: 1px solid var(--cp-line);
   color: var(--cp-muted);
@@ -361,6 +363,10 @@
   font-weight: 600;
   letter-spacing: var(--cp-label-tracking);
   text-transform: var(--cp-label-case);
+}
+
+.previewLabel {
+  color: var(--cp-accent);
 }
 
 .srOnly {

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
 import { isFixtureId } from "@/lib/campaign-lab/fixtures";
 import { runCampaignGeneration } from "@/lib/campaign-lab/generation/service";
+import { loadCampaignCatalog } from "@/lib/campaign-lab/pilots/local-pilot";
 import type { CampaignFormValues } from "@/lib/campaign-lab/types";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +58,8 @@ export async function POST(request: Request) {
 
   const record = body as Record<string, unknown>;
   const fixtureId = record.fixtureId;
-  if (typeof fixtureId !== "string" || !isFixtureId(fixtureId)) {
+  const catalog = loadCampaignCatalog();
+  if (typeof fixtureId !== "string" || !isFixtureId(fixtureId, catalog)) {
     return json({ ok: false, message: "Choose a supported campaign fixture." }, 400);
   }
 
@@ -71,7 +73,7 @@ export async function POST(request: Request) {
     : undefined;
 
   try {
-    const result = await runCampaignGeneration({ fixtureId, values, requestId });
+    const result = await runCampaignGeneration({ fixtureId, values, requestId }, { catalog });
     return json({ ...result, requestId }, result.ok ? 200 : 422);
   } catch {
     return json(

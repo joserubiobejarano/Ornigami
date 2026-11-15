@@ -41,6 +41,16 @@ design or the first-pour story. The server rejects unfamiliar values and holds
 that opening fixed through provider selection and fallback. Selecting a new
 focus requires a fresh preview and approval.
 
+## Local pilot catalog
+
+A Git-ignored local pilot can merge one real-brand brand, fixture, and approved
+asset into the same catalog. The editor shows the pilot, and the server route
+uses the same catalog for validation and generation. See
+[`campaign-lab-pilots.md`](./campaign-lab-pilots.md). A pilot may also expose
+approved opening options. The operator selects the opening; the generator chooses
+the layout, sections, and approved facts, so the fixed product, offer,
+destination, and asset identity stay unchanged.
+
 ## Material claims
 
 `ProductFact` now carries an `id`, the rendered `label`/`value`, and an approved

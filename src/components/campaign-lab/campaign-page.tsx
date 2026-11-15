@@ -16,6 +16,7 @@ type CampaignPageProps = {
   };
   theme: ResolvedBrandTheme;
   headingId: string;
+  previewLabel?: string;
 };
 
 function FactList({ facts, className }: { facts: ProductFact[]; className?: string }) {
@@ -58,7 +59,7 @@ function Action({ href, label }: { href: string; label: string }) {
   );
 }
 
-export function CampaignPage({ brief, draft, asset, theme, headingId }: CampaignPageProps) {
+export function CampaignPage({ brief, draft, asset, theme, headingId, previewLabel }: CampaignPageProps) {
   const { tokens } = theme;
   const isEditorial = draft.layout === "editorial-long-copy";
   const showHeroFacts = draft.sections.includes("hero-facts");
@@ -84,6 +85,9 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
     "--cp-label-tracking": tokens.labelTracking,
     "--cp-image-radius": tokens.imageRadius,
     "--cp-button-radius": tokens.buttonRadius,
+    "--cp-detail-bg": tokens.detailBackground,
+    "--cp-detail-ink": tokens.detailInk,
+    "--cp-image-blend": tokens.imageBlend,
   } as CSSProperties;
 
   const image = (
@@ -113,7 +117,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
     >
       <header className={styles.masthead}>
         <p className={styles.wordmark}>
-          <span className={styles.mark} aria-hidden="true" />
+          {tokens.showWordmarkMark ? <span className={styles.mark} aria-hidden="true" /> : null}
           {theme.brand.wordmark}
         </p>
       </header>
@@ -180,6 +184,7 @@ export function CampaignPage({ brief, draft, asset, theme, headingId }: Campaign
 
       <footer className={styles.footer}>
         <span>{theme.brand.wordmark}</span>
+        {previewLabel ? <span className={styles.previewLabel}>{previewLabel}</span> : null}
         <span>© 2026 {theme.brand.name}</span>
       </footer>
     </article>
