@@ -33,6 +33,12 @@ export type BrowserOfferPackshotInput = {
   fileName?: string;
 };
 
+export type BrowserOfferConfirmations = {
+  offer?: string | null;
+  destination?: string | null;
+  rights?: string | null;
+};
+
 export type BrowserOfferIntakeInput = {
   brandName?: string;
   productName: string;
@@ -41,6 +47,7 @@ export type BrowserOfferIntakeInput = {
   facts: readonly BrowserOfferFactInput[];
   packshot: BrowserOfferPackshotInput | null;
   reviewedOn: string;
+  confirmations?: BrowserOfferConfirmations;
 };
 
 export type OfferVerification = "missing" | "provisional" | "confirmed";
@@ -103,14 +110,43 @@ export function classifyDestination(value: string): DestinationVerification {
   return "direct";
 }
 
+function confirmedExactly(
+  confirmed: string | null | undefined,
+  value: string,
+): boolean {
+  return Boolean(confirmed) && confirmed === value.trim();
+}
+
 export function verifyBrowserOffer(input: BrowserOfferIntakeInput): BrowserOfferVerification {
-  const offer = classifyOffer(input.offer);
-  const destination = classifyDestination(input.destinationUrl);
-  const rights = input.packshot?.rights.trim()
-    ? isProvisionalRights(input.packshot.rights)
+  const offerValue = input.offer.trim();
+  const destinationValue = input.destinationUrl.trim();
+  const rightsValue = input.packshot?.rights.trim() ?? "";
+  const confirmations = input.confirmations;
+
+  const offerClassification = classifyOffer(offerValue);
+  const destinationClassification = classifyDestination(destinationValue);
+  const rightsClassification: OfferVerification = rightsValue
+    ? isProvisionalRights(rightsValue)
       ? "provisional"
       : "confirmed"
     : "missing";
+
+  const offer =
+    offerClassification === "confirmed" &&
+    !confirmedExactly(confirmations?.offer, offerValue)
+      ? "provisional"
+      : offerClassification;
+  const destination =
+    destinationClassification === "direct" &&
+    !confirmedExactly(confirmations?.destination, destinationValue)
+      ? "provisional"
+      : destinationClassification;
+  const rights =
+    rightsClassification === "confirmed" &&
+    !confirmedExactly(confirmations?.rights, rightsValue)
+      ? "provisional"
+      : rightsClassification;
+
   return {
     offer,
     destination,
@@ -190,6 +226,16 @@ function productNoun(productName: string): string {
 
 function productLede(productName: string, brand: BrandDefinition): string {
   return `A ${productNoun(productName)} from ${brand.name}.`;
+}
+
+function conciseOfferHeadline(offer: string, productName: string): string {
+  const lead = offer
+    .trim()
+    .split(/\s+(?:through|until|when|on)\s+/i)[0]
+    .replace(/[.!?]+$/, "")
+    .trim();
+  const candidate = lead || productName;
+  return `${candidate.charAt(0).toUpperCase()}${candidate.slice(1)}.`;
 }
 
 export function validateBrowserOfferIntake(
@@ -339,7 +385,11 @@ export function buildBrowserOfferCatalog(
       productFacts,
       requiredFactGroups,
       copy: {
+        ...(trimmed(input.offer).length > 68
+          ? { headline: conciseOfferHeadline(input.offer, input.productName) }
+          : {}),
         lede: productLede(input.productName, brand),
+        hideLede: true,
       },
     },
   };

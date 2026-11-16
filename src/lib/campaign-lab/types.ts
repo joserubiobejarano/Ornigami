@@ -245,6 +245,8 @@ export type ApprovedAsset = {
 export type ApprovedCopy = {
   headline?: string;
   lede: string;
+  /** A generated lede can be retained for validation without rendering it. */
+  hideLede?: boolean;
 };
 
 export type CampaignOpening = {

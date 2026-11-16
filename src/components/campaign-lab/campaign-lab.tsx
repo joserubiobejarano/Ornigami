@@ -69,6 +69,16 @@ type CampaignLabProps = {
   showFixtureNav?: boolean;
   localOnly?: boolean;
   previewNotice?: string;
+  onEditorStateChange?: (snapshot: {
+    values: CampaignFormValues;
+    revision: string | null;
+    dirty: boolean;
+    rendered: {
+      offer: string;
+      destination: string;
+      rights: string;
+    } | null;
+  }) => void;
 };
 
 type Approval = {
@@ -103,6 +113,7 @@ export function CampaignLab({
   showFixtureNav = true,
   localOnly = false,
   previewNotice,
+  onEditorStateChange,
 }: CampaignLabProps) {
   const fixture = catalog.fixtures[initialFixtureId];
   const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
@@ -265,6 +276,23 @@ export function CampaignLab({
       inFlight.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    onEditorStateChange?.({
+      values,
+      revision: preview?.revision ?? null,
+      dirty,
+      rendered: preview
+        ? {
+            offer: preview.brief.offer,
+            destination: preview.brief.destinationUrl,
+            rights: isAdvertorialPreviewData(preview)
+              ? (preview.assets[0]?.asset.rights ?? "")
+              : preview.asset.rights,
+          }
+        : null,
+    });
+  }, [dirty, onEditorStateChange, preview, values]);
 
   function invalidateGenerationRequest() {
     requestGate.current.invalidate();

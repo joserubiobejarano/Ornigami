@@ -90,7 +90,7 @@ export function CampaignPage({
     .includes(brief.productName.toLowerCase());
   const copyLength =
     draft.headline.length +
-    draft.lede.length +
+    (brief.copy.hideLede ? 0 : draft.lede.length) +
     brief.offer.length +
     draft.facts.reduce((total, fact) => total + fact.label.length + fact.value.length, 0);
   const showClose = draft.sections.includes("close") && (isEditorial || copyLength >= 320);
@@ -172,7 +172,9 @@ export function CampaignPage({
             <div className={styles.editorialBody}>
               {image}
               <div className={styles.editorialSupport}>
-                <p className={styles.lede} data-role="lede">{draft.lede}</p>
+                {brief.copy.hideLede ? null : (
+                  <p className={styles.lede} data-role="lede">{draft.lede}</p>
+                )}
                 <Offer offer={brief.offer} />
                 <Action href={brief.destinationUrl} label={brief.actionLabel} />
               </div>
@@ -185,10 +187,12 @@ export function CampaignPage({
               <h1 id={headingId} className={styles.headline}>
                 {draft.headline}
               </h1>
-              <p className={styles.lede} data-role="lede">{draft.lede}</p>
-              {showHeroFacts ? <FactList facts={draft.facts} className={styles.facts} /> : null}
+              {brief.copy.hideLede ? null : (
+                <p className={styles.lede} data-role="lede">{draft.lede}</p>
+              )}
               <Offer offer={brief.offer} />
               <Action href={brief.destinationUrl} label={brief.actionLabel} />
+              {showHeroFacts ? <FactList facts={draft.facts} className={styles.facts} /> : null}
             </div>
             {image}
           </section>

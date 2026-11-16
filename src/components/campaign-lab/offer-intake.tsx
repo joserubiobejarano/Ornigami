@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,17 @@ import {
   verifyBrowserOffer,
 } from "@/lib/campaign-lab/browser-offer";
 import type {
+  BrowserOfferConfirmations,
   BrowserOfferFactInput,
   BrowserOfferIntakeErrors,
   BrowserOfferIntakeInput,
   BrowserOfferVerification,
 } from "@/lib/campaign-lab/browser-offer";
-import type { CampaignCatalog, CampaignFixture } from "@/lib/campaign-lab/types";
+import type {
+  CampaignCatalog,
+  CampaignFixture,
+  CampaignFormValues,
+} from "@/lib/campaign-lab/types";
 
 import { CampaignLab } from "./campaign-lab";
 
@@ -37,7 +42,17 @@ type SubmittedBrief = {
   key: number;
   fixture: CampaignFixture;
   catalog: CampaignCatalog;
-  verification: BrowserOfferVerification;
+};
+
+type EditorSnapshot = {
+  values: CampaignFormValues;
+  revision: string | null;
+  dirty: boolean;
+  rendered: {
+    offer: string;
+    destination: string;
+    rights: string;
+  } | null;
 };
 
 const EMPTY_FACT: BrowserOfferFactInput = { label: "", value: "" };
@@ -94,9 +109,19 @@ function provisionalNotice(
 
 function VerificationSummary({
   verification,
+  values,
+  revision = null,
+  dirty = false,
+  rendered = null,
 }: {
   verification: BrowserOfferVerification;
+  values: { offer: string; destination: string; rights: string };
+  revision?: string | null;
+  dirty?: boolean;
+  rendered?: { offer: string; destination: string; rights: string } | null;
 }) {
+  const shown = revision && !dirty && rendered ? rendered : values;
+  const valueSource = revision && !dirty && rendered ? "rendered" : "pending";
   return (
     <div
       className="rounded-xl border border-[#ddd3c2] bg-[#fbf8f1] p-3"
@@ -104,26 +129,50 @@ function VerificationSummary({
       data-offer-verification={verification.offer}
       data-destination-verification={verification.destination}
       data-rights-verification={verification.rights}
+      data-offer-value={shown.offer}
+      data-destination-value={shown.destination}
+      data-rights-value={shown.rights}
+      data-verification-value-source={valueSource}
+      data-verification-revision={revision ?? undefined}
+      data-verification-dirty={dirty ? "true" : "false"}
     >
-      <p className="text-sm font-semibold">Commercial and media check</p>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm font-semibold">Commercial and media check</p>
+        <p className="text-[0.68rem] font-medium text-[#6d6a5f]">
+          {revision
+            ? `Revision ${revision.slice(0, 10)} · ${
+                dirty ? "current values pending regeneration" : "rendered values"
+              }`
+            : "Not rendered yet"}
+        </p>
+      </div>
       <div className="mt-2 grid gap-2 sm:grid-cols-3">
         {(
           [
-            ["Offer", VERIFICATION_LABELS.offer[verification.offer], verification.offer],
+            ["Offer", VERIFICATION_LABELS.offer[verification.offer], verification.offer, shown.offer],
             [
               "Destination",
               VERIFICATION_LABELS.destination[verification.destination],
               verification.destination,
+              shown.destination,
             ],
-            ["Media", VERIFICATION_LABELS.rights[verification.rights], verification.rights],
+            [
+              "Media",
+              VERIFICATION_LABELS.rights[verification.rights],
+              verification.rights,
+              shown.rights,
+            ],
           ] as const
-        ).map(([label, text, status]) => (
+        ).map(([label, text, status, value]) => (
           <div
             key={label}
             className={`rounded-lg border px-3 py-2 text-xs font-semibold ${verificationTone(status)}`}
           >
             <p className="text-[0.62rem] uppercase tracking-[0.12em] opacity-80">{label}</p>
             <p className="mt-1">{text}</p>
+            <p className="mt-1 break-words text-[0.66rem] font-normal opacity-85">
+              {value || "Not entered"}
+            </p>
           </div>
         ))}
       </div>
@@ -179,8 +228,15 @@ export function OfferIntake() {
   const [rights, setRights] = useState("");
   const [readingPackshot, setReadingPackshot] = useState(false);
   const [packshotError, setPackshotError] = useState<string | null>(null);
+  const [confirmations, setConfirmations] = useState<BrowserOfferConfirmations>({
+    offer: null,
+    destination: null,
+    rights: null,
+  });
   const [errors, setErrors] = useState<BrowserOfferIntakeErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedBrief | null>(null);
+  const [editorSnapshot, setEditorSnapshot] = useState<EditorSnapshot | null>(null);
+  const formValuesRef = useRef({ offer, destinationUrl, rights });
 
   const productNameId = `${baseId}-product-name`;
   const offerId = `${baseId}-offer`;
@@ -189,6 +245,10 @@ export function OfferIntake() {
   const packshotId = `${baseId}-packshot`;
   const altId = `${baseId}-alt`;
   const rightsId = `${baseId}-rights`;
+
+  useEffect(() => {
+    formValuesRef.current = { offer, destinationUrl, rights };
+  }, [destinationUrl, offer, rights]);
 
   useEffect(() => {
     return () => {
@@ -240,6 +300,7 @@ export function OfferIntake() {
   async function handlePackshotChange(file: File | null) {
     const readId = packshotReadRef.current + 1;
     packshotReadRef.current = readId;
+    setConfirmations((current) => ({ ...current, rights: null }));
     setPackshotError(null);
     setPackshotName(file?.name ?? null);
     if (objectUrlRef.current) {
@@ -275,6 +336,25 @@ export function OfferIntake() {
     }
   }
 
+  const handleEditorStateChange = useCallback((snapshot: EditorSnapshot) => {
+    setEditorSnapshot(snapshot);
+    const previous = formValuesRef.current;
+    if (snapshot.values.offer !== previous.offer) {
+      setConfirmations((current) => ({ ...current, offer: null }));
+    }
+    if (snapshot.values.destinationUrl !== previous.destinationUrl) {
+      setConfirmations((current) => ({ ...current, destination: null }));
+    }
+    formValuesRef.current = {
+      offer: snapshot.values.offer,
+      destinationUrl: snapshot.values.destinationUrl,
+      rights: previous.rights,
+    };
+    setProductName(snapshot.values.productName);
+    setOffer(snapshot.values.offer);
+    setDestinationUrl(snapshot.values.destinationUrl);
+  }, []);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (readingPackshot || packshotError) return;
@@ -293,6 +373,7 @@ export function OfferIntake() {
           }
         : null,
       reviewedOn: new Date().toISOString().slice(0, 10),
+      confirmations,
     };
     const validation = validateBrowserOfferIntake(input);
     if (!validation.valid) {
@@ -310,8 +391,8 @@ export function OfferIntake() {
       key: submissionCount.current,
       fixture: built.fixture,
       catalog: built.catalog,
-      verification: built.verification,
     });
+    setEditorSnapshot(null);
     window.scrollTo({ top: 0 });
   }
 
@@ -324,6 +405,7 @@ export function OfferIntake() {
     facts,
     packshot: packshot ? { ...packshot, alt, rights } : null,
     reviewedOn: "",
+    confirmations,
   });
 
   if (submitted) {
@@ -345,7 +427,13 @@ export function OfferIntake() {
           </div>
         </div>
         <div className="mx-auto max-w-[1600px] px-4 pt-3 sm:px-6 lg:px-8">
-          <VerificationSummary verification={submitted.verification} />
+          <VerificationSummary
+            verification={formVerification}
+            values={{ offer, destination: destinationUrl, rights }}
+            revision={editorSnapshot?.revision ?? null}
+            dirty={editorSnapshot?.dirty ?? true}
+            rendered={editorSnapshot?.rendered ?? null}
+          />
         </div>
         <CampaignLab
           key={submitted.key}
@@ -353,7 +441,8 @@ export function OfferIntake() {
           catalog={submitted.catalog}
           showFixtureNav={false}
           localOnly
-          previewNotice={provisionalNotice(submitted.verification)}
+          previewNotice={provisionalNotice(formVerification)}
+          onEditorStateChange={handleEditorStateChange}
         />
       </div>
     );
@@ -430,6 +519,7 @@ export function OfferIntake() {
                 value={offer}
                 onChange={(event) => {
                   setOffer(event.target.value);
+                  setConfirmations((current) => ({ ...current, offer: null }));
                   clearError("offer");
                 }}
                 autoComplete="off"
@@ -453,6 +543,10 @@ export function OfferIntake() {
                 value={destinationUrl}
                 onChange={(event) => {
                   setDestinationUrl(event.target.value);
+                  setConfirmations((current) => ({
+                    ...current,
+                    destination: null,
+                  }));
                   clearError("destinationUrl");
                 }}
                 autoComplete="url"
@@ -632,6 +726,7 @@ export function OfferIntake() {
                 value={rights}
                 onChange={(event) => {
                   setRights(event.target.value);
+                  setConfirmations((current) => ({ ...current, rights: null }));
                   clearError("rights");
                 }}
                 autoComplete="off"
@@ -651,7 +746,87 @@ export function OfferIntake() {
             </div>
           </fieldset>
 
-          <VerificationSummary verification={formVerification} />
+          <fieldset
+            className="m-0 space-y-3 rounded-xl border border-[#ebe3d6] bg-[#f8f3ea] p-3"
+            data-confirmations
+            data-offer-confirmed={formVerification.offer === "confirmed" ? "true" : "false"}
+            data-destination-confirmed={
+              formVerification.destination === "direct" ? "true" : "false"
+            }
+            data-rights-confirmed={formVerification.rights === "confirmed" ? "true" : "false"}
+          >
+            <legend className="text-sm font-semibold">Operator confirmations</legend>
+            <label className="flex items-start gap-2 text-xs text-[#4f4a3f]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#234a6b]"
+                checked={Boolean(offer.trim()) && confirmations.offer === offer.trim()}
+                disabled={!offer.trim()}
+                onChange={(event) =>
+                  setConfirmations((current) => ({
+                    ...current,
+                    offer: event.target.checked ? offer.trim() : null,
+                  }))
+                }
+              />
+              <span>
+                I confirm these exact offer terms:
+                <strong className="ml-1 break-words font-semibold">
+                  {offer.trim() || "not entered"}
+                </strong>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-xs text-[#4f4a3f]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#234a6b]"
+                checked={
+                  Boolean(destinationUrl.trim()) &&
+                  confirmations.destination === destinationUrl.trim()
+                }
+                disabled={!destinationUrl.trim()}
+                onChange={(event) =>
+                  setConfirmations((current) => ({
+                    ...current,
+                    destination: event.target.checked
+                      ? destinationUrl.trim()
+                      : null,
+                  }))
+                }
+              />
+              <span>
+                I confirm this exact destination:
+                <strong className="ml-1 break-words font-semibold">
+                  {destinationUrl.trim() || "not entered"}
+                </strong>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-xs text-[#4f4a3f]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#234a6b]"
+                checked={Boolean(rights.trim()) && confirmations.rights === rights.trim()}
+                disabled={!rights.trim()}
+                onChange={(event) =>
+                  setConfirmations((current) => ({
+                    ...current,
+                    rights: event.target.checked ? rights.trim() : null,
+                  }))
+                }
+              />
+              <span>
+                I confirm these media rights:
+                <strong className="ml-1 break-words font-semibold">
+                  {rights.trim() || "not entered"}
+                </strong>
+              </span>
+            </label>
+          </fieldset>
+
+          <VerificationSummary
+            verification={formVerification}
+            values={{ offer, destination: destinationUrl, rights }}
+          />
 
           <div className="flex flex-col gap-3 border-t border-[#ebe3d6] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#6d6a5f]">

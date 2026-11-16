@@ -40,6 +40,11 @@ function completeInput(): BrowserOfferIntakeInput {
     ],
     packshot,
     reviewedOn: "2026-11-16",
+    confirmations: {
+      offer: "20% off, 27–30 November 2026",
+      destination: "https://example.com/harbor-field",
+      rights: "Client-approved for web and paid social.",
+    },
   };
 }
 
@@ -66,6 +71,8 @@ test("a complete browser brief validates and builds the existing offer preview",
       fixture.brief.copy.lede.includes("Harbor Field") &&
       !fixture.brief.copy.lede.includes("500 ml"),
   );
+  assert.equal(fixture.brief.copy.hideLede, true);
+  assert.equal(fixture.brief.copy.headline, undefined);
   assert.deepEqual(
     fixture.brief.requiredFactGroups?.[0]?.factIds,
     ["capacity", "closure", "material"],
@@ -90,6 +97,37 @@ test("a complete browser brief validates and builds the existing offer preview",
   assert.equal(preview.preview.asset.id, "browser-offer-packshot");
 });
 
+test("a long offer gets a concise headline while the exact terms stay intact", () => {
+  const offer =
+    "Free shipping plus a matching carafe through 30 November 2026 when you order the complete pour-over set";
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    productName: "Morrow ceramic dripper",
+    offer,
+    confirmations: {
+      ...completeInput().confirmations,
+      offer,
+    },
+  });
+  assert.equal(built.fixture.brief.offer, offer);
+  assert.equal(
+    built.fixture.brief.copy.headline,
+    "Free shipping plus a matching carafe.",
+  );
+  assert.equal(built.fixture.brief.copy.hideLede, true);
+
+  const preview = buildCampaignPreview(
+    built.fixture,
+    createFormValues(built.fixture, built.catalog),
+    built.catalog,
+  );
+  assert.equal(preview.ok, true);
+  if (!preview.ok) return;
+  assert.equal(preview.preview.draft.headline, "Free shipping plus a matching carafe.");
+  assert.equal(preview.preview.draft.lede, "A dripper from Harbor Field.");
+  assert.equal(preview.preview.brief.offer, offer);
+});
+
 test("a blank brand name uses the neutral preview identity", () => {
   const built = buildBrowserOfferCatalog({
     ...completeInput(),
@@ -100,16 +138,36 @@ test("a blank brand name uses the neutral preview identity", () => {
   assert.equal(built.fixture.brief.copy.lede, "A bottle from Preview brand.");
 });
 
-test("Amazon search destinations and pending rights stay provisional", () => {
+test("explicit confirmations bind to the exact offer, destination, and rights values", () => {
+  const confirmed = verifyBrowserOffer(completeInput());
+  assert.equal(confirmed.provisional, false);
+  assert.equal(confirmed.offer, "confirmed");
+  assert.equal(confirmed.destination, "direct");
+  assert.equal(confirmed.rights, "confirmed");
+
+  const edited = verifyBrowserOffer({
+    ...completeInput(),
+    offer: "25% off through 24 November 2026",
+  });
+  assert.equal(edited.offer, "provisional");
+  assert.equal(edited.destination, "direct");
+  assert.equal(edited.rights, "confirmed");
+});
+
+test("Amazon search destinations and pending rights stay provisional even when confirmed", () => {
   assert.equal(
     classifyDestination("https://www.amazon.com/s?k=Momisa+Glow+Box"),
     "provisional",
   );
+  const offer = "30% off, placeholder terms";
+  const destinationUrl = "https://www.amazon.com/s?k=Momisa+Glow+Box";
+  const rights = "Rights pending confirmation";
   const input: BrowserOfferIntakeInput = {
     ...completeInput(),
-    offer: "30% off, placeholder terms",
-    destinationUrl: "https://www.amazon.com/s?k=Momisa+Glow+Box",
-    packshot: { ...packshot, rights: "Rights pending confirmation" },
+    offer,
+    destinationUrl,
+    packshot: { ...packshot, rights },
+    confirmations: { offer, destination: destinationUrl, rights },
   };
   const built = buildBrowserOfferCatalog(input);
   assert.deepEqual(built.verification, {
@@ -120,7 +178,6 @@ test("Amazon search destinations and pending rights stay provisional", () => {
   });
   assert.equal(built.catalog.pilot?.status, "preview");
   assert.match(built.catalog.pilot?.note ?? "", /offer, destination, media rights/i);
-  assert.equal(verifyBrowserOffer(completeInput()).provisional, false);
 });
 
 test("a changed offer changes the preview revision while keeping the approved packshot", () => {
