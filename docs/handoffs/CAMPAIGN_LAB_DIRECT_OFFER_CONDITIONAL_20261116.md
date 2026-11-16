@@ -2,6 +2,9 @@
 
 Status: local, development-only fixes for the single-product offer pilot.
 
+Follow-up: [Safe direct-offer headlines](./CAMPAIGN_LAB_SAFE_OFFER_HEADLINES_20261117.md)
+replaces the conditional denylist below with a narrow, positive allowlist.
+
 - Branch: `codex/campaign-lab-direct-offer-conditional`
 - Base: `8dda4f6` (`Share offer brief and bind verification to rendered revisions`)
 - Worktree: `C:/Users/joser/.local/share/opencode/worktree/7bfa2f/direct-offer-conditional`

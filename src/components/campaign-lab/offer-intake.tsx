@@ -656,6 +656,10 @@ export function OfferIntake() {
                   {fieldError(errors, "offer")}
                 </p>
               ) : null}
+              <p className="text-xs text-[#6d6a5f]">
+                Automatic headlines only shorten a simple discount, optionally dated. Any
+                other terms keep the product name, and the exact offer stays beside the CTA.
+              </p>
             </div>
 
             <div className="space-y-1.5">

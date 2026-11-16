@@ -129,7 +129,7 @@ test("a changed offer derives a headline from the current brief", () => {
   const initialOffer =
     "50% off your first order when you spend $75 or more, excluding gift cards and sale items";
   const freeShippingOffer = "Free shipping on orders over $75";
-  const nonConditionalOffer =
+  const unparsedOffer =
     "A free custom engraving is included with every travel bottle for the whole launch season";
   const built = buildBrowserOfferCatalog({
     ...completeInput(),
@@ -148,7 +148,7 @@ test("a changed offer derives a headline from the current brief", () => {
   );
   const third = buildCampaignPreview(
     built.fixture,
-    { ...values, offer: nonConditionalOffer },
+    { ...values, offer: unparsedOffer },
     built.catalog,
   );
 
@@ -160,11 +160,38 @@ test("a changed offer derives a headline from the current brief", () => {
   assert.equal(second.preview.draft.headline, "Harbor Field travel bottle");
   assert.equal(second.preview.brief.offer, freeShippingOffer);
   assert.notEqual(first.preview.revision, second.preview.revision);
-  assert.equal(
-    third.preview.draft.headline,
-    "A free custom engraving is included with every travel bottle for the whole launch season.",
-  );
-  assert.equal(third.preview.brief.offer, nonConditionalOffer);
+  assert.equal(third.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(third.preview.brief.offer, unparsedOffer);
+});
+
+test("browser intake keeps qualifiers out of automatic headlines", () => {
+  const cases = [
+    { offer: "20% off, members only", headline: "Harbor Field travel bottle" },
+    { offer: "20% off, US customers only", headline: "Harbor Field travel bottle" },
+    { offer: "20% off orders over $50", headline: "Harbor Field travel bottle" },
+    { offer: "20% off, 27-30 November 2026", headline: "20% off the bottle." },
+  ] as const;
+
+  for (const { offer, headline } of cases) {
+    const built = buildBrowserOfferCatalog({
+      ...completeInput(),
+      offer,
+      confirmations: {
+        ...completeInput().confirmations,
+        offer,
+      },
+    });
+    const preview = buildCampaignPreview(
+      built.fixture,
+      createFormValues(built.fixture, built.catalog),
+      built.catalog,
+    );
+    assert.equal(preview.ok, true, offer);
+    if (!preview.ok) return;
+    assert.equal(preview.preview.draft.headline, headline, offer);
+    assert.equal(preview.preview.brief.offer, offer);
+    assert.equal(built.verification.offer, "confirmed");
+  }
 });
 
 test("every valid offer length renders successfully", () => {
@@ -204,9 +231,8 @@ test("every valid offer length renders successfully", () => {
 });
 
 test("a 180-character conditional offer uses the product name", () => {
-  const base =
-    "50% off your first order when you spend $75 or more, excluding gift cards and sale items, plus free returns for the whole launch season and future refill orders placed directly with our team";
-  const offer = base.slice(0, 180);
+  const offer =
+    "50% off your first order when you spend $75 or more, excluding gift cards and sale items, plus free returns for the launch season and future refills ordered directly from our team.";
   const built = buildBrowserOfferCatalog({
     ...completeInput(),
     offer,

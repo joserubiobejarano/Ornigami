@@ -15,7 +15,7 @@ import {
   buildCampaignPreview,
   buildHeadline,
   getDestinationUrlError,
-  isConditionalPromotion,
+  safeOfferHeadlineLead,
   validateCampaignForm,
 } from "../src/lib/campaign-lab/template.ts";
 
@@ -116,7 +116,7 @@ test("the sparse fixture uses the one-photo layout and the long-copy fixture ear
   );
 });
 
-test("the layout adapts to a long offer when the short brand no longer fits", () => {
+test("a long unparsed offer keeps the product name and the exact terms", () => {
   const values = sparseValues();
   values.offer =
     "A free custom engraving with every travel bottle ordered before the campaign closes";
@@ -124,13 +124,10 @@ test("the layout adapts to a long offer when the short brand no longer fits", ()
   assert.equal(result.ok, true);
   if (!result.ok) return;
 
-  assert.ok(result.preview.draft.headline.length > 68);
-  assert.equal(result.preview.draft.layout, "editorial-long-copy");
-  assert.equal(
-    result.preview.draft.headline,
-    "A free custom engraving with every travel bottle ordered before the campaign closes.",
-  );
-  assert.match(result.preview.draft.layoutReason, /headline needs room/);
+  assert.equal(result.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(result.preview.draft.layout, "offer-led-one-photo");
+  assert.equal(result.preview.brief.offer, values.offer);
+  assert.match(result.preview.draft.layoutReason, /short headline/);
 });
 
 test("destination validation returns specific errors and accepts a public HTTPS URL", () => {
@@ -248,16 +245,29 @@ test("brand style changes keep the campaign offer and destination but change the
   assert.equal(restyled.preview.theme.brand.id, "morrow-ceramic");
 });
 
-test("conditional promotions use the product name in an offer-led headline", () => {
-  const conditionalOffers = [
+test("offer-led headlines are reserved for fully parsed simple discounts", () => {
+  const unsafeOffers = [
+    "20% off, members only",
+    "20% off, members only.",
+    "20% off, US customers only",
+    "20% off, UK and EU customers only",
     "50% off your first order when you spend $75 or more, excluding gift cards and sale items",
     "Free shipping on orders over $75",
     "20% off with code SAVE20",
     "Buy one, get one free",
     "20% off orders of $50 or more",
+    "20% off everything",
+    "20% off, 27-30 November 2026, while stocks last",
+    "20% off, 27-30 November 2026, members only",
+    "20% off, 27-30 November 2026, online only",
+    "20% off, members only, 27-30 November 2026",
+    "20% off, US customers only, 27-30 November 2026",
+    "20% off, 27-30 November 2026, minimum spend $50",
+    "20% off the travel bottle",
+    "20% off — 27-30 November 2026",
   ];
-  for (const offer of conditionalOffers) {
-    assert.equal(isConditionalPromotion(offer), true, offer);
+  for (const offer of unsafeOffers) {
+    assert.equal(safeOfferHeadlineLead(offer), null, offer);
     const brief = {
       ...CAMPAIGN_FIXTURES.sparse.brief,
       offer,
@@ -266,15 +276,29 @@ test("conditional promotions use the product name in an offer-led headline", () 
     assert.equal(buildHeadline(brief, "harbor-field"), "Harbor Field travel bottle");
   }
 
-  const simpleOffer = "20% off, 27-30 November 2026";
-  assert.equal(isConditionalPromotion(simpleOffer), false);
-  assert.equal(
-    buildHeadline(
-      { ...CAMPAIGN_FIXTURES.sparse.brief, offer: simpleOffer },
-      "harbor-field",
-    ),
-    "20% off the travel bottle.",
-  );
+  const safeOffers = [
+    "20% off",
+    "20% off.",
+    "20% off, 27-30 November 2026",
+    "20% off, 27–30 November 2026",
+    "20% off through 30 November 2026",
+    "20% off until 30/11/2026",
+    "$10 off, 27-30 November 2026",
+    "£10 off",
+    "10.5% off, November 27-30, 2026",
+  ];
+  for (const offer of safeOffers) {
+    assert.notEqual(safeOfferHeadlineLead(offer), null, offer);
+    const brief = {
+      ...CAMPAIGN_FIXTURES.sparse.brief,
+      offer,
+      productName: "Harbor Field travel bottle",
+    };
+    assert.equal(
+      buildHeadline(brief, "harbor-field"),
+      `${safeOfferHeadlineLead(offer)} the travel bottle.`,
+    );
+  }
 });
 
 test("headline assembly and accent contrast remain deterministic", () => {
