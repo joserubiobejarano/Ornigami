@@ -137,7 +137,7 @@ nonzero instead of silently producing zero results.
 | `images.revision-switch` | Runs A → B → A: starts with A's image pending, switches to offer revision B with a pending image, verifies the status does not claim approval, returns to A, proves from the browser that returned A's image is pending, releases the stale B response, then releases A and approves A. If Chromium reuses a loaded A image, the pending-image path is reported as unexercised rather than asserted. |
 | `long-label` | Loads the exact long campaign label at 320 px. Checks document width, exact name access, keyboard reach, visible focus, and controls staying in the viewport. |
 | `distinct.both-formats` | Runs the distinct-opening pilot in advertorial, offer, and advertorial again. Compares API revision and image assignments with the rendered article, then checks required facts and exact CTA in each format. |
-| `real-brand.pending` | Separates intake readiness from a completed two-layout browser run. Incomplete inputs produce an explicit pending result and reference the existing checklist; a ready package runs full and one-photo with the same story, mandatory facts, exact offer, destination, required images loaded/decoded, and approval recorded against each inspected revision. |
+| `real-brand.pending` | Separates intake readiness from a completed two-layout browser run. Incomplete inputs produce an explicit pending result and reference the existing checklist; a ready package runs full and one-photo at 375 and 1440 px with the same story, mandatory facts, exact offer, destination, loaded/decoded assigned images, and approval recorded against each inspected revision. |
 
 ## Recovery and image-status contract
 
@@ -161,17 +161,22 @@ The report distinguishes:
    approved story, facts, confirmed offer and destination, disclosure, approved
    images, media rights, and `confirmed` status.
 2. **Two-layout browser run** — the same brief rendered in
-   `advertorial-full` and `advertorial-one-photo`, removing only the supporting
-   images for the one-photo run.
+   `advertorial-full` and `advertorial-one-photo` at **375 px and 1440 px**,
+   removing only the supporting images for the one-photo run.
 
 If intake is incomplete, the result is pending and the evidence points to
 `docs/campaign-lab-advertorial-review-real-brand.md#exact-missing-inputs`. No
 browser result is claimed. If the package becomes ready, the runner starts the
 real-brand pilot and compares the story, mandatory facts, exact offer, action
-label, and destination across both layouts.
+label, and destination across both layouts and both widths.
 
 The browser result also checks the revision the runner actually rendered:
 
+- Each article is compared with the **assets actually assigned to its inspected
+  revision**, not every asset in the manifest. An approved asset with no
+  supported slot must be reported as unused with its asset ID.
+- The full layout must load the packshot and at least one placed supporting
+  image. The one-photo layout must place only the packshot.
 - Every image assigned to that revision must be present in the article DOM,
   complete, have non-zero natural dimensions, and decode successfully. A failed
   required image fails the browser result and identifies the asset ID.
@@ -186,7 +191,10 @@ The browser result also checks the revision the runner actually rendered:
 Three ignored synthetic packages exercise this path without claiming a real-brand
 result: `review-ready-path-qa` (pass), `review-optional-facts-qa` (pass with a
 fourth optional fact), and `review-broken-media-qa` (must fail on the
-hash-mismatched `review-hero` packshot in both layouts).
+hash-mismatched `review-hero` packshot in both layouts). A fourth,
+`review-duplicate-assignment-qa`, assigns a `story-opening` asset that has no
+supported slot in either layout; it must pass while reporting that asset as
+unused.
 
 ## Baseline on 109536c
 
@@ -216,25 +224,34 @@ Result: **11 cases: 9 passed, 1 failed, 1 pending.**
 The only open defect is the overpromised capacity recovery. Evidence is in the
 ignored `.local/campaign-lab-review/final-109536c/` directory.
 
+## Follow-up on f49451d
+
+The `review-duplicate-assignment-qa` package reproduced the recorded false
+failure: the full layout placed `review-hero` and `review-use`, while the runner
+wrongly expected the unplaced `story-opening` asset `review-opening` to render.
+The one-photo layout correctly placed only `review-hero`.
+
+After the fix:
+
+- Each article is compared with `data-asset-ids` from the same inspected
+  revision.
+- `review-opening` is reported as unused in the full layout; `review-use` and
+  `review-opening` are unused in one-photo.
+- The full layout still requires a loaded packshot and at least one placed
+  supporting image.
+- Full and one-photo pass at 375 px and 1440 px with the same revision per
+  layout, exact offer, destination, facts, and approval revision.
+- `review-broken-media-qa` still fails both layouts and widths on the broken
+  `review-hero` packshot; approval stays disabled.
+- `review-ready-path-qa` and `review-optional-facts-qa` still pass.
+
+Evidence stays under ignored `.local/campaign-lab-review/`.
+
 ## Session 1 rerun
 
-The latest available Session 1 editor is `109536c`, which includes the
-`364590b` editor fixes. The full suite at that commit produced **9 passed, 1
-failed, 1 pending**:
-
-- The only failure is `capacity.recovery`: the editor still recommends
-  **Use single-product offer** for the four-fact group even though the offer
-  template also rejects it.
-- `capacity.alternate-format` passes, so a recommendation that can render the
-  brief works.
-- `images.revision-switch` passes the A → B → A pending-image path.
-- `real-brand.pending` remains pending with intake readiness false and the
-  two-layout browser run not claimed.
-
-No Session 1 commit after `109536c` was available at verification time. When its
-recovery-recommendation fix lands, apply this test commit in a separate worktree
-and rerun into a new output directory. Record each case separately; keep
-`real-brand.pending` pending while its inputs are incomplete.
+The latest verified Session 1 commit is `f49451d` on top of `1081e15`. The full
+acceptance suite completed with **10 passed, 0 failed, 1 pending**. The pending
+case is the real-brand intake, not a runner failure.
 
 ## Run against Session 1's editor
 
