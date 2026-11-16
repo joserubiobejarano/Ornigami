@@ -20,7 +20,7 @@
   },
   "baseArtifact": "Verified official next@16.4.5 tarball; unchanged files retained.",
   "patchFile": "scripts/framework-prototype/next-16.4.5-sri.dist.patch",
-  "patchSha256": "c40a81e15818b34250b12c08f1902828f108cf13b25d802331e5c816995f6b19",
+  "patchSha256": "56afe56380e26493464ef7b6c76ad07b85ba684e825bb671ce7abcb20d5b9593",
   "sourcePatchInspected": "scripts/framework-prototype/next-16.4.2-sri.patch",
   "sourcePatchInspectedSha256": "7d38e144d5f09908161bf90418fe2e6c4daf6f82bc43d244bbb8ccb0861b57f5",
   "buildMode": "Official 16.4.5 dist seed with minimal app-owned SRI repairs applied to compiled server, plugin, and RSC client files. No source rebuild and no upstream release-pipeline reproduction.",
@@ -36,14 +36,16 @@
     "dist/server/app-render/required-scripts.js",
     "dist/server/app-render/script-integrity.js",
     "dist/server/load-components.js",
-    "dist/server/route-modules/route-module.js"
+    "dist/server/route-modules/route-module.js",
+    "dist/compiled/next-server/app-page.runtime.prod.js"
   ],
   "node": "v24.11.1",
   "platform": "win32",
   "arch": "x64",
   "adopted": false,
   "maintenanceOwners": "unassigned",
-  "bytes": 44821756,
-  "sha256": "dcd421b4e8bb6d99f200de5ed0afbc6d3483079f24b9fa9ac8e303bd3f2376e0",
-  "integrity": "sha512-dv1sqpTweYLePSG8ZaspI0hW3WEErQ30YVMzGKXyg93WbIT98Fod5VxwCdFEss8L5f8Lz31F4Pq9Basgh+YRng=="
+  "knownGap": "Production SRI check still reports missing integrity on App Router chunk scripts (10 on /, 11 on /login). The remaining emission path is inside the bundled app-page runtime and was not safely reconstructed from the 16.4.2 patch.",
+  "bytes": 44821778,
+  "sha256": "da0c86bee1d60f963cebba91b88a4253bfaa884dd05e26a3e74af8d1b7bab3f1",
+  "integrity": "sha512-uDmdR/NXRq1NirQSMwNWALAdBKzALbqUwrcwCCUlwq57lQAxF/FcLy8ZP5i9HRCZxHKv6t5NfxL2mU6h6UKd8g=="
 }
