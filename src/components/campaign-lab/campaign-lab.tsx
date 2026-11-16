@@ -66,6 +66,8 @@ import { CampaignPage } from "./campaign-page";
 type CampaignLabProps = {
   initialFixtureId: FixtureId;
   catalog: CampaignCatalog;
+  showFixtureNav?: boolean;
+  localOnly?: boolean;
 };
 
 type Approval = {
@@ -94,7 +96,12 @@ function assetLabel(asset: ApprovedAsset, catalog: CampaignCatalog): string {
     `${catalog.brands[asset.brandId]?.name ?? asset.brandId} product image`;
 }
 
-export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
+export function CampaignLab({
+  initialFixtureId,
+  catalog,
+  showFixtureNav = true,
+  localOnly = false,
+}: CampaignLabProps) {
   const fixture = catalog.fixtures[initialFixtureId];
   const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
   const baseId = useId().replace(/:/g, "");
@@ -389,6 +396,20 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
       return;
     }
 
+    if (localOnly) {
+      invalidateGenerationRequest();
+      setPreview(local.preview);
+      setGeneration(
+        deterministicFallback(
+          "Browser offer intake uses the deterministic local builder; no manifest or provider request is involved.",
+        ),
+      );
+      setIssues([]);
+      setDirty(false);
+      setApproval(null);
+      return;
+    }
+
     const requestId = requestGate.current.begin();
     inFlight.current?.abort();
     const controller = new AbortController();
@@ -567,29 +588,39 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   </span>
                 </span>
               ) : null}
+              {showFixtureNav ? (
+                <Link
+                  href="/campaign-lab/offer"
+                  className="inline-flex min-h-9 min-w-0 max-w-full items-center rounded-full border border-[#b8aa93] bg-[#fffdf8] px-3 py-1.5 text-xs font-semibold text-[#3f3b33] transition-colors hover:border-[#9c8c73] hover:bg-[#f3ece0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d2a22] focus-visible:ring-offset-2"
+                >
+                  Offer intake
+                </Link>
+              ) : null}
             </div>
           </div>
 
-          <nav aria-label="Campaign fixtures" className="flex min-w-0 flex-wrap items-center gap-2">
-            {Object.values(catalog.fixtures).map((item) => {
-              const active = item.id === initialFixtureId;
-              return (
-                <Link
-                  key={item.id}
-                  href={`/campaign-lab?fixture=${item.id}`}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "inline-flex min-h-11 min-w-0 max-w-full items-center rounded-full border px-4 py-2 text-left text-xs font-semibold transition-colors break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d2a22] focus-visible:ring-offset-2",
-                    active
-                      ? "border-[#1d2a22] bg-[#1d2a22] text-[#fffdf8]"
-                      : "border-[#d4c8b5] bg-[#fffdf8] text-[#4f4a3f] hover:border-[#b8aa93] hover:bg-[#f3ece0]",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {showFixtureNav ? (
+            <nav aria-label="Campaign fixtures" className="flex min-w-0 flex-wrap items-center gap-2">
+              {Object.values(catalog.fixtures).map((item) => {
+                const active = item.id === initialFixtureId;
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/campaign-lab?fixture=${item.id}`}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "inline-flex min-h-11 min-w-0 max-w-full items-center rounded-full border px-4 py-2 text-left text-xs font-semibold transition-colors break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d2a22] focus-visible:ring-offset-2",
+                      active
+                        ? "border-[#1d2a22] bg-[#1d2a22] text-[#fffdf8]"
+                        : "border-[#d4c8b5] bg-[#fffdf8] text-[#4f4a3f] hover:border-[#b8aa93] hover:bg-[#f3ece0]",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          ) : null}
         </div>
       </header>
 

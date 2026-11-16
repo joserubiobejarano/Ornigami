@@ -6,7 +6,8 @@ export type BaseFixtureId =
   | "morrow-advertorial-full"
   | "morrow-advertorial-one-photo";
 export type PilotFixtureId = "momisa-glow-box";
-export type FixtureId = BaseFixtureId | PilotFixtureId;
+export type BrowserOfferFixtureId = "browser-offer";
+export type FixtureId = BaseFixtureId | PilotFixtureId | BrowserOfferFixtureId;
 
 export type BaseBrandId = "harbor-field" | "morrow-ceramic";
 export type PilotBrandId = "momisa";
