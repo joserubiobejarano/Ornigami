@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "pilot": {
+    "id": "review-four-facts",
+    "label": "Four required facts review",
+    "status": "preview"
+  },
+  "brand": {
+    "id": "review-four-facts",
+    "name": "Morrow Ceramic",
+    "wordmark": "Morrow",
+    "descriptor": "Editorial craft",
+    "tokens": {
+      "page": "#f2ebde",
+      "surface": "#e6dbc8",
+      "ink": "#1d2a3c",
+      "muted": "#5c6066",
+      "accent": "#234a6b",
+      "accentInk": "#f9f3e8",
+      "line": "#cbbda8",
+      "displayFont": "Georgia, \"Iowan Old Style\", \"Palatino Linotype\", \"Times New Roman\", serif",
+      "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+      "displayWeight": 400,
+      "displayTracking": "-0.03em",
+      "labelCase": "uppercase",
+      "labelTracking": "0.2em",
+      "imageRadius": "999px 999px 12px 12px",
+      "buttonRadius": "999px",
+      "heroImage": "arch",
+      "heroOrder": "headline-first",
+      "prefersEditorial": true,
+      "detailBackground": "#1d2a3c",
+      "detailInk": "#f2ebde",
+      "imageBlend": "normal",
+      "showWordmarkMark": true
+    },
+    "headlineMode": "angle",
+    "detailTitle": "The ribs are the design."
+  },
+  "sourceCampaign": {
+    "channel": "Email",
+    "promise": "Why the filter sits away from the wall",
+    "document": "Synthetic review fixture",
+    "reviewedBy": "Local QA",
+    "reviewedOn": "2026-11-15"
+  },
+  "fixture": {
+    "id": "review-four-facts",
+    "label": "Four required facts review",
+    "description": "Fixture for testing intake and rendering of approved product-in-use assets",
+    "brief": {
+      "productName": "Morrow ceramic pour-over dripper",
+      "productNoun": "pour-over dripper",
+      "actionLabel": "See the dripper",
+      "offer": "Free shipping through 30 November 2026",
+      "destinationUrl": "https://example.com/morrow",
+      "productFacts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "finish",
+          "label": "Finish",
+          "value": "Matte glaze",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Finish: matte glaze.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ],
+      "requiredFactGroups": [
+        {
+          "id": "rib-design",
+          "label": "the rib design",
+          "factIds": [
+            "interior",
+            "outlet",
+            "body",
+            "finish"
+          ]
+        }
+      ],
+      "copy": {
+        "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+        "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs."
+      },
+      "advertorial": {
+        "openings": [
+          {
+            "id": "flow-control",
+            "headline": "Why the filter sits away from the wall",
+            "standfirst": "Three raised interior ribs hold it clear."
+          }
+        ],
+        "storyBeats": [
+          {
+            "id": "prototype-wall",
+            "role": "opening",
+            "text": "In the first prototype, the filter sat against the wall.",
+            "source": {
+              "document": "Morrow Ceramic approved flow-control lede",
+              "quote": "In the first prototype, the filter sat against the wall.",
+              "reviewedBy": "Ornigami content review",
+              "reviewedOn": "2026-11-15"
+            }
+          },
+          {
+            "id": "rib-revision",
+            "role": "turn",
+            "text": "Morrow revised the spacing between the three interior ribs.",
+            "source": {
+              "document": "Morrow Ceramic approved flow-control lede",
+              "quote": "Morrow revised the spacing between the three interior ribs.",
+              "reviewedBy": "Ornigami content review",
+              "reviewedOn": "2026-11-15"
+            }
+          }
+        ],
+        "disclosure": {
+          "label": "Advertisement",
+          "sponsor": "Morrow Ceramic",
+          "explanation": "Paid advertisement created by Ornigami for Morrow Ceramic. Images are illustrations.",
+          "repeatAtClose": false
+        },
+        "productTransition": "The dripper holds the filter clear of the wall the same way.",
+        "assetAssignments": [
+          {
+            "role": "product-hero",
+            "assetId": "review-hero"
+          },
+          {
+            "role": "product-in-use",
+            "assetId": "review-use"
+          }
+        ],
+        "preferredLayout": "advertorial-full"
+      }
+    },
+    "openings": [
+      {
+        "id": "flow-control",
+        "label": "Rib design",
+        "copy": {
+          "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+          "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs."
+        }
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "review-hero",
+      "brandId": "review-four-facts",
+      "src": "/campaign-lab-pilots/review-four-facts/review-hero.webp",
+      "width": 1200,
+      "height": 1500,
+      "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Ornigami design review",
+      "reviewedOn": "2026-11-12",
+      "source": "Original fictional fixture rendered from assets/campaign-lab/morrow-ceramic-dripper.svg",
+      "rights": "Original work for this local prototype; fictional brand.",
+      "contentHash": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7"
+    },
+    {
+      "id": "review-use",
+      "brandId": "review-four-facts",
+      "src": "/campaign-lab-pilots/review-four-facts/review-use.png",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Water poured from a kettle into the Morrow cream ceramic dripper on a dark table.",
+      "role": "product-in-use",
+      "reviewed": true,
+      "reviewedBy": "Ornigami design review",
+      "reviewedOn": "2026-11-15",
+      "source": "Original fictional fixture from the approved Morrow review brief",
+      "rights": "Original work for this local prototype; fictional brand.",
+      "caption": "Water poured into the Morrow dripper.",
+      "contentHash": "49b0e48a866a21be4058bdfb166d5523fab4c0b77ff245c6067ee707106c7ff2"
+    }
+  ]
+}
