@@ -1,0 +1,373 @@
+diff --git a/dist/build/webpack/plugins/subresource-integrity-plugin.js b/dist/build/webpack/plugins/subresource-integrity-plugin.js
+index cd9d302..a556628 100644
+--- a/dist/build/webpack/plugins/subresource-integrity-plugin.js
++++ b/dist/build/webpack/plugins/subresource-integrity-plugin.js
+@@ -22,29 +22,125 @@ class SubresourceIntegrityPlugin {
+         this.algorithm = algorithm;
+     }
+     apply(compiler) {
+-        compiler.hooks.make.tap(PLUGIN_NAME, (compilation)=>{
+-            compilation.hooks.afterProcessAssets.tap({
++        const digest = (bytes)=>`${this.algorithm}-${_crypto.default.createHash(this.algorithm).update(bytes).digest('base64')}`;
++        compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation)=>{
++            if (compilation.outputOptions.chunkLoading !== 'jsonp') {
++                throw new Error('SRI: prototype supports only webpack JSONP browser loading');
++            }
++            if (!compiler.options.optimization.realContentHash) {
++                throw new Error('SRI: realContentHash is required');
++            }
++            const placeholders = new Map();
++            const tracked = new Set();
++            const { RuntimeModule, RuntimeGlobals } = compiler.webpack;
++            class IntegrityLoader extends RuntimeModule {
++                constructor(){
++                    super('ornigami SRI loader', RuntimeModule.STAGE_ATTACH + 1);
++                }
++                generate() {
++                    const table = {};
++                    for (const chunk of compilation.chunks){
++                        if (chunk.hasRuntime() || chunk.id === null) continue;
++                        // CSS-only split chunks have no JavaScript asset and never invoke
++                        // the JSONP script loader. Do not generate unresolvable JS hashes.
++                        if (![
++                            ...compilation.chunkGraph.getChunkModulesIterableBySourceType(chunk, 'javascript') || []
++                        ].length) continue;
++                        const length = digest('').length;
++                        const placeholder = ('ORNIGAMI_SRI_' + digest(String(chunk.id))).slice(0, length);
++                        placeholders.set(placeholder, chunk);
++                        table[String(chunk.id)] = placeholder;
++                    }
++                    return [
++                        `var ornigamiBootstrap = typeof document !== 'undefined' && document.currentScript;`,
++                        `if (!${RuntimeGlobals.scriptNonce} && ornigamiBootstrap && ornigamiBootstrap.nonce) ${RuntimeGlobals.scriptNonce} = ornigamiBootstrap.nonce;`,
++                        `var ornigamiSri = ${JSON.stringify(table)};`,
++                        `var ornigamiLoad = ${RuntimeGlobals.loadScript};`,
++                        `${RuntimeGlobals.loadScript} = function(url, done, key, chunkId) {`,
++                        `var integrity = ornigamiSri[chunkId];`,
++                        `if (!integrity || !/^(?:sha256-[A-Za-z0-9+/]{43}=|sha384-[A-Za-z0-9+/]{64}|sha512-[A-Za-z0-9+/]{86}==)$/.test(integrity)) throw new Error('SRI: missing or malformed chunk integrity');`,
++                        `return ornigamiLoad(url, done, key, chunkId);`,
++                        `};`,
++                        `${RuntimeGlobals.require}.ornigamiSri = ornigamiSri;`
++                    ].join('\n');
++                }
++            }
++            // webpack 5 compatibility hook delegates to this compiler's actual
++            // LoadScriptRuntimeModule createScript hook; set SRI before appendChild.
++            compilation.mainTemplate.hooks.jsonpScript.tap(PLUGIN_NAME, (source)=>source + '\nscript.integrity = __webpack_require__.ornigamiSri[chunkId];\n' + `script.crossOrigin = ${JSON.stringify(compilation.outputOptions.crossOriginLoading || 'anonymous')};\n`);
++            const attached = new Set();
++            compilation.hooks.runtimeRequirementInTree.for(RuntimeGlobals.loadScript).tap(PLUGIN_NAME, (chunk)=>{
++                if (!attached.has(chunk)) {
++                    attached.add(chunk);
++                    compilation.addRuntimeModule(chunk, new IntegrityLoader());
++                }
++            });
++            // Resolve fixed-width placeholders after minimization. Register SRI as
++            // content hashes so RealContentHash repairs references after renaming.
++            // The same phase boundary is used by webpack-subresource-integrity.
++            compilation.hooks.processAssets.tap({
+                 name: PLUGIN_NAME,
+-                stage: _webpack.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS
++                stage: _webpack.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE
+             }, ()=>{
+-                // Collect all the assets.
+-                let files = new Set();
++                const replacements = new Map();
++                for (const [placeholder, chunk] of placeholders){
++                    const files = [
++                        ...chunk.files
++                    ].filter((name)=>/\.js$/.test(name));
++                    if (!files.length) continue; // CSS-only chunks never invoke JS loader.
++                    if (files.length !== 1) throw new Error('SRI: ambiguous JavaScript chunk');
++                    const asset = compilation.getAsset(files[0]);
++                    if (!asset) throw new Error('SRI: missing chunk asset');
++                    replacements.set(placeholder, digest(asset.source.buffer()));
++                }
+                 for (const asset of compilation.getAssets()){
+-                    files.add(asset.name);
++                    if (!/\.js$/.test(asset.name)) continue;
++                    const original = asset.source.source().toString();
++                    const updated = new _webpack.sources.ReplaceSource(asset.source);
++                    for (const [placeholder, integrity] of replacements){
++                        let offset = original.indexOf(placeholder);
++                        while(offset !== -1){
++                            updated.replace(offset, offset + placeholder.length - 1, integrity);
++                            offset = original.indexOf(placeholder, offset + placeholder.length);
++                        }
++                    }
++                    const integrity = digest(updated.buffer());
++                    tracked.add(integrity);
++                    compilation.updateAsset(asset.name, updated, (info)=>({
++                            ...info,
++                            contenthash: [
++                                ...new Set([
++                                    ...Array.isArray(info.contenthash) ? info.contenthash : info.contenthash ? [
++                                        info.contenthash
++                                    ] : [],
++                                    integrity
++                                ])
++                            ]
++                        }));
+                 }
+-                // For each file, deduped, calculate the file hash.
++            });
++            compiler.webpack.optimize.RealContentHashPlugin.getCompilationHooks(compilation).updateHash.tap(PLUGIN_NAME, (input, oldHash)=>{
++                if (!tracked.has(oldHash)) return undefined;
++                if (!input[0]) throw new Error('SRI: missing real content hash bytes');
++                const integrity = digest(input[0]);
++                tracked.add(integrity);
++                return integrity;
++            });
++            compilation.hooks.afterProcessAssets.tap(PLUGIN_NAME, ()=>{
+                 const hashes = {};
+-                for (const file of files.values()){
+-                    // Get the buffer for the asset.
+-                    const asset = compilation.getAsset(file);
+-                    if (!asset) {
+-                        throw new Error(`could not get asset: ${file}`);
++                for (const asset of compilation.getAssets()){
++                    if (/\.js$/.test(asset.name) && asset.source.source().toString().includes('ORNIGAMI_SRI_')) {
++                        const unresolved = [
++                            ...placeholders
++                        ].filter(([placeholder])=>asset.source.source().toString().includes(placeholder)).map(([, chunk])=>({
++                                id: chunk.id,
++                                files: [
++                                    ...chunk.files
++                                ]
++                            }));
++                        throw new Error(`SRI: unresolved placeholder in ${asset.name}: ${JSON.stringify(unresolved)}`);
+                     }
+-                    // Get the buffer for the asset.
+-                    const buffer = asset.source.buffer();
+-                    // Create the hash for the content.
+-                    const hash = _crypto.default.createHash(this.algorithm).update(buffer).digest().toString('base64');
+-                    hashes[file] = `${this.algorithm}-${hash}`;
++                    hashes[asset.name] = digest(asset.source.buffer());
+                 }
+                 const json = JSON.stringify(hashes, null, 2);
+                 const file = 'server/' + _constants.SUBRESOURCE_INTEGRITY_MANIFEST;
+diff --git a/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.edge.production.js b/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.edge.production.js
+index bb29fc6..d33537e 100644
+--- a/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.edge.production.js
++++ b/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.edge.production.js
+@@ -131,7 +131,7 @@ function prepareDestinationWithChunks(moduleLoading, chunks, nonce$jscomp$0) {
+         JSCompiler_temp_const$jscomp$1,
+         {
+           crossOrigin: JSCompiler_inline_result,
+-          integrity: void 0,
++          integrity: moduleLoading.integrity ? moduleLoading.integrity(chunks[i]) : void 0,
+           fetchPriority: void 0,
+           nonce: nonce
+         }
+diff --git a/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.node.production.js b/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.node.production.js
+index 7ba22a7..ae63b03 100644
+--- a/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.node.production.js
++++ b/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.node.production.js
+@@ -132,7 +132,7 @@ function prepareDestinationWithChunks(moduleLoading, chunks, nonce$jscomp$0) {
+         JSCompiler_temp_const$jscomp$1,
+         {
+           crossOrigin: JSCompiler_inline_result,
+-          integrity: void 0,
++          integrity: moduleLoading.integrity ? moduleLoading.integrity(chunks[i]) : void 0,
+           fetchPriority: void 0,
+           nonce: nonce
+         }
+diff --git a/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.edge.production.js b/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.edge.production.js
+index b1940b1..43d4c14 100644
+--- a/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.edge.production.js
++++ b/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.edge.production.js
+@@ -131,7 +131,7 @@ function prepareDestinationWithChunks(moduleLoading, chunks, nonce$jscomp$0) {
+         JSCompiler_temp_const$jscomp$1,
+         {
+           crossOrigin: JSCompiler_inline_result,
+-          integrity: void 0,
++          integrity: moduleLoading.integrity ? moduleLoading.integrity(chunks[i]) : void 0,
+           fetchPriority: void 0,
+           nonce: nonce
+         }
+diff --git a/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.node.production.js b/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.node.production.js
+index e7ddaef..72f8341 100644
+--- a/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.node.production.js
++++ b/dist/compiled/react-server-dom-webpack-experimental/cjs/react-server-dom-webpack-client.node.production.js
+@@ -132,7 +132,7 @@ function prepareDestinationWithChunks(moduleLoading, chunks, nonce$jscomp$0) {
+         JSCompiler_temp_const$jscomp$1,
+         {
+           crossOrigin: JSCompiler_inline_result,
+-          integrity: void 0,
++          integrity: moduleLoading.integrity ? moduleLoading.integrity(chunks[i]) : void 0,
+           fetchPriority: void 0,
+           nonce: nonce
+         }
+diff --git a/dist/server/app-render/app-render.js b/dist/server/app-render/app-render.js
+index 7861673..3a73056 100644
+--- a/dist/server/app-render/app-render.js
++++ b/dist/server/app-render/app-render.js
+@@ -33,6 +33,7 @@ _export(exports, {
+     }
+ });
+ const _jsxruntime = require("react/jsx-runtime");
++const _scriptintegrity = require("./script-integrity");
+ const _approutertypes = require("../../shared/lib/app-router-types");
+ const _workasyncstorageexternal = require("../app-render/work-async-storage.external");
+ const _getpagefiles = require("../get-page-files");
+@@ -2004,7 +2005,7 @@ async function renderToStream(requestStore, res, ctx, tree, formState, postponed
+     const tracingMetadata = (0, _utils1.getTracedMetadata)((0, _tracer.getTracer)().getTracePropagationData(), experimental.clientTraceMetadata);
+     const polyfills = buildManifest.polyfillFiles.filter((polyfill)=>polyfill.endsWith('.js') && !polyfill.endsWith('.module.js')).map((polyfill)=>({
+             src: `${assetPrefix}/_next/${polyfill}${(0, _getassetquerystring.getAssetQueryString)(ctx, false)}`,
+-            integrity: subresourceIntegrityManifest == null ? void 0 : subresourceIntegrityManifest[polyfill],
++            integrity: (0, _scriptintegrity.scriptIntegrity)(subresourceIntegrityManifest, polyfill),
+             crossOrigin,
+             noModule: true,
+             nonce
+@@ -5188,7 +5189,7 @@ async function prerenderToStream(res, ctx, metadata, tree, fallbackRouteParams)
+     const tracingMetadata = (0, _utils1.getTracedMetadata)((0, _tracer.getTracer)().getTracePropagationData(), experimental.clientTraceMetadata);
+     const polyfills = buildManifest.polyfillFiles.filter((polyfill)=>polyfill.endsWith('.js') && !polyfill.endsWith('.module.js')).map((polyfill)=>({
+             src: `${assetPrefix}/_next/${polyfill}${(0, _getassetquerystring.getAssetQueryString)(ctx, false)}`,
+-            integrity: subresourceIntegrityManifest == null ? void 0 : subresourceIntegrityManifest[polyfill],
++            integrity: (0, _scriptintegrity.scriptIntegrity)(subresourceIntegrityManifest, polyfill),
+             crossOrigin,
+             noModule: true,
+             nonce
+diff --git a/dist/server/app-render/create-component-styles-and-scripts.js b/dist/server/app-render/create-component-styles-and-scripts.js
+index f1581e2..418bdb8 100644
+--- a/dist/server/app-render/create-component-styles-and-scripts.js
++++ b/dist/server/app-render/create-component-styles-and-scripts.js
+@@ -9,6 +9,7 @@ Object.defineProperty(exports, "createComponentStylesAndScripts", {
+     }
+ });
+ const _interopdefault = require("./interop-default");
++const _scriptintegrity = require("./script-integrity");
+ const _getcssinlinedlinktags = require("./get-css-inlined-link-tags");
+ const _getassetquerystring = require("./get-asset-query-string");
+ const _encodeuripath = require("../../shared/lib/encode-uri-path");
+@@ -24,7 +25,9 @@ async function createComponentStylesAndScripts({ filePath, getComponent, injecte
+             src: `${ctx.assetPrefix}/_next/${(0, _encodeuripath.encodeURIPath)(href)}${(0, _getassetquerystring.getAssetQueryString)(ctx, true)}`,
+             async: true,
+             key: `script-${scriptIndex}`,
+-            nonce: ctx.nonce
++            nonce: ctx.nonce,
++            integrity: (0, _scriptintegrity.scriptIntegrity)(ctx.renderOpts.subresourceIntegrityManifest, href),
++            crossOrigin: ctx.renderOpts.crossOrigin
+         }));
+         scriptIndex++;
+     }
+diff --git a/dist/server/app-render/get-layer-assets.js b/dist/server/app-render/get-layer-assets.js
+index 97d57fb..ede902f 100644
+--- a/dist/server/app-render/get-layer-assets.js
++++ b/dist/server/app-render/get-layer-assets.js
+@@ -8,6 +8,7 @@ Object.defineProperty(exports, "getLayerAssets", {
+         return getLayerAssets;
+     }
+ });
++const _scriptintegrity = require("./script-integrity");
+ const _getcssinlinedlinktags = require("./get-css-inlined-link-tags");
+ const _getpreloadablefonts = require("./get-preloadable-fonts");
+ const _getassetquerystring = require("./get-asset-query-string");
+@@ -56,7 +57,9 @@ function getLayerAssets({ ctx, layoutOrPagePath, injectedCSS: injectedCSSWithCur
+             src: fullSrc,
+             async: true,
+             key: `script-${scriptIndex}`,
+-            nonce: ctx.nonce
++            nonce: ctx.nonce,
++            integrity: (0, _scriptintegrity.scriptIntegrity)(ctx.renderOpts.subresourceIntegrityManifest, href),
++            crossOrigin: ctx.renderOpts.crossOrigin
+         }));
+         scriptIndex++;
+     }
+diff --git a/dist/server/app-render/required-scripts.js b/dist/server/app-render/required-scripts.js
+index 0844100..8711159 100644
+--- a/dist/server/app-render/required-scripts.js
++++ b/dist/server/app-render/required-scripts.js
+@@ -9,6 +9,7 @@ Object.defineProperty(exports, "getRequiredScripts", {
+     }
+ });
+ const _encodeuripath = require("../../shared/lib/encode-uri-path");
++const _scriptintegrity = require("./script-integrity");
+ const _reactdom = /*#__PURE__*/ _interop_require_default(require("react-dom"));
+ function _interop_require_default(obj) {
+     return obj && obj.__esModule ? obj : {
+@@ -29,10 +30,10 @@ function getRequiredScripts(buildManifest, assetPrefix, crossOrigin, SRIManifest
+     }
+     if (SRIManifest) {
+         bootstrapScript.src = `${assetPrefix}/_next/` + files[0] + qs;
+-        bootstrapScript.integrity = SRIManifest[files[0]];
++        bootstrapScript.integrity = (0, _scriptintegrity.scriptIntegrity)(SRIManifest, files[0]);
+         for(let i = 1; i < files.length; i++){
+             const src = `${assetPrefix}/_next/` + files[i] + qs;
+-            const integrity = SRIManifest[files[i]];
++            const integrity = (0, _scriptintegrity.scriptIntegrity)(SRIManifest, files[i]);
+             preinitScriptCommands.push(src, integrity);
+         }
+         preinitScripts = ()=>{
+diff --git a/patched-16.4.5/dist/server/app-render/script-integrity.js b/dist/server/app-render/script-integrity.js
+new file mode 100644
+index 0000000..2c44e0a
+--- /dev/null
++++ b/dist/server/app-render/script-integrity.js
+@@ -0,0 +1,20 @@
++/** Fail closed for an admitted SRI build; non-SRI/development stays explicit. */ "use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++Object.defineProperty(exports, "scriptIntegrity", {
++    enumerable: true,
++    get: function() {
++        return scriptIntegrity;
++    }
++});
++function scriptIntegrity(manifest, file) {
++    if (manifest === undefined) return undefined;
++    const integrity = Object.prototype.hasOwnProperty.call(manifest, file) ? manifest[file] : undefined;
++    if (typeof integrity !== 'string' || !/^(?:sha256-[A-Za-z0-9+/]{43}=|sha384-[A-Za-z0-9+/]{64}|sha512-[A-Za-z0-9+/]{86}==)$/.test(integrity)) {
++        throw new Error(`SRI: missing or malformed integrity for ${file}`);
++    }
++    return integrity;
++}
++
++//# sourceMappingURL=script-integrity.js.map
+\ No newline at end of file
+diff --git a/dist/server/load-components.js b/dist/server/load-components.js
+index 6fc540c..0ade1c2 100644
+--- a/dist/server/load-components.js
++++ b/dist/server/load-components.js
+@@ -130,6 +130,9 @@ needsManifestsForLegacyReasons }) {
+             isAppPath ? loadManifestWithRetries((0, _path.join)(/* turbopackIgnore: true */ distDir, 'server', _constants.SERVER_REFERENCE_MANIFEST + '.json'), manifestLoadAttempts).catch(()=>null) : null,
+             sriEnabled ? loadManifestWithRetries((0, _path.join)(/* turbopackIgnore: true */ distDir, 'server', _constants.SUBRESOURCE_INTEGRITY_MANIFEST + '.json')).catch(()=>undefined) : undefined
+         ]);
++        if (sriEnabled && !subresourceIntegrityManifest) {
++            throw new Error('SRI: enabled production build has no integrity manifest');
++        }
+         // Before requiring the actual page module, we have to set the reference
+         // manifests to our global store so Server Action's encryption util can access
+         // to them at the top level of the page module.
+diff --git a/dist/server/route-modules/route-module.js b/dist/server/route-modules/route-module.js
+index d49ab39..f4ceeef 100644
+--- a/dist/server/route-modules/route-module.js
++++ b/dist/server/route-modules/route-module.js
+@@ -9,6 +9,7 @@ Object.defineProperty(exports, "RouteModule", {
+     }
+ });
+ require("../../build/adapter/setup-node-env.external");
++const _scriptintegrity = require("../app-render/script-integrity");
+ const _constants = require("../../shared/lib/constants");
+ const _url = require("../../lib/url");
+ const _normalizelocalepath = require("../../shared/lib/i18n/normalize-locale-path");
+@@ -263,6 +264,19 @@ class RouteModule {
+                 interceptionRoutePatterns: routesManifest.rewrites.beforeFiles.filter(_isinterceptionrouterewrite.isInterceptionRouteRewrite).map((rewrite)=>new RegExp(rewrite.regex))
+             };
+         }
++        if (!this.isDev && ((_result_serverFilesManifest = result.serverFilesManifest) == null ? void 0 : (_result_serverFilesManifest_config_experimental = _result_serverFilesManifest.config.experimental) == null ? void 0 : (_result_serverFilesManifest_config_experimental_sri = _result_serverFilesManifest_config_experimental.sri) == null ? void 0 : _result_serverFilesManifest_config_experimental_sri.algorithm) && !result.subresourceIntegrityManifest) {
++            throw new Error('SRI: enabled production build has no integrity manifest');
++        }
++        if (result.clientReferenceManifest && result.subresourceIntegrityManifest) {
++            const manifest = result.subresourceIntegrityManifest;
++            result.clientReferenceManifest = {
++                ...result.clientReferenceManifest,
++                moduleLoading: {
++                    ...result.clientReferenceManifest.moduleLoading,
++                    integrity: (file)=>(0, _scriptintegrity.scriptIntegrity)(manifest, file)
++                }
++            };
++        }
+         return result;
+     }
+     async loadCustomCacheHandlers(req, nextConfig) {
