@@ -34,6 +34,7 @@ const { values: cli } = parseArgs({
     "no-prepare": { type: "boolean", default: false },
     "keep-server": { type: "boolean", default: false },
     "real-brand": { type: "string", default: "momisa" },
+    list: { type: "boolean", default: false },
   },
 });
 
@@ -50,7 +51,14 @@ const groups = [
   {
     id: "no-pilot",
     pilot: null,
-    cases: ["images.delayed", "images.404", "images.recovery", "images.revision-switch", "failed-edit"],
+    cases: [
+      "images.delayed",
+      "images.404",
+      "images.recovery",
+      "images.revision-switch",
+      "failed-edit",
+      "capacity.alternate-format",
+    ],
   },
   {
     id: "review-four-facts",
@@ -63,16 +71,19 @@ const groups = [
 
 const caseTitles = {
   "capacity.direct-open": "Schema-valid four-fact pilot opened directly",
-  "capacity.recovery": "Capacity error recovery action",
+  "capacity.recovery": "Capacity error recovery recommendation",
+  "capacity.alternate-format": "Alternate format that can render the whole brief",
   "failed-edit": "Failed edit after a valid preview",
   "images.delayed": "Required image delayed: approval while pending",
   "images.404": "Required image 404: approval after failure",
   "images.recovery": "Required image recovery after a failure",
-  "images.revision-switch": "Revision switch while an old image request is pending",
+  "images.revision-switch": "Revision switch A to B to A with a pending image",
   "long-label": "Long campaign label at 320 px",
   "distinct.both-formats": "Distinct-opening pilot in both formats",
-  "real-brand.pending": "Real-brand two-layout intake",
+  "real-brand.pending": "Real-brand intake readiness and two-layout run",
 };
+
+const knownCaseIds = Object.keys(caseTitles);
 
 const cases = [];
 let browser;
@@ -199,10 +210,17 @@ async function readPageState(page) {
       );
     const approve = labelledButton("Approve preview");
     const generate = labelledButton("Generate preview");
+    const statusText = (suffix) =>
+      textOf(Array.from(document.querySelectorAll("[id]")).find((node) => node.id.endsWith(suffix)));
     return {
       url: location.href,
       title: document.title,
       responseText: document.body.innerText.slice(0, 4_000),
+      statusText: {
+        preview: statusText("-campaign-preview-status"),
+        review: statusText("-review-status"),
+        form: statusText("-form-status"),
+      },
       hasEditor: Boolean(bySuffix("-format")) && Boolean(bySuffix("-offer")),
       format: bySuffix("-format")?.value ?? null,
       layout: bySuffix("-advertorial-layout")?.value ?? null,
@@ -229,6 +247,10 @@ async function readPageState(page) {
             assetIds: region.getAttribute("data-asset-ids")?.split(",").filter(Boolean) ?? [],
             unusedAssetIds: region.getAttribute("data-unused-asset-ids")?.split(",").filter(Boolean) ?? [],
             generationStatus: region.getAttribute("data-generation-status"),
+            imagesReady: region.getAttribute("data-images-ready"),
+            imageStatuses: region.getAttribute("data-image-statuses"),
+            imageFailures: region.getAttribute("data-image-failures"),
+            approvalBlockedBy: region.getAttribute("data-approval-blocked-by"),
           }
         : null,
       article: article
@@ -246,6 +268,9 @@ async function readPageState(page) {
             ),
             domRoles: Array.from(article.querySelectorAll("[data-asset-role]")).map((node) =>
               node.getAttribute("data-asset-role"),
+            ),
+            storyTexts: Array.from(article.querySelectorAll("[data-story-beat-id]")).map((node) =>
+              node.innerText.trim(),
             ),
             images,
             text: article.innerText.slice(0, 6_000),
@@ -368,6 +393,48 @@ function visibleTextMatches(text, patterns) {
   return patterns.every((pattern) => pattern.test(text));
 }
 
+function statusText(state) {
+  return [state.statusText?.preview, state.statusText?.review, state.statusText?.form]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function statusClaimsApprovalAvailable(state) {
+  return /approval (?:is )?available|ready to approve|approve now|approved locally|preview ready for local review/i.test(
+    statusText(state),
+  );
+}
+
+function imageGateReportsBlocked(state) {
+  const region = state.region;
+  if (!region) return false;
+  const statuses = region.imageStatuses ?? "";
+  const blockedByImages = region.approvalBlockedBy === "images";
+  const hasPendingOrFailed = /(?:^|,)[^:,]+:(?:pending|error)/i.test(statuses);
+  const text = statusText(state);
+  const saysWaiting = /waiting|pending|failed to load|image failed|not approved/i.test(text);
+  return (
+    region.imagesReady === "false" &&
+    (blockedByImages || hasPendingOrFailed) &&
+    saysWaiting &&
+    !statusClaimsApprovalAvailable(state)
+  );
+}
+
+function imageStatusDoesNotClaimApproval(state) {
+  return !statusClaimsApprovalAvailable(state) && imageGateReportsBlocked(state);
+}
+
+function wholeGroupRendered(state, factIds) {
+  return Boolean(state.article) && factIds.every((id) => state.article.factIds.includes(id));
+}
+
+function formatRecommendation(page) {
+  return page.locator("button, a").filter({
+    hasText: /use .*offer|use .*advertorial|single-product offer|switch to .*offer|use .*layout/i,
+  });
+}
+
 function createImageController(page) {
   const pending = [];
   const requests = [];
@@ -431,6 +498,14 @@ function createImageController(page) {
       while (pending.length > 0) {
         await this.respond(() => true, outcome);
       }
+    },
+    async respondAll(match, outcome = "continue") {
+      let released = 0;
+      while (pending.some((entry) => match(entry.url))) {
+        if (await this.respond(match, outcome)) released += 1;
+        else break;
+      }
+      return released;
     },
   };
 }
@@ -527,18 +602,19 @@ async function runCapacityDirect(browserInstance, base) {
         : "No truncated preview is shown while the group is rejected.",
       { factIds: state.article?.factIds ?? [] },
     );
-    const recovery = page.locator("button, a").filter({
-      hasText: /single-product offer|use .*offer|recover|choose .*layout/i,
-    });
+    const recovery = formatRecommendation(page);
     const recoveryCount = await recovery.count();
     addCheck(
       entry,
-      "recovery-action-visible",
-      recoveryCount > 0 && (await recovery.first().isVisible()),
+      "recovery-guidance-visible",
+      recoveryCount > 0 ||
+        /keep the group whole|no supported format|no compatible format|revise .*brief|choose a layout/i.test(
+          capacityText,
+        ),
       recoveryCount > 0
         ? `A recovery action is visible: "${(await recovery.first().innerText()).trim()}".`
-        : "No recovery action was offered.",
-      { recoveryCount },
+        : "The editor states how to recover without offering an incompatible format.",
+      { recoveryCount, errorText: capacityText.slice(0, 1_200) },
     );
     const api = await postGenerate(base, "review-four-facts", expectedValues(manifest));
     addCheck(
@@ -568,61 +644,210 @@ async function runCapacityRecovery(browserInstance, base) {
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
+  const requiredFacts = ["interior", "outlet", "body", "finish"];
   try {
     await openFixture(page, base, "review-four-facts");
     const before = await readPageState(page);
-    const recovery = page.locator("button, a").filter({
-      hasText: /single-product offer|use .*offer|recover|choose .*layout/i,
-    });
-    const available = (await recovery.count()) > 0 && (await recovery.first().isVisible());
+    const recommendation = formatRecommendation(page);
+    const recommendationCount = await recommendation.count();
+    const recommendationLabel =
+      recommendationCount > 0 ? (await recommendation.first().innerText()).trim() : null;
+    entry.evidence = {
+      before: {
+        hasEditor: before.hasEditor,
+        error: before.errorText,
+        text: before.responseText.slice(0, 2_000),
+        recommendationCount,
+        recommendationLabel,
+      },
+    };
+
     addCheck(
       entry,
-      "recovery-action-available",
-      available,
-      available ? "The capacity error offers a recovery action." : "The capacity error offers no recovery action.",
+      "capacity-guidance-still-visible",
+      /the rib design/i.test(before.responseText) &&
+        /\b4\b[\s\S]{0,80}facts|\bfacts\b[\s\S]{0,80}\b4\b/i.test(before.responseText) &&
+        /at most\s*3|can present at most 3|capacity/i.test(before.responseText),
+      "The recovery state still names the four-fact group and the three-fact capacity.",
+      { errorText: before.errorText || before.responseText.slice(0, 1_200) },
     );
-    if (available) {
-      const label = (await recovery.first().innerText()).trim();
-      await recovery.first().click();
-      await page.waitForTimeout(500);
+
+    if (recommendationCount === 0) {
+      addCheck(
+        entry,
+        "format-recommendation-can-render-whole-brief",
+        /no supported format|no compatible format|cannot render|revise .*brief|keep the group whole/i.test(
+          before.responseText,
+        ),
+        "No format is recommended when none can render the whole group.",
+        { text: before.responseText.slice(0, 1_500) },
+      );
+      addCheck(
+        entry,
+        "recovery-does-not-render-partial-group",
+        !before.article || wholeGroupRendered(before, requiredFacts),
+        "The editor does not render a partial required group.",
+        { factIds: before.article?.factIds ?? [] },
+      );
+    } else {
+      const label = recommendationLabel;
+      await recommendation.first().click();
+      await page.waitForTimeout(600);
       const after = await readPageState(page);
-      entry.evidence = {
+      entry.evidence.after = {
         action: label,
-        before: { hasEditor: before.hasEditor, error: before.errorText },
-        after: {
-          hasEditor: after.hasEditor,
-          format: after.format,
-          region: after.region,
-          error: after.errorText,
-          facts: after.article?.factIds ?? [],
-        },
+        hasEditor: after.hasEditor,
+        format: after.format,
+        layout: after.layout,
+        region: after.region,
+        error: after.errorText,
+        facts: after.article?.factIds ?? [],
+        text: after.responseText.slice(0, 2_000),
       };
-      await capture(page, entry, "after-recovery");
+      await capture(page, entry, "after-recommendation");
       addCheck(
         entry,
         "recovery-action-responds",
         after.hasEditor,
         after.hasEditor
-          ? "The editor remains usable after the recovery action."
-          : "The editor failed after the recovery action.",
+          ? "The editor remains usable after the recommended recovery action."
+          : "The editor failed after the recommended recovery action.",
       );
       addCheck(
         entry,
-        "recovery-does-not-truncate",
-        !after.article || ["interior", "outlet", "body", "finish"].every((id) => after.article.factIds.includes(id)),
-        after.article
-          ? "A recovered preview still carries the whole required group."
-          : "The recovery path keeps an explicit error instead of rendering a partial group.",
+        "format-recommendation-can-render-whole-brief",
+        wholeGroupRendered(after, requiredFacts),
+        `${label} ${wholeGroupRendered(after, requiredFacts) ? "renders" : "does not render"} the whole four-fact group.`,
+        { action: label, format: after.format, facts: after.article?.factIds ?? [] },
+      );
+      addCheck(
+        entry,
+        "recovery-does-not-render-partial-group",
+        !after.article || wholeGroupRendered(after, requiredFacts),
+        "The recovery did not quietly drop a required fact.",
         { factIds: after.article?.factIds ?? [] },
       );
       addCheck(
         entry,
-        "recovery-outcome-visible",
-        Boolean(after.article) ||
-          /the rib design/i.test(after.errorText) ||
-          /the rib design/i.test(after.responseText),
-        "The recovery either renders a complete preview or keeps the capacity error visible.",
-        { format: after.format, hasPreview: Boolean(after.article) },
+        "recovery-does-not-overpromise",
+        !/single-product offer is recommended/i.test(before.responseText) ||
+          wholeGroupRendered(after, requiredFacts),
+        "The editor only recommends a format that can render the whole brief.",
+        { recommendationLabel: label, facts: after.article?.factIds ?? [] },
+      );
+    }
+  } catch (error) {
+    entry.evidence.error = error instanceof Error ? error.message : String(error);
+    addCheck(entry, "case-completed", false, `The case could not complete: ${entry.evidence.error}`);
+  } finally {
+    await context.close();
+    finishCase(entry);
+  }
+}
+
+async function runAlternateFormat(browserInstance, base) {
+  const entry = startCase("capacity.alternate-format", { target: base });
+  const requiredFacts = ["interior", "outlet", "body"];
+  const context = await browserInstance.newContext({
+    viewport: { width: 1440, height: 900 },
+    serviceWorkers: "block",
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  try {
+    const response = await openFixture(page, base, "morrow-advertorial-full", { waitForImages: true });
+    const initial = await readPageState(page);
+    addCheck(
+      entry,
+      "alternate-starting-preview",
+      response.status === 200 &&
+        Boolean(initial.article) &&
+        wholeGroupRendered(initial, requiredFacts),
+      "The starting advertorial preview renders the full three-fact group.",
+      { status: response.status, facts: initial.article?.factIds ?? [] },
+    );
+
+    const productName = page.getByLabel("Product name", { exact: true });
+    await productName.fill("Harbor Field travel bottle");
+    await page.waitForTimeout(300);
+    const unfit = await readPageState(page);
+    const recommendation = formatRecommendation(page);
+    const count = await recommendation.count();
+    const label = count > 0 ? (await recommendation.first().innerText()).trim() : null;
+    entry.evidence = {
+      recommendation: label,
+      recommendationCount: count,
+      before: {
+        format: unfit.format,
+        error: unfit.errorText,
+        text: unfit.responseText.slice(0, 2_000),
+      },
+    };
+    addCheck(
+      entry,
+      "alternate-format-recommended",
+      count > 0 && /offer/i.test(label ?? ""),
+      count > 0
+        ? `The editor recommends "${label}" for the unfit advertorial.`
+        : "The editor does not recommend the format that can render this brief.",
+      { recommendation: label },
+    );
+    if (count > 0) {
+      await recommendation.first().click();
+      await page.waitForTimeout(600);
+      await page
+        .waitForFunction(
+          () =>
+            Array.from(document.querySelectorAll("select")).some(
+              (select) => select.id.endsWith("-format") && select.value === "offer",
+            ),
+          { timeout: 8_000 },
+        )
+        .catch(() => {});
+      const after = await readPageState(page);
+      const approved = await waitForApproveEnabled(page);
+      const settled = approved ? await readPageState(page) : after;
+      entry.evidence.after = {
+        format: settled.format,
+        region: settled.region,
+        facts: settled.article?.factIds ?? [],
+        offer: settled.article?.offer,
+        action: { label: settled.article?.actionLabel, href: settled.article?.actionHref },
+        approveDisabled: settled.approve?.disabled,
+      };
+      await capture(page, entry, "alternate-offer");
+      addCheck(
+        entry,
+        "alternate-format-selected",
+        settled.format === "offer",
+        "The recommended alternate format is selected.",
+        { format: settled.format },
+      );
+      addCheck(
+        entry,
+        "alternate-format-renders-whole-brief",
+        wholeGroupRendered(settled, requiredFacts),
+        "The alternate format renders the whole required group instead of rejecting it.",
+        { facts: settled.article?.factIds ?? [] },
+      );
+      addCheck(
+        entry,
+        "alternate-format-keeps-exact-commercials",
+        settled.article?.offer === "Free shipping through 30 November 2026" &&
+          settled.article?.actionHref === "https://example.com/morrow" &&
+          settled.article?.actionLabel === "See the dripper",
+        "The alternate format keeps the exact offer, action label and destination.",
+        {
+          offer: settled.article?.offer,
+          action: { label: settled.article?.actionLabel, href: settled.article?.actionHref },
+        },
+      );
+      addCheck(
+        entry,
+        "alternate-format-is-approvable",
+        settled.approve?.disabled === false,
+        "The alternate preview is approvable after its image loads.",
+        { approveDisabled: settled.approve?.disabled },
       );
     }
   } catch (error) {
@@ -994,64 +1219,167 @@ async function runImageRevisionSwitch(browserInstance, base) {
   controller.hold(harborMatch);
   try {
     await openFixture(page, base, "morrow-advertorial-one-photo");
-    const oldPending = await controller.waitForPending(morrowMatch);
+    const initialPending = await controller.waitForPending(morrowMatch);
     const initial = await readPageState(page);
-    await page.getByLabel("Format", { exact: true }).selectOption("offer");
-    await page.getByLabel("Product image", { exact: true }).selectOption("harbor-field-bottle-front");
-    await generateAndSettle(page);
-    const newPending = await controller.waitForPending(harborMatch);
-    const switched = await readPageState(page);
     entry.evidence = {
-      oldRevision: initial.region?.revision,
-      newRevision: switched.region?.revision,
-      oldRequest: oldPending?.url ?? null,
-      newRequest: newPending?.url ?? null,
-      newImage: imageState(switched),
+      aInitial: {
+        revision: initial.region?.revision,
+        request: initialPending?.url ?? null,
+        image: imageState(initial),
+      },
     };
     addCheck(
       entry,
-      "revision-changed",
-      Boolean(initial.region?.revision) &&
-        Boolean(switched.region?.revision) &&
-        initial.region.revision !== switched.region.revision,
-      "The editor switched to a different revision while the old image request was pending.",
-      { oldRevision: initial.region?.revision, newRevision: switched.region?.revision },
+      "a-initial-image-pending",
+      Boolean(initialPending) && imageState(initial).naturalWidth === 0,
+      "Revision A starts with its required image pending.",
+      { request: initialPending?.url ?? null, image: imageState(initial) },
     );
-    addCheck(
-      entry,
-      "new-revision-image-pending",
-      Boolean(newPending) && imageState(switched).naturalWidth === 0,
-      "The new revision's required image is still pending.",
-      { request: newPending?.url ?? null, image: imageState(switched) },
-    );
-    addCheck(
-      entry,
-      "approval-blocked-for-new-revision",
-      switched.approve?.disabled === true && switched.region?.approved !== "true",
-      "Approval is blocked while the new revision's image is pending.",
-      { approveDisabled: switched.approve?.disabled, approved: switched.region?.approved },
-    );
-    await capture(page, entry, "new-revision-pending");
 
-    const releasedOld = await controller.respond(morrowMatch, "continue");
-    await page.waitForTimeout(400);
-    const afterOld = await readPageState(page);
+    await page.getByLabel("Format", { exact: true }).selectOption("offer");
+    await page.getByLabel("Product image", { exact: true }).selectOption("harbor-field-bottle-front");
+    await generateAndSettle(page);
+    const bPending = await controller.waitForPending(harborMatch);
+    const bState = await readPageState(page);
+    entry.evidence.bPending = {
+      revision: bState.region?.revision,
+      request: bPending?.url ?? null,
+      image: imageState(bState),
+      status: statusText(bState),
+      imageAttributes: bState.region,
+    };
     addCheck(
       entry,
-      "old-image-response-does-not-approve-new-revision",
-      afterOld.approve?.disabled === true && afterOld.region?.approved !== "true",
-      releasedOld
-        ? "The old image response did not unlock approval for the new revision."
-        : "The old request had already been cancelled by the remount; approval stayed blocked.",
+      "revision-b-changed",
+      Boolean(initial.region?.revision) &&
+        Boolean(bState.region?.revision) &&
+        initial.region.revision !== bState.region.revision,
+      "The offer edit produced revision B while the A image request was still pending.",
+      { aRevision: initial.region?.revision, bRevision: bState.region?.revision },
+    );
+    addCheck(
+      entry,
+      "revision-b-image-pending",
+      Boolean(bPending) && imageState(bState).naturalWidth === 0,
+      "Revision B's required image is still pending.",
+      { request: bPending?.url ?? null, image: imageState(bState) },
+    );
+    addCheck(
+      entry,
+      "approval-blocked-for-revision-b",
+      bState.approve?.disabled === true && bState.region?.approved !== "true",
+      "Approval is blocked while revision B's image is pending.",
+      { approveDisabled: bState.approve?.disabled, approved: bState.region?.approved },
+    );
+    addCheck(
+      entry,
+      "revision-b-image-status-no-approval",
+      imageStatusDoesNotClaimApproval(bState),
+      "Revision B's image status reports a blocked/pending approval state, not an available one.",
+      { status: statusText(bState), imageAttributes: bState.region },
+    );
+    await capture(page, entry, "revision-b-pending");
+
+    // Return to A without releasing either pending request. The B response is
+    // now stale, and the returned A image must still be pending before we
+    // assert anything about approval.
+    await page.getByLabel("Format", { exact: true }).selectOption("advertorial");
+    await generateAndSettle(page);
+    const returnedAPending = await controller.waitForPending(morrowMatch, 10_000);
+    const returnedA = await readPageState(page);
+    const returnedARevision = returnedA.region?.revision;
+    const returnedAImagePending =
+      Boolean(returnedAPending) &&
+      imageState(returnedA).naturalWidth === 0 &&
+      returnedARevision === initial.region?.revision;
+    entry.evidence.returnedA = {
+      revision: returnedARevision,
+      expectedRevision: initial.region?.revision,
+      request: returnedAPending?.url ?? null,
+      image: imageState(returnedA),
+      imageAttributes: returnedA.region,
+      status: statusText(returnedA),
+    };
+    addCheck(
+      entry,
+      "returned-a-revision",
+      Boolean(returnedARevision) && returnedARevision === initial.region?.revision,
+      "Returning to the advertorial restores revision A.",
+      { revision: returnedARevision, expected: initial.region?.revision },
+    );
+    addCheck(
+      entry,
+      "returned-a-image-pending",
+      returnedAImagePending ? true : null,
+      returnedAImagePending
+        ? "The returned A preview has a pending required image, so the block can be asserted."
+        : "Chromium reused or already loaded A's image; the returned-A pending-image path is unexercised.",
+      { request: returnedAPending?.url ?? null, image: imageState(returnedA) },
+    );
+    if (returnedAImagePending) {
+      addCheck(
+        entry,
+        "approval-blocked-for-returned-a",
+        returnedA.approve?.disabled === true && returnedA.region?.approved !== "true",
+        "Approval stays blocked for the returned A preview while its image is pending.",
+        { approveDisabled: returnedA.approve?.disabled, approved: returnedA.region?.approved },
+      );
+      addCheck(
+        entry,
+        "returned-a-image-status-no-approval",
+        imageStatusDoesNotClaimApproval(returnedA),
+        "The returned A image status reports a blocked/pending approval state, not an available one.",
+        { status: statusText(returnedA), imageAttributes: returnedA.region },
+      );
+    } else {
+      addCheck(
+        entry,
+        "approval-blocked-for-returned-a",
+        null,
+        "Not asserted: the returned A image was not pending in this browser.",
+      );
+      addCheck(
+        entry,
+        "returned-a-image-status-no-approval",
+        null,
+        "Not asserted: the returned A image was not pending in this browser.",
+      );
+    }
+    await capture(page, entry, "returned-a-pending");
+
+    const releasedB = await controller.respondAll(harborMatch, "continue");
+    await page.waitForTimeout(400);
+    const afterB = await readPageState(page);
+    entry.evidence.afterStaleB = {
+      releasedB,
+      revision: afterB.region?.revision,
+      approveDisabled: afterB.approve?.disabled,
+      approved: afterB.region?.approved,
+      image: imageState(afterB),
+    };
+    addCheck(
+      entry,
+      "stale-b-response-does-not-approve-returned-a",
+      returnedAImagePending
+        ? afterB.region?.revision === returnedARevision &&
+            afterB.approve?.disabled === true &&
+            afterB.region?.approved !== "true"
+        : null,
+      returnedAImagePending
+        ? releasedB > 0
+          ? "The stale B response did not unlock approval for the returned A preview."
+          : "No live B request remained; approval still stayed blocked for A."
+        : "Not asserted: the returned A image was not pending in this browser.",
       {
-        oldRequestReleased: releasedOld,
-        approveDisabled: afterOld.approve?.disabled,
-        approved: afterOld.region?.approved,
+        releasedB,
+        revision: afterB.region?.revision,
+        approveDisabled: afterB.approve?.disabled,
+        approved: afterB.region?.approved,
       },
     );
-    await capture(page, entry, "after-old-response");
+    await capture(page, entry, "after-stale-b");
 
-    await controller.respond(harborMatch, "continue");
+    const releasedA = await controller.respondAll(morrowMatch, "continue");
     await page
       .waitForFunction(
         () => {
@@ -1061,15 +1389,20 @@ async function runImageRevisionSwitch(browserInstance, base) {
         { timeout: 15_000 },
       )
       .catch(() => {});
-    const loaded = await readPageState(page);
-    const enabledForNewRevision = await waitForApproveEnabled(page);
-    const settledLoaded = enabledForNewRevision ? await readPageState(page) : loaded;
+    await waitForApproveEnabled(page);
+    const loadedA = await readPageState(page);
+    entry.evidence.loadedA = {
+      releasedA,
+      revision: loadedA.region?.revision,
+      image: imageState(loadedA),
+      approveDisabled: loadedA.approve?.disabled,
+    };
     addCheck(
       entry,
-      "approval-enabled-for-new-revision",
-      imageState(settledLoaded).naturalWidth > 0 && settledLoaded.approve?.disabled === false,
-      "Approval becomes available only after the new revision's image loads.",
-      { image: imageState(settledLoaded), approveDisabled: settledLoaded.approve?.disabled },
+      "approval-enabled-for-returned-a",
+      imageState(loadedA).naturalWidth > 0 && loadedA.approve?.disabled === false,
+      "Approval becomes available only after the returned A image loads.",
+      { image: imageState(loadedA), approveDisabled: loadedA.approve?.disabled },
     );
     const approved = await approve(page);
     await page
@@ -1080,21 +1413,20 @@ async function runImageRevisionSwitch(browserInstance, base) {
       )
       .catch(() => {});
     const approvedState = await readPageState(page);
-    entry.evidence.approvedRevision = approvedState.region?.revision;
     addCheck(
       entry,
-      "approval-recorded-against-new-revision",
+      "approval-recorded-against-returned-a",
       approved &&
         approvedState.region?.approved === "true" &&
-        approvedState.region?.revision === switched.region?.revision,
-      "Approval is recorded against the new revision.",
+        approvedState.region?.revision === initial.region?.revision,
+      "Approval is recorded against the returned A revision.",
       {
         approved: approvedState.region?.approved,
         revision: approvedState.region?.revision,
-        statusText: approvedState.responseText.slice(0, 1_200),
+        expected: initial.region?.revision,
       },
     );
-    await capture(page, entry, "new-revision-approved");
+    await capture(page, entry, "returned-a-approved");
   } catch (error) {
     entry.evidence.error = error instanceof Error ? error.message : String(error);
     addCheck(entry, "case-completed", false, `The case could not complete: ${entry.evidence.error}`);
@@ -1460,49 +1792,237 @@ function inspectRealBrandPilot(pilotId) {
   return { data, missing: [...new Set(missing)], ready: missing.length === 0, pilotDir };
 }
 
-async function runRealBrand(browserInstance, base) {
+async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
+  const fixture = manifest.fixture;
+  const requiredFactIds = (fixture.brief.requiredFactGroups ?? []).flatMap((group) => group.factIds);
+  const expectedFacts = requiredFactIds.length > 0
+    ? requiredFactIds
+    : (fixture.brief.productFacts ?? []).map((fact) => fact.id);
+  const expectedOffer = fixture.brief.offer;
+  const expectedDestination = fixture.brief.destinationUrl;
+  const expectedAction = fixture.brief.actionLabel;
+  const heroId = fixture.brief.advertorial?.assetAssignments.find(
+    (assignment) => assignment.role === "product-hero",
+  )?.assetId;
+  const assignedIds = (fixture.brief.advertorial?.assetAssignments ?? []).map(
+    (assignment) => assignment.assetId,
+  );
+  const supportingIds = assignedIds.filter((assetId) => assetId !== heroId);
+  const context = await browserInstance.newContext({
+    viewport: { width: 1440, height: 900 },
+    serviceWorkers: "block",
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  try {
+    const response = await openFixture(page, base, fixture.id, { waitForImages: true });
+    await page.getByLabel("Format", { exact: true }).selectOption("advertorial");
+    await page.getByLabel("Advertorial layout", { exact: true }).selectOption("advertorial-full");
+    await generateAndSettle(page);
+    const full = await readPageState(page);
+    await capture(page, entry, "real-brand-full");
+
+    await page.getByLabel("Advertorial layout", { exact: true }).selectOption("advertorial-one-photo");
+    await generateAndSettle(page);
+    const onePhoto = await readPageState(page);
+    await capture(page, entry, "real-brand-one-photo");
+
+    const fullStory = full.article?.storyTexts ?? [];
+    const onePhotoStory = onePhoto.article?.storyTexts ?? [];
+    const fullFacts = full.article?.factIds ?? [];
+    const onePhotoFacts = onePhoto.article?.factIds ?? [];
+    const fullOffers = full.article?.offer === expectedOffer;
+    const onePhotoOffers = onePhoto.article?.offer === expectedOffer;
+    const fullDestination =
+      full.article?.actionHref === expectedDestination && full.article?.actionLabel === expectedAction;
+    const onePhotoDestination =
+      onePhoto.article?.actionHref === expectedDestination &&
+      onePhoto.article?.actionLabel === expectedAction;
+    const onePhotoOnlyHero =
+      onePhoto.article?.domAssetIds?.length === 1 &&
+      onePhoto.article.domAssetIds[0] === heroId &&
+      (onePhoto.article.images ?? []).length === 1;
+    const fullHasSupporting =
+      supportingIds.length > 0 &&
+      supportingIds.every((assetId) => full.article?.domAssetIds?.includes(assetId));
+
+    entry.evidence.twoLayoutBrowserRun = {
+      status: "completed",
+      fixture: fixture.id,
+      expected: {
+        requiredFactIds: expectedFacts,
+        offer: expectedOffer,
+        destination: expectedDestination,
+        action: expectedAction,
+        heroId,
+        supportingIds,
+      },
+      full: {
+        status: response.status,
+        revision: full.region?.revision,
+        layout: full.region?.layout,
+        story: fullStory,
+        facts: fullFacts,
+        offer: full.article?.offer,
+        action: { label: full.article?.actionLabel, href: full.article?.actionHref },
+        assetIds: full.article?.domAssetIds,
+      },
+      onePhoto: {
+        revision: onePhoto.region?.revision,
+        layout: onePhoto.region?.layout,
+        story: onePhotoStory,
+        facts: onePhotoFacts,
+        offer: onePhoto.article?.offer,
+        action: { label: onePhoto.article?.actionLabel, href: onePhoto.article?.actionHref },
+        assetIds: onePhoto.article?.domAssetIds,
+      },
+    };
+
+    addCheck(
+      entry,
+      "two-layout-full-runs",
+      response.status === 200 && full.region?.layout === "advertorial-full" && Boolean(full.article),
+      "The full advertorial renders from the approved real-brand brief.",
+      { status: response.status, layout: full.region?.layout },
+    );
+    addCheck(
+      entry,
+      "two-layout-one-photo-runs",
+      onePhoto.region?.layout === "advertorial-one-photo" && Boolean(onePhoto.article),
+      "The one-photo advertorial renders from the same brief.",
+      { layout: onePhoto.region?.layout },
+    );
+    addCheck(
+      entry,
+      "two-layout-story-parity",
+      JSON.stringify(fullStory) === JSON.stringify(onePhotoStory) && fullStory.length > 0,
+      "Both layouts keep the same approved story.",
+      { full: fullStory, onePhoto: onePhotoStory },
+    );
+    addCheck(
+      entry,
+      "two-layout-required-facts-parity",
+      expectedFacts.every((id) => fullFacts.includes(id) && onePhotoFacts.includes(id)) &&
+        JSON.stringify(fullFacts) === JSON.stringify(onePhotoFacts),
+      "Both layouts keep every required fact in the same order.",
+      { expectedFacts, full: fullFacts, onePhoto: onePhotoFacts },
+    );
+    addCheck(
+      entry,
+      "two-layout-exact-offer",
+      fullOffers && onePhotoOffers,
+      "Both layouts keep the exact approved offer.",
+      { expected: expectedOffer, full: full.article?.offer, onePhoto: onePhoto.article?.offer },
+    );
+    addCheck(
+      entry,
+      "two-layout-destination",
+      fullDestination && onePhotoDestination,
+      "Both layouts keep the exact action label and destination.",
+      {
+        expected: { label: expectedAction, href: expectedDestination },
+        full: { label: full.article?.actionLabel, href: full.article?.actionHref },
+        onePhoto: { label: onePhoto.article?.actionLabel, href: onePhoto.article?.actionHref },
+      },
+    );
+    addCheck(
+      entry,
+      "two-layout-removes-only-supporting-images",
+      fullHasSupporting && onePhotoOnlyHero,
+      "The one-photo run removes only the supporting images and keeps the packshot.",
+      {
+        heroId,
+        supportingIds,
+        fullAssetIds: full.article?.domAssetIds,
+        onePhotoAssetIds: onePhoto.article?.domAssetIds,
+      },
+    );
+  } finally {
+    await context.close();
+  }
+}
+
+async function runRealBrand(browserInstance, base, readiness = inspectRealBrandPilot(cli["real-brand"])) {
   const entry = startCase("real-brand.pending", { target: base, pilot: cli["real-brand"] });
-  const readiness = inspectRealBrandPilot(cli["real-brand"]);
+  const checklist = "docs/campaign-lab-advertorial-review-real-brand.md#exact-missing-inputs";
   entry.evidence = {
     pilot: cli["real-brand"],
-    ready: readiness.ready,
-    missing: readiness.missing,
-    package: readiness.data
-      ? {
-          pilot: readiness.data.pilot,
-          fixture: {
-            id: readiness.data.fixture?.id,
-            label: readiness.data.fixture?.label,
-            offer: readiness.data.fixture?.brief?.offer,
-            destination: readiness.data.fixture?.brief?.destinationUrl,
-          },
-        }
-      : null,
+    intakeReadiness: {
+      ready: readiness.ready,
+      missing: readiness.missing,
+      checklist,
+      package: readiness.data
+        ? {
+            pilot: readiness.data.pilot,
+            fixture: {
+              id: readiness.data.fixture?.id,
+              label: readiness.data.fixture?.label,
+              offer: readiness.data.fixture?.brief?.offer,
+              destination: readiness.data.fixture?.brief?.destinationUrl,
+            },
+          }
+        : null,
+    },
+    twoLayoutBrowserRun: {
+      status: readiness.ready ? "not-started" : "not-run",
+      reason: readiness.ready
+        ? "Awaiting the browser run."
+        : "Intake readiness is incomplete, so a two-layout browser result is not claimed.",
+    },
   };
   addCheck(
     entry,
-    "real-brand-inputs-available",
+    "intake-readiness",
     readiness.ready ? true : null,
     readiness.ready
       ? "The staged real-brand package has the story, facts, offer, destination, disclosure, and approved images."
-      : "Suitable real-brand material is not on file; the two-layout test remains pending.",
-    { missing: readiness.missing },
+      : "The real-brand intake is incomplete; the missing inputs are recorded below.",
+    { missing: readiness.missing, checklist },
   );
-  if (readiness.ready) {
+  if (!readiness.ready) {
     addCheck(
       entry,
-      "real-brand-two-layout-run",
+      "missing-inputs-recorded",
+      true,
+      `The exact missing inputs and the existing checklist (${checklist}) are recorded.`,
+      { missing: readiness.missing, checklist },
+    );
+    addCheck(
+      entry,
+      "two-layout-browser-run",
+      null,
+      "Not run because approved real-brand inputs are not available; no browser result is claimed.",
+      { status: "not-run", checklist },
+    );
+  } else if (!base) {
+    addCheck(
+      entry,
+      "two-layout-browser-run",
       false,
-      "The package is ready but this runner still needs its server started with the real-brand pilot.",
+      "The inputs are ready but no development server was available for the browser run.",
     );
   } else {
-    addCheck(
-      entry,
-      "real-brand-missing-inputs-recorded",
-      true,
-      "The exact missing inputs are recorded below; no real-brand result is claimed.",
-      { missing: readiness.missing },
-    );
+    try {
+      await runRealBrandTwoLayouts(entry, browserInstance, base, readiness.data);
+      addCheck(
+        entry,
+        "two-layout-browser-run",
+        true,
+        "The same brief completed both full and one-photo browser runs.",
+        { status: "completed" },
+      );
+    } catch (error) {
+      entry.evidence.twoLayoutBrowserRun = {
+        status: "failed",
+        reason: error instanceof Error ? error.message : String(error),
+      };
+      addCheck(
+        entry,
+        "two-layout-browser-run",
+        false,
+        `The two-layout browser run failed: ${entry.evidence.twoLayoutBrowserRun.reason}`,
+      );
+    }
   }
   finishCase(entry);
 }
@@ -1630,12 +2150,48 @@ async function runGroup(browserInstance, group, base) {
   if (group.cases.includes("images.revision-switch") && selected("images.revision-switch")) {
     await runImageRevisionSwitch(browserInstance, base);
   }
+  if (group.cases.includes("capacity.alternate-format") && selected("capacity.alternate-format")) {
+    await runAlternateFormat(browserInstance, base);
+  }
   if (group.cases.includes("long-label") && selected("long-label")) {
     await runLongLabel(browserInstance, base);
   }
   if (group.cases.includes("distinct.both-formats") && selected("distinct.both-formats")) {
     await runDistinctBothFormats(browserInstance, base);
   }
+}
+
+function validateExecutedCases() {
+  const expected = requestedCases.length > 0 ? [...new Set(requestedCases)] : knownCaseIds;
+  const counts = new Map();
+  for (const entry of cases) counts.set(entry.id, (counts.get(entry.id) ?? 0) + 1);
+  const notExecuted = expected.filter((id) => (counts.get(id) ?? 0) === 0);
+  const duplicated = expected.filter((id) => (counts.get(id) ?? 0) > 1);
+  if (notExecuted.length === 0 && duplicated.length === 0) return;
+  const detail = [
+    notExecuted.length ? `requested case(s) never executed: ${notExecuted.join(", ")}` : null,
+    duplicated.length ? `requested case(s) produced more than one result: ${duplicated.join(", ")}` : null,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  cases.push({
+    id: "runner.selection",
+    title: "Requested case selection",
+    state: "failed",
+    startedAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    checks: [
+      {
+        id: "requested-cases-execute-exactly-once",
+        state: "failed",
+        detail,
+        evidence: { requested: expected, counts: Object.fromEntries(counts) },
+      },
+    ],
+    captures: [],
+    evidence: { requested: expected, counts: Object.fromEntries(counts) },
+  });
+  exitCode = 1;
 }
 
 function writeReports() {
@@ -1680,6 +2236,20 @@ function writeReports() {
 
 let exitCode = 0;
 try {
+  if (cli.list) {
+    console.log(JSON.stringify({ cases: knownCaseIds }, null, 2));
+    process.exit(0);
+  }
+  const unknownRequested = [...new Set(requestedCases)].filter((id) => !knownCaseIds.includes(id));
+  if (unknownRequested.length > 0) {
+    throw new Error(
+      `Unknown case ID(s): ${unknownRequested.join(", ")}. ` +
+        `Valid IDs: ${knownCaseIds.join(", ")}.`,
+    );
+  }
+  const realBrandSelected = selected("real-brand.pending");
+  const realBrandReadiness = realBrandSelected ? inspectRealBrandPilot(cli["real-brand"]) : null;
+
   if (!cli["no-prepare"]) {
     const preparation = spawnSync(
       process.execPath,
@@ -1701,10 +2271,11 @@ try {
   if (cli.url) {
     const base = new URL(cli.url).origin;
     const activePilot = cli.pilot ?? (await detectActivePilot(browser, base));
-    const selectedGroups = cli.pilot
-      ? groups.filter((group) => group.pilot === cli.pilot)
-      : groups.filter((group) => group.pilot === activePilot);
-    if (selectedGroups.length === 0) {
+    const selectedGroups = groups.filter(
+      (group) =>
+        group.pilot === activePilot && group.cases.some((caseId) => selected(caseId)),
+    );
+    if (selectedGroups.length === 0 && !realBrandSelected) {
       throw new Error(
         `No cases match the requested selection for pilot "${activePilot ?? "none"}". ` +
           "Expected one of: " +
@@ -1730,7 +2301,28 @@ try {
     }
   }
 
-  if (selected("real-brand")) await runRealBrand(browser, cli.url ? new URL(cli.url).origin : "not-started");
+  if (realBrandSelected) {
+    if (cli.url) {
+      await runRealBrand(browser, new URL(cli.url).origin, realBrandReadiness);
+    } else if (realBrandReadiness.ready) {
+      const port = await findFreePort(Number.parseInt(cli.port, 10) + 20 || 3230);
+      console.log(`\n[server] real-brand ${cli["real-brand"]} on http://127.0.0.1:${port}`);
+      activeServer = await startServer(
+        { id: `real-brand-${cli["real-brand"]}`, pilot: cli["real-brand"], cases: [] },
+        port,
+      );
+      try {
+        await runRealBrand(browser, activeServer.base, realBrandReadiness);
+      } finally {
+        await stopServer(activeServer);
+        activeServer = null;
+      }
+    } else {
+      await runRealBrand(browser, null, realBrandReadiness);
+    }
+  }
+
+  validateExecutedCases();
 } catch (error) {
   console.error(error);
   exitCode = 2;
