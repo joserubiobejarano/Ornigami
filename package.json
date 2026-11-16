@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-    "build": "next build --webpack && node scripts/finalize-sri-manifest.mjs && node scripts/generate-static-csp-hashes.mjs",
+        "build": "next build --webpack && node scripts/finalize-sri-manifest.mjs && node scripts/generate-static-csp-hashes.mjs",
         "analyze": "next experimental-analyze --output",
         "start": "next start",
         "lint": "eslint",
@@ -39,7 +39,7 @@
         "@radix-ui/react-separator": "^1.1.8",
         "@radix-ui/react-slot": "^1.2.4",
         "@radix-ui/react-tabs": "^1.1.13",
-        "@sentry/nextjs": "^10.69.0",
+        "@sentry/nextjs": "^10.78.0",
         "bcryptjs": "^3.0.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -55,7 +55,7 @@
         "sonner": "^2.0.7",
         "stripe": "^22.5.0",
         "tailwind-merge": "^3.4.0",
-        "zod": "^4.1.12"
+        "zod": "^4.6.7"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4",
@@ -65,7 +65,7 @@
         "@types/react-dom": "^19",
         "babel-plugin-react-compiler": "1.0.0",
         "eslint": "^9",
-        "eslint-config-next": "16.4.1",
+        "eslint-config-next": "16.4.5",
         "fast-glob": "file:./scripts/vendor/fast-glob-compat",
         "tailwindcss": "^4",
         "tw-animate-css": "^1.4.0",
@@ -73,8 +73,9 @@
     },
     "overrides": {
         "sharp": "^0.35.5",
-        "fast-uri": "^3.1.7",
+        "fast-uri": "^3.1.9",
         "fast-glob": "$fast-glob",
+        "glob": "^14.0.6",
         "brace-expansion@^1": "^1.1.20",
         "brace-expansion@^2": "^2.1.6",
         "brace-expansion@^5": "^5.0.11"
