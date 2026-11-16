@@ -1,0 +1,22 @@
+{
+  "distribution": "ornigami-sri.1-16.4.5",
+  "internalVersion": "16.4.5",
+  "upstreamCommit": "4e5335a00314be7fbb2aace5e9be56a88e64e5a8",
+  "officialPackageSha256": "a9b934c4deda237c1a269da4e68be28f39c7c5e07296a891e0a8346ce847ef97",
+  "upstreamLockSha256": "a250cafac0fc58361229688488b9af4a751dd182ab61d1cf273c62e5e5eecd1a",
+  "patchSha256": "602ed6a8b3f10843009276676a997e1a60427f3d9b266a4bb70fd612f6f94965",
+  "node": "v24.11.1",
+  "platform": "win32",
+  "arch": "x64",
+  "builderSha256": "26cd189a5ffa54df758615e287fd267432e4d32d0dbb87e32b924eef20f0ca79",
+  "packerSha256": "8b56157a7bdc6d8364be3918b9a9f74f4a1a15d9d1b0a9affb423d0ffe6b76e9",
+  "runtimeBuildConfigSha256": "79b8b6cd0eea384fc01c18c11f431c1f970314af196a33f90dd3fd95b38ac7a8",
+  "portabilityCheckerSha256": "9902214a1f8aab5a2ad66887f8bf3bb2581ac92dea621e8c5280df0d8a596997",
+  "patchedSourceLineEndings": "LF",
+  "buildMode": "Official verified package seed; source TS server/build outputs and four production App Router bundles rebuilt serially. Unchanged assets and declarations retained.",
+  "adopted": false,
+  "maintenanceOwners": "unassigned",
+  "bytes": 44840348,
+  "sha256": "65edfe40b2c592e780a58a9256775814faf681aa5c653c67ae3fb5c4eba58a28",
+  "integrity": "sha512-eX6my0Em5+3pnq7KH1ZcTjT2heQiejYpc+g7GWKBo9iZxU4wB6QTGXmxy5I0Gw3itUVnX1VcNZJEEkD8YpPNWQ=="
+}
