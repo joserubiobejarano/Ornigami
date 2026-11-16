@@ -2,6 +2,65 @@
 
 Evidence is scoped to the commit, target, action and time actually observed. A local test, manual monitor dispatch, provider configuration probe or prior deployment does not prove a different target or natural workflow. This concise ledger replaces repeated task handoffs; detailed Git-tracked proofs remain in history and the verified recovery bundle. Availability of untracked local receipts is qualified below.
 
+## Next.js 16.4.5 release audit — 17 November 2026
+
+The release branch `codex/ornigami-next-sri-release-20261117` starts at `6f188c2` and carries the durable fixture-test correction from `697e322`. The temporary Linux receipt workflow is kept on the separate evidence branch `codex/ornigami-next-sri-audit-receipts-20261117`; it is not part of the release branch. Deployment remains out of scope.
+
+The source-built candidate remains `vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz` (SHA-256 `65edfe40b2c592e780a58a9256775814faf681aa5c653c67ae3fb5c4eba58a28`). The audits below were reproduced on Ubuntu 24.04 x86_64 with Node `v22.23.3` and npm `10.9.9`, matching the target Linux/Node 22 platform.
+
+### Baseline dependency findings
+
+Baseline `8868c12`: full audit **14** findings (1 critical, 1 high, 12 moderate); production audit **8** findings (1 critical, 1 high, 6 moderate). Package findings aggregate eight distinct advisories:
+
+| Audit finding | Advisory ID(s) | Dependency path | Installed | Fixed | Scope |
+| --- | --- | --- | --- | --- | --- |
+| `@sentry/nextjs` (critical) | GHSA-mchm-gjx6-7h55 | direct dependency | `10.69.0` | `10.78.0` | full + production |
+| `@sentry/bundler-plugin-core` (moderate) | GHSA-3g3m-2fjr-6pw4; GHSA-g3hv-75wg-m249 | `@sentry/nextjs` → `@sentry/bundler-plugin-core` | `5.3.0` | removed by `@sentry/nextjs` `10.78.0` | full + production |
+| `@sentry/bundler-plugins` (moderate) | GHSA-3g3m-2fjr-6pw4; GHSA-g3hv-75wg-m249 | `@sentry/nextjs` → `@sentry/webpack-plugin` → `@sentry/bundler-plugins` | `10.69.0` | `10.78.0` | full + production |
+| `@sentry/webpack-plugin` (moderate) | GHSA-3g3m-2fjr-6pw4; GHSA-g3hv-75wg-m249 | `@sentry/nextjs` → `@sentry/webpack-plugin` | `5.4.0` | `5.4.1` | full + production |
+| `@typescript-eslint/eslint-plugin` (moderate) | GHSA-g3hv-75wg-m249 | `eslint-config-next` → `typescript-eslint` → `@typescript-eslint/eslint-plugin` | `8.71.2` | `8.73.0` | full |
+| `@typescript-eslint/parser` (moderate) | GHSA-g3hv-75wg-m249 | `eslint-config-next` → `typescript-eslint` → `@typescript-eslint/parser` | `8.71.2` | `8.73.0` | full |
+| `@typescript-eslint/type-utils` (moderate) | GHSA-g3hv-75wg-m249 | `eslint-config-next` → `typescript-eslint` → `@typescript-eslint/type-utils` | `8.71.2` | `8.73.0` | full |
+| `@typescript-eslint/typescript-estree` (moderate) | GHSA-g3hv-75wg-m249 | `eslint-config-next` → `typescript-eslint` → `@typescript-eslint/typescript-estree` | `8.71.2` | `8.73.0` | full |
+| `@typescript-eslint/utils` (moderate) | GHSA-g3hv-75wg-m249 | `eslint-config-next` → `typescript-eslint` → `@typescript-eslint/utils` | `8.71.2` | `8.73.0` | full |
+| `fast-uri` (moderate) | GHSA-w74x-v6f9-j3xg; GHSA-xhq7-xmqj-769h; GHSA-wjr9-j795-jxcr; GHSA-333x-w4r6-6crp | `@sentry/nextjs` → `@sentry/webpack-plugin` → `webpack` → `schema-utils` → `ajv`/`ajv-formats` → `fast-uri` | `3.1.8` | `3.1.9` | full + production |
+| `glob` (moderate) | GHSA-3g3m-2fjr-6pw4; GHSA-g3hv-75wg-m249 | `@sentry/nextjs` → `@sentry/bundler-plugin-core` → `glob`; `@sentry/nextjs` → `@sentry/webpack-plugin` → `@sentry/bundler-plugins` → `glob` | `13.0.6` | `14.0.6` | full + production |
+| `minimatch` (moderate) | GHSA-g3hv-75wg-m249 | `@sentry/nextjs` → `@sentry/bundler-plugin-core` → `glob` → `minimatch`; `eslint-config-next` → `typescript-eslint` → `@typescript-eslint/typescript-estree` → `minimatch` | `10.2.6` | `11.0.9` | full + production |
+| `typescript-eslint` (moderate) | GHSA-g3hv-75wg-m249 | `eslint-config-next` → `typescript-eslint` | `8.71.2` | `8.73.0` | full |
+| `zod` (high) | GHSA-mrhx-c7xc-m3w5 | direct dependency (also deduplicated through `openai` and the ESLint plugin) | `4.1.12` | `4.6.7` | full + production |
+
+### Remediation and final audit
+
+The remediation uses targeted compatible upgrades and existing override machinery; `scripts/security-audit.mjs` and its policy remain unchanged:
+
+- `@sentry/nextjs` `^10.69.0` → `^10.78.0`
+- `zod` `^4.1.12` → `^4.6.7`
+- `eslint-config-next` `16.4.1` → `16.4.5`, resolving `typescript-eslint` `8.73.0`
+- `fast-uri` override `^3.1.7` → `^3.1.9`
+- `glob` override `^14.0.6`, which resolves `minimatch` `11.0.9` for the remaining glob paths
+
+On code commit `7daa47c`, both the full and production Linux audits report **zero** findings and exit `0`. The same result was repeated by the repository's `Security checks` workflow.
+
+### Verification and release decision
+
+On the same Linux/Node 22 target, the following passed on `7daa47c`:
+
+- Quality checks: lint with 0 errors (26 existing warnings), type generation, TypeScript, and the full test suite (1,027 pass, 0 fail, 14 skipped).
+- Production build: 24 static pages generated with the 16.4.5 SRI source candidate.
+- SRI production check: 31 same-origin scripts checked across `/` and `/login`, all with valid integrity; CSP nonce rotation distinct.
+- Production smoke and A19 CSP runtime smoke, including static CSP hash parity, nonce hydration/rotation, protected dashboard, and Trusted Types headers.
+- Security unit tests: 7 passed.
+- Campaign Lab production gates: `/campaign-lab` and `/campaign-lab/offer` return `404`; `POST /api/campaign-lab/generate` returns `404` with `{"ok":false,"message":"Campaign Lab is unavailable."}`.
+- SRI fixture: all 9 checks passed, including late-chunk integrity, tampered bootstrap/chunk rejection, missing/malformed manifest fail-closed behavior, and restart retention.
+
+**Rollback:** there is still no verified rollback artifact. The prior compiled-dist `vendor/framework/next-16.4.5-ornigami-sri.1.tgz` (SHA-256 `da0c86bee1d60f963cebba91b88a4253bfaa884dd05e26a3e74af8d1b7bab3f1`) builds but fails the production SRI gate on three App Router chunks (`global-error`, `error`, and `page`). The 16.4.2 artifact is inside the November advisory range and is not an acceptable security fallback.
+
+**First-rollout stop procedure:** do not switch traffic or promote the candidate if any pre-cutover gate fails. If a first canary/rollout has started, stop new intake and promotion, keep the last accepted serving deployment unchanged, and return traffic to it; do not substitute either unverified 16.4.5 compiled-dist artifact or the vulnerable 16.4.2 artifact. Preserve the failed receipt, browser logs, and exact source/artifact hashes for review. Rebuild only from the last accepted commit/artifact after the failure is understood.
+
+**Custom Next.js patch ownership:** explicitly **unassigned**. No named maintainer currently owns rebases of `next-16.4.5-sri.patch` or retesting/publishing the app-owned artifact. Assign a named owner before the next Next.js maintenance rebase.
+
+**Release recommendation:** **GO for a first controlled rollout from this commit, with deployment still separately authorized and out of scope here.** The audit, build, SRI/CSP, fixture, and Campaign Lab gates are clean on the target platform. Because no verified rollback artifact passes the same SRI gates, use the documented stop/hold procedure rather than artifact rollback for the first rollout, and treat broad rollout as conditional on a named patch owner and a tested rollback path.
+
 ## Expanded audit adaptation — 18 October 2026
 
 The supplied reusable library was indexed without modifying it: 341 regular files, 243 Markdown files, 4,003 source checklist controls, 93 CSV worksheets and 4,058 worksheet rows. Its two supplied license texts are preserved byte for byte. The [audit entry point](../Audits/README.md) and [158-family register](../Audits/scenarios.csv) adapt the source to actual Ornigami product/data/host boundaries, existing A02–A24 evidence and the private-staging/customer-launch split. Missing standalone performance/SEO and external design-library coverage are explicit project supplements, not completed audits. Source inventory is comprehensive for the snapshot; semantic selection is curated, not a claim that every source control was individually assessed.
