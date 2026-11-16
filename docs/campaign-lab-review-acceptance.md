@@ -137,7 +137,7 @@ nonzero instead of silently producing zero results.
 | `images.revision-switch` | Runs A → B → A: starts with A's image pending, switches to offer revision B with a pending image, verifies the status does not claim approval, returns to A, proves from the browser that returned A's image is pending, releases the stale B response, then releases A and approves A. If Chromium reuses a loaded A image, the pending-image path is reported as unexercised rather than asserted. |
 | `long-label` | Loads the exact long campaign label at 320 px. Checks document width, exact name access, keyboard reach, visible focus, and controls staying in the viewport. |
 | `distinct.both-formats` | Runs the distinct-opening pilot in advertorial, offer, and advertorial again. Compares API revision and image assignments with the rendered article, then checks required facts and exact CTA in each format. |
-| `real-brand.pending` | Separates intake readiness from a completed two-layout browser run. Incomplete inputs produce an explicit pending result and reference the existing checklist; a ready package runs full and one-photo with the same story, required facts, exact offer, and destination. |
+| `real-brand.pending` | Separates intake readiness from a completed two-layout browser run. Incomplete inputs produce an explicit pending result and reference the existing checklist; a ready package runs full and one-photo with the same story, mandatory facts, exact offer, destination, required images loaded/decoded, and approval recorded against each inspected revision. |
 
 ## Recovery and image-status contract
 
@@ -167,10 +167,26 @@ The report distinguishes:
 If intake is incomplete, the result is pending and the evidence points to
 `docs/campaign-lab-advertorial-review-real-brand.md#exact-missing-inputs`. No
 browser result is claimed. If the package becomes ready, the runner starts the
-real-brand pilot and compares the story, required facts, exact offer, action
-label, and destination across both layouts. The ready path was exercised once
-with a synthetic intake harness in ignored storage; that is a mechanics check,
-not a real-brand result.
+real-brand pilot and compares the story, mandatory facts, exact offer, action
+label, and destination across both layouts.
+
+The browser result also checks the revision the runner actually rendered:
+
+- Every image assigned to that revision must be present in the article DOM,
+  complete, have non-zero natural dimensions, and decode successfully. A failed
+  required image fails the browser result and identifies the asset ID.
+- Approval must stay disabled while any required image is pending or failed. Once
+  all images load, approval must become available and must record the same
+  revision the runner inspected.
+- Mandatory fact IDs come only from `brief.requiredFactGroups`. Optional facts
+  may be omitted within template capacity, but every rendered fact must come from
+  the approved brief and keep its approved visible value. Required facts must keep
+  their values in both layouts.
+
+Three ignored synthetic packages exercise this path without claiming a real-brand
+result: `review-ready-path-qa` (pass), `review-optional-facts-qa` (pass with a
+fourth optional fact), and `review-broken-media-qa` (must fail on the
+hash-mismatched `review-hero` packshot in both layouts).
 
 ## Baseline on 109536c
 

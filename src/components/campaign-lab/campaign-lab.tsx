@@ -712,17 +712,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   <p className="mt-1 text-xs">{capacityMessage}</p>
                   <p className="mt-1 text-xs">
                     The editor will not shorten or split the approved group. Revise the approved
-                    brief so the complete group fits the product block, reload the approved brief,
-                    then generate the preview again.
+                    brief outside the editor so the complete group fits, then reload this page.
                   </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="mt-3 w-full sm:w-auto"
-                    onClick={() => window.location.reload()}
-                  >
-                    Recover approved brief
-                  </Button>
                 </div>
               ) : null}
 
@@ -1384,20 +1375,11 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
               className="rounded-xl border border-dashed border-[#c08a3f] bg-[#fbf3e4] p-4 text-[#6b4918]"
               data-preview-empty
             >
-              <p className="text-sm font-semibold">No valid preview yet</p>
+              <p className="text-sm font-semibold">No valid preview</p>
               <p className="mt-1 text-xs">
-                Approval is unavailable until the campaign brief validates and a preview is
-                generated.
-              </p>
-              {capacityMessage ? (
-                <p className="mt-2 text-xs">
-                  Resolve the capacity issue in the brief above, then reload the approved brief.
-                </p>
-              ) : otherIssues[0] ? (
-                <p className="mt-2 text-xs">{otherIssues[0].message}</p>
-              ) : null}
-              <p className="mt-2 text-xs">
-                Approval stays unavailable until a valid preview exists.
+                {capacityMessage
+                  ? "Revise the approved brief above, reload this page, then generate again."
+                  : "Fix the validation issue in the brief above, then generate a preview."}
               </p>
             </div>
           )}

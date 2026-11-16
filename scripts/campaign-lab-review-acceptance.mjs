@@ -204,6 +204,11 @@ async function readPageState(page) {
       assetId: image.closest("[data-asset-id]")?.getAttribute("data-asset-id") ?? null,
       role: image.closest("[data-asset-role]")?.getAttribute("data-asset-role") ?? null,
     }));
+    const facts = Array.from(article?.querySelectorAll("[data-fact-id]") ?? []).map((node) => ({
+      id: node.getAttribute("data-fact-id"),
+      label: node.getAttribute("data-fact-label"),
+      value: (node.lastElementChild?.textContent ?? node.textContent ?? "").trim(),
+    }));
     const labelledButton = (name) =>
       Array.from(document.querySelectorAll("button")).find(
         (button) => button.textContent?.trim() === name,
@@ -260,9 +265,8 @@ async function readPageState(page) {
             offer: textOf(article.querySelector("[data-role='offer'] p")),
             actionLabel: action ? textOf(action).replace(/\s*\(opens[^)]*\)$/i, "").trim() : null,
             actionHref: action?.getAttribute("href") ?? null,
-            factIds: Array.from(article.querySelectorAll("[data-fact-id]")).map((node) =>
-              node.getAttribute("data-fact-id"),
-            ),
+            factIds: facts.map((fact) => fact.id),
+            facts,
             domAssetIds: Array.from(article.querySelectorAll("[data-asset-id]")).map((node) =>
               node.getAttribute("data-asset-id"),
             ),
@@ -1792,12 +1796,88 @@ function inspectRealBrandPilot(pilotId) {
   return { data, missing: [...new Set(missing)], ready: missing.length === 0, pilotDir };
 }
 
+async function readDecodedArticleImages(page) {
+  return page.evaluate(async () => {
+    const article = document.querySelector("[data-preview-canvas] article");
+    const images = Array.from(article?.querySelectorAll("img") ?? []);
+    return Promise.all(
+      images.map(async (image) => {
+        let decodeOk = false;
+        let decodeError = null;
+        try {
+          await image.decode();
+          decodeOk = image.naturalWidth > 0 && image.naturalHeight > 0;
+        } catch (error) {
+          decodeError = error instanceof Error ? error.name : String(error);
+        }
+        return {
+          assetId: image.closest("[data-asset-id]")?.getAttribute("data-asset-id") ?? null,
+          role: image.closest("[data-asset-role]")?.getAttribute("data-asset-role") ?? null,
+          src: image.getAttribute("src"),
+          currentSrc: image.currentSrc,
+          alt: image.getAttribute("alt"),
+          complete: image.complete,
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          decodeOk,
+          decodeError,
+        };
+      }),
+    );
+  });
+}
+
+function requiredImageFailures(state, decodedImages) {
+  const requiredIds = state.region?.assetIds ?? [];
+  const domIds = state.article?.domAssetIds ?? [];
+  return requiredIds
+    .filter((assetId) => {
+      const image = decodedImages.find((candidate) => candidate.assetId === assetId);
+      return (
+        !domIds.includes(assetId) ||
+        !image ||
+        !image.complete ||
+        image.naturalWidth <= 0 ||
+        image.naturalHeight <= 0 ||
+        !image.decodeOk
+      );
+    })
+    .map((assetId) => {
+      const image = decodedImages.find((candidate) => candidate.assetId === assetId) ?? null;
+      return {
+        assetId,
+        rendered: domIds.includes(assetId),
+        src: image?.src ?? null,
+        currentSrc: image?.currentSrc ?? null,
+        complete: image?.complete ?? false,
+        naturalWidth: image?.naturalWidth ?? 0,
+        naturalHeight: image?.naturalHeight ?? 0,
+        decodeOk: image?.decodeOk ?? false,
+        decodeError: image?.decodeError ?? null,
+      };
+    });
+}
+
+function factsComeFromApprovedBrief(state, approvedFacts) {
+  const facts = state.article?.facts ?? [];
+  return (
+    facts.length > 0 &&
+    facts.every((fact) => {
+      const approved = approvedFacts.get(fact.id);
+      return Boolean(approved) && fact.value === approved.value;
+    })
+  );
+}
+
 async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
   const fixture = manifest.fixture;
-  const requiredFactIds = (fixture.brief.requiredFactGroups ?? []).flatMap((group) => group.factIds);
-  const expectedFacts = requiredFactIds.length > 0
-    ? requiredFactIds
-    : (fixture.brief.productFacts ?? []).map((fact) => fact.id);
+  const requiredFactIds = [
+    ...new Set((fixture.brief.requiredFactGroups ?? []).flatMap((group) => group.factIds)),
+  ];
+  const approvedFacts = new Map(
+    (fixture.brief.productFacts ?? []).map((fact) => [fact.id, fact]),
+  );
+  const expectedFacts = requiredFactIds;
   const expectedOffer = fixture.brief.offer;
   const expectedDestination = fixture.brief.destinationUrl;
   const expectedAction = fixture.brief.actionLabel;
@@ -1808,6 +1888,7 @@ async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
     (assignment) => assignment.assetId,
   );
   const supportingIds = assignedIds.filter((assetId) => assetId !== heroId);
+  const checksBefore = entry.checks.length;
   const context = await browserInstance.newContext({
     viewport: { width: 1440, height: 900 },
     serviceWorkers: "block",
@@ -1819,18 +1900,79 @@ async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
     await page.getByLabel("Format", { exact: true }).selectOption("advertorial");
     await page.getByLabel("Advertorial layout", { exact: true }).selectOption("advertorial-full");
     await generateAndSettle(page);
+    const fullInspected = await readPageState(page);
+    const fullDecodedImages = await readDecodedArticleImages(page);
+    const fullImageState = await readPageState(page);
+    const fullImageFailures = requiredImageFailures(fullImageState, fullDecodedImages);
+    const fullImagesReady =
+      (fullImageState.region?.assetIds?.length ?? 0) > 0 &&
+      fullImageFailures.length === 0 &&
+      fullImageState.region?.imagesReady === "true";
+    const fullApproveEnabled = await waitForApproveEnabled(
+      page,
+      fullImagesReady ? 6_000 : 500,
+    );
     const full = await readPageState(page);
+    let fullApproval = {
+      attempted: false,
+      approved: false,
+      revision: null,
+      matchesInspectedRevision: false,
+    };
+    if (fullImagesReady && fullApproveEnabled) {
+      const clicked = await approve(page);
+      const approvedState = await readPageState(page);
+      fullApproval = {
+        attempted: clicked,
+        approved: approvedState.region?.approved === "true",
+        revision: approvedState.region?.revision ?? null,
+        matchesInspectedRevision:
+          approvedState.region?.revision === fullInspected.region?.revision &&
+          approvedState.region?.approved === "true",
+      };
+    }
     await capture(page, entry, "real-brand-full");
 
     await page.getByLabel("Advertorial layout", { exact: true }).selectOption("advertorial-one-photo");
     await generateAndSettle(page);
+    const onePhotoInspected = await readPageState(page);
+    const onePhotoDecodedImages = await readDecodedArticleImages(page);
+    const onePhotoImageState = await readPageState(page);
+    const onePhotoImageFailures = requiredImageFailures(
+      onePhotoImageState,
+      onePhotoDecodedImages,
+    );
+    const onePhotoImagesReady =
+      (onePhotoImageState.region?.assetIds?.length ?? 0) > 0 &&
+      onePhotoImageFailures.length === 0 &&
+      onePhotoImageState.region?.imagesReady === "true";
+    const onePhotoApproveEnabled = await waitForApproveEnabled(
+      page,
+      onePhotoImagesReady ? 6_000 : 500,
+    );
     const onePhoto = await readPageState(page);
+    let onePhotoApproval = {
+      attempted: false,
+      approved: false,
+      revision: null,
+      matchesInspectedRevision: false,
+    };
+    if (onePhotoImagesReady && onePhotoApproveEnabled) {
+      const clicked = await approve(page);
+      const approvedState = await readPageState(page);
+      onePhotoApproval = {
+        attempted: clicked,
+        approved: approvedState.region?.approved === "true",
+        revision: approvedState.region?.revision ?? null,
+        matchesInspectedRevision:
+          approvedState.region?.revision === onePhotoInspected.region?.revision &&
+          approvedState.region?.approved === "true",
+      };
+    }
     await capture(page, entry, "real-brand-one-photo");
 
     const fullStory = full.article?.storyTexts ?? [];
     const onePhotoStory = onePhoto.article?.storyTexts ?? [];
-    const fullFacts = full.article?.factIds ?? [];
-    const onePhotoFacts = onePhoto.article?.factIds ?? [];
     const fullOffers = full.article?.offer === expectedOffer;
     const onePhotoOffers = onePhoto.article?.offer === expectedOffer;
     const fullDestination =
@@ -1850,7 +1992,11 @@ async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
       status: "completed",
       fixture: fixture.id,
       expected: {
-        requiredFactIds: expectedFacts,
+        mandatoryFactIds: expectedFacts,
+        approvedFacts: [...approvedFacts.values()].map((fact) => ({
+          id: fact.id,
+          value: fact.value,
+        })),
         offer: expectedOffer,
         destination: expectedDestination,
         action: expectedAction,
@@ -1860,21 +2006,35 @@ async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
       full: {
         status: response.status,
         revision: full.region?.revision,
+        inspectedRevision: fullInspected.region?.revision,
         layout: full.region?.layout,
         story: fullStory,
-        facts: fullFacts,
+        facts: full.article?.facts,
         offer: full.article?.offer,
         action: { label: full.article?.actionLabel, href: full.article?.actionHref },
         assetIds: full.article?.domAssetIds,
+        requiredAssetIds: fullImageState.region?.assetIds,
+        images: fullDecodedImages,
+        imageFailures: fullImageFailures,
+        imagesReady: fullImagesReady,
+        approveEnabled: fullImagesReady && fullApproveEnabled,
+        approval: fullApproval,
       },
       onePhoto: {
         revision: onePhoto.region?.revision,
+        inspectedRevision: onePhotoInspected.region?.revision,
         layout: onePhoto.region?.layout,
         story: onePhotoStory,
-        facts: onePhotoFacts,
+        facts: onePhoto.article?.facts,
         offer: onePhoto.article?.offer,
         action: { label: onePhoto.article?.actionLabel, href: onePhoto.article?.actionHref },
         assetIds: onePhoto.article?.domAssetIds,
+        requiredAssetIds: onePhotoImageState.region?.assetIds,
+        images: onePhotoDecodedImages,
+        imageFailures: onePhotoImageFailures,
+        imagesReady: onePhotoImagesReady,
+        approveEnabled: onePhotoImagesReady && onePhotoApproveEnabled,
+        approval: onePhotoApproval,
       },
     };
 
@@ -1894,18 +2054,132 @@ async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
     );
     addCheck(
       entry,
+      "two-layout-full-images-loaded",
+      fullImagesReady,
+      fullImagesReady
+        ? `All ${fullImageState.region?.assetIds?.length ?? 0} images assigned to the full revision loaded and decoded.`
+        : `The full revision has required image failures: ${fullImageFailures
+            .map((failure) => `${failure.assetId} (${failure.naturalWidth}x${failure.naturalHeight}, decode=${failure.decodeOk})`)
+            .join(", ")}.`,
+      {
+        revision: fullInspected.region?.revision,
+        requiredAssetIds: fullImageState.region?.assetIds ?? [],
+        failures: fullImageFailures,
+      },
+    );
+    addCheck(
+      entry,
+      "two-layout-full-approval-gate",
+      fullImagesReady ? fullApproveEnabled : !fullApproveEnabled,
+      fullImagesReady
+        ? "Approval is enabled only after every full-layout image loads."
+        : "Approval stays disabled while a required full-layout image fails.",
+      {
+        imagesReady: fullImagesReady,
+        approveEnabled: fullApproveEnabled,
+      },
+    );
+    addCheck(
+      entry,
+      "two-layout-full-approval-record",
+      fullImagesReady ? fullApproval.matchesInspectedRevision : null,
+      fullImagesReady
+        ? "Approval records the same full-layout revision the runner inspected."
+        : "Approval is not evaluated because the required full-layout image did not load.",
+      fullApproval,
+    );
+    addCheck(
+      entry,
+      "two-layout-one-photo-images-loaded",
+      onePhotoImagesReady,
+      onePhotoImagesReady
+        ? `All ${onePhotoImageState.region?.assetIds?.length ?? 0} images assigned to the one-photo revision loaded and decoded.`
+        : `The one-photo revision has required image failures: ${onePhotoImageFailures
+            .map((failure) => `${failure.assetId} (${failure.naturalWidth}x${failure.naturalHeight}, decode=${failure.decodeOk})`)
+            .join(", ")}.`,
+      {
+        revision: onePhotoInspected.region?.revision,
+        requiredAssetIds: onePhotoImageState.region?.assetIds ?? [],
+        failures: onePhotoImageFailures,
+      },
+    );
+    addCheck(
+      entry,
+      "two-layout-one-photo-approval-gate",
+      onePhotoImagesReady ? onePhotoApproveEnabled : !onePhotoApproveEnabled,
+      onePhotoImagesReady
+        ? "Approval is enabled only after every one-photo image loads."
+        : "Approval stays disabled while the required one-photo image fails.",
+      {
+        imagesReady: onePhotoImagesReady,
+        approveEnabled: onePhotoApproveEnabled,
+      },
+    );
+    addCheck(
+      entry,
+      "two-layout-one-photo-approval-record",
+      onePhotoImagesReady ? onePhotoApproval.matchesInspectedRevision : null,
+      onePhotoImagesReady
+        ? "Approval records the same one-photo revision the runner inspected."
+        : "Approval is not evaluated because the required one-photo image did not load.",
+      onePhotoApproval,
+    );
+    addCheck(
+      entry,
       "two-layout-story-parity",
       JSON.stringify(fullStory) === JSON.stringify(onePhotoStory) && fullStory.length > 0,
       "Both layouts keep the same approved story.",
       { full: fullStory, onePhoto: onePhotoStory },
     );
+    const requiredSet = new Set(expectedFacts);
+    const fullRequiredFacts = (full.article?.facts ?? []).filter((fact) =>
+      requiredSet.has(fact.id),
+    );
+    const onePhotoRequiredFacts = (onePhoto.article?.facts ?? []).filter((fact) =>
+      requiredSet.has(fact.id),
+    );
+    const requiredFactIdsMatch =
+      JSON.stringify(fullRequiredFacts.map((fact) => fact.id)) ===
+        JSON.stringify(expectedFacts) &&
+      JSON.stringify(onePhotoRequiredFacts.map((fact) => fact.id)) ===
+        JSON.stringify(expectedFacts);
+    const requiredFactValuesMatch = expectedFacts.every((id) => {
+      const approved = approvedFacts.get(id);
+      const fullFact = fullRequiredFacts.find((fact) => fact.id === id);
+      const onePhotoFact = onePhotoRequiredFacts.find((fact) => fact.id === id);
+      return (
+        approved &&
+        fullFact?.value === approved.value &&
+        onePhotoFact?.value === approved.value
+      );
+    });
     addCheck(
       entry,
       "two-layout-required-facts-parity",
-      expectedFacts.every((id) => fullFacts.includes(id) && onePhotoFacts.includes(id)) &&
-        JSON.stringify(fullFacts) === JSON.stringify(onePhotoFacts),
-      "Both layouts keep every required fact in the same order.",
-      { expectedFacts, full: fullFacts, onePhoto: onePhotoFacts },
+      expectedFacts.length === 0 || (requiredFactIdsMatch && requiredFactValuesMatch),
+      expectedFacts.length === 0
+        ? "The brief declares no mandatory fact group; optional facts may be omitted."
+        : "Both layouts keep every required fact and its approved visible value.",
+      {
+        expectedFacts: expectedFacts.map((id) => ({
+          id,
+          value: approvedFacts.get(id)?.value ?? null,
+        })),
+        full: fullRequiredFacts,
+        onePhoto: onePhotoRequiredFacts,
+      },
+    );
+    addCheck(
+      entry,
+      "two-layout-rendered-facts-approved",
+      factsComeFromApprovedBrief(full, approvedFacts) &&
+        factsComeFromApprovedBrief(onePhoto, approvedFacts),
+      "Every rendered fact comes from the approved brief and keeps its approved value.",
+      {
+        approvedFactIds: [...approvedFacts.keys()],
+        full: full.article?.facts ?? [],
+        onePhoto: onePhoto.article?.facts ?? [],
+      },
     );
     addCheck(
       entry,
@@ -1937,6 +2211,11 @@ async function runRealBrandTwoLayouts(entry, browserInstance, base, manifest) {
         onePhotoAssetIds: onePhoto.article?.domAssetIds,
       },
     );
+    return {
+      completed: entry.checks
+        .slice(checksBefore)
+        .every((check) => check.state !== "failed"),
+    };
   } finally {
     await context.close();
   }
@@ -2003,13 +2282,25 @@ async function runRealBrand(browserInstance, base, readiness = inspectRealBrandP
     );
   } else {
     try {
-      await runRealBrandTwoLayouts(entry, browserInstance, base, readiness.data);
+      const result = await runRealBrandTwoLayouts(
+        entry,
+        browserInstance,
+        base,
+        readiness.data,
+      );
+      if (!result.completed) {
+        entry.evidence.twoLayoutBrowserRun.status = "failed";
+        entry.evidence.twoLayoutBrowserRun.reason =
+          "A required image, approval gate, fact check, or layout check failed.";
+      }
       addCheck(
         entry,
         "two-layout-browser-run",
-        true,
-        "The same brief completed both full and one-photo browser runs.",
-        { status: "completed" },
+        result.completed,
+        result.completed
+          ? "The same brief completed both full and one-photo browser runs."
+          : "The two-layout browser run failed; see the failed image, approval, fact, or layout checks above.",
+        { status: result.completed ? "completed" : "failed" },
       );
     } catch (error) {
       entry.evidence.twoLayoutBrowserRun = {
