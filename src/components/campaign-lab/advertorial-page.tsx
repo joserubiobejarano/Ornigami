@@ -1,7 +1,10 @@
-import Image from "next/image";
 import type { CSSProperties } from "react";
 
 import { ADVERTORIAL_MANIFEST, type AdvertorialResolvedAsset } from "@/lib/campaign-lab/advertorial";
+import type {
+  PreviewImageEvent,
+  PreviewImageStatus,
+} from "@/lib/campaign-lab/editor";
 import type {
   AdvertorialBrief,
   AdvertorialDraft,
@@ -10,6 +13,7 @@ import type {
 } from "@/lib/campaign-lab/types";
 
 import styles from "./advertorial-page.module.css";
+import { PreviewImage } from "./preview-image";
 
 type AdvertorialPageProps = {
   brief: AdvertorialBrief;
@@ -18,6 +22,10 @@ type AdvertorialPageProps = {
   theme: ResolvedBrandTheme;
   headingId: string;
   previewLabel?: string;
+  imageRevision: string;
+  imageStatuses: Record<string, PreviewImageStatus>;
+  imageAttempts: Record<string, number>;
+  onImageStateChange: (event: PreviewImageEvent) => void;
 };
 
 function FactList({ facts, className }: { facts: ProductFact[]; className?: string }) {
@@ -70,6 +78,10 @@ function Figure({
   caption,
   priority = false,
   contain = false,
+  imageRevision,
+  imageStatus,
+  imageAttempt,
+  onImageStateChange,
 }: {
   asset: AdvertorialResolvedAsset;
   className: string;
@@ -77,14 +89,20 @@ function Figure({
   caption?: string;
   priority?: boolean;
   contain?: boolean;
+  imageRevision: string;
+  imageStatus: PreviewImageStatus;
+  imageAttempt: number;
+  onImageStateChange: (event: PreviewImageEvent) => void;
 }) {
   return (
     <figure
       className={className}
       data-asset-id={asset.asset.id}
       data-asset-role={asset.assignment.role}
+      data-image-status={imageStatus}
+      data-image-attempt={imageAttempt}
     >
-      <Image
+      <PreviewImage
         className={[styles.image, contain ? styles.containImage : null, imageClassName]
           .filter(Boolean)
           .join(" ")}
@@ -94,6 +112,10 @@ function Figure({
         height={asset.asset.height}
         unoptimized
         priority={priority}
+        assetId={asset.asset.id}
+        revision={imageRevision}
+        attempt={imageAttempt}
+        onStateChange={onImageStateChange}
       />
       {caption ? <figcaption className={styles.caption}>{caption}</figcaption> : null}
     </figure>
@@ -107,6 +129,10 @@ export function AdvertorialPage({
   theme,
   headingId,
   previewLabel,
+  imageRevision,
+  imageStatuses,
+  imageAttempts,
+  onImageStateChange,
 }: AdvertorialPageProps) {
   const { tokens } = theme;
   const byRole = (role: AdvertorialResolvedAsset["assignment"]["role"]) =>
@@ -118,6 +144,11 @@ export function AdvertorialPage({
     .filter(({ role, region }) => region === "story" && (!showEvidence || role !== "product-evidence"))
     .map(({ role }) => byRole(role))
     .filter((entry): entry is AdvertorialResolvedAsset => Boolean(entry));
+  const imageAttempt = (assetId: string) => imageAttempts[assetId] ?? 0;
+  const imageStatus = (assetId: string): PreviewImageStatus =>
+    imageStatuses[assetId] ?? "pending";
+  const figureKey = (asset: AdvertorialResolvedAsset) =>
+    `${asset.asset.id}:${imageRevision}:${imageAttempt(asset.asset.id)}`;
 
   const style = {
     "--ad-page": tokens.page,
@@ -193,11 +224,15 @@ export function AdvertorialPage({
             <div className={styles.storyEvidence} role="group" aria-label="Story evidence">
               {storyFigures.map((figure, index) => (
                 <Figure
-                  key={figure.asset.id}
+                  key={figureKey(figure)}
                   asset={figure}
                   className={styles.storyFigure}
                   caption={figure.asset.caption}
                   priority={index === 0}
+                  imageRevision={imageRevision}
+                  imageStatus={imageStatus(figure.asset.id)}
+                  imageAttempt={imageAttempt(figure.asset.id)}
+                  onImageStateChange={onImageStateChange}
                 />
               ))}
             </div>
@@ -209,7 +244,17 @@ export function AdvertorialPage({
         <section className={styles.evidence} data-advertorial-section="evidence">
           <div className={styles.evidenceGrid}>
             <FactList facts={draft.facts} className={styles.facts} />
-            {prototype ? <Figure asset={prototype} className={styles.evidenceImage} /> : null}
+            {prototype ? (
+              <Figure
+                key={figureKey(prototype)}
+                asset={prototype}
+                className={styles.evidenceImage}
+                imageRevision={imageRevision}
+                imageStatus={imageStatus(prototype.asset.id)}
+                imageAttempt={imageAttempt(prototype.asset.id)}
+                onImageStateChange={onImageStateChange}
+              />
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -224,10 +269,15 @@ export function AdvertorialPage({
         </div>
         {hero ? (
           <Figure
+            key={figureKey(hero)}
             asset={hero}
             className={styles.productHero}
             priority={draft.layout === "advertorial-one-photo"}
             contain
+            imageRevision={imageRevision}
+            imageStatus={imageStatus(hero.asset.id)}
+            imageAttempt={imageAttempt(hero.asset.id)}
+            onImageStateChange={onImageStateChange}
           />
         ) : null}
         <div className={styles.productAction}>

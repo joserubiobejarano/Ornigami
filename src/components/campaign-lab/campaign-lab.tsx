@@ -11,10 +11,21 @@ import {
   assessAdvertorialFit,
   buildConfiguredPreview,
 } from "@/lib/campaign-lab/advertorial";
+import type { ConfiguredPreviewData } from "@/lib/campaign-lab/advertorial";
+import {
+  createEditorPreviewState,
+  createPreviewImageGate,
+  isAdvertorialPreviewData,
+  previewImageAttempt,
+  previewImageStatus,
+  recordPreviewImageEvent,
+  retryPreviewImage,
+  summarizePreviewImages,
+} from "@/lib/campaign-lab/editor";
 import type {
-  AdvertorialPreviewData,
-  ConfiguredPreviewData,
-} from "@/lib/campaign-lab/advertorial";
+  PreviewImageEvent,
+  PreviewImageGate,
+} from "@/lib/campaign-lab/editor";
 import {
   createFormValues,
   defaultAccent,
@@ -60,9 +71,13 @@ type Approval = {
 
 type GenerationState = { status: "idle" } | GenerationMetadata;
 
-function isAdvertorialPreview(preview: ConfiguredPreviewData): preview is AdvertorialPreviewData {
-  return preview.draft.templateId === ADVERTORIAL_MANIFEST.id;
-}
+const ROLE_LABELS: Record<string, string> = {
+  "story-opening": "opening image",
+  "product-detail": "detail image",
+  "product-in-use": "in-use image",
+  "product-evidence": "evidence image",
+  "product-hero": "product image",
+};
 
 const ASSET_LABELS: Record<string, string> = {
   "harbor-field-bottle-front": "Harbor Field bottle",
@@ -89,20 +104,24 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   });
 
   const [values, setValues] = useState<CampaignFormValues>(() => createFormValues(fixture, catalog));
-  const [preview, setPreview] = useState<ConfiguredPreviewData>(() => {
-    const result = buildConfiguredPreview(fixture, values, catalog);
-    if (!result.ok) throw new Error(`The ${fixture.label} campaign fixture is invalid.`);
-    return result.preview;
-  });
-  const [issues, setIssues] = useState<ValidationIssue[]>([]);
-  const [dirty, setDirty] = useState(false);
+  const [initialPreviewState] = useState(() =>
+    createEditorPreviewState(fixture, values, catalog),
+  );
+  const [preview, setPreview] = useState<ConfiguredPreviewData | null>(
+    initialPreviewState.preview,
+  );
+  const [issues, setIssues] = useState<ValidationIssue[]>(initialPreviewState.issues);
+  const [dirty, setDirty] = useState(initialPreviewState.dirty);
   const [approval, setApproval] = useState<Approval | null>(null);
   const [generation, setGeneration] = useState<GenerationState>({ status: "idle" });
   const [generating, setGenerating] = useState(false);
+  const [imageGate, setImageGate] = useState<PreviewImageGate>(() =>
+    createPreviewImageGate(initialPreviewState.preview?.revision ?? null),
+  );
 
   const brand = getBrand(values.brandId, catalog);
   const selectedAsset = getAsset(values.assetId, catalog);
-  const advertorialPreview = isAdvertorialPreview(preview) ? preview : null;
+  const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
   const format: CampaignFormat = values.format ?? defaultFormat(fixture);
   const openingOptions = openingOptionsForFormat(fixture, format);
@@ -114,14 +133,56 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
       ? asset.id === approvedHeroAssignment?.assetId
       : asset.role === "product-hero",
   );
-  const template = advertorialPreview ? ADVERTORIAL_MANIFEST : SINGLE_PRODUCT_OFFER_TEMPLATE;
+  const template = advertorialPreview
+    ? ADVERTORIAL_MANIFEST
+    : preview
+      ? SINGLE_PRODUCT_OFFER_TEMPLATE
+      : null;
   const layout = advertorialPreview
     ? ADVERTORIAL_MANIFEST.layouts[advertorialPreview.draft.layout]
-    : SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[(preview as CampaignPreviewData).draft.layout];
+    : preview
+      ? SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[(preview as CampaignPreviewData).draft.layout]
+      : null;
   const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
-  const approved = approval?.revision === preview.revision && !dirty && !generating;
-  const canApprove = editorReady && !dirty && !generating && issues.length === 0 && !approved;
-  const revisionLabel = shortRevision(preview.revision);
+  const imageSummary = summarizePreviewImages(preview, imageGate);
+  const revision = preview?.revision ?? null;
+  const imageRows = advertorialPreview
+    ? advertorialPreview.assets.map(({ asset, assignment }) => ({
+        assetId: asset.id,
+        roleLabel: ROLE_LABELS[assignment.role] ?? assignment.role,
+        label: assetLabel(asset, catalog),
+      }))
+    : preview
+      ? [
+          {
+            assetId: preview.asset.id,
+            roleLabel: ROLE_LABELS[preview.asset.role] ?? preview.asset.role,
+            label: assetLabel(preview.asset, catalog),
+          },
+        ]
+      : [];
+  const failedImageRows = imageRows.filter((row) =>
+    imageSummary.failedAssetIds.includes(row.assetId),
+  );
+  const pendingImageRows = imageRows.filter((row) =>
+    imageSummary.pendingAssetIds.includes(row.assetId),
+  );
+  const approved =
+    Boolean(revision) &&
+    approval?.revision === revision &&
+    !dirty &&
+    !generating &&
+    imageSummary.ready;
+  const canApprove =
+    editorReady &&
+    Boolean(preview) &&
+    !dirty &&
+    !generating &&
+    issues.length === 0 &&
+    imageSummary.ready &&
+    !approved;
+  const approvalBlockedByImages = Boolean(preview) && !imageSummary.ready;
+  const revisionLabel = revision ? shortRevision(revision) : null;
 
   const fieldIds: Record<ValidationField, string> = {
     brandId: `${baseId}-brand-style`,
@@ -166,6 +227,19 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     inFlight.current?.abort();
     inFlight.current = null;
     setGenerating(false);
+  }
+
+  function handleImageStateChange(event: PreviewImageEvent) {
+    if (!preview || event.revision !== preview.revision) return;
+    if (event.status === "error") setApproval(null);
+    setImageGate((current) => recordPreviewImageEvent(current, event));
+  }
+
+  function handleRetryImage(assetId: string) {
+    if (!preview) return;
+    setApproval(null);
+    const revision = preview.revision;
+    setImageGate((current) => retryPreviewImage(current, revision, assetId));
   }
 
   function clearChangedState(field?: ValidationField) {
@@ -373,7 +447,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   }
 
   function handleApprove() {
-    if (!canApprove) return;
+    if (!canApprove || !preview) return;
     setApproval({
       revision: preview.revision,
       approvedAt: new Date().toISOString(),
@@ -388,31 +462,46 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     return ids.length ? ids.join(" ") : undefined;
   }
 
-  const previewStatusText = generating
-    ? `Generating a fresh preview. Revision ${revisionLabel} stays available until a valid response arrives.`
-    : approved
-      ? `Approved locally. Revision ${revisionLabel} matches the preview.`
-      : dirty
-        ? issues.length > 0
-          ? `Preview not updated. Fix ${issues.length} ${issues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
-          : `Preview out of date. Approval is cleared. Showing the last valid preview, revision ${revisionLabel}. Generate a fresh preview to review your edits.`
-        : `Preview ready for local review. Revision ${revisionLabel}.`;
+  const previewStatusText = !preview
+    ? "No valid preview yet. Fix the validation issue shown in the brief, then generate preview."
+    : generating
+      ? `Generating a fresh preview. Revision ${revisionLabel} stays available until a valid response arrives.`
+      : approved
+        ? `Approved locally. Revision ${revisionLabel} matches the preview.`
+        : dirty
+          ? issues.length > 0
+            ? `Preview not updated. Fix ${issues.length} ${issues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
+            : `Preview out of date. Approval is cleared. Showing the last valid preview, revision ${revisionLabel}. Generate a fresh preview to review your edits.`
+          : failedImageRows.length > 0
+            ? `Preview revision ${revisionLabel} is not approveable. ${failedImageRows.length} required ${failedImageRows.length === 1 ? "image has" : "images have"} failed to load. Retry below.`
+            : pendingImageRows.length > 0
+              ? `Preview revision ${revisionLabel} is waiting for ${pendingImageRows.length} required ${pendingImageRows.length === 1 ? "image" : "images"} to load before approval.`
+              : `Preview ready for local review. Revision ${revisionLabel}.`;
 
-  const reviewStatusText = generating
-    ? "Not approved. A fresh preview is being generated."
-    : approved
-      ? `Approved locally — revision ${revisionLabel}.`
-      : dirty
-        ? "Not approved. Changes need a fresh preview."
-        : "Not approved. Preview ready for local review.";
+  const reviewStatusText = !preview
+    ? "Not approved. No valid preview is available yet."
+    : generating
+      ? "Not approved. A fresh preview is being generated."
+      : approved
+        ? `Approved locally — revision ${revisionLabel}.`
+        : failedImageRows.length > 0
+          ? "Not approved. A required image failed to load."
+          : pendingImageRows.length > 0
+            ? "Not approved. Waiting for the required images to load."
+            : dirty
+              ? "Not approved. Changes need a fresh preview."
+              : "Not approved. Preview ready for local review.";
 
   const reviewTone = approved
     ? "border-[#3f7a5a] bg-[#eef5ee]"
-    : dirty || generating
+    : dirty || generating || failedImageRows.length > 0 || pendingImageRows.length > 0
       ? "border-[#b98237] bg-[#fbf3e4]"
       : "border-[#d8cebd] bg-[#f8f3ea]";
 
   const generationStatusText = (() => {
+    if (!preview && generation.status === "idle") {
+      return "No valid preview has been generated yet.";
+    }
     if (generation.status === "idle") {
       return "Deterministic draft. Generation has not run in this session.";
     }
@@ -439,29 +528,31 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   return (
     <div className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
       <header className="border-b border-[#ddd3c2] bg-[#fbf8f1]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-end justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div className="space-y-1">
+        <div className="mx-auto flex min-w-0 max-w-[1600px] flex-wrap items-end justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="min-w-0 space-y-1">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#6d6a5f]">
               Ornigami · campaign workflow
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
               <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
                 Campaign Lab
               </h1>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#c9bda8] bg-[#efe7d8] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
-                <span className="size-1.5 rounded-full bg-[#9a3f25]" aria-hidden="true" />
-                Local only · not published
+              <span className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-[#c9bda8] bg-[#efe7d8] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
+                <span className="size-1.5 shrink-0 rounded-full bg-[#9a3f25]" aria-hidden="true" />
+                <span className="min-w-0 break-words text-left">Local only · not published</span>
               </span>
               {catalog.pilot ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#b98237] bg-[#fbf3e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a541d]">
-                  {catalog.pilot.label} ·{" "}
-                  {catalog.pilot.status === "preview" ? "preview inputs" : "confirmed inputs"}
+                <span className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-[#b98237] bg-[#fbf3e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a541d]">
+                  <span className="min-w-0 break-words text-left">
+                    {catalog.pilot.label} ·{" "}
+                    {catalog.pilot.status === "preview" ? "preview inputs" : "confirmed inputs"}
+                  </span>
                 </span>
               ) : null}
             </div>
           </div>
 
-          <nav aria-label="Campaign fixtures" className="flex flex-wrap items-center gap-2">
+          <nav aria-label="Campaign fixtures" className="flex min-w-0 flex-wrap items-center gap-2">
             {Object.values(catalog.fixtures).map((item) => {
               const active = item.id === initialFixtureId;
               return (
@@ -470,7 +561,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   href={`/campaign-lab?fixture=${item.id}`}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d2a22] focus-visible:ring-offset-2",
+                    "inline-flex min-h-11 min-w-0 max-w-full items-center rounded-full border px-4 py-2 text-left text-xs font-semibold transition-colors break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d2a22] focus-visible:ring-offset-2",
                     active
                       ? "border-[#1d2a22] bg-[#1d2a22] text-[#fffdf8]"
                       : "border-[#d4c8b5] bg-[#fffdf8] text-[#4f4a3f] hover:border-[#b8aa93] hover:bg-[#f3ece0]",
@@ -486,11 +577,11 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
 
       <main className="mx-auto grid max-w-[1600px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start lg:px-8 lg:py-6">
         <aside
-          className="rounded-[1.25rem] border border-[#ddd3c2] bg-[#fffdf8] p-4 shadow-[0_20px_60px_-50px_rgba(35,36,32,.55)] lg:sticky lg:top-4"
+          className="min-w-0 rounded-[1.25rem] border border-[#ddd3c2] bg-[#fffdf8] p-4 shadow-[0_20px_60px_-50px_rgba(35,36,32,.55)] lg:sticky lg:top-4"
           aria-labelledby={`${baseId}-campaign-brief-heading`}
         >
-          <div className="flex items-start justify-between gap-3 border-b border-[#ebe3d6] pb-3">
-            <div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#ebe3d6] pb-3">
+            <div className="min-w-0 flex-1">
               <h2
                 id={`${baseId}-campaign-brief-heading`}
                 className="text-sm font-semibold tracking-tight"
@@ -502,7 +593,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 <p className="mt-1 text-xs font-medium text-[#7a541d]">{catalog.pilot.note}</p>
               ) : null}
             </div>
-            <span className="shrink-0 rounded-full bg-[#efe7d8] px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
+            <span className="min-w-0 max-w-full rounded-full bg-[#efe7d8] px-2.5 py-1 text-left text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346] break-words">
               {fixture.label}
             </span>
           </div>
@@ -913,11 +1004,13 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 className="rounded-xl border border-[#c65c45] bg-[#fff1ec] p-3 text-[#6d2b20] outline-none focus-visible:ring-2 focus-visible:ring-[#a2382a] focus-visible:ring-offset-2"
               >
                 <p id={errorSummaryHeadingId} className="text-sm font-semibold">
-                  Preview not generated
+                  {preview ? "Preview not updated" : "No valid preview"}
                 </p>
                 <p className="mt-1 text-xs">
-                  The last valid preview is still shown. Fix{" "}
-                  {issues.length === 1 ? "this field" : "these fields"}:
+                  {preview
+                    ? "The last valid preview is still shown."
+                    : "The editor is still usable. Fix the validation issue before generating."}{" "}
+                  Fix {issues.length === 1 ? "this field" : "these fields"}:
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
                   {issues.map((issue) => (
@@ -993,14 +1086,60 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                         : "bg-[#e9e0d1] text-[#5b5346]",
                   )}
                 >
-                  {approved ? "Approved" : dirty ? "Needs fresh preview" : "Not approved"}
+                  {approved
+                    ? "Approved"
+                    : failedImageRows.length > 0
+                      ? "Image failed"
+                      : pendingImageRows.length > 0
+                        ? "Loading images"
+                        : dirty
+                          ? "Needs fresh preview"
+                          : "Not approved"}
                 </span>
               </div>
               <p id={reviewStatusId} className="mt-2 text-sm font-medium">
                 {reviewStatusText}
               </p>
+              {preview ? (
+                <div
+                  className="mt-3 rounded-lg border border-[#d8cebd] bg-white/60 p-2.5"
+                  data-image-gate
+                  data-images-ready={imageSummary.ready ? "true" : "false"}
+                >
+                  <p className="text-xs font-medium" role="status" aria-live="polite">
+                    {imageSummary.ready
+                      ? `All required images loaded for revision ${revisionLabel}. Approval is available.`
+                      : failedImageRows.length > 0
+                        ? `Approval is blocked: ${failedImageRows.length} required ${failedImageRows.length === 1 ? "image has" : "images have"} failed to load.`
+                        : `Checking required images for revision ${revisionLabel} before approval… ${imageRows.length - pendingImageRows.length} of ${imageRows.length} loaded.`}
+                  </p>
+                  {failedImageRows.length > 0 ? (
+                    <ul className="mt-2 space-y-2 text-xs">
+                      {failedImageRows.map((row) => (
+                        <li
+                          key={row.assetId}
+                          className="flex flex-wrap items-center justify-between gap-2"
+                        >
+                          <span className="min-w-0 break-words">
+                            {row.roleLabel} · {row.label} ({row.assetId}) did not load. Check the
+                            approved asset file, then retry.
+                          </span>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="min-h-9 w-full px-3 py-1.5 text-xs sm:w-auto"
+                            onClick={() => handleRetryImage(row.assetId)}
+                          >
+                            Retry {row.roleLabel}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
               <p className="mt-1 text-xs text-[#6d6a5f]">
-                Approval applies to revision {revisionLabel}. Editing any field clears it.
+                Approval applies to revision {revisionLabel ?? "none"}. Editing any field clears it.
                 {approval ? " Recorded locally in this browser session." : ""}
               </p>
             </div>
@@ -1039,24 +1178,37 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
         </aside>
 
         <section
-          className="rounded-[1.25rem] border border-[#d8cebd] bg-[#fffdf8] p-3 shadow-[0_20px_60px_-55px_rgba(35,36,32,.55)] sm:p-4"
+          className="min-w-0 rounded-[1.25rem] border border-[#d8cebd] bg-[#fffdf8] p-3 shadow-[0_20px_60px_-55px_rgba(35,36,32,.55)] sm:p-4"
           aria-labelledby={previewHeadingId}
           aria-describedby={previewStatusId}
           data-fixture={initialFixtureId}
           data-format={format}
-          data-template={preview.draft.templateId}
-          data-template-version={preview.draft.templateVersion}
-          data-layout={preview.draft.layout}
-          data-revision={preview.revision}
-          data-asset-id={preview.asset.id}
+          data-template={preview?.draft.templateId}
+          data-template-version={preview?.draft.templateVersion}
+          data-layout={preview?.draft.layout}
+          data-revision={revision ?? undefined}
+          data-asset-id={preview?.asset.id}
           data-pilot={catalog.pilot?.id}
           data-preview-status={catalog.pilot?.status}
           data-generation-status={generation.status}
           data-generation-provider={generation.status === "idle" ? "deterministic" : generation.provider}
           data-generation-code={generation.status === "fallback" ? generation.code : undefined}
           data-generation-angle={generation.status === "generated" ? generation.angle : undefined}
-          data-section-order={preview.draft.sections.join(",")}
-          data-fact-ids={preview.draft.facts.map((fact) => fact.id).join(",")}
+          data-images-ready={preview ? (imageSummary.ready ? "true" : "false") : undefined}
+          data-image-statuses={
+            preview
+              ? imageRows
+                  .map(
+                    (row) =>
+                      `${row.assetId}:${imageSummary.statuses[row.assetId] ?? "pending"}`,
+                  )
+                  .join(",")
+              : undefined
+          }
+          data-image-failures={imageSummary.failedAssetIds.join(",") || undefined}
+          data-approval-blocked-by={approvalBlockedByImages ? "images" : undefined}
+          data-section-order={preview?.draft.sections.join(",")}
+          data-fact-ids={preview?.draft.facts.map((fact) => fact.id).join(",")}
           data-story-beat-ids={advertorialPreview?.draft.story.map((beat) => beat.id).join(",")}
           data-disclosure-label={advertorialPreview?.draft.disclosure.label}
           data-advertorial-fit={advertorialFit.fit ? "true" : "false"}
@@ -1067,21 +1219,23 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
             generation.status === "fallback" ? generation.issues?.join(" | ") : undefined
           }
         >
-          <div className="flex flex-wrap items-start justify-between gap-3 px-1 pb-3">
-            <div>
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 px-1 pb-3">
+            <div className="min-w-0">
               <h2 id={previewHeadingId} className="text-sm font-semibold tracking-tight">
                 Campaign preview
               </h2>
               <p className="mt-1 text-xs text-[#6d6a5f]">
-                {template.name} · v{template.version} · {layout.label}
+                {template && layout
+                  ? `${template.name} · v${template.version} · ${layout.label}`
+                  : "No valid template preview yet"}
               </p>
             </div>
             <span
-              className="rounded-full border border-[#d4c8b5] bg-[#f8f3ea] px-3 py-1 font-mono text-[0.68rem] text-[#5b5346]"
-              title={preview.revision}
+              className="max-w-full rounded-full border border-[#d4c8b5] bg-[#f8f3ea] px-3 py-1 font-mono text-[0.68rem] text-[#5b5346] break-words"
+              title={revision ?? undefined}
               data-approved={approved ? "true" : "false"}
             >
-              Revision {revisionLabel}
+              {revisionLabel ? `Revision ${revisionLabel}` : "No revision"}
             </span>
           </div>
 
@@ -1113,36 +1267,75 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
             {previewStatusText}
           </p>
 
-          <div
-            className={cn(
-              "overflow-hidden rounded-xl border bg-white",
-              dirty ? "border-[#c08a3f]" : "border-[#cec3b1]",
-            )}
-            data-preview-canvas
-          >
-            {advertorialPreview ? (
-              <AdvertorialPage
-                brief={advertorialPreview.brief}
-                draft={advertorialPreview.draft}
-                assets={advertorialPreview.assets}
-                theme={advertorialPreview.theme}
-                headingId={pageHeadingId}
-              />
-            ) : (
-              <CampaignPage
-                brief={(preview as CampaignPreviewData).brief}
-                draft={(preview as CampaignPreviewData).draft}
-                asset={preview.asset}
-                theme={preview.theme}
-                headingId={pageHeadingId}
-                previewLabel={
-                  catalog.pilot?.status === "preview"
-                    ? "Preview · offer and destination unconfirmed"
-                    : undefined
-                }
-              />
-            )}
-          </div>
+          {preview ? (
+            <div
+              className={cn(
+                "overflow-hidden rounded-xl border bg-white",
+                dirty ? "border-[#c08a3f]" : "border-[#cec3b1]",
+              )}
+              data-preview-canvas
+            >
+              {advertorialPreview ? (
+                <AdvertorialPage
+                  brief={advertorialPreview.brief}
+                  draft={advertorialPreview.draft}
+                  assets={advertorialPreview.assets}
+                  theme={advertorialPreview.theme}
+                  headingId={pageHeadingId}
+                  imageRevision={advertorialPreview.revision}
+                  imageStatuses={imageSummary.statuses}
+                  imageAttempts={Object.fromEntries(
+                    imageRows.map((row) => [
+                      row.assetId,
+                      previewImageAttempt(imageGate, revision, row.assetId),
+                    ]),
+                  )}
+                  onImageStateChange={handleImageStateChange}
+                />
+              ) : (
+                <CampaignPage
+                  brief={(preview as CampaignPreviewData).brief}
+                  draft={(preview as CampaignPreviewData).draft}
+                  asset={preview.asset}
+                  theme={preview.theme}
+                  headingId={pageHeadingId}
+                  imageRevision={preview.revision}
+                  imageStatus={previewImageStatus(
+                    imageGate,
+                    revision,
+                    preview.asset.id,
+                  )}
+                  imageAttempt={previewImageAttempt(
+                    imageGate,
+                    revision,
+                    preview.asset.id,
+                  )}
+                  onImageStateChange={handleImageStateChange}
+                  previewLabel={
+                    catalog.pilot?.status === "preview"
+                      ? "Preview · offer and destination unconfirmed"
+                      : undefined
+                  }
+                />
+              )}
+            </div>
+          ) : (
+            <div
+              className="rounded-xl border border-dashed border-[#c08a3f] bg-[#fbf3e4] p-4 text-[#6b4918]"
+              data-preview-empty
+            >
+              <p className="text-sm font-semibold">No valid preview yet</p>
+              <p className="mt-1 text-xs">
+                Approval is unavailable until the campaign brief validates and a preview is
+                generated.
+              </p>
+              {issues[0] ? <p className="mt-2 text-xs">{issues[0].message}</p> : null}
+              <p className="mt-2 text-xs">
+                Recovery controls are available in the campaign brief. Approval stays unavailable
+                until a valid preview exists.
+              </p>
+            </div>
+          )}
         </section>
       </main>
     </div>

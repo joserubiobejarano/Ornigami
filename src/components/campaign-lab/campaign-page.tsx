@@ -1,14 +1,19 @@
-import Image from "next/image";
 import type { CSSProperties } from "react";
 
+import type {
+  PreviewImageEvent,
+  PreviewImageStatus,
+} from "@/lib/campaign-lab/editor";
 import type { CampaignBrief, ProductFact, ResolvedBrandTheme, TemplateDraft } from "@/lib/campaign-lab/types";
 
 import styles from "./campaign-page.module.css";
+import { PreviewImage } from "./preview-image";
 
 type CampaignPageProps = {
   brief: CampaignBrief;
   draft: TemplateDraft;
   asset: {
+    id: string;
     src: string;
     width: number;
     height: number;
@@ -17,6 +22,10 @@ type CampaignPageProps = {
   theme: ResolvedBrandTheme;
   headingId: string;
   previewLabel?: string;
+  imageRevision: string;
+  imageStatus: PreviewImageStatus;
+  imageAttempt: number;
+  onImageStateChange: (event: PreviewImageEvent) => void;
 };
 
 function FactList({ facts, className }: { facts: ProductFact[]; className?: string }) {
@@ -58,7 +67,18 @@ function Action({ href, label }: { href: string; label: string }) {
   );
 }
 
-export function CampaignPage({ brief, draft, asset, theme, headingId, previewLabel }: CampaignPageProps) {
+export function CampaignPage({
+  brief,
+  draft,
+  asset,
+  theme,
+  headingId,
+  previewLabel,
+  imageRevision,
+  imageStatus,
+  imageAttempt,
+  onImageStateChange,
+}: CampaignPageProps) {
   const { tokens } = theme;
   const isEditorial = draft.layout === "editorial-long-copy";
   const showHeroFacts = draft.sections.includes("hero-facts");
@@ -92,8 +112,14 @@ export function CampaignPage({ brief, draft, asset, theme, headingId, previewLab
   } as CSSProperties;
 
   const image = (
-    <figure className={styles.imageFrame}>
-      <Image
+    <figure
+      key={`${asset.id}:${imageRevision}:${imageAttempt}`}
+      className={styles.imageFrame}
+      data-asset-id={asset.id}
+      data-image-status={imageStatus}
+      data-image-attempt={imageAttempt}
+    >
+      <PreviewImage
         className={styles.image}
         src={asset.src}
         alt={asset.alt}
@@ -101,6 +127,10 @@ export function CampaignPage({ brief, draft, asset, theme, headingId, previewLab
         height={asset.height}
         unoptimized
         priority
+        assetId={asset.id}
+        revision={imageRevision}
+        attempt={imageAttempt}
+        onStateChange={onImageStateChange}
       />
     </figure>
   );
