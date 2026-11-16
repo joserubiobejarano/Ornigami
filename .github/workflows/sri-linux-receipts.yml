@@ -1,0 +1,220 @@
+name: SRI Linux receipts (temporary)
+
+on:
+  push:
+    branches:
+      - codex/ornigami-next-sri-linux-receipts
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sri-linux-receipts
+  cancel-in-progress: false
+
+jobs:
+  linux-receipts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      DATABASE_URL: https://ci.invalid/database
+      OPENAI_API_KEY: ci-openai-key
+      STRIPE_SECRET_KEY: ci-stripe-key
+      STRIPE_WEBHOOK_SECRET: ci-stripe-webhook-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      AUTH_SECRET: ci-auth-secret
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://127.0.0.1:3410
+      CRON_SECRET: ci-cron-secret
+      RESEND_API_KEY: ci-resend-key
+      EMAIL_FROM: ci@example.com
+      REPLY_TO_EMAIL: ci@example.com
+      TOKEN_ENCRYPTION_KEY: ci-token-encryption-key
+      REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ci-unsubscribe-secret
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3410
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Record environment and candidate identity
+        run: |
+          set -Eeuo pipefail
+          evidence="$RUNNER_TEMP/sri-linux-evidence"
+          mkdir -p "$evidence"
+          echo "EVIDENCE=$evidence" >> "$GITHUB_ENV"
+          node --version | tee "$evidence/node-version.txt"
+          npm --version | tee "$evidence/npm-version.txt"
+          uname -a | tee "$evidence/uname.txt"
+          git rev-parse HEAD | tee "$evidence/source-sha.txt"
+          sha256sum vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz | tee "$evidence/candidate-sha256.txt"
+          sha256sum vendor/framework/next-16.4.5-ornigami-sri.1.tgz | tee "$evidence/rollback-sha256.txt"
+
+      - name: Clean install
+        run: |
+          set -Eeuo pipefail
+          npm ci --no-audit --no-fund 2>&1 | tee "$EVIDENCE/npm-ci.log"
+
+      - name: Production build
+        run: |
+          set -Eeuo pipefail
+          npm run build 2>&1 | tee "$EVIDENCE/production-build.log"
+
+      - name: SRI production check (clean rebuild)
+        run: |
+          set -Eeuo pipefail
+          rm -rf .next
+          node scripts/sri-production-check.mjs \
+            --repo "$GITHUB_WORKSPACE" \
+            --node "$(command -v node)" \
+            --source-sha "$GITHUB_SHA" \
+            --output "$EVIDENCE/sri-source-candidate.json" \
+            2>&1 | tee "$EVIDENCE/sri-production-check.log"
+
+      - name: Existing CSP and production smokes
+        run: |
+          set -Eeuo pipefail
+          node scripts/production-smoke.mjs 2>&1 | tee "$EVIDENCE/production-smoke.log"
+          node scripts/a19-csp-runtime-smoke.mjs 2>&1 | tee "$EVIDENCE/a19-csp-runtime-smoke.log"
+          npm run test:security 2>&1 | tee "$EVIDENCE/test-security.log"
+
+      - name: Home, login, and Campaign Lab gates
+        run: |
+          set -Eeuo pipefail
+          port=3410
+          NODE_ENV=production node node_modules/next/dist/bin/next start -H 127.0.0.1 -p "$port" \
+            > "$EVIDENCE/app-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          node --input-type=module <<'NODE' 2>&1 | tee "$EVIDENCE/app-gates.log"
+          import { writeFileSync } from 'node:fs'
+          const base = 'http://127.0.0.1:3410'
+          const evidence = process.env.EVIDENCE
+          let ready = false
+          for (let i = 0; i < 90; i += 1) {
+            try {
+              const r = await fetch(base + '/')
+              if (r.status === 200) { ready = true; break }
+            } catch {}
+            await new Promise((resolve) => setTimeout(resolve, 500))
+          }
+          if (!ready) throw new Error('production server did not become ready')
+          const result = {}
+          for (const route of ['/', '/login']) {
+            const response = await fetch(base + route, { redirect: 'manual' })
+            const csp = response.headers.get('content-security-policy') ?? ''
+            result[route] = {
+              status: response.status,
+              cspNonce: /'nonce-[^']+'/.test(csp),
+              hasCsp: csp.length > 0,
+            }
+          }
+          for (const route of ['/campaign-lab', '/campaign-lab/offer']) {
+            const response = await fetch(base + route, { redirect: 'manual' })
+            result[route] = { status: response.status, body: (await response.text()).slice(0, 160) }
+          }
+          const api = await fetch(base + '/api/campaign-lab/generate', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{}',
+          })
+          result['POST /api/campaign-lab/generate'] = { status: api.status, body: (await api.text()).slice(0, 160) }
+          writeFileSync(evidence + '/app-gates.json', JSON.stringify(result, null, 2) + '\n')
+          console.log(JSON.stringify(result, null, 2))
+          if (result['/'].status !== 200 || result['/login'].status !== 200) throw new Error('home/login gate failed')
+          if (!result['/'].cspNonce || !result['/login'].cspNonce) throw new Error('CSP nonce missing')
+          if (result['/campaign-lab'].status !== 404) throw new Error('campaign-lab gate failed')
+          if (result['/campaign-lab/offer'].status !== 404) throw new Error('campaign-lab offer gate failed')
+          if (result['POST /api/campaign-lab/generate'].status !== 404) throw new Error('campaign-lab api gate failed')
+          NODE
+
+      - name: Dynamic-chunk fixture with tamper rejection
+        run: |
+          set -Eeuo pipefail
+          fixture="$RUNNER_TEMP/fixture-candidate"
+          mkdir -p "$RUNNER_TEMP/packages"
+          cp -a tests/fixtures/framework-sri "$fixture"
+          cp vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz "$RUNNER_TEMP/packages/"
+          rm "$fixture/package-lock.json"
+          node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p));j.dependencies.next='file:../packages/next-16.4.5-ornigami-sri.source.1.tgz';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')" "$fixture/package.json"
+          (
+            cd "$fixture"
+            npm install --no-audit --no-fund 2>&1 | tee "$EVIDENCE/fixture-install.log"
+            npm run build 2>&1 | tee "$EVIDENCE/fixture-build.log"
+          )
+          npm ci --prefix scripts/framework-prototype/browser-tools --no-audit --no-fund 2>&1 | tee "$EVIDENCE/browser-tools-install.log"
+          ORNIGAMI_TEST_BROWSER_EXECUTABLE=/usr/bin/google-chrome \
+            node scripts/framework-prototype/browser-regressions.mjs \
+              "$fixture" "$GITHUB_WORKSPACE/scripts/framework-prototype/browser-tools" "$EVIDENCE/fixture" \
+            2>&1 | tee "$EVIDENCE/fixture-regressions.log"
+          node -e "const r=require(process.argv[1]);console.log(JSON.stringify({checks:r.checks.map(c=>({name:c.name,state:c.state,evidence:c.evidence})),lateAsset:r.lateAsset},null,2))" "$EVIDENCE/fixture/regressions.json" | tee "$EVIDENCE/fixture-summary.json"
+
+      - name: Rollback rehearsal (previous compiled-dist artifact)
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          fixture="$RUNNER_TEMP/fixture-rollback"
+          cp -a tests/fixtures/framework-sri "$fixture"
+          rm "$fixture/package-lock.json"
+          node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p));j.dependencies.next='file:$GITHUB_WORKSPACE/vendor/framework/next-16.4.5-ornigami-sri.1.tgz';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')" "$fixture/package.json"
+          (
+            cd "$fixture"
+            npm install --no-audit --no-fund 2>&1 | tee "$EVIDENCE/rollback-install.log"
+            npm run build 2>&1 | tee "$EVIDENCE/rollback-build.log"
+          )
+          set +e
+          ORNIGAMI_TEST_BROWSER_EXECUTABLE=/usr/bin/google-chrome \
+            node scripts/framework-prototype/browser-regressions.mjs \
+              "$fixture" "$GITHUB_WORKSPACE/scripts/framework-prototype/browser-tools" "$EVIDENCE/rollback" \
+            2>&1 | tee "$EVIDENCE/rollback-regressions.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/rollback-exit-code.txt"
+          node -e "const r=require(process.argv[1]);console.log(JSON.stringify({checks:r.checks.map(c=>({name:c.name,state:c.state,assertion:c.assertion})),lateAsset:r.lateAsset},null,2))" "$EVIDENCE/rollback/regressions.json" | tee "$EVIDENCE/rollback-summary.json" || true
+          printf 'Rollback artifact is expected to fail the same SRI gates; exit=%s\n' "$status" | tee "$EVIDENCE/rollback-verdict.txt"
+
+      - name: Summarize
+        run: |
+          set -Eeuo pipefail
+          node --input-type=module <<'NODE' 2>&1 | tee "$EVIDENCE/summary.log"
+          import { readFileSync, existsSync } from 'node:fs'
+          const evidence = process.env.EVIDENCE
+          const summary = {}
+          const readJson = (name) => existsSync(evidence + '/' + name) ? JSON.parse(readFileSync(evidence + '/' + name, 'utf8')) : null
+          const sri = readJson('sri-source-candidate.json')
+          const fixture = readJson('fixture/regressions.json')
+          const rollback = readJson('rollback/regressions.json')
+          const appGates = readJson('app-gates.json')
+          summary.sri = sri ? { status: sri.status, errors: sri.errors, pages: sri.pages?.map((p) => ({ path: p.path, status: p.status, sameOrigin: p.sri?.sameOriginCount, issues: p.sri?.issues })), nonceRotation: sri.nonceRotation } : null
+          summary.appGates = appGates
+          summary.fixture = fixture ? { checks: fixture.checks.map((c) => ({ name: c.name, state: c.state })), lateAsset: fixture.lateAsset, browserVersion: fixture.browserVersion } : null
+          summary.rollback = rollback ? { checks: rollback.checks.map((c) => ({ name: c.name, state: c.state, assertion: c.assertion })), lateAsset: rollback.lateAsset } : null
+          const requiredOk = sri?.status === 'passed'
+            && appGates?.['/']?.status === 200
+            && appGates?.['/login']?.status === 200
+            && appGates?.['/campaign-lab']?.status === 404
+            && appGates?.['/campaign-lab/offer']?.status === 404
+            && appGates?.['POST /api/campaign-lab/generate']?.status === 404
+            && fixture?.checks?.every((c) => c.state === 'passed')
+          summary.requiredGatesPassed = requiredOk
+          summary.rollbackVerified = rollback?.checks?.every((c) => c.state === 'passed') ?? false
+          console.log(JSON.stringify(summary, null, 2))
+          if (!requiredOk) process.exitCode = 1
+          NODE
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sri-linux-receipts
+          path: ${{ runner.temp }}/sri-linux-evidence
+          if-no-files-found: error
+          retention-days: 14
