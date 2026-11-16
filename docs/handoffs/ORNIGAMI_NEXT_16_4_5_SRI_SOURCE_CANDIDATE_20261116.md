@@ -8,8 +8,8 @@ artifact is local-only (`adopted: false`) with unassigned maintenance ownership.
 - Base: `ece5ca9`
 - Branch: `codex/ornigami-next-sri-source-candidate`
 - Worktree: `C:/Users/joser/.local/ornigami-next-sri-source-candidate`
-- Candidate code commit: branch tip at the time the SRI receipt was produced
-  (see the response accompanying this handoff)
+- Candidate code commit: `d00aced` (code and artifact commit)
+- SRI receipt source SHA: `d00aced9d12e75a15f253026b077928741e2b3ee`
 
 ## Selected release
 
@@ -172,7 +172,9 @@ node scripts/sri-production-check.mjs `
   --output .local\sri-source-candidate.json
 ```
 
-The receipt and browser JSON remain in ignored `.local/` storage:
+The passing clean-commit receipt records `status: passed`, `nextVersion: 16.4.5`,
+no errors, and distinct nonces across the two pages. The receipt and browser
+JSON remain in ignored `.local/` storage:
 `browser-sri-audit.json`, `tamper-proof.json`, and `sri-source-candidate.json`.
 
 ## Maintenance plan
