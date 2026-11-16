@@ -3,6 +3,7 @@ import type {
   AdvertorialPreviewData,
   ConfiguredPreviewData,
 } from "./advertorial.ts";
+import { getAsset, openingFocusForFormat } from "./fixtures.ts";
 import type {
   CampaignCatalog,
   CampaignFixture,
@@ -36,6 +37,92 @@ export function isAdvertorialPreviewData(
   preview: ConfiguredPreviewData | null,
 ): preview is AdvertorialPreviewData {
   return preview?.draft.templateId === ADVERTORIAL_MANIFEST.id;
+}
+
+/** A fact-capacity error means no currently supported layout can hold the group. */
+export function isFactCapacityMessage(message: string): boolean {
+  return (
+    /no supported layout accepts more than\s+\d+/i.test(message) ||
+    /product block can present at most\s+\d+/i.test(message) ||
+    (/required fact group/i.test(message) &&
+      /\b(?:has|needs)\s+\d+\s+facts/i.test(message) &&
+      /(?:at most|capacity)/i.test(message))
+  );
+}
+
+export function splitCapacityIssues(issues: readonly ValidationIssue[]): {
+  capacityIssue: ValidationIssue | null;
+  otherIssues: ValidationIssue[];
+} {
+  let capacityIssue: ValidationIssue | null = null;
+  const otherIssues: ValidationIssue[] = [];
+  for (const issue of issues) {
+    if (!capacityIssue && isFactCapacityMessage(issue.message)) {
+      capacityIssue = issue;
+    } else if (!isFactCapacityMessage(issue.message)) {
+      otherIssues.push(issue);
+    }
+  }
+  return { capacityIssue, otherIssues };
+}
+
+export type FormatPreviewAlternative = {
+  ok: boolean;
+  values: CampaignFormValues;
+  preview: ConfiguredPreviewData | null;
+  issues: ValidationIssue[];
+};
+
+/**
+ * Builds the offer values from the same approved brief, including the
+ * campaign's approved packshot and the remembered offer opening.
+ */
+export function createOfferAlternativeValues(
+  fixture: CampaignFixture,
+  values: CampaignFormValues,
+  catalog: CampaignCatalog,
+  preferredOpeningFocus?: string,
+): CampaignFormValues {
+  const next: CampaignFormValues = {
+    ...values,
+    format: "offer",
+    advertorialLayout: "auto",
+  };
+  const heroAsset = getAsset(next.assetId, catalog);
+  if (heroAsset?.role !== "product-hero") {
+    next.assetId =
+      catalog.assets.find(
+        (asset) => asset.role === "product-hero" && asset.brandId === next.brandId,
+      )?.id ?? next.assetId;
+  }
+  next.openingFocus = openingFocusForFormat(
+    fixture,
+    "offer",
+    preferredOpeningFocus,
+  );
+  return next;
+}
+
+/**
+ * An alternative is only recommended when the full current brief validates in
+ * that format. Capacity and field errors are returned for the caller.
+ */
+export function evaluateOfferAlternative(
+  fixture: CampaignFixture,
+  values: CampaignFormValues,
+  catalog: CampaignCatalog,
+  preferredOpeningFocus?: string,
+): FormatPreviewAlternative {
+  const offerValues = createOfferAlternativeValues(
+    fixture,
+    values,
+    catalog,
+    preferredOpeningFocus,
+  );
+  const result = buildConfiguredPreview(fixture, offerValues, catalog);
+  return result.ok
+    ? { ok: true, values: offerValues, preview: result.preview, issues: [] }
+    : { ok: false, values: offerValues, preview: null, issues: result.issues };
 }
 
 /**
@@ -138,6 +225,53 @@ export function summarizePreviewImages(
       failedAssetIds.length === 0 &&
       pendingAssetIds.length === 0,
   };
+}
+
+export type ImagePanelState = {
+  hasPreview: boolean;
+  failedCount: number;
+  pendingCount: number;
+  loadedCount: number;
+  totalCount: number;
+  generating: boolean;
+  dirty: boolean;
+  hasIssues: boolean;
+  approved: boolean;
+  canApprove: boolean;
+  editorReady: boolean;
+  revisionLabel: string | null;
+};
+
+/**
+ * Describes the image state and the real next action. Readiness alone is not
+ * approval: an edited or failed preview still needs a retry or regeneration.
+ */
+export function imagePanelStatusText(state: ImagePanelState): string {
+  if (state.generating) {
+    return "Waiting for the fresh preview. Image status will apply to its new revision.";
+  }
+  if (state.failedCount > 0) {
+    return `${state.failedCount} required ${state.failedCount === 1 ? "image has" : "images have"} failed to load. Retry below before approval.`;
+  }
+  if (state.pendingCount > 0) {
+    return `Loading required images for revision ${state.revisionLabel}… ${state.loadedCount} of ${state.totalCount} loaded.`;
+  }
+  if (state.dirty || state.hasIssues) {
+    return "Required images are loaded. Generate a fresh preview before approving the edit.";
+  }
+  if (state.approved) {
+    return `Required images are loaded. Revision ${state.revisionLabel} is already approved; no further image action is needed.`;
+  }
+  if (state.canApprove) {
+    return `Required images are loaded. Approve revision ${state.revisionLabel} when ready.`;
+  }
+  if (!state.editorReady) {
+    return "Required images are loaded. Preparing the editor controls…";
+  }
+  if (!state.hasPreview) {
+    return "No preview images are available to check.";
+  }
+  return `Required images are loaded for revision ${state.revisionLabel}. Approval is not available for this revision.`;
 }
 
 /**

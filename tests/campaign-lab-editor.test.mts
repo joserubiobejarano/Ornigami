@@ -8,8 +8,12 @@ import {
 import {
   createEditorPreviewState,
   createPreviewImageGate,
+  evaluateOfferAlternative,
+  imagePanelStatusText,
+  isFactCapacityMessage,
   recordPreviewImageEvent,
   retryPreviewImage,
+  splitCapacityIssues,
   summarizePreviewImages,
 } from "../src/lib/campaign-lab/editor.ts";
 import type {
@@ -114,6 +118,103 @@ test("a four-fact required group never offers a nominal compatible layout", () =
   assert.equal(fit.recommended, "single-product-offer");
   assert.ok(
     fit.missingInputs.some((message) => /has 4 facts.*at most 3/.test(message)),
+  );
+});
+
+test("the four-fact brief does not validate as an offer alternative", () => {
+  const fixture = fourFactFixture();
+  const catalog = catalogWith(fixture);
+  const alternative = evaluateOfferAlternative(
+    fixture,
+    createFormValues(fixture, catalog),
+    catalog,
+  );
+
+  assert.equal(alternative.ok, false);
+  assert.equal(alternative.preview, null);
+  assert.ok(
+    alternative.issues.some(
+      (issue) =>
+        issue.field === "offer" &&
+        /the rib design/i.test(issue.message) &&
+        /\b4\b/.test(issue.message) &&
+        /at most\s*3|no supported layout accepts more than 3/i.test(issue.message),
+    ),
+  );
+});
+
+test("a genuine alternate format is recommended only when it validates", () => {
+  const fixture = CAMPAIGN_FIXTURES["long-copy"];
+  const values = {
+    ...createFormValues(fixture),
+    format: "advertorial" as const,
+    advertorialLayout: "auto" as const,
+  };
+  const fit = assessAdvertorialFit(fixture, values);
+  const alternative = evaluateOfferAlternative(fixture, values, BASE_CATALOG);
+
+  assert.equal(fit.fit, false);
+  assert.equal(fit.compatibleLayout, undefined);
+  assert.equal(alternative.ok, true);
+  assert.ok(alternative.preview);
+  assert.equal(alternative.preview.draft.templateId, "single-product-offer");
+  assert.equal(alternative.values.format, "offer");
+  assert.equal(alternative.preview.brief.offer, values.offer);
+  assert.equal(alternative.preview.brief.destinationUrl, values.destinationUrl);
+});
+
+test("capacity errors are shown once and kept out of field-level errors", () => {
+  const fixture = fourFactFixture();
+  const catalog = catalogWith(fixture);
+  const state = createEditorPreviewState(
+    fixture,
+    createFormValues(fixture, catalog),
+    catalog,
+  );
+  const split = splitCapacityIssues(state.issues);
+
+  assert.ok(split.capacityIssue);
+  assert.ok(isFactCapacityMessage(split.capacityIssue?.message ?? ""));
+  assert.equal(
+    split.otherIssues.some((issue) => isFactCapacityMessage(issue.message)),
+    false,
+  );
+  assert.equal(split.otherIssues.some((issue) => issue.field === "offer"), false);
+});
+
+test("the image panel reflects the actual approval action after an edit", () => {
+  const base = {
+    hasPreview: true,
+    failedCount: 0,
+    pendingCount: 0,
+    loadedCount: 3,
+    totalCount: 3,
+    generating: false,
+    dirty: false,
+    hasIssues: false,
+    approved: false,
+    canApprove: true,
+    editorReady: true,
+    revisionLabel: "abc123",
+  };
+
+  assert.match(imagePanelStatusText({ ...base, pendingCount: 1, loadedCount: 2 }), /Loading required images/i);
+  assert.match(imagePanelStatusText({ ...base, failedCount: 1 }), /failed to load.*Retry/i);
+  assert.match(
+    imagePanelStatusText({ ...base, dirty: true, canApprove: false }),
+    /Generate a fresh preview before approving the edit/i,
+  );
+  assert.match(
+    imagePanelStatusText({ ...base, canApprove: true }),
+    /Approve revision abc123/i,
+  );
+  assert.match(
+    imagePanelStatusText({ ...base, approved: true, canApprove: false }),
+    /already approved.*no further image action/i,
+  );
+  assert.doesNotMatch(
+    imagePanelStatusText({ ...base, dirty: true, canApprove: false }),
+    /Approval is available/i,
   );
 });
 

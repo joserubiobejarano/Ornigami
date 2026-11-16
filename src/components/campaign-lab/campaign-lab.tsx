@@ -15,11 +15,15 @@ import type { ConfiguredPreviewData } from "@/lib/campaign-lab/advertorial";
 import {
   createEditorPreviewState,
   createPreviewImageGate,
+  evaluateOfferAlternative,
+  imagePanelStatusText,
   isAdvertorialPreviewData,
+  isFactCapacityMessage,
   previewImageAttempt,
   previewImageStatus,
   recordPreviewImageEvent,
   retryPreviewImage,
+  splitCapacityIssues,
   summarizePreviewImages,
 } from "@/lib/campaign-lab/editor";
 import type {
@@ -95,6 +99,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
   const baseId = useId().replace(/:/g, "");
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const capacityAlertRef = useRef<HTMLDivElement>(null);
   const previousIssueCount = useRef(0);
   const requestGate = useRef(new GenerationRequestGate());
   const inFlight = useRef<AbortController | null>(null);
@@ -123,6 +128,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const selectedAsset = getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
+  const offerAlternative = evaluateOfferAlternative(fixture, values, catalog);
   const format: CampaignFormat = values.format ?? defaultFormat(fixture);
   const openingOptions = openingOptionsForFormat(fixture, format);
   const approvedHeroAssignment = fixture.brief.advertorial?.assetAssignments.find(
@@ -143,7 +149,19 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     : preview
       ? SINGLE_PRODUCT_OFFER_TEMPLATE.layouts[(preview as CampaignPreviewData).draft.layout]
       : null;
-  const issueByField = new Map(issues.map((issue) => [issue.field, issue.message]));
+  const { capacityIssue, otherIssues } = splitCapacityIssues(issues);
+  const capacityMessage =
+    capacityIssue?.message ??
+    [advertorialFit.layoutReason, ...advertorialFit.missingInputs]
+      .concat(offerAlternative.issues.map((issue) => issue.message))
+      .find((message): message is string =>
+        Boolean(message && isFactCapacityMessage(message)),
+      ) ??
+    null;
+  const issueByField = new Map(
+    otherIssues.map((issue) => [issue.field, issue.message]),
+  );
+  const issueCount = otherIssues.length + (capacityMessage ? 1 : 0);
   const imageSummary = summarizePreviewImages(preview, imageGate);
   const revision = preview?.revision ?? null;
   const imageRows = advertorialPreview
@@ -183,6 +201,22 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
     !approved;
   const approvalBlockedByImages = Boolean(preview) && !imageSummary.ready;
   const revisionLabel = revision ? shortRevision(revision) : null;
+  const imagePanelText = preview
+    ? imagePanelStatusText({
+        hasPreview: true,
+        failedCount: failedImageRows.length,
+        pendingCount: pendingImageRows.length,
+        loadedCount: imageRows.length - pendingImageRows.length,
+        totalCount: imageRows.length,
+        generating,
+        dirty,
+        hasIssues: otherIssues.length > 0 || Boolean(capacityMessage),
+        approved,
+        canApprove,
+        editorReady,
+        revisionLabel,
+      })
+    : null;
 
   const fieldIds: Record<ValidationField, string> = {
     brandId: `${baseId}-brand-style`,
@@ -204,15 +238,16 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   const generationEditorStatusId = `${baseId}-generation-editor-status`;
   const generationPreviewStatusId = `${baseId}-generation-preview-status`;
   const errorSummaryHeadingId = `${baseId}-error-summary-heading`;
+  const capacityIssueId = `${baseId}-capacity-issue`;
   const assetMetaId = `${baseId}-asset-meta`;
   const accentHintId = `${baseId}-accent-hint`;
 
   useEffect(() => {
-    if (issues.length > previousIssueCount.current) {
-      errorSummaryRef.current?.focus();
+    if (issueCount > previousIssueCount.current) {
+      (capacityMessage ? capacityAlertRef.current : errorSummaryRef.current)?.focus();
     }
-    previousIssueCount.current = issues.length;
-  }, [issues]);
+    previousIssueCount.current = issueCount;
+  }, [capacityMessage, issueCount]);
 
   useEffect(() => {
     const gate = requestGate.current;
@@ -309,40 +344,25 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
   }
 
   function handleUseOfferTemplate() {
-    invalidateGenerationRequest();
-    const next: CampaignFormValues = {
-      ...values,
-      format: "offer",
-      advertorialLayout: "auto",
-    };
-    const heroAsset = getAsset(next.assetId, catalog);
-    if (heroAsset?.role !== "product-hero") {
-      next.assetId =
-        catalog.assets.find((asset) => asset.role === "product-hero" && asset.brandId === next.brandId)?.id ??
-        next.assetId;
-    }
-    next.openingFocus = openingFocusForFormat(
+    const alternative = evaluateOfferAlternative(
       fixture,
-      "offer",
+      values,
+      catalog,
       openingByFormat.current.offer,
     );
-    openingByFormat.current.offer = next.openingFocus;
-    setValues(next);
+    if (!alternative.ok || !alternative.preview) return;
+    invalidateGenerationRequest();
+    openingByFormat.current.offer = alternative.values.openingFocus;
+    setValues(alternative.values);
     setIssues([]);
     setApproval(null);
-    const result = buildConfiguredPreview(fixture, next, catalog);
-    if (result.ok) {
-      setPreview(result.preview);
-      setDirty(false);
-      setGeneration(
-        deterministicFallback(
-          "The single-product offer template is selected because this brief has no approved advertorial story.",
-        ),
-      );
-    } else {
-      setIssues(result.issues);
-      setDirty(true);
-    }
+    setPreview(alternative.preview);
+    setDirty(false);
+    setGeneration(
+      deterministicFallback(
+        "The single-product offer template is selected because it validates the current approved brief.",
+      ),
+    );
   }
 
   function deterministicFallback(
@@ -469,28 +489,26 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
       : approved
         ? `Approved locally. Revision ${revisionLabel} matches the preview.`
         : dirty
-          ? issues.length > 0
-            ? `Preview not updated. Fix ${issues.length} ${issues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
+          ? otherIssues.length > 0
+            ? `Preview not updated. Fix ${otherIssues.length} ${otherIssues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
             : `Preview out of date. Approval is cleared. Showing the last valid preview, revision ${revisionLabel}. Generate a fresh preview to review your edits.`
-          : failedImageRows.length > 0
-            ? `Preview revision ${revisionLabel} is not approveable. ${failedImageRows.length} required ${failedImageRows.length === 1 ? "image has" : "images have"} failed to load. Retry below.`
-            : pendingImageRows.length > 0
-              ? `Preview revision ${revisionLabel} is waiting for ${pendingImageRows.length} required ${pendingImageRows.length === 1 ? "image" : "images"} to load before approval.`
-              : `Preview ready for local review. Revision ${revisionLabel}.`;
+          : failedImageRows.length > 0 || pendingImageRows.length > 0
+            ? `Preview revision ${revisionLabel} is shown; image status is below.`
+            : `Preview ready for local review. Revision ${revisionLabel}.`;
 
   const reviewStatusText = !preview
     ? "Not approved. No valid preview is available yet."
     : generating
-      ? "Not approved. A fresh preview is being generated."
+      ? "Not approved. Generating a fresh preview."
       : approved
         ? `Approved locally — revision ${revisionLabel}.`
-        : failedImageRows.length > 0
-          ? "Not approved. A required image failed to load."
-          : pendingImageRows.length > 0
-            ? "Not approved. Waiting for the required images to load."
-            : dirty
-              ? "Not approved. Changes need a fresh preview."
-              : "Not approved. Preview ready for local review.";
+        : dirty
+          ? "Not approved. Changes need a fresh preview."
+          : failedImageRows.length > 0
+            ? "Not approved. Image attention required."
+            : pendingImageRows.length > 0
+              ? "Not approved. Waiting for required images."
+              : "Not approved.";
 
   const reviewTone = approved
     ? "border-[#3f7a5a] bg-[#eef5ee]"
@@ -618,8 +636,11 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   className={nativeSelectClassName}
                   value={format}
                   onChange={(event) => handleFormatChange(event.target.value as CampaignFormat)}
-                  aria-invalid={issueByField.has("format")}
-                  aria-describedby={describedBy("format")}
+                  aria-invalid={issueByField.has("format") || Boolean(capacityMessage)}
+                  aria-describedby={describedBy(
+                    "format",
+                    capacityMessage ? capacityIssueId : undefined,
+                  )}
                 >
                   <option value="offer">
                     Single-product offer · v{SINGLE_PRODUCT_OFFER_TEMPLATE.version}
@@ -655,8 +676,13 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                         event.target.value as AdvertorialLayoutId | "auto",
                       )
                     }
-                    aria-invalid={issueByField.has("advertorialLayout")}
-                    aria-describedby={describedBy("advertorialLayout")}
+                    aria-invalid={
+                      issueByField.has("advertorialLayout") || Boolean(capacityMessage)
+                    }
+                    aria-describedby={describedBy(
+                      "advertorialLayout",
+                      capacityMessage ? capacityIssueId : undefined,
+                    )}
                   >
                     <option value="auto">Auto from the approved image set</option>
                     <option value="advertorial-full">Full advertorial · story, evidence, product</option>
@@ -670,6 +696,33 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                       {issueByField.get("advertorialLayout")}
                     </p>
                   ) : null}
+                </div>
+              ) : null}
+
+              {capacityMessage ? (
+                <div
+                  ref={capacityAlertRef}
+                  id={capacityIssueId}
+                  tabIndex={-1}
+                  role="alert"
+                  data-capacity-issue
+                  className="rounded-xl border border-[#b98237] bg-[#fbf3e4] p-3 text-[#6b4918] outline-none focus-visible:ring-2 focus-visible:ring-[#7a541d] focus-visible:ring-offset-2"
+                >
+                  <p className="text-sm font-semibold">Required fact group does not fit</p>
+                  <p className="mt-1 text-xs">{capacityMessage}</p>
+                  <p className="mt-1 text-xs">
+                    The editor will not shorten or split the approved group. Revise the approved
+                    brief so the complete group fits the product block, reload the approved brief,
+                    then generate the preview again.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="mt-3 w-full sm:w-auto"
+                    onClick={() => window.location.reload()}
+                  >
+                    Recover approved brief
+                  </Button>
                 </div>
               ) : null}
 
@@ -705,7 +758,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 </details>
               ) : null}
 
-              {!advertorialFit.fit ? (
+              {!capacityMessage && !advertorialFit.fit && format === "advertorial" ? (
                 <div className="rounded-xl border border-[#b98237] bg-[#fbf3e4] p-3 text-[#6b4918]">
                   <p className="text-sm font-semibold">Advertorial not ready for this brief</p>
                   {advertorialFit.layoutReason ? (
@@ -717,28 +770,39 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                       {ADVERTORIAL_MANIFEST.layouts[advertorialFit.compatibleLayout].label}{" "}
                       layout instead.
                     </p>
+                  ) : offerAlternative.ok ? (
+                    <p className="mt-1 text-xs">
+                      The current brief validates as a single-product offer. The advertorial still
+                      needs:
+                    </p>
                   ) : (
                     <p className="mt-1 text-xs">
-                      Single-product offer is recommended. The advertorial still needs:
+                      No alternate format validates the current brief yet. Fix these inputs or
+                      revise the approved brief:
                     </p>
                   )}
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
-                    {advertorialFit.missingInputs.slice(0, 6).map((input) => (
-                      <li key={input}>{input}</li>
-                    ))}
+                    {advertorialFit.missingInputs
+                      .filter((input) => !isFactCapacityMessage(input))
+                      .slice(0, 6)
+                      .map((input) => (
+                        <li key={input}>{input}</li>
+                      ))}
                   </ul>
-                  {format === "advertorial" ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {advertorialFit.compatibleLayout ? (
-                        <Button
-                          type="button"
-                          className="w-full sm:w-auto"
-                          onClick={() => handleUseCompatibleLayout(advertorialFit.compatibleLayout!)}
-                        >
-                          Use{" "}
-                          {ADVERTORIAL_MANIFEST.layouts[advertorialFit.compatibleLayout].label}
-                        </Button>
-                      ) : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {advertorialFit.compatibleLayout ? (
+                      <Button
+                        type="button"
+                        className="w-full sm:w-auto"
+                        onClick={() =>
+                          handleUseCompatibleLayout(advertorialFit.compatibleLayout!)
+                        }
+                      >
+                        Use{" "}
+                        {ADVERTORIAL_MANIFEST.layouts[advertorialFit.compatibleLayout].label}
+                      </Button>
+                    ) : null}
+                    {offerAlternative.ok ? (
                       <Button
                         type="button"
                         variant="secondary"
@@ -747,8 +811,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                       >
                         Use single-product offer
                       </Button>
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
 
@@ -995,7 +1059,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
               </div>
             </fieldset>
 
-            {issues.length > 0 ? (
+            {otherIssues.length > 0 ? (
               <div
                 ref={errorSummaryRef}
                 tabIndex={-1}
@@ -1010,10 +1074,10 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   {preview
                     ? "The last valid preview is still shown."
                     : "The editor is still usable. Fix the validation issue before generating."}{" "}
-                  Fix {issues.length === 1 ? "this field" : "these fields"}:
+                  Fix {otherIssues.length === 1 ? "this field" : "these fields"}:
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-                  {issues.map((issue) => (
+                  {otherIssues.map((issue) => (
                     <li key={issue.field}>
                       <a
                         href={`#${fieldIds[issue.field]}`}
@@ -1055,7 +1119,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
               aria-live="polite"
               className={cn(
                 "text-xs font-medium",
-                issues.length > 0
+                issueCount > 0
                   ? "text-[#a2382a]"
                   : dirty
                     ? "text-[#7a541d]"
@@ -1064,8 +1128,8 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
             >
               {generating
                 ? "Generating preview. The last valid preview remains available."
-                : issues.length > 0
-                  ? `${issues.length} ${issues.length === 1 ? "field needs" : "fields need"} attention.`
+                : issueCount > 0
+                  ? `${issueCount} ${issueCount === 1 ? "issue needs" : "issues need"} attention.`
                   : dirty
                     ? "Changes not yet validated. Generate preview to validate."
                     : "No validation errors."}
@@ -1107,11 +1171,7 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                   data-images-ready={imageSummary.ready ? "true" : "false"}
                 >
                   <p className="text-xs font-medium" role="status" aria-live="polite">
-                    {imageSummary.ready
-                      ? `All required images loaded for revision ${revisionLabel}. Approval is available.`
-                      : failedImageRows.length > 0
-                        ? `Approval is blocked: ${failedImageRows.length} required ${failedImageRows.length === 1 ? "image has" : "images have"} failed to load.`
-                        : `Checking required images for revision ${revisionLabel} before approval… ${imageRows.length - pendingImageRows.length} of ${imageRows.length} loaded.`}
+                    {imagePanelText}
                   </p>
                   {failedImageRows.length > 0 ? (
                     <ul className="mt-2 space-y-2 text-xs">
@@ -1329,10 +1389,15 @@ export function CampaignLab({ initialFixtureId, catalog }: CampaignLabProps) {
                 Approval is unavailable until the campaign brief validates and a preview is
                 generated.
               </p>
-              {issues[0] ? <p className="mt-2 text-xs">{issues[0].message}</p> : null}
+              {capacityMessage ? (
+                <p className="mt-2 text-xs">
+                  Resolve the capacity issue in the brief above, then reload the approved brief.
+                </p>
+              ) : otherIssues[0] ? (
+                <p className="mt-2 text-xs">{otherIssues[0].message}</p>
+              ) : null}
               <p className="mt-2 text-xs">
-                Recovery controls are available in the campaign brief. Approval stays unavailable
-                until a valid preview exists.
+                Approval stays unavailable until a valid preview exists.
               </p>
             </div>
           )}
