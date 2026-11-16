@@ -97,7 +97,7 @@ test("a complete browser brief validates and builds the existing offer preview",
   assert.equal(preview.preview.asset.id, "browser-offer-packshot");
 });
 
-test("a long offer gets a concise headline while the exact terms stay intact", () => {
+test("a conditional long offer uses the product name and keeps the exact terms", () => {
   const offer =
     "Free shipping plus a matching carafe through 30 November 2026 when you order the complete pour-over set";
   const built = buildBrowserOfferCatalog({
@@ -110,10 +110,7 @@ test("a long offer gets a concise headline while the exact terms stay intact", (
     },
   });
   assert.equal(built.fixture.brief.offer, offer);
-  assert.equal(
-    built.fixture.brief.copy.headline,
-    "Free shipping plus a matching carafe.",
-  );
+  assert.equal(built.fixture.brief.copy.headline, undefined);
   assert.equal(built.fixture.brief.copy.hideLede, true);
 
   const preview = buildCampaignPreview(
@@ -123,8 +120,110 @@ test("a long offer gets a concise headline while the exact terms stay intact", (
   );
   assert.equal(preview.ok, true);
   if (!preview.ok) return;
-  assert.equal(preview.preview.draft.headline, "Free shipping plus a matching carafe.");
+  assert.equal(preview.preview.draft.headline, "Morrow ceramic dripper");
   assert.equal(preview.preview.draft.lede, "A dripper from Harbor Field.");
+  assert.equal(preview.preview.brief.offer, offer);
+});
+
+test("a changed offer derives a headline from the current brief", () => {
+  const initialOffer =
+    "50% off your first order when you spend $75 or more, excluding gift cards and sale items";
+  const freeShippingOffer = "Free shipping on orders over $75";
+  const nonConditionalOffer =
+    "A free custom engraving is included with every travel bottle for the whole launch season";
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    offer: initialOffer,
+    confirmations: {
+      ...completeInput().confirmations,
+      offer: initialOffer,
+    },
+  });
+  const values = createFormValues(built.fixture, built.catalog);
+  const first = buildCampaignPreview(built.fixture, values, built.catalog);
+  const second = buildCampaignPreview(
+    built.fixture,
+    { ...values, offer: freeShippingOffer },
+    built.catalog,
+  );
+  const third = buildCampaignPreview(
+    built.fixture,
+    { ...values, offer: nonConditionalOffer },
+    built.catalog,
+  );
+
+  assert.equal(first.ok, true);
+  assert.equal(second.ok, true);
+  assert.equal(third.ok, true);
+  if (!first.ok || !second.ok || !third.ok) return;
+  assert.equal(first.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(second.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(second.preview.brief.offer, freeShippingOffer);
+  assert.notEqual(first.preview.revision, second.preview.revision);
+  assert.equal(
+    third.preview.draft.headline,
+    "A free custom engraving is included with every travel bottle for the whole launch season.",
+  );
+  assert.equal(third.preview.brief.offer, nonConditionalOffer);
+});
+
+test("every valid offer length renders successfully", () => {
+  for (let length = 1; length <= 180; length += 1) {
+    const offer =
+      length === 180
+        ? "x".repeat(180)
+        : "save ".repeat(40).slice(0, length).trim();
+    const input: BrowserOfferIntakeInput = {
+      ...completeInput(),
+      offer,
+      confirmations: {
+        ...completeInput().confirmations,
+        offer,
+      },
+    };
+    assert.equal(
+      validateBrowserOfferIntake(input).valid,
+      true,
+      `intake rejected a valid ${length}-character offer`,
+    );
+    const built = buildBrowserOfferCatalog(input);
+    const preview = buildCampaignPreview(
+      built.fixture,
+      createFormValues(built.fixture, built.catalog),
+      built.catalog,
+    );
+    assert.equal(
+      preview.ok,
+      true,
+      `preview failed for a ${length}-character offer`,
+    );
+    if (preview.ok) {
+      assert.ok(preview.preview.draft.headline.length <= 180);
+    }
+  }
+});
+
+test("a 180-character conditional offer uses the product name", () => {
+  const base =
+    "50% off your first order when you spend $75 or more, excluding gift cards and sale items, plus free returns for the whole launch season and future refill orders placed directly with our team";
+  const offer = base.slice(0, 180);
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    offer,
+    confirmations: {
+      ...completeInput().confirmations,
+      offer,
+    },
+  });
+  const preview = buildCampaignPreview(
+    built.fixture,
+    createFormValues(built.fixture, built.catalog),
+    built.catalog,
+  );
+  assert.equal(offer.length, 180);
+  assert.equal(preview.ok, true);
+  if (!preview.ok) return;
+  assert.equal(preview.preview.draft.headline, "Harbor Field travel bottle");
   assert.equal(preview.preview.brief.offer, offer);
 });
 

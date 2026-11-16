@@ -158,6 +158,24 @@ export function verifyBrowserOffer(input: BrowserOfferIntakeInput): BrowserOffer
   };
 }
 
+export function provisionalOfferInputs(
+  verification: BrowserOfferVerification,
+): string[] {
+  return [
+    verification.offer === "provisional" ? "offer" : null,
+    verification.destination === "provisional" ? "destination" : null,
+    verification.rights === "provisional" ? "media rights" : null,
+  ].filter((value): value is string => Boolean(value));
+}
+
+export function browserOfferPilotNote(
+  verification: BrowserOfferVerification,
+): string {
+  return verification.provisional
+    ? `Provisional: ${provisionalOfferInputs(verification).join(", ")}. Confirm before publication.`
+    : "Local browser brief · not publication approval.";
+}
+
 const NEUTRAL_TOKENS: BrandTokens = {
   page: "#f6f3ec",
   surface: "#e8e2d6",
@@ -226,16 +244,6 @@ function productNoun(productName: string): string {
 
 function productLede(productName: string, brand: BrandDefinition): string {
   return `A ${productNoun(productName)} from ${brand.name}.`;
-}
-
-function conciseOfferHeadline(offer: string, productName: string): string {
-  const lead = offer
-    .trim()
-    .split(/\s+(?:through|until|when|on)\s+/i)[0]
-    .replace(/[.!?]+$/, "")
-    .trim();
-  const candidate = lead || productName;
-  return `${candidate.charAt(0).toUpperCase()}${candidate.slice(1)}.`;
 }
 
 export function validateBrowserOfferIntake(
@@ -385,20 +393,11 @@ export function buildBrowserOfferCatalog(
       productFacts,
       requiredFactGroups,
       copy: {
-        ...(trimmed(input.offer).length > 68
-          ? { headline: conciseOfferHeadline(input.offer, input.productName) }
-          : {}),
         lede: productLede(input.productName, brand),
         hideLede: true,
       },
     },
   };
-
-  const provisionalInputs = [
-    verification.offer === "provisional" ? "offer" : null,
-    verification.destination === "provisional" ? "destination" : null,
-    verification.rights === "provisional" ? "media rights" : null,
-  ].filter((value): value is string => Boolean(value));
 
   return {
     fixture,
@@ -411,9 +410,7 @@ export function buildBrowserOfferCatalog(
         id: BROWSER_OFFER_FIXTURE_ID,
         label: "Browser offer intake",
         status: verification.provisional ? "preview" : "confirmed",
-        note: verification.provisional
-          ? `Provisional: ${provisionalInputs.join(", ")}. Confirm before publication.`
-          : "Local browser brief · not publication approval.",
+        note: browserOfferPilotNote(verification),
       },
     },
   };

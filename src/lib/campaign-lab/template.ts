@@ -227,15 +227,62 @@ function cloneFact(fact: ProductFact): ProductFact {
   };
 }
 
+/**
+ * A short offer headline must never hide a purchase requirement, threshold, or
+ * exclusion. These patterns intentionally describe promotion conditions rather
+ * than every temporal detail, so a simple date range can still use offer-led
+ * copy while the exact terms stay next to the action.
+ */
+const CONDITIONAL_PROMOTION_PATTERNS: readonly RegExp[] = [
+  /\bfirst\s+(?:order|purchase|subscription|delivery)\b/i,
+  /\bwhen\s+you\s+(?:buy|order|spend|subscribe|purchase)\b/i,
+  /\bwhen\s+(?:you\s+)?(?:spend|buy|order)\b/i,
+  /\bwith\s+(?:any\s+|every\s+|your\s+)?(?:purchase|order)\b/i,
+  /\bwith\s+(?:code|promo\s*code|voucher)\b/i,
+  /\bminimum\s+(?:spend|order|purchase)\b/i,
+  /\bmin\.?\s*(?:spend|order|purchase)\b/i,
+  /\bspend\s+[$£€]?\s*\d/i,
+  /\borders?\s+(?:over|above|of)\s+[$£€]?\s*\d/i,
+  /\bover\s+[$£€]\s*\d/i,
+  /\b(?:under|below)\s+[$£€]\s*\d/i,
+  /[$£€]\s*\d+(?:\.\d+)?\s+or\s+more\b/i,
+  /\b\d+\s+for\s+[$£€]\s*\d/i,
+  /\bbuy\s+(?:one|1|\d+)\b/i,
+  /\bbogo\b/i,
+  /\bexclud(?:e|es|ing|ed)\b/i,
+  /\bexceptions?\b/i,
+  /\bnot\s+valid\b/i,
+  /\bcannot\s+be\s+combined\b/i,
+  /\bone\s+per\b/i,
+  /\blimit(?:ed)?\s+(?:to|of|one|\d+)\b/i,
+  /\bwhile\s+(?:stocks|supplies)\s+last\b/i,
+];
+
+export function isConditionalPromotion(offer: string): boolean {
+  return CONDITIONAL_PROMOTION_PATTERNS.some((pattern) => pattern.test(offer));
+}
+
+function productNameHeadline(brief: CampaignBrief): string {
+  return withoutTerminalPunctuation(brief.productName);
+}
+
 function buildOfferLedHeadline(brief: CampaignBrief): string {
-  const offerLead = withoutTerminalPunctuation(firstClause(brief.offer));
-  if (!offerLead) return withoutTerminalPunctuation(brief.productName);
+  const offer = brief.offer.trim();
+  const offerLead = withoutTerminalPunctuation(firstClause(offer));
+  if (!offerLead) return productNameHeadline(brief);
+
+  if (isConditionalPromotion(offer)) {
+    return productNameHeadline(brief);
+  }
 
   const offerLed = `${capitalize(offerLead)} the ${withoutTerminalPunctuation(brief.productNoun)}.`;
-  if (offerLed.length > 68 && offerLead.length >= 40) {
-    return `${capitalize(offerLead)}.`;
-  }
-  return offerLed;
+  const concise =
+    offerLed.length > 68 && offerLead.length >= 40
+      ? `${capitalize(offerLead)}.`
+      : offerLed;
+  return concise.length <= SINGLE_PRODUCT_OFFER_TEMPLATE.limits.headline
+    ? concise
+    : productNameHeadline(brief);
 }
 
 export function buildHeadline(

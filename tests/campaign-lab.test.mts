@@ -15,6 +15,7 @@ import {
   buildCampaignPreview,
   buildHeadline,
   getDestinationUrlError,
+  isConditionalPromotion,
   validateCampaignForm,
 } from "../src/lib/campaign-lab/template.ts";
 
@@ -245,6 +246,35 @@ test("brand style changes keep the campaign offer and destination but change the
   assert.equal(restyled.preview.brief.destinationUrl, base.preview.brief.destinationUrl);
   assert.notEqual(restyled.preview.revision, base.preview.revision);
   assert.equal(restyled.preview.theme.brand.id, "morrow-ceramic");
+});
+
+test("conditional promotions use the product name in an offer-led headline", () => {
+  const conditionalOffers = [
+    "50% off your first order when you spend $75 or more, excluding gift cards and sale items",
+    "Free shipping on orders over $75",
+    "20% off with code SAVE20",
+    "Buy one, get one free",
+    "20% off orders of $50 or more",
+  ];
+  for (const offer of conditionalOffers) {
+    assert.equal(isConditionalPromotion(offer), true, offer);
+    const brief = {
+      ...CAMPAIGN_FIXTURES.sparse.brief,
+      offer,
+      productName: "Harbor Field travel bottle",
+    };
+    assert.equal(buildHeadline(brief, "harbor-field"), "Harbor Field travel bottle");
+  }
+
+  const simpleOffer = "20% off, 27-30 November 2026";
+  assert.equal(isConditionalPromotion(simpleOffer), false);
+  assert.equal(
+    buildHeadline(
+      { ...CAMPAIGN_FIXTURES.sparse.brief, offer: simpleOffer },
+      "harbor-field",
+    ),
+    "20% off the travel bottle.",
+  );
 });
 
 test("headline assembly and accent contrast remain deterministic", () => {
