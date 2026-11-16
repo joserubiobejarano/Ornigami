@@ -13,11 +13,13 @@ import {
   buildBrowserOfferCatalog,
   isProvisionalRights,
   validateBrowserOfferIntake,
+  verifyBrowserOffer,
 } from "@/lib/campaign-lab/browser-offer";
 import type {
   BrowserOfferFactInput,
   BrowserOfferIntakeErrors,
   BrowserOfferIntakeInput,
+  BrowserOfferVerification,
 } from "@/lib/campaign-lab/browser-offer";
 import type { CampaignCatalog, CampaignFixture } from "@/lib/campaign-lab/types";
 
@@ -35,6 +37,7 @@ type SubmittedBrief = {
   key: number;
   fixture: CampaignFixture;
   catalog: CampaignCatalog;
+  verification: BrowserOfferVerification;
 };
 
 const EMPTY_FACT: BrowserOfferFactInput = { label: "", value: "" };
@@ -45,6 +48,87 @@ function fieldError(
 ): string | undefined {
   const error = errors[key];
   return typeof error === "string" ? error : undefined;
+}
+
+const VERIFICATION_LABELS = {
+  offer: {
+    missing: "Offer missing",
+    provisional: "Offer provisional",
+    confirmed: "Offer entered",
+  },
+  destination: {
+    missing: "Destination missing",
+    provisional: "Search/placeholder · provisional",
+    invalid: "Destination invalid",
+    direct: "Direct destination",
+  },
+  rights: {
+    missing: "Media rights missing",
+    provisional: "Media rights provisional",
+    confirmed: "Media rights recorded",
+  },
+} as const;
+
+function verificationTone(status: string): string {
+  if (status === "missing" || status === "invalid") {
+    return "border-[#c65c45] bg-[#fff1ec] text-[#6d2b20]";
+  }
+  if (status === "provisional") {
+    return "border-[#b98237] bg-[#fbf3e4] text-[#6b4918]";
+  }
+  return "border-[#bcd7c2] bg-[#eef5ee] text-[#285a3d]";
+}
+
+function provisionalNotice(
+  verification: BrowserOfferVerification,
+): string | undefined {
+  const provisional = [
+    verification.offer === "provisional" ? "offer" : null,
+    verification.destination === "provisional" ? "destination" : null,
+    verification.rights === "provisional" ? "media rights" : null,
+  ].filter((value): value is string => Boolean(value));
+  return provisional.length > 0
+    ? `Preview · ${provisional.join(", ")} provisional`
+    : undefined;
+}
+
+function VerificationSummary({
+  verification,
+}: {
+  verification: BrowserOfferVerification;
+}) {
+  return (
+    <div
+      className="rounded-xl border border-[#ddd3c2] bg-[#fbf8f1] p-3"
+      data-intake-verification
+      data-offer-verification={verification.offer}
+      data-destination-verification={verification.destination}
+      data-rights-verification={verification.rights}
+    >
+      <p className="text-sm font-semibold">Commercial and media check</p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+        {(
+          [
+            ["Offer", VERIFICATION_LABELS.offer[verification.offer], verification.offer],
+            [
+              "Destination",
+              VERIFICATION_LABELS.destination[verification.destination],
+              verification.destination,
+            ],
+            ["Media", VERIFICATION_LABELS.rights[verification.rights], verification.rights],
+          ] as const
+        ).map(([label, text, status]) => (
+          <div
+            key={label}
+            className={`rounded-lg border px-3 py-2 text-xs font-semibold ${verificationTone(status)}`}
+          >
+            <p className="text-[0.62rem] uppercase tracking-[0.12em] opacity-80">{label}</p>
+            <p className="mt-1">{text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 async function sha256(file: File): Promise<string> {
@@ -78,8 +162,10 @@ async function readPackshot(file: File): Promise<Omit<PackshotFile, "fileName">>
 export function OfferIntake() {
   const baseId = useId().replace(/:/g, "");
   const objectUrlRef = useRef<string | null>(null);
+  const packshotReadRef = useRef(0);
   const submissionCount = useRef(0);
 
+  const [brandName, setBrandName] = useState("");
   const [productName, setProductName] = useState("");
   const [offer, setOffer] = useState("");
   const [destinationUrl, setDestinationUrl] = useState("");
@@ -152,6 +238,8 @@ export function OfferIntake() {
   }
 
   async function handlePackshotChange(file: File | null) {
+    const readId = packshotReadRef.current + 1;
+    packshotReadRef.current = readId;
     setPackshotError(null);
     setPackshotName(file?.name ?? null);
     if (objectUrlRef.current) {
@@ -159,30 +247,40 @@ export function OfferIntake() {
       objectUrlRef.current = null;
     }
     setPackshot(null);
-    if (!file) return;
+    if (!file) {
+      setReadingPackshot(false);
+      return;
+    }
     if (!/^image\/(?:png|jpeg|webp)$/i.test(file.type)) {
       setPackshotError("Use a PNG, JPEG, or WebP packshot.");
+      setReadingPackshot(false);
       return;
     }
 
     setReadingPackshot(true);
     try {
       const read = await readPackshot(file);
+      if (readId !== packshotReadRef.current) {
+        URL.revokeObjectURL(read.src);
+        return;
+      }
       objectUrlRef.current = read.src;
       setPackshot({ ...read, fileName: file.name });
       clearError("packshot");
     } catch {
+      if (readId !== packshotReadRef.current) return;
       setPackshotError("The file could not be read as a packshot image.");
     } finally {
-      setReadingPackshot(false);
+      if (readId === packshotReadRef.current) setReadingPackshot(false);
     }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (readingPackshot) return;
+    if (readingPackshot || packshotError) return;
 
     const input: BrowserOfferIntakeInput = {
+      brandName,
       productName,
       offer,
       destinationUrl,
@@ -212,11 +310,21 @@ export function OfferIntake() {
       key: submissionCount.current,
       fixture: built.fixture,
       catalog: built.catalog,
+      verification: built.verification,
     });
     window.scrollTo({ top: 0 });
   }
 
   const rightsProvisional = isProvisionalRights(rights);
+  const formVerification = verifyBrowserOffer({
+    brandName,
+    productName,
+    offer,
+    destinationUrl,
+    facts,
+    packshot: packshot ? { ...packshot, alt, rights } : null,
+    reviewedOn: "",
+  });
 
   if (submitted) {
     return (
@@ -224,7 +332,7 @@ export function OfferIntake() {
         <div className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <p className="text-xs font-medium text-[#5f5a4f]">
-              Local brief · {submitted.fixture.label}
+              Local session · refreshing clears this brief and local approval.
             </p>
             <Button
               type="button"
@@ -236,12 +344,16 @@ export function OfferIntake() {
             </Button>
           </div>
         </div>
+        <div className="mx-auto max-w-[1600px] px-4 pt-3 sm:px-6 lg:px-8">
+          <VerificationSummary verification={submitted.verification} />
+        </div>
         <CampaignLab
           key={submitted.key}
           initialFixtureId={submitted.fixture.id}
           catalog={submitted.catalog}
           showFixtureNav={false}
           localOnly
+          previewNotice={provisionalNotice(submitted.verification)}
         />
       </div>
     );
@@ -278,6 +390,16 @@ export function OfferIntake() {
         >
           <fieldset className="m-0 space-y-4 border-0 p-0">
             <legend className="mb-2 text-base font-semibold">Product and offer</legend>
+            <div className="space-y-1.5">
+              <Label htmlFor={`${baseId}-brand-name`}>Brand name</Label>
+              <Input
+                id={`${baseId}-brand-name`}
+                value={brandName}
+                onChange={(event) => setBrandName(event.target.value)}
+                autoComplete="organization"
+                placeholder="Optional — neutral preview if blank"
+              />
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor={productNameId}>Product name</Label>
               <Input
@@ -529,11 +651,17 @@ export function OfferIntake() {
             </div>
           </fieldset>
 
+          <VerificationSummary verification={formVerification} />
+
           <div className="flex flex-col gap-3 border-t border-[#ebe3d6] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#6d6a5f]">
-              The existing brief validation, renderer, and revision approval run next.
+              Local session only. Refreshing clears this brief and any local approval.
             </p>
-            <Button type="submit" className="w-full sm:w-auto" disabled={readingPackshot}>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={readingPackshot || Boolean(packshotError)}
+            >
               {readingPackshot ? "Reading packshot…" : "Open Campaign Lab preview"}
             </Button>
           </div>

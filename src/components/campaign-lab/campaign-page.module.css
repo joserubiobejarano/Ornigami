@@ -118,6 +118,18 @@
   gap: 15px;
 }
 
+.offerHero .copy .offer {
+  order: 3;
+}
+
+.offerHero .copy .action {
+  order: 4;
+}
+
+.offerHero .copy .facts {
+  order: 5;
+}
+
 .editorialHero {
   display: flex;
   flex-direction: column;
@@ -438,6 +450,12 @@
   .headlineFirst .offerHero .imageFrame {
     grid-column: 1;
     grid-row: 1;
+    order: 0;
+  }
+
+  .offerHero .copy .offer,
+  .offerHero .copy .action,
+  .offerHero .copy .facts {
     order: 0;
   }
 

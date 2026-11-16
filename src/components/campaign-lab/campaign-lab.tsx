@@ -68,6 +68,7 @@ type CampaignLabProps = {
   catalog: CampaignCatalog;
   showFixtureNav?: boolean;
   localOnly?: boolean;
+  previewNotice?: string;
 };
 
 type Approval = {
@@ -101,6 +102,7 @@ export function CampaignLab({
   catalog,
   showFixtureNav = true,
   localOnly = false,
+  previewNotice,
 }: CampaignLabProps) {
   const fixture = catalog.fixtures[initialFixtureId];
   const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
@@ -1270,6 +1272,8 @@ export function CampaignLab({
           data-layout={preview?.draft.layout}
           data-revision={revision ?? undefined}
           data-asset-id={preview?.asset.id}
+          data-asset-content-hash={preview?.asset.contentHash}
+          data-asset-source={preview?.asset.source}
           data-pilot={catalog.pilot?.id}
           data-preview-status={catalog.pilot?.status}
           data-generation-status={generation.status}
@@ -1394,9 +1398,10 @@ export function CampaignLab({
                   )}
                   onImageStateChange={handleImageStateChange}
                   previewLabel={
-                    catalog.pilot?.status === "preview"
+                    previewNotice ??
+                    (catalog.pilot?.status === "preview"
                       ? "Preview · offer and destination unconfirmed"
-                      : undefined
+                      : undefined)
                   }
                 />
               )}

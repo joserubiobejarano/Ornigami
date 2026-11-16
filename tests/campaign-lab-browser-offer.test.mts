@@ -5,8 +5,10 @@ import {
   BROWSER_OFFER_FIXTURE_ID,
   BROWSER_OFFER_MAX_FACTS,
   buildBrowserOfferCatalog,
+  classifyDestination,
   isProvisionalRights,
   validateBrowserOfferIntake,
+  verifyBrowserOffer,
 } from "../src/lib/campaign-lab/browser-offer.ts";
 import type {
   BrowserOfferIntakeInput,
@@ -27,6 +29,7 @@ const packshot: BrowserOfferPackshotInput = {
 
 function completeInput(): BrowserOfferIntakeInput {
   return {
+    brandName: "Harbor Field",
     productName: "Harbor Field travel bottle",
     offer: "20% off, 27–30 November 2026",
     destinationUrl: "https://example.com/harbor-field",
@@ -46,13 +49,23 @@ test("a complete browser brief validates and builds the existing offer preview",
   assert.equal(validation.valid, true);
   assert.deepEqual(validation.errors, {});
 
-  const { fixture, catalog } = buildBrowserOfferCatalog(input);
+  const { fixture, catalog, verification } = buildBrowserOfferCatalog(input);
   assert.equal(fixture.id, BROWSER_OFFER_FIXTURE_ID);
+  assert.equal(fixture.brief.brandId, "browser-offer-brand");
+  assert.equal(catalog.brands["browser-offer-brand"]?.name, "Harbor Field");
   assert.equal(fixture.brief.productName, input.productName);
   assert.equal(fixture.brief.offer, input.offer);
   assert.equal(fixture.brief.destinationUrl, input.destinationUrl);
   assert.equal(fixture.brief.productNoun, "bottle");
   assert.equal(fixture.brief.assetId, "browser-offer-packshot");
+  assert.equal(verification.provisional, false);
+  assert.equal(verification.offer, "confirmed");
+  assert.equal(verification.destination, "direct");
+  assert.ok(
+    fixture.brief.copy.lede &&
+      fixture.brief.copy.lede.includes("Harbor Field") &&
+      !fixture.brief.copy.lede.includes("500 ml"),
+  );
   assert.deepEqual(
     fixture.brief.requiredFactGroups?.[0]?.factIds,
     ["capacity", "closure", "material"],
@@ -75,6 +88,39 @@ test("a complete browser brief validates and builds the existing offer preview",
   assert.equal(preview.preview.brief.offer, input.offer);
   assert.equal(preview.preview.brief.destinationUrl, input.destinationUrl);
   assert.equal(preview.preview.asset.id, "browser-offer-packshot");
+});
+
+test("a blank brand name uses the neutral preview identity", () => {
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    brandName: "",
+  });
+  assert.equal(built.catalog.brands["browser-offer-brand"]?.name, "Preview brand");
+  assert.equal(built.catalog.brands["browser-offer-brand"]?.wordmark, "Preview");
+  assert.equal(built.fixture.brief.copy.lede, "A bottle from Preview brand.");
+});
+
+test("Amazon search destinations and pending rights stay provisional", () => {
+  assert.equal(
+    classifyDestination("https://www.amazon.com/s?k=Momisa+Glow+Box"),
+    "provisional",
+  );
+  const input: BrowserOfferIntakeInput = {
+    ...completeInput(),
+    offer: "30% off, placeholder terms",
+    destinationUrl: "https://www.amazon.com/s?k=Momisa+Glow+Box",
+    packshot: { ...packshot, rights: "Rights pending confirmation" },
+  };
+  const built = buildBrowserOfferCatalog(input);
+  assert.deepEqual(built.verification, {
+    offer: "provisional",
+    destination: "provisional",
+    rights: "provisional",
+    provisional: true,
+  });
+  assert.equal(built.catalog.pilot?.status, "preview");
+  assert.match(built.catalog.pilot?.note ?? "", /offer, destination, media rights/i);
+  assert.equal(verifyBrowserOffer(completeInput()).provisional, false);
 });
 
 test("a changed offer changes the preview revision while keeping the approved packshot", () => {

@@ -11,7 +11,8 @@ export type FixtureId = BaseFixtureId | PilotFixtureId | BrowserOfferFixtureId;
 
 export type BaseBrandId = "harbor-field" | "morrow-ceramic";
 export type PilotBrandId = "momisa";
-export type BrandId = BaseBrandId | PilotBrandId;
+export type BrowserOfferBrandId = "browser-offer-brand";
+export type BrandId = BaseBrandId | PilotBrandId | BrowserOfferBrandId;
 
 export type LayoutId = "offer-led-one-photo" | "editorial-long-copy";
 export type AssetRole =
