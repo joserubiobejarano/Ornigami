@@ -124,11 +124,17 @@ test('restored fixture retains locked Next, React, browser-tool and strict SRI/C
   const browserHarness = readFileSync(path.join(repositoryRoot, 'scripts/framework-prototype/browser-regressions.mjs'), 'utf8');
   const nextArchive = readFileSync(path.join(repositoryRoot, 'vendor/framework/next-16.4.2-ornigami-sri.2.tgz'));
   const nextIntegrity = fixtureLock.packages['node_modules/next'].integrity;
+  const applicationNext = applicationLock.packages['node_modules/next'];
+  const candidateArchive = readFileSync(path.join(repositoryRoot, 'vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz'));
 
   assert.equal(fixturePackage.dependencies.next, 'file:../packages/next-16.4.2-ornigami-sri.2.tgz');
   assert.equal(fixtureLock.packages['node_modules/next'].version, '16.4.2');
-  assert.equal(nextIntegrity, applicationLock.packages['node_modules/next'].integrity);
+  assert.equal(nextIntegrity, 'sha512-' + createHash('sha512').update(nextArchive).digest('base64'));
   assert.equal(createHash('sha256').update(nextArchive).digest('hex'), 'ba4c69f53cedf4a3ea0221666bfe0c62c4db86cbb6869025aa1c6c04dcfff17f');
+  assert.equal(applicationNext.version, '16.4.5');
+  assert.equal(applicationNext.resolved, 'file:vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz');
+  assert.equal(applicationNext.integrity, 'sha512-' + createHash('sha512').update(candidateArchive).digest('base64'));
+  assert.equal(createHash('sha256').update(candidateArchive).digest('hex'), '65edfe40b2c592e780a58a9256775814faf681aa5c653c67ae3fb5c4eba58a28');
   for (const packageName of ['react', 'react-dom']) {
     const fixture = fixtureLock.packages['node_modules/' + packageName];
     const application = applicationLock.packages['node_modules/' + packageName];
