@@ -1123,8 +1123,11 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
       await capture(page, recorder, outDir, { fixture: fixture.name, viewport: viewport.name, state: "cta-focus", purpose: "Keyboard focus state on the primary CTA.", region: true });
     }
 
-    // Change only the offer and destination. The product name and image stay untouched.
-    afterEditOffer = `${workingOffer} (acceptance revision)`;
+    // Change only the offer and destination. The product name and image stay
+    // untouched. The edit stays inside the safe dated-discount subset so the
+    // derived offer headline is unrelated copy that must remain stable; an
+    // unsafe term change is covered by the browser offer checks separately.
+    afterEditOffer = `${workingOffer}, 1 December 2026`;
     afterEditDestination = `https://example.com/ornigami-acceptance/${fixture.name}/revised`;
     inputs.offer = afterEditOffer;
     inputs.destination = afterEditDestination;

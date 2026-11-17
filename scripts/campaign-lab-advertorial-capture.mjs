@@ -124,6 +124,44 @@ async function readPreview(page) {
   });
 }
 
+async function waitForApprovalImages(page) {
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline) {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(250);
+    const ready = await page.evaluate(() => {
+      const gate = document.querySelector("[data-image-gate]");
+      const approve = [...document.querySelectorAll("button")].find(
+        (candidate) => candidate.textContent?.trim() === "Approve preview locally",
+      );
+      return (
+        gate?.getAttribute("data-images-ready") === "true" &&
+        Boolean(approve) &&
+        !approve.disabled
+      );
+    });
+    if (ready) return;
+    await page.waitForTimeout(250);
+  }
+  const state = await page.evaluate(() => {
+    const gate = document.querySelector("[data-image-gate]");
+    const preview = document.querySelector("[data-asset-content-hash]");
+    const approve = [...document.querySelectorAll("button")].find(
+      (candidate) => candidate.textContent?.trim() === "Approve preview locally",
+    );
+    return {
+      imagesReady: gate?.getAttribute("data-images-ready") ?? null,
+      imageStatuses: preview?.getAttribute("data-image-statuses") ?? null,
+      dirty: preview?.getAttribute("data-preview-dirty") ?? null,
+      generation: preview?.getAttribute("data-generation-status") ?? null,
+      approvalBlockedBy: preview?.getAttribute("data-approval-blocked-by") ?? null,
+      gate: gate?.innerText?.replace(/\s+/g, " ").trim() ?? null,
+      approveDisabled: approve?.disabled ?? null,
+    };
+  });
+  throw new Error(`Approval images did not become ready: ${JSON.stringify(state)}`);
+}
+
 async function captureCase(browser, details) {
   const context = await browser.newContext({
     viewport: { width: details.viewport.width, height: details.viewport.height },
@@ -169,6 +207,7 @@ async function captureCase(browser, details) {
     }
 
     if (details.approve) {
+      await waitForApprovalImages(page);
       const approve = page.getByRole("button", { name: "Approve preview locally", exact: true });
       if (!(await approve.isDisabled())) {
         await approve.click();
@@ -363,7 +402,9 @@ async function exerciseOfferOnly(browser) {
     );
     add(
       "fit-panel",
-      (await page.getByText("Advertorial not ready for this brief").count()) > 0,
+      (await page
+        .getByText(/Single-product advertorial.*inputs missing|Advertorial not ready for this brief/i)
+        .count()) > 0,
       "The editor names the advertorial gap before a generation attempt.",
     );
 
@@ -433,6 +474,7 @@ async function exerciseApprovalInvalidation(browser) {
     await page.getByRole("region", { name: "Campaign preview" }).waitFor();
     await page.getByRole("button", { name: "Generate preview", exact: true }).click();
     await page.waitForTimeout(500);
+    await waitForApprovalImages(page);
     await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(250);
     const approved = await readPreview(page);
@@ -492,6 +534,7 @@ async function exerciseWrongPackshot(browser) {
     await page.getByRole("region", { name: "Campaign preview" }).waitFor();
     await page.getByRole("button", { name: "Generate preview", exact: true }).click();
     await page.waitForTimeout(600);
+    await waitForApprovalImages(page);
     await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(250);
     const before = await readPreview(page);
