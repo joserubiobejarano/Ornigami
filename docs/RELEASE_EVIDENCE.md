@@ -62,7 +62,7 @@ Screenshots and the machine-readable result are in Git-ignored `.local/offer-int
 
 ### First-canary stop when there is no accepted deployment to return to
 
-No accepted deployment of this combined candidate is established, and the only compiled-dist 16.4.5 artifact fails the same SRI gate. The historical Vercel production record was not re-checked or accepted as a rollback target in this audit. If a first canary starts and any gate fails, use this fail-closed procedure; it is manual and must be rehearsed before any separately authorized rollout:
+No accepted deployment of this combined candidate is established, and the only compiled-dist 16.4.5 artifact fails the same SRI gate. The historical Vercel production record was not re-checked or accepted as a rollback target in this audit. This procedure replaces the earlier "return traffic to the last accepted deployment" step for this candidate: that step presumes an accepted deployment, which does not exist here. If a first canary starts and any gate fails, use this fail-closed procedure; it is manual and must be rehearsed before any separately authorized rollout:
 
 1. **Stop promotion and new intake.** Do not approve, generate or publish further campaign pages; keep schedulers, paid integrations and destructive jobs disabled. Do not change DNS, data or provider configuration to compensate.
 2. **Take the candidate out of traffic.** Remove or disable only the canary route, or set its weight to zero. If the edge has an owner-approved static maintenance response, serve that; otherwise leave the candidate unreachable. Do not send traffic to either unverified 16.4.5 artifact or the vulnerable 16.4.2 artifact.
