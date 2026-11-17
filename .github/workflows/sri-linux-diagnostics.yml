@@ -1,0 +1,630 @@
+name: SRI Linux diagnostics (temporary)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Full commit SHA or branch ref to verify
+        required: true
+        default: "6906f5cb36a28400dc39229f737578dcfe2f1f4a"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sri-linux-diagnostics
+  cancel-in-progress: false
+
+jobs:
+  linux-diagnostics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      DATABASE_URL: https://ci.invalid/database
+      OPENAI_API_KEY: ci-openai-key
+      STRIPE_SECRET_KEY: ci-stripe-key
+      STRIPE_WEBHOOK_SECRET: ci-stripe-webhook-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      AUTH_SECRET: ci-auth-secret
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://127.0.0.1:3410
+      CRON_SECRET: ci-cron-secret
+      RESEND_API_KEY: ci-resend-key
+      EMAIL_FROM: ci@example.com
+      REPLY_TO_EMAIL: ci@example.com
+      TOKEN_ENCRYPTION_KEY: ci-token-encryption-key
+      REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ci-unsubscribe-secret
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3410
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      CAMPAIGN_LAB_CHROMIUM: /usr/bin/google-chrome
+    steps:
+      - name: Checkout source candidate
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+
+      - name: Set up Node 22.23.3
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Record environment and candidate identity
+        run: |
+          set -Eeuo pipefail
+          export EVIDENCE="$RUNNER_TEMP/sri-linux-diagnostics"
+          mkdir -p "$EVIDENCE/portable"
+          echo "EVIDENCE=$EVIDENCE" >> "$GITHUB_ENV"
+          node --version | tee "$EVIDENCE/node-version.txt"
+          npm --version | tee "$EVIDENCE/npm-version.txt"
+          uname -a | tee "$EVIDENCE/uname.txt"
+          git rev-parse HEAD | tee "$EVIDENCE/source-sha.txt"
+          git status --short | tee "$EVIDENCE/source-status.txt"
+          sha256sum vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz | tee "$EVIDENCE/candidate-sha256.txt"
+          sha256sum vendor/framework/next-16.4.5-ornigami-sri.1.tgz | tee "$EVIDENCE/rollback-sha256.txt" || true
+          if git fetch origin "${GITHUB_REF_NAME}" --depth=1 2>/dev/null \
+            && git show "origin/${GITHUB_REF_NAME}:docs/security/EXCEPTION_PROPOSAL_GHSA-fc5q-39xc-vjpf.md" > "$EVIDENCE/exception-proposal.md" 2>/dev/null; then
+            echo "captured" > "$EVIDENCE/proposal-status.txt"
+          else
+            echo "not-found-on-workflow-ref" > "$EVIDENCE/proposal-status.txt"
+          fi
+          cat "$EVIDENCE/proposal-status.txt"
+
+      - name: Clean install
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          npm ci --no-audit --no-fund 2>&1 | tee "$EVIDENCE/npm-ci.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/npm-ci-exit.txt"
+          exit "$status"
+
+      - name: Full and production dependency audits (diagnostic)
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          npm audit --json > "$EVIDENCE/audit-full.json"
+          full_status=$?
+          npm audit --omit=dev --json > "$EVIDENCE/audit-production.json"
+          production_status=$?
+          npm audit fix --dry-run --json > "$EVIDENCE/audit-fix-dry-run.json"
+          fix_status=$?
+          set -e
+          printf '{"fullExit":%s,"productionExit":%s,"fixDryRunExit":%s}\n' \
+            "$full_status" "$production_status" "$fix_status" > "$EVIDENCE/audit-exits.json"
+          npm ls --all --json > "$EVIDENCE/npm-ls.json" || true
+          node --input-type=module <<'NODE' 2>&1 | tee "$EVIDENCE/audit-summary.log"
+          import { readFileSync } from 'node:fs'
+          const evidence = process.env.EVIDENCE
+          const read = (name) => JSON.parse(readFileSync(evidence + '/' + name, 'utf8').replace(/^\uFEFF/, ''))
+          const full = read('audit-full.json')
+          const production = read('audit-production.json')
+          const exits = read('audit-exits.json')
+          const summarize = (report) => ({
+            counts: report.metadata.vulnerabilities,
+            findings: Object.values(report.vulnerabilities).map((entry) => ({
+              package: entry.name,
+              severity: entry.severity,
+              installedRange: entry.range,
+              nodes: entry.nodes,
+              advisories: entry.via.filter((via) => typeof via === 'object').map((via) => ({
+                id: via.url?.split('/').pop() ?? null,
+                title: via.title,
+                range: via.range,
+                url: via.url,
+              })),
+              transitiveVia: entry.via.filter((via) => typeof via === 'string'),
+            })),
+          })
+          console.log(JSON.stringify({ exits, full: summarize(full), production: summarize(production) }, null, 2))
+          NODE
+          exit 0
+
+      - name: "Release audit policy (diagnostic: failure recorded)"
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          npm run security:audit 2>&1 | tee "$EVIDENCE/security-audit.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/security-audit-exit.txt"
+          if [ "$status" -ne 0 ]; then
+            echo "::warning::Release audit policy failed with exit $status; diagnostic engineering checks will continue and release approval will remain denied."
+          fi
+          exit "$status"
+
+      - name: Lint, type generation, and TypeScript
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          overall=0
+          run_check() {
+            local name="$1"; shift
+            set +e
+            "$@" 2>&1 | tee "$EVIDENCE/$name.log"
+            local status=${PIPESTATUS[0]}
+            set -e
+            printf '%s\n' "$status" > "$EVIDENCE/$name-exit.txt"
+            if [ "$status" -ne 0 ]; then overall=1; fi
+          }
+          run_check lint npm run lint
+          run_check typegen npm run typegen
+          run_check tsc npx tsc --noEmit
+          exit "$overall"
+
+      - name: Provide PostgreSQL 17 binaries for isolated SQL tests
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          (
+            a12_postgres17_bin=/usr/lib/postgresql/17/bin
+            if [ ! -x "$a12_postgres17_bin/initdb" ]; then
+              sudo install -d /usr/share/postgresql-common/pgdg
+              sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+                -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+                https://www.postgresql.org/media/keys/ACCC4CF8.asc
+              a12_postgres17_codename=$( . /etc/os-release; printf '%s' "$VERSION_CODENAME" )
+              echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $a12_postgres17_codename-pgdg main" \
+                | sudo tee /etc/apt/sources.list.d/pgdg.list
+              sudo apt-get update
+              sudo apt-get install --no-install-recommends -y postgresql-17
+            fi
+            "$a12_postgres17_bin/pg_config" --version
+            echo "A04_PG_BIN=$a12_postgres17_bin" >> "$GITHUB_ENV"
+            echo "$a12_postgres17_bin" >> "$GITHUB_PATH"
+          ) 2>&1 | tee "$EVIDENCE/postgres.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/postgres-exit.txt"
+          exit "$status"
+
+      - name: Test suite
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          npm test 2>&1 | tee "$EVIDENCE/test.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/test-exit.txt"
+          exit "$status"
+
+      - name: Production build
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          npm run build 2>&1 | tee "$EVIDENCE/production-build.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/build-exit.txt"
+          exit "$status"
+
+      - name: SRI production check (clean rebuild)
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          source_sha=$(git rev-parse HEAD)
+          rm -rf .next
+          node scripts/sri-production-check.mjs \
+            --repo "$GITHUB_WORKSPACE" \
+            --node "$(command -v node)" \
+            --source-sha "$source_sha" \
+            --output "$EVIDENCE/sri-source-candidate.json" \
+            2>&1 | tee "$EVIDENCE/sri-production-check.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/sri-exit.txt"
+          exit "$status"
+
+      - name: Existing CSP and production smokes
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          overall=0
+          run_check() {
+            local name="$1"; shift
+            set +e
+            "$@" 2>&1 | tee "$EVIDENCE/$name.log"
+            local status=${PIPESTATUS[0]}
+            set -e
+            printf '%s\n' "$status" > "$EVIDENCE/$name-exit.txt"
+            if [ "$status" -ne 0 ]; then overall=1; fi
+          }
+          run_check production-smoke node scripts/production-smoke.mjs
+          run_check csp-smoke node scripts/a19-csp-runtime-smoke.mjs
+          run_check security-tests npm run test:security
+          exit "$overall"
+
+      - name: Home, login, and Campaign Lab gates
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          port=3410
+          NODE_ENV=production node node_modules/next/dist/bin/next start -H 127.0.0.1 -p "$port" \
+            > "$EVIDENCE/app-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          set +e
+          node --input-type=module <<'NODE' 2>&1 | tee "$EVIDENCE/app-gates.log"
+          import { writeFileSync } from 'node:fs'
+          const base = 'http://127.0.0.1:3410'
+          const evidence = process.env.EVIDENCE
+          let ready = false
+          for (let i = 0; i < 90; i += 1) {
+            try {
+              const r = await fetch(base + '/')
+              if (r.status === 200) { ready = true; break }
+            } catch {}
+            await new Promise((resolve) => setTimeout(resolve, 500))
+          }
+          if (!ready) throw new Error('production server did not become ready')
+          const result = {}
+          for (const route of ['/', '/login']) {
+            const response = await fetch(base + route, { redirect: 'manual' })
+            const csp = response.headers.get('content-security-policy') ?? ''
+            result[route] = {
+              status: response.status,
+              cspNonce: /'nonce-[^']+'/.test(csp),
+              hasCsp: csp.length > 0,
+            }
+          }
+          for (const route of ['/campaign-lab', '/campaign-lab/offer']) {
+            const response = await fetch(base + route, { redirect: 'manual' })
+            result[route] = { status: response.status, body: (await response.text()).slice(0, 160) }
+          }
+          const api = await fetch(base + '/api/campaign-lab/generate', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{}',
+          })
+          result['POST /api/campaign-lab/generate'] = { status: api.status, body: (await api.text()).slice(0, 160) }
+          writeFileSync(evidence + '/app-gates.json', JSON.stringify(result, null, 2) + '\n')
+          console.log(JSON.stringify(result, null, 2))
+          if (result['/'].status !== 200 || result['/login'].status !== 200) throw new Error('home/login gate failed')
+          if (!result['/'].cspNonce || !result['/login'].cspNonce) throw new Error('CSP nonce missing')
+          if (result['/campaign-lab'].status !== 404) throw new Error('campaign-lab gate failed')
+          if (result['/campaign-lab/offer'].status !== 404) throw new Error('campaign-lab offer gate failed')
+          if (result['POST /api/campaign-lab/generate'].status !== 404) throw new Error('campaign-lab api gate failed')
+          NODE
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/app-gates-exit.txt"
+          exit "$status"
+
+      - name: Install browser tools for portable checks
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          npm ci --prefix scripts/framework-prototype/browser-tools --no-audit --no-fund 2>&1 | tee "$EVIDENCE/browser-tools-install.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/browser-tools-install-exit.txt"
+          exit "$status"
+
+      - name: Dynamic-chunk fixture with tamper rejection
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          trap 'status=$?; printf "%s\n" "$status" > "$EVIDENCE/fixture-exit.txt"' EXIT
+          fixture="$RUNNER_TEMP/fixture-candidate"
+          mkdir -p "$RUNNER_TEMP/packages"
+          cp -a tests/fixtures/framework-sri "$fixture"
+          cp vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz "$RUNNER_TEMP/packages/"
+          rm "$fixture/package-lock.json"
+          node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p));j.dependencies.next='file:../packages/next-16.4.5-ornigami-sri.source.1.tgz';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')" "$fixture/package.json"
+          (
+            cd "$fixture"
+            npm install --no-audit --no-fund 2>&1 | tee "$EVIDENCE/fixture-install.log"
+            npm run build 2>&1 | tee "$EVIDENCE/fixture-build.log"
+          )
+          npm ci --prefix scripts/framework-prototype/browser-tools --no-audit --no-fund 2>&1 | tee "$EVIDENCE/browser-tools-install-fixture.log"
+          ORNIGAMI_TEST_BROWSER_EXECUTABLE=/usr/bin/google-chrome \
+            node scripts/framework-prototype/browser-regressions.mjs \
+              "$fixture" "$GITHUB_WORKSPACE/scripts/framework-prototype/browser-tools" "$EVIDENCE/fixture" \
+            2>&1 | tee "$EVIDENCE/fixture-regressions.log"
+          node -e "const r=require(process.argv[1]);console.log(JSON.stringify({checks:r.checks.map(c=>({name:c.name,state:c.state,evidence:c.evidence})),lateAsset:r.lateAsset},null,2))" "$EVIDENCE/fixture/regressions.json" | tee "$EVIDENCE/fixture-summary.json"
+
+      - name: Rollback rehearsal (diagnostic, expected failure)
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          trap 'status=$?; printf "%s\n" "$status" > "$EVIDENCE/rollback-exit.txt"' EXIT
+          fixture="$RUNNER_TEMP/fixture-rollback"
+          cp -a tests/fixtures/framework-sri "$fixture"
+          rm "$fixture/package-lock.json"
+          node -e "const fs=require('fs');const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p));j.dependencies.next='file:$GITHUB_WORKSPACE/vendor/framework/next-16.4.5-ornigami-sri.1.tgz';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n')" "$fixture/package.json"
+          (
+            cd "$fixture"
+            npm install --no-audit --no-fund 2>&1 | tee "$EVIDENCE/rollback-install.log"
+            npm run build 2>&1 | tee "$EVIDENCE/rollback-build.log"
+          )
+          set +e
+          ORNIGAMI_TEST_BROWSER_EXECUTABLE=/usr/bin/google-chrome \
+            node scripts/framework-prototype/browser-regressions.mjs \
+              "$fixture" "$GITHUB_WORKSPACE/scripts/framework-prototype/browser-tools" "$EVIDENCE/rollback" \
+            2>&1 | tee "$EVIDENCE/rollback-regressions.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/rollback-exit-code.txt"
+          node -e "const r=require(process.argv[1]);console.log(JSON.stringify({checks:r.checks.map(c=>({name:c.name,state:c.state,assertion:c.assertion})),lateAsset:r.lateAsset},null,2))" "$EVIDENCE/rollback/regressions.json" | tee "$EVIDENCE/rollback-summary.json" || true
+          printf 'Rollback artifact is expected to fail the same SRI gates; exit=%s\n' "$status" | tee "$EVIDENCE/rollback-verdict.txt"
+          exit 0
+
+      - name: Portable Campaign Lab export checks
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE/portable"
+          server_pid=""
+          trap 'status=$?; printf "%s\n" "$status" > "$EVIDENCE/portable-exit.txt"; if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi' EXIT
+          port=3122
+          NODE_ENV=development node node_modules/next/dist/bin/next dev -H 127.0.0.1 -p "$port" \
+            > "$EVIDENCE/portable/dev-server.log" 2>&1 &
+          server_pid=$!
+          ready=0
+          for i in $(seq 1 180); do
+            if curl -fsS -o /dev/null "http://127.0.0.1:$port/campaign-lab/offer"; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "development server did not become ready" | tee "$EVIDENCE/portable/readiness.txt"
+            exit 1
+          fi
+          overall=0
+          run_portable() {
+            local name="$1"; shift
+            set +e
+            "$@" 2>&1 | tee "$EVIDENCE/portable/$name.log"
+            local status=${PIPESTATUS[0]}
+            set -e
+            printf '%s\n' "$status" > "$EVIDENCE/portable/$name-exit.txt"
+            if [ "$status" -ne 0 ]; then overall=1; fi
+          }
+          run_portable prepared-brief node scripts/campaign-lab-prepared-brief-check.mjs \
+            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/prepared-brief"
+          run_portable packshot node scripts/campaign-lab-packshot-hardening-check.mjs \
+            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/packshot"
+          run_portable approval node scripts/campaign-lab-local-approval-check.mjs \
+            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/approval"
+          run_portable export-failure node scripts/campaign-lab-export-check.mjs \
+            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/export-failure" \
+            --label portable-export-failure --failure-matrix
+          run_portable export node scripts/campaign-lab-export-check.mjs \
+            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/export" \
+            --label portable-export --provisional
+          exit "$overall"
+
+      - name: Summarize engineering checks and release status
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          node --input-type=module <<'NODE' 2>&1 | tee "$EVIDENCE/summary.log"
+          import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+
+          const evidence = process.env.EVIDENCE
+          const readText = (name) => {
+            const p = `${evidence}/${name}`
+            return existsSync(p) ? readFileSync(p, 'utf8').trim() : null
+          }
+          const readJson = (name) => {
+            const t = readText(name)
+            if (!t) return null
+            try {
+              return JSON.parse(t.replace(/^\uFEFF/, ''))
+            } catch {
+              return null
+            }
+          }
+          const readExit = (name) => {
+            const t = readText(`${name}-exit.txt`)
+            if (t === null || t === '') return null
+            const n = Number(t)
+            return Number.isFinite(n) ? n : null
+          }
+          const portable = (name) => {
+            const p = `${evidence}/portable/${name}/report.json`
+            if (!existsSync(p)) return { status: 'missing', checks: null, failed: null }
+            try {
+              const r = JSON.parse(readFileSync(p, 'utf8'))
+              return {
+                status: r.status ?? 'unknown',
+                checks: Array.isArray(r.checks) ? r.checks.length : null,
+                failed: Array.isArray(r.failed) ? r.failed.length : (r.status === 'passed' ? 0 : null),
+              }
+            } catch {
+              return { status: 'malformed', checks: null, failed: null }
+            }
+          }
+
+          const required = [
+            ['lint', 'lint'],
+            ['typegen', 'typegen'],
+            ['tsc', 'tsc'],
+            ['test', 'test'],
+            ['build', 'build'],
+            ['sri', 'sri'],
+            ['production-smoke', 'production-smoke'],
+            ['csp-smoke', 'csp-smoke'],
+            ['security-tests', 'security-tests'],
+            ['app-gates', 'app-gates'],
+            ['dynamic-chunk', 'fixture'],
+          ]
+          const prerequisites = [
+            ['npm-ci', 'npm-ci'],
+            ['postgres', 'postgres'],
+            ['browser-tools', 'browser-tools-install'],
+          ]
+          const portableChecks = [
+            ['portable-prepared-brief', 'prepared-brief'],
+            ['portable-packshot', 'packshot'],
+            ['portable-approval', 'approval'],
+            ['portable-export-failure', 'export-failure'],
+            ['portable-export', 'export'],
+          ]
+          const checks = required.map(([name, file]) => {
+            const exit = readExit(file)
+            return { name, exit, passed: exit === 0 }
+          })
+          const prerequisiteChecks = prerequisites.map(([name, file]) => {
+            const exit = readExit(file)
+            return { name, exit, passed: exit === 0 }
+          })
+          for (const [name, dir] of portableChecks) {
+            const exit = readExit(`portable/${dir}`)
+            const report = portable(dir)
+            checks.push({ name, exit, passed: exit === 0 && report.status === 'passed', report })
+          }
+          const failedRequiredChecks = checks.filter((c) => !c.passed).map((c) => c.name)
+          const engineeringPassed = failedRequiredChecks.length === 0
+          const auditExit = readExit('security-audit')
+          const auditPassed = auditExit === 0
+          const full = readJson('audit-full.json')
+          const production = readJson('audit-production.json')
+          const auditExits = readJson('audit-exits.json')
+          const releaseApproval = engineeringPassed && auditPassed
+          const releaseReasons = []
+          if (!auditPassed) {
+            releaseReasons.push(`Dependency audit failed (npm run security:audit exit ${auditExit}; GHSA-fc5q-39xc-vjpf).`)
+          }
+          if (!engineeringPassed) {
+            releaseReasons.push(`Engineering check failure(s): ${failedRequiredChecks.join(', ')}.`)
+          }
+          const releaseApprovalReason = releaseReasons.length
+            ? releaseReasons.join(' ')
+            : 'All required engineering checks and the dependency audit passed.'
+
+          const summary = {
+            schemaVersion: 1,
+            kind: 'sri-linux-diagnostics',
+            sourceSha: readText('source-sha.txt'),
+            generatedAt: new Date().toISOString(),
+            releasePolicy: 'unchanged: scripts/security-audit.mjs requires zero full-audit findings and zero production high/critical findings',
+            audit: {
+              securityAuditExit: auditExit,
+              full: full?.metadata?.vulnerabilities ?? null,
+              production: production?.metadata?.vulnerabilities ?? null,
+              exits: auditExits,
+              passed: auditPassed,
+            },
+            engineering: {
+              passed: engineeringPassed,
+              failedRequiredChecks,
+              prerequisites: prerequisiteChecks,
+              checks,
+            },
+            rollback: {
+              diagnosticOnly: true,
+              expectedFailure: true,
+              exit: readExit('rollback-exit-code'),
+            },
+            releaseApproval: {
+              granted: releaseApproval,
+              reason: releaseApprovalReason,
+              exceptionRequired: !auditPassed,
+              exceptionStatus: 'PENDING OWNER APPROVAL',
+              exceptionProposal: 'docs/security/EXCEPTION_PROPOSAL_GHSA-fc5q-39xc-vjpf.md',
+            },
+            diagnosticsOnly: true,
+            deployment: 'out of scope',
+          }
+
+          writeFileSync(`${evidence}/diagnostic-summary.json`, JSON.stringify(summary, null, 2) + '\n')
+          const lines = [
+            '# Linux/Node 22 diagnostics',
+            '',
+            `- Source SHA: \`${summary.sourceSha}\``,
+            `- Engineering checks: **${engineeringPassed ? 'PASSED' : 'FAILED'}**`,
+            `- Dependency audit: **${auditPassed ? 'PASSED' : 'FAILED'}**`,
+            `- Release approval: **${releaseApproval ? 'GRANTED' : 'DENIED'}**`,
+            `- Reason: ${releaseApprovalReason}`,
+            '',
+            '| Check | Exit | Result |',
+            '| --- | --- | --- |',
+            ...prerequisiteChecks.map((c) => `| ${c.name} (prerequisite) | ${c.exit ?? 'missing'} | ${c.passed ? 'passed' : 'failed'} |`),
+            ...checks.map((c) => `| ${c.name} | ${c.exit ?? 'missing'} | ${c.passed ? 'passed' : 'failed'} |`),
+            '',
+            `Rollback rehearsal (diagnostic only, expected failure): exit ${readExit('rollback-exit-code') ?? 'missing'}`,
+            '',
+            'This is diagnostic evidence. It does not grant release approval or authorize deployment.',
+          ]
+          writeFileSync(`${evidence}/diagnostic-summary.md`, lines.join('\n') + '\n')
+          console.log(lines.join('\n'))
+          NODE
+          exit 0
+
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sri-linux-diagnostics
+          path: ${{ runner.temp }}/sri-linux-diagnostics
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Release approval gate (diagnostic)
+        if: always()
+        run: |
+          set -Eeuo pipefail
+          summary="$EVIDENCE/diagnostic-summary.json"
+          if [ ! -f "$summary" ]; then
+            echo "::error::Diagnostic summary was not produced."
+            exit 1
+          fi
+          export SUMMARY="$summary"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs'
+          const s = JSON.parse(readFileSync(process.env.SUMMARY, 'utf8'))
+          console.log(`Engineering checks: ${s.engineering.passed ? 'PASSED' : 'FAILED'}`)
+          console.log(`Dependency audit: ${s.audit.passed ? 'PASSED' : 'FAILED'}`)
+          console.log(`Release approval: ${s.releaseApproval.granted ? 'GRANTED' : 'DENIED'}`)
+          console.log(`Reason: ${s.releaseApproval.reason}`)
+          if (!s.engineering.passed && s.engineering.failedRequiredChecks.length) {
+            console.log(`Failed engineering checks: ${s.engineering.failedRequiredChecks.join(', ')}`)
+          }
+          if (!s.releaseApproval.granted) process.exit(1)
+          NODE
