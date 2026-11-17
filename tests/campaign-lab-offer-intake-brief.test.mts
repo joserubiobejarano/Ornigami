@@ -1,0 +1,117 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  hasPersistedBriefContent,
+  parsePersistedOfferIntakeBrief,
+  serializePersistedOfferIntakeBrief,
+} from "../src/lib/campaign-lab/offer-intake-brief.ts";
+
+const brief = {
+  brandName: "Harbor Field",
+  productName: "Harbor Field bottle",
+  offer: "Free shipping through 30 November 2026, on every order",
+  destinationUrl: "https://example.com/harbor-field",
+  facts: [
+    { label: "Material", value: "Recycled glass" },
+    { label: "Capacity", value: "750 ml" },
+  ],
+  alt: "Synthetic Harbor Field bottle on a plain background.",
+  rights: "Synthetic fixture for local UI checks only.",
+};
+
+test("the persisted brief round-trips current text fields and facts", () => {
+  const serialized = serializePersistedOfferIntakeBrief(brief);
+  assert.doesNotMatch(serialized, /blob:|approval/i);
+  assert.deepEqual(parsePersistedOfferIntakeBrief(serialized), {
+    schemaVersion: 1,
+    ...brief,
+  });
+});
+
+test("invalid or older storage payloads are ignored", () => {
+  assert.equal(parsePersistedOfferIntakeBrief(null), null);
+  assert.equal(parsePersistedOfferIntakeBrief(""), null);
+  assert.equal(parsePersistedOfferIntakeBrief("not json"), null);
+  assert.equal(parsePersistedOfferIntakeBrief("[]"), null);
+  assert.equal(
+    parsePersistedOfferIntakeBrief(JSON.stringify({ schemaVersion: 2, ...brief })),
+    null,
+  );
+});
+
+test("fact rows are capped and padded to the intake shape", () => {
+  const parsed = parsePersistedOfferIntakeBrief(
+    JSON.stringify({
+      schemaVersion: 1,
+      ...brief,
+      facts: [
+        { label: "One", value: "1" },
+        { label: "Two", value: "2" },
+        { label: "Three", value: "3" },
+        { label: "Four", value: "4" },
+      ],
+    }),
+  );
+  assert.equal(parsed?.facts.length, 3);
+  assert.deepEqual(parsed?.facts, [
+    { label: "One", value: "1" },
+    { label: "Two", value: "2" },
+    { label: "Three", value: "3" },
+  ]);
+
+  const sparse = parsePersistedOfferIntakeBrief(
+    JSON.stringify({ schemaVersion: 1, facts: [{ label: "Only" }] }),
+  );
+  assert.deepEqual(sparse?.facts, [
+    { label: "Only", value: "" },
+    { label: "", value: "" },
+  ]);
+});
+
+test("non-string fields and accidental image or approval keys are not restored", () => {
+  const parsed = parsePersistedOfferIntakeBrief(
+    JSON.stringify({
+      schemaVersion: 1,
+      brandName: 42,
+      productName: null,
+      offer: { value: "not a string" },
+      destinationUrl: ["https://example.com"],
+      facts: "not an array",
+      alt: true,
+      rights: "Confirmed.",
+      packshot: "blob:http://localhost/temporary",
+      approval: { revision: "abc" },
+    }),
+  );
+  assert.equal(parsed?.brandName, "");
+  assert.equal(parsed?.productName, "");
+  assert.equal(parsed?.offer, "");
+  assert.equal(parsed?.destinationUrl, "");
+  assert.deepEqual(parsed?.facts, [
+    { label: "", value: "" },
+    { label: "", value: "" },
+  ]);
+  assert.equal(parsed?.alt, "");
+  assert.equal(parsed?.rights, "Confirmed.");
+});
+
+test("empty saved fields do not trigger the restored-brief notice", () => {
+  const empty = parsePersistedOfferIntakeBrief(
+    serializePersistedOfferIntakeBrief({
+      brandName: "",
+      productName: "",
+      offer: "",
+      destinationUrl: "",
+      facts: [
+        { label: "", value: "" },
+        { label: "", value: "" },
+      ],
+      alt: "",
+      rights: "",
+    }),
+  );
+  assert.ok(empty);
+  assert.equal(hasPersistedBriefContent(empty), false);
+  assert.equal(hasPersistedBriefContent({ ...empty, offer: "30% off" }), true);
+});

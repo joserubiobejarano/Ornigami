@@ -31,7 +31,7 @@ const PACKSHOT = path.join(root, "public", "campaign-assets", "harbor-field-bott
 const PRODUCT_NAME = "Harbor Field travel bottle";
 const OFFER = "20% off, 27-30 November 2026";
 const DIRECT_URL = "https://example.com/harbor-field";
-const SEARCH_URL = "https://www.amazon.com/s?k=Momisa+Glow+Box";
+const SEARCH_URL = "https://www.amazon.com/s?k=Harbor+Field+travel+bottle";
 const INVALID_URL = "not-a-url";
 const RIGHTS = "Client-approved for web and paid social.";
 
@@ -44,7 +44,6 @@ async function loadPlaywright() {
     process.env.CAMPAIGN_LAB_PLAYWRIGHT,
     path.join(root, "scripts", "framework-prototype", "browser-tools", "node_modules", "playwright", "index.mjs"),
     path.join(root, ".a20-fixture", "mobile-performance-tools", "node_modules", "playwright", "index.mjs"),
-    "C:/Users/joser/Desktop/Projects/Ornigami/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs",
   ].filter(Boolean);
   for (const candidate of candidates) {
     if (!existsSync(candidate)) continue;

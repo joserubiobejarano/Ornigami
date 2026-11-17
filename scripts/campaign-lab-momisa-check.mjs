@@ -36,7 +36,6 @@ async function loadPlaywright() {
   const candidates = [
     process.env.CAMPAIGN_LAB_PLAYWRIGHT,
     path.join(root, "scripts", "framework-prototype", "browser-tools", "node_modules", "playwright", "index.mjs"),
-    "C:/Users/joser/Desktop/Projects/Ornigami/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs",
   ].filter(Boolean);
   for (const candidate of candidates) {
     if (!existsSync(candidate)) continue;

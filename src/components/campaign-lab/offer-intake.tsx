@@ -24,6 +24,16 @@ import type {
   BrowserOfferIntakeInput,
   BrowserOfferVerification,
 } from "@/lib/campaign-lab/browser-offer";
+import {
+  hasPersistedBriefContent,
+  OFFER_INTAKE_BRIEF_STORAGE_KEY,
+  parsePersistedOfferIntakeBrief,
+  serializePersistedOfferIntakeBrief,
+} from "@/lib/campaign-lab/offer-intake-brief";
+import {
+  PackshotReadError,
+  readPackshotFile,
+} from "@/lib/campaign-lab/packshot";
 import type {
   CampaignCatalog,
   CampaignFixture,
@@ -229,40 +239,15 @@ function VerificationSummary({
   );
 }
 
-async function sha256(file: File): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function readPackshot(file: File): Promise<Omit<PackshotFile, "fileName">> {
-  const src = URL.createObjectURL(file);
-  const image = new Image();
-  image.src = src;
-  try {
-    await image.decode();
-    if (image.naturalWidth <= 0 || image.naturalHeight <= 0) {
-      throw new Error("The image has no dimensions.");
-    }
-    return {
-      src,
-      width: image.naturalWidth,
-      height: image.naturalHeight,
-      contentHash: await sha256(file),
-    };
-  } catch (error) {
-    URL.revokeObjectURL(src);
-    throw error;
-  }
-}
-
 export function OfferIntake() {
   const baseId = useId().replace(/:/g, "");
   const objectUrlRef = useRef<string | null>(null);
   const packshotReadRef = useRef(0);
+  const mountedRef = useRef(true);
   const submissionCount = useRef(0);
 
+  const [briefHydrated, setBriefHydrated] = useState(false);
+  const [restoredBrief, setRestoredBrief] = useState(false);
   const [brandName, setBrandName] = useState("");
   const [productName, setProductName] = useState("");
   const [offer, setOffer] = useState("");
@@ -304,6 +289,63 @@ export function OfferIntake() {
   useEffect(() => {
     formValuesRef.current = { offer, destinationUrl, rights };
   }, [destinationUrl, offer, rights]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      let raw: string | null = null;
+      try {
+        raw = window.sessionStorage.getItem(OFFER_INTAKE_BRIEF_STORAGE_KEY);
+      } catch {
+        // Storage can be unavailable; the intake still works without recovery.
+      }
+      const brief = parsePersistedOfferIntakeBrief(raw);
+      if (brief) {
+        setBrandName(brief.brandName);
+        setProductName(brief.productName);
+        setOffer(brief.offer);
+        setDestinationUrl(brief.destinationUrl);
+        setFacts(brief.facts);
+        setAlt(brief.alt);
+        setRights(brief.rights);
+        setRestoredBrief(hasPersistedBriefContent(brief));
+      }
+      setBriefHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!briefHydrated) return;
+    try {
+      window.sessionStorage.setItem(
+        OFFER_INTAKE_BRIEF_STORAGE_KEY,
+        serializePersistedOfferIntakeBrief({
+          brandName,
+          productName,
+          offer,
+          destinationUrl,
+          facts,
+          alt,
+          rights,
+        }),
+      );
+    } catch {
+      // A full or blocked storage area must not block the intake.
+    }
+  }, [
+    alt,
+    brandName,
+    destinationUrl,
+    facts,
+    offer,
+    productName,
+    briefHydrated,
+    rights,
+  ]);
 
   useEffect(() => {
     const snapshot = editorSnapshot;
@@ -356,7 +398,10 @@ export function OfferIntake() {
   ]);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
+      packshotReadRef.current += 1;
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
   }, []);
@@ -425,19 +470,25 @@ export function OfferIntake() {
 
     setReadingPackshot(true);
     try {
-      const read = await readPackshot(file);
-      if (readId !== packshotReadRef.current) {
+      const read = await readPackshotFile(file);
+      if (readId !== packshotReadRef.current || !mountedRef.current) {
         URL.revokeObjectURL(read.src);
         return;
       }
       objectUrlRef.current = read.src;
       setPackshot({ ...read, fileName: file.name });
       clearError("packshot");
-    } catch {
-      if (readId !== packshotReadRef.current) return;
-      setPackshotError("The file could not be read as a packshot image.");
+    } catch (error) {
+      if (readId !== packshotReadRef.current || !mountedRef.current) return;
+      setPackshotError(
+        error instanceof PackshotReadError
+          ? error.message
+          : "The file could not be read as a packshot image. Choose another PNG, JPEG, or WebP.",
+      );
     } finally {
-      if (readId === packshotReadRef.current) setReadingPackshot(false);
+      if (readId === packshotReadRef.current && mountedRef.current) {
+        setReadingPackshot(false);
+      }
     }
   }
 
@@ -497,6 +548,7 @@ export function OfferIntake() {
       fixture: built.fixture,
       catalog: built.catalog,
     });
+    setRestoredBrief(false);
     renderedVerificationRef.current = { revision: null, dirty: false };
     setRenderedVerification(null);
     setEditorSnapshot(null);
@@ -544,7 +596,7 @@ export function OfferIntake() {
         <div className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <p className="text-xs font-medium text-[#5f5a4f]">
-              Local session · refreshing clears this brief and local approval.
+              Local session · text fields are restored after refresh; the packshot and local approval are not.
             </p>
             <Button
               type="button"
@@ -602,10 +654,25 @@ export function OfferIntake() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-8">
+        {restoredBrief ? (
+          <div
+            role="status"
+            data-restored-brief="true"
+            className="mb-4 rounded-xl border border-[#b98237] bg-[#fbf3e4] p-3 text-sm text-[#6b4918]"
+          >
+            <p className="font-semibold">Brief restored after refresh.</p>
+            <p className="mt-1 text-xs">
+              {packshot
+                ? "Packshot reselected. Review the newly rendered revision and record a fresh local approval."
+                : "Reselect the packshot to continue. The previous packshot and local approval were not restored."}
+            </p>
+          </div>
+        ) : null}
         <form
           method="post"
           noValidate
           onSubmit={handleSubmit}
+          data-restored-brief={restoredBrief ? "true" : "false"}
           className="space-y-5 rounded-[1.25rem] border border-[#ddd3c2] bg-[#fffdf8] p-4 shadow-[0_20px_60px_-50px_rgba(35,36,32,.55)] sm:p-6"
         >
           <fieldset className="m-0 space-y-4 border-0 p-0">
@@ -806,7 +873,18 @@ export function OfferIntake() {
             </div>
           </fieldset>
 
-          <fieldset className="m-0 space-y-4 border-0 p-0">
+          <fieldset
+            className="m-0 space-y-4 border-0 p-0"
+            data-packshot-status={
+              readingPackshot
+                ? "reading"
+                : packshotError
+                  ? "error"
+                  : packshot
+                    ? "ready"
+                    : "empty"
+            }
+          >
             <legend className="mb-2 text-base font-semibold">Packshot</legend>
             <div className="space-y-1.5">
               <Label htmlFor={packshotId}>Product image</Label>
@@ -814,8 +892,14 @@ export function OfferIntake() {
                 id={packshotId}
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
+                data-packshot-input
                 onChange={(event) => {
-                  void handlePackshotChange(event.target.files?.[0] ?? null);
+                  const input = event.currentTarget;
+                  const file = input.files?.[0] ?? null;
+                  // Clear the picker value so selecting the same file again still
+                  // emits a change event and retries the read.
+                  input.value = "";
+                  void handlePackshotChange(file);
                 }}
                 required
                 aria-invalid={Boolean(packshotError || fieldError(errors, "packshot"))}
@@ -826,13 +910,27 @@ export function OfferIntake() {
                 }
               />
               {packshotError || fieldError(errors, "packshot") ? (
-                <p id={`${packshotId}-error`} className="text-xs font-medium text-[#a2382a]">
+                <p
+                  id={`${packshotId}-error`}
+                  className="text-xs font-medium text-[#a2382a]"
+                  data-packshot-error
+                  role="alert"
+                >
                   {packshotError ?? fieldError(errors, "packshot")}
                 </p>
               ) : readingPackshot ? (
-                <p className="text-xs text-[#6d6a5f]">Reading packshot…</p>
+                <p className="text-xs text-[#6d6a5f]" data-packshot-reading>
+                  Reading packshot…
+                </p>
               ) : packshot ? (
-                <p className="text-xs text-[#4f6b55]">
+                <p
+                  className="text-xs text-[#4f6b55]"
+                  data-packshot-ready
+                  data-packshot-file={packshotName ?? ""}
+                  data-packshot-width={packshot.width}
+                  data-packshot-height={packshot.height}
+                  data-packshot-hash={packshot.contentHash}
+                >
                   {packshotName} · {packshot.width} × {packshot.height} · SHA-256 recorded
                 </p>
               ) : (
@@ -972,7 +1070,7 @@ export function OfferIntake() {
 
           <div className="flex flex-col gap-3 border-t border-[#ebe3d6] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#6d6a5f]">
-              Local session only. Refreshing clears this brief and any local approval.
+              Local session only. Text fields are restored after refresh; the packshot and local approval are not.
             </p>
             <Button
               type="submit"
