@@ -2,6 +2,58 @@
 
 Evidence is scoped to the commit, target, action and time actually observed. A local test, manual monitor dispatch, provider configuration probe or prior deployment does not prove a different target or natural workflow. This concise ledger replaces repeated task handoffs; detailed Git-tracked proofs remain in history and the verified recovery bundle. Availability of untracked local receipts is qualified below.
 
+## Campaign Lab local-approval integration — 17 November 2026
+
+A dedicated integration worktree started at `fbc43f6897b747f6213a6e37907c6fa8d9e9a43e` and merged `428083cb8e2d889d77927819c0529b0032de742a` (`fix: clarify local preview approval and destination states`). The merge was clean and produced `a53b37ac0871ec37cff534f518307973fc653d16`, tree `b1060fd5684635363af7e875feccda31efb46cda`, with parents `fbc43f6` and `428083c`. Before any CI was started, `git merge-base --is-ancestor` proved both `18b6f2fac2c0aa098c42bf1358d017c985afbb5c` and `428083c` are ancestors of that integration commit. A test-only follow-up, `ce1b99835fecab87eb926d2c39d98a8080f5fd36`, aligned the existing acceptance runners with current preview gates; it changed no product code. This documentation commit is the final source tip checked by the exact-SHA receipts.
+
+### Source and artifact identity after clean install
+
+The clean install was `npm ci --no-audit --no-fund` on Windows x64 with Node `v24.11.1` and npm `11.6.2`.
+
+| Item | Value |
+| --- | --- |
+| Integration merge | `a53b37ac0871ec37cff534f518307973fc653d16` |
+| Integration tree | `b1060fd5684635363af7e875feccda31efb46cda` |
+| Test-harness follow-up | `ce1b99835fecab87eb926d2c39d98a8080f5fd36` |
+| `package-lock.json` SHA-256 | `63c735ef9283fc20518cdc261cff793369c99c8f860f2feae7c40306d8beca02` |
+| `package-lock.json` Git blob | `adf6efff9b051fb927a3971a74e996525e77fbcc` |
+| Custom Next.js source tarball | `vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz`, 44,840,348 bytes |
+| Source tarball SHA-256 | `65edfe40b2c592e780a58a9256775814faf681aa5c653c67ae3fb5c4eba58a28` |
+| Installed `node_modules/next` version | `16.4.5` (8,715 files) |
+| Installed `node_modules/next` aggregate SHA-256 | `28ed4a42361f7e79ea8ececb331440f315379d73769457d1195264d0952006f7` |
+
+`npm ls next --json` resolved the installed `next` to the local source tarball; `@sentry/nextjs` and `next-auth` deduplicated to `16.4.5`.
+
+### Local browser and acceptance runs on the combined development build
+
+These runs used the combined worktree's `next dev` server on `http://localhost:3100`, Windows x64, Node `v24.11.1`, Chromium `158.0.8127.18`. They are local workflow evidence, not deployed or publication approval.
+
+| Run | Result | Key evidence |
+| --- | --- | --- |
+| `campaign-lab-local-approval-check.mjs` | **30 passed, 0 failed** at 375 and 1440 px | Generated revision `4b1c3fae06bc1444`; edited and approved revision `e96297b272818742`; approval recorded that exact revision; an edit cleared approval while keeping the old revision visible; Amazon/search revision `1f5e6c0adf8e9af3` kept both the provisional footer and the local-preview approval label; 0 console errors. |
+| `campaign-lab-acceptance.mjs --require-approved` | **144 passed, 0 failed, 0 pending** | Both approved fixtures at 375 and 1440 px. The qualified offer edit `20% off, 27–30 November 2026, 1 December 2026` rendered exactly at revision `428d373af4`; the renamed control approved that revision; the edit invalidated approval. |
+| `campaign-lab-advertorial-capture.mjs` | **200 passed, 0 failed** | Both advertorial layouts at 320, 375, 768, 1024 and 1440 px, including wrong-packshot rejection, edit invalidation and exact-revision local approval. A local Momisa pilot package was staged only under Git-ignored `.local/` to exercise the offer-only path. |
+
+The local-approval flow also covered the unconfirmed direct URL (`Direct URL · unconfirmed`), the Amazon search/placeholder URL after confirmation (`Amazon/search placeholder · provisional`), an invalid URL, and a confirmed direct URL. The test-only follow-up kept the acceptance edit inside the safe dated-discount subset, waited for lazy advertorial images before approving, and matched the current advertorial-gap copy. Product preview, destination classification and approval behavior were unchanged.
+
+Machine-readable results and screenshots remain under Git-ignored `.local/integration-receipts/` in the integration worktree.
+
+### Exact-SHA CI receipts
+
+Quality, Security and the temporary Linux/Node 22 production receipt workflow were started only after the ancestry and identity checks above. Their run links are returned with this integration record; the branch tip containing this section is the exact source those runs checked. Because adding the links here would create a different documentation-only SHA, no receipt URL is embedded in this file.
+
+### Canary stop carried forward
+
+The fail-closed procedure recorded below remains the tested procedure for this candidate. No accepted serving deployment or verified rollback artifact exists. If a first canary starts and any gate fails: stop promotion and new intake; remove only the canary route or set its weight to zero; return traffic only to an owner-accepted target or keep the candidate stopped and private; preserve the exact source SHA, artifact hashes, failed logs and edge state; rebuild or re-review before recovery. Do not send traffic to either unverified 16.4.5 artifact or the vulnerable 16.4.2 artifact.
+
+### Custom Next.js patch ownership
+
+**Unassigned.** No one has accepted ownership of rebases for `next-16.4.5-sri.patch` or retesting/publishing the app-owned artifact. `scripts/framework-prototype/build-package.mjs` still records `maintenanceOwners:'unassigned'`; this integration did not assign a name.
+
+### Deployment boundary
+
+Deployment, traffic changes, DNS, provider actions and production-data changes remain out of scope. This integration establishes source, local browser and exact-SHA CI evidence only.
+
 ## Integrated release audit — 17 November 2026
 
 A dedicated integration branch, `codex/ornigami-release-integration-20261117`, was created at `18b6f2f` and merged Session 1's final commit `b839cb1` (`Default offer headlines to product name unless safe`). The merge was clean and produced combined commit `f5b5c6d517aa02148967e1dec16fd05b477a439a`, tree `ad1c0ce6ea9c8f1e98943c5789eadd5aac4c8804`, with parents `18b6f2f` and `b839cb1`. Deployment, traffic changes, provider actions and production data changes remain out of scope. GitHub records no deployment for the combined commit or for the temporary receipts commit.
