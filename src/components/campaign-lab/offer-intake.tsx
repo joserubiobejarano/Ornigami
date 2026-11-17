@@ -28,6 +28,7 @@ import {
   hasPersistedBriefContent,
   OFFER_INTAKE_BRIEF_STORAGE_KEY,
   parsePersistedOfferIntakeBrief,
+  parsePreparedOfferIntakeBrief,
   serializePersistedOfferIntakeBrief,
 } from "@/lib/campaign-lab/offer-intake-brief";
 import {
@@ -262,6 +263,12 @@ export function OfferIntake() {
   const [rights, setRights] = useState("");
   const [readingPackshot, setReadingPackshot] = useState(false);
   const [packshotError, setPackshotError] = useState<string | null>(null);
+  const [preparedBriefNotice, setPreparedBriefNotice] = useState<string | null>(
+    null,
+  );
+  const [preparedBriefError, setPreparedBriefError] = useState<string | null>(
+    null,
+  );
   const [confirmations, setConfirmations] = useState<BrowserOfferConfirmations>({
     offer: null,
     destination: null,
@@ -285,6 +292,7 @@ export function OfferIntake() {
   const packshotId = `${baseId}-packshot`;
   const altId = `${baseId}-alt`;
   const rightsId = `${baseId}-rights`;
+  const preparedBriefId = `${baseId}-prepared-brief`;
 
   useEffect(() => {
     formValuesRef.current = { offer, destinationUrl, rights };
@@ -445,6 +453,43 @@ export function OfferIntake() {
     if (facts.length <= BROWSER_OFFER_MIN_FACTS) return;
     setFacts((current) => current.filter((_, factIndex) => factIndex !== index));
     setErrors((current) => ({ ...current, facts: undefined, factRows: undefined }));
+  }
+
+  async function handlePreparedBriefChange(file: File | null) {
+    if (!file) return;
+
+    let raw: string;
+    try {
+      raw = await file.text();
+    } catch {
+      setPreparedBriefNotice(null);
+      setPreparedBriefError("The prepared brief could not be read.");
+      return;
+    }
+
+    const parsed = parsePreparedOfferIntakeBrief(raw);
+    if (!parsed.ok) {
+      setPreparedBriefNotice(null);
+      setPreparedBriefError(parsed.error);
+      return;
+    }
+
+    const brief = parsed.brief;
+    setBrandName(brief.brandName);
+    setProductName(brief.productName);
+    setOffer(brief.offer);
+    setDestinationUrl(brief.destinationUrl);
+    setFacts(brief.facts.map((fact) => ({ ...fact })));
+    setAlt(brief.alt);
+    setRights(brief.rights);
+    setConfirmations({ offer: null, destination: null, rights: null });
+    setErrors({});
+    setRestoredBrief(false);
+    setPreparedBriefError(null);
+    setPreparedBriefNotice(
+      "Prepared brief loaded. Review every field, select the packshot, and confirm the exact inputs below.",
+    );
+    handlePackshotChange(null);
   }
 
   async function handlePackshotChange(file: File | null) {
@@ -675,6 +720,65 @@ export function OfferIntake() {
           data-restored-brief={restoredBrief ? "true" : "false"}
           className="space-y-5 rounded-[1.25rem] border border-[#ddd3c2] bg-[#fffdf8] p-4 shadow-[0_20px_60px_-50px_rgba(35,36,32,.55)] sm:p-6"
         >
+          <fieldset
+            className="m-0 space-y-3 border-0 border-b border-[#e8dfd0] p-0 pb-4"
+            data-prepared-brief-status={
+              preparedBriefError
+                ? "error"
+                : preparedBriefNotice
+                  ? "loaded"
+                  : "idle"
+            }
+          >
+            <legend className="mb-2 text-base font-semibold">Prepared brief</legend>
+            <p className="text-xs text-[#6d6a5f]">
+              Load a local JSON brief, review the populated fields, then select the
+              packshot and confirm the exact inputs below.
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor={preparedBriefId}>Prepared brief JSON</Label>
+              <Input
+                id={preparedBriefId}
+                type="file"
+                accept="application/json,.json"
+                data-prepared-brief-input
+                onChange={(event) => {
+                  const input = event.currentTarget;
+                  const file = input.files?.[0] ?? null;
+                  input.value = "";
+                  void handlePreparedBriefChange(file);
+                }}
+                aria-invalid={Boolean(preparedBriefError)}
+                aria-describedby={
+                  preparedBriefError
+                    ? `${preparedBriefId}-error`
+                    : preparedBriefNotice
+                      ? `${preparedBriefId}-notice`
+                      : undefined
+                }
+              />
+              {preparedBriefError ? (
+                <p
+                  id={`${preparedBriefId}-error`}
+                  className="text-xs font-medium text-[#a2382a]"
+                  role="alert"
+                  data-prepared-brief-error
+                >
+                  {preparedBriefError}
+                </p>
+              ) : preparedBriefNotice ? (
+                <p
+                  id={`${preparedBriefId}-notice`}
+                  className="text-xs font-medium text-[#4f6b55]"
+                  role="status"
+                  data-prepared-brief-notice
+                >
+                  {preparedBriefNotice}
+                </p>
+              ) : null}
+            </div>
+          </fieldset>
+
           <fieldset className="m-0 space-y-4 border-0 p-0">
             <legend className="mb-2 text-base font-semibold">Product and offer</legend>
             <div className="space-y-1.5">

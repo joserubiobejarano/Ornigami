@@ -1,6 +1,7 @@
 import {
   BROWSER_OFFER_MAX_FACTS,
   BROWSER_OFFER_MIN_FACTS,
+  validateBrowserOfferIntake,
 } from "./browser-offer.ts";
 import type { BrowserOfferFactInput } from "./browser-offer.ts";
 
@@ -17,6 +18,150 @@ export type PersistedOfferIntakeBrief = {
   alt: string;
   rights: string;
 };
+
+export type PreparedOfferIntakeBrief = Omit<
+  PersistedOfferIntakeBrief,
+  "schemaVersion"
+>;
+
+export type PreparedOfferIntakeBriefResult =
+  | { ok: true; brief: PreparedOfferIntakeBrief }
+  | { ok: false; error: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function requiredText(
+  record: Record<string, unknown>,
+  key: string,
+  label: string,
+): string {
+  const value = record[key];
+  if (typeof value !== "string") {
+    throw new Error(`${label} must be text.`);
+  }
+  if (!value.trim()) {
+    throw new Error(`${label} is required.`);
+  }
+  return value;
+}
+
+function optionalText(
+  record: Record<string, unknown>,
+  key: string,
+  label: string,
+): string {
+  const value = record[key];
+  if (value === undefined) return "";
+  if (typeof value !== "string") {
+    throw new Error(`${label} must be text.`);
+  }
+  return value;
+}
+
+function preparedFact(value: unknown, index: number): BrowserOfferFactInput {
+  if (!isRecord(value)) {
+    throw new Error(`Fact ${index + 1} must be an object with label and value.`);
+  }
+  return {
+    label: requiredText(value, "label", `Fact ${index + 1} label`),
+    value: requiredText(value, "value", `Fact ${index + 1} value`),
+  };
+}
+
+function preparedValidationMessage(
+  errors: ReturnType<typeof validateBrowserOfferIntake>["errors"],
+): string {
+  const messages = [
+    errors.productName,
+    errors.offer,
+    errors.destinationUrl,
+    errors.facts,
+    errors.alt,
+    errors.rights,
+  ].filter((message): message is string => Boolean(message));
+  for (const row of Object.values(errors.factRows ?? {})) {
+    if (row.label) messages.push(row.label);
+    if (row.value) messages.push(row.value);
+  }
+  return messages.slice(0, 3).join(" ");
+}
+
+export function parsePreparedOfferIntakeBrief(
+  raw: string,
+): PreparedOfferIntakeBriefResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: "Prepared brief must be valid JSON." };
+  }
+
+  if (!isRecord(parsed)) {
+    return { ok: false, error: "Prepared brief must be one JSON object." };
+  }
+  if (parsed.schemaVersion !== 1) {
+    return { ok: false, error: "Prepared brief schemaVersion must be 1." };
+  }
+
+  try {
+    const rawFacts = parsed.facts;
+    if (!Array.isArray(rawFacts)) {
+      throw new Error("Facts must be an array.");
+    }
+    if (rawFacts.length < BROWSER_OFFER_MIN_FACTS) {
+      throw new Error(`Add at least ${BROWSER_OFFER_MIN_FACTS} facts.`);
+    }
+    if (rawFacts.length > BROWSER_OFFER_MAX_FACTS) {
+      throw new Error(`Use no more than ${BROWSER_OFFER_MAX_FACTS} facts.`);
+    }
+
+    const brief: PreparedOfferIntakeBrief = {
+      brandName: optionalText(parsed, "brandName", "Brand name"),
+      productName: requiredText(parsed, "productName", "Product name"),
+      offer: requiredText(parsed, "offer", "Offer"),
+      destinationUrl: requiredText(
+        parsed,
+        "destinationUrl",
+        "Destination URL",
+      ),
+      facts: rawFacts.map(preparedFact),
+      alt: requiredText(parsed, "alt", "Alt text"),
+      rights: requiredText(parsed, "rights", "Usage rights"),
+    };
+
+    const validation = validateBrowserOfferIntake({
+      brandName: brief.brandName,
+      productName: brief.productName,
+      offer: brief.offer,
+      destinationUrl: brief.destinationUrl,
+      facts: brief.facts,
+      packshot: {
+        src: "prepared-brief",
+        width: 1,
+        height: 1,
+        contentHash: "",
+        alt: brief.alt,
+        rights: brief.rights,
+      },
+      reviewedOn: "",
+    });
+    if (!validation.valid) {
+      return {
+        ok: false,
+        error: `Prepared brief is invalid: ${preparedValidationMessage(validation.errors)}`,
+      };
+    }
+
+    return { ok: true, brief };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Prepared brief is invalid.",
+    };
+  }
+}
 
 function text(value: unknown): string {
   return typeof value === "string" ? value : "";

@@ -256,7 +256,7 @@ async function main() {
     await page.getByRole("heading", { name: "Offer intake", exact: true }).waitFor();
     await page.waitForFunction(
       () => {
-        const input = document.querySelector('input[type="file"]');
+        const input = document.querySelector('input[type="file"][data-packshot-input]');
         return (
           Boolean(input) &&
           Object.keys(input).some((key) => key.startsWith("__reactProps$"))

@@ -86,9 +86,9 @@ async function gotoOffer(page, baseUrl) {
     timeout: 60_000,
   });
   await page.getByRole("heading", { name: "Offer intake", exact: true }).waitFor();
-  await page.locator('input[type="file"]').waitFor();
+  await page.locator('input[type="file"][data-packshot-input]').waitFor();
   await page.waitForFunction(() => {
-    const input = document.querySelector('input[type="file"]');
+    const input = document.querySelector('input[type="file"][data-packshot-input]');
     return Boolean(input) && Object.keys(input).some((key) => key.startsWith("__reactProps$"));
   });
   const cookieDismiss = page.getByRole("button", { name: "Got it", exact: true });

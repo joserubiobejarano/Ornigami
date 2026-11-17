@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   hasPersistedBriefContent,
   parsePersistedOfferIntakeBrief,
+  parsePreparedOfferIntakeBrief,
   serializePersistedOfferIntakeBrief,
 } from "../src/lib/campaign-lab/offer-intake-brief.ts";
 
@@ -114,4 +115,104 @@ test("empty saved fields do not trigger the restored-brief notice", () => {
   assert.ok(empty);
   assert.equal(hasPersistedBriefContent(empty), false);
   assert.equal(hasPersistedBriefContent({ ...empty, offer: "30% off" }), true);
+});
+
+test("a prepared brief loads every text field verbatim", () => {
+  const parsed = parsePreparedOfferIntakeBrief(
+    JSON.stringify({
+      schemaVersion: 1,
+      brandName: "Harbor Field",
+      productName: "Harbor Field  bottle",
+      offer: "Free shipping through 30 November 2026, on every order",
+      destinationUrl: "https://example.com/harbor-field",
+      facts: [
+        { label: "Material", value: "Recycled glass" },
+        { label: "Capacity", value: "750 ml" },
+      ],
+      alt: "Synthetic Harbor Field bottle on a plain background.",
+      rights: "Synthetic fixture for local UI checks only.",
+    }),
+  );
+  assert.equal(parsed.ok, true);
+  if (!parsed.ok) return;
+  assert.deepEqual(parsed.brief, {
+    brandName: "Harbor Field",
+    productName: "Harbor Field  bottle",
+    offer: "Free shipping through 30 November 2026, on every order",
+    destinationUrl: "https://example.com/harbor-field",
+    facts: [
+      { label: "Material", value: "Recycled glass" },
+      { label: "Capacity", value: "750 ml" },
+    ],
+    alt: "Synthetic Harbor Field bottle on a plain background.",
+    rights: "Synthetic fixture for local UI checks only.",
+  });
+});
+
+test("an invalid prepared brief explains the error and returns no draft", () => {
+  const malformed = parsePreparedOfferIntakeBrief("not json");
+  assert.equal(malformed.ok, false);
+  assert.match(
+    malformed.ok ? "" : malformed.error,
+    /valid JSON/i,
+  );
+
+  const missingProduct = parsePreparedOfferIntakeBrief(
+    JSON.stringify({
+      schemaVersion: 1,
+      productName: "",
+      offer: "Free shipping",
+      destinationUrl: "https://example.com/harbor-field",
+      facts: [
+        { label: "Material", value: "Glass" },
+        { label: "Capacity", value: "750 ml" },
+      ],
+      alt: "Bottle.",
+      rights: "Local only.",
+    }),
+  );
+  assert.equal(missingProduct.ok, false);
+  assert.match(
+    missingProduct.ok ? "" : missingProduct.error,
+    /Product name is required/i,
+  );
+
+  const badUrl = parsePreparedOfferIntakeBrief(
+    JSON.stringify({
+      schemaVersion: 1,
+      productName: "Harbor Field bottle",
+      offer: "Free shipping",
+      destinationUrl: "not-a-url",
+      facts: [
+        { label: "Material", value: "Glass" },
+        { label: "Capacity", value: "750 ml" },
+      ],
+      alt: "Bottle.",
+      rights: "Local only.",
+    }),
+  );
+  assert.equal(badUrl.ok, false);
+  assert.match(badUrl.ok ? "" : badUrl.error, /valid URL/i);
+
+  const tooManyFacts = parsePreparedOfferIntakeBrief(
+    JSON.stringify({
+      schemaVersion: 1,
+      productName: "Harbor Field bottle",
+      offer: "Free shipping",
+      destinationUrl: "https://example.com/harbor-field",
+      facts: [
+        { label: "One", value: "1" },
+        { label: "Two", value: "2" },
+        { label: "Three", value: "3" },
+        { label: "Four", value: "4" },
+      ],
+      alt: "Bottle.",
+      rights: "Local only.",
+    }),
+  );
+  assert.equal(tooManyFacts.ok, false);
+  assert.match(
+    tooManyFacts.ok ? "" : tooManyFacts.error,
+    /no more than 3 facts/i,
+  );
 });
