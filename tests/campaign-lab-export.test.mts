@@ -1,0 +1,341 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  assertHtmlReceiptAgreement,
+  auditArchiveReferences,
+  buildExportReceipt,
+  buildStandaloneDocument,
+  buildStandaloneStylesheet,
+  CampaignExportReferenceError,
+  campaignExportFileName,
+  crc32,
+  createStoredZip,
+  evaluateCampaignExport,
+  isLocalPreviewApproved,
+  sameExportGuard,
+} from "../src/lib/campaign-lab/export.ts";
+import { findFontLicense } from "../src/lib/campaign-lab/font-licenses.ts";
+
+const approvedState = {
+  revision: "c17b6383cc650d5f",
+  approvalRevision: "c17b6383cc650d5f",
+  dirty: false,
+  generating: false,
+  imagesReady: true,
+  supportedFormat: true,
+};
+
+test("local preview approval requires the rendered revision and a clean image gate", () => {
+  assert.equal(isLocalPreviewApproved(approvedState), true);
+
+  for (const change of [
+    { revision: null },
+    { approvalRevision: "0000000000000000" },
+    { dirty: true },
+    { generating: true },
+    { imagesReady: false },
+  ]) {
+    assert.equal(
+      isLocalPreviewApproved({ ...approvedState, ...change }),
+      false,
+      JSON.stringify(change),
+    );
+  }
+});
+
+test("export eligibility follows the editor approval rules and direct-offer scope", () => {
+  assert.equal(evaluateCampaignExport(approvedState).ok, true);
+  assert.match(
+    evaluateCampaignExport({ ...approvedState, dirty: true }).reason,
+    /edits that are not rendered/i,
+  );
+  assert.match(
+    evaluateCampaignExport({
+      ...approvedState,
+      approvalRevision: "0000000000000000",
+    }).reason,
+    /not locally approved/i,
+  );
+  assert.match(
+    evaluateCampaignExport({ ...approvedState, supportedFormat: false }).reason,
+    /direct-offer template only/i,
+  );
+  assert.match(
+    evaluateCampaignExport({ ...approvedState, imagesReady: false }).reason,
+    /packshot/i,
+  );
+});
+
+test("export filename is local, bounded and revision-specific", () => {
+  assert.equal(
+    campaignExportFileName("Harbor Field bottle", "c17b6383cc650d5f"),
+    "campaign-lab-harbor-field-bottle-c17b6383cc.zip",
+  );
+  assert.equal(
+    campaignExportFileName("  ", "abc"),
+    "campaign-lab-campaign-abc.zip",
+  );
+});
+
+test("standalone document carries revision, content agreement and provisional notice", () => {
+  const html = buildStandaloneDocument({
+    title: 'Harbor Field <Bottle>',
+    bodyHtml: '<article class="page">Offer</article>',
+    revision: "c17b6383cc650d5f",
+    previewStatus: "preview",
+    previewNotice: "Preview · destination provisional",
+    packshotSha256: "49b0e48a866a21be4058bdfb166d5523fab4c0b77ff245c6067ee707106c7ff2",
+    offer: "Free shipping through 30 November 2026, on every order",
+    destinationUrl: "https://example.com/harbor-field",
+    actionLabel: "Shop now",
+    packshotFile: "packshot-49b0e48a866a21be.jpg",
+  });
+
+  assert.match(html, /^<!doctype html>/);
+  assert.match(html, /name="campaign-lab-revision" content="c17b6383cc650d5f"/);
+  assert.match(
+    html,
+    /name="campaign-lab-packshot-sha256" content="49b0e48a/,
+  );
+  assert.match(html, /name="campaign-lab-offer" content="Free shipping/);
+  assert.match(
+    html,
+    /name="campaign-lab-destination" content="https:\/\/example\.com\/harbor-field/,
+  );
+  assert.match(html, /name="campaign-lab-packshot-file" content="packshot-/);
+  assert.match(html, /Preview · destination provisional/);
+  assert.match(html, /Harbor Field &lt;Bottle&gt;/);
+  assert.match(html, /href="\.\/styles\.css"/);
+  assert.doesNotMatch(html, /<script/i);
+});
+
+test("export guard only matches the same still-approved revision", () => {
+  assert.equal(
+    sameExportGuard(
+      {
+        revision: "c17b6383cc650d5f",
+        approvalRevision: "c17b6383cc650d5f",
+        dirty: false,
+        generating: false,
+        imagesReady: true,
+      },
+      approvedState,
+    ),
+    true,
+  );
+  assert.equal(
+    sameExportGuard(
+      {
+        revision: "c17b6383cc650d5f",
+        approvalRevision: "c17b6383cc650d5f",
+        dirty: false,
+        generating: false,
+        imagesReady: true,
+      },
+      { ...approvedState, dirty: true },
+    ),
+    false,
+  );
+});
+
+test("archive reference audit accepts local assets and rejects missing or external resources", () => {
+  const html =
+    '<link rel="stylesheet" href="./styles.css"><img src="./packshot-abc.jpg">';
+  const css =
+    '@font-face{font-family:Inter;src:url("./fonts/Inter-123.woff2")}';
+  const audit = auditArchiveReferences(html, css, [
+    "index.html",
+    "styles.css",
+    "packshot-abc.jpg",
+    "fonts/Inter-123.woff2",
+  ]);
+  assert.equal(audit.stylesheets[0], "styles.css");
+  assert.equal(audit.images[0], "packshot-abc.jpg");
+  assert.equal(audit.fonts[0], "fonts/Inter-123.woff2");
+
+  assert.throws(
+    () =>
+      auditArchiveReferences(
+        html,
+        `${css} .page{background:url("./missing.png")}`,
+        [
+          "index.html",
+          "styles.css",
+          "packshot-abc.jpg",
+          "fonts/Inter-123.woff2",
+        ],
+      ),
+    (error: unknown) =>
+      error instanceof CampaignExportReferenceError &&
+      /missing\.png/.test(error.message),
+  );
+
+  assert.throws(
+    () =>
+      auditArchiveReferences(
+        '<link rel="stylesheet" href="https://cdn.example.com/app.css">',
+        "",
+        ["index.html"],
+      ),
+    (error: unknown) =>
+      error instanceof CampaignExportReferenceError &&
+      /external resource references/i.test(error.message),
+  );
+});
+
+test("HTML and receipt agreement checks revision, offer, destination and packshot", async () => {
+  const receipt = await buildExportReceipt({
+    preview: {
+      status: "confirmed",
+      revision: "c17b6383cc650d5f",
+      productName: "Harbor Field bottle",
+      brandName: "Harbor Field",
+      offer: "Free shipping through 30 November 2026, on every order",
+      destinationUrl: "https://example.com/harbor-field",
+      actionLabel: "Shop now",
+      template: {
+        id: "single-product-offer",
+        version: "1.0.0",
+        layout: "offer-led-one-photo",
+        sections: ["hero", "hero-facts", "close"],
+      },
+      asset: {
+        id: "browser-offer-packshot",
+        contentHash:
+          "49b0e48a866a21be4058bdfb166d5523fab4c0b77ff245c6067ee707106c7ff2",
+        alt: "Packshot",
+        width: 2500,
+        height: 2500,
+        src: "blob:test",
+      },
+    },
+    approval: {
+      revision: "c17b6383cc650d5f",
+      approvedAt: "2026-11-17T14:00:00.000Z",
+    },
+    exportedAt: "2026-11-17T14:01:00.000Z",
+    packshotFile: "packshot-49b0e48a866a21be.jpg",
+    packshotSha256:
+      "49b0e48a866a21be4058bdfb166d5523fab4c0b77ff245c6067ee707106c7ff2",
+    files: [],
+  });
+  const html = buildStandaloneDocument({
+    title: "Harbor Field",
+    bodyHtml: "<article>Offer</article>",
+    revision: receipt.approval.revision,
+    previewStatus: receipt.preview.status,
+    packshotSha256: receipt.asset.exportedSha256,
+    offer: receipt.preview.offer,
+    destinationUrl: receipt.preview.destinationUrl,
+    actionLabel: receipt.preview.actionLabel,
+    packshotFile: receipt.asset.file,
+  });
+
+  assert.doesNotThrow(() => assertHtmlReceiptAgreement(html, receipt));
+  assert.throws(() =>
+    assertHtmlReceiptAgreement(
+      html.replace("Free shipping through 30 November 2026", "A different offer"),
+      receipt,
+    ),
+  );
+});
+
+test("Inter bundles its matching copyright and OFL text", () => {
+  const license = findFontLicense("Inter");
+  assert.ok(license);
+  assert.equal(license.family, "Inter");
+  assert.match(license.copyright, /The Inter Project Authors/);
+  assert.match(license.licenseText, /SIL OPEN FONT LICENSE Version 1\.1/);
+  assert.equal(license.licenseFile, "fonts/LICENSE-Inter-OFL-1.1.txt");
+  assert.equal(findFontLicense("Unknown Font"), null);
+});
+
+test("standalone stylesheet mirrors the preview canvas and keeps extracted styles", () => {
+  const css = buildStandaloneStylesheet({
+    extractedCss: ".page{color:red}",
+    primaryFontFamily: '"Inter"',
+  });
+  assert.match(css, /--font-sans: "Inter"/);
+  assert.match(css, /max-width: 992px/);
+  assert.match(css, /width: calc\(100vw - 448px\)/);
+  assert.match(css, /\.page\{color:red\}/);
+});
+
+test("receipt binds the local approval, rendered revision and exported files", async () => {
+  const receipt = await buildExportReceipt({
+    preview: {
+      status: "confirmed",
+      revision: "c17b6383cc650d5f",
+      productName: "Harbor Field bottle",
+      brandName: "Harbor Field",
+      offer: "Free shipping through 30 November 2026, on every order",
+      destinationUrl: "https://example.com/harbor-field",
+      actionLabel: "Shop now",
+      template: {
+        id: "single-product-offer",
+        version: "1.0.0",
+        layout: "offer-led-one-photo",
+        sections: ["hero", "hero-facts", "close"],
+      },
+      asset: {
+        id: "browser-offer-packshot",
+        contentHash:
+          "49b0e48a866a21be4058bdfb166d5523fab4c0b77ff245c6067ee707106c7ff2",
+        alt: "Packshot",
+        width: 2500,
+        height: 2500,
+        src: "blob:test",
+      },
+      verification: {
+        offer: "confirmed",
+        destination: "direct",
+        rights: "confirmed",
+        provisional: false,
+      },
+    },
+    approval: {
+      revision: "c17b6383cc650d5f",
+      approvedAt: "2026-11-17T14:00:00.000Z",
+    },
+    exportedAt: "2026-11-17T14:01:00.000Z",
+    packshotFile: "packshot-49b0e48a866a21be.jpg",
+    packshotSha256:
+      "49b0e48a866a21be4058bdfb166d5523fab4c0b77ff245c6067ee707106c7ff2",
+    files: [
+      { path: "index.html", bytes: 10, sha256: "a" },
+      { path: "styles.css", bytes: 20, sha256: "b" },
+    ],
+  });
+
+  assert.equal(receipt.approval.scope, "local-preview");
+  assert.equal(receipt.approval.revision, receipt.approval.renderedRevision);
+  assert.equal(receipt.preview.offer, "Free shipping through 30 November 2026, on every order");
+  assert.equal(
+    receipt.preview.destinationUrl,
+    "https://example.com/harbor-field",
+  );
+  assert.equal(receipt.asset.exportedSha256, receipt.asset.contentHash);
+  assert.equal(receipt.checks.editorControlsExcluded, true);
+  assert.equal(receipt.checks.internalNotesExcluded, true);
+});
+
+test("stored ZIP writer emits a readable archive", () => {
+  const files = [
+    { path: "index.html", bytes: new TextEncoder().encode("<html></html>") },
+    { path: "styles.css", bytes: new TextEncoder().encode(".page{}") },
+  ];
+  const zip = createStoredZip(files, new Date("2026-11-17T14:00:00Z"));
+  const view = new DataView(zip.buffer);
+  assert.equal(view.getUint32(0, true), 0x04034b50);
+  assert.equal(view.getUint16(8, true), 0);
+  assert.equal(crc32(files[0].bytes), view.getUint32(14, true));
+
+  const eocdOffset = zip.length - 22;
+  assert.equal(view.getUint32(eocdOffset, true), 0x06054b50);
+  assert.equal(view.getUint16(eocdOffset + 10, true), files.length);
+
+  const firstNameLength = view.getUint16(26, true);
+  const firstName = new TextDecoder().decode(zip.slice(30, 30 + firstNameLength));
+  assert.equal(firstName, "index.html");
+});

@@ -26,6 +26,17 @@ import {
   splitCapacityIssues,
   summarizePreviewImages,
 } from "@/lib/campaign-lab/editor";
+import {
+  buildCampaignExportBundle,
+  CampaignExportCancelledError,
+  captureCampaignExportSnapshot,
+  downloadCampaignExport,
+  evaluateCampaignExport,
+  isLocalPreviewApproved,
+  sameExportGuard,
+} from "@/lib/campaign-lab/export";
+import type { LocalPreviewApprovalInput } from "@/lib/campaign-lab/export";
+import type { BrowserOfferVerification } from "@/lib/campaign-lab/browser-offer";
 import type {
   PreviewImageEvent,
   PreviewImageGate,
@@ -71,6 +82,8 @@ type CampaignLabProps = {
   previewNotice?: string;
   previewStatus?: "preview" | "confirmed";
   previewNote?: string;
+  exportVerification?: BrowserOfferVerification | null;
+  exportPackshotBlob?: Blob | null;
   onEditorStateChange?: (snapshot: {
     values: CampaignFormValues;
     revision: string | null;
@@ -117,6 +130,8 @@ export function CampaignLab({
   previewNotice,
   previewStatus,
   previewNote,
+  exportVerification = null,
+  exportPackshotBlob = null,
   onEditorStateChange,
 }: CampaignLabProps) {
   const fixture = catalog.fixtures[initialFixtureId];
@@ -127,6 +142,15 @@ export function CampaignLab({
   const previousIssueCount = useRef(0);
   const requestGate = useRef(new GenerationRequestGate());
   const inFlight = useRef<AbortController | null>(null);
+  const previewCanvasRef = useRef<HTMLDivElement>(null);
+  const approvalGuardRef = useRef<LocalPreviewApprovalInput>({
+    revision: null,
+    approvalRevision: null,
+    dirty: false,
+    generating: false,
+    imagesReady: false,
+  });
+  const exportAbortRef = useRef<AbortController | null>(null);
   const openingByFormat = useRef<Record<CampaignFormat, string | undefined>>({
     offer: openingFocusForFormat(fixture, "offer"),
     advertorial: openingFocusForFormat(fixture, "advertorial"),
@@ -147,6 +171,9 @@ export function CampaignLab({
   const [imageGate, setImageGate] = useState<PreviewImageGate>(() =>
     createPreviewImageGate(initialPreviewState.preview?.revision ?? null),
   );
+  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const effectivePilotStatus = previewStatus ?? catalog.pilot?.status;
   const effectivePilotNote = previewNote ?? catalog.pilot?.note;
@@ -211,12 +238,13 @@ export function CampaignLab({
   const pendingImageRows = imageRows.filter((row) =>
     imageSummary.pendingAssetIds.includes(row.assetId),
   );
-  const approved =
-    Boolean(revision) &&
-    approval?.revision === revision &&
-    !dirty &&
-    !generating &&
-    imageSummary.ready;
+  const approved = isLocalPreviewApproved({
+    revision,
+    approvalRevision: approval?.revision,
+    dirty,
+    generating,
+    imagesReady: imageSummary.ready,
+  });
   const canApprove =
     editorReady &&
     Boolean(preview) &&
@@ -225,6 +253,22 @@ export function CampaignLab({
     issues.length === 0 &&
     imageSummary.ready &&
     !approved;
+  const exportCapability = evaluateCampaignExport({
+    revision,
+    approvalRevision: approval?.revision,
+    dirty,
+    generating,
+    imagesReady: imageSummary.ready,
+    supportedFormat: Boolean(preview) && !advertorialPreview,
+  });
+  const canExport = exportCapability.ok && !exporting;
+  approvalGuardRef.current = {
+    revision,
+    approvalRevision: approval?.revision,
+    dirty,
+    generating,
+    imagesReady: imageSummary.ready,
+  };
   const approvalBlockedByImages = Boolean(preview) && !imageSummary.ready;
   const revisionLabel = revision ? shortRevision(revision) : null;
   const imagePanelText = preview
@@ -280,8 +324,15 @@ export function CampaignLab({
     return () => {
       gate.invalidate();
       inFlight.current?.abort();
+      exportAbortRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLocalPreviewApproved(approvalGuardRef.current)) {
+      exportAbortRef.current?.abort();
+    }
+  }, [approval?.revision, dirty, generating, imageSummary.ready, revision]);
 
   useEffect(() => {
     onEditorStateChange?.({
@@ -529,6 +580,107 @@ export function CampaignLab({
       revision: preview.revision,
       approvedAt: new Date().toISOString(),
     });
+    setExportError(null);
+    setExportStatus(null);
+  }
+
+  async function handleExport() {
+    if (
+      !exportCapability.ok ||
+      !approval ||
+      !preview ||
+      isAdvertorialPreviewData(preview)
+    ) {
+      return;
+    }
+
+    const article = previewCanvasRef.current?.querySelector<HTMLElement>("article");
+    if (!article) {
+      setExportError(
+        "The rendered direct-offer page is not available. Generate it again before exporting.",
+      );
+      return;
+    }
+
+    const expectedGuard = { ...approvalGuardRef.current };
+    const notice =
+      previewNotice ??
+      (effectivePilotStatus === "preview"
+        ? "Preview · offer and destination unconfirmed"
+        : undefined);
+
+    // Capture the article HTML, packshot handle, styles and approval in one
+    // synchronous step. Everything after this point reads only the snapshot.
+    const snapshot = captureCampaignExportSnapshot({
+      article,
+      approval: {
+        revision: approval.revision,
+        approvedAt: approval.approvedAt,
+      },
+      preview: {
+        status: effectivePilotStatus ?? "confirmed",
+        notice,
+        revision: preview.revision,
+        productName: preview.brief.productName,
+        brandName: preview.theme.brand.name,
+        offer: preview.brief.offer,
+        destinationUrl: preview.brief.destinationUrl,
+        actionLabel: preview.brief.actionLabel,
+        template: {
+          id: preview.draft.templateId,
+          version: preview.draft.templateVersion,
+          layout: preview.draft.layout,
+          sections: preview.draft.sections,
+        },
+        asset: {
+          id: preview.asset.id,
+          contentHash: preview.asset.contentHash,
+          alt: preview.asset.alt,
+          width: preview.asset.width,
+          height: preview.asset.height,
+          src: preview.asset.src,
+        },
+        verification: exportVerification,
+      },
+      guard: expectedGuard,
+      packshotBlob: exportPackshotBlob,
+    });
+
+    exportAbortRef.current?.abort();
+    const controller = new AbortController();
+    exportAbortRef.current = controller;
+    setExporting(true);
+    setExportError(null);
+    setExportStatus(null);
+
+    try {
+      const bundle = await buildCampaignExportBundle(snapshot, {
+        signal: controller.signal,
+        isStillApproved: (expected) =>
+          sameExportGuard(expected, approvalGuardRef.current),
+      });
+      if (
+        controller.signal.aborted ||
+        !sameExportGuard(expectedGuard, approvalGuardRef.current)
+      ) {
+        throw new CampaignExportCancelledError();
+      }
+      downloadCampaignExport(bundle);
+      setExportStatus(
+        `Exported ${bundle.fileName} · revision ${shortRevision(preview.revision)}.`,
+      );
+    } catch (error) {
+      setExportError(
+        error instanceof Error
+          ? error.message
+          : "The standalone export could not be prepared.",
+      );
+    } finally {
+      if (exportAbortRef.current === controller) {
+        exportAbortRef.current = null;
+      }
+      setExporting(false);
+    }
   }
 
   function describedBy(field: ValidationField, extraId?: string): string | undefined {
@@ -1273,6 +1425,73 @@ export function CampaignLab({
             </div>
 
             <div
+              className={cn(
+                "rounded-xl border p-3",
+                exportCapability.ok
+                  ? "border-[#bcd7c2] bg-[#eef5ee]"
+                  : "border-[#ddd3c2] bg-[#f8f3ea]",
+              )}
+              data-export-panel
+              data-export-ready={canExport ? "true" : "false"}
+              data-exporting={exporting ? "true" : "false"}
+              data-export-revision={exportCapability.ok ? revision : undefined}
+              data-export-reason={exportCapability.ok ? undefined : exportCapability.reason}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#5f5a4f]">
+                  Standalone export
+                </p>
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em]",
+                    exportCapability.ok
+                      ? "bg-[#dcecdf] text-[#285a3d]"
+                      : "bg-[#e9e0d1] text-[#5b5346]",
+                  )}
+                >
+                  {exportCapability.ok ? "Ready" : "Locked"}
+                </span>
+              </div>
+              <p className="mt-2 text-sm font-medium">
+                {exportCapability.reason}
+              </p>
+              <p className="mt-1 text-xs text-[#6d6a5f]">
+                The local ZIP contains index.html, styles.css, the approved packshot and a
+                revision receipt. Only the rendered direct-offer page is included; editor
+                controls and internal notes are excluded.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-3 w-full sm:w-auto"
+                onClick={() => void handleExport()}
+                disabled={!canExport}
+                aria-describedby={reviewStatusId}
+                data-export-button
+              >
+                {exporting ? "Preparing export…" : "Export approved page"}
+              </Button>
+              {exportError ? (
+                <p
+                  className="mt-2 text-xs font-medium text-[#a2382a]"
+                  role="alert"
+                  data-export-error
+                >
+                  {exportError}
+                </p>
+              ) : exportStatus ? (
+                <p
+                  className="mt-2 text-xs font-medium text-[#285a3d]"
+                  role="status"
+                  aria-live="polite"
+                  data-export-status
+                >
+                  {exportStatus}
+                </p>
+              ) : null}
+            </div>
+
+            <div
               className={cn("rounded-xl border p-3", generationTone)}
               data-generation-status={generation.status}
             >
@@ -1408,6 +1627,7 @@ export function CampaignLab({
 
           {preview ? (
             <div
+              ref={previewCanvasRef}
               className={cn(
                 "overflow-hidden rounded-xl border bg-white",
                 dirty ? "border-[#c08a3f]" : "border-[#cec3b1]",

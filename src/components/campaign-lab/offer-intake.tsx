@@ -49,6 +49,7 @@ type PackshotFile = {
   height: number;
   contentHash: string;
   fileName: string;
+  file: File;
 };
 
 type SubmittedBrief = {
@@ -534,7 +535,7 @@ export function OfferIntake() {
         return;
       }
       objectUrlRef.current = read.src;
-      setPackshot({ ...read, fileName: file.name });
+      setPackshot({ ...read, fileName: file.name, file });
       clearError("packshot");
     } catch (error) {
       if (readId !== packshotReadRef.current || !mountedRef.current) return;
@@ -683,6 +684,8 @@ export function OfferIntake() {
           previewNotice={renderedNotice}
           previewStatus={renderedStatus}
           previewNote={renderedNote}
+          exportVerification={renderedVerification?.verification ?? null}
+          exportPackshotBlob={packshot?.file ?? null}
           onEditorStateChange={handleEditorStateChange}
         />
       </div>

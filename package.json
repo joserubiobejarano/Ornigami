@@ -18,6 +18,7 @@
         "campaign-lab:acceptance": "node scripts/campaign-lab-acceptance.mjs",
         "campaign-lab:generation-check": "node --experimental-strip-types scripts/campaign-lab-generation-check.mjs",
         "campaign-lab:momisa-check": "node scripts/campaign-lab-momisa-check.mjs",
+        "campaign-lab:export-check": "node scripts/campaign-lab-export-check.mjs",
         "campaign-lab:pilot:load": "node --experimental-strip-types scripts/load-campaign-lab-pilot.mjs --pilot momisa",
         "campaign-lab:edge-fixtures": "node --experimental-strip-types scripts/campaign-lab-advertorial-edge-fixtures.mjs",
         "campaign-lab:review-pilots": "node --experimental-strip-types scripts/prepare-campaign-lab-review-pilots.mjs",
