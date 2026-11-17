@@ -711,12 +711,36 @@ jobs:
           printf 'Rollback artifact is expected to fail the same SRI gates; exit=%s\n' "$status" | tee "$EVIDENCE/rollback-verdict.txt"
           exit 0
 
+      - name: Install ZIP-capable tar for portable export checks
+        if: always()
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE"
+          set +e
+          (sudo apt-get update && sudo apt-get install -y libarchive-tools) 2>&1 | tee "$EVIDENCE/libarchive-install.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$status" > "$EVIDENCE/libarchive-install-exit.txt"
+          if [ "$status" -eq 0 ]; then
+            /usr/bin/bsdtar --version | tee "$EVIDENCE/bsdtar-version.txt"
+          fi
+          exit "$status"
+
       - name: Portable Campaign Lab export checks
         if: always()
         continue-on-error: true
         run: |
           set -Eeuo pipefail
           mkdir -p "$EVIDENCE/portable"
+          if [ -x /usr/bin/bsdtar ]; then
+            mkdir -p "$RUNNER_TEMP/bsdtar-bin"
+            printf '#!/bin/sh\nexec /usr/bin/bsdtar "$@"\n' > "$RUNNER_TEMP/bsdtar-bin/tar"
+            chmod +x "$RUNNER_TEMP/bsdtar-bin/tar"
+            export PATH="$RUNNER_TEMP/bsdtar-bin:$PATH"
+          fi
+          command -v tar | tee "$EVIDENCE/portable/tar-path.txt"
+          tar --version 2>&1 | head -n 1 | tee "$EVIDENCE/portable/tar-version.txt" || true
           server_pid=""
           trap 'status=$?; printf "%s\n" "$status" > "$EVIDENCE/portable-exit.txt"; if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi' EXIT
           port=3122
@@ -820,6 +844,7 @@ jobs:
             ['npm-ci', 'npm-ci'],
             ['postgres', 'postgres'],
             ['browser-tools', 'browser-tools-install'],
+            ['libarchive', 'libarchive-install'],
           ]
           const portableChecks = [
             ['portable-prepared-brief', 'prepared-brief'],
@@ -928,6 +953,26 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           overwrite: true
+
+      - name: Engineering check gate
+        if: always()
+        run: |
+          set -Eeuo pipefail
+          summary="$EVIDENCE/diagnostic-summary.json"
+          if [ ! -f "$summary" ]; then
+            echo "::error::Diagnostic summary was not produced."
+            exit 1
+          fi
+          export SUMMARY="$summary"
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs'
+          const s = JSON.parse(readFileSync(process.env.SUMMARY, 'utf8'))
+          console.log(`Engineering checks: ${s.engineering.passed ? 'PASSED' : 'FAILED'}`)
+          if (!s.engineering.passed) {
+            console.log(`Failed engineering checks: ${s.engineering.failedRequiredChecks.join(', ')}`)
+            process.exit(1)
+          }
+          NODE
 
   release-approval:
     if: always() && inputs.diagnostic_mode == 'true'
