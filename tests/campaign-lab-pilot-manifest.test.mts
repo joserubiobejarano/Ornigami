@@ -312,3 +312,21 @@ test("a malformed runtime manifest reports hash, dimensions and local URL errors
   assert.ok(result.issues.some((issue) => /contentHash must be a SHA-256 digest/i.test(issue)));
   assert.ok(result.issues.some((issue) => /width and height are required/i.test(issue)));
 });
+
+test("a pilot offer price must be an exact reviewed substring of the complete offer", () => {
+  const valid = sourcePilot();
+  (valid.fixture.brief as Record<string, unknown>).offerPrice = "30 November";
+  assert.equal(
+    validatePilotSource(valid, { pilotId: "morrow-pilot" }).ok,
+    true,
+  );
+
+  const invalid = sourcePilot();
+  (invalid.fixture.brief as Record<string, unknown>).offerPrice = "$4.94";
+  const result = validatePilotSource(invalid, { pilotId: "morrow-pilot" });
+  assert.equal(result.ok, false);
+  assert.match(
+    result.ok ? "" : result.issues.join(" "),
+    /exact substring/,
+  );
+});

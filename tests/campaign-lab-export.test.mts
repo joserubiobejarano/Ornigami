@@ -251,6 +251,25 @@ test("Inter bundles its matching copyright and OFL text", () => {
   assert.equal(findFontLicense("Unknown Font"), null);
 });
 
+test("EB Garamond and Jost bundle their matching copyright and OFL text", () => {
+  const garamond = findFontLicense("EB Garamond");
+  const jost = findFontLicense("Jost");
+
+  assert.ok(garamond);
+  assert.ok(jost);
+  assert.equal(garamond.family, "EB Garamond");
+  assert.equal(jost.family, "Jost");
+  assert.match(garamond.copyright, /EB Garamond Project Authors/);
+  assert.match(jost.copyright, /Jost Project Authors/);
+  assert.match(garamond.licenseText, /SIL OPEN FONT LICENSE Version 1\.1/);
+  assert.match(jost.licenseText, /SIL OPEN FONT LICENSE Version 1\.1/);
+  assert.equal(
+    garamond.licenseFile,
+    "fonts/LICENSE-EB-Garamond-OFL-1.1.txt",
+  );
+  assert.equal(jost.licenseFile, "fonts/LICENSE-Jost-OFL-1.1.txt");
+});
+
 test("standalone stylesheet mirrors the preview canvas and keeps extracted styles", () => {
   const css = buildStandaloneStylesheet({
     extractedCss: ".page{color:red}",

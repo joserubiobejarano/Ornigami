@@ -286,6 +286,12 @@ export type CampaignBrief = {
   brandId: BrandId;
   productName: string;
   offer: string;
+  /**
+   * The exact approved substring of `offer` that may receive price emphasis.
+   * Emphasis never searches by currency pattern; absence or a non-match keeps
+   * the offer unstyled.
+   */
+  offerPrice?: string;
   destinationUrl: string;
   assetId: string;
   actionLabel: string;

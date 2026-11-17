@@ -414,6 +414,19 @@ function validateFixture(
     }
   }
 
+  if (brief.offerPrice !== undefined) {
+    if (!isString(brief.offerPrice)) {
+      issues.push("fixture.brief.offerPrice must be text");
+    } else if (
+      typeof brief.offer !== "string" ||
+      !brief.offer.includes(brief.offerPrice)
+    ) {
+      issues.push(
+        "fixture.brief.offerPrice must be an exact substring of fixture.brief.offer",
+      );
+    }
+  }
+
   if (!Array.isArray(brief.productFacts) || brief.productFacts.length === 0) {
     issues.push("fixture.brief.productFacts must be a non-empty array");
   } else {

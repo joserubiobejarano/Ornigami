@@ -725,6 +725,7 @@ export function calculateDraftRevision(
       fixtureId: brief.fixtureId,
       productName: brief.productName,
       offer: brief.offer,
+      ...(brief.offerPrice ? { offerPrice: brief.offerPrice } : {}),
       destinationUrl: normalizeDestinationUrl(brief.destinationUrl),
       actionLabel: brief.actionLabel,
       productNoun: brief.productNoun,

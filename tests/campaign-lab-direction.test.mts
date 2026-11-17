@@ -22,6 +22,7 @@ const TEST_BRIEF: MomisaDirectionInput = {
   brandName: "Example Brand",
   productName: "Example Glow Box",
   offer: "20% off, $9.99",
+  offerPrice: "$9.99",
   destinationUrl: "https://example.com/offer",
   actionLabel: "Shop now",
   productNoun: "box",
@@ -62,6 +63,7 @@ test("all three previews preserve the supplied commercial identity", () => {
   for (const preview of [reference, alternative, alternativeOriginal]) {
     assert.equal(preview.brief.productName, TEST_BRIEF.productName);
     assert.equal(preview.brief.offer, TEST_BRIEF.offer);
+    assert.equal(preview.brief.offerPrice, TEST_BRIEF.offerPrice);
     assert.equal(preview.brief.destinationUrl, TEST_BRIEF.destinationUrl);
     assert.equal(preview.brief.actionLabel, TEST_BRIEF.actionLabel);
     assert.deepEqual(

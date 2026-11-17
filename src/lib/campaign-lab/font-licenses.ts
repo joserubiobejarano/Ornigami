@@ -108,7 +108,45 @@ ${OFL_1_1}
 -----------------------------------------------------------`,
 };
 
-const LICENSES: readonly BundledFontLicense[] = [INTER_LICENSE];
+const EB_GARAMOND_LICENSE: BundledFontLicense = {
+  family: "EB Garamond",
+  copyright:
+    "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)",
+  licenseName: "SIL Open Font License 1.1",
+  licenseFile: "fonts/LICENSE-EB-Garamond-OFL-1.1.txt",
+  licenseText: `Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+-----------------------------------------------------------
+${OFL_1_1}
+-----------------------------------------------------------`,
+};
+
+const JOST_LICENSE: BundledFontLicense = {
+  family: "Jost",
+  copyright:
+    "Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)",
+  licenseName: "SIL Open Font License 1.1",
+  licenseFile: "fonts/LICENSE-Jost-OFL-1.1.txt",
+  licenseText: `Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+-----------------------------------------------------------
+${OFL_1_1}
+-----------------------------------------------------------`,
+};
+
+const LICENSES: readonly BundledFontLicense[] = [
+  INTER_LICENSE,
+  EB_GARAMOND_LICENSE,
+  JOST_LICENSE,
+];
 
 function normalizedFamily(family: string): string {
   return family

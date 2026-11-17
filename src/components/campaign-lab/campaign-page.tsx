@@ -4,6 +4,7 @@ import type {
   PreviewImageEvent,
   PreviewImageStatus,
 } from "@/lib/campaign-lab/editor";
+import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";
 import type { CampaignBrief, ProductFact, ResolvedBrandTheme, TemplateDraft } from "@/lib/campaign-lab/types";
 
 import styles from "./campaign-page.module.css";
@@ -52,24 +53,25 @@ function ProductLabel({ productName }: { productName: string }) {
 
 function Offer({
   offer,
+  approvedPrice,
   emphasizePrice = false,
 }: {
   offer: string;
+  approvedPrice?: string;
   emphasizePrice?: boolean;
 }) {
   const price = emphasizePrice
-    ? offer.match(/[$£€]\s?\d[\d,]*(?:\.\d{2})?/)
+    ? findApprovedOfferPrice(offer, approvedPrice)
     : null;
-  const content =
-    price && price.index !== undefined ? (
-      <>
-        {offer.slice(0, price.index)}
-        <span className={styles.offerPrice}>{price[0]}</span>
-        {offer.slice(price.index + price[0].length)}
-      </>
-    ) : (
-      offer
-    );
+  const content = price ? (
+    <>
+      {offer.slice(0, price.start)}
+      <span className={styles.offerPrice}>{price.text}</span>
+      {offer.slice(price.end)}
+    </>
+  ) : (
+    offer
+  );
 
   return (
     <div className={styles.offer} data-role="offer">
@@ -178,7 +180,13 @@ export function CampaignPage({
       {draft.lede}
     </p>
   );
-  const offer = <Offer offer={brief.offer} emphasizePrice={usesPriceEmphasis} />;
+  const offer = (
+    <Offer
+      offer={brief.offer}
+      approvedPrice={brief.offerPrice}
+      emphasizePrice={usesPriceEmphasis}
+    />
+  );
   const action = <Action href={brief.destinationUrl} label={brief.actionLabel} />;
   const facts = showHeroFacts ? (
     <FactList facts={draft.facts} className={styles.facts} />

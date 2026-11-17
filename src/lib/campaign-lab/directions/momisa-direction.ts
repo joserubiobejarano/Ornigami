@@ -34,6 +34,7 @@ export type MomisaDirectionInput = {
   brandName: string;
   productName: string;
   offer: string;
+  offerPrice?: string;
   destinationUrl: string;
   actionLabel: string;
   productNoun: string;
@@ -102,8 +103,8 @@ export const MOMISA_ORIGINAL_ALTERNATIVE_TOKENS: BrandTokens = {
   accent: "#2f5d4a",
   accentInk: "#f6e3cf",
   line: "#e6d1bb",
-  displayFont: "var(--font-direction-display), Georgia, serif",
-  bodyFont: "var(--font-direction-body), system-ui, sans-serif",
+  displayFont: '"EB Garamond", Georgia, serif',
+  bodyFont: "Jost, system-ui, sans-serif",
   displayWeight: 400,
   displayTracking: "-0.012em",
   labelCase: "none",
@@ -133,8 +134,8 @@ export const MOMISA_ALTERNATIVE_TOKENS: BrandTokens = {
   accent: "#2f5d4a",
   accentInk: "#f6e3cf",
   line: "#e6d1bb",
-  displayFont: "var(--font-direction-display), Georgia, serif",
-  bodyFont: "var(--font-direction-body), system-ui, sans-serif",
+  displayFont: '"EB Garamond", Georgia, serif',
+  bodyFont: "Jost, system-ui, sans-serif",
   displayWeight: 400,
   displayTracking: "-0.012em",
   labelCase: "none",
@@ -199,6 +200,7 @@ function fixture(input: MomisaDirectionInput, asset: ApprovedAsset): CampaignFix
       brandId: MOMISA_DIRECTION_BRAND_ID,
       productName: input.productName,
       offer: input.offer,
+      ...(input.offerPrice ? { offerPrice: input.offerPrice } : {}),
       destinationUrl: input.destinationUrl,
       assetId: asset.id,
       actionLabel: input.actionLabel,
