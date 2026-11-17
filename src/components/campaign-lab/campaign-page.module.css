@@ -189,6 +189,26 @@
   text-wrap: pretty;
 }
 
+/*
+ * The optional editorial offer is a type-led alternative to the tinted
+ * notification block. The approved offer string is unchanged; only its
+ * typographic role and surrounding rules change.
+ */
+.offerEditorial .offer {
+  padding: 14px 0 15px;
+  background: transparent;
+  border-block: 1px solid var(--cp-line);
+  border-left: 0;
+}
+
+.offerEditorial .offerText {
+  font-family: var(--cp-display-font);
+  font-size: clamp(1.3rem, 3.7cqi, 1.7rem);
+  font-weight: var(--cp-display-weight);
+  letter-spacing: var(--cp-display-tracking);
+  line-height: 1.16;
+}
+
 .action {
   display: inline-flex;
   align-items: center;
@@ -417,6 +437,12 @@
     align-items: center;
     gap: 52px;
     padding: 48px 44px 56px;
+  }
+
+  /* When the image moves to the first column, give it the larger share so the
+     product remains the visual anchor rather than shrinking beside the copy. */
+  .headlineFirst .offerHero {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
   }
 
   .productFirst .offerHero .copy {

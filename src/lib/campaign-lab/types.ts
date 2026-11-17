@@ -171,6 +171,12 @@ export type BrandTokens = {
   imageRadius: string;
   buttonRadius: string;
   heroImage: "framed" | "arch";
+  /**
+   * How the offer sits in the hero. "tint" is the original notification-style
+   * block; "editorial" sets the offer as a display-type line between rules.
+   * Optional so existing brand tokens keep their approved revision.
+   */
+  offerStyle?: "tint" | "editorial";
   heroOrder: "product-first" | "headline-first";
   prefersEditorial: boolean;
   /** The detail band's own surface, so a light editorial brand can stay light. */

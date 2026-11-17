@@ -1,0 +1,156 @@
+.page {
+  min-height: 100vh;
+  background: #f3efe6;
+  color: #1f2a24;
+  padding: 24px 16px 56px;
+}
+
+.header {
+  width: min(1408px, 100%);
+  margin: 0 auto 28px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #60695f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 8px 0 0;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.note {
+  max-width: 68ch;
+  margin: 12px 0 0;
+  color: #60695f;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.meta {
+  max-width: 68ch;
+  margin: 8px 0 0;
+  color: #60695f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.rows {
+  display: grid;
+  gap: 32px;
+  width: min(1408px, 100%);
+  margin: 0 auto;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.previewLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: #60695f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.previewLabel strong {
+  color: #1f2a24;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+}
+
+.shellMobile,
+.shellDesktop {
+  background: #f5f1e8;
+  box-sizing: border-box;
+}
+
+.shellMobile {
+  width: 375px;
+  padding: 16px;
+}
+
+.shellDesktop {
+  width: 992px;
+  padding: 16px;
+}
+
+.frameMobile,
+.frameDesktop {
+  background: #fffdf8;
+  border: 1px solid #d8cebd;
+  box-sizing: border-box;
+}
+
+.frameMobile {
+  padding: 12px;
+  border-radius: 16px;
+}
+
+.frameDesktop {
+  padding: 16px;
+  border-radius: 20px;
+}
+
+.canvas {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #cec3b1;
+  border-radius: 12px;
+}
+
+@media (max-width: 1023px) {
+  .rows {
+    width: 100%;
+  }
+
+  .row {
+    display: grid;
+    gap: 24px;
+    justify-items: start;
+  }
+
+  .shellDesktop {
+    width: 100%;
+    max-width: 992px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 10px 40px;
+  }
+
+  .shellMobile {
+    width: min(375px, calc(100vw - 20px));
+  }
+}

@@ -711,6 +711,9 @@ export function calculateDraftRevision(
       accentInk: theme.tokens.accentInk,
       displayFont: theme.tokens.displayFont,
       heroImage: theme.tokens.heroImage,
+      ...(theme.tokens.offerStyle && theme.tokens.offerStyle !== "tint"
+        ? { offerStyle: theme.tokens.offerStyle }
+        : {}),
     },
     campaign: {
       fixtureId: brief.fixtureId,

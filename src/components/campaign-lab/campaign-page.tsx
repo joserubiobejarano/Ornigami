@@ -85,6 +85,7 @@ export function CampaignPage({
   const showDetail = draft.sections.includes("detail");
   const isProductFirst = tokens.heroOrder === "product-first";
   const usesBlendedImage = Boolean(tokens.imageBlend && tokens.imageBlend !== "normal");
+  const usesEditorialOffer = tokens.offerStyle === "editorial";
   const showProductLabel = !draft.headline
     .toLowerCase()
     .includes(brief.productName.toLowerCase());
@@ -149,6 +150,7 @@ export function CampaignPage({
         isProductFirst ? styles.productFirst : styles.headlineFirst,
         tokens.heroImage === "arch" ? styles.arch : styles.framed,
         usesBlendedImage ? styles.blendedImage : null,
+        usesEditorialOffer ? styles.offerEditorial : null,
       ].join(" ")}
       style={style}
       aria-labelledby={headingId}
