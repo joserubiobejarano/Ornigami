@@ -244,6 +244,7 @@ export function OfferIntake() {
   const baseId = useId().replace(/:/g, "");
   const objectUrlRef = useRef<string | null>(null);
   const packshotReadRef = useRef(0);
+  const preparedBriefReadRef = useRef(0);
   const mountedRef = useRef(true);
   const submissionCount = useRef(0);
 
@@ -263,6 +264,7 @@ export function OfferIntake() {
   const [rights, setRights] = useState("");
   const [readingPackshot, setReadingPackshot] = useState(false);
   const [packshotError, setPackshotError] = useState<string | null>(null);
+  const [readingPreparedBrief, setReadingPreparedBrief] = useState(false);
   const [preparedBriefNotice, setPreparedBriefNotice] = useState<string | null>(
     null,
   );
@@ -410,6 +412,7 @@ export function OfferIntake() {
     return () => {
       mountedRef.current = false;
       packshotReadRef.current += 1;
+      preparedBriefReadRef.current += 1;
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
   }, []);
@@ -458,19 +461,28 @@ export function OfferIntake() {
   async function handlePreparedBriefChange(file: File | null) {
     if (!file) return;
 
+    const readId = preparedBriefReadRef.current + 1;
+    preparedBriefReadRef.current = readId;
+    setReadingPreparedBrief(true);
+    setPreparedBriefNotice(null);
+    setPreparedBriefError(null);
+
     let raw: string;
     try {
       raw = await file.text();
     } catch {
-      setPreparedBriefNotice(null);
+      if (readId !== preparedBriefReadRef.current || !mountedRef.current) return;
       setPreparedBriefError("The prepared brief could not be read.");
+      setReadingPreparedBrief(false);
       return;
     }
+    if (readId !== preparedBriefReadRef.current || !mountedRef.current) return;
 
     const parsed = parsePreparedOfferIntakeBrief(raw);
     if (!parsed.ok) {
       setPreparedBriefNotice(null);
       setPreparedBriefError(parsed.error);
+      setReadingPreparedBrief(false);
       return;
     }
 
@@ -490,6 +502,7 @@ export function OfferIntake() {
       "Prepared brief loaded. Review every field, select the packshot, and confirm the exact inputs below.",
     );
     handlePackshotChange(null);
+    setReadingPreparedBrief(false);
   }
 
   async function handlePackshotChange(file: File | null) {
@@ -558,7 +571,7 @@ export function OfferIntake() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (readingPackshot || packshotError) return;
+    if (readingPreparedBrief || readingPackshot || packshotError) return;
 
     const input: BrowserOfferIntakeInput = {
       brandName,
@@ -723,12 +736,15 @@ export function OfferIntake() {
           <fieldset
             className="m-0 space-y-3 border-0 border-b border-[#e8dfd0] p-0 pb-4"
             data-prepared-brief-status={
-              preparedBriefError
-                ? "error"
-                : preparedBriefNotice
-                  ? "loaded"
-                  : "idle"
+              readingPreparedBrief
+                ? "reading"
+                : preparedBriefError
+                  ? "error"
+                  : preparedBriefNotice
+                    ? "loaded"
+                    : "idle"
             }
+            aria-busy={readingPreparedBrief}
           >
             <legend className="mb-2 text-base font-semibold">Prepared brief</legend>
             <p className="text-xs text-[#6d6a5f]">
@@ -750,14 +766,25 @@ export function OfferIntake() {
                 }}
                 aria-invalid={Boolean(preparedBriefError)}
                 aria-describedby={
-                  preparedBriefError
-                    ? `${preparedBriefId}-error`
-                    : preparedBriefNotice
-                      ? `${preparedBriefId}-notice`
-                      : undefined
+                  readingPreparedBrief
+                    ? `${preparedBriefId}-reading`
+                    : preparedBriefError
+                      ? `${preparedBriefId}-error`
+                      : preparedBriefNotice
+                        ? `${preparedBriefId}-notice`
+                        : undefined
                 }
               />
-              {preparedBriefError ? (
+              {readingPreparedBrief ? (
+                <p
+                  id={`${preparedBriefId}-reading`}
+                  className="text-xs text-[#6d6a5f]"
+                  role="status"
+                  data-prepared-brief-reading
+                >
+                  Reading prepared brief…
+                </p>
+              ) : preparedBriefError ? (
                 <p
                   id={`${preparedBriefId}-error`}
                   className="text-xs font-medium text-[#a2382a]"
@@ -1179,9 +1206,17 @@ export function OfferIntake() {
             <Button
               type="submit"
               className="w-full sm:w-auto"
-              disabled={readingPackshot || Boolean(packshotError)}
+              disabled={
+                readingPreparedBrief ||
+                readingPackshot ||
+                Boolean(packshotError)
+              }
             >
-              {readingPackshot ? "Reading packshot…" : "Open Campaign Lab preview"}
+              {readingPreparedBrief
+                ? "Reading prepared brief…"
+                : readingPackshot
+                  ? "Reading packshot…"
+                  : "Open Campaign Lab preview"}
             </Button>
           </div>
         </form>

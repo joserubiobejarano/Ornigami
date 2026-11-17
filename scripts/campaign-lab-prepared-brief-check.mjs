@@ -99,12 +99,47 @@ async function fillDraft(page, brief) {
   await page.getByLabel("Usage rights", { exact: true }).fill(brief.rights);
 }
 
-async function importBrief(page, brief) {
+async function selectPreparedBrief(page, payload, name) {
   await page.getByLabel("Prepared brief JSON", { exact: true }).setInputFiles({
-    name: "prepared-brief.json",
+    name,
     mimeType: "application/json",
-    buffer: Buffer.from(JSON.stringify({ schemaVersion: 1, ...brief })),
+    buffer: Buffer.from(
+      typeof payload === "string"
+        ? payload
+        : JSON.stringify({ schemaVersion: 1, ...payload }),
+    ),
   });
+}
+
+async function importBrief(page, brief, name = "prepared-brief.json") {
+  await selectPreparedBrief(page, brief, name);
+}
+
+async function installSlowPreparedBriefRead(page, delayMs = 700) {
+  await page.evaluate((delay) => {
+    const original = File.prototype.text;
+    File.prototype.text = function () {
+      if (this.name.startsWith("slow-")) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            original.call(this).then(resolve, reject);
+          }, delay);
+        });
+      }
+      return original.call(this);
+    };
+  }, delayMs);
+}
+
+async function waitForPreparedStatus(page, status) {
+  await page.waitForFunction(
+    (expected) =>
+      document
+        .querySelector("[data-prepared-brief-status]")
+        ?.getAttribute("data-prepared-brief-status") === expected,
+    status,
+    { timeout: 10_000 },
+  );
 }
 
 async function readDraft(page) {
@@ -146,9 +181,34 @@ async function readDraft(page) {
         document
           .querySelector("[data-packshot-status]")
           ?.getAttribute("data-packshot-status") ?? null,
+      packshot: (() => {
+        const node = document.querySelector("[data-packshot-ready]");
+        return node
+          ? {
+              file: node.getAttribute("data-packshot-file"),
+              width: Number(node.getAttribute("data-packshot-width") ?? 0),
+              height: Number(node.getAttribute("data-packshot-height") ?? 0),
+              hash: node.getAttribute("data-packshot-hash"),
+            }
+          : null;
+      })(),
       confirmations: [...document.querySelectorAll('input[type="checkbox"]')].map(
         (box) => box.checked,
       ),
+      previewButton: (() => {
+        const button = [...document.querySelectorAll("button")].find(
+          (node) =>
+            /Campaign Lab preview|Reading prepared brief/.test(
+              node.textContent ?? "",
+            ),
+        );
+        return button
+          ? {
+              label: button.textContent?.replace(/\s+/g, " ").trim() ?? null,
+              disabled: button.disabled,
+            }
+          : null;
+      })(),
     };
   });
   return values;
@@ -252,6 +312,16 @@ async function main() {
     checks: [],
     states: {},
   };
+
+  const draftOnly = (state) => ({
+    brandName: state.brandName,
+    productName: state.productName,
+    offer: state.offer,
+    destinationUrl: state.destinationUrl,
+    facts: state.facts,
+    alt: state.alt,
+    rights: state.rights,
+  });
 
   await gotoOffer(page, cli.url);
 
@@ -386,8 +456,174 @@ async function main() {
   );
   check(report, "portable:no-console-errors", errors.length === 0, errors, "no console errors");
   await page.screenshot({ path: path.join(out, "prepared-brief-approved-375.png"), fullPage: true });
-
   await page.close();
+
+  // Slow valid -> fast valid: the latest selection wins.
+  const slowValidPage = await browser.newPage({ viewport: { width: 375, height: 900 } });
+  const slowValidErrors = [];
+  slowValidPage.on("console", (message) => {
+    if (message.type() === "error" && !message.text().includes("WebSocket")) {
+      slowValidErrors.push(message.text());
+    }
+  });
+  slowValidPage.on("pageerror", (error) => slowValidErrors.push(`pageerror: ${error.message}`));
+  await gotoOffer(slowValidPage, cli.url);
+  await installSlowPreparedBriefRead(slowValidPage, 700);
+
+  const slowValidBrief = {
+    ...fixture.brief,
+    brandName: "Slow valid brand",
+    productName: "Slow valid product",
+  };
+  const fastValidBrief = {
+    ...fixture.brief,
+    brandName: "Fast valid brand",
+    productName: "Fast valid product",
+  };
+  await importBrief(slowValidPage, slowValidBrief, "slow-valid.json");
+  await waitForPreparedStatus(slowValidPage, "reading");
+  const slowPending = await readDraft(slowValidPage);
+  await importBrief(slowValidPage, fastValidBrief, "fast-valid.json");
+  const bothPending = await readDraft(slowValidPage);
+  await waitForPreparedStatus(slowValidPage, "loaded");
+  const fastLoaded = await readDraft(slowValidPage);
+  await slowValidPage.waitForTimeout(1000);
+  const afterSlowValidFinished = await readDraft(slowValidPage);
+
+  report.states.slowValidThenFastValid = {
+    slowPending,
+    bothPending,
+    fastLoaded,
+    afterSlowValidFinished,
+  };
+  check(
+    report,
+    "race-valid:pending-is-visible",
+    slowPending.preparedStatus === "reading" &&
+      slowPending.previewButton?.disabled === true &&
+      slowPending.previewButton?.label === "Reading prepared brief…",
+    { slowPending, bothPending },
+    "reading state and disabled preview while the import is pending",
+  );
+  check(
+    report,
+    "race-valid:latest-selection-wins",
+    fastLoaded.preparedStatus === "loaded" &&
+      fastLoaded.brandName === "Fast valid brand" &&
+      fastLoaded.productName === "Fast valid product" &&
+      fastLoaded.preparedError === null,
+    fastLoaded,
+    {
+      brandName: "Fast valid brand",
+      productName: "Fast valid product",
+      status: "loaded",
+    },
+  );
+  check(
+    report,
+    "race-valid:superseded-read-does-not-overwrite",
+    JSON.stringify(draftOnly(afterSlowValidFinished)) ===
+      JSON.stringify(draftOnly(fastLoaded)) &&
+      afterSlowValidFinished.preparedStatus === "loaded" &&
+      afterSlowValidFinished.preparedError === null,
+    { fastLoaded, afterSlowValidFinished },
+    "slow read leaves the fast draft and loaded state unchanged",
+  );
+  check(
+    report,
+    "race-valid:no-console-errors",
+    slowValidErrors.length === 0,
+    slowValidErrors,
+    "no console errors",
+  );
+  await slowValidPage.close();
+
+  // Slow valid -> fast invalid: the latest error wins and the existing draft,
+  // packshot and confirmations are untouched.
+  const slowInvalidPage = await browser.newPage({ viewport: { width: 375, height: 900 } });
+  const slowInvalidErrors = [];
+  slowInvalidPage.on("console", (message) => {
+    if (message.type() === "error" && !message.text().includes("WebSocket")) {
+      slowInvalidErrors.push(message.text());
+    }
+  });
+  slowInvalidPage.on("pageerror", (error) => slowInvalidErrors.push(`pageerror: ${error.message}`));
+  await gotoOffer(slowInvalidPage, cli.url);
+  await fillDraft(slowInvalidPage, existingDraft);
+  await selectPackshot(slowInvalidPage, fixture.packshot);
+  await waitForPackshotReady(slowInvalidPage);
+  await confirmAll(slowInvalidPage);
+  const raceBaseline = await readDraft(slowInvalidPage);
+  await installSlowPreparedBriefRead(slowInvalidPage, 700);
+  await importBrief(slowInvalidPage, slowValidBrief, "slow-valid.json");
+  await waitForPreparedStatus(slowInvalidPage, "reading");
+  await selectPreparedBrief(
+    slowInvalidPage,
+    {
+      schemaVersion: 1,
+      productName: "",
+      offer: "Latest invalid offer",
+      destinationUrl: "https://example.com/latest-invalid",
+      facts: [
+        { label: "One", value: "1" },
+        { label: "Two", value: "2" },
+      ],
+      alt: "Latest invalid alt.",
+      rights: "Latest invalid rights.",
+    },
+    "fast-invalid.json",
+  );
+  await slowInvalidPage.locator("[data-prepared-brief-error]").waitFor({
+    state: "visible",
+    timeout: 10_000,
+  });
+  const afterFastInvalid = await readDraft(slowInvalidPage);
+  await slowInvalidPage.waitForTimeout(1000);
+  const afterSlowValidFinishedInvalid = await readDraft(slowInvalidPage);
+
+  report.states.slowValidThenFastInvalid = {
+    raceBaseline,
+    afterFastInvalid,
+    afterSlowValidFinishedInvalid,
+  };
+  check(
+    report,
+    "race-invalid:draft-packshot-confirmations-preserved",
+    JSON.stringify(draftOnly(afterFastInvalid)) ===
+      JSON.stringify(draftOnly(raceBaseline)) &&
+      JSON.stringify(afterFastInvalid.packshot) ===
+        JSON.stringify(raceBaseline.packshot) &&
+      JSON.stringify(afterFastInvalid.confirmations) ===
+        JSON.stringify(raceBaseline.confirmations),
+    { raceBaseline, afterFastInvalid },
+    "existing draft, packshot and confirmations unchanged",
+  );
+  check(
+    report,
+    "race-invalid:latest-error-stays-visible",
+    afterFastInvalid.preparedStatus === "error" &&
+      /Product name is required/i.test(afterFastInvalid.preparedError ?? "") &&
+      afterSlowValidFinishedInvalid.preparedStatus === "error" &&
+      afterSlowValidFinishedInvalid.preparedError ===
+        afterFastInvalid.preparedError &&
+      JSON.stringify(draftOnly(afterSlowValidFinishedInvalid)) ===
+        JSON.stringify(draftOnly(raceBaseline)) &&
+      JSON.stringify(afterSlowValidFinishedInvalid.packshot) ===
+        JSON.stringify(raceBaseline.packshot) &&
+      JSON.stringify(afterSlowValidFinishedInvalid.confirmations) ===
+        JSON.stringify(raceBaseline.confirmations),
+    { afterFastInvalid, afterSlowValidFinishedInvalid },
+    "latest error remains and the slow valid read changes nothing",
+  );
+  check(
+    report,
+    "race-invalid:no-console-errors",
+    slowInvalidErrors.length === 0,
+    slowInvalidErrors,
+    "no console errors",
+  );
+  await slowInvalidPage.close();
+
   await browser.close();
   const failed = report.checks.filter((item) => !item.passed);
   report.status = failed.length === 0 ? "passed" : "failed";
