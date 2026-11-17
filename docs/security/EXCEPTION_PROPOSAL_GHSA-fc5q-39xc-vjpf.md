@@ -314,3 +314,48 @@ Local investigation (not committed):
 Diagnostic CI evidence is uploaded by the workflow as
 `sri-linux-diagnostics` and includes the audit logs, build/SRI/CSP logs, gate
 results, dynamic-chunk results, portable export reports, and the summary JSON.
+
+## Appendix C - Diagnostic evidence (2026-11-17)
+
+- Workflow run:
+  https://github.com/joserubiobejarano/Ornigami/actions/runs/44159542956
+- App source SHA under test:
+  `6906f5cb36a28400dc39229f737578dcfe2f1f4a`
+- Workflow ref used for the run:
+  `71e2d4352e482153568db45e0470930ff82f3959`
+- `linux-diagnostics` job: **success**.
+- `release-approval` job: **failure**, by design, because the dependency audit
+  failed.
+- Full audit: **14 high, 0 critical**.
+- Production audit: **5 high, 0 critical**.
+- `npm run security:audit`: **exit 1** (`Full audit contains 14
+  vulnerabilities`).
+- Engineering checks: **passed**.
+
+| Check | Result |
+| --- | --- |
+| Lint / typegen / TypeScript | passed |
+| Test suite | 1069 tests, 1055 pass, 0 fail, 14 skipped |
+| Production build | 24/24 pages, SRI finalized, 2 CSP hashes |
+| SRI production check | passed; 31 same-origin scripts across 2 pages; nonce rotation distinct |
+| Production smoke | passed |
+| CSP runtime smoke | passed; 8 routes plus 404 nonce check |
+| Security tests | 7/7 |
+| Home/login/Campaign Lab gates | `/` 200, `/login` 200, Campaign Lab routes 404, API 404 |
+| Dynamic-chunk fixture | 9/9 checks passed |
+| Prepared brief | 15/15 |
+| Packshot hardening | 21/21 |
+| Local approval | 30/30 |
+| Export failure matrix | 8/8 |
+| Provisional export | 70/70 |
+| Rollback rehearsal | exit 1, expected SRI-gate failure (diagnostic only) |
+
+The diagnostic job is green; the separate release-approval job is red. That is
+the intended separation: engineering checks can pass while release approval
+remains denied until the owner approves this exception.
+
+Earlier diagnostic attempts exposed two test-harness issues that are not
+application regressions: GNU tar on Linux cannot extract the app's valid ZIP,
+and the prepared-brief status wait was timing-sensitive on a cold runner. The
+diagnostic workflow installs `libarchive-tools`/`bsdtar` for the ZIP check and
+runs the prepared-brief check after the page is warm.
