@@ -16,6 +16,7 @@ import {
   sameExportGuard,
 } from "../src/lib/campaign-lab/export.ts";
 import { findFontLicense } from "../src/lib/campaign-lab/font-licenses.ts";
+import { buildPilotVerificationProvenance } from "../src/lib/campaign-lab/verification-provenance.ts";
 
 const approvedState = {
   revision: "c17b6383cc650d5f",
@@ -238,6 +239,128 @@ test("HTML and receipt agreement checks revision, offer, destination and packsho
       html.replace("Free shipping through 30 November 2026", "A different offer"),
       receipt,
     ),
+  );
+});
+
+test("HTML agreement enforces preview status, notice, and provenance values", async () => {
+  const manifest = {
+    offer: "25% off, was $24.00, now $18.00",
+    offerPrice: "$18.00",
+    destinationUrl: "https://example.com/synthetic-field-lantern",
+  };
+  const rendered = {
+    ...manifest,
+    offer: "30% off, was $25.00, now $18.00",
+  };
+  const provenance = buildPilotVerificationProvenance({
+    pilot: {
+      id: "review-price-exercise",
+      label: "Synthetic price review",
+      status: "confirmed",
+    },
+    manifest,
+    rendered,
+    asset: {
+      id: "review-hero",
+      brandId: "browser-offer-brand",
+      src: "/campaign-lab-pilots/review-price-exercise/review-hero.webp",
+      width: 1200,
+      height: 1500,
+      alt: "Synthetic packshot",
+      role: "product-hero",
+      reviewed: true,
+      reviewedBy: "Local QA",
+      reviewedOn: "2026-11-17",
+      source: "Synthetic fixture",
+      rights: "Original synthetic fixture for local review.",
+      contentHash: "b".repeat(64),
+    },
+  });
+  const preview = {
+    status: "preview" as const,
+    notice: "Preview · offer provisional",
+    revision: "d17b6383cc650d5f",
+    productName: "Aster Field field lantern",
+    brandName: "Aster Field",
+    offer: rendered.offer,
+    offerPrice: rendered.offerPrice,
+    destinationUrl: rendered.destinationUrl,
+    actionLabel: "See the lantern",
+    template: {
+      id: "single-product-offer",
+      version: "1.0.0",
+      layout: "offer-led-one-photo",
+      sections: ["hero", "hero-facts", "close"],
+    },
+    asset: {
+      id: "review-hero",
+      contentHash: "b".repeat(64),
+      alt: "Synthetic packshot",
+      width: 1200,
+      height: 1500,
+      src: "/review-hero.webp",
+    },
+    verification: null,
+    provenance,
+  };
+  const receipt = await buildExportReceipt({
+    preview,
+    approval: {
+      revision: preview.revision,
+      approvedAt: "2026-11-17T14:00:00.000Z",
+    },
+    exportedAt: "2026-11-17T14:01:00.000Z",
+    packshotFile: "packshot-bbbbbbbbbbbbbbbb.webp",
+    packshotSha256: "b".repeat(64),
+    files: [],
+  });
+  const html = buildStandaloneDocument({
+    title: "Aster Field field lantern — Aster Field",
+    bodyHtml: '<article class="page"><p>30% off, was $25.00, now $18.00</p></article>',
+    revision: receipt.approval.revision,
+    previewStatus: receipt.preview.status,
+    previewNotice: receipt.preview.notice ?? undefined,
+    packshotSha256: receipt.asset.exportedSha256,
+    offer: receipt.preview.offer,
+    offerPrice: receipt.preview.offerPrice,
+    destinationUrl: receipt.preview.destinationUrl,
+    actionLabel: receipt.preview.actionLabel,
+    packshotFile: receipt.asset.file,
+  });
+
+  assert.doesNotThrow(() => assertHtmlReceiptAgreement(html, receipt));
+  assert.throws(
+    () =>
+      assertHtmlReceiptAgreement(
+        html.replace(
+          'name="campaign-lab-preview-status" content="preview"',
+          'name="campaign-lab-preview-status" content="confirmed"',
+        ),
+        receipt,
+      ),
+    /agree on the preview status/i,
+  );
+  assert.throws(
+    () =>
+      assertHtmlReceiptAgreement(
+        html.replace(
+          'content="Preview · offer provisional"',
+          'content="Preview · offer, destination provisional"',
+        ),
+        receipt,
+      ),
+    /agree on the preview notice/i,
+  );
+  assert.throws(
+    () =>
+      assertHtmlReceiptAgreement(
+        html.replace(
+          'name="campaign-lab-offer" content="30% off, was $25.00, now $18.00"',
+          'name="campaign-lab-offer" content="25% off, was $24.00, now $18.00"',
+        ),
+        receipt,
+      ),
+    /agree on the offer/i,
   );
 });
 

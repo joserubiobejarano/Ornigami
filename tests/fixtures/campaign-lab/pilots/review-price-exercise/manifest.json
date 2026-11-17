@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "pilot": {
+    "id": "review-price-exercise",
+    "label": "Synthetic two-currency price review",
+    "status": "confirmed",
+    "note": "Synthetic product and internally consistent reference prices for local provenance regression; not brand material."
+  },
+  "brand": {
+    "id": "review-price-exercise",
+    "name": "Aster Field",
+    "wordmark": "Aster Field",
+    "descriptor": "Synthetic local study",
+    "tokens": {
+      "page": "#f2ebde",
+      "surface": "#e6dbc8",
+      "ink": "#1d2a3c",
+      "muted": "#5c6066",
+      "accent": "#234a6b",
+      "accentInk": "#f9f3e8",
+      "line": "#cbbda8",
+      "displayFont": "Georgia, \"Iowan Old Style\", \"Palatino Linotype\", \"Times New Roman\", serif",
+      "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+      "displayWeight": 400,
+      "displayTracking": "-0.03em",
+      "labelCase": "uppercase",
+      "labelTracking": "0.2em",
+      "imageRadius": "999px 999px 12px 12px",
+      "buttonRadius": "999px",
+      "offerStyle": "editorial",
+      "offerPriceEmphasis": true,
+      "heroImage": "arch",
+      "heroOrder": "headline-first",
+      "prefersEditorial": false,
+      "detailBackground": "#1d2a3c",
+      "detailInk": "#f2ebde",
+      "imageBlend": "normal",
+      "showWordmarkMark": true
+    },
+    "headlineMode": "angle",
+    "detailTitle": "The synthetic product details."
+  },
+  "sourceCampaign": {
+    "channel": "Synthetic test",
+    "promise": "A two-currency reference price with internally consistent arithmetic",
+    "document": "Synthetic provenance fixture",
+    "reviewedBy": "Local QA",
+    "reviewedOn": "2026-11-17"
+  },
+  "fixture": {
+    "id": "review-price-exercise",
+    "label": "Synthetic two-currency price review",
+    "description": "Synthetic product for the original, edited-offer, edited-destination, and restored provenance exercise.",
+    "brief": {
+      "productName": "Aster Field field lantern",
+      "productNoun": "lantern",
+      "actionLabel": "See the lantern",
+      "offer": "20% off, was $22.50, now $18.00",
+      "offerPrice": "$18.00",
+      "destinationUrl": "https://example.com/synthetic-field-lantern",
+      "productFacts": [
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Powder-coated steel",
+          "source": {
+            "document": "Synthetic product sheet",
+            "quote": "Body: powder-coated steel.",
+            "reviewedBy": "Local QA",
+            "reviewedOn": "2026-11-17"
+          }
+        },
+        {
+          "id": "light",
+          "label": "Light",
+          "value": "Warm-white LED",
+          "source": {
+            "document": "Synthetic product sheet",
+            "quote": "Light: warm-white LED.",
+            "reviewedBy": "Local QA",
+            "reviewedOn": "2026-11-17"
+          }
+        }
+      ],
+      "requiredFactGroups": [
+        {
+          "id": "synthetic-facts",
+          "label": "the synthetic facts",
+          "factIds": ["body", "light"]
+        }
+      ],
+      "copy": {
+        "lede": "A synthetic lantern from Aster Field.",
+        "hideLede": true
+      }
+    }
+  },
+  "assets": [
+    {
+      "id": "review-hero",
+      "brandId": "review-price-exercise",
+      "src": "/campaign-lab-pilots/review-price-exercise/review-hero.webp",
+      "width": 1200,
+      "height": 1500,
+      "alt": "Synthetic Aster Field field lantern in a cream studio setting.",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Local QA",
+      "reviewedOn": "2026-11-17",
+      "source": "Synthetic review asset shared with the local Campaign Lab fixtures",
+      "rights": "Original synthetic fixture; fictional brand and product. Local review only.",
+      "contentHash": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7"
+    }
+  ]
+}

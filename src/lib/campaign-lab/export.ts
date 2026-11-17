@@ -1044,11 +1044,21 @@ export function assertHtmlReceiptAgreement(
   html: string,
   receipt: CampaignExportReceipt,
 ): void {
-  const checks: Array<[string, string | null, string]> = [
+  const checks: Array<[string, string | null, string | null]> = [
     [
       "revision",
       metaContent(html, "campaign-lab-revision"),
       receipt.approval.revision,
+    ],
+    [
+      "preview status",
+      metaContent(html, "campaign-lab-preview-status"),
+      receipt.preview.status,
+    ],
+    [
+      "preview notice",
+      metaContent(html, "campaign-lab-preview-notice"),
+      receipt.preview.notice,
     ],
     [
       "offer",
@@ -1078,6 +1088,29 @@ export function assertHtmlReceiptAgreement(
       metaContent(html, "campaign-lab-offer-price"),
       receipt.preview.offerPrice,
     ]);
+  }
+
+  if (receipt.provenance) {
+    checks.push(
+      ["provenance offer", receipt.provenance.offer.value, receipt.preview.offer],
+      [
+        "provenance destination",
+        receipt.provenance.destination.value,
+        receipt.preview.destinationUrl,
+      ],
+      [
+        "provenance status",
+        receipt.provenance.status,
+        receipt.preview.status === "confirmed" ? "confirmed" : "provisional",
+      ],
+    );
+    if (receipt.preview.offerPrice !== undefined) {
+      checks.push([
+        "provenance offer price",
+        receipt.provenance.offerPrice.value,
+        receipt.preview.offerPrice,
+      ]);
+    }
   }
 
   for (const [label, htmlValue, receiptValue] of checks) {

@@ -70,7 +70,11 @@ import type {
 } from "@/lib/campaign-lab/types";
 import { nativeSelectClassName } from "@/lib/form-controls";
 import { cn } from "@/lib/utils";
-import { buildPilotVerificationProvenance } from "@/lib/campaign-lab/verification-provenance";
+import {
+  buildPilotVerificationProvenance,
+  pilotPreviewNotice,
+  pilotPreviewStatus,
+} from "@/lib/campaign-lab/verification-provenance";
 
 import { AdvertorialPage } from "./advertorial-page";
 import { CampaignPage } from "./campaign-page";
@@ -178,6 +182,34 @@ export function CampaignLab({
 
   const effectivePilotStatus = previewStatus ?? catalog.pilot?.status;
   const effectivePilotNote = previewNote ?? catalog.pilot?.note;
+  const pilotProvenance =
+    catalog.pilot && preview && !isAdvertorialPreviewData(preview)
+      ? buildPilotVerificationProvenance({
+          pilot: catalog.pilot,
+          manifest: {
+            offer: fixture.brief.offer,
+            offerPrice: fixture.brief.offerPrice,
+            destinationUrl: fixture.brief.destinationUrl,
+          },
+          rendered: {
+            offer: preview.brief.offer,
+            offerPrice: preview.brief.offerPrice,
+            destinationUrl: preview.brief.destinationUrl,
+          },
+          asset: preview.asset,
+        })
+      : undefined;
+  const renderedPilotStatus =
+    catalog.pilot && pilotProvenance
+      ? pilotPreviewStatus(pilotProvenance)
+      : effectivePilotStatus;
+  const renderedPilotNotice =
+    catalog.pilot && pilotProvenance
+      ? pilotPreviewNotice(pilotProvenance) ?? previewNotice
+      : previewNotice ??
+        (effectivePilotStatus === "preview"
+          ? "Preview · offer and destination unconfirmed"
+          : undefined);
   const brand = getBrand(values.brandId, catalog);
   const selectedAsset = getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
@@ -604,20 +636,8 @@ export function CampaignLab({
     }
 
     const expectedGuard = { ...approvalGuardRef.current };
-    const notice =
-      previewNotice ??
-      (effectivePilotStatus === "preview"
-        ? "Preview · offer and destination unconfirmed"
-        : undefined);
-    const provenance = catalog.pilot
-      ? buildPilotVerificationProvenance({
-          pilot: catalog.pilot,
-          offer: preview.brief.offer,
-          offerPrice: preview.brief.offerPrice,
-          destinationUrl: preview.brief.destinationUrl,
-          asset: preview.asset,
-        })
-      : undefined;
+    const notice = renderedPilotNotice;
+    const provenance = pilotProvenance;
 
     // Capture the article HTML, packshot handle, styles and approval in one
     // synchronous step. Everything after this point reads only the snapshot.
@@ -628,7 +648,7 @@ export function CampaignLab({
         approvedAt: approval.approvedAt,
       },
       preview: {
-        status: effectivePilotStatus ?? "confirmed",
+        status: renderedPilotStatus ?? "confirmed",
         notice,
         revision: preview.revision,
         productName: preview.brief.productName,
@@ -783,11 +803,11 @@ export function CampaignLab({
               {catalog.pilot ? (
                 <span
                   className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-[#b98237] bg-[#fbf3e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a541d]"
-                  data-pilot-badge={effectivePilotStatus}
+                  data-pilot-badge={renderedPilotStatus}
                 >
                   <span className="min-w-0 break-words text-left">
                     {catalog.pilot.label} ·{" "}
-                    {effectivePilotStatus === "preview" ? "preview inputs" : "confirmed inputs"}
+                    {renderedPilotStatus === "preview" ? "preview inputs" : "confirmed inputs"}
                   </span>
                 </span>
               ) : null}
@@ -1550,11 +1570,11 @@ export function CampaignLab({
           data-asset-content-hash={preview?.asset.contentHash}
           data-asset-source={preview?.asset.source}
           data-pilot={catalog.pilot?.id}
-          data-preview-status={effectivePilotStatus}
+          data-preview-status={renderedPilotStatus}
           data-preview-verification={
-            effectivePilotStatus === "preview"
+            renderedPilotStatus === "preview"
               ? "provisional"
-              : effectivePilotStatus === "confirmed"
+              : renderedPilotStatus === "confirmed"
                 ? "confirmed"
                 : undefined
           }
@@ -1682,12 +1702,7 @@ export function CampaignLab({
                     preview.asset.id,
                   )}
                   onImageStateChange={handleImageStateChange}
-                  previewLabel={
-                    previewNotice ??
-                    (effectivePilotStatus === "preview"
-                      ? "Preview · offer and destination unconfirmed"
-                      : undefined)
-                  }
+                  previewLabel={renderedPilotNotice}
                 />
               )}
             </div>
