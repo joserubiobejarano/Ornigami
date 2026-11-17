@@ -2,6 +2,82 @@
 
 Evidence is scoped to the commit, target, action and time actually observed. A local test, manual monitor dispatch, provider configuration probe or prior deployment does not prove a different target or natural workflow. This concise ledger replaces repeated task handoffs; detailed Git-tracked proofs remain in history and the verified recovery bundle. Availability of untracked local receipts is qualified below.
 
+## Integrated release audit — 17 November 2026
+
+A dedicated integration branch, `codex/ornigami-release-integration-20261117`, was created at `18b6f2f` and merged Session 1's final commit `b839cb1` (`Default offer headlines to product name unless safe`). The merge was clean and produced combined commit `f5b5c6d517aa02148967e1dec16fd05b477a439a`, tree `ad1c0ce6ea9c8f1e98943c5789eadd5aac4c8804`, with parents `18b6f2f` and `b839cb1`. Deployment, traffic changes, provider actions and production data changes remain out of scope. GitHub records no deployment for the combined commit or for the temporary receipts commit.
+
+### Source and artifact identity
+
+| Item | Value |
+| --- | --- |
+| Combined source SHA | `f5b5c6d517aa02148967e1dec16fd05b477a439a` |
+| Combined tree | `ad1c0ce6ea9c8f1e98943c5789eadd5aac4c8804` |
+| Merge parents | `18b6f2fac2c0aa098c42bf1358d017c985afbb5c`; `b839cb1c1393808fcc95cccc0dd124a82483747a` |
+| Custom Next.js source tarball | `vendor/framework/next-16.4.5-ornigami-sri.source.1.tgz`, 44,840,348 bytes |
+| Source tarball SHA-256 | `65edfe40b2c592e780a58a9256775814faf681aa5c653c67ae3fb5c4eba58a28` |
+| Prior compiled-dist tarball | `vendor/framework/next-16.4.5-ornigami-sri.1.tgz` |
+| Compiled-dist SHA-256 | `da0c86bee1d60f963cebba91b88a4253bfaa884dd05e26a3e74af8d1b7bab3f1` |
+
+The compiled-dist tarball is retained only as a rehearsal artifact. It is not a verified rollback: the combined-build rehearsal again fails the production SRI gate on the `global-error`, `error` and `page` App Router chunks with `missing-integrity`. The 16.4.2 artifact remains inside the November advisory range and is not an acceptable fallback.
+
+### Linux/Node 22 CI receipts
+
+The exact combined SHA passed the repository's normal push CI and a separate temporary Linux receipt workflow. The receipt workflow is kept on `codex/ornigami-release-integration-receipts-20261117`; it is not part of the release branch.
+
+| Workflow | Run | Source binding | Result |
+| --- | --- | --- | --- |
+| Quality checks | [43986197875](https://github.com/joserubiobejarano/Ornigami/actions/runs/43986197875), attempt 1 | Push on `f5b5c6d` | Success |
+| Security checks | [43986197913](https://github.com/joserubiobejarano/Ornigami/actions/runs/43986197913), attempt 1 | Push on `f5b5c6d` | Success |
+| SRI Linux receipts | [43986251374](https://github.com/joserubiobejarano/Ornigami/actions/runs/43986251374), attempt 1 | `workflow_dispatch` with `source_ref=f5b5c6d`; checked-out source recorded as `f5b5c6d` | Success |
+
+The SRI Linux run's `headSha` is the workflow-only commit `2979305`; the checked-out source is the `source_ref` value and is recorded in the receipt artifact's `source-sha.txt`. The receipt artifact was downloaded to Git-ignored `.local/ci-receipts/sri-linux-43986251374/` and records Ubuntu 24.04 x86_64, Node `v22.23.3` and npm `10.9.9`.
+
+Results on `f5b5c6d`:
+
+- Dependency audits: full audit **0** findings and production audit **0** findings; both exit `0`. The repository audit policy also reports zero full/production findings, and `npm audit fix --dry-run` exits `0`.
+- Quality: lint **0 errors**, 26 existing warnings; type generation passed; TypeScript `tsc --noEmit` exited `0`.
+- Tests: **1,050 total, 1,036 passed, 0 failed, 14 skipped**; security unit tests **7/7 passed**.
+- Clean production build: **24/24** static pages generated with the 16.4.5 source candidate; 2 static CSP script hashes generated.
+- SRI: **31** same-origin scripts checked across `/` and `/login`, all with valid integrity, 0 issues; CSP nonce rotation distinct.
+- CSP and smoke: production smoke passed static CSP hash parity, nonce-bound hydration/rotation, protected dashboard, Open Graph image and anonymous auth/Google/billing boundaries. A19 runtime CSP smoke passed 8 rendered routes plus a 404 nonce/CSP check, anonymous dashboard redirect and report-only Trusted Types headers.
+- Home and login: both returned `200` with a CSP nonce present.
+- Campaign Lab production gates: `/campaign-lab` and `/campaign-lab/offer` returned `404`; `POST /api/campaign-lab/generate` returned `404` with `{"ok":false,"message":"Campaign Lab is unavailable."}`.
+- SRI fixture: **9/9** checks passed, including late-chunk integrity, tampered bootstrap and asynchronous chunk rejection, missing/malformed manifest fail-closed behavior, and restart retention. Chromium `157.0.8103.50`.
+- Rollback rehearsal: the compiled-dist artifact failed the same SRI gate on three App Router chunks; `rollbackVerified=false`.
+
+### Local browser intake on the combined build
+
+The development-only intake was exercised from the combined worktree's dev server, not the Linux production build. Environment: Windows x64, Node `v24.11.1`, Chromium `158.0.8127.18`, viewport 1440 × 1000. This is a local workflow check; it does not establish a deployed intake, Linux browser acceptance or publication approval.
+
+The intake used the synthetic Harbor Field bottle packshot (`7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2`), a direct `https://harborfield.example/...` destination, owned synthetic rights, and two approved facts (Material: Stainless steel; Capacity: 750 ml).
+
+| Step | Observed result |
+| --- | --- |
+| Qualified offer `20% off, members only` | Headline `Harbor Field travel bottle`; exact offer next to CTA; revision `0959bbe7735734f2`; status `confirmed`; images ready |
+| Edit to `20% off orders over $50` without regenerating | Last rendered revision and exact offer stayed visible; `dirty=true` |
+| Generate the revision | Revision `23a228018c9a02f9`; headline stays the product name; exact `20% off orders over $50` next to CTA; status `preview` because the edited offer no longer matches the confirmed intake terms |
+| Console errors | **0** |
+
+Screenshots and the machine-readable result are in Git-ignored `.local/offer-intake-integration-20261117/` (`intake-qualified-offer.png`, `preview-qualified-offer.png`, `preview-pending-revision.png`, `preview-revised-offer.png`, `result.json`, SHA-256 `40d5e6be55eee6d91464b91ce5a6a3e34efc6ab613696444da04d7cf642388bc`). The production gates above confirm this development surface is not reachable in production.
+
+### First-canary stop when there is no accepted deployment to return to
+
+No accepted deployment of this combined candidate is established, and the only compiled-dist 16.4.5 artifact fails the same SRI gate. The historical Vercel production record was not re-checked or accepted as a rollback target in this audit. If a first canary starts and any gate fails, use this fail-closed procedure; it is manual and must be rehearsed before any separately authorized rollout:
+
+1. **Stop promotion and new intake.** Do not approve, generate or publish further campaign pages; keep schedulers, paid integrations and destructive jobs disabled. Do not change DNS, data or provider configuration to compensate.
+2. **Take the candidate out of traffic.** Remove or disable only the canary route, or set its weight to zero. If the edge has an owner-approved static maintenance response, serve that; otherwise leave the candidate unreachable. Do not send traffic to either unverified 16.4.5 artifact or the vulnerable 16.4.2 artifact.
+3. **Return traffic only to an accepted target.** If a known, owner-accepted serving deployment exists, leave it unchanged and return traffic to it. If no accepted deployment exists, keep the candidate stopped and private; **no public serving candidate is the required end state**, not a substitute application build.
+4. **Preserve the failed receipt.** Keep the exact source SHA, tarball hash, failed check logs, browser/console logs, timestamps, edge state and any candidate image/artifact digest. Do not retry, delete the failed artifact or roll back the database to create a cleaner record.
+5. **Recover only after review.** Rebuild from the last accepted commit/artifact, or from a newly reviewed fixed candidate, and re-run the full quality, audit, build, SRI/CSP, smoke and Campaign Lab gates. If no accepted commit/artifact exists, remain stopped until one is accepted.
+
+### Custom Next.js patch ownership
+
+**Unassigned.** No named maintainer currently owns rebases of `next-16.4.5-sri.patch` or retesting/publishing the app-owned artifact. `scripts/framework-prototype/build-package.mjs` still records `maintenanceOwners:'unassigned'`, and this integration did not assign a name. A named owner must accept those duties before the next Next.js maintenance rebase.
+
+### Release recommendation
+
+**GO for a first controlled canary from `f5b5c6d`, with deployment separately authorized and out of scope here.** The combined source passes quality, both dependency audits, the clean Linux/Node 22 production build, SRI and CSP checks, home/login smokes, Campaign Lab production gates, the SRI fixture and the local qualified-offer/revision intake. **Broad rollout remains NO-GO** until a named Next.js patch owner accepts maintenance and a tested rollback path or accepted serving target exists. Because no verified rollback artifact passes the same SRI gates, use the fail-closed stop procedure above rather than artifact rollback.
+
 ## Next.js 16.4.5 release audit — 17 November 2026
 
 The release branch `codex/ornigami-next-sri-release-20261117` starts at `6f188c2` and carries the durable fixture-test correction from `697e322`. The temporary Linux receipt workflow is kept on the separate evidence branch `codex/ornigami-next-sri-audit-receipts-20261117`; it is not part of the release branch. Deployment remains out of scope.
