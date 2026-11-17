@@ -77,9 +77,10 @@ const VERIFICATION_LABELS = {
   },
   destination: {
     missing: "Destination missing",
-    provisional: "Search/placeholder · provisional",
+    search: "Amazon/search placeholder · provisional",
+    unconfirmed: "Direct URL · unconfirmed",
     invalid: "Destination invalid",
-    direct: "Direct destination",
+    direct: "Direct URL · confirmed",
   },
   rights: {
     missing: "Media rights missing",
@@ -92,7 +93,11 @@ function verificationTone(status: string): string {
   if (status === "missing" || status === "invalid") {
     return "border-[#c65c45] bg-[#fff1ec] text-[#6d2b20]";
   }
-  if (status === "provisional") {
+  if (
+    status === "provisional" ||
+    status === "search" ||
+    status === "unconfirmed"
+  ) {
     return "border-[#b98237] bg-[#fbf3e4] text-[#6b4918]";
   }
   return "border-[#bcd7c2] bg-[#eef5ee] text-[#285a3d]";
@@ -133,6 +138,8 @@ function VerificationCards({
         <div
           key={label}
           className={`rounded-lg border px-3 py-2 text-xs font-semibold ${verificationTone(status)}`}
+          data-verification-card={label.toLowerCase()}
+          data-verification-label={text}
         >
           <p className="text-[0.62rem] uppercase tracking-[0.12em] opacity-80">{label}</p>
           <p className="mt-1">{text}</p>
@@ -681,17 +688,24 @@ export function OfferIntake() {
                 spellCheck={false}
                 required
                 aria-invalid={Boolean(fieldError(errors, "destinationUrl"))}
-                aria-describedby={
+                aria-describedby={[
                   fieldError(errors, "destinationUrl")
                     ? `${destinationId}-error`
-                    : undefined
-                }
+                    : null,
+                  `${destinationId}-hint`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               />
               {fieldError(errors, "destinationUrl") ? (
                 <p id={`${destinationId}-error`} className="text-xs font-medium text-[#a2382a]">
                   {fieldError(errors, "destinationUrl")}
                 </p>
               ) : null}
+              <p id={`${destinationId}-hint`} className="text-xs text-[#6d6a5f]">
+                A direct URL stays unconfirmed until you check the exact destination.
+                Amazon search and placeholder URLs stay provisional after confirmation.
+              </p>
             </div>
           </fieldset>
 

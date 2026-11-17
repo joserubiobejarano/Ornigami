@@ -19,7 +19,7 @@ The runner drives the published accessible interface only:
 - `/campaign-lab?fixture=sparse`
 - `/campaign-lab?fixture=long-copy`
 - Fields: **Product name**, **Offer**, **Destination URL**, **Product image**
-- Buttons: **Generate preview**, **Approve preview**
+- Buttons: **Generate preview**, **Approve preview locally**
 - A region named **Campaign preview**
 
 A mismatch is reported as a check failure or an unassessed check with the

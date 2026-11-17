@@ -205,7 +205,7 @@ try {
   }
 
   if (cli["offer-opening"] && cli["advertorial-opening"]) {
-    await page.getByRole("button", { name: "Approve preview", exact: true }).click();
+    await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(150);
     const approved = await readPage(page);
     add("checked-pilot-approval", approved.approved === "true", "The initial preview can be approved.", {
