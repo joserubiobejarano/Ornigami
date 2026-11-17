@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   MOMISA_ALTERNATIVE_TOKENS,
+  MOMISA_ORIGINAL_ALTERNATIVE_TOKENS,
   MOMISA_REFERENCE_TOKENS,
   buildMomisaDirectionPreviews,
   type MomisaDirectionInput,
@@ -54,10 +55,11 @@ const TEST_BRIEF: MomisaDirectionInput = {
   },
 };
 
-test("both directions preserve the supplied commercial identity", () => {
-  const { reference, alternative } = buildMomisaDirectionPreviews(TEST_BRIEF);
+test("all three previews preserve the supplied commercial identity", () => {
+  const { reference, alternative, alternativeOriginal } =
+    buildMomisaDirectionPreviews(TEST_BRIEF);
 
-  for (const preview of [reference, alternative]) {
+  for (const preview of [reference, alternative, alternativeOriginal]) {
     assert.equal(preview.brief.productName, TEST_BRIEF.productName);
     assert.equal(preview.brief.offer, TEST_BRIEF.offer);
     assert.equal(preview.brief.destinationUrl, TEST_BRIEF.destinationUrl);
@@ -93,8 +95,9 @@ test("the reference tokens reproduce the approved local export", () => {
   assert.equal(MOMISA_REFERENCE_TOKENS.offerStyle, undefined);
 });
 
-test("the alternative uses the Taste-dealt brand character and an editorial offer", () => {
+test("the revised alternative keeps the brand character and changes the treatment", () => {
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.page, "#f6e3cf");
+  assert.equal(MOMISA_ALTERNATIVE_TOKENS.surface, "#fbf4ea");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.ink, "#24362a");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.accent, "#2f5d4a");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.displayWeight, 400);
@@ -102,9 +105,19 @@ test("the alternative uses the Taste-dealt brand character and an editorial offe
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.labelCase, "none");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.heroOrder, "headline-first");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.imageRadius, "0px");
+  assert.equal(MOMISA_ALTERNATIVE_TOKENS.imageInset, "8px");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.buttonRadius, "2px");
-  assert.equal(MOMISA_ALTERNATIVE_TOKENS.imageBlend, "multiply");
+  assert.equal(MOMISA_ALTERNATIVE_TOKENS.imageBlend, "normal");
   assert.equal(MOMISA_ALTERNATIVE_TOKENS.offerStyle, "editorial");
+  assert.equal(MOMISA_ALTERNATIVE_TOKENS.offerPriceEmphasis, true);
+  assert.equal(MOMISA_ALTERNATIVE_TOKENS.mobileHeroOrder, "product-second");
+});
+
+test("the original alternative remains available for the before comparison", () => {
+  assert.equal(MOMISA_ORIGINAL_ALTERNATIVE_TOKENS.imageBlend, "multiply");
+  assert.equal(MOMISA_ORIGINAL_ALTERNATIVE_TOKENS.imageInset, undefined);
+  assert.equal(MOMISA_ORIGINAL_ALTERNATIVE_TOKENS.offerPriceEmphasis, undefined);
+  assert.equal(MOMISA_ORIGINAL_ALTERNATIVE_TOKENS.mobileHeroOrder, undefined);
 });
 
 test("the direction token change participates in the revision", () => {
@@ -127,4 +140,21 @@ test("the direction token change participates in the revision", () => {
 
   assert.equal(tintRevision, reference.revision);
   assert.notEqual(editorialRevision, tintRevision);
+
+  for (const change of [
+    { mobileHeroOrder: "product-second" as const },
+    { offerPriceEmphasis: true },
+    { imageInset: "8px" },
+  ]) {
+    const revision = calculateDraftRevision(
+      reference.brief,
+      reference.draft,
+      reference.asset,
+      {
+        ...reference.theme,
+        tokens: { ...reference.theme.tokens, ...change },
+      },
+    );
+    assert.notEqual(revision, tintRevision);
+  }
 });

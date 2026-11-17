@@ -118,6 +118,28 @@
   gap: 15px;
 }
 
+.headlineBlock,
+.supportBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+  width: 100%;
+  min-width: 0;
+}
+
+.headlineBlock {
+  gap: 16px;
+}
+
+.productSecond .copy {
+  gap: 18px;
+}
+
+.productSecond .imageFrame {
+  max-height: none;
+}
+
 .editorialHero {
   display: flex;
   flex-direction: column;
@@ -209,6 +231,17 @@
   line-height: 1.16;
 }
 
+.offerPrice {
+  display: inline-block;
+  margin-inline: 0.06em 0.01em;
+  color: var(--cp-accent);
+  font-size: 1.45em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
 .action {
   display: inline-flex;
   align-items: center;
@@ -239,6 +272,7 @@
   width: 100%;
   max-height: 330px;
   margin: 0;
+  padding: var(--cp-image-inset, 0);
   overflow: hidden;
   background: var(--cp-surface);
   border-radius: var(--cp-image-radius);
@@ -439,12 +473,6 @@
     padding: 48px 44px 56px;
   }
 
-  /* When the image moves to the first column, give it the larger share so the
-     product remains the visual anchor rather than shrinking beside the copy. */
-  .headlineFirst .offerHero {
-    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-  }
-
   .productFirst .offerHero .copy {
     grid-column: 1;
     grid-row: 1;
@@ -465,6 +493,42 @@
     grid-column: 1;
     grid-row: 1;
     order: 0;
+  }
+
+  /*
+   * Scoped to the product-second experiment. The copy wrapper becomes the
+   * two-column grid, so existing headline-first offer layouts keep the base
+   * .offerHero geometry.
+   */
+  .productSecond .offerHero {
+    display: block;
+  }
+
+  .productSecond .offerHero .copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 52px;
+    row-gap: 24px;
+    align-items: start;
+  }
+
+  .productSecond .headlineBlock {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .productSecond .offerHero .imageFrame {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    align-self: start;
+    order: 0;
+  }
+
+  .productSecond .supportBlock {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
   }
 
   .offerHero .copy .offer,

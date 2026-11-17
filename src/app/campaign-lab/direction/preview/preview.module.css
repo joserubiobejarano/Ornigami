@@ -1,0 +1,34 @@
+.page {
+  min-height: 100vh;
+  background: #f5f1e8;
+}
+
+.shell {
+  width: 100%;
+  max-width: 992px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.frame {
+  padding: 12px;
+  border: 1px solid #d8cebd;
+  border-radius: 16px;
+  background: #fffdf8;
+  box-sizing: border-box;
+}
+
+.canvas {
+  overflow: hidden;
+  border: 1px solid #cec3b1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+@media (min-width: 640px) {
+  .frame {
+    padding: 16px;
+    border-radius: 20px;
+  }
+}

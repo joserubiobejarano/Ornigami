@@ -3,6 +3,10 @@
 Status: local, development-only. This is not brand approval and not publication
 approval.
 
+> This is the original a35c178 direction. See
+> [MOMISA_DIRECTION_REVISION_20261117.md](./MOMISA_DIRECTION_REVISION_20261117.md)
+> for the product-second revision. The original is retained for comparison.
+
 - Source: commit `6906f5c` and the approved local Momisa export. The exact
   export revision and commercial values are recorded in the ignored local
   brief.

@@ -714,6 +714,12 @@ export function calculateDraftRevision(
       ...(theme.tokens.offerStyle && theme.tokens.offerStyle !== "tint"
         ? { offerStyle: theme.tokens.offerStyle }
         : {}),
+      ...(theme.tokens.offerPriceEmphasis ? { offerPriceEmphasis: true } : {}),
+      ...(theme.tokens.imageInset ? { imageInset: theme.tokens.imageInset } : {}),
+      ...(theme.tokens.mobileHeroOrder &&
+      theme.tokens.mobileHeroOrder !== "support-first"
+        ? { mobileHeroOrder: theme.tokens.mobileHeroOrder }
+        : {}),
     },
     campaign: {
       fixtureId: brief.fixtureId,

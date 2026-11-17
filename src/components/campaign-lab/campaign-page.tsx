@@ -50,10 +50,30 @@ function ProductLabel({ productName }: { productName: string }) {
   return <p className={styles.productLabel}>{productName}</p>;
 }
 
-function Offer({ offer }: { offer: string }) {
+function Offer({
+  offer,
+  emphasizePrice = false,
+}: {
+  offer: string;
+  emphasizePrice?: boolean;
+}) {
+  const price = emphasizePrice
+    ? offer.match(/[$£€]\s?\d[\d,]*(?:\.\d{2})?/)
+    : null;
+  const content =
+    price && price.index !== undefined ? (
+      <>
+        {offer.slice(0, price.index)}
+        <span className={styles.offerPrice}>{price[0]}</span>
+        {offer.slice(price.index + price[0].length)}
+      </>
+    ) : (
+      offer
+    );
+
   return (
     <div className={styles.offer} data-role="offer">
-      <p className={styles.offerText}>{offer}</p>
+      <p className={styles.offerText}>{content}</p>
     </div>
   );
 }
@@ -84,8 +104,10 @@ export function CampaignPage({
   const showHeroFacts = draft.sections.includes("hero-facts");
   const showDetail = draft.sections.includes("detail");
   const isProductFirst = tokens.heroOrder === "product-first";
+  const isProductSecond = tokens.mobileHeroOrder === "product-second";
   const usesBlendedImage = Boolean(tokens.imageBlend && tokens.imageBlend !== "normal");
   const usesEditorialOffer = tokens.offerStyle === "editorial";
+  const usesPriceEmphasis = Boolean(tokens.offerPriceEmphasis);
   const showProductLabel = !draft.headline
     .toLowerCase()
     .includes(brief.productName.toLowerCase());
@@ -111,6 +133,7 @@ export function CampaignPage({
     "--cp-label-case": tokens.labelCase,
     "--cp-label-tracking": tokens.labelTracking,
     "--cp-image-radius": tokens.imageRadius,
+    "--cp-image-inset": tokens.imageInset ?? "0px",
     "--cp-button-radius": tokens.buttonRadius,
     "--cp-image-aspect": asset.width > 0 && asset.height > 0 ? `${asset.width} / ${asset.height}` : "4 / 5",
     "--cp-detail-bg": tokens.detailBackground,
@@ -142,6 +165,25 @@ export function CampaignPage({
     </figure>
   );
 
+  const productLabel = showProductLabel ? (
+    <ProductLabel productName={brief.productName} />
+  ) : null;
+  const headline = (
+    <h1 id={headingId} className={styles.headline}>
+      {draft.headline}
+    </h1>
+  );
+  const lede = brief.copy.hideLede ? null : (
+    <p className={styles.lede} data-role="lede">
+      {draft.lede}
+    </p>
+  );
+  const offer = <Offer offer={brief.offer} emphasizePrice={usesPriceEmphasis} />;
+  const action = <Action href={brief.destinationUrl} label={brief.actionLabel} />;
+  const facts = showHeroFacts ? (
+    <FactList facts={draft.facts} className={styles.facts} />
+  ) : null;
+
   return (
     <article
       className={[
@@ -151,6 +193,7 @@ export function CampaignPage({
         tokens.heroImage === "arch" ? styles.arch : styles.framed,
         usesBlendedImage ? styles.blendedImage : null,
         usesEditorialOffer ? styles.offerEditorial : null,
+        isProductSecond ? styles.productSecond : null,
       ].join(" ")}
       style={style}
       aria-labelledby={headingId}
@@ -166,37 +209,47 @@ export function CampaignPage({
         {isEditorial ? (
           <section className={styles.editorialHero}>
             <div className={styles.editorialHeading}>
-              {showProductLabel ? <ProductLabel productName={brief.productName} /> : null}
-              <h1 id={headingId} className={styles.headline}>
-                {draft.headline}
-              </h1>
+              {productLabel}
+              {headline}
             </div>
             <div className={styles.editorialBody}>
               {image}
               <div className={styles.editorialSupport}>
-                {brief.copy.hideLede ? null : (
-                  <p className={styles.lede} data-role="lede">{draft.lede}</p>
-                )}
-                <Offer offer={brief.offer} />
-                <Action href={brief.destinationUrl} label={brief.actionLabel} />
+                {lede}
+                {offer}
+                {action}
               </div>
             </div>
           </section>
         ) : (
           <section className={styles.offerHero}>
-            <div className={styles.copy}>
-              {showProductLabel ? <ProductLabel productName={brief.productName} /> : null}
-              <h1 id={headingId} className={styles.headline}>
-                {draft.headline}
-              </h1>
-              {brief.copy.hideLede ? null : (
-                <p className={styles.lede} data-role="lede">{draft.lede}</p>
-              )}
-              <Offer offer={brief.offer} />
-              <Action href={brief.destinationUrl} label={brief.actionLabel} />
-              {showHeroFacts ? <FactList facts={draft.facts} className={styles.facts} /> : null}
-            </div>
-            {image}
+            {isProductSecond ? (
+              <div className={styles.copy}>
+                <div className={styles.headlineBlock}>
+                  {productLabel}
+                  {headline}
+                  {lede}
+                </div>
+                {image}
+                <div className={styles.supportBlock}>
+                  {offer}
+                  {action}
+                  {facts}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={styles.copy}>
+                  {productLabel}
+                  {headline}
+                  {lede}
+                  {offer}
+                  {action}
+                  {facts}
+                </div>
+                {image}
+              </>
+            )}
           </section>
         )}
 

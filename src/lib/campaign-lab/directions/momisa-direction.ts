@@ -56,6 +56,7 @@ export type MomisaDirectionInput = {
 export type MomisaDirectionPreviews = {
   reference: CampaignPreviewData;
   alternative: CampaignPreviewData;
+  alternativeOriginal: CampaignPreviewData;
   input: MomisaDirectionInput;
 };
 
@@ -90,12 +91,10 @@ export const MOMISA_REFERENCE_TOKENS: BrandTokens = {
 };
 
 /**
- * Apricot Atelier. Colours come from the approved packshot and the on-demand
- * Taste brand deal; the type pairing is the Taste product-page deal
- * (EB Garamond / Jost). The product field is square and unframed apart from a
- * hairline; the white packshot ground multiplies into the apricot page.
+ * The original a35c178 alternative. Kept only so the revised B can be shown
+ * beside the page the operator already reviewed.
  */
-export const MOMISA_ALTERNATIVE_TOKENS: BrandTokens = {
+export const MOMISA_ORIGINAL_ALTERNATIVE_TOKENS: BrandTokens = {
   page: "#f6e3cf",
   surface: "#f6e3cf",
   ink: "#24362a",
@@ -118,6 +117,40 @@ export const MOMISA_ALTERNATIVE_TOKENS: BrandTokens = {
   detailBackground: "#24362a",
   detailInk: "#f6e3cf",
   imageBlend: "multiply",
+  showWordmarkMark: false,
+};
+
+/**
+ * Apricot Atelier, revised. The type and palette stay; the product is rendered
+ * with normal blending on a warm mat, the price is the offer's typographic
+ * anchor, and the mobile DOM is headline -> product -> offer -> CTA -> facts.
+ */
+export const MOMISA_ALTERNATIVE_TOKENS: BrandTokens = {
+  page: "#f6e3cf",
+  surface: "#fbf4ea",
+  ink: "#24362a",
+  muted: "#675748",
+  accent: "#2f5d4a",
+  accentInk: "#f6e3cf",
+  line: "#e6d1bb",
+  displayFont: "var(--font-direction-display), Georgia, serif",
+  bodyFont: "var(--font-direction-body), system-ui, sans-serif",
+  displayWeight: 400,
+  displayTracking: "-0.012em",
+  labelCase: "none",
+  labelTracking: "0.01em",
+  imageRadius: "0px",
+  imageInset: "8px",
+  buttonRadius: "2px",
+  heroImage: "framed",
+  offerStyle: "editorial",
+  offerPriceEmphasis: true,
+  mobileHeroOrder: "product-second",
+  heroOrder: "headline-first",
+  prefersEditorial: false,
+  detailBackground: "#24362a",
+  detailInk: "#f6e3cf",
+  imageBlend: "normal",
   showWordmarkMark: false,
 };
 
@@ -270,10 +303,21 @@ export function buildMomisaDirectionPreviews(
     "momisa",
     "Alternative · Apricot Atelier",
   );
+  const alternativeOriginalBrand = brand(
+    MOMISA_ORIGINAL_ALTERNATIVE_TOKENS,
+    "momisa",
+    "Alternative · original review",
+  );
 
   return {
     reference: build(fixtureDefinition, referenceBrand, asset, input),
     alternative: build(fixtureDefinition, alternativeBrand, asset, input),
+    alternativeOriginal: build(
+      fixtureDefinition,
+      alternativeOriginalBrand,
+      asset,
+      input,
+    ),
     input,
   };
 }

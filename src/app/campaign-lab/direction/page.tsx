@@ -1,7 +1,3 @@
-import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-
 import type { Metadata } from "next";
 import { EB_Garamond, Jost } from "next/font/google";
 import { notFound } from "next/navigation";
@@ -9,8 +5,8 @@ import { notFound } from "next/navigation";
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
 import {
   buildMomisaDirectionPreviews,
-  type MomisaDirectionInput,
 } from "@/lib/campaign-lab/directions/momisa-direction";
+import { loadMomisaDirectionInput } from "@/lib/campaign-lab/directions/local-momisa-input";
 import type { CampaignPreviewData } from "@/lib/campaign-lab/template";
 
 import styles from "./direction.module.css";
@@ -41,46 +37,6 @@ const directionBody = Jost({
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
-
-const INPUT_PATH = join(
-  process.cwd(),
-  ".local",
-  "momisa-direction",
-  "approved-brief.json",
-);
-const ASSET_PATH = join(
-  process.cwd(),
-  ".local",
-  "momisa-direction",
-  "inputs",
-  "Box.jpg",
-);
-
-async function loadApprovedBrief(): Promise<MomisaDirectionInput | null> {
-  try {
-    const raw = await readFile(INPUT_PATH, "utf8");
-    const parsed = JSON.parse(raw) as MomisaDirectionInput;
-    if (parsed.schemaVersion !== 1) return null;
-    if (
-      !parsed.productName?.trim() ||
-      !parsed.offer?.trim() ||
-      !parsed.destinationUrl?.trim() ||
-      !parsed.asset?.sha256?.trim() ||
-      !Array.isArray(parsed.facts) ||
-      parsed.facts.length === 0
-    ) {
-      return null;
-    }
-
-    const bytes = await readFile(ASSET_PATH);
-    const digest = createHash("sha256").update(bytes).digest("hex");
-    if (digest !== parsed.asset.sha256) return null;
-
-    return parsed;
-  } catch {
-    return null;
-  }
-}
 
 type PreviewFrameProps = {
   label: "A" | "B";
@@ -123,7 +79,7 @@ function PreviewFrame({
 export default async function MomisaDirectionPage() {
   if (!isCampaignLabAvailable()) notFound();
 
-  const input = await loadApprovedBrief();
+  const input = await loadMomisaDirectionInput();
   if (!input) notFound();
 
   let previews: ReturnType<typeof buildMomisaDirectionPreviews>;

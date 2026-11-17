@@ -24,6 +24,7 @@
         "campaign-lab:review-pilots": "node --experimental-strip-types scripts/prepare-campaign-lab-review-pilots.mjs",
         "campaign-lab:review-acceptance": "node scripts/campaign-lab-review-acceptance.mjs",
         "campaign-lab:direction:capture": "node scripts/capture-momisa-direction.mjs",
+        "campaign-lab:direction:revision": "node scripts/capture-momisa-direction-revision.mjs",
         "campaign-lab:self-test": "node tests/support/campaign-lab-contract-self-test.mjs",
         "campaign-eval:validate": "node scripts/campaign-eval.mjs validate",
         "campaign-eval:evaluate": "node scripts/campaign-eval.mjs evaluate",

@@ -177,6 +177,16 @@ export type BrandTokens = {
    * Optional so existing brand tokens keep their approved revision.
    */
   offerStyle?: "tint" | "editorial";
+  /** Emphasise the currency amount inside the approved offer string. */
+  offerPriceEmphasis?: boolean;
+  /** Optional inset between the product field edge and the image. */
+  imageInset?: string;
+  /**
+   * The mobile hero order. "support-first" keeps the copy block before the
+   * image; "product-second" places the image between the headline and the
+   * offer/action/facts so the visual and DOM order agree.
+   */
+  mobileHeroOrder?: "support-first" | "product-second";
   heroOrder: "product-first" | "headline-first";
   prefersEditorial: boolean;
   /** The detail band's own surface, so a light editorial brand can stay light. */
