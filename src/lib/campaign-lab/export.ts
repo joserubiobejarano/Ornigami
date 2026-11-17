@@ -1,4 +1,5 @@
 import type { BrowserOfferVerification } from "./browser-offer.ts";
+import type { CampaignVerificationProvenance } from "./verification-provenance.ts";
 import {
   buildFontNotice,
   findFontLicense,
@@ -154,6 +155,7 @@ export type CampaignExportPreview = {
   productName: string;
   brandName: string;
   offer: string;
+  offerPrice?: string;
   destinationUrl: string;
   actionLabel: string;
   template: {
@@ -164,6 +166,7 @@ export type CampaignExportPreview = {
   };
   asset: CampaignExportAsset;
   verification?: BrowserOfferVerification | null;
+  provenance?: CampaignVerificationProvenance;
 };
 
 export type CampaignExportApproval = {
@@ -219,11 +222,13 @@ export type CampaignExportReceipt = {
     productName: string;
     brandName: string;
     offer: string;
+    offerPrice?: string;
     destinationUrl: string;
     actionLabel: string;
     template: CampaignExportPreview["template"];
   };
   verification: BrowserOfferVerification | null;
+  provenance?: CampaignVerificationProvenance;
   asset: {
     id: string;
     contentHash: string;
@@ -398,6 +403,7 @@ export function buildStandaloneDocument(input: {
   previewNotice?: string;
   packshotSha256: string;
   offer?: string;
+  offerPrice?: string;
   destinationUrl?: string;
   actionLabel?: string;
   packshotFile?: string;
@@ -405,6 +411,9 @@ export function buildStandaloneDocument(input: {
   const agreementMeta = [
     input.offer !== undefined
       ? `<meta name="campaign-lab-offer" content="${escapeHtml(input.offer)}">`
+      : null,
+    input.offerPrice !== undefined
+      ? `<meta name="campaign-lab-offer-price" content="${escapeHtml(input.offerPrice)}">`
       : null,
     input.destinationUrl !== undefined
       ? `<meta name="campaign-lab-destination" content="${escapeHtml(input.destinationUrl)}">`
@@ -704,6 +713,9 @@ export function captureCampaignExportSnapshot(
       verification: input.preview.verification
         ? { ...input.preview.verification }
         : null,
+      provenance: input.preview.provenance
+        ? JSON.parse(JSON.stringify(input.preview.provenance))
+        : undefined,
     },
     guard: input.guard ?? {
       revision: input.preview.revision,
@@ -1060,6 +1072,14 @@ export function assertHtmlReceiptAgreement(
     ],
   ];
 
+  if (receipt.preview.offerPrice !== undefined) {
+    checks.push([
+      "offer price",
+      metaContent(html, "campaign-lab-offer-price"),
+      receipt.preview.offerPrice,
+    ]);
+  }
+
   for (const [label, htmlValue, receiptValue] of checks) {
     if (htmlValue !== receiptValue) {
       throw new CampaignExportIntegrityError(
@@ -1166,11 +1186,17 @@ export async function buildExportReceipt(input: {
       productName: input.preview.productName,
       brandName: input.preview.brandName,
       offer: input.preview.offer,
+      ...(input.preview.offerPrice !== undefined
+        ? { offerPrice: input.preview.offerPrice }
+        : {}),
       destinationUrl: input.preview.destinationUrl,
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
     },
     verification: input.preview.verification ?? null,
+    ...(input.preview.provenance
+      ? { provenance: input.preview.provenance }
+      : {}),
     asset: {
       id: input.preview.asset.id,
       contentHash: input.preview.asset.contentHash,
@@ -1375,6 +1401,7 @@ export async function buildCampaignExportBundle(
     previewNotice: snapshot.preview.notice,
     packshotSha256,
     offer: snapshot.preview.offer,
+    offerPrice: snapshot.preview.offerPrice,
     destinationUrl: snapshot.preview.destinationUrl,
     actionLabel: snapshot.preview.actionLabel,
     packshotFile,

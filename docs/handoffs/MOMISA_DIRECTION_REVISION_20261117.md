@@ -18,8 +18,9 @@ and desktop image-left composition. This revision changes:
 - **Mobile order:** headline → product → complete offer → CTA → facts, in both
   DOM and visual order. The image now sits between the headline and the
   commercial block.
-- **Price role:** `$4.94` is a larger inline accent inside the same approved
-  offer sentence. The offer text is unchanged and is not duplicated.
+- **Price role:** the reviewed final price is a larger inline accent inside the
+  same approved offer sentence. The offer text is unchanged and is not
+  duplicated.
 - **Packshot:** normal blending on a warm photo mat (`#fbf4ea`) with an 8 px
   inset and square hairline frame. The mobile max-height crop is removed for the
   product-second frame, so the whole square packshot shows at 320, 375, and the
@@ -73,7 +74,7 @@ Checked at 320, 375, 1440, and a 200% zoom equivalent (720 CSS px at DPR 2):
   SHA-256;
 - article widths 260 / 315 / 924 / 652 px;
 - no horizontal overflow;
-- normal blending, 8 px mat, and the `$4.94` price style;
+- normal blending, 8 px mat, and the approved-price style;
 - EB Garamond display and offer type, Jost body/action type;
 - visual and DOM order headline → product → offer → action → facts at mobile
   and zoom widths;

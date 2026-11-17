@@ -71,11 +71,34 @@ Added:
 - Export receipt `fonts` entries for both families.
 - A focused test for both licenses.
 
+## Verification provenance in the receipt
+
+The pilot path now writes a `provenance` object into the export receipt:
+
+- `source: "pilot-manifest"`, the pilot ID and status;
+- the exact rendered offer, destination, and approved price values;
+- the manifest source paths for each value;
+- the asset's rights record with `reviewedBy`, `reviewedOn`, and source;
+- the packshot asset ID, content hash, and reviewed asset record;
+- an explicit `missingEvidence` list.
+
+The manifest has no named reviewer identity/date for the offer, destination, or
+approved price, so those fields stay `reviewedBy: null`, `reviewedOn: null`, and
+the receipt lists them as missing. The asset rights and packshot retain their
+existing reviewed record. `verification` remains the existing
+browser-offer-shaped field and is `null` on the pilot path; `provenance` is the
+new additive field.
+
+Compatibility: `offerPrice` and `provenance` are optional. Receipts without
+them keep their previous shape and still pass the HTML/receipt agreement check.
+The optional approved-price meta tag is checked only when the receipt contains
+it.
+
 ## Verification
 
 `node scripts/momisa-export-review.mjs --url http://localhost:3130` drove the
 real preview, approval, export, download, extraction, offline open, and review:
-**133 checks passed, 0 failed**.
+**199 checks passed, 0 failed**.
 
 Checked:
 
@@ -101,12 +124,35 @@ Measured editor/export article pixel differences: **0.61% at 320 px, 1.49% at
 bundle. The differences are rasterization/shell-rounding level; the computed
 typography, image treatment, order, offer, and destination match.
 
+### Edited offer with two currency amounts
+
+The normal editor flow was exercised again with an offer containing both a
+discount amount and a second currency amount:
+
+1. edit the Offer field;
+2. Generate preview;
+3. review the regenerated preview;
+4. Approve preview locally;
+5. Export approved page.
+
+The edited receipt records the exact edited offer, the same approved final-price
+substring, the same destination, and the same packshot. The rendered page
+emphasises only the reviewed final price; the other currency amount is not
+wrapped by the price span. The receipt and rendered emphasis agree. The edited
+export is in `bundle-edited/` with its own receipt and revision.
+
+No visual change was introduced to the approved revised B. The original review
+bundle is preserved at `.local/momisa-review-bundle-before-provenance/` for
+comparison; the only new “visual” artifact is the intentional edited-offer
+exercise.
+
 ## Remaining editor/export differences
 
-- The export receipt's `verification` field is `null`: the local pilot path does
-  not flow through the browser-offer verification cards. The approved offer,
-  destination, rights, and packshot are still checked by the receipt and the
-  review pipeline.
+- The export receipt's existing browser-offer-shaped `verification` field is
+  still `null` on the pilot path. The new additive `provenance` object carries
+  the manifest source, exact rendered values, asset-rights record, and the
+  explicit missing reviewer identities/dates for offer, destination, and price.
+  Existing receipts without `provenance` remain valid.
 - The export strips editor-only data attributes and source notes.
 - The export uses relative packshot/font paths and bundled font files; the
   editor uses local editor URLs and Next-served fonts.
@@ -117,15 +163,20 @@ typography, image treatment, order, offer, and destination match.
 
 ## Local artifacts
 
-- `.local/momisa-review-bundle/index.html` — review bundle
-- `.local/momisa-review-bundle/bundle/index.html` — offline exported page
-- `.local/momisa-review-bundle/bundle/receipt.json` — approval and file receipt
+- `.local/momisa-review-bundle/index.html` — updated review bundle
+- `.local/momisa-review-bundle/bundle/index.html` — offline approved export
+- `.local/momisa-review-bundle/bundle-edited/index.html` — offline edited-offer
+  export
+- `.local/momisa-review-bundle/bundle/receipt.json` and
+  `bundle-edited/receipt.json` — approval, provenance, font, and file receipts
 - `.local/momisa-review-bundle/bundle/fonts/NOTICE.txt` — bundled font notice
 - `.local/momisa-review-bundle/report.json` / `report.md` — checks and
   differences
-- `.local/momisa-review-bundle/captures/` — editor, export, zoom, focus, and
-  regression captures
-- `.local/momisa-review-bundle/*.zip` — downloaded export archive
+- `.local/momisa-review-bundle/captures/` — editor, export, edited-offer, zoom,
+  focus, and regression captures
+- `.local/momisa-review-bundle/*.zip` — downloaded export archives
+- `.local/momisa-review-bundle-before-provenance/` — previous review bundle kept
+  for comparison
 
 All Momisa inputs, the pilot manifest, captures, and the review bundle remain
 under Git-ignored `.local/` storage. No publication, deployment, or live Amazon

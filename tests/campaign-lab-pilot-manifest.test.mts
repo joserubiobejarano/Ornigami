@@ -322,7 +322,7 @@ test("a pilot offer price must be an exact reviewed substring of the complete of
   );
 
   const invalid = sourcePilot();
-  (invalid.fixture.brief as Record<string, unknown>).offerPrice = "$4.94";
+  (invalid.fixture.brief as Record<string, unknown>).offerPrice = "$5.00";
   const result = validatePilotSource(invalid, { pilotId: "morrow-pilot" });
   assert.equal(result.ok, false);
   assert.match(

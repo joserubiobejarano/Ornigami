@@ -358,3 +358,84 @@ test("stored ZIP writer emits a readable archive", () => {
   const firstName = new TextDecoder().decode(zip.slice(30, 30 + firstNameLength));
   assert.equal(firstName, "index.html");
 });
+
+test("optional approved price keeps existing receipt compatibility and agrees with the HTML", async () => {
+  const preview = {
+    status: "confirmed" as const,
+    revision: "c17b6383cc650d5f",
+    productName: "Example product",
+    brandName: "Example brand",
+    offer: "30% off, was $10, now $7.50",
+    offerPrice: "$7.50",
+    destinationUrl: "https://example.com/offer",
+    actionLabel: "Shop now",
+    template: {
+      id: "single-product-offer",
+      version: "1.0.0",
+      layout: "offer-led-one-photo",
+      sections: ["hero", "hero-facts", "close"],
+    },
+    asset: {
+      id: "packshot",
+      contentHash: "a".repeat(64),
+      alt: "Example packshot",
+      width: 2500,
+      height: 2500,
+      src: "/packshot.jpg",
+    },
+    verification: null,
+  };
+  const receipt = await buildExportReceipt({
+    preview,
+    approval: {
+      revision: preview.revision,
+      approvedAt: "2026-11-17T00:00:00.000Z",
+    },
+    exportedAt: "2026-11-17T00:00:01.000Z",
+    packshotFile: "packshot-aaaaaaaaaaaaaaaa.jpg",
+    packshotSha256: "a".repeat(64),
+    files: [],
+  });
+  assert.equal(receipt.preview.offerPrice, "$7.50");
+  assert.equal("provenance" in receipt, false);
+
+  const html = buildStandaloneDocument({
+    title: "Example product — Example brand",
+    bodyHtml: '<article class="page"><p>30% off, was $10, now $7.50</p></article>',
+    revision: preview.revision,
+    previewStatus: "confirmed",
+    packshotSha256: "a".repeat(64),
+    offer: preview.offer,
+    offerPrice: preview.offerPrice,
+    destinationUrl: preview.destinationUrl,
+    actionLabel: preview.actionLabel,
+    packshotFile: "packshot-aaaaaaaaaaaaaaaa.jpg",
+  });
+  assert.doesNotThrow(() => assertHtmlReceiptAgreement(html, receipt));
+
+  const legacyPreview = { ...preview, offerPrice: undefined };
+  const legacyReceipt = await buildExportReceipt({
+    preview: legacyPreview,
+    approval: {
+      revision: preview.revision,
+      approvedAt: "2026-11-17T00:00:00.000Z",
+    },
+    exportedAt: "2026-11-17T00:00:01.000Z",
+    packshotFile: "packshot-aaaaaaaaaaaaaaaa.jpg",
+    packshotSha256: "a".repeat(64),
+    files: [],
+  });
+  assert.equal("offerPrice" in legacyReceipt.preview, false);
+  const legacyHtml = buildStandaloneDocument({
+    title: "Example product — Example brand",
+    bodyHtml: '<article class="page"><p>30% off, was $10, now $7.50</p></article>',
+    revision: preview.revision,
+    previewStatus: "confirmed",
+    packshotSha256: "a".repeat(64),
+    offer: preview.offer,
+    destinationUrl: preview.destinationUrl,
+    actionLabel: preview.actionLabel,
+    packshotFile: "packshot-aaaaaaaaaaaaaaaa.jpg",
+  });
+  assert.doesNotThrow(() => assertHtmlReceiptAgreement(legacyHtml, legacyReceipt));
+});

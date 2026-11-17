@@ -70,6 +70,7 @@ import type {
 } from "@/lib/campaign-lab/types";
 import { nativeSelectClassName } from "@/lib/form-controls";
 import { cn } from "@/lib/utils";
+import { buildPilotVerificationProvenance } from "@/lib/campaign-lab/verification-provenance";
 
 import { AdvertorialPage } from "./advertorial-page";
 import { CampaignPage } from "./campaign-page";
@@ -608,6 +609,15 @@ export function CampaignLab({
       (effectivePilotStatus === "preview"
         ? "Preview · offer and destination unconfirmed"
         : undefined);
+    const provenance = catalog.pilot
+      ? buildPilotVerificationProvenance({
+          pilot: catalog.pilot,
+          offer: preview.brief.offer,
+          offerPrice: preview.brief.offerPrice,
+          destinationUrl: preview.brief.destinationUrl,
+          asset: preview.asset,
+        })
+      : undefined;
 
     // Capture the article HTML, packshot handle, styles and approval in one
     // synchronous step. Everything after this point reads only the snapshot.
@@ -624,6 +634,7 @@ export function CampaignLab({
         productName: preview.brief.productName,
         brandName: preview.theme.brand.name,
         offer: preview.brief.offer,
+        offerPrice: preview.brief.offerPrice,
         destinationUrl: preview.brief.destinationUrl,
         actionLabel: preview.brief.actionLabel,
         template: {
@@ -641,6 +652,7 @@ export function CampaignLab({
           src: preview.asset.src,
         },
         verification: exportVerification,
+        provenance,
       },
       guard: expectedGuard,
       packshotBlob: exportPackshotBlob,

@@ -228,7 +228,14 @@ function readingOrderPasses(metrics) {
   );
 }
 
-function checkWidth(checks, label, metrics, expectedWidth) {
+function checkWidth(
+  checks,
+  label,
+  metrics,
+  expectedWidth,
+  expectedOffer = approved.offer,
+  expectedPrice = approved.offerPrice,
+) {
   check(
     checks,
     `${label}:article-width`,
@@ -239,9 +246,9 @@ function checkWidth(checks, label, metrics, expectedWidth) {
   check(
     checks,
     `${label}:exact-offer`,
-    metrics.offerText === approved.offer,
+    metrics.offerText === expectedOffer,
     metrics.offerText,
-    approved.offer,
+    expectedOffer,
   );
   check(
     checks,
@@ -329,7 +336,7 @@ function checkWidth(checks, label, metrics, expectedWidth) {
   check(
     checks,
     `${label}:price-role`,
-    metrics.priceText === approved.offerPrice &&
+    metrics.priceText === expectedPrice &&
       Number.parseFloat(metrics.priceStyle.fontSize) >
         Number.parseFloat(metrics.offerTextStyle.fontSize) &&
       metrics.priceStyle.color === "rgb(47, 93, 74)" &&
@@ -342,7 +349,7 @@ function checkWidth(checks, label, metrics, expectedWidth) {
       display: metrics.priceStyle.display,
     },
     {
-      text: approved.offerPrice,
+      text: expectedPrice,
       size: "larger than offer",
       color: "rgb(47, 93, 74)",
       display: "inline-block",
@@ -456,6 +463,30 @@ function figure(label, src, full = false) {
 }
 
 function writeReviewHtml(report) {
+  const editedSection = report.edited
+    ? `
+  <section class="section">
+    <h2>Offer edit with two currency amounts</h2>
+    <p class="note">Edited offer: <code>${escapeHtml(report.edited.offer)}</code>. The reviewed <code>${escapeHtml(report.edited.offerPrice)}</code> substring is the only price emphasis; the other currency amount stays unemphasised. The export receipt and rendered page must agree.</p>
+    <div class="grid">
+      ${figure("Edited editor · 1440 px", "captures/editor-edited-1440.png")}
+      ${figure("Edited export · 375 px", "captures/export-edited-375.png")}
+      ${figure("Edited export · 1440 px", "captures/export-edited-1440.png")}
+    </div>
+    <table style="margin-top:16px">
+      <thead><tr><th>Edited offer check</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Receipt offer</td><td>${escapeHtml(report.edited.receipt?.preview?.offer ?? "")}</td></tr>
+        <tr><td>Receipt approved price</td><td>${escapeHtml(report.edited.receipt?.preview?.offerPrice ?? "")}</td></tr>
+        <tr><td>Provenance offer</td><td>${escapeHtml(report.edited.provenance?.offer?.value ?? "")}</td></tr>
+        <tr><td>Provenance approved price</td><td>${escapeHtml(report.edited.provenance?.offerPrice?.value ?? "")} · ${escapeHtml(report.edited.provenance?.offerPrice?.status ?? "")}</td></tr>
+        <tr><td>Rendered emphasis</td><td>${escapeHtml((report.edited.priceSpans ?? []).join(", "))}</td></tr>
+        <tr><td>Receipt revision</td><td><code>${escapeHtml(report.edited.revision ?? "")}</code></td></tr>
+      </tbody>
+    </table>
+  </section>`
+    : "";
+
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -547,6 +578,9 @@ function writeReviewHtml(report) {
     </table>
     <div class="links">
       <a href="bundle/index.html">Open exported page</a>
+      <a href="bundle-edited/index.html">Open edited-offer export</a>
+      <a href="../momisa-review-bundle-before-provenance/index.html">Previous review bundle</a>
+      <a href="../momisa-review-bundle-before-provenance/index.html">Previous review bundle</a>
       <a href="${escapeHtml(report.zipFile)}">Open export ZIP</a>
       <a href="report.json">report.json</a>
       <a href="report.md">report.md</a>
@@ -555,6 +589,8 @@ function writeReviewHtml(report) {
       <a href="bundle/fonts/LICENSE-Jost-OFL-1.1.txt">Jost license</a>
     </div>
   </section>
+
+  ${editedSection}
 
   <section class="section">
     <h2>Remaining differences</h2>
@@ -590,6 +626,18 @@ function writeReportMarkdown(report) {
     "",
     ...report.differences.map((difference) => `- ${difference}`),
     "",
+    ...(report.edited
+      ? [
+          "## Edited offer with two currency amounts",
+          "",
+          `- Edited offer: ${report.edited.offer}`,
+          `- Receipt offer: ${report.edited.receipt?.preview?.offer ?? "missing"}`,
+          `- Receipt approved price: ${report.edited.receipt?.preview?.offerPrice ?? "missing"}`,
+          `- Rendered emphasis: ${(report.edited.priceSpans ?? []).join(", ") || "missing"}`,
+          `- Receipt revision: \`${report.edited.revision}\``,
+          "",
+        ]
+      : []),
     "## Artifacts",
     "",
     "- `bundle/index.html` — offline exported page",
@@ -723,7 +771,341 @@ async function main() {
   const noticeText = readFileSync(path.join(bundleDir, "fonts", "NOTICE.txt"), "utf8");
   check(checks, "notice:families", /EB Garamond/.test(noticeText) && /Jost/.test(noticeText), noticeText.slice(0, 80), "both families");
 
-  // 2. Editor captures at 320, 375, 1440 (article only).
+  const provenance = receipt.provenance;
+  check(checks, "provenance:present", Boolean(provenance), provenance ? true : null, true);
+  check(
+    checks,
+    "receipt:verification-null",
+    receipt.verification === null,
+    receipt.verification,
+    null,
+  );
+  if (provenance) {
+    check(
+      checks,
+      "provenance:source",
+      provenance.source === "pilot-manifest" &&
+        provenance.pilotId === "momisa-taste" &&
+        provenance.pilotStatus === "confirmed",
+      {
+        source: provenance.source,
+        pilotId: provenance.pilotId,
+        pilotStatus: provenance.pilotStatus,
+      },
+      {
+        source: "pilot-manifest",
+        pilotId: "momisa-taste",
+        pilotStatus: "confirmed",
+      },
+    );
+    check(
+      checks,
+      "provenance:offer",
+      provenance.offer.value === approved.offer &&
+        provenance.offer.status === "confirmed" &&
+        provenance.offer.source ===
+          "pilot-manifest:momisa-taste#fixture.brief.offer",
+      provenance.offer,
+      {
+        value: approved.offer,
+        status: "confirmed",
+        source: "pilot-manifest:momisa-taste#fixture.brief.offer",
+      },
+    );
+    check(
+      checks,
+      "provenance:destination",
+      provenance.destination.value === approved.destinationUrl &&
+        provenance.destination.status === "confirmed",
+      provenance.destination,
+      { value: approved.destinationUrl, status: "confirmed" },
+    );
+    check(
+      checks,
+      "provenance:offer-price",
+      provenance.offerPrice.value === approved.offerPrice &&
+        provenance.offerPrice.status === "confirmed",
+      provenance.offerPrice,
+      { value: approved.offerPrice, status: "confirmed" },
+    );
+    check(
+      checks,
+      "provenance:rights",
+      provenance.rights.value === approved.asset.rights &&
+        provenance.rights.status === "confirmed" &&
+        provenance.rights.reviewedBy === approved.review.reviewedBy &&
+        provenance.rights.reviewedOn === approved.review.reviewedOn,
+      provenance.rights,
+      {
+        value: approved.asset.rights,
+        status: "confirmed",
+        reviewedBy: approved.review.reviewedBy,
+        reviewedOn: approved.review.reviewedOn,
+      },
+    );
+    check(
+      checks,
+      "provenance:packshot",
+      provenance.packshot.assetId === "momisa-glow-box-front" &&
+        provenance.packshot.contentHash === approved.asset.sha256 &&
+        provenance.packshot.status === "confirmed" &&
+        provenance.packshot.reviewedBy === approved.review.reviewedBy &&
+        provenance.packshot.reviewedOn === approved.review.reviewedOn,
+      provenance.packshot,
+      {
+        assetId: "momisa-glow-box-front",
+        contentHash: approved.asset.sha256,
+        status: "confirmed",
+        reviewedBy: approved.review.reviewedBy,
+        reviewedOn: approved.review.reviewedOn,
+      },
+    );
+    check(
+      checks,
+      "provenance:missing-evidence",
+      ["offer reviewer identity/date", "destination reviewer identity/date", "approved price reviewer identity/date"].every(
+        (item) => provenance.missingEvidence.includes(item),
+      ),
+      provenance.missingEvidence,
+      "explicitly missing reviewer evidence",
+    );
+  }
+  check(
+    checks,
+    "receipt:offer-price",
+    receipt.preview.offerPrice === approved.offerPrice,
+    receipt.preview.offerPrice,
+    approved.offerPrice,
+  );
+  check(
+    checks,
+    "html:offer-price-meta",
+    exportedHtml.includes(
+      `name="campaign-lab-offer-price" content="${escapeHtml(approved.offerPrice)}"`,
+    ),
+    true,
+    true,
+  );
+
+  // 2. Edited offer with two currency amounts: edit, regenerate, review,
+  // approve, and export through the same normal editor flow.
+  const editedOffer = `30% off, was $10, now ${approved.offerPrice}`;
+  const editedPage = await editorContext.newPage();
+  await editedPage.setViewportSize({ width: 1440, height: 1000 });
+  await editedPage.goto(editorUrl, { waitUntil: "networkidle", timeout: 180000 });
+  await waitForArticle(editedPage, "[data-preview-canvas] article");
+  await hideDevIndicator(editedPage);
+  const initialRevision = await editedPage
+    .locator("[data-template]")
+    .getAttribute("data-revision");
+  await editedPage.locator('input[name="offer"]').fill(editedOffer);
+  await editedPage
+    .getByRole("button", { name: "Generate preview", exact: true })
+    .click();
+  await editedPage.waitForFunction(
+    (oldRevision) => {
+      const revision = document
+        .querySelector("[data-template]")
+        ?.getAttribute("data-revision");
+      return Boolean(revision && revision !== oldRevision);
+    },
+    initialRevision,
+    { timeout: 60000 },
+  );
+  await waitForArticle(editedPage, "[data-preview-canvas] article");
+  await editedPage.waitForFunction(
+    (offer) =>
+      document
+        .querySelector("[data-preview-canvas] article")
+        ?.innerText.includes(offer),
+    editedOffer,
+    { timeout: 60000 },
+  );
+  const editedRevision = await editedPage
+    .locator("[data-template]")
+    .getAttribute("data-revision");
+  const editedEditorMetrics = await readArticleMetrics(
+    editedPage,
+    "[data-preview-canvas] article",
+  );
+  checkWidth(
+    checks,
+    "editor-edited:1440",
+    editedEditorMetrics,
+    924,
+    editedOffer,
+    approved.offerPrice,
+  );
+  await editedPage.locator("[data-preview-canvas] article").screenshot({
+    path: path.join(captureDir, "editor-edited-1440.png"),
+    animations: "disabled",
+  });
+  await editedPage
+    .getByRole("button", { name: "Approve preview locally", exact: true })
+    .click();
+  await editedPage.waitForFunction(
+    () =>
+      document
+        .querySelector("[data-local-preview-approval]")
+        ?.getAttribute("data-local-preview-approval") === "true",
+    null,
+    { timeout: 15000 },
+  );
+  const [editedDownload] = await Promise.all([
+    editedPage.waitForEvent("download", { timeout: 120000 }),
+    editedPage
+      .getByRole("button", { name: "Export approved page", exact: true })
+      .click(),
+  ]);
+  const editedZip = path.join(zipDir, editedDownload.suggestedFilename());
+  await editedDownload.saveAs(editedZip);
+  const editedBundleDir = path.join(bundleRoot, "bundle-edited");
+  extractZip(editedZip, editedBundleDir);
+  const editedReceipt = JSON.parse(
+    readFileSync(path.join(editedBundleDir, "receipt.json"), "utf8"),
+  );
+  const editedHtml = readFileSync(
+    path.join(editedBundleDir, "index.html"),
+    "utf8",
+  );
+  const editedPackshotHash = sha256File(
+    path.join(editedBundleDir, editedReceipt.asset.file),
+  );
+  const editedProvenance = editedReceipt.provenance;
+  const editedPriceSpans = [
+    ...editedHtml.matchAll(
+      /<span[^>]*campaign-page_offerPrice[^>]*>([^<]*)<\/span>/g,
+    ),
+  ].map((match) => match[1]);
+  check(
+    checks,
+    "edited:receipt-revision",
+    editedReceipt.approval.revision === editedRevision,
+    {
+      receipt: editedReceipt.approval.revision,
+      rendered: editedRevision,
+    },
+    { receipt: editedRevision, rendered: editedRevision },
+  );
+  check(
+    checks,
+    "edited:receipt-offer",
+    editedReceipt.preview.offer === editedOffer,
+    editedReceipt.preview.offer,
+    editedOffer,
+  );
+  check(
+    checks,
+    "edited:receipt-offer-price",
+    editedReceipt.preview.offerPrice === approved.offerPrice,
+    editedReceipt.preview.offerPrice,
+    approved.offerPrice,
+  );
+  check(
+    checks,
+    "edited:rendered-emphasis",
+    editedReceipt.provenance?.offer.value === editedOffer &&
+      editedReceipt.provenance?.offerPrice.value === approved.offerPrice &&
+      editedReceipt.provenance?.offerPrice.status === "confirmed",
+    editedReceipt.provenance,
+    {
+      offer: editedOffer,
+      offerPrice: approved.offerPrice,
+      status: "confirmed",
+    },
+  );
+  check(
+    checks,
+    "edited:price-span",
+    editedPriceSpans.length === 1 && editedPriceSpans[0] === approved.offerPrice,
+    editedPriceSpans,
+    [approved.offerPrice],
+  );
+  check(
+    checks,
+    "edited:no-wrong-currency-emphasis",
+    !editedPriceSpans.includes("$10"),
+    editedPriceSpans,
+    "not $10",
+  );
+  check(
+    checks,
+    "edited:destination",
+    editedReceipt.preview.destinationUrl === approved.destinationUrl,
+    editedReceipt.preview.destinationUrl,
+    approved.destinationUrl,
+  );
+  check(
+    checks,
+    "edited:packshot-hash",
+    editedPackshotHash === approved.asset.sha256 &&
+      editedReceipt.asset.exportedSha256 === approved.asset.sha256,
+    {
+      file: editedPackshotHash,
+      receipt: editedReceipt.asset.exportedSha256,
+    },
+    approved.asset.sha256,
+  );
+  check(
+    checks,
+    "edited:offer-price-meta",
+    editedHtml.includes(
+      `name="campaign-lab-offer-price" content="${escapeHtml(approved.offerPrice)}"`,
+    ),
+    true,
+    true,
+  );
+
+  const editedExportContext = await browser.newContext({ offline: true });
+  const editedExportMetrics = {};
+  for (const width of [375, 1440]) {
+    const page = await editedExportContext.newPage();
+    await page.setViewportSize({
+      width,
+      height: width === 1440 ? 1000 : 900,
+    });
+    await page.goto(pathToFileURL(path.join(editedBundleDir, "index.html")).href, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
+    await waitForArticle(page, "article");
+    await page.locator("article").screenshot({
+      path: path.join(captureDir, `export-edited-${width}.png`),
+      animations: "disabled",
+    });
+    editedExportMetrics[width] = await readArticleMetrics(page, "article");
+    checkWidth(
+      checks,
+      `export-edited:${width}`,
+      editedExportMetrics[width],
+      width === 375 ? 315 : 924,
+      editedOffer,
+      approved.offerPrice,
+    );
+    await page.close();
+  }
+  await editedExportContext.close();
+  await editedPage.close();
+
+  const edited = {
+    offer: editedOffer,
+    offerPrice: approved.offerPrice,
+    revision: editedRevision,
+    zipFile: path.relative(bundleRoot, editedZip),
+    bundle: path.relative(bundleRoot, editedBundleDir),
+    receipt: editedReceipt,
+    provenance: editedProvenance,
+    editorMetrics: editedEditorMetrics,
+    metrics: editedExportMetrics,
+    priceSpans: editedPriceSpans,
+    captures: {
+      editor: path.join(captureDir, "editor-edited-1440.png"),
+      export375: path.join(captureDir, "export-edited-375.png"),
+      export1440: path.join(captureDir, "export-edited-1440.png"),
+    },
+  };
+
+  // 3. Editor captures at 320, 375, 1440 (article only).
   const editorMetrics = {};
   const editorCaptures = {};
   for (const width of [320, 375, 1440]) {
@@ -1027,6 +1409,17 @@ async function main() {
     ["Zoom", "200% page scale + 200% browser-zoom layout"],
     ["Keyboard", "First Tab reaches the CTA; 3 px focus ring"],
     ["Headline-first regression", "Image 361 / copy 423 after; 423 / 361 before"],
+    [
+      "Verification provenance",
+      provenance
+        ? `${provenance.source}:${provenance.pilotId} (${provenance.pilotStatus})`
+        : "missing",
+    ],
+    ["Approved price", approved.offerPrice ?? "missing"],
+    [
+      "Edited offer exercise",
+      `${edited.offer} → ${edited.priceSpans.join(", ")}`,
+    ],
     ["Checks", `${passed} passed, ${failed.length} failed`],
   ];
   // Replace the placeholder diff row with the measured ratios.
@@ -1044,6 +1437,7 @@ async function main() {
     "The export strips editor-only data attributes and source notes; the editor preview keeps them in the DOM.",
     "The export uses relative packshot and font paths; the editor uses local editor URLs and Next-served fonts.",
     "The exported page is opened offline in the approved export shell; the editor preview sits inside the editor canvas. The article-only pixel comparison is the like-for-like view.",
+    "No visual change was introduced to the approved revised B. The edited-offer exercise intentionally renders the edited offer text with only the reviewed final price emphasised; the original review bundle remains available for comparison.",
     "The editor preview article and export article differ by the measured ratios above (0.61–2.03%), mainly image/font rasterization and shell rounding.",
   );
 
@@ -1067,6 +1461,7 @@ async function main() {
     regression: { before: beforeRegression, after: regressionMetrics },
     summary,
     differences,
+    edited,
     captures,
   };
   writeFileSync(
@@ -1078,7 +1473,7 @@ async function main() {
   writeReportMarkdown(report);
   writeFileSync(
     path.join(bundleRoot, "README.md"),
-    `# Momisa revised B export review\n\nOpen \`index.html\`.\n\n- Exported page: \`bundle/index.html\`\n- ZIP: \`${path.basename(zipFile)}\`\n- Receipt: \`bundle/receipt.json\`\n- Report: \`report.json\` / \`report.md\`\n- Captures: \`captures/\`\n\nAll inputs and captures stay in Git-ignored \`.local/\` storage. The direction remains experimental until the user or Momisa selects it.\n`,
+    `# Momisa revised B export review\n\nOpen \`index.html\`.\n\n- Exported page: \`bundle/index.html\`\n- Edited-offer export: \`bundle-edited/index.html\`\n- ZIPs: \`${path.basename(zipFile)}\` and the edited-offer archive\n- Receipts: \`bundle/receipt.json\` / \`bundle-edited/receipt.json\`\n- Report: \`report.json\` / \`report.md\`\n- Captures: \`captures/\`\n- Previous bundle: \`../momisa-review-bundle-before-provenance/index.html\`\n\nAll inputs and captures stay in Git-ignored \`.local/\` storage. The direction remains experimental until the user or Momisa selects it.\n`,
     "utf8",
   );
 

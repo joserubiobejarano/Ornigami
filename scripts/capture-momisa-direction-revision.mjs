@@ -329,7 +329,7 @@ function checkViewport(checks, label, metrics, expectedWidth, firstScreen = null
   check(
     checks,
     `${label}:price-role`,
-    metrics.priceText === "$4.94" &&
+    metrics.priceText === approved.offerPrice &&
       Number.parseFloat(metrics.priceStyle.fontSize) >
         Number.parseFloat(metrics.offerTextStyle.fontSize) &&
       metrics.priceStyle.color === "rgb(47, 93, 74)" &&
@@ -341,7 +341,7 @@ function checkViewport(checks, label, metrics, expectedWidth, firstScreen = null
       color: metrics.priceStyle.color,
       display: metrics.priceStyle.display,
     },
-    "$4.94, larger than the offer line, accent colour, inline-block",
+    `${approved.offerPrice}, larger than the offer line, accent colour, inline-block`,
   );
   check(
     checks,
@@ -410,7 +410,7 @@ function writeIndexHtml() {
     [
       "Price role",
       "The offer was a single display line.",
-      "$4.94 is a larger inline accent within the same approved offer sentence.",
+      `${approved.offerPrice} is a larger inline accent within the same approved offer sentence.`,
       "Give the price a clear second read without changing, duplicating, or inventing offer copy.",
     ],
     [
