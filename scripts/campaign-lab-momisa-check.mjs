@@ -232,7 +232,7 @@ async function main() {
       requiredFactValues,
       "all required fact values visible",
     );
-    await page.getByRole("button", { name: "Approve preview", exact: true }).click();
+    await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(200);
     const approved = await snapshot(page);
     check(report, `${width}:approve`, approved.approved === "true", approved.approved, "true");
@@ -284,7 +284,7 @@ async function main() {
       "all required fact values visible",
     );
     await capture(page, out, "revision-pending-approval", width);
-    await page.getByRole("button", { name: "Approve preview", exact: true }).click();
+    await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(200);
     const revisedApproved = await snapshot(page);
     check(report, `${width}:revision-approve`, revisedApproved.approved === "true", revisedApproved.approved, "true");

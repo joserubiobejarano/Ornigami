@@ -105,7 +105,7 @@ fresh valid preview before approval.
 The revision hash includes template ID/version, layout, section order, resolved
 theme, campaign facts, asset content hash and alt text, and draft slots. Approval
 stores that exact hash. Any edit clears approval and invalidates in-flight
-generation. Approve preview is disabled while a request is in flight, on
+generation. Approve preview locally is disabled while a request is in flight, on
 validation issues, and when the form is dirty.
 
 ## Local run

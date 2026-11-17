@@ -51,7 +51,12 @@ export type BrowserOfferIntakeInput = {
 };
 
 export type OfferVerification = "missing" | "provisional" | "confirmed";
-export type DestinationVerification = "missing" | "provisional" | "invalid" | "direct";
+export type DestinationVerification =
+  | "missing"
+  | "search"
+  | "unconfirmed"
+  | "invalid"
+  | "direct";
 
 export type BrowserOfferVerification = {
   offer: OfferVerification;
@@ -105,7 +110,7 @@ export function classifyDestination(value: string): DestinationVerification {
       destination,
     )
   ) {
-    return "provisional";
+    return "search";
   }
   return "direct";
 }
@@ -139,7 +144,7 @@ export function verifyBrowserOffer(input: BrowserOfferIntakeInput): BrowserOffer
   const destination =
     destinationClassification === "direct" &&
     !confirmedExactly(confirmations?.destination, destinationValue)
-      ? "provisional"
+      ? "unconfirmed"
       : destinationClassification;
   const rights =
     rightsClassification === "confirmed" &&
@@ -153,7 +158,8 @@ export function verifyBrowserOffer(input: BrowserOfferIntakeInput): BrowserOffer
     rights,
     provisional:
       offer === "provisional" ||
-      destination === "provisional" ||
+      destination === "search" ||
+      destination === "unconfirmed" ||
       rights === "provisional",
   };
 }
@@ -163,7 +169,10 @@ export function provisionalOfferInputs(
 ): string[] {
   return [
     verification.offer === "provisional" ? "offer" : null,
-    verification.destination === "provisional" ? "destination" : null,
+    verification.destination === "search" ||
+    verification.destination === "unconfirmed"
+      ? "destination"
+      : null,
     verification.rights === "provisional" ? "media rights" : null,
   ].filter((value): value is string => Boolean(value));
 }

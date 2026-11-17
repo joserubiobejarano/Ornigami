@@ -4,7 +4,7 @@
  *
  * The runner is deliberately app-agnostic: it accepts the app URL, reads the
  * approved fixture metadata from a manifest, and drives the published interface
- * (fields, Generate preview, Approve preview, Campaign preview region). It does
+ * (fields, Generate preview, Approve preview locally, Campaign preview region). It does
  * not import the route, the renderer, or any app source.
  *
  * Usage:
@@ -193,7 +193,7 @@ function defaultReproduction(fixtureUrlValue, viewport, inputs = {}) {
     `Set Product name to ${JSON.stringify(inputs.productName ?? "<fixture value>")}.`,
     `Set Offer to ${JSON.stringify(inputs.offer ?? "<fixture value>")}.`,
     `Set Destination URL to ${JSON.stringify(inputs.destination ?? "<fixture value>")}.`,
-    "Click Generate preview, then Approve preview.",
+    "Click Generate preview, then Approve preview locally.",
   ];
   return lines;
 }
@@ -206,7 +206,7 @@ async function locateContract(page) {
     productImage: page.getByLabel("Product image", { exact: true }).first(),
   };
   const generate = page.getByRole("button", { name: "Generate preview", exact: true }).first();
-  const approve = page.getByRole("button", { name: "Approve preview", exact: true }).first();
+  const approve = page.getByRole("button", { name: "Approve preview locally", exact: true }).first();
   let region = page.getByRole("region", { name: "Campaign preview", exact: true }).first();
   let regionFallback = false;
   if ((await region.count()) === 0) {
@@ -906,7 +906,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
     const generatePresent = await contract.generate.count() > 0;
     const approvePresent = await contract.approve.count() > 0;
     add("controls-present", fieldPresence.productName && fieldPresence.offer && fieldPresence.destination && fieldPresence.productImage && generatePresent && approvePresent && regionPresent ? "passed" : "failed",
-      `Product name, Offer, Destination URL, Product image, Generate preview, Approve preview, and the named Campaign preview region must be present.`,
+      `Product name, Offer, Destination URL, Product image, Generate preview, Approve preview locally, and the named Campaign preview region must be present.`,
       { fields: fieldPresence, generatePresent, approvePresent, regionPresent, regionFallback: contract.regionFallback, url },
       [`Open ${url} and inspect the accessible names.`]);
     if (!regionPresent) {
@@ -982,12 +982,12 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
 
     const approveBefore = await readApproval(page, contract);
     if (await contract.approve.isDisabled().catch(() => false)) {
-      add("approve-preview", "failed", "Approve preview is disabled for a valid, generated preview.", { approval: approveBefore }, repro(inputs));
+      add("approve-preview", "failed", "Approve preview locally is disabled for a valid, generated preview.", { approval: approveBefore }, repro(inputs));
     } else {
       await contract.approve.click({ timeout: timeoutMs });
       approvalAfterApprove = await waitForApproval(page, contract, (state) => state.state !== approveBefore.state || state.state === "approved", 2500);
       if (approvalAfterApprove.state === "unknown" && approvalAfterApprove.approveDisabled && !approveBefore.approveDisabled) {
-        approvalAfterApprove = { ...approvalAfterApprove, state: "approved", inferred: true, evidence: "Approve preview became disabled after a successful approval click." };
+        approvalAfterApprove = { ...approvalAfterApprove, state: "approved", inferred: true, evidence: "Approve preview locally became disabled after a successful approval click." };
       }
       add("approve-preview", approvalAfterApprove.state === "approved" ? "passed" : "failed",
         approvalAfterApprove.state === "approved" ? "Approving the exact previewed revision produced an approved state." : "Approving the preview did not expose an approved state.",

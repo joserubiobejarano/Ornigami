@@ -1,0 +1,1141 @@
+{
+  "target": "http://localhost:3100",
+  "out": ".local\\campaign-lab-local-approval\\evidence",
+  "playwright": "C:/Users/joser/Desktop/Projects/Ornigami/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs",
+  "browserVersion": "158.0.8127.18",
+  "generatedAt": "2026-11-17T00:27:01.080Z",
+  "viewports": [
+    375,
+    1440
+  ],
+  "states": {
+    "375": {
+      "intake": {
+        "unconfirmed-direct": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "unconfirmed",
+          "rightsVerification": "confirmed",
+          "destinationValue": "https://example.com/harbor-field",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Direct URL · unconfirmed",
+              "text": "DESTINATION\n\nDirect URL · unconfirmed\n\nhttps://example.com/harbor-field"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            false,
+            true
+          ]
+        },
+        "amazon-search": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "search",
+          "rightsVerification": "confirmed",
+          "destinationValue": "https://www.amazon.com/s?k=Momisa+Glow+Box",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Amazon/search placeholder · provisional",
+              "text": "DESTINATION\n\nAmazon/search placeholder · provisional\n\nhttps://www.amazon.com/s?k=Momisa+Glow+Box"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            true,
+            true
+          ]
+        },
+        "invalid": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "invalid",
+          "rightsVerification": "confirmed",
+          "destinationValue": "not-a-url",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Destination invalid",
+              "text": "DESTINATION\n\nDestination invalid\n\nnot-a-url"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            false,
+            true
+          ]
+        },
+        "confirmed-direct": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "direct",
+          "rightsVerification": "confirmed",
+          "destinationValue": "https://example.com/harbor-field",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Direct URL · confirmed",
+              "text": "DESTINATION\n\nDirect URL · confirmed\n\nhttps://example.com/harbor-field"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      "generated": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 4b1c3fae06.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "editing": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision 4b1c3fae06. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision 4b1c3fae06. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 25% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "edited": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision e96297b272.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "approved": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "e96297b272818742",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "e96297b272818742",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision e96297b272. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision e96297b272 matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "cleared": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision e96297b272. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision e96297b272. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 15% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "provisional": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 1f5e6c0adf.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "provisionalApproved": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "1f5e6c0adf8e9af3",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "1f5e6c0adf8e9af3",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision 1f5e6c0adf. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision 1f5e6c0adf matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "consoleErrors": []
+    },
+    "1440": {
+      "intake": {
+        "unconfirmed-direct": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "unconfirmed",
+          "rightsVerification": "confirmed",
+          "destinationValue": "https://example.com/harbor-field",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Direct URL · unconfirmed",
+              "text": "DESTINATION\n\nDirect URL · unconfirmed\n\nhttps://example.com/harbor-field"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            false,
+            true
+          ]
+        },
+        "amazon-search": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "search",
+          "rightsVerification": "confirmed",
+          "destinationValue": "https://www.amazon.com/s?k=Momisa+Glow+Box",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Amazon/search placeholder · provisional",
+              "text": "DESTINATION\n\nAmazon/search placeholder · provisional\n\nhttps://www.amazon.com/s?k=Momisa+Glow+Box"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            true,
+            true
+          ]
+        },
+        "invalid": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "invalid",
+          "rightsVerification": "confirmed",
+          "destinationValue": "not-a-url",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Destination invalid",
+              "text": "DESTINATION\n\nDestination invalid\n\nnot-a-url"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            false,
+            true
+          ]
+        },
+        "confirmed-direct": {
+          "offerVerification": "confirmed",
+          "destinationVerification": "direct",
+          "rightsVerification": "confirmed",
+          "destinationValue": "https://example.com/harbor-field",
+          "cards": {
+            "offer": {
+              "label": "Offer entered",
+              "text": "OFFER\n\nOffer entered\n\n20% off, 27-30 November 2026"
+            },
+            "destination": {
+              "label": "Direct URL · confirmed",
+              "text": "DESTINATION\n\nDirect URL · confirmed\n\nhttps://example.com/harbor-field"
+            },
+            "media": {
+              "label": "Media rights recorded",
+              "text": "MEDIA\n\nMedia rights recorded\n\nClient-approved for web and paid social."
+            }
+          },
+          "confirmationsChecked": [
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      "generated": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 4b1c3fae06.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "editing": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision 4b1c3fae06. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision 4b1c3fae06. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 25% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "edited": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision e96297b272.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "approved": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "e96297b272818742",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "e96297b272818742",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision e96297b272. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision e96297b272 matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "cleared": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision e96297b272. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision e96297b272. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 15% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "provisional": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 1f5e6c0adf.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "provisionalApproved": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "1f5e6c0adf8e9af3",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "1f5e6c0adf8e9af3",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision 1f5e6c0adf. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision 1f5e6c0adf matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "consoleErrors": []
+    }
+  },
+  "checks": [
+    {
+      "id": "375:intake-unconfirmed-direct",
+      "passed": true,
+      "actual": {
+        "verification": "unconfirmed",
+        "label": "Direct URL · unconfirmed"
+      },
+      "expected": {
+        "verification": "unconfirmed",
+        "label": "Direct URL · unconfirmed"
+      }
+    },
+    {
+      "id": "375:intake-amazon-search",
+      "passed": true,
+      "actual": {
+        "verification": "search",
+        "label": "Amazon/search placeholder · provisional"
+      },
+      "expected": {
+        "verification": "search",
+        "label": "Amazon/search placeholder · provisional"
+      }
+    },
+    {
+      "id": "375:intake-invalid",
+      "passed": true,
+      "actual": {
+        "verification": "invalid",
+        "label": "Destination invalid"
+      },
+      "expected": {
+        "verification": "invalid",
+        "label": "Destination invalid"
+      }
+    },
+    {
+      "id": "375:intake-confirmed-direct",
+      "passed": true,
+      "actual": {
+        "verification": "direct",
+        "label": "Direct URL · confirmed"
+      },
+      "expected": {
+        "verification": "direct",
+        "label": "Direct URL · confirmed"
+      }
+    },
+    {
+      "id": "375:intake-search-stays-provisional-when-confirmed",
+      "passed": true,
+      "actual": {
+        "label": "Amazon/search placeholder · provisional",
+        "text": "DESTINATION\n\nAmazon/search placeholder · provisional\n\nhttps://www.amazon.com/s?k=Momisa+Glow+Box"
+      },
+      "expected": "search placeholder remains provisional even after confirmation"
+    },
+    {
+      "id": "375:intake-confirmed-direct-is-distinct",
+      "passed": true,
+      "actual": {
+        "label": "Direct URL · confirmed",
+        "text": "DESTINATION\n\nDirect URL · confirmed\n\nhttps://example.com/harbor-field"
+      },
+      "expected": "Direct URL · confirmed"
+    },
+    {
+      "id": "375:generated-before-approval",
+      "passed": true,
+      "actual": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 4b1c3fae06.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "unapproved generated preview with the local-only approval button"
+    },
+    {
+      "id": "375:editing-pending",
+      "passed": true,
+      "actual": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision 4b1c3fae06. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision 4b1c3fae06. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 25% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "pending edits keep the old preview revision and clear approval"
+    },
+    {
+      "id": "375:edited-revision",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision e96297b272.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "fresh revision is generated and remains unapproved"
+    },
+    {
+      "id": "375:approval-is-local-to-preview",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "e96297b272818742",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "e96297b272818742",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision e96297b272. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision e96297b272 matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "recorded status and button both identify a local preview approval"
+    },
+    {
+      "id": "375:edit-clears-exact-revision-approval",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision e96297b272. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision e96297b272. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 15% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "editing keeps the approved revision visible but clears its local approval"
+    },
+    {
+      "id": "375:provisional-notice-retained",
+      "passed": true,
+      "actual": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 1f5e6c0adf.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "Amazon search destination keeps the provisional notice on the rendered preview"
+    },
+    {
+      "id": "375:provisional-can-still-be-approved-locally",
+      "passed": true,
+      "actual": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "1f5e6c0adf8e9af3",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "1f5e6c0adf8e9af3",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision 1f5e6c0adf. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision 1f5e6c0adf matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "local preview approval does not erase the provisional destination notice"
+    },
+    {
+      "id": "375:no-horizontal-overflow",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "e96297b272818742",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "e96297b272818742",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision e96297b272. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision e96297b272 matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 375,
+        "viewportWidth": 375,
+        "canvasScrollWidth": 315,
+        "canvasClientWidth": 315
+      },
+      "expected": "document and preview canvas widths match the viewport"
+    },
+    {
+      "id": "375:console",
+      "passed": true,
+      "actual": [],
+      "expected": "no console errors"
+    },
+    {
+      "id": "1440:intake-unconfirmed-direct",
+      "passed": true,
+      "actual": {
+        "verification": "unconfirmed",
+        "label": "Direct URL · unconfirmed"
+      },
+      "expected": {
+        "verification": "unconfirmed",
+        "label": "Direct URL · unconfirmed"
+      }
+    },
+    {
+      "id": "1440:intake-amazon-search",
+      "passed": true,
+      "actual": {
+        "verification": "search",
+        "label": "Amazon/search placeholder · provisional"
+      },
+      "expected": {
+        "verification": "search",
+        "label": "Amazon/search placeholder · provisional"
+      }
+    },
+    {
+      "id": "1440:intake-invalid",
+      "passed": true,
+      "actual": {
+        "verification": "invalid",
+        "label": "Destination invalid"
+      },
+      "expected": {
+        "verification": "invalid",
+        "label": "Destination invalid"
+      }
+    },
+    {
+      "id": "1440:intake-confirmed-direct",
+      "passed": true,
+      "actual": {
+        "verification": "direct",
+        "label": "Direct URL · confirmed"
+      },
+      "expected": {
+        "verification": "direct",
+        "label": "Direct URL · confirmed"
+      }
+    },
+    {
+      "id": "1440:intake-search-stays-provisional-when-confirmed",
+      "passed": true,
+      "actual": {
+        "label": "Amazon/search placeholder · provisional",
+        "text": "DESTINATION\n\nAmazon/search placeholder · provisional\n\nhttps://www.amazon.com/s?k=Momisa+Glow+Box"
+      },
+      "expected": "search placeholder remains provisional even after confirmation"
+    },
+    {
+      "id": "1440:intake-confirmed-direct-is-distinct",
+      "passed": true,
+      "actual": {
+        "label": "Direct URL · confirmed",
+        "text": "DESTINATION\n\nDirect URL · confirmed\n\nhttps://example.com/harbor-field"
+      },
+      "expected": "Direct URL · confirmed"
+    },
+    {
+      "id": "1440:generated-before-approval",
+      "passed": true,
+      "actual": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 4b1c3fae06.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "unapproved generated preview with the local-only approval button"
+    },
+    {
+      "id": "1440:editing-pending",
+      "passed": true,
+      "actual": {
+        "revision": "4b1c3fae06bc1444",
+        "previewStatus": "confirmed",
+        "previewVerification": "confirmed",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision 4b1c3fae06. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor Field© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision 4b1c3fae06. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 25% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "pending edits keep the old preview revision and clear approval"
+    },
+    {
+      "id": "1440:edited-revision",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision e96297b272.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "fresh revision is generated and remains unapproved"
+    },
+    {
+      "id": "1440:approval-is-local-to-preview",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "e96297b272818742",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "e96297b272818742",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision e96297b272. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision e96297b272 matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "recorded status and button both identify a local preview approval"
+    },
+    {
+      "id": "1440:edit-clears-exact-revision-approval",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "true",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Needs fresh preview",
+        "reviewText": "Not approved. Changes need a fresh preview.",
+        "previewStatusText": "Preview out of date. Approval is cleared. Showing the last valid preview, revision e96297b272. Generate a fresh preview to review your edits.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": "Pending edits · not rendered The preview and footer still describe revision e96297b272. Approval is cleared for pending edits. Generate preview to validate these values. OFFER Offer provisional 15% off, members only DESTINATION Direct URL · confirmed https://example.com/harbor-field MEDIA Media rights recorded Client-approved for web and paid social.",
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "editing keeps the approved revision visible but clears its local approval"
+    },
+    {
+      "id": "1440:provisional-notice-retained",
+      "passed": true,
+      "actual": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "false",
+        "approvalRevision": null,
+        "approvalScope": "local-preview",
+        "approvedAttribute": "false",
+        "approvedRevision": null,
+        "reviewBadge": "Not approved",
+        "reviewText": "Not approved.",
+        "previewStatusText": "Preview ready for local review. Revision 1f5e6c0adf.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": false,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "Amazon search destination keeps the provisional notice on the rendered preview"
+    },
+    {
+      "id": "1440:provisional-can-still-be-approved-locally",
+      "passed": true,
+      "actual": {
+        "revision": "1f5e6c0adf8e9af3",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "1f5e6c0adf8e9af3",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "1f5e6c0adf8e9af3",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision 1f5e6c0adf. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision 1f5e6c0adf matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer, destination provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "local preview approval does not erase the provisional destination notice"
+    },
+    {
+      "id": "1440:no-horizontal-overflow",
+      "passed": true,
+      "actual": {
+        "revision": "e96297b272818742",
+        "previewStatus": "preview",
+        "previewVerification": "provisional",
+        "dirty": "false",
+        "generationStatus": "fallback",
+        "approval": "true",
+        "approvalRevision": "e96297b272818742",
+        "approvalScope": "local-preview",
+        "approvedAttribute": "true",
+        "approvedRevision": "e96297b272818742",
+        "reviewBadge": "Local preview approval",
+        "reviewText": "Local preview approval recorded — revision e96297b272. Not publication approval.",
+        "previewStatusText": "Local preview approval recorded. Revision e96297b272 matches the preview; this is not publication approval.",
+        "previewLabel": "Harbor FieldPreview · offer provisional© 2026 Harbor Field",
+        "pendingText": null,
+        "approveText": "Approve preview locally",
+        "approveDisabled": true,
+        "documentScrollWidth": 1440,
+        "viewportWidth": 1440,
+        "canvasScrollWidth": 924,
+        "canvasClientWidth": 924
+      },
+      "expected": "document and preview canvas widths match the viewport"
+    },
+    {
+      "id": "1440:console",
+      "passed": true,
+      "actual": [],
+      "expected": "no console errors"
+    }
+  ],
+  "status": "passed",
+  "failed": []
+}

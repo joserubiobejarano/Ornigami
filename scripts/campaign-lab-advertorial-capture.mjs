@@ -169,7 +169,7 @@ async function captureCase(browser, details) {
     }
 
     if (details.approve) {
-      const approve = page.getByRole("button", { name: "Approve preview", exact: true });
+      const approve = page.getByRole("button", { name: "Approve preview locally", exact: true });
       if (!(await approve.isDisabled())) {
         await approve.click();
         await page.waitForTimeout(250);
@@ -433,7 +433,7 @@ async function exerciseApprovalInvalidation(browser) {
     await page.getByRole("region", { name: "Campaign preview" }).waitFor();
     await page.getByRole("button", { name: "Generate preview", exact: true }).click();
     await page.waitForTimeout(500);
-    await page.getByRole("button", { name: "Approve preview", exact: true }).click();
+    await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(250);
     const approved = await readPreview(page);
     add("approved-first", approved?.approved === "true", "The exact preview revision is approved.", {
@@ -492,7 +492,7 @@ async function exerciseWrongPackshot(browser) {
     await page.getByRole("region", { name: "Campaign preview" }).waitFor();
     await page.getByRole("button", { name: "Generate preview", exact: true }).click();
     await page.waitForTimeout(600);
-    await page.getByRole("button", { name: "Approve preview", exact: true }).click();
+    await page.getByRole("button", { name: "Approve preview locally", exact: true }).click();
     await page.waitForTimeout(250);
     const before = await readPreview(page);
 

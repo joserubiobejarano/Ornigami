@@ -98,7 +98,7 @@ function page(fixture, faults) {
       <input id="product-image" name="productImage" type="file" accept="image/*">
     </div>
     <button id="generate" type="button">Generate preview</button>
-    <button id="approve" type="button" disabled>Approve preview</button>
+    <button id="approve" type="button" disabled>Approve preview locally</button>
     <p id="status" class="status" role="status">Not approved</p>
     <p id="error" class="error" role="alert" hidden></p>
   </form>

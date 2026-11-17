@@ -279,11 +279,34 @@ test("explicit confirmations bind to the exact offer, destination, and rights va
   assert.equal(edited.rights, "confirmed");
 });
 
+test("unconfirmed direct, Amazon search, invalid, and confirmed direct destinations stay distinct", () => {
+  const directUrl = "https://example.com/harbor-field";
+  const searchUrl = "https://www.amazon.com/s?k=Momisa+Glow+Box";
+
+  assert.equal(classifyDestination(""), "missing");
+  assert.equal(classifyDestination("not-a-url"), "invalid");
+  assert.equal(classifyDestination(searchUrl), "search");
+  assert.equal(classifyDestination(directUrl), "direct");
+
+  const unconfirmed = verifyBrowserOffer({
+    ...completeInput(),
+    confirmations: { ...completeInput().confirmations, destination: null },
+  });
+  assert.equal(unconfirmed.destination, "unconfirmed");
+  assert.equal(unconfirmed.provisional, true);
+
+  const staleConfirmation = verifyBrowserOffer({
+    ...completeInput(),
+    destinationUrl: "https://example.com/harbor-field-offer",
+  });
+  assert.equal(staleConfirmation.destination, "unconfirmed");
+  assert.equal(staleConfirmation.provisional, true);
+
+  assert.equal(verifyBrowserOffer(completeInput()).destination, "direct");
+  assert.equal(verifyBrowserOffer(completeInput()).provisional, false);
+});
+
 test("Amazon search destinations and pending rights stay provisional even when confirmed", () => {
-  assert.equal(
-    classifyDestination("https://www.amazon.com/s?k=Momisa+Glow+Box"),
-    "provisional",
-  );
   const offer = "30% off, placeholder terms";
   const destinationUrl = "https://www.amazon.com/s?k=Momisa+Glow+Box";
   const rights = "Rights pending confirmation";
@@ -297,7 +320,7 @@ test("Amazon search destinations and pending rights stay provisional even when c
   const built = buildBrowserOfferCatalog(input);
   assert.deepEqual(built.verification, {
     offer: "provisional",
-    destination: "provisional",
+    destination: "search",
     rights: "provisional",
     provisional: true,
   });

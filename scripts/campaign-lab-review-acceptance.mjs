@@ -213,7 +213,7 @@ async function readPageState(page) {
       Array.from(document.querySelectorAll("button")).find(
         (button) => button.textContent?.trim() === name,
       );
-    const approve = labelledButton("Approve preview");
+    const approve = labelledButton("Approve preview locally");
     const generate = labelledButton("Generate preview");
     const statusText = (suffix) =>
       textOf(Array.from(document.querySelectorAll("[id]")).find((node) => node.id.endsWith(suffix)));
@@ -364,7 +364,7 @@ async function generateAndSettle(page, { timeoutMs = 25_000 } = {}) {
 }
 
 async function approve(page) {
-  const button = page.getByRole("button", { name: "Approve preview", exact: true });
+  const button = page.getByRole("button", { name: "Approve preview locally", exact: true });
   if (await button.isDisabled()) return false;
   await button.click();
   await page.waitForTimeout(200);
@@ -376,7 +376,7 @@ async function waitForApproveEnabled(page, timeoutMs = 6_000) {
     .waitForFunction(
       () => {
         const button = Array.from(document.querySelectorAll("button")).find(
-          (candidate) => candidate.textContent?.trim() === "Approve preview",
+          (candidate) => candidate.textContent?.trim() === "Approve preview locally",
         );
         return Boolean(button) && !button.disabled;
       },
@@ -1712,7 +1712,7 @@ async function runDistinctBothFormats(browserInstance, base) {
     await compare(advertorial, "advertorial");
     await capture(page, entry, "advertorial");
 
-    await page.getByRole("button", { name: "Approve preview", exact: true }).click().catch(() => {});
+    await page.getByRole("button", { name: "Approve preview locally", exact: true }).click().catch(() => {});
     await page.waitForTimeout(100);
     await page.getByLabel("Format", { exact: true }).selectOption("offer");
     await page.waitForTimeout(200);

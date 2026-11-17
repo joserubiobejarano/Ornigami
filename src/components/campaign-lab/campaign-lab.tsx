@@ -544,7 +544,7 @@ export function CampaignLab({
     : generating
       ? `Generating a fresh preview. Revision ${revisionLabel} stays available until a valid response arrives.`
       : approved
-        ? `Approved locally. Revision ${revisionLabel} matches the preview.`
+        ? `Local preview approval recorded. Revision ${revisionLabel} matches the preview; this is not publication approval.`
         : dirty
           ? otherIssues.length > 0
             ? `Preview not updated. Fix ${otherIssues.length} ${otherIssues.length === 1 ? "field" : "fields"} and generate again. The last valid preview, revision ${revisionLabel}, is still shown.`
@@ -558,7 +558,7 @@ export function CampaignLab({
     : generating
       ? "Not approved. Generating a fresh preview."
       : approved
-        ? `Approved locally — revision ${revisionLabel}.`
+        ? `Local preview approval recorded — revision ${revisionLabel}. Not publication approval.`
         : dirty
           ? "Not approved. Changes need a fresh preview."
           : failedImageRows.length > 0
@@ -1170,7 +1170,7 @@ export function CampaignLab({
                 disabled={!canApprove}
                 aria-describedby={previewStatusId}
               >
-                Approve preview
+                Approve preview locally
               </Button>
             </div>
 
@@ -1196,7 +1196,12 @@ export function CampaignLab({
                     : "No validation errors."}
             </p>
 
-            <div className={cn("rounded-xl border p-3", reviewTone)}>
+            <div
+              className={cn("rounded-xl border p-3", reviewTone)}
+              data-local-preview-approval={approved ? "true" : "false"}
+              data-approval-revision={approval?.revision}
+              data-approval-scope="local-preview"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#5f5a4f]">
                   Local review status
@@ -1212,7 +1217,7 @@ export function CampaignLab({
                   )}
                 >
                   {approved
-                    ? "Approved"
+                    ? "Local preview approval"
                     : failedImageRows.length > 0
                       ? "Image failed"
                       : pendingImageRows.length > 0
@@ -1260,7 +1265,9 @@ export function CampaignLab({
                 </div>
               ) : null}
               <p className="mt-1 text-xs text-[#6d6a5f]">
-                Approval applies to revision {revisionLabel ?? "none"}. Editing any field clears it.
+                Local preview approval applies only to revision {revisionLabel ?? "none"} in
+                this browser session; it is not publication approval. Editing any field or
+                generating a new revision clears it.
                 {approval ? " Recorded locally in this browser session." : ""}
               </p>
             </div>
