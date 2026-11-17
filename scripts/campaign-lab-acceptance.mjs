@@ -396,6 +396,28 @@ async function waitForPreview(page, contract, predicate, timeout = 3500) {
   return last;
 }
 
+/**
+ * A generate click can resolve before the server has answered. The preview
+ * predicate alone is not a completion signal when the requested values already
+ * match the visible revision, so wait for the form to leave its busy state.
+ */
+async function waitForGeneration(page, timeout = timeoutMs) {
+  await page.waitForTimeout(120);
+  await page
+    .waitForFunction(
+      () => {
+        const busy = document.querySelector('button[aria-busy="true"]');
+        const generate = [...document.querySelectorAll("button")].find((candidate) =>
+          candidate.textContent?.trim().startsWith("Generate preview"),
+        );
+        return !busy && Boolean(generate) && !generate.disabled;
+      },
+      undefined,
+      { timeout },
+    )
+    .catch(() => {});
+}
+
 async function errorMessages(page, fieldLocators) {
   const messages = [];
   for (const [name, locator] of Object.entries(fieldLocators)) {
@@ -943,6 +965,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
 
     await contract.generate.click({ timeout: timeoutMs });
     await page.waitForTimeout(settleMs);
+    await waitForGeneration(page);
     let generated = await waitForPreview(page, contract, (snapshot) =>
       comparableText(snapshot.text).includes(comparableText(workingOffer)) ||
       snapshot.links.some((link) => link.rawHref === workingDestination || link.resolvedHref === workingDestination));
@@ -1109,6 +1132,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
     await setText(contract.fields.destination, afterEditDestination);
     await contract.generate.click({ timeout: timeoutMs });
     await page.waitForTimeout(settleMs);
+    await waitForGeneration(page);
     const edited = await waitForPreview(page, contract, (snapshot) =>
       comparableText(snapshot.text).includes(comparableText(afterEditOffer)) ||
       snapshot.links.some((link) => link.rawHref === afterEditDestination || link.resolvedHref === afterEditDestination));
@@ -1247,6 +1271,7 @@ async function runFixtureViewport({ browser, base, manifest, fixture, viewport, 
     await setText(contract.fields.destination, afterEditDestination);
     await contract.generate.click({ timeout: timeoutMs }).catch(() => {});
     await page.waitForTimeout(settleMs);
+    await waitForGeneration(page);
     const restored = await waitForPreview(page, contract, (snapshot) => snapshot.links.some((link) => link.rawHref === afterEditDestination));
     if (restored) {
       const activationFocus = await keyboardFocus(page, contract, { href: afterEditDestination });

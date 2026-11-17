@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,25 @@ import { Label } from "@/components/ui/label";
 import {
   BROWSER_OFFER_MAX_FACTS,
   BROWSER_OFFER_MIN_FACTS,
+  browserOfferPilotNote,
   buildBrowserOfferCatalog,
   isProvisionalRights,
+  provisionalOfferInputs,
   validateBrowserOfferIntake,
+  verifyBrowserOffer,
 } from "@/lib/campaign-lab/browser-offer";
 import type {
+  BrowserOfferConfirmations,
   BrowserOfferFactInput,
   BrowserOfferIntakeErrors,
   BrowserOfferIntakeInput,
+  BrowserOfferVerification,
 } from "@/lib/campaign-lab/browser-offer";
-import type { CampaignCatalog, CampaignFixture } from "@/lib/campaign-lab/types";
+import type {
+  CampaignCatalog,
+  CampaignFixture,
+  CampaignFormValues,
+} from "@/lib/campaign-lab/types";
 
 import { CampaignLab } from "./campaign-lab";
 
@@ -37,6 +46,19 @@ type SubmittedBrief = {
   catalog: CampaignCatalog;
 };
 
+type EditorSnapshot = {
+  values: CampaignFormValues;
+  revision: string | null;
+  dirty: boolean;
+  rendered: VerificationValues | null;
+};
+
+type RenderedVerification = {
+  revision: string;
+  values: VerificationValues;
+  verification: BrowserOfferVerification;
+};
+
 const EMPTY_FACT: BrowserOfferFactInput = { label: "", value: "" };
 
 function fieldError(
@@ -45,6 +67,159 @@ function fieldError(
 ): string | undefined {
   const error = errors[key];
   return typeof error === "string" ? error : undefined;
+}
+
+const VERIFICATION_LABELS = {
+  offer: {
+    missing: "Offer missing",
+    provisional: "Offer provisional",
+    confirmed: "Offer entered",
+  },
+  destination: {
+    missing: "Destination missing",
+    provisional: "Search/placeholder · provisional",
+    invalid: "Destination invalid",
+    direct: "Direct destination",
+  },
+  rights: {
+    missing: "Media rights missing",
+    provisional: "Media rights provisional",
+    confirmed: "Media rights recorded",
+  },
+} as const;
+
+function verificationTone(status: string): string {
+  if (status === "missing" || status === "invalid") {
+    return "border-[#c65c45] bg-[#fff1ec] text-[#6d2b20]";
+  }
+  if (status === "provisional") {
+    return "border-[#b98237] bg-[#fbf3e4] text-[#6b4918]";
+  }
+  return "border-[#bcd7c2] bg-[#eef5ee] text-[#285a3d]";
+}
+
+type VerificationValues = {
+  offer: string;
+  destination: string;
+  rights: string;
+};
+
+function VerificationCards({
+  verification,
+  values,
+}: {
+  verification: BrowserOfferVerification;
+  values: VerificationValues;
+}) {
+  return (
+    <div className="mt-2 grid gap-2 sm:grid-cols-3">
+      {(
+        [
+          ["Offer", VERIFICATION_LABELS.offer[verification.offer], verification.offer, values.offer],
+          [
+            "Destination",
+            VERIFICATION_LABELS.destination[verification.destination],
+            verification.destination,
+            values.destination,
+          ],
+          [
+            "Media",
+            VERIFICATION_LABELS.rights[verification.rights],
+            verification.rights,
+            values.rights,
+          ],
+        ] as const
+      ).map(([label, text, status, value]) => (
+        <div
+          key={label}
+          className={`rounded-lg border px-3 py-2 text-xs font-semibold ${verificationTone(status)}`}
+        >
+          <p className="text-[0.62rem] uppercase tracking-[0.12em] opacity-80">{label}</p>
+          <p className="mt-1">{text}</p>
+          <p className="mt-1 break-words text-[0.66rem] font-normal opacity-85">
+            {value || "Not entered"}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function provisionalNotice(
+  verification: BrowserOfferVerification,
+): string | undefined {
+  const provisional = provisionalOfferInputs(verification);
+  return provisional.length > 0
+    ? `Preview · ${provisional.join(", ")} provisional`
+    : undefined;
+}
+
+function VerificationSummary({
+  verification,
+  values,
+  revision = null,
+  pending = null,
+}: {
+  verification: BrowserOfferVerification;
+  values: VerificationValues;
+  revision?: string | null;
+  pending?: {
+    verification: BrowserOfferVerification;
+    values: VerificationValues;
+  } | null;
+}) {
+  return (
+    <div
+      className="rounded-xl border border-[#ddd3c2] bg-[#fbf8f1] p-3"
+      data-intake-verification
+      data-offer-verification={verification.offer}
+      data-destination-verification={verification.destination}
+      data-rights-verification={verification.rights}
+      data-offer-value={values.offer}
+      data-destination-value={values.destination}
+      data-rights-value={values.rights}
+      data-verification-value-source={revision ? "rendered" : "pending"}
+      data-verification-revision={revision ?? undefined}
+      data-verification-dirty={pending ? "true" : "false"}
+      data-verification-pending={pending ? "true" : "false"}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm font-semibold">Commercial and media check</p>
+        <p className="text-[0.68rem] font-medium text-[#6d6a5f]">
+          {revision
+            ? `Revision ${revision.slice(0, 10)} · rendered values`
+            : "Current intake values"}
+        </p>
+      </div>
+      <VerificationCards verification={verification} values={values} />
+
+      {pending ? (
+        <div
+          className="mt-3 rounded-lg border border-[#b98237] bg-[#fbf3e4] p-3"
+          data-intake-pending
+          data-pending-offer-verification={pending.verification.offer}
+          data-pending-destination-verification={pending.verification.destination}
+          data-pending-rights-verification={pending.verification.rights}
+          data-pending-offer-value={pending.values.offer}
+          data-pending-destination-value={pending.values.destination}
+          data-pending-rights-value={pending.values.rights}
+        >
+          <p className="text-xs font-semibold text-[#6b4918]">
+            Pending edits · not rendered
+          </p>
+          <p className="mt-1 text-[0.68rem] font-medium text-[#6b4918]">
+            {revision
+              ? `The preview and footer still describe revision ${revision.slice(0, 10)}. Approval is cleared for pending edits. Generate preview to validate these values.`
+              : "Generate preview to validate these values."}
+          </p>
+          <VerificationCards
+            verification={pending.verification}
+            values={pending.values}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 async function sha256(file: File): Promise<string> {
@@ -78,8 +253,10 @@ async function readPackshot(file: File): Promise<Omit<PackshotFile, "fileName">>
 export function OfferIntake() {
   const baseId = useId().replace(/:/g, "");
   const objectUrlRef = useRef<string | null>(null);
+  const packshotReadRef = useRef(0);
   const submissionCount = useRef(0);
 
+  const [brandName, setBrandName] = useState("");
   const [productName, setProductName] = useState("");
   const [offer, setOffer] = useState("");
   const [destinationUrl, setDestinationUrl] = useState("");
@@ -93,8 +270,21 @@ export function OfferIntake() {
   const [rights, setRights] = useState("");
   const [readingPackshot, setReadingPackshot] = useState(false);
   const [packshotError, setPackshotError] = useState<string | null>(null);
+  const [confirmations, setConfirmations] = useState<BrowserOfferConfirmations>({
+    offer: null,
+    destination: null,
+    rights: null,
+  });
   const [errors, setErrors] = useState<BrowserOfferIntakeErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedBrief | null>(null);
+  const [editorSnapshot, setEditorSnapshot] = useState<EditorSnapshot | null>(null);
+  const [renderedVerification, setRenderedVerification] =
+    useState<RenderedVerification | null>(null);
+  const formValuesRef = useRef({ offer, destinationUrl, rights });
+  const renderedVerificationRef = useRef<{
+    revision: string | null;
+    dirty: boolean;
+  }>({ revision: null, dirty: false });
 
   const productNameId = `${baseId}-product-name`;
   const offerId = `${baseId}-offer`;
@@ -103,6 +293,60 @@ export function OfferIntake() {
   const packshotId = `${baseId}-packshot`;
   const altId = `${baseId}-alt`;
   const rightsId = `${baseId}-rights`;
+
+  useEffect(() => {
+    formValuesRef.current = { offer, destinationUrl, rights };
+  }, [destinationUrl, offer, rights]);
+
+  useEffect(() => {
+    const snapshot = editorSnapshot;
+    if (!snapshot?.revision || !snapshot.rendered) return;
+
+    const previous = renderedVerificationRef.current;
+    if (snapshot.dirty) {
+      renderedVerificationRef.current = {
+        revision: previous.revision,
+        dirty: true,
+      };
+      return;
+    }
+
+    const renderedNow =
+      previous.revision === null ||
+      previous.dirty ||
+      snapshot.revision !== previous.revision;
+    if (!renderedNow) return;
+
+    const verification = verifyBrowserOffer({
+      brandName,
+      productName,
+      offer: snapshot.rendered.offer,
+      destinationUrl: snapshot.rendered.destination,
+      facts,
+      packshot: packshot
+        ? { ...packshot, alt, rights: snapshot.rendered.rights }
+        : null,
+      reviewedOn: "",
+      confirmations,
+    });
+    renderedVerificationRef.current = {
+      revision: snapshot.revision,
+      dirty: snapshot.dirty,
+    };
+    setRenderedVerification({
+      revision: snapshot.revision,
+      values: snapshot.rendered,
+      verification,
+    });
+  }, [
+    alt,
+    brandName,
+    confirmations,
+    editorSnapshot,
+    facts,
+    packshot,
+    productName,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -152,6 +396,9 @@ export function OfferIntake() {
   }
 
   async function handlePackshotChange(file: File | null) {
+    const readId = packshotReadRef.current + 1;
+    packshotReadRef.current = readId;
+    setConfirmations((current) => ({ ...current, rights: null }));
     setPackshotError(null);
     setPackshotName(file?.name ?? null);
     if (objectUrlRef.current) {
@@ -159,30 +406,59 @@ export function OfferIntake() {
       objectUrlRef.current = null;
     }
     setPackshot(null);
-    if (!file) return;
+    if (!file) {
+      setReadingPackshot(false);
+      return;
+    }
     if (!/^image\/(?:png|jpeg|webp)$/i.test(file.type)) {
       setPackshotError("Use a PNG, JPEG, or WebP packshot.");
+      setReadingPackshot(false);
       return;
     }
 
     setReadingPackshot(true);
     try {
       const read = await readPackshot(file);
+      if (readId !== packshotReadRef.current) {
+        URL.revokeObjectURL(read.src);
+        return;
+      }
       objectUrlRef.current = read.src;
       setPackshot({ ...read, fileName: file.name });
       clearError("packshot");
     } catch {
+      if (readId !== packshotReadRef.current) return;
       setPackshotError("The file could not be read as a packshot image.");
     } finally {
-      setReadingPackshot(false);
+      if (readId === packshotReadRef.current) setReadingPackshot(false);
     }
   }
 
+  const handleEditorStateChange = useCallback((snapshot: EditorSnapshot) => {
+    setEditorSnapshot(snapshot);
+    const previous = formValuesRef.current;
+    if (snapshot.values.offer !== previous.offer) {
+      setConfirmations((current) => ({ ...current, offer: null }));
+    }
+    if (snapshot.values.destinationUrl !== previous.destinationUrl) {
+      setConfirmations((current) => ({ ...current, destination: null }));
+    }
+    formValuesRef.current = {
+      offer: snapshot.values.offer,
+      destinationUrl: snapshot.values.destinationUrl,
+      rights: previous.rights,
+    };
+    setProductName(snapshot.values.productName);
+    setOffer(snapshot.values.offer);
+    setDestinationUrl(snapshot.values.destinationUrl);
+  }, []);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (readingPackshot) return;
+    if (readingPackshot || packshotError) return;
 
     const input: BrowserOfferIntakeInput = {
+      brandName,
       productName,
       offer,
       destinationUrl,
@@ -195,6 +471,7 @@ export function OfferIntake() {
           }
         : null,
       reviewedOn: new Date().toISOString().slice(0, 10),
+      confirmations,
     };
     const validation = validateBrowserOfferIntake(input);
     if (!validation.valid) {
@@ -213,10 +490,46 @@ export function OfferIntake() {
       fixture: built.fixture,
       catalog: built.catalog,
     });
+    renderedVerificationRef.current = { revision: null, dirty: false };
+    setRenderedVerification(null);
+    setEditorSnapshot(null);
     window.scrollTo({ top: 0 });
   }
 
   const rightsProvisional = isProvisionalRights(rights);
+  const formVerification = verifyBrowserOffer({
+    brandName,
+    productName,
+    offer,
+    destinationUrl,
+    facts,
+    packshot: packshot ? { ...packshot, alt, rights } : null,
+    reviewedOn: "",
+    confirmations,
+  });
+  const renderedNotice = renderedVerification
+    ? provisionalNotice(renderedVerification.verification)
+    : undefined;
+  const renderedStatus = renderedVerification
+    ? renderedVerification.verification.provisional
+      ? "preview"
+      : "confirmed"
+    : undefined;
+  const renderedNote = renderedVerification
+    ? browserOfferPilotNote(renderedVerification.verification)
+    : undefined;
+  const renderedValues = renderedVerification?.values ?? {
+    offer,
+    destination: destinationUrl,
+    rights,
+  };
+  const pendingEdits =
+    editorSnapshot?.dirty && renderedVerification
+      ? {
+          verification: formVerification,
+          values: { offer, destination: destinationUrl, rights },
+        }
+      : null;
 
   if (submitted) {
     return (
@@ -224,7 +537,7 @@ export function OfferIntake() {
         <div className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <p className="text-xs font-medium text-[#5f5a4f]">
-              Local brief · {submitted.fixture.label}
+              Local session · refreshing clears this brief and local approval.
             </p>
             <Button
               type="button"
@@ -236,12 +549,24 @@ export function OfferIntake() {
             </Button>
           </div>
         </div>
+        <div className="mx-auto max-w-[1600px] px-4 pt-3 sm:px-6 lg:px-8">
+          <VerificationSummary
+            verification={renderedVerification?.verification ?? formVerification}
+            values={renderedValues}
+            revision={renderedVerification?.revision ?? null}
+            pending={pendingEdits}
+          />
+        </div>
         <CampaignLab
           key={submitted.key}
           initialFixtureId={submitted.fixture.id}
           catalog={submitted.catalog}
           showFixtureNav={false}
           localOnly
+          previewNotice={renderedNotice}
+          previewStatus={renderedStatus}
+          previewNote={renderedNote}
+          onEditorStateChange={handleEditorStateChange}
         />
       </div>
     );
@@ -279,6 +604,16 @@ export function OfferIntake() {
           <fieldset className="m-0 space-y-4 border-0 p-0">
             <legend className="mb-2 text-base font-semibold">Product and offer</legend>
             <div className="space-y-1.5">
+              <Label htmlFor={`${baseId}-brand-name`}>Brand name</Label>
+              <Input
+                id={`${baseId}-brand-name`}
+                value={brandName}
+                onChange={(event) => setBrandName(event.target.value)}
+                autoComplete="organization"
+                placeholder="Optional — neutral preview if blank"
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor={productNameId}>Product name</Label>
               <Input
                 id={productNameId}
@@ -308,6 +643,7 @@ export function OfferIntake() {
                 value={offer}
                 onChange={(event) => {
                   setOffer(event.target.value);
+                  setConfirmations((current) => ({ ...current, offer: null }));
                   clearError("offer");
                 }}
                 autoComplete="off"
@@ -320,6 +656,10 @@ export function OfferIntake() {
                   {fieldError(errors, "offer")}
                 </p>
               ) : null}
+              <p className="text-xs text-[#6d6a5f]">
+                Automatic headlines only shorten a simple discount, optionally dated. Any
+                other terms keep the product name, and the exact offer stays beside the CTA.
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -331,6 +671,10 @@ export function OfferIntake() {
                 value={destinationUrl}
                 onChange={(event) => {
                   setDestinationUrl(event.target.value);
+                  setConfirmations((current) => ({
+                    ...current,
+                    destination: null,
+                  }));
                   clearError("destinationUrl");
                 }}
                 autoComplete="url"
@@ -510,6 +854,7 @@ export function OfferIntake() {
                 value={rights}
                 onChange={(event) => {
                   setRights(event.target.value);
+                  setConfirmations((current) => ({ ...current, rights: null }));
                   clearError("rights");
                 }}
                 autoComplete="off"
@@ -529,11 +874,97 @@ export function OfferIntake() {
             </div>
           </fieldset>
 
+          <fieldset
+            className="m-0 space-y-3 rounded-xl border border-[#ebe3d6] bg-[#f8f3ea] p-3"
+            data-confirmations
+            data-offer-confirmed={formVerification.offer === "confirmed" ? "true" : "false"}
+            data-destination-confirmed={
+              formVerification.destination === "direct" ? "true" : "false"
+            }
+            data-rights-confirmed={formVerification.rights === "confirmed" ? "true" : "false"}
+          >
+            <legend className="text-sm font-semibold">Operator confirmations</legend>
+            <label className="flex items-start gap-2 text-xs text-[#4f4a3f]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#234a6b]"
+                checked={Boolean(offer.trim()) && confirmations.offer === offer.trim()}
+                disabled={!offer.trim()}
+                onChange={(event) =>
+                  setConfirmations((current) => ({
+                    ...current,
+                    offer: event.target.checked ? offer.trim() : null,
+                  }))
+                }
+              />
+              <span>
+                I confirm these exact offer terms:
+                <strong className="ml-1 break-words font-semibold">
+                  {offer.trim() || "not entered"}
+                </strong>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-xs text-[#4f4a3f]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#234a6b]"
+                checked={
+                  Boolean(destinationUrl.trim()) &&
+                  confirmations.destination === destinationUrl.trim()
+                }
+                disabled={!destinationUrl.trim()}
+                onChange={(event) =>
+                  setConfirmations((current) => ({
+                    ...current,
+                    destination: event.target.checked
+                      ? destinationUrl.trim()
+                      : null,
+                  }))
+                }
+              />
+              <span>
+                I confirm this exact destination:
+                <strong className="ml-1 break-words font-semibold">
+                  {destinationUrl.trim() || "not entered"}
+                </strong>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-xs text-[#4f4a3f]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#234a6b]"
+                checked={Boolean(rights.trim()) && confirmations.rights === rights.trim()}
+                disabled={!rights.trim()}
+                onChange={(event) =>
+                  setConfirmations((current) => ({
+                    ...current,
+                    rights: event.target.checked ? rights.trim() : null,
+                  }))
+                }
+              />
+              <span>
+                I confirm these media rights:
+                <strong className="ml-1 break-words font-semibold">
+                  {rights.trim() || "not entered"}
+                </strong>
+              </span>
+            </label>
+          </fieldset>
+
+          <VerificationSummary
+            verification={formVerification}
+            values={{ offer, destination: destinationUrl, rights }}
+          />
+
           <div className="flex flex-col gap-3 border-t border-[#ebe3d6] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#6d6a5f]">
-              The existing brief validation, renderer, and revision approval run next.
+              Local session only. Refreshing clears this brief and any local approval.
             </p>
-            <Button type="submit" className="w-full sm:w-auto" disabled={readingPackshot}>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={readingPackshot || Boolean(packshotError)}
+            >
               {readingPackshot ? "Reading packshot…" : "Open Campaign Lab preview"}
             </Button>
           </div>

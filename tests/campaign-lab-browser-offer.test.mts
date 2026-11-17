@@ -5,8 +5,10 @@ import {
   BROWSER_OFFER_FIXTURE_ID,
   BROWSER_OFFER_MAX_FACTS,
   buildBrowserOfferCatalog,
+  classifyDestination,
   isProvisionalRights,
   validateBrowserOfferIntake,
+  verifyBrowserOffer,
 } from "../src/lib/campaign-lab/browser-offer.ts";
 import type {
   BrowserOfferIntakeInput,
@@ -27,6 +29,7 @@ const packshot: BrowserOfferPackshotInput = {
 
 function completeInput(): BrowserOfferIntakeInput {
   return {
+    brandName: "Harbor Field",
     productName: "Harbor Field travel bottle",
     offer: "20% off, 27–30 November 2026",
     destinationUrl: "https://example.com/harbor-field",
@@ -37,6 +40,11 @@ function completeInput(): BrowserOfferIntakeInput {
     ],
     packshot,
     reviewedOn: "2026-11-16",
+    confirmations: {
+      offer: "20% off, 27–30 November 2026",
+      destination: "https://example.com/harbor-field",
+      rights: "Client-approved for web and paid social.",
+    },
   };
 }
 
@@ -46,13 +54,25 @@ test("a complete browser brief validates and builds the existing offer preview",
   assert.equal(validation.valid, true);
   assert.deepEqual(validation.errors, {});
 
-  const { fixture, catalog } = buildBrowserOfferCatalog(input);
+  const { fixture, catalog, verification } = buildBrowserOfferCatalog(input);
   assert.equal(fixture.id, BROWSER_OFFER_FIXTURE_ID);
+  assert.equal(fixture.brief.brandId, "browser-offer-brand");
+  assert.equal(catalog.brands["browser-offer-brand"]?.name, "Harbor Field");
   assert.equal(fixture.brief.productName, input.productName);
   assert.equal(fixture.brief.offer, input.offer);
   assert.equal(fixture.brief.destinationUrl, input.destinationUrl);
   assert.equal(fixture.brief.productNoun, "bottle");
   assert.equal(fixture.brief.assetId, "browser-offer-packshot");
+  assert.equal(verification.provisional, false);
+  assert.equal(verification.offer, "confirmed");
+  assert.equal(verification.destination, "direct");
+  assert.ok(
+    fixture.brief.copy.lede &&
+      fixture.brief.copy.lede.includes("Harbor Field") &&
+      !fixture.brief.copy.lede.includes("500 ml"),
+  );
+  assert.equal(fixture.brief.copy.hideLede, true);
+  assert.equal(fixture.brief.copy.headline, undefined);
   assert.deepEqual(
     fixture.brief.requiredFactGroups?.[0]?.factIds,
     ["capacity", "closure", "material"],
@@ -75,6 +95,214 @@ test("a complete browser brief validates and builds the existing offer preview",
   assert.equal(preview.preview.brief.offer, input.offer);
   assert.equal(preview.preview.brief.destinationUrl, input.destinationUrl);
   assert.equal(preview.preview.asset.id, "browser-offer-packshot");
+});
+
+test("a conditional long offer uses the product name and keeps the exact terms", () => {
+  const offer =
+    "Free shipping plus a matching carafe through 30 November 2026 when you order the complete pour-over set";
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    productName: "Morrow ceramic dripper",
+    offer,
+    confirmations: {
+      ...completeInput().confirmations,
+      offer,
+    },
+  });
+  assert.equal(built.fixture.brief.offer, offer);
+  assert.equal(built.fixture.brief.copy.headline, undefined);
+  assert.equal(built.fixture.brief.copy.hideLede, true);
+
+  const preview = buildCampaignPreview(
+    built.fixture,
+    createFormValues(built.fixture, built.catalog),
+    built.catalog,
+  );
+  assert.equal(preview.ok, true);
+  if (!preview.ok) return;
+  assert.equal(preview.preview.draft.headline, "Morrow ceramic dripper");
+  assert.equal(preview.preview.draft.lede, "A dripper from Harbor Field.");
+  assert.equal(preview.preview.brief.offer, offer);
+});
+
+test("a changed offer derives a headline from the current brief", () => {
+  const initialOffer =
+    "50% off your first order when you spend $75 or more, excluding gift cards and sale items";
+  const freeShippingOffer = "Free shipping on orders over $75";
+  const unparsedOffer =
+    "A free custom engraving is included with every travel bottle for the whole launch season";
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    offer: initialOffer,
+    confirmations: {
+      ...completeInput().confirmations,
+      offer: initialOffer,
+    },
+  });
+  const values = createFormValues(built.fixture, built.catalog);
+  const first = buildCampaignPreview(built.fixture, values, built.catalog);
+  const second = buildCampaignPreview(
+    built.fixture,
+    { ...values, offer: freeShippingOffer },
+    built.catalog,
+  );
+  const third = buildCampaignPreview(
+    built.fixture,
+    { ...values, offer: unparsedOffer },
+    built.catalog,
+  );
+
+  assert.equal(first.ok, true);
+  assert.equal(second.ok, true);
+  assert.equal(third.ok, true);
+  if (!first.ok || !second.ok || !third.ok) return;
+  assert.equal(first.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(second.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(second.preview.brief.offer, freeShippingOffer);
+  assert.notEqual(first.preview.revision, second.preview.revision);
+  assert.equal(third.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(third.preview.brief.offer, unparsedOffer);
+});
+
+test("browser intake keeps qualifiers out of automatic headlines", () => {
+  const cases = [
+    { offer: "20% off, members only", headline: "Harbor Field travel bottle" },
+    { offer: "20% off, US customers only", headline: "Harbor Field travel bottle" },
+    { offer: "20% off orders over $50", headline: "Harbor Field travel bottle" },
+    { offer: "20% off, 27-30 November 2026", headline: "20% off the bottle." },
+  ] as const;
+
+  for (const { offer, headline } of cases) {
+    const built = buildBrowserOfferCatalog({
+      ...completeInput(),
+      offer,
+      confirmations: {
+        ...completeInput().confirmations,
+        offer,
+      },
+    });
+    const preview = buildCampaignPreview(
+      built.fixture,
+      createFormValues(built.fixture, built.catalog),
+      built.catalog,
+    );
+    assert.equal(preview.ok, true, offer);
+    if (!preview.ok) return;
+    assert.equal(preview.preview.draft.headline, headline, offer);
+    assert.equal(preview.preview.brief.offer, offer);
+    assert.equal(built.verification.offer, "confirmed");
+  }
+});
+
+test("every valid offer length renders successfully", () => {
+  for (let length = 1; length <= 180; length += 1) {
+    const offer =
+      length === 180
+        ? "x".repeat(180)
+        : "save ".repeat(40).slice(0, length).trim();
+    const input: BrowserOfferIntakeInput = {
+      ...completeInput(),
+      offer,
+      confirmations: {
+        ...completeInput().confirmations,
+        offer,
+      },
+    };
+    assert.equal(
+      validateBrowserOfferIntake(input).valid,
+      true,
+      `intake rejected a valid ${length}-character offer`,
+    );
+    const built = buildBrowserOfferCatalog(input);
+    const preview = buildCampaignPreview(
+      built.fixture,
+      createFormValues(built.fixture, built.catalog),
+      built.catalog,
+    );
+    assert.equal(
+      preview.ok,
+      true,
+      `preview failed for a ${length}-character offer`,
+    );
+    if (preview.ok) {
+      assert.ok(preview.preview.draft.headline.length <= 180);
+    }
+  }
+});
+
+test("a 180-character conditional offer uses the product name", () => {
+  const offer =
+    "50% off your first order when you spend $75 or more, excluding gift cards and sale items, plus free returns for the launch season and future refills ordered directly from our team.";
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    offer,
+    confirmations: {
+      ...completeInput().confirmations,
+      offer,
+    },
+  });
+  const preview = buildCampaignPreview(
+    built.fixture,
+    createFormValues(built.fixture, built.catalog),
+    built.catalog,
+  );
+  assert.equal(offer.length, 180);
+  assert.equal(preview.ok, true);
+  if (!preview.ok) return;
+  assert.equal(preview.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(preview.preview.brief.offer, offer);
+});
+
+test("a blank brand name uses the neutral preview identity", () => {
+  const built = buildBrowserOfferCatalog({
+    ...completeInput(),
+    brandName: "",
+  });
+  assert.equal(built.catalog.brands["browser-offer-brand"]?.name, "Preview brand");
+  assert.equal(built.catalog.brands["browser-offer-brand"]?.wordmark, "Preview");
+  assert.equal(built.fixture.brief.copy.lede, "A bottle from Preview brand.");
+});
+
+test("explicit confirmations bind to the exact offer, destination, and rights values", () => {
+  const confirmed = verifyBrowserOffer(completeInput());
+  assert.equal(confirmed.provisional, false);
+  assert.equal(confirmed.offer, "confirmed");
+  assert.equal(confirmed.destination, "direct");
+  assert.equal(confirmed.rights, "confirmed");
+
+  const edited = verifyBrowserOffer({
+    ...completeInput(),
+    offer: "25% off through 24 November 2026",
+  });
+  assert.equal(edited.offer, "provisional");
+  assert.equal(edited.destination, "direct");
+  assert.equal(edited.rights, "confirmed");
+});
+
+test("Amazon search destinations and pending rights stay provisional even when confirmed", () => {
+  assert.equal(
+    classifyDestination("https://www.amazon.com/s?k=Momisa+Glow+Box"),
+    "provisional",
+  );
+  const offer = "30% off, placeholder terms";
+  const destinationUrl = "https://www.amazon.com/s?k=Momisa+Glow+Box";
+  const rights = "Rights pending confirmation";
+  const input: BrowserOfferIntakeInput = {
+    ...completeInput(),
+    offer,
+    destinationUrl,
+    packshot: { ...packshot, rights },
+    confirmations: { offer, destination: destinationUrl, rights },
+  };
+  const built = buildBrowserOfferCatalog(input);
+  assert.deepEqual(built.verification, {
+    offer: "provisional",
+    destination: "provisional",
+    rights: "provisional",
+    provisional: true,
+  });
+  assert.equal(built.catalog.pilot?.status, "preview");
+  assert.match(built.catalog.pilot?.note ?? "", /offer, destination, media rights/i);
 });
 
 test("a changed offer changes the preview revision while keeping the approved packshot", () => {

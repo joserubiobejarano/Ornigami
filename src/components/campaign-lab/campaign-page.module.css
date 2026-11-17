@@ -441,6 +441,12 @@
     order: 0;
   }
 
+  .offerHero .copy .offer,
+  .offerHero .copy .action,
+  .offerHero .copy .facts {
+    order: 0;
+  }
+
   .editorialHero {
     gap: 30px;
     padding: 46px 44px 56px;

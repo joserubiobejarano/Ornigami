@@ -88,6 +88,12 @@ export function CampaignPage({
   const showProductLabel = !draft.headline
     .toLowerCase()
     .includes(brief.productName.toLowerCase());
+  const copyLength =
+    draft.headline.length +
+    (brief.copy.hideLede ? 0 : draft.lede.length) +
+    brief.offer.length +
+    draft.facts.reduce((total, fact) => total + fact.label.length + fact.value.length, 0);
+  const showClose = draft.sections.includes("close") && (isEditorial || copyLength >= 320);
 
   const style = {
     "--cp-page": tokens.page,
@@ -166,7 +172,9 @@ export function CampaignPage({
             <div className={styles.editorialBody}>
               {image}
               <div className={styles.editorialSupport}>
-                <p className={styles.lede}>{draft.lede}</p>
+                {brief.copy.hideLede ? null : (
+                  <p className={styles.lede} data-role="lede">{draft.lede}</p>
+                )}
                 <Offer offer={brief.offer} />
                 <Action href={brief.destinationUrl} label={brief.actionLabel} />
               </div>
@@ -179,10 +187,12 @@ export function CampaignPage({
               <h1 id={headingId} className={styles.headline}>
                 {draft.headline}
               </h1>
-              <p className={styles.lede}>{draft.lede}</p>
-              {showHeroFacts ? <FactList facts={draft.facts} className={styles.facts} /> : null}
+              {brief.copy.hideLede ? null : (
+                <p className={styles.lede} data-role="lede">{draft.lede}</p>
+              )}
               <Offer offer={brief.offer} />
               <Action href={brief.destinationUrl} label={brief.actionLabel} />
+              {showHeroFacts ? <FactList facts={draft.facts} className={styles.facts} /> : null}
             </div>
             {image}
           </section>
@@ -201,17 +211,19 @@ export function CampaignPage({
           </section>
         ) : null}
 
-        <section className={styles.close} aria-labelledby="campaign-close-heading">
-          <div className={styles.closeCopy}>
-            <h2 id="campaign-close-heading" className={styles.closeTitle}>
-              {brief.productName}
-            </h2>
-          </div>
-          <div className={styles.closeAction}>
-            <Action href={brief.destinationUrl} label={brief.actionLabel} />
-            <p className={styles.closeOffer}>{brief.offer}</p>
-          </div>
-        </section>
+        {showClose ? (
+          <section className={styles.close} aria-labelledby="campaign-close-heading">
+            <div className={styles.closeCopy}>
+              <h2 id="campaign-close-heading" className={styles.closeTitle}>
+                {brief.productName}
+              </h2>
+            </div>
+            <div className={styles.closeAction}>
+              <Action href={brief.destinationUrl} label={brief.actionLabel} />
+              <p className={styles.closeOffer}>{brief.offer}</p>
+            </div>
+          </section>
+        ) : null}
       </div>
 
       <footer className={styles.footer}>

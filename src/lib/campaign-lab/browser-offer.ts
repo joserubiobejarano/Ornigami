@@ -1,10 +1,11 @@
-import { BRANDS } from "./fixtures.ts";
 import {
   SINGLE_PRODUCT_OFFER_TEMPLATE,
   getDestinationUrlError,
 } from "./template.ts";
 import type {
   ApprovedAsset,
+  BrandDefinition,
+  BrandTokens,
   CampaignCatalog,
   CampaignFixture,
   ProductFact,
@@ -13,6 +14,7 @@ import type {
 
 export const BROWSER_OFFER_FIXTURE_ID = "browser-offer" as const;
 export const BROWSER_OFFER_ASSET_ID = "browser-offer-packshot" as const;
+export const BROWSER_OFFER_BRAND_ID = "browser-offer-brand" as const;
 export const BROWSER_OFFER_MAX_FACTS = 3;
 export const BROWSER_OFFER_MIN_FACTS = 2;
 
@@ -31,13 +33,31 @@ export type BrowserOfferPackshotInput = {
   fileName?: string;
 };
 
+export type BrowserOfferConfirmations = {
+  offer?: string | null;
+  destination?: string | null;
+  rights?: string | null;
+};
+
 export type BrowserOfferIntakeInput = {
+  brandName?: string;
   productName: string;
   offer: string;
   destinationUrl: string;
   facts: readonly BrowserOfferFactInput[];
   packshot: BrowserOfferPackshotInput | null;
   reviewedOn: string;
+  confirmations?: BrowserOfferConfirmations;
+};
+
+export type OfferVerification = "missing" | "provisional" | "confirmed";
+export type DestinationVerification = "missing" | "provisional" | "invalid" | "direct";
+
+export type BrowserOfferVerification = {
+  offer: OfferVerification;
+  destination: DestinationVerification;
+  rights: OfferVerification;
+  provisional: boolean;
 };
 
 export type BrowserOfferFactErrors = {
@@ -65,6 +85,133 @@ export function isProvisionalRights(value: string): boolean {
   return /pending|unconfirmed|not confirmed|preview only|confirm .*rights/i.test(
     value,
   );
+}
+
+export function classifyOffer(value: string): OfferVerification {
+  const offer = trimmed(value);
+  if (!offer) return "missing";
+  if (/placeholder|pending|unconfirmed|tbc|to be confirmed/i.test(offer)) {
+    return "provisional";
+  }
+  return "confirmed";
+}
+
+export function classifyDestination(value: string): DestinationVerification {
+  const destination = trimmed(value);
+  if (!destination) return "missing";
+  if (getDestinationUrlError(destination)) return "invalid";
+  if (
+    /amazon\.[^/]+\/s\?|(?:^|[/.])search(?:[/?]|$)|placeholder|pending|unconfirmed/i.test(
+      destination,
+    )
+  ) {
+    return "provisional";
+  }
+  return "direct";
+}
+
+function confirmedExactly(
+  confirmed: string | null | undefined,
+  value: string,
+): boolean {
+  return Boolean(confirmed) && confirmed === value.trim();
+}
+
+export function verifyBrowserOffer(input: BrowserOfferIntakeInput): BrowserOfferVerification {
+  const offerValue = input.offer.trim();
+  const destinationValue = input.destinationUrl.trim();
+  const rightsValue = input.packshot?.rights.trim() ?? "";
+  const confirmations = input.confirmations;
+
+  const offerClassification = classifyOffer(offerValue);
+  const destinationClassification = classifyDestination(destinationValue);
+  const rightsClassification: OfferVerification = rightsValue
+    ? isProvisionalRights(rightsValue)
+      ? "provisional"
+      : "confirmed"
+    : "missing";
+
+  const offer =
+    offerClassification === "confirmed" &&
+    !confirmedExactly(confirmations?.offer, offerValue)
+      ? "provisional"
+      : offerClassification;
+  const destination =
+    destinationClassification === "direct" &&
+    !confirmedExactly(confirmations?.destination, destinationValue)
+      ? "provisional"
+      : destinationClassification;
+  const rights =
+    rightsClassification === "confirmed" &&
+    !confirmedExactly(confirmations?.rights, rightsValue)
+      ? "provisional"
+      : rightsClassification;
+
+  return {
+    offer,
+    destination,
+    rights,
+    provisional:
+      offer === "provisional" ||
+      destination === "provisional" ||
+      rights === "provisional",
+  };
+}
+
+export function provisionalOfferInputs(
+  verification: BrowserOfferVerification,
+): string[] {
+  return [
+    verification.offer === "provisional" ? "offer" : null,
+    verification.destination === "provisional" ? "destination" : null,
+    verification.rights === "provisional" ? "media rights" : null,
+  ].filter((value): value is string => Boolean(value));
+}
+
+export function browserOfferPilotNote(
+  verification: BrowserOfferVerification,
+): string {
+  return verification.provisional
+    ? `Provisional: ${provisionalOfferInputs(verification).join(", ")}. Confirm before publication.`
+    : "Local browser brief · not publication approval.";
+}
+
+const NEUTRAL_TOKENS: BrandTokens = {
+  page: "#f6f3ec",
+  surface: "#e8e2d6",
+  ink: "#1f2a24",
+  muted: "#60695f",
+  accent: "#2f5d4a",
+  accentInk: "#f8faf7",
+  line: "#d5cdbf",
+  displayFont: "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+  bodyFont: "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+  displayWeight: 700,
+  displayTracking: "-0.035em",
+  labelCase: "uppercase",
+  labelTracking: "0.14em",
+  imageRadius: "12px",
+  buttonRadius: "999px",
+  heroImage: "framed",
+  heroOrder: "product-first",
+  prefersEditorial: false,
+  detailBackground: "#1f2a24",
+  detailInk: "#f6f3ec",
+  imageBlend: "normal",
+  showWordmarkMark: false,
+};
+
+function browserBrand(brandName?: string): BrandDefinition {
+  const name = brandName?.trim() || "Preview brand";
+  return {
+    id: BROWSER_OFFER_BRAND_ID,
+    name,
+    wordmark: brandName?.trim() || "Preview",
+    descriptor: brandName?.trim() ? "Local brand preview" : "Neutral preview",
+    tokens: { ...NEUTRAL_TOKENS },
+    headlineMode: "offer-led",
+    detailTitle: "Product details",
+  };
 }
 
 function trimmed(value: string): string {
@@ -95,15 +242,8 @@ function productNoun(productName: string): string {
   return (words.at(-1) ?? "product").toLowerCase();
 }
 
-function firstFactLede(facts: readonly ProductFact[], productName: string): string {
-  const fact = facts[0];
-  if (fact?.value.trim()) {
-    return `A ${productNoun(productName)} with ${fact.value
-      .trim()
-      .toLowerCase()
-      .replace(/[.!?]+$/, "")}.`;
-  }
-  return `A ${productNoun(productName)} from ${BRANDS["harbor-field"].name}.`;
+function productLede(productName: string, brand: BrandDefinition): string {
+  return `A ${productNoun(productName)} from ${brand.name}.`;
 }
 
 export function validateBrowserOfferIntake(
@@ -180,8 +320,13 @@ export function validateBrowserOfferIntake(
  */
 export function buildBrowserOfferCatalog(
   input: BrowserOfferIntakeInput,
-): { fixture: CampaignFixture; catalog: CampaignCatalog } {
-  const brand = BRANDS["harbor-field"];
+): {
+  fixture: CampaignFixture;
+  catalog: CampaignCatalog;
+  verification: BrowserOfferVerification;
+} {
+  const brand = browserBrand(input.brandName);
+  const verification = verifyBrowserOffer(input);
   const factsInput = input.facts.map((fact) => ({
     label: trimmed(fact.label),
     value: trimmed(fact.value),
@@ -248,13 +393,15 @@ export function buildBrowserOfferCatalog(
       productFacts,
       requiredFactGroups,
       copy: {
-        lede: firstFactLede(productFacts, input.productName),
+        lede: productLede(input.productName, brand),
+        hideLede: true,
       },
     },
   };
 
   return {
     fixture,
+    verification,
     catalog: {
       brands: { [brand.id]: brand },
       fixtures: { [fixture.id]: fixture },
@@ -262,8 +409,8 @@ export function buildBrowserOfferCatalog(
       pilot: {
         id: BROWSER_OFFER_FIXTURE_ID,
         label: "Browser offer intake",
-        status: "confirmed",
-        note: "Local browser brief · not publication approval.",
+        status: verification.provisional ? "preview" : "confirmed",
+        note: browserOfferPilotNote(verification),
       },
     },
   };

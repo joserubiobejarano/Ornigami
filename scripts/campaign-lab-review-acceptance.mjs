@@ -322,6 +322,7 @@ async function openFixture(page, base, fixture, { waitForImages = false } = {}) 
           );
           return Boolean(button) && !button.disabled;
         },
+        undefined,
         { timeout: 15_000 },
       )
       .catch(() => {});
@@ -333,6 +334,7 @@ async function openFixture(page, base, fixture, { waitForImages = false } = {}) 
           const images = Array.from(document.querySelectorAll("[data-preview-canvas] img"));
           return images.length > 0 && images.every((image) => image.complete);
         },
+        undefined,
         { timeout: 12_000 },
       )
       .catch(() => {});
@@ -354,6 +356,7 @@ async function generateAndSettle(page, { timeoutMs = 25_000 } = {}) {
         );
         return Boolean(candidate) && !candidate.disabled;
       },
+      undefined,
       { timeout: timeoutMs },
     )
     .catch(() => {});
@@ -377,6 +380,7 @@ async function waitForApproveEnabled(page, timeoutMs = 6_000) {
         );
         return Boolean(button) && !button.disabled;
       },
+      undefined,
       { timeout: timeoutMs },
     )
     .then(() => true)
@@ -806,6 +810,7 @@ async function runAlternateFormat(browserInstance, base) {
             Array.from(document.querySelectorAll("select")).some(
               (select) => select.id.endsWith("-format") && select.value === "offer",
             ),
+          undefined,
           { timeout: 8_000 },
         )
         .catch(() => {});
@@ -1025,6 +1030,7 @@ async function runImageDelayed(browserInstance, base) {
           const image = document.querySelector("[data-preview-canvas] img");
           return image && image.complete && image.naturalWidth > 0;
         },
+        undefined,
         { timeout: 15_000 },
       )
       .catch(() => {});
@@ -1070,6 +1076,7 @@ async function runImage404(browserInstance, base) {
           const image = document.querySelector("[data-preview-canvas] img");
           return image && image.complete;
         },
+        undefined,
         { timeout: 12_000 },
       )
       .catch(() => {});
@@ -1139,6 +1146,7 @@ async function runImageRecovery(browserInstance, base) {
           const image = document.querySelector("[data-preview-canvas] img");
           return image && image.complete;
         },
+        undefined,
         { timeout: 12_000 },
       )
       .catch(() => {});
@@ -1168,6 +1176,7 @@ async function runImageRecovery(browserInstance, base) {
           const image = document.querySelector("[data-preview-canvas] img");
           return image && image.complete && image.naturalWidth > 0;
         },
+        undefined,
         { timeout: 15_000 },
       )
       .catch(() => {});
@@ -1391,6 +1400,7 @@ async function runImageRevisionSwitch(browserInstance, base) {
           const image = document.querySelector("[data-preview-canvas] img");
           return image && image.complete && image.naturalWidth > 0;
         },
+        undefined,
         { timeout: 15_000 },
       )
       .catch(() => {});
@@ -1414,6 +1424,7 @@ async function runImageRevisionSwitch(browserInstance, base) {
       .waitForFunction(
         () =>
           document.querySelector("[data-approved]")?.getAttribute("data-approved") === "true",
+        undefined,
         { timeout: 5_000 },
       )
       .catch(() => {});

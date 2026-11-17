@@ -68,6 +68,19 @@ type CampaignLabProps = {
   catalog: CampaignCatalog;
   showFixtureNav?: boolean;
   localOnly?: boolean;
+  previewNotice?: string;
+  previewStatus?: "preview" | "confirmed";
+  previewNote?: string;
+  onEditorStateChange?: (snapshot: {
+    values: CampaignFormValues;
+    revision: string | null;
+    dirty: boolean;
+    rendered: {
+      offer: string;
+      destination: string;
+      rights: string;
+    } | null;
+  }) => void;
 };
 
 type Approval = {
@@ -101,6 +114,10 @@ export function CampaignLab({
   catalog,
   showFixtureNav = true,
   localOnly = false,
+  previewNotice,
+  previewStatus,
+  previewNote,
+  onEditorStateChange,
 }: CampaignLabProps) {
   const fixture = catalog.fixtures[initialFixtureId];
   const editorReady = useSyncExternalStore(() => () => {}, () => true, () => false);
@@ -131,6 +148,8 @@ export function CampaignLab({
     createPreviewImageGate(initialPreviewState.preview?.revision ?? null),
   );
 
+  const effectivePilotStatus = previewStatus ?? catalog.pilot?.status;
+  const effectivePilotNote = previewNote ?? catalog.pilot?.note;
   const brand = getBrand(values.brandId, catalog);
   const selectedAsset = getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
@@ -263,6 +282,23 @@ export function CampaignLab({
       inFlight.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    onEditorStateChange?.({
+      values,
+      revision: preview?.revision ?? null,
+      dirty,
+      rendered: preview
+        ? {
+            offer: preview.brief.offer,
+            destination: preview.brief.destinationUrl,
+            rights: isAdvertorialPreviewData(preview)
+              ? (preview.assets[0]?.asset.rights ?? "")
+              : preview.asset.rights,
+          }
+        : null,
+    });
+  }, [dirty, onEditorStateChange, preview, values]);
 
   function invalidateGenerationRequest() {
     requestGate.current.invalidate();
@@ -581,10 +617,13 @@ export function CampaignLab({
                 <span className="min-w-0 break-words text-left">Local only · not published</span>
               </span>
               {catalog.pilot ? (
-                <span className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-[#b98237] bg-[#fbf3e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a541d]">
+                <span
+                  className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-[#b98237] bg-[#fbf3e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a541d]"
+                  data-pilot-badge={effectivePilotStatus}
+                >
                   <span className="min-w-0 break-words text-left">
                     {catalog.pilot.label} ·{" "}
-                    {catalog.pilot.status === "preview" ? "preview inputs" : "confirmed inputs"}
+                    {effectivePilotStatus === "preview" ? "preview inputs" : "confirmed inputs"}
                   </span>
                 </span>
               ) : null}
@@ -638,8 +677,8 @@ export function CampaignLab({
                 Campaign brief
               </h2>
               <p className="mt-1 text-xs text-[#6d6a5f]">{fixture.description}</p>
-              {catalog.pilot?.note ? (
-                <p className="mt-1 text-xs font-medium text-[#7a541d]">{catalog.pilot.note}</p>
+              {catalog.pilot && effectivePilotNote ? (
+                <p className="mt-1 text-xs font-medium text-[#7a541d]">{effectivePilotNote}</p>
               ) : null}
             </div>
             <span className="min-w-0 max-w-full rounded-full bg-[#efe7d8] px-2.5 py-1 text-left text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346] break-words">
@@ -1270,8 +1309,18 @@ export function CampaignLab({
           data-layout={preview?.draft.layout}
           data-revision={revision ?? undefined}
           data-asset-id={preview?.asset.id}
+          data-asset-content-hash={preview?.asset.contentHash}
+          data-asset-source={preview?.asset.source}
           data-pilot={catalog.pilot?.id}
-          data-preview-status={catalog.pilot?.status}
+          data-preview-status={effectivePilotStatus}
+          data-preview-verification={
+            effectivePilotStatus === "preview"
+              ? "provisional"
+              : effectivePilotStatus === "confirmed"
+                ? "confirmed"
+                : undefined
+          }
+          data-preview-dirty={dirty ? "true" : "false"}
           data-generation-status={generation.status}
           data-generation-provider={generation.status === "idle" ? "deterministic" : generation.provider}
           data-generation-code={generation.status === "fallback" ? generation.code : undefined}
@@ -1316,6 +1365,7 @@ export function CampaignLab({
               className="max-w-full rounded-full border border-[#d4c8b5] bg-[#f8f3ea] px-3 py-1 font-mono text-[0.68rem] text-[#5b5346] break-words"
               title={revision ?? undefined}
               data-approved={approved ? "true" : "false"}
+              data-approved-revision={approval?.revision}
             >
               {revisionLabel ? `Revision ${revisionLabel}` : "No revision"}
             </span>
@@ -1394,9 +1444,10 @@ export function CampaignLab({
                   )}
                   onImageStateChange={handleImageStateChange}
                   previewLabel={
-                    catalog.pilot?.status === "preview"
+                    previewNotice ??
+                    (effectivePilotStatus === "preview"
                       ? "Preview · offer and destination unconfirmed"
-                      : undefined
+                      : undefined)
                   }
                 />
               )}

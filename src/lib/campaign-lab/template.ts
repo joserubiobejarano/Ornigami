@@ -208,10 +208,6 @@ export function validateCampaignForm(
   return issues;
 }
 
-function firstClause(value: string): string {
-  return value.split(/[,;.]/)[0]?.trim() ?? "";
-}
-
 function capitalize(value: string): string {
   return value.length ? value[0].toUpperCase() + value.slice(1) : value;
 }
@@ -227,15 +223,85 @@ function cloneFact(fact: ProductFact): ProductFact {
   };
 }
 
+/**
+ * Offer-led headlines are generated only for a narrow, fully parsed subset:
+ * one percentage or currency discount, optionally followed by a plain date
+ * window. Anything else - membership, region, thresholds, promo codes,
+ * bundles, exclusions or stock qualifiers - falls back to the product name.
+ * That default is deliberate: an unparsed condition must never disappear from
+ * the headline while the exact offer stays next to the action.
+ */
+const SIMPLE_DISCOUNT_LEAD =
+  /^(?:\d{1,3}(?:\.\d+)?\s?%|[$£€]\s?\d+(?:\.\d+)?)\s+off$/i;
+
+const MONTH_NAME =
+  /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i;
+const MONTH_NAME_ALL = new RegExp(MONTH_NAME.source, "gi");
+
+function isPlainDateWindow(value: string): boolean {
+  const normalized = withoutTerminalPunctuation(value).trim();
+  if (!normalized) return false;
+  const hasDateSignal =
+    MONTH_NAME.test(normalized) || /\b\d{4}\b/.test(normalized);
+  if (!hasDateSignal) return false;
+
+  const remainder = normalized
+    .replace(
+      /\b(?:on|through|thru|until|till|from|between|to|and)\b/gi,
+      " ",
+    )
+    .replace(MONTH_NAME_ALL, " ")
+    .replace(
+      /\b(?:mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/gi,
+      " ",
+    )
+    .replace(/\b\d{1,4}(?:st|nd|rd|th)?\b/g, " ")
+    .replace(/[–—\-,./]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return remainder === "";
+}
+
+/**
+ * Returns the offer lead only when shortening is demonstrably safe. A plain
+ * dated discount keeps its offer-led headline; every other form uses the
+ * product name until an operator supplies approved headline copy.
+ */
+export function safeOfferHeadlineLead(offer: string): string | null {
+  const clean = withoutTerminalPunctuation(offer.trim());
+  if (!clean) return null;
+
+  const segments = clean
+    .split(/[,;]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (segments.length === 0) return null;
+
+  let lead = segments[0];
+  const remainder = segments.slice(1);
+  const until = lead.match(/^(.*?)\s+(?:through|thru|until|till)\s+(.+)$/i);
+  if (until) {
+    lead = until[1].trim();
+    remainder.unshift(until[2].trim());
+  }
+
+  if (!SIMPLE_DISCOUNT_LEAD.test(lead)) return null;
+  if (!remainder.every(isPlainDateWindow)) return null;
+  return lead;
+}
+
+function productNameHeadline(brief: CampaignBrief): string {
+  return withoutTerminalPunctuation(brief.productName);
+}
+
 function buildOfferLedHeadline(brief: CampaignBrief): string {
-  const offerLead = withoutTerminalPunctuation(firstClause(brief.offer));
-  if (!offerLead) return withoutTerminalPunctuation(brief.productName);
+  const offerLead = safeOfferHeadlineLead(brief.offer);
+  if (!offerLead) return productNameHeadline(brief);
 
   const offerLed = `${capitalize(offerLead)} the ${withoutTerminalPunctuation(brief.productNoun)}.`;
-  if (offerLed.length > 68 && offerLead.length >= 40) {
-    return `${capitalize(offerLead)}.`;
-  }
-  return offerLed;
+  return offerLed.length <= SINGLE_PRODUCT_OFFER_TEMPLATE.limits.headline
+    ? offerLed
+    : productNameHeadline(brief);
 }
 
 export function buildHeadline(
