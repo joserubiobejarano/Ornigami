@@ -769,8 +769,6 @@ jobs:
             printf '%s\n' "$status" > "$EVIDENCE/portable/$name-exit.txt"
             if [ "$status" -ne 0 ]; then overall=1; fi
           }
-          run_portable prepared-brief node scripts/campaign-lab-prepared-brief-check.mjs \
-            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/prepared-brief"
           run_portable packshot node scripts/campaign-lab-packshot-hardening-check.mjs \
             --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/packshot"
           run_portable approval node scripts/campaign-lab-local-approval-check.mjs \
@@ -781,6 +779,8 @@ jobs:
           run_portable export node scripts/campaign-lab-export-check.mjs \
             --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/export" \
             --label portable-export --provisional
+          run_portable prepared-brief node scripts/campaign-lab-prepared-brief-check.mjs \
+            --url "http://127.0.0.1:$port" --out "$EVIDENCE/portable/prepared-brief"
           exit "$overall"
 
       - name: Summarize engineering checks and release status
