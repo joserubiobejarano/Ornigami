@@ -55,12 +55,12 @@ function themeWith(
 }
 
 test("revision identity is versioned and previews carry the version", () => {
-  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 3);
-  assert.equal(base.revisionIdentityVersion, 3);
+  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 4);
+  assert.equal(base.revisionIdentityVersion, 4);
   assert.equal(
     buildDraftRevisionIdentity(base.brief, base.draft, base.asset, base.theme)
       .identityVersion,
-    3,
+    4,
   );
   assert.equal(revisionWith(), base.revision);
 });
@@ -333,7 +333,7 @@ test("receipts expose the new identity version and keep v1 receipts readable", a
   const preview = {
     status: "confirmed" as const,
     revision: base.revision,
-    revisionIdentityVersion: 3,
+    revisionIdentityVersion: 4,
     productName: base.brief.productName,
     brandName: base.theme.brand.name,
     offer: base.brief.offer,
@@ -366,7 +366,7 @@ test("receipts expose the new identity version and keep v1 receipts readable", a
     packshotSha256: base.asset.contentHash,
     files: [],
   });
-  assert.equal(receipt.revisionIdentityVersion, 3);
+  assert.equal(receipt.revisionIdentityVersion, 4);
 
   const legacy = await buildExportReceipt({
     preview: { ...preview, revisionIdentityVersion: undefined },

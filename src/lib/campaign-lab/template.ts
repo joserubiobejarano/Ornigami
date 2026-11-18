@@ -27,6 +27,7 @@ import { CAMPAIGN_LAB_TEMPLATE_ID } from "./types.ts";
 import { findApprovedOfferPrice } from "./offer-emphasis.ts";
 import {
   presentationText,
+  showsProductLabel,
   shouldShowClose,
   visibleLede,
 } from "./presentation.ts";
@@ -745,7 +746,7 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
-export const CAMPAIGN_REVISION_IDENTITY_VERSION = 3;
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 4;
 
 function canonicalText(value: string): string {
   return presentationText(value);
@@ -805,6 +806,7 @@ export function buildDraftRevisionIdentity(
     layout: draft.layout,
     sections: [...draft.sections],
     closingSection: shouldShowClose(brief, draft),
+    productLabelVisible: showsProductLabel(brief, draft),
     previewNotice: canonicalOptionalText(notice ?? undefined),
     appearance: {
       page: canonicalColor(tokens.page),

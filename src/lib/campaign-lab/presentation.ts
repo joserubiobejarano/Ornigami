@@ -20,6 +20,15 @@ export function visibleLede(brief: CampaignBrief, draft: TemplateDraft): string 
   return brief.copy.hideLede ? "" : presentationText(draft.lede);
 }
 
+export function showsProductLabel(
+  brief: CampaignBrief,
+  draft: TemplateDraft,
+): boolean {
+  return !presentationText(draft.headline)
+    .toLowerCase()
+    .includes(presentationText(brief.productName).toLowerCase());
+}
+
 export function renderedCopyLength(
   brief: CampaignBrief,
   draft: TemplateDraft,

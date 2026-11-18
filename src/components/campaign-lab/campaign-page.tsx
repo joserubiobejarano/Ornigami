@@ -5,7 +5,10 @@ import type {
   PreviewImageStatus,
 } from "@/lib/campaign-lab/editor";
 import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";
-import { shouldShowClose } from "@/lib/campaign-lab/presentation";
+import {
+  showsProductLabel,
+  shouldShowClose,
+} from "@/lib/campaign-lab/presentation";
 import type { CampaignBrief, ProductFact, ResolvedBrandTheme, TemplateDraft } from "@/lib/campaign-lab/types";
 
 import styles from "./campaign-page.module.css";
@@ -111,9 +114,7 @@ export function CampaignPage({
   const usesBlendedImage = Boolean(tokens.imageBlend && tokens.imageBlend !== "normal");
   const usesEditorialOffer = tokens.offerStyle === "editorial";
   const usesPriceEmphasis = Boolean(tokens.offerPriceEmphasis);
-  const showProductLabel = !draft.headline
-    .toLowerCase()
-    .includes(brief.productName.toLowerCase());
+  const showProductLabel = showsProductLabel(brief, draft);
   const showClose = shouldShowClose(brief, draft);
 
   const style = {
