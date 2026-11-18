@@ -68,7 +68,10 @@ function categoryFor(error: Record<string, unknown>): ProviderFailureCategory {
     typeof error.message === "string" ? error.message.toLowerCase() : "";
 
   if (status === 401 || status === 403) return "authentication";
-  if (code === "insufficient_quota" || /quota/.test(code) || /quota/.test(message)) {
+  if (
+    code === "insufficient_quota" ||
+    /quota|credit[_ -]?balance|no credits/.test(`${code} ${type} ${message}`)
+  ) {
     return "quota";
   }
   if (status === 429) return "rate-limit";

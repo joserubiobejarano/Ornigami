@@ -227,9 +227,9 @@ test("authentication failures keep sanitized diagnostics through fallback and st
 });
 
 test("quota and rate-limit failures are distinguished", async () => {
-  for (const [code, expected, stop] of [
-    ["insufficient_quota", "quota", true],
-    ["rate_limit_exceeded", "rate-limit", false],
+  for (const [code, type, expected, stop] of [
+    ["insufficient_quota", "insufficient_quota", "quota", true],
+    ["rate_limit_exceeded", "requests", "rate-limit", false],
   ] as const) {
     const transport = new OpenAIGenerationTransport(
       fakeClient(async () => {
@@ -237,7 +237,7 @@ test("quota and rate-limit failures are distinguished", async () => {
           message: `Rejected with ${code}`,
           status: 429,
           code,
-          type: "insufficient_quota",
+          type,
         });
       }),
       "gpt-test",
@@ -395,4 +395,31 @@ test("service timeout fallback includes a timeout diagnostic", async () => {
   assert.equal(result.generation.status, "fallback");
   assert.equal(result.generation.code, "timeout");
   assert.equal(result.generation.diagnostics?.category, "timeout");
+});
+test("credit balance exhaustion is classified as quota even with a 429 status", async () => {
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async () => {
+      throw sdkError({
+        message: "429 You have no credits remaining. Add credits to continue using the API.",
+        status: 429,
+        code: "credit_balance_exhausted",
+        type: "insufficient_quota",
+      });
+    }),
+    "gpt-test",
+  );
+  await assert.rejects(
+    transport.generate(await capturedSparseRequest(), {
+      signal: new AbortController().signal,
+      timeoutMs: 100,
+    }),
+    (error: unknown) => {
+      assert.ok(error instanceof GenerationProviderError);
+      assert.equal(error.diagnostics.category, "quota");
+      assert.equal(error.diagnostics.httpStatus, 429);
+      assert.equal(error.diagnostics.providerCode, "credit_balance_exhausted");
+      assert.equal(shouldStopAfterFailure(error.diagnostics), true);
+      return true;
+    },
+  );
 });

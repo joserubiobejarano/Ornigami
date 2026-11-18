@@ -70,12 +70,12 @@ fixed request allowance, instead of character count alone.
 
 ## Offline verification
 
-- Campaign Lab tests: **176 passed, 0 failed**.
-- New transport tests: **9 passed**, covering:
+- Campaign Lab tests: **177 passed, 0 failed**.
+- New transport tests: **10 passed**, covering:
   - successful SDK response with known usage and no retry;
   - invalid model output;
   - authentication failure with secret redaction;
-  - quota and rate-limit distinctions;
+  - quota and rate-limit distinctions, including credit-balance exhaustion;
   - invalid parameters and parameter capture;
   - connection failure and timeout;
   - abort signal;
@@ -117,6 +117,36 @@ not fresh authorization. The canary must not run until a new explicit
 authorization and spend cap are supplied. It will make at most one generation
 request, record sanitized diagnostics or the validated proposal, and stop. It
 will not launch the A/B experiment.
+
+## Authorized canary outcome
+
+Fresh authorization was supplied for one request with a **$0.01** cap. The
+canary ran exactly once with zero retries and then stopped.
+
+- Shared adapter: `openai-chat-completions`
+- Model: `gpt-4o-mini`
+- HTTP status: **429**
+- Failure category after classifier correction: **quota**
+- Provider code: `credit_balance_exhausted`
+- Provider type: `insufficient_quota`
+- Diagnostic message: the organization has no credits remaining
+- Latency: **853 ms**
+- Usage: **unknown**
+- Known cost: **unknown**
+- Reserved exposure retained: **$0.00222495**
+- Validated proposal: none
+
+The raw canary record is preserved at
+`.local/campaign-lab-live-canary/preflight/canary/canary.json`. It was written
+before the classifier recognized `credit_balance_exhausted` as a quota failure,
+so its raw category is `rate-limit`. A derived record,
+`canary-derived.json`, preserves the raw record and records the corrected
+`quota` classification. No rerun was attempted. No full A/B experiment was
+launched.
+
+Recommendation: resolve the provider account credit balance before any further
+live evaluation. This canary failure is a current account/provider outcome; it
+does not prove the cause of the earlier 12 failures.
 
 ## Historical cause
 
