@@ -341,6 +341,28 @@ test("a product-led profile keeps a safe discount out of the headline", () => {
   );
 });
 
+test("an approved campaign headline overrides a product-led profile", () => {
+  const catalog = {
+    ...BASE_CATALOG,
+    brands: {
+      ...BASE_CATALOG.brands,
+      "morrow-ceramic": {
+        ...BASE_CATALOG.brands["morrow-ceramic"],
+        headlineMode: "product-led" as const,
+      },
+    },
+  };
+  const brief = CAMPAIGN_FIXTURES["long-copy"].brief;
+  assert.equal(
+    buildHeadline(brief, "morrow-ceramic", catalog),
+    brief.copy.headline,
+  );
+  assert.equal(
+    assembleDraft(brief, "morrow-ceramic", catalog).headline,
+    brief.copy.headline,
+  );
+});
+
 test("headline assembly and accent contrast remain deterministic", () => {
   const values = sparseValues();
   const brief = CAMPAIGN_FIXTURES.sparse.brief;

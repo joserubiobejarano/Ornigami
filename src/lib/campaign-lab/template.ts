@@ -67,22 +67,28 @@ export const SINGLE_PRODUCT_OFFER_TEMPLATE: TemplateManifest = {
     },
   },
   /**
-   * Profile headline choices map onto the same OpeningAngle representation.
-   * Explicit offer-led and product-led profiles constrain both the
-   * deterministic headline and successful provider generation. The legacy
-   * angle mode keeps the broad, brief-compatible generation choices.
+   * Headline precedence, shared by deterministic previews, provider requests,
+   * proposal validation, and fallback:
+   *
+   * 1. An explicit approved campaign headline (or selected approved opening
+   *    carrying one) resolves to story-led and overrides the profile.
+   * 2. Otherwise an explicit offer-led or product-led profile constrains both
+   *    the deterministic headline and successful provider generation.
+   * 3. The legacy angle mode keeps the broad, brief-compatible choices.
+   *
+   * Profile choices reuse the same OpeningAngle representation.
    */
   profileHeadlineModes: {
     "offer-led": {
       label: "Offer-led profile",
       description:
-        "Deterministic and generated headlines may use only the offer-led opening.",
+        "When no approved campaign headline overrides it, deterministic and generated headlines use only the offer-led opening.",
       angles: ["offer-led"],
     },
     "product-led": {
       label: "Product-led profile",
       description:
-        "Deterministic and generated headlines may use only the product-led opening.",
+        "When no approved campaign headline overrides it, deterministic and generated headlines use only the product-led opening.",
       angles: ["product-led"],
     },
     angle: {
@@ -363,22 +369,22 @@ export function buildHeadlineForAngle(brief: CampaignBrief, angle: OpeningAngle)
   }
 }
 
-/** Supported for this brief. A story opening needs approved story copy. */
-function legacyAllowedAngles(brief: CampaignBrief): OpeningAngle[] {
-  if (brief.openingFocus && brief.copy.headline?.trim()) return ["story-led"];
-  const angles: OpeningAngle[] = ["offer-led", "product-led"];
-  if (brief.copy.headline?.trim()) angles.push("story-led");
-  return angles;
-}
-
+/**
+ * A selected approved opening or explicit approved campaign headline wins over
+ * every profile choice. Without one, the profile's permitted angles apply.
+ */
 export function getAllowedAngles(
   brief: CampaignBrief,
   brand?: { headlineMode: ProfileHeadlineMode },
 ): OpeningAngle[] {
+  if (brief.copy.headline?.trim()) return ["story-led"];
   if (!brand || brand.headlineMode === "angle") {
-    return legacyAllowedAngles(brief);
+    return ["offer-led", "product-led"];
   }
-  return [...SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes[brand.headlineMode].angles];
+  return [
+    ...SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes[brand.headlineMode]
+      .angles,
+  ];
 }
 
 function chooseLayout(

@@ -43,13 +43,14 @@ function stubProvider(value: unknown): CampaignGenerationProvider {
 
 function catalogWithHeadlineMode(
   headlineMode: "offer-led" | "product-led" | "angle",
+  brandId: keyof typeof BASE_CATALOG.brands = "harbor-field",
 ) {
   return {
     ...BASE_CATALOG,
     brands: {
       ...BASE_CATALOG.brands,
-      "harbor-field": {
-        ...BASE_CATALOG.brands["harbor-field"],
+      [brandId]: {
+        ...BASE_CATALOG.brands[brandId],
         headlineMode,
       },
     },
@@ -160,6 +161,105 @@ test("a product-led profile governs successful provider generation", async () =>
   assert.equal(result.preview.asset.id, values.assetId);
   assert.equal(result.preview.asset.alt, deterministic.preview.asset.alt);
   assert.notEqual(result.preview.revision, deterministic.preview.revision);
+});
+
+test("product-led yields to an approved campaign headline in generation and fallback", async () => {
+  const fixture = CAMPAIGN_FIXTURES["long-copy"];
+  const values = createFormValues(fixture);
+  const catalog = catalogWithHeadlineMode("product-led", "morrow-ceramic");
+  const deterministic = buildCampaignPreview(fixture, values, catalog);
+  const success = await runCampaignGeneration(
+    { fixtureId: "long-copy", values },
+    { env: env(), catalog },
+  );
+
+  assert.equal(deterministic.ok, true);
+  assert.equal(success.ok, true);
+  if (!success.ok || !deterministic.ok) return;
+  assert.equal(success.generation.status, "generated");
+  assert.equal(success.generation.angle, "story-led");
+  assert.equal(success.preview.draft.headline, fixture.brief.copy.headline);
+  assert.equal(success.preview.brief.offer, values.offer);
+  assert.equal(success.preview.brief.destinationUrl, values.destinationUrl);
+  assert.equal(success.preview.asset.id, values.assetId);
+
+  const fallback = await runCampaignGeneration(
+    { fixtureId: "long-copy", values },
+    {
+      catalog,
+      provider: stubProvider({
+        angle: "product-led",
+        layout: "editorial-long-copy",
+        sections: ["hero", "detail", "close"],
+        factIds: ["interior", "outlet", "body"],
+      }),
+    },
+  );
+  assert.equal(fallback.ok, true);
+  if (!fallback.ok) return;
+  assert.equal(fallback.generation.status, "fallback");
+  assert.equal(fallback.generation.code, "invalid");
+  assert.match(
+    fallback.generation.issues?.join(" ") ?? "",
+    /opening angle is not supported/i,
+  );
+  assert.equal(fallback.preview.revision, deterministic.preview.revision);
+  assert.equal(fallback.preview.draft.headline, fixture.brief.copy.headline);
+  assert.equal(fallback.preview.brief.offer, values.offer);
+  assert.equal(fallback.preview.brief.destinationUrl, values.destinationUrl);
+  assert.equal(fallback.preview.asset.id, values.assetId);
+});
+
+test("product-led preserves a selected approved opening through generation and fallback", async () => {
+  const fixture = CAMPAIGN_FIXTURES["long-copy"];
+  const values = {
+    ...createFormValues(fixture),
+    openingFocus: "first-pour",
+  };
+  const catalog = catalogWithHeadlineMode("product-led", "morrow-ceramic");
+  const deterministic = buildCampaignPreview(fixture, values, catalog);
+  const success = await runCampaignGeneration(
+    { fixtureId: "long-copy", values },
+    { env: env(), catalog },
+  );
+
+  assert.equal(deterministic.ok, true);
+  assert.equal(success.ok, true);
+  if (!success.ok || !deterministic.ok) return;
+  assert.equal(success.generation.status, "generated");
+  assert.equal(success.generation.angle, "story-led");
+  assert.equal(
+    success.preview.draft.headline,
+    "Start with a slower first pour",
+  );
+  assert.equal(success.preview.brief.offer, values.offer);
+  assert.equal(success.preview.brief.destinationUrl, values.destinationUrl);
+  assert.equal(success.preview.asset.id, values.assetId);
+
+  const fallback = await runCampaignGeneration(
+    { fixtureId: "long-copy", values },
+    {
+      catalog,
+      provider: stubProvider({
+        angle: "offer-led",
+        layout: "editorial-long-copy",
+        sections: ["hero", "detail", "close"],
+        factIds: ["interior", "outlet", "body"],
+      }),
+    },
+  );
+  assert.equal(fallback.ok, true);
+  if (!fallback.ok) return;
+  assert.equal(fallback.generation.status, "fallback");
+  assert.equal(fallback.generation.code, "invalid");
+  assert.equal(fallback.preview.revision, deterministic.preview.revision);
+  assert.equal(
+    fallback.preview.draft.headline,
+    "Start with a slower first pour",
+  );
+  assert.equal(fallback.preview.brief.offer, values.offer);
+  assert.equal(fallback.preview.brief.destinationUrl, values.destinationUrl);
+  assert.equal(fallback.preview.asset.id, values.assetId);
 });
 
 test("an incompatible proposal recovers through the product-led fallback", async () => {
@@ -450,16 +550,14 @@ test("template slots enforce approved facts and length limits", () => {
   );
 });
 
-test("story-led is only available when approved story copy exists", () => {
+test("approved campaign headline wins over every profile choice", () => {
   assert.deepEqual(getAllowedAngles(CAMPAIGN_FIXTURES.sparse.brief), ["offer-led", "product-led"]);
   assert.deepEqual(getAllowedAngles(CAMPAIGN_FIXTURES["long-copy"].brief), [
-    "offer-led",
-    "product-led",
     "story-led",
   ]);
 });
 
-test("explicit profile choices constrain generation angles and legacy angle stays broad", () => {
+test("profile choices apply only when no campaign headline overrides them", () => {
   const brief = CAMPAIGN_FIXTURES.sparse.brief;
   assert.deepEqual(
     getAllowedAngles(brief, { headlineMode: "product-led" }),
@@ -477,11 +575,15 @@ test("explicit profile choices constrain generation angles and legacy angle stay
   const storyBrief = CAMPAIGN_FIXTURES["long-copy"].brief;
   assert.deepEqual(
     getAllowedAngles(storyBrief, { headlineMode: "product-led" }),
-    ["product-led"],
+    ["story-led"],
+  );
+  assert.deepEqual(
+    getAllowedAngles(storyBrief, { headlineMode: "offer-led" }),
+    ["story-led"],
   );
   assert.deepEqual(
     getAllowedAngles(storyBrief, { headlineMode: "angle" }),
-    ["offer-led", "product-led", "story-led"],
+    ["story-led"],
   );
 });
 

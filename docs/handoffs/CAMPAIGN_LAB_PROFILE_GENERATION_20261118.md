@@ -4,6 +4,7 @@ Status: synthetic, local-only verification. Not brand approval and not
 publication approval.
 
 - Base: `d83babe` (`Support product-led pilot headlines`)
+- Precedence follow-up base: `59368ff` (`Govern generation with profile headline mode`)
 - Entry point: `/campaign-lab?fixture=<pilot-fixture>`
 - Local evidence: `.local/harbor-field-portability/` (Git-ignored)
 
@@ -15,25 +16,32 @@ The supported profile choices now sit with the versioned template contract in
 `ProfileHeadlineMode` and `TemplateProfileHeadlineManifest` in
 `src/lib/campaign-lab/types.ts`.
 
-| Profile `headlineMode` | Deterministic headline | Successful generation angles |
+| Precedence | Deterministic headline | Successful generation angles |
 | --- | --- | --- |
-| `product-led` | Product name | `product-led` only |
-| `offer-led` | Offer-led headline | `offer-led` only |
-| `angle` (legacy) | Product name | Broad brief-compatible set: `offer-led`, `product-led`, and `story-led` when approved story copy exists |
+| Explicit approved campaign headline, or selected approved opening carrying one | The approved headline copy | `story-led` only |
+| `product-led` profile, no campaign headline | Product name | `product-led` only |
+| `offer-led` profile, no campaign headline | Offer-led headline | `offer-led` only |
+| `angle` legacy, no campaign headline | Product name | Broad brief-compatible set: `offer-led` and `product-led` |
 
-The explicit choices reuse the existing `OpeningAngle` representation. They do
-not add a second headline system.
+The precedence is documented beside `profileHeadlineModes` in the template
+manifest. Approved campaign copy or a selected approved opening wins first.
+The profile's constrained choices apply only when there is no campaign-specific
+headline. The explicit choices reuse the existing `OpeningAngle`
+representation; they do not add a second headline system.
 
 ## Generation path
 
 `runCampaignGeneration` passes the resolved brand to
-`getAllowedAngles(brief, brand)`. The resulting list becomes
-`request.allowed.angles`, so the provider sees the profile's permitted choices
-and `validateGenerationProposal` rejects any incompatible opening angle.
+`getAllowedAngles(brief, brand)`. That helper applies the shared precedence
+before building `request.allowed.angles`, so the provider sees the same resolved
+opening as the deterministic preview. `validateGenerationProposal` rejects any
+incompatible angle.
 
 An incompatible proposal, invalid provider output, or timeout recovers through
-the existing deterministic preview. For a `product-led` profile that fallback
-is also product-led, with the original offer, destination, facts, and packshot.
+the existing deterministic preview, which applies the same precedence. For a
+`product-led` profile without campaign headline copy that fallback is
+product-led; with approved headline copy or a selected approved opening it stays
+story-led. The original offer, destination, facts, and packshot are unchanged.
 
 The local test provider prefers `story-led` when it is permitted and approved,
 otherwise `offer-led` when permitted, otherwise `product-led`. This preserves
@@ -42,10 +50,12 @@ generate successfully.
 
 ## Compatibility
 
-- Existing `offer-led` profiles still generate `offer-led`.
+- Existing `offer-led` profiles still generate `offer-led` when no approved
+  campaign headline is selected.
 - Legacy `angle` profiles keep their deterministic product-name headline and
-  their broad generation choices.
-- Story-led behavior for legacy approved-story briefs is unchanged.
+  their broad generation choices when no approved campaign headline is selected.
+- Approved campaign headlines and selected approved openings resolve to
+  story-led under every profile and in both generation and fallback.
 
 ## Synthetic Harbor Field verification
 
@@ -78,9 +88,12 @@ Browser results:
 - Invalid-output mode: fallback `invalid`, product-led headline, fixed offer.
 - Timeout mode: fallback `timeout`, product-led headline, fixed offer.
 
-Focused checks: **140 Campaign Lab tests passed, 0 failed**; Harbor Field
+Focused checks: **143 Campaign Lab tests passed, 0 failed**; Harbor Field
 browser review **45 checks passed, 0 failed**; invalid and timeout mode checks
-**2/2 each**. TypeScript and focused ESLint passed.
+**2/2 each**. TypeScript and focused ESLint passed. Coverage includes
+product-led profiles with and without approved headline copy, selected opening
+focus, offer-led profiles, and legacy angle profiles, with successful generation
+and fallback preserving the resolved opening and commercial inputs.
 
 ## Local artifacts
 
