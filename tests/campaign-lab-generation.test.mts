@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  BASE_CATALOG,
   CAMPAIGN_FIXTURES,
   createFormValues,
 } from "../src/lib/campaign-lab/fixtures.ts";
@@ -36,6 +37,21 @@ function stubProvider(value: unknown): CampaignGenerationProvider {
     label: "Stub provider",
     async generate() {
       return value;
+    },
+  };
+}
+
+function catalogWithHeadlineMode(
+  headlineMode: "offer-led" | "product-led" | "angle",
+) {
+  return {
+    ...BASE_CATALOG,
+    brands: {
+      ...BASE_CATALOG.brands,
+      "harbor-field": {
+        ...BASE_CATALOG.brands["harbor-field"],
+        headlineMode,
+      },
     },
   };
 }
@@ -117,6 +133,142 @@ test("the local test provider succeeds through the server generation path", asyn
     assert.equal(fact.value, fixture.brief.productFacts.find((item) => item.id === fact.id)?.value);
   }
   assert.deepEqual(validateTemplateDraft(result.preview.brief, result.preview.draft), []);
+});
+
+test("a product-led profile governs successful provider generation", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const values = createFormValues(fixture);
+  const catalog = catalogWithHeadlineMode("product-led");
+  const deterministic = buildCampaignPreview(fixture, values, catalog);
+  const result = await runCampaignGeneration(
+    { fixtureId: "sparse", values },
+    { env: env(), catalog },
+  );
+
+  assert.equal(deterministic.ok, true);
+  assert.equal(result.ok, true);
+  if (!result.ok || !deterministic.ok) return;
+
+  assert.equal(result.generation.status, "generated");
+  assert.equal(result.generation.angle, "product-led");
+  assert.equal(
+    result.preview.draft.headline,
+    "Harbor Field travel bottle",
+  );
+  assert.equal(result.preview.brief.offer, values.offer);
+  assert.equal(result.preview.brief.destinationUrl, values.destinationUrl);
+  assert.equal(result.preview.asset.id, values.assetId);
+  assert.equal(result.preview.asset.alt, deterministic.preview.asset.alt);
+  assert.notEqual(result.preview.revision, deterministic.preview.revision);
+});
+
+test("an incompatible proposal recovers through the product-led fallback", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const values = createFormValues(fixture);
+  const catalog = catalogWithHeadlineMode("product-led");
+  const deterministic = buildCampaignPreview(fixture, values, catalog);
+  const result = await runCampaignGeneration(
+    { fixtureId: "sparse", values },
+    {
+      catalog,
+      provider: stubProvider({
+        angle: "offer-led",
+        layout: "offer-led-one-photo",
+        sections: ["hero", "hero-facts", "close"],
+        factIds: ["capacity", "closure"],
+      }),
+    },
+  );
+
+  assert.equal(deterministic.ok, true);
+  assert.equal(result.ok, true);
+  if (!result.ok || !deterministic.ok) return;
+
+  assert.equal(result.generation.status, "fallback");
+  assert.equal(result.generation.code, "invalid");
+  assert.match(
+    result.generation.issues?.join(" ") ?? "",
+    /opening angle is not supported/i,
+  );
+  assert.equal(result.preview.revision, deterministic.preview.revision);
+  assert.equal(result.preview.draft.headline, "Harbor Field travel bottle");
+  assert.equal(result.preview.brief.offer, values.offer);
+  assert.equal(result.preview.brief.destinationUrl, values.destinationUrl);
+  assert.equal(result.preview.asset.id, values.assetId);
+});
+
+test("invalid output and timeout keep the product-led fallback and fixed inputs", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const values = createFormValues(fixture);
+  const catalog = catalogWithHeadlineMode("product-led");
+  const deterministic = buildCampaignPreview(fixture, values, catalog);
+  assert.equal(deterministic.ok, true);
+  if (!deterministic.ok) return;
+
+  for (const [mode, code] of [
+    ["invalid", "invalid"],
+    ["timeout", "timeout"],
+  ] as const) {
+    const result = await runCampaignGeneration(
+      { fixtureId: "sparse", values },
+      {
+        catalog,
+        env: env({
+          CAMPAIGN_LAB_GENERATION_TEST_MODE: mode,
+          CAMPAIGN_LAB_GENERATION_TIMEOUT_MS: "50",
+        }),
+      },
+    );
+    assert.equal(result.ok, true, mode);
+    if (!result.ok) continue;
+    assert.equal(result.generation.status, "fallback", mode);
+    assert.equal(result.generation.code, code, mode);
+    assert.equal(result.preview.revision, deterministic.preview.revision);
+    assert.equal(result.preview.draft.headline, "Harbor Field travel bottle");
+    assert.equal(result.preview.brief.offer, values.offer);
+    assert.equal(result.preview.brief.destinationUrl, values.destinationUrl);
+    assert.equal(result.preview.asset.id, values.assetId);
+  }
+});
+
+test("offer-led and legacy angle profiles stay compatible", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const values = createFormValues(fixture);
+
+  const offerLedCatalog = catalogWithHeadlineMode("offer-led");
+  const offerLed = await runCampaignGeneration(
+    { fixtureId: "sparse", values },
+    { env: env(), catalog: offerLedCatalog },
+  );
+  assert.equal(offerLed.ok, true);
+  if (offerLed.ok) {
+    assert.equal(offerLed.generation.status, "generated");
+    assert.equal(offerLed.generation.angle, "offer-led");
+    assert.equal(offerLed.preview.brief.offer, values.offer);
+  }
+
+  const legacyCatalog = catalogWithHeadlineMode("angle");
+  const legacyDeterministic = buildCampaignPreview(
+    fixture,
+    values,
+    legacyCatalog,
+  );
+  const legacy = await runCampaignGeneration(
+    { fixtureId: "sparse", values },
+    { env: env(), catalog: legacyCatalog },
+  );
+  assert.equal(legacyDeterministic.ok, true);
+  assert.equal(legacy.ok, true);
+  if (legacy.ok && legacyDeterministic.ok) {
+    assert.equal(legacy.generation.status, "generated");
+    assert.equal(legacy.generation.angle, "offer-led");
+    assert.equal(
+      legacyDeterministic.preview.draft.headline,
+      "Harbor Field travel bottle",
+    );
+    assert.equal(legacy.preview.brief.offer, values.offer);
+    assert.equal(legacy.preview.brief.destinationUrl, values.destinationUrl);
+  }
 });
 
 test("the local test provider preserves the long-copy story angle and detail arrangement", async () => {
@@ -305,6 +457,32 @@ test("story-led is only available when approved story copy exists", () => {
     "product-led",
     "story-led",
   ]);
+});
+
+test("explicit profile choices constrain generation angles and legacy angle stays broad", () => {
+  const brief = CAMPAIGN_FIXTURES.sparse.brief;
+  assert.deepEqual(
+    getAllowedAngles(brief, { headlineMode: "product-led" }),
+    ["product-led"],
+  );
+  assert.deepEqual(
+    getAllowedAngles(brief, { headlineMode: "offer-led" }),
+    ["offer-led"],
+  );
+  assert.deepEqual(
+    getAllowedAngles(brief, { headlineMode: "angle" }),
+    ["offer-led", "product-led"],
+  );
+
+  const storyBrief = CAMPAIGN_FIXTURES["long-copy"].brief;
+  assert.deepEqual(
+    getAllowedAngles(storyBrief, { headlineMode: "product-led" }),
+    ["product-led"],
+  );
+  assert.deepEqual(
+    getAllowedAngles(storyBrief, { headlineMode: "angle" }),
+    ["offer-led", "product-led", "story-led"],
+  );
 });
 
 test("paid provider configuration is explicit and bounded", () => {

@@ -55,6 +55,7 @@ function buildGenerationRequest(
   const layoutCapacity = Object.fromEntries(
     layouts.map((layout) => [layout, layoutFactCapacity(layout)]),
   ) as Record<LayoutId, number>;
+  const brand = getBrand(brief.brandId, catalog);
 
   return {
     template: {
@@ -63,7 +64,7 @@ function buildGenerationRequest(
     },
     brand: {
       id: brief.brandId,
-      name: getBrand(brief.brandId, catalog).name,
+      name: brand.name,
     },
     campaign: {
       fixtureId: fixtureId as GenerationRequest["campaign"]["fixtureId"],
@@ -79,7 +80,7 @@ function buildGenerationRequest(
       })),
     },
     allowed: {
-      angles: getAllowedAngles(brief),
+      angles: getAllowedAngles(brief, brand),
       layouts,
       sectionOrders,
       layoutFactCapacity: layoutCapacity,

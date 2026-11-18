@@ -151,6 +151,14 @@ export type AdvertorialSectionIssue = {
  */
 export type OpeningAngle = "offer-led" | "product-led" | "story-led";
 
+/**
+ * The profile-level headline choice. "offer-led" and "product-led" are
+ * explicit choices and also constrain generation to the same angle. "angle"
+ * is the legacy product-name deterministic mode and keeps the broad,
+ * brief-compatible generation choices.
+ */
+export type ProfileHeadlineMode = "offer-led" | "product-led" | "angle";
+
 /** Named sections the versioned template can render, in legal orders. */
 export type SectionId = "hero" | "hero-facts" | "detail" | "close";
 
@@ -203,7 +211,7 @@ export type BrandDefinition = {
   wordmark: string;
   descriptor: string;
   tokens: BrandTokens;
-  headlineMode: "offer-led" | "product-led" | "angle";
+  headlineMode: ProfileHeadlineMode;
   detailTitle: string;
 };
 
@@ -368,6 +376,13 @@ export type TemplateSectionManifest = {
   description: string;
 };
 
+export type TemplateProfileHeadlineManifest = {
+  label: string;
+  description: string;
+  /** Angles a successful provider proposal may choose for this profile. */
+  angles: readonly OpeningAngle[];
+};
+
 export type TemplateManifest = {
   id: typeof CAMPAIGN_LAB_TEMPLATE_ID;
   version: string;
@@ -377,6 +392,10 @@ export type TemplateManifest = {
   allowedAssetRoles: readonly AssetRole[];
   layouts: Record<LayoutId, TemplateLayoutManifest>;
   angles: Record<OpeningAngle, TemplateAngleManifest>;
+  profileHeadlineModes: Record<
+    ProfileHeadlineMode,
+    TemplateProfileHeadlineManifest
+  >;
   sections: Record<SectionId, TemplateSectionManifest>;
   limits: {
     productName: number;

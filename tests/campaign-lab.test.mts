@@ -42,6 +42,18 @@ test("the single-product template is versioned and declares its contract", () =>
   assert.ok(SINGLE_PRODUCT_OFFER_TEMPLATE.requiredInputs.includes("destinationUrl"));
   assert.ok(SINGLE_PRODUCT_OFFER_TEMPLATE.requiredInputs.includes("assetId"));
   assert.deepEqual(SINGLE_PRODUCT_OFFER_TEMPLATE.allowedAssetRoles, ["product-hero"]);
+  assert.deepEqual(
+    SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes["product-led"].angles,
+    ["product-led"],
+  );
+  assert.deepEqual(
+    SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes["offer-led"].angles,
+    ["offer-led"],
+  );
+  assert.deepEqual(
+    SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes.angle.angles,
+    ["offer-led", "product-led", "story-led"],
+  );
   assert.deepEqual(Object.keys(SINGLE_PRODUCT_OFFER_TEMPLATE.layouts).sort(), [
     "editorial-long-copy",
     "offer-led-one-photo",

@@ -70,7 +70,11 @@ export class LocalTestGenerationProvider implements CampaignGenerationProvider {
     const storyHeadline = request.campaign.storyHeadline?.trim();
     const angle = storyHeadline && request.allowed.angles.includes("story-led")
       ? "story-led"
-      : "offer-led";
+      : request.allowed.angles.includes("offer-led")
+        ? "offer-led"
+        : request.allowed.angles.includes("product-led")
+          ? "product-led"
+          : "offer-led";
 
     const candidate: LayoutId = angle === "story-led" ||
       request.campaign.offer.length > 70 ||
