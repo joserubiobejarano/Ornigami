@@ -24,6 +24,7 @@ import type {
   BrowserOfferIntakeInput,
   BrowserOfferVerification,
 } from "@/lib/campaign-lab/browser-offer";
+import { browserOfferBriefFromIntake } from "@/lib/campaign-lab/browser-offer-brief";
 import {
   hasPersistedBriefContent,
   OFFER_INTAKE_BRIEF_STORAGE_KEY,
@@ -56,6 +57,8 @@ type SubmittedBrief = {
   key: number;
   fixture: CampaignFixture;
   catalog: CampaignCatalog;
+  input: BrowserOfferIntakeInput;
+  assetSrc: string;
 };
 
 type EditorSnapshot = {
@@ -578,6 +581,8 @@ export function OfferIntake() {
       rights: previous.rights,
     };
     setProductName(snapshot.values.productName);
+    setAudience(snapshot.values.audience ?? "");
+    setObjective(snapshot.values.objective ?? "");
     setOffer(snapshot.values.offer);
     setDestinationUrl(snapshot.values.destinationUrl);
   }, []);
@@ -620,6 +625,8 @@ export function OfferIntake() {
       key: submissionCount.current,
       fixture: built.fixture,
       catalog: built.catalog,
+      input,
+      assetSrc: input.packshot?.src ?? built.catalog.assets[0]?.src ?? "",
     });
     setRestoredBrief(false);
     renderedVerificationRef.current = { revision: null, dirty: false };
@@ -694,7 +701,18 @@ export function OfferIntake() {
           initialFixtureId={submitted.fixture.id}
           catalog={submitted.catalog}
           showFixtureNav={false}
-          localOnly
+          browserBrief={(nextValues) =>
+            browserOfferBriefFromIntake({
+              ...submitted.input,
+              productName: nextValues.productName,
+              audience: nextValues.audience,
+              objective: nextValues.objective,
+              offer: nextValues.offer,
+              destinationUrl: nextValues.destinationUrl,
+              confirmations,
+            })
+          }
+          browserAssetSrc={submitted.assetSrc}
           previewNotice={renderedNotice}
           previewStatus={renderedStatus}
           previewNote={renderedNote}
@@ -864,25 +882,52 @@ export function OfferIntake() {
                 <Input
                   id={audienceId}
                   value={audience}
-                  onChange={(event) => setAudience(event.target.value)}
+                  onChange={(event) => {
+                    setAudience(event.target.value);
+                    clearError("audience");
+                  }}
                   autoComplete="off"
                   placeholder="Who is this campaign for?"
+                  aria-invalid={Boolean(fieldError(errors, "audience"))}
+                  aria-describedby={
+                    fieldError(errors, "audience")
+                      ? `${audienceId}-error`
+                      : undefined
+                  }
                 />
+                {fieldError(errors, "audience") ? (
+                  <p id={`${audienceId}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {fieldError(errors, "audience")}
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={objectiveId}>Campaign objective</Label>
                 <Input
                   id={objectiveId}
                   value={objective}
-                  onChange={(event) => setObjective(event.target.value)}
+                  onChange={(event) => {
+                    setObjective(event.target.value);
+                    clearError("objective");
+                  }}
                   autoComplete="off"
                   placeholder="What should the page achieve?"
+                  aria-invalid={Boolean(fieldError(errors, "objective"))}
+                  aria-describedby={
+                    fieldError(errors, "objective")
+                      ? `${objectiveId}-error`
+                      : undefined
+                  }
                 />
+                {fieldError(errors, "objective") ? (
+                  <p id={`${objectiveId}-error`} className="text-xs font-medium text-[#a2382a]">
+                    {fieldError(errors, "objective")}
+                  </p>
+                ) : null}
               </div>
             </div>
             <p className="text-xs text-[#6d6a5f]">
-              Audience and objective travel with the brief into preview generation. They
-              guide the opening and section choice; they are never rendered as page copy.
+              Optional. Used to choose the page opening; never rendered.
             </p>
 
             <div className="space-y-1.5">

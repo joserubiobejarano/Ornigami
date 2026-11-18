@@ -45,6 +45,29 @@ IDs, and facts outside a facts section. The draft validator enforces headline,
 lede and fact length limits and verifies that every rendered claim matches its
 approved fact label and value.
 
+## Browser offer intake
+
+The normal `/campaign-lab/offer` flow now uses the same server generation
+service as fixture briefs. After the operator validates the intake, the browser
+posts a bounded `browserBrief` contract to `POST /api/campaign-lab/generate`.
+The route does not accept a client catalog, provider, environment, fixture ID, or
+executable configuration. It validates the contract, builds the browser offer
+fixture and catalog on the server with `buildBrowserOfferCatalog`, creates the
+same `CampaignFormValues`, and calls `runCampaignGeneration`.
+
+The browser keeps the packshot `File` and object URL local. Only declared asset
+metadata crosses the boundary: file name, dimensions, alt text, rights, and the
+SHA-256 recorded by the browser reader. The server validates the metadata shape
+but does not claim to verify the image bytes. The returned preview is hydrated
+with the local object URL for rendering, approval, and export. Browser response
+metadata records `ownerConfirmed: false` and `assetBytesVerified: false`; the
+intake's checkboxes remain operator attestations, not owner confirmation.
+
+Audience and objective use shared 240-character limits across the browser
+request, prepared briefs, pilot source/runtime manifests, form validation, and
+direct service entry points. Missing values remain valid. Wrong types or
+overlong values return field-level errors and are never silently truncated.
+
 A brief may declare `requiredFactGroups`. Every fact in a group must render
 together; facts outside the groups remain optional. The deterministic builder
 puts the required facts first and fills remaining capacity with optional facts.
@@ -209,6 +232,17 @@ HTTP evidence through the actual route, while the dev server is running:
 node --experimental-strip-types scripts/campaign-lab-generation-check.mjs `
   --url http://localhost:3100 --fixture sparse --expect generated
 ```
+
+Browser-offer evidence through the real intake and generation route:
+
+```powershell
+node scripts/campaign-lab-browser-generation-check.mjs `
+  --url http://localhost:3100 --scenario success
+```
+
+Use the same command with `--scenario invalid`, `timeout`, or `stale` after
+restarting the dev server with the matching local-test mode. Reports, captures,
+and exported bundles stay under `.local/campaign-lab-browser-generation/`.
 
 For the fallback evidence, restart with the matching test mode and use
 `--expect fallback --expect-code invalid` or `--expect-code timeout`.

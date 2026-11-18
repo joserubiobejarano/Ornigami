@@ -228,3 +228,39 @@ test("an invalid prepared brief explains the error and returns no draft", () => 
     /no more than 3 facts/i,
   );
 });
+test("prepared brief context uses shared limits and persisted drafts are not truncated", () => {
+  const base = {
+    schemaVersion: 1,
+    brandName: "Harbor Field",
+    productName: "Harbor Field bottle",
+    offer: "20% off",
+    destinationUrl: "https://example.com/harbor-field",
+    facts: [
+      { label: "Material", value: "Steel" },
+      { label: "Capacity", value: "500 ml" },
+    ],
+    alt: "Bottle.",
+    rights: "Local only.",
+  };
+
+  const wrongType = parsePreparedOfferIntakeBrief(
+    JSON.stringify({ ...base, audience: 42, objective: { goal: "Synthetic" } }),
+  );
+  assert.equal(wrongType.ok, false);
+  if (!wrongType.ok) assert.match(wrongType.error, /Audience must be text/);
+
+  const tooLong = parsePreparedOfferIntakeBrief(
+    JSON.stringify({ ...base, audience: "a".repeat(241) }),
+  );
+  assert.equal(tooLong.ok, false);
+  if (!tooLong.ok) {
+    assert.match(tooLong.error, /Audience must be 240 characters or fewer/);
+  }
+
+  const overlong = "b".repeat(300);
+  const restored = parsePersistedOfferIntakeBrief(
+    JSON.stringify({ ...base, audience: overlong }),
+  );
+  assert.equal(restored?.audience.length, 300);
+  assert.equal(restored?.audience, overlong);
+});

@@ -1,3 +1,4 @@
+import { parseCampaignContext } from "../campaign-context.ts";
 import type {
   AdvertorialBriefData,
   AdvertorialLayoutId,
@@ -414,6 +415,16 @@ function validateFixture(
     }
   }
 
+  const context = parseCampaignContext({
+    audience: brief.audience,
+    objective: brief.objective,
+  });
+  if (!context.ok) {
+    for (const issue of context.issues) {
+      issues.push(`fixture.brief.${issue.field}: ${issue.message}`);
+    }
+  }
+
   if (brief.offerPrice !== undefined) {
     if (!isString(brief.offerPrice)) {
       issues.push("fixture.brief.offerPrice must be text");
@@ -521,6 +532,9 @@ function validateFixture(
     ...(fixture as unknown as PilotManifest["fixture"]),
     brief: {
       ...(brief as unknown as PilotManifest["fixture"]["brief"]),
+      ...(context.ok
+        ? { audience: context.audience, objective: context.objective }
+        : {}),
       ...(advertorial ? { advertorial } : {}),
     },
   };

@@ -4,6 +4,7 @@ import {
   validateBrowserOfferIntake,
 } from "./browser-offer.ts";
 import type { BrowserOfferFactInput } from "./browser-offer.ts";
+import { parseCampaignContext } from "./campaign-context.ts";
 
 export const OFFER_INTAKE_BRIEF_STORAGE_KEY =
   "ornigami.campaign-lab.offer-intake.brief.v1";
@@ -119,11 +120,19 @@ export function parsePreparedOfferIntakeBrief(
       throw new Error(`Use no more than ${BROWSER_OFFER_MAX_FACTS} facts.`);
     }
 
+    const context = parseCampaignContext({
+      audience: parsed.audience,
+      objective: parsed.objective,
+    });
+    if (!context.ok) {
+      throw new Error(context.issues.map((issue) => issue.message).join(" "));
+    }
+
     const brief: PreparedOfferIntakeBrief = {
       brandName: optionalText(parsed, "brandName", "Brand name"),
       productName: requiredText(parsed, "productName", "Product name"),
-      audience: optionalText(parsed, "audience", "Audience"),
-      objective: optionalText(parsed, "objective", "Campaign objective"),
+      audience: context.audience ?? "",
+      objective: context.objective ?? "",
       offer: requiredText(parsed, "offer", "Offer"),
       destinationUrl: requiredText(
         parsed,
@@ -231,8 +240,8 @@ export function hasPersistedBriefContent(
   return Boolean(
     brief.brandName.trim() ||
       brief.productName.trim() ||
-      brief.audience.trim() ||
-      brief.objective.trim() ||
+      brief.audience?.trim() ||
+      brief.objective?.trim() ||
       brief.offer.trim() ||
       brief.destinationUrl.trim() ||
       brief.alt.trim() ||

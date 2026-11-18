@@ -421,6 +421,8 @@ export type ValidationField =
   | "brandId"
   | "accent"
   | "productName"
+  | "audience"
+  | "objective"
   | "offer"
   | "destinationUrl"
   | "assetId"

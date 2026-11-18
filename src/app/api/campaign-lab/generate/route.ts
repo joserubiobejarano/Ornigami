@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 
 import { buildAdvertorialPreview } from "@/lib/campaign-lab/advertorial";
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
-import { isFixtureId } from "@/lib/campaign-lab/fixtures";
+import { buildBrowserOfferCatalog } from "@/lib/campaign-lab/browser-offer";
+import { parseBrowserOfferBriefRequest } from "@/lib/campaign-lab/browser-offer-brief";
+import {
+  createFormValues,
+  isFixtureId,
+} from "@/lib/campaign-lab/fixtures";
 import {
   DESIGN_GUIDANCE_PACK_VERSION,
   DESIGN_HARNESS_VERSION,
@@ -15,6 +20,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 32_768;
+const BODY_KEYS = new Set(["fixtureId", "values", "browserBrief", "requestId"]);
 
 function json(body: unknown, status = 200): NextResponse {
   return NextResponse.json(body, {
@@ -28,8 +34,6 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
   const record = raw as Record<string, unknown>;
   const fields = ["brandId", "accent", "productName", "offer", "destinationUrl", "assetId"] as const;
   if (fields.some((field) => typeof record[field] !== "string")) return null;
-  if (record.audience !== undefined && typeof record.audience !== "string") return null;
-  if (record.objective !== undefined && typeof record.objective !== "string") return null;
   if (record.openingFocus !== undefined && typeof record.openingFocus !== "string") return null;
   if (record.format !== undefined && record.format !== "offer" && record.format !== "advertorial") {
     return null;
@@ -79,6 +83,65 @@ export async function POST(request: Request) {
   }
 
   const record = body as Record<string, unknown>;
+  const requestId = typeof record.requestId === "string"
+    ? record.requestId.slice(0, 120)
+    : undefined;
+
+  const unsupported = Object.keys(record).filter((key) => !BODY_KEYS.has(key));
+  if (unsupported.length > 0) {
+    return json(
+      {
+        ok: false,
+        message: `Unsupported request field "${unsupported[0]}".`,
+        requestId,
+      },
+      400,
+    );
+  }
+
+  if (record.browserBrief !== undefined) {
+    if (record.fixtureId !== undefined || record.values !== undefined) {
+      return json(
+        {
+          ok: false,
+          message:
+            "browserBrief cannot be combined with fixtureId or values; the server builds the browser brief context.",
+          requestId,
+        },
+        400,
+      );
+    }
+    const parsed = parseBrowserOfferBriefRequest(record.browserBrief);
+    if (!parsed.ok) {
+      return json({ ok: false, issues: parsed.issues, requestId }, 422);
+    }
+    try {
+      const built = buildBrowserOfferCatalog(parsed.input);
+      const values = createFormValues(built.fixture, built.catalog);
+      const result = await runCampaignGeneration(
+        { fixtureId: built.fixture.id, values, requestId },
+        { catalog: built.catalog },
+      );
+      return json(
+        {
+          ...result,
+          requestId,
+          browserBrief: parsed.context,
+        },
+        result.ok ? 200 : 422,
+      );
+    } catch {
+      return json(
+        {
+          ok: false,
+          message: "The browser brief could not be generated.",
+          requestId,
+        },
+        500,
+      );
+    }
+  }
+
   const fixtureId = record.fixtureId;
   const catalog = loadCampaignCatalog();
   if (typeof fixtureId !== "string" || !isFixtureId(fixtureId, catalog)) {
@@ -89,10 +152,6 @@ export async function POST(request: Request) {
   if (!values) {
     return json({ ok: false, message: "The campaign form values are incomplete." }, 400);
   }
-
-  const requestId = typeof record.requestId === "string"
-    ? record.requestId.slice(0, 120)
-    : undefined;
 
   try {
     const fixture = catalog.fixtures[fixtureId];

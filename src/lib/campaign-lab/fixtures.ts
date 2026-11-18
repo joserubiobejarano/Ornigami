@@ -590,8 +590,8 @@ export function createFormValues(
   };
 }
 
-function optionalCampaignText(value: string | undefined): string | undefined {
-  const text = value?.trim() ?? "";
+function optionalCampaignText(value: unknown): string | undefined {
+  const text = typeof value === "string" ? value.trim() : "";
   return text || undefined;
 }
 

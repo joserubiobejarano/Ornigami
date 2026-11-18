@@ -44,6 +44,7 @@ import {
 } from "@/lib/campaign-lab/export";
 import type { LocalPreviewApprovalInput } from "@/lib/campaign-lab/export";
 import type { BrowserOfferVerification } from "@/lib/campaign-lab/browser-offer";
+import type { BrowserOfferBriefRequest } from "@/lib/campaign-lab/browser-offer-brief";
 import type {
   PreviewImageEvent,
   PreviewImageGate,
@@ -96,7 +97,10 @@ type CampaignLabProps = {
   initialFixtureId: FixtureId;
   catalog: CampaignCatalog;
   showFixtureNav?: boolean;
-  localOnly?: boolean;
+  /** Browser-created briefs send this bounded contract instead of a fixture ID. */
+  browserBrief?: (values: CampaignFormValues) => BrowserOfferBriefRequest;
+  /** Keeps the uploaded packshot object URL local to this browser. */
+  browserAssetSrc?: string;
   previewNotice?: string;
   previewStatus?: "preview" | "confirmed";
   previewNote?: string;
@@ -140,11 +144,26 @@ function assetLabel(asset: ApprovedAsset, catalog: CampaignCatalog): string {
     `${catalog.brands[asset.brandId]?.name ?? asset.brandId} product image`;
 }
 
+function withLocalBrowserAsset(
+  preview: ConfiguredPreviewData,
+  assetSrc?: string,
+): ConfiguredPreviewData {
+  if (!assetSrc || isAdvertorialPreviewData(preview)) return preview;
+  return {
+    ...preview,
+    asset: {
+      ...preview.asset,
+      src: assetSrc,
+    },
+  };
+}
+
 export function CampaignLab({
   initialFixtureId,
   catalog,
   showFixtureNav = true,
-  localOnly = false,
+  browserBrief,
+  browserAssetSrc,
   previewNotice,
   previewStatus,
   previewNote,
@@ -355,6 +374,8 @@ export function CampaignLab({
     brandId: `${baseId}-brand-style`,
     accent: `${baseId}-accent`,
     productName: `${baseId}-product-name`,
+    audience: `${baseId}-audience`,
+    objective: `${baseId}-objective`,
     offer: `${baseId}-offer`,
     destinationUrl: `${baseId}-destination-url`,
     assetId: `${baseId}-product-image`,
@@ -374,8 +395,8 @@ export function CampaignLab({
   const capacityIssueId = `${baseId}-capacity-issue`;
   const assetMetaId = `${baseId}-asset-meta`;
   const accentHintId = `${baseId}-accent-hint`;
-  const audienceId = `${baseId}-audience`;
-  const objectiveId = `${baseId}-objective`;
+  const audienceId = fieldIds.audience;
+  const objectiveId = fieldIds.objective;
 
   useEffect(() => {
     if (issueCount > previousIssueCount.current) {
@@ -551,20 +572,7 @@ export function CampaignLab({
       return;
     }
 
-    if (localOnly) {
-      invalidateGenerationRequest();
-      setPreview(local.preview);
-      setGeneration(
-        deterministicFallback(
-          "Browser offer intake uses the deterministic local builder; no manifest or provider request is involved.",
-        ),
-      );
-      setIssues([]);
-      setDirty(false);
-      setApproval(null);
-      return;
-    }
-
+    const browserRequest = browserBrief?.(snapshot) ?? null;
     const requestId = requestGate.current.begin();
     inFlight.current?.abort();
     const controller = new AbortController();
@@ -577,11 +585,18 @@ export function CampaignLab({
       const response = await fetch("/api/campaign-lab/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fixtureId: fixture.id,
-          values: snapshot,
-          requestId: String(requestId),
-        }),
+        body: JSON.stringify(
+          browserRequest
+            ? {
+                browserBrief: browserRequest,
+                requestId: String(requestId),
+              }
+            : {
+                fixtureId: fixture.id,
+                values: snapshot,
+                requestId: String(requestId),
+              },
+        ),
         signal: controller.signal,
       });
 
@@ -617,7 +632,12 @@ export function CampaignLab({
         return;
       }
 
-      setPreview(payload.preview as ConfiguredPreviewData);
+      setPreview(
+        withLocalBrowserAsset(
+          payload.preview as ConfiguredPreviewData,
+          browserAssetSrc,
+        ),
+      );
       setGeneration(
         (payload.generation as GenerationMetadata | undefined) ??
           deterministicFallback("The preview was generated without provenance metadata."),

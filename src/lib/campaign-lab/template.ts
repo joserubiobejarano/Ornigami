@@ -24,6 +24,7 @@ import type {
   ValidationIssue,
 } from "./types.ts";
 import { CAMPAIGN_LAB_TEMPLATE_ID } from "./types.ts";
+import { parseCampaignContext } from "./campaign-context.ts";
 import { findApprovedOfferPrice } from "./offer-emphasis.ts";
 import {
   presentationText,
@@ -177,6 +178,11 @@ export function validateCampaignForm(
   catalog: CampaignCatalog = BASE_CATALOG,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+
+  const context = parseCampaignContext(values);
+  if (!context.ok) {
+    issues.push(...context.issues);
+  }
 
   if (!isBrandId(values.brandId, catalog)) {
     issues.push({

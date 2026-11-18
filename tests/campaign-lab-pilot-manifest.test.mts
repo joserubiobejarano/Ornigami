@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
@@ -346,4 +346,56 @@ test("a pilot brand profile can select the product-led headline mode", () => {
     rejected.ok ? "" : rejected.issues.join(" "),
     /headlineMode must be "offer-led", "product-led", or "angle"/,
   );
+});
+test("pilot source and runtime manifests reject malformed campaign context without crashing", () => {
+  const missing = sourcePilot();
+  assert.equal(validatePilotSource(missing, { pilotId: "morrow-pilot" }).ok, true);
+
+  const malformed = sourcePilot();
+  (malformed.fixture.brief as Record<string, unknown>).audience = 42;
+  (malformed.fixture.brief as Record<string, unknown>).objective = {
+    goal: "Synthetic",
+  };
+  const sourceResult = validatePilotSource(malformed, {
+    pilotId: "morrow-pilot",
+  });
+  assert.equal(sourceResult.ok, false);
+  if (!sourceResult.ok) {
+    assert.match(sourceResult.issues.join(" "), /fixture\.brief\.audience: Audience must be text/);
+    assert.match(
+      sourceResult.issues.join(" "),
+      /fixture\.brief\.objective: Campaign objective must be text/,
+    );
+  }
+
+  const runtime = manifestFrom(sourcePilot());
+  (runtime.fixture.brief as Record<string, unknown>).audience = ["not", "text"];
+  const runtimeResult = validatePilotManifest(runtime, {
+    pilotId: "morrow-pilot",
+    requireRuntimeAssets: true,
+  });
+  assert.equal(runtimeResult.ok, false);
+  if (!runtimeResult.ok) {
+    assert.match(runtimeResult.issues.join(" "), /fixture\.brief\.audience: Audience must be text/);
+  }
+});
+
+test("pilot campaign context uses the shared length limit and normalizes whitespace", () => {
+  const valid = sourcePilot();
+  (valid.fixture.brief as Record<string, unknown>).audience = "  Curious pour-over drinkers.  ";
+  (valid.fixture.brief as Record<string, unknown>).objective = "  Explain the rib design.  ";
+  const accepted = validatePilotSource(valid, { pilotId: "morrow-pilot" });
+  assert.equal(accepted.ok, true);
+  if (accepted.ok) {
+    assert.equal(accepted.value.fixture.brief.audience, "Curious pour-over drinkers.");
+    assert.equal(accepted.value.fixture.brief.objective, "Explain the rib design.");
+  }
+
+  const tooLong = sourcePilot();
+  (tooLong.fixture.brief as Record<string, unknown>).audience = "a".repeat(241);
+  const rejected = validatePilotSource(tooLong, { pilotId: "morrow-pilot" });
+  assert.equal(rejected.ok, false);
+  if (!rejected.ok) {
+    assert.match(rejected.issues.join(" "), /Audience must be 240 characters or fewer/);
+  }
 });

@@ -1,3 +1,4 @@
+import { parseCampaignContext } from "./campaign-context.ts";
 import {
   SINGLE_PRODUCT_OFFER_TEMPLATE,
   getDestinationUrlError,
@@ -74,6 +75,8 @@ export type BrowserOfferFactErrors = {
 
 export type BrowserOfferIntakeErrors = {
   productName?: string;
+  audience?: string;
+  objective?: string;
   offer?: string;
   destinationUrl?: string;
   facts?: string;
@@ -125,9 +128,9 @@ function confirmedExactly(
 }
 
 export function verifyBrowserOffer(input: BrowserOfferIntakeInput): BrowserOfferVerification {
-  const offerValue = input.offer.trim();
-  const destinationValue = input.destinationUrl.trim();
-  const rightsValue = input.packshot?.rights.trim() ?? "";
+  const offerValue = trimmed(input.offer);
+  const destinationValue = trimmed(input.destinationUrl);
+  const rightsValue = trimmed(input.packshot?.rights);
   const confirmations = input.confirmations;
 
   const offerClassification = classifyOffer(offerValue);
@@ -212,21 +215,22 @@ const NEUTRAL_TOKENS: BrandTokens = {
   showWordmarkMark: false,
 };
 
-function browserBrand(brandName?: string): BrandDefinition {
-  const name = brandName?.trim() || "Preview brand";
+function browserBrand(brandName?: unknown): BrandDefinition {
+  const supplied = typeof brandName === "string" ? brandName.trim() : "";
+  const name = supplied || "Preview brand";
   return {
     id: BROWSER_OFFER_BRAND_ID,
     name,
-    wordmark: brandName?.trim() || "Preview",
-    descriptor: brandName?.trim() ? "Local brand preview" : "Neutral preview",
+    wordmark: supplied || "Preview",
+    descriptor: supplied ? "Local brand preview" : "Neutral preview",
     tokens: { ...NEUTRAL_TOKENS },
     headlineMode: "offer-led",
     detailTitle: "Product details",
   };
 }
 
-function trimmed(value: string): string {
-  return value.trim();
+function trimmed(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function factSlug(label: string, index: number): string {
@@ -262,6 +266,13 @@ export function validateBrowserOfferIntake(
 ): BrowserOfferIntakeValidation {
   const errors: BrowserOfferIntakeErrors = {};
   const limits = SINGLE_PRODUCT_OFFER_TEMPLATE.limits;
+
+  const context = parseCampaignContext(input);
+  if (!context.ok) {
+    for (const issue of context.issues) {
+      errors[issue.field] = issue.message;
+    }
+  }
 
   const productName = trimmed(input.productName);
   if (!productName) {
@@ -338,6 +349,7 @@ export function buildBrowserOfferCatalog(
 } {
   const brand = browserBrand(input.brandName);
   const verification = verifyBrowserOffer(input);
+  const context = parseCampaignContext(input);
   const factsInput = input.facts.map((fact) => ({
     label: trimmed(fact.label),
     value: trimmed(fact.value),
@@ -396,8 +408,8 @@ export function buildBrowserOfferCatalog(
       fixtureId: BROWSER_OFFER_FIXTURE_ID,
       brandId: brand.id,
       productName: trimmed(input.productName),
-      audience: trimmed(input.audience ?? "") || undefined,
-      objective: trimmed(input.objective ?? "") || undefined,
+      audience: context.ok ? context.audience : undefined,
+      objective: context.ok ? context.objective : undefined,
       offer: trimmed(input.offer),
       destinationUrl: trimmed(input.destinationUrl),
       assetId: asset.id,
