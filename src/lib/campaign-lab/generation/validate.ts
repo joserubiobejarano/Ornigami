@@ -15,10 +15,18 @@ const PROTECTED_KEYS = new Set([
   "destination",
   "assetId",
   "asset",
+  "assets",
   "image",
   "alt",
   "actionLabel",
+  "brand",
   "brandId",
+  "tokens",
+  "audience",
+  "objective",
+  "guidance",
+  "template",
+  "limits",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

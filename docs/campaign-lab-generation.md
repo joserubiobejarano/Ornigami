@@ -5,6 +5,12 @@ generation step before the existing template renderer. This remains a local
 operator slice: no publishing, accounts, billing, database writes, or deployment
 changes are included.
 
+Audience and campaign objective are optional campaign-context fields. They can
+come from a tracked fixture, the Campaign Lab editor, or the browser offer
+intake's prepared/persisted brief. Older fixtures, pilots, and prepared briefs
+without them remain valid; the provider request then carries `null` rather than
+inventing campaign intent.
+
 ## Request path
 
 1. The editor validates the current form locally and keeps the last valid
@@ -13,8 +19,11 @@ changes are included.
    `POST /api/campaign-lab/generate`.
 3. The route validates the form again, builds the validated ``CampaignBrief``
    from the fixture and form values, and builds a deterministic fallback draft.
-4. The server sends a narrow generation request to a provider. The provider may
-   choose only:
+4. The server sends a narrow generation request to a provider. The request
+   carries the audience, campaign objective, approved brand character, resolved
+   visual tokens, available asset roles and dimensions, the selected asset, the
+   template capabilities and constraints, and the approved facts with their
+   evidence sources. The provider may choose only:
    - an opening angle supported by the brief (`offer-led`, `product-led`, or
      `story-led` when approved story copy exists);
    - one supported layout (`offer-led-one-photo` or
@@ -81,6 +90,40 @@ source record (`document`, `quote`, `reviewedBy`, `reviewedOn`). Only facts from
 `CAMPAIGN_LAB_GENERATION_TIMEOUT_MS` bounds the request (default 5000 ms,
 clamped to 50–15000 ms). The OpenAI provider uses zero retries and a small output
 token cap. Live paid calls are off for verification.
+
+## Runtime design harness
+
+Harness version `1.0.0` is recorded in
+`src/lib/campaign-lab/generation/harness.ts`. The app-owned guidance content is
+under `src/lib/campaign-lab/generation/guidance/`. The provider request includes
+a versioned runtime guidance pack (`ornigami-single-product-offer` version
+`1.0.0`) with two deliberately separate sections:
+
+- **Hard rules** repeat the enforceable template and identity constraints. The
+  template manifest and `validateGenerationProposal` remain the source of truth;
+  the hard rules are context for the provider, not a second validator.
+- **Advisory guidance** covers campaign fit, sparse-material restraint, product
+  image treatment, one primary action, brand character, and avoiding generic
+  decoration. It never overrides approved copy, evidence, destination, assets,
+  or brand identity.
+
+The pack is loaded lazily only after a validated brief has a usable provider.
+Invalid forms, unavailable providers, and the deterministic-only intake path do
+not load it. It is server-side only: application pages and components import
+the small version constants for metadata, never the pack content. The pack does
+not import or execute every installed design tool. It uses Ornigami's rules and
+a small set of advisory principles adapted from Taste Skill 2.5.1 at
+`Leonxlnx/taste-skill@f6b76575f949707b4e3c37cd86cb44b0b98643e8` (MIT). The
+license notice is committed at
+`src/lib/campaign-lab/generation/guidance/TASTE-SKILL-LICENSE.txt`; no Taste
+scripts, assets, CSS, or browser checker are bundled.
+
+Generation metadata records `harnessVersion`, `guidancePackVersion`, and
+`providerMode`. `status: "generated"` with `providerMode: "model"` is model
+output, `status: "generated"` with `providerMode: "local-test"` is local-test
+output, and `status: "fallback"` is the deterministic draft. The editor shows
+those labels and exposes them as `data-generation-mode`,
+`data-generation-harness-version`, and `data-generation-guidance-version`.
 
 ## Fallback behaviour
 
@@ -150,6 +193,16 @@ identity, validation limits, request gate):
 node --experimental-strip-types --test tests/campaign-lab-generation.test.mts
 ```
 
+Design-harness tests and request captures:
+
+```powershell
+node --experimental-strip-types --test tests/campaign-lab-design-harness.test.mts
+node --experimental-strip-types scripts/campaign-lab-design-harness-check.mjs
+```
+
+The runner writes synthetic provider requests, prompts, recovery results, and a
+summary under `.local/campaign-lab-design-harness/` (Git-ignored).
+
 HTTP evidence through the actual route, while the dev server is running:
 
 ```powershell
@@ -179,6 +232,9 @@ import the generation code.
 
 - The local test provider is a deterministic stand-in, not evidence of model
   quality. It does not prove that a real model chooses a better angle.
+- The harness proves that campaign context and versioned guidance reach the
+  provider request, not that a real model produces a better-looking page. Visual
+  quality still requires a fresh model run and human preview review.
 - The generator chooses among approved template options; it does not author free
   prose. This is intentional for claim safety and reviewability, but limits
   stylistic range.

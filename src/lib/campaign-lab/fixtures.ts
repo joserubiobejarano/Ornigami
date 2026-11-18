@@ -295,6 +295,9 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
       fixtureId: "sparse",
       brandId: "harbor-field",
       productName: "Harbor Field travel bottle",
+      audience: "People discovering the bottle in a paid social ad on mobile.",
+      objective:
+        "Send the visitor to the marketplace listing while the 20% offer is clear.",
       offer: "20% off, 27–30 November 2026",
       destinationUrl: "https://example.com/harbor-field",
       assetId: "harbor-field-bottle-front",
@@ -350,6 +353,9 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
       fixtureId: "long-copy",
       brandId: "morrow-ceramic",
       productName: "Morrow ceramic pour-over dripper",
+      audience:
+        "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+      objective: "Explain the rib design and lead to the dripper page.",
       offer: "Free shipping through 30 November 2026",
       destinationUrl: "https://example.com/morrow",
       assetId: "morrow-ceramic-dripper-front",
@@ -414,6 +420,9 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
       fixtureId: "morrow-advertorial-full",
       brandId: "morrow-ceramic",
       productName: "Morrow ceramic pour-over dripper",
+      audience:
+        "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+      objective: "Explain the rib design through the approved story and lead to the dripper page.",
       offer: "Free shipping through 30 November 2026",
       destinationUrl: "https://example.com/morrow",
       assetId: "morrow-ceramic-dripper-front",
@@ -447,6 +456,9 @@ export const CAMPAIGN_FIXTURES: Record<BaseFixtureId, CampaignFixture> = {
       fixtureId: "morrow-advertorial-one-photo",
       brandId: "morrow-ceramic",
       productName: "Morrow ceramic pour-over dripper",
+      audience:
+        "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+      objective: "Explain the rib design through the approved story and lead to the dripper page.",
       offer: "Free shipping through 30 November 2026",
       destinationUrl: "https://example.com/morrow",
       assetId: "morrow-ceramic-dripper-front",
@@ -567,6 +579,8 @@ export function createFormValues(
     brandId: fixture.brief.brandId,
     accent: defaultAccent(fixture.brief.brandId, catalog),
     productName: fixture.brief.productName,
+    audience: fixture.brief.audience,
+    objective: fixture.brief.objective,
     offer: fixture.brief.offer,
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
@@ -576,12 +590,25 @@ export function createFormValues(
   };
 }
 
+function optionalCampaignText(value: string | undefined): string | undefined {
+  const text = value?.trim() ?? "";
+  return text || undefined;
+}
+
 export function createCampaignBrief(fixture: CampaignFixture, values: CampaignFormValues): CampaignBrief {
   const opening = fixture.openings?.find((option) => option.id === values.openingFocus);
   return {
     ...fixture.brief,
     brandId: values.brandId,
     productName: values.productName.trim(),
+    audience:
+      values.audience !== undefined
+        ? optionalCampaignText(values.audience)
+        : optionalCampaignText(fixture.brief.audience),
+    objective:
+      values.objective !== undefined
+        ? optionalCampaignText(values.objective)
+        : optionalCampaignText(fixture.brief.objective),
     offer: values.offer.trim(),
     destinationUrl: values.destinationUrl.trim(),
     assetId: values.assetId,

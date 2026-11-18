@@ -7,6 +7,11 @@ import {
   createFormValues,
 } from "../src/lib/campaign-lab/fixtures.ts";
 import { GenerationRequestGate } from "../src/lib/campaign-lab/generation/client-gate.ts";
+import {
+  DESIGN_GUIDANCE_PACK_ID,
+  DESIGN_GUIDANCE_PACK_VERSION,
+  DESIGN_HARNESS_VERSION,
+} from "../src/lib/campaign-lab/generation/harness.ts";
 import { resolveGenerationProvider, resolveGenerationTimeoutMs } from "../src/lib/campaign-lab/generation/provider-config.ts";
 import { runCampaignGeneration } from "../src/lib/campaign-lab/generation/service.ts";
 import type {
@@ -58,21 +63,71 @@ function catalogWithHeadlineMode(
 }
 
 function validRequest(): GenerationRequest {
+  const brand = BASE_CATALOG.brands["harbor-field"];
   return {
+    harness: {
+      version: DESIGN_HARNESS_VERSION,
+      guidancePack: {
+        id: DESIGN_GUIDANCE_PACK_ID,
+        version: DESIGN_GUIDANCE_PACK_VERSION,
+      },
+    },
     template: {
       id: SINGLE_PRODUCT_OFFER_TEMPLATE.id,
       version: SINGLE_PRODUCT_OFFER_TEMPLATE.version,
+      name: SINGLE_PRODUCT_OFFER_TEMPLATE.name,
+      format: SINGLE_PRODUCT_OFFER_TEMPLATE.format,
+      capabilities: {
+        layouts: SINGLE_PRODUCT_OFFER_TEMPLATE.layouts,
+        angles: SINGLE_PRODUCT_OFFER_TEMPLATE.angles,
+        profileHeadlineModes: SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes,
+        sections: SINGLE_PRODUCT_OFFER_TEMPLATE.sections,
+      },
+      constraints: {
+        requiredInputs: SINGLE_PRODUCT_OFFER_TEMPLATE.requiredInputs,
+        allowedAssetRoles: SINGLE_PRODUCT_OFFER_TEMPLATE.allowedAssetRoles,
+        limits: SINGLE_PRODUCT_OFFER_TEMPLATE.limits,
+      },
     },
-    brand: { id: "harbor-field", name: "Harbor Field" },
+    brand: {
+      id: brand.id,
+      name: brand.name,
+      wordmark: brand.wordmark,
+      character: {
+        descriptor: brand.descriptor,
+        headlineMode: brand.headlineMode,
+        detailTitle: brand.detailTitle,
+      },
+      tokens: brand.tokens,
+    },
     campaign: {
       fixtureId: "sparse",
       openingFocus: null,
+      audience: CAMPAIGN_FIXTURES.sparse.brief.audience ?? null,
+      objective: CAMPAIGN_FIXTURES.sparse.brief.objective ?? null,
       productName: "Harbor Field travel bottle",
       productNoun: "travel bottle",
       offer: "20% off, 27–30 November 2026",
       lede: "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
       storyHeadline: null,
       facts: CAMPAIGN_FIXTURES.sparse.brief.productFacts,
+    },
+    assets: {
+      selected: {
+        id: "harbor-field-bottle-front",
+        role: "product-hero",
+        width: 1200,
+        height: 1500,
+      },
+      approved: [
+        {
+          id: "harbor-field-bottle-front",
+          role: "product-hero",
+          width: 1200,
+          height: 1500,
+        },
+      ],
+      allowedRoles: ["product-hero"],
     },
     allowed: {
       angles: ["offer-led", "product-led"],
@@ -90,6 +145,24 @@ function validRequest(): GenerationRequest {
       requiredFactGroups: [],
     },
     limits: { headline: 180, lede: 240, factValue: 80 },
+    guidance: {
+      harnessVersion: DESIGN_HARNESS_VERSION,
+      pack: {
+        id: DESIGN_GUIDANCE_PACK_ID,
+        version: DESIGN_GUIDANCE_PACK_VERSION,
+      },
+      hard: {
+        owner: "ornigami",
+        label: "Enforceable template and identity constraints",
+        rules: ["Return only the allowed template options."],
+      },
+      advisory: {
+        owner: "adapted-taste-skill",
+        label: "Advisory design judgment",
+        rules: ["Use the approved material."],
+      },
+      sources: [],
+    },
   };
 }
 

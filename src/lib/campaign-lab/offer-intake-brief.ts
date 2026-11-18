@@ -12,6 +12,8 @@ export type PersistedOfferIntakeBrief = {
   schemaVersion: 1;
   brandName: string;
   productName: string;
+  audience: string;
+  objective: string;
   offer: string;
   destinationUrl: string;
   facts: BrowserOfferFactInput[];
@@ -120,6 +122,8 @@ export function parsePreparedOfferIntakeBrief(
     const brief: PreparedOfferIntakeBrief = {
       brandName: optionalText(parsed, "brandName", "Brand name"),
       productName: requiredText(parsed, "productName", "Product name"),
+      audience: optionalText(parsed, "audience", "Audience"),
+      objective: optionalText(parsed, "objective", "Campaign objective"),
       offer: requiredText(parsed, "offer", "Offer"),
       destinationUrl: requiredText(
         parsed,
@@ -205,6 +209,8 @@ export function parsePersistedOfferIntakeBrief(
     schemaVersion: 1,
     brandName: text(record.brandName),
     productName: text(record.productName),
+    audience: text(record.audience),
+    objective: text(record.objective),
     offer: text(record.offer),
     destinationUrl: text(record.destinationUrl),
     facts,
@@ -225,6 +231,8 @@ export function hasPersistedBriefContent(
   return Boolean(
     brief.brandName.trim() ||
       brief.productName.trim() ||
+      brief.audience.trim() ||
+      brief.objective.trim() ||
       brief.offer.trim() ||
       brief.destinationUrl.trim() ||
       brief.alt.trim() ||

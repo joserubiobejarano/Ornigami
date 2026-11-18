@@ -90,21 +90,61 @@ function valuesFor(fixture: CampaignFixture) {
 }
 
 function requestFor(): GenerationRequest {
+  const brand = BASE_CATALOG.brands["harbor-field"];
   return {
+    harness: {
+      version: "1.0.0",
+      guidancePack: { id: "ornigami-single-product-offer", version: "1.0.0" },
+    },
     template: {
       id: SINGLE_PRODUCT_OFFER_TEMPLATE.id,
       version: SINGLE_PRODUCT_OFFER_TEMPLATE.version,
+      name: SINGLE_PRODUCT_OFFER_TEMPLATE.name,
+      format: SINGLE_PRODUCT_OFFER_TEMPLATE.format,
+      capabilities: {
+        layouts: SINGLE_PRODUCT_OFFER_TEMPLATE.layouts,
+        angles: SINGLE_PRODUCT_OFFER_TEMPLATE.angles,
+        profileHeadlineModes: SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes,
+        sections: SINGLE_PRODUCT_OFFER_TEMPLATE.sections,
+      },
+      constraints: {
+        requiredInputs: SINGLE_PRODUCT_OFFER_TEMPLATE.requiredInputs,
+        allowedAssetRoles: SINGLE_PRODUCT_OFFER_TEMPLATE.allowedAssetRoles,
+        limits: SINGLE_PRODUCT_OFFER_TEMPLATE.limits,
+      },
     },
-    brand: { id: "harbor-field", name: "Harbor Field" },
+    brand: {
+      id: brand.id,
+      name: brand.name,
+      wordmark: brand.wordmark,
+      character: {
+        descriptor: brand.descriptor,
+        headlineMode: brand.headlineMode,
+        detailTitle: brand.detailTitle,
+      },
+      tokens: brand.tokens,
+    },
     campaign: {
       fixtureId: "sparse",
       openingFocus: null,
+      audience: null,
+      objective: null,
       productName: "Synthetic set",
       productNoun: "set",
       offer: "20% off the synthetic set",
       lede: "The set brings together three individually packed items.",
       storyHeadline: "Three items. One set.",
       facts,
+    },
+    assets: {
+      selected: {
+        id: "harbor-field-bottle-front",
+        role: "product-hero",
+        width: 1200,
+        height: 1500,
+      },
+      approved: [],
+      allowedRoles: ["product-hero"],
     },
     allowed: {
       angles: ["offer-led", "product-led", "story-led"],
@@ -122,6 +162,21 @@ function requestFor(): GenerationRequest {
       requiredFactGroups: [completeSet],
     },
     limits: { headline: 180, lede: 240, factValue: 80 },
+    guidance: {
+      harnessVersion: "1.0.0",
+      pack: { id: "ornigami-single-product-offer", version: "1.0.0" },
+      hard: {
+        owner: "ornigami",
+        label: "Enforceable template and identity constraints",
+        rules: ["Return only the allowed template options."],
+      },
+      advisory: {
+        owner: "adapted-taste-skill",
+        label: "Advisory design judgment",
+        rules: ["Use the approved material."],
+      },
+      sources: [],
+    },
   };
 }
 

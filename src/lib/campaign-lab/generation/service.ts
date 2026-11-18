@@ -18,6 +18,11 @@ import {
 } from "../template.ts";
 import type { CampaignPreviewData } from "../template.ts";
 import type { CampaignCatalog, LayoutId, SectionId } from "../types.ts";
+import {
+  DESIGN_GUIDANCE_PACK_ID,
+  DESIGN_GUIDANCE_PACK_VERSION,
+  DESIGN_HARNESS_VERSION,
+} from "./harness.ts";
 import { LocalTestGenerationProvider } from "./local-test-provider.ts";
 import { resolveGenerationProvider, resolveGenerationTimeoutMs } from "./provider-config.ts";
 import type { ProviderResolution } from "./provider-config.ts";
@@ -26,10 +31,13 @@ import type {
   CampaignGenerationInput,
   CampaignGenerationProvider,
   CampaignGenerationResult,
+  GenerationAssetContext,
   GenerationFailureCode,
   GenerationMetadata,
   GenerationOptions,
   GenerationRequest,
+  ProviderMode,
+  RuntimeDesignGuidance,
 } from "./types.ts";
 
 class GenerationTimeoutError extends Error {
@@ -39,11 +47,26 @@ class GenerationTimeoutError extends Error {
   }
 }
 
+function assetContext(
+  asset: ReturnType<typeof getAsset>,
+): GenerationAssetContext {
+  if (!asset) throw new Error("The approved campaign asset is missing.");
+  return {
+    id: asset.id,
+    role: asset.role,
+    width: asset.width,
+    height: asset.height,
+    ...(asset.crop ? { crop: asset.crop } : {}),
+    ...(asset.caption ? { caption: asset.caption } : {}),
+  };
+}
+
 function buildGenerationRequest(
   fixtureId: string,
   brief: ReturnType<typeof createCampaignBrief>,
+  values: { accent: string },
   catalog: CampaignCatalog,
-): GenerationRequest {
+): Omit<GenerationRequest, "guidance"> {
   const layouts = Object.keys(SINGLE_PRODUCT_OFFER_TEMPLATE.layouts) as LayoutId[];
   const sectionOrders = Object.fromEntries(
     layouts.map((layout) => [
@@ -57,19 +80,53 @@ function buildGenerationRequest(
     layouts.map((layout) => [layout, layoutFactCapacity(layout)]),
   ) as Record<LayoutId, number>;
   const brand = getBrand(brief.brandId, catalog);
+  const theme = resolveBrandTheme(brief.brandId, values.accent, catalog);
+  const selectedAsset = getAsset(brief.assetId, catalog);
+  const approvedAssets = catalog.assets
+    .filter((asset) => asset.brandId === brief.brandId && asset.reviewed)
+    .map(assetContext);
 
   return {
+    harness: {
+      version: DESIGN_HARNESS_VERSION,
+      guidancePack: {
+        id: DESIGN_GUIDANCE_PACK_ID,
+        version: DESIGN_GUIDANCE_PACK_VERSION,
+      },
+    },
     template: {
       id: SINGLE_PRODUCT_OFFER_TEMPLATE.id,
       version: SINGLE_PRODUCT_OFFER_TEMPLATE.version,
+      name: SINGLE_PRODUCT_OFFER_TEMPLATE.name,
+      format: SINGLE_PRODUCT_OFFER_TEMPLATE.format,
+      capabilities: {
+        layouts: SINGLE_PRODUCT_OFFER_TEMPLATE.layouts,
+        angles: SINGLE_PRODUCT_OFFER_TEMPLATE.angles,
+        profileHeadlineModes: SINGLE_PRODUCT_OFFER_TEMPLATE.profileHeadlineModes,
+        sections: SINGLE_PRODUCT_OFFER_TEMPLATE.sections,
+      },
+      constraints: {
+        requiredInputs: SINGLE_PRODUCT_OFFER_TEMPLATE.requiredInputs,
+        allowedAssetRoles: SINGLE_PRODUCT_OFFER_TEMPLATE.allowedAssetRoles,
+        limits: SINGLE_PRODUCT_OFFER_TEMPLATE.limits,
+      },
     },
     brand: {
       id: brief.brandId,
       name: brand.name,
+      wordmark: brand.wordmark,
+      character: {
+        descriptor: brand.descriptor,
+        headlineMode: brand.headlineMode,
+        detailTitle: brand.detailTitle,
+      },
+      tokens: { ...theme.tokens },
     },
     campaign: {
       fixtureId: fixtureId as GenerationRequest["campaign"]["fixtureId"],
       openingFocus: brief.openingFocus ?? null,
+      audience: brief.audience?.trim() || null,
+      objective: brief.objective?.trim() || null,
       productName: brief.productName,
       productNoun: brief.productNoun,
       offer: brief.offer,
@@ -79,6 +136,11 @@ function buildGenerationRequest(
         ...fact,
         source: { ...fact.source },
       })),
+    },
+    assets: {
+      selected: assetContext(selectedAsset),
+      approved: approvedAssets,
+      allowedRoles: SINGLE_PRODUCT_OFFER_TEMPLATE.allowedAssetRoles,
     },
     allowed: {
       angles: getAllowedAngles(brief, brand),
@@ -129,6 +191,12 @@ async function createProvider(
   return createOpenAIGenerationProvider(resolution.model);
 }
 
+function providerModeFor(provider: string): ProviderMode {
+  if (provider === "local-test") return "local-test";
+  if (provider === "none" || provider === "deterministic") return "none";
+  return "model";
+}
+
 function failure(
   preview: CampaignPreviewData,
   provider: string,
@@ -144,6 +212,9 @@ function failure(
       status: "fallback",
       provider,
       providerLabel,
+      providerMode: providerModeFor(provider),
+      harnessVersion: DESIGN_HARNESS_VERSION,
+      guidancePackVersion: DESIGN_GUIDANCE_PACK_VERSION,
       code,
       message,
       ...extra,
@@ -226,7 +297,36 @@ export async function runCampaignGeneration(
   }
 
   const brief = createCampaignBrief(fixture, input.values);
-  const request = buildGenerationRequest(input.fixtureId, brief, catalog);
+  const baseRequest = buildGenerationRequest(
+    input.fixtureId,
+    brief,
+    input.values,
+    catalog,
+  );
+
+  let guidance: RuntimeDesignGuidance;
+  try {
+    const guidanceLoader =
+      options.guidanceLoader ??
+      (async (context: Omit<GenerationRequest, "guidance">) => {
+        const pack = await import("./guidance/pack.ts");
+        return pack.buildRuntimeGuidance(context);
+      });
+    guidance = await guidanceLoader(baseRequest);
+  } catch {
+    return failure(
+      deterministic.preview,
+      provider.id,
+      provider.label,
+      "unavailable",
+      "The runtime design guidance could not be loaded. The deterministic draft is shown.",
+    );
+  }
+
+  const request: GenerationRequest = {
+    ...baseRequest,
+    guidance,
+  };
   const timeoutMs = options.timeoutMs ?? resolveGenerationTimeoutMs(env);
   const controller = new AbortController();
 
@@ -323,6 +423,9 @@ export async function runCampaignGeneration(
       status: "generated",
       provider: provider.id,
       providerLabel: provider.label,
+      providerMode: providerModeFor(provider.id),
+      harnessVersion: DESIGN_HARNESS_VERSION,
+      guidancePackVersion: DESIGN_GUIDANCE_PACK_VERSION,
       model: provider.model,
       angle: validation.plan.angle,
       layout: validation.plan.layout,

@@ -2,6 +2,8 @@ import type { CampaignPreviewData } from "../template.ts";
 
 export type GenerationEnv = Record<string, string | undefined>;
 import type {
+  AssetRole,
+  BrandTokens,
   CampaignCatalog,
   CampaignFormValues,
   FixtureId,
@@ -10,27 +12,107 @@ import type {
   ProductFact,
   RequiredFactGroup,
   SectionId,
+  TemplateManifest,
   ValidationIssue,
 } from "../types.ts";
 
+export type ProviderMode = "model" | "local-test" | "none";
+
+export type GuidanceSource = {
+  id: string;
+  label: string;
+  version?: string;
+  revision?: string;
+  license: string;
+  licensePath?: string;
+  url?: string;
+  usage: string;
+};
+
+export type GuidanceRuleSet = {
+  owner: "ornigami" | "adapted-taste-skill";
+  label: string;
+  rules: readonly string[];
+};
+
+/**
+ * Runtime guidance is supplied with the provider request. Hard rules are the
+ * enforceable template constraints; advisory rules are design judgment only.
+ */
+export type RuntimeDesignGuidance = {
+  harnessVersion: string;
+  pack: {
+    id: string;
+    version: string;
+  };
+  hard: GuidanceRuleSet;
+  advisory: GuidanceRuleSet;
+  sources: readonly GuidanceSource[];
+};
+
+export type GenerationAssetContext = {
+  id: string;
+  role: AssetRole;
+  width: number;
+  height: number;
+  crop?: string;
+  caption?: string;
+};
+
 export type GenerationRequest = {
+  harness: {
+    version: string;
+    guidancePack: {
+      id: string;
+      version: string;
+    };
+  };
   template: {
     id: string;
     version: string;
+    name: string;
+    format: string;
+    capabilities: {
+      layouts: TemplateManifest["layouts"];
+      angles: TemplateManifest["angles"];
+      profileHeadlineModes: TemplateManifest["profileHeadlineModes"];
+      sections: TemplateManifest["sections"];
+    };
+    constraints: {
+      requiredInputs: TemplateManifest["requiredInputs"];
+      allowedAssetRoles: TemplateManifest["allowedAssetRoles"];
+      limits: TemplateManifest["limits"];
+    };
   };
   brand: {
     id: string;
     name: string;
+    wordmark: string;
+    /** Approved brand character, not copy for the provider to rewrite. */
+    character: {
+      descriptor: string;
+      headlineMode: string;
+      detailTitle: string;
+    };
+    /** Fully resolved tokens, including the selected accent and accent ink. */
+    tokens: BrandTokens;
   };
   campaign: {
     fixtureId: FixtureId;
     openingFocus: string | null;
+    audience: string | null;
+    objective: string | null;
     productName: string;
     productNoun: string;
     offer: string;
     lede: string;
     storyHeadline: string | null;
     facts: ProductFact[];
+  };
+  assets: {
+    selected: GenerationAssetContext;
+    approved: GenerationAssetContext[];
+    allowedRoles: readonly AssetRole[];
   };
   allowed: {
     angles: OpeningAngle[];
@@ -46,6 +128,7 @@ export type GenerationRequest = {
     lede: number;
     factValue: number;
   };
+  guidance: RuntimeDesignGuidance;
 };
 
 export type NullableSelection = {
@@ -82,6 +165,9 @@ export type GenerationMetadata = {
   status: "generated" | "fallback";
   provider: string;
   providerLabel: string;
+  providerMode: ProviderMode;
+  harnessVersion: string;
+  guidancePackVersion: string;
   model?: string;
   code?: GenerationFailureCode;
   message?: string;
@@ -98,11 +184,17 @@ export type CampaignGenerationInput = {
   requestId?: string;
 };
 
+export type GuidanceLoader = (
+  request: Omit<GenerationRequest, "guidance">,
+) => Promise<RuntimeDesignGuidance>;
+
 export type GenerationOptions = {
   provider?: CampaignGenerationProvider;
   timeoutMs?: number;
   env?: GenerationEnv;
   catalog?: CampaignCatalog;
+  /** Test seam; production uses the app-owned runtime guidance pack. */
+  guidanceLoader?: GuidanceLoader;
 };
 
 export type CampaignGenerationResult =

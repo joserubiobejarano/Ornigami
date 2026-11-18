@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { buildAdvertorialPreview } from "@/lib/campaign-lab/advertorial";
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
 import { isFixtureId } from "@/lib/campaign-lab/fixtures";
+import {
+  DESIGN_GUIDANCE_PACK_VERSION,
+  DESIGN_HARNESS_VERSION,
+} from "@/lib/campaign-lab/generation/harness";
 import { runCampaignGeneration } from "@/lib/campaign-lab/generation/service";
 import { loadCampaignCatalog } from "@/lib/campaign-lab/pilots/local-pilot";
 import type { CampaignFormValues } from "@/lib/campaign-lab/types";
@@ -24,6 +28,8 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
   const record = raw as Record<string, unknown>;
   const fields = ["brandId", "accent", "productName", "offer", "destinationUrl", "assetId"] as const;
   if (fields.some((field) => typeof record[field] !== "string")) return null;
+  if (record.audience !== undefined && typeof record.audience !== "string") return null;
+  if (record.objective !== undefined && typeof record.objective !== "string") return null;
   if (record.openingFocus !== undefined && typeof record.openingFocus !== "string") return null;
   if (record.format !== undefined && record.format !== "offer" && record.format !== "advertorial") {
     return null;
@@ -40,6 +46,8 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
     brandId: record.brandId as CampaignFormValues["brandId"],
     accent: record.accent as string,
     productName: record.productName as string,
+    audience: record.audience as string | undefined,
+    objective: record.objective as string | undefined,
     offer: record.offer as string,
     destinationUrl: record.destinationUrl as string,
     assetId: record.assetId as string,
@@ -102,6 +110,9 @@ export async function POST(request: Request) {
             status: "fallback",
             provider: "deterministic",
             providerLabel: "Deterministic builder",
+            providerMode: "none",
+            harnessVersion: DESIGN_HARNESS_VERSION,
+            guidancePackVersion: DESIGN_GUIDANCE_PACK_VERSION,
             code: "unavailable",
             message: "Advertorial drafts are assembled deterministically from approved brief material. Live model generation is out of scope.",
           },

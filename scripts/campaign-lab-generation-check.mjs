@@ -22,6 +22,10 @@ import {
   createFormValues,
   getAsset,
 } from "../src/lib/campaign-lab/fixtures.ts";
+import {
+  DESIGN_GUIDANCE_PACK_VERSION,
+  DESIGN_HARNESS_VERSION,
+} from "../src/lib/campaign-lab/generation/harness.ts";
 
 const { values: cli } = parseArgs({
   options: {
@@ -129,6 +133,24 @@ async function main() {
     payload?.generation?.status,
     cli.expect,
   );
+  check(
+    "generation-harness-version",
+    payload?.generation?.harnessVersion === DESIGN_HARNESS_VERSION,
+    payload?.generation?.harnessVersion,
+    DESIGN_HARNESS_VERSION,
+  );
+  check(
+    "generation-guidance-version",
+    payload?.generation?.guidancePackVersion === DESIGN_GUIDANCE_PACK_VERSION,
+    payload?.generation?.guidancePackVersion,
+    DESIGN_GUIDANCE_PACK_VERSION,
+  );
+  check(
+    "generation-provider-mode",
+    typeof payload?.generation?.providerMode === "string",
+    payload?.generation?.providerMode,
+    "model | local-test | none",
+  );
   if (cli["expect-code"]) {
     check(
       "generation-code",
@@ -145,6 +167,18 @@ async function main() {
   const approvedAsset = pilot?.asset ?? getAsset(values.assetId);
 
   check("product-identity-preserved", brief?.productName === values.productName, brief?.productName, values.productName);
+  check(
+    "audience-preserved",
+    (brief?.audience ?? null) === (fixture.brief.audience ?? null),
+    brief?.audience ?? null,
+    fixture.brief.audience ?? null,
+  );
+  check(
+    "objective-preserved",
+    (brief?.objective ?? null) === (fixture.brief.objective ?? null),
+    brief?.objective ?? null,
+    fixture.brief.objective ?? null,
+  );
   check("offer-preserved", brief?.offer === values.offer, brief?.offer, values.offer);
   check("destination-preserved", brief?.destinationUrl === values.destinationUrl, brief?.destinationUrl, values.destinationUrl);
   check("asset-id-preserved", asset?.id === values.assetId, asset?.id, values.assetId);

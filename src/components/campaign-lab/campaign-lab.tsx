@@ -59,6 +59,10 @@ import {
   openingOptionsForFormat,
 } from "@/lib/campaign-lab/fixtures";
 import { GenerationRequestGate } from "@/lib/campaign-lab/generation/client-gate";
+import {
+  DESIGN_GUIDANCE_PACK_VERSION,
+  DESIGN_HARNESS_VERSION,
+} from "@/lib/campaign-lab/generation/harness";
 import type { GenerationMetadata } from "@/lib/campaign-lab/generation/types";
 import {
   CAMPAIGN_REVISION_IDENTITY_VERSION,
@@ -370,6 +374,8 @@ export function CampaignLab({
   const capacityIssueId = `${baseId}-capacity-issue`;
   const assetMetaId = `${baseId}-asset-meta`;
   const accentHintId = `${baseId}-accent-hint`;
+  const audienceId = `${baseId}-audience`;
+  const objectiveId = `${baseId}-objective`;
 
   useEffect(() => {
     if (issueCount > previousIssueCount.current) {
@@ -526,6 +532,9 @@ export function CampaignLab({
       status: "fallback",
       provider: "deterministic",
       providerLabel: "Deterministic builder",
+      providerMode: "none",
+      harnessVersion: DESIGN_HARNESS_VERSION,
+      guidancePackVersion: DESIGN_GUIDANCE_PACK_VERSION,
       code,
       message,
     };
@@ -791,18 +800,31 @@ export function CampaignLab({
     if (generation.status === "idle") {
       return "Deterministic draft. Generation has not run in this session.";
     }
+    const harness = generation.harnessVersion ?? DESIGN_HARNESS_VERSION;
+    const guidance =
+      generation.guidancePackVersion ?? DESIGN_GUIDANCE_PACK_VERSION;
     if (generation.status === "generated") {
       const angle = generation.angle ?? "selected angle";
       const sections = generation.sections?.join(" → ") ?? "selected sections";
       const facts = generation.factIds?.length
         ? generation.factIds.join(", ")
         : "no approved facts";
-      return `Generated with ${generation.providerLabel}${generation.model ? ` (${generation.model})` : ""}. Opening ${angle}; sections ${sections}; facts ${facts}.`;
+      const mode =
+        generation.providerMode === "local-test"
+          ? "Local test output"
+          : "Model generation";
+      return `${mode} · ${generation.providerLabel}${generation.model ? ` (${generation.model})` : ""}. Opening ${angle}; sections ${sections}; facts ${facts}. Harness ${harness}; guidance pack ${guidance}.`;
     }
     const detail = generation.issues?.length
       ? ` ${generation.issues.length} proposal ${generation.issues.length === 1 ? "issue was" : "issues were"} rejected.`
       : "";
-    return `Deterministic fallback · ${generation.message ?? "generation was unavailable."}${detail}`;
+    const attempted =
+      generation.providerMode === "local-test"
+        ? "local-test attempt"
+        : generation.providerMode === "model"
+          ? "model attempt"
+          : "deterministic path";
+    return `Deterministic fallback · ${generation.message ?? "generation was unavailable."}${detail} · ${attempted}. Harness ${harness}; guidance pack ${guidance}.`;
   })();
 
   const generationTone = generation.status === "generated"
@@ -1120,6 +1142,34 @@ export function CampaignLab({
                   </p>
                 ) : null}
               </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor={audienceId}>Audience</Label>
+                  <Input
+                    id={audienceId}
+                    name="audience"
+                    value={values.audience ?? ""}
+                    onChange={(event) => handleValueChange("audience", event.target.value)}
+                    autoComplete="off"
+                    placeholder="Who is this campaign for?"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={objectiveId}>Campaign objective</Label>
+                  <Input
+                    id={objectiveId}
+                    name="objective"
+                    value={values.objective ?? ""}
+                    onChange={(event) => handleValueChange("objective", event.target.value)}
+                    autoComplete="off"
+                    placeholder="What should the page achieve?"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-[#6d6a5f]">
+                Audience and objective guide generation and are not rendered as page copy.
+              </p>
 
               {openingOptions.length > 0 ? (
                 <div className="space-y-1.5">
@@ -1560,7 +1610,9 @@ export function CampaignLab({
                 </p>
                 <span className="rounded-full bg-white/55 px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em]">
                   {generation.status === "generated"
-                    ? generation.providerLabel
+                    ? generation.providerMode === "local-test"
+                      ? "Local test output"
+                      : "Model generation"
                     : generation.status === "fallback"
                       ? "Fallback"
                       : "Not generated"}
@@ -1608,6 +1660,9 @@ export function CampaignLab({
           data-preview-dirty={dirty ? "true" : "false"}
           data-generation-status={generation.status}
           data-generation-provider={generation.status === "idle" ? "deterministic" : generation.provider}
+          data-generation-mode={generation.status === "idle" ? "none" : generation.providerMode}
+          data-generation-harness-version={generation.status === "idle" ? DESIGN_HARNESS_VERSION : generation.harnessVersion}
+          data-generation-guidance-version={generation.status === "idle" ? DESIGN_GUIDANCE_PACK_VERSION : generation.guidancePackVersion}
           data-generation-code={generation.status === "fallback" ? generation.code : undefined}
           data-generation-angle={generation.status === "generated" ? generation.angle : undefined}
           data-images-ready={preview ? (imageSummary.ready ? "true" : "false") : undefined}

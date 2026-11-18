@@ -253,6 +253,8 @@ export function OfferIntake() {
   const [restoredBrief, setRestoredBrief] = useState(false);
   const [brandName, setBrandName] = useState("");
   const [productName, setProductName] = useState("");
+  const [audience, setAudience] = useState("");
+  const [objective, setObjective] = useState("");
   const [offer, setOffer] = useState("");
   const [destinationUrl, setDestinationUrl] = useState("");
   const [facts, setFacts] = useState<BrowserOfferFactInput[]>([
@@ -289,6 +291,8 @@ export function OfferIntake() {
   }>({ revision: null, dirty: false });
 
   const productNameId = `${baseId}-product-name`;
+  const audienceId = `${baseId}-audience`;
+  const objectiveId = `${baseId}-objective`;
   const offerId = `${baseId}-offer`;
   const destinationId = `${baseId}-destination`;
   const factsId = `${baseId}-facts`;
@@ -315,6 +319,8 @@ export function OfferIntake() {
       if (brief) {
         setBrandName(brief.brandName);
         setProductName(brief.productName);
+        setAudience(brief.audience);
+        setObjective(brief.objective);
         setOffer(brief.offer);
         setDestinationUrl(brief.destinationUrl);
         setFacts(brief.facts);
@@ -337,6 +343,8 @@ export function OfferIntake() {
         serializePersistedOfferIntakeBrief({
           brandName,
           productName,
+          audience,
+          objective,
           offer,
           destinationUrl,
           facts,
@@ -349,9 +357,11 @@ export function OfferIntake() {
     }
   }, [
     alt,
+    audience,
     brandName,
     destinationUrl,
     facts,
+    objective,
     offer,
     productName,
     briefHydrated,
@@ -490,6 +500,8 @@ export function OfferIntake() {
     const brief = parsed.brief;
     setBrandName(brief.brandName);
     setProductName(brief.productName);
+    setAudience(brief.audience);
+    setObjective(brief.objective);
     setOffer(brief.offer);
     setDestinationUrl(brief.destinationUrl);
     setFacts(brief.facts.map((fact) => ({ ...fact })));
@@ -577,6 +589,8 @@ export function OfferIntake() {
     const input: BrowserOfferIntakeInput = {
       brandName,
       productName,
+      audience,
+      objective,
       offer,
       destinationUrl,
       facts,
@@ -843,6 +857,33 @@ export function OfferIntake() {
                 </p>
               ) : null}
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor={audienceId}>Audience</Label>
+                <Input
+                  id={audienceId}
+                  value={audience}
+                  onChange={(event) => setAudience(event.target.value)}
+                  autoComplete="off"
+                  placeholder="Who is this campaign for?"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={objectiveId}>Campaign objective</Label>
+                <Input
+                  id={objectiveId}
+                  value={objective}
+                  onChange={(event) => setObjective(event.target.value)}
+                  autoComplete="off"
+                  placeholder="What should the page achieve?"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-[#6d6a5f]">
+              Audience and objective travel with the brief into preview generation. They
+              guide the opening and section choice; they are never rendered as page copy.
+            </p>
 
             <div className="space-y-1.5">
               <Label htmlFor={offerId}>Offer</Label>

@@ -293,6 +293,13 @@ export type CampaignBrief = {
   fixtureId: FixtureId;
   brandId: BrandId;
   productName: string;
+  /**
+   * The intended campaign audience. Optional so every existing fixture,
+   * prepared brief, and pilot manifest remains valid without re-authoring.
+   */
+  audience?: string;
+  /** The campaign's primary objective. Optional for the same reason. */
+  objective?: string;
   offer: string;
   /**
    * The exact approved substring of `offer` that may receive price emphasis.
@@ -327,6 +334,8 @@ export type CampaignFormValues = {
   brandId: BrandId;
   accent: string;
   productName: string;
+  audience?: string;
+  objective?: string;
   offer: string;
   destinationUrl: string;
   assetId: string;

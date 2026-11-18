@@ -42,6 +42,8 @@ export type BrowserOfferConfirmations = {
 export type BrowserOfferIntakeInput = {
   brandName?: string;
   productName: string;
+  audience?: string;
+  objective?: string;
   offer: string;
   destinationUrl: string;
   facts: readonly BrowserOfferFactInput[];
@@ -394,6 +396,8 @@ export function buildBrowserOfferCatalog(
       fixtureId: BROWSER_OFFER_FIXTURE_ID,
       brandId: brand.id,
       productName: trimmed(input.productName),
+      audience: trimmed(input.audience ?? "") || undefined,
+      objective: trimmed(input.objective ?? "") || undefined,
       offer: trimmed(input.offer),
       destinationUrl: trimmed(input.destinationUrl),
       assetId: asset.id,

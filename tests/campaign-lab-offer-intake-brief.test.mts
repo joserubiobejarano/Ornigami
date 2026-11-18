@@ -11,6 +11,8 @@ import {
 const brief = {
   brandName: "Harbor Field",
   productName: "Harbor Field bottle",
+  audience: "Commuters who saw the bottle in a mobile ad.",
+  objective: "Reach the marketplace listing with the exact offer.",
   offer: "Free shipping through 30 November 2026, on every order",
   destinationUrl: "https://example.com/harbor-field",
   facts: [
@@ -76,6 +78,8 @@ test("non-string fields and accidental image or approval keys are not restored",
       schemaVersion: 1,
       brandName: 42,
       productName: null,
+      audience: ["not", "text"],
+      objective: false,
       offer: { value: "not a string" },
       destinationUrl: ["https://example.com"],
       facts: "not an array",
@@ -87,6 +91,8 @@ test("non-string fields and accidental image or approval keys are not restored",
   );
   assert.equal(parsed?.brandName, "");
   assert.equal(parsed?.productName, "");
+  assert.equal(parsed?.audience, "");
+  assert.equal(parsed?.objective, "");
   assert.equal(parsed?.offer, "");
   assert.equal(parsed?.destinationUrl, "");
   assert.deepEqual(parsed?.facts, [
@@ -102,6 +108,8 @@ test("empty saved fields do not trigger the restored-brief notice", () => {
     serializePersistedOfferIntakeBrief({
       brandName: "",
       productName: "",
+      audience: "",
+      objective: "",
       offer: "",
       destinationUrl: "",
       facts: [
@@ -123,6 +131,8 @@ test("a prepared brief loads every text field verbatim", () => {
       schemaVersion: 1,
       brandName: "Harbor Field",
       productName: "Harbor Field  bottle",
+      audience: "Commuters who saw a mobile ad.",
+      objective: "Reach the exact offer page.",
       offer: "Free shipping through 30 November 2026, on every order",
       destinationUrl: "https://example.com/harbor-field",
       facts: [
@@ -138,6 +148,8 @@ test("a prepared brief loads every text field verbatim", () => {
   assert.deepEqual(parsed.brief, {
     brandName: "Harbor Field",
     productName: "Harbor Field  bottle",
+    audience: "Commuters who saw a mobile ad.",
+    objective: "Reach the exact offer page.",
     offer: "Free shipping through 30 November 2026, on every order",
     destinationUrl: "https://example.com/harbor-field",
     facts: [
