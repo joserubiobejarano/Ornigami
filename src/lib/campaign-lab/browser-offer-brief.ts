@@ -25,6 +25,7 @@ const MAX_ALT_LENGTH = 500;
 const MAX_RIGHTS_LENGTH = 500;
 const MAX_ASSET_DIMENSION = 20_000;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/i;
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export type BrowserOfferBriefAsset = {
@@ -42,6 +43,8 @@ export type BrowserOfferBriefRequest = {
   productName: string;
   audience?: string;
   objective?: string;
+  /** Supported presentation choice; missing keeps the app-owned default accent. */
+  accent?: string;
   offer: string;
   destinationUrl: string;
   facts: BrowserOfferFactInput[];
@@ -63,6 +66,7 @@ export type BrowserOfferBriefParseResult =
       ok: true;
       input: BrowserOfferIntakeInput;
       context: BrowserOfferBriefContext;
+      accent?: string;
     }
   | {
       ok: false;
@@ -75,6 +79,7 @@ const BRIEF_KEYS = new Set([
   "productName",
   "audience",
   "objective",
+  "accent",
   "offer",
   "destinationUrl",
   "facts",
@@ -309,6 +314,25 @@ export function parseBrowserOfferBriefRequest(
     contextIssues.push(...context.issues);
   }
 
+  let accent: string | undefined;
+  if (raw.accent !== undefined && raw.accent !== null) {
+    if (typeof raw.accent !== "string") {
+      issues.push({ field: "accent", message: "Accent color must be text." });
+    } else {
+      const value = raw.accent.trim();
+      if (value) {
+        if (!HEX_COLOR_PATTERN.test(value)) {
+          issues.push({
+            field: "accent",
+            message: "Accent color must be a six-digit hex value.",
+          });
+        } else {
+          accent = value.toLowerCase();
+        }
+      }
+    }
+  }
+
   const facts = parseFacts(raw.facts);
   if (!facts) {
     issues.push({
@@ -390,6 +414,7 @@ export function parseBrowserOfferBriefRequest(
   return {
     ok: true,
     input,
+    ...(accent ? { accent } : {}),
     context: {
       source: "browser-offer",
       ownerConfirmed: false,
@@ -406,6 +431,7 @@ export function parseBrowserOfferBriefRequest(
  */
 export function browserOfferBriefFromIntake(
   input: BrowserOfferIntakeInput,
+  options: { accent?: string } = {},
 ): BrowserOfferBriefRequest {
   if (!input.packshot) {
     throw new Error("A packshot is required to build the browser brief.");
@@ -418,6 +444,7 @@ export function browserOfferBriefFromIntake(
     productName: input.productName,
     ...(input.audience !== undefined ? { audience: input.audience } : {}),
     ...(input.objective !== undefined ? { objective: input.objective } : {}),
+    ...(options.accent ? { accent: options.accent } : {}),
     offer: input.offer,
     destinationUrl: input.destinationUrl,
     facts: input.facts.map((fact) => ({ ...fact })),

@@ -1,3 +1,4 @@
+import type { BrowserOfferVerification } from "./browser-offer.ts";
 import type { ApprovedAsset, PilotDescriptor } from "./types.ts";
 
 export type VerificationFieldStatus = "confirmed" | "provisional" | "missing";
@@ -45,8 +46,20 @@ export type PilotVerificationValues = {
  * review evidence the manifest does not contain. Confirmation is inherited only
  * when the rendered value still matches its approved manifest source.
  */
+export type BrowserIntakeAssetIdentity = {
+  source: "browser-computed";
+  /** SHA-256 declared by the browser packshot reader. */
+  declaredSha256: string | null;
+  /** SHA-256 recalculated from the exported packshot bytes. */
+  exportedSha256?: string | null;
+  /** The local export copy matched the declared asset identity. */
+  localExportHashMatches?: boolean;
+  /** The server received metadata, not the image bytes. */
+  serverBytesVerified: false;
+};
+
 export type CampaignVerificationProvenance = {
-  source: "pilot-manifest";
+  source: "pilot-manifest" | "browser-intake";
   pilotId: string;
   /** The status recorded by the manifest itself. */
   pilotStatus: "preview" | "confirmed";
@@ -61,6 +74,14 @@ export type CampaignVerificationProvenance = {
   rights: VerificationField;
   packshot: VerificationPackshotField;
   missingEvidence: string[];
+  /** Browser intake is never an owner confirmation. */
+  ownerConfirmed?: false;
+  /** The server did not receive or verify the packshot bytes. */
+  assetBytesVerified?: false;
+  /** Operator checkbox state carried into the local export receipt. */
+  operatorAttestation?: BrowserOfferVerification;
+  /** Declared and locally checked packshot identity, distinct from server verification. */
+  assetIdentity?: BrowserIntakeAssetIdentity;
 };
 
 export type PilotVerificationInput = {
@@ -157,8 +178,9 @@ export function pilotPreviewNotice(
   return "Preview · offer and destination unconfirmed";
 }
 
-export function buildPilotVerificationProvenance(
+function buildVerificationProvenance(
   input: PilotVerificationInput,
+  sourceKind: CampaignVerificationProvenance["source"],
 ): CampaignVerificationProvenance {
   const { pilot, asset } = input;
   const fallback: PilotVerificationValues = {
@@ -169,7 +191,7 @@ export function buildPilotVerificationProvenance(
   const manifest = input.manifest ?? fallback;
   const rendered = input.rendered ?? fallback;
 
-  const source = `pilot-manifest:${pilot.id}`;
+  const source = `${sourceKind}:${pilot.id}`;
   const manifestOffer = manifest.offer ?? "";
   const renderedOffer = rendered.offer ?? "";
   const manifestDestination = manifest.destinationUrl ?? "";
@@ -236,7 +258,7 @@ export function buildPilotVerificationProvenance(
   }
 
   return {
-    source: "pilot-manifest",
+    source: sourceKind,
     pilotId: pilot.id,
     pilotStatus: pilot.status,
     status:
@@ -310,5 +332,29 @@ export function buildPilotVerificationProvenance(
       contentHash: asset.contentHash || null,
     },
     missingEvidence: unique(missing),
+  };
+}
+
+export function buildPilotVerificationProvenance(
+  input: PilotVerificationInput,
+): CampaignVerificationProvenance {
+  return buildVerificationProvenance(input, "pilot-manifest");
+}
+
+export function buildBrowserIntakeVerificationProvenance(
+  input: PilotVerificationInput & {
+    operatorVerification: BrowserOfferVerification;
+  },
+): CampaignVerificationProvenance {
+  return {
+    ...buildVerificationProvenance(input, "browser-intake"),
+    ownerConfirmed: false,
+    assetBytesVerified: false,
+    operatorAttestation: { ...input.operatorVerification },
+    assetIdentity: {
+      source: "browser-computed",
+      declaredSha256: input.asset.contentHash?.trim().toLowerCase() || null,
+      serverBytesVerified: false,
+    },
   };
 }

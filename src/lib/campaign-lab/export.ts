@@ -166,6 +166,11 @@ export type CampaignExportPreview = {
     layout: string;
     sections: readonly string[];
   };
+  /** Optional selected presentation values carried into the receipt. */
+  appearance?: {
+    accent: string;
+    accentInk: string;
+  };
   asset: CampaignExportAsset;
   verification?: BrowserOfferVerification | null;
   provenance?: CampaignVerificationProvenance;
@@ -230,6 +235,7 @@ export type CampaignExportReceipt = {
     destinationUrl: string;
     actionLabel: string;
     template: CampaignExportPreview["template"];
+    appearance?: CampaignExportPreview["appearance"];
   };
   verification: BrowserOfferVerification | null;
   provenance?: CampaignVerificationProvenance;
@@ -1197,6 +1203,32 @@ async function readPackshotBytes(
   };
 }
 
+function receiptProvenance(
+  preview: CampaignExportPreview,
+  packshotSha256: string,
+): CampaignVerificationProvenance | undefined {
+  const provenance = preview.provenance;
+  if (!provenance) return undefined;
+  if (provenance.source !== "browser-intake") return provenance;
+
+  const declaredSha256 =
+    preview.asset.contentHash.trim().toLowerCase() || null;
+  const exportedSha256 = packshotSha256.trim().toLowerCase() || null;
+  return {
+    ...provenance,
+    ownerConfirmed: false,
+    assetBytesVerified: false,
+    assetIdentity: {
+      source: "browser-computed",
+      declaredSha256,
+      exportedSha256,
+      localExportHashMatches:
+        Boolean(declaredSha256) && declaredSha256 === exportedSha256,
+      serverBytesVerified: false,
+    },
+  };
+}
+
 export async function buildExportReceipt(input: {
   preview: CampaignExportPreview;
   approval: CampaignExportApproval;
@@ -1207,6 +1239,7 @@ export async function buildExportReceipt(input: {
   fonts?: CampaignExportFontNotice[];
   references?: ArchiveReferenceAudit;
 }): Promise<CampaignExportReceipt> {
+  const provenance = receiptProvenance(input.preview, input.packshotSha256);
   return {
     schemaVersion: 1,
     kind: "campaign-lab-local-export",
@@ -1232,11 +1265,12 @@ export async function buildExportReceipt(input: {
       destinationUrl: input.preview.destinationUrl,
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
+      ...(input.preview.appearance
+        ? { appearance: { ...input.preview.appearance } }
+        : {}),
     },
     verification: input.preview.verification ?? null,
-    ...(input.preview.provenance
-      ? { provenance: input.preview.provenance }
-      : {}),
+    ...(provenance ? { provenance } : {}),
     asset: {
       id: input.preview.asset.id,
       contentHash: input.preview.asset.contentHash,

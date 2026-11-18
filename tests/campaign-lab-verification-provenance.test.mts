@@ -268,3 +268,30 @@ test("the builder still accepts the legacy single-value input shape", () => {
   assert.equal(provenance.offer.status, "confirmed");
   assert.deepEqual(provenance.editorChanges, []);
 });
+test("browser intake provenance names its source and keeps the operator boundary explicit", async () => {
+  const { buildBrowserIntakeVerificationProvenance } = await import(
+    "../src/lib/campaign-lab/verification-provenance.ts"
+  );
+  const provenance = buildBrowserIntakeVerificationProvenance({
+    pilot,
+    manifest,
+    rendered: manifest,
+    asset,
+    operatorVerification: {
+      offer: "confirmed",
+      destination: "direct",
+      rights: "confirmed",
+      provisional: false,
+    },
+  });
+  assert.equal(provenance.source, "browser-intake");
+  assert.equal(provenance.ownerConfirmed, false);
+  assert.equal(provenance.assetBytesVerified, false);
+  assert.equal(provenance.operatorAttestation?.offer, "confirmed");
+  assert.deepEqual(provenance.assetIdentity, {
+    source: "browser-computed",
+    declaredSha256: asset.contentHash,
+    serverBytesVerified: false,
+  });
+  assert.match(provenance.offer.source, /^browser-intake:test-pilot#/);
+});

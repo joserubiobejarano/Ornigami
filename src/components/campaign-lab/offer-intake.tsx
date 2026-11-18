@@ -710,6 +710,8 @@ export function OfferIntake() {
               offer: nextValues.offer,
               destinationUrl: nextValues.destinationUrl,
               confirmations,
+            }, {
+              accent: nextValues.accent,
             })
           }
           browserAssetSrc={submitted.assetSrc}

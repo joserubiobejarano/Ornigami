@@ -12,6 +12,7 @@ import {
   DESIGN_GUIDANCE_PACK_VERSION,
   DESIGN_HARNESS_VERSION,
 } from "@/lib/campaign-lab/generation/harness";
+import { readBoundedJsonBody } from "@/lib/campaign-lab/generation/request-body";
 import { runCampaignGeneration } from "@/lib/campaign-lab/generation/service";
 import { loadCampaignCatalog } from "@/lib/campaign-lab/pilots/local-pilot";
 import type { CampaignFormValues } from "@/lib/campaign-lab/types";
@@ -66,18 +67,12 @@ export async function POST(request: Request) {
     return json({ ok: false, message: "Campaign Lab is unavailable." }, 404);
   }
 
-  const contentLength = Number.parseInt(request.headers.get("content-length") ?? "0", 10);
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
-    return json({ ok: false, message: "The request body is too large." }, 413);
+  const bounded = await readBoundedJsonBody(request, MAX_BODY_BYTES);
+  if (!bounded.ok) {
+    return json({ ok: false, message: bounded.message }, bounded.status);
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ ok: false, message: "Send a JSON request body." }, 400);
-  }
-
+  const body = bounded.value;
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return json({ ok: false, message: "Send a JSON object." }, 400);
   }
@@ -118,6 +113,7 @@ export async function POST(request: Request) {
     try {
       const built = buildBrowserOfferCatalog(parsed.input);
       const values = createFormValues(built.fixture, built.catalog);
+      if (parsed.accent) values.accent = parsed.accent;
       const result = await runCampaignGeneration(
         { fixtureId: built.fixture.id, values, requestId },
         { catalog: built.catalog },

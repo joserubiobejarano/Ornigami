@@ -178,3 +178,113 @@ test("the direct service rejects malformed campaign context without throwing", a
   assert.match(result.issues[0].message, /Audience must be text/);
   assert.match(result.issues[1].message, /Campaign objective must be text/);
 });
+test("accent is a narrowly validated browser presentation choice", () => {
+  const withAccent = { ...request(), accent: "#244FAE" };
+  const parsed = parseBrowserOfferBriefRequest(withAccent);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.equal(parsed.accent, "#244fae");
+    assert.equal(parsed.context.source, "browser-offer");
+  }
+
+  for (const accent of ["blue", "#123", "#gggggg", 42, { value: "#244fae" }]) {
+    const rejected = parseBrowserOfferBriefRequest({ ...request(), accent });
+    assert.equal(rejected.ok, false, JSON.stringify(accent));
+    if (!rejected.ok) {
+      assert.ok(
+        rejected.issues.some((issue) => issue.field === "accent"),
+        JSON.stringify(accent),
+      );
+    }
+  }
+
+  const older = request();
+  delete older.accent;
+  assert.equal(parseBrowserOfferBriefRequest(older).ok, true);
+});
+
+test("the client builder carries the selected accent without accepting arbitrary tokens", () => {
+  const brief = browserOfferBriefFromIntake(
+    {
+      brandName: "Harbor Field",
+      productName: "Harbor Field travel bottle",
+      audience: "Mobile shoppers.",
+      objective: "Reach the listing.",
+      offer: "20% off",
+      destinationUrl: "https://example.com/harbor-field",
+      facts: [
+        { label: "Capacity", value: "500 ml" },
+        { label: "Closure", value: "Screw cap" },
+      ],
+      packshot: {
+        src: "blob:http://localhost/local-packshot",
+        width: 1200,
+        height: 1500,
+        alt: "Bottle.",
+        rights: "Local only.",
+        contentHash: "b".repeat(64),
+        fileName: "bottle.png",
+      },
+      reviewedOn: "2026-11-18",
+    },
+    { accent: "#244fae" },
+  );
+  assert.equal(brief.accent, "#244fae");
+  assert.equal("tokens" in brief, false);
+  assert.equal("catalog" in brief, false);
+});
+test("accent survives successful generation and deterministic fallback", async () => {
+  const { buildBrowserOfferCatalog } = await import(
+    "../src/lib/campaign-lab/browser-offer.ts"
+  );
+  const parsed = parseBrowserOfferBriefRequest({
+    ...request(),
+    accent: "#244fae",
+  });
+  assert.equal(parsed.ok, true);
+  if (!parsed.ok) return;
+  const built = buildBrowserOfferCatalog(parsed.input);
+  const values = {
+    ...createFormValues(built.fixture, built.catalog),
+    accent: parsed.accent!,
+  };
+
+  const success = await runCampaignGeneration(
+    { fixtureId: built.fixture.id, values },
+    {
+      env: {
+        CAMPAIGN_LAB_GENERATION_PROVIDER: "local-test",
+        CAMPAIGN_LAB_GENERATION_TEST_MODE: "success",
+      },
+      catalog: built.catalog,
+    },
+  );
+  assert.equal(success.ok, true);
+  if (success.ok) {
+    assert.equal(success.preview.theme.tokens.accent, "#244fae");
+    assert.equal(success.generation.status, "generated");
+  }
+
+  for (const [mode, code] of [
+    ["invalid", "invalid"],
+    ["timeout", "timeout"],
+  ] as const) {
+    const fallback = await runCampaignGeneration(
+      { fixtureId: built.fixture.id, values },
+      {
+        env: {
+          CAMPAIGN_LAB_GENERATION_PROVIDER: "local-test",
+          CAMPAIGN_LAB_GENERATION_TEST_MODE: mode,
+          CAMPAIGN_LAB_GENERATION_TIMEOUT_MS: "50",
+        },
+        catalog: built.catalog,
+      },
+    );
+    assert.equal(fallback.ok, true, mode);
+    if (fallback.ok) {
+      assert.equal(fallback.generation.status, "fallback", mode);
+      assert.equal(fallback.generation.code, code, mode);
+      assert.equal(fallback.preview.theme.tokens.accent, "#244fae", mode);
+    }
+  }
+});

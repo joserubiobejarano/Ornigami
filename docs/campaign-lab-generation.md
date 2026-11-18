@@ -63,10 +63,29 @@ with the local object URL for rendering, approval, and export. Browser response
 metadata records `ownerConfirmed: false` and `assetBytesVerified: false`; the
 intake's checkboxes remain operator attestations, not owner confirmation.
 
+The editor's selected accent is carried as one narrowly validated hex-color
+field. The server still builds the catalog and resolves tokens itself; arbitrary
+catalogs or token maps are rejected. Missing accent keeps the app-owned default
+for older browser briefs.
+
+Browser export receipts identify `provenance.source: "browser-intake"`. They
+carry the operator attestation, keep `ownerConfirmed` and `assetBytesVerified`
+false, and separate the browser-declared SHA-256, the local export hash check,
+and the fact that the server never received the image bytes. The receipt also
+records the selected accent so the approved treatment and revision can be
+matched to the exported HTML. Historical pilot receipts keep their existing
+shape and remain readable.
+
 Audience and objective use shared 240-character limits across the browser
 request, prepared briefs, pilot source/runtime manifests, form validation, and
 direct service entry points. Missing values remain valid. Wrong types or
 overlong values return field-level errors and are never silently truncated.
+
+The generation route reads the request stream and counts actual UTF-8 bytes
+before parsing JSON. `Content-Length` is only an early rejection hint; a missing
+or understated header cannot bypass the limit. Over-limit bodies return 413
+before provider selection, malformed JSON keeps the actionable 400 response, and
+the development availability gate remains first.
 
 A brief may declare `requiredFactGroups`. Every fact in a group must render
 together; facts outside the groups remain optional. The deterministic builder

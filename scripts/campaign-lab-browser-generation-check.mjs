@@ -11,6 +11,7 @@
  */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { request as httpRequest } from "node:http";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -81,6 +82,7 @@ const BRIEFS = [
     productName: "Harbor Field travel bottle",
     audience: "People discovering the bottle in a paid social ad on mobile.",
     objective: "Send the visitor to the marketplace listing while the 20% offer is clear.",
+    accent: "#244fae",
     offer: "20% off, 27-30 November 2026",
     destinationUrl: "https://example.com/harbor-field",
     facts: [
@@ -98,6 +100,7 @@ const BRIEFS = [
     audience:
       "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
     objective: "Explain the rib design and lead to the dripper page.",
+    accent: "#5b3f8c",
     offer: "Free shipping through 30 November 2026",
     destinationUrl: "https://example.com/morrow",
     facts: [
@@ -139,6 +142,8 @@ async function fillIntake(page, brief) {
   await confirmations.nth(2).check();
   await page.getByRole("button", { name: "Open Campaign Lab preview", exact: true }).click();
   await page.waitForSelector('section[data-fixture="browser-offer"]', { timeout: 60_000 });
+  await page.getByLabel("Accent color", { exact: true }).fill(brief.accent);
+  await page.waitForTimeout(150);
   await page.waitForFunction(
     () => [...document.images].every((image) => image.complete && image.naturalWidth > 0),
     null,
@@ -169,12 +174,16 @@ async function generate(page, report, label) {
   );
   await page.waitForTimeout(300);
   const preview = await readPreview(page);
+  const editorAccent = await page
+    .getByLabel("Accent color", { exact: true })
+    .inputValue();
   const record = {
     label,
     status: response.status(),
     request,
     response: payload,
     preview,
+    editorAccent,
   };
   report.generations.push(record);
   return record;
@@ -232,11 +241,21 @@ async function approveAndExport(page, report, brief) {
   extractZip(zipPath, bundleDir);
   const receipt = JSON.parse(readFileSync(path.join(bundleDir, "receipt.json"), "utf8"));
   const html = readFileSync(path.join(bundleDir, "index.html"), "utf8");
+  const css = readFileSync(path.join(bundleDir, "styles.css"), "utf8");
   const preview = report.generations.at(-1).preview;
   check(report, "export-file", existsSync(zipPath), true, true);
   check(report, "receipt-revision", receipt.approval.revision === preview.revision, receipt.approval.revision, preview.revision);
   check(report, "receipt-offer", receipt.preview.offer === brief.offer, receipt.preview.offer, brief.offer);
   check(report, "receipt-destination", receipt.preview.destinationUrl === brief.destinationUrl, receipt.preview.destinationUrl, brief.destinationUrl);
+  check(report, "receipt-accent", receipt.preview.appearance?.accent === brief.accent, receipt.preview.appearance?.accent, brief.accent);
+  check(report, "receipt-source", receipt.provenance?.source === "browser-intake", receipt.provenance?.source, "browser-intake");
+  check(report, "receipt-owner-confirmed", receipt.provenance?.ownerConfirmed === false, receipt.provenance?.ownerConfirmed, false);
+  check(report, "receipt-bytes-verified", receipt.provenance?.assetBytesVerified === false, receipt.provenance?.assetBytesVerified, false);
+  check(report, "receipt-operator-attestation", receipt.provenance?.operatorAttestation?.offer === "confirmed", receipt.provenance?.operatorAttestation?.offer, "confirmed");
+  check(report, "receipt-asset-declared", receipt.provenance?.assetIdentity?.declaredSha256 === preview.asset.contentHash, receipt.provenance?.assetIdentity?.declaredSha256, preview.asset.contentHash);
+  check(report, "receipt-asset-exported", receipt.provenance?.assetIdentity?.exportedSha256 === preview.asset.contentHash, receipt.provenance?.assetIdentity?.exportedSha256, preview.asset.contentHash);
+  check(report, "receipt-asset-local-match", receipt.provenance?.assetIdentity?.localExportHashMatches === true, receipt.provenance?.assetIdentity?.localExportHashMatches, true);
+  check(report, "receipt-asset-server-unverified", receipt.provenance?.assetIdentity?.serverBytesVerified === false, receipt.provenance?.assetIdentity?.serverBytesVerified, false);
   check(
     report,
     "receipt-packshot",
@@ -247,6 +266,20 @@ async function approveAndExport(page, report, brief) {
   check(report, "html-revision", html.includes(`name="campaign-lab-revision" content="${preview.revision}"`), true, true);
   check(report, "html-offer", html.includes(brief.offer), true, true);
   check(report, "html-destination", html.includes(brief.destinationUrl), true, true);
+  check(
+    report,
+    "export-html-accent",
+    html.toLowerCase().includes(brief.accent.toLowerCase()),
+    html.toLowerCase().includes(brief.accent.toLowerCase()),
+    true,
+  );
+  check(
+    report,
+    "export-css-present",
+    css.includes(".campaign-page_"),
+    css.includes(".campaign-page_"),
+    true,
+  );
   for (const [id, value] of Object.entries(receipt.checks)) {
     check(report, `receipt-check-${id}`, value === true, value, true);
   }
@@ -274,6 +307,10 @@ function validateGeneration(report, brief, record, expected) {
   check(report, `${brief.id}-no-client-values`, request.values === undefined, request.values, undefined);
   check(report, `${brief.id}-audience-request`, request.browserBrief?.audience === brief.audience, request.browserBrief?.audience, brief.audience);
   check(report, `${brief.id}-objective-request`, request.browserBrief?.objective === brief.objective, request.browserBrief?.objective, brief.objective);
+  check(report, `${brief.id}-accent-request`, request.browserBrief?.accent === brief.accent, request.browserBrief?.accent, brief.accent);
+  check(report, `${brief.id}-accent-editor`, record.editorAccent === brief.accent, record.editorAccent, brief.accent);
+  check(report, `${brief.id}-accent-preview`, response.preview?.theme?.tokens?.accent === brief.accent, response.preview?.theme?.tokens?.accent, brief.accent);
+  check(report, `${brief.id}-no-client-tokens`, request.browserBrief?.tokens === undefined, request.browserBrief?.tokens, undefined);
   check(report, `${brief.id}-audience-response`, response.preview?.brief?.audience === brief.audience, response.preview?.brief?.audience, brief.audience);
   check(report, `${brief.id}-objective-response`, response.preview?.brief?.objective === brief.objective, response.preview?.brief?.objective, brief.objective);
   check(report, `${brief.id}-asset-src-local-only`, request.browserBrief?.asset?.src === undefined, request.browserBrief?.asset?.src, undefined);
@@ -349,6 +386,118 @@ async function checkApiBoundary(report) {
   report.apiBoundary = { status: response.status, issues: payload.issues ?? [] };
 }
 
+function rawPost(url, body, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const target = new URL(url);
+    const request = httpRequest(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname,
+        port: target.port,
+        path: `${target.pathname}${target.search}`,
+        method: "POST",
+        headers,
+      },
+      (response) => {
+        const chunks = [];
+        response.on("data", (chunk) => chunks.push(chunk));
+        response.on("end", () => {
+          resolve({
+            status: response.statusCode ?? 0,
+            body: Buffer.concat(chunks).toString("utf8"),
+          });
+        });
+      },
+    );
+    request.on("error", reject);
+    request.end(Buffer.from(body, "utf8"));
+  });
+}
+
+async function checkBodyLimit(report) {
+  const brief = BRIEFS[0];
+  const validBrowserBrief = {
+    schemaVersion: 1,
+    brandName: brief.brandName,
+    productName: brief.productName,
+    audience: brief.audience,
+    objective: brief.objective,
+    accent: brief.accent,
+    offer: brief.offer,
+    destinationUrl: brief.destinationUrl,
+    facts: brief.facts,
+    asset: {
+      fileName: path.basename(brief.packshot),
+      width: 1200,
+      height: 1500,
+      alt: brief.alt,
+      rights: brief.rights,
+      contentHash: sha256File(path.join(root, brief.packshot)),
+    },
+    reviewedOn: "2026-11-18",
+  };
+  const padding = " ".repeat(40_000);
+  const oversized = `{"browserBrief":${JSON.stringify(validBrowserBrief)}${padding}}`;
+  const multibyte = `{"padding":"${"é".repeat(20_000)}","browserBrief":${JSON.stringify(validBrowserBrief)}}`;
+  assertByteSizes(oversized, multibyte);
+
+  const missing = await rawPost(
+    new URL("/api/campaign-lab/generate", cli.url).href,
+    oversized,
+    { "Content-Type": "application/json" },
+  );
+  check(report, "body-limit-missing-header", missing.status === 413, missing.status, 413);
+  check(report, "body-limit-missing-header-no-generation", !missing.body.includes("generation"), false, false);
+
+  const understated = await rawPost(
+    new URL("/api/campaign-lab/generate", cli.url).href,
+    oversized,
+    {
+      "Content-Type": "application/json",
+      "Content-Length": "1",
+    },
+  );
+  check(
+    report,
+    "body-limit-understated-header",
+    understated.status === 413 || understated.status === 400,
+    understated.status,
+    "413 (or parser-limited 400)",
+  );
+  check(report, "body-limit-understated-no-generation", !understated.body.includes("generation"), false, false);
+
+  const multibyteResult = await rawPost(
+    new URL("/api/campaign-lab/generate", cli.url).href,
+    multibyte,
+    { "Content-Type": "application/json" },
+  );
+  check(report, "body-limit-multibyte", multibyteResult.status === 413, multibyteResult.status, 413);
+  check(report, "body-limit-multibyte-no-generation", !multibyteResult.body.includes("generation"), false, false);
+
+  report.bodyLimit = {
+    limit: 32_768,
+    missingHeader: { status: missing.status, body: missing.body },
+    understatedHeader: { status: understated.status, body: understated.body },
+    multibyte: {
+      stringLength: multibyte.length,
+      utf8Bytes: Buffer.byteLength(multibyte, "utf8"),
+      status: multibyteResult.status,
+    },
+  };
+}
+
+function assertByteSizes(oversized, multibyte) {
+  if (Buffer.byteLength(oversized, "utf8") <= 32_768) {
+    throw new Error("The oversized body fixture is not over the configured limit.");
+  }
+  if (
+    multibyte.length >= 32_768 ||
+    Buffer.byteLength(multibyte, "utf8") <= 32_768
+  ) {
+    throw new Error("The multibyte fixture must be under the character limit but over the byte limit.");
+  }
+}
+
 async function main() {
   const scenario = cli.scenario;
   if (!["success", "invalid", "timeout", "stale"].includes(scenario)) {
@@ -374,6 +523,7 @@ async function main() {
   };
 
   await checkApiBoundary(report);
+  await checkBodyLimit(report);
 
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });

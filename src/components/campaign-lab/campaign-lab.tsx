@@ -85,6 +85,7 @@ import type {
 import { nativeSelectClassName } from "@/lib/form-controls";
 import { cn } from "@/lib/utils";
 import {
+  buildBrowserIntakeVerificationProvenance,
   buildPilotVerificationProvenance,
   pilotPreviewNotice,
   pilotPreviewStatus,
@@ -216,20 +217,33 @@ export function CampaignLab({
   const effectivePilotNote = previewNote ?? catalog.pilot?.note;
   const pilotProvenance =
     catalog.pilot && previewState && !isAdvertorialPreviewData(previewState)
-      ? buildPilotVerificationProvenance({
-          pilot: catalog.pilot,
-          manifest: {
-            offer: fixture.brief.offer,
-            offerPrice: fixture.brief.offerPrice,
-            destinationUrl: fixture.brief.destinationUrl,
-          },
-          rendered: {
-            offer: previewState.brief.offer,
-            offerPrice: previewState.brief.offerPrice,
-            destinationUrl: previewState.brief.destinationUrl,
-          },
-          asset: previewState.asset,
-        })
+      ? (() => {
+          const input = {
+            pilot: catalog.pilot,
+            manifest: {
+              offer: fixture.brief.offer,
+              offerPrice: fixture.brief.offerPrice,
+              destinationUrl: fixture.brief.destinationUrl,
+            },
+            rendered: {
+              offer: previewState.brief.offer,
+              offerPrice: previewState.brief.offerPrice,
+              destinationUrl: previewState.brief.destinationUrl,
+            },
+            asset: previewState.asset,
+          };
+          return browserBrief
+            ? buildBrowserIntakeVerificationProvenance({
+                ...input,
+                operatorVerification: exportVerification ?? {
+                  offer: "provisional",
+                  destination: "unconfirmed",
+                  rights: "provisional",
+                  provisional: true,
+                },
+              })
+            : buildPilotVerificationProvenance(input);
+        })()
       : undefined;
   const renderedPilotStatus =
     catalog.pilot && pilotProvenance
@@ -718,6 +732,10 @@ export function CampaignLab({
           version: preview.draft.templateVersion,
           layout: preview.draft.layout,
           sections: preview.draft.sections,
+        },
+        appearance: {
+          accent: preview.theme.tokens.accent,
+          accentInk: preview.theme.tokens.accentInk,
         },
         asset: {
           id: preview.asset.id,
