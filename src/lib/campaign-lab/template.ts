@@ -763,6 +763,9 @@ export function calculateDraftRevision(
         : {}),
       ...(theme.tokens.offerPriceEmphasis ? { offerPriceEmphasis: true } : {}),
       ...(theme.tokens.imageInset ? { imageInset: theme.tokens.imageInset } : {}),
+      ...(theme.tokens.imageBlend && theme.tokens.imageBlend !== "normal"
+        ? { imageBlend: theme.tokens.imageBlend }
+        : {}),
       ...(theme.tokens.mobileHeroOrder &&
       theme.tokens.mobileHeroOrder !== "support-first"
         ? { mobileHeroOrder: theme.tokens.mobileHeroOrder }

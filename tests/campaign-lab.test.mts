@@ -258,6 +258,38 @@ test("brand style changes keep the campaign offer and destination but change the
   assert.equal(restyled.preview.theme.brand.id, "morrow-ceramic");
 });
 
+test("a non-default image blend participates in the revision", () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const values = sparseValues();
+  const normal = buildCampaignPreview(fixture, values);
+  const multiplyCatalog = {
+    ...BASE_CATALOG,
+    brands: {
+      ...BASE_CATALOG.brands,
+      "harbor-field": {
+        ...BASE_CATALOG.brands["harbor-field"],
+        tokens: {
+          ...BASE_CATALOG.brands["harbor-field"].tokens,
+          imageBlend: "multiply" as const,
+        },
+      },
+    },
+  };
+  const multiply = buildCampaignPreview(fixture, values, multiplyCatalog);
+  assert.equal(normal.ok, true);
+  assert.equal(multiply.ok, true);
+  if (!normal.ok || !multiply.ok) return;
+
+  assert.notEqual(multiply.preview.revision, normal.preview.revision);
+  assert.equal(multiply.preview.brief.offer, normal.preview.brief.offer);
+  assert.equal(
+    multiply.preview.brief.destinationUrl,
+    normal.preview.brief.destinationUrl,
+  );
+  assert.equal(multiply.preview.asset.id, normal.preview.asset.id);
+  assert.equal(multiply.preview.theme.tokens.imageBlend, "multiply");
+});
+
 test("offer-led headlines are reserved for fully parsed simple discounts", () => {
   const unsafeOffers = [
     "20% off, members only",
