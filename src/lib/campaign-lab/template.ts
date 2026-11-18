@@ -24,6 +24,7 @@ import type {
   ValidationIssue,
 } from "./types.ts";
 import { CAMPAIGN_LAB_TEMPLATE_ID } from "./types.ts";
+import { findApprovedOfferPrice } from "./offer-emphasis.ts";
 
 const OFFER_LED_SECTIONS: readonly SectionId[] = ["hero", "hero-facts", "close"];
 const EDITORIAL_SECTIONS: readonly SectionId[] = ["hero", "detail", "close"];
@@ -739,63 +740,135 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 2;
+
+function canonicalText(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function canonicalOptionalText(value: string | undefined): string | null {
+  const text = value ? canonicalText(value) : "";
+  return text || null;
+}
+
+function canonicalColor(value: string): string {
+  const color = value.trim().toLowerCase();
+  if (/^#[0-9a-f]{3}$/.test(color)) {
+    return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
+  }
+  return color;
+}
+
+function canonicalLength(value: string | undefined, fallback = "0px"): string {
+  const length = value?.trim() || fallback;
+  if (/^0(?:px|rem|em|%)?$/.test(length)) return "0px";
+  return length.replace(/\s+/g, " ");
+}
+
+function canonicalFont(value: string): string {
+  return value
+    .trim()
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * The canonical rendered identity. Only values that can reach CampaignPage
+ * markup or CSS are included. Review notes, unused facts, source quotes,
+ * editor-only IDs, and other non-rendered metadata stay out.
+ */
+export function buildDraftRevisionIdentity(
+  brief: CampaignBrief,
+  draft: TemplateDraft,
+  asset: ApprovedAsset,
+  theme: ResolvedBrandTheme,
+) {
+  const { tokens, brand } = theme;
+  const showsDetail = draft.sections.includes("detail");
+  const visibleLede = brief.copy.hideLede
+    ? null
+    : canonicalOptionalText(draft.lede);
+  const highlightedPrice = tokens.offerPriceEmphasis
+    ? findApprovedOfferPrice(brief.offer, brief.offerPrice)?.text ?? null
+    : null;
+
+  return {
+    identityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
+    template: {
+      id: draft.templateId,
+      version: draft.templateVersion,
+    },
+    layout: draft.layout,
+    sections: [...draft.sections],
+    appearance: {
+      page: canonicalColor(tokens.page),
+      surface: canonicalColor(tokens.surface),
+      ink: canonicalColor(tokens.ink),
+      muted: canonicalColor(tokens.muted),
+      accent: canonicalColor(tokens.accent),
+      accentInk: canonicalColor(tokens.accentInk),
+      line: canonicalColor(tokens.line),
+      displayFont: canonicalFont(tokens.displayFont),
+      bodyFont: canonicalFont(tokens.bodyFont),
+      displayWeight: tokens.displayWeight,
+      displayTracking: canonicalText(tokens.displayTracking),
+      labelCase: tokens.labelCase,
+      labelTracking: canonicalText(tokens.labelTracking),
+      imageRadius: canonicalLength(tokens.imageRadius),
+      buttonRadius: canonicalLength(tokens.buttonRadius),
+      heroImage: tokens.heroImage,
+      offerStyle: tokens.offerStyle ?? "tint",
+      offerPriceEmphasis: Boolean(tokens.offerPriceEmphasis),
+      highlightedPrice,
+      imageInset: canonicalLength(tokens.imageInset),
+      mobileHeroOrder: tokens.mobileHeroOrder ?? "support-first",
+      heroOrder: tokens.heroOrder,
+      imageBlend: tokens.imageBlend ?? "normal",
+      showWordmarkMark: Boolean(tokens.showWordmarkMark),
+      ...(showsDetail
+        ? {
+            detailBackground: canonicalColor(tokens.detailBackground),
+            detailInk: canonicalColor(tokens.detailInk),
+          }
+        : {}),
+    },
+    brand: {
+      name: canonicalText(brand.name),
+      wordmark: canonicalText(brand.wordmark),
+      ...(showsDetail ? { detailTitle: canonicalText(brand.detailTitle) } : {}),
+    },
+    campaign: {
+      productName: canonicalText(brief.productName),
+      offer: canonicalText(brief.offer),
+      destinationUrl: normalizeDestinationUrl(brief.destinationUrl),
+      actionLabel: canonicalText(brief.actionLabel),
+      lede: visibleLede,
+    },
+    draft: {
+      headline: canonicalText(draft.headline),
+      facts: draft.facts.map((fact) => ({
+        label: canonicalText(fact.label),
+        value: canonicalText(fact.value),
+      })),
+    },
+    asset: {
+      contentHash: asset.contentHash.trim().toLowerCase(),
+      width: asset.width,
+      height: asset.height,
+      alt: canonicalText(asset.alt),
+    },
+  };
+}
+
 export function calculateDraftRevision(
   brief: CampaignBrief,
   draft: TemplateDraft,
   asset: ApprovedAsset,
   theme: ResolvedBrandTheme,
 ): string {
-  const payload = {
-    template: {
-      id: draft.templateId,
-      version: draft.templateVersion,
-    },
-    layout: draft.layout,
-    sections: draft.sections,
-    theme: {
-      brandId: theme.brand.id,
-      accent: theme.tokens.accent,
-      accentInk: theme.tokens.accentInk,
-      displayFont: theme.tokens.displayFont,
-      heroImage: theme.tokens.heroImage,
-      ...(theme.tokens.offerStyle && theme.tokens.offerStyle !== "tint"
-        ? { offerStyle: theme.tokens.offerStyle }
-        : {}),
-      ...(theme.tokens.offerPriceEmphasis ? { offerPriceEmphasis: true } : {}),
-      ...(theme.tokens.imageInset ? { imageInset: theme.tokens.imageInset } : {}),
-      ...(theme.tokens.imageBlend && theme.tokens.imageBlend !== "normal"
-        ? { imageBlend: theme.tokens.imageBlend }
-        : {}),
-      ...(theme.tokens.mobileHeroOrder &&
-      theme.tokens.mobileHeroOrder !== "support-first"
-        ? { mobileHeroOrder: theme.tokens.mobileHeroOrder }
-        : {}),
-    },
-    campaign: {
-      fixtureId: brief.fixtureId,
-      productName: brief.productName,
-      offer: brief.offer,
-      ...(brief.offerPrice ? { offerPrice: brief.offerPrice } : {}),
-      destinationUrl: normalizeDestinationUrl(brief.destinationUrl),
-      actionLabel: brief.actionLabel,
-      productNoun: brief.productNoun,
-      facts: brief.productFacts,
-      requiredFactGroups: brief.requiredFactGroups ?? [],
-      copy: brief.copy,
-    },
-    asset: {
-      id: asset.id,
-      contentHash: asset.contentHash,
-      alt: asset.alt,
-    },
-    draft: {
-      headline: draft.headline,
-      lede: draft.lede,
-      facts: draft.facts,
-    },
-  };
-
-  return hashRevision(JSON.stringify(payload));
+  return hashRevision(
+    JSON.stringify(buildDraftRevisionIdentity(brief, draft, asset, theme)),
+  );
 }
 
 export function shortRevision(revision: string): string {
@@ -808,6 +881,7 @@ export type CampaignPreviewData = {
   asset: ApprovedAsset;
   theme: ResolvedBrandTheme;
   revision: string;
+  revisionIdentityVersion: number;
 };
 
 export type CampaignPreviewResult =
@@ -874,6 +948,13 @@ export function buildCampaignPreview(
 
   return {
     ok: true,
-    preview: { brief, draft, asset, theme, revision },
+    preview: {
+      brief,
+      draft,
+      asset,
+      theme,
+      revision,
+      revisionIdentityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
+    },
   };
 }

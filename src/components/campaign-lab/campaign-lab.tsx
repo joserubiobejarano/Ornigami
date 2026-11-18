@@ -651,6 +651,7 @@ export function CampaignLab({
         status: renderedPilotStatus ?? "confirmed",
         notice,
         revision: preview.revision,
+        revisionIdentityVersion: preview.revisionIdentityVersion,
         productName: preview.brief.productName,
         brandName: preview.theme.brand.name,
         offer: preview.brief.offer,

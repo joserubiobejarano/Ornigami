@@ -152,6 +152,8 @@ export type CampaignExportPreview = {
   status: "preview" | "confirmed";
   notice?: string;
   revision: string;
+  /** Revision identity schema version. Missing on historical receipts means v1. */
+  revisionIdentityVersion?: number;
   productName: string;
   brandName: string;
   offer: string;
@@ -210,6 +212,8 @@ export type CampaignExportReceipt = {
   schemaVersion: 1;
   kind: "campaign-lab-local-export";
   exportedAt: string;
+  /** Missing on historical receipts, which use the v1 revision identity. */
+  revisionIdentityVersion?: number;
   approval: {
     scope: "local-preview";
     revision: string;
@@ -1207,6 +1211,9 @@ export async function buildExportReceipt(input: {
     schemaVersion: 1,
     kind: "campaign-lab-local-export",
     exportedAt: input.exportedAt,
+    ...(input.preview.revisionIdentityVersion !== undefined
+      ? { revisionIdentityVersion: input.preview.revisionIdentityVersion }
+      : {}),
     approval: {
       scope: "local-preview",
       revision: input.approval.revision,

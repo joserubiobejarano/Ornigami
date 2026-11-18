@@ -7,6 +7,7 @@ import {
 } from "../fixtures.ts";
 import {
   SINGLE_PRODUCT_OFFER_TEMPLATE,
+  CAMPAIGN_REVISION_IDENTITY_VERSION,
   assemblePlannedDraft,
   buildCampaignPreview,
   calculateDraftRevision,
@@ -316,6 +317,7 @@ export async function runCampaignGeneration(
       asset,
       theme,
       revision,
+      revisionIdentityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
     },
     generation: {
       status: "generated",
