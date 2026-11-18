@@ -677,9 +677,12 @@ function validateCommon(
   if (
     isRecord(value.brand) &&
     value.brand.headlineMode !== "offer-led" &&
+    value.brand.headlineMode !== "product-led" &&
     value.brand.headlineMode !== "angle"
   ) {
-    issues.push('brand headlineMode must be "offer-led" or "angle"');
+    issues.push(
+      'brand headlineMode must be "offer-led", "product-led", or "angle"',
+    );
   }
 
   if (value.sourceCampaign !== undefined && !isCampaignSource(value.sourceCampaign)) {

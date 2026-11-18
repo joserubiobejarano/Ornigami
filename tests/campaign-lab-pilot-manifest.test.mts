@@ -330,3 +330,20 @@ test("a pilot offer price must be an exact reviewed substring of the complete of
     /exact substring/,
   );
 });
+
+test("a pilot brand profile can select the product-led headline mode", () => {
+  const valid = sourcePilot();
+  valid.brand.headlineMode = "product-led";
+  const accepted = validatePilotSource(valid, { pilotId: "morrow-pilot" });
+  assert.equal(accepted.ok, true);
+  if (accepted.ok) assert.equal(accepted.value.brand.headlineMode, "product-led");
+
+  const invalid = sourcePilot();
+  (invalid.brand as Record<string, unknown>).headlineMode = "claim-led";
+  const rejected = validatePilotSource(invalid, { pilotId: "morrow-pilot" });
+  assert.equal(rejected.ok, false);
+  assert.match(
+    rejected.ok ? "" : rejected.issues.join(" "),
+    /headlineMode must be "offer-led", "product-led", or "angle"/,
+  );
+});

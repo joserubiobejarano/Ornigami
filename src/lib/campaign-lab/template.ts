@@ -314,6 +314,10 @@ export function buildHeadline(
     return brief.copy.headline;
   }
 
+  if (brand.headlineMode === "product-led") {
+    return buildHeadlineForAngle(brief, "product-led");
+  }
+
   if (brand.headlineMode === "angle") {
     return withoutTerminalPunctuation(brief.productName);
   }

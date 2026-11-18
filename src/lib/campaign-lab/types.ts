@@ -203,7 +203,7 @@ export type BrandDefinition = {
   wordmark: string;
   descriptor: string;
   tokens: BrandTokens;
-  headlineMode: "offer-led" | "angle";
+  headlineMode: "offer-led" | "product-led" | "angle";
   detailTitle: string;
 };
 

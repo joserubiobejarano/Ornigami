@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   APPROVED_ASSETS,
+  BASE_CATALOG,
   CAMPAIGN_FIXTURES,
   createFormValues,
   getAsset,
@@ -299,6 +300,33 @@ test("offer-led headlines are reserved for fully parsed simple discounts", () =>
       `${safeOfferHeadlineLead(offer)} the travel bottle.`,
     );
   }
+});
+
+test("a product-led profile keeps a safe discount out of the headline", () => {
+  const brief = {
+    ...CAMPAIGN_FIXTURES.sparse.brief,
+    offer: "20% off, 27-30 November 2026",
+    productName: "Harbor Field travel bottle",
+  };
+  assert.equal(
+    buildHeadline(brief, "harbor-field"),
+    "20% off the travel bottle.",
+  );
+
+  const catalog = {
+    ...BASE_CATALOG,
+    brands: {
+      ...BASE_CATALOG.brands,
+      "harbor-field": {
+        ...BASE_CATALOG.brands["harbor-field"],
+        headlineMode: "product-led" as const,
+      },
+    },
+  };
+  assert.equal(
+    buildHeadline(brief, "harbor-field", catalog),
+    "Harbor Field travel bottle",
+  );
 });
 
 test("headline assembly and accent contrast remain deterministic", () => {
