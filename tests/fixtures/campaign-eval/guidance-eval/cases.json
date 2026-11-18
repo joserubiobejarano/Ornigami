@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "packId": "campaign-lab-guidance-eval",
+  "packVersion": "1.0.0",
+  "template": {
+    "id": "single-product-offer",
+    "name": "Single product offer",
+    "version": "1.0.0",
+    "source": "src/lib/campaign-lab/template.ts"
+  },
+  "cases": [
+    {
+      "id": "sparse-offer",
+      "title": "Sparse single-photo direct offer",
+      "role": "sparse",
+      "campaign": {
+        "brandId": "harbor-field",
+        "brandName": "Harbor Field",
+        "productName": "Harbor Field travel bottle",
+        "campaignAngle": "Direct offer",
+        "audience": "People discovering the bottle in a paid social ad on mobile.",
+        "objective": "Send the visitor to the marketplace listing while the 20% offer is clear.",
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "actionLabel": "Shop on Amazon",
+        "productNoun": "travel bottle"
+      },
+      "approvedFacts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml"
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap"
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel"
+        }
+      ],
+      "approvedStory": null,
+      "approvedAssets": [
+        {
+          "id": "harbor-field-bottle-front",
+          "file": "../../../../public/campaign-assets/harbor-field-bottle.webp",
+          "sha256": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2",
+          "role": "product-hero",
+          "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+          "visibleLabel": "HARBOR FIELD 500 ML"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "actionLabel": "Shop on Amazon",
+        "productName": "Harbor Field travel bottle",
+        "assetIds": [
+          "harbor-field-bottle-front"
+        ],
+        "assetSha256": {
+          "harbor-field-bottle-front": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2"
+        }
+      },
+      "mayChange": [
+        "layout and section order",
+        "which approved optional facts are selected"
+      ],
+      "forbiddenClaims": [],
+      "expected": {
+        "draft": {
+          "maxWords": 90,
+          "minFacts": 0,
+          "maxSections": 3,
+          "openingTerms": [
+            "20%",
+            "travel bottle"
+          ],
+          "requiredFactIds": [],
+          "allowedLayouts": [
+            "offer-led-one-photo",
+            "editorial-long-copy"
+          ]
+        },
+        "differentFrom": null,
+        "openingShift": null,
+        "revision": null
+      },
+      "review": {
+        "375": [
+          "The product, exact offer, and primary action are clear without horizontal scrolling.",
+          "The chosen layout and fact selection do not make the sparse page feel empty or overfilled."
+        ],
+        "1440": [
+          "The composition uses the wide canvas deliberately.",
+          "The selected facts support the offer without repeating the same point."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Exact offer, destination, action, product name, and approved asset identity.",
+          "Approved facts only and no invented proof or absolute claims.",
+          "Template, layout, section order, and length budgets."
+        ],
+        "humanOnly": [
+          "Whether the composition looks intentional rather than merely sparse.",
+          "Whether the product crop and hierarchy preserve recognition."
+        ]
+      },
+      "fallback": {
+        "condition": "The provider fails or returns an invalid plan.",
+        "expected": "Keep the deterministic sparse draft with the same commercial identity."
+      }
+    },
+    {
+      "id": "rich-angle",
+      "title": "Richer offer with four approved optional facts",
+      "role": "rich",
+      "campaign": {
+        "brandId": "morrow-ceramic",
+        "brandName": "Morrow Ceramic",
+        "productName": "Morrow ceramic pour-over dripper",
+        "campaignAngle": "Flow control: the ribs hold the filter clear of the wall",
+        "audience": "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+        "objective": "Explain the rib design and lead to the dripper page.",
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productNoun": "pour-over dripper"
+      },
+      "approvedFacts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs"
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet"
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic"
+        },
+        {
+          "id": "finish",
+          "label": "Finish",
+          "value": "Matte glaze"
+        }
+      ],
+      "approvedStory": "Morrow revised the rib spacing after its first prototype held the filter against the wall.",
+      "approvedAssets": [
+        {
+          "id": "morrow-ceramic-dripper-front",
+          "file": "../../../../public/campaign-assets/morrow-ceramic-dripper.webp",
+          "sha256": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
+          "role": "product-hero",
+          "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+          "visibleLabel": "MORROW"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productName": "Morrow ceramic pour-over dripper",
+        "assetIds": [
+          "morrow-ceramic-dripper-front"
+        ],
+        "assetSha256": {
+          "morrow-ceramic-dripper-front": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7"
+        }
+      },
+      "mayChange": [
+        "layout and section order",
+        "which three of the four approved optional facts are selected"
+      ],
+      "forbiddenClaims": [
+        "flavor",
+        "taste",
+        "brew time",
+        "faster than",
+        "better than",
+        "even extraction"
+      ],
+      "expected": {
+        "draft": {
+          "maxWords": 180,
+          "minFacts": 1,
+          "maxSections": 3,
+          "openingTerms": [
+            "rib",
+            "ribs",
+            "filter",
+            "wall",
+            "flow",
+            "first pour"
+          ],
+          "requiredFactIds": [],
+          "allowedLayouts": [
+            "offer-led-one-photo",
+            "editorial-long-copy"
+          ],
+          "minEvidenceItems": 1
+        },
+        "differentFrom": null,
+        "openingShift": null,
+        "revision": null
+      },
+      "review": {
+        "375": [
+          "The selected evidence supports the rib-design objective.",
+          "The offer and action remain easy to find."
+        ],
+        "1440": [
+          "The extra approved facts are used selectively rather than filling every slot.",
+          "The page still reads as Morrow Ceramic."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Exact commercial inputs and approved hero asset identity.",
+          "Approved facts only and no forbidden claims.",
+          "Template, layout, section order, and length budgets."
+        ],
+        "humanOnly": [
+          "Whether fact selection improves the argument.",
+          "Whether the hierarchy and composition fit the brief."
+        ]
+      },
+      "fallback": {
+        "condition": "The provider fails or returns an invalid plan.",
+        "expected": "Keep the deterministic editorial draft with the same commercial identity."
+      }
+    },
+    {
+      "id": "intent-change",
+      "title": "Same Morrow product with a different audience and objective",
+      "role": "intent-change",
+      "campaign": {
+        "brandId": "morrow-ceramic",
+        "brandName": "Morrow Ceramic",
+        "productName": "Morrow ceramic pour-over dripper",
+        "campaignAngle": "Ritual: a slower first pour",
+        "audience": "People who want a calmer morning routine and clicked an email about the first pour.",
+        "objective": "Lead with the ritual of the first pour, then connect it to the same rib design.",
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productNoun": "pour-over dripper"
+      },
+      "approvedFacts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs"
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet"
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic"
+        },
+        {
+          "id": "finish",
+          "label": "Finish",
+          "value": "Matte glaze"
+        }
+      ],
+      "approvedStory": "Morrow revised the rib spacing after its first prototype held the filter against the wall.",
+      "approvedAssets": [
+        {
+          "id": "morrow-ceramic-dripper-front",
+          "file": "../../../../public/campaign-assets/morrow-ceramic-dripper.webp",
+          "sha256": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
+          "role": "product-hero",
+          "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+          "visibleLabel": "MORROW"
+        }
+      ],
+      "mustStayExact": {
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "actionLabel": "See the dripper",
+        "productName": "Morrow ceramic pour-over dripper",
+        "assetIds": [
+          "morrow-ceramic-dripper-front"
+        ],
+        "assetSha256": {
+          "morrow-ceramic-dripper-front": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7"
+        }
+      },
+      "mayChange": [
+        "layout and section order",
+        "which three of the four approved optional facts are selected"
+      ],
+      "forbiddenClaims": [
+        "flavor",
+        "taste",
+        "brew time",
+        "faster than",
+        "better than",
+        "even extraction"
+      ],
+      "expected": {
+        "draft": {
+          "maxWords": 180,
+          "minFacts": 1,
+          "maxSections": 3,
+          "openingTerms": [
+            "first pour",
+            "morning",
+            "ritual",
+            "slow",
+            "steady",
+            "pace"
+          ],
+          "requiredFactIds": [],
+          "allowedLayouts": [
+            "offer-led-one-photo",
+            "editorial-long-copy"
+          ],
+          "minEvidenceItems": 1
+        },
+        "differentFrom": {
+          "caseId": "rich-angle",
+          "mustDiffer": [
+            "headline",
+            "lede"
+          ],
+          "mustNotDiffer": [
+            "brandId",
+            "productName",
+            "offer",
+            "destinationUrl",
+            "actionLabel",
+            "assetIds"
+          ]
+        },
+        "openingShift": null,
+        "revision": null
+      },
+      "review": {
+        "375": [
+          "The opening promises the calmer first-pour angle while the commercial inputs remain unchanged.",
+          "The selected facts still support the same product."
+        ],
+        "1440": [
+          "The page is distinguishable from the rib-email brief.",
+          "The composition still reads as the same Morrow brand and product."
+        ]
+      },
+      "proofBoundary": {
+        "automated": [
+          "Same brand, product, offer, destination, action, and approved hero asset as the richer brief.",
+          "Headline and lede differ from the richer brief.",
+          "Approved facts only and no forbidden claims."
+        ],
+        "humanOnly": [
+          "Whether the changed context actually changes the campaign emphasis.",
+          "Whether the page remains recognizable as the same brand and product."
+        ]
+      },
+      "fallback": {
+        "condition": "The provider fails or returns an invalid plan.",
+        "expected": "Keep the deterministic first-pour draft with the same commercial identity."
+      }
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "packId": "campaign-lab-guidance-eval",
+  "packVersion": "1.0.0",
+  "purpose": "Frozen synthetic briefs for comparing the current Ornigami advisory guidance pack with hard constraints only. The template, context, provider settings, validation, renderer, and fallback are otherwise identical.",
+  "briefs": [
+    {
+      "id": "sparse-social",
+      "evalCaseId": "sparse-offer",
+      "label": "Sparse single-photo direct offer",
+      "fixtureId": "sparse",
+      "values": {
+        "brandId": "harbor-field",
+        "accent": "#9a3f25",
+        "productName": "Harbor Field travel bottle",
+        "audience": "People discovering the bottle in a paid social ad on mobile.",
+        "objective": "Send the visitor to the marketplace listing while the 20% offer is clear.",
+        "offer": "20% off, 27–30 November 2026",
+        "destinationUrl": "https://example.com/harbor-field",
+        "assetId": "harbor-field-bottle-front"
+      }
+    },
+    {
+      "id": "morrow-rib-email",
+      "evalCaseId": "rich-angle",
+      "label": "Richer offer with four approved optional facts",
+      "fixtureId": "long-copy",
+      "values": {
+        "brandId": "morrow-ceramic",
+        "accent": "#234a6b",
+        "productName": "Morrow ceramic pour-over dripper",
+        "audience": "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+        "objective": "Explain the rib design and lead to the dripper page.",
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "assetId": "morrow-ceramic-dripper-front",
+        "openingFocus": "flow-control"
+      }
+    },
+    {
+      "id": "morrow-first-pour",
+      "evalCaseId": "intent-change",
+      "label": "Same Morrow product with a different audience and objective",
+      "fixtureId": "long-copy",
+      "values": {
+        "brandId": "morrow-ceramic",
+        "accent": "#234a6b",
+        "productName": "Morrow ceramic pour-over dripper",
+        "audience": "People who want a calmer morning routine and clicked an email about the first pour.",
+        "objective": "Lead with the ritual of the first pour, then connect it to the same rib design.",
+        "offer": "Free shipping through 30 November 2026",
+        "destinationUrl": "https://example.com/morrow",
+        "assetId": "morrow-ceramic-dripper-front",
+        "openingFocus": "first-pour"
+      }
+    }
+  ]
+}

@@ -34,6 +34,10 @@
         "campaign-eval:collect-flow": "node scripts/campaign-eval-collect-flow.mjs",
         "campaign-eval:compare": "node scripts/campaign-eval-compare.mjs",
         "campaign-eval:browser": "node scripts/campaign-eval-browser.mjs",
+        "campaign-lab:guidance-eval:preflight": "node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs preflight",
+        "campaign-lab:guidance-eval:run": "node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs run",
+        "campaign-lab:guidance-eval:render": "node scripts/campaign-lab-guidance-eval-render.mjs",
+        "campaign-lab:guidance-eval:report": "node scripts/campaign-lab-guidance-eval-report.mjs",
         "campaign-eval:browser-self-test": "node tests/support/campaign-eval-browser-self-test.mjs"
     },
     "dependencies": {
