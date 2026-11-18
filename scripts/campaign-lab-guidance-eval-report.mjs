@@ -120,23 +120,76 @@ for (const condition of ["A", "B"]) {
   }
 }
 
-const requestSummary = run.records.map((record) => ({
-  condition: record.condition,
-  briefId: record.briefId,
-  repeat: record.repeat,
-  status: record.result?.generation?.status ?? "error",
-  code: record.result?.generation?.code ?? null,
-  latencyMs: record.latencyMs,
-  promptTokens: record.usage?.prompt_tokens ?? null,
-  completionTokens: record.usage?.completion_tokens ?? null,
-  costUsd: record.costUsd,
-}));
+const requestSummary = run.records.map((record) => {
+  const usageKnown = Boolean(record.usage);
+  return {
+    condition: record.condition,
+    briefId: record.briefId,
+    repeat: record.repeat,
+    status: record.result?.generation?.status ?? "error",
+    code: record.result?.generation?.code ?? null,
+    latencyMs: record.latencyMs,
+    promptTokens: record.usage?.prompt_tokens ?? null,
+    completionTokens: record.usage?.completion_tokens ?? null,
+    usageStatus: usageKnown ? "known" : "unknown",
+    costUsd: usageKnown ? (record.costUsd ?? null) : null,
+    reservedCostUsd: record.reservedCostUsd ?? null,
+    diagnostics: record.diagnostics ?? null,
+    providerRequestId: record.providerRequestId ?? null,
+    transport: record.transport ?? null,
+  };
+});
+
+let resolvedAccounting = null;
+if (run.knownSpendUsd !== undefined) {
+  resolvedAccounting = {
+    knownSpendUsd: run.knownSpendUsd,
+    unresolvedReservedUsd: run.unresolvedReservedUsd ?? null,
+    unresolvedUsageRequests: run.unresolvedUsageRequests ?? null,
+    conservativeExposureUsd:
+      run.conservativeExposureUsd ??
+      run.knownSpendUsd + (run.unresolvedReservedUsd ?? 0),
+    capUsd: run.capUsd ?? null,
+    stoppedEarly: run.stoppedEarly ?? null,
+  };
+} else {
+  const unresolved = requestSummary.filter(
+    (record) => record.usageStatus === "unknown",
+  );
+  const known = requestSummary.filter(
+    (record) => record.usageStatus === "known" && record.costUsd !== null,
+  );
+  const knownSpendUsd = known.reduce(
+    (sum, record) => sum + Number(record.costUsd),
+    0,
+  );
+  const reservedValues = unresolved
+    .map((record) => record.reservedCostUsd)
+    .filter((value) => typeof value === "number");
+  resolvedAccounting = {
+    knownSpendUsd,
+    unresolvedReservedUsd:
+      reservedValues.length === unresolved.length
+        ? reservedValues.reduce((sum, value) => sum + value, 0)
+        : null,
+    unresolvedUsageRequests: unresolved.length,
+    conservativeExposureUsd:
+      reservedValues.length === unresolved.length
+        ? knownSpendUsd +
+          reservedValues.reduce((sum, value) => sum + value, 0)
+        : null,
+    capUsd: run.capUsd ?? null,
+    stoppedEarly: run.stoppedEarly ?? null,
+    derivedFromHistoricalRun: true,
+  };
+}
 
 const report = {
   schemaVersion: 1,
   run: path.relative(root, runDir),
   pack: path.relative(root, packFile),
   model: run.model,
+  accounting: resolvedAccounting,
   conditions,
   requests: requestSummary,
 };
@@ -152,7 +205,13 @@ const lines = [
   "",
   `- Model: ${run.model}`,
   `- Requests recorded: ${run.requestCount}`,
-  `- Actual recorded cost: $${Number(run.spentUsd).toFixed(6)}`,
+  `- Known spend: ${report.accounting.knownSpendUsd === null ? "unknown" : `$${Number(report.accounting.knownSpendUsd).toFixed(6)}`}`,
+  `- Unresolved reserved exposure: ${report.accounting.unresolvedReservedUsd === null ? "unknown" : `$${Number(report.accounting.unresolvedReservedUsd).toFixed(6)}`}`,
+  `- Unresolved usage requests: ${report.accounting.unresolvedUsageRequests ?? "unknown"}`,
+  `- Cap: ${report.accounting.capUsd === null ? "unknown" : `$${Number(report.accounting.capUsd).toFixed(2)}`}`,
+  ...(report.accounting.stoppedEarly
+    ? [`- Stopped early: ${report.accounting.stoppedEarly.reason}`]
+    : []),
   "",
   "| Brief | Condition | Repeat | Status | Hard failures | Identical to deterministic | Layout | Sections | Facts |",
   "| --- | --- | ---: | --- | --- | --- | --- | --- | --- |",
@@ -177,12 +236,13 @@ lines.push(
   "",
   "## Recorded response outcomes",
   "",
-  "| Brief | Condition | Repeat | Status | Code | Latency ms | Prompt tokens | Completion tokens | Cost USD |",
-  "| --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: |",
+  "| Brief | Condition | Repeat | Status | Code | Failure category | HTTP | Provider code | Request ID | Latency ms | Usage | Prompt tokens | Completion tokens | Known cost USD | Reserved exposure USD |",
+  "| --- | --- | ---: | --- | --- | --- | ---: | --- | --- | ---: | --- | ---: | ---: | ---: | ---: |",
 );
 for (const request of requestSummary) {
+  const diagnostics = request.diagnostics;
   lines.push(
-    `| ${request.briefId} | ${request.condition} | ${request.repeat} | ${request.status} | ${request.code ?? ""} | ${request.latencyMs} | ${request.promptTokens ?? ""} | ${request.completionTokens ?? ""} | ${Number(request.costUsd ?? 0).toFixed(6)} |`,
+    `| ${request.briefId} | ${request.condition} | ${request.repeat} | ${request.status} | ${request.code ?? ""} | ${diagnostics?.category ?? ""} | ${diagnostics?.httpStatus ?? ""} | ${diagnostics?.providerCode ?? ""} | ${request.providerRequestId ?? diagnostics?.providerRequestId ?? ""} | ${request.latencyMs} | ${request.usageStatus} | ${request.promptTokens ?? ""} | ${request.completionTokens ?? ""} | ${request.costUsd === null ? "unknown" : Number(request.costUsd).toFixed(6)} | ${request.reservedCostUsd === null ? "unknown" : Number(request.reservedCostUsd).toFixed(6)} |`,
   );
 }
 
@@ -205,6 +265,7 @@ lines.push(
   `- Generated model outputs: A ${generatedCounts.A}/6, B ${generatedCounts.B}/6.`,
   `- Identical to deterministic among generated outputs: A ${identicalCounts.A}/${generatedCounts.A}, B ${identicalCounts.B}/${generatedCounts.B}.`,
   `- Hard-gate failures among generated outputs: A ${Object.values(conditions.A.repeats).flat().filter((item) => item.hardFailures?.length).length}, B ${Object.values(conditions.B.repeats).flat().filter((item) => item.hardFailures?.length).length}.`,
+  `- Known spend: ${report.accounting.knownSpendUsd === null ? "unknown" : `$${Number(report.accounting.knownSpendUsd).toFixed(6)}`}; unresolved reserved exposure: ${report.accounting.unresolvedReservedUsd === null ? "unknown" : `$${Number(report.accounting.unresolvedReservedUsd).toFixed(6)}`}.`,
   "- Identical outputs, mixed results, and no improvement are valid outcomes.",
   "",
   "## Detailed changes",

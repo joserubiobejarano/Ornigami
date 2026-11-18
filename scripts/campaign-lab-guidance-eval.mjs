@@ -13,8 +13,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import OpenAI from "openai";
 
+import { createOpenAIClient } from "../src/lib/openai-config.ts";
 import { BASE_CATALOG } from "../src/lib/campaign-lab/fixtures.ts";
 import {
   buildCampaignPreview,
@@ -25,6 +25,12 @@ import {
   DESIGN_GUIDANCE_PACK_VERSION,
   DESIGN_HARNESS_VERSION,
 } from "../src/lib/campaign-lab/generation/guidance/pack.ts";
+import { OpenAIGenerationTransport } from "../src/lib/campaign-lab/generation/openai-transport.ts";
+import { accountProviderUsage } from "../src/lib/campaign-lab/generation/provider-accounting.ts";
+import {
+  redactDiagnosticText,
+  shouldStopAfterFailure,
+} from "../src/lib/campaign-lab/generation/provider-diagnostics.ts";
 import { buildOpenAIMessages } from "../src/lib/campaign-lab/generation/prompt.ts";
 import {
   resolveGenerationProvider,
@@ -56,6 +62,8 @@ function usage() {
 Usage:
   node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs preflight [--out <dir>] [--model <id>]
   node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs run --execute --cap-usd <amount> [--env-file <.env.local>] [--out <dir>] [--model <id>]
+  node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs canary [--out <dir>] [--model <id>] [--env-file <.env.local>]
+  node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs canary --execute --cap-usd <amount> [--env-file <.env.local>] [--out <dir>] [--model <id>]
 
 Options:
   --pack <file>          Frozen brief pack
@@ -87,7 +95,7 @@ function parseCli() {
     process.exit(0);
   }
   const command = parsed.positionals[0] ?? "preflight";
-  if (!["preflight", "run"].includes(command)) {
+  if (!["preflight", "run", "canary"].includes(command)) {
     throw new Error(`Unknown command: ${command}`);
   }
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_");
@@ -96,7 +104,14 @@ function parseCli() {
     pack: path.resolve(parsed.values.pack ?? defaultPack),
     out: path.resolve(
       parsed.values.out ??
-        path.join(root, ".local", "campaign-lab-guidance-eval", stamp),
+        path.join(
+          root,
+          ".local",
+          command === "canary"
+            ? "campaign-lab-live-canary"
+            : "campaign-lab-guidance-eval",
+          stamp,
+        ),
     ),
     model:
       parsed.values.model ??
@@ -257,10 +272,19 @@ async function capturedRequest(brief, condition) {
 function promptStats(request) {
   const messages = buildOpenAIMessages(request);
   const chars = messages.reduce((sum, message) => sum + message.content.length, 0);
+  const utf8Bytes = messages.reduce(
+    (sum, message) => sum + Buffer.byteLength(message.content, "utf8"),
+    0,
+  );
+  // One token per UTF-8 byte is deliberately conservative. The extra framing
+  // allowance covers role/message separators and request metadata.
+  const messageFramingBytes = messages.length * 32 + 128;
   const estimatedTokens = Math.ceil(chars / 4);
-  const conservativeTokens = chars;
+  const conservativeTokens = utf8Bytes + messageFramingBytes;
   return {
     chars,
+    utf8Bytes,
+    messageFramingBytes,
     estimatedTokens,
     conservativeTokens,
     messages,
@@ -425,6 +449,8 @@ async function buildPreflight(options) {
         distinctSignatures: signatures.size,
         prompt: {
           chars: stats.chars,
+          utf8Bytes: stats.utf8Bytes,
+          messageFramingBytes: stats.messageFramingBytes,
           estimatedTokens: stats.estimatedTokens,
           conservativeTokens: stats.conservativeTokens,
           estimatedCost: requestCost(
@@ -481,6 +507,8 @@ async function buildPreflight(options) {
           condition,
           {
             chars: item.prompt.chars,
+            utf8Bytes: item.prompt.utf8Bytes,
+            messageFramingBytes: item.prompt.messageFramingBytes,
             estimatedInputTokens: item.prompt.estimatedTokens,
             conservativeInputTokens: item.prompt.conservativeTokens,
             planCount: item.plans.length,
@@ -554,7 +582,7 @@ function preflightMarkdown(preflight) {
     `- Repeats: ${preflight.requestPlan.repeats} per condition per brief`,
     `- Retries: ${preflight.requestPlan.retries}`,
     `- Estimated cost: ${money(preflight.cost.estimated)}`,
-    `- Conservative ceiling (1 token per character + output bound): ${money(preflight.cost.conservativeCeiling)}`,
+    `- Conservative ceiling (UTF-8 bytes + message framing + output bound): ${money(preflight.cost.conservativeCeiling)}`,
     `- Recommended explicit cap: $${preflight.cost.recommendedCap.toFixed(2)}`,
     "",
     "## Conditions",
@@ -601,14 +629,14 @@ function preflightMarkdown(preflight) {
     "",
     "## Prompt bounds",
     "",
-    "| Brief | Condition | Prompt chars | Estimated input tokens | Conservative input tokens |",
-    "| --- | --- | ---: | ---: | ---: |",
+    "| Brief | Condition | Prompt chars | UTF-8 bytes | Framing allowance | Estimated input tokens | Conservative input tokens |",
+    "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
   );
   for (const brief of preflight.briefs) {
     for (const condition of ["A", "B"]) {
       const item = brief.conditions[condition];
       lines.push(
-        `| ${brief.id} | ${condition} | ${item.chars} | ${item.estimatedInputTokens} | ${item.conservativeInputTokens} |`,
+        `| ${brief.id} | ${condition} | ${item.chars} | ${item.utf8Bytes} | ${item.messageFramingBytes} | ${item.estimatedInputTokens} | ${item.conservativeInputTokens} |`,
       );
     }
   }
@@ -619,6 +647,255 @@ function preflightMarkdown(preflight) {
     "No paid request is made unless `run --execute --cap-usd <amount>` is supplied and the cap covers the conservative ceiling. The runner stops before a request that would exceed the cap, makes zero retries, and never reruns for a better-looking result.",
   );
   return `${lines.join("\n")}\n`;
+}
+
+function canaryCapFor(maxCostUsd) {
+  return Math.max(0.01, Math.ceil(maxCostUsd * 1000) / 1000);
+}
+
+async function buildCanaryPreflight(options) {
+  const pack = readJson(options.pack);
+  const brief = pack.briefs?.[0];
+  if (!brief) throw new Error("The brief pack is empty.");
+  const model = options.model;
+  const price = PRICING[model];
+  if (!price) throw new Error(`No pricing entry for model "${model}".`);
+  const capture = await capturedRequest(brief, "B");
+  const stats = promptStats(capture.request);
+  const maxCostUsd = requestCost(
+    stats.conservativeTokens,
+    model,
+    OUTPUT_TOKEN_BOUND,
+  );
+  const timeoutMs = resolveGenerationTimeoutMs(process.env);
+  return {
+    schemaVersion: 1,
+    packId: pack.packId,
+    packVersion: pack.packVersion,
+    briefId: brief.id,
+    model,
+    provider: "openai",
+    transport: "openai-chat-completions",
+    guidancePackVersion: DESIGN_GUIDANCE_PACK_VERSION,
+    harnessVersion: DESIGN_HARNESS_VERSION,
+    settings: {
+      responseFormat: "json_object",
+      temperature: 0.2,
+      outputTokenBound: OUTPUT_TOKEN_BOUND,
+      retries: 0,
+      timeoutMs,
+    },
+    prompt: {
+      chars: stats.chars,
+      utf8Bytes: stats.utf8Bytes,
+      messageFramingBytes: stats.messageFramingBytes,
+      estimatedInputTokens: stats.estimatedTokens,
+      conservativeInputTokens: stats.conservativeTokens,
+    },
+    pricing: {
+      inputPerMillionTokens: price.input,
+      outputPerMillionTokens: price.output,
+    },
+    maxCostUsd,
+    recommendedCapUsd: canaryCapFor(maxCostUsd),
+    requests: 1,
+    command: `$env:OPENAI_ENABLED='true'; $env:CAMPAIGN_LAB_GENERATION_LIVE='true'; node --experimental-strip-types scripts/campaign-lab-guidance-eval.mjs canary --execute --cap-usd ${canaryCapFor(maxCostUsd).toFixed(3)} --env-file "${options.envFile ?? "<authorized-env-file>"}" --model ${model} --out "${path.join(options.out, "canary")}"`,
+    request: capture.request,
+  };
+}
+
+function canaryMarkdown(preflight) {
+  return [
+    "# One-request live provider canary",
+    "",
+    `- Brief: ${preflight.briefId}`,
+    `- Shared adapter: ${preflight.transport}`,
+    `- Model: ${preflight.model}`,
+    `- Requests: 1`,
+    `- Retries: ${preflight.settings.retries}`,
+    `- Timeout: ${preflight.settings.timeoutMs} ms`,
+    `- Output bound: ${preflight.settings.outputTokenBound} tokens`,
+    `- Temperature: ${preflight.settings.temperature}`,
+    `- Response format: ${preflight.settings.responseFormat}`,
+    `- Prompt chars: ${preflight.prompt.chars}`,
+    `- Prompt UTF-8 bytes: ${preflight.prompt.utf8Bytes}`,
+    `- Framing allowance: ${preflight.prompt.messageFramingBytes} tokens`,
+    `- Conservative input token bound: ${preflight.prompt.conservativeInputTokens}`,
+    `- Maximum cost: ${money(preflight.maxCostUsd)}`,
+    `- Recommended cap: ${money(preflight.recommendedCapUsd)}`,
+    "",
+    "## Exact authorized command",
+    "",
+    "```powershell",
+    preflight.command,
+    "```",
+    "",
+    "The previous 12-attempt allowance is exhausted. This canary requires fresh explicit authorization and a new spend cap; existing environment flags are not authorization.",
+    "",
+  ].join("\n");
+}
+
+async function executeCanary(options) {
+  if (!options.execute) {
+    throw new Error(
+      "The canary did not execute. Fresh authorization and --execute --cap-usd are required.",
+    );
+  }
+  if (!Number.isFinite(options.capUsd) || options.capUsd <= 0) {
+    throw new Error("The canary requires an explicit positive --cap-usd.");
+  }
+  if (!options.envFile) {
+    throw new Error("The canary requires --env-file. No request was made.");
+  }
+  if (existsSync(options.out) && !options.overwrite) {
+    throw new Error(
+      `Evidence directory already exists: ${options.out}. Use --overwrite only for an intentional canary.`,
+    );
+  }
+
+  const preflight = await buildCanaryPreflight(options);
+  if (options.capUsd + 1e-9 < preflight.maxCostUsd) {
+    throw new Error(
+      `The canary maximum cost ${money(preflight.maxCostUsd)} exceeds the cap ${money(options.capUsd)}. No request was made.`,
+    );
+  }
+  const fileEnv = loadEnvFile(options.envFile);
+  const env = mergedEnv(fileEnv);
+  const resolved = resolveGenerationProvider({
+    ...env,
+    CAMPAIGN_LAB_GENERATION_PROVIDER: "openai",
+    CAMPAIGN_LAB_GENERATION_MODEL: options.model,
+  });
+  if (!resolved.ok) {
+    throw new Error(`${resolved.reason} No request was made.`);
+  }
+  const timeoutMs = resolveGenerationTimeoutMs(env);
+  const model = options.model;
+  const client = createOpenAIClient(env.OPENAI_API_KEY);
+  const transport = new OpenAIGenerationTransport(client, model);
+  const brief = readJson(options.pack).briefs[0];
+
+  mkdirSync(options.out, { recursive: true });
+  writeJson(options.out, "canary-preflight.json", preflight);
+  writeFileSync(
+    path.join(options.out, "canary-preflight.md"),
+    canaryMarkdown(preflight),
+  );
+
+  const startedAt = Date.now();
+  const requestId = randomUUID();
+  let outcome = null;
+  const provider = {
+    id: "openai",
+    label: "OpenAI",
+    model,
+    async generate(request, callOptions) {
+      outcome = await transport.generate(request, callOptions);
+      return outcome.value;
+    },
+  };
+
+  const result = await runCampaignGeneration(
+    {
+      fixtureId: brief.fixtureId,
+      values: brief.values,
+      requestId,
+    },
+    {
+      catalog: BASE_CATALOG,
+      provider,
+      guidanceLoader: conditionGuidance("B"),
+      timeoutMs,
+      env,
+    },
+  );
+  const finishedAt = Date.now();
+  const latencyMs = outcome?.latencyMs ?? finishedAt - startedAt;
+  const usage = outcome?.usage ?? null;
+  const diagnostics =
+    result.ok && result.generation.diagnostics
+      ? result.generation.diagnostics
+      : null;
+  const accounting = accountProviderUsage(
+    usage,
+    {
+      inputPerMillionTokens: preflight.pricing.inputPerMillionTokens,
+      outputPerMillionTokens: preflight.pricing.outputPerMillionTokens,
+    },
+    preflight.maxCostUsd,
+  );
+  const record = {
+    schemaVersion: 1,
+    executedAt: new Date().toISOString(),
+    briefId: brief.id,
+    requestId,
+    model,
+    provider: "openai",
+    transport: outcome?.transport ?? "openai-chat-completions",
+    providerRequestId:
+      outcome?.providerRequestId ?? diagnostics?.providerRequestId ?? null,
+    timeoutMs,
+    retries: 0,
+    requestCount: 1,
+    latencyMs,
+    usage: usage
+      ? {
+          prompt_tokens: usage.promptTokens,
+          completion_tokens: usage.completionTokens,
+          total_tokens: usage.totalTokens,
+          prompt_tokens_details:
+            usage.cachedPromptTokens === null
+              ? null
+              : { cached_tokens: usage.cachedPromptTokens },
+        }
+      : null,
+    usageStatus: accounting.status,
+    costUsd: accounting.costUsd,
+    reservedCostUsd: preflight.maxCostUsd,
+    unresolvedReservationUsd: accounting.reservedExposureUsd,
+    finishReason: outcome?.finishReason ?? null,
+    rawContent: outcome?.rawContent ?? null,
+    diagnostics,
+    request: preflight.request,
+    result: result.ok
+      ? {
+          generation: result.generation,
+          validatedProposal:
+            result.generation.status === "generated"
+              ? {
+                  angle: result.generation.angle,
+                  layout: result.generation.layout,
+                  sections: result.generation.sections,
+                  factIds: result.generation.factIds,
+                  revision: result.preview.revision,
+                }
+              : null,
+          preview: result.preview,
+        }
+      : result,
+  };
+  writeJson(options.out, "canary.json", record);
+  console.log(
+    JSON.stringify(
+      {
+        status: result.ok && result.generation.status === "generated"
+          ? "passed"
+          : "failed",
+        model,
+        transport: record.transport,
+        requests: 1,
+        usageStatus: record.usageStatus,
+        costUsd: accounting.costUsd,
+        reservedExposureUsd: record.unresolvedReservationUsd,
+        latencyMs,
+        diagnostics,
+        validatedProposal: record.result?.validatedProposal ?? null,
+        output: path.relative(root, options.out),
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 async function executeRun(options) {
@@ -673,15 +950,15 @@ async function executeRun(options) {
   const model = options.model;
   const price = PRICING[model];
   if (!price) throw new Error(`No pricing entry for model "${model}".`);
-  const client = new OpenAI({
-    apiKey: env.OPENAI_API_KEY,
-    timeout: 20_000,
-    maxRetries: 2,
-  });
+  const client = createOpenAIClient(env.OPENAI_API_KEY);
+  const transport = new OpenAIGenerationTransport(client, model);
 
   const records = [];
-  let spent = 0;
+  let knownSpendUsd = 0;
+  let unresolvedReservedUsd = 0;
+  let unresolvedUsageRequests = 0;
   let requestCount = 0;
+  let stoppedEarly = null;
   const order = [];
   for (const condition of ["A", "B"]) {
     for (const brief of preflight.briefs) {
@@ -711,52 +988,23 @@ async function executeRun(options) {
       model,
       OUTPUT_TOKEN_BOUND,
     );
-    if (spent + reserved > options.capUsd + 1e-9) {
+    if (knownSpendUsd + unresolvedReservedUsd + reserved > options.capUsd + 1e-9) {
       throw new Error(
-        `Stopped before ${brief.id}/${item.condition}/${item.repeat}: reserved ${money(reserved)} would exceed cap ${money(options.capUsd)}.`,
+        `Stopped before ${brief.id}/${item.condition}/${item.repeat}: reserved ${money(reserved)} plus known/unresolved exposure would exceed cap ${money(options.capUsd)}.`,
       );
     }
 
     const startedAt = Date.now();
     const requestId = randomUUID();
-    let usage = null;
-    let latencyMs = null;
-    let rawContent = null;
-    let error = null;
+    let outcome = null;
     let result = null;
     const provider = {
       id: "openai",
       label: "OpenAI",
       model,
       async generate(request, callOptions) {
-        const response = await client.chat.completions.create(
-          {
-            model,
-            messages: buildOpenAIMessages(request),
-            response_format: { type: "json_object" },
-            max_tokens: OUTPUT_TOKEN_BOUND,
-            temperature: 0.2,
-          },
-          {
-            timeout: Math.max(1, callOptions.timeoutMs),
-            maxRetries: 0,
-          },
-        );
-        usage = response.usage ?? null;
-        rawContent = response.choices[0]?.message?.content?.trim() ?? null;
-        latencyMs = Date.now() - startedAt;
-        if (!rawContent) {
-          const invalid = new Error("The model returned an empty response.");
-          invalid.name = "InvalidGenerationOutputError";
-          throw invalid;
-        }
-        try {
-          return JSON.parse(rawContent);
-        } catch {
-          const invalid = new Error("The model response was not valid JSON.");
-          invalid.name = "InvalidGenerationOutputError";
-          throw invalid;
-        }
+        outcome = await transport.generate(request, callOptions);
+        return outcome.value;
       },
     };
 
@@ -776,26 +1024,46 @@ async function executeRun(options) {
         },
       );
     } catch (caught) {
-      error = caught instanceof Error ? caught.message : String(caught);
+      result = {
+        ok: false,
+        error: redactDiagnosticText(
+          (caught instanceof Error ? caught.message : String(caught)).slice(
+            0,
+            500,
+          ),
+        ),
+      };
     }
     const finishedAt = Date.now();
-    if (latencyMs === null) latencyMs = finishedAt - startedAt;
-    const actualCost =
-      usage && typeof usage.prompt_tokens === "number"
-        ? requestCost(
-            usage.prompt_tokens,
-            model,
-            usage.completion_tokens ?? 0,
-          )
-        : 0;
-    spent += actualCost;
+    const latencyMs = outcome?.latencyMs ?? finishedAt - startedAt;
+    const usage = outcome?.usage ?? null;
+    const accounting = accountProviderUsage(
+      usage,
+      {
+        inputPerMillionTokens: price.input,
+        outputPerMillionTokens: price.output,
+      },
+      reserved,
+    );
+    const usageKnown = accounting.status === "known";
+    const actualCost = accounting.costUsd;
+    if (usageKnown) {
+      knownSpendUsd += actualCost;
+    } else {
+      unresolvedReservedUsd += accounting.reservedExposureUsd;
+      unresolvedUsageRequests += 1;
+    }
     requestCount += 1;
-    if (spent > options.capUsd + 1e-9) {
+    if (knownSpendUsd > options.capUsd + 1e-9) {
       throw new Error(
-        `Actual spend ${money(spent)} exceeded cap ${money(options.capUsd)} after ${requestCount} requests. Stopping without retry.`,
+        `Known spend ${money(knownSpendUsd)} exceeded cap ${money(options.capUsd)} after ${requestCount} requests. Stopping without retry.`,
       );
     }
 
+    const diagnostics =
+      result?.ok && result.generation.diagnostics
+        ? result.generation.diagnostics
+        : null;
     const record = {
       requestId,
       condition: item.condition,
@@ -808,18 +1076,40 @@ async function executeRun(options) {
       latencyMs,
       model,
       provider: "openai",
+      transport: outcome?.transport ?? "openai-chat-completions",
+      providerRequestId:
+        outcome?.providerRequestId ?? diagnostics?.providerRequestId ?? null,
+      diagnostics,
       harnessVersion: preflight.harnessVersion,
       guidancePackVersion: preflight.guidancePackVersion,
       requestTemplate: requestTemplate,
       promptChars: stats.chars,
+      promptUtf8Bytes: stats.utf8Bytes,
+      messageFramingBytes: stats.messageFramingBytes,
       estimatedInputTokens: stats.estimatedTokens,
       conservativeInputTokens: stats.conservativeTokens,
       outputTokenBound: OUTPUT_TOKEN_BOUND,
-      usage,
+      usage:
+        usageKnown
+          ? {
+              prompt_tokens: usage.promptTokens,
+              completion_tokens: usage.completionTokens,
+              total_tokens: usage.totalTokens,
+              prompt_tokens_details:
+                usage.cachedPromptTokens === null
+                  ? null
+                  : { cached_tokens: usage.cachedPromptTokens },
+            }
+          : null,
+      usageStatus: accounting.status,
       costUsd: actualCost,
-      cumulativeCostUsd: spent,
-      rawContent,
-      error,
+      reservedCostUsd: reserved,
+      unresolvedReservationUsd: accounting.reservedExposureUsd,
+      cumulativeKnownSpendUsd: knownSpendUsd,
+      cumulativeUnresolvedReservedUsd: unresolvedReservedUsd,
+      finishReason: outcome?.finishReason ?? null,
+      rawContent: outcome?.rawContent ?? null,
+      error: result?.ok ? null : result.error,
       result: result?.ok
         ? {
             ok: true,
@@ -864,9 +1154,20 @@ async function executeRun(options) {
         result.preview,
       );
     }
+    if (shouldStopAfterFailure(diagnostics)) {
+      stoppedEarly = {
+        reason: `Stopped after ${brief.id}/${item.condition}/${item.repeat} because the provider failure category was ${diagnostics.category}.`,
+        category: diagnostics.category,
+        diagnostics,
+      };
+      break;
+    }
   }
 
-  const usageTotals = records.reduce(
+  const knownUsageRecords = records.filter(
+    (record) => record.usageStatus === "known",
+  );
+  const usageTotals = knownUsageRecords.reduce(
     (totals, record) => ({
       promptTokens: totals.promptTokens + (record.usage?.prompt_tokens ?? 0),
       completionTokens:
@@ -882,7 +1183,12 @@ async function executeRun(options) {
     model,
     capUsd: options.capUsd,
     requestCount,
-    spentUsd: spent,
+    knownUsageRequests: knownUsageRecords.length,
+    unresolvedUsageRequests,
+    knownSpendUsd,
+    unresolvedReservedUsd,
+    conservativeExposureUsd: knownSpendUsd + unresolvedReservedUsd,
+    stoppedEarly,
     usageTotals,
     statusCounts: {
       generated: records.filter(
@@ -904,16 +1210,23 @@ async function executeRun(options) {
   writeJson(options.out, "run.json", summary);
   writeFileSync(
     path.join(options.out, "run.md"),
-    `# Guidance evaluation run\n\n- Model: ${model}\n- Requests: ${requestCount}\n- Actual recorded cost: ${money(spent)}\n- Cap: ${money(options.capUsd)}\n`,
+    `# Guidance evaluation run\n\n- Model: ${model}\n- Requests: ${requestCount}\n- Known usage requests: ${knownUsageRecords.length}\n- Unresolved usage requests: ${unresolvedUsageRequests}\n- Known spend: ${money(knownSpendUsd)}\n- Unresolved reserved exposure: ${money(unresolvedReservedUsd)}\n- Conservative exposure: ${money(knownSpendUsd + unresolvedReservedUsd)}\n- Cap: ${money(options.capUsd)}\n${stoppedEarly ? `- Stopped early: ${stoppedEarly.reason}\n` : ""}`,
   );
   console.log(
     JSON.stringify(
       {
-        status: "completed",
+        status: stoppedEarly ? "stopped-early" : "completed",
         model,
         requests: requestCount,
-        spentUsd: Number(spent.toFixed(6)),
+        knownUsageRequests: knownUsageRecords.length,
+        unresolvedUsageRequests,
+        knownSpendUsd: Number(knownSpendUsd.toFixed(6)),
+        unresolvedReservedUsd: Number(unresolvedReservedUsd.toFixed(6)),
+        conservativeExposureUsd: Number(
+          (knownSpendUsd + unresolvedReservedUsd).toFixed(6),
+        ),
         capUsd: options.capUsd,
+        stoppedEarly: stoppedEarly?.reason ?? null,
         output: path.relative(root, options.out),
       },
       null,
@@ -934,6 +1247,22 @@ async function main() {
     );
     writeDeterministicReferences(readJson(options.pack), options.out);
     console.log(preflightMarkdown(preflight));
+    console.log(`Evidence directory: ${path.relative(root, options.out)}`);
+    return;
+  }
+  if (options.command === "canary") {
+    if (options.execute) {
+      await executeCanary(options);
+      return;
+    }
+    const preflight = await buildCanaryPreflight(options);
+    mkdirSync(options.out, { recursive: true });
+    writeJson(options.out, "canary-preflight.json", preflight);
+    writeFileSync(
+      path.join(options.out, "canary-preflight.md"),
+      canaryMarkdown(preflight),
+    );
+    console.log(canaryMarkdown(preflight));
     console.log(`Evidence directory: ${path.relative(root, options.out)}`);
     return;
   }

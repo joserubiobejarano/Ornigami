@@ -1,4 +1,5 @@
 import type { CampaignPreviewData } from "../template.ts";
+import type { ProviderDiagnostics } from "./provider-diagnostics.ts";
 
 export type GenerationEnv = Record<string, string | undefined>;
 import type {
@@ -171,6 +172,8 @@ export type GenerationMetadata = {
   model?: string;
   code?: GenerationFailureCode;
   message?: string;
+  /** Sanitized provider failure details. Absent when no diagnostic was available. */
+  diagnostics?: ProviderDiagnostics;
   angle?: OpeningAngle;
   layout?: LayoutId;
   sections?: SectionId[];

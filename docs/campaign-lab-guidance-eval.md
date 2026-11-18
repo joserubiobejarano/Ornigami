@@ -1,5 +1,11 @@
 # Campaign Lab advisory guidance evaluation
 
+> Follow-up 19 November 2026: live-provider diagnostics and cost accounting were
+> corrected in
+> [`CAMPAIGN_LAB_LIVE_PROVIDER_DIAGNOSTICS_20261119.md`](./handoffs/CAMPAIGN_LAB_LIVE_PROVIDER_DIAGNOSTICS_20261119.md).
+> The historical run below is preserved unchanged; its recorded `$0` is not proof
+> that missing-usage requests cost nothing.
+
 This is a small blinded comparison of the current Ornigami advisory pack. It
 does not evaluate the complete Taste Skill or any other design tool.
 

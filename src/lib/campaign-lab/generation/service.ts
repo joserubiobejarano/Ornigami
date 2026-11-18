@@ -26,6 +26,7 @@ import {
 import { LocalTestGenerationProvider } from "./local-test-provider.ts";
 import { resolveGenerationProvider, resolveGenerationTimeoutMs } from "./provider-config.ts";
 import type { ProviderResolution } from "./provider-config.ts";
+import { diagnosticsFromUnknownError } from "./provider-diagnostics.ts";
 import { validateGenerationProposal } from "./validate.ts";
 import type {
   CampaignGenerationInput,
@@ -338,6 +339,7 @@ export async function runCampaignGeneration(
       controller,
     );
   } catch (error) {
+    const diagnostics = diagnosticsFromUnknownError(error);
     if (error instanceof GenerationTimeoutError) {
       return failure(
         deterministic.preview,
@@ -345,6 +347,17 @@ export async function runCampaignGeneration(
         provider.label,
         "timeout",
         `The generator did not respond within ${timeoutMs} ms.`,
+        {
+          diagnostics: {
+            category: "timeout",
+            httpStatus: null,
+            providerCode: null,
+            providerType: null,
+            parameter: null,
+            providerRequestId: null,
+            message: `The provider did not respond within ${timeoutMs} ms.`,
+          },
+        },
       );
     }
 
@@ -355,6 +368,7 @@ export async function runCampaignGeneration(
         provider.label,
         "invalid",
         "The generator returned output that could not be read. The deterministic draft is shown.",
+        diagnostics ? { diagnostics } : {},
       );
     }
 
@@ -364,6 +378,7 @@ export async function runCampaignGeneration(
       provider.label,
       "provider-error",
       "The generation provider failed before returning a proposal.",
+      diagnostics ? { diagnostics } : {},
     );
   }
 
