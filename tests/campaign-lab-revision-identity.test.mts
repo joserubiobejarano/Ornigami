@@ -12,6 +12,11 @@ import {
   calculateDraftRevision,
 } from "../src/lib/campaign-lab/template.ts";
 import {
+  presentationText,
+  renderedCopyLength,
+  shouldShowClose,
+} from "../src/lib/campaign-lab/presentation.ts";
+import {
   buildExportReceipt,
   evaluateCampaignExport,
   isLocalPreviewApproved,
@@ -50,12 +55,12 @@ function themeWith(
 }
 
 test("revision identity is versioned and previews carry the version", () => {
-  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 2);
-  assert.equal(base.revisionIdentityVersion, 2);
+  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 3);
+  assert.equal(base.revisionIdentityVersion, 3);
   assert.equal(
     buildDraftRevisionIdentity(base.brief, base.draft, base.asset, base.theme)
       .identityVersion,
-    2,
+    3,
   );
   assert.equal(revisionWith(), base.revision);
 });
@@ -184,6 +189,116 @@ test("a hidden lede ignores its unrendered text", () => {
   );
 });
 
+test("equivalent ASCII whitespace cannot change the closing CTA or identity", () => {
+  const ledeA = `A ${"b".repeat(210)}`;
+  const ledeB = `A  ${"b".repeat(210)}`;
+  const build = (lede: string) => {
+    const fixtureA = {
+      ...fixture,
+      brief: {
+        ...fixture.brief,
+        copy: { ...fixture.brief.copy, lede, hideLede: false },
+      },
+    };
+    const result = buildCampaignPreview(fixtureA, values);
+    assert.equal(result.ok, true);
+    if (!result.ok) throw new Error("Expected the whitespace fixture to render.");
+    return result.preview;
+  };
+  const a = build(ledeA);
+  const b = build(ledeB);
+
+  assert.equal(renderedCopyLength(a.brief, a.draft), 319);
+  assert.equal(renderedCopyLength(b.brief, b.draft), 319);
+  assert.equal(shouldShowClose(a.brief, a.draft), false);
+  assert.equal(shouldShowClose(b.brief, b.draft), false);
+  assert.equal(a.revision, b.revision);
+  assert.notEqual(a.brief.copy.lede, b.brief.copy.lede);
+});
+
+test("nonbreaking spaces remain meaningful while ASCII whitespace normalizes", () => {
+  assert.equal(presentationText("A  B\tC"), "A B C");
+  assert.equal(presentationText("Save\u00a020%\u00a0now"), "Save\u00a020%\u00a0now");
+
+  const ordinary = { ...base.brief, offer: "Save 20% on every order" };
+  const nonbreaking = {
+    ...base.brief,
+    offer: "Save\u00a020%\u00a0on\u00a0every\u00a0order",
+  };
+  assert.notEqual(
+    calculateDraftRevision(ordinary, base.draft, base.asset, base.theme),
+    calculateDraftRevision(nonbreaking, base.draft, base.asset, base.theme),
+  );
+  assert.equal(ordinary.offer, "Save 20% on every order");
+  assert.equal(nonbreaking.offer, "Save\u00a020%\u00a0on\u00a0every\u00a0order");
+});
+
+test("visible notice changes the revision and removing it restores the original", () => {
+  const withoutNotice = calculateDraftRevision(
+    base.brief,
+    base.draft,
+    base.asset,
+    base.theme,
+  );
+  const offerNotice = calculateDraftRevision(
+    base.brief,
+    base.draft,
+    base.asset,
+    base.theme,
+    "Preview · offer provisional",
+  );
+  const destinationNotice = calculateDraftRevision(
+    base.brief,
+    base.draft,
+    base.asset,
+    base.theme,
+    "Preview · destination provisional",
+  );
+
+  assert.notEqual(offerNotice, withoutNotice);
+  assert.notEqual(destinationNotice, offerNotice);
+  assert.equal(
+    calculateDraftRevision(
+      base.brief,
+      base.draft,
+      base.asset,
+      base.theme,
+      "Preview · offer provisional",
+    ),
+    offerNotice,
+  );
+  assert.equal(
+    calculateDraftRevision(base.brief, base.draft, base.asset, base.theme, null),
+    withoutNotice,
+  );
+  assert.equal(
+    buildDraftRevisionIdentity(
+      base.brief,
+      base.draft,
+      base.asset,
+      base.theme,
+      "Preview · offer provisional",
+    ).previewNotice,
+    "Preview · offer provisional",
+  );
+
+  const stale = {
+    revision: offerNotice,
+    approvalRevision: withoutNotice,
+    dirty: false,
+    generating: false,
+    imagesReady: true,
+  };
+  assert.equal(isLocalPreviewApproved(stale), false);
+  assert.equal(
+    sameExportGuard(
+      { ...stale, revision: withoutNotice, approvalRevision: withoutNotice },
+      stale,
+    ),
+    false,
+  );
+});
+
 test("stale approval cannot authorize a newly calculated revision", () => {
   const oldRevision = base.revision;
   const newRevision = revisionWith({
@@ -218,7 +333,7 @@ test("receipts expose the new identity version and keep v1 receipts readable", a
   const preview = {
     status: "confirmed" as const,
     revision: base.revision,
-    revisionIdentityVersion: 2,
+    revisionIdentityVersion: 3,
     productName: base.brief.productName,
     brandName: base.theme.brand.name,
     offer: base.brief.offer,
@@ -251,7 +366,7 @@ test("receipts expose the new identity version and keep v1 receipts readable", a
     packshotSha256: base.asset.contentHash,
     files: [],
   });
-  assert.equal(receipt.revisionIdentityVersion, 2);
+  assert.equal(receipt.revisionIdentityVersion, 3);
 
   const legacy = await buildExportReceipt({
     preview: { ...preview, revisionIdentityVersion: undefined },

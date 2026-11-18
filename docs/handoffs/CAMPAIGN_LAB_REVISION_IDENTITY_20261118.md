@@ -4,7 +4,8 @@ Status: synthetic, local-only verification. Not brand approval and not
 publication approval.
 
 - Base: `9fd517a`
-- Identity version: `2`
+- Follow-up base: `498d1f2`
+- Identity version: `3`
 - Entry point: `/campaign-lab?fixture=<pilot-fixture>`
 
 ## Canonical representation
@@ -14,7 +15,8 @@ publication approval.
 The object contains only inputs that can reach the shared `CampaignPage`
 markup or CSS:
 
-- template id/version, layout, and section order;
+- template id/version, layout, section order, and the resolved closing-CTA
+  decision;
 - every rendered brand token: colour, display/body font, display weight,
   tracking, label casing, radii, image shape/inset/blend, offer treatment,
   hero order, detail colours when the detail section renders, and wordmark
@@ -22,7 +24,8 @@ markup or CSS:
 - visible brand content: name, wordmark, and detail title when rendered;
 - campaign content: product name, offer, normalized destination, action label,
   visible lede, headline, and rendered fact labels/values;
-- asset appearance: content hash, width, height, and alt text.
+- asset appearance: content hash, width, height, and alt text;
+- the effective visible preview notice, resolved before the final revision.
 
 Reviewer notes, unused facts, source quotes, internal campaign notes,
 editor-only IDs, asset rights/source/reviewer metadata, and non-rendered
@@ -34,21 +37,31 @@ descriptors are excluded. Equivalent defaults are normalized, including:
 - absent `imageInset` vs `"0px"`;
 - unitless zero vs `"0px"` radii;
 - hex colour case and three-digit hex expansion;
-- whitespace around font lists and text values.
+- whitespace around font lists and text values;
+- ordinary ASCII whitespace runs, which HTML collapses, while meaningful
+  Unicode whitespace such as nonbreaking spaces is preserved.
 
-A hidden lede is excluded from identity even if its unrendered text changes.
+The renderer and revision identity share `presentation.ts` for visible text
+normalization and the closing-CTA decision. A hidden lede is excluded from
+identity even if its unrendered text changes. Approved commercial strings remain
+unchanged in the campaign data and rendered markup.
 
 ## Versioning and approval
 
-Preview data carries `revisionIdentityVersion: 2`. Export receipts include the
-same optional top-level field when available. Historical receipts without the
-field remain readable and are treated as the earlier identity version; the
-receipt schema version stays `1`.
+This correction requires identity version `3`: the canonical schema now
+includes the resolved closing-CTA decision, presentation-aware whitespace, and
+the effective visible notice, and earlier v2 revisions cannot be reproduced
+from the new payload.
 
-Because the revision changes when any rendered appearance input changes,
-existing local approval no longer matches the new revision. Export remains
-locked until the operator regenerates, reviews, and approves the fresh
-revision.
+Preview data carries `revisionIdentityVersion: 3`. Export receipts include the
+same optional top-level field when available. Historical v1 and v2 receipts
+without the field remain readable and are treated as their earlier identity
+versions; the receipt schema version stays `1`.
+
+Because the revision changes when any rendered appearance input or visible
+notice changes, existing local approval no longer matches the new revision.
+Export remains locked and any in-flight export is cancelled until the operator
+regenerates, reviews, and approves the fresh revision.
 
 ## Verification
 
@@ -59,28 +72,39 @@ Focused tests cover:
 - non-rendered review notes and unused fact metadata leaving the revision
   unchanged;
 - equivalent defaults producing the same revision;
+- ordinary versus nonbreaking spaces;
+- the reproduced one-space/two-space closing-CTA boundary;
+- visible notice added, changed, and removed, including stale approval and
+  export-guard failure;
 - hidden lede text not affecting revision;
-- stale approval failing the approval/export guard;
-- receipts exposing identity version `2` while v1 receipts remain readable.
+- receipts exposing identity version `3` while historical receipts remain
+  readable.
 
-Focused regression: **151 Campaign Lab tests passed, 0 failed**. TypeScript and
-focused ESLint passed.
+The actual `CampaignPage` renderer reproduced the original collision before the
+fix at revision `e3b66947c5d0b79e` with 1 versus 2 CTAs. After the fix both
+whitespace variants render one CTA at revision `4fff61f8f5e5c425`.
 
 Browser exercise on the synthetic Fernway profile:
 
-- generated and approved revision `129a658a2002b144`;
-- changed only the accent colour; approval cleared and export locked;
-- regenerated revision `e608c65a3d433b90`, still unapproved and export locked;
-- fresh approval enabled export;
-- receipt recorded identity version `2`, approval/render revision
-  `e608c65a3d433b90`, and the unchanged frozen commercial inputs.
+- original confirmed revision `8711825522782efb`, one CTA;
+- offer edit added `Preview · offer provisional`, cleared approval, locked
+  export, and produced revision `11f55b80b8060f43`, still one CTA;
+- fresh approval enabled export; receipt recorded identity version `3`, status
+  `preview`, the same notice, and the same approved/rendered revision;
+- restoring the original offer removed the notice, cleared approval, and
+  returned revision `8711825522782efb`;
+- restored export receipt recorded identity version `3`, status `confirmed`,
+  no notice, and the original frozen offer.
+
+Focused regression: **154 Campaign Lab tests passed, 0 failed**. TypeScript and
+focused ESLint passed.
 
 ## Synthetic evidence
 
-- `.local/fernway-campaign/revision-identity/report.json`
-- `.local/fernway-campaign/revision-identity/bundle/index.html`
-- `.local/fernway-campaign/revision-identity/bundle/receipt.json`
-- `.local/fernway-campaign/revision-identity/captures/`
-- `.local/fernway-campaign/review/` — refreshed first/revised quality evidence
+- `.local/review-498d1f2/repro-before.json` / `repro-after.json`
+- `.local/review-498d1f2/browser/report.json`
+- `.local/review-498d1f2/browser/bundle-notice/`
+- `.local/review-498d1f2/browser/bundle-restored/`
+- `.local/review-498d1f2/browser/captures/`
 
 All material remains synthetic and under Git-ignored `.local/` storage.

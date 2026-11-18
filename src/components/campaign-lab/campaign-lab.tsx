@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +61,9 @@ import {
 import { GenerationRequestGate } from "@/lib/campaign-lab/generation/client-gate";
 import type { GenerationMetadata } from "@/lib/campaign-lab/generation/types";
 import {
+  CAMPAIGN_REVISION_IDENTITY_VERSION,
   SINGLE_PRODUCT_OFFER_TEMPLATE,
+  calculateDraftRevision,
   shortRevision,
 } from "@/lib/campaign-lab/template";
 import type { CampaignPreviewData } from "@/lib/campaign-lab/template";
@@ -165,7 +174,7 @@ export function CampaignLab({
   const [initialPreviewState] = useState(() =>
     createEditorPreviewState(fixture, values, catalog),
   );
-  const [preview, setPreview] = useState<ConfiguredPreviewData | null>(
+  const [previewState, setPreview] = useState<ConfiguredPreviewData | null>(
     initialPreviewState.preview,
   );
   const [issues, setIssues] = useState<ValidationIssue[]>(initialPreviewState.issues);
@@ -183,7 +192,7 @@ export function CampaignLab({
   const effectivePilotStatus = previewStatus ?? catalog.pilot?.status;
   const effectivePilotNote = previewNote ?? catalog.pilot?.note;
   const pilotProvenance =
-    catalog.pilot && preview && !isAdvertorialPreviewData(preview)
+    catalog.pilot && previewState && !isAdvertorialPreviewData(previewState)
       ? buildPilotVerificationProvenance({
           pilot: catalog.pilot,
           manifest: {
@@ -192,11 +201,11 @@ export function CampaignLab({
             destinationUrl: fixture.brief.destinationUrl,
           },
           rendered: {
-            offer: preview.brief.offer,
-            offerPrice: preview.brief.offerPrice,
-            destinationUrl: preview.brief.destinationUrl,
+            offer: previewState.brief.offer,
+            offerPrice: previewState.brief.offerPrice,
+            destinationUrl: previewState.brief.destinationUrl,
           },
-          asset: preview.asset,
+          asset: previewState.asset,
         })
       : undefined;
   const renderedPilotStatus =
@@ -210,6 +219,23 @@ export function CampaignLab({
         (effectivePilotStatus === "preview"
           ? "Preview · offer and destination unconfirmed"
           : undefined);
+  const preview = useMemo(
+    () =>
+      previewState && !isAdvertorialPreviewData(previewState)
+        ? {
+            ...previewState,
+            revision: calculateDraftRevision(
+              previewState.brief,
+              previewState.draft,
+              previewState.asset,
+              previewState.theme,
+              renderedPilotNotice ?? null,
+            ),
+            revisionIdentityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
+          }
+        : previewState,
+    [previewState, renderedPilotNotice],
+  );
   const brand = getBrand(values.brandId, catalog);
   const selectedAsset = getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;

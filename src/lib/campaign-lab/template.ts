@@ -25,6 +25,11 @@ import type {
 } from "./types.ts";
 import { CAMPAIGN_LAB_TEMPLATE_ID } from "./types.ts";
 import { findApprovedOfferPrice } from "./offer-emphasis.ts";
+import {
+  presentationText,
+  shouldShowClose,
+  visibleLede,
+} from "./presentation.ts";
 
 const OFFER_LED_SECTIONS: readonly SectionId[] = ["hero", "hero-facts", "close"];
 const EDITORIAL_SECTIONS: readonly SectionId[] = ["hero", "detail", "close"];
@@ -740,10 +745,10 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
-export const CAMPAIGN_REVISION_IDENTITY_VERSION = 2;
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 3;
 
 function canonicalText(value: string): string {
-  return value.trim().replace(/\s+/g, " ");
+  return presentationText(value);
 }
 
 function canonicalOptionalText(value: string | undefined): string | null {
@@ -782,12 +787,11 @@ export function buildDraftRevisionIdentity(
   draft: TemplateDraft,
   asset: ApprovedAsset,
   theme: ResolvedBrandTheme,
+  notice?: string | null,
 ) {
   const { tokens, brand } = theme;
   const showsDetail = draft.sections.includes("detail");
-  const visibleLede = brief.copy.hideLede
-    ? null
-    : canonicalOptionalText(draft.lede);
+  const renderedLede = visibleLede(brief, draft);
   const highlightedPrice = tokens.offerPriceEmphasis
     ? findApprovedOfferPrice(brief.offer, brief.offerPrice)?.text ?? null
     : null;
@@ -800,6 +804,8 @@ export function buildDraftRevisionIdentity(
     },
     layout: draft.layout,
     sections: [...draft.sections],
+    closingSection: shouldShowClose(brief, draft),
+    previewNotice: canonicalOptionalText(notice ?? undefined),
     appearance: {
       page: canonicalColor(tokens.page),
       surface: canonicalColor(tokens.surface),
@@ -842,7 +848,7 @@ export function buildDraftRevisionIdentity(
       offer: canonicalText(brief.offer),
       destinationUrl: normalizeDestinationUrl(brief.destinationUrl),
       actionLabel: canonicalText(brief.actionLabel),
-      lede: visibleLede,
+      lede: renderedLede || null,
     },
     draft: {
       headline: canonicalText(draft.headline),
@@ -865,9 +871,12 @@ export function calculateDraftRevision(
   draft: TemplateDraft,
   asset: ApprovedAsset,
   theme: ResolvedBrandTheme,
+  notice?: string | null,
 ): string {
   return hashRevision(
-    JSON.stringify(buildDraftRevisionIdentity(brief, draft, asset, theme)),
+    JSON.stringify(
+      buildDraftRevisionIdentity(brief, draft, asset, theme, notice),
+    ),
   );
 }
 

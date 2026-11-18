@@ -5,6 +5,7 @@ import type {
   PreviewImageStatus,
 } from "@/lib/campaign-lab/editor";
 import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";
+import { shouldShowClose } from "@/lib/campaign-lab/presentation";
 import type { CampaignBrief, ProductFact, ResolvedBrandTheme, TemplateDraft } from "@/lib/campaign-lab/types";
 
 import styles from "./campaign-page.module.css";
@@ -113,12 +114,7 @@ export function CampaignPage({
   const showProductLabel = !draft.headline
     .toLowerCase()
     .includes(brief.productName.toLowerCase());
-  const copyLength =
-    draft.headline.length +
-    (brief.copy.hideLede ? 0 : draft.lede.length) +
-    brief.offer.length +
-    draft.facts.reduce((total, fact) => total + fact.label.length + fact.value.length, 0);
-  const showClose = draft.sections.includes("close") && (isEditorial || copyLength >= 320);
+  const showClose = shouldShowClose(brief, draft);
 
   const style = {
     "--cp-page": tokens.page,
