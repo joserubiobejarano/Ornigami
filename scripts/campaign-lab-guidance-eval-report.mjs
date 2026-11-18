@@ -90,21 +90,28 @@ for (const condition of ["A", "B"]) {
         continue;
       }
       const checks = evaluateDraft(artifact, caseDef, pack);
-      const comparison = deterministic.get(caseDef.id)
-        ? compareDraftPair(
-            deterministic.get(caseDef.id),
-            artifact,
-            caseDef,
-            pack,
-          )
-        : null;
+      const generated = artifact.flow?.generation?.status === "generated";
+      const comparison =
+        generated && deterministic.get(caseDef.id)
+          ? compareDraftPair(
+              deterministic.get(caseDef.id),
+              artifact,
+              caseDef,
+              pack,
+            )
+          : null;
       results.push({
         caseId: caseDef.id,
         artifact,
+        generated,
         summary: summarize(checks),
-        hardFailures: hardGateFailures(checks).map((check) => check.id),
+        hardFailures: generated
+          ? hardGateFailures(checks).map((check) => check.id)
+          : [],
         checks,
-        identicalToDeterministic: comparison?.identical ?? null,
+        identicalToDeterministic: generated
+          ? (comparison?.identical ?? null)
+          : null,
         changes: comparison?.changes ?? [],
         comparisonChecks: comparison?.checks ?? [],
       });
@@ -160,7 +167,7 @@ for (const condition of ["A", "B"]) {
       }
       const artifact = result.artifact;
       lines.push(
-        `| ${result.caseId} | ${condition} | ${repeat} | ${artifact.flow?.generation?.status ?? "unknown"} | ${result.hardFailures.join(", ") || "none"} | ${result.identicalToDeterministic === null ? "unassessed" : result.identicalToDeterministic ? "yes" : "no"} | ${artifact.draft.layout} | ${artifact.draft.sections.map((section) => section.id).join(" → ")} | ${artifact.draft.facts.map((fact) => `${fact.label}: ${fact.value}`).join(", ") || "none"} |`,
+        `| ${result.caseId} | ${condition} | ${repeat} | ${result.generated ? "generated" : `${artifact.flow?.generation?.status ?? "unknown"} / unassessed`} | ${result.hardFailures.join(", ") || "none"} | ${result.identicalToDeterministic === null ? "unassessed" : result.identicalToDeterministic ? "yes" : "no"} | ${artifact.draft.layout} | ${artifact.draft.sections.map((section) => section.id).join(" → ")} | ${artifact.draft.facts.map((fact) => `${fact.label}: ${fact.value}`).join(", ") || "none"} |`,
       );
     }
   }
@@ -180,10 +187,12 @@ for (const request of requestSummary) {
 }
 
 const identicalCounts = { A: 0, B: 0, total: 0 };
+const generatedCounts = { A: 0, B: 0 };
 for (const condition of ["A", "B"]) {
   for (const repeat of [1, 2]) {
     for (const result of conditions[condition].repeats[`r${repeat}`]) {
-      if (result.missing) continue;
+      if (result.missing || !result.generated) continue;
+      generatedCounts[condition] += 1;
       identicalCounts.total += 1;
       if (result.identicalToDeterministic) identicalCounts[condition] += 1;
     }
@@ -193,8 +202,9 @@ lines.push(
   "",
   "## Aggregate observations",
   "",
-  `- Identical to deterministic: A ${identicalCounts.A}/6, B ${identicalCounts.B}/6.`,
-  `- Hard-gate failures: A ${Object.values(conditions.A.repeats).flat().filter((item) => item.hardFailures?.length).length}, B ${Object.values(conditions.B.repeats).flat().filter((item) => item.hardFailures?.length).length}.`,
+  `- Generated model outputs: A ${generatedCounts.A}/6, B ${generatedCounts.B}/6.`,
+  `- Identical to deterministic among generated outputs: A ${identicalCounts.A}/${generatedCounts.A}, B ${identicalCounts.B}/${generatedCounts.B}.`,
+  `- Hard-gate failures among generated outputs: A ${Object.values(conditions.A.repeats).flat().filter((item) => item.hardFailures?.length).length}, B ${Object.values(conditions.B.repeats).flat().filter((item) => item.hardFailures?.length).length}.`,
   "- Identical outputs, mixed results, and no improvement are valid outcomes.",
   "",
   "## Detailed changes",
@@ -205,6 +215,12 @@ for (const condition of ["A", "B"]) {
   for (const repeat of [1, 2]) {
     for (const result of conditions[condition].repeats[`r${repeat}`]) {
       if (result.missing) continue;
+      if (!result.generated) {
+        lines.push(
+          `- **${result.caseId} r${repeat}:** unassessed; provider outcome was ${result.artifact.flow?.generation?.status ?? "unknown"}${result.artifact.flow?.generation?.code ? ` (${result.artifact.flow.generation.code})` : ""}.`,
+        );
+        continue;
+      }
       lines.push(
         `- **${result.caseId} r${repeat}:** ${result.changes.length ? result.changes.join(" ") : "No rendered change from the deterministic reference."}`,
       );

@@ -108,3 +108,42 @@ Functional gates stay in `functional/`. Human review covers campaign fit,
 relevant evidence, hierarchy, repetition, and edits needed. Identical outputs,
 mixed results, or no observable improvement are valid findings; no scores are
 invented.
+
+## Authorized run result
+
+The explicit cap was **$0.03**. The runner made all 12 planned attempts and then
+stopped; no retry or rerun was performed.
+
+- Model: `gpt-4o-mini`
+- Requests: 12
+- Generated outputs: 0
+- Fallbacks: 12, all `provider-error`
+- Invalid results: 0
+- Timeouts: 0
+- Recorded token usage: 0 prompt / 0 completion
+- Recorded spend: $0
+- Latency range: 149–1449 ms
+
+The existing real-model adapter returned the generic `provider-error` fallback
+for every attempt, so no model proposal or preview reached validation. The
+underlying API error message is not preserved by that adapter. A non-generative
+`models.retrieve("gpt-4o-mini")` diagnostic succeeded, so the credential and
+model identifier are at least readable; that does not explain the chat
+completion failures.
+
+Because there are no model outputs, conditions A and B are **unassessed**. The
+renderer produced the deterministic reference gallery, exports, mapping, and
+blank review sheet only. The functional report records the 12 fallbacks and does
+not treat them as generated evidence.
+
+Recommendation: this run provides no evidence that the advisory pack improves or
+worsens model choices. Do not choose or remove guidance based on it. A valid
+evaluation needs the provider request failure diagnosed and a new authorization;
+rerunning this run would exceed the 12-request experiment limit and is prohibited
+by the no-rerun rule.
+
+Evidence:
+`.local/campaign-lab-guidance-eval/authorized/`,
+including `run.json`, `preflight.md`, `review/gallery.html`,
+`review/review-sheet.md`, `review/mapping.json`, `functional/`, and three
+deterministic reference exports.
