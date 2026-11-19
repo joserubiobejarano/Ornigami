@@ -7,7 +7,10 @@ Static remains default; no template, animation or model proposal authority was a
 
 `visual-directions.ts` is the app-owned 1.0.0 registry. Clear keeps the historical
 neutral sans/framed/direct tokens. Editorial uses the existing serif/arch/editorial
-features and supported palette. Neither imports fictional brand identity, copy,
+features and supported palette. The generated one-photo layout retains rectangular framing; arch tokens apply
+only in layouts supporting that treatment. The observed distinction here is
+serif/weight/palette and desktop column order, not a guaranteed arch. Neither
+imports fictional brand identity, copy,
 claims or attestations. Existing licensed/system font handling is reused.
 
 `browserBrief.directionId` is an optional scalar (`clear` or `editorial`). Missing

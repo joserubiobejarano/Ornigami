@@ -28,7 +28,7 @@ const CLEAR_TOKENS: BrandTokens = {
 
 export const VISUAL_DIRECTIONS = [
   { id: "clear", name: "Clear", description: "Sans type, framed product, direct hierarchy", tokens: CLEAR_TOKENS },
-  { id: "editorial", name: "Editorial", description: "Serif type, arched image, editorial hierarchy", tokens: { ...CLEAR_TOKENS,
+  { id: "editorial", name: "Editorial", description: "Serif type, warm palette, editorial hierarchy", tokens: { ...CLEAR_TOKENS,
     page: "#f2ebde", surface: "#e6dbc8", ink: "#1d2a3c", muted: "#5c6066", accent: "#234a6b", accentInk: "#f9f3e8", line: "#cbbda8",
     displayFont: "Georgia, serif", bodyFont: "Arial, sans-serif", displayWeight: 400, displayTracking: "-0.03em", labelTracking: "0.2em",
     heroImage: "arch", heroOrder: "headline-first", prefersEditorial: true, detailBackground: "#1d2a3c", detailInk: "#f2ebde",
