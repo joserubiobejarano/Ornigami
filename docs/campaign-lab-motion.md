@@ -41,6 +41,15 @@ change detector over the actual owned runtime and CSS. Recipe/runtime policy is
 The change detector is not a cryptographic provenance claim; packaged files
 receive SHA-256 through the existing export receipt.
 
+The Session 1 intake correction preserves optional `imageFit: "contain" | "cover"`
+through source normalization and the normal pilot loader. Both source and
+runtime manifest boundaries reject other supplied values with a named asset
+issue. Omission retains role defaults; effective fit/frame uses the existing
+identity 6 and receipt contract without a schema change. The reproducible
+source-to-editor-to-export proof is documented in
+[local pilots](./campaign-lab-pilots.md#synthetic-image-fit-contract-regression).
+It changes no motion recipe, inspection behavior or model proposal authority.
+
 Inspection uses existing approved page/surface/ink/muted/accent and button-radius
 tokens for its controls, modal, focus, and restrained hover feedback. Neutral
 CSS fallbacks cover missing tokens. The modal radius derives from the button

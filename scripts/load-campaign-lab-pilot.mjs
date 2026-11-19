@@ -75,6 +75,7 @@ if (!existsSync(sourcePath)) {
         height: metadata.height,
         alt: asset.alt,
         role: asset.role,
+        ...(asset.imageFit !== undefined ? { imageFit: asset.imageFit } : {}),
         reviewed: true,
         reviewedBy: asset.reviewedBy,
         reviewedOn: asset.reviewedOn,
@@ -122,6 +123,7 @@ if (!existsSync(sourcePath)) {
           assets: assets.map((asset) => ({
             id: asset.id,
             role: asset.role,
+            imageFit: asset.imageFit,
             src: asset.src,
             width: asset.width,
             height: asset.height,

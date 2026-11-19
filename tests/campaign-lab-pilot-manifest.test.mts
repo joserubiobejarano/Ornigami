@@ -1,10 +1,11 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
   validatePilotManifest,
   validatePilotSource,
 } from "../src/lib/campaign-lab/pilots/pilot-manifest.ts";
+import { resolveCampaignImage } from "../src/lib/campaign-lab/presentation.ts";
 
 function sourcePilot() {
   return {
@@ -194,6 +195,45 @@ function manifestFrom(source: ReturnType<typeof sourcePilot>) {
     })),
   };
 }
+
+test("source normalization and runtime validation retain each explicit imageFit", () => {
+  for (const imageFit of ["contain", "cover"] as const) {
+    const source = sourcePilot();
+    Object.assign(source.assets[0], { imageFit });
+    const normalized = validatePilotSource(source);
+    assert.ok(normalized.ok);
+    assert.equal(normalized.value.assets[0].imageFit, imageFit);
+    const runtime = validatePilotManifest(manifestFrom(source), { pilotId: "morrow-pilot" });
+    assert.ok(runtime.ok);
+    assert.equal(runtime.value.assets[0].imageFit, imageFit);
+    assert.deepEqual(resolveCampaignImage(runtime.value.assets[0], runtime.value.brand.tokens), {
+      fit: imageFit, frame: imageFit === "contain" ? "natural-arch" : "compact",
+    });
+  }
+});
+
+test("omitted imageFit remains optional with historical hero and supporting-role defaults", () => {
+  const source = validatePilotSource(sourcePilot());
+  const runtime = validatePilotManifest(manifestFrom(sourcePilot()), { pilotId: "morrow-pilot" });
+  assert.ok(source.ok && runtime.ok);
+  for (const asset of [...source.value.assets, ...runtime.value.assets]) {
+    assert.equal(Object.hasOwn(asset, "imageFit"), false);
+  }
+  assert.deepEqual(resolveCampaignImage(runtime.value.assets[0], runtime.value.brand.tokens), { fit: "contain", frame: "natural-arch" });
+  assert.deepEqual(resolveCampaignImage(runtime.value.assets[1], runtime.value.brand.tokens), { fit: "cover", frame: "compact" });
+});
+
+test("source and runtime reject invalid imageFit values with an actionable asset issue", () => {
+  for (const imageFit of ["stretch", "", "CONTAIN", " cover ", null, 0, true, {}, []]) {
+    const source = sourcePilot();
+    Object.assign(source.assets[0], { imageFit });
+    for (const result of [validatePilotSource(source), validatePilotManifest(manifestFrom(source), { pilotId: "morrow-pilot" })]) {
+      assert.equal(result.ok, false, JSON.stringify(imageFit));
+      if (result.ok) continue;
+      assert.ok(result.issues.some(issue => issue.includes(source.assets[0].id) && /imageFit.*"contain".*"cover"/.test(issue)));
+    }
+  }
+});
 
 test("a local pilot source accepts advertorial supporting roles and records the source promise", () => {
   const result = validatePilotSource(sourcePilot(), { pilotId: "morrow-pilot" });

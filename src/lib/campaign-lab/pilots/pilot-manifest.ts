@@ -75,6 +75,7 @@ type PilotSourceAsset = {
   file: string;
   alt: string;
   role: ApprovedAsset["role"];
+  imageFit?: ApprovedAsset["imageFit"];
   reviewed: true;
   reviewedBy: string;
   reviewedOn: string;
@@ -577,6 +578,10 @@ function validateAssets(
     }
     ids.add(asset.id);
 
+    if (asset.imageFit !== undefined && asset.imageFit !== "contain" && asset.imageFit !== "cover") {
+      issues.push(`asset "${asset.id}" imageFit must be "contain" or "cover" when supplied`);
+    }
+
     if (asset.reviewed !== true) {
       issues.push(`asset "${asset.id}" must be reviewed`);
     }
@@ -755,6 +760,7 @@ function validateCommon(
           file: entry.file as string,
           alt: entry.alt as string,
           role: entry.role as ApprovedAsset["role"],
+          ...(entry.imageFit !== undefined ? { imageFit: entry.imageFit as ApprovedAsset["imageFit"] } : {}),
           reviewed: true,
           reviewedBy: entry.reviewedBy as string,
           reviewedOn: entry.reviewedOn as string,

@@ -74,7 +74,17 @@ the header. A preview pilot also shows the note from the manifest and a
   `story-opening`, `product-detail`, `product-in-use`, `product-evidence`), stay
   under `/campaign-lab-pilots/`, include a SHA-256 hash, dimensions, alt text,
   source, rights note, and reviewer metadata. `caption` and `crop` are carried
-  into the manifest when supplied. An approved role is not automatically
+  into the manifest when supplied. Optional `imageFit` accepts exactly
+  `"contain"` or `"cover"` in both `pilot.json` and the runtime `manifest.json`.
+  Source normalization and the normal CLI loader preserve an explicit choice.
+  Other values (including null, wrong types and whitespace-padded strings) fail
+  validation with the asset ID and allowed choices; invalid source input leaves
+  the previous valid manifest untouched. Omit the field to retain historical
+  defaults: product heroes use contain, other roles use cover. An arch product
+  hero with contain uses the existing natural frame; cover uses compact framing.
+  Effective fit/frame already participates in revision identity 6 and export
+  metadata/receipts; a changed effective presentation requires fresh local approval.
+  No schema or historical receipt migration is needed. An approved role is not automatically
   rendered: the advertorial placement contract in
   `ADVERTORIAL_MANIFEST.imagePlacements` decides which roles enter the API
   assignments. Unplaced roles are reported in the editor with the asset ID and
@@ -91,6 +101,31 @@ the header. A preview pilot also shows the note from the manifest and a
 - The loader writes `manifest.json` under the same Git-ignored pilot directory.
   It does not print source file paths, raw source documents, or the source
   promise; the editor shows the promise only for editorial review.
+
+### Synthetic image-fit contract regression
+
+Run `node --experimental-strip-types scripts/campaign-lab-imagefit-check.mjs`
+from the builder worktree for source/runtime validation and real CLI loading.
+It uses the existing approved Morrow WebP bytes with a distinct pilot-local
+asset handle, keeping the approved commercial brief fixed. All generated source,
+normalized records, manifests and diagnostics stay under ignored
+`.local/imagefit-contract/intake/`. Invalid source preserves the last valid
+manifest. `--observe --out <ignored-directory>` records behavior without asserting
+the corrected contract, for a deliberate before/after reproduction.
+
+For the editor-to-export proof, start the development server with
+`CAMPAIGN_LAB_PILOT_ID=imagefit-contract`, `CAMPAIGN_LAB_PILOT_DIR` pointing to
+the absolute `<out>/pilots` directory, `CAMPAIGN_LAB_GENERATION_PROVIDER=local-test`,
+`OPENAI_ENABLED=false` and `CAMPAIGN_LAB_GENERATION_LIVE=false`. Then append
+`--url http://127.0.0.1:<port>` to the checker. Optional
+`CAMPAIGN_LAB_PLAYWRIGHT` and `CAMPAIGN_LAB_CHROMIUM` select existing installed
+browser tools; the checker installs nothing. It exercises the actual server
+loader and generation route, fresh editor approval, six static/inspection ZIPs,
+320/375/768/1440 px captures, offline interaction, receipt/hash agreement and
+effective revision changes. No route mocking or paid provider is used. An
+invalid runtime manifest is ignored by the server and its asset route returns
+404. Browser evidence is local Chromium automation, not physical-device or
+cross-engine acceptance.
 
 ## Editorial manifest example
 
