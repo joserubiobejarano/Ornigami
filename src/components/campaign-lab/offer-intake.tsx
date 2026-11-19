@@ -686,7 +686,7 @@ export function OfferIntake() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
+      <div data-intake-ready={briefHydrated ? "true" : "false"} className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
         <div className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <p className="text-xs font-medium text-[#5f5a4f]">
@@ -742,7 +742,7 @@ export function OfferIntake() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
+    <div data-intake-ready={briefHydrated ? "true" : "false"} className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
       <header className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
         <div className="mx-auto max-w-4xl px-4 py-5 sm:px-6">
           <Link
