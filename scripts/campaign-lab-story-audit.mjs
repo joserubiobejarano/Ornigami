@@ -10,19 +10,20 @@ import {gzipSync} from 'node:zlib';
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
 import {crc32,assertHtmlReceiptAgreement,auditArchiveReferences} from '../src/lib/campaign-lab/export.ts';
+import {STORY_DEFINITIONS} from '../src/lib/campaign-lab/story.ts';
 import {createCatalog,getAsset,BASE_CATALOG} from '../src/lib/campaign-lab/fixtures.ts';
 
 const directory=path.resolve(process.argv[2]??'.local/story-session2');
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 function checkPackagedRuntime(source,config,reduce=false,fail=false){
  class Element extends EventTarget {
-  style={};hidden=true;inert=false;complete=true;naturalWidth=1200;attrs=new Map();
+  style={setProperty(key,value){this[key]=value;},removeProperty(key){delete this[key];}};hidden=true;inert=false;complete=true;naturalWidth=1200;attrs=new Map();
   setAttribute(key,value){this.attrs.set(key,value);}
   removeAttribute(key){this.attrs.delete(key);if(key==='style')this.style={};}
   focus(){this.focused=true;}
  }
  const root=new Element(),track=new Element(),controls=new Element();
- const panels=[new Element(),new Element()],buttons=[new Element(),new Element()],images=[new Element(),new Element()],classes=new Set();
+ const count=config.beats.length,panels=Array.from({length:count},()=>new Element()),buttons=Array.from({length:count},()=>new Element()),images=Array.from({length:count},()=>new Element()),classes=new Set();
  Object.assign(root,{classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)},querySelector:s=>s==='.story-track'?track:controls,querySelectorAll:s=>s==='.story-panel'?panels:s==='img'?images:buttons});
  const media=Object.assign(new EventTarget(),{matches:reduce});
  const document=Object.assign(new EventTarget(),{querySelector:()=>root,getElementById:()=>({textContent:JSON.stringify(config)})});
@@ -31,16 +32,19 @@ function checkPackagedRuntime(source,config,reduce=false,fail=false){
  vm.runInNewContext(source,{document,matchMedia:()=>media},{timeout:1000});
  if(fail){assert.equal(classes.size,0);assert.equal(controls.hidden,true);return;}
  assert.equal(controls.hidden,false);
- for(const index of [1,0,1]){const click=new Event('click');Object.assign(click,{detail:1});buttons[index].dispatchEvent(click);}
- assert.equal(track.style.transform,'translateX(-50%)');
+ for(const index of [count-1,0,count-1,1,count-1]){const click=new Event('click');Object.assign(click,{detail:1});buttons[index].dispatchEvent(click);}
+ assert.equal(track.style.transform,`translateX(-${(count-1)*(100/count)}%)`);
  assert.equal(track.style.transition,config.mode==='motion'&&!reduce?'transform 250ms cubic-bezier(0.23, 1, 0.32, 1)':'none');
- assert.deepEqual(panels.map(panel=>panel.inert),[true,false]);
+ assert.deepEqual(panels.map(panel=>panel.inert),panels.map((_,index)=>index!==count-1));
  images[1].dispatchEvent(new Event('error'));assert.equal(classes.size,0);assert.ok(panels.every(panel=>!panel.inert));
 }
 const results=[];
+const definitions=process.argv.includes('--definitions')?STORY_DEFINITIONS:[null];
+for(const definition of definitions){
+const definitionDirectory=definition?path.join(directory,definition.id):directory;
 let referenceContent;
 for(const mode of ['static','instant','motion']){
-  const bytes=fs.readFileSync(path.join(directory,mode+'.zip'));
+  const bytes=fs.readFileSync(path.join(definitionDirectory,mode+'.zip'));
   const files=new Map(); let offset=0;
   while(bytes.readUInt32LE(offset)===0x04034b50){
     assert.equal(bytes.readUInt16LE(offset+8),0,'Stored ZIP expected');
@@ -56,10 +60,10 @@ for(const mode of ['static','instant','motion']){
   assertHtmlReceiptAgreement(html,receipt);
   if(mode!=='static')for(const [reduce,fail] of [[false,false],[true,false],[false,true]])checkPackagedRuntime(files.get('story.js').toString(),receipt.preview.story,reduce,fail);
   auditArchiveReferences(html,css,[...files.keys()]);
-  assert.equal(receipt.assets.length,2);
+  assert.equal(receipt.assets.length,definition?.beats.length??2);
   for(const file of receipt.files){assert.equal(hash(files.get(file.path)),file.sha256);assert.equal(files.get(file.path).length,file.bytes);}
   for(const asset of receipt.assets){assert.equal(hash(files.get(asset.file)),asset.contentHash);assert.equal(asset.contentHash,asset.exportedSha256);assert.equal(hash(fs.readFileSync(path.join('public',asset.src))),asset.contentHash);assert.ok(asset.rights&&asset.source);}
-  assert.equal(new Set(receipt.assets.map(asset=>asset.file)).size,2);
+  assert.equal(new Set(receipt.assets.map(asset=>asset.file)).size,definition?.beats.length??2);
   assert.ok(!/story-enhanced|aria-hidden="true"|\binert\b|data-approved-asset-id|translateX/.test(html));
   assert.ok(!/\son\w+=|javascript:|<iframe|<svg\b/.test(html));
   const rawArticle=html.match(/<article[\s\S]*?<\/article>/)[0];
@@ -68,14 +72,15 @@ for(const mode of ['static','instant','motion']){
   const article=rawArticle.replace(/<div class="story-controls"[^>]*>/,tag=>tag.replace(' hidden=""','').replace('>',' hidden="">'));
   if(referenceContent)assert.equal(article,referenceContent,'Canonical narrative/content/assets must match across modes');
   referenceContent=article;
-  const output=path.join(directory,mode);fs.mkdirSync(output,{recursive:true});
+  const output=path.join(definitionDirectory,mode);fs.mkdirSync(output,{recursive:true});
   for(const [name,data] of files){const target=path.join(output,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,data);}
-  const fallback=path.join(directory,mode+'-no-runtime');fs.mkdirSync(fallback,{recursive:true});
+  const fallback=path.join(definitionDirectory,mode+'-no-runtime');fs.mkdirSync(fallback,{recursive:true});
   for(const [name,data] of files){if(name==='story.js')continue;const target=path.join(fallback,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,data);}
-  results.push({mode,revision:receipt.approval.revision,archiveSha256:hash(bytes),archiveBytes:bytes.length,gzipBytes:gzipSync(bytes).length,runtimeBytes:files.get('story.js')?.length??0,packagedRuntimeOfflineVM:mode==='static'?'No executable runtime': 'Normal/reduced/init failure/image failure/reversed selection pass; event-double logic, not a browser test',assets:receipt.assets.map(({id,file,exportedSha256,alt})=>({id,file,exportedSha256,alt})),references:receipt.references});
+  results.push({definition:definition?.id??null,mode,revision:receipt.approval.revision,archiveSha256:hash(bytes),archiveBytes:bytes.length,gzipBytes:gzipSync(bytes).length,runtimeBytes:files.get('story.js')?.length??0,packagedRuntimeOfflineVM:mode==='static'?'No executable runtime': 'Normal/reduced/init failure/image failure/reversed selection pass; event-double logic, not a browser test',assets:receipt.assets.map(({id,file,exportedSha256,alt})=>({id,file,exportedSha256,alt})),references:receipt.references});
+}
 }
 let collision;
-if(process.argv[3]){
+if(process.argv[3] && process.argv[3]!=='--definitions'){
  const baseline=await import(pathToFileURL(path.join(path.resolve(process.argv[3]),'src/lib/campaign-lab/fixtures.ts')).href);
  const base=baseline.getAsset('morrow-ceramic-dripper-front');
  const pilot={brand:BASE_CATALOG.brands[base.brandId],fixture:BASE_CATALOG.fixtures['morrow-advertorial-full'],assets:[{...base,src:'/campaign-lab-pilots/conflict/hero.webp',contentHash:'a'.repeat(64),imageFit:'cover'}],pilot:{id:'momisa',label:'Synthetic conflict',status:'preview',note:'Test'}};
@@ -84,7 +89,7 @@ if(process.argv[3]){
  assert.throws(()=>getAsset(base.id,createCatalog(pilot)),/Ambiguous/);
  collision={baseline:execFileSync('git',['-C',process.argv[3],'rev-parse','HEAD'],{encoding:'utf8'}).trim(),declared:pilot.assets[0],previouslyResolved:old,current:'Rejected: Ambiguous approved asset ID'};
 }
-const report={commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),results,collision};
+const report={sourceDirty:execFileSync("git",["status","--porcelain"],{encoding:"utf8"}).trim(),commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),results,collision};
 fs.writeFileSync(path.join(directory,'archive-audit.json'),JSON.stringify(report,null,2)+'\n');
-fs.writeFileSync(path.join(directory,'index.html'),`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Morrow story comparison</title><style>body{font:18px/1.6 system-ui;background:#f2ebde;color:#1d2a3c;max-width:900px;margin:40px auto;padding:24px}a{color:#234a6b}td,th{padding:12px;text-align:left}img{max-width:100%}</style><h1>Morrow: prototype → revised ribs</h1><p>Same approved synthetic narrative, assets and offer. Interaction isolates selection; motion adds a 250 ms directional transition. No performance claim or conversion result.</p><table><tr><th>Variant</th><th>Standalone export</th><th>Archive</th></tr>${results.map(result=>`<tr><td><a href="./${result.mode}/index.html">${result.mode}</a></td><td><a href="./${result.mode}.zip">ZIP</a> · <a href="./${result.mode}/receipt.json">receipt</a></td><td>${result.archiveBytes} bytes</td></tr>`).join('')}</table><p><a href="./archive-audit.json">Asset/hash audit</a> · <a href="./browser-evidence.json">Playback and responsive evidence</a> · <a href="./REPORT.md">Critical review and limitations</a></p><p>Static is the default recommendation. Interaction compresses the reading sequence but hides the second beat until selected. Motion explains sequence direction; no measured comprehension advantage over instant interaction.</p><img src="./motion-375-selected.jpg" alt="Motion variant with revised ribs selected at 375 pixels"></html>`);
+fs.writeFileSync(path.join(directory,'index.html'),`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Registered story comparison</title><style>body{font:18px/1.6 system-ui;background:#f2ebde;color:#1d2a3c;max-width:900px;margin:40px auto;padding:24px}a{color:#234a6b}td,th{padding:12px;text-align:left}img{max-width:100%}</style><h1>Registered stories: static, instant, motion</h1><p>Same approved synthetic narrative, assets and offer. Interaction isolates selection; motion adds a 250 ms directional transition. No performance claim or conversion result.</p><table><tr><th>Variant</th><th>Standalone export</th><th>Archive</th></tr>${results.map(result=>`<tr><td>${result.definition??"Morrow"} <a href="./${result.definition?result.definition+"/":""}${result.mode}/index.html">${result.mode}</a></td><td>${result.definition??"Morrow"} <a href="./${result.definition?result.definition+"/":""}${result.mode}.zip">ZIP</a> · <a href="./${result.definition?result.definition+"/":""}${result.mode}/receipt.json">receipt</a></td><td>${result.archiveBytes} bytes</td></tr>`).join('')}</table><p><a href="./archive-audit.json">Asset/hash audit</a> · <a href="./browser-evidence.json">Playback and responsive evidence</a> · <a href="./REPORT.md">Critical review and limitations</a></p><p>Static is the default recommendation. Interaction compresses the reading sequence but hides the second beat until selected. Motion explains sequence direction; no measured comprehension advantage over instant interaction.</p></html>`);
 console.log(JSON.stringify({exports:results.map(({mode,revision,archiveBytes,gzipBytes})=>({mode,revision,archiveBytes,gzipBytes})),collision:collision?.current},null,2));

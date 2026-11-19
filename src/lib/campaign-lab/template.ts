@@ -1,3 +1,4 @@
+import { assetLookupIssue } from "./fixtures.ts";
 import { motionPresentation } from "./motion.ts";
 import type { MotionPresentation } from "./motion.ts";
 import {
@@ -235,6 +236,8 @@ export function validateCampaignForm(
       message: "Choose an approved product image.",
     });
   } else {
+    const lookupIssue = assetLookupIssue(values.assetId, catalog);
+    if (lookupIssue) { issues.push(lookupIssue); return issues; }
     const asset = getAsset(values.assetId, catalog);
     if (!asset) {
       issues.push({

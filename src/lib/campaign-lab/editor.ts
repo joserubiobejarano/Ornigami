@@ -3,7 +3,7 @@ import type {
   AdvertorialPreviewData,
   ConfiguredPreviewData,
 } from "./advertorial.ts";
-import { getAsset, openingFocusForFormat } from "./fixtures.ts";
+import { assetLookupIssue, getAsset, openingFocusForFormat } from "./fixtures.ts";
 import type {
   CampaignCatalog,
   CampaignFixture,
@@ -113,6 +113,8 @@ export function evaluateOfferAlternative(
   catalog: CampaignCatalog,
   preferredOpeningFocus?: string,
 ): FormatPreviewAlternative {
+  const lookupIssue = assetLookupIssue(values.assetId, catalog);
+  if (lookupIssue) return { ok: false, values, preview: null, issues: [lookupIssue] };
   const offerValues = createOfferAlternativeValues(
     fixture,
     values,
@@ -200,8 +202,10 @@ export function summarizePreviewImages(
   preview: ConfiguredPreviewData | null,
   gate: PreviewImageGate,
 ): PreviewImageSummary {
-  const requiredAssetIds = requiredPreviewImageIds(preview);
-  const revision = preview?.revision ?? null;
+  return summarizeRequiredPreviewImages(preview?.revision ?? null, requiredPreviewImageIds(preview), gate);
+}
+
+export function summarizeRequiredPreviewImages(revision: string | null, requiredAssetIds: string[], gate: PreviewImageGate): PreviewImageSummary {
   const statuses = Object.fromEntries(
     requiredAssetIds.map((assetId) => [
       assetId,
@@ -221,7 +225,8 @@ export function summarizePreviewImages(
     failedAssetIds,
     pendingAssetIds,
     ready:
-      Boolean(preview) &&
+      Boolean(revision) &&
+      requiredAssetIds.length > 0 &&
       failedAssetIds.length === 0 &&
       pendingAssetIds.length === 0,
   };

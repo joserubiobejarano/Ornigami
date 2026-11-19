@@ -1,3 +1,4 @@
+import { assetLookupIssue } from "./fixtures.ts";
 import {
   BASE_CATALOG,
   createCampaignBrief,
@@ -713,6 +714,8 @@ export function validateAdvertorialBrief(
     }
     assetIds.add(assignment.assetId);
 
+    const lookupIssue = assetLookupIssue(assignment.assetId, catalog);
+    if (lookupIssue) { issues.push(sectionIssue("asset", lookupIssue.message)); continue; }
     const asset = getAsset(assignment.assetId, catalog);
     if (!asset) {
       issues.push(
@@ -1070,6 +1073,8 @@ export function validateAdvertorialDraft(
       );
     }
 
+    const lookupIssue = assetLookupIssue(assignment.assetId, catalog);
+    if (lookupIssue) { issues.push(sectionIssue("asset", lookupIssue.message)); continue; }
     const asset = getAsset(assignment.assetId, catalog);
     if (!asset) {
       issues.push(
@@ -1264,6 +1269,8 @@ export function resolveAdvertorialAssets(
   const issues: AdvertorialSectionIssue[] = [];
   const assets: AdvertorialResolvedAsset[] = [];
   for (const assignment of draft.assetAssignments) {
+    const lookupIssue = assetLookupIssue(assignment.assetId, catalog);
+    if (lookupIssue) { issues.push(sectionIssue("asset", lookupIssue.message)); continue; }
     const asset = getAsset(assignment.assetId, catalog);
     if (!asset) {
       issues.push(

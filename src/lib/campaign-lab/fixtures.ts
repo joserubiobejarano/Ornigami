@@ -528,12 +528,27 @@ export function getBrand(
   return catalog.brands[brandId] ?? BRANDS["harbor-field"];
 }
 
+/** Known input conflict, distinct from programming errors. Keep all records. */
+export class ApprovedAssetLookupError extends Error {
+  readonly assetId: string;
+  readonly matches: readonly ApprovedAsset[];
+  constructor(assetId: string, matches: readonly ApprovedAsset[]) {
+    super(`Ambiguous approved asset ID "${assetId}". Conflicting identities: ${matches.map(asset => `${asset.src} [SHA-256 ${asset.contentHash}; fit ${asset.imageFit ?? "role default"}; role ${asset.role}]`).join(" versus ")}. Fix the source IDs and reload; no asset was selected.`);
+    this.assetId = assetId; this.matches = matches;
+  }
+}
+export function assetLookupIssue(assetId: string, catalog: CampaignCatalog = BASE_CATALOG) {
+  const matches = catalog.assets.filter(asset => asset.id === assetId);
+  if (matches.length > 1) return { field: "assetId" as const, message: new ApprovedAssetLookupError(assetId, matches).message };
+  if (!matches.length) return { field: "assetId" as const, message: `Approved asset "${assetId}" is not in the approved asset library. Restore the approved source record and reload.` };
+  return null;
+}
 export function getAsset(
   assetId: string,
   catalog: CampaignCatalog = BASE_CATALOG,
 ): ApprovedAsset | undefined {
   const matches = catalog.assets.filter((asset) => asset.id === assetId);
-  if (matches.length > 1) throw new Error(`Ambiguous approved asset ID "${assetId}". Resolve the pilot/base collision before preview or export.`);
+  if (matches.length > 1) throw new ApprovedAssetLookupError(assetId, matches);
   return matches[0];
 }
 

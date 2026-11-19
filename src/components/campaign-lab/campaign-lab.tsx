@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePreviewReview } from "./use-preview-review";
 import {
   useEffect,
   useId,
@@ -21,7 +22,6 @@ import {
 import type { ConfiguredPreviewData } from "@/lib/campaign-lab/advertorial";
 import {
   createEditorPreviewState,
-  createPreviewImageGate,
   evaluateOfferAlternative,
   imagePanelStatusText,
   isAdvertorialPreviewData,
@@ -34,25 +34,21 @@ import {
   summarizePreviewImages,
 } from "@/lib/campaign-lab/editor";
 import {
-  buildCampaignExportBundle,
-  CampaignExportCancelledError,
   captureCampaignExportSnapshot,
   downloadCampaignExport,
   evaluateCampaignExport,
   isLocalPreviewApproved,
-  sameExportGuard,
 } from "@/lib/campaign-lab/export";
-import type { LocalPreviewApprovalInput } from "@/lib/campaign-lab/export";
 import type { BrowserOfferVerification } from "@/lib/campaign-lab/browser-offer";
 import type { BrowserOfferBriefRequest } from "@/lib/campaign-lab/browser-offer-brief";
 import type {
   PreviewImageEvent,
-  PreviewImageGate,
 } from "@/lib/campaign-lab/editor";
 import {
   createFormValues,
   defaultAccent,
   defaultFormat,
+  assetLookupIssue,
   getAsset,
   getBrand,
   isBrandId,
@@ -122,11 +118,6 @@ type CampaignLabProps = {
   }) => void;
 };
 
-type Approval = {
-  revision: string;
-  approvedAt: string;
-};
-
 type GenerationState = { status: "idle" } | GenerationMetadata;
 
 const ROLE_LABELS: Record<string, string> = {
@@ -184,13 +175,6 @@ export function CampaignLab({
   const requestGate = useRef(new GenerationRequestGate());
   const inFlight = useRef<AbortController | null>(null);
   const previewCanvasRef = useRef<HTMLDivElement>(null);
-  const approvalGuardRef = useRef<LocalPreviewApprovalInput>({
-    revision: null,
-    approvalRevision: null,
-    dirty: false,
-    generating: false,
-    imagesReady: false,
-  });
   const exportAbortRef = useRef<AbortController | null>(null);
   const openingByFormat = useRef<Record<CampaignFormat, string | undefined>>({
     offer: openingFocusForFormat(fixture, "offer"),
@@ -208,14 +192,10 @@ export function CampaignLab({
   const { preview: previewState, recipe: renderedMotion } = acceptedPresentation;
   const [issues, setIssues] = useState<ValidationIssue[]>(initialPreviewState.issues);
   const [dirty, setDirty] = useState(initialPreviewState.dirty);
-  const [approval, setApproval] = useState<Approval | null>(null);
+  const { approval, setApproval, approve, imageGate, setImageGate, exporting, approvalGuardRef, prepareExport } = usePreviewReview(initialPreviewState.preview?.revision ?? null);
   const [pendingMotion, setPendingMotion] = useState<MotionRecipeId>("none");
   const [generation, setGeneration] = useState<GenerationState>({ status: "idle" });
   const [generating, setGenerating] = useState(false);
-  const [imageGate, setImageGate] = useState<PreviewImageGate>(() =>
-    createPreviewImageGate(initialPreviewState.preview?.revision ?? null),
-  );
-  const [exporting, setExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -282,7 +262,7 @@ export function CampaignLab({
     [previewState, renderedPilotNotice, renderedMotion],
   );
   const brand = getBrand(values.brandId, catalog);
-  const selectedAsset = getAsset(values.assetId, catalog);
+  const selectedAsset = assetLookupIssue(values.assetId, catalog) ? undefined : getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
   const offerAlternative = evaluateOfferAlternative(fixture, values, catalog);
@@ -440,7 +420,7 @@ export function CampaignLab({
     if (!isLocalPreviewApproved(approvalGuardRef.current)) {
       exportAbortRef.current?.abort();
     }
-  }, [approval?.revision, dirty, generating, imageSummary.ready, revision]);
+  }, [approval?.revision, approvalGuardRef, dirty, generating, imageSummary.ready, revision]);
 
   useEffect(() => {
     onEditorStateChange?.({
@@ -688,10 +668,7 @@ export function CampaignLab({
 
   function handleApprove() {
     if (!canApprove || !preview) return;
-    setApproval({
-      revision: preview.revision,
-      approvedAt: new Date().toISOString(),
-    });
+    approve();
     setExportError(null);
     setExportStatus(null);
   }
@@ -767,22 +744,11 @@ export function CampaignLab({
     exportAbortRef.current?.abort();
     const controller = new AbortController();
     exportAbortRef.current = controller;
-    setExporting(true);
     setExportError(null);
     setExportStatus(null);
 
     try {
-      const bundle = await buildCampaignExportBundle(snapshot, {
-        signal: controller.signal,
-        isStillApproved: (expected) =>
-          sameExportGuard(expected, approvalGuardRef.current),
-      });
-      if (
-        controller.signal.aborted ||
-        !sameExportGuard(expectedGuard, approvalGuardRef.current)
-      ) {
-        throw new CampaignExportCancelledError();
-      }
+      const bundle = await prepareExport(snapshot, controller.signal);
       downloadCampaignExport(bundle);
       setExportStatus(
         `Exported ${bundle.fileName} · revision ${shortRevision(preview.revision)}.`,
@@ -797,7 +763,6 @@ export function CampaignLab({
       if (exportAbortRef.current === controller) {
         exportAbortRef.current = null;
       }
-      setExporting(false);
     }
   }
 
@@ -1320,8 +1285,8 @@ export function CampaignLab({
                   aria-describedby={describedBy("assetId", assetMetaId)}
                 >
                   <option value="">Select an approved image</option>
-                  {heroAssetOptions.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
+                  {heroAssetOptions.map((asset, index) => (
+                    <option key={`${asset.id}-${index}`} value={asset.id}>
                       {assetLabel(asset, catalog)} — approved
                     </option>
                   ))}

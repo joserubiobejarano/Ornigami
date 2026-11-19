@@ -24,3 +24,4 @@ docs/handoffs/ornigami-coolify-20261016/build-profile-local-evidence/** -text -w
 # Approved story hashes refer to exact LF repository bytes.
 public/campaign-assets/morrow-prototype.svg text eol=lf
 public/campaign-assets/morrow-ribs.svg text eol=lf
+public/campaign-assets/morrow-pour.svg text eol=lf

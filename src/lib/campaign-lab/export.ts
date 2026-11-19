@@ -1,5 +1,5 @@
-import { assertCurrentStory, resolveStory, storyRevision, STORY_CSS } from "./story.ts";
-import type { StoryConfiguration } from "./story.ts";
+import { assertCurrentStory, resolveStory, storyRevision, isApprovedStorySvg, STORY_CSS } from "./story.ts";
+import type { StoryConfiguration, StorySource, StoryDefinition } from "./story.ts";
 import { storyRuntimeSource } from "./story-runtime.ts";
 import type { ApprovedAsset } from "./types.ts";
 import type { BrowserOfferVerification } from "./browser-offer.ts";
@@ -158,6 +158,7 @@ export type CampaignExportAsset = {
 };
 
 export type CampaignExportPreview = {
+  storySource?: StorySource;
   story?: StoryConfiguration;
   assets?: ApprovedAsset[];
   imagePresentation?: CampaignImagePresentation;
@@ -391,6 +392,7 @@ export function captureRenderedArticle(article: HTMLElement, assets?: readonly A
     }
     if (seen.size !== assets.length) throw new Error("Every approved story asset must be displayed.");
     clone.classList.remove("story-enhanced");
+    clone.style.removeProperty("--story-count");
     clone.querySelector(".story-track")?.removeAttribute("style");
     for (const panel of clone.querySelectorAll(".story-panel")) { panel.removeAttribute("aria-hidden"); panel.removeAttribute("inert"); }
     const controls = clone.querySelector(".story-controls");
@@ -446,6 +448,7 @@ export function sanitizeRenderedArticle(
 }
 
 export function buildStandaloneDocument(input: {
+  storyDefinition?: StoryDefinition;
   story?: StoryConfiguration;
   imagePresentation?: CampaignImagePresentation;
   motion?: MotionPresentation;
@@ -461,7 +464,7 @@ export function buildStandaloneDocument(input: {
   actionLabel?: string;
   packshotFile?: string;
 }): string {
-  if (input.story) assertCurrentStory(input.story);
+  if (input.story) assertCurrentStory(input.story, input.storyDefinition);
   const storyMarkup = input.story ? `<meta name="campaign-lab-story" content="${escapeHtml(JSON.stringify(input.story))}">` : "";
   const storyScripts = input.story && input.story.mode !== "static" ? `<script type="application/json" id="ornigami-story-config">${JSON.stringify(input.story).replace(/</g, "\\u003c")}</script><script src="./story.js" defer></script>` : "";
   if (input.motion) assertCurrentMotion(input.motion);
@@ -785,6 +788,7 @@ export function captureCampaignExportSnapshot(
       ...input.preview,
       template: { ...input.preview.template },
       asset: { ...input.preview.asset },
+      ...(input.preview.storySource ? { storySource: JSON.parse(JSON.stringify(input.preview.storySource)) } : {}),
       ...(input.preview.story ? { story: JSON.parse(JSON.stringify(input.preview.story)) } : {}),
       ...(input.preview.assets ? { assets: input.preview.assets.map(asset => ({ ...asset })) } : {}),
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
@@ -796,7 +800,7 @@ export function captureCampaignExportSnapshot(
         ? JSON.parse(JSON.stringify(input.preview.provenance))
         : undefined,
     },
-    guard: input.guard ?? {
+    guard: input.guard ? { ...input.guard } : {
       revision: input.preview.revision,
       approvalRevision: input.approval.revision,
       dirty: false,
@@ -1538,12 +1542,16 @@ export async function buildCampaignExportBundle(
 
   assertCanContinue(snapshot.guard, options);
 
-  if (snapshot.preview.story) assertCurrentStory(snapshot.preview.story);
+  if (snapshot.preview.story) {
+    if (!snapshot.preview.storySource) throw new Error("Capture the resolved story definition/catalog before export; approve a fresh revision.");
+    assertCurrentStory(snapshot.preview.story, snapshot.preview.storySource.definition);
+  }
   const storyAssets = snapshot.preview.assets;
   if (snapshot.preview.story) {
-    const expected = resolveStory();
+    const { catalog, definition } = snapshot.preview.storySource!;
+    const expected = resolveStory(catalog, definition);
     if (["id", "src", "contentHash", "alt", "width", "height"].some(key => snapshot.preview.asset[key as "id"] !== expected.beats[0].asset[key as "id"]) || snapshot.packshot.src !== expected.beats[0].asset.src) throw new Error("Primary story asset handle changed; approve a fresh revision.");
-    if (snapshot.preview.revision !== storyRevision(snapshot.preview.story.mode) || JSON.stringify(storyAssets) !== JSON.stringify(expected.beats.map(beat => beat.asset)) || ["offer", "destinationUrl", "actionLabel", "productName"].some(key => snapshot.preview[key as "offer"] !== expected.brief[key as "offer"])) throw new Error("Story content/assets changed; generate and approve a fresh reviewed revision.");
+    if (snapshot.preview.brandName !== expected.brand.name || snapshot.preview.revision !== storyRevision(snapshot.preview.story.mode, catalog, definition) || JSON.stringify(storyAssets) !== JSON.stringify(expected.beats.map(beat => beat.asset)) || ["offer", "destinationUrl", "actionLabel", "productName"].some(key => snapshot.preview[key as "offer"] !== expected.brief[key as "offer"])) throw new Error("Story content/assets changed; generate and approve a fresh reviewed revision.");
   }
   if (storyAssets && (!snapshot.preview.story || new Set(storyAssets.map(asset => asset.id)).size !== storyAssets.length || JSON.stringify(storyAssets.map(asset => asset.id)) !== JSON.stringify(snapshot.preview.story.beats.map(beat => beat.assetId)))) throw new Error("Invalid or ambiguous story asset set.");
   const extraFiles: Array<{path: string; bytes: Uint8Array}> = [];
@@ -1553,7 +1561,7 @@ export async function buildCampaignExportBundle(
     assertCanContinue(snapshot.guard, options);
     const hash = await sha256Hex(media.bytes);
     if (hash !== asset.contentHash) throw new Error(`Approved asset SHA-256 mismatch: ${asset.id}`);
-    if (media.extension === ".svg" && !["/campaign-assets/morrow-prototype.svg", "/campaign-assets/morrow-ribs.svg"].includes(asset.src)) throw new Error("Only approved repository story SVGs are permitted.");
+    if (media.extension === ".svg" && !isApprovedStorySvg(asset)) throw new Error("Only approved repository story SVGs are permitted.");
     const file = `story-${assetRecords.length}-${hash.slice(0,16)}${media.extension}`;
     extraFiles.push({path: file, bytes: media.bytes});
     assetRecords.push({...asset, file, exportedSha256: hash});
@@ -1589,6 +1597,7 @@ export async function buildCampaignExportBundle(
   assetRecords.forEach((asset, index) => { bodyHtml = bodyHtml.split(`data:ornigami-asset,${index}`).join(`./${asset.file}`); });
   const html = buildStandaloneDocument({
     story: snapshot.preview.story,
+    storyDefinition: snapshot.preview.storySource?.definition,
     imagePresentation: snapshot.preview.imagePresentation,
     motion: snapshot.preview.motion,
     title: `${snapshot.preview.productName} — ${snapshot.preview.brandName}`,

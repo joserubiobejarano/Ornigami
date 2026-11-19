@@ -5,14 +5,16 @@ export function initializeStory(root: HTMLElement, mode: "static" | "instant" | 
   const panels = Array.from(root.querySelectorAll<HTMLElement>(".story-panel"));
   const controls = root.querySelector<HTMLElement>(".story-controls");
   const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>(".story-controls button"));
-  if (!track || !controls || panels.length !== 2 || buttons.length !== panels.length) return () => {};
+  if (!track || !controls || (panels.length < 2 || panels.length > 3) || buttons.length !== panels.length) return () => {};
   let selected = 0;
+  let active = true;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)");
   function select(index: number, keyboard = false) {
+    if (!active) return;
     selected = Math.max(0, Math.min(panels.length - 1, index));
     track!.style.transition = mode === "motion" && !reduce.matches && !keyboard
       ? "transform 250ms cubic-bezier(0.23, 1, 0.32, 1)" : "none";
-    track!.style.transform = `translateX(-${selected * 50}%)`;
+    track!.style.transform = `translateX(-${selected * (100 / panels.length)}%)`;
     panels.forEach((panel, i) => { panel.inert = i !== selected; panel.setAttribute("aria-hidden", String(i !== selected)); });
     buttons.forEach((button, i) => button.setAttribute("aria-pressed", String(i === selected)));
   }
@@ -28,7 +30,9 @@ export function initializeStory(root: HTMLElement, mode: "static" | "instant" | 
   }
   function stopMotion() { track!.style.transition = "none"; }
   function restore() {
+    active = false;
     root.classList.remove("story-enhanced");
+    root.style.removeProperty("--story-count");
     track!.removeAttribute("style");
     panels.forEach(panel => { panel.inert = false; panel.removeAttribute("aria-hidden"); });
     controls!.hidden = true;
@@ -41,6 +45,7 @@ export function initializeStory(root: HTMLElement, mode: "static" | "instant" | 
     reduce.addEventListener("change", stopMotion);
     document.addEventListener("visibilitychange", stopMotion);
     images.forEach(image => image.addEventListener("error", restore));
+    root.style.setProperty("--story-count", String(panels.length));
     root.classList.add("story-enhanced");
     controls.hidden = false;
     select(0, true);
