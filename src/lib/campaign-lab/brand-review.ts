@@ -72,6 +72,43 @@ export function paletteTokens(defaults: BrandTokens, raw?: BrandKitSnapshot, ove
   return tokens;
 }
 
+/** Current palette validation is independent of file-read state and never mutates evidence. */
+export function reviewPalette(
+  draft: BrandKitDraft,
+  choices: Partial<Record<PaletteRole, { candidateId: string; value: string }>>,
+  defaults: BrandTokens,
+  override?: string,
+): { snapshot?: BrandKitSnapshot; error?: string } {
+  if (!Object.values(choices).some(choice => choice?.candidateId)) return {};
+  try {
+    const selections = PALETTE_ROLES.flatMap(role => {
+      const choice = choices[role];
+      if (!choice?.candidateId) return [];
+      const candidate = draft.candidates.find(candidate => candidate.id === choice.candidateId);
+      if (!candidate) throw new Error("Selected evidence is unavailable. Choose a current candidate.");
+      return [{
+        role, value: choice.value, candidateId: candidate.id,
+        originalValue: candidate.observed, sourceId: candidate.sourceId,
+        sourceSha256: candidate.sourceSha256, method: candidate.method, category: candidate.category,
+        review: candidate.observed.toLowerCase() === `${choice.value.toLowerCase()}ff` ? "selected" : "corrected",
+      }];
+    });
+    const snapshot = parseBrandSnapshot({
+      schemaVersion: "ornigami-brand-snapshot/1.0.0", draftSchemaVersion: draft.schemaVersion,
+      extractorVersion: draft.extractorVersion, provenance: "imported-claims-unverified",
+      reviewMethod: "local-operator-palette", selections, ownerConfirmed: false,
+      campaignFactsApproved: false, mediaRightsApproved: false, sourceBytesVerified: false,
+    });
+    paletteTokens(defaults, snapshot, override);
+    return { snapshot };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid palette.";
+    return { error: message.startsWith("[")
+      ? "Use opaque six-digit hex corrections. Translucency cannot be applied."
+      : message };
+  }
+}
+
 /** One selection stream: old reads cannot publish either success or error. */
 export class BrandEvidenceFileReader {
   private sequence = 0;

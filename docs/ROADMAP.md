@@ -1,11 +1,12 @@
 # Roadmap and pending work
 
-19 November brand-import integration: the [bounded offline pipeline](./campaign-lab-brand-import.md)
-now connects protected Node reads, final-URL HTML discovery and deterministic
-BrandKitDraft collection with shared budgets and explicit partial failures.
-This is a library checkpoint; no customer importer or campaign application exists.
-Independent review precedes editable evidence review / BrandKitSnapshot work.
-Live DNS/TLS, hosting egress and native image isolation remain unqualified.
+19 November palette recovery integration: the [combined local workflow](./campaign-lab-brand-recovery.md)
+now recovers from failed palette validation using external accent/direction controls,
+then generates, requires fresh local approval and exports the exact revision.
+Saved-file errors remain authoritative. The merged injected-wire TLS qualification
+and controlled transport-stage tests pass with 309/309 Campaign Lab tests.
+Live URL access, actual DNS/TCP/hosting egress, native image isolation, offline
+playback and independent customer usability remain unqualified. No release authority follows.
 
 19 November Session 2: the local [Morrow story experiment](./campaign-lab-story.md) compares a complete static narrative, instant selection and the same selection with restrained motion. It extends exact-approval export to two distinct reviewed synthetic assets and rejects ambiguous pilot/base asset IDs. Static remains the default recommendation; native-device/other-engine qualification, owner adoption and any comprehension study remain separate. Session 1 is not repeated. No paid calls, publication or deployment are authorized by this checkpoint.
 

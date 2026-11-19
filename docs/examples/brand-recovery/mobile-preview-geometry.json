@@ -1,0 +1,27 @@
+{
+  "client": {
+    "height": 812,
+    "width": 360
+  },
+  "focus": "Shop now (opens in a new tab)",
+  "heading": [
+    {
+      "height": 72.15625,
+      "text": "Fjord Works field notebook",
+      "width": 260,
+      "x": 50,
+      "y": 387.765625
+    }
+  ],
+  "images": [
+    {
+      "alt": "Synthetic Fjord Works field notebook packshot",
+      "loaded": true
+    }
+  ],
+  "inner": {
+    "height": 812,
+    "width": 375
+  },
+  "scrollWidth": 360
+}

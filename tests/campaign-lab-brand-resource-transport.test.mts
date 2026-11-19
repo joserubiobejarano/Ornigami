@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Duplex } from "node:stream";
 import { getEventListeners } from "node:events";
+import { setImmediate as turn } from "node:timers/promises";
 import type { Socket, NetConnectOpts } from "node:net";
 import type { ConnectionOptions, PeerCertificate } from "node:tls";
 import { createPublicResourceReader, ResourceReadError, type ResourceTransport, type Destination, type ResourceClock } from "../src/lib/campaign-lab/brand-import/public-resource-fetch.ts";
@@ -226,20 +227,77 @@ test("deadline includes DNS and late resolution never opens a connection", async
   assert.equal(f.connections.length, 0);
 });
 
-test("deadline covers stalled connector, response headers and body", async () => {
-  for (const reply of [null, "HTTP/1.1 200 OK\r\nX-Stall: yes\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nx\r\n"]) {
-    const f = fixture([reply]);
-    await rejects(f.read("https://brand.example", { ...options, timeoutMs: 20 }), "DEADLINE");
-    assert.equal(f.connections.length, 1);
-    await cleaned(f);
+test("deadline covers entered connector, response headers and body stages", { timeout: 5000 }, async () => {
+  for (const stage of ["connector", "headers", "body"]) {
+    let expire!: () => void;
+    let active = false;
+    let now = 0;
+    const clock: ResourceClock = {
+      now: () => now,
+      schedule: (callback, _ms) => {
+        active = true;
+        expire = callback;
+        return () => { active = false; };
+      },
+    };
+    let entered!: () => void;
+    const entry = new Promise<void>(resolve => { entered = resolve; });
+    const sockets: WireSocket[] = [];
+    const signals: AbortSignal[] = [];
+    const read = createPublicResourceReader({
+      resolve: async (_host, signal) => { signals.push(signal); return [public4]; },
+      connectTls: () => {
+        const socket = new WireSocket(stage === "body"
+          ? "HTTP/1.1 200 OK\r\nX-Stall: yes\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nx\r\n"
+          : null);
+        sockets.push(socket);
+        if (stage === "connector") {
+          socket.connecting = true;
+          // A real connecting socket queues writes until connection establishment.
+          // Duplex alone would write immediately, so hold them at this stage.
+          socket._write = () => {};
+          entered();
+        } else {
+          if (stage === "body") socket.once("data", () => entered());
+          const write = socket._write.bind(socket);
+          socket._write = (...args) => {
+            write(...args);
+            if (stage === "headers" && socket.sent) entered();
+          };
+        }
+        return socket as unknown as Socket;
+      },
+      connectTcp: () => { throw new Error("unexpected TCP"); },
+    }, clock);
+    const work = rejects(read("https://brand.example", { ...options, timeoutMs: 20 }), "DEADLINE");
+    await entry;
+    await turn(); // Let ClientRequest/parser enter the stage before delivering the deadline.
+    assert.equal(sockets.length, 1);
+    assert.equal(sockets[0].destroyed, false, stage);
+    assert.equal(sockets[0].sent, stage !== "connector");
+    assert.equal(active, true);
+    now = 20;
+    expire();
+    await work;
+    await turn();
+    assert.ok(sockets[0].destroyed);
+    assert.equal(active, false);
+    assert.equal(getEventListeners(signals[0], "abort").length, 0);
+    sockets[0].emit("connect");
+    sockets[0].push(null);
+    await turn();
+    assert.equal(sockets.length, 1);
+    assert.equal(sockets[0].sent, stage !== "connector");
   }
-  const sockets: WireSocket[] = [];
-  const read = createPublicResourceReader({ resolve: async () => [public4], connectTls: () => {
-    const socket = new WireSocket(null); socket.connecting = true; sockets.push(socket);
-    return socket as unknown as Socket;
-  }, connectTcp: () => { throw new Error("unexpected"); } });
-  await rejects(read("https://brand.example", { ...options, timeoutMs: 20 }), "DEADLINE");
-  assert.ok(sockets[0].destroyed);
+});
+
+test("real-time deadline smoke cleans any work entered before expiry", async () => {
+  const f = fixture([null]);
+  await rejects(f.read("https://brand.example", { ...options, timeoutMs: 20 }), "DEADLINE");
+  const connectionsAtExpiry = f.connections.length;
+  assert.ok(f.signals[0].aborted);
+  await cleaned(f);
+  assert.equal(f.connections.length, connectionsAtExpiry);
 });
 
 test("redirect time does not reset deadline; late response produces no next hop", async () => {

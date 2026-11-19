@@ -1,0 +1,12 @@
+{
+  "directionFail": {
+    "alerts": [
+      "Offer text on its accent tint needs 4.5:1 contrast. Correct the palette."
+    ],
+    "disabled": true
+  },
+  "directionPass": {
+    "alerts": [],
+    "disabled": false
+  }
+}

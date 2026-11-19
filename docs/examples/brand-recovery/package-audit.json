@@ -1,0 +1,86 @@
+{
+  "packages": [
+    {
+      "path": "C:\\Users\\joser\\.local\\ornigami-brand-review-apply\\.local\\rose-export",
+      "revision": "8b3a10b42f5a9785",
+      "files": 13,
+      "commercialFactsActionRightsAndAttestations": true,
+      "authorityFlagsRemainFalse": true,
+      "fontNoticesAndReferences": true,
+      "static": true
+    },
+    {
+      "path": "C:\\Users\\joser\\.local\\ornigami-brand-review-apply\\.local\\rose-corrected-export",
+      "revision": "ead895d89e720a2b",
+      "files": 4,
+      "commercialFactsActionRightsAndAttestations": true,
+      "authorityFlagsRemainFalse": true,
+      "fontNoticesAndReferences": true,
+      "static": true
+    },
+    {
+      "path": "C:\\Users\\joser\\.local\\ornigami-brand-review-apply\\.local\\fjord-export",
+      "revision": "0cc39d127f53fbca",
+      "files": 13,
+      "commercialFactsActionRightsAndAttestations": true,
+      "authorityFlagsRemainFalse": true,
+      "fontNoticesAndReferences": true,
+      "static": true
+    },
+    {
+      "path": "C:\\Users\\joser\\.local\\ornigami-brand-review-apply\\.local\\fjord-timeout-export",
+      "revision": "e209038f6d26c17b",
+      "files": 13,
+      "commercialFactsActionRightsAndAttestations": true,
+      "authorityFlagsRemainFalse": true,
+      "fontNoticesAndReferences": true,
+      "static": true
+    },
+    {
+      "path": ".local/recovery-export",
+      "revision": "d36c263b05efa470",
+      "files": 13,
+      "commercialFactsActionRightsAndAttestations": true,
+      "authorityFlagsRemainFalse": true,
+      "fontNoticesAndReferences": true,
+      "static": true
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "before-stale-apply.jpg",
+      "width": 1265,
+      "height": 712
+    },
+    {
+      "name": "desktop-approved.jpg",
+      "width": 1425,
+      "height": 891
+    },
+    {
+      "name": "mobile-apply.jpg",
+      "width": 360,
+      "height": 780
+    },
+    {
+      "name": "mobile-approved-preview.jpg",
+      "width": 360,
+      "height": 780
+    },
+    {
+      "name": "mobile-correction.jpg",
+      "width": 360,
+      "height": 780
+    },
+    {
+      "name": "mobile-evidence-default.jpg",
+      "width": 360,
+      "height": 780
+    },
+    {
+      "name": "mobile-keyboard-apply.jpg",
+      "width": 360,
+      "height": 780
+    }
+  ]
+}

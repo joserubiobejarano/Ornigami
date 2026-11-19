@@ -1,0 +1,41 @@
+{
+  "mobileGeom": {
+    "active": "<input id=\"_r_2_-accent\" class=\"h-11 w-16 cursor-pointer rounded-lg border border-[#d8cebd] bg-[#fffdf8] p-1\" aria-invalid=\"false\" aria-describedby=\"_r_2_-accent-hint\" type=\"color\" value=\"#123456\" name=\"accent\">",
+    "article": [
+      {
+        "height": 789.359375,
+        "width": 300,
+        "x": 30,
+        "y": 1660.640625
+      }
+    ],
+    "client": {
+      "height": 812,
+      "width": 360
+    },
+    "inner": {
+      "height": 812,
+      "width": 375
+    },
+    "scrollWidth": 360
+  },
+  "desktopGeom": {
+    "article": [
+      {
+        "height": 736.234375,
+        "width": 909,
+        "x": 466,
+        "y": -81.09375
+      }
+    ],
+    "client": {
+      "height": 900,
+      "width": 1425
+    },
+    "inner": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollWidth": 1425
+  }
+}

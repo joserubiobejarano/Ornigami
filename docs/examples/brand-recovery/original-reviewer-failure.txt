@@ -1,0 +1,18 @@
+âœ– failing tests:
+
+test at tests\campaign-lab-brand-resource-transport.test.mts:229:1
+âœ– deadline covers stalled connector, response headers and body (27.0495ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///C:/Users/joser/.local/ornigami-brand-review-apply/tests/campaign-lab-brand-resource-transport.test.mts:233:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

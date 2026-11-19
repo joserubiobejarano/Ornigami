@@ -1,0 +1,137 @@
+{
+  "runtime": {
+    "node": "v24.11.1",
+    "openssl": "3.5.4",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "commands": [
+    {
+      "command": "node --experimental-strip-types --test tests/campaign-lab-brand-recovery.test.mts tests/campaign-lab-brand-review.test.mts tests/campaign-lab-brand-resource-transport.test.mts tests/campaign-lab-brand-tls.test.mts",
+      "exit": 0,
+      "tests": 44,
+      "log": "focused-final.log",
+      "sha256": "6a410b2b0b4c50ed6dcdf51c6b1acbd20997c8f12ac9ce957cec96f0251a768e",
+      "bytes": 6750
+    },
+    {
+      "command": "$suites=@(Get-ChildItem tests/campaign-lab*.test.mts,tests/campaign-lab*.test.mjs | Sort-Object Name | ForEach-Object {$_.FullName}); node --experimental-strip-types --test @suites",
+      "exit": 0,
+      "files": 30,
+      "tests": 309,
+      "pass": 309,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log": "campaign-lab-final.log",
+      "sha256": "5212c2f96d6c5c84f5f6a8cd2fb427e55c0eea654178672f1d128a1945b17869",
+      "bytes": 42425
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+      "exit": 0,
+      "log": "typescript-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src/components/campaign-lab/brand-evidence-review.tsx src/lib/campaign-lab/brand-review.ts tests/campaign-lab-brand-recovery.test.mts tests/campaign-lab-brand-resource-transport.test.mts tests/campaign-lab-brand-tls.test.mts tests/support/brand-tls.mts scripts/generate-brand-tls-fixtures.mjs",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 1,
+      "log": "lint-final.log",
+      "sha256": "1412dd2294554e4c0d8377da06d11f14b40228c5be7c233de4a5e007817caa37",
+      "bytes": 230
+    },
+    {
+      "command": "npm run build",
+      "exit": 0,
+      "log": "build-final.log",
+      "sha256": "7ded1633b08df75c99096c3eee58f0c43842b326445c3ce78b39f5629b901245",
+      "bytes": 4355
+    },
+    {
+      "command": "npm run test:build",
+      "exit": 0,
+      "log": "production-final.log",
+      "sha256": "c5312b730a1e7bb8fe508a098c1659fc7982a234f4582eb004d1ca202b42d041",
+      "bytes": 405
+    },
+    {
+      "command": "node --experimental-strip-types scripts/verify-brand-review-exports.mts C:/Users/joser/.local/ornigami-brand-review-apply/.local/rose-export C:/Users/joser/.local/ornigami-brand-review-apply/.local/rose-corrected-export C:/Users/joser/.local/ornigami-brand-review-apply/.local/fjord-export",
+      "exit": 0,
+      "log": "existing-exports-final.json",
+      "sha256": "f54546968e1ac631ae3a078bef5105f26c436af80b20a895de65c20c8ee706ec",
+      "bytes": 2930
+    },
+    {
+      "command": "node --experimental-strip-types scripts/verify-brand-review-exports.mts C:/Users/joser/.local/ornigami-brand-review-apply/.local/fjord-timeout-export .local/recovery-export --expect-accent=#123456",
+      "exit": 0,
+      "log": "override-exports-final.json",
+      "sha256": "b412f1a6aaedd85dc7a219214cac078984098c1cc078e37827024bff4209cb78",
+      "bytes": 1988
+    },
+    {
+      "command": "node .local/audit-recovery.mjs",
+      "exit": 0,
+      "log": "package-audit.log",
+      "sha256": "a2c801da936ec4a383593ae18f626e21e249c6cb554f6ee0af9a8d679bf87060",
+      "bytes": 2366
+    }
+  ],
+  "retained": [
+    {
+      "log": "reviewer-campaign-tests.log",
+      "source": "C:/Users/joser/.local/ornigami-brand-review-apply/.local/reviewer-campaign-tests.log",
+      "sourceCommit": "e8bd78ad4b354975eacf1d29a2d860e9a2d57307",
+      "result": "287/288; original concurrent deadline connection assertion 0 !== 1",
+      "sha256": "98d6762d852be0428845f237d166f9df9868043d1e1081cb3f99bb497abd41f8",
+      "bytes": 41259
+    },
+    {
+      "log": "reviewer-transport-isolated.log",
+      "source": "C:/Users/joser/.local/ornigami-brand-review-apply/.local/reviewer-transport-isolated.log",
+      "sourceCommit": "e8bd78ad4b354975eacf1d29a2d860e9a2d57307",
+      "result": "Original isolated pass; does not erase concurrent failure",
+      "sha256": "b0b11f239ced6ea6a2a4f3c6ece418f9c337617b9790fa3dd82dbe70f3139bb9",
+      "bytes": 758
+    },
+    {
+      "log": "focused-initial.log",
+      "result": "Initial controlled fixture failed sent=false assertion; intermediate clock schedule signature also corrected before final checks",
+      "sha256": "34d84893dcb186fc93729cda6ce0857e64171e77f041071a0cdae7a7e1f9bd6d",
+      "bytes": 6674
+    },
+    {
+      "log": "transport-correction.log",
+      "result": "Connecting Duplex still wrote immediately; test fixture corrected to queue connecting writes",
+      "sha256": "2c51d1b144445faf5e535d179c610aad0c53ac992066f8fabf7c15d3c9a4345e",
+      "bytes": 3164
+    },
+    {
+      "log": "transport-final.log",
+      "result": "19/19 passed after controlled connecting writes correction",
+      "sha256": "5db9712f92d0f9177af274063eac4cc981e20dd48922d86c523ed3cba4154aae",
+      "bytes": 2436
+    },
+    {
+      "log": "dev.log",
+      "result": "Turbopack startup failed resolving node_modules junction",
+      "sha256": "c1a3a45c5816a262c89db57e77dff442724fe000fa121840fcd394ffaaa378b0",
+      "bytes": 2350
+    },
+    {
+      "log": "dev-webpack.log",
+      "result": "Webpack initial startup exposed missing synthetic GOOGLE_CLIENT_ID",
+      "sha256": "425baca9df1050367349a06c4cb429d886ef5fe0dbb74d406be1715cb5aaea5b",
+      "bytes": 3493
+    }
+  ],
+  "discovery": "C:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-acceptance-core.test.mjs\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-advertorial.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-evidence.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-import.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-outcomes.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-recovery.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-resource-transport.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-review.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-brand-tls.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-browser-export.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-browser-generation.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-browser-offer.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-design-harness.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-direction.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-editor.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-export.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-generation.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-motion.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-offer-emphasis.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-offer-intake-brief.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-openai-transport.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-pilot-manifest.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-pilot.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-product-label-render.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-request-body.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-required-facts.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-revision-identity.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-story.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab-verification-provenance.test.mts\r\nC:\\Users\\joser\\.local\\ornigami-brand-recovery\\tests\\campaign-lab.test.mts\r\n",
+  "noBroadRerun": true,
+  "toolRejection": {
+    "action": "combined shell transport test edit and focused test command",
+    "reason": "blocked by policy",
+    "resolution": "file-only apply_patch then separate test command; no rejected production/browser surface retried"
+  }
+}

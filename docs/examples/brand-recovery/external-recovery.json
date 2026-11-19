@@ -1,0 +1,12 @@
+{
+  "failedCurrent": {
+    "alert": [
+      "Offer text on its accent tint needs 4.5:1 contrast. Correct the palette."
+    ],
+    "disabled": true
+  },
+  "correctedCurrent": {
+    "alert": [],
+    "disabled": false
+  }
+}

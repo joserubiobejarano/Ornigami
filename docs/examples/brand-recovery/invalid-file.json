@@ -1,0 +1,6 @@
+{
+  "alerts": [
+    "Invalid BrandKitDraft. Check version, bounds, references and false approval flags."
+  ],
+  "disabled": true
+}

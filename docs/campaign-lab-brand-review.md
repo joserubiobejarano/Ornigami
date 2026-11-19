@@ -1,5 +1,9 @@
 # Saved brand evidence review and application
 
+Follow-up: [combined recovery and TLS verification](./campaign-lab-brand-recovery.md)
+demonstrates and fixes external-control recovery, simplifies evidence defaults,
+and verifies a fresh local approval/export with both histories preserved.
+
 19 November 2026. Base `fb293a03135dd90e2cd07ff8d3fa9d2fdafdd775`; branch `codex/brand-review-apply-20261119`; worktree `C:/Users/joser/.local/ornigami-brand-review-apply`. The requested integration worktree already existed clean at the base. It, all other worktrees and the dirty legacy checkout were preserved.
 
 The normal `/campaign-lab/offer` intake and ordinary editor accept optional **Brand evidence JSON**. An operator selects/corrects supported roles, applies a compact snapshot, generates with the existing resolver, inspects, locally approves and downloads the exact approved appearance. No parallel renderer or export path was added.
