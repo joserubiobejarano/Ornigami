@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "outcome": "unsupported",
+  "sources": [
+    {
+      "kind": "raster",
+      "requestedUrl": "https://synthetic.example/start",
+      "finalUrl": "https://synthetic.example/brand/home",
+      "status": 200,
+      "contentType": "image/svg+xml",
+      "id": "7c1698f65b495cd3dccd283ce508b4d25be4f9271d7f62e1be7b7ba156d70521",
+      "sha256": "af50f51cb1177c0888c46779b40cfebbb8c9290e06bceaecc57e023167d3be65",
+      "byteLength": 29,
+      "outcome": "unsupported",
+      "issues": [
+        "unsupported-raster-media-type"
+      ]
+    }
+  ],
+  "candidates": [],
+  "acceptedValues": [],
+  "approvals": {
+    "brand": false,
+    "campaignFacts": false,
+    "mediaRights": false
+  },
+  "gaps": [
+    "All evidence is unreviewed; identity, campaign facts, destinations and media rights require independent approval.",
+    "No computed styles: CSS variables, cascade, inheritance, selectors, themes and media queries are unresolved.",
+    "Typography, geometry, contrast in context and font redistribution permissions are not extracted.",
+    "Lexical HTML/CSS subset only; no rendering, script execution, network requests or live-site qualification.",
+    "No supported website UI color evidence; no brand style invented.",
+    "No source body text; empty/JS-only content cannot establish identity.",
+    "Partial/unsupported evidence: inspect each source's issues and outcome."
+  ],
+  "limits": {
+    "resources": 12,
+    "totalBytes": 4194304,
+    "htmlBytes": 524288,
+    "cssBytes": 262144,
+    "rasterBytes": 524288,
+    "rasterCount": 4,
+    "rasterPixels": 4000000,
+    "sampleSide": 64,
+    "candidates": 256,
+    "evidenceChars": 240,
+    "textChars": 4000,
+    "urlChars": 2048
+  }
+}

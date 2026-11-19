@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "html",
+    "requestedUrl": "https://synthetic.example/start",
+    "finalUrl": "https://synthetic.example/brand/home",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "bodyFile": "source-0.html"
+  },
+  {
+    "kind": "css",
+    "requestedUrl": "https://synthetic.example/start",
+    "finalUrl": "https://cdn.synthetic.example/theme.css",
+    "status": 200,
+    "contentType": "text/css",
+    "bodyFile": "source-1.css"
+  },
+  {
+    "kind": "raster",
+    "requestedUrl": "https://synthetic.example/start",
+    "finalUrl": "https://images.synthetic.example/photo.png",
+    "status": 200,
+    "contentType": "image/png",
+    "bodyFile": "source-2.bin"
+  }
+]

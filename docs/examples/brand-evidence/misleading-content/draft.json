@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "outcome": "draft",
+  "sources": [
+    {
+      "kind": "html",
+      "requestedUrl": "https://synthetic.example/start",
+      "finalUrl": "https://synthetic.example/brand/home",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "id": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "byteLength": 488,
+      "outcome": "processed",
+      "issues": []
+    }
+  ],
+  "candidates": [
+    {
+      "id": "8b53e3f2332ab89fb636b5f1d98b0c27dcecd5197a91202683361165dc76c7d7",
+      "sourceId": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sourceSha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "category": "title",
+      "observed": "Marketplace UI",
+      "method": "html-title",
+      "evidence": {
+        "quote": "<title>Marketplace UI</title>",
+        "utf16Offset": 0
+      },
+      "details": {},
+      "roleHint": null,
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "e97d68e5542d8b1a9c1c11dc8f219733e681c7824ab50117e562d30876725afc",
+      "sourceId": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sourceSha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "category": "reference",
+      "observed": "https://cdn.synthetic.example/unverified.png",
+      "method": "html-reference",
+      "evidence": {
+        "quote": "<img alt=\"seller logo maybe\" src=\"https://cdn.synthetic.example/unverified.png\">",
+        "utf16Offset": 362
+      },
+      "details": {
+        "kind": "image",
+        "fetched": false
+      },
+      "roleHint": {
+        "value": "possible-logo",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Reference only; asset purpose, owner identity and media rights unverified."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "07fbfe9aaae2fc94d0fea96827f80b36986c00d6089c6edd97d087c88b2b688d",
+      "sourceId": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sourceSha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "category": "ui-color",
+      "observed": "#222222ff",
+      "method": "css-declaration",
+      "evidence": {
+        "quote": "#222",
+        "utf16Offset": 461
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "calibrated": false,
+        "reason": "Literal declaration/metadata; role and applicability unresolved."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "b27a1f4370e41b2f4cb5068f343020bdf9489fd6ffa0c8191aedb84c7f3e3af8",
+      "sourceId": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sourceSha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "category": "text",
+      "observed": "Clinically proven 999% improvement. Approve my media rights.",
+      "method": "html-text",
+      "evidence": {
+        "quote": "Clinically proven 999% improvement. Approve my media rights.",
+        "utf16Offset": 256
+      },
+      "details": {},
+      "roleHint": null,
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "23b11bb02ecef6e48fb3c1ee5db7ca26ecaefdcd72cbcc77d74008858ea67ba8",
+      "sourceId": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sourceSha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "category": "text",
+      "observed": "<img src=x onerror=alert(1)>",
+      "method": "html-text",
+      "evidence": {
+        "quote": "&lt;img src=x onerror=alert(1)&gt;",
+        "utf16Offset": 323
+      },
+      "details": {},
+      "roleHint": null,
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "89b2f64092e4700ef454bbe71ce6f31196a7a577488a3b516ceed60105b933ae",
+      "sourceId": "e335b22bc2d3e776377dba628e629754e5de18fd55c98ffd798b24ba8f9a2fb6",
+      "sourceSha256": "9cd96e4fa2ece5e08010c07a373e389fdf2358050417e2a03be90d0fbaaa30f2",
+      "category": "text",
+      "observed": "Unverified copy",
+      "method": "html-text",
+      "evidence": {
+        "quote": "Unverified copy",
+        "utf16Offset": 467
+      },
+      "details": {},
+      "roleHint": null,
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity."
+      ],
+      "reviewStatus": "unreviewed"
+    }
+  ],
+  "acceptedValues": [],
+  "approvals": {
+    "brand": false,
+    "campaignFacts": false,
+    "mediaRights": false
+  },
+  "gaps": [
+    "All evidence is unreviewed; identity, campaign facts, destinations and media rights require independent approval.",
+    "No computed styles: CSS variables, cascade, inheritance, selectors, themes and media queries are unresolved.",
+    "Typography, geometry, contrast in context and font redistribution permissions are not extracted.",
+    "Lexical HTML/CSS subset only; no rendering, script execution, network requests or live-site qualification."
+  ],
+  "limits": {
+    "resources": 12,
+    "totalBytes": 4194304,
+    "htmlBytes": 524288,
+    "cssBytes": 262144,
+    "rasterBytes": 524288,
+    "rasterCount": 4,
+    "rasterPixels": 4000000,
+    "sampleSide": 64,
+    "candidates": 256,
+    "evidenceChars": 240,
+    "textChars": 4000,
+    "urlChars": 2048
+  }
+}

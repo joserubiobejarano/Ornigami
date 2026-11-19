@@ -1,0 +1,10 @@
+[
+  {
+    "kind": "raster",
+    "requestedUrl": "https://synthetic.example/start",
+    "finalUrl": "https://synthetic.example/brand/home",
+    "status": 200,
+    "contentType": "image/svg+xml",
+    "bodyFile": "source-0.bin"
+  }
+]

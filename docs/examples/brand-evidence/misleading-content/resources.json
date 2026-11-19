@@ -1,0 +1,10 @@
+[
+  {
+    "kind": "html",
+    "requestedUrl": "https://synthetic.example/start",
+    "finalUrl": "https://synthetic.example/brand/home",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "bodyFile": "source-0.html"
+  }
+]
