@@ -6,6 +6,8 @@ const tls = require('node:tls');
 const resolve4 = Resolver.prototype.resolve4;
 const resolve6 = Resolver.prototype.resolve6;
 const connectTls = tls.connect;
+const fixture = globalThis[Symbol.for('ornigami.native-physical-fixtures/1')];
+const instrumentedCapture = !!fixture && fixture.resolve4 === resolve4 && fixture.resolve6 === resolve6 && fixture.connectTls === connectTls;
 const registered = new WeakSet();
 function createNativeBackend() {
   const calls = { resolve4: 0, resolve6: 0, tls: 0 };
@@ -37,4 +39,4 @@ function createNativeBackend() {
   });
   registered.add(backend); return backend;
 }
-module.exports = { createNativeBackend, isNativeBackend: value => registered.has(value) };
+module.exports = { createNativeBackend, isNativeBackend: value => registered.has(value), capturedForOfflineTests: () => instrumentedCapture };

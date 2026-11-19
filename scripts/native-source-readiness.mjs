@@ -1,6 +1,9 @@
 import { mkdirSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { startSourceApplication } from './support/native-run-control.mjs';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+if (require.cache[require.resolve('./support/offline-guard.cjs')]) throw new Error('Run readiness directly: an inherited guard can replace the mandatory test preloads');
 const args = process.argv.slice(2);
 if (args.length && (args.length !== 1 || args[0] !== '--serve-simulated')) throw new Error('Only optional --serve-simulated exists. No live execution option.');
 mkdirSync('.local/native-adapter', { recursive: true });

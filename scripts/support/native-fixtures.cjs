@@ -66,5 +66,8 @@ tls.connect = function(options, ...args) {
   if (tlsEngine) return tlsEngine(options);
   return net.Socket.prototype.connect.call(new SourceStream(), { host: options.host, family: options.family, port: options.port });
 };
+Object.defineProperty(globalThis, Symbol.for('ornigami.native-physical-fixtures/1'), { value: Object.freeze({
+  resolve4: dns.promises.Resolver.prototype.resolve4, resolve6: dns.promises.Resolver.prototype.resolve6, connectTls: tls.connect,
+}) });
 module.exports = { stats, configure: value => { scenario = value; }, setTlsEngine: value => { tlsEngine = value; },
   inMemoryConnect(options) { if (!(options.socket instanceof Duplex)) throw new Error('In-memory wire required'); return realTls(options); } };

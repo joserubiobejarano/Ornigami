@@ -15,6 +15,7 @@ import bridge from '../../scripts/support/native-bridge.cjs';
 import { validateSourcePlan, startSourceApplication } from '../../scripts/support/native-run-control.mjs';
 import { fixture, cleaned } from './brand-tls.mts';
 const checks: string[] = [], traces: unknown[] = [];
+assert.equal(native.capturedForOfflineTests(),true,'Physical seams must precede native capture; refuse all source operations otherwise');
 const sample = () => ({ dns: seams.stats.dns.length, tls: seams.stats.tls.length, tcp: seams.stats.tcp.length, wire: seams.stats.wire.length });
 const setup = (clock?: { now():number; schedule(fn:()=>void, ms:number):()=>void }) => {
   const backend = native.createNativeBackend();
