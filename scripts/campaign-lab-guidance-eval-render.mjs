@@ -251,6 +251,8 @@ async function renderEntry(browser, entry) {
       await page.waitForTimeout(150);
       await page.locator("article").first().screenshot({
         path: path.join(caseDir, `${width}.png`),
+        // Developer chrome can overlap the article even in a locator capture.
+        style: "nextjs-portal { display: none !important; }",
       });
     }
 
