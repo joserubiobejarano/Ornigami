@@ -2,8 +2,8 @@ import { z } from "zod";
 import { isCampaignLabAvailable } from "./availability.ts";
 import { BRAND_FILE_BYTES, parseBrandEvidence } from "./brand-review.ts";
 import { importBrandDraft, type BrandResourceReader } from "./brand-import/import-brand.ts";
-import { readPublicResource } from "./brand-import/public-resource-fetch.ts";
 import { createSyntheticBrandUrlReader } from "./brand-import/url-synthetic.ts";
+import { bridgeReader, registeredSourceBridge, type SourceBridge } from './brand-source-bridge.ts';
 
 export const BRAND_URL_API_LIMITS = Object.freeze({ bodyBytes:4096, bodyMs:2000, active:2, responseBytes:BRAND_FILE_BYTES+8192 });
 export type BrandUrlEnvironment = { NODE_ENV?:string; ORNIGAMI_BRAND_URL_MODE?:string; ORNIGAMI_BRAND_URL_LIVE?:string };
@@ -40,7 +40,7 @@ async function readInput(request: Request,signal:AbortSignal) {
   } finally {signal.removeEventListener("abort",abort);void reader.cancel().catch(()=>{});reader.releaseLock();}
 }
 /** Trusted application configuration; never constructed from request fields. */
-export function createBrandUrlHandler(options: { env?:BrandUrlEnvironment; reader?:()=>BrandResourceReader; bodyMs?:number }={}) {
+export function createBrandUrlHandler(options: { env?:BrandUrlEnvironment; reader?:()=>BrandResourceReader; bodyMs?:number; sourceBridge?:()=>SourceBridge | undefined }={}) {
   let active=0;
   return async function handleBrandUrl(request: Request):Promise<Response> {
     const mode=brandUrlMode(options.env ?? process.env);
@@ -63,17 +63,22 @@ export function createBrandUrlHandler(options: { env?:BrandUrlEnvironment; reade
     try {
       const input=await readInput(request,controller.signal);clearTimeout(bodyTimer);
       if(controller.signal.aborted)return json({ok:false,message:"Website evidence was cancelled."},408);
-      const reader=options.reader?.() ?? (mode==="synthetic" ? createSyntheticBrandUrlReader().read : readPublicResource);
-      const result=await importBrandDraft(input.url,reader,{resourcePolicy:"html-css",signal:controller.signal});
+      const bridge=(options.sourceBridge ?? registeredSourceBridge)();
+      // Environment flags are gates, never native execution authority.
+      if(mode==="live" && !bridge)return json({ok:false,message:"Website source execution requires trusted local authorization."},503);
+      const perform=(reader:BrandResourceReader)=>importBrandDraft(input.url,reader,{resourcePolicy:"html-css",signal:controller.signal});
+      const result=bridge ? await bridge.run(input.url,controller.signal,control=>perform(bridgeReader(control))) :
+        await perform(options.reader?.() ?? createSyntheticBrandUrlReader().read);
       const summary={status:result.ledger.status,logicalReads:result.ledger.logicalReads,chargedBytes:result.ledger.chargedBytes,retainedBytes:result.ledger.retainedBytes};
       if(!result.draft || result.ledger.status==="cancelled")return json({ok:false,message:result.ledger.status==="cancelled" ? "Website evidence was cancelled or timed out." : "The website could not supply supported HTML. Use saved evidence or manual colors.",requestId:input.requestId,summary},result.ledger.status==="cancelled" ? 408 : 422);
       const draft=result.draft;
+      if(bridge?.simulated)draft.gaps.push('SOURCE_NETWORK_SIMULATED: native-delegation rehearsal with simulated source bytes; no website contacted.');
       const failures=result.ledger.entries.filter(e=>e.error).map(e=>`${e.kind.toUpperCase()} resource unavailable: ${e.error}.`);
       draft.gaps.push(...failures);
       // The exact same schema/byte cap as saved-file review applies on both sides.
       let validated;
       try {validated=parseBrandEvidence(JSON.stringify(draft));}catch{return json({ok:false,message:"Website evidence exceeds the review limits. Use a smaller saved evidence set or manual colors."},413);}
-      const payload={ok:true,draft:validated,requestId:input.requestId,summary,mode:mode==="synthetic" ? "synthetic" : "protected-text-read"};
+      const payload={ok:true,draft:validated,requestId:input.requestId,summary,mode:bridge?.simulated || mode==="synthetic" ? "synthetic" : "protected-text-read"};
       const bytes=new TextEncoder().encode(JSON.stringify(payload));
       if(bytes.length>BRAND_URL_API_LIMITS.responseBytes)return json({ok:false,message:"Website evidence exceeds the response limit."},413);
       return json(payload);
