@@ -70,7 +70,11 @@ surface. Navigate first, wait for hydration/image readiness, then apply each
 320/375/768/1440 viewport. The helper asserts actual innerWidth before and after
 the article-only JPEG, records client width/DPR, article/panel/track geometry,
 mode/definition, loaded-image count and screenshot pixel dimensions, and fails
-mismatches. Initial/selected states remain distinct. Do not infer viewport width
+mismatches. Captures use an explicitly recorded 3600px-high viewport so the whole
+article fits without screenshot-induced resizing; unchanged client/article
+geometry is asserted as well. These qualify responsive widths, not a physical
+phone screen. Scrolled rectangles use document coordinates for capture.
+Initial/selected states remain distinct. Do not infer viewport width
 from a filename or count hidden content as an animation benefit.
 
 Private final evidence/commands and the critical review live under
