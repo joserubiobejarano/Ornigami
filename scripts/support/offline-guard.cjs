@@ -77,8 +77,11 @@ for (const api of [http, https]) {
         const settings = args[0] ?? {};
         // The protected reader's URL remains authoritative; no request-option
         // override may move a permitted GET to another destination.
-        if (!(input instanceof URL) || ['hostname','host','path','protocol','auth','port'].some(k => settings[k] !== undefined) ||
-            settings.headers?.Host !== input.host || Object.keys(settings.headers ?? {}).some(k => !['host','accept-encoding','connection'].includes(k.toLowerCase()))) check('source-options', host);
+        const protectedOptions = Object.keys(settings).sort().join('|') === 'agent|headers|joinDuplicateHeaders|maxHeaderSize|method';
+        const protectedHeaders = Object.keys(settings.headers ?? {}).sort().join('|') === 'Accept-Encoding|Connection|Host';
+        if (!(input instanceof URL) || !protectedOptions || !protectedHeaders || settings.headers.Host !== input.host ||
+            settings.headers['Accept-Encoding'] !== 'identity' || settings.headers.Connection !== 'close' ||
+            settings.maxHeaderSize !== 16384 || settings.joinDuplicateHeaders !== false) check('source-options', host);
         permit.route('https.request', { url: input.href, method: settings.method, injectedAgent: agent && Object.hasOwn(agent, 'createConnection') });
       } else if (synthetic) log({ event: 'synthetic-stream', host });
       else check(api === http ? 'http.' + key : 'https.' + key, host);

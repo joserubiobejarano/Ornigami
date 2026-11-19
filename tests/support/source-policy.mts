@@ -72,6 +72,10 @@ await check('existing API + protected reader + four actual synthetic GETs; close
   await assert.rejects(f.controller.transaction(() => handler(request())), /consumed/);
   const before = f.seen.dns; await assert.rejects(f.read(windows.POLICY.seed, { maxBytes: 512 }), /denied/); assert.equal(f.seen.dns, before);
   observations.push({ scenario: 'synthetic API only', ...f.controller.snapshot(), fixture: f.seen });
+  const completed = fixture();
+  await completed.controller.transaction(() => completed.read(windows.POLICY.seed, { maxBytes: 1024 }));
+  assert.equal(completed.controller.snapshot().reason, 'completed'); assert.equal(completed.controller.snapshot().open, false);
+  observations.push({ scenario: 'single completed protected read', ...completed.controller.snapshot(), fixture: completed.seen });
 });
 await check('wrong host / protocol / port / credentials / numeric URL rejected before synthetic DNS', async () => {
   for (const url of ['https://outside.invalid/', 'http://www.iana.org/', 'https://www.iana.org:8443/', 'https://u:p@www.iana.org/', 'https://93.184.216.34/']) {
