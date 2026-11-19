@@ -10,6 +10,8 @@ const tls = require('node:tls');
 const http2 = require('node:http2');
 const dgram = require('node:dgram');
 const child = require('node:child_process');
+const { promisify } = require('node:util');
+const sourceWindow = require('./source-window.cjs');
 const { syncBuiltinESMExports } = require('node:module');
 const log = (event) => {
   if (process.env.ORNIGAMI_OFFLINE_LOG) fs.appendFileSync(process.env.ORNIGAMI_OFFLINE_LOG,
@@ -27,7 +29,12 @@ for (const api of [dns, dns.promises, dns.Resolver.prototype, dns.promises.Resol
   for (const key of Object.getOwnPropertyNames(api)) {
     if (!/^(lookup|resolve|reverse)/.test(key) || typeof api[key] !== 'function') continue;
     const original = api[key];
-    api[key] = function(host, ...args) { check('dns.' + key, host); return original.call(this, host, ...args); };
+    api[key] = function(host, ...args) {
+      if (!allowed(host) && api === dns.promises && key === 'lookup' && args[0]?.all === true && sourceWindow.current()) {
+        return sourceWindow.current().route('dns', { host });
+      }
+      check('dns.' + key, host); return original.call(this, host, ...args);
+    };
   }
 }
 const h2connect = http2.connect;
@@ -50,6 +57,7 @@ net.Socket.prototype.connect = function(...args) {
 const secure = tls.connect;
 tls.connect = function(...args) {
   const options = typeof args[0] === 'object' ? args[0] : typeof args[1] === 'object' ? args[1] : { host: typeof args[1] === 'string' ? args[1] : 'localhost' };
+  if (!allowed(options.host) && sourceWindow.current()) return sourceWindow.current().route('tls.connect', options);
   if (!options.path) check('tls.connect', options.host ?? options.servername ?? 'localhost');
   return secure.apply(this, args);
 };
@@ -64,9 +72,21 @@ for (const api of [http, https]) {
       // not an OS connection. DNS/TCP/TLS guards still apply to its connector.
       const synthetic = process.env.ORNIGAMI_BRAND_URL_MODE === 'synthetic' &&
         host === 'brand-url.example' && agent && Object.hasOwn(agent, 'createConnection');
-      if (synthetic) log({ event: 'synthetic-stream', host });
+      const permit = !allowed(host) && !synthetic && api === https && key === 'request' ? sourceWindow.current() : null;
+      if (permit) {
+        const settings = args[0] ?? {};
+        // The protected reader's URL remains authoritative; no request-option
+        // override may move a permitted GET to another destination.
+        if (!(input instanceof URL) || ['hostname','host','path','protocol','auth','port'].some(k => settings[k] !== undefined) ||
+            settings.headers?.Host !== input.host || settings.headers?.Authorization || settings.headers?.Cookie) check('source-options', host);
+        permit.route('https.request', { url: input.href, method: settings.method, injectedAgent: agent && Object.hasOwn(agent, 'createConnection') });
+      } else if (synthetic) log({ event: 'synthetic-stream', host });
       else check(api === http ? 'http.' + key : 'https.' + key, host);
-      return original.call(this, input, ...args);
+      const request = original.call(this, input, ...args);
+      if (permit) request.prependOnceListener('response', response => {
+        try { permit.response(response); } catch (error) { response.destroy(error); request.destroy(error); }
+      });
+      return request;
     };
   }
 }
@@ -83,14 +103,40 @@ globalThis.fetch = function(input, ...args) {
 // Preserve the preload even when a trusted build script constructs a small env.
 const inherit = options => ({ ...options, env: { ...(options?.env ?? process.env),
   NODE_OPTIONS: process.env.NODE_OPTIONS, ORNIGAMI_OFFLINE_LOG: process.env.ORNIGAMI_OFFLINE_LOG } });
-for (const key of ['spawn', 'spawnSync', 'execFile', 'execFileSync', 'fork']) {
+for (const key of ['spawn', 'spawnSync', 'execFileSync', 'fork']) {
   const original = child[key];
   child[key] = function(file, args, options, ...rest) {
-    if (!Array.isArray(args)) { options = args; args = []; }
+    if (!Array.isArray(args)) {
+      if (args != null && typeof args !== 'object') return original.call(this, file, args, options, ...rest);
+      options = args ?? options; args = [];
+    }
+    if (options != null && (typeof options !== 'object' || Array.isArray(options))) return original.call(this, file, args, options, ...rest);
     log({ event: 'child', method: key, file });
-    if (typeof options === 'function') return original.call(this, file, args, inherit({}), options, ...rest);
     return original.call(this, file, args, inherit(options), ...rest);
   };
 }
+const execFile = child.execFile;
+child.execFile = function(file, args, options, callback) {
+  if (args != null && !Array.isArray(args) && typeof args === 'object' && options != null && typeof options !== 'function') return execFile.apply(this, arguments);
+  if (Array.isArray(args)) {
+    if (typeof options === 'function') { callback = options; options = undefined; }
+  } else if (typeof args === 'function') {
+    callback = args; args = []; options = undefined;
+  } else if (args == null || typeof args === 'object') {
+    if (typeof options === 'function') callback = options;
+    options = args ?? (typeof options === 'function' ? undefined : options); args = [];
+  } else return execFile.apply(this, arguments); // Node retains invalid-argument errors.
+  if (options != null && (typeof options !== 'object' || Array.isArray(options))) return execFile.apply(this, arguments);
+  log({ event: 'child', method: 'execFile', file });
+  return execFile.call(this, file, args, inherit(options), callback);
+};
+Object.defineProperty(child.execFile, promisify.custom, { value: function(...args) {
+  const { promise, resolve, reject } = Promise.withResolvers();
+  promise.child = child.execFile(...args, (error, stdout, stderr) => {
+      if (error) { error.stdout = stdout; error.stderr = stderr; reject(error); }
+      else resolve({ stdout, stderr });
+  });
+  return promise;
+} });
 syncBuiltinESMExports();
-log({ event: 'initialized', preload: __filename });
+log({ event: 'initialized', preload: __filename, sourceWindow: 'closed', liveBackend: false });
