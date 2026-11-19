@@ -50,6 +50,16 @@ await check('closed startup / no worker permission / background denial', async (
   });
   assert.equal(f.seen.dns + f.seen.tls, 0);
 });
+await check('API input cannot arm authority; production rejects before reader creation', async () => {
+  const f = fixture(); let factories = 0;
+  const reader = () => { factories++; return f.read; };
+  const handler = createBrandUrlHandler({ env: { NODE_ENV: 'development', ORNIGAMI_BRAND_URL_MODE: 'synthetic' }, reader });
+  const input = new Request('http://localhost/api/campaign-lab/brand-evidence', { method: 'POST', headers: { origin: 'http://localhost', 'content-type': 'application/json' }, body: JSON.stringify({ url: windows.POLICY.seed, permit: true }) });
+  assert.equal((await handler(input)).status, 400); assert.equal(factories, 0);
+  assert.equal((await handler(request())).status, 422); assert.equal(f.controller.snapshot().used, false);
+  const unavailable = createBrandUrlHandler({ env: { NODE_ENV: 'production', ORNIGAMI_BRAND_URL_MODE: 'live', ORNIGAMI_BRAND_URL_LIVE: 'true' }, reader });
+  factories = 0; assert.equal((await unavailable(request())).status, 404); assert.equal(factories, 0); assert.equal(f.seen.dns + f.seen.tls, 0);
+});
 await check('existing API + protected reader + four actual synthetic GETs; closed completion / second transaction', async () => {
   const f = fixture();
   const handler = createBrandUrlHandler({ env: { NODE_ENV: 'development', ORNIGAMI_BRAND_URL_MODE: 'synthetic' }, reader: () => f.read });
@@ -73,9 +83,12 @@ await check('wrong method and unbound numeric TLS never reach fixture connector'
   await f.controller.transaction(async () => {
     await assert.rejects(f.controller.read(windows.POLICY.seed, { maxBytes: 512 }, async () => {
       await f.controller.route('dns', { host: 'www.iana.org' });
+      assert.throws(() => https.request(new URL(windows.POLICY.seed), { method: 'GET', agent: new https.Agent(), headers: { Host: 'www.iana.org', authorization: 'forbidden' } }), { code: 'ORNIGAMI_OFFLINE' });
       assert.throws(() => f.controller.route('https.request', { url: windows.POLICY.seed, method: 'POST', injectedAgent: true }), /GET scope/);
       f.controller.route('https.request', { url: windows.POLICY.seed, method: 'GET', injectedAgent: true });
       assert.throws(() => f.controller.route('tls.connect', { host: '8.8.8.8', family: 4, port: 443, servername: 'www.iana.org', rejectUnauthorized: true, checkServerIdentity() {}, ALPNProtocols: ['http/1.1'] }), /bound TLS/);
+      const bound = { host: '93.184.216.34', family: 4, port: 443, servername: 'www.iana.org', rejectUnauthorized: true, checkServerIdentity() {}, ALPNProtocols: ['http/1.1'] };
+      for (const change of [{ port: 80 }, { family: 6 }, { servername: 'outside.invalid' }, { rejectUnauthorized: false }, { checkServerIdentity: null }]) assert.throws(() => f.controller.route('tls.connect', { ...bound, ...change }), /bound TLS/);
       throw new Error('fixture stop');
     }));
   });

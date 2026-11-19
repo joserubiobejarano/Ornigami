@@ -81,7 +81,7 @@ function createSourceController({ synthetic, isPublicAddress, clock = { now: () 
       if (boundary === 'https.request') {
         const url = sourceUrl(details.url);
         if (read.phase !== 'bound' || url.href !== read.url || details.method !== 'GET' || !details.injectedAgent || gets >= POLICY.gets) return reject('GET scope');
-        gets++; read.phase = 'connect'; trace.push({ event: 'GET', url: url.href, admission: gets, synthetic: true });
+        gets++; read.phase = 'connect'; trace.push({ event: 'GET-admitted', url: url.href, admission: gets, synthetic: true });
         return true;
       }
       if (boundary === 'tls.connect') {

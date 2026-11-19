@@ -78,7 +78,7 @@ for (const api of [http, https]) {
         // The protected reader's URL remains authoritative; no request-option
         // override may move a permitted GET to another destination.
         if (!(input instanceof URL) || ['hostname','host','path','protocol','auth','port'].some(k => settings[k] !== undefined) ||
-            settings.headers?.Host !== input.host || settings.headers?.Authorization || settings.headers?.Cookie) check('source-options', host);
+            settings.headers?.Host !== input.host || Object.keys(settings.headers ?? {}).some(k => !['host','accept-encoding','connection'].includes(k.toLowerCase()))) check('source-options', host);
         permit.route('https.request', { url: input.href, method: settings.method, injectedAgent: agent && Object.hasOwn(agent, 'createConnection') });
       } else if (synthetic) log({ event: 'synthetic-stream', host });
       else check(api === http ? 'http.' + key : 'https.' + key, host);
