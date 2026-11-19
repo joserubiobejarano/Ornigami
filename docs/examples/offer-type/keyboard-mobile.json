@@ -1,0 +1,71 @@
+{
+  "focus": {
+    "focusVisible": true,
+    "focused": true,
+    "href": "https://fjord.example/products/fjord",
+    "outline": "3px",
+    "outlineColor": "rgb(29, 42, 60)"
+  },
+  "mobile": {
+    "action": {
+      "height": 52,
+      "width": 260,
+      "x": 50,
+      "y": 379.625
+    },
+    "article": {
+      "height": 808.703125,
+      "width": 300,
+      "x": 30,
+      "y": 139.640625
+    },
+    "column": {
+      "height": 68.15625,
+      "width": 260,
+      "x": 50,
+      "y": 211.4375
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "35.5px",
+    "heading": {
+      "height": 68.15625,
+      "width": 260,
+      "x": 50,
+      "y": 211.4375
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 303.328125,
+      "width": 260,
+      "x": 50,
+      "y": 549.328125
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "34.08px",
+    "lines": [
+      {
+        "text": "Fjord Works",
+        "y": 207.4375
+      },
+      {
+        "text": "field notebook",
+        "y": 241.515625
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 260,
+      "x": 50,
+      "y": 294.59375
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 812,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  }
+}

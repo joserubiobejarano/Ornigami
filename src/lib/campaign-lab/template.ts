@@ -43,7 +43,7 @@ const COMPACT_SECTIONS: readonly SectionId[] = ["hero", "close"];
 
 export const SINGLE_PRODUCT_OFFER_TEMPLATE: TemplateManifest = {
   id: CAMPAIGN_LAB_TEMPLATE_ID,
-  version: "1.0.0",
+  version: "1.0.1",
   name: "Single product offer",
   format: "Problem–solution / offer-led campaign page",
   requiredInputs: ["brandId", "productName", "offer", "destinationUrl", "assetId"],

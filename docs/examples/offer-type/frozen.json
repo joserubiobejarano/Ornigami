@@ -1,0 +1,1788 @@
+[
+  {
+    "id": "rose",
+    "directionId": "clear",
+    "brief": {
+      "directionId": "clear",
+      "fixtureId": "browser-offer",
+      "brandId": "browser-offer-brand",
+      "productName": "Rose Supply ceramic cup",
+      "audience": "Home coffee drinkers",
+      "objective": "Present the exact bundle and purchase destination",
+      "offer": "Cup + lid, €24 · offer ends 30 November 2026",
+      "destinationUrl": "https://rose.example/products/rose",
+      "assetId": "browser-offer-packshot",
+      "actionLabel": "Shop now",
+      "productNoun": "cup",
+      "productFacts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "350 ml",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Capacity: 350 ml",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Glazed ceramic",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Material: Glazed ceramic",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ],
+      "requiredFactGroups": [
+        {
+          "id": "browser-offer-required-facts",
+          "label": "the approved facts",
+          "factIds": [
+            "capacity",
+            "material"
+          ]
+        }
+      ],
+      "copy": {
+        "lede": "A cup from Rose Supply.",
+        "hideLede": true
+      }
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "offer-led-one-photo",
+      "layoutReason": "The short headline and single image fit the offer-led composition without adding a second section.",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "headline": "Rose Supply ceramic cup",
+      "lede": "A cup from Rose Supply.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "350 ml",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Capacity: 350 ml",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Glazed ceramic",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Material: Glazed ceramic",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "browser-offer-packshot",
+      "brandId": "browser-offer-brand",
+      "src": "docs/examples/brand-review/rose/packshot.png",
+      "width": 600,
+      "height": 700,
+      "alt": "Synthetic Rose Supply ceramic cup packshot",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19",
+      "source": "Browser intake upload",
+      "rights": "Synthetic fixture created locally; approved for this local test.",
+      "contentHash": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "sha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6"
+    },
+    "theme": {
+      "brand": {
+        "id": "browser-offer-brand",
+        "name": "Rose Supply",
+        "wordmark": "Rose Supply",
+        "descriptor": "Local brand preview",
+        "tokens": {
+          "page": "#f6f3ec",
+          "surface": "#e8e2d6",
+          "ink": "#1f2a24",
+          "muted": "#60695f",
+          "accent": "#2f5d4a",
+          "accentInk": "#fffaf1",
+          "line": "#d5cdbf",
+          "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "displayWeight": 700,
+          "displayTracking": "-0.035em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.14em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "framed",
+          "heroOrder": "product-first",
+          "prefersEditorial": false,
+          "detailBackground": "#1f2a24",
+          "detailInk": "#f6f3ec",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "visualDirection": {
+          "id": "clear",
+          "version": "1.0.0"
+        },
+        "headlineMode": "offer-led",
+        "detailTitle": "Product details"
+      },
+      "tokens": {
+        "page": "#f6f3ec",
+        "surface": "#e8e2d6",
+        "ink": "#1f2a24",
+        "muted": "#60695f",
+        "accent": "#2f5d4a",
+        "accentInk": "#fffaf1",
+        "line": "#d5cdbf",
+        "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "displayWeight": 700,
+        "displayTracking": "-0.035em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.14em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "framed",
+        "heroOrder": "product-first",
+        "prefersEditorial": false,
+        "detailBackground": "#1f2a24",
+        "detailInk": "#f6f3ec",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "008c9297e41d08d4",
+    "beforeRevision": "097a8c3867a5690f",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "offer-led-one-photo",
+      "layoutReason": "The short headline and single image fit the offer-led composition without adding a second section.",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "headline": "Rose Supply ceramic cup",
+      "lede": "A cup from Rose Supply.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "350 ml",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Capacity: 350 ml",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Glazed ceramic",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Material: Glazed ceramic",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rose",
+    "directionId": "editorial",
+    "brief": {
+      "directionId": "editorial",
+      "fixtureId": "browser-offer",
+      "brandId": "browser-offer-brand",
+      "productName": "Rose Supply ceramic cup",
+      "audience": "Home coffee drinkers",
+      "objective": "Present the exact bundle and purchase destination",
+      "offer": "Cup + lid, €24 · offer ends 30 November 2026",
+      "destinationUrl": "https://rose.example/products/rose",
+      "assetId": "browser-offer-packshot",
+      "actionLabel": "Shop now",
+      "productNoun": "cup",
+      "productFacts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "350 ml",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Capacity: 350 ml",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Glazed ceramic",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Material: Glazed ceramic",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ],
+      "requiredFactGroups": [
+        {
+          "id": "browser-offer-required-facts",
+          "label": "the approved facts",
+          "factIds": [
+            "capacity",
+            "material"
+          ]
+        }
+      ],
+      "copy": {
+        "lede": "A cup from Rose Supply.",
+        "hideLede": true
+      }
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Rose Supply ceramic cup",
+      "lede": "A cup from Rose Supply.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "350 ml",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Capacity: 350 ml",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Glazed ceramic",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Material: Glazed ceramic",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "browser-offer-packshot",
+      "brandId": "browser-offer-brand",
+      "src": "docs/examples/brand-review/rose/packshot.png",
+      "width": 600,
+      "height": 700,
+      "alt": "Synthetic Rose Supply ceramic cup packshot",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19",
+      "source": "Browser intake upload",
+      "rights": "Synthetic fixture created locally; approved for this local test.",
+      "contentHash": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "sha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6"
+    },
+    "theme": {
+      "brand": {
+        "id": "browser-offer-brand",
+        "name": "Rose Supply",
+        "wordmark": "Rose Supply",
+        "descriptor": "Local brand preview",
+        "tokens": {
+          "page": "#f2ebde",
+          "surface": "#e6dbc8",
+          "ink": "#1d2a3c",
+          "muted": "#5c6066",
+          "accent": "#234a6b",
+          "accentInk": "#fffaf1",
+          "line": "#cbbda8",
+          "displayFont": "Georgia, serif",
+          "bodyFont": "Arial, sans-serif",
+          "displayWeight": 400,
+          "displayTracking": "-0.03em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.2em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "arch",
+          "heroOrder": "headline-first",
+          "prefersEditorial": true,
+          "detailBackground": "#1d2a3c",
+          "detailInk": "#f2ebde",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "visualDirection": {
+          "id": "editorial",
+          "version": "1.0.0"
+        },
+        "headlineMode": "offer-led",
+        "detailTitle": "Product details"
+      },
+      "tokens": {
+        "page": "#f2ebde",
+        "surface": "#e6dbc8",
+        "ink": "#1d2a3c",
+        "muted": "#5c6066",
+        "accent": "#234a6b",
+        "accentInk": "#fffaf1",
+        "line": "#cbbda8",
+        "displayFont": "Georgia, serif",
+        "bodyFont": "Arial, sans-serif",
+        "displayWeight": 400,
+        "displayTracking": "-0.03em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.2em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "arch",
+        "heroOrder": "headline-first",
+        "prefersEditorial": true,
+        "detailBackground": "#1d2a3c",
+        "detailInk": "#f2ebde",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "ce400e97d2175c98",
+    "beforeRevision": "64d2aa2a065df793",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Rose Supply ceramic cup",
+      "lede": "A cup from Rose Supply.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "350 ml",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Capacity: 350 ml",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Glazed ceramic",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Material: Glazed ceramic",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "fjord",
+    "directionId": "clear",
+    "brief": {
+      "directionId": "clear",
+      "fixtureId": "browser-offer",
+      "brandId": "browser-offer-brand",
+      "productName": "Fjord Works field notebook",
+      "audience": "Field researchers",
+      "objective": "Present the exact bundle and purchase destination",
+      "offer": "Two notebooks for €18, through 2 December 2026",
+      "destinationUrl": "https://fjord.example/products/fjord",
+      "assetId": "browser-offer-packshot",
+      "actionLabel": "Shop now",
+      "productNoun": "notebook",
+      "productFacts": [
+        {
+          "id": "pages",
+          "label": "Pages",
+          "value": "96 ruled pages",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Pages: 96 ruled pages",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "format",
+          "label": "Format",
+          "value": "A5, stitched binding",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Format: A5, stitched binding",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ],
+      "requiredFactGroups": [
+        {
+          "id": "browser-offer-required-facts",
+          "label": "the approved facts",
+          "factIds": [
+            "pages",
+            "format"
+          ]
+        }
+      ],
+      "copy": {
+        "lede": "A notebook from Fjord Works.",
+        "hideLede": true
+      }
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "offer-led-one-photo",
+      "layoutReason": "The short headline and single image fit the offer-led composition without adding a second section.",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "headline": "Fjord Works field notebook",
+      "lede": "A notebook from Fjord Works.",
+      "facts": [
+        {
+          "id": "pages",
+          "label": "Pages",
+          "value": "96 ruled pages",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Pages: 96 ruled pages",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "format",
+          "label": "Format",
+          "value": "A5, stitched binding",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Format: A5, stitched binding",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "browser-offer-packshot",
+      "brandId": "browser-offer-brand",
+      "src": "docs/examples/brand-review/fjord/packshot.png",
+      "width": 600,
+      "height": 700,
+      "alt": "Synthetic Fjord Works field notebook packshot",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19",
+      "source": "Browser intake upload",
+      "rights": "Synthetic fixture created locally; approved for this local test.",
+      "contentHash": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863",
+      "sha256": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863"
+    },
+    "theme": {
+      "brand": {
+        "id": "browser-offer-brand",
+        "name": "Fjord Works",
+        "wordmark": "Fjord Works",
+        "descriptor": "Local brand preview",
+        "tokens": {
+          "page": "#f6f3ec",
+          "surface": "#e8e2d6",
+          "ink": "#1f2a24",
+          "muted": "#60695f",
+          "accent": "#2f5d4a",
+          "accentInk": "#fffaf1",
+          "line": "#d5cdbf",
+          "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "displayWeight": 700,
+          "displayTracking": "-0.035em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.14em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "framed",
+          "heroOrder": "product-first",
+          "prefersEditorial": false,
+          "detailBackground": "#1f2a24",
+          "detailInk": "#f6f3ec",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "visualDirection": {
+          "id": "clear",
+          "version": "1.0.0"
+        },
+        "headlineMode": "offer-led",
+        "detailTitle": "Product details"
+      },
+      "tokens": {
+        "page": "#f6f3ec",
+        "surface": "#e8e2d6",
+        "ink": "#1f2a24",
+        "muted": "#60695f",
+        "accent": "#2f5d4a",
+        "accentInk": "#fffaf1",
+        "line": "#d5cdbf",
+        "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "displayWeight": 700,
+        "displayTracking": "-0.035em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.14em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "framed",
+        "heroOrder": "product-first",
+        "prefersEditorial": false,
+        "detailBackground": "#1f2a24",
+        "detailInk": "#f6f3ec",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "48289216c9b39c22",
+    "beforeRevision": "f4f26b69b22e825d",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "offer-led-one-photo",
+      "layoutReason": "The short headline and single image fit the offer-led composition without adding a second section.",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "headline": "Fjord Works field notebook",
+      "lede": "A notebook from Fjord Works.",
+      "facts": [
+        {
+          "id": "pages",
+          "label": "Pages",
+          "value": "96 ruled pages",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Pages: 96 ruled pages",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "format",
+          "label": "Format",
+          "value": "A5, stitched binding",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Format: A5, stitched binding",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "fjord",
+    "directionId": "editorial",
+    "brief": {
+      "directionId": "editorial",
+      "fixtureId": "browser-offer",
+      "brandId": "browser-offer-brand",
+      "productName": "Fjord Works field notebook",
+      "audience": "Field researchers",
+      "objective": "Present the exact bundle and purchase destination",
+      "offer": "Two notebooks for €18, through 2 December 2026",
+      "destinationUrl": "https://fjord.example/products/fjord",
+      "assetId": "browser-offer-packshot",
+      "actionLabel": "Shop now",
+      "productNoun": "notebook",
+      "productFacts": [
+        {
+          "id": "pages",
+          "label": "Pages",
+          "value": "96 ruled pages",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Pages: 96 ruled pages",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "format",
+          "label": "Format",
+          "value": "A5, stitched binding",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Format: A5, stitched binding",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ],
+      "requiredFactGroups": [
+        {
+          "id": "browser-offer-required-facts",
+          "label": "the approved facts",
+          "factIds": [
+            "pages",
+            "format"
+          ]
+        }
+      ],
+      "copy": {
+        "lede": "A notebook from Fjord Works.",
+        "hideLede": true
+      }
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Fjord Works field notebook",
+      "lede": "A notebook from Fjord Works.",
+      "facts": [
+        {
+          "id": "pages",
+          "label": "Pages",
+          "value": "96 ruled pages",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Pages: 96 ruled pages",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "format",
+          "label": "Format",
+          "value": "A5, stitched binding",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Format: A5, stitched binding",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "browser-offer-packshot",
+      "brandId": "browser-offer-brand",
+      "src": "docs/examples/brand-review/fjord/packshot.png",
+      "width": 600,
+      "height": 700,
+      "alt": "Synthetic Fjord Works field notebook packshot",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19",
+      "source": "Browser intake upload",
+      "rights": "Synthetic fixture created locally; approved for this local test.",
+      "contentHash": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863",
+      "sha256": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863"
+    },
+    "theme": {
+      "brand": {
+        "id": "browser-offer-brand",
+        "name": "Fjord Works",
+        "wordmark": "Fjord Works",
+        "descriptor": "Local brand preview",
+        "tokens": {
+          "page": "#f2ebde",
+          "surface": "#e6dbc8",
+          "ink": "#1d2a3c",
+          "muted": "#5c6066",
+          "accent": "#234a6b",
+          "accentInk": "#fffaf1",
+          "line": "#cbbda8",
+          "displayFont": "Georgia, serif",
+          "bodyFont": "Arial, sans-serif",
+          "displayWeight": 400,
+          "displayTracking": "-0.03em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.2em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "arch",
+          "heroOrder": "headline-first",
+          "prefersEditorial": true,
+          "detailBackground": "#1d2a3c",
+          "detailInk": "#f2ebde",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "visualDirection": {
+          "id": "editorial",
+          "version": "1.0.0"
+        },
+        "headlineMode": "offer-led",
+        "detailTitle": "Product details"
+      },
+      "tokens": {
+        "page": "#f2ebde",
+        "surface": "#e6dbc8",
+        "ink": "#1d2a3c",
+        "muted": "#5c6066",
+        "accent": "#234a6b",
+        "accentInk": "#fffaf1",
+        "line": "#cbbda8",
+        "displayFont": "Georgia, serif",
+        "bodyFont": "Arial, sans-serif",
+        "displayWeight": 400,
+        "displayTracking": "-0.03em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.2em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "arch",
+        "heroOrder": "headline-first",
+        "prefersEditorial": true,
+        "detailBackground": "#1d2a3c",
+        "detailInk": "#f2ebde",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "7d07df4a588ad31a",
+    "beforeRevision": "591bfe2f95a42c35",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Fjord Works field notebook",
+      "lede": "A notebook from Fjord Works.",
+      "facts": [
+        {
+          "id": "pages",
+          "label": "Pages",
+          "value": "96 ruled pages",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Pages: 96 ruled pages",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        },
+        {
+          "id": "format",
+          "label": "Format",
+          "value": "A5, stitched binding",
+          "source": {
+            "document": "Browser offer intake",
+            "quote": "Format: A5, stitched binding",
+            "reviewedBy": "Local browser operator",
+            "reviewedOn": "2026-11-19"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "harbor",
+    "directionId": "clear",
+    "brief": {
+      "fixtureId": "sparse",
+      "brandId": "harbor-field",
+      "productName": "Harbor Field travel bottle",
+      "audience": "People discovering the bottle in a paid social ad on mobile.",
+      "objective": "Send the visitor to the marketplace listing while the 20% offer is clear.",
+      "offer": "20% off, 27–30 November 2026",
+      "destinationUrl": "https://example.com/harbor-field",
+      "assetId": "harbor-field-bottle-front",
+      "actionLabel": "Shop on Amazon",
+      "productNoun": "travel bottle",
+      "productFacts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Capacity: 500 ml.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Closure: brushed steel screw cap.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Body material: stainless steel.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ],
+      "copy": {
+        "lede": "A 500 ml insulated bottle with a screw cap, made for the commute and the trail."
+      }
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "offer-led-one-photo",
+      "layoutReason": "The short headline and single image fit the offer-led composition without adding a second section.",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "headline": "Harbor Field travel bottle",
+      "lede": "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Capacity: 500 ml.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Closure: brushed steel screw cap.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Body material: stainless steel.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "harbor-field-bottle-front",
+      "imageFit": "contain",
+      "brandId": "harbor-field",
+      "src": "public/campaign-assets/harbor-field-bottle.webp",
+      "width": 1200,
+      "height": 1500,
+      "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Ornigami design review",
+      "reviewedOn": "2026-11-12",
+      "source": "Original fictional fixture rendered from assets/campaign-lab/harbor-field-bottle.svg",
+      "rights": "Original work for this local prototype; fictional brand.",
+      "contentHash": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2",
+      "sha256": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2"
+    },
+    "theme": {
+      "brand": {
+        "id": "harbor-field",
+        "name": "Harbor Field",
+        "wordmark": "Harbor Field",
+        "descriptor": "Warm utility",
+        "tokens": {
+          "page": "#f6f3ec",
+          "surface": "#e8e2d6",
+          "ink": "#1f2a24",
+          "muted": "#60695f",
+          "accent": "#2f5d4a",
+          "accentInk": "#f8faf7",
+          "line": "#d5cdbf",
+          "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "displayWeight": 700,
+          "displayTracking": "-0.035em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.14em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "framed",
+          "heroOrder": "product-first",
+          "prefersEditorial": false,
+          "detailBackground": "#1f2a24",
+          "detailInk": "#f6f3ec",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "headlineMode": "product-led",
+        "detailTitle": "Built for the day.",
+        "visualDirection": {
+          "id": "clear",
+          "version": "1.0.0"
+        }
+      },
+      "tokens": {
+        "page": "#f6f3ec",
+        "surface": "#e8e2d6",
+        "ink": "#1f2a24",
+        "muted": "#60695f",
+        "accent": "#2f5d4a",
+        "accentInk": "#fffaf1",
+        "line": "#d5cdbf",
+        "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "displayWeight": 700,
+        "displayTracking": "-0.035em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.14em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "framed",
+        "heroOrder": "product-first",
+        "prefersEditorial": false,
+        "detailBackground": "#1f2a24",
+        "detailInk": "#f6f3ec",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "987e73c8774809c6",
+    "beforeRevision": "e0767f0762c20ab9",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "offer-led-one-photo",
+      "layoutReason": "The short headline and single image fit the offer-led composition without adding a second section.",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ],
+      "headline": "Harbor Field travel bottle",
+      "lede": "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Capacity: 500 ml.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Closure: brushed steel screw cap.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Body material: stainless steel.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "harbor",
+    "directionId": "editorial",
+    "brief": {
+      "fixtureId": "sparse",
+      "brandId": "harbor-field",
+      "productName": "Harbor Field travel bottle",
+      "audience": "People discovering the bottle in a paid social ad on mobile.",
+      "objective": "Send the visitor to the marketplace listing while the 20% offer is clear.",
+      "offer": "20% off, 27–30 November 2026",
+      "destinationUrl": "https://example.com/harbor-field",
+      "assetId": "harbor-field-bottle-front",
+      "actionLabel": "Shop on Amazon",
+      "productNoun": "travel bottle",
+      "productFacts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Capacity: 500 ml.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Closure: brushed steel screw cap.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Body material: stainless steel.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ],
+      "copy": {
+        "lede": "A 500 ml insulated bottle with a screw cap, made for the commute and the trail."
+      }
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Harbor Field travel bottle",
+      "lede": "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Capacity: 500 ml.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Closure: brushed steel screw cap.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Body material: stainless steel.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "harbor-field-bottle-front",
+      "imageFit": "contain",
+      "brandId": "harbor-field",
+      "src": "public/campaign-assets/harbor-field-bottle.webp",
+      "width": 1200,
+      "height": 1500,
+      "alt": "Harbor Field 500 ml insulated travel bottle in graphite with a brushed steel screw cap, centred on a warm off-white studio backdrop.",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Ornigami design review",
+      "reviewedOn": "2026-11-12",
+      "source": "Original fictional fixture rendered from assets/campaign-lab/harbor-field-bottle.svg",
+      "rights": "Original work for this local prototype; fictional brand.",
+      "contentHash": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2",
+      "sha256": "7428586f0fcbd847f741ebfd1415c4ecd38ff0754c831edf6b5fc94a3a609ab2"
+    },
+    "theme": {
+      "brand": {
+        "id": "harbor-field",
+        "name": "Harbor Field",
+        "wordmark": "Harbor Field",
+        "descriptor": "Warm utility",
+        "tokens": {
+          "page": "#f2ebde",
+          "surface": "#e6dbc8",
+          "ink": "#1d2a3c",
+          "muted": "#5c6066",
+          "accent": "#234a6b",
+          "accentInk": "#f9f3e8",
+          "line": "#cbbda8",
+          "displayFont": "Georgia, serif",
+          "bodyFont": "Arial, sans-serif",
+          "displayWeight": 400,
+          "displayTracking": "-0.03em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.2em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "arch",
+          "heroOrder": "headline-first",
+          "prefersEditorial": true,
+          "detailBackground": "#1d2a3c",
+          "detailInk": "#f2ebde",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "headlineMode": "product-led",
+        "detailTitle": "Built for the day.",
+        "visualDirection": {
+          "id": "editorial",
+          "version": "1.0.0"
+        }
+      },
+      "tokens": {
+        "page": "#f2ebde",
+        "surface": "#e6dbc8",
+        "ink": "#1d2a3c",
+        "muted": "#5c6066",
+        "accent": "#234a6b",
+        "accentInk": "#fffaf1",
+        "line": "#cbbda8",
+        "displayFont": "Georgia, serif",
+        "bodyFont": "Arial, sans-serif",
+        "displayWeight": 400,
+        "displayTracking": "-0.03em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.2em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "arch",
+        "heroOrder": "headline-first",
+        "prefersEditorial": true,
+        "detailBackground": "#1d2a3c",
+        "detailInk": "#f2ebde",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "38e1a932af10936b",
+    "beforeRevision": "fa92c985b5a9d4f2",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Harbor Field travel bottle",
+      "lede": "A 500 ml insulated bottle with a screw cap, made for the commute and the trail.",
+      "facts": [
+        {
+          "id": "capacity",
+          "label": "Capacity",
+          "value": "500 ml",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Capacity: 500 ml.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "closure",
+          "label": "Closure",
+          "value": "Screw cap",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Closure: brushed steel screw cap.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "value": "Stainless steel",
+          "source": {
+            "document": "Harbor Field approved product sheet",
+            "quote": "Body material: stainless steel.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "morrow",
+    "directionId": "clear",
+    "brief": {
+      "fixtureId": "long-copy",
+      "brandId": "morrow-ceramic",
+      "productName": "Morrow ceramic pour-over dripper",
+      "audience": "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+      "objective": "Explain the rib design and lead to the dripper page.",
+      "offer": "Free shipping through 30 November 2026",
+      "destinationUrl": "https://example.com/morrow",
+      "assetId": "morrow-ceramic-dripper-front",
+      "actionLabel": "See the dripper",
+      "productNoun": "pour-over dripper",
+      "productFacts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "finish",
+          "label": "Finish",
+          "value": "Matte glaze",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Finish: matte glaze.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ],
+      "copy": {
+        "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+        "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs."
+      },
+      "openingFocus": "flow-control"
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+      "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs.",
+      "facts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "morrow-ceramic-dripper-front",
+      "imageFit": "contain",
+      "brandId": "morrow-ceramic",
+      "src": "public/campaign-assets/morrow-ceramic-dripper.webp",
+      "width": 1200,
+      "height": 1500,
+      "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Ornigami design review",
+      "reviewedOn": "2026-11-12",
+      "source": "Original fictional fixture rendered from assets/campaign-lab/morrow-ceramic-dripper.svg",
+      "rights": "Original work for this local prototype; fictional brand.",
+      "contentHash": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
+      "sha256": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7"
+    },
+    "theme": {
+      "brand": {
+        "id": "morrow-ceramic",
+        "name": "Morrow Ceramic",
+        "wordmark": "Morrow",
+        "descriptor": "Editorial craft",
+        "tokens": {
+          "page": "#f6f3ec",
+          "surface": "#e8e2d6",
+          "ink": "#1f2a24",
+          "muted": "#60695f",
+          "accent": "#2f5d4a",
+          "accentInk": "#f8faf7",
+          "line": "#d5cdbf",
+          "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+          "displayWeight": 700,
+          "displayTracking": "-0.035em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.14em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "framed",
+          "heroOrder": "product-first",
+          "prefersEditorial": false,
+          "detailBackground": "#1f2a24",
+          "detailInk": "#f6f3ec",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "headlineMode": "angle",
+        "detailTitle": "The ribs are the design.",
+        "visualDirection": {
+          "id": "clear",
+          "version": "1.0.0"
+        }
+      },
+      "tokens": {
+        "page": "#f6f3ec",
+        "surface": "#e8e2d6",
+        "ink": "#1f2a24",
+        "muted": "#60695f",
+        "accent": "#2f5d4a",
+        "accentInk": "#fffaf1",
+        "line": "#d5cdbf",
+        "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "displayWeight": 700,
+        "displayTracking": "-0.035em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.14em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "framed",
+        "heroOrder": "product-first",
+        "prefersEditorial": false,
+        "detailBackground": "#1f2a24",
+        "detailInk": "#f6f3ec",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "472a1e5be5ce2ce8",
+    "beforeRevision": "2bafbb6aa57a5a49",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+      "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs.",
+      "facts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "morrow",
+    "directionId": "editorial",
+    "brief": {
+      "fixtureId": "long-copy",
+      "brandId": "morrow-ceramic",
+      "productName": "Morrow ceramic pour-over dripper",
+      "audience": "People curious about pour-over coffee who clicked an email asking what changes when the first pour is slower.",
+      "objective": "Explain the rib design and lead to the dripper page.",
+      "offer": "Free shipping through 30 November 2026",
+      "destinationUrl": "https://example.com/morrow",
+      "assetId": "morrow-ceramic-dripper-front",
+      "actionLabel": "See the dripper",
+      "productNoun": "pour-over dripper",
+      "productFacts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "finish",
+          "label": "Finish",
+          "value": "Matte glaze",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Finish: matte glaze.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ],
+      "copy": {
+        "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+        "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs."
+      },
+      "openingFocus": "flow-control"
+    },
+    "draft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.1",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+      "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs.",
+      "facts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    },
+    "asset": {
+      "id": "morrow-ceramic-dripper-front",
+      "imageFit": "contain",
+      "brandId": "morrow-ceramic",
+      "src": "public/campaign-assets/morrow-ceramic-dripper.webp",
+      "width": 1200,
+      "height": 1500,
+      "alt": "Morrow cream ceramic pour-over dripper with a ribbed interior and single outlet, resting on a matching carafe against a deep blue wall.",
+      "role": "product-hero",
+      "reviewed": true,
+      "reviewedBy": "Ornigami design review",
+      "reviewedOn": "2026-11-12",
+      "source": "Original fictional fixture rendered from assets/campaign-lab/morrow-ceramic-dripper.svg",
+      "rights": "Original work for this local prototype; fictional brand.",
+      "contentHash": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7",
+      "sha256": "4a6a4811b830ccfc712da50ef589cf6c6dbc54996ec55dbf5472055f209356b7"
+    },
+    "theme": {
+      "brand": {
+        "id": "morrow-ceramic",
+        "name": "Morrow Ceramic",
+        "wordmark": "Morrow",
+        "descriptor": "Editorial craft",
+        "tokens": {
+          "page": "#f2ebde",
+          "surface": "#e6dbc8",
+          "ink": "#1d2a3c",
+          "muted": "#5c6066",
+          "accent": "#234a6b",
+          "accentInk": "#f9f3e8",
+          "line": "#cbbda8",
+          "displayFont": "Georgia, serif",
+          "bodyFont": "Arial, sans-serif",
+          "displayWeight": 400,
+          "displayTracking": "-0.03em",
+          "labelCase": "uppercase",
+          "labelTracking": "0.2em",
+          "imageRadius": "12px",
+          "buttonRadius": "999px",
+          "heroImage": "arch",
+          "heroOrder": "headline-first",
+          "prefersEditorial": true,
+          "detailBackground": "#1d2a3c",
+          "detailInk": "#f2ebde",
+          "imageBlend": "normal",
+          "showWordmarkMark": false
+        },
+        "headlineMode": "angle",
+        "detailTitle": "The ribs are the design.",
+        "visualDirection": {
+          "id": "editorial",
+          "version": "1.0.0"
+        }
+      },
+      "tokens": {
+        "page": "#f2ebde",
+        "surface": "#e6dbc8",
+        "ink": "#1d2a3c",
+        "muted": "#5c6066",
+        "accent": "#234a6b",
+        "accentInk": "#fffaf1",
+        "line": "#cbbda8",
+        "displayFont": "Georgia, serif",
+        "bodyFont": "Arial, sans-serif",
+        "displayWeight": 400,
+        "displayTracking": "-0.03em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.2em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "arch",
+        "heroOrder": "headline-first",
+        "prefersEditorial": true,
+        "detailBackground": "#1d2a3c",
+        "detailInk": "#f2ebde",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "revision": "9ca2e9be8a25476d",
+    "beforeRevision": "cc9b4b65a5c82240",
+    "beforeDraft": {
+      "templateId": "single-product-offer",
+      "templateVersion": "1.0.0",
+      "layout": "editorial-long-copy",
+      "layoutReason": "The headline needs room, so the editorial composition gives it a wider field and a slower opening.",
+      "sections": [
+        "hero",
+        "detail",
+        "close"
+      ],
+      "headline": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+      "lede": "In the first prototype, the filter sat against the wall. Morrow revised the spacing between the three interior ribs.",
+      "facts": [
+        {
+          "id": "interior",
+          "label": "Interior",
+          "value": "Three ribs",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Interior: three raised ribs that hold the filter clear of the wall.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "outlet",
+          "label": "Outlet",
+          "value": "Single outlet",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Outlet: one centred outlet.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        },
+        {
+          "id": "body",
+          "label": "Body",
+          "value": "Ceramic",
+          "source": {
+            "document": "Morrow Ceramic approved product sheet",
+            "quote": "Body: glazed ceramic.",
+            "reviewedBy": "Ornigami content review",
+            "reviewedOn": "2026-11-12"
+          }
+        }
+      ]
+    }
+  }
+]

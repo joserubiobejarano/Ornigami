@@ -5,7 +5,7 @@
   "template": {
     "id": "single-product-offer",
     "name": "Single product offer",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "source": "src/lib/campaign-lab/template.ts"
   },
   "fixtures": [

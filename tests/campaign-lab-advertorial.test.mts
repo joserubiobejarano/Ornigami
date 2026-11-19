@@ -68,7 +68,7 @@ test("the advertorial manifest is versioned and additive", () => {
     "product-hero",
   ]);
   assert.deepEqual(SINGLE_PRODUCT_OFFER_TEMPLATE.allowedAssetRoles, ["product-hero"]);
-  assert.equal(SINGLE_PRODUCT_OFFER_TEMPLATE.version, "1.0.0");
+  assert.equal(SINGLE_PRODUCT_OFFER_TEMPLATE.version, "1.0.1");
 });
 
 test("the full Morrow brief assembles the approved reading sequence", () => {

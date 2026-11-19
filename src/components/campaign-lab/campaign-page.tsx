@@ -188,9 +188,11 @@ export function CampaignPage({
     <ProductLabel productName={brief.productName} />
   ) : null;
   const headline = (
-    <h1 id={headingId} className={styles.headline}>
-      {draft.headline}
-    </h1>
+    <div className={styles.headlineMeasure}>
+      <h1 id={headingId} className={styles.headline}>
+        {draft.headline}
+      </h1>
+    </div>
   );
   const lede = brief.copy.hideLede ? null : (
     <p className={styles.lede} data-role="lede">
