@@ -1,0 +1,37 @@
+[
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 52868,
+    "OwningProcess": 20112
+  },
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 58629,
+    "OwningProcess": 20112
+  },
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 64669,
+    "OwningProcess": 20112
+  },
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 50159,
+    "OwningProcess": 20112
+  },
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 55074,
+    "OwningProcess": 20112
+  },
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 62929,
+    "OwningProcess": 20112
+  },
+  {
+    "RemoteAddress": "127.0.0.1",
+    "RemotePort": 65050,
+    "OwningProcess": 20112
+  }
+]

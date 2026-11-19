@@ -1,0 +1,119 @@
+- paragraph: Local session · text fields are restored after refresh; the packshot and local approval are not.
+- button "Edit brief inputs"
+- paragraph: Commercial and media check
+- paragraph: Revision 3eafc0d2a1 · rendered values
+- paragraph: Offer
+- paragraph: Offer entered
+- paragraph: Cup + lid, €24 · offer ends 30 November 2026
+- paragraph: Destination
+- paragraph: Direct URL · confirmed
+- paragraph: https://rose.example/products/rose
+- paragraph: Media
+- paragraph: Media rights recorded
+- paragraph: Synthetic fixture created locally; approved for this local test.
+- banner:
+  - paragraph: Ornigami · campaign workflow
+  - heading "Campaign Lab" [level=1]
+  - generic: Local only · not published
+  - generic: Browser offer intake · confirmed inputs
+- main:
+  - complementary "Campaign brief":
+    - heading "Campaign brief" [level=2]
+    - paragraph: A single-product offer entered in the local browser intake.
+    - paragraph: Local browser brief · not publication approval.
+    - generic: Browser offer
+    - group "Campaign facts":
+      - generic: Campaign facts
+      - generic: Experimental presentation
+      - combobox "Experimental presentation":
+        - option "Static reference" [selected]
+        - option "Restrained product motion"
+        - option "Product inspection"
+      - generic: Format
+      - combobox "Format":
+        - option "Single-product offer · v1.0.1" [selected]
+        - option "Single-product advertorial · v1.0.0 · inputs missing"
+      - paragraph: The existing direct-offer workflow. Use it when the brief has no approved story.
+      - generic: Product name
+      - textbox "Product name": Rose Supply ceramic cup
+      - generic: Audience
+      - textbox "Audience":
+        - /placeholder: Who is this campaign for?
+        - text: Home coffee drinkers
+      - generic: Campaign objective
+      - textbox "Campaign objective":
+        - /placeholder: What should the page achieve?
+        - text: Present the exact bundle and purchase destination
+      - paragraph: Audience and objective guide generation and are not rendered as page copy.
+      - generic: Offer
+      - textbox "Offer": Cup + lid, €24 · offer ends 30 November 2026
+      - generic: Destination URL
+      - textbox "Destination URL": https://rose.example/products/rose
+      - generic: Product image
+      - combobox "Product image":
+        - option "Select an approved image"
+        - option "Rose Supply product image — approved" [selected]
+      - paragraph: browser-offer-packshot · reviewed 2026-11-19
+      - generic "Approved asset record"
+    - group "Brand styling":
+      - generic: Brand styling
+      - generic "Brand evidence (optional) · palette applied"
+      - generic: Visual direction
+      - combobox "Visual direction":
+        - option "Clear" [selected]
+        - option "Editorial"
+      - button "Use reviewed / direction accent"
+      - generic: Accent color
+      - code: "#6b2340"
+      - generic: Accent override (hex)
+      - textbox "Accent override (hex)":
+        - /placeholder: "#2f5d4a"
+      - textbox "Accent color": "#6b2340"
+      - paragraph: Used for the offer rule and primary action. Action text contrast adjusts automatically.
+    - button "Generate preview"
+    - button "Approve preview locally" [disabled]
+    - status: No validation errors.
+    - paragraph: Local review status
+    - generic: Local preview approval
+    - paragraph: Local preview approval recorded — revision 3eafc0d2a1. Not publication approval.
+    - status: Required images are loaded. Revision 3eafc0d2a1 is already approved; no further image action is needed.
+    - paragraph: Local preview approval applies only to revision 3eafc0d2a1 in this browser session; it is not publication approval. Editing any field or generating a new revision clears it. Recorded locally in this browser session.
+    - paragraph: Standalone export
+    - generic: Ready
+    - paragraph: Revision 3eafc0d2a1 is locally approved and ready to export.
+    - paragraph: The local ZIP contains index.html, styles.css, the approved packshot and a revision receipt. Only the rendered direct-offer page is included; editor controls and internal notes are excluded.
+    - button "Export approved page"
+    - status: Exported campaign-lab-rose-supply-ceramic-cup-3eafc0d2a1.zip · revision 3eafc0d2a1.
+    - paragraph: Draft source
+    - generic: Local test output
+    - paragraph: Local test output · Local test provider. Opening offer-led; sections hero → hero-facts → close; facts capacity, material. Harness 1.0.0; guidance pack 1.0.0.
+  - region "Campaign preview":
+    - heading "Campaign preview" [level=2]
+    - paragraph: Single product offer · v1.0.1 · Offer-led, one photo
+    - generic "3eafc0d2a1662f57": Revision 3eafc0d2a1
+    - status: Local test output · Local test provider. Opening offer-led; sections hero → hero-facts → close; facts capacity, material. Harness 1.0.0; guidance pack 1.0.0.
+    - status: Local preview approval recorded. Revision 3eafc0d2a1 matches the preview; this is not publication approval.
+    - article "Rose Supply ceramic cup":
+      - paragraph: Rose Supply
+      - heading "Rose Supply ceramic cup" [level=1]
+      - paragraph: Cup + lid, €24 · offer ends 30 November 2026
+      - link "Shop now (opens in a new tab)":
+        - /url: https://rose.example/products/rose
+        - text: Shop now
+        - generic: (opens in a new tab)
+      - list:
+        - generic: Capacity
+        - generic: 350 ml
+        - generic: Material
+        - generic: Glazed ceramic
+      - figure:
+        - img "Synthetic Rose Supply ceramic cup packshot"
+      - generic: Rose Supply
+      - generic: © 2026 Rose Supply
+- region "Notifications alt+T"
+- button "Open Next.js Dev Tools":
+  - text: Compiling
+  - generic: .
+  - generic: .
+  - generic: .
+- alert

@@ -1,0 +1,81 @@
+✔ guard preserves child-process contracts and inherited enforcement (1761.1849ms)
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (115.7207ms)
+✔ sanitized compilation child environment retains preload (196.1437ms)
+✔ local data fetch remains available without a network exception (159.4224ms)
+✔ source permit is executable with protected reader and mandatory synthetic seams (711.3637ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1843.9954
+(node:25728) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-guard-rehearsal/src/lib/campaign-lab/brand-import/private-address.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-guard-rehearsal\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Offline rehearsal passed. Source authority closed; synthetic trace saved. No live backend or reservation exists.
+▲ Next.js 16.4.5 (webpack)
+- Local:         http://127.0.0.1:3041
+- Network:       http://127.0.0.1:3041
+✓ Ready in 744ms
+[@sentry/nextjs] Importing `withSentryConfig` from `@sentry/nextjs` is deprecated and will stop working in v11. Import it from `@sentry/nextjs/config` instead:
+  import { withSentryConfig } from '@sentry/nextjs/config';
+✓ Running next.config.ts took 1279ms
+○ Compiling /instrumentation ...
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+○ Compiling proxy ...
+○ Compiling /campaign-lab/offer/page ...
+ GET /campaign-lab/offer 200 in 18.7s (next.js: 17.6s, proxy.ts: 501ms, application-code: 576ms)
+○ Compiling /api/auth/[...nextauth]/route ...
+ GET /campaign-lab/offer 200 in 287ms (next.js: 40ms, proxy.ts: 15ms, application-code: 232ms)
+ GET /api/auth/session 200 in 7.8s (next.js: 7.7s, proxy.ts: 30ms, application-code: 62ms)
+ GET /api/auth/session 200 in 39ms (next.js: 15ms, proxy.ts: 12ms, application-code: 12ms)
+ GET /api/auth/session 200 in 28ms (next.js: 5ms, proxy.ts: 11ms, application-code: 12ms)
+ GET /api/auth/session 200 in 25ms (next.js: 6ms, proxy.ts: 9ms, application-code: 9ms)
+ GET /campaign-lab/offer 200 in 487ms (next.js: 10ms, proxy.ts: 19ms, application-code: 458ms)
+ POST /api/campaign-lab/brand-evidence 200 in 2.6s (next.js: 2.3s, proxy.ts: 19ms, application-code: 282ms)
+ GET /campaign-lab/offer 200 in 328ms (next.js: 57ms, proxy.ts: 116ms, application-code: 155ms)
+ GET /campaign-lab/offer 200 in 61ms (next.js: 9ms, proxy.ts: 12ms, application-code: 40ms)
+ POST /api/campaign-lab/generate 200 in 3.0s (next.js: 2.9s, proxy.ts: 9ms, application-code: 65ms)
+ GET /campaign-lab/offer 200 in 179ms (next.js: 28ms, proxy.ts: 13ms, application-code: 137ms)
+ GET /campaign-lab/offer 200 in 68ms (next.js: 12ms, proxy.ts: 14ms, application-code: 42ms)
+ GET /campaign-lab/offer 200 in 50ms (next.js: 7ms, proxy.ts: 10ms, application-code: 33ms)
+ GET /campaign-lab/offer 200 in 83ms (next.js: 12ms, proxy.ts: 14ms, application-code: 58ms)
+○ Compiling /page ...
+ GET / 200 in 4.9s (next.js: 4.2s, proxy.ts: 17ms, application-code: 719ms)
+ GET /campaign-lab/offer 200 in 329ms (next.js: 33ms, proxy.ts: 239ms, application-code: 58ms)
+ GET /login 200 in 2.6s (next.js: 2.3s, proxy.ts: 10ms, application-code: 305ms)
+ GET /campaign-lab/offer 200 in 184ms (next.js: 17ms, proxy.ts: 14ms, application-code: 154ms)
+○ Compiling /api/auth/[...nextauth]/route ...
+ GET /api/auth/session 200 in 3.7s (next.js: 3.6s, proxy.ts: 20ms, application-code: 106ms)
+ GET /api/auth/session 200 in 152ms (next.js: 98ms, proxy.ts: 40ms, application-code: 15ms)
+ GET /login 200 in 349ms (next.js: 39ms, proxy.ts: 216ms, application-code: 94ms)
+ GET /api/auth/session 200 in 32ms (next.js: 6ms, proxy.ts: 14ms, application-code: 12ms)
+ GET /api/auth/session 200 in 41ms (next.js: 7ms, proxy.ts: 21ms, application-code: 13ms)
+ GET /login 200 in 159ms (next.js: 10ms, proxy.ts: 10ms, application-code: 139ms)
+ GET /api/auth/session 200 in 50ms (next.js: 10ms, proxy.ts: 27ms, application-code: 13ms)
+ GET /api/auth/session 200 in 52ms (next.js: 21ms, proxy.ts: 16ms, application-code: 15ms)
+ GET /api/auth/session 200 in 60ms (next.js: 32ms, proxy.ts: 15ms, application-code: 13ms)
+ GET /api/auth/session 200 in 37ms (next.js: 7ms, proxy.ts: 18ms, application-code: 12ms)
+ GET /api/auth/session 200 in 28ms (next.js: 6ms, proxy.ts: 10ms, application-code: 12ms)
+ GET /api/auth/session 200 in 36ms (next.js: 12ms, proxy.ts: 12ms, application-code: 12ms)
+ GET /api/auth/session 200 in 37ms (next.js: 14ms, proxy.ts: 12ms, application-code: 11ms)
+ GET /api/auth/session 200 in 38ms (next.js: 14ms, proxy.ts: 12ms, application-code: 12ms)
+ GET /api/auth/session 200 in 25ms (next.js: 5ms, proxy.ts: 10ms, application-code: 10ms)
+ GET /api/auth/session 200 in 28ms (next.js: 5ms, proxy.ts: 10ms, application-code: 12ms)
+ GET /login 200 in 193ms (next.js: 121ms, proxy.ts: 34ms, application-code: 38ms)
+ GET /campaign-lab/offer 200 in 195ms (next.js: 70ms, proxy.ts: 28ms, application-code: 97ms)
+ GET /campaign-lab 200 in 3.6s (next.js: 3.1s, proxy.ts: 9ms, application-code: 464ms)
+ GET /campaign-lab/offer 200 in 101ms (next.js: 25ms, proxy.ts: 11ms, application-code: 66ms)
+ GET /api/auth/session 200 in 2.6s (next.js: 2.4s, proxy.ts: 9ms, application-code: 220ms)
+ GET /api/auth/session 200 in 49ms (next.js: 14ms, proxy.ts: 24ms, application-code: 12ms)
+ GET /api/auth/session 200 in 40ms (next.js: 13ms, proxy.ts: 14ms, application-code: 12ms)
+ GET /api/auth/session 200 in 25ms (next.js: 6ms, proxy.ts: 10ms, application-code: 8ms)
+ GET /campaign-lab/offer 200 in 162ms (next.js: 106ms, proxy.ts: 16ms, application-code: 39ms)
+ GET /campaign-lab 200 in 168ms (next.js: 51ms, proxy.ts: 15ms, application-code: 102ms)
+ GET /campaign-lab/offer 200 in 213ms (next.js: 121ms, proxy.ts: 25ms, application-code: 67ms)
+ GET /campaign-lab 200 in 218ms (next.js: 23ms, proxy.ts: 22ms, application-code: 173ms)

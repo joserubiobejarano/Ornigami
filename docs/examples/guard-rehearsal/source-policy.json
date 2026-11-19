@@ -1,0 +1,292 @@
+{
+  "policy": {
+    "seed": "https://www.iana.org/",
+    "host": "www.iana.org",
+    "port": 443,
+    "method": "GET",
+    "gets": 4,
+    "bytes": 1048576,
+    "deadlineMs": 10000,
+    "transactions": 1,
+    "media": [
+      "text/html",
+      "text/css"
+    ]
+  },
+  "checks": [
+    {
+      "name": "closed startup / no worker permission / background denial",
+      "result": "PASS"
+    },
+    {
+      "name": "API input cannot arm authority; production rejects before reader creation",
+      "result": "PASS"
+    },
+    {
+      "name": "existing API + protected reader + four actual synthetic GETs; closed completion / second transaction",
+      "result": "PASS"
+    },
+    {
+      "name": "wrong host / protocol / port / credentials / numeric URL rejected before synthetic DNS",
+      "result": "PASS"
+    },
+    {
+      "name": "wrong method and unbound numeric TLS never reach fixture connector",
+      "result": "PASS"
+    },
+    {
+      "name": "private DNS / cross-host redirect / wrong media cannot open connector or consume entities",
+      "result": "PASS"
+    },
+    {
+      "name": "conservative failed reservation closes byte budget",
+      "result": "PASS"
+    },
+    {
+      "name": "cancellation destroys pending synthetic stream and closes authority",
+      "result": "PASS"
+    },
+    {
+      "name": "deadline closes permission autonomously, including inherited async continuation",
+      "result": "PASS"
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "synthetic API only",
+      "open": false,
+      "used": true,
+      "gets": 4,
+      "charged": 346,
+      "reason": "budget",
+      "trace": [
+        {
+          "event": "opened",
+          "synthetic": true
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": true
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/",
+          "admission": 1,
+          "synthetic": true
+        },
+        {
+          "event": "TLS",
+          "address": "93.184.216.34",
+          "synthetic": true
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": true
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/one.css",
+          "admission": 2,
+          "synthetic": true
+        },
+        {
+          "event": "TLS",
+          "address": "93.184.216.34",
+          "synthetic": true
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": true
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/two.css",
+          "admission": 3,
+          "synthetic": true
+        },
+        {
+          "event": "TLS",
+          "address": "93.184.216.34",
+          "synthetic": true
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": true
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/three.css",
+          "admission": 4,
+          "synthetic": true
+        },
+        {
+          "event": "TLS",
+          "address": "93.184.216.34",
+          "synthetic": true
+        },
+        {
+          "event": "closed",
+          "reason": "budget"
+        }
+      ],
+      "fixture": {
+        "dns": 4,
+        "tls": 4,
+        "wire": [
+          "/",
+          "/one.css",
+          "/two.css",
+          "/three.css"
+        ],
+        "closed": 4
+      }
+    },
+    {
+      "scenario": "single completed protected read",
+      "open": false,
+      "used": true,
+      "gets": 1,
+      "charged": 268,
+      "reason": "completed",
+      "trace": [
+        {
+          "event": "opened",
+          "synthetic": true
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": true
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/",
+          "admission": 1,
+          "synthetic": true
+        },
+        {
+          "event": "TLS",
+          "address": "93.184.216.34",
+          "synthetic": true
+        },
+        {
+          "event": "closed",
+          "reason": "completed"
+        }
+      ],
+      "fixture": {
+        "dns": 1,
+        "tls": 1,
+        "wire": [
+          "/"
+        ],
+        "closed": 1
+      }
+    },
+    {
+      "scenario": "rejections",
+      "open": false,
+      "used": true,
+      "gets": 1,
+      "charged": 512,
+      "reason": "completed",
+      "trace": [
+        {
+          "event": "opened",
+          "synthetic": true
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": true
+        },
+        {
+          "event": "rejected",
+          "boundary": "https.request",
+          "why": "GET scope"
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/",
+          "admission": 1,
+          "synthetic": true
+        },
+        {
+          "event": "rejected",
+          "boundary": "tls.connect",
+          "why": "bound TLS"
+        },
+        {
+          "event": "rejected",
+          "boundary": "tls.connect",
+          "why": "bound TLS"
+        },
+        {
+          "event": "rejected",
+          "boundary": "tls.connect",
+          "why": "bound TLS"
+        },
+        {
+          "event": "rejected",
+          "boundary": "tls.connect",
+          "why": "bound TLS"
+        },
+        {
+          "event": "rejected",
+          "boundary": "tls.connect",
+          "why": "bound TLS"
+        },
+        {
+          "event": "rejected",
+          "boundary": "tls.connect",
+          "why": "bound TLS"
+        },
+        {
+          "event": "closed",
+          "reason": "completed"
+        }
+      ]
+    }
+  ],
+  "realUnderlyingCalls": 0
+}

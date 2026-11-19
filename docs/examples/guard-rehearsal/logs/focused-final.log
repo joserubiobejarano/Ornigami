@@ -1,0 +1,13 @@
+✔ guard preserves child-process contracts and inherited enforcement (2190.8805ms)
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (149.3313ms)
+✔ sanitized compilation child environment retains preload (279.3147ms)
+✔ local data fetch remains available without a network exception (173.9684ms)
+✔ source permit is executable with protected reader and mandatory synthetic seams (1275.1766ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2334.2005

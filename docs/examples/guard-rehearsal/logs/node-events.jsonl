@@ -1,0 +1,33 @@
+{"time":"2026-11-19T22:11:44.963Z","pid":38300,"ppid":29204,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:11:44.997Z","pid":38300,"ppid":29204,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T22:11:45.021Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:45.052Z","pid":34144,"ppid":38300,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:11:45.283Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:45.536Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:46.545Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:46.808Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:47.666Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:47.922Z","pid":38300,"ppid":29204,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:53.253Z","pid":28540,"ppid":12420,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:11:53.263Z","pid":28540,"ppid":12420,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T22:11:53.327Z","pid":8424,"ppid":28540,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:11:53.807Z","pid":28540,"ppid":12420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:11:55.934Z","pid":28540,"ppid":12420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:24.797Z","pid":36956,"ppid":16304,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:18:24.839Z","pid":36956,"ppid":16304,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T22:18:24.870Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:24.913Z","pid":45704,"ppid":36956,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:18:25.129Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:25.385Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:25.646Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:26.651Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:26.912Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:27.927Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:28.182Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:28.544Z","pid":36956,"ppid":16304,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:34.108Z","pid":22308,"ppid":33616,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:18:34.122Z","pid":22308,"ppid":33616,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T22:18:34.248Z","pid":11596,"ppid":22308,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}
+{"time":"2026-11-19T22:18:34.941Z","pid":22308,"ppid":33616,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:18:37.770Z","pid":22308,"ppid":33616,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T22:20:59.192Z","pid":15996,"ppid":24628,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-guard-rehearsal\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","liveBackend":false}

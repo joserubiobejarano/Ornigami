@@ -1,0 +1,18 @@
+✔ guard preserves child-process contracts and inherited enforcement (1560.2347ms)
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (137.5245ms)
+✔ sanitized compilation child environment retains preload (227.9357ms)
+✔ local data fetch remains available without a network exception (153.4708ms)
+✔ source permit is executable with protected reader and mandatory synthetic seams (882.3896ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1665.5783
+(node:43004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-guard-rehearsal/src/lib/campaign-lab/brand-import/private-address.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-guard-rehearsal\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Offline rehearsal passed. Source authority closed; synthetic trace saved. No live backend or reservation exists.

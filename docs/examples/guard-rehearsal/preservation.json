@@ -1,0 +1,43 @@
+{
+  "records": [
+    {
+      "path": "C:/Users/joser/.local/ornigami-brand-public-network/.local/brand-public-network-20261119/EXECUTION_RESERVED",
+      "sha256": "42e472b254c311c5a4b3ddc6a34f8f23676126dffc14c2da26d286d14299282d",
+      "bytes": 76,
+      "unchanged": true
+    },
+    {
+      "path": "C:/Users/joser/.local/ornigami-brand-public-network/.local/brand-public-network-20261119/ledger.json",
+      "sha256": "6b151673c21501380376f02c1a3ffc8c8b5f5b4a3933a7635b8b0129bc6e0ba8",
+      "bytes": 1585,
+      "unchanged": true
+    },
+    {
+      "path": "C:/Users/joser/.local/ornigami-brand-live-canary/.local/brand-live-canary-20261119/EXECUTION_RESERVED",
+      "sha256": "6a0bc15f8ddebf7f9023aa286b114ee7b915fe63c6723313bde798c3c0e74517",
+      "bytes": 689,
+      "unchanged": true
+    },
+    {
+      "path": "C:/Users/joser/.local/ornigami-brand-live-canary/.local/brand-live-canary-20261119/failure-ledger.json",
+      "sha256": "1ca7d38f798c256edc833297ca0b1315bbd36a5492e9efeec8b5297393b24bf5",
+      "bytes": 19493,
+      "unchanged": true
+    },
+    {
+      "path": "C:/Users/joser/.local/ornigami-brand-live-canary/.local/brand-live-canary-20261119/failed-pre-action-audit.json",
+      "sha256": "c9df5f9e42e7c5bf9a10ece336e6ae3bce40f1245ecea9c610bc65d3e6ac63fe",
+      "bytes": 6075,
+      "unchanged": true
+    },
+    {
+      "path": "C:/Users/joser/.local/ornigami-brand-live-canary/.local/brand-live-canary-20261119/RUN_RETIRED.json",
+      "sha256": "d832a78496023633423f681554042c21326c378b8f67883ecb06f0a35006bddf",
+      "bytes": 200,
+      "unchanged": true
+    }
+  ],
+  "failedBodies": 19,
+  "failedBodyBytes": 373051,
+  "allLedgerHashesMatch": true
+}

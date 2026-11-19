@@ -1,0 +1,50 @@
+✖ source permit is executable with protected reader and mandatory synthetic seams (545.7041ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 640.5596
+
+✖ failing tests:
+
+test at tests\source-policy.test.cjs:6:1
+✖ source permit is executable with protected reader and mandatory synthetic seams (545.7041ms)
+  AssertionError [ERR_ASSERTION]: node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: {"body":{"ok":false,"message":"The website could not supply supported HTML. Use saved evidence or manual colors.","summary":{"status":"rejected","logicalReads":1,"chargedBytes":524288,"retainedBytes":0}},"policy":{"open":false,"used":true,"gets":0,"charged":524288,"reason":"completed","trace":[{"event":"opened","synthetic":true},{"event":"closed","reason":"completed"}]},"fixture":{"dns":0,"tls":0,"wire":[],"closed":0}}
+  
+  422 !== 200
+  
+      at file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:57:10
+      at async check (file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:40:70)
+      at async file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:53:1 {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 422,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+  
+  Node.js v24.11.1
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (C:\Users\joser\.local\ornigami-guard-rehearsal\tests\source-policy.test.cjs:9:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

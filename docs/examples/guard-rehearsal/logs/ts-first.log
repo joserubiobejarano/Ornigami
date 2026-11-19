@@ -1,0 +1,7 @@
+tests/support/source-policy.mts(48,191): error TS2769: No overload matches this call.
+  Overload 1 of 8, '(command: string, args: readonly string[], options: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>', gave the following error.
+    Property 'NODE_ENV' is missing in type '{ SystemRoot: string | undefined; }' but required in type 'ProcessEnv'.
+  Overload 2 of 8, '(command: string, args: readonly string[], options: SpawnSyncOptionsWithBufferEncoding): SpawnSyncReturns<NonSharedBuffer>', gave the following error.
+    Property 'NODE_ENV' is missing in type '{ SystemRoot: string | undefined; }' but required in type 'ProcessEnv'.
+  Overload 3 of 8, '(command: string, args?: readonly string[] | undefined, options?: SpawnSyncOptions | undefined): SpawnSyncReturns<string | NonSharedBuffer>', gave the following error.
+    Property 'NODE_ENV' is missing in type '{ SystemRoot: string | undefined; }' but required in type 'ProcessEnv'.

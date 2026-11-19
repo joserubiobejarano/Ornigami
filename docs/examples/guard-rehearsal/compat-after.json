@@ -1,0 +1,20 @@
+{
+  "baseline": {
+    "callbacks": 1,
+    "callbackHandle": true,
+    "value": {
+      "stdout": "out",
+      "stderr": "err"
+    },
+    "childPresent": true
+  },
+  "guarded": {
+    "callbacks": 1,
+    "callbackHandle": true,
+    "value": {
+      "stdout": "out",
+      "stderr": "err"
+    },
+    "childPresent": true
+  }
+}

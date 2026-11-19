@@ -1,0 +1,73 @@
+✖ source permit is executable with protected reader and mandatory synthetic seams (474.9124ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 598.8181
+
+✖ failing tests:
+
+test at tests\source-policy.test.cjs:6:1
+✖ source permit is executable with protected reader and mandatory synthetic seams (474.9124ms)
+  AssertionError [ERR_ASSERTION]: node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   code: 'ORNIGAMI_OFFLINE'
+  -   code: 'SOURCE_WINDOW_DENIED'
+    }
+  
+      at file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:46:12
+      at C:\Users\joser\.local\ornigami-guard-rehearsal\scripts\support\source-window.cjs:32:79
+      at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+      at Object.transaction (C:\Users\joser\.local\ornigami-guard-rehearsal\scripts\support\source-window.cjs:32:41)
+      at file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:45:22
+      at check (file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:40:76)
+      at file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:42:7
+      at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:671:26)
+      at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Offline qualification denied source-options: fonts.googleapis.com
+        at check (C:\Users\joser\.local\ornigami-guard-rehearsal\scripts\support\offline-guard.cjs:24:17)
+        at api.<computed> (C:\Users\joser\.local\ornigami-guard-rehearsal\scripts\support\offline-guard.cjs:81:115)
+        at assert.throws.code (file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:46:31)
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:46:12
+        at C:\Users\joser\.local\ornigami-guard-rehearsal\scripts\support\source-window.cjs:32:79
+        at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+        at Object.transaction (C:\Users\joser\.local\ornigami-guard-rehearsal\scripts\support\source-window.cjs:32:41)
+        at file:///C:/Users/joser/.local/ornigami-guard-rehearsal/tests/support/source-policy.mts:45:22 {
+      code: 'ORNIGAMI_OFFLINE'
+    },
+    expected: { code: 'SOURCE_WINDOW_DENIED' },
+    operator: 'throws',
+    diff: 'simple'
+  }
+  
+  Node.js v24.11.1
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (C:\Users\joser\.local\ornigami-guard-rehearsal\tests\source-policy.test.cjs:9:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

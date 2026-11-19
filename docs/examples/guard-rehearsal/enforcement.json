@@ -1,0 +1,90 @@
+{
+  "build": {
+    "initializedPids": [
+      1120,
+      2360,
+      4464,
+      6984,
+      11284,
+      14172,
+      14852,
+      17436,
+      17784,
+      18112,
+      21188,
+      22828,
+      23164,
+      23444,
+      24964,
+      27784,
+      28616,
+      33168,
+      33640,
+      35700,
+      36808,
+      44376
+    ],
+    "allInitializedClosed": true,
+    "denied": {
+      "https.request o1.ingest.sentry.io": 3
+    },
+    "connectCalls": {},
+    "children": {
+      "C:\\Program Files\\nodejs\\node.exe": 4,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js": 15
+    },
+    "syntheticStreamCalls": 0
+  },
+  "dev": {
+    "initializedPids": [
+      6216,
+      6424,
+      8268,
+      8988,
+      11776,
+      18076,
+      20112,
+      20684,
+      21404,
+      22148,
+      24004,
+      24072,
+      32292,
+      37068,
+      41076
+    ],
+    "allInitializedClosed": true,
+    "denied": {
+      "fetch:https: registry.npmjs.org": 4
+    },
+    "connectCalls": {},
+    "children": {
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\server\\lib\\start-server.js": 2,
+      "C:\\Program Files\\nodejs\\node.exe": 4,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js": 7
+    },
+    "syntheticStreamCalls": 4
+  },
+  "node": {
+    "initializedPids": [
+      8424,
+      11596,
+      15996,
+      22308,
+      28540,
+      34144,
+      36956,
+      38300,
+      45704
+    ],
+    "allInitializedClosed": true,
+    "denied": {},
+    "connectCalls": {
+      "127.0.0.1": 20
+    },
+    "children": {
+      "C:\\Program Files\\nodejs\\node.exe": 4
+    },
+    "syntheticStreamCalls": 0
+  }
+}

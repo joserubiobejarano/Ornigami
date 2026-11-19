@@ -1,0 +1,25 @@
+{
+  "base": "e4858682ca3c12817f19f26f5ec8180d01886831",
+  "testedGuardControllerCommit": "0fe9a0ebc3a02d147966aa751b07ffa3a158a38a",
+  "supportHead": "5d4e6f674af728493717fd17725cca4ac1c491d5",
+  "runtime": "v24.11.1",
+  "trees": {
+    "src": {
+      "base": "ef5a3a7f43856fc1b3ef6036c49ccdc4927c7ee1",
+      "current": "ef5a3a7f43856fc1b3ef6036c49ccdc4927c7ee1",
+      "unchanged": true
+    },
+    "public": {
+      "base": "f92a32bd2b16d96c4c05c6b5942a65b30e7aa713",
+      "current": "f92a32bd2b16d96c4c05c6b5942a65b30e7aa713",
+      "unchanged": true
+    },
+    "scripts/canary": {
+      "base": "f705f6bc64325443a6183a559a30cd211c424dfa",
+      "current": "f705f6bc64325443a6183a559a30cd211c424dfa",
+      "unchanged": true
+    }
+  },
+  "guardSha256": "ee1661fdfa1b985c203e704b4b3f38f069f56c8ae0ea6adc29bd586416554de5",
+  "controllerSha256": "b1095f575c46c0a5bf8f60a5a218a9ac1c7f52d68063170cfbe0b7fd4739645e"
+}

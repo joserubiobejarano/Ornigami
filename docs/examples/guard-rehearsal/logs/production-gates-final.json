@@ -1,0 +1,17 @@
+{
+  "runtime": "v24.11.1",
+  "mode": "production",
+  "serverOptIns": "live + true (intentionally ignored in production)",
+  "records": [
+    {
+      "status": 404,
+      "sourceWork": "unavailable before request validation"
+    },
+    {
+      "status": 404,
+      "sourceWork": "unavailable before request validation"
+    }
+  ],
+  "pageStatus": 404,
+  "externalRequests": 0
+}
