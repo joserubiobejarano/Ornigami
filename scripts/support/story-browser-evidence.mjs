@@ -73,3 +73,36 @@ export async function captureStoryViewport(tab, viewport, options) {
   } catch (error) { record.status = "failed"; record.error = error.message; throw error; }
   finally { await fs.writeFile(path.join(directory, `${name}.json`), JSON.stringify(record, null, 2) + "\n"); }
 }
+
+
+/** Normal-height offer intake/preview evidence; no full-page resizing. */
+export async function captureOfferViewport(tab, viewport, options) {
+  const { width, height, directory, name } = options;
+  await fs.mkdir(directory, { recursive: true });
+  await viewport.set({width,height});
+  const measure=()=>tab.playwright.evaluate(()=>{
+    const article=document.querySelector("article"),h1=article?.querySelector("h1"),image=article?.querySelector("img");
+    return {innerWidth,innerHeight,clientWidth:document.documentElement.clientWidth,dpr:devicePixelRatio,scrollY,
+      article:article?.getBoundingClientRect().toJSON()??null,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+      readyImages:article?[...article.querySelectorAll("img")].filter(i=>i.complete&&i.naturalWidth>0).length:0,
+      revision:document.querySelector("section[data-fixture]")?.getAttribute("data-revision")??null,
+      appearance:h1?{font:getComputedStyle(h1).fontFamily,weight:getComputedStyle(h1).fontWeight,background:getComputedStyle(article).backgroundColor,radius:getComputedStyle(image.closest("figure")).borderRadius}:null,
+      headline:h1?.textContent??null,content:article?.textContent??null,links:article?[...article.querySelectorAll("a")].map(a=>({href:a.href,text:a.textContent})):[],
+      generation:document.querySelector("section[data-generation-status]")?.getAttribute("data-generation-status"),
+      provider:document.querySelector("section[data-generation-provider]")?.getAttribute("data-generation-provider"),
+      direction:document.querySelector("#browser-visual-direction")?.value??document.querySelector("input[name=visualDirection]:checked")?.value,
+      controls:[...document.querySelectorAll("select,#browser-accent-override,#intake-accent-override,input[name=visualDirection]")].map(e=>({name:e.getAttribute("aria-label")??e.id,type:e.type,width:(e.type==="radio"?e.closest("label"):e).getBoundingClientRect().width,height:(e.type==="radio"?e.closest("label"):e).getBoundingClientRect().height})),
+    };
+  });
+  const result={requestedWidth:width,requestedHeight:height,name};
+  try {
+    result.before=await measure();assert.equal(result.before.innerWidth,width);assert.equal(result.before.innerHeight,height);assert.equal(result.before.overflow,false);
+    if(result.before.article)assert.ok(result.before.readyImages>0);
+    const bytes=await tab.screenshot({fullPage:false});result.screenshot=jpegDimensions(bytes);
+    assert.equal(result.screenshot.width,width*result.before.dpr);assert.equal(result.screenshot.height,height*result.before.dpr);
+    await fs.writeFile(path.join(directory,name+".jpg"),bytes);
+    result.after=await measure();assert.equal(result.after.innerWidth,width);assert.equal(result.after.innerHeight,height);assert.equal(result.after.clientWidth,result.before.clientWidth);assert.deepEqual(result.after.article,result.before.article);
+    result.status="passed";return result;
+  } catch(error){result.status="failed";result.error=error.message;throw error;}
+  finally{await fs.writeFile(path.join(directory,name+".json"),JSON.stringify(result,null,2)+"\n");}
+}

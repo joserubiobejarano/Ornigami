@@ -1,3 +1,4 @@
+import { resolveVisualDirection } from "./visual-directions.ts";
 import { parseCampaignContext } from "./campaign-context.ts";
 import {
   SINGLE_PRODUCT_OFFER_TEMPLATE,
@@ -6,7 +7,6 @@ import {
 import type {
   ApprovedAsset,
   BrandDefinition,
-  BrandTokens,
   CampaignCatalog,
   CampaignFixture,
   ProductFact,
@@ -41,6 +41,8 @@ export type BrowserOfferConfirmations = {
 };
 
 export type BrowserOfferIntakeInput = {
+  directionId?: string;
+  accent?: string;
   brandName?: string;
   productName: string;
   audience?: string;
@@ -74,6 +76,8 @@ export type BrowserOfferFactErrors = {
 };
 
 export type BrowserOfferIntakeErrors = {
+  directionId?: string;
+  accent?: string;
   productName?: string;
   audience?: string;
   objective?: string;
@@ -190,32 +194,8 @@ export function browserOfferPilotNote(
     : "Local browser brief · not publication approval.";
 }
 
-const NEUTRAL_TOKENS: BrandTokens = {
-  page: "#f6f3ec",
-  surface: "#e8e2d6",
-  ink: "#1f2a24",
-  muted: "#60695f",
-  accent: "#2f5d4a",
-  accentInk: "#f8faf7",
-  line: "#d5cdbf",
-  displayFont: "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
-  bodyFont: "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
-  displayWeight: 700,
-  displayTracking: "-0.035em",
-  labelCase: "uppercase",
-  labelTracking: "0.14em",
-  imageRadius: "12px",
-  buttonRadius: "999px",
-  heroImage: "framed",
-  heroOrder: "product-first",
-  prefersEditorial: false,
-  detailBackground: "#1f2a24",
-  detailInk: "#f6f3ec",
-  imageBlend: "normal",
-  showWordmarkMark: false,
-};
-
-function browserBrand(brandName?: unknown): BrandDefinition {
+function browserBrand(brandName?: unknown, directionId?: string): BrandDefinition {
+  const direction = resolveVisualDirection(directionId);
   const supplied = typeof brandName === "string" ? brandName.trim() : "";
   const name = supplied || "Preview brand";
   return {
@@ -223,7 +203,8 @@ function browserBrand(brandName?: unknown): BrandDefinition {
     name,
     wordmark: supplied || "Preview",
     descriptor: supplied ? "Local brand preview" : "Neutral preview",
-    tokens: { ...NEUTRAL_TOKENS },
+    tokens: { ...direction.tokens },
+    visualDirection: { id: direction.id, version: direction.version },
     headlineMode: "offer-led",
     detailTitle: "Product details",
   };
@@ -265,6 +246,8 @@ export function validateBrowserOfferIntake(
   input: BrowserOfferIntakeInput,
 ): BrowserOfferIntakeValidation {
   const errors: BrowserOfferIntakeErrors = {};
+  try { resolveVisualDirection(input.directionId); } catch (error) { errors.directionId = (error as Error).message; }
+  if (input.accent !== undefined && !/^#[a-f0-9]{6}$/i.test(input.accent)) errors.accent = "Accent override must be a six-digit hex color.";
   const limits = SINGLE_PRODUCT_OFFER_TEMPLATE.limits;
 
   const context = parseCampaignContext(input);
@@ -347,7 +330,7 @@ export function buildBrowserOfferCatalog(
   catalog: CampaignCatalog;
   verification: BrowserOfferVerification;
 } {
-  const brand = browserBrand(input.brandName);
+  const brand = browserBrand(input.brandName, input.directionId);
   const verification = verifyBrowserOffer(input);
   const context = parseCampaignContext(input);
   const factsInput = input.facts.map((fact) => ({
@@ -405,6 +388,8 @@ export function buildBrowserOfferCatalog(
     description: "A single-product offer entered in the local browser intake.",
     assetId: asset.id,
     brief: {
+      directionId: brand.visualDirection!.id,
+      ...(input.accent ? { accentOverride: input.accent } : {}),
       fixtureId: BROWSER_OFFER_FIXTURE_ID,
       brandId: brand.id,
       productName: trimmed(input.productName),

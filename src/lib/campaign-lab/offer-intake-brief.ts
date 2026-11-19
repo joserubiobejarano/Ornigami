@@ -1,3 +1,4 @@
+import { resolveVisualDirection } from "./visual-directions.ts";
 import {
   BROWSER_OFFER_MAX_FACTS,
   BROWSER_OFFER_MIN_FACTS,
@@ -11,6 +12,8 @@ export const OFFER_INTAKE_BRIEF_STORAGE_KEY =
 
 export type PersistedOfferIntakeBrief = {
   schemaVersion: 1;
+  directionId?: string;
+  accent?: string;
   brandName: string;
   productName: string;
   audience: string;
@@ -129,6 +132,8 @@ export function parsePreparedOfferIntakeBrief(
     }
 
     const brief: PreparedOfferIntakeBrief = {
+      ...(parsed.directionId !== undefined ? { directionId: resolveVisualDirection(parsed.directionId).id } : {}),
+      ...(parsed.accent !== undefined ? { accent: optionalText(parsed, "accent", "Accent override") } : {}),
       brandName: optionalText(parsed, "brandName", "Brand name"),
       productName: requiredText(parsed, "productName", "Product name"),
       audience: context.audience ?? "",
@@ -144,6 +149,7 @@ export function parsePreparedOfferIntakeBrief(
       rights: requiredText(parsed, "rights", "Usage rights"),
     };
 
+    if (brief.accent && !/^#[a-f0-9]{6}$/i.test(brief.accent)) throw new Error("Accent override must be a six-digit hex color.");
     const validation = validateBrowserOfferIntake({
       brandName: brief.brandName,
       productName: brief.productName,
@@ -206,6 +212,9 @@ export function parsePersistedOfferIntakeBrief(
   const record = parsed as Record<string, unknown>;
   if (record.schemaVersion !== 1) return null;
 
+  let directionId: string;
+  try { directionId = resolveVisualDirection(record.directionId).id; } catch { return null; }
+  if (record.accent !== undefined && typeof record.accent !== "string") return null;
   const rawFacts = Array.isArray(record.facts) ? record.facts : [];
   const facts = rawFacts
     .slice(0, BROWSER_OFFER_MAX_FACTS)
@@ -216,6 +225,8 @@ export function parsePersistedOfferIntakeBrief(
 
   return {
     schemaVersion: 1,
+    ...(record.directionId !== undefined ? { directionId } : {}),
+    ...(record.accent !== undefined ? { accent: text(record.accent) } : {}),
     brandName: text(record.brandName),
     productName: text(record.productName),
     audience: text(record.audience),

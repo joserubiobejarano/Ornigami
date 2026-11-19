@@ -113,6 +113,7 @@ function buildGenerationRequest(
       },
     },
     brand: {
+      ...(brand.visualDirection ? { visualDirection: { ...brand.visualDirection } } : {}),
       id: brief.brandId,
       name: brand.name,
       wordmark: brand.wordmark,

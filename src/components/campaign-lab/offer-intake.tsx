@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VISUAL_DIRECTIONS } from "@/lib/campaign-lab/visual-directions";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
@@ -254,6 +255,8 @@ export function OfferIntake() {
 
   const [briefHydrated, setBriefHydrated] = useState(false);
   const [restoredBrief, setRestoredBrief] = useState(false);
+  const [directionId, setDirectionId] = useState("clear");
+  const [accentOverride, setAccentOverride] = useState("");
   const [brandName, setBrandName] = useState("");
   const [productName, setProductName] = useState("");
   const [audience, setAudience] = useState("");
@@ -320,6 +323,8 @@ export function OfferIntake() {
       }
       const brief = parsePersistedOfferIntakeBrief(raw);
       if (brief) {
+        setDirectionId(brief.directionId ?? "clear");
+        setAccentOverride(brief.accent ?? "");
         setBrandName(brief.brandName);
         setProductName(brief.productName);
         setAudience(brief.audience);
@@ -344,6 +349,8 @@ export function OfferIntake() {
       window.sessionStorage.setItem(
         OFFER_INTAKE_BRIEF_STORAGE_KEY,
         serializePersistedOfferIntakeBrief({
+          directionId,
+          accent: accentOverride,
           brandName,
           productName,
           audience,
@@ -359,6 +366,7 @@ export function OfferIntake() {
       // A full or blocked storage area must not block the intake.
     }
   }, [
+    directionId, accentOverride,
     alt,
     audience,
     brandName,
@@ -501,7 +509,9 @@ export function OfferIntake() {
     }
 
     const brief = parsed.brief;
-    setBrandName(brief.brandName);
+    setDirectionId(brief.directionId ?? "clear");
+        setAccentOverride(brief.accent ?? "");
+        setBrandName(brief.brandName);
     setProductName(brief.productName);
     setAudience(brief.audience);
     setObjective(brief.objective);
@@ -580,6 +590,8 @@ export function OfferIntake() {
       destinationUrl: snapshot.values.destinationUrl,
       rights: previous.rights,
     };
+    setDirectionId(snapshot.values.directionId ?? "clear");
+    setAccentOverride(snapshot.values.accentOverride ?? "");
     setProductName(snapshot.values.productName);
     setAudience(snapshot.values.audience ?? "");
     setObjective(snapshot.values.objective ?? "");
@@ -592,6 +604,8 @@ export function OfferIntake() {
     if (readingPreparedBrief || readingPackshot || packshotError) return;
 
     const input: BrowserOfferIntakeInput = {
+      directionId,
+      ...(accentOverride ? { accent: accentOverride } : {}),
       brandName,
       productName,
       audience,
@@ -704,6 +718,7 @@ export function OfferIntake() {
           browserBrief={(nextValues) =>
             browserOfferBriefFromIntake({
               ...submitted.input,
+              directionId: nextValues.directionId,
               productName: nextValues.productName,
               audience: nextValues.audience,
               objective: nextValues.objective,
@@ -711,7 +726,7 @@ export function OfferIntake() {
               destinationUrl: nextValues.destinationUrl,
               confirmations,
             }, {
-              accent: nextValues.accent,
+              accent: nextValues.accentOverride,
             })
           }
           browserAssetSrc={submitted.assetSrc}
@@ -749,6 +764,13 @@ export function OfferIntake() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-8">
+        <fieldset className="mb-5 grid gap-3 sm:grid-cols-2"><legend className="mb-2 font-semibold">Visual direction</legend>
+          {VISUAL_DIRECTIONS.map(direction => <label key={direction.id} className="flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border border-[#c9bda8] bg-[#fbf8f1] p-3">
+            <input type="radio" name="visualDirection" value={direction.id} checked={directionId === direction.id} onChange={() => setDirectionId(direction.id)} />
+            <span><span className="block text-lg" style={{fontFamily:direction.tokens.displayFont}}>{direction.name}</span><span className="text-sm">{direction.description}</span></span>
+          </label>)}
+        </fieldset>
+        <div className="mb-5 space-y-1"><Label htmlFor="intake-accent-override">Accent override (hex)</Label><Input className="min-h-11" id="intake-accent-override" value={accentOverride} placeholder="Optional — use direction default" onChange={event => { setAccentOverride(event.target.value); clearError("accent"); }} />{errors.accent ? <p role="alert">{errors.accent}</p> : null}</div>
         {restoredBrief ? (
           <div
             role="status"

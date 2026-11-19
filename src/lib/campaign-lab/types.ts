@@ -206,6 +206,7 @@ export type BrandTokens = {
 };
 
 export type BrandDefinition = {
+  visualDirection?: { id: string; version: string };
   id: BrandId;
   name: string;
   wordmark: string;
@@ -293,6 +294,8 @@ export type RequiredFactGroup = {
 };
 
 export type CampaignBrief = {
+  directionId?: string;
+  accentOverride?: string;
   fixtureId: FixtureId;
   brandId: BrandId;
   productName: string;
@@ -334,6 +337,8 @@ export type CampaignFixture = {
 };
 
 export type CampaignFormValues = {
+  directionId?: string;
+  accentOverride?: string;
   brandId: BrandId;
   accent: string;
   productName: string;
@@ -421,6 +426,7 @@ export type TemplateManifest = {
 };
 
 export type ValidationField =
+  | "directionId"
   | "brandId"
   | "accent"
   | "productName"

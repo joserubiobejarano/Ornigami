@@ -856,6 +856,7 @@ export function buildDraftRevisionIdentity(
         : {}),
     },
     brand: {
+      ...(brand.visualDirection ? { visualDirection: { ...brand.visualDirection } } : {}),
       name: canonicalText(brand.name),
       wordmark: canonicalText(brand.wordmark),
       ...(showsDetail ? { detailTitle: canonicalText(brand.detailTitle) } : {}),

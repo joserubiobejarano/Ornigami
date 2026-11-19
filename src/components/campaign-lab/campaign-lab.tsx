@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VISUAL_DIRECTIONS, resolveVisualDirection, browserDirectionCatalog } from "@/lib/campaign-lab/visual-directions";
 import { usePreviewReview } from "./use-preview-review";
 import {
   useEffect,
@@ -261,7 +262,8 @@ export function CampaignLab({
         : previewState,
     [previewState, renderedPilotNotice, renderedMotion],
   );
-  const brand = getBrand(values.brandId, catalog);
+  const sourceBrand = getBrand(values.brandId, catalog);
+  const brand = browserBrief ? { ...sourceBrand, tokens: { ...resolveVisualDirection(values.directionId).tokens, accent: values.accent } } : sourceBrand;
   const selectedAsset = assetLookupIssue(values.assetId, catalog) ? undefined : getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
@@ -373,6 +375,7 @@ export function CampaignLab({
     : null;
 
   const fieldIds: Record<ValidationField, string> = {
+    directionId: "browser-visual-direction",
     brandId: `${baseId}-brand-style`,
     accent: `${baseId}-accent`,
     productName: `${baseId}-product-name`,
@@ -475,8 +478,14 @@ export function CampaignLab({
     if (field === "openingFocus" && typeof value === "string") {
       openingByFormat.current[format] = value;
     }
-    setValues((current) => ({ ...current, [field]: value }));
+    setValues((current) => ({ ...current, [field]: value, ...(browserBrief && field === "accent" ? { accentOverride: value as string } : {}) }));
     clearChangedState(field as ValidationField);
+  }
+
+  function handleDirectionChange(value: string) {
+    const direction = resolveVisualDirection(value);
+    setValues(current => ({ ...current, directionId: direction.id, accent: current.accentOverride || direction.tokens.accent }));
+    clearChangedState("directionId");
   }
 
   function handleBrandChange(value: string) {
@@ -566,7 +575,8 @@ export function CampaignLab({
   async function handleGenerate() {
     const snapshot = { ...values };
     const recipeSnapshot = pendingMotion;
-    const local = buildConfiguredPreview(fixture, snapshot, catalog);
+    const candidateCatalog = browserBrief ? browserDirectionCatalog(catalog, snapshot.directionId) : catalog;
+    const local = buildConfiguredPreview(fixture, snapshot, candidateCatalog);
     if (!local.ok) {
       invalidateGenerationRequest();
       setIssues(local.issues);
@@ -722,6 +732,7 @@ export function CampaignLab({
           layout: preview.draft.layout,
           sections: preview.draft.sections,
         },
+        ...(preview.theme.brand.visualDirection ? { visualDirection: { ...preview.theme.brand.visualDirection, tokens: { ...preview.theme.tokens } } } : {}),
         appearance: {
           accent: preview.theme.tokens.accent,
           accentInk: preview.theme.tokens.accentInk,
@@ -1346,6 +1357,12 @@ export function CampaignLab({
 
             <fieldset className="m-0 space-y-4 border-0 p-0">
               <legend className="mb-1 text-sm font-semibold">Brand styling</legend>
+              {browserBrief ? <div className="space-y-2"><Label htmlFor="browser-visual-direction">Visual direction</Label>
+                <select id="browser-visual-direction" className={nativeSelectClassName} value={values.directionId ?? "clear"} onChange={event => handleDirectionChange(event.target.value)}>
+                  {VISUAL_DIRECTIONS.map(direction => <option key={direction.id} value={direction.id}>{direction.name}</option>)}
+                </select>
+                <button type="button" className="min-h-11 text-sm underline" onClick={() => { setValues(current => ({ ...current, accentOverride: undefined, accent: resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }}>Use direction accent</button>
+              </div> : null}
 
               <div className="flex items-center gap-1.5" aria-hidden="true">
                 {[brand.tokens.page, brand.tokens.surface, brand.tokens.ink, brand.tokens.accent].map(
@@ -1359,7 +1376,7 @@ export function CampaignLab({
                 )}
               </div>
 
-              <div className="space-y-1.5">
+              {!browserBrief ? <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.brandId}>Brand style</Label>
                 <select
                   id={fieldIds.brandId}
@@ -1382,20 +1399,24 @@ export function CampaignLab({
                     {issueByField.get("brandId")}
                   </p>
                 ) : null}
-              </div>
+              </div> : null}
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <Label htmlFor={fieldIds.accent}>Accent color</Label>
                   <code className="text-xs text-[#6d6a5f]">{values.accent}</code>
                 </div>
+                {browserBrief ? <div className="space-y-1"><Label htmlFor="browser-accent-override">Accent override (hex)</Label><Input className="min-h-11" id="browser-accent-override" value={values.accentOverride ?? ""} placeholder={resolveVisualDirection(values.directionId).tokens.accent} onChange={event => {
+                  if (event.target.value === "") { setValues(current => ({ ...current, accentOverride: undefined, accent: resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }
+                  else handleValueChange("accent", event.target.value);
+                }} /></div> : null}
                 <input
                   id={fieldIds.accent}
                   name="accent"
                   type="color"
                   value={values.accent}
                   onChange={(event) => handleValueChange("accent", event.target.value)}
-                  className="h-10 w-16 cursor-pointer rounded-lg border border-[#d8cebd] bg-[#fffdf8] p-1"
+                  className="h-11 w-16 cursor-pointer rounded-lg border border-[#d8cebd] bg-[#fffdf8] p-1"
                   aria-invalid={issueByField.has("accent")}
                   aria-describedby={describedBy("accent", accentHintId)}
                 />

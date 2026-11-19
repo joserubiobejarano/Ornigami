@@ -1,3 +1,4 @@
+import { resolveVisualDirection } from "./visual-directions.ts";
 ﻿import {
   validateBrowserOfferIntake,
   verifyBrowserOffer,
@@ -39,6 +40,7 @@ export type BrowserOfferBriefAsset = {
 
 export type BrowserOfferBriefRequest = {
   schemaVersion: typeof BROWSER_OFFER_BRIEF_SCHEMA_VERSION;
+  directionId?: string;
   brandName?: string;
   productName: string;
   audience?: string;
@@ -76,6 +78,7 @@ export type BrowserOfferBriefParseResult =
 const BRIEF_KEYS = new Set([
   "schemaVersion",
   "brandName",
+  "directionId",
   "productName",
   "audience",
   "objective",
@@ -314,6 +317,8 @@ export function parseBrowserOfferBriefRequest(
     contextIssues.push(...context.issues);
   }
 
+  let directionId: string | undefined;
+  try { directionId = resolveVisualDirection(raw.directionId).id; } catch (error) { issues.push({ field: "directionId", message: (error as Error).message }); }
   let accent: string | undefined;
   if (raw.accent !== undefined && raw.accent !== null) {
     if (typeof raw.accent !== "string") {
@@ -374,6 +379,8 @@ export function parseBrowserOfferBriefRequest(
   }
 
   const input: BrowserOfferIntakeInput = {
+    directionId,
+    ...(accent ? { accent } : {}),
     brandName: brandName.value,
     productName,
     audience: context.ok ? context.audience : undefined,
@@ -440,6 +447,7 @@ export function browserOfferBriefFromIntake(
     typeof input.brandName === "string" ? input.brandName.trim() : "";
   return {
     schemaVersion: BROWSER_OFFER_BRIEF_SCHEMA_VERSION,
+    ...(input.directionId !== undefined ? { directionId: input.directionId } : {}),
     ...(brandName ? { brandName } : {}),
     productName: input.productName,
     ...(input.audience !== undefined ? { audience: input.audience } : {}),

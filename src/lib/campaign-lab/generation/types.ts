@@ -86,6 +86,7 @@ export type GenerationRequest = {
     };
   };
   brand: {
+    visualDirection?: { id: string; version: string };
     id: string;
     name: string;
     wordmark: string;

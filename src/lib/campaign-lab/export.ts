@@ -1,7 +1,7 @@
 import { assertCurrentStory, resolveStory, storyRevision, isApprovedStorySvg, STORY_CSS } from "./story.ts";
 import type { StoryConfiguration, StorySource, StoryDefinition } from "./story.ts";
 import { storyRuntimeSource } from "./story-runtime.ts";
-import type { ApprovedAsset } from "./types.ts";
+import type { BrandTokens, ApprovedAsset } from "./types.ts";
 import type { BrowserOfferVerification } from "./browser-offer.ts";
 import { assertCurrentMotion, MOTION_CSS } from "./motion.ts";
 import type { MotionPresentation } from "./motion.ts";
@@ -158,6 +158,7 @@ export type CampaignExportAsset = {
 };
 
 export type CampaignExportPreview = {
+  visualDirection?: { id: string; version: string; tokens: BrandTokens };
   storySource?: StorySource;
   story?: StoryConfiguration;
   assets?: ApprovedAsset[];
@@ -252,6 +253,7 @@ export type CampaignExportReceipt = {
     actionLabel: string;
     template: CampaignExportPreview["template"];
     appearance?: CampaignExportPreview["appearance"];
+    visualDirection?: CampaignExportPreview["visualDirection"];
     story?: StoryConfiguration;
     motion?: MotionPresentation;
     imagePresentation?: CampaignImagePresentation;
@@ -451,6 +453,7 @@ export function sanitizeRenderedArticle(
 }
 
 export function buildStandaloneDocument(input: {
+  visualDirection?: CampaignExportPreview["visualDirection"];
   storyDefinition?: StoryDefinition;
   story?: StoryConfiguration;
   imagePresentation?: CampaignImagePresentation;
@@ -503,6 +506,7 @@ export function buildStandaloneDocument(input: {
 <meta name="robots" content="noindex, nofollow">
 <meta name="campaign-lab-revision" content="${escapeHtml(input.revision)}">
 ${motionMarkup}
+${input.visualDirection ? `<meta name="campaign-lab-visual-direction" content="${escapeHtml(JSON.stringify(input.visualDirection))}">` : ""}
 ${storyMarkup}
 <meta name="campaign-lab-preview-status" content="${escapeHtml(input.previewStatus)}">
 <meta name="campaign-lab-packshot-sha256" content="${escapeHtml(input.packshotSha256)}">
@@ -794,6 +798,7 @@ export function captureCampaignExportSnapshot(
       ...(input.preview.storySource ? { storySource: JSON.parse(JSON.stringify(input.preview.storySource)) } : {}),
       ...(input.preview.story ? { story: JSON.parse(JSON.stringify(input.preview.story)) } : {}),
       ...(input.preview.assets ? { assets: input.preview.assets.map(asset => ({ ...asset })) } : {}),
+      ...(input.preview.visualDirection ? { visualDirection: JSON.parse(JSON.stringify(input.preview.visualDirection)) } : {}),
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion, settings: { ...input.preview.motion.settings } } } : {}),
       verification: input.preview.verification
@@ -1136,6 +1141,7 @@ export function assertHtmlReceiptAgreement(
   html: string,
   receipt: CampaignExportReceipt,
 ): void {
+  if (receipt.preview.visualDirection && metaContent(html, "campaign-lab-visual-direction") !== JSON.stringify(receipt.preview.visualDirection)) throw new Error("Visual direction receipt disagrees with HTML.");
   if (receipt.preview.story) {
     if (metaContent(html, "campaign-lab-story") !== JSON.stringify(receipt.preview.story)) throw new Error("Story receipt disagrees with HTML.");
     if (receipt.preview.story.mode !== "static" && (!html.includes('<script src="./story.js" defer></script>') || !html.includes(JSON.stringify(receipt.preview.story)))) throw new Error("Story runtime/configuration missing.");
@@ -1366,6 +1372,7 @@ export async function buildExportReceipt(input: {
       destinationUrl: input.preview.destinationUrl,
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
+      ...(input.preview.visualDirection ? { visualDirection: JSON.parse(JSON.stringify(input.preview.visualDirection)) } : {}),
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.story ? { story: input.preview.story } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion } } : {}),
@@ -1599,6 +1606,7 @@ export async function buildCampaignExportBundle(
   );
   assetRecords.forEach((asset, index) => { bodyHtml = bodyHtml.split(`data:ornigami-asset,${index}`).join(`./${asset.file}`); });
   const html = buildStandaloneDocument({
+    visualDirection: snapshot.preview.visualDirection,
     story: snapshot.preview.story,
     storyDefinition: snapshot.preview.storySource?.definition,
     imagePresentation: snapshot.preview.imagePresentation,
