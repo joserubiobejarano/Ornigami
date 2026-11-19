@@ -120,7 +120,7 @@ test("two synthetic briefs carry distinct audience, objective, brand, asset, tem
     assert.deepEqual(request.assets.allowedRoles, ["product-hero"]);
 
     assert.equal(request.template.id, "single-product-offer");
-    assert.equal(request.template.version, "1.0.0");
+    assert.equal(request.template.version, "1.0.1");
     assert.deepEqual(Object.keys(request.template.capabilities.layouts), [
       "offer-led-one-photo",
       "editorial-long-copy",

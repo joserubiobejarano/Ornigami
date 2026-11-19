@@ -59,16 +59,26 @@
   border-radius: 999px;
 }
 
+.headlineMeasure {
+  /* Only the heading uses this column, so other cqi-based type stays unchanged. */
+  container-type: inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
 .headline {
   font-family: var(--cp-display-font);
   font-weight: var(--cp-display-weight);
   letter-spacing: var(--cp-display-tracking);
   line-height: 0.96;
   text-wrap: balance;
+  /* Emergency wrapping for identifiers; ordinary words and NBSP groups keep
+     their normal break opportunities unless the group cannot fit at all. */
+  overflow-wrap: anywhere;
 }
 
 .offerLed .headline {
-  font-size: clamp(2.35rem, 10.5cqi, 4.8rem);
+  font-size: clamp(2rem, calc(1rem + 7.5cqi), 4rem);
 }
 
 .editorial .headline {

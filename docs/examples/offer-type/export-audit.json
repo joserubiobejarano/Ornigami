@@ -1,0 +1,50 @@
+{
+  "results": [
+    {
+      "name": "rose-clear",
+      "version": "1.0.1",
+      "revision": "008c9297e41d08d4",
+      "files": 13,
+      "references": 23,
+      "packshot": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "fonts": 1
+    },
+    {
+      "name": "rose-editorial",
+      "version": "1.0.1",
+      "revision": "56d21bb267e85282",
+      "files": 4,
+      "references": 2,
+      "packshot": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "fonts": 0
+    },
+    {
+      "name": "fjord-clear",
+      "version": "1.0.1",
+      "revision": "48289216c9b39c22",
+      "files": 13,
+      "references": 23,
+      "packshot": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863",
+      "fonts": 1
+    },
+    {
+      "name": "fjord-editorial",
+      "version": "1.0.1",
+      "revision": "6c25b54b03177144",
+      "files": 4,
+      "references": 2,
+      "packshot": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863",
+      "fonts": 0
+    },
+    {
+      "name": "rose-clear-before",
+      "version": "1.0.0",
+      "revision": "097a8c3867a5690f",
+      "files": 13,
+      "references": 23,
+      "packshot": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "fonts": 1
+    }
+  ],
+  "matchingWidthParity": 4
+}
