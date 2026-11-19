@@ -100,7 +100,8 @@ export async function captureOfferViewport(tab, viewport, options) {
     result.before=await measure();assert.equal(result.before.innerWidth,width);assert.equal(result.before.innerHeight,height);assert.equal(result.before.overflow,false);
     if(result.before.article)assert.ok(result.before.readyImages>0);
     const bytes=await tab.screenshot({fullPage:false});result.screenshot=jpegDimensions(bytes);
-    assert.ok([width, result.before.clientWidth].some(w => Math.abs(result.screenshot.width-w*result.before.dpr)<=1), "Screenshot width must match viewport or its measured scrollbar-free client area");assert.equal(result.screenshot.height,height*result.before.dpr);
+    assert.ok([width, result.before.clientWidth].some(w => Math.abs(result.screenshot.width-w*result.before.dpr)<=1), "Screenshot width must match viewport or its measured scrollbar-free client area");assert.ok(result.screenshot.height <= height*result.before.dpr && result.screenshot.height >= (height-64)*result.before.dpr, "Viewport image must remain within the measured viewport; record backend chrome cropping");
+    result.screenshot.croppedHeightPixels = height*result.before.dpr-result.screenshot.height;
     result.screenshot.omitsScrollbar = result.screenshot.width !== width*result.before.dpr;
     await fs.writeFile(path.join(directory,name+".jpg"),bytes);
     result.after=await measure();assert.equal(result.after.innerWidth,width);assert.equal(result.after.innerHeight,height);assert.equal(result.after.clientWidth,result.before.clientWidth);assert.deepEqual(result.after.article,result.before.article);
