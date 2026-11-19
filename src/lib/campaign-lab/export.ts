@@ -393,6 +393,9 @@ export function captureRenderedArticle(article: HTMLElement, assets?: readonly A
     if (seen.size !== assets.length) throw new Error("Every approved story asset must be displayed.");
     clone.classList.remove("story-enhanced");
     clone.style.removeProperty("--story-count");
+    // Enhancement touches CSSOM, which reformats the style attribute. Normalize
+    // static capture too so equivalent approved tokens serialize identically.
+    clone.style.cssText = clone.style.cssText;
     clone.querySelector(".story-track")?.removeAttribute("style");
     for (const panel of clone.querySelectorAll(".story-panel")) { panel.removeAttribute("aria-hidden"); panel.removeAttribute("inert"); }
     const controls = clone.querySelector(".story-controls");
