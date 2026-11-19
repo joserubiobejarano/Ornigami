@@ -3,6 +3,7 @@ import { assertCurrentMotion, MOTION_CSS } from "./motion.ts";
 import type { MotionPresentation } from "./motion.ts";
 import { campaignMotionRuntimeSource } from "./motion-runtime.ts";
 import { MOTION_AUTHORING_NOTICE } from "./motion-notice.ts";
+import type { CampaignImagePresentation } from "./presentation.ts";
 import type { CampaignVerificationProvenance } from "./verification-provenance.ts";
 import {
   buildFontNotice,
@@ -153,6 +154,7 @@ export type CampaignExportAsset = {
 };
 
 export type CampaignExportPreview = {
+  imagePresentation?: CampaignImagePresentation;
   /** Absent on historical/static exports. Never accepts executable config. */
   motion?: MotionPresentation;
   status: "preview" | "confirmed";
@@ -244,6 +246,7 @@ export type CampaignExportReceipt = {
     template: CampaignExportPreview["template"];
     appearance?: CampaignExportPreview["appearance"];
     motion?: MotionPresentation;
+    imagePresentation?: CampaignImagePresentation;
   };
   verification: BrowserOfferVerification | null;
   provenance?: CampaignVerificationProvenance;
@@ -418,6 +421,7 @@ export function sanitizeRenderedArticle(
 }
 
 export function buildStandaloneDocument(input: {
+  imagePresentation?: CampaignImagePresentation;
   motion?: MotionPresentation;
   title: string;
   bodyHtml: string;
@@ -436,6 +440,7 @@ export function buildStandaloneDocument(input: {
   const motionScripts = input.motion && input.motion.recipe !== "none"
     ? `<script type="application/json" id="ornigami-motion-config">${JSON.stringify(input.motion).replace(/</g, "\\u003c")}</script>\n<script src="./motion.js" defer></script>` : "";
   const agreementMeta = [
+    input.imagePresentation ? `<meta name="campaign-lab-image-presentation" content="${escapeHtml(JSON.stringify(input.imagePresentation))}">` : null,
     input.offer !== undefined
       ? `<meta name="campaign-lab-offer" content="${escapeHtml(input.offer)}">`
       : null,
@@ -745,6 +750,7 @@ export function captureCampaignExportSnapshot(
       ...input.preview,
       template: { ...input.preview.template },
       asset: { ...input.preview.asset },
+      ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion, settings: { ...input.preview.motion.settings } } } : {}),
       verification: input.preview.verification
         ? { ...input.preview.verification }
@@ -1086,6 +1092,9 @@ export function assertHtmlReceiptAgreement(
   html: string,
   receipt: CampaignExportReceipt,
 ): void {
+  if (receipt.preview.imagePresentation && metaContent(html, "campaign-lab-image-presentation") !== JSON.stringify(receipt.preview.imagePresentation)) {
+    throw new Error("The exported image presentation and receipt disagree.");
+  }
   if (receipt.preview.motion && metaContent(html, "campaign-lab-motion") !== JSON.stringify(receipt.preview.motion)) {
     throw new Error("The exported HTML and receipt disagree on motion identity.");
   }
@@ -1306,6 +1315,7 @@ export async function buildExportReceipt(input: {
       destinationUrl: input.preview.destinationUrl,
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
+      ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion } } : {}),
       ...(input.preview.appearance
         ? { appearance: { ...input.preview.appearance } }
@@ -1512,6 +1522,7 @@ export async function buildCampaignExportBundle(
     packshotFile,
   );
   const html = buildStandaloneDocument({
+    imagePresentation: snapshot.preview.imagePresentation,
     motion: snapshot.preview.motion,
     title: `${snapshot.preview.productName} — ${snapshot.preview.brandName}`,
     bodyHtml,

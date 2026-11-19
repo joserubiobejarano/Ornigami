@@ -247,6 +247,9 @@ export type ProductFact = {
 };
 
 export type ApprovedAsset = {
+  /** Reviewed direct-offer fit override; omitted product heroes preserve the
+   * full product, while other roles retain editorial cover framing. */
+  imageFit?: "contain" | "cover";
   id: string;
   brandId: BrandId;
   src: string;

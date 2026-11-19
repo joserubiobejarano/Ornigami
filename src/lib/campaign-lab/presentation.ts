@@ -1,4 +1,20 @@
-import type { CampaignBrief, TemplateDraft } from "./types.ts";
+import type { ApprovedAsset, BrandTokens, CampaignBrief, TemplateDraft } from "./types.ts";
+
+export type CampaignImagePresentation = {
+  fit: "contain" | "cover";
+  frame: "natural-arch" | "compact";
+};
+
+/** Approved image policy, independent of motion. A portrait product hero in an
+ * arch keeps its natural aspect at tablet widths instead of clipping the
+ * product or leaving a narrow image floating inside a wide empty arch. */
+export function resolveCampaignImage(
+  asset: Pick<ApprovedAsset, "imageFit"> & Partial<Pick<ApprovedAsset, "role">>,
+  tokens: Pick<BrandTokens, "heroImage">,
+): CampaignImagePresentation {
+  const fit = asset.imageFit ?? (asset.role === "product-hero" ? "contain" : "cover");
+  return { fit, frame: tokens.heroImage === "arch" && asset.role === "product-hero" && fit === "contain" ? "natural-arch" : "compact" };
+}
 
 const ASCII_WHITESPACE = /[ \t\n\r\f]+/g;
 const EDGE_ASCII_WHITESPACE = /^[ \t\n\r\f]+|[ \t\n\r\f]+$/g;

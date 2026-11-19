@@ -95,6 +95,7 @@ import { AdvertorialPage } from "./advertorial-page";
 import { CampaignPage } from "./campaign-page";
 import { MOTION_RECIPES, isMotionRecipeId, motionPresentation } from "@/lib/campaign-lab/motion";
 import type { MotionRecipeId } from "@/lib/campaign-lab/motion";
+import { resolveCampaignImage } from "@/lib/campaign-lab/presentation";
 
 type CampaignLabProps = {
   initialFixtureId: FixtureId;
@@ -200,14 +201,15 @@ export function CampaignLab({
   const [initialPreviewState] = useState(() =>
     createEditorPreviewState(fixture, values, catalog),
   );
-  const [previewState, setPreview] = useState<ConfiguredPreviewData | null>(
-    initialPreviewState.preview,
-  );
+  const [acceptedPresentation, setAcceptedPresentation] = useState<{
+    preview: ConfiguredPreviewData | null;
+    recipe: MotionRecipeId;
+  }>({ preview: initialPreviewState.preview, recipe: "none" });
+  const { preview: previewState, recipe: renderedMotion } = acceptedPresentation;
   const [issues, setIssues] = useState<ValidationIssue[]>(initialPreviewState.issues);
   const [dirty, setDirty] = useState(initialPreviewState.dirty);
   const [approval, setApproval] = useState<Approval | null>(null);
   const [pendingMotion, setPendingMotion] = useState<MotionRecipeId>("none");
-  const [renderedMotion, setRenderedMotion] = useState<MotionRecipeId>("none");
   const [generation, setGeneration] = useState<GenerationState>({ status: "idle" });
   const [generating, setGenerating] = useState(false);
   const [imageGate, setImageGate] = useState<PreviewImageGate>(() =>
@@ -556,7 +558,7 @@ export function CampaignLab({
     setValues(alternative.values);
     setIssues([]);
     setApproval(null);
-    setPreview(alternative.preview);
+    setAcceptedPresentation({ preview: alternative.preview, recipe: pendingMotion });
     setDirty(false);
     setGeneration(
       deterministicFallback(
@@ -583,6 +585,7 @@ export function CampaignLab({
 
   async function handleGenerate() {
     const snapshot = { ...values };
+    const recipeSnapshot = pendingMotion;
     const local = buildConfiguredPreview(fixture, snapshot, catalog);
     if (!local.ok) {
       invalidateGenerationRequest();
@@ -598,7 +601,6 @@ export function CampaignLab({
     const controller = new AbortController();
     inFlight.current = controller;
     setGenerating(true);
-    setRenderedMotion(pendingMotion);
     setApproval(null);
     setIssues([]);
 
@@ -632,7 +634,7 @@ export function CampaignLab({
           return;
         }
 
-        setPreview(local.preview);
+        setAcceptedPresentation({ preview: local.preview, recipe: recipeSnapshot });
         setGeneration(
           deterministicFallback(
             payload?.message ?? "The generation endpoint did not return a preview.",
@@ -644,7 +646,7 @@ export function CampaignLab({
       }
 
       if (!payload.preview?.revision) {
-        setPreview(local.preview);
+        setAcceptedPresentation({ preview: local.preview, recipe: recipeSnapshot });
         setGeneration(
           deterministicFallback("The generation endpoint returned an unreadable preview."),
         );
@@ -653,12 +655,13 @@ export function CampaignLab({
         return;
       }
 
-      setPreview(
-        withLocalBrowserAsset(
+      setAcceptedPresentation({
+        preview: withLocalBrowserAsset(
           payload.preview as ConfiguredPreviewData,
           browserAssetSrc,
         ),
-      );
+        recipe: recipeSnapshot,
+      });
       setGeneration(
         (payload.generation as GenerationMetadata | undefined) ??
           deterministicFallback("The preview was generated without provenance metadata."),
@@ -667,7 +670,7 @@ export function CampaignLab({
       setDirty(false);
     } catch {
       if (!requestGate.current.isCurrent(requestId)) return;
-      setPreview(local.preview);
+      setAcceptedPresentation({ preview: local.preview, recipe: recipeSnapshot });
       setGeneration(
         deterministicFallback(
           "Generation was unavailable, so this preview uses the deterministic builder.",
@@ -729,6 +732,7 @@ export function CampaignLab({
         revision: preview.revision,
         revisionIdentityVersion: preview.revisionIdentityVersion,
         motion: (preview as CampaignPreviewData).motion,
+        imagePresentation: resolveCampaignImage(preview.asset, preview.theme.tokens),
         productName: preview.brief.productName,
         brandName: preview.theme.brand.name,
         offer: preview.brief.offer,

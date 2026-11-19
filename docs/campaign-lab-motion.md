@@ -2,8 +2,9 @@
 
 The development-only Campaign Lab editor has an **Experimental presentation**
 selector for direct offers. This experiment keeps Taste as the existing visual
-baseline and compares three presentations of the existing synthetic Harbor Field
-campaign. It makes no model call and does not extend the proposal contract.
+baseline. The original three-recipe experiment is followed by a bounded reuse
+qualification of static/inspection pairs for Harbor Field and Morrow. Neither
+experiment needs a model call or extends the proposal contract.
 
 ## Owned recipe contract
 
@@ -16,24 +17,52 @@ campaign. It makes no model call and does not extend the proposal contract.
 Recipes are defined in `src/lib/campaign-lab/motion.ts`; settings are closed,
 typed, and resolved by owned code. There is no executable user configuration,
 external service, animation dependency, drag requirement, looping decoration,
-or scroll hijacking. The existing Motion package is not needed. The image now
-uses `contain` in all variants, correcting the reproduced tablet crop. CTA
+or scroll hijacking. The existing Motion package is not needed. Image fit is now
+resolved from approved asset metadata/role; product heroes default to `contain`,
+other roles to `cover`, and a reviewed asset may explicitly override fit. A
+contained product hero in an arch uses the natural aspect without the compact
+330 px cap; the arch mask remains. Framed/compact layouts keep their responsive
+cap. This resolves the bottle crop and avoids narrow letterboxing in the arch,
+with a documented increase in tablet scroll height. CTA
 feedback uses opacity and focus outlines without moving the action.
 
 ## Preview, identity, and export
 
 Selecting a recipe marks presentation pending, clears approval, and locks export.
-Generate preview and approve again through the existing flow. The rendered
-identity is now **version 5** and includes recipe version, effective settings,
-runtime version and a change detector over the actual owned runtime source and
-CSS. A changed runtime/configuration cannot reuse approval for the old identity.
+The request captures both brief and recipe. Preview and recipe share one accepted
+state and commit together only when the current request accepts a result or a
+validated local fallback. Server rejection, local validation, edits during a
+delayed request and stale responses preserve the complete last accepted article,
+recipe, revision and runtime. Generate preview and approve again through the
+existing flow. Rendered identity is now **version 6** (the original experiment
+used 5), including effective fit/frame, recipe/settings, runtime version and a
+change detector over the actual owned runtime and CSS. Recipe/runtime policy is
+1.1.0; old receipts remain readable. A changed configuration cannot reuse approval.
 The change detector is not a cryptographic provenance claim; packaged files
 receive SHA-256 through the existing export receipt.
+
+Inspection uses existing approved page/surface/ink/muted/accent and button-radius
+tokens for its controls, modal, focus, and restrained hover feedback. Neutral
+CSS fallbacks cover missing tokens. The modal radius derives from the button
+radius with a 16 px geometric cap; Morrow's pill controls do not force an arch
+shape onto a dialog. The neutral dimming backdrop uses the ink token where
+available. Fit view adapts to the available pane height, including wrapped
+controls at 320×480. Native tap highlight is suppressed in favor of the existing
+press feedback, preventing a stale tap rectangle over the newly opened image.
+
+The Harbor Field reference now uses its already-supported `product-led` profile
+mode: headline is the exact product name, and the complete discount/dates remain
+in the offer. Product, offer, destination, facts and packshot are unchanged. This
+baseline composition correction is shared by its static/inspection pair and is
+not attributed to motion. Morrow retains its approved editorial opening.
 
 Preview directly calls the self-contained `initializeCampaignMotion` function.
 The export serializes that same function as a classic local `motion.js` script,
 without eval, module imports, CDN requests or React. Its closed JSON configuration
-and identity are checked against the HTML metadata and receipt. The normal
+and identity are checked against the HTML metadata and receipt. The fit/frame
+decision also appears in metadata and the optional receipt field
+`preview.imagePresentation`; historical receipts without it remain readable. The
+normal
 archive audit now accounts for the allowlisted `motion.js` reference and rejects
 other script resources. `none` packages no enhancement script.
 
@@ -84,6 +113,9 @@ $env:AUTH_SECRET='offline-motion-local-only-placeholder'
 node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3140
 # In another terminal, from the same worktree:
 node --experimental-strip-types scripts/campaign-lab-motion-check.mjs --url http://127.0.0.1:3140 --out .local/motion-experiment/reproduction
+node --experimental-strip-types scripts/campaign-lab-motion-state-check.mjs --url http://127.0.0.1:3140 --out .local/motion-reuse/state
+node --experimental-strip-types scripts/campaign-lab-motion-check.mjs --url http://127.0.0.1:3140 --fixture sparse --recipes none,product-inspect --reuse --out .local/motion-reuse/harbor
+node --experimental-strip-types scripts/campaign-lab-motion-check.mjs --url http://127.0.0.1:3140 --fixture long-copy --recipes none,product-inspect --reuse --out .local/motion-reuse/morrow
 node --experimental-strip-types --test tests/campaign-lab*.test.mts
 node node_modules/typescript/bin/tsc --noEmit --pretty false
 ```

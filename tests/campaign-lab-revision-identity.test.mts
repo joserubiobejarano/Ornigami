@@ -55,12 +55,12 @@ function themeWith(
 }
 
 test("revision identity is versioned and previews carry the version", () => {
-  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 5);
-  assert.equal(base.revisionIdentityVersion, 5);
+  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 6);
+  assert.equal(base.revisionIdentityVersion, 6);
   assert.equal(
     buildDraftRevisionIdentity(base.brief, base.draft, base.asset, base.theme)
       .identityVersion,
-    5,
+    6,
   );
   assert.equal(revisionWith(), base.revision);
 });

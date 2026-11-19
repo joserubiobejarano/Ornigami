@@ -24,6 +24,13 @@ function sparseValues() {
   return createFormValues(CAMPAIGN_FIXTURES.sparse);
 }
 
+// Keep offer-led grammar coverage explicit now that the bottle reference uses
+// the already-supported product-led profile setting.
+const offerLedCatalog = {
+  ...BASE_CATALOG,
+  brands: { ...BASE_CATALOG.brands, "harbor-field": { ...BASE_CATALOG.brands["harbor-field"], headlineMode: "offer-led" as const } },
+};
+
 function longCopyValues() {
   return createFormValues(CAMPAIGN_FIXTURES["long-copy"]);
 }
@@ -318,7 +325,7 @@ test("offer-led headlines are reserved for fully parsed simple discounts", () =>
       offer,
       productName: "Harbor Field travel bottle",
     };
-    assert.equal(buildHeadline(brief, "harbor-field"), "Harbor Field travel bottle");
+    assert.equal(buildHeadline(brief, "harbor-field", offerLedCatalog), "Harbor Field travel bottle");
   }
 
   const safeOffers = [
@@ -340,7 +347,7 @@ test("offer-led headlines are reserved for fully parsed simple discounts", () =>
       productName: "Harbor Field travel bottle",
     };
     assert.equal(
-      buildHeadline(brief, "harbor-field"),
+      buildHeadline(brief, "harbor-field", offerLedCatalog),
       `${safeOfferHeadlineLead(offer)} the travel bottle.`,
     );
   }
@@ -353,7 +360,7 @@ test("a product-led profile keeps a safe discount out of the headline", () => {
     productName: "Harbor Field travel bottle",
   };
   assert.equal(
-    buildHeadline(brief, "harbor-field"),
+    buildHeadline(brief, "harbor-field", offerLedCatalog),
     "20% off the travel bottle.",
   );
 
@@ -400,7 +407,7 @@ test("headline assembly and accent contrast remain deterministic", () => {
   const brief = CAMPAIGN_FIXTURES.sparse.brief;
   assert.equal(
     buildHeadline({ ...brief, ...values, productName: values.productName }, values.brandId),
-    "20% off the travel bottle.",
+    "Harbor Field travel bottle",
   );
 
   const lightAccent = resolveBrandTheme("harbor-field", "#f4eee4");

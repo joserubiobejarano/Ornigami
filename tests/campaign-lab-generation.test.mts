@@ -181,7 +181,7 @@ test("the local test provider succeeds through the server generation path", asyn
 
   assert.equal(result.generation.status, "generated");
   assert.equal(result.generation.provider, "local-test");
-  assert.equal(result.generation.angle, "offer-led");
+  assert.equal(result.generation.angle, "product-led");
   assert.equal(result.generation.layout, "offer-led-one-photo");
   assert.deepEqual(result.generation.sections, ["hero", "hero-facts", "close"]);
   assert.deepEqual(result.generation.factIds, ["capacity", "closure"]);

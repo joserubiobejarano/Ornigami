@@ -77,7 +77,7 @@ export const BRANDS: Record<BaseBrandId, BrandDefinition> = {
     wordmark: "Harbor Field",
     descriptor: "Warm utility",
     tokens: harborTokens,
-    headlineMode: "offer-led",
+    headlineMode: "product-led",
     detailTitle: "Built for the day.",
   },
   "morrow-ceramic": {
@@ -94,6 +94,7 @@ export const BRANDS: Record<BaseBrandId, BrandDefinition> = {
 export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
   {
     id: "harbor-field-bottle-front",
+    imageFit: "contain",
     brandId: "harbor-field",
     src: "/campaign-assets/harbor-field-bottle.webp",
     width: 1200,
@@ -109,6 +110,7 @@ export const APPROVED_ASSETS: readonly ApprovedAsset[] = [
   },
   {
     id: "morrow-ceramic-dripper-front",
+    imageFit: "contain",
     brandId: "morrow-ceramic",
     src: "/campaign-assets/morrow-ceramic-dripper.webp",
     width: 1200,

@@ -33,6 +33,7 @@ import {
   showsProductLabel,
   shouldShowClose,
   visibleLede,
+  resolveCampaignImage,
 } from "./presentation.ts";
 
 const OFFER_LED_SECTIONS: readonly SectionId[] = ["hero", "hero-facts", "close"];
@@ -754,7 +755,7 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
-export const CAMPAIGN_REVISION_IDENTITY_VERSION = 5;
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 6;
 
 function canonicalText(value: string): string {
   return presentationText(value);
@@ -809,7 +810,7 @@ export function buildDraftRevisionIdentity(
   return {
     identityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
     motion,
-    imageFit: "contain",
+    imagePresentation: resolveCampaignImage(asset, tokens),
     template: {
       id: draft.templateId,
       version: draft.templateVersion,

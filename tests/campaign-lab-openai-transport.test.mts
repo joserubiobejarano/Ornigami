@@ -32,7 +32,7 @@ import type {
 
 const PRICING = { inputPerMillionTokens: 0.15, outputPerMillionTokens: 0.6 };
 const VALID_PROPOSAL = {
-  angle: "offer-led",
+  angle: "product-led",
   layout: "offer-led-one-photo",
   sections: ["hero", "hero-facts", "close"],
   factIds: ["capacity", "closure"],

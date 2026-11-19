@@ -43,7 +43,7 @@ async function loadCampaignPage() {
     )
     .replace(
       /import \{[^}]*\} from "@\/lib\/campaign-lab\/presentation";/,
-      'const { showsProductLabel, shouldShowClose } = require("../../../src/lib/campaign-lab/presentation.ts");',
+      'const { showsProductLabel, shouldShowClose, resolveCampaignImage } = require("../../../src/lib/campaign-lab/presentation.ts");',
     );
 
   const transformed = transformSync(`const React = require("react");\n${source}`, {

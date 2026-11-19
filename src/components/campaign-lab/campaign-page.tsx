@@ -14,6 +14,7 @@ import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";
 import {
   showsProductLabel,
   shouldShowClose,
+  resolveCampaignImage,
 } from "@/lib/campaign-lab/presentation";
 import type { CampaignBrief, ProductFact, ResolvedBrandTheme, TemplateDraft } from "@/lib/campaign-lab/types";
 
@@ -25,6 +26,8 @@ type CampaignPageProps = {
   brief: CampaignBrief;
   draft: TemplateDraft;
   asset: {
+    role?: "product-hero" | "story-opening" | "product-detail" | "product-in-use" | "product-evidence";
+    imageFit?: "contain" | "cover";
     id: string;
     src: string;
     width: number;
@@ -120,6 +123,7 @@ export function CampaignPage({
     }
   }, [imageRevision, motion?.recipe, motion?.runtimeIdentity]);
   const { tokens } = theme;
+  const imagePresentation = resolveCampaignImage(asset, tokens);
   const isEditorial = draft.layout === "editorial-long-copy";
   const showHeroFacts = draft.sections.includes("hero-facts");
   const showDetail = draft.sections.includes("detail");
@@ -146,6 +150,8 @@ export function CampaignPage({
     "--cp-label-case": tokens.labelCase,
     "--cp-label-tracking": tokens.labelTracking,
     "--cp-image-radius": tokens.imageRadius,
+    "--cp-image-fit": imagePresentation.fit,
+    "--cp-image-max-height": imagePresentation.frame === "natural-arch" ? "none" : "330px",
     "--cp-image-inset": tokens.imageInset ?? "0px",
     "--cp-button-radius": tokens.buttonRadius,
     "--cp-image-aspect": asset.width > 0 && asset.height > 0 ? `${asset.width} / ${asset.height}` : "4 / 5",
