@@ -1,5 +1,10 @@
 # Public resource transport foundation
 
+Integration checkpoint: see [bounded offline brand import](./campaign-lab-brand-import.md).
+The reader now also accepts a trusted absolute monotonic `deadline` in the same
+clock domain, capped by its own timeout. Clock injection is trusted test
+configuration only. The original scope/results below remain historical evidence.
+
 Session 2, 19 November 2026. Base: `2e05e3e35411a6894c4a9a6a969b284406801a63`.
 This is an integration-free Node library. No URL endpoint, UI, collector changes,
 live requests, dependencies, deployment or paid calls are included.

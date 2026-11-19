@@ -1,5 +1,9 @@
 # Offline brand evidence foundation — Session 1
 
+Integration checkpoint: see [bounded offline brand import](./campaign-lab-brand-import.md)
+for the working protected-reader/discovery/collector pipeline and combined results.
+The foundation description below records its original isolated scope.
+
 19 November 2026. Base: `2e05e3e35411a6894c4a9a6a969b284406801a63`.
 Branch: `codex/brand-evidence-session1-20261119`.
 

@@ -1,0 +1,400 @@
+<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'"><title>Synthetic partial brand draft</title><pre>{
+  &quot;schemaVersion&quot;: &quot;1.0.0&quot;,
+  &quot;extractorVersion&quot;: &quot;ornigami-brand-evidence/1.0.0&quot;,
+  &quot;outcome&quot;: &quot;draft&quot;,
+  &quot;sources&quot;: [
+    {
+      &quot;kind&quot;: &quot;html&quot;,
+      &quot;requestedUrl&quot;: &quot;https://synthetic.example/start&quot;,
+      &quot;finalUrl&quot;: &quot;https://synthetic.example/brand/home&quot;,
+      &quot;status&quot;: 200,
+      &quot;contentType&quot;: &quot;text/html&quot;,
+      &quot;id&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;byteLength&quot;: 472,
+      &quot;outcome&quot;: &quot;processed&quot;,
+      &quot;issues&quot;: []
+    },
+    {
+      &quot;kind&quot;: &quot;css&quot;,
+      &quot;requestedUrl&quot;: &quot;https://synthetic.example/brand/theme.png&quot;,
+      &quot;finalUrl&quot;: &quot;https://synthetic.example/brand/theme.png&quot;,
+      &quot;status&quot;: 200,
+      &quot;contentType&quot;: &quot;text/css&quot;,
+      &quot;id&quot;: &quot;655cada935d28e461144adfb4fc60363e70b260c5163a3ef2c80ba15827e8ff7&quot;,
+      &quot;sha256&quot;: &quot;9ec4f01dd3a4b853b37016d1dbe3134c3201f22e34e6ca8fc22b458f043fd9f8&quot;,
+      &quot;byteLength&quot;: 39,
+      &quot;outcome&quot;: &quot;processed&quot;,
+      &quot;issues&quot;: []
+    },
+    {
+      &quot;kind&quot;: &quot;raster&quot;,
+      &quot;requestedUrl&quot;: &quot;https://synthetic.example/brand/photo.css&quot;,
+      &quot;finalUrl&quot;: &quot;https://synthetic.example/brand/photo.css&quot;,
+      &quot;status&quot;: 200,
+      &quot;contentType&quot;: &quot;image/png&quot;,
+      &quot;id&quot;: &quot;0284ce07753381bae16ecb142763f3115a6041ccdde3122481fa26078e0bb22b&quot;,
+      &quot;sha256&quot;: &quot;18ce7f4586a0f02b9480d6ae954e2af924d2c907de0340ced0d7f54f8f3dba6e&quot;,
+      &quot;byteLength&quot;: 95,
+      &quot;outcome&quot;: &quot;processed&quot;,
+      &quot;issues&quot;: [
+        &quot;sampled-srgb-not-original-pixel-palette&quot;,
+        &quot;image-purpose-and-rights-unknown&quot;
+      ]
+    }
+  ],
+  &quot;candidates&quot;: [
+    {
+      &quot;id&quot;: &quot;1b648f5c883d8d1738e4272633d1a81f3b0fa29c3d114fe995db8e9174abdfaa&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;title&quot;,
+      &quot;observed&quot;: &quot;Paper &amp; Ink&quot;,
+      &quot;method&quot;: &quot;html-title&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;title&gt;Paper &amp;amp; Ink&lt;/title&gt;&quot;,
+        &quot;utf16Offset&quot;: 0
+      },
+      &quot;details&quot;: {},
+      &quot;roleHint&quot;: null,
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;aaeee5aa94ccfe7e44cda379205bdbcf8005e2f62c64984594657a1acdd6559a&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;ui-color&quot;,
+      &quot;observed&quot;: &quot;#123456ff&quot;,
+      &quot;method&quot;: &quot;html-theme-color&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;meta name=\&quot;theme-color\&quot; content=\&quot;#123456\&quot;&gt;&quot;,
+        &quot;utf16Offset&quot;: 30
+      },
+      &quot;details&quot;: {
+        &quot;alpha&quot;: 1,
+        &quot;media&quot;: &quot;&quot;,
+        &quot;rank&quot;: 3
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;browser-theme&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;medium&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Literal declaration/metadata; role and applicability unresolved.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Browser chrome hint; not an approved campaign accent.&quot;,
+        &quot;Media condition and alpha composition unresolved.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;5a74093643d584e348e1ec117d0982b7d299d7d29f216db3ca559a9d9cca39a6&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;reference&quot;,
+      &quot;observed&quot;: &quot;https://synthetic.example/brand/theme.png&quot;,
+      &quot;method&quot;: &quot;html-reference&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;theme.png\&quot;&gt;&quot;,
+        &quot;utf16Offset&quot;: 74
+      },
+      &quot;details&quot;: {
+        &quot;kind&quot;: &quot;stylesheet&quot;,
+        &quot;fetched&quot;: false
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;resource&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Reference only; asset purpose, owner identity and media rights unverified.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;59ff7ab28e950a86d06c76b3c3ff114a507198c06539bcba7d9d2bdc28bf029a&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;reference&quot;,
+      &quot;observed&quot;: &quot;https://synthetic.example/brand/theme.png&quot;,
+      &quot;method&quot;: &quot;html-reference&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;theme.png#same\&quot;&gt;&quot;,
+        &quot;utf16Offset&quot;: 114
+      },
+      &quot;details&quot;: {
+        &quot;kind&quot;: &quot;stylesheet&quot;,
+        &quot;fetched&quot;: false
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;resource&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Reference only; asset purpose, owner identity and media rights unverified.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;3452eee29f6a7c57ec845f7af3507dc98753353517d2f0ac837293ae3995dd7f&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;reference&quot;,
+      &quot;observed&quot;: &quot;https://synthetic.example/brand/photo.css&quot;,
+      &quot;method&quot;: &quot;html-reference&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;img src=\&quot;photo.css\&quot; type=\&quot;image/svg+xml\&quot;&gt;&quot;,
+        &quot;utf16Offset&quot;: 244
+      },
+      &quot;details&quot;: {
+        &quot;kind&quot;: &quot;image&quot;,
+        &quot;fetched&quot;: false
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;resource&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Reference only; asset purpose, owner identity and media rights unverified.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;32d93b5214a4bf2d5be6464845f263b15a433c1f9afee1feeb48bb53528c2b79&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;reference&quot;,
+      &quot;observed&quot;: &quot;https://synthetic.example/brand/photo.css&quot;,
+      &quot;method&quot;: &quot;html-reference&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;img src=\&quot;photo.css#duplicate\&quot;&gt;&quot;,
+        &quot;utf16Offset&quot;: 286
+      },
+      &quot;details&quot;: {
+        &quot;kind&quot;: &quot;image&quot;,
+        &quot;fetched&quot;: false
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;resource&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Reference only; asset purpose, owner identity and media rights unverified.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;9c141ab99df27ee9b88777fc3c735aaded2b528b9f8dd7b70c58bfbbf8cd8ee6&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;reference&quot;,
+      &quot;observed&quot;: &quot;https://cdn.synthetic.example/blocked.css&quot;,
+      &quot;method&quot;: &quot;html-reference&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;&lt;link rel=\&quot;stylesheet\&quot; href=\&quot;https://cdn.synthetic.example/blocked.css\&quot;&gt;&quot;,
+        &quot;utf16Offset&quot;: 318
+      },
+      &quot;details&quot;: {
+        &quot;kind&quot;: &quot;stylesheet&quot;,
+        &quot;fetched&quot;: false
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;resource&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Reference only; asset purpose, owner identity and media rights unverified.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;9c4e90cfe6b662cfb7858f3b5fbd0f99691778c08c66d47b2b4e4b92df6cdff1&quot;,
+      &quot;sourceId&quot;: &quot;696147d06d85c9125702b3dd3230c8f7262b1fdaf247610532a4a016132f11ad&quot;,
+      &quot;sourceSha256&quot;: &quot;09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba&quot;,
+      &quot;category&quot;: &quot;text&quot;,
+      &quot;observed&quot;: &quot;Fictional paper, unapproved claims.&quot;,
+      &quot;method&quot;: &quot;html-text&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;Fictional paper, unapproved claims.&quot;,
+        &quot;utf16Offset&quot;: 433
+      },
+      &quot;details&quot;: {},
+      &quot;roleHint&quot;: null,
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;ae279cac92f8c1a9e2c2089645a771f0442c176bc2e6146a3a92f6cb38ae962f&quot;,
+      &quot;sourceId&quot;: &quot;655cada935d28e461144adfb4fc60363e70b260c5163a3ef2c80ba15827e8ff7&quot;,
+      &quot;sourceSha256&quot;: &quot;9ec4f01dd3a4b853b37016d1dbe3134c3201f22e34e6ca8fc22b458f043fd9f8&quot;,
+      &quot;category&quot;: &quot;ui-color&quot;,
+      &quot;observed&quot;: &quot;#111111ff&quot;,
+      &quot;method&quot;: &quot;css-declaration&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;#111&quot;,
+        &quot;utf16Offset&quot;: 14
+      },
+      &quot;details&quot;: {
+        &quot;property&quot;: &quot;color&quot;,
+        &quot;alpha&quot;: 1,
+        &quot;rank&quot;: 1
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;ink&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;medium&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Literal declaration/metadata; role and applicability unresolved.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Declaration presence does not establish visibility, ownership or brand role.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;4966845ad9ef22c26293e70c4fe848cd40ed389bac651a0aefac47206c94117a&quot;,
+      &quot;sourceId&quot;: &quot;655cada935d28e461144adfb4fc60363e70b260c5163a3ef2c80ba15827e8ff7&quot;,
+      &quot;sourceSha256&quot;: &quot;9ec4f01dd3a4b853b37016d1dbe3134c3201f22e34e6ca8fc22b458f043fd9f8&quot;,
+      &quot;category&quot;: &quot;ui-color&quot;,
+      &quot;observed&quot;: &quot;#ffffffff&quot;,
+      &quot;method&quot;: &quot;css-declaration&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;#fff&quot;,
+        &quot;utf16Offset&quot;: 32
+      },
+      &quot;details&quot;: {
+        &quot;property&quot;: &quot;background&quot;,
+        &quot;alpha&quot;: 1,
+        &quot;rank&quot;: 1
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;background-or-surface&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;medium&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Literal declaration/metadata; role and applicability unresolved.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;Declaration presence does not establish visibility, ownership or brand role.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    },
+    {
+      &quot;id&quot;: &quot;5f6158804cf1ccf2f980311994e9b25fb0917e4e33843addeb386f99845201a5&quot;,
+      &quot;sourceId&quot;: &quot;0284ce07753381bae16ecb142763f3115a6041ccdde3122481fa26078e0bb22b&quot;,
+      &quot;sourceSha256&quot;: &quot;18ce7f4586a0f02b9480d6ae954e2af924d2c907de0340ced0d7f54f8f3dba6e&quot;,
+      &quot;category&quot;: &quot;raster-color&quot;,
+      &quot;observed&quot;: &quot;#ff0080ff&quot;,
+      &quot;method&quot;: &quot;raster-sample&quot;,
+      &quot;evidence&quot;: {
+        &quot;quote&quot;: &quot;Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.&quot;,
+        &quot;utf16Offset&quot;: null
+      },
+      &quot;details&quot;: {
+        &quot;rgba&quot;: &quot;#ff0080ff&quot;,
+        &quot;pixels&quot;: 64,
+        &quot;fraction&quot;: 1,
+        &quot;width&quot;: 8,
+        &quot;height&quot;: 8
+      },
+      &quot;roleHint&quot;: {
+        &quot;value&quot;: &quot;image-palette-only&quot;,
+        &quot;reason&quot;: &quot;Lexical property/metadata/attribute hint; not computed or accepted.&quot;
+      },
+      &quot;confidence&quot;: {
+        &quot;level&quot;: &quot;low&quot;,
+        &quot;calibrated&quot;: false,
+        &quot;reason&quot;: &quot;Source occurrence or bounded image sample; identity relevance unverified.&quot;
+      },
+      &quot;uncertainty&quot;: [
+        &quot;Untrusted source evidence; review required, including marketplace versus seller identity.&quot;,
+        &quot;May depict a photograph or product; never ranked as website UI or brand colors.&quot;,
+        &quot;Sample frequency is not brand confidence.&quot;
+      ],
+      &quot;reviewStatus&quot;: &quot;unreviewed&quot;
+    }
+  ],
+  &quot;acceptedValues&quot;: [],
+  &quot;approvals&quot;: {
+    &quot;brand&quot;: false,
+    &quot;campaignFacts&quot;: false,
+    &quot;mediaRights&quot;: false
+  },
+  &quot;gaps&quot;: [
+    &quot;All evidence is unreviewed; identity, campaign facts, destinations and media rights require independent approval.&quot;,
+    &quot;No computed styles: CSS variables, cascade, inheritance, selectors, themes and media queries are unresolved.&quot;,
+    &quot;Typography, geometry, contrast in context and font redistribution permissions are not extracted.&quot;,
+    &quot;Lexical HTML/CSS subset only; no rendering, script execution, network requests or live-site qualification.&quot;,
+    &quot;Partial/unsupported evidence: inspect each source&#39;s issues and outcome.&quot;,
+    &quot;Import evidence is incomplete: inspect the bounded import ledger for missing resources and failures.&quot;
+  ],
+  &quot;limits&quot;: {
+    &quot;resources&quot;: 12,
+    &quot;totalBytes&quot;: 4194304,
+    &quot;htmlBytes&quot;: 524288,
+    &quot;cssBytes&quot;: 262144,
+    &quot;rasterBytes&quot;: 524288,
+    &quot;rasterCount&quot;: 4,
+    &quot;rasterPixels&quot;: 4000000,
+    &quot;sampleSide&quot;: 64,
+    &quot;candidates&quot;: 256,
+    &quot;evidenceChars&quot;: 240,
+    &quot;textChars&quot;: 4000,
+    &quot;urlChars&quot;: 2048
+  }
+}</pre>

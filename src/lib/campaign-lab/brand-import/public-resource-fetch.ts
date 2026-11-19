@@ -31,6 +31,8 @@ export interface ResourceReadOptions {
   timeoutMs?: number;
   maxRedirects?: number;
   signal?: AbortSignal;
+  /** Trusted caller's absolute monotonic deadline, in the reader clock domain. */
+  deadline?: number;
 }
 export interface Destination { address: string; family: number }
 /** Trusted test/deployment seam; never populate from imported data. */
@@ -39,6 +41,16 @@ export interface ResourceTransport {
   connectTcp(options: net.NetConnectOpts): net.Socket;
   connectTls(options: tls.ConnectionOptions): net.Socket;
 }
+
+/** Trusted sequencing seam, never configured by imported input. */
+export interface ResourceClock {
+  now(): number;
+  schedule(callback: () => void, ms: number): () => void;
+}
+export const resourceClock: ResourceClock = {
+  now: () => performance.now(),
+  schedule: (callback, ms) => { const timer = setTimeout(callback, ms); return () => clearTimeout(timer); },
+};
 
 async function resolve(host: string, signal: AbortSignal): Promise<Destination[]> {
   const resolver = new Resolver();
@@ -86,23 +98,24 @@ function normalize(raw: string, base?: URL): URL {
 const hostname = (url: URL) => url.hostname.replace(/^\[|\]$/g, "");
 
 /** Creates a Node-only reader. Production callers should use the default transport. */
-export function createPublicResourceReader(transport: ResourceTransport = nodeTransport) {
+export function createPublicResourceReader(transport: ResourceTransport = nodeTransport, clock: ResourceClock = resourceClock) {
   return async function readPublicResource(raw: string, options: ResourceReadOptions): Promise<PublicResource> {
     const { maxBytes, timeoutMs = 10_000, maxRedirects = 3, signal: external } = options;
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 8 * 1024 * 1024
       || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000
-      || !Number.isSafeInteger(maxRedirects) || maxRedirects < 0 || maxRedirects > 5) {
+      || !Number.isSafeInteger(maxRedirects) || maxRedirects < 0 || maxRedirects > 5
+      || (options.deadline !== undefined && !Number.isFinite(options.deadline))) {
       throw failure("INVALID_OPTIONS");
     }
     const controller = new AbortController();
     const { signal } = controller;
-    const expires = performance.now() + timeoutMs;
+    const expires = Math.min(clock.now() + timeoutMs, options.deadline ?? Infinity);
     const cancel = () => controller.abort(failure("CANCELLED"));
     if (external?.aborted) cancel();
     else external?.addEventListener("abort", cancel, { once: true });
-    const timer = setTimeout(() => controller.abort(failure("DEADLINE")), timeoutMs);
+    const clearTimer = clock.schedule(() => controller.abort(failure("DEADLINE")), Math.max(0, expires - clock.now()));
     const check = () => {
-      if (!signal.aborted && performance.now() >= expires) controller.abort(failure("DEADLINE"));
+      if (!signal.aborted && clock.now() >= expires) controller.abort(failure("DEADLINE"));
       signal.throwIfAborted();
     };
     // Race DNS as well as I/O: a late resolver result cannot create a socket.
@@ -245,7 +258,7 @@ export function createPublicResourceReader(transport: ResourceTransport = nodeTr
       if (signal.aborted) throw signal.reason;
       throw error instanceof ResourceReadError ? error : failure("NETWORK_FAILED");
     } finally {
-      clearTimeout(timer);
+      clearTimer();
       external?.removeEventListener("abort", cancel);
     }
   };

@@ -1,0 +1,3 @@
+**/source-* -text
+**/*.json text eol=lf
+**/report.html text eol=lf

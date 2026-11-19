@@ -1,0 +1,26 @@
+[
+  {
+    "requestedUrl": "https://synthetic.example/start",
+    "finalUrl": "https://synthetic.example/brand/home",
+    "status": 200,
+    "contentType": "text/html",
+    "kind": "html",
+    "bodyFile": "source-0.html"
+  },
+  {
+    "requestedUrl": "https://synthetic.example/brand/theme.png",
+    "finalUrl": "https://synthetic.example/brand/theme.png",
+    "status": 200,
+    "contentType": "text/css",
+    "kind": "css",
+    "bodyFile": "source-1.css"
+  },
+  {
+    "requestedUrl": "https://synthetic.example/brand/photo.css",
+    "finalUrl": "https://synthetic.example/brand/photo.css",
+    "status": 200,
+    "contentType": "image/png",
+    "kind": "raster",
+    "bodyFile": "source-2.bin"
+  }
+]

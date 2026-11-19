@@ -4,7 +4,7 @@ import { Duplex } from "node:stream";
 import { getEventListeners } from "node:events";
 import type { Socket, NetConnectOpts } from "node:net";
 import type { ConnectionOptions, PeerCertificate } from "node:tls";
-import { createPublicResourceReader, ResourceReadError, type ResourceTransport, type Destination } from "../src/lib/campaign-lab/brand-import/public-resource-fetch.ts";
+import { createPublicResourceReader, ResourceReadError, type ResourceTransport, type Destination, type ResourceClock } from "../src/lib/campaign-lab/brand-import/public-resource-fetch.ts";
 import { isPublicAddress, isBlockedHostname } from "../src/lib/campaign-lab/brand-import/private-address.ts";
 
 const public4 = { address: "93.184.216.34", family: 4 };
@@ -22,6 +22,7 @@ class WireSocket extends Duplex {
   sent = false;
   readonly reply: string | null;
   readonly lag: number;
+  beforeReply?: () => void;
   constructor(reply: string | null, lag = 0) { super(); this.reply = reply; this.lag = lag; }
   _read() {}
   _write(chunk: Buffer, _encoding: string, callback: (error?: Error | null) => void) {
@@ -31,6 +32,7 @@ class WireSocket extends Duplex {
       this.sent = true;
       const deliver = () => {
         if (this.destroyed || this.reply === null) return;
+        this.beforeReply?.();
         this.push(Buffer.from(this.reply));
         // No FIN for an explicitly unfinished chunked response.
         if (!this.reply.includes("X-Stall: yes")) this.push(null);
@@ -40,7 +42,7 @@ class WireSocket extends Duplex {
   }
 }
 
-function fixture(replies: (string | null)[] = [ok], dns?: ResourceTransport["resolve"]) {
+function fixture(replies: (string | null)[] = [ok], dns?: ResourceTransport["resolve"], clock?: ResourceClock, beforeReply?: () => void) {
   const sockets: WireSocket[] = [];
   type RecordedOptions = ConnectionOptions & { host?: string; port?: number; family?: number };
   const connections: { secure: boolean; options: RecordedOptions }[] = [];
@@ -50,6 +52,7 @@ function fixture(replies: (string | null)[] = [ok], dns?: ResourceTransport["res
   const connect = (secure: boolean, options: ConnectionOptions | NetConnectOpts) => {
     connections.push({ secure, options: options as RecordedOptions });
     const socket = new WireSocket(replies[sockets.length] ?? null, lag);
+    socket.beforeReply = beforeReply;
     sockets.push(socket);
     return socket as unknown as Socket;
   };
@@ -61,7 +64,7 @@ function fixture(replies: (string | null)[] = [ok], dns?: ResourceTransport["res
     connectTcp: (options) => connect(false, options),
     connectTls: (options) => connect(true, options),
   };
-  return { read: createPublicResourceReader(transport), sockets, connections, lookups, signals,
+  return { read: createPublicResourceReader(transport, clock), sockets, connections, lookups, signals,
     setLag(ms: number) { lag = ms; } };
 }
 const options = { maxBytes: 1024, timeoutMs: 500 };
@@ -240,18 +243,31 @@ test("deadline covers stalled connector, response headers and body", async () =>
 });
 
 test("redirect time does not reset deadline; late response produces no next hop", async () => {
-  const f = fixture([redirect("/next"), ok]);
-  f.setLag(40);
+  let now = 0;
+  let activeTimers = 0;
+  const clock: ResourceClock = { now: () => now, schedule: () => {
+    activeTimers++; return () => { activeTimers--; };
+  } };
+  // Real Node parser events drive the hops. Virtual elapsed time is 40 then 80;
+  // deliberate event-loop contention cannot consume the first-hop allowance.
+  const advance = () => {
+    const until = performance.now() + 15;
+    while (performance.now() < until) { /* Controlled contention. */ }
+    now += 40;
+  };
+  const f = fixture([redirect("/next"), redirect("/forbidden-late-hop")], undefined, clock, advance);
   await rejects(f.read("https://brand.example", { ...options, timeoutMs: 65 }), "DEADLINE");
   assert.equal(f.connections.length, 2);
-  await delay(50);
+  assert.equal(now, 80);
   await cleaned(f);
   assert.equal(f.connections.length, 2);
-  const late = fixture([redirect("/next")]); late.setLag(40);
-  await rejects(late.read("https://brand.example", { ...options, timeoutMs: 10 }), "DEADLINE");
-  await delay(50);
+  assert.equal(activeTimers, 0);
+  now = 0;
+  const late = fixture([redirect("/next")], undefined, clock, () => { now = 80; });
+  await rejects(late.read("https://brand.example", { ...options, timeoutMs: 65 }), "DEADLINE");
   assert.equal(late.connections.length, 1);
   await cleaned(late);
+  assert.equal(activeTimers, 0);
 });
 
 test("external cancellation before work, during DNS/connect/body; listener cleanup", async () => {

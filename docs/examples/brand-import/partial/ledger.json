@@ -1,0 +1,71 @@
+{
+  "version": "ornigami-brand-import/1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "status": "partial",
+  "limits": {
+    "resources": 12,
+    "totalBytes": 4194304,
+    "networkMs": 10000,
+    "redirects": 2,
+    "tags": 256,
+    "rasters": 4
+  },
+  "logicalReads": 4,
+  "maxHttpAttempts": 36,
+  "scheduledHttpAttemptBound": 12,
+  "retainedBytes": 606,
+  "chargedBytes": 262750,
+  "cancellation": null,
+  "discoveryTags": 9,
+  "issues": [
+    "DUPLICATE_REFERENCE"
+  ],
+  "entries": [
+    {
+      "kind": "html",
+      "requestedUrl": "https://synthetic.example/start",
+      "finalUrl": "https://synthetic.example/brand/home",
+      "bytes": 472,
+      "sha256": "09d76af58c080f983aef56c97df078f00b6aa6a22a2f84cc27d6d048dd7a8aba",
+      "status": 200,
+      "error": null
+    },
+    {
+      "kind": "css",
+      "requestedUrl": "https://synthetic.example/brand/theme.png",
+      "finalUrl": "https://synthetic.example/brand/theme.png",
+      "bytes": 39,
+      "sha256": "9ec4f01dd3a4b853b37016d1dbe3134c3201f22e34e6ca8fc22b458f043fd9f8",
+      "status": 200,
+      "error": null
+    },
+    {
+      "kind": "raster",
+      "requestedUrl": "https://synthetic.example/brand/photo.css",
+      "finalUrl": "https://synthetic.example/brand/photo.css",
+      "bytes": 95,
+      "sha256": "18ce7f4586a0f02b9480d6ae954e2af924d2c907de0340ced0d7f54f8f3dba6e",
+      "status": 200,
+      "error": null
+    },
+    {
+      "kind": "css",
+      "requestedUrl": "https://cdn.synthetic.example/blocked.css",
+      "finalUrl": null,
+      "bytes": 0,
+      "sha256": null,
+      "status": null,
+      "error": "BLOCKED_DESTINATION"
+    }
+  ],
+  "extractionFailures": [
+    {
+      "sourceId": "0284ce07753381bae16ecb142763f3115a6041ccdde3122481fa26078e0bb22b",
+      "outcome": "processed",
+      "issues": [
+        "sampled-srgb-not-original-pixel-palette",
+        "image-purpose-and-rights-unknown"
+      ]
+    }
+  ]
+}

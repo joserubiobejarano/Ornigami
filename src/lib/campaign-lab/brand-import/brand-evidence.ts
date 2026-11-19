@@ -1,3 +1,4 @@
+import { decodeEntities, activeHtml, attributes, referenceUrl } from "./html-lexical.ts";
 import { createHash } from "node:crypto";
 import { BRAND_EVIDENCE_LIMITS as L, type BrandKitDraft, type EvidenceCandidate,
   type EvidenceSource, type SuppliedBrandResource } from "./evidence-types.ts";
@@ -13,45 +14,8 @@ const BASE_GAPS = [
   "Lexical HTML/CSS subset only; no rendering, script execution, network requests or live-site qualification.",
 ];
 
-function decodeEntities(s: string): string {
-  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
-  return s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (raw, name: string) => {
-    if (name[0] !== "#") return named[name.toLowerCase()] ?? raw;
-    const n = name[1].toLowerCase() === "x" ? parseInt(name.slice(2), 16) : Number(name.slice(1));
-    return n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff) ? String.fromCodePoint(n) : "�";
-  });
-}
 const plain = (s: string) => decodeEntities(s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
 
-/** Replaces inert blocks with spaces, retaining UTF-16 offsets in the original. */
-function activeHtml(s: string): string {
-  return s.replace(/<!--[\s\S]*?(?:-->|$)|<(script|template|svg|noscript|iframe)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi,
-    value => " ".repeat(value.length));
-}
-
-type Attr = { value: string; offset: number };
-function attributes(tag: string, offset: number): Map<string, Attr> {
-  const result = new Map<string, Attr>();
-  const pattern = /([^\s=<>/]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
-  for (const m of tag.matchAll(pattern)) {
-    const raw = m[2] ?? m[3] ?? m[4];
-    const start = m.index! + m[0].indexOf("=") + 1;
-    const local = tag.indexOf(raw, start);
-    if (!result.has(m[1].toLowerCase())) result.set(m[1].toLowerCase(), { value: raw, offset: offset + local });
-  }
-  return result;
-}
-
-/** URL normalization is discovery only, never network authorization. */
-function referenceUrl(raw: string, base?: string): string | null {
-  if (raw.length > L.urlChars) return null;
-  try {
-    const u = new URL(decodeEntities(raw), base);
-    if (!["http:", "https:"].includes(u.protocol) || u.username || u.password) return null;
-    u.hash = "";
-    return u.href.length <= L.urlChars ? u.href : null;
-  } catch { return null; }
-}
 
 /** Deliberately small strict subset. Alpha is retained, never composited. */
 export function observedCssColor(raw: string): { rgba: string; alpha: number } | null {
@@ -145,7 +109,7 @@ function collectHtml(html: string, source: EvidenceSource, add: Add): void {
     const ref = tag === "meta" && ["og:image", "og:image:url"].includes(name) ? a.get("content") :
       tag === "link" ? a.get("href") : ["img", "source"].includes(tag) ? a.get("src") : undefined;
     const kind = tag === "link" ? val("rel").toLowerCase() : tag === "meta" ? "og-image" : "image";
-    if (ref && (tag !== "link" || /(?:stylesheet|icon|preload)/.test(kind))) {
+    if (ref && (tag !== "link" || kind.split(/\s+/).some(token => ["stylesheet", "icon", "preload"].includes(token)))) {
       const url = referenceUrl(ref.value, source.finalUrl);
       if (url) add("reference", url, "html-reference", m.index!, m[0], { kind: clip(kind), fetched: false },
         /logo|wordmark/i.test(val("alt") + " " + val("class") + " " + val("id")) ? "possible-logo" : "resource",

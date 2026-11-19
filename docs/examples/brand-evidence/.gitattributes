@@ -1,2 +1,5 @@
 # Preserve source-byte hashes across Windows and Unix checkouts.
 **/source-* -text
+
+# Exact report replay embeds canonical LF JSON.
+**/report.html text eol=lf
