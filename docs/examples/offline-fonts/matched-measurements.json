@@ -1,0 +1,1570 @@
+[
+  {
+    "phase": "after",
+    "name": "rose-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 335,
+      "x": 20,
+      "y": 600.765625
+    },
+    "article": {
+      "height": 802.296875,
+      "width": 375,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 78.9375,
+      "width": 335,
+      "x": 20,
+      "y": 421.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "41.125px",
+    "heading": {
+      "height": 78.9375,
+      "width": 335,
+      "x": 20,
+      "y": 421.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 328,
+      "width": 333,
+      "x": 21,
+      "y": 72.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "39.48px",
+    "lines": [
+      {
+        "text": "Rose Supply",
+        "y": 415.796875
+      },
+      {
+        "text": "ceramic cup",
+        "y": 455.265625
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 335,
+      "x": 20,
+      "y": 515.734375
+    },
+    "overflowWrap": "anywhere",
+    "text": "Rose Supply ceramic cup",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "rose-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 320,
+      "x": 20,
+      "y": 634.84375
+    },
+    "article": {
+      "height": 1215.28125,
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 69.6875,
+      "width": 320,
+      "x": 20,
+      "y": 71.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "35.2px",
+    "heading": {
+      "height": 69.6875,
+      "width": 320,
+      "x": 20,
+      "y": 71.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 373.328125,
+      "width": 320,
+      "x": 20,
+      "y": 157.484375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "34.848px",
+    "lines": [
+      {
+        "text": "Rose Supply",
+        "y": 68.796875
+      },
+      {
+        "text": "ceramic cup",
+        "y": 103.640625
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 320,
+      "x": 20,
+      "y": 552.8125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Rose Supply ceramic cup",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "fjord-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 335,
+      "x": 20,
+      "y": 600.765625
+    },
+    "article": {
+      "height": 802.296875,
+      "width": 375,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 78.9375,
+      "width": 335,
+      "x": 20,
+      "y": 421.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "41.125px",
+    "heading": {
+      "height": 78.9375,
+      "width": 335,
+      "x": 20,
+      "y": 421.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 328,
+      "width": 333,
+      "x": 21,
+      "y": 72.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "39.48px",
+    "lines": [
+      {
+        "text": "Fjord Works",
+        "y": 415.796875
+      },
+      {
+        "text": "field notebook",
+        "y": 455.265625
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 335,
+      "x": 20,
+      "y": 515.734375
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "fjord-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 320,
+      "x": 20,
+      "y": 634.84375
+    },
+    "article": {
+      "height": 1245.6875,
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 69.6875,
+      "width": 320,
+      "x": 20,
+      "y": 71.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "35.2px",
+    "heading": {
+      "height": 69.6875,
+      "width": 320,
+      "x": 20,
+      "y": 71.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 373.328125,
+      "width": 320,
+      "x": 20,
+      "y": 157.484375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "34.848px",
+    "lines": [
+      {
+        "text": "Fjord Works field",
+        "y": 68.796875
+      },
+      {
+        "text": "notebook",
+        "y": 103.640625
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 320,
+      "x": 20,
+      "y": 552.8125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "harbor-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 335,
+      "x": 20,
+      "y": 643.34375
+    },
+    "article": {
+      "height": 865.390625,
+      "width": 375,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 78.9375,
+      "width": 335,
+      "x": 20,
+      "y": 421.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "41.125px",
+    "heading": {
+      "height": 78.9375,
+      "width": 335,
+      "x": 20,
+      "y": 421.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 328,
+      "width": 333,
+      "x": 21,
+      "y": 72.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "39.48px",
+    "lines": [
+      {
+        "text": "Harbor Field",
+        "y": 415.796875
+      },
+      {
+        "text": "travel bottle",
+        "y": 455.265625
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 335,
+      "x": 20,
+      "y": 580.328125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Harbor Field travel bottle",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "harbor-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 320,
+      "x": 20,
+      "y": 701.09375
+    },
+    "article": {
+      "height": 1335.53125,
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 69.6875,
+      "width": 320,
+      "x": 20,
+      "y": 71.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "35.2px",
+    "heading": {
+      "height": 69.6875,
+      "width": 320,
+      "x": 20,
+      "y": 71.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 400,
+      "width": 320,
+      "x": 20,
+      "y": 157.484375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "34.848px",
+    "lines": [
+      {
+        "text": "Harbor Field",
+        "y": 68.796875
+      },
+      {
+        "text": "travel bottle",
+        "y": 103.640625
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 320,
+      "x": 20,
+      "y": 641.078125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Harbor Field travel bottle",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "morrow-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 320,
+      "x": 20,
+      "y": 834.25
+    },
+    "article": {
+      "height": 1531.09375,
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 174.21875,
+      "width": 320,
+      "x": 20,
+      "y": 123.609375
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "35.2px",
+    "heading": {
+      "height": 174.21875,
+      "width": 320,
+      "x": 20,
+      "y": 123.609375
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 328,
+      "width": 318,
+      "x": 21,
+      "y": 314.828125
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "34.848px",
+    "lines": [
+      {
+        "text": "Why Morrow",
+        "y": 120.609375
+      },
+      {
+        "text": "revised the rib",
+        "y": 155.453125
+      },
+      {
+        "text": "spacing inside its",
+        "y": 190.296875
+      },
+      {
+        "text": "ceramic pour-over",
+        "y": 225.140625
+      },
+      {
+        "text": "dripper",
+        "y": 259.984375
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 320,
+      "x": 20,
+      "y": 752.21875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "morrow-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 320,
+      "x": 20,
+      "y": 869.40625
+    },
+    "article": {
+      "height": 1534.25,
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 139.375,
+      "width": 320,
+      "x": 20,
+      "y": 123.609375
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "35.2px",
+    "heading": {
+      "height": 139.375,
+      "width": 320,
+      "x": 20,
+      "y": 123.609375
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 400,
+      "width": 320,
+      "x": 20,
+      "y": 278.984375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "34.848px",
+    "lines": [
+      {
+        "text": "Why Morrow revised",
+        "y": 120.609375
+      },
+      {
+        "text": "the rib spacing inside",
+        "y": 155.453125
+      },
+      {
+        "text": "its ceramic pour-over",
+        "y": 190.296875
+      },
+      {
+        "text": "dripper",
+        "y": 225.140625
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 320,
+      "x": 20,
+      "y": 787.375
+    },
+    "overflowWrap": "anywhere",
+    "text": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "rose-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 44,
+      "y": 329.1875
+    },
+    "article": {
+      "height": 607.78125,
+      "width": 768,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 72.3125,
+      "width": 288.875,
+      "x": 44,
+      "y": 156.84375
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "37.6656px",
+    "heading": {
+      "height": 72.3125,
+      "width": 288.875,
+      "x": 44,
+      "y": 156.84375
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 393.640625,
+      "width": 337.125,
+      "x": 385.875,
+      "y": 110.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "36.159px",
+    "lines": [
+      {
+        "text": "Rose Supply",
+        "y": 151.84375
+      },
+      {
+        "text": "ceramic cup",
+        "y": 188
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 288.875,
+      "x": 44,
+      "y": 244.15625
+    },
+    "overflowWrap": "anywhere",
+    "text": "Rose Supply ceramic cup",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "rose-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 425.171875,
+      "y": 402.453125
+    },
+    "article": {
+      "height": 1096.375,
+      "width": 753,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 55.296875,
+      "width": 665,
+      "x": 44,
+      "y": 107.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "55.86px",
+    "heading": {
+      "height": 55.296875,
+      "width": 665,
+      "x": 44,
+      "y": 107.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 388.6875,
+      "width": 333.171875,
+      "x": 44,
+      "y": 193.09375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "55.3014px",
+    "lines": [
+      {
+        "text": "Rose Supply ceramic cup",
+        "y": 103.796875
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 283.828125,
+      "x": 425.171875,
+      "y": 320.421875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Rose Supply ceramic cup",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "fjord-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 44,
+      "y": 318.9375
+    },
+    "article": {
+      "height": 607.78125,
+      "width": 768,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 72.3125,
+      "width": 288.875,
+      "x": 44,
+      "y": 146.59375
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "37.6656px",
+    "heading": {
+      "height": 72.3125,
+      "width": 288.875,
+      "x": 44,
+      "y": 146.59375
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 393.640625,
+      "width": 337.125,
+      "x": 385.875,
+      "y": 110.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "36.159px",
+    "lines": [
+      {
+        "text": "Fjord Works",
+        "y": 141.59375
+      },
+      {
+        "text": "field notebook",
+        "y": 177.75
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 288.875,
+      "x": 44,
+      "y": 233.90625
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "fjord-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 425.171875,
+      "y": 402.453125
+    },
+    "article": {
+      "height": 1096.375,
+      "width": 753,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 55.296875,
+      "width": 665,
+      "x": 44,
+      "y": 107.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "55.86px",
+    "heading": {
+      "height": 55.296875,
+      "width": 665,
+      "x": 44,
+      "y": 107.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 388.6875,
+      "width": 333.171875,
+      "x": 44,
+      "y": 193.09375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "55.3014px",
+    "lines": [
+      {
+        "text": "Fjord Works field notebook",
+        "y": 103.796875
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 283.828125,
+      "x": 425.171875,
+      "y": 320.421875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "harbor-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 44,
+      "y": 360.671875
+    },
+    "article": {
+      "height": 640.390625,
+      "width": 768,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 72.3125,
+      "width": 288.875,
+      "x": 44,
+      "y": 109.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "37.6656px",
+    "heading": {
+      "height": 72.3125,
+      "width": 288.875,
+      "x": 44,
+      "y": 109.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 421.90625,
+      "width": 337.125,
+      "x": 385.875,
+      "y": 112.96875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "36.159px",
+    "lines": [
+      {
+        "text": "Harbor Field",
+        "y": 104.796875
+      },
+      {
+        "text": "travel bottle",
+        "y": 140.953125
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 288.875,
+      "x": 44,
+      "y": 297.65625
+    },
+    "overflowWrap": "anywhere",
+    "text": "Harbor Field travel bottle",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "harbor-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 425.171875,
+      "y": 453.34375
+    },
+    "article": {
+      "height": 1179.59375,
+      "width": 753,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 55.296875,
+      "width": 665,
+      "x": 44,
+      "y": 107.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "55.86px",
+    "heading": {
+      "height": 55.296875,
+      "width": 665,
+      "x": 44,
+      "y": 107.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 416.453125,
+      "width": 333.171875,
+      "x": 44,
+      "y": 193.09375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "55.3014px",
+    "lines": [
+      {
+        "text": "Harbor Field travel bottle",
+        "y": 103.796875
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 283.828125,
+      "x": 425.171875,
+      "y": 393.328125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Harbor Field travel bottle",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "morrow-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 425.171875,
+      "y": 622.859375
+    },
+    "article": {
+      "height": 1324.09375,
+      "width": 753,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 165.890625,
+      "width": 665,
+      "x": 44,
+      "y": 141.703125
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "55.86px",
+    "heading": {
+      "height": 165.890625,
+      "width": 665,
+      "x": 44,
+      "y": 141.703125
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 414.453125,
+      "width": 331.171875,
+      "x": 45,
+      "y": 338.59375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "55.3014px",
+    "lines": [
+      {
+        "text": "Why Morrow revised the",
+        "y": 135.703125
+      },
+      {
+        "text": "rib spacing inside its",
+        "y": 191
+      },
+      {
+        "text": "ceramic pour-over dripper",
+        "y": 246.296875
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 283.828125,
+      "x": 425.171875,
+      "y": 540.828125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "morrow-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 425.171875,
+      "y": 622.859375
+    },
+    "article": {
+      "height": 1324.09375,
+      "width": 753,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 165.890625,
+      "width": 665,
+      "x": 44,
+      "y": 141.703125
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "55.86px",
+    "heading": {
+      "height": 165.890625,
+      "width": 665,
+      "x": 44,
+      "y": 141.703125
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 416.453125,
+      "width": 333.171875,
+      "x": 44,
+      "y": 337.59375
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "55.3014px",
+    "lines": [
+      {
+        "text": "Why Morrow revised the rib",
+        "y": 137.703125
+      },
+      {
+        "text": "spacing inside its ceramic",
+        "y": 193
+      },
+      {
+        "text": "pour-over dripper",
+        "y": 248.296875
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 283.828125,
+      "x": 425.171875,
+      "y": 540.828125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "rose-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 44,
+      "y": 546.890625
+    },
+    "article": {
+      "height": 1021.6875,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 115.8125,
+      "width": 591.09375,
+      "x": 44,
+      "y": 353.0625
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "60.332px",
+    "heading": {
+      "height": 115.8125,
+      "width": 591.09375,
+      "x": 44,
+      "y": 353.0625
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 807.546875,
+      "width": 691.90625,
+      "x": 688.09375,
+      "y": 110.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "57.9188px",
+    "lines": [
+      {
+        "text": "Rose Supply",
+        "y": 345.0625
+      },
+      {
+        "text": "ceramic cup",
+        "y": 402.96875
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 591.09375,
+      "x": 44,
+      "y": 483.875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Rose Supply ceramic cup",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "rose-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 788.046875,
+      "y": 641.1875
+    },
+    "article": {
+      "height": 1582.703125,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 82.359375,
+      "width": 1337,
+      "x": 44,
+      "y": 107.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "83.2px",
+    "heading": {
+      "height": 82.359375,
+      "width": 1337,
+      "x": 44,
+      "y": 107.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 812.046875,
+      "width": 696.046875,
+      "x": 44,
+      "y": 220.15625
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "82.368px",
+    "lines": [
+      {
+        "text": "Rose Supply ceramic cup",
+        "y": 101.796875
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 373.734375,
+      "x": 788.046875,
+      "y": 559.15625
+    },
+    "overflowWrap": "anywhere",
+    "text": "Rose Supply ceramic cup",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "fjord-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 44,
+      "y": 546.890625
+    },
+    "article": {
+      "height": 1021.6875,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 115.8125,
+      "width": 591.09375,
+      "x": 44,
+      "y": 353.0625
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "60.332px",
+    "heading": {
+      "height": 115.8125,
+      "width": 591.09375,
+      "x": 44,
+      "y": 353.0625
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 807.546875,
+      "width": 691.90625,
+      "x": 688.09375,
+      "y": 110.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "57.9188px",
+    "lines": [
+      {
+        "text": "Fjord Works",
+        "y": 345.0625
+      },
+      {
+        "text": "field notebook",
+        "y": 402.96875
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 591.09375,
+      "x": 44,
+      "y": 483.875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "fjord-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 788.046875,
+      "y": 641.1875
+    },
+    "article": {
+      "height": 1582.703125,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 82.359375,
+      "width": 1337,
+      "x": 44,
+      "y": 107.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "83.2px",
+    "heading": {
+      "height": 82.359375,
+      "width": 1337,
+      "x": 44,
+      "y": 107.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 812.046875,
+      "width": 696.046875,
+      "x": 44,
+      "y": 220.15625
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "82.368px",
+    "lines": [
+      {
+        "text": "Fjord Works field notebook",
+        "y": 101.796875
+      }
+    ],
+    "offer": {
+      "height": 70.03125,
+      "width": 373.734375,
+      "x": 788.046875,
+      "y": 559.15625
+    },
+    "overflowWrap": "anywhere",
+    "text": "Fjord Works field notebook",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "harbor-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 44,
+      "y": 611.8125
+    },
+    "article": {
+      "height": 1079.515625,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 115.8125,
+      "width": 591.09375,
+      "x": 44,
+      "y": 345.953125
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "60.332px",
+    "heading": {
+      "height": 115.8125,
+      "width": 591.09375,
+      "x": 44,
+      "y": 345.953125
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 865.375,
+      "width": 691.90625,
+      "x": 688.09375,
+      "y": 110.796875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "57.9188px",
+    "lines": [
+      {
+        "text": "Harbor Field",
+        "y": 337.953125
+      },
+      {
+        "text": "travel bottle",
+        "y": 395.859375
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 591.09375,
+      "x": 44,
+      "y": 548.796875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Harbor Field travel bottle",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "harbor-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 788.046875,
+      "y": 693.703125
+    },
+    "article": {
+      "height": 1706.578125,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 82.359375,
+      "width": 1337,
+      "x": 44,
+      "y": 107.796875
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "83.2px",
+    "heading": {
+      "height": 82.359375,
+      "width": 1337,
+      "x": 44,
+      "y": 107.796875
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 870.046875,
+      "width": 696.046875,
+      "x": 44,
+      "y": 220.15625
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "82.368px",
+    "lines": [
+      {
+        "text": "Harbor Field travel bottle",
+        "y": 101.796875
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 373.734375,
+      "x": 788.046875,
+      "y": 633.6875
+    },
+    "overflowWrap": "anywhere",
+    "text": "Harbor Field travel bottle",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "morrow-clear",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 788.046875,
+      "y": 906.578125
+    },
+    "article": {
+      "height": 1905.203125,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 247.078125,
+      "width": 1337,
+      "x": 44,
+      "y": 141.703125
+    },
+    "documentOverflow": false,
+    "fontFamily": "Inter, Arial, sans-serif, ui-sans-serif, system-ui, sans-serif",
+    "fontSize": "83.2px",
+    "heading": {
+      "height": 247.078125,
+      "width": 1337,
+      "x": 44,
+      "y": 141.703125
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 868.046875,
+      "width": 694.046875,
+      "x": 45,
+      "y": 419.78125
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "82.368px",
+    "lines": [
+      {
+        "text": "Why Morrow revised the rib",
+        "y": 131.703125
+      },
+      {
+        "text": "spacing inside its ceramic pour-",
+        "y": 214.0625
+      },
+      {
+        "text": "over dripper",
+        "y": 296.421875
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 423.9375,
+      "x": 788.046875,
+      "y": 846.5625
+    },
+    "overflowWrap": "anywhere",
+    "text": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  },
+  {
+    "phase": "after",
+    "name": "morrow-editorial",
+    "pane": "full",
+    "action": {
+      "height": 52,
+      "width": 210,
+      "x": 788.046875,
+      "y": 824.21875
+    },
+    "article": {
+      "height": 1822.84375,
+      "width": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "column": {
+      "height": 164.71875,
+      "width": 1337,
+      "x": 44,
+      "y": 141.703125
+    },
+    "documentOverflow": false,
+    "fontFamily": "Georgia, serif",
+    "fontSize": "83.2px",
+    "heading": {
+      "height": 164.71875,
+      "width": 1337,
+      "x": 44,
+      "y": 141.703125
+    },
+    "headingOverflow": false,
+    "image": {
+      "height": 870.046875,
+      "width": 696.046875,
+      "x": 44,
+      "y": 336.421875
+    },
+    "imageFit": "contain",
+    "imageLoaded": true,
+    "lineHeight": "82.368px",
+    "lines": [
+      {
+        "text": "Why Morrow revised the rib spacing",
+        "y": 135.703125
+      },
+      {
+        "text": "inside its ceramic pour-over dripper",
+        "y": 218.0625
+      }
+    ],
+    "offer": {
+      "height": 48.015625,
+      "width": 373.734375,
+      "x": 788.046875,
+      "y": 764.203125
+    },
+    "overflowWrap": "anywhere",
+    "text": "Why Morrow revised the rib spacing inside its ceramic pour-over dripper",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "wordBreak": "normal"
+  }
+]

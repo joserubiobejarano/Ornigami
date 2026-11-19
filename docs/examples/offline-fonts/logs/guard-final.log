@@ -1,0 +1,11 @@
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (127.4442ms)
+✔ sanitized compilation child environment retains preload (202.7267ms)
+✔ local data fetch remains available without a network exception (136.7758ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 597.2329

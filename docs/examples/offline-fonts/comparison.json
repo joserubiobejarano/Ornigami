@@ -1,0 +1,218 @@
+[
+  {
+    "name": "rose-clear",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "rose-editorial",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "fjord-clear",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "fjord-editorial",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "harbor-clear",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "harbor-editorial",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "morrow-clear",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "morrow-editorial",
+    "width": 1440,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "rose-clear",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "rose-editorial",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "fjord-clear",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "fjord-editorial",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "harbor-clear",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": false,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "harbor-editorial",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "morrow-clear",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "morrow-editorial",
+    "width": 375,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "rose-clear",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "rose-editorial",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "fjord-clear",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "fjord-editorial",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "harbor-clear",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "harbor-editorial",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "morrow-clear",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  },
+  {
+    "name": "morrow-editorial",
+    "width": 768,
+    "baselineFound": true,
+    "linesSame": true,
+    "fontSizeSame": true,
+    "headingOverflow": false,
+    "documentOverflow": false
+  }
+]

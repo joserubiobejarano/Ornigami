@@ -69,4 +69,4 @@ for (const { id, directionId, preview } of cases) {
   inventory.push({id,directionId,brief:preview.brief,draft:preview.draft,asset:preview.asset,theme:preview.theme,revision:preview.revision});
 }
 writeFileSync(join(out,'frozen.json'),JSON.stringify(inventory,null,2));
-console.log(`Rendered ${inventory.length} frozen/stress specimens for ${phase}; fonts=${readdirSync(fontOut).length-1}.`);
+console.log(`Rendered ${inventory.length} frozen/stress specimens for ${phase}; fonts=${readdirSync(fontOut).filter(name=>name.endsWith('.woff2')).length}.`);

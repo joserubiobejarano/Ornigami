@@ -1,0 +1,76 @@
+{"time":"2026-11-19T21:14:26.996Z","pid":19444,"ppid":33516,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:14:38.711Z","pid":29488,"ppid":27844,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:14:39.160Z","pid":44632,"ppid":9912,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:18:29.881Z","pid":5136,"ppid":17420,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:18:29.913Z","pid":5136,"ppid":17420,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:18:29.937Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:29.965Z","pid":36512,"ppid":5136,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:18:30.203Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:30.465Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:31.470Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:31.729Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:32.591Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:32.843Z","pid":5136,"ppid":17420,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:38.045Z","pid":1632,"ppid":21912,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:18:38.056Z","pid":1632,"ppid":21912,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:18:38.119Z","pid":37556,"ppid":1632,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:18:38.617Z","pid":1632,"ppid":21912,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:18:40.722Z","pid":1632,"ppid":21912,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:16.014Z","pid":28404,"ppid":21860,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:21:16.054Z","pid":28404,"ppid":21860,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:21:16.087Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:16.126Z","pid":31000,"ppid":28404,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:21:16.351Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:16.617Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:16.880Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:17.895Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:18.159Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:19.170Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:19.434Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:20.035Z","pid":28404,"ppid":21860,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:25.584Z","pid":12348,"ppid":44384,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:21:25.599Z","pid":12348,"ppid":44384,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:21:25.681Z","pid":5152,"ppid":12348,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:21:26.377Z","pid":12348,"ppid":44384,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:29.172Z","pid":12348,"ppid":44384,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:21:49.429Z","pid":40028,"ppid":13024,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:22:34.068Z","pid":31920,"ppid":25044,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:22:34.088Z","pid":31920,"ppid":25044,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:22:34.323Z","pid":31920,"ppid":25044,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:25:20.315Z","pid":31352,"ppid":20312,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:30:15.077Z","pid":21376,"ppid":26608,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:30:15.116Z","pid":21376,"ppid":26608,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:30:15.143Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:15.176Z","pid":29008,"ppid":21376,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:30:15.405Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:15.666Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:16.680Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:16.932Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:17.934Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:18.197Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:18.381Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:18.742Z","pid":21376,"ppid":26608,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:23.976Z","pid":32136,"ppid":42040,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:30:23.987Z","pid":32136,"ppid":42040,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:30:24.066Z","pid":20196,"ppid":32136,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:30:24.764Z","pid":32136,"ppid":42040,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:30:27.721Z","pid":32136,"ppid":42040,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:35:52.991Z","pid":12816,"ppid":29380,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:37:07.650Z","pid":37600,"ppid":17572,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:37:07.689Z","pid":37600,"ppid":17572,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:37:07.715Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:07.746Z","pid":13972,"ppid":37600,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:37:07.978Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:08.236Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:09.242Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:09.502Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:10.510Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:10.775Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:11.098Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:11.494Z","pid":37600,"ppid":17572,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:16.667Z","pid":43124,"ppid":6744,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:37:16.678Z","pid":43124,"ppid":6744,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T21:37:16.747Z","pid":15232,"ppid":43124,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}
+{"time":"2026-11-19T21:37:17.363Z","pid":43124,"ppid":6744,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:37:20.090Z","pid":43124,"ppid":6744,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T21:39:11.781Z","pid":43780,"ppid":42696,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-offline-fonts\\scripts\\support\\offline-guard.cjs"}

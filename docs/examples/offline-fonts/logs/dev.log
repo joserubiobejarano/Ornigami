@@ -1,0 +1,45 @@
+▲ Next.js 16.4.5 (webpack)
+- Local:         http://127.0.0.1:3041
+- Network:       http://127.0.0.1:3041
+✓ Ready in 497ms
+[@sentry/nextjs] Importing `withSentryConfig` from `@sentry/nextjs` is deprecated and will stop working in v11. Import it from `@sentry/nextjs/config` instead:
+  import { withSentryConfig } from '@sentry/nextjs/config';
+✓ Running next.config.ts took 923ms
+○ Compiling /instrumentation ...
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+○ Compiling /campaign-lab/offer/page ...
+ GET /campaign-lab/offer 200 in 15.4s (next.js: 14.5s, proxy.ts: 441ms, application-code: 493ms)
+ GET /campaign-lab/offer 200 in 296ms (next.js: 25ms, proxy.ts: 186ms, application-code: 84ms)
+○ Compiling /api/auth/[...nextauth]/route ...
+ GET /campaign-lab/offer 200 in 692ms (next.js: 48ms, proxy.ts: 310ms, application-code: 335ms)
+ GET /api/auth/session 200 in 8.1s (next.js: 8.0s, proxy.ts: 31ms, application-code: 65ms)
+○ Compiling /api/campaign-lab/brand-evidence/route ...
+ GET /api/auth/session 200 in 222ms (next.js: 29ms, proxy.ts: 121ms, application-code: 73ms)
+ POST /api/campaign-lab/brand-evidence 200 in 4.7s (next.js: 4.4s, proxy.ts: 15ms, application-code: 297ms)
+ GET /api/auth/session 200 in 30ms (next.js: 5ms, proxy.ts: 13ms, application-code: 13ms)
+ GET /api/auth/session 200 in 29ms (next.js: 6ms, proxy.ts: 10ms, application-code: 13ms)
+○ Compiling /api/campaign-lab/generate/route ...
+ POST /api/campaign-lab/generate 200 in 3.6s (next.js: 3.5s, proxy.ts: 15ms, application-code: 70ms)
+ GET /campaign-lab/offer 200 in 128ms (next.js: 42ms, proxy.ts: 12ms, application-code: 74ms)
+ GET /campaign-lab/offer 200 in 481ms (next.js: 11ms, proxy.ts: 18ms, application-code: 452ms)
+ GET /campaign-lab/offer 200 in 57ms (next.js: 11ms, proxy.ts: 13ms, application-code: 34ms)
+ GET /campaign-lab/offer 200 in 63ms (next.js: 10ms, proxy.ts: 11ms, application-code: 42ms)
+ GET /campaign-lab/offer 200 in 56ms (next.js: 7ms, proxy.ts: 12ms, application-code: 36ms)
+ GET /campaign-lab/offer 200 in 177ms (next.js: 20ms, proxy.ts: 96ms, application-code: 60ms)
+○ Compiling /campaign-lab/direction/page ...
+ GET /campaign-lab/offer 200 in 314ms (next.js: 24ms, proxy.ts: 252ms, application-code: 38ms)
+ GET /campaign-lab/direction 404 in 5.0s (next.js: 4.3s, proxy.ts: 33ms, application-code: 627ms)
+ GET /api/auth/session 200 in 1599ms (next.js: 1396ms, proxy.ts: 23ms, application-code: 180ms)
+ GET /api/auth/session 200 in 194ms (next.js: 4ms, proxy.ts: 181ms, application-code: 9ms)
+ GET /campaign-lab/direction 200 in 104ms (next.js: 31ms, proxy.ts: 12ms, application-code: 60ms)
+ GET /campaign-lab/direction 200 in 82ms (proxy.ts: 68ms)
+ GET /campaign-lab 200 in 2.6s (next.js: 2.3s, proxy.ts: 10ms, application-code: 301ms)
+ GET /campaign-lab/direction/preview?direction=B 404 in 1373ms (next.js: 1228ms, proxy.ts: 7ms, application-code: 138ms)
+ GET /api/auth/session 200 in 3.2s (next.js: 2.9s, proxy.ts: 135ms, application-code: 88ms)
+ GET /api/auth/session 200 in 137ms (next.js: 22ms, proxy.ts: 99ms, application-code: 16ms)
+ GET /campaign-lab/direction/preview?direction=B 200 in 3.3s (next.js: 36ms, proxy.ts: 3.1s, application-code: 136ms)
+ GET /campaign-lab/direction/preview?direction=B 200 in 72ms (next.js: 21ms, proxy.ts: 16ms, application-code: 35ms)
+ GET /campaign-lab/direction/preview?direction=B 200 in 99ms (next.js: 20ms, proxy.ts: 10ms, application-code: 70ms)
+ GET /campaign-lab/direction/preview?direction=B 200 in 58ms (next.js: 9ms, proxy.ts: 11ms, application-code: 39ms)

@@ -1,0 +1,40 @@
+(node:43780) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[
+  {
+    "directory": ".local/offline/rose-export-exact-license",
+    "revision": "3eafc0d2a1662f57",
+    "direction": "clear",
+    "palette": [
+      {
+        "role": "accent",
+        "value": "#6b2340",
+        "originalValue": "#6b2340ff",
+        "review": "selected"
+      },
+      {
+        "role": "page",
+        "value": "#fff8fa",
+        "originalValue": "#fff8faff",
+        "review": "selected"
+      },
+      {
+        "role": "surface",
+        "value": "#f5e6ea",
+        "originalValue": "#f5e6eaff",
+        "review": "selected"
+      }
+    ],
+    "effectiveAccent": "#6b2340",
+    "verifiedFiles": 13,
+    "fonts": [
+      "Inter"
+    ],
+    "packshotSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "snapshotFalseFlagsPreserved": true,
+    "htmlReceiptAgreement": true,
+    "references": 23
+  }
+]

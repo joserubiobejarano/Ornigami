@@ -1,0 +1,30 @@
+▲ Next.js 16.4.5 (webpack)
+- Local:         http://127.0.0.1:3041
+- Network:       http://127.0.0.1:3041
+✓ Ready in 505ms
+[@sentry/nextjs] Importing `withSentryConfig` from `@sentry/nextjs` is deprecated and will stop working in v11. Import it from `@sentry/nextjs/config` instead:
+  import { withSentryConfig } from '@sentry/nextjs/config';
+✓ Running next.config.ts took 1256ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+○ Compiling /page ...
+ GET / 200 in 13.0s (next.js: 11.9s, proxy.ts: 424ms, application-code: 715ms)
+○ Compiling /api/auth/[...nextauth]/route ...
+ GET / 200 in 557ms (next.js: 34ms, proxy.ts: 233ms, application-code: 290ms)
+ GET /api/auth/session 200 in 6.6s (next.js: 6.6s, proxy.ts: 14ms, application-code: 56ms)
+ GET /api/auth/session 200 in 34ms (next.js: 12ms, proxy.ts: 11ms, application-code: 12ms)
+ GET /api/auth/session 200 in 26ms (next.js: 6ms, proxy.ts: 9ms, application-code: 11ms)
+ GET /api/auth/session 200 in 23ms (next.js: 5ms, proxy.ts: 9ms, application-code: 9ms)
+ GET /login 200 in 2.1s (next.js: 1867ms, proxy.ts: 14ms, application-code: 215ms)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+○ Compiling /campaign-lab/offer/page ...
+ GET /campaign-lab/offer 200 in 3.2s (next.js: 3.1s, proxy.ts: 9ms, application-code: 149ms)
+ GET /api/auth/session 200 in 92ms (next.js: 20ms, proxy.ts: 22ms, application-code: 50ms)
+ GET /api/auth/session 200 in 145ms (next.js: 10ms, proxy.ts: 110ms, application-code: 25ms)
+ GET /api/auth/session 200 in 78ms (next.js: 51ms, proxy.ts: 16ms, application-code: 11ms)
+ GET /campaign-lab/offer 200 in 96ms (next.js: 9ms, proxy.ts: 15ms, application-code: 73ms)
+ GET /api/auth/session 200 in 31ms (next.js: 6ms, proxy.ts: 16ms, application-code: 9ms)
+ POST /api/campaign-lab/brand-evidence 422 in 1682ms (next.js: 1468ms, proxy.ts: 10ms, application-code: 205ms)
+ GET /campaign-lab/offer 200 in 80ms (next.js: 22ms, proxy.ts: 11ms, application-code: 47ms)
+[?25h

@@ -1,0 +1,9 @@
+
+C:\Users\joser\.local\ornigami-offline-fonts\tests\offline-guard.test.cjs
+  1:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:23  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:21  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+✖ 4 problems (4 errors, 0 warnings)
+

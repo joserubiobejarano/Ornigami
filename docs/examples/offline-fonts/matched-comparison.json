@@ -1,0 +1,290 @@
+[
+  {
+    "name": "rose-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "rose-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "fjord-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "fjord-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "harbor-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "harbor-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "morrow-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "morrow-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 375
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "rose-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "rose-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "fjord-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "fjord-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "harbor-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "harbor-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "morrow-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "morrow-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 768
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "rose-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "rose-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "fjord-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "fjord-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "harbor-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "harbor-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "morrow-clear",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  },
+  {
+    "name": "morrow-editorial",
+    "viewport": {
+      "height": 1000,
+      "width": 1440
+    },
+    "articleWidthSame": true,
+    "fontSizeSame": true,
+    "lineHeightSame": true,
+    "linesSame": true,
+    "overflow": false
+  }
+]

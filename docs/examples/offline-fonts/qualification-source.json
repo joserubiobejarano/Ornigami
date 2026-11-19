@@ -1,0 +1,12 @@
+{
+  "applicationFreeze": "89f485d77103ba9e537f1a0a67d76fc9543693e5",
+  "sourceTree": "ef5a3a7f43856fc1b3ef6036c49ccdc4927c7ee1",
+  "integrationMerge": "40ba4bb463d85c50bb8b76580bf32af711538e87",
+  "mergeParents": [
+    "46f1691618942d9155e244b717b9ba6f6c9351a0",
+    "0b37d62dd09c3768bc85429f9a7ffcd310f7c5e7"
+  ],
+  "guardSha256": "751caa31e7a50288101db0f35b057f5df153d33e25f36e95c4963ca0508a8c64",
+  "lockSha256": "63c735ef9283fc20518cdc261cff793369c99c8f860f2feae7c40306d8beca02",
+  "nextConfigSha256": "f96115b3be5ed77998a66a5ecca871cb66352b2ef08fbcfdb5af54d2eb5870af"
+}

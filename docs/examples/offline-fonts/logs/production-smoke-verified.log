@@ -1,0 +1,2 @@
+Production smoke passed: static CSP hash parity, nonce-bound hydration/rotation, protected dashboard, Open Graph image, anonymous auth/Google/billing boundaries, Campaign Lab development-only pages and generation gate.
+Note: static-csp-hashes.json is generated and parity-checked; it is not currently consumed by runtime CSP policy.

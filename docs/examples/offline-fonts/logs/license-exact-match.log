@@ -1,0 +1,32 @@
+(node:35860) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ local preview approval requires the rendered revision and a clean image gate (0.8319ms)
+✔ export eligibility follows the editor approval rules and direct-offer scope (0.2973ms)
+✔ export filename is local, bounded and revision-specific (0.1796ms)
+✔ standalone document carries revision, content agreement and provisional notice (0.349ms)
+✔ export guard only matches the same still-approved revision (0.2108ms)
+✔ archive reference audit accepts local assets and rejects missing or external resources (1.208ms)
+✔ HTML and receipt agreement checks revision, offer, destination and packshot (1.2434ms)
+✔ HTML agreement enforces preview status, notice, and provenance values (2.097ms)
+✔ Inter bundles its matching copyright and OFL text (0.4331ms)
+✔ EB Garamond and Jost bundle their matching copyright and OFL text (0.6852ms)
+✔ standalone stylesheet mirrors the preview canvas and keeps extracted styles (0.2367ms)
+✔ receipt binds the local approval, rendered revision and exported files (0.1957ms)
+✔ stored ZIP writer emits a readable archive (1.4788ms)
+✔ optional approved price keeps existing receipt compatibility and agrees with the HTML (0.7298ms)
+(node:45676) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/font-licenses.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ all admitted programs match committed hashes, family rights and delivery rules (23.6607ms)
+✔ only registered families resolve to their matching redistribution notices (0.6684ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 284.0474

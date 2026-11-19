@@ -1,0 +1,62 @@
+{
+  "action": {
+    "height": 52,
+    "width": 260,
+    "x": 50,
+    "y": 3836.953125
+  },
+  "article": {
+    "height": 764.84375,
+    "width": 300,
+    "x": 30,
+    "y": 3273.640625
+  },
+  "column": {
+    "height": 68.15625,
+    "width": 260,
+    "x": 50,
+    "y": 3668.765625
+  },
+  "documentOverflow": false,
+  "fontFamily": "Inter, sans-serif, ui-sans-serif, system-ui, sans-serif",
+  "fontSize": "35.5px",
+  "heading": {
+    "height": 68.15625,
+    "width": 260,
+    "x": 50,
+    "y": 3668.765625
+  },
+  "headingOverflow": false,
+  "image": {
+    "height": 301.328125,
+    "width": 258,
+    "x": 51,
+    "y": 3346.4375
+  },
+  "imageFit": "contain",
+  "imageLoaded": true,
+  "lineHeight": "34.08px",
+  "lines": [
+    {
+      "text": "Rose Supply",
+      "y": 3663.765625
+    },
+    {
+      "text": "ceramic cup",
+      "y": 3697.84375
+    }
+  ],
+  "offer": {
+    "height": 70.03125,
+    "width": 260,
+    "x": 50,
+    "y": 3751.921875
+  },
+  "overflowWrap": "anywhere",
+  "text": "Rose Supply ceramic cup",
+  "viewport": {
+    "height": 812,
+    "width": 375
+  },
+  "wordBreak": "normal"
+}

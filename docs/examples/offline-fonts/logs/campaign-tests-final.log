@@ -1,0 +1,489 @@
+✔ destination accepts absolute http(s) URLs without credentials (2.2099ms)
+✔ destination rejects missing schemes, non-http schemes and credentials (1.3174ms)
+✔ approval classification prefers explicit state over prose (0.3037ms)
+✔ approval classification recognizes invalidation prose and unknown state (1.0157ms)
+✔ unrelatedCopyDiff normalizes only the expected offer and destination changes (0.9543ms)
+✔ contrast thresholds follow WCAG large-text allowance (0.3177ms)
+✔ manifest validation requires fixture identity and asset metadata shape (1.8428ms)
+✔ comparable text and safe segments are stable (1.3033ms)
+(node:33280) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/advertorial.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the advertorial manifest is versioned and additive (3.5564ms)
+✔ the full Morrow brief assembles the approved reading sequence (6.2993ms)
+✔ the one-photo brief removes the evidence band and extra image roles (2.0755ms)
+✔ assembly is deterministic and keeps offer, destination, action and asset identity (3.8591ms)
+✔ the full and one-photo layouts keep the same story and required facts (3.9364ms)
+✔ changing a story beat, fact, image or offer produces a new revision (4.6443ms)
+✔ an offer-only brief reports the exact advertorial inputs it needs (1.2178ms)
+✔ the offer path remains selectable and unchanged for an offer-only brief (7.2262ms)
+✔ a missing disclosure, unapproved beat and first-person release are rejected by section (1.234ms)
+✔ the one-photo layout rejects extra roles and the full layout rejects a single image (26.0276ms)
+✔ pending rights and a missing product hero block the advertorial (36.9805ms)
+✔ the packshot is bound to the campaign's approved assignment (1.1889ms)
+✔ the revision covers visible copy, presentation and asset content (1.0006ms)
+✔ approved opening copy and opening focus each produce a new revision (1.3281ms)
+✔ fit and generation agree for the full brief with full and packshot-only imagery (2.7729ms)
+✔ in-use images have a full-layout placement but stay outside the one-photo draft (0.635ms)
+✔ an approved library role without an opening slot is reported as unused (0.8212ms)
+✔ the advertorial product name is bound to the campaign identity (0.5989ms)
+✔ opening focus initializes from the selected format's own options (0.3768ms)
+✔ one-photo rejects a required group larger than the verified fact presentation (4.3455ms)
+✔ the section contract rejects a closing action after the product block (1.3784ms)
+✔ required fact groups stay complete in the advertorial (2.0349ms)
+(node:16396) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/brand-evidence.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ monochrome UI retains neutrals and roles despite colorful photo; no approvals (169.3847ms)
+✔ every suggestion has actual byte hash, exact quote and correct final source (72.6144ms)
+✔ conditional light/dark, alpha, unsupported colors and fonts remain unresolved (30.883ms)
+✔ strict colors retain alpha and reject unsupported expressions (1.4928ms)
+✔ misleading source claims and markup stay data, reports escape them (34.3748ms)
+✔ CDN discovery uses redirected document base, records source without fetching (2.3757ms)
+✔ missing, JS-only, corrupt and unsupported resources have explicit outcomes (127.6717ms)
+✔ inert CSS, fake tags inside CSS strings, quoted > and inline offsets (5.478ms)
+✔ text, metadata, raster signature and invisible-pixel bounds are explicit (64.7925ms)
+✔ bounds reject before parsing; output and per-image work remain bounded (162.3389ms)
+✔ transparent raster retains alpha and neutral samples; SVG never decoded (39.5132ms)
+✔ bad status, unsupported encoding and source URLs produce no observations (11.4131ms)
+✔ byte changes alter identity and async raster work cannot race supplied bytes (81.7709ms)
+✔ saved inspectable examples replay exact supplied bytes and evidence (1847.3977ms)
+(node:21720) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/import-brand.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ complete protected-reader pipeline: redirected base, exact hashes/quotes, forbidden CDN stays partial (191.3171ms)
+✔ discovery uses exact rel tokens, final base, inert exclusions, deduplication and bounded tag enumeration (1.0544ms)
+✔ logical resource, tag and raster limits bound all scheduled work including duplicate fragments (19.7447ms)
+✔ aggregate bytes reserve failed reads and stop scheduling at exhaustion (4.9597ms)
+✔ successful byte exhaustion and CSS parser failure preserve exact seed evidence (9.1555ms)
+✔ usable HTML and supported stylesheet complete without approvals or recursive CSS reads (14.0278ms)
+✔ per-resource HTML size and seed status/type/encoding/UTF8 failures never become success (14.1405ms)
+✔ optional CSS/HTTP/compression failures and corrupt/oversized/unsupported raster retain useful HTML (164.8948ms)
+✔ shared deadline covers redirect expansion and subsequent reads without resetting allowance (28.0555ms)
+✔ global cancellation races offline DNS; late DNS cannot start a socket (1.3172ms)
+✔ shared deadline cancels stalled DNS independently of the per-read timer (0.8822ms)
+✔ absolute shared deadline prevents a new socket before delayed timer callbacks (1.0148ms)
+✔ global body cancellation destroys streams; late body cannot publish or discover resources (2.1094ms)
+✔ expiry between seed collection and discovery stops scheduling, even with a delayed timer callback (2.3166ms)
+✔ pre-cancellation and invalid input/configuration perform no network work (2.4538ms)
+✔ JS-only and empty HTML yield incomplete evidence without defaults or script execution (4.1751ms)
+✔ redirect cap bounds wire expansion independently from logical read count (3.3413ms)
+✔ saved integrated example replays from exact source bytes (36.5622ms)
+(node:11360) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/import-brand.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ new canary reservation is exclusive, durable, and cannot reset old markers (154.3684ms)
+✔ passive observer records real parser events without replacing reader or changing supplied bytes (131.3082ms)
+✔ observer sees redirects as headers without consuming redirect bodies (52.0518ms)
+✔ canary launcher refuses absent/unknown options without starting server or reserving work (1476.9033ms)
+✔ offline ledger reconstruction enforces one import, exact seed, GET-only and conservative caps (68.9598ms)
+✔ background fetch guard blocks update probes without changing the protected Node reader (5.1563ms)
+✔ observer preserves real isolated TLS and records certificate authorization and closure (87.2741ms)
+✔ known remote font compilation blocks future launch before reservation without changing typography (0.9703ms)
+(node:29748) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/import-brand.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ healthy HTML/CSS/raster completes with warnings separate from failures and approvals false (117.7208ms)
+✔ unsupported, corrupt, missing and unresolved resources remain partial (58.4483ms)
+(node:29392) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/public-resource-fetch.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ exact HTTPS/443 allowlist and narrow CSS subset (2.7607ms)
+✔ dry-run and invalid CLI never create execution evidence or contact a network (3825.4856ms)
+✔ persistent exclusive reservation permits one execution, including concurrent attempts (69.0536ms)
+✔ only two seeds and two directly linked allowlisted CSS reads; no recursion/media or hidden calls (10.0771ms)
+✔ failed reads consume reservation; redirects are recorded without follow or retry (0.7556ms)
+✔ network/DNS/policy failure stops without trying the second host (0.8548ms)
+✔ access restriction and unsupported media are accurate and never decoded/discovered (1.6954ms)
+✔ shared absolute deadline reduces later timeout; elapsed reservation save cannot start a late read (0.6542ms)
+✔ one deadline/abort destroys held read via its signal and schedules no more work (1.4198ms)
+✔ oversized or unexpectedly followed response violates contract and stops (0.8659ms)
+(node:28740) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-review.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ external accent correction/removal and direction changes revalidate current evidence (9.5214ms)
+✔ alpha, invalid correction and absent references cannot produce an applyable snapshot (20.1608ms)
+✔ latest invalid import remains authoritative after old valid read and external correction (16.9182ms)
+(node:5692) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/public-resource-fetch.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ conservative address policy rejects private/reserved/mapped/transition ranges (10.2369ms)
+✔ actual agent connector receives pinned IP once; Host/SNI and standard identity policy remain original (21.4477ms)
+✔ HTTP, IPv6 and IP-literal TLS preserve the correct identity without DNS (31.5707ms)
+✔ invalid URLs and alternate private literal spellings never resolve or connect (3.159ms)
+✔ all DNS answers are checked: mixed families, malformed and empty results fail closed (115.0359ms)
+✔ redirects validate each target and pin fresh answers, including same hostname (333.0053ms)
+✔ redirect limit, missing location, encoding and response framing failures clean sockets (181.7859ms)
+✔ actual parser-stream bytes capped without Content-Length and with chunked encoding (160.3954ms)
+✔ deadline includes DNS and late resolution never opens a connection (66.7265ms)
+✔ deadline covers entered connector, response headers and body stages (25.4517ms)
+✔ real-time deadline smoke cleans any work entered before expiry (79.9185ms)
+✔ redirect time does not reset deadline; late response produces no next hop (80.1842ms)
+✔ external cancellation before work, during DNS/connect/body; listener cleanup (116.6003ms)
+✔ connection and parser errors are safe and bounded; invalid options do no work (17.4362ms)
+✔ incremental chunked overflow destroys the stream before retaining excess bytes (28.7053ms)
+✔ oversized headers and duplicate framing fail in Node's bounded parser (47.9804ms)
+✔ standard redirect statuses and non-success final responses retain structural result (79.0905ms)
+✔ socket errors and late DNS rejection after abort do not escape or connect (86.5367ms)
+✔ monotonic expiry prevents connect even before the timer gets an event-loop turn (25.7669ms)
+(node:32696) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-review.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ frozen draft validation rejects hostile configuration, purported approvals, references, offsets and bounds (100.2591ms)
+✔ opaque correction preserves alpha and contrast checks dependent rendered roles (24.313ms)
+✔ rose: browser/server, defaults, override removal, restoration, generation and invalid/timeout fallback agree (370.7184ms)
+✔ fjord: browser/server, defaults, override removal, restoration, generation and invalid/timeout fallback agree (410.9946ms)
+✔ file selection stream rejects oversize before reading, retries same file and suppresses late success/error/cancelled results (21.8487ms)
+(node:38220) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/public-resource-fetch.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ synthetic certificate windows and SAN inventory match qualification assumptions (39.8737ms)
+✔ real TLS trusted original hostname, ClientHello SNI, Host, ALPN, bytes and hash (177.5003ms)
+ℹ authorized=true; protocol=TLSv1.3; SNI=brand.example; Host=brand.example; SHA256 verified
+✔ real TLS rejects wrong certificate before any HTTP request (41.2862ms)
+ℹ TLS client error=ERR_TLS_CERT_ALTNAME_INVALID; observed SNI=brand.example; secureConnect=0; HTTP requests=0
+✔ real TLS rejects unknown certificate before any HTTP request (23.2702ms)
+ℹ TLS client error=UNABLE_TO_VERIFY_LEAF_SIGNATURE; observed SNI=brand.example; secureConnect=0; HTTP requests=0
+✔ real TLS rejects expired certificate before any HTTP request (19.0662ms)
+ℹ TLS client error=CERT_HAS_EXPIRED; observed SNI=brand.example; secureConnect=0; HTTP requests=0
+✔ redirect to distinct TLS peer receives fresh DNS, certificate, SNI and Host (112.0317ms)
+✔ redirect cannot reuse origin certificate for a differently named TLS peer (143.1433ms)
+✔ cancel destroys a held real ClientHello and prevents late completion (42.4968ms)
+✔ deadline destroys a held real ClientHello and prevents late completion (27.7934ms)
+✔ held handshake socket error and malformed TLS peer reject safely and close (28.2965ms)
+✔ http streams separate chunked records to success or truncated-body rejection (11.0425ms)
+✔ http streamed chunked limit and cancellation destroy active response (3.8575ms)
+✔ http declared body limit rejects before waiting for entity (3.2604ms)
+✔ https streams separate chunked records to success or truncated-body rejection (149.6045ms)
+✔ https streamed chunked limit and cancellation destroy active response (107.4055ms)
+✔ https declared body limit rejects before waiting for entity (22.0229ms)
+✔ private direct, DNS and TLS redirect destinations never reach connector (28.0185ms)
+(node:44044) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/brand-import/import-brand.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ text-only protected pipeline skips every media/font/script reference and preserves healthy caveats (199.6211ms)
+✔ misleading extensions and MIME never invoke native raster decoding (with a positive trap control) (441.5818ms)
+✔ partial CSS, missing/unsupported/JS-only seeds and forbidden redirects remain accurate (21.78ms)
+✔ text policy preserves shared resource/byte/deadline limits and cancellation cleanup (22.4105ms)
+✔ API default/unavailable/production gates reject before reader construction or body work (8.6622ms)
+✔ API validates same-origin JSON, actual body bytes, strict fields and URL before protected reads (83.2811ms)
+✔ API caps active work, aborts on disconnect, times out a stalled body and releases slots (37.8327ms)
+✔ file/URL selections share authority; stale successes/errors cannot replace current evidence (19.1875ms)
+✔ response byte/schema validation cannot bypass saved-file limits (3.3458ms)
+✔ API rejects expanded evidence beyond the saved-file contract rather than truncating silently (43.648ms)
+(node:27860) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ browser export receipt identifies browser intake and separates identity checks (2.561ms)
+✔ a mismatched local export hash is recorded as false, not server verification (0.4425ms)
+(node:12848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/browser-offer-brief.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a bounded browser brief constructs the app-owned generation context (4.138ms)
+✔ missing context remains compatible with older browser briefs (0.9794ms)
+✔ malformed and overlong browser context returns actionable issues (0.8518ms)
+✔ the browser boundary rejects local sources, catalogs, and unknown fields (0.728ms)
+✔ the client builder omits the packshot object URL and keeps metadata only (0.4472ms)
+✔ the direct service rejects malformed campaign context without throwing (2.2353ms)
+✔ accent is a narrowly validated browser presentation choice (1.982ms)
+✔ the client builder carries the selected accent without accepting arbitrary tokens (0.3659ms)
+✔ accent survives successful generation and deterministic fallback (186.0012ms)
+✔ direction IDs are closed scalar inputs and old briefs retain Clear (1.7874ms)
+✔ server-resolved directions reach the real provider context and fallback without changing approved inputs (181.7621ms)
+✔ prepared and session briefs preserve direction/override; invalid imports are rejected as a unit (7.1971ms)
+(node:29444) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/browser-offer.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a complete browser brief validates and builds the existing offer preview (9.5085ms)
+✔ a conditional long offer uses the product name and keeps the exact terms (1.3841ms)
+✔ a changed offer derives a headline from the current brief (1.6073ms)
+✔ browser intake keeps qualifiers out of automatic headlines (3.0009ms)
+✔ every valid offer length renders successfully (35.2619ms)
+✔ a 180-character conditional offer uses the product name (0.7832ms)
+✔ a blank brand name uses the neutral preview identity (0.5759ms)
+✔ explicit confirmations bind to the exact offer, destination, and rights values (0.3145ms)
+✔ unconfirmed direct, Amazon search, invalid, and confirmed direct destinations stay distinct (0.4636ms)
+✔ Amazon search destinations and pending rights stay provisional even when confirmed (1.5101ms)
+✔ a changed offer changes the preview revision while keeping the approved packshot (1.1511ms)
+✔ missing and invalid intake inputs are reported at their fields (0.61ms)
+✔ the intake caps the offered fact presentation without truncating a group (0.5886ms)
+✔ provisional rights are allowed but surfaced as provisional (0.4281ms)
+✔ building a catalog requires a packshot (0.7174ms)
+(node:41296) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ two synthetic briefs carry distinct audience, objective, brand, asset, template and evidence context (21.7373ms)
+✔ guidance is loaded only for a valid generation attempt (46.3156ms)
+✔ guidance content is absent from app pages and components (1330.1522ms)
+✔ the runtime pack uses only Ornigami and reviewed Taste guidance (10.0438ms)
+✔ invalid output and timeout recovery keep harness and provider mode metadata (66.5964ms)
+✔ a provider cannot supply audience, objective, brand, assets, or guidance (7.9061ms)
+✔ prepared and persisted offer briefs carry audience and objective without breaking older payloads (3.5385ms)
+(node:3784) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/directions/momisa-direction.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ all three previews preserve the supplied commercial identity (19.8128ms)
+✔ the reference tokens reproduce the approved local export (0.4348ms)
+✔ the revised alternative keeps the brand character and changes the treatment (0.4847ms)
+✔ the original alternative remains available for the before comparison (0.2962ms)
+✔ the direction token change participates in the revision (3.9894ms)
+(node:34768) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/advertorial.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a four-fact pilot opens the editor with its validation issue instead of throwing (8.3525ms)
+✔ a four-fact required group never offers a nominal compatible layout (4.2901ms)
+✔ the four-fact brief does not validate as an offer alternative (2.6228ms)
+✔ a genuine alternate format is recommended only when it validates (7.5099ms)
+✔ capacity errors are shown once and kept out of field-level errors (1.931ms)
+✔ the image panel reflects the actual approval action after an edit (0.8573ms)
+✔ a valid preview still opens on first load (9.5223ms)
+✔ approval waits for every image assigned to the current revision (2.5249ms)
+✔ a failed required image blocks approval until its retry loads (1.6361ms)
+✔ an image event from a superseded preview never unlocks the current approval (2.4475ms)
+✔ both advertorial layouts remain available with the complete three-fact group (0.9884ms)
+(node:2316) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/export.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ local preview approval requires the rendered revision and a clean image gate (1.6624ms)
+✔ export eligibility follows the editor approval rules and direct-offer scope (0.7627ms)
+✔ export filename is local, bounded and revision-specific (0.5764ms)
+✔ standalone document carries revision, content agreement and provisional notice (0.7576ms)
+✔ export guard only matches the same still-approved revision (0.3196ms)
+✔ archive reference audit accepts local assets and rejects missing or external resources (1.9095ms)
+✔ HTML and receipt agreement checks revision, offer, destination and packshot (1.8684ms)
+✔ HTML agreement enforces preview status, notice, and provenance values (1.9157ms)
+✔ Inter bundles its matching copyright and OFL text (0.6004ms)
+✔ EB Garamond and Jost bundle their matching copyright and OFL text (0.4023ms)
+✔ standalone stylesheet mirrors the preview canvas and keeps extracted styles (0.4776ms)
+✔ receipt binds the local approval, rendered revision and exported files (0.4014ms)
+✔ stored ZIP writer emits a readable archive (3.5533ms)
+✔ optional approved price keeps existing receipt compatibility and agrees with the HTML (1.0691ms)
+(node:10924) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the local test provider succeeds through the server generation path (72.3893ms)
+✔ a product-led profile governs successful provider generation (6.2369ms)
+✔ product-led yields to an approved campaign headline in generation and fallback (2.7195ms)
+✔ product-led preserves a selected approved opening through generation and fallback (2.4357ms)
+✔ an incompatible proposal recovers through the product-led fallback (1.2215ms)
+✔ invalid output and timeout keep the product-led fallback and fixed inputs (67.3692ms)
+✔ offer-led and legacy angle profiles stay compatible (4.1987ms)
+✔ the local test provider preserves the long-copy story angle and detail arrangement (1.0732ms)
+✔ invalid provider output is rejected and leaves a valid deterministic draft (1.5103ms)
+✔ a provider that times out falls back through the server path (75.7345ms)
+✔ generation switched off produces an explicit deterministic fallback (12.6676ms)
+✔ a valid proposal cannot smuggle protected campaign values (3.6923ms)
+✔ unsupported variants, section orders and fact IDs are rejected (0.8129ms)
+✔ template slots enforce approved facts and length limits (0.6784ms)
+✔ approved campaign headline wins over every profile choice (0.1927ms)
+✔ profile choices apply only when no campaign headline overrides them (0.2078ms)
+✔ paid provider configuration is explicit and bounded (0.2151ms)
+✔ the request gate prevents an older response from replacing newer work (0.1655ms)
+✔ an approved opening focus changes the story and survives provider fallback (2.2597ms)
+(node:31184) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/font-licenses.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ all admitted programs match committed hashes, family rights and delivery rules (37.9197ms)
+✔ only registered families resolve to their matching redistribution notices (3.8878ms)
+(node:9640) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ recipe and actual runtime identity change the approved rendered revision (24.8078ms)
+✔ image policy preserves product heroes and explicit editorial framing, and affects identity (2.8873ms)
+✔ image presentation metadata must agree with its optional receipt field (1.3269ms)
+✔ static export stays script-free; enhancements contain only owned local runtime and closed config (3.0546ms)
+(node:38548) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/offer-emphasis.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the reviewed final price is emphasised, not the first currency amount (2.1438ms)
+✔ a different reviewed substring can be emphasised when explicitly approved (0.4395ms)
+✔ missing, blank, and non-matching approved prices keep the offer unstyled (0.3489ms)
+✔ the complete offer text is preserved around the emphasised substring (0.3757ms)
+(node:34304) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/offer-intake-brief.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the persisted brief round-trips current text fields and facts (2.6535ms)
+✔ invalid or older storage payloads are ignored (0.5931ms)
+✔ fact rows are capped and padded to the intake shape (0.5315ms)
+✔ non-string fields and accidental image or approval keys are not restored (0.3193ms)
+✔ empty saved fields do not trigger the restored-brief notice (0.4493ms)
+✔ a prepared brief loads every text field verbatim (4.105ms)
+✔ an invalid prepared brief explains the error and returns no draft (1.0835ms)
+✔ prepared brief context uses shared limits and persisted drafts are not truncated (0.5481ms)
+(node:16920) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/template.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ offer presentation patch invalidates old approvals without changing campaign, theme or motion identity (96.1578ms)
+✔ frozen campaign inputs, approved long opening and meaningful whitespace remain intact (27.3765ms)
+(node:22720) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/generation/openai-transport.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ successful transport records usage, request identity, settings, and no retry (26.8831ms)
+✔ transport success exposes usage without inventing a request failure (2.4368ms)
+✔ invalid output becomes a preserved invalid-output diagnostic (1.9325ms)
+✔ invalid JSON retains usage, finish reason, request ID, and bounded content (2.1389ms)
+✔ empty content retains known usage and request identity (1.7549ms)
+✔ valid output returns the proposal alongside complete telemetry (1.916ms)
+✔ invalid output without usage keeps the reservation unresolved (1.3765ms)
+✔ private response content never enters public fallback metadata (1.3225ms)
+✔ invalid-output error keeps raw content out of enumerable fields (1.494ms)
+✔ diagnostic redaction removes quoted, escaped, and assigned credentials (0.9971ms)
+✔ authentication failures keep sanitized diagnostics through fallback and stop the run (1.8445ms)
+✔ quota and rate-limit failures are distinguished (4.5419ms)
+✔ invalid parameters preserve the parameter name and stop configuration failures (1.4487ms)
+✔ connection and timeout failures keep categories without inventing status (2.301ms)
+✔ abort signal produces a timeout diagnostic and the SDK is called once (1.3415ms)
+✔ missing usage stays unknown instead of zero cost (0.3814ms)
+✔ service timeout fallback includes a timeout diagnostic (41.4564ms)
+✔ credit balance exhaustion is classified as quota even with a 429 status (1.9122ms)
+(node:10800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/pilots/pilot-manifest.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ source normalization and runtime validation retain each explicit imageFit (8.4956ms)
+✔ omitted imageFit remains optional with historical hero and supporting-role defaults (11.7483ms)
+✔ source and runtime reject invalid imageFit values with an actionable asset issue (2.931ms)
+✔ a local pilot source accepts advertorial supporting roles and records the source promise (0.4285ms)
+✔ the runtime manifest accepts the same editorial package and fills the missing brand ID (0.4652ms)
+✔ a missing source campaign promise is named specifically (0.3869ms)
+✔ story beats require an approved source quote, reviewer and date (2.0773ms)
+✔ disclosure and product transition are required editorial inputs (0.5248ms)
+✔ unsupported asset roles and unknown assignments are rejected by name (0.8923ms)
+✔ first-person copy needs a narrator release (1.5525ms)
+✔ a legacy offer-only pilot still loads without advertorial editorial (0.4153ms)
+✔ a malformed runtime manifest reports hash, dimensions and local URL errors (0.5392ms)
+✔ a pilot offer price must be an exact reviewed substring of the complete offer (0.4947ms)
+✔ a pilot brand profile can select the product-led headline mode (0.2853ms)
+✔ pilot source and runtime manifests reject malformed campaign context without crashing (0.392ms)
+✔ pilot campaign context uses the shared length limit and normalizes whitespace (0.3855ms)
+(node:3356) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a local pilot merges into the base catalog without changing the base fixtures (1.8251ms)
+✔ the pilot fixture renders with the approved opening and fixed campaign inputs (200.01ms)
+✔ a rejected pilot proposal keeps the fixed campaign inputs in the deterministic fallback (3.0126ms)
+✔ changing the approved opening changes the story and evidence emphasis but not the fixed inputs (5.889ms)
+(node:7892) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ actual CampaignPage product-label markup follows shared whitespace normalization (446.5528ms)
+(node:43836) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/generation/request-body.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the bounded reader counts actual UTF-8 bytes, not string length (48.3232ms)
+✔ missing Content-Length cannot bypass the actual byte limit (1.1244ms)
+✔ understated Content-Length cannot bypass the actual byte limit (0.9411ms)
+✔ declared over-limit bodies are rejected before parsing (0.7544ms)
+✔ malformed JSON and empty bodies keep the actionable 400 response (2.1633ms)
+(node:34516) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ briefs without fact groups keep their existing deterministic fact output (11.3948ms)
+✔ deterministic assembly includes every required fact and may omit optional facts (9.172ms)
+✔ the generator cannot return an incomplete required group (38.05ms)
+✔ normal generation includes the full required group (4.7205ms)
+✔ a required group larger than every layout capacity returns a clear validation error (1.007ms)
+✔ deterministic assembly switches to a supported layout when the preferred one cannot fit (0.4269ms)
+✔ layout capacity selects a supported layout that can hold the required group (0.4251ms)
+✔ provider validation rejects a layout that cannot hold the selected facts (0.5578ms)
+✔ required fact groups reject unapproved or duplicate declarations (0.4476ms)
+(node:31644) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ revision identity is versioned and previews carry the version (2.0913ms)
+✔ rendered colour, type, spacing, radii, treatment, order, wordmark, and image dimensions participate (1.9026ms)
+✔ non-rendered review notes and unused fact metadata do not change the revision (0.5205ms)
+✔ equivalent defaults and equivalent values normalize to the same revision (0.752ms)
+✔ a hidden lede ignores its unrendered text (0.8652ms)
+✔ equivalent ASCII whitespace cannot change the closing CTA or identity (1.094ms)
+✔ nonbreaking spaces remain meaningful while ASCII whitespace normalizes (0.4036ms)
+✔ visible notice changes the revision and removing it restores the original (0.7009ms)
+✔ stale approval cannot authorize a newly calculated revision (0.6586ms)
+✔ receipts expose the new identity version and keep v1 receipts readable (1.0636ms)
+(node:21396) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pilot/base conflicting ID (source and fit) fails closed through real catalog lookup (2.6024ms)
+✔ closed sequence uses exact approved story IDs, roles and independently hashed repository bytes (34.5986ms)
+✔ content, brand, config and runtime participate in identity; modes cannot share approval (4.0853ms)
+✔ real bundle preserves distinct assets, alt, hashes, provenance and local references in all variants (141.7206ms)
+✔ packaging rejects stale runtime, changed handles, bytes and cancellation during asset read (6.7357ms)
+✔ runtime instant/reduced motion keep interaction; reversed input retargets; keyboard preserves focus (5.5167ms)
+✔ initialization/image failure restores complete static reading; dynamic reduction stops active motion (2.8739ms)
+✔ both registered definitions resolve approved copy/facts and distinct exact-byte assets (46.9128ms)
+✔ definition and catalog validation reject unsupported counts, config, IDs, copy and source roles (1.5076ms)
+✔ export resolves the captured nondefault definition/catalog and all three modes at both lengths (140.9401ms)
+✔ three-panel packaged runtime supports End/Home, rapid reverse and canonical recovery (3.957ms)
+✔ ordinary editor and generation turn known missing/conflicting assets into recoverable issues (1.8841ms)
+✔ cancellation during the last required image read rejects both captured definitions (15.5794ms)
+(node:4200) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/verification-provenance.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ unchanged rendered values inherit the manifest confirmation and keep their source values (3.1699ms)
+✔ an edited offer is explicit, provisional, and retains its original source value (0.8555ms)
+✔ an edited destination is explicit and does not disturb unchanged rights or packshot evidence (0.4242ms)
+✔ restoring every rendered value also restores inherited confirmation (0.5134ms)
+✔ preview pilots stay provisional even when their rendered values match the manifest (0.289ms)
+✔ missing asset evidence and a non-matching approved price stay explicit (0.6576ms)
+✔ the builder still accepts the legacy single-value input shape (0.4338ms)
+✔ browser intake provenance names its source and keeps the operator boundary explicit (0.7163ms)
+(node:26912) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-offline-fonts/src/lib/campaign-lab/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-offline-fonts\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the campaign lab is available only in local development (3.1002ms)
+✔ the single-product template is versioned and declares its contract (1.7297ms)
+✔ the fixtures use two visibly different brands and reviewed assets (0.8552ms)
+✔ deterministic assembly keeps offer, destination and asset identity as campaign facts (7.6895ms)
+✔ the sparse fixture uses the one-photo layout and the long-copy fixture earns the editorial layout (1.4198ms)
+✔ a long unparsed offer keeps the product name and the exact terms (0.8355ms)
+✔ destination validation returns specific errors and accepts a public HTTPS URL (0.4266ms)
+✔ missing offer, missing image and unknown images return field-level errors (0.7233ms)
+✔ an invalid edit does not mutate the last valid preview (0.5907ms)
+✔ offer, destination, product name, image and accent changes each produce a new revision (3.2387ms)
+✔ brand style changes keep the campaign offer and destination but change the revision (0.7078ms)
+✔ a non-default image blend participates in the revision (0.5575ms)
+✔ offer-led headlines are reserved for fully parsed simple discounts (3.5707ms)
+✔ a product-led profile keeps a safe discount out of the headline (0.2851ms)
+✔ an approved campaign headline overrides a product-led profile (0.266ms)
+✔ headline assembly and accent contrast remain deterministic (0.3934ms)
+ℹ tests 341
+ℹ suites 0
+ℹ pass 341
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4704.7278

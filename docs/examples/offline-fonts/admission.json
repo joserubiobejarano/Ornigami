@@ -1,0 +1,137 @@
+{
+  "sourceWorktreeHead": "761e273a5b7b8cd601276d796393c95c2d5394fc",
+  "sourceBuildId": "-8tb-um9dKD_6GK0oaAcy",
+  "files": [
+    {
+      "Name": "013b72fa676f92e0-s.woff2",
+      "Length": 6204,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "062340a5902d57de-s.woff2",
+      "Length": 33932,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "19cfc7226ec3afaa-s.woff2",
+      "Length": 19044,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "21350d82a1f187e9-s.woff2",
+      "Length": 18744,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "2913b528b2922316-s.woff2",
+      "Length": 19868,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "2b5b02fc7e511755-s.woff2",
+      "Length": 14712,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3505322Z"
+    },
+    {
+      "Name": "548b5aa0a10194aa-s.woff2",
+      "Length": 10936,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "5bbac197f803cc34-s.woff2",
+      "Length": 17204,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3555332Z"
+    },
+    {
+      "Name": "65f03d54ccadf4a8-s.woff2",
+      "Length": 5892,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3505322Z"
+    },
+    {
+      "Name": "69e44c27a0558172-s.woff2",
+      "Length": 11476,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "7d4881bb7e1bf84d-s.p.woff2",
+      "Length": 23108,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "8e9860b6e62d6359-s.woff2",
+      "Length": 85272,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "93a6e477e1480c92-s.woff2",
+      "Length": 8652,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "9d5a263311222317-s.p.woff2",
+      "Length": 41236,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "9dd75fadc5b3df29-s.p.woff2",
+      "Length": 26588,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3555332Z"
+    },
+    {
+      "Name": "af2852512783d6fe-s.woff2",
+      "Length": 113756,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "b8c37bb59076c047-s.woff2",
+      "Length": 10140,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3555332Z"
+    },
+    {
+      "Name": "b9408752a0c24fb9-s.woff2",
+      "Length": 12872,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3505322Z"
+    },
+    {
+      "Name": "ba9851c3c22cd980-s.woff2",
+      "Length": 25844,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "c5fe6dc8356a8c31-s.woff2",
+      "Length": 11272,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "c679f70df756412c-s.p.woff2",
+      "Length": 44172,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "c7e0cf6c760983e7-s.woff2",
+      "Length": 18740,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "d63e13930677f53f-s.woff2",
+      "Length": 25968,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3545334Z"
+    },
+    {
+      "Name": "df0a9ae256c0569c-s.woff2",
+      "Length": 10280,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    },
+    {
+      "Name": "e038a29029a234f2-s.woff2",
+      "Length": 7728,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3515309Z"
+    },
+    {
+      "Name": "e4af272ccee01ff0-s.p.woff2",
+      "Length": 48432,
+      "LastWriteTimeUtc": "2026-11-19T19:55:32.3495305Z"
+    }
+  ],
+  "admission": "Existing source selected by accepted typography helper; no failed-run capture adopted"
+}

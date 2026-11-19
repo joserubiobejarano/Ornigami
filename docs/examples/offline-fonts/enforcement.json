@@ -1,0 +1,122 @@
+{
+  "dev": {
+    "processes": [
+      5692,
+      5820,
+      6920,
+      7384,
+      10124,
+      10204,
+      11108,
+      11400,
+      14572,
+      14824,
+      16872,
+      17004,
+      18616,
+      19220,
+      22380,
+      22672,
+      23372,
+      27464,
+      33456,
+      35588,
+      36212,
+      36504,
+      36720,
+      36872,
+      37244,
+      37484,
+      38236,
+      38832,
+      41016,
+      42040,
+      42444,
+      43300,
+      45156,
+      45192
+    ],
+    "blocked": {
+      "fetch registry.npmjs.org": 2,
+      "fetch:https: registry.npmjs.org": 6
+    },
+    "connections": {},
+    "syntheticStreamRequests": 8,
+    "children": {
+      "C:\\Program Files\\nodejs\\node.exe": 10,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\server\\lib\\start-server.js": 4,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js": 16
+    }
+  },
+  "build": {
+    "processes": [
+      6592,
+      7872,
+      14480,
+      19692,
+      22956,
+      23256,
+      25252,
+      25256,
+      25292,
+      25604,
+      25712,
+      26940,
+      27836,
+      31408,
+      32072,
+      34692,
+      35020,
+      38404,
+      39928,
+      43328,
+      43588,
+      45148
+    ],
+    "blocked": {
+      "https.request o1.ingest.sentry.io": 5
+    },
+    "connections": {},
+    "syntheticStreamRequests": 0,
+    "children": {
+      "C:\\Program Files\\nodejs\\node.exe": 4,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js": 15
+    }
+  },
+  "node": {
+    "processes": [
+      1632,
+      5136,
+      5152,
+      12348,
+      12816,
+      13972,
+      15232,
+      19444,
+      20196,
+      21376,
+      28404,
+      29008,
+      29488,
+      31000,
+      31352,
+      31920,
+      32136,
+      36512,
+      37556,
+      37600,
+      40028,
+      43124,
+      43780,
+      44632
+    ],
+    "blocked": {},
+    "connections": {
+      "127.0.0.1": 44
+    },
+    "syntheticStreamRequests": 0,
+    "children": {
+      "C:\\Program Files\\nodejs\\node.exe": 8
+    }
+  }
+}

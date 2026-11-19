@@ -1,0 +1,12 @@
+{
+  "bindings": {
+    "display": "\"Bricolage Grotesque\", sans-serif",
+    "mono": "\"Geist Mono\", monospace",
+    "sans": "\"Inter\", sans-serif"
+  },
+  "body": "Inter, sans-serif, sans-serif",
+  "displayLoaded": true,
+  "headline": "\"Bricolage Grotesque\", sans-serif, sans-serif",
+  "sansLoaded": true,
+  "weight": "800"
+}

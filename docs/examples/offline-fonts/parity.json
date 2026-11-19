@@ -1,0 +1,61 @@
+{
+  "previewViewport": {
+    "height": 900,
+    "width": 1440
+  },
+  "exportViewport": {
+    "height": 900,
+    "width": 1425
+  },
+  "previewArticleWidth": 909,
+  "exportArticleWidth": 909,
+  "properties": [
+    {
+      "key": "fontSize",
+      "preview": "42.5301px",
+      "export": "42.5301px",
+      "equal": true
+    },
+    {
+      "key": "lineHeight",
+      "preview": "40.8289px",
+      "export": "40.8289px",
+      "equal": true
+    },
+    {
+      "key": "text",
+      "preview": "Rose Supply ceramic cup",
+      "export": "Rose Supply ceramic cup",
+      "equal": true
+    },
+    {
+      "key": "imageFit",
+      "preview": "contain",
+      "export": "contain",
+      "equal": true
+    }
+  ],
+  "linesEqual": true,
+  "sizes": [
+    {
+      "key": "heading",
+      "widthDifference": 0,
+      "heightDifference": 0
+    },
+    {
+      "key": "image",
+      "widthDifference": 0,
+      "heightDifference": 0
+    },
+    {
+      "key": "action",
+      "widthDifference": 0,
+      "heightDifference": 0
+    },
+    {
+      "key": "offer",
+      "widthDifference": 0,
+      "heightDifference": 0
+    }
+  ]
+}
