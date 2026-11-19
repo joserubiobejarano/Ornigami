@@ -1,3 +1,5 @@
+import { motionPresentation } from "./motion.ts";
+import type { MotionPresentation } from "./motion.ts";
 import {
   BASE_CATALOG,
   createCampaignBrief,
@@ -752,7 +754,7 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
-export const CAMPAIGN_REVISION_IDENTITY_VERSION = 4;
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 5;
 
 function canonicalText(value: string): string {
   return presentationText(value);
@@ -795,6 +797,7 @@ export function buildDraftRevisionIdentity(
   asset: ApprovedAsset,
   theme: ResolvedBrandTheme,
   notice?: string | null,
+  motion: MotionPresentation = motionPresentation(),
 ) {
   const { tokens, brand } = theme;
   const showsDetail = draft.sections.includes("detail");
@@ -805,6 +808,8 @@ export function buildDraftRevisionIdentity(
 
   return {
     identityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
+    motion,
+    imageFit: "contain",
     template: {
       id: draft.templateId,
       version: draft.templateVersion,
@@ -880,10 +885,11 @@ export function calculateDraftRevision(
   asset: ApprovedAsset,
   theme: ResolvedBrandTheme,
   notice?: string | null,
+  motion?: MotionPresentation,
 ): string {
   return hashRevision(
     JSON.stringify(
-      buildDraftRevisionIdentity(brief, draft, asset, theme, notice),
+      buildDraftRevisionIdentity(brief, draft, asset, theme, notice, motion),
     ),
   );
 }
@@ -899,6 +905,7 @@ export type CampaignPreviewData = {
   theme: ResolvedBrandTheme;
   revision: string;
   revisionIdentityVersion: number;
+  motion?: MotionPresentation;
 };
 
 export type CampaignPreviewResult =

@@ -1,4 +1,10 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
+import { initializeCampaignMotion } from "@/lib/campaign-lab/motion-runtime";
+import { MOTION_CSS } from "@/lib/campaign-lab/motion";
+import type { MotionPresentation } from "@/lib/campaign-lab/motion";
 
 import type {
   PreviewImageEvent,
@@ -15,6 +21,7 @@ import styles from "./campaign-page.module.css";
 import { PreviewImage } from "./preview-image";
 
 type CampaignPageProps = {
+  motion?: MotionPresentation;
   brief: CampaignBrief;
   draft: TemplateDraft;
   asset: {
@@ -94,6 +101,7 @@ function Action({ href, label }: { href: string; label: string }) {
 }
 
 export function CampaignPage({
+  motion,
   brief,
   draft,
   asset,
@@ -105,6 +113,12 @@ export function CampaignPage({
   imageAttempt,
   onImageStateChange,
 }: CampaignPageProps) {
+  const articleRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (articleRef.current && motion?.recipe && motion.recipe !== "none") {
+      return initializeCampaignMotion(articleRef.current, motion.recipe);
+    }
+  }, [imageRevision, motion?.recipe, motion?.runtimeIdentity]);
   const { tokens } = theme;
   const isEditorial = draft.layout === "editorial-long-copy";
   const showHeroFacts = draft.sections.includes("hero-facts");
@@ -191,6 +205,7 @@ export function CampaignPage({
 
   return (
     <article
+      ref={articleRef}
       className={[
         styles.page,
         isEditorial ? styles.editorial : styles.offerLed,
@@ -203,6 +218,7 @@ export function CampaignPage({
       style={style}
       aria-labelledby={headingId}
     >
+      {motion?.recipe && motion.recipe !== "none" ? <style data-ornigami-motion-style="true">{MOTION_CSS}</style> : null}
       <header className={styles.masthead}>
         <p className={styles.wordmark}>
           {tokens.showWordmarkMark ? <span className={styles.mark} aria-hidden="true" /> : null}

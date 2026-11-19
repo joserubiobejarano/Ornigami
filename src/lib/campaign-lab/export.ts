@@ -1,4 +1,8 @@
 import type { BrowserOfferVerification } from "./browser-offer.ts";
+import { assertCurrentMotion, MOTION_CSS } from "./motion.ts";
+import type { MotionPresentation } from "./motion.ts";
+import { campaignMotionRuntimeSource } from "./motion-runtime.ts";
+import { MOTION_AUTHORING_NOTICE } from "./motion-notice.ts";
 import type { CampaignVerificationProvenance } from "./verification-provenance.ts";
 import {
   buildFontNotice,
@@ -149,6 +153,8 @@ export type CampaignExportAsset = {
 };
 
 export type CampaignExportPreview = {
+  /** Absent on historical/static exports. Never accepts executable config. */
+  motion?: MotionPresentation;
   status: "preview" | "confirmed";
   notice?: string;
   revision: string;
@@ -206,6 +212,7 @@ export type CampaignExportFontNotice = {
 };
 
 export type ArchiveReferenceAudit = {
+  scripts?: string[];
   stylesheets: string[];
   images: string[];
   fonts: string[];
@@ -236,6 +243,7 @@ export type CampaignExportReceipt = {
     actionLabel: string;
     template: CampaignExportPreview["template"];
     appearance?: CampaignExportPreview["appearance"];
+    motion?: MotionPresentation;
   };
   verification: BrowserOfferVerification | null;
   provenance?: CampaignVerificationProvenance;
@@ -361,6 +369,10 @@ export function campaignExportFileName(
 export function captureRenderedArticle(article: HTMLElement): string {
   const clone = article.cloneNode(true) as HTMLElement;
 
+  // Remove only owned enhancement UI before data attributes are stripped.
+  // The canonical product image survives even during open/zoomed inspection.
+  for (const element of clone.querySelectorAll("[data-ornigami-motion-ui]")) element.remove();
+
   for (const element of [clone, ...Array.from(clone.querySelectorAll("*"))]) {
     for (const attribute of Array.from(element.attributes)) {
       if (attribute.name.startsWith("data-")) {
@@ -406,6 +418,7 @@ export function sanitizeRenderedArticle(
 }
 
 export function buildStandaloneDocument(input: {
+  motion?: MotionPresentation;
   title: string;
   bodyHtml: string;
   revision: string;
@@ -418,6 +431,10 @@ export function buildStandaloneDocument(input: {
   actionLabel?: string;
   packshotFile?: string;
 }): string {
+  if (input.motion) assertCurrentMotion(input.motion);
+  const motionMarkup = input.motion ? `<meta name="campaign-lab-motion" content="${escapeHtml(JSON.stringify(input.motion))}">` : "";
+  const motionScripts = input.motion && input.motion.recipe !== "none"
+    ? `<script type="application/json" id="ornigami-motion-config">${JSON.stringify(input.motion).replace(/</g, "\\u003c")}</script>\n<script src="./motion.js" defer></script>` : "";
   const agreementMeta = [
     input.offer !== undefined
       ? `<meta name="campaign-lab-offer" content="${escapeHtml(input.offer)}">`
@@ -445,6 +462,7 @@ export function buildStandaloneDocument(input: {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="campaign-lab-revision" content="${escapeHtml(input.revision)}">
+${motionMarkup}
 <meta name="campaign-lab-preview-status" content="${escapeHtml(input.previewStatus)}">
 <meta name="campaign-lab-packshot-sha256" content="${escapeHtml(input.packshotSha256)}">
 ${agreementMeta}
@@ -459,6 +477,7 @@ ${input.bodyHtml}
 </div>
 </div>
 </div>
+${motionScripts}
 </body>
 </html>
 `;
@@ -664,7 +683,9 @@ export function captureCampaignStyleInputs(
 ): CapturedCampaignStyleInputs {
   const classes = new Set<string>();
   const usedFontFamilies = new Set<string>();
-  const elements = [article, ...Array.from(article.querySelectorAll("*"))];
+  const elements = [article, ...Array.from(article.querySelectorAll("*"))].filter(
+    (element) => !element.closest("[data-ornigami-motion-ui]") && element.tagName !== "STYLE",
+  );
 
   for (const element of elements) {
     for (const className of Array.from(element.classList)) {
@@ -679,6 +700,10 @@ export function captureCampaignStyleInputs(
 
   const nodes: CapturedStyleNode[] = [];
   for (const sheet of Array.from(doc.styleSheets)) {
+    // Enhancement CSS is appended once from the owned source, independent of
+    // whether a modal is currently open or zoomed when the snapshot is taken.
+    const owner = sheet.ownerNode as HTMLElement | null;
+    if (owner?.hasAttribute?.("data-ornigami-motion-style")) continue;
     let rules: CSSRuleList;
     try {
       rules = sheet.cssRules;
@@ -720,6 +745,7 @@ export function captureCampaignExportSnapshot(
       ...input.preview,
       template: { ...input.preview.template },
       asset: { ...input.preview.asset },
+      ...(input.preview.motion ? { motion: { ...input.preview.motion, settings: { ...input.preview.motion.settings } } } : {}),
       verification: input.preview.verification
         ? { ...input.preview.verification }
         : null,
@@ -985,11 +1011,12 @@ export function auditArchiveReferences(
   const images: string[] = [];
   const fonts: string[] = [];
   const cssUrls: string[] = [];
+  const scripts: string[] = [];
   const missing: string[] = [];
   const external: string[] = [];
   let checked = 0;
 
-  for (const match of html.matchAll(/<(?:link|img)\b[^>]*>/gi)) {
+  for (const match of html.matchAll(/<(?:link|img|script)\b[^>]*>/gi)) {
     const tag = match[0];
     const rel = tagAttribute(tag, "rel");
     const href = tagAttribute(tag, "href");
@@ -997,7 +1024,7 @@ export function auditArchiveReferences(
     const reference =
       rel?.toLowerCase() === "stylesheet" && href
         ? href
-        : tag.toLowerCase().startsWith("<img") && src
+        : /^(?:<img|<script)/i.test(tag) && src
           ? src
           : null;
     if (!reference) continue;
@@ -1007,8 +1034,12 @@ export function auditArchiveReferences(
       continue;
     }
     const normalized = normalizeArchivePath(reference);
+    if (tag.toLowerCase().startsWith("<script")) {
+      if (normalized !== "motion.js") throw new CampaignExportReferenceError("Only the owned motion runtime may be packaged.");
+      scripts.push(normalized);
+    }
     if (rel?.toLowerCase() === "stylesheet") stylesheets.push(normalized);
-    else images.push(normalized);
+    else if (!tag.toLowerCase().startsWith("<script")) images.push(normalized);
     if (!available.has(normalized)) missing.push(normalized);
   }
 
@@ -1042,6 +1073,7 @@ export function auditArchiveReferences(
   }
 
   return {
+    ...(scripts.length ? { scripts: [...new Set(scripts)].sort() } : {}),
     stylesheets: [...new Set(stylesheets)].sort(),
     images: [...new Set(images)].sort(),
     fonts: [...new Set(fonts)].sort(),
@@ -1054,6 +1086,15 @@ export function assertHtmlReceiptAgreement(
   html: string,
   receipt: CampaignExportReceipt,
 ): void {
+  if (receipt.preview.motion && metaContent(html, "campaign-lab-motion") !== JSON.stringify(receipt.preview.motion)) {
+    throw new Error("The exported HTML and receipt disagree on motion identity.");
+  }
+  if (receipt.preview.motion?.recipe && receipt.preview.motion.recipe !== "none") {
+    const config = /<script type="application\/json" id="ornigami-motion-config">([\s\S]*?)<\/script>/.exec(html);
+    if (!config || JSON.stringify(JSON.parse(config[1])) !== JSON.stringify(receipt.preview.motion) || !html.includes('<script src="./motion.js" defer></script>')) {
+      throw new Error("The owned runtime configuration and receipt disagree.");
+    }
+  }
   const checks: Array<[string, string | null, string | null]> = [
     [
       "revision",
@@ -1265,6 +1306,7 @@ export async function buildExportReceipt(input: {
       destinationUrl: input.preview.destinationUrl,
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
+      ...(input.preview.motion ? { motion: { ...input.preview.motion } } : {}),
       ...(input.preview.appearance
         ? { appearance: { ...input.preview.appearance } }
         : {}),
@@ -1441,6 +1483,8 @@ export async function buildCampaignExportBundle(
 
   assertCanContinue(snapshot.guard, options);
 
+  if (snapshot.preview.motion) assertCurrentMotion(snapshot.preview.motion);
+
   const packshot = await readPackshotBytes(
     snapshot.packshot.src,
     snapshot.packshot.blob,
@@ -1468,6 +1512,7 @@ export async function buildCampaignExportBundle(
     packshotFile,
   );
   const html = buildStandaloneDocument({
+    motion: snapshot.preview.motion,
     title: `${snapshot.preview.productName} — ${snapshot.preview.brandName}`,
     bodyHtml,
     revision: snapshot.preview.revision,
@@ -1480,19 +1525,24 @@ export async function buildCampaignExportBundle(
     actionLabel: snapshot.preview.actionLabel,
     packshotFile,
   });
+  const enhanced = snapshot.preview.motion && snapshot.preview.motion.recipe !== "none";
   const css = buildStandaloneStylesheet({
     extractedCss: styles.css,
     primaryFontFamily: snapshot.styleInputs.primaryFontFamily,
     bodyLetterSpacing: snapshot.styleInputs.bodyLetterSpacing,
-  });
+  }) + (enhanced ? MOTION_CSS : "");
 
   const encoder = new TextEncoder();
   const htmlBytes = encoder.encode(html);
   const cssBytes = encoder.encode(css);
-  const readme = `Campaign Lab local export\n\nRevision: ${snapshot.preview.revision}\nOffer: ${snapshot.preview.offer}\nDestination: ${snapshot.preview.destinationUrl}\nApproval scope: local-preview\nPreview status: ${snapshot.preview.status}\n${snapshot.preview.notice ? `Provisional notice: ${snapshot.preview.notice}\n` : ""}\nOpen index.html directly in a browser. No server, build step, or Ornigami runtime is required.\n\nThis is a local preview artifact, not publication approval. Editor controls, internal source notes and campaign-brief data are intentionally excluded.\n\nBundled fonts retain their matching copyright and license text in fonts/NOTICE.txt and the referenced license files.\n`;
+  const readme = `Campaign Lab local export\n\nRevision: ${snapshot.preview.revision}\nOffer: ${snapshot.preview.offer}\nDestination: ${snapshot.preview.destinationUrl}\nApproval scope: local-preview\nPreview status: ${snapshot.preview.status}\n${snapshot.preview.notice ? `Provisional notice: ${snapshot.preview.notice}\n` : ""}\nOpen index.html directly in a browser. No server or build step is required. Optional enhancements use only the bundled owned runtime; primary content remains usable without JavaScript.\n\nThis is a local preview artifact, not publication approval. Editor controls, internal source notes and campaign-brief data are intentionally excluded.\n\nBundled fonts retain their matching copyright and license text in fonts/NOTICE.txt and the referenced license files.\n`;
   const readmeBytes = encoder.encode(readme);
 
   const filesWithoutReceipt: Array<{ path: string; bytes: Uint8Array }> = [
+    ...(enhanced ? [
+      { path: "motion.js", bytes: encoder.encode(campaignMotionRuntimeSource()) },
+      { path: "motion-NOTICE.txt", bytes: encoder.encode(MOTION_AUTHORING_NOTICE) },
+    ] : []),
     { path: "index.html", bytes: htmlBytes },
     { path: "styles.css", bytes: cssBytes },
     { path: packshotFile, bytes: packshot.bytes },

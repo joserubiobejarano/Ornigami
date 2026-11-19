@@ -166,7 +166,16 @@ try {
       body: JSON.stringify({ plan_id: "replies", billing_period: "monthly" }),
     });
   }
-  console.log("Production smoke passed: static CSP hash parity, nonce-bound hydration/rotation, protected dashboard, Open Graph image, anonymous auth/Google/billing boundaries.");
+  for (const path of ["/campaign-lab", "/campaign-lab/offer", "/campaign-lab/direction", "/campaign-lab/direction/preview", "/campaign-lab/direction/regression"]) {
+    const response = await request(path);
+    assert.equal(response.status, 404, path + " must remain development-only");
+  }
+  const generation = await request("/api/campaign-lab/generate", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ fixtureId: "sparse" }),
+  });
+  assert.equal(generation.status, 404, "Campaign Lab generation must remain development-only");
+  console.log("Production smoke passed: static CSP hash parity, nonce-bound hydration/rotation, protected dashboard, Open Graph image, anonymous auth/Google/billing boundaries, Campaign Lab development-only pages and generation gate.");
   console.log("Note: static-csp-hashes.json is generated and parity-checked; it is not currently consumed by runtime CSP policy.");
 } finally {
   if (!exited()) {

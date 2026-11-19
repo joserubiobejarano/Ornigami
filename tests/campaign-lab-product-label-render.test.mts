@@ -27,6 +27,8 @@ async function loadCampaignPage() {
     "utf8",
   );
   source = source
+    .replace('import { initializeCampaignMotion } from "@/lib/campaign-lab/motion-runtime";', 'const { initializeCampaignMotion } = require("../../../src/lib/campaign-lab/motion-runtime.ts");')
+    .replace('import { MOTION_CSS } from "@/lib/campaign-lab/motion";', 'const { MOTION_CSS } = require("../../../src/lib/campaign-lab/motion.ts");')
     .replace(
       'import styles from "./campaign-page.module.css";',
       'const styles = new Proxy({}, { get: (_target, prop) => String(prop) });',

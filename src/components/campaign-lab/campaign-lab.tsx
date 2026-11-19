@@ -93,6 +93,8 @@ import {
 
 import { AdvertorialPage } from "./advertorial-page";
 import { CampaignPage } from "./campaign-page";
+import { MOTION_RECIPES, isMotionRecipeId, motionPresentation } from "@/lib/campaign-lab/motion";
+import type { MotionRecipeId } from "@/lib/campaign-lab/motion";
 
 type CampaignLabProps = {
   initialFixtureId: FixtureId;
@@ -204,6 +206,8 @@ export function CampaignLab({
   const [issues, setIssues] = useState<ValidationIssue[]>(initialPreviewState.issues);
   const [dirty, setDirty] = useState(initialPreviewState.dirty);
   const [approval, setApproval] = useState<Approval | null>(null);
+  const [pendingMotion, setPendingMotion] = useState<MotionRecipeId>("none");
+  const [renderedMotion, setRenderedMotion] = useState<MotionRecipeId>("none");
   const [generation, setGeneration] = useState<GenerationState>({ status: "idle" });
   const [generating, setGenerating] = useState(false);
   const [imageGate, setImageGate] = useState<PreviewImageGate>(() =>
@@ -261,17 +265,19 @@ export function CampaignLab({
       previewState && !isAdvertorialPreviewData(previewState)
         ? {
             ...previewState,
+            motion: motionPresentation(renderedMotion),
             revision: calculateDraftRevision(
               previewState.brief,
               previewState.draft,
               previewState.asset,
               previewState.theme,
               renderedPilotNotice ?? null,
+              motionPresentation(renderedMotion),
             ),
             revisionIdentityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
           }
         : previewState,
-    [previewState, renderedPilotNotice],
+    [previewState, renderedPilotNotice, renderedMotion],
   );
   const brand = getBrand(values.brandId, catalog);
   const selectedAsset = getAsset(values.assetId, catalog);
@@ -592,6 +598,7 @@ export function CampaignLab({
     const controller = new AbortController();
     inFlight.current = controller;
     setGenerating(true);
+    setRenderedMotion(pendingMotion);
     setApproval(null);
     setIssues([]);
 
@@ -721,6 +728,7 @@ export function CampaignLab({
         notice,
         revision: preview.revision,
         revisionIdentityVersion: preview.revisionIdentityVersion,
+        motion: (preview as CampaignPreviewData).motion,
         productName: preview.brief.productName,
         brandName: preview.theme.brand.name,
         offer: preview.brief.offer,
@@ -968,6 +976,20 @@ export function CampaignLab({
           >
             <fieldset className="m-0 space-y-4 border-0 p-0">
               <legend className="mb-1 text-sm font-semibold">Campaign facts</legend>
+              {format === "offer" ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${baseId}-motion`}>Experimental presentation</Label>
+                  <select id={`${baseId}-motion`} value={pendingMotion}
+                    className="w-full rounded-md border p-2"
+                    onChange={(event) => {
+                      if (!isMotionRecipeId(event.target.value)) return;
+                      setPendingMotion(event.target.value);
+                      clearChangedState();
+                    }}>
+                    {MOTION_RECIPES.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.label}</option>)}
+                  </select>
+                </div>
+              ) : null}
 
               <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.format}>Format</Label>
@@ -1805,6 +1827,7 @@ export function CampaignLab({
                 />
               ) : (
                 <CampaignPage
+                  motion={(preview as CampaignPreviewData).motion}
                   brief={(preview as CampaignPreviewData).brief}
                   draft={(preview as CampaignPreviewData).draft}
                   asset={preview.asset}
