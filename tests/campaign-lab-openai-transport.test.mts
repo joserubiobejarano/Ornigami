@@ -4,13 +4,20 @@ import type OpenAI from "openai";
 
 import {
   GenerationProviderError,
+  InvalidGenerationOutputError,
   OpenAIGenerationTransport,
+  generateWithTelemetry,
+  openAITransportTelemetryFromError,
 } from "../src/lib/campaign-lab/generation/openai-transport.ts";
+import type { OpenAITransportTelemetry } from "../src/lib/campaign-lab/generation/openai-transport.ts";
 import {
   accountProviderUsage,
   providerCost,
 } from "../src/lib/campaign-lab/generation/provider-accounting.ts";
 import {
+  providerDiagnosticsFromError,
+  redactDiagnosticText,
+  sanitizeDiagnosticText,
   shouldStopAfterFailure,
 } from "../src/lib/campaign-lab/generation/provider-diagnostics.ts";
 import { runCampaignGeneration } from "../src/lib/campaign-lab/generation/service.ts";
@@ -103,6 +110,63 @@ function sdkError(properties: Record<string, unknown>) {
   return Object.assign(new Error(String(properties.message ?? "provider error")), properties);
 }
 
+function responseWithContent(
+  content: string,
+  options: {
+    finishReason?: string;
+    requestId?: string | null;
+    usage?: boolean;
+  } = {},
+) {
+  const {
+    finishReason = "stop",
+    requestId = "req_synthetic",
+    usage = true,
+  } = options;
+  return {
+    ...(requestId ? { _request_id: requestId } : {}),
+    choices: [{ message: { content }, finish_reason: finishReason }],
+    ...(usage
+      ? {
+          usage: {
+            prompt_tokens: 123,
+            completion_tokens: 8,
+            total_tokens: 131,
+          },
+        }
+      : {}),
+  };
+}
+
+type CapturedTelemetry = OpenAITransportTelemetry & { value?: unknown };
+
+async function runWithCapturedTelemetry(
+  transport: OpenAIGenerationTransport,
+): Promise<{
+  result: Awaited<ReturnType<typeof runCampaignGeneration>>;
+  telemetry: CapturedTelemetry | null;
+}> {
+  let telemetry: CapturedTelemetry | null = null;
+  const result = await runCampaignGeneration(sparseInput(), {
+    provider: {
+      id: "openai",
+      label: "OpenAI",
+      model: transport.model,
+      async generate(request, options) {
+        return generateWithTelemetry(
+          transport,
+          request,
+          options,
+          (captured) => {
+            telemetry = captured;
+          },
+        );
+      },
+    },
+  });
+  return { result, telemetry };
+}
+
 test("successful transport records usage, request identity, settings, and no retry", async () => {
   let calls = 0;
   const seenBody: Record<string, unknown> = {};
@@ -185,6 +249,232 @@ test("invalid output becomes a preserved invalid-output diagnostic", async () =>
   assert.equal(result.generation.code, "invalid");
   assert.equal(result.generation.diagnostics?.category, "invalid-output");
   assert.match(result.generation.message ?? "", /could not be read/i);
+});
+
+test("invalid JSON retains usage, finish reason, request ID, and bounded content", async () => {
+  let calls = 0;
+  const seenOptions: Record<string, unknown> = {};
+  const content = '{"angle":';
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async (_body, options) => {
+      calls += 1;
+      Object.assign(seenOptions, options as Record<string, unknown>);
+      return responseWithContent(content, {
+        finishReason: "length",
+        requestId: "req_invalid_json",
+      });
+    }),
+    "gpt-test",
+  );
+  const { result, telemetry } = await runWithCapturedTelemetry(transport);
+
+  assert.equal(calls, 1);
+  assert.equal(seenOptions.maxRetries, 0);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.generation.status, "fallback");
+  assert.equal(result.generation.code, "invalid");
+  assert.equal(
+    result.generation.diagnostics?.providerRequestId,
+    "req_invalid_json",
+  );
+  assert.equal("rawContent" in result.generation, false);
+  assert.equal(JSON.stringify(result.generation).includes("rawContent"), false);
+
+  assert.ok(telemetry);
+  assert.deepEqual(telemetry.usage, {
+    promptTokens: 123,
+    completionTokens: 8,
+    totalTokens: 131,
+    cachedPromptTokens: null,
+  });
+  assert.equal(telemetry.finishReason, "length");
+  assert.equal(telemetry.providerRequestId, "req_invalid_json");
+  assert.equal(telemetry.model, "gpt-test");
+  assert.equal(telemetry.rawContent, content);
+  assert.ok(telemetry.latencyMs >= 0);
+
+  const accounting = accountProviderUsage(telemetry.usage, PRICING, 0.002);
+  assert.equal(accounting.status, "known");
+  if (accounting.status === "known") {
+    assert.equal(
+      accounting.costUsd,
+      providerCost({ promptTokens: 123, completionTokens: 8 }, PRICING),
+    );
+    assert.equal(accounting.reservedExposureUsd, 0);
+  }
+});
+
+test("empty content retains known usage and request identity", async () => {
+  let calls = 0;
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async () => {
+      calls += 1;
+      return responseWithContent("", {
+        finishReason: "length",
+        requestId: "req_empty_content",
+      });
+    }),
+    "gpt-test",
+  );
+  const { result, telemetry } = await runWithCapturedTelemetry(transport);
+
+  assert.equal(calls, 1);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.generation.status, "fallback");
+  assert.equal(result.generation.code, "invalid");
+  assert.equal(
+    result.generation.diagnostics?.providerRequestId,
+    "req_empty_content",
+  );
+
+  assert.ok(telemetry);
+  assert.equal(telemetry.rawContent, "");
+  assert.equal(telemetry.finishReason, "length");
+  assert.equal(telemetry.providerRequestId, "req_empty_content");
+  assert.deepEqual(telemetry.usage, {
+    promptTokens: 123,
+    completionTokens: 8,
+    totalTokens: 131,
+    cachedPromptTokens: null,
+  });
+  assert.equal(
+    accountProviderUsage(telemetry.usage, PRICING, 0.002).status,
+    "known",
+  );
+});
+
+test("valid output returns the proposal alongside complete telemetry", async () => {
+  let calls = 0;
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async () => {
+      calls += 1;
+      return successResponse();
+    }),
+    "gpt-test",
+  );
+  const { result, telemetry } = await runWithCapturedTelemetry(transport);
+
+  assert.equal(calls, 1);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.generation.status, "generated");
+  assert.ok(telemetry);
+  assert.deepEqual(telemetry.value, VALID_PROPOSAL);
+  assert.equal(telemetry.finishReason, "stop");
+  assert.equal(telemetry.providerRequestId, "req_success");
+});
+
+test("invalid output without usage keeps the reservation unresolved", async () => {
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async () =>
+      responseWithContent("{", {
+        requestId: "req_missing_usage",
+        usage: false,
+      }),
+    ),
+    "gpt-test",
+  );
+  const { telemetry } = await runWithCapturedTelemetry(transport);
+
+  assert.ok(telemetry);
+  assert.equal(telemetry.usage, null);
+  const accounting = accountProviderUsage(telemetry.usage, PRICING, 0.002);
+  assert.deepEqual(accounting, {
+    status: "unknown",
+    promptTokens: null,
+    completionTokens: null,
+    costUsd: null,
+    reservedExposureUsd: 0.002,
+  });
+});
+
+test("private response content never enters public fallback metadata", async () => {
+  const secret = "synthetic-secret-value-123";
+  const content = `{"api_key":"${secret}","angle":`;
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async () => responseWithContent(content)),
+    "gpt-test",
+  );
+  const { result, telemetry } = await runWithCapturedTelemetry(transport);
+
+  assert.ok(telemetry);
+  assert.equal(telemetry.rawContent, content);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  const publicGeneration = JSON.stringify(result.generation);
+  assert.equal(publicGeneration.includes(content), false);
+  assert.equal(publicGeneration.includes(secret), false);
+  assert.equal(publicGeneration.includes("rawContent"), false);
+  assert.equal(result.generation.diagnostics?.category, "invalid-output");
+});
+
+test("invalid-output error keeps raw content out of enumerable fields", async () => {
+  const secret = "synthetic-secret-value-123";
+  const content = `{"api_key":"${secret}","angle":`;
+  const transport = new OpenAIGenerationTransport(
+    fakeClient(async () => responseWithContent(content)),
+    "gpt-test",
+  );
+  let error: unknown = null;
+  try {
+    await transport.generate(await capturedSparseRequest(), {
+      signal: new AbortController().signal,
+      timeoutMs: 100,
+    });
+  } catch (caught) {
+    error = caught;
+  }
+
+  assert.ok(error instanceof InvalidGenerationOutputError);
+  assert.equal(JSON.stringify(error).includes(secret), false);
+  assert.equal(JSON.stringify(error).includes("rawContent"), false);
+  const telemetry = openAITransportTelemetryFromError(error);
+  assert.equal(telemetry?.rawContent, content);
+});
+
+test("diagnostic redaction removes quoted, escaped, and assigned credentials", () => {
+  const secret = "synthetic-secret-value-123";
+  const token = "synthetic-token-value-456";
+  const cases = [
+    `{"api_key":"${secret}"}`,
+    `{\\"api_key\\":\\"${secret}\\"}`,
+    `"authorization": "${secret}"`,
+    `client_secret='${secret}'`,
+    `OPENAI_API_KEY=${secret}`,
+    `password: ${secret}`,
+    `access_token: "${token}"`,
+    `api_key provided: ${secret}`,
+  ];
+  for (const input of cases) {
+    const redacted = redactDiagnosticText(input);
+    assert.equal(
+      redacted.includes(secret),
+      false,
+      `secret survived redaction: ${input}`,
+    );
+    assert.equal(redacted.includes(token), false);
+  }
+
+  assert.equal(
+    redactDiagnosticText("Rate limit reached for requests"),
+    "Rate limit reached for requests",
+  );
+
+  const diagnostics = providerDiagnosticsFromError(
+    new Error(`Provider rejected {"api_key":"${secret}"}`),
+  );
+  assert.equal(diagnostics.message.includes(secret), false);
+  assert.equal(JSON.stringify(diagnostics).includes(secret), false);
+
+  const sanitized = sanitizeDiagnosticText(
+    `api_key=${"a".repeat(480)}${secret}`,
+    500,
+  );
+  assert.ok(sanitized);
+  assert.equal(sanitized.includes(secret.slice(0, 8)), false);
+  assert.ok(sanitized.length < 100);
 });
 
 test("authentication failures keep sanitized diagnostics through fallback and stop the run", async () => {

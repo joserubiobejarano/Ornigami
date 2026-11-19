@@ -21,30 +21,85 @@ export type ProviderDiagnostics = {
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_CODE_LENGTH = 120;
+const REDACTED_DIAGNOSTIC = "[redacted diagnostic]";
+const GENERIC_PROVIDER_MESSAGE = "The provider request failed.";
+
+const CREDENTIAL_KEYS =
+  "(?:proxy[-_ ]?authorization|authorization|x[-_ ]?api[-_ ]?key|openai[-_ ]?api[-_ ]?key|api[-_ ]?key|apikey|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|auth[-_ ]?token|client[-_ ]?secret|private[-_ ]?key|password|passwd|credentials?|secret|session[-_ ]?key|token|auth)";
+
+const QUOTED_OR_ESCAPED_VALUE =
+  '(?:"(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\'|\\\\"(?:[^"\\\\]|\\\\.)*\\\\"|\\\\\'(?:[^\'\\\\]|\\\\.)*\\\\\')';
+
+const CREDENTIAL_ASSIGNMENT = new RegExp(
+  `((?:\\\\?["']?)${CREDENTIAL_KEYS}(?:\\\\?["']?)\\s*[:=]\\s*)(?:${QUOTED_OR_ESCAPED_VALUE}|[^,;]+)`,
+  "gi",
+);
+
+// Free-form provider messages often say "Incorrect API key provided: ...".
+const CREDENTIAL_PROVIDED_PHRASE = new RegExp(
+  `((?:${CREDENTIAL_KEYS})\\s+(?:provided|supplied|value)\\s*(?:[:=]\\s*)?)(?:${QUOTED_OR_ESCAPED_VALUE}|[^,;]+)`,
+  "gi",
+);
+
+const RESIDUAL_CREDENTIAL_ASSIGNMENT = new RegExp(
+  `(?:${CREDENTIAL_KEYS})(?:\\\\?["']?)\\s*[:=](?!\\s*\\[redacted\\])`,
+  "i",
+);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function safeText(value: unknown, maxLength = MAX_MESSAGE_LENGTH): string | null {
-  if (typeof value !== "string") return null;
-  const compact = value.replace(/\s+/g, " ").trim();
-  if (!compact) return null;
-  return redactDiagnosticText(compact).slice(0, maxLength);
-}
-
+/**
+ * Removes credentials and credential-like assignments from free-form text.
+ * The complete input is sanitized before any caller truncates it, so a secret
+ * cannot survive by being split at the length boundary. If a credential-looking
+ * assignment still remains after replacement, the text is withheld entirely.
+ */
 export function redactDiagnosticText(value: string): string {
-  return value
-    .replace(/sk-[A-Za-z0-9_-]{8,}/g, "[redacted-key]")
+  const redacted = value
     .replace(
       /-----BEGIN [^-]+-----[\s\S]*?-----END [^-]+-----/g,
       "[redacted-key]",
     )
-    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [redacted]")
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, "[redacted-key]")
     .replace(
-      /\b(authorization|api[-_ ]?key|access[-_ ]?token|secret)\b\s*[:=]\s*[^\s,;]+/gi,
-      "$1: [redacted]",
-    );
+      /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})\b/g,
+      "[redacted-key]",
+    )
+    .replace(
+      /\bBearer\s+(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\\"(?:[^"\\]|\\.)*\\"|\\'(?:[^'\\]|\\.)*\\'|[^\s,;}\]\)"']+)/gi,
+      "Bearer [redacted]",
+    )
+    .replace(/\b(https?:\/\/)[^\s/@]+@/gi, "$1[redacted]@")
+    .replace(CREDENTIAL_ASSIGNMENT, "$1[redacted]")
+    .replace(CREDENTIAL_PROVIDED_PHRASE, "$1[redacted]");
+
+  return RESIDUAL_CREDENTIAL_ASSIGNMENT.test(redacted)
+    ? REDACTED_DIAGNOSTIC
+    : redacted;
+}
+
+/**
+ * Compacts, redacts, then truncates diagnostic text. Redaction always happens
+ * before truncation, and this helper is the only path used for diagnostic
+ * messages and structured provider strings.
+ */
+export function sanitizeDiagnosticText(
+  value: string,
+  maxLength = MAX_MESSAGE_LENGTH,
+): string | null {
+  const compact = value.replace(/\s+/g, " ").trim();
+  if (!compact) return null;
+  return redactDiagnosticText(compact).slice(0, maxLength).trim() || null;
+}
+
+function safeText(
+  value: unknown,
+  maxLength = MAX_MESSAGE_LENGTH,
+): string | null {
+  if (typeof value !== "string") return null;
+  return sanitizeDiagnosticText(value, maxLength);
 }
 
 function safeNumber(value: unknown): number | null {
@@ -100,9 +155,7 @@ function categoryFor(error: Record<string, unknown>): ProviderFailureCategory {
     code.startsWith("econn") ||
     code === "enotfound" ||
     code === "und_err_socket" ||
-    /connection|socket|fetch failed|network/.test(
-      `${name} ${code} ${message}`,
-    )
+    /connection|socket|fetch failed|network/.test(`${name} ${code} ${message}`)
   ) {
     return "connection";
   }
@@ -120,7 +173,7 @@ export function providerDiagnosticsFromError(
   const message =
     safeText(record.message) ??
     (typeof error === "string" ? safeText(error) : null) ??
-    "The provider request failed.";
+    GENERIC_PROVIDER_MESSAGE;
   const category = categoryFor(record);
   return {
     category,
@@ -133,14 +186,19 @@ export function providerDiagnosticsFromError(
   };
 }
 
-export function invalidOutputDiagnostics(message: string): ProviderDiagnostics {
+export function invalidOutputDiagnostics(
+  message: string,
+  providerRequestId: string | null = null,
+): ProviderDiagnostics {
   return {
     category: "invalid-output",
     httpStatus: null,
     providerCode: null,
     providerType: null,
     parameter: null,
-    providerRequestId: null,
+    providerRequestId: providerRequestId
+      ? safeText(providerRequestId, MAX_CODE_LENGTH)
+      : null,
     message: safeText(message) ?? "The provider returned unreadable output.",
   };
 }
@@ -174,8 +232,7 @@ export function diagnosticsFromUnknownError(
       diagnostics.providerRequestId,
       MAX_CODE_LENGTH,
     ),
-    message:
-      safeText(diagnostics.message) ?? "The provider request failed.",
+    message: safeText(diagnostics.message) ?? GENERIC_PROVIDER_MESSAGE,
   };
 }
 

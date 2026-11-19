@@ -25,10 +25,13 @@ import {
   DESIGN_GUIDANCE_PACK_VERSION,
   DESIGN_HARNESS_VERSION,
 } from "../src/lib/campaign-lab/generation/guidance/pack.ts";
-import { OpenAIGenerationTransport } from "../src/lib/campaign-lab/generation/openai-transport.ts";
+import {
+  OpenAIGenerationTransport,
+  generateWithTelemetry,
+} from "../src/lib/campaign-lab/generation/openai-transport.ts";
 import { accountProviderUsage } from "../src/lib/campaign-lab/generation/provider-accounting.ts";
 import {
-  redactDiagnosticText,
+  sanitizeDiagnosticText,
   shouldStopAfterFailure,
 } from "../src/lib/campaign-lab/generation/provider-diagnostics.ts";
 import { buildOpenAIMessages } from "../src/lib/campaign-lab/generation/prompt.ts";
@@ -790,8 +793,14 @@ async function executeCanary(options) {
     label: "OpenAI",
     model,
     async generate(request, callOptions) {
-      outcome = await transport.generate(request, callOptions);
-      return outcome.value;
+      return generateWithTelemetry(
+        transport,
+        request,
+        callOptions,
+        (captured) => {
+          outcome = captured;
+        },
+      );
     },
   };
 
@@ -1003,8 +1012,14 @@ async function executeRun(options) {
       label: "OpenAI",
       model,
       async generate(request, callOptions) {
-        outcome = await transport.generate(request, callOptions);
-        return outcome.value;
+        return generateWithTelemetry(
+          transport,
+          request,
+          callOptions,
+          (captured) => {
+            outcome = captured;
+          },
+        );
       },
     };
 
@@ -1026,12 +1041,11 @@ async function executeRun(options) {
     } catch (caught) {
       result = {
         ok: false,
-        error: redactDiagnosticText(
-          (caught instanceof Error ? caught.message : String(caught)).slice(
-            0,
+        error:
+          sanitizeDiagnosticText(
+            caught instanceof Error ? caught.message : String(caught),
             500,
-          ),
-        ),
+          ) ?? "The generation provider request failed.",
       };
     }
     const finishedAt = Date.now();
