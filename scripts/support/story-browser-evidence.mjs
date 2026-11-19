@@ -87,6 +87,7 @@ export async function captureOfferViewport(tab, viewport, options) {
       readyImages:article?[...article.querySelectorAll("img")].filter(i=>i.complete&&i.naturalWidth>0).length:0,
       revision:document.querySelector("section[data-fixture]")?.getAttribute("data-revision")??null,
       appearance:h1?{font:getComputedStyle(h1).fontFamily,weight:getComputedStyle(h1).fontWeight,background:getComputedStyle(article).backgroundColor,radius:getComputedStyle(image.closest("figure")).borderRadius}:null,
+      hero:article?{heading:h1?.getBoundingClientRect().toJSON(),offer:article.querySelector('[data-role="offer"]')?.getBoundingClientRect().toJSON(),cta:article.querySelector("a")?.getBoundingClientRect().toJSON(),image:image?.getBoundingClientRect().toJSON()}:null,
       headline:h1?.textContent??null,content:article?.textContent??null,links:article?[...article.querySelectorAll("a")].map(a=>({href:a.href,text:a.textContent})):[],
       generation:document.querySelector("section[data-generation-status]")?.getAttribute("data-generation-status"),
       provider:document.querySelector("section[data-generation-provider]")?.getAttribute("data-generation-provider"),
