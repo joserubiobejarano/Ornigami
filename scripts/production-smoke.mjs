@@ -166,7 +166,7 @@ try {
       body: JSON.stringify({ plan_id: "replies", billing_period: "monthly" }),
     });
   }
-  for (const path of ["/campaign-lab", "/campaign-lab/offer", "/campaign-lab/direction", "/campaign-lab/direction/preview", "/campaign-lab/direction/regression"]) {
+  for (const path of ["/campaign-lab", "/campaign-lab/offer", "/campaign-lab/story", "/campaign-lab/direction", "/campaign-lab/direction/preview", "/campaign-lab/direction/regression"]) {
     const response = await request(path);
     assert.equal(response.status, 404, path + " must remain development-only");
   }

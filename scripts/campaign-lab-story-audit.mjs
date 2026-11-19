@@ -8,11 +8,35 @@ import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {gzipSync} from 'node:zlib';
 import {execFileSync} from 'node:child_process';
+import vm from 'node:vm';
 import {crc32,assertHtmlReceiptAgreement,auditArchiveReferences} from '../src/lib/campaign-lab/export.ts';
 import {createCatalog,getAsset,BASE_CATALOG} from '../src/lib/campaign-lab/fixtures.ts';
 
 const directory=path.resolve(process.argv[2]??'.local/story-session2');
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+function checkPackagedRuntime(source,config,reduce=false,fail=false){
+ class Element extends EventTarget {
+  style={};hidden=true;inert=false;complete=true;naturalWidth=1200;attrs=new Map();
+  setAttribute(key,value){this.attrs.set(key,value);}
+  removeAttribute(key){this.attrs.delete(key);if(key==='style')this.style={};}
+  focus(){this.focused=true;}
+ }
+ const root=new Element(),track=new Element(),controls=new Element();
+ const panels=[new Element(),new Element()],buttons=[new Element(),new Element()],images=[new Element(),new Element()],classes=new Set();
+ Object.assign(root,{classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)},querySelector:s=>s==='.story-track'?track:controls,querySelectorAll:s=>s==='.story-panel'?panels:s==='img'?images:buttons});
+ const media=Object.assign(new EventTarget(),{matches:reduce});
+ const document=Object.assign(new EventTarget(),{querySelector:()=>root,getElementById:()=>({textContent:JSON.stringify(config)})});
+ if(fail)buttons[1].addEventListener=()=>{throw Error('Injected initialization failure');};
+ // No fetch, network, filesystem, process or module globals exist inside this VM.
+ vm.runInNewContext(source,{document,matchMedia:()=>media},{timeout:1000});
+ if(fail){assert.equal(classes.size,0);assert.equal(controls.hidden,true);return;}
+ assert.equal(controls.hidden,false);
+ for(const index of [1,0,1]){const click=new Event('click');Object.assign(click,{detail:1});buttons[index].dispatchEvent(click);}
+ assert.equal(track.style.transform,'translateX(-50%)');
+ assert.equal(track.style.transition,config.mode==='motion'&&!reduce?'transform 250ms cubic-bezier(0.23, 1, 0.32, 1)':'none');
+ assert.deepEqual(panels.map(panel=>panel.inert),[true,false]);
+ images[1].dispatchEvent(new Event('error'));assert.equal(classes.size,0);assert.ok(panels.every(panel=>!panel.inert));
+}
 const results=[];
 let referenceContent;
 for(const mode of ['static','instant','motion']){
@@ -30,6 +54,7 @@ for(const mode of ['static','instant','motion']){
   const receipt=JSON.parse(files.get('receipt.json'));
   const html=files.get('index.html').toString(),css=files.get('styles.css').toString();
   assertHtmlReceiptAgreement(html,receipt);
+  if(mode!=='static')for(const [reduce,fail] of [[false,false],[true,false],[false,true]])checkPackagedRuntime(files.get('story.js').toString(),receipt.preview.story,reduce,fail);
   auditArchiveReferences(html,css,[...files.keys()]);
   assert.equal(receipt.assets.length,2);
   for(const file of receipt.files){assert.equal(hash(files.get(file.path)),file.sha256);assert.equal(files.get(file.path).length,file.bytes);}
@@ -37,14 +62,17 @@ for(const mode of ['static','instant','motion']){
   assert.equal(new Set(receipt.assets.map(asset=>asset.file)).size,2);
   assert.ok(!/story-enhanced|aria-hidden="true"|\binert\b|data-approved-asset-id|translateX/.test(html));
   assert.ok(!/\son\w+=|javascript:|<iframe|<svg\b/.test(html));
-  const article=html.match(/<article[\s\S]*?<\/article>/)[0];
+  const rawArticle=html.match(/<article[\s\S]*?<\/article>/)[0];
+  assert.match(rawArticle,/<div class="story-controls"(?=[^>]* hidden="")/);
+  // DOM attribute insertion order changes when enhancement removes/re-adds hidden.
+  const article=rawArticle.replace(/<div class="story-controls"[^>]*>/,tag=>tag.replace(' hidden=""','').replace('>',' hidden="">'));
   if(referenceContent)assert.equal(article,referenceContent,'Canonical narrative/content/assets must match across modes');
   referenceContent=article;
   const output=path.join(directory,mode);fs.mkdirSync(output,{recursive:true});
   for(const [name,data] of files){const target=path.join(output,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,data);}
   const fallback=path.join(directory,mode+'-no-runtime');fs.mkdirSync(fallback,{recursive:true});
   for(const [name,data] of files){if(name==='story.js')continue;const target=path.join(fallback,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,data);}
-  results.push({mode,revision:receipt.approval.revision,archiveSha256:hash(bytes),archiveBytes:bytes.length,gzipBytes:gzipSync(bytes).length,runtimeBytes:files.get('story.js')?.length??0,assets:receipt.assets.map(({id,file,exportedSha256,alt})=>({id,file,exportedSha256,alt})),references:receipt.references});
+  results.push({mode,revision:receipt.approval.revision,archiveSha256:hash(bytes),archiveBytes:bytes.length,gzipBytes:gzipSync(bytes).length,runtimeBytes:files.get('story.js')?.length??0,packagedRuntimeOfflineVM:mode==='static'?'No executable runtime': 'Normal/reduced/init failure/image failure/reversed selection pass; event-double logic, not a browser test',assets:receipt.assets.map(({id,file,exportedSha256,alt})=>({id,file,exportedSha256,alt})),references:receipt.references});
 }
 let collision;
 if(process.argv[3]){
