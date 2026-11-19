@@ -1,5 +1,28 @@
 # Campaign Lab advisory guidance evaluation
 
+> Completed follow-up, 19 November 2026: after authenticated dashboard account
+> reconciliation and fresh explicit approval of both scopes, one canary and all
+> 12 comparison requests returned valid proposals with zero retries. Execution
+> used baseline `c455da3` plus capture-only correction `4dffe36` on
+> `codex/ornigami-first-valid-guidance-20261119`. Recalculated ceilings were
+> $0.00222495 for the canary and $0.02665890 for the comparison; approved caps
+> were separately $0.01 and $0.03. Calculated costs were $0.00051465 and
+> $0.00627960, totaling $0.00679425, with no unknown usage or exposure in this
+> experiment. These costs use the runner's recorded rate table, not invoices.
+>
+> The existing renderer produced 12 model pages plus three deterministic
+> references, 45 article-only captures at 375/768/1440 px, 15 standalone exports,
+> a separate mapping, and a blank scorecard. Functional draft checks: 116 passed,
+> zero failed, 12 asset-byte checks unassessed by draft artifacts; supplemental
+> export checks verified all 15 declared packshot hashes and approval revisions.
+> Human scores and a guidance decision remain pending. Both allowances are
+> consumed. Private evidence in the canary-execution worktree is under
+> `.local/first-valid-guidance-20261119/`; start with
+> `comparison-live/review/gallery.html` and `review-sheet.md`, then unblind with
+> `mapping.json`. Full accounting and limitations are in `accounting.json` and
+> `REPORT.md`. The historical failed run and earlier receipts below remain
+> unchanged and must not be rerun or interpreted as zero-cost evidence.
+
 > Follow-up 19 November 2026: live-provider diagnostics and cost accounting were
 > corrected in
 > [`CAMPAIGN_LAB_LIVE_PROVIDER_DIAGNOSTICS_20261119.md`](./handoffs/CAMPAIGN_LAB_LIVE_PROVIDER_DIAGNOSTICS_20261119.md).
