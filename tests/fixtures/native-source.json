@@ -1,0 +1,5 @@
+{
+  "html": "<title>UNAPPROVED synthetic source claims</title>\n<style>body{background:#fff8fa;color:#1f2a24}.card{background:#f5e6ea}.overlay{background:#12345680}</style>\n<link rel=\"stylesheet\" href=\"/theme.png\"><img src=\"/image.css\"><link rel=\"icon\" href=\"/icon\">\n<link rel=\"preload\" as=\"font\" href=\"/font.woff2\"><script src=\"/script.js\"></script><p>Synthetic evidence only.</p>",
+  "css": "button{background:#6b2340} @font-face{font-family:NeverLoaded;src:url('/font.woff2')} @import '/recursive.css';",
+  "provenance": "Existing app-owned synthetic source bytes, replayed as www.iana.org only inside offline instrumentation; never IANA observations."
+}

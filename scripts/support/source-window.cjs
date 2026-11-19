@@ -1,8 +1,10 @@
 /* Trusted qualification control only. No environment/body field can arm it.
- * This implementation routes admitted DNS/TLS to mandatory synthetic seams;
- * it has no live backend. HTTP still uses Node's real parser over that stream. */
+ * Backend identity is explicit. Captured native functions still require an
+ * owned, validated phase; no environment or HTTP field opens this scope. */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { AsyncLocalStorage } = require('node:async_hooks');
+const net = require('node:net');
+const native = require('./native-backend.cjs');
 const scope = new AsyncLocalStorage();
 const POLICY = Object.freeze({ seed: 'https://www.iana.org/', host: 'www.iana.org', port: 443,
   method: 'GET', gets: 4, bytes: 1048576, deadlineMs: 10000, transactions: 1, media: ['text/html', 'text/css'] });
@@ -12,19 +14,21 @@ function sourceUrl(raw) {
   if (url.protocol !== 'https:' || url.hostname !== POLICY.host || url.port || url.username || url.password || url.hash) throw denied('URL');
   return url;
 }
-function createSourceController({ synthetic, isPublicAddress, clock = { now: () => performance.now(), schedule: (fn, ms) => { const timer = setTimeout(fn, ms); return () => clearTimeout(timer); } } }) {
-  if (!synthetic || typeof synthetic.resolve !== 'function' || typeof synthetic.connectTls !== 'function' || typeof isPublicAddress !== 'function') throw denied('synthetic transport and validator required');
+/** @param {{synthetic?: object, backend?: object, isPublicAddress: (address:string)=>boolean, clock?: {now():number, schedule(fn:()=>void, ms:number):()=>void}}} configuration */
+function createSourceController({ synthetic, backend = synthetic && { ...synthetic, kind: 'synthetic' }, isPublicAddress, clock = { now: () => performance.now(), schedule: (fn, ms) => { const timer = setTimeout(fn, ms); return () => clearTimeout(timer); } } }) {
+  if (!backend || !['synthetic','native'].includes(backend.kind) || typeof backend.resolve !== 'function' || typeof backend.connectTls !== 'function' || typeof isPublicAddress !== 'function' || (backend.kind === 'native' && !native.isNativeBackend(backend))) throw denied('identified backend and validator required');
+  const simulated = backend.kind === 'synthetic';
   let used = false, open = false, activeRead = false, gets = 0, charged = 0, expires = 0, reason = 'startup';
   const abort = new AbortController(), trace = [];
   const close = why => { if (open) { open = false; reason = why; trace.push({ event: 'closed', reason }); abort.abort(denied(why)); } };
   const check = () => { if (open && clock.now() >= expires) close('deadline'); if (!open) throw denied(reason); };
-  const snapshot = () => ({ open, used, gets, charged, reason, trace: [...trace] });
+  const snapshot = () => ({ open, used, gets, charged, reason, backend: backend.kind, nativeCalls: backend.snapshot?.(), trace: [...trace] });
   const controller = {
     snapshot, cancel: () => close('cancelled'),
     async transaction(operation, signal) {
       if (used) throw denied('transaction consumed');
       used = true; open = true; reason = 'source'; expires = clock.now() + POLICY.deadlineMs;
-      trace.push({ event: 'opened', synthetic: true });
+      trace.push({ event: 'opened', backend: backend.kind });
       const cancel = () => close('cancelled');
       const clear = clock.schedule(() => close('deadline'), POLICY.deadlineMs);
       signal?.addEventListener('abort', cancel, { once: true });
@@ -32,6 +36,13 @@ function createSourceController({ synthetic, isPublicAddress, clock = { now: () 
       try { check(); return await scope.run({ controller, read: null }, () => operation(abort.signal)); }
       finally { close('completed'); clear(); signal?.removeEventListener('abort', cancel); }
     },
+    authorizeNative(candidate, boundary, details) {
+      check(); const read = scope.getStore()?.read;
+      if (candidate !== backend || !native.isNativeBackend(candidate) || !read ||
+          (boundary === 'dns' ? read.phase !== 'resolving' || details.host !== POLICY.host :
+            read.phase !== 'native-tcp' || details.host !== read.binding?.host || details.port !== 443)) throw denied('native delegation');
+    },
+    canDelegateTcp() { return backend.kind === 'native' && scope.getStore()?.read?.phase === 'native-tcp'; },
     async read(raw, options, operation) {
       check();
       if (scope.getStore()?.controller !== controller || scope.getStore()?.read || activeRead) throw denied('unowned/nested/concurrent read');
@@ -70,26 +81,33 @@ function createSourceController({ synthetic, isPublicAddress, clock = { now: () 
       if (boundary === 'dns') {
         if (details.host !== POLICY.host || read.phase !== 'resolve' || gets >= POLICY.gets) return reject('DNS scope');
         read.phase = 'resolving';
-        return Promise.resolve(synthetic.resolve(details.host, abort.signal)).then(addresses => {
+        return Promise.resolve(backend.resolve(details.host, abort.signal)).then(addresses => {
           check();
-          if (!addresses.length || addresses.length > 64 || addresses.some(a => !isPublicAddress(a.address))) return reject('address');
-          read.addresses = addresses; read.phase = 'bound';
-          trace.push({ event: 'resolved', host: details.host, addresses, synthetic: true });
-          return addresses;
+          if (!addresses.length || addresses.length > 64 || addresses.some(a => !isPublicAddress(a.address) || net.isIP(a.address) !== a.family)) return reject('address');
+          read.addresses = addresses.map(a => Object.freeze({ ...a })); read.phase = 'bound';
+          trace.push({ event: 'resolved', host: details.host, addresses: read.addresses, synthetic: simulated });
+          return read.addresses;
         });
       }
       if (boundary === 'https.request') {
         const url = sourceUrl(details.url);
         if (read.phase !== 'bound' || url.href !== read.url || details.method !== 'GET' || !details.injectedAgent || gets >= POLICY.gets) return reject('GET scope');
-        gets++; read.phase = 'connect'; trace.push({ event: 'GET-admitted', url: url.href, admission: gets, synthetic: true });
+        gets++; read.phase = 'connect'; trace.push({ event: 'GET-admitted', url: url.href, admission: gets, synthetic: simulated });
         return true;
       }
       if (boundary === 'tls.connect') {
         if (read.phase !== 'connect' || !read.addresses.some(a => a.address === details.host && a.family === details.family) ||
             details.port !== 443 || details.servername !== POLICY.host || details.rejectUnauthorized !== true || typeof details.checkServerIdentity !== 'function' ||
             JSON.stringify(details.ALPNProtocols) !== '["http/1.1"]') return reject('bound TLS');
-        read.phase = 'response'; trace.push({ event: 'TLS', address: details.host, synthetic: true });
-        return synthetic.connectTls(details);
+        read.binding = { host: details.host, family: details.family, used: false };
+        read.phase = simulated ? 'response' : 'native-tcp';
+        trace.push({ event: 'TLS-admitted', address: details.host, synthetic: simulated });
+        try { return backend.connectTls(details); }
+        finally { read.phase = 'response'; read.binding = null; }
+      }
+      if (boundary === 'tcp.connect') {
+        if (backend.kind !== 'native' || read.phase !== 'native-tcp' || read.binding?.used || details.host !== read.binding?.host || details.family !== read.binding?.family || Number(details.port) !== 443 || details.path) return reject('native TCP binding');
+        read.binding.used = true; trace.push({ event: 'TCP-delegated', address: details.host }); return true;
       }
       return reject('unsupported boundary');
     },

@@ -63,7 +63,7 @@ export type Attempt = {
   requested: ReturnType<typeof gate<void>>;
   handshaken: ReturnType<typeof gate<void>>;
 };
-export function fixture(peers: Peer[], clock?: ResourceClock, privateDns = false) {
+export function fixture(peers: Peer[], clock?: ResourceClock, privateDns = false, connectClient: (options: ConnectionOptions) => TLSSocket = options => connect(options)) {
   const attempts: Attempt[] = [];
   const signals: AbortSignal[] = [];
   const lookups: string[] = [];
@@ -82,7 +82,7 @@ export function fixture(peers: Peer[], clock?: ResourceClock, privateDns = false
     }) : b;
     // Preserve all reader options, including its identity callback and verification.
     // socket replaces only the physical connection; CA is local to this client.
-    const client = secure ? connect({ ...options, socket: a, ca: pem('trusted-ca.cert') }) : a;
+    const client = secure ? connectClient({ ...options, socket: a, ca: pem('trusted-ca.cert') }) : a;
     const attempt: Attempt = { options, clientWire: a, serverWire: b, client, server,
       sni, requests: [], clientErrors: [], serverErrors: [], secure: false, protocol: null,
       requested: gate(), handshaken: gate() };
@@ -116,7 +116,7 @@ export function fixture(peers: Peer[], clock?: ResourceClock, privateDns = false
     connectTls: (options) => attach(options, true),
     connectTcp: (options) => attach(options as ConnectionOptions, false),
   };
-  return { attempts, signals, lookups, connected, read: createPublicResourceReader(transport, clock) };
+  return { attempts, signals, lookups, connected, read: createPublicResourceReader(transport, clock), connectTls: (options: ConnectionOptions) => attach(options, true) };
 }
 
 export async function cleaned(f: ReturnType<typeof fixture>, external?: AbortSignal) {

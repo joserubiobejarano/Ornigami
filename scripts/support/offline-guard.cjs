@@ -50,7 +50,8 @@ net.Socket.prototype.connect = function(...args) {
   if (options.path && process.platform === 'win32' && !String(options.path).toLowerCase().startsWith('\\\\.\\pipe\\')) {
     check('ipc.connect', 'Nonlocal Windows pipe');
   }
-  if (!options.path) check('tcp.connect', options.host ?? 'localhost');
+  if (!options.path && !allowed(options.host ?? 'localhost') && sourceWindow.current()?.canDelegateTcp()) sourceWindow.current().route('tcp.connect', options);
+  else if (!options.path) check('tcp.connect', options.host ?? 'localhost');
   log({ event: 'connect', host: options.path ? 'IPC' : options.host ?? 'localhost' });
   return connect.apply(this, args);
 };
@@ -142,4 +143,4 @@ Object.defineProperty(child.execFile, promisify.custom, { value: function(...arg
   return promise;
 } });
 syncBuiltinESMExports();
-log({ event: 'initialized', preload: __filename, sourceWindow: 'closed', liveBackend: false });
+log({ event: 'initialized', preload: __filename, sourceWindow: 'closed', nativeBackendAvailable: true });
