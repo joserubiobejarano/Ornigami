@@ -1,5 +1,7 @@
 # Roadmap and pending work
 
+19 November Session 2: the local [Morrow story experiment](./campaign-lab-story.md) compares a complete static narrative, instant selection and the same selection with restrained motion. It extends exact-approval export to two distinct reviewed synthetic assets and rejects ambiguous pilot/base asset IDs. Static remains the default recommendation; native-device/other-engine qualification, owner adoption and any comprehension study remain separate. Session 1 is not repeated. No paid calls, publication or deployment are authorized by this checkpoint.
+
 This is Ornigami's single current backlog. Work from completed agent sessions is not reassigned unless a changed requirement or reproducible failure invalidates its evidence. Read [product contracts](./PRODUCT_CONTRACTS.md), [operations](./OPERATIONS.md), [technical reference](./TECHNICAL_REFERENCE.md), [release evidence](./RELEASE_EVIDENCE.md) and the [user guide](./USER_GUIDE.md) for the retained details. Historical handoffs remain recoverable from Git history.
 
 ## P0: VPS staging delivery

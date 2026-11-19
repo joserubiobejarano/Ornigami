@@ -532,7 +532,9 @@ export function getAsset(
   assetId: string,
   catalog: CampaignCatalog = BASE_CATALOG,
 ): ApprovedAsset | undefined {
-  return catalog.assets.find((asset) => asset.id === assetId);
+  const matches = catalog.assets.filter((asset) => asset.id === assetId);
+  if (matches.length > 1) throw new Error(`Ambiguous approved asset ID "${assetId}". Resolve the pilot/base collision before preview or export.`);
+  return matches[0];
 }
 
 export function defaultAccent(

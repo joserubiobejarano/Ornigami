@@ -1,5 +1,7 @@
 # Experimental campaign presentation recipes
 
+Session 2 adds a separate [Morrow explanatory story experiment](./campaign-lab-story.md): static, instant interaction and the identical interaction with restrained motion, including a bounded distinct-asset export contract. It does not add recipes to model proposals or replace the existing offer/inspection editor.
+
 The development-only Campaign Lab editor has an **Experimental presentation**
 selector for direct offers. This experiment keeps Taste as the existing visual
 baseline. The original three-recipe experiment is followed by a bounded reuse

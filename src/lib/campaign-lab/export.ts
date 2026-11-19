@@ -1,3 +1,7 @@
+import { assertCurrentStory, resolveStory, storyRevision, STORY_CSS } from "./story.ts";
+import type { StoryConfiguration } from "./story.ts";
+import { storyRuntimeSource } from "./story-runtime.ts";
+import type { ApprovedAsset } from "./types.ts";
 import type { BrowserOfferVerification } from "./browser-offer.ts";
 import { assertCurrentMotion, MOTION_CSS } from "./motion.ts";
 import type { MotionPresentation } from "./motion.ts";
@@ -154,6 +158,8 @@ export type CampaignExportAsset = {
 };
 
 export type CampaignExportPreview = {
+  story?: StoryConfiguration;
+  assets?: ApprovedAsset[];
   imagePresentation?: CampaignImagePresentation;
   /** Absent on historical/static exports. Never accepts executable config. */
   motion?: MotionPresentation;
@@ -245,6 +251,7 @@ export type CampaignExportReceipt = {
     actionLabel: string;
     template: CampaignExportPreview["template"];
     appearance?: CampaignExportPreview["appearance"];
+    story?: StoryConfiguration;
     motion?: MotionPresentation;
     imagePresentation?: CampaignImagePresentation;
   };
@@ -259,6 +266,7 @@ export type CampaignExportReceipt = {
     height: number;
     alt: string;
   };
+  assets?: Array<ApprovedAsset & { file: string; exportedSha256: string }>;
   fonts: CampaignExportFontNotice[];
   references: ArchiveReferenceAudit;
   files: CampaignExportFile[];
@@ -369,16 +377,33 @@ export function campaignExportFileName(
 }
 
 /** Synchronously clones and cleans the approved article before any await. */
-export function captureRenderedArticle(article: HTMLElement): string {
+export function captureRenderedArticle(article: HTMLElement, assets?: readonly ApprovedAsset[]): string {
   const clone = article.cloneNode(true) as HTMLElement;
 
+  if (assets) {
+    const seen = new Set<string>();
+    for (const image of clone.querySelectorAll("img")) {
+      const id = image.getAttribute("data-approved-asset-id");
+      const asset = assets.find(asset => asset.id === id);
+      if (!asset || image.getAttribute("src") !== asset.src || image.alt !== asset.alt) throw new Error("Story image identity/alt does not match approved assets.");
+      image.setAttribute("src", `data:ornigami-asset,${assets.indexOf(asset)}`);
+      seen.add(asset.id);
+    }
+    if (seen.size !== assets.length) throw new Error("Every approved story asset must be displayed.");
+    clone.classList.remove("story-enhanced");
+    clone.querySelector(".story-track")?.removeAttribute("style");
+    for (const panel of clone.querySelectorAll(".story-panel")) { panel.removeAttribute("aria-hidden"); panel.removeAttribute("inert"); }
+    const controls = clone.querySelector(".story-controls");
+    if (controls) controls.setAttribute("hidden", "");
+    for (const button of clone.querySelectorAll(".story-controls button")) button.setAttribute("aria-pressed", "false");
+  }
   // Remove only owned enhancement UI before data attributes are stripped.
   // The canonical product image survives even during open/zoomed inspection.
   for (const element of clone.querySelectorAll("[data-ornigami-motion-ui]")) element.remove();
 
   for (const element of [clone, ...Array.from(clone.querySelectorAll("*"))]) {
     for (const attribute of Array.from(element.attributes)) {
-      if (attribute.name.startsWith("data-")) {
+      if (attribute.name.startsWith("data-") || attribute.name.startsWith("on") || ((attribute.name === "href" || attribute.name === "src") && /^\s*javascript:/i.test(attribute.value))) {
         element.removeAttribute(attribute.name);
       }
     }
@@ -394,7 +419,7 @@ export function captureRenderedArticle(article: HTMLElement): string {
   // data URI while the clone is serialized, then write the local path into the
   // resulting HTML so the export preparation makes no network request.
   for (const image of Array.from(clone.querySelectorAll("img"))) {
-    image.setAttribute("src", PACKSHOT_PLACEHOLDER);
+    if (!assets) image.setAttribute("src", PACKSHOT_PLACEHOLDER);
     image.removeAttribute("srcset");
     image.removeAttribute("sizes");
     image.removeAttribute("fetchpriority");
@@ -421,6 +446,7 @@ export function sanitizeRenderedArticle(
 }
 
 export function buildStandaloneDocument(input: {
+  story?: StoryConfiguration;
   imagePresentation?: CampaignImagePresentation;
   motion?: MotionPresentation;
   title: string;
@@ -435,6 +461,9 @@ export function buildStandaloneDocument(input: {
   actionLabel?: string;
   packshotFile?: string;
 }): string {
+  if (input.story) assertCurrentStory(input.story);
+  const storyMarkup = input.story ? `<meta name="campaign-lab-story" content="${escapeHtml(JSON.stringify(input.story))}">` : "";
+  const storyScripts = input.story && input.story.mode !== "static" ? `<script type="application/json" id="ornigami-story-config">${JSON.stringify(input.story).replace(/</g, "\\u003c")}</script><script src="./story.js" defer></script>` : "";
   if (input.motion) assertCurrentMotion(input.motion);
   const motionMarkup = input.motion ? `<meta name="campaign-lab-motion" content="${escapeHtml(JSON.stringify(input.motion))}">` : "";
   const motionScripts = input.motion && input.motion.recipe !== "none"
@@ -468,6 +497,7 @@ export function buildStandaloneDocument(input: {
 <meta name="robots" content="noindex, nofollow">
 <meta name="campaign-lab-revision" content="${escapeHtml(input.revision)}">
 ${motionMarkup}
+${storyMarkup}
 <meta name="campaign-lab-preview-status" content="${escapeHtml(input.previewStatus)}">
 <meta name="campaign-lab-packshot-sha256" content="${escapeHtml(input.packshotSha256)}">
 ${agreementMeta}
@@ -483,6 +513,7 @@ ${input.bodyHtml}
 </div>
 </div>
 ${motionScripts}
+${storyScripts}
 </body>
 </html>
 `;
@@ -738,9 +769,13 @@ export function captureCampaignStyleInputs(
 export function captureCampaignExportSnapshot(
   input: CampaignExportInput,
 ): CampaignExportSnapshot {
+  if (input.preview.story) {
+    const images = Array.from(input.article.querySelectorAll("img"));
+    if (images.length !== input.preview.assets?.length || images.some(image => !image.complete || !image.naturalWidth)) throw new Error("Load every required story illustration before approval/export.");
+  }
   return {
     capturedAt: new Date().toISOString(),
-    articleHtml: captureRenderedArticle(input.article),
+    articleHtml: captureRenderedArticle(input.article, input.preview.assets),
     styleInputs: captureCampaignStyleInputs(
       input.article,
       input.document ?? document,
@@ -750,6 +785,8 @@ export function captureCampaignExportSnapshot(
       ...input.preview,
       template: { ...input.preview.template },
       asset: { ...input.preview.asset },
+      ...(input.preview.story ? { story: JSON.parse(JSON.stringify(input.preview.story)) } : {}),
+      ...(input.preview.assets ? { assets: input.preview.assets.map(asset => ({ ...asset })) } : {}),
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion, settings: { ...input.preview.motion.settings } } } : {}),
       verification: input.preview.verification
@@ -1041,7 +1078,7 @@ export function auditArchiveReferences(
     }
     const normalized = normalizeArchivePath(reference);
     if (tag.toLowerCase().startsWith("<script")) {
-      if (normalized !== "motion.js") throw new CampaignExportReferenceError("Only the owned motion runtime may be packaged.");
+      if (normalized !== "motion.js" && normalized !== "story.js") throw new CampaignExportReferenceError("Only the owned motion runtime may be packaged.");
       scripts.push(normalized);
     }
     if (rel?.toLowerCase() === "stylesheet") stylesheets.push(normalized);
@@ -1092,6 +1129,13 @@ export function assertHtmlReceiptAgreement(
   html: string,
   receipt: CampaignExportReceipt,
 ): void {
+  if (receipt.preview.story) {
+    if (metaContent(html, "campaign-lab-story") !== JSON.stringify(receipt.preview.story)) throw new Error("Story receipt disagrees with HTML.");
+    if (receipt.preview.story.mode !== "static" && (!html.includes('<script src="./story.js" defer></script>') || !html.includes(JSON.stringify(receipt.preview.story)))) throw new Error("Story runtime/configuration missing.");
+    for (const asset of receipt.assets ?? []) {
+      if (!html.includes(`src="./${asset.file}"`) || !html.includes(`alt="${escapeHtml(asset.alt)}"`)) throw new Error("Exported story asset reference/alt disagrees.");
+    }
+  }
   if (receipt.preview.imagePresentation && metaContent(html, "campaign-lab-image-presentation") !== JSON.stringify(receipt.preview.imagePresentation)) {
     throw new Error("The exported image presentation and receipt disagree.");
   }
@@ -1316,6 +1360,7 @@ export async function buildExportReceipt(input: {
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
+      ...(input.preview.story ? { story: input.preview.story } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion } } : {}),
       ...(input.preview.appearance
         ? { appearance: { ...input.preview.appearance } }
@@ -1493,6 +1538,26 @@ export async function buildCampaignExportBundle(
 
   assertCanContinue(snapshot.guard, options);
 
+  if (snapshot.preview.story) assertCurrentStory(snapshot.preview.story);
+  const storyAssets = snapshot.preview.assets;
+  if (snapshot.preview.story) {
+    const expected = resolveStory();
+    if (["id", "src", "contentHash", "alt", "width", "height"].some(key => snapshot.preview.asset[key as "id"] !== expected.beats[0].asset[key as "id"]) || snapshot.packshot.src !== expected.beats[0].asset.src) throw new Error("Primary story asset handle changed; approve a fresh revision.");
+    if (snapshot.preview.revision !== storyRevision(snapshot.preview.story.mode) || JSON.stringify(storyAssets) !== JSON.stringify(expected.beats.map(beat => beat.asset)) || ["offer", "destinationUrl", "actionLabel", "productName"].some(key => snapshot.preview[key as "offer"] !== expected.brief[key as "offer"])) throw new Error("Story content/assets changed; generate and approve a fresh reviewed revision.");
+  }
+  if (storyAssets && (!snapshot.preview.story || new Set(storyAssets.map(asset => asset.id)).size !== storyAssets.length || JSON.stringify(storyAssets.map(asset => asset.id)) !== JSON.stringify(snapshot.preview.story.beats.map(beat => beat.assetId)))) throw new Error("Invalid or ambiguous story asset set.");
+  const extraFiles: Array<{path: string; bytes: Uint8Array}> = [];
+  const assetRecords: Array<ApprovedAsset & {file: string; exportedSha256: string}> = [];
+  for (const asset of storyAssets ?? []) {
+    const media = await readPackshotBytes(asset.src, null, options.signal);
+    assertCanContinue(snapshot.guard, options);
+    const hash = await sha256Hex(media.bytes);
+    if (hash !== asset.contentHash) throw new Error(`Approved asset SHA-256 mismatch: ${asset.id}`);
+    if (media.extension === ".svg" && !["/campaign-assets/morrow-prototype.svg", "/campaign-assets/morrow-ribs.svg"].includes(asset.src)) throw new Error("Only approved repository story SVGs are permitted.");
+    const file = `story-${assetRecords.length}-${hash.slice(0,16)}${media.extension}`;
+    extraFiles.push({path: file, bytes: media.bytes});
+    assetRecords.push({...asset, file, exportedSha256: hash});
+  }
   if (snapshot.preview.motion) assertCurrentMotion(snapshot.preview.motion);
 
   const packshot = await readPackshotBytes(
@@ -1516,12 +1581,14 @@ export async function buildCampaignExportBundle(
   );
   assertCanContinue(snapshot.guard, options);
 
-  const packshotFile = `packshot-${snapshot.preview.asset.contentHash.slice(0, 16)}${packshot.extension}`;
-  const bodyHtml = applyPackshotReference(
+  const packshotFile = assetRecords[0]?.file ?? `packshot-${snapshot.preview.asset.contentHash.slice(0, 16)}${packshot.extension}`;
+  let bodyHtml = applyPackshotReference(
     snapshot.articleHtml,
     packshotFile,
   );
+  assetRecords.forEach((asset, index) => { bodyHtml = bodyHtml.split(`data:ornigami-asset,${index}`).join(`./${asset.file}`); });
   const html = buildStandaloneDocument({
+    story: snapshot.preview.story,
     imagePresentation: snapshot.preview.imagePresentation,
     motion: snapshot.preview.motion,
     title: `${snapshot.preview.productName} — ${snapshot.preview.brandName}`,
@@ -1541,7 +1608,7 @@ export async function buildCampaignExportBundle(
     extractedCss: styles.css,
     primaryFontFamily: snapshot.styleInputs.primaryFontFamily,
     bodyLetterSpacing: snapshot.styleInputs.bodyLetterSpacing,
-  }) + (enhanced ? MOTION_CSS : "");
+  }) + (enhanced ? MOTION_CSS : "") + (snapshot.preview.story ? STORY_CSS : "");
 
   const encoder = new TextEncoder();
   const htmlBytes = encoder.encode(html);
@@ -1550,13 +1617,15 @@ export async function buildCampaignExportBundle(
   const readmeBytes = encoder.encode(readme);
 
   const filesWithoutReceipt: Array<{ path: string; bytes: Uint8Array }> = [
+    ...extraFiles,
+    ...(snapshot.preview.story && snapshot.preview.story.mode !== "static" ? [{path: "story.js", bytes: encoder.encode(storyRuntimeSource())}, {path: "story-NOTICE.txt", bytes: encoder.encode(MOTION_AUTHORING_NOTICE)}] : []),
     ...(enhanced ? [
       { path: "motion.js", bytes: encoder.encode(campaignMotionRuntimeSource()) },
       { path: "motion-NOTICE.txt", bytes: encoder.encode(MOTION_AUTHORING_NOTICE) },
     ] : []),
     { path: "index.html", bytes: htmlBytes },
     { path: "styles.css", bytes: cssBytes },
-    { path: packshotFile, bytes: packshot.bytes },
+    ...(storyAssets ? [] : [{ path: packshotFile, bytes: packshot.bytes }]),
     ...styles.fonts.map((font) => ({ path: font.path, bytes: font.bytes })),
     ...styles.licenseFiles,
     ...(styles.noticeFile ? [styles.noticeFile] : []),
@@ -1590,6 +1659,7 @@ export async function buildCampaignExportBundle(
     fonts: styles.notices,
     references: referenceAudit,
   });
+  if (storyAssets) receipt.assets = assetRecords;
   assertHtmlReceiptAgreement(html, receipt);
   assertCanContinue(snapshot.guard, options);
 
