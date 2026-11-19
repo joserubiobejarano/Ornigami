@@ -2,6 +2,8 @@
 
 This branch integrates URL source `761e273a5b7b8cd601276d796393c95c2d5394fc` with accepted network history `6568017fa17f5965d91dfc6898b71faab74d235c`. History-preserving merge `0ae3a206a6e590ce755e8eb3f869339c9c1cf60a` has those exact parents. Application, typography and template identity are unchanged. Canary support/guide/tests are owned by this session only.
 
+**Outcome: failed before the IANA action.** Cold development compilation performed inherited Google font requests outside scope. The server was stopped, the run retired and no IANA import or approval/export was attempted. See the separate result record. Subsequent support code conservatively refuses remote `next/font/google` imports before reservation. It does not change fonts or authorize another run.
+
 The owner explicitly authorized one new normal browser API transaction seeded at https://www.iana.org/. It is separate from the completed standalone qualification. The old command is not executed and its marker/ledger are never reset. No allowance survives a failed transaction.
 
 ## Before the sole live action
@@ -14,7 +16,11 @@ The launcher starts the ordinary Next development server on 127.0.0.1:3031 with 
 
 The observer records incoming evidence/generation POST counts and outgoing source GETs, statuses, exact response-body hashes/lengths, redirects and available real socket/TLS/close evidence. Redirect entities are not consumed by the observer. It adds body listeners to responses already consumed by the protected reader, with up to 1 MiB of extra private capture buffering. Synchronous evidence writes/hash work consume time and are disclosed overhead, not a different network implementation.
 
+The generic outgoing-GET observer also catches framework HTTP activity. In the failed run its `source-request` event label covered framework font requests, not IANA/protected-reader calls; the failure ledger separates them explicitly.
+
 A separate canary-only global-fetch guard blocks framework update/telemetry probes (the installed Next dev helper otherwise queries the package registry). Local fetch remains available. Source extraction uses the unchanged Node HTTP(S) protected reader, so this guard neither substitutes for it nor grants broader egress. Offline tests verify the guard and passive observer, including real TLS over isolated synthetic wires.
+
+That global-fetch guard does **not** block Next's separate Node HTTP font loader. This missed path caused the failed setup. A build passing with cached fonts does not qualify a cold dev compilation. The corrective static preflight rejects the currently inherited remote font imports, before marker creation or server startup. An offline-qualified font-loading solution and new bounded authorization are required before a later canary; typography is outside this session's ownership.
 
 ## Authorized source work
 

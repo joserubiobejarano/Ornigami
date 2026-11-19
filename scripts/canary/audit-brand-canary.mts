@@ -41,11 +41,23 @@ export function reconstruct(events:Event[],seed=BOUNDS.seed){
     generation:events.filter(e=>e.type==='local-request'&&e.path==='/api/campaign-lab/generate'),
     localResponses:events.filter(e=>e.type==='local-response')};
 }
+export function preActionFailure(events:Event[]){
+  const imports=events.filter(e=>e.type==='local-request'&&e.path==='/api/campaign-lab/brand-evidence');
+  const requests=events.filter(e=>e.type==='source-request');
+  if(imports.length===0&&requests.length>0)return {outcome:'FAILED_PRE_ACTION_OUT_OF_SCOPE_EGRESS',ianaApiTransactions:0,ianaGetAttempts:requests.filter(e=>new URL(e.url!).hostname==='www.iana.org').length,unexpectedGetAttempts:requests.length,unexpectedReturnedEntityBytes:events.filter(e=>e.type==='source-body').reduce((n,e)=>n+(e.bytes??0),0),retryAuthorized:false,requests};
+  return null;
+}
 async function main(){
   const directory=resolve('.local/brand-live-canary-20261119');
   const events:Event[]=[];
   for(const file of await readdir(directory))if(/^events-\d+\.jsonl$/.test(file))events.push(...(await readFile(resolve(directory,file),'utf8')).trim().split('\n').filter(Boolean).map(line=>JSON.parse(line)));
   events.sort((a,b)=>Date.parse(a.at)-Date.parse(b.at)||a.monotonic-b.monotonic);
+  const failure=preActionFailure(events);
+  if(failure){
+    for(const e of events.filter(e=>e.type==='source-body'&&e.file)){const bytes=await readFile(resolve(directory,e.file!));assert.equal(bytes.length,e.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),e.sha256);}
+    await writeFile(resolve(directory,'failed-pre-action-audit.json'),JSON.stringify(failure,null,2));
+    console.log(JSON.stringify({...failure,requests:undefined}));process.exitCode=1;return;
+  }
   const ledger=reconstruct(events);
   const resources:SuppliedBrandResource[]=[];
   for(const entry of ledger.entries){

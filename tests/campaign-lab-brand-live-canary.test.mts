@@ -6,9 +6,9 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { setImmediate as turn } from 'node:timers/promises';
-import { reconstruct } from '../scripts/canary/audit-brand-canary.mts';
+import { reconstruct, preActionFailure } from '../scripts/canary/audit-brand-canary.mts';
 import { observeCanary, guardBackgroundFetch } from '../scripts/canary/observe-brand-canary.mjs';
-import { BOUNDS, oldHashes, reserve } from '../scripts/canary/run-brand-canary.mjs';
+import { BOUNDS, oldHashes, reserve, assertNoRemoteFontImports } from '../scripts/canary/run-brand-canary.mjs';
 import { importBrandDraft } from '../src/lib/campaign-lab/brand-import/import-brand.ts';
 import { fixture, cleaned } from './support/brand-tls.mts';
 import { createSyntheticBrandUrlReader } from '../src/lib/campaign-lab/brand-import/url-synthetic.ts';
@@ -60,4 +60,11 @@ test('observer preserves real isolated TLS and records certificate authorization
  const response=await f.read('https://brand.example/',{maxBytes:1024,timeoutMs:4000});assert.equal(Buffer.from(response.body).toString(),'hello');await cleaned(f);stop();
  const events=(await readFile(join(dir,`events-${process.pid}.jsonl`),'utf8')).trim().split('\n').map(s=>JSON.parse(s));
  const tls=events.find(e=>e.type==='tls');assert.equal(tls.authorized,true);assert.equal(tls.servername,'brand.example');assert.match(tls.protocol,/TLSv1/);assert(events.some(e=>e.type==='connection-close'));
+});
+
+test('known remote font compilation blocks future launch before reservation without changing typography',()=>{
+ assert.throws(()=>assertNoRemoteFontImports([{path:'src/app/layout.tsx',source:'import { Inter } from "next/font/google";'}]),/blocked before reservation/);
+ assert.doesNotThrow(()=>assertNoRemoteFontImports([{path:'local.tsx',source:'import localFont from "next/font/local";'}]));
+ const events=[{type:'source-request',method:'GET',key:'1-0',url:'https://fonts.googleapis.com/css2',at:'2026-11-19T00:00:00Z',pid:1,monotonic:0}];
+ const result=preActionFailure(events);assert.equal(result!.ianaApiTransactions,0);assert.equal(result!.unexpectedGetAttempts,1);assert.equal(result!.retryAuthorized,false);
 });

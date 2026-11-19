@@ -15,11 +15,18 @@ export async function reserve(directory,metadata){
   const file=await open(resolve(directory,'EXECUTION_RESERVED'),'wx',0o600);
   try{await file.writeFile(JSON.stringify(metadata,null,2)+'\n');await file.sync();}finally{await file.close();}
 }
+/** Conservative offline gate for the reproduced dev compiler egress path. */
+export function assertNoRemoteFontImports(sourceFiles){
+  const blocked=sourceFiles.filter(file=>/next\/font\/google/.test(file.source));
+  if(blocked.length)throw new Error(`Live canary blocked before reservation: inherited remote font imports require separate offline qualification (${blocked.map(file=>file.path).join(', ')}). No restart/retry is authorized by this run.`);
+}
 async function main(){
   if(process.argv.length!==3 || process.argv[2]!=='--start-once')throw new Error('Only --start-once is supported. Offline checks must precede this command.');
   const root=fileURLToPath(new URL('../../',import.meta.url));
   const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
   if(git('status','--porcelain'))throw new Error('Freeze a clean tested source before reserving live work.');
+  const fontFiles=git('ls-files','src').split('\n').filter(path=>/\.[cm]?[jt]sx?$/.test(path));
+  assertNoRemoteFontImports(await Promise.all(fontFiles.map(async path=>({path,source:await readFile(resolve(root,path),'utf8')}))));
   const directory=resolve(root,'.local/brand-live-canary-20261119');
   const before=await oldHashes();
   await reserve(directory,{reservedAt:new Date().toISOString(),testedSha:git('rev-parse','HEAD'),mergeParents:git('show','-s','--format=%P','0ae3a206a6e590ce755e8eb3f869339c9c1cf60a'),bounds:BOUNDS,oldHashes:before,node:process.version,openssl:process.versions.openssl,retryAuthorized:false});
