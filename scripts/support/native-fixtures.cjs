@@ -9,7 +9,7 @@ const { readFileSync, appendFileSync } = require('node:fs');
 const bytes = JSON.parse(readFileSync(require('node:path').resolve('tests/fixtures/native-source.json'), 'utf8'));
 const realLookup = dns.lookup, realPromiseLookup = dns.promises.lookup;
 const realTls = tls.connect, realConnect = net.Socket.prototype.connect;
-const stats = { dns: [], tls: [], tcp: [], wire: [], forbidden: 0, externalOSCalls: 0 };
+const stats = { dns: [], tls: [], tcp: [], wire: [], dnsCancelled: 0, forbidden: 0, externalOSCalls: 0 };
 let scenario = {};
 let tlsEngine;
 const waiting = new WeakMap();
@@ -29,6 +29,7 @@ for (const family of [4,6]) dns.promises.Resolver.prototype['resolve' + family] 
 };
 const realCancel = dns.promises.Resolver.prototype.cancel;
 dns.promises.Resolver.prototype.cancel = function() {
+  if (waiting.get(this)?.length) stats.dnsCancelled++;
   for (const reject of waiting.get(this) ?? []) reject(Object.assign(new Error('Fixture DNS cancelled'), { code: 'ECANCELLED' }));
   waiting.delete(this); return realCancel.call(this);
 };

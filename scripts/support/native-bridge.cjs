@@ -2,6 +2,13 @@
 const { createSourceController, POLICY } = require('./source-window.cjs');
 const { createNativeBackend } = require('./native-backend.cjs');
 const KEY = Symbol.for('ornigami.qualified-source-bridge/1');
+function nativeSourceControl(controller) {
+  return {
+    resolve: (host, signal) => controller.route('dns', { host, signal }),
+    connectTls: options => require('node:tls').connect(options),
+    read: (raw, options, perform) => controller.read(raw, options, perform),
+  };
+}
 function installNativeBridge({ isPublicAddress, simulated, audit = event => { void event; } }) {
   if (globalThis[KEY]) throw new Error('Source bridge already installed');
   let controller;
@@ -10,11 +17,7 @@ function installNativeBridge({ isPublicAddress, simulated, audit = event => { vo
     async run(url, signal, operation) {
       if (!controller || url !== POLICY.seed) throw new Error('Trusted source authority closed or wrong seed');
       try {
-        return await controller.transaction(() => operation({
-          resolve: host => controller.route('dns', { host }),
-          connectTls: options => require('node:tls').connect(options),
-          read: (raw, options, perform) => controller.read(raw, options, perform),
-        }), signal);
+        return await controller.transaction(() => operation(nativeSourceControl(controller)), signal);
       } finally { audit({ event: 'transaction-finished', ...controller.snapshot() }); }
     },
   });
@@ -28,4 +31,4 @@ function installNativeBridge({ isPublicAddress, simulated, audit = event => { vo
     snapshot: () => controller?.snapshot() ?? { open: false, used: false, reason: 'unarmed' },
   });
 }
-module.exports = { installNativeBridge };
+module.exports = { installNativeBridge, nativeSourceControl };

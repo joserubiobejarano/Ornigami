@@ -8,7 +8,7 @@ import { setImmediate as turn } from 'node:timers/promises';
 import windows from '../../scripts/support/source-window.cjs';
 import native from '../../scripts/support/native-backend.cjs';
 import seams from '../../scripts/support/native-fixtures.cjs';
-import { createRehearsalReader } from '../../scripts/support/source-reader.mts';
+import { bridgeReader } from '../../src/lib/campaign-lab/brand-source-bridge.ts';
 import { isPublicAddress } from '../../src/lib/campaign-lab/brand-import/private-address.ts';
 import { createBrandUrlHandler } from '../../src/lib/campaign-lab/brand-url-api.ts';
 import bridge from '../../scripts/support/native-bridge.cjs';
@@ -20,7 +20,7 @@ const sample = () => ({ dns: seams.stats.dns.length, tls: seams.stats.tls.length
 const setup = (clock?: { now():number; schedule(fn:()=>void, ms:number):()=>void }) => {
   const backend = native.createNativeBackend();
   const controller = windows.createSourceController({ backend, isPublicAddress, ...(clock ? { clock } : {}) });
-  return { backend, controller, read: createRehearsalReader(controller) };
+  return { backend, controller, read: bridgeReader(bridge.nativeSourceControl(controller)) };
 };
 const options = { maxBytes: 4096, timeoutMs: 1000 };
 const request = () => new Request('http://localhost/api/campaign-lab/brand-evidence', { method:'POST', headers:{origin:'http://localhost','content-type':'application/json'},body:JSON.stringify({url:windows.POLICY.seed}) });
@@ -79,6 +79,11 @@ await check('cancellation/deadline cancel native DNS and close inherited continu
   let now=performance.now(),expire=()=>{};const g=setup({now:()=>now,schedule:fn=>{expire=fn;return()=>{};}});
   const deadline=g.controller.transaction(()=>g.read(windows.POLICY.seed,options));await turn();now+=10000;expire();await assert.rejects(deadline);assert.equal(g.controller.snapshot().reason,'deadline');
   await assert.rejects(g.controller.transaction(async()=>{}));
+  const h=setup(),before=seams.stats.dnsCancelled;
+  await h.controller.transaction(async()=>{
+    await assert.rejects(h.read(windows.POLICY.seed,{...options,timeoutMs:25}));
+    await turn();assert(seams.stats.dnsCancelled>before,'reader DNS cancellation reaches native Resolver before transaction finally');
+  });
 });
 await check('real in-memory TLS engine rejects admitted fixture certificate for IANA identity', async()=>{
   const memory=fixture([{}],undefined,false,seams.inMemoryConnect);seams.setTlsEngine((options:ConnectionOptions)=>memory.connectTls(options));

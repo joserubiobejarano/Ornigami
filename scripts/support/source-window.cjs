@@ -81,8 +81,10 @@ function createSourceController({ synthetic, backend = synthetic && { ...synthet
       if (boundary === 'dns') {
         if (details.host !== POLICY.host || read.phase !== 'resolve' || gets >= POLICY.gets) return reject('DNS scope');
         read.phase = 'resolving';
-        return Promise.resolve(backend.resolve(details.host, abort.signal)).then(addresses => {
+        const dnsSignal = details.signal ? AbortSignal.any([abort.signal, details.signal]) : abort.signal;
+        return Promise.resolve(backend.resolve(details.host, dnsSignal)).then(addresses => {
           check();
+          dnsSignal.throwIfAborted();
           if (!addresses.length || addresses.length > 64 || addresses.some(a => !isPublicAddress(a.address) || net.isIP(a.address) !== a.family)) return reject('address');
           read.addresses = addresses.map(a => Object.freeze({ ...a })); read.phase = 'bound';
           trace.push({ event: 'resolved', host: details.host, addresses: read.addresses, synthetic: simulated });
