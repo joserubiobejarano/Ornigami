@@ -22,6 +22,17 @@ const callback = (shape) => new Promise((resolveResult, reject) => {
   assert.throws(() => cp.execFile(process.execPath, {}, 42), { code: 'ERR_INVALID_ARG_TYPE' });
   assert.throws(() => cp.execFile(process.execPath, [], 'invalid'), { code: 'ERR_INVALID_ARG_TYPE' });
   assert.throws(() => promisify(cp.execFile)(42), { code: 'ERR_INVALID_ARG_TYPE' });
+  await new Promise((done, reject) => {
+    let count = 0, failure;
+    const p = cp.execFile('nonexistent-guard-contract-binary', { env: minimal }, error => { count++; failure = error; });
+    p.once('close', () => setImmediate(() => { try { assert.equal(count, 1); assert.equal(failure.code, 'ENOENT'); done(); } catch (e) { reject(e); } }));
+  });
+  await new Promise((done, reject) => {
+    let count = 0, failure;
+    const p = cp.execFile(process.execPath, ['-e', 'setTimeout(()=>{},30000)'], { timeout: 100, env: minimal }, error => { count++; failure = error; });
+    p.stdin.end();
+    p.once('close', () => setImmediate(() => { try { assert.equal(count, 1); assert.equal(failure.killed, true); done(); } catch (e) { reject(e); } }));
+  });
   const promise = promisify(cp.execFile)(process.execPath, [fixture], { env: minimal, encoding: 'buffer', timeout: 2000 });
   assert.ok(promise.child instanceof cp.ChildProcess);
   const output = await promise; assert.ok(Buffer.isBuffer(output.stdout)); assert.equal(output.stdout.toString(), 'out'); assert.equal(output.stderr.toString(), 'err');
