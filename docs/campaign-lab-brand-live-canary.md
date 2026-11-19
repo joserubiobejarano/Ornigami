@@ -2,9 +2,9 @@
 
 This branch integrates URL source `761e273a5b7b8cd601276d796393c95c2d5394fc` with accepted network history `6568017fa17f5965d91dfc6898b71faab74d235c`. History-preserving merge `0ae3a206a6e590ce755e8eb3f869339c9c1cf60a` has those exact parents. Application, typography and template identity are unchanged. Canary support/guide/tests are owned by this session only.
 
-**Outcome: failed before the IANA action.** Cold development compilation performed inherited Google font requests outside scope. The server was stopped, the run retired and no IANA import or approval/export was attempted. See the separate result record. Subsequent support code conservatively refuses remote `next/font/google` imports before reservation. It does not change fonts or authorize another run.
+**Outcome: failed before the IANA action.** Cold development compilation performed inherited Google font requests outside scope. The server was stopped, the run retired and no IANA import or approval/export was attempted. See the [result record](./campaign-lab-brand-live-canary-result.md). Subsequent support code conservatively refuses remote `next/font/google` imports before reservation. It does not change fonts or authorize another run.
 
-The owner explicitly authorized one new normal browser API transaction seeded at https://www.iana.org/. It is separate from the completed standalone qualification. The old command is not executed and its marker/ledger are never reset. No allowance survives a failed transaction.
+The owner explicitly authorized one new normal browser API transaction seeded at https://www.iana.org/. It is separate from the completed standalone qualification. The old command's live mode is never executed and its marker/ledger are never reset; inherited trapped dry-run tests remain offline. No allowance survives a failed transaction.
 
 ## Before the sole live action
 
