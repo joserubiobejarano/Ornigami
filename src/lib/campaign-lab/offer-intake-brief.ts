@@ -1,3 +1,4 @@
+import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import { resolveVisualDirection } from "./visual-directions.ts";
 import {
   BROWSER_OFFER_MAX_FACTS,
@@ -12,6 +13,7 @@ export const OFFER_INTAKE_BRIEF_STORAGE_KEY =
 
 export type PersistedOfferIntakeBrief = {
   schemaVersion: 1;
+  brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
   accent?: string;
   brandName: string;
@@ -132,6 +134,7 @@ export function parsePreparedOfferIntakeBrief(
     }
 
     const brief: PreparedOfferIntakeBrief = {
+      ...(parsed.brandKitSnapshot !== undefined ? { brandKitSnapshot: parseBrandSnapshot(parsed.brandKitSnapshot) } : {}),
       ...(parsed.directionId !== undefined ? { directionId: resolveVisualDirection(parsed.directionId).id } : {}),
       ...(parsed.accent !== undefined ? { accent: optionalText(parsed, "accent", "Accent override") } : {}),
       brandName: optionalText(parsed, "brandName", "Brand name"),
@@ -150,6 +153,7 @@ export function parsePreparedOfferIntakeBrief(
     };
 
     if (brief.accent && !/^#[a-f0-9]{6}$/i.test(brief.accent)) throw new Error("Accent override must be a six-digit hex color.");
+    paletteTokens(resolveVisualDirection(brief.directionId).tokens, brief.brandKitSnapshot, brief.accent || undefined);
     const validation = validateBrowserOfferIntake({
       brandName: brief.brandName,
       productName: brief.productName,
@@ -215,6 +219,10 @@ export function parsePersistedOfferIntakeBrief(
   let directionId: string;
   try { directionId = resolveVisualDirection(record.directionId).id; } catch { return null; }
   if (record.accent !== undefined && typeof record.accent !== "string") return null;
+  let brandKitSnapshot: BrandKitSnapshot | undefined;
+  try { if (record.brandKitSnapshot !== undefined) brandKitSnapshot = parseBrandSnapshot(record.brandKitSnapshot);
+    if (brandKitSnapshot) paletteTokens(resolveVisualDirection(directionId).tokens, brandKitSnapshot, /^#[a-f0-9]{6}$/i.test(text(record.accent)) ? text(record.accent) : undefined);
+  } catch { return null; }
   const rawFacts = Array.isArray(record.facts) ? record.facts : [];
   const facts = rawFacts
     .slice(0, BROWSER_OFFER_MAX_FACTS)
@@ -225,6 +233,7 @@ export function parsePersistedOfferIntakeBrief(
 
   return {
     schemaVersion: 1,
+    ...(brandKitSnapshot ? { brandKitSnapshot } : {}),
     ...(record.directionId !== undefined ? { directionId } : {}),
     ...(record.accent !== undefined ? { accent: text(record.accent) } : {}),
     brandName: text(record.brandName),

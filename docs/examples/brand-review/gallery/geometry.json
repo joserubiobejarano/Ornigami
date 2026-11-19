@@ -1,0 +1,47 @@
+[
+  {
+    "file": "fjord-approved-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "fjord-article-context-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "fjord-editor-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "fjord-editor-mobile.jpg",
+    "width": 360,
+    "height": 780
+  },
+  {
+    "file": "fjord-evidence-mobile.jpg",
+    "width": 360,
+    "height": 780
+  },
+  {
+    "file": "fjord-timeout-focus-mobile.jpg",
+    "width": 360,
+    "height": 780
+  },
+  {
+    "file": "rose-corrected-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "rose-editor-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "rose-editor-mobile.jpg",
+    "width": 360,
+    "height": 780
+  }
+]

@@ -1,3 +1,4 @@
+import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import { resolveVisualDirection } from "./visual-directions.ts";
 import { parseCampaignContext } from "./campaign-context.ts";
 import {
@@ -41,6 +42,7 @@ export type BrowserOfferConfirmations = {
 };
 
 export type BrowserOfferIntakeInput = {
+  brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
   accent?: string;
   brandName?: string;
@@ -247,6 +249,10 @@ export function validateBrowserOfferIntake(
 ): BrowserOfferIntakeValidation {
   const errors: BrowserOfferIntakeErrors = {};
   try { resolveVisualDirection(input.directionId); } catch (error) { errors.directionId = (error as Error).message; }
+  if (!errors.directionId) {
+    try { paletteTokens(resolveVisualDirection(input.directionId).tokens, input.brandKitSnapshot, input.accent); }
+    catch (error) { errors.accent = (error as Error).message; }
+  }
   if (input.accent !== undefined && !/^#[a-f0-9]{6}$/i.test(input.accent)) errors.accent = "Accent override must be a six-digit hex color.";
   const limits = SINGLE_PRODUCT_OFFER_TEMPLATE.limits;
 
@@ -331,6 +337,8 @@ export function buildBrowserOfferCatalog(
   verification: BrowserOfferVerification;
 } {
   const brand = browserBrand(input.brandName, input.directionId);
+  brand.tokens = paletteTokens(brand.tokens, input.brandKitSnapshot, input.accent);
+  if (input.brandKitSnapshot) brand.visualDirection = { ...brand.visualDirection!, brandKitSnapshot: parseBrandSnapshot(input.brandKitSnapshot) };
   const verification = verifyBrowserOffer(input);
   const context = parseCampaignContext(input);
   const factsInput = input.facts.map((fact) => ({
@@ -388,6 +396,7 @@ export function buildBrowserOfferCatalog(
     description: "A single-product offer entered in the local browser intake.",
     assetId: asset.id,
     brief: {
+      ...(input.brandKitSnapshot ? { brandKitSnapshot: parseBrandSnapshot(input.brandKitSnapshot) } : {}),
       directionId: brand.visualDirection!.id,
       ...(input.accent ? { accentOverride: input.accent } : {}),
       fixtureId: BROWSER_OFFER_FIXTURE_ID,

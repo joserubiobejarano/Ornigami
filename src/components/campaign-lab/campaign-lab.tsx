@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandEvidenceReview } from "./brand-evidence-review";
 import { VISUAL_DIRECTIONS, resolveVisualDirection, browserDirectionCatalog } from "@/lib/campaign-lab/visual-directions";
 import { usePreviewReview } from "./use-preview-review";
 import {
@@ -263,7 +264,7 @@ export function CampaignLab({
     [previewState, renderedPilotNotice, renderedMotion],
   );
   const sourceBrand = getBrand(values.brandId, catalog);
-  const brand = browserBrief ? { ...sourceBrand, tokens: { ...resolveVisualDirection(values.directionId).tokens, accent: values.accent } } : sourceBrand;
+  const brand = browserBrief ? { ...sourceBrand, tokens: { ...resolveVisualDirection(values.directionId).tokens, ...Object.fromEntries(values.brandKitSnapshot?.selections.map(v => [v.role, v.value]) ?? []), accent: values.accent } } : sourceBrand;
   const selectedAsset = assetLookupIssue(values.assetId, catalog) ? undefined : getAsset(values.assetId, catalog);
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
@@ -484,7 +485,7 @@ export function CampaignLab({
 
   function handleDirectionChange(value: string) {
     const direction = resolveVisualDirection(value);
-    setValues(current => ({ ...current, directionId: direction.id, accent: current.accentOverride || direction.tokens.accent }));
+    setValues(current => ({ ...current, directionId: direction.id, accent: current.accentOverride || current.brandKitSnapshot?.selections.find(v => v.role === "accent")?.value || direction.tokens.accent }));
     clearChangedState("directionId");
   }
 
@@ -575,7 +576,9 @@ export function CampaignLab({
   async function handleGenerate() {
     const snapshot = { ...values };
     const recipeSnapshot = pendingMotion;
-    const candidateCatalog = browserBrief ? browserDirectionCatalog(catalog, snapshot.directionId) : catalog;
+    let candidateCatalog = catalog;
+    try { if (browserBrief) candidateCatalog = browserDirectionCatalog(catalog, snapshot.directionId, snapshot.brandKitSnapshot, snapshot.accentOverride); }
+    catch (error) { invalidateGenerationRequest(); setIssues([{field:"accent",message:(error as Error).message}]); setDirty(true); setApproval(null); return; }
     const local = buildConfiguredPreview(fixture, snapshot, candidateCatalog);
     if (!local.ok) {
       invalidateGenerationRequest();
@@ -1357,11 +1360,12 @@ export function CampaignLab({
 
             <fieldset className="m-0 space-y-4 border-0 p-0">
               <legend className="mb-1 text-sm font-semibold">Brand styling</legend>
+              {browserBrief ? <BrandEvidenceReview snapshot={values.brandKitSnapshot} directionId={values.directionId} accentOverride={values.accentOverride} onApply={snapshot => { setValues(current => ({ ...current, brandKitSnapshot: snapshot, accent: current.accentOverride || snapshot?.selections.find(v => v.role === "accent")?.value || resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }} /> : null}
               {browserBrief ? <div className="space-y-2"><Label htmlFor="browser-visual-direction">Visual direction</Label>
                 <select id="browser-visual-direction" className={nativeSelectClassName} value={values.directionId ?? "clear"} onChange={event => handleDirectionChange(event.target.value)}>
                   {VISUAL_DIRECTIONS.map(direction => <option key={direction.id} value={direction.id}>{direction.name}</option>)}
                 </select>
-                <button type="button" className="min-h-11 text-sm underline" onClick={() => { setValues(current => ({ ...current, accentOverride: undefined, accent: resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }}>Use direction accent</button>
+                <button type="button" className="min-h-11 text-sm underline" onClick={() => { setValues(current => ({ ...current, accentOverride: undefined, accent: current.brandKitSnapshot?.selections.find(v => v.role === "accent")?.value || resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }}>Use reviewed / direction accent</button>
               </div> : null}
 
               <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -1407,7 +1411,7 @@ export function CampaignLab({
                   <code className="text-xs text-[#6d6a5f]">{values.accent}</code>
                 </div>
                 {browserBrief ? <div className="space-y-1"><Label htmlFor="browser-accent-override">Accent override (hex)</Label><Input className="min-h-11" id="browser-accent-override" value={values.accentOverride ?? ""} placeholder={resolveVisualDirection(values.directionId).tokens.accent} onChange={event => {
-                  if (event.target.value === "") { setValues(current => ({ ...current, accentOverride: undefined, accent: resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }
+                  if (event.target.value === "") { setValues(current => ({ ...current, accentOverride: undefined, accent: current.brandKitSnapshot?.selections.find(v => v.role === "accent")?.value || resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }
                   else handleValueChange("accent", event.target.value);
                 }} /></div> : null}
                 <input

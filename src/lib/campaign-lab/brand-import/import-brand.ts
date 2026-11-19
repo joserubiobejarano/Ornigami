@@ -4,6 +4,9 @@ import { BRAND_EVIDENCE_LIMITS as E, type BrandKitDraft, type SuppliedBrandResou
 import { discoverHtmlResources } from "./html-discovery.ts";
 import { ResourceReadError, resourceClock, type PublicResource, type ResourceReadOptions, type ResourceClock } from "./public-resource-fetch.ts";
 
+const caveats = new Set(["sampled-srgb-not-original-pixel-palette", "image-purpose-and-rights-unknown"]);
+const failedExtraction = (s: BrandKitDraft["sources"][number]) => s.outcome !== "processed" || s.issues.some(i => !caveats.has(i));
+
 export const BRAND_IMPORT_LIMITS = Object.freeze({
   resources: E.resources, totalBytes: E.totalBytes, networkMs: 10_000,
   redirects: 2, tags: 256, rasters: E.rasterCount,
@@ -15,11 +18,12 @@ type Entry = {
   bytes: number; sha256: string | null; status: number | null; error: string | null;
 };
 export type ImportLedger = {
-  version: "ornigami-brand-import/1.0.0"; extractorVersion: BrandKitDraft["extractorVersion"];
+  version: "ornigami-brand-import/1.0.0" | "ornigami-brand-import/1.1.0"; extractorVersion: BrandKitDraft["extractorVersion"];
   status: "complete" | "partial" | "incomplete" | "rejected" | "cancelled";
   limits: Limits; logicalReads: number; maxHttpAttempts: number; scheduledHttpAttemptBound: number;
   retainedBytes: number; chargedBytes: number; cancellation: "CANCELLED" | "DEADLINE" | null;
   discoveryTags: number; issues: string[]; entries: Entry[];
+  evidenceWarnings?: { sourceId: string; issues: string[] }[];
   extractionFailures: { sourceId: string; outcome: string; issues: string[] }[];
 };
 
@@ -39,7 +43,7 @@ export async function importBrandDraft(seed: string, reader: BrandResourceReader
   const expires = clock.now() + limits.networkMs;
   const controller = new AbortController();
   const ledger: ImportLedger = {
-    version: "ornigami-brand-import/1.0.0", extractorVersion: "ornigami-brand-evidence/1.0.0",
+    version: "ornigami-brand-import/1.1.0", extractorVersion: "ornigami-brand-evidence/1.0.0",
     status: "rejected", limits, logicalReads: 0, maxHttpAttempts: limits.resources * (limits.redirects + 1),
     scheduledHttpAttemptBound: 0, retainedBytes: 0, chargedBytes: 0, cancellation: null,
     discoveryTags: 0, issues: [], entries: [], extractionFailures: [],
@@ -122,14 +126,15 @@ export async function importBrandDraft(seed: string, reader: BrandResourceReader
         }
         if (check()) draft = await collectBrandKitDraft(resources);
         ledger.status = draft.outcome === "draft" ? "complete" : "incomplete";
-        if (ledger.entries.some(e => e.error) || ledger.issues.length || draft.sources.some(s => s.outcome !== "processed" || s.issues.length)) ledger.status = "partial";
+        if (ledger.entries.some(e => e.error) || ledger.issues.length || draft.sources.some(failedExtraction)) ledger.status = "partial";
       }
     }
     // Collection/native decoding is not preemptible. Recheck after every await;
     // a late result may never publish as a successful draft.
     if (!check()) { draft = null; ledger.status = "cancelled"; }
-    if (draft) ledger.extractionFailures = draft.sources.filter(s => s.outcome !== "processed" || s.issues.length)
+    if (draft) ledger.extractionFailures = draft.sources.filter(failedExtraction)
       .map(s => ({ sourceId: s.id, outcome: s.outcome, issues: s.issues }));
+    if (draft) ledger.evidenceWarnings = draft.sources.filter(s => s.issues.length).map(s => ({ sourceId: s.id, issues: [...s.issues] }));
     if (draft && ledger.status !== "complete") draft.gaps.push("Import evidence is incomplete: inspect the bounded import ledger for missing resources and failures.");
     return { draft, ledger, resources };
   } finally {

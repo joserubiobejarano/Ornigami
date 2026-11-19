@@ -1,0 +1,36 @@
+[
+  {
+    "directory": ".local/fjord-timeout-export",
+    "revision": "e209038f6d26c17b",
+    "direction": "clear",
+    "palette": [
+      {
+        "role": "accent",
+        "value": "#163f64",
+        "originalValue": "#163f64ff",
+        "review": "selected"
+      },
+      {
+        "role": "page",
+        "value": "#f5f9ff",
+        "originalValue": "#f5f9ffff",
+        "review": "selected"
+      },
+      {
+        "role": "surface",
+        "value": "#e5effb",
+        "originalValue": "#e5effbff",
+        "review": "selected"
+      }
+    ],
+    "effectiveAccent": "#123456",
+    "verifiedFiles": 13,
+    "fonts": [
+      "Inter"
+    ],
+    "packshotSha256": "0cfa8235e88ec443bc5fb22af3eba5ecb85076b1f920d9f6e20fe6b6b4fd8863",
+    "snapshotFalseFlagsPreserved": true,
+    "htmlReceiptAgreement": true,
+    "references": 23
+  }
+]

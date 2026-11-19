@@ -1,5 +1,7 @@
 "use client";
 
+import { BrandEvidenceReview } from "./brand-evidence-review";
+import type { BrandKitSnapshot } from "@/lib/campaign-lab/brand-review";
 import Link from "next/link";
 import { VISUAL_DIRECTIONS } from "@/lib/campaign-lab/visual-directions";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -255,6 +257,8 @@ export function OfferIntake() {
 
   const [briefHydrated, setBriefHydrated] = useState(false);
   const [restoredBrief, setRestoredBrief] = useState(false);
+  const [evidenceSession, setEvidenceSession] = useState(0);
+  const [brandKitSnapshot, setBrandKitSnapshot] = useState<BrandKitSnapshot>();
   const [directionId, setDirectionId] = useState("clear");
   const [accentOverride, setAccentOverride] = useState("");
   const [brandName, setBrandName] = useState("");
@@ -323,6 +327,7 @@ export function OfferIntake() {
       }
       const brief = parsePersistedOfferIntakeBrief(raw);
       if (brief) {
+        setBrandKitSnapshot(brief.brandKitSnapshot);
         setDirectionId(brief.directionId ?? "clear");
         setAccentOverride(brief.accent ?? "");
         setBrandName(brief.brandName);
@@ -350,6 +355,7 @@ export function OfferIntake() {
         OFFER_INTAKE_BRIEF_STORAGE_KEY,
         serializePersistedOfferIntakeBrief({
           directionId,
+          brandKitSnapshot,
           accent: accentOverride,
           brandName,
           productName,
@@ -366,7 +372,7 @@ export function OfferIntake() {
       // A full or blocked storage area must not block the intake.
     }
   }, [
-    directionId, accentOverride,
+    directionId, accentOverride, brandKitSnapshot,
     alt,
     audience,
     brandName,
@@ -509,7 +515,9 @@ export function OfferIntake() {
     }
 
     const brief = parsed.brief;
-    setDirectionId(brief.directionId ?? "clear");
+    setEvidenceSession(current => current + 1);
+    setBrandKitSnapshot(brief.brandKitSnapshot);
+        setDirectionId(brief.directionId ?? "clear");
         setAccentOverride(brief.accent ?? "");
         setBrandName(brief.brandName);
     setProductName(brief.productName);
@@ -590,6 +598,7 @@ export function OfferIntake() {
       destinationUrl: snapshot.values.destinationUrl,
       rights: previous.rights,
     };
+    setBrandKitSnapshot(snapshot.values.brandKitSnapshot);
     setDirectionId(snapshot.values.directionId ?? "clear");
     setAccentOverride(snapshot.values.accentOverride ?? "");
     setProductName(snapshot.values.productName);
@@ -604,6 +613,7 @@ export function OfferIntake() {
     if (readingPreparedBrief || readingPackshot || packshotError) return;
 
     const input: BrowserOfferIntakeInput = {
+      brandKitSnapshot,
       directionId,
       ...(accentOverride ? { accent: accentOverride } : {}),
       brandName,
@@ -719,6 +729,7 @@ export function OfferIntake() {
             browserOfferBriefFromIntake({
               ...submitted.input,
               directionId: nextValues.directionId,
+              brandKitSnapshot: nextValues.brandKitSnapshot,
               productName: nextValues.productName,
               audience: nextValues.audience,
               objective: nextValues.objective,
@@ -764,6 +775,7 @@ export function OfferIntake() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-8">
+        <BrandEvidenceReview key={evidenceSession} snapshot={brandKitSnapshot} directionId={directionId} accentOverride={accentOverride} onApply={setBrandKitSnapshot} />
         <fieldset className="mb-5 grid gap-3 sm:grid-cols-2"><legend className="mb-2 font-semibold">Visual direction</legend>
           {VISUAL_DIRECTIONS.map(direction => <label key={direction.id} className="flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border border-[#c9bda8] bg-[#fbf8f1] p-3">
             <input type="radio" name="visualDirection" value={direction.id} checked={directionId === direction.id} onChange={() => setDirectionId(direction.id)} />

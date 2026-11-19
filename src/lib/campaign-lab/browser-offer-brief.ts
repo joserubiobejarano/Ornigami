@@ -1,3 +1,4 @@
+import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import { resolveVisualDirection } from "./visual-directions.ts";
 ﻿import {
   validateBrowserOfferIntake,
@@ -40,6 +41,7 @@ export type BrowserOfferBriefAsset = {
 
 export type BrowserOfferBriefRequest = {
   schemaVersion: typeof BROWSER_OFFER_BRIEF_SCHEMA_VERSION;
+  brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
   brandName?: string;
   productName: string;
@@ -79,6 +81,7 @@ const BRIEF_KEYS = new Set([
   "schemaVersion",
   "brandName",
   "directionId",
+  "brandKitSnapshot",
   "productName",
   "audience",
   "objective",
@@ -338,6 +341,12 @@ export function parseBrowserOfferBriefRequest(
     }
   }
 
+  let brandKitSnapshot: BrandKitSnapshot | undefined;
+  try {
+    if (raw.brandKitSnapshot !== undefined) brandKitSnapshot = parseBrandSnapshot(raw.brandKitSnapshot);
+    paletteTokens(resolveVisualDirection(directionId).tokens, brandKitSnapshot, accent);
+  } catch (error) { issues.push({ field: "accent", message: (error as Error).message }); }
+
   const facts = parseFacts(raw.facts);
   if (!facts) {
     issues.push({
@@ -379,6 +388,7 @@ export function parseBrowserOfferBriefRequest(
   }
 
   const input: BrowserOfferIntakeInput = {
+    ...(brandKitSnapshot ? { brandKitSnapshot } : {}),
     directionId,
     ...(accent ? { accent } : {}),
     brandName: brandName.value,
@@ -447,6 +457,7 @@ export function browserOfferBriefFromIntake(
     typeof input.brandName === "string" ? input.brandName.trim() : "";
   return {
     schemaVersion: BROWSER_OFFER_BRIEF_SCHEMA_VERSION,
+    ...(input.brandKitSnapshot ? { brandKitSnapshot: parseBrandSnapshot(input.brandKitSnapshot) } : {}),
     ...(input.directionId !== undefined ? { directionId: input.directionId } : {}),
     ...(brandName ? { brandName } : {}),
     productName: input.productName,

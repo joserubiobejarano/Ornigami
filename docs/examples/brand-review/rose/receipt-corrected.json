@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "kind": "campaign-lab-local-export",
+  "exportedAt": "2026-11-19T18:46:21.646Z",
+  "revisionIdentityVersion": 6,
+  "approval": {
+    "scope": "local-preview",
+    "revision": "ead895d89e720a2b",
+    "approvedAt": "2026-11-19T18:46:21.142Z",
+    "renderedRevision": "ead895d89e720a2b"
+  },
+  "preview": {
+    "status": "confirmed",
+    "notice": null,
+    "productName": "Rose Supply ceramic cup",
+    "brandName": "Rose Supply",
+    "offer": "Cup + lid, €24 · offer ends 30 November 2026",
+    "destinationUrl": "https://rose.example/products/rose",
+    "actionLabel": "Shop now",
+    "template": {
+      "id": "single-product-offer",
+      "version": "1.0.0",
+      "layout": "offer-led-one-photo",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ]
+    },
+    "visualDirection": {
+      "id": "editorial",
+      "version": "1.0.0",
+      "brandKitSnapshot": {
+        "schemaVersion": "ornigami-brand-snapshot/1.0.0",
+        "draftSchemaVersion": "1.0.0",
+        "extractorVersion": "ornigami-brand-evidence/1.0.0",
+        "provenance": "imported-claims-unverified",
+        "reviewMethod": "local-operator-palette",
+        "selections": [
+          {
+            "role": "accent",
+            "value": "#123456",
+            "candidateId": "6222b51d65a3d4bd8aa492ed17e4c6d177f7101cfaa4952d5501430df4aaeac1",
+            "originalValue": "#12345680",
+            "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+            "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+            "method": "css-declaration",
+            "category": "ui-color",
+            "review": "corrected"
+          }
+        ],
+        "ownerConfirmed": false,
+        "campaignFactsApproved": false,
+        "mediaRightsApproved": false,
+        "sourceBytesVerified": false
+      },
+      "tokens": {
+        "page": "#f2ebde",
+        "surface": "#e6dbc8",
+        "ink": "#1d2a3c",
+        "muted": "#5c6066",
+        "accent": "#123456",
+        "accentInk": "#fffaf1",
+        "line": "#cbbda8",
+        "displayFont": "Georgia, serif",
+        "bodyFont": "Arial, sans-serif",
+        "displayWeight": 400,
+        "displayTracking": "-0.03em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.2em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "arch",
+        "heroOrder": "headline-first",
+        "prefersEditorial": true,
+        "detailBackground": "#1d2a3c",
+        "detailInk": "#f2ebde",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "imagePresentation": {
+      "fit": "contain",
+      "frame": "natural-arch"
+    },
+    "motion": {
+      "recipe": "none",
+      "recipeVersion": "1.1.0",
+      "runtimeVersion": null,
+      "settings": {
+        "emphasisMs": 0,
+        "emphasisScale": 1,
+        "easing": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "actionFeedbackMs": 150,
+        "inspectionFeedbackMs": 0,
+        "inspection": "none"
+      },
+      "runtimeIdentity": null
+    },
+    "appearance": {
+      "accent": "#123456",
+      "accentInk": "#fffaf1"
+    }
+  },
+  "verification": {
+    "offer": "confirmed",
+    "destination": "direct",
+    "rights": "confirmed",
+    "provisional": false
+  },
+  "provenance": {
+    "source": "browser-intake",
+    "pilotId": "browser-offer",
+    "pilotStatus": "confirmed",
+    "status": "confirmed",
+    "note": "Local browser brief · not publication approval.",
+    "editorChanges": [],
+    "offer": {
+      "value": "Cup + lid, €24 · offer ends 30 November 2026",
+      "sourceValue": "Cup + lid, €24 · offer ends 30 November 2026",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#fixture.brief.offer",
+      "note": "Local browser brief · not publication approval.",
+      "reviewedBy": null,
+      "reviewedOn": null
+    },
+    "destination": {
+      "value": "https://rose.example/products/rose",
+      "sourceValue": "https://rose.example/products/rose",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#fixture.brief.destinationUrl",
+      "note": "Local browser brief · not publication approval.",
+      "reviewedBy": null,
+      "reviewedOn": null
+    },
+    "offerPrice": {
+      "value": null,
+      "sourceValue": null,
+      "status": "missing",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#fixture.brief.offerPrice",
+      "note": "Local browser brief · not publication approval.",
+      "reviewedBy": null,
+      "reviewedOn": null
+    },
+    "rights": {
+      "value": "Synthetic fixture created locally; approved for this local test.",
+      "sourceValue": "Synthetic fixture created locally; approved for this local test.",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#assets.browser-offer-packshot.rights",
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19"
+    },
+    "packshot": {
+      "value": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "sourceValue": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "Browser intake upload: packshot.png",
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19",
+      "assetId": "browser-offer-packshot",
+      "contentHash": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6"
+    },
+    "missingEvidence": [
+      "offer reviewer identity/date",
+      "destination reviewer identity/date",
+      "approved price emphasis"
+    ],
+    "ownerConfirmed": false,
+    "assetBytesVerified": false,
+    "operatorAttestation": {
+      "offer": "confirmed",
+      "destination": "direct",
+      "rights": "confirmed",
+      "provisional": false
+    },
+    "assetIdentity": {
+      "source": "browser-computed",
+      "declaredSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "exportedSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "localExportHashMatches": true,
+      "serverBytesVerified": false
+    }
+  },
+  "asset": {
+    "id": "browser-offer-packshot",
+    "contentHash": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "exportedSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "file": "packshot-cdb29be4bb74777f.png",
+    "width": 600,
+    "height": 700,
+    "alt": "Synthetic Rose Supply ceramic cup packshot"
+  },
+  "fonts": [],
+  "references": {
+    "stylesheets": [
+      "styles.css"
+    ],
+    "images": [
+      "packshot-cdb29be4bb74777f.png"
+    ],
+    "fonts": [],
+    "cssUrls": [],
+    "checked": 2
+  },
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 5900,
+      "sha256": "c1660f64f082cdbd3fc4b3b6ecd37e0b2da752644830acf4929a848f1b75e73d"
+    },
+    {
+      "path": "packshot-cdb29be4bb74777f.png",
+      "bytes": 19930,
+      "sha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6"
+    },
+    {
+      "path": "README.txt",
+      "bytes": 669,
+      "sha256": "db31e27797b1f964b8757bb4c4c22afee984031c337cd356be06853f08f1152c"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 10068,
+      "sha256": "ed7d28c25d6e5cfac8b9d9d3f88cb9a1d28895bee28e3cc02d8aec9c656bd026"
+    }
+  ],
+  "checks": {
+    "approvalRevisionMatchesRenderedRevision": true,
+    "renderedValuesAreCurrent": true,
+    "requiredImagesLoaded": true,
+    "editorControlsExcluded": true,
+    "internalNotesExcluded": true,
+    "allResourceReferencesResolve": true,
+    "htmlAndReceiptAgree": true,
+    "fontLicensesIncluded": true
+  }
+}

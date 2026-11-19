@@ -1,5 +1,7 @@
 # Browser offer visual directions
 
+Current local saved-evidence review/application checkpoint: [working browser journey](./campaign-lab-brand-review.md). The foundation/integration scope below is historical; no live URL importer is authorized.
+
 The normal `/campaign-lab/offer` flow accepts a customer's own identity and
 campaign, plus one supported direction. This is local operator intake, not
 brand extraction, exact brand matching, customer hosting or public launch.

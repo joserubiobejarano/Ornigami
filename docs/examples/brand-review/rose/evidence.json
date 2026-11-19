@@ -1,0 +1,537 @@
+{
+  "schemaVersion": "1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "outcome": "draft",
+  "sources": [
+    {
+      "kind": "html",
+      "requestedUrl": "https://rose.example/home",
+      "finalUrl": "https://rose.example/home",
+      "status": 200,
+      "contentType": "text/html",
+      "id": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "byteLength": 279,
+      "outcome": "processed",
+      "issues": []
+    },
+    {
+      "kind": "raster",
+      "requestedUrl": "https://rose.example/photo.png",
+      "finalUrl": "https://rose.example/photo.png",
+      "status": 200,
+      "contentType": "image/png",
+      "id": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "byteLength": 19930,
+      "outcome": "processed",
+      "issues": [
+        "sampled-srgb-not-original-pixel-palette",
+        "image-purpose-and-rights-unknown"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "ea95eafe938ed48a1870ead425763677525b82b980e398d95dddda2b4d10e613",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "title",
+      "observed": "Unapproved source copy <script>never execute</script>",
+      "method": "html-title",
+      "evidence": {
+        "quote": "<title>Unapproved source copy &lt;script&gt;never execute&lt;/script&gt;</title>",
+        "utf16Offset": 0
+      },
+      "details": {},
+      "roleHint": null,
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "3b0740dc2c349a9a22e57de6c671f52970966d8d4f7074beeea38a01307de8c8",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "method": "css-declaration",
+      "evidence": {
+        "quote": "#fff8fa",
+        "utf16Offset": 103
+      },
+      "details": {
+        "property": "background",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "calibrated": false,
+        "reason": "Literal declaration/metadata; role and applicability unresolved."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "41d2289d00bb9b8031e7414c2c29715087988817f350ba5859053057ea30e2bf",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "ui-color",
+      "observed": "#1f2a24ff",
+      "method": "css-declaration",
+      "evidence": {
+        "quote": "#1f2a24",
+        "utf16Offset": 117
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "calibrated": false,
+        "reason": "Literal declaration/metadata; role and applicability unresolved."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "281e3a80adbffe6cba9443d1c5acb43f7b45874a8329e7116d21e11ee586fd62",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "method": "css-declaration",
+      "evidence": {
+        "quote": "#f5e6ea",
+        "utf16Offset": 142
+      },
+      "details": {
+        "property": "background",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "calibrated": false,
+        "reason": "Literal declaration/metadata; role and applicability unresolved."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c6ae83948628e015b3fb7f2118e42c7d2c936b37dc4e14bdb6166a6ada8e7c11",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "method": "css-declaration",
+      "evidence": {
+        "quote": "#6b2340",
+        "utf16Offset": 168
+      },
+      "details": {
+        "property": "background",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "calibrated": false,
+        "reason": "Literal declaration/metadata; role and applicability unresolved."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6222b51d65a3d4bd8aa492ed17e4c6d177f7101cfaa4952d5501430df4aaeac1",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "method": "css-declaration",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 196
+      },
+      "details": {
+        "property": "background",
+        "alpha": 0.5019607843137255,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "calibrated": false,
+        "reason": "Literal declaration/metadata; role and applicability unresolved."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role.",
+        "Translucent: appearance depends on unresolved background/composition."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "46048d02965a9215fcf14296bb2d3ce065004db5d497a7ca575c966660b30895",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "category": "text",
+      "observed": "Untrusted marketing claim — not approved campaign facts.",
+      "method": "html-text",
+      "evidence": {
+        "quote": "Untrusted marketing claim — not approved campaign facts.",
+        "utf16Offset": 217
+      },
+      "details": {},
+      "roleHint": null,
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5e707002b0614258a32e52af798e6253b48f0a25390f4b1b9fd1a7ea29915d57",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#fff8faff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#fff8faff",
+        "pixels": 2440,
+        "fraction": 0.6931818181818182,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "7a94fcdfebac692e1d21b36b8f9c386a8727e9973a5e32f6e14271857db1790d",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#6b2340ff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#6b2340ff",
+        "pixels": 569,
+        "fraction": 0.16164772727272728,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5daa693afbc8da3b63d6d07f23abff5ac5c513430b6dbf41bfe435e115a42447",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#f5e6eaff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#f5e6eaff",
+        "pixels": 488,
+        "fraction": 0.13863636363636364,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "f3ee5b42dfe07d716b863345fba8fd4b64755679267b7236ed9569a4031e101d",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#7d3c55ff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#7d3c55ff",
+        "pixels": 2,
+        "fraction": 0.0005681818181818182,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2cfdba16b133cd6b1eba58a97094825f229d47c7ceea93311d615e985355461b",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#6e2844ff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#6e2844ff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ea8de4d71dbbe93e3a6437968f23312a18b0e8ca0ebe58e2b27387ec4602ad4b",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#712c47ff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#712c47ff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "e6a9033af9d1181c51158d1b34477ef752dca103d66616efeb2e40001e8e9928",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#722d49ff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#722d49ff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ec739755391a17d691e3476efb4a62bf138b5a87287ab476f58314591cbd7d04",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "category": "raster-color",
+      "observed": "#732f4aff",
+      "method": "raster-sample",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#732f4aff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "calibrated": false,
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified."
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    }
+  ],
+  "acceptedValues": [],
+  "approvals": {
+    "brand": false,
+    "campaignFacts": false,
+    "mediaRights": false
+  },
+  "gaps": [
+    "All evidence is unreviewed; identity, campaign facts, destinations and media rights require independent approval.",
+    "No computed styles: CSS variables, cascade, inheritance, selectors, themes and media queries are unresolved.",
+    "Typography, geometry, contrast in context and font redistribution permissions are not extracted.",
+    "Lexical HTML/CSS subset only; no rendering, script execution, network requests or live-site qualification.",
+    "Partial/unsupported evidence: inspect each source's issues and outcome."
+  ],
+  "limits": {
+    "resources": 12,
+    "totalBytes": 4194304,
+    "htmlBytes": 524288,
+    "cssBytes": 262144,
+    "rasterBytes": 524288,
+    "rasterCount": 4,
+    "rasterPixels": 4000000,
+    "sampleSide": 64,
+    "candidates": 256,
+    "evidenceChars": 240,
+    "textChars": 4000,
+    "urlChars": 2048
+  }
+}

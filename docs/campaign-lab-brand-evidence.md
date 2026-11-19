@@ -1,5 +1,7 @@
 # Offline brand evidence foundation — Session 1
 
+Current local saved-evidence review/application checkpoint: [working browser journey](./campaign-lab-brand-review.md). The foundation/integration scope below is historical; no live URL importer is authorized.
+
 Integration checkpoint: see [bounded offline brand import](./campaign-lab-brand-import.md)
 for the working protected-reader/discovery/collector pipeline and combined results.
 The foundation description below records its original isolated scope.

@@ -1,3 +1,4 @@
+import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import type { BrandTokens, CampaignCatalog } from "./types.ts";
 export const VISUAL_DIRECTION_VERSION = "1.0.0";
 const CLEAR_TOKENS: BrandTokens = {
@@ -41,9 +42,9 @@ export function resolveVisualDirection(value: unknown = "clear") {
   return { ...direction, version: VISUAL_DIRECTION_VERSION };
 }
 /** Shared local fallback uses the same app-owned registry as the server. */
-export function browserDirectionCatalog(catalog: CampaignCatalog, directionId: unknown): CampaignCatalog {
+export function browserDirectionCatalog(catalog: CampaignCatalog, directionId: unknown, snapshot?: BrandKitSnapshot, accent?: string): CampaignCatalog {
   const direction = resolveVisualDirection(directionId);
   const brand = catalog.brands["browser-offer-brand"];
   if (!brand) throw new Error("Browser brand is unavailable.");
-  return { ...catalog, brands: { ...catalog.brands, [brand.id]: { ...brand, tokens: { ...direction.tokens }, visualDirection: { id: direction.id, version: direction.version } } } };
+  return { ...catalog, brands: { ...catalog.brands, [brand.id]: { ...brand, tokens: paletteTokens(direction.tokens, snapshot, accent), visualDirection: { id: direction.id, version: direction.version, ...(snapshot ? { brandKitSnapshot: parseBrandSnapshot(snapshot) } : {}) } } } };
 }

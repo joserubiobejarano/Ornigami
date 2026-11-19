@@ -1,3 +1,4 @@
+import type { BrandKitSnapshot } from "./brand-review.ts";
 import { assertCurrentStory, resolveStory, storyRevision, isApprovedStorySvg, STORY_CSS } from "./story.ts";
 import type { StoryConfiguration, StorySource, StoryDefinition } from "./story.ts";
 import { storyRuntimeSource } from "./story-runtime.ts";
@@ -158,7 +159,7 @@ export type CampaignExportAsset = {
 };
 
 export type CampaignExportPreview = {
-  visualDirection?: { id: string; version: string; tokens: BrandTokens };
+  visualDirection?: { id: string; version: string; tokens: BrandTokens; brandKitSnapshot?: BrandKitSnapshot };
   storySource?: StorySource;
   story?: StoryConfiguration;
   assets?: ApprovedAsset[];

@@ -1,5 +1,7 @@
 # Bounded offline brand-import integration
 
+Current local saved-evidence review/application checkpoint: [working browser journey](./campaign-lab-brand-review.md). The foundation/integration scope below is historical; no live URL importer is authorized.
+
 19 November 2026. Implemented library checkpoint, not a customer importer.
 Worktree: `C:/Users/joser/.local/ornigami-brand-integration`, branch
 `codex/brand-import-integration-20261119`.

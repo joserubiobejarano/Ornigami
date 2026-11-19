@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "ornigami-brand-snapshot/1.0.0",
+  "draftSchemaVersion": "1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "provenance": "imported-claims-unverified",
+  "reviewMethod": "local-operator-palette",
+  "selections": [
+    {
+      "role": "accent",
+      "value": "#163f64",
+      "candidateId": "edea1c85576f705189cfb0ac0548435593be3a4f2f9bed0fd8243e5960ab77a4",
+      "originalValue": "#163f64ff",
+      "sourceId": "4077204eba56136c01bd1dd3bbb064621f352d2474ac577b299a866285af02b1",
+      "sourceSha256": "53e698d0d23e62ee87e4a653117930eb501a06bd55c725adbf45013eaa89180d",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "review": "selected"
+    },
+    {
+      "role": "page",
+      "value": "#f5f9ff",
+      "candidateId": "e13b947b64e1c5c6b4cacb82a4491a7a9ba91b0a061acefb3114ebaa30a6aa0b",
+      "originalValue": "#f5f9ffff",
+      "sourceId": "4077204eba56136c01bd1dd3bbb064621f352d2474ac577b299a866285af02b1",
+      "sourceSha256": "53e698d0d23e62ee87e4a653117930eb501a06bd55c725adbf45013eaa89180d",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "review": "selected"
+    },
+    {
+      "role": "surface",
+      "value": "#e5effb",
+      "candidateId": "6f47f1d5e762bfe0109568ee4da6823cb10f1ada7fdac6fab2e3fb5cc028861a",
+      "originalValue": "#e5effbff",
+      "sourceId": "4077204eba56136c01bd1dd3bbb064621f352d2474ac577b299a866285af02b1",
+      "sourceSha256": "53e698d0d23e62ee87e4a653117930eb501a06bd55c725adbf45013eaa89180d",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "review": "selected"
+    }
+  ],
+  "ownerConfirmed": false,
+  "campaignFactsApproved": false,
+  "mediaRightsApproved": false,
+  "sourceBytesVerified": false
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "brandName": "Fjord Works",
+  "productName": "Fjord Works field notebook",
+  "audience": "Field researchers",
+  "objective": "Present the exact bundle and purchase destination",
+  "offer": "Two notebooks for €18, through 2 December 2026",
+  "destinationUrl": "https://fjord.example/products/fjord",
+  "facts": [
+    {
+      "label": "Pages",
+      "value": "96 ruled pages"
+    },
+    {
+      "label": "Format",
+      "value": "A5, stitched binding"
+    }
+  ],
+  "alt": "Synthetic Fjord Works field notebook packshot",
+  "rights": "Synthetic fixture created locally; approved for this local test."
+}

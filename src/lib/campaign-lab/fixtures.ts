@@ -595,6 +595,7 @@ export function createFormValues(
 ): CampaignFormValues {
   const format = defaultFormat(fixture);
   return {
+    ...(fixture.brief.brandKitSnapshot ? { brandKitSnapshot: fixture.brief.brandKitSnapshot } : {}),
     brandId: fixture.brief.brandId,
     accent: fixture.brief.accentOverride ?? defaultAccent(fixture.brief.brandId, catalog),
     ...(fixture.brief.directionId ? { directionId: fixture.brief.directionId, accentOverride: fixture.brief.accentOverride } : {}),
@@ -619,6 +620,7 @@ export function createCampaignBrief(fixture: CampaignFixture, values: CampaignFo
   const opening = fixture.openings?.find((option) => option.id === values.openingFocus);
   return {
     ...fixture.brief,
+    brandKitSnapshot: values.brandKitSnapshot,
     ...(values.directionId ? { directionId: values.directionId, accentOverride: values.accentOverride } : {}),
     brandId: values.brandId,
     productName: values.productName.trim(),

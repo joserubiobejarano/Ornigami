@@ -1,3 +1,4 @@
+import type { BrandKitSnapshot } from "./brand-review.ts";
 export const CAMPAIGN_LAB_TEMPLATE_ID = "single-product-offer" as const;
 
 export type BaseFixtureId =
@@ -206,7 +207,7 @@ export type BrandTokens = {
 };
 
 export type BrandDefinition = {
-  visualDirection?: { id: string; version: string };
+  visualDirection?: { id: string; version: string; brandKitSnapshot?: BrandKitSnapshot };
   id: BrandId;
   name: string;
   wordmark: string;
@@ -294,6 +295,7 @@ export type RequiredFactGroup = {
 };
 
 export type CampaignBrief = {
+  brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
   accentOverride?: string;
   fixtureId: FixtureId;
@@ -337,6 +339,7 @@ export type CampaignFixture = {
 };
 
 export type CampaignFormValues = {
+  brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
   accentOverride?: string;
   brandId: BrandId;
