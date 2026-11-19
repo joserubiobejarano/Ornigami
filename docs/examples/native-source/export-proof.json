@@ -1,0 +1,52 @@
+{
+  "sourceNetwork": "SIMULATED native physical-call seams, no website contacted",
+  "sourceLabelEvidence": "UI SOURCE_NETWORK_SIMULATED warning and bridge/native seam traces; compact receipt omits raw gaps and target URLs",
+  "revision": "857e1840864dd44f",
+  "approvedAt": "2026-11-19T23:18:12.419Z",
+  "exportedAt": "2026-11-19T23:18:12.907Z",
+  "template": "1.0.1",
+  "rawCssIdentical": false,
+  "cssIdenticalAfterFontReferencesMappedToProgramHashes": true,
+  "fontAliasReason": "Existing exporter derives local font names from loopback URLs; rehearsal uses port 3043 rather than 3041",
+  "rawFixtureFilesAndTargetURLAbsentFromReceipt": true,
+  "receiptProvenance": "imported-claims-unverified",
+  "sourceBytesVerified": false,
+  "ownerConfirmed": false,
+  "fontPrograms": [
+    {
+      "export": "inter-243e35ab.woff2",
+      "source": "21350d82a1f187e9-s.woff2",
+      "sha256": "aebf2ab4a4ce6810d73c1ac7be7cafb4e5ec4cee2d6db5fb3e09691747ec4bd6"
+    },
+    {
+      "export": "inter-4dbebd7b.woff2",
+      "source": "df0a9ae256c0569c-s.woff2",
+      "sha256": "8db00ff46c67b22cda8bed865acf7077651cac8d2841d5b40980556b48961931"
+    },
+    {
+      "export": "inter-8186d77d.woff2",
+      "source": "ba9851c3c22cd980-s.woff2",
+      "sha256": "fccca918fea40089dacadc7045861314d1a6bc91f1f323cc1eeb22ebcdb321b5"
+    },
+    {
+      "export": "inter-85e5a054.woff2",
+      "source": "8e9860b6e62d6359-s.woff2",
+      "sha256": "a28eb6d3ccb534ae0c94ca999371df024aab60b08c3c8a5720ee9e32fa0faaa2"
+    },
+    {
+      "export": "inter-a03a0c9c.woff2",
+      "source": "e4af272ccee01ff0-s.p.woff2",
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "export": "inter-af405b7b.woff2",
+      "source": "19cfc7226ec3afaa-s.woff2",
+      "sha256": "46dd4cdca58c26ae87cc6927657bf83b2e8abfc39ffd0ab176e301a8d28d22bf"
+    },
+    {
+      "export": "inter-ed2aea8c.woff2",
+      "source": "c5fe6dc8356a8c31-s.woff2",
+      "sha256": "a2e2c783ca6f9c20486e81e72a279203e86730bbf8f01ff6a5ee9dbd09e1c271"
+    }
+  ]
+}

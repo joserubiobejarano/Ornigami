@@ -1,0 +1,16 @@
+{
+  "matchingProperties": {
+    "fontFamily": true,
+    "fontSize": true,
+    "lineHeight": true,
+    "text": true,
+    "imageFit": true
+  },
+  "articleWidth": 909,
+  "lineText": [
+    "Rose Supply",
+    "ceramic cup"
+  ],
+  "allPreserved": true,
+  "template": "1.0.1"
+}

@@ -1,0 +1,53 @@
+✔ guard preserves child-process contracts and inherited enforcement (1381.2209ms)
+✔ native delegation and normal bridge are qualified without external OS calls (713.4765ms)
+✔ late instrumentation refuses before captured primitives, with a separate physical fail-safe (401.0929ms)
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (83.1527ms)
+✔ sanitized compilation child environment retains preload (164.0668ms)
+✔ local data fetch remains available without a network exception (129.1996ms)
+✔ source permit is executable with protected reader and mandatory synthetic seams (538.9281ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1450.0066
+Offline native-delegation checks passed; no owner-approved live plan or record exists.
+(node:19104) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-live-source-adapter/src/lib/campaign-lab/brand-import/private-address.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-live-source-adapter\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[@sentry/nextjs] Importing `withSentryConfig` from `@sentry/nextjs` is deprecated and will stop working in v11. Import it from `@sentry/nextjs/config` instead:
+  import { withSentryConfig } from '@sentry/nextjs/config';
+✓ Running next.config.ts took 1054ms
+○ Compiling /instrumentation ...
+○ Compiling proxy ...
+○ Compiling /page ...
+ GET / 200 in 14.3s (next.js: 13.1s, proxy.ts: 442ms, application-code: 790ms)
+○ Compiling /(auth)/login/page ...
+ GET /login 200 in 6.0s (next.js: 5.6s, proxy.ts: 190ms, application-code: 269ms)
+○ Compiling /campaign-lab/offer/page ...
+ GET /campaign-lab/offer 200 in 5.9s (next.js: 5.7s, proxy.ts: 12ms, application-code: 211ms)
+ POST /api/campaign-lab/brand-evidence 400 in 1337ms (next.js: 1174ms, proxy.ts: 13ms, application-code: 150ms)
+Source app ready at http://127.0.0.1:3043 — simulation; authority closed until the one matching API action.
+ GET /campaign-lab/offer 200 in 265ms (next.js: 39ms, proxy.ts: 20ms, application-code: 206ms)
+ GET /api/auth/session 200 in 4.4s (next.js: 4.2s, proxy.ts: 10ms, application-code: 202ms)
+ POST /api/campaign-lab/brand-evidence 200 in 2.5s (next.js: 1921ms, proxy.ts: 426ms, application-code: 170ms)
+ GET /api/auth/session 200 in 286ms (next.js: 21ms, proxy.ts: 210ms, application-code: 55ms)
+ GET /api/auth/session 200 in 43ms (next.js: 16ms, proxy.ts: 16ms, application-code: 12ms)
+ GET /api/auth/session 200 in 34ms (next.js: 7ms, proxy.ts: 13ms, application-code: 14ms)
+ GET /campaign-lab/offer 200 in 125ms (next.js: 45ms, proxy.ts: 12ms, application-code: 67ms)
+○ Compiling /api/campaign-lab/generate/route ...
+ POST /api/campaign-lab/generate 200 in 5.4s (next.js: 5.1s, proxy.ts: 11ms, application-code: 207ms)
+ GET /campaign-lab/offer 200 in 549ms (next.js: 38ms, proxy.ts: 18ms, application-code: 494ms)
+ GET /campaign-lab/offer 200 in 60ms (next.js: 8ms, proxy.ts: 14ms, application-code: 38ms)
+ GET /campaign-lab/offer 200 in 557ms (next.js: 11ms, proxy.ts: 18ms, application-code: 528ms)
+ GET /campaign-lab/offer 200 in 64ms (next.js: 11ms, proxy.ts: 12ms, application-code: 42ms)
+ GET /campaign-lab/offer 200 in 75ms (next.js: 11ms, proxy.ts: 15ms, application-code: 49ms)
+ GET /campaign-lab/offer 200 in 54ms (next.js: 10ms, proxy.ts: 11ms, application-code: 33ms)
+ GET /campaign-lab/offer 200 in 664ms (next.js: 13ms, proxy.ts: 20ms, application-code: 631ms)
+ GET /campaign-lab/offer 200 in 85ms (next.js: 13ms, proxy.ts: 16ms, application-code: 56ms)
+ GET /campaign-lab/offer 200 in 611ms (next.js: 12ms, proxy.ts: 27ms, application-code: 573ms)
+ GET /campaign-lab/offer 200 in 46ms (next.js: 7ms, proxy.ts: 8ms, application-code: 30ms)
+ GET /campaign-lab/offer 200 in 60ms (next.js: 8ms, proxy.ts: 12ms, application-code: 40ms)

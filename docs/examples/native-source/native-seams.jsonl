@@ -1,0 +1,10 @@
+{"pid":19104,"kind":"dns","host":"www.iana.org","family":4,"physical":"instrumented"}
+{"pid":19104,"kind":"dns","host":"www.iana.org","family":6,"physical":"instrumented"}
+{"pid":19104,"kind":"tls","host":"93.184.216.34","family":4,"port":443,"servername":"www.iana.org","rejectUnauthorized":true,"identityCheck":true,"alpn":["http/1.1"],"physical":"instrumented-no-OS"}
+{"pid":19104,"kind":"tcp","host":"93.184.216.34","family":4,"port":443,"physical":"instrumented-no-OS"}
+{"pid":19104,"kind":"wire","path":"/","host":"www.iana.org","simulated":true}
+{"pid":19104,"kind":"dns","host":"www.iana.org","family":4,"physical":"instrumented"}
+{"pid":19104,"kind":"dns","host":"www.iana.org","family":6,"physical":"instrumented"}
+{"pid":19104,"kind":"tls","host":"93.184.216.34","family":4,"port":443,"servername":"www.iana.org","rejectUnauthorized":true,"identityCheck":true,"alpn":["http/1.1"],"physical":"instrumented-no-OS"}
+{"pid":19104,"kind":"tcp","host":"93.184.216.34","family":4,"port":443,"physical":"instrumented-no-OS"}
+{"pid":19104,"kind":"wire","path":"/theme.png","host":"www.iana.org","simulated":true}

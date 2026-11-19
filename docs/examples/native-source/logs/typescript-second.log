@@ -1,0 +1,2 @@
+tests/support/source-policy.mts(34,72): error TS2322: Type '{ resolve: () => Promise<{ address: string; family: number; }[]>; connectTls: () => Socket; }' is not assignable to type 'undefined'.
+tests/support/source-policy.mts(121,63): error TS2322: Type '{ resolve: () => Promise<never[]>; connectTls: () => never; }' is not assignable to type 'undefined'.

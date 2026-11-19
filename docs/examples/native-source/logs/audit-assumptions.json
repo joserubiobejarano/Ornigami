@@ -1,0 +1,5 @@
+{
+  "initialChecks": "Expected API gap in compact receipt, then exact font filenames across changed loopback port; both assertions failed",
+  "contract": "Existing compact snapshot omits gaps/URLs; keeps imported-claims-unverified and false verification flags",
+  "appearance": "Only URL-derived font aliases differ. All seven program hashes and canonical CSS agree with accepted export. No application change made to force checks."
+}

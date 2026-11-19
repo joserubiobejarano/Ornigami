@@ -1,0 +1,959 @@
+(node:24804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/joser/.local/ornigami-live-source-adapter/src/lib/campaign-lab/brand-source-bridge.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\joser\.local\ornigami-live-source-adapter\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "checks": [
+    "native captures cannot execute without owned authority",
+    "native resolver -> validated binding -> native TLS -> scoped TCP -> HTTP wire",
+    "full DNS answer set, native DNS failure and native TLS failure",
+    "wrong URL/method/TLS binding and background/child calls stop before captures",
+    "same-host redirects count admissions and stop at four; third party refused",
+    "exact 1 MiB budget and one-byte-over edge",
+    "cancellation/deadline cancel native DNS and close inherited continuations",
+    "real in-memory TLS engine rejects admitted fixture certificate for IANA identity",
+    "missing/unapproved/wrong-source plans refuse before startup or reservation",
+    "normal API factory receives installed bridge; production/off/live-env-only gates stay closed"
+  ],
+  "traces": [
+    {
+      "case": "positive native delegation, physical calls instrumented",
+      "controller": {
+        "open": false,
+        "used": true,
+        "gets": 1,
+        "charged": 367,
+        "reason": "completed",
+        "backend": "native",
+        "nativeCalls": {
+          "resolve4": 1,
+          "resolve6": 1,
+          "tls": 1
+        },
+        "trace": [
+          {
+            "event": "opened",
+            "backend": "native"
+          },
+          {
+            "event": "resolved",
+            "host": "www.iana.org",
+            "addresses": [
+              {
+                "address": "93.184.216.34",
+                "family": 4
+              }
+            ],
+            "synthetic": false
+          },
+          {
+            "event": "GET-admitted",
+            "url": "https://www.iana.org/",
+            "admission": 1,
+            "synthetic": false
+          },
+          {
+            "event": "TLS-admitted",
+            "address": "93.184.216.34",
+            "synthetic": false
+          },
+          {
+            "event": "TCP-delegated",
+            "address": "93.184.216.34"
+          },
+          {
+            "event": "closed",
+            "reason": "completed"
+          }
+        ]
+      },
+      "delta": {
+        "dns": 2,
+        "tls": 1,
+        "tcp": 1,
+        "wire": 1
+      }
+    },
+    {
+      "case": "native failure",
+      "configuration": {
+        "addresses": [
+          "93.184.216.34",
+          "10.0.0.1"
+        ]
+      },
+      "state": {
+        "open": false,
+        "used": true,
+        "gets": 0,
+        "charged": 4096,
+        "reason": "completed",
+        "backend": "native",
+        "nativeCalls": {
+          "resolve4": 1,
+          "resolve6": 1,
+          "tls": 0
+        },
+        "trace": [
+          {
+            "event": "opened",
+            "backend": "native"
+          },
+          {
+            "event": "rejected",
+            "boundary": "dns",
+            "why": "address"
+          },
+          {
+            "event": "closed",
+            "reason": "completed"
+          }
+        ]
+      }
+    },
+    {
+      "case": "native failure",
+      "configuration": {
+        "dnsError": true
+      },
+      "state": {
+        "open": false,
+        "used": true,
+        "gets": 0,
+        "charged": 4096,
+        "reason": "completed",
+        "backend": "native",
+        "nativeCalls": {
+          "resolve4": 1,
+          "resolve6": 1,
+          "tls": 0
+        },
+        "trace": [
+          {
+            "event": "opened",
+            "backend": "native"
+          },
+          {
+            "event": "closed",
+            "reason": "completed"
+          }
+        ]
+      }
+    },
+    {
+      "case": "native failure",
+      "configuration": {
+        "tlsError": true
+      },
+      "state": {
+        "open": false,
+        "used": true,
+        "gets": 1,
+        "charged": 4096,
+        "reason": "completed",
+        "backend": "native",
+        "nativeCalls": {
+          "resolve4": 1,
+          "resolve6": 1,
+          "tls": 1
+        },
+        "trace": [
+          {
+            "event": "opened",
+            "backend": "native"
+          },
+          {
+            "event": "resolved",
+            "host": "www.iana.org",
+            "addresses": [
+              {
+                "address": "93.184.216.34",
+                "family": 4
+              }
+            ],
+            "synthetic": false
+          },
+          {
+            "event": "GET-admitted",
+            "url": "https://www.iana.org/",
+            "admission": 1,
+            "synthetic": false
+          },
+          {
+            "event": "TLS-admitted",
+            "address": "93.184.216.34",
+            "synthetic": false
+          },
+          {
+            "event": "closed",
+            "reason": "completed"
+          }
+        ]
+      }
+    },
+    {
+      "case": "redirect cap",
+      "controller": {
+        "open": false,
+        "used": true,
+        "gets": 4,
+        "charged": 4096,
+        "reason": "budget",
+        "backend": "native",
+        "nativeCalls": {
+          "resolve4": 4,
+          "resolve6": 4,
+          "tls": 4
+        },
+        "trace": [
+          {
+            "event": "opened",
+            "backend": "native"
+          },
+          {
+            "event": "resolved",
+            "host": "www.iana.org",
+            "addresses": [
+              {
+                "address": "93.184.216.34",
+                "family": 4
+              }
+            ],
+            "synthetic": false
+          },
+          {
+            "event": "GET-admitted",
+            "url": "https://www.iana.org/",
+            "admission": 1,
+            "synthetic": false
+          },
+          {
+            "event": "TLS-admitted",
+            "address": "93.184.216.34",
+            "synthetic": false
+          },
+          {
+            "event": "TCP-delegated",
+            "address": "93.184.216.34"
+          },
+          {
+            "event": "resolved",
+            "host": "www.iana.org",
+            "addresses": [
+              {
+                "address": "93.184.216.34",
+                "family": 4
+              }
+            ],
+            "synthetic": false
+          },
+          {
+            "event": "GET-admitted",
+            "url": "https://www.iana.org/again",
+            "admission": 2,
+            "synthetic": false
+          },
+          {
+            "event": "TLS-admitted",
+            "address": "93.184.216.34",
+            "synthetic": false
+          },
+          {
+            "event": "TCP-delegated",
+            "address": "93.184.216.34"
+          },
+          {
+            "event": "resolved",
+            "host": "www.iana.org",
+            "addresses": [
+              {
+                "address": "93.184.216.34",
+                "family": 4
+              }
+            ],
+            "synthetic": false
+          },
+          {
+            "event": "GET-admitted",
+            "url": "https://www.iana.org/again",
+            "admission": 3,
+            "synthetic": false
+          },
+          {
+            "event": "TLS-admitted",
+            "address": "93.184.216.34",
+            "synthetic": false
+          },
+          {
+            "event": "TCP-delegated",
+            "address": "93.184.216.34"
+          },
+          {
+            "event": "resolved",
+            "host": "www.iana.org",
+            "addresses": [
+              {
+                "address": "93.184.216.34",
+                "family": 4
+              }
+            ],
+            "synthetic": false
+          },
+          {
+            "event": "GET-admitted",
+            "url": "https://www.iana.org/again",
+            "admission": 4,
+            "synthetic": false
+          },
+          {
+            "event": "TLS-admitted",
+            "address": "93.184.216.34",
+            "synthetic": false
+          },
+          {
+            "event": "TCP-delegated",
+            "address": "93.184.216.34"
+          },
+          {
+            "event": "rejected",
+            "boundary": "dns",
+            "why": "DNS scope"
+          },
+          {
+            "event": "closed",
+            "reason": "budget"
+          }
+        ]
+      },
+      "wireGets": 4
+    },
+    {
+      "case": "real TLS over in-memory wire",
+      "sni": [
+        "www.iana.org"
+      ],
+      "errors": [
+        "ERR_TLS_CERT_ALTNAME_INVALID"
+      ],
+      "wireGets": 0
+    },
+    {
+      "case": "bridge",
+      "event": "armed-closed-until-API",
+      "open": false,
+      "used": false,
+      "gets": 0,
+      "charged": 0,
+      "reason": "startup",
+      "backend": "native",
+      "nativeCalls": {
+        "resolve4": 0,
+        "resolve6": 0,
+        "tls": 0
+      },
+      "trace": []
+    },
+    {
+      "case": "bridge",
+      "event": "transaction-finished",
+      "open": false,
+      "used": true,
+      "gets": 2,
+      "charged": 478,
+      "reason": "completed",
+      "backend": "native",
+      "nativeCalls": {
+        "resolve4": 2,
+        "resolve6": 2,
+        "tls": 2
+      },
+      "trace": [
+        {
+          "event": "opened",
+          "backend": "native"
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": false
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/",
+          "admission": 1,
+          "synthetic": false
+        },
+        {
+          "event": "TLS-admitted",
+          "address": "93.184.216.34",
+          "synthetic": false
+        },
+        {
+          "event": "TCP-delegated",
+          "address": "93.184.216.34"
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": false
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/theme.png",
+          "admission": 2,
+          "synthetic": false
+        },
+        {
+          "event": "TLS-admitted",
+          "address": "93.184.216.34",
+          "synthetic": false
+        },
+        {
+          "event": "TCP-delegated",
+          "address": "93.184.216.34"
+        },
+        {
+          "event": "closed",
+          "reason": "completed"
+        }
+      ]
+    },
+    {
+      "case": "bridge",
+      "event": "transaction-finished",
+      "open": false,
+      "used": true,
+      "gets": 2,
+      "charged": 478,
+      "reason": "completed",
+      "backend": "native",
+      "nativeCalls": {
+        "resolve4": 2,
+        "resolve6": 2,
+        "tls": 2
+      },
+      "trace": [
+        {
+          "event": "opened",
+          "backend": "native"
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": false
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/",
+          "admission": 1,
+          "synthetic": false
+        },
+        {
+          "event": "TLS-admitted",
+          "address": "93.184.216.34",
+          "synthetic": false
+        },
+        {
+          "event": "TCP-delegated",
+          "address": "93.184.216.34"
+        },
+        {
+          "event": "resolved",
+          "host": "www.iana.org",
+          "addresses": [
+            {
+              "address": "93.184.216.34",
+              "family": 4
+            }
+          ],
+          "synthetic": false
+        },
+        {
+          "event": "GET-admitted",
+          "url": "https://www.iana.org/theme.png",
+          "admission": 2,
+          "synthetic": false
+        },
+        {
+          "event": "TLS-admitted",
+          "address": "93.184.216.34",
+          "synthetic": false
+        },
+        {
+          "event": "TCP-delegated",
+          "address": "93.184.216.34"
+        },
+        {
+          "event": "closed",
+          "reason": "completed"
+        }
+      ]
+    }
+  ],
+  "nativeSeams": {
+    "dns": [
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 4,
+        "physical": "instrumented"
+      },
+      {
+        "host": "www.iana.org",
+        "family": 6,
+        "physical": "instrumented"
+      }
+    ],
+    "tls": [
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "in-memory TLS engine"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "servername": "www.iana.org",
+        "rejectUnauthorized": true,
+        "identityCheck": true,
+        "alpn": [
+          "http/1.1"
+        ],
+        "physical": "instrumented-no-OS"
+      }
+    ],
+    "tcp": [
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      },
+      {
+        "host": "93.184.216.34",
+        "family": 4,
+        "port": 443,
+        "physical": "instrumented-no-OS"
+      }
+    ],
+    "wire": [
+      {
+        "path": "/",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/again",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/again",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/again",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/",
+        "host": "www.iana.org",
+        "simulated": true
+      },
+      {
+        "path": "/theme.png",
+        "host": "www.iana.org",
+        "simulated": true
+      }
+    ],
+    "dnsCancelled": 3,
+    "forbidden": 0,
+    "externalOSCalls": 0
+  },
+  "physicalExternalOSCalls": 0
+}

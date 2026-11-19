@@ -1,0 +1,16 @@
+✔ guard preserves child-process contracts and inherited enforcement (1384.241ms)
+✔ native delegation and normal bridge are qualified without external OS calls (758.8319ms)
+✔ late instrumentation refuses before captured primitives, with a separate physical fail-safe (399.0488ms)
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (114.3459ms)
+✔ sanitized compilation child environment retains preload (172.3293ms)
+✔ local data fetch remains available without a network exception (151.5556ms)
+✔ source permit is executable with protected reader and mandatory synthetic seams (578.6996ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1501.1925
+Offline native-delegation checks passed; no owner-approved live plan or record exists.

@@ -1,0 +1,18 @@
+{"time":"2026-11-19T23:15:42.530Z","pid":19104,"ppid":29460,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-live-source-adapter\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-19T23:15:44.236Z","pid":19104,"ppid":29460,"event":"denied","boundary":"fetch:https:","host":"registry.npmjs.org"}
+{"time":"2026-11-19T23:15:44.552Z","pid":19104,"ppid":29460,"event":"denied","boundary":"fetch:https:","host":"registry.npmjs.org"}
+{"time":"2026-11-19T23:15:44.575Z","pid":19104,"ppid":29460,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T23:15:44.629Z","pid":23712,"ppid":19104,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-live-source-adapter\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-19T23:15:48.745Z","pid":19104,"ppid":29460,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T23:15:48.930Z","pid":19104,"ppid":29460,"event":"child","method":"spawnSync","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-19T23:15:49.001Z","pid":17908,"ppid":19104,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-live-source-adapter\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-19T23:16:00.556Z","pid":19104,"ppid":29460,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-live-source-adapter\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-19T23:16:05.974Z","pid":19104,"ppid":29460,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T23:16:12.004Z","pid":19104,"ppid":29460,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T23:16:17.894Z","pid":19104,"ppid":29460,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-19T23:17:36.583Z","pid":19104,"ppid":29460,"event":"child","method":"fork","file":"C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js"}
+{"time":"2026-11-19T23:17:36.681Z","pid":13924,"ppid":19104,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-live-source-adapter\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-19T23:17:38.949Z","pid":19104,"ppid":29460,"event":"connect","host":"93.184.216.34"}
+{"time":"2026-11-19T23:17:38.961Z","pid":19104,"ppid":29460,"event":"connect","host":"93.184.216.34"}
+{"time":"2026-11-19T23:17:39.002Z","pid":19104,"ppid":29460,"event":"child","method":"fork","file":"C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js"}
+{"time":"2026-11-19T23:17:39.061Z","pid":28600,"ppid":19104,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-live-source-adapter\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}

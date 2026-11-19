@@ -1,0 +1,77 @@
+✔ guard preserves child-process contracts and inherited enforcement (1146.1396ms)
+✔ offline boundaries refuse before synthetic underlying resolver/connector seams (78.0566ms)
+✔ sanitized compilation child environment retains preload (135.3091ms)
+✔ local data fetch remains available without a network exception (77.9151ms)
+✖ source permit is executable with protected reader and mandatory synthetic seams (389.5019ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1216.6601
+
+✖ failing tests:
+
+test at tests\source-policy.test.cjs:6:1
+✖ source permit is executable with protected reader and mandatory synthetic seams (389.5019ms)
+  AssertionError [ERR_ASSERTION]: node:internal/modules/run_main:107
+      triggerUncaughtException(
+      ^
+  
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   code: 'SOURCE_WINDOW_DENIED'
+  -   code: 'ORNIGAMI_OFFLINE'
+    }
+  
+      at file:///C:/Users/joser/.local/ornigami-live-source-adapter/tests/support/source-policy.mts:47:12
+      at C:\Users\joser\.local\ornigami-live-source-adapter\scripts\support\source-window.cjs:35:79
+      at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+      at Object.transaction (C:\Users\joser\.local\ornigami-live-source-adapter\scripts\support\source-window.cjs:35:41)
+      at file:///C:/Users/joser/.local/ornigami-live-source-adapter/tests/support/source-policy.mts:45:22
+      at check (file:///C:/Users/joser/.local/ornigami-live-source-adapter/tests/support/source-policy.mts:40:76)
+      at file:///C:/Users/joser/.local/ornigami-live-source-adapter/tests/support/source-policy.mts:42:7
+      at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:671:26)
+      at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Source window denied: no reader
+        at denied (C:\Users\joser\.local\ornigami-live-source-adapter\scripts\support\source-window.cjs:11:42)
+        at Object.route (C:\Users\joser\.local\ornigami-live-source-adapter\scripts\support\source-window.cjs:77:51)
+        at net.Socket.connect (C:\Users\joser\.local\ornigami-live-source-adapter\scripts\support\offline-guard.cjs:53:112)
+        at Module.connect (node:net:245:17)
+        at assert.throws.code (file:///C:/Users/joser/.local/ornigami-live-source-adapter/tests/support/source-policy.mts:47:29)
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at file:///C:/Users/joser/.local/ornigami-live-source-adapter/tests/support/source-policy.mts:47:12
+        at C:\Users\joser\.local\ornigami-live-source-adapter\scripts\support\source-window.cjs:35:79
+        at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14) {
+      code: 'SOURCE_WINDOW_DENIED'
+    },
+    expected: { code: 'ORNIGAMI_OFFLINE' },
+    operator: 'throws',
+    diff: 'simple'
+  }
+  
+  Node.js v24.11.1
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (C:\Users\joser\.local\ornigami-live-source-adapter\tests\source-policy.test.cjs:9:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

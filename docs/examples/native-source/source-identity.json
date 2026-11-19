@@ -1,0 +1,37 @@
+{
+  "kind": "OFFLINE_QUALIFICATION_NOT_EXECUTION_AUTHORIZATION",
+  "base": "9d9724055f874dd8d91805f333f2070a818bdd2a",
+  "functionalColdFreeze": "882e9bf1124b9d7d043d3b271cf2fbc2bf214f46",
+  "browserAndSupportSha": "ec0f47f042309353c756e715636d375d964c3baf",
+  "node": "v24.11.1",
+  "unchanged": {
+    "public": "f92a32bd2b16d96c4c05c6b5942a65b30e7aa713",
+    "src/components/campaign-lab": "b64ec16fd7fdc0d717464cc02a0ad8c65a9ccdd5",
+    "src/lib/campaign-lab/brand-import/public-resource-fetch.ts": "4a71f5b1fd44a046f0d66f23248809bee46a5f1e",
+    "src/lib/campaign-lab/brand-import/private-address.ts": "2a516224da80912d629632ff55e4cd30a77b2f90",
+    "src/lib/campaign-lab/brand-review.ts": "1f44fc6d1871d05ac3833decb3dc28e6970acd97",
+    "src/lib/campaign-lab/export.ts": "efa4be5e8835c43c07708d55efdc4faf4afbcb58",
+    "scripts/canary": "f705f6bc64325443a6183a559a30cd211c424dfa",
+    "package.json": "b397db3f16d197461a6215f0d31d60ff9cfa509b",
+    "package-lock.json": "adf6efff9b051fb927a3971a74e996525e77fbcc"
+  },
+  "focusedLintCommand": "node node_modules/eslint/bin/eslint.js src/lib/campaign-lab/brand-source-bridge.ts src/lib/campaign-lab/brand-url-api.ts src/app/api/campaign-lab/brand-evidence/route.ts scripts/support/native-backend.cjs scripts/support/source-window.cjs scripts/support/offline-guard.cjs scripts/support/native-bridge.cjs scripts/support/native-fixtures.cjs scripts/support/native-run-control.mjs scripts/support/native-app-server.mjs scripts/native-source-readiness.mjs tests/native-source.test.cjs tests/support/native-source-contract.mts tests/support/brand-tls.mts tests/support/native-refuse.cjs",
+  "staticResults": {
+    "nativeContract": 0,
+    "lint": 0,
+    "typescript": 0
+  },
+  "runtimeSourceHashes": {
+    "src/lib/campaign-lab/brand-source-bridge.ts": "d85f97e2c0bbee95d0a2a9b1c29c4acd85d7d3cf8179211d666d0a96409b76c1",
+    "src/lib/campaign-lab/brand-url-api.ts": "c4fb9fa76cbf4e8f034ce33fa933b188ea78883774e68b796a51f92d03a4f0c9",
+    "src/app/api/campaign-lab/brand-evidence/route.ts": "a7d9105968e6a0c6381b1d28cca3e13952d7f07f01dbc6dc3ca61e2abac04ffa",
+    "scripts/support/native-backend.cjs": "9358d85fa0c3658410a078258c559dd4cfe58ae2683ad2ba363bd7a82e4832ef",
+    "scripts/support/source-window.cjs": "38e6c6115b3b92773a441b5fc1dd97bc54977234318d2fa8d0fa62c8b601dd2d",
+    "scripts/support/offline-guard.cjs": "c551a7459f735924f493816e7a85d80f3343f994c5258145b3e61d0c7e5ac121",
+    "scripts/support/native-bridge.cjs": "1189e84c59009d6875696f70df0eb6bba967a5664633ae8592b2775e5694cd44",
+    "scripts/support/native-fixtures.cjs": "63f4e3f8760c83fe96ac7e142f03869b74e6c0d3f797bacefe93c34fa74c0e80",
+    "scripts/support/native-run-control.mjs": "1bced67c2935162f3ffa95c311b2209363f2bfdedba8111ee65ddce1736c7d06",
+    "scripts/support/native-app-server.mjs": "1a1587cfdd9c9d446bc224301cc576d91305a2e29c8542ab3c6875ba63ceee87",
+    "scripts/native-source-readiness.mjs": "d336488d872747fc54a6df0a3acd7cb811c3fca8aec4b4ff46f89ccdb34fd472"
+  }
+}

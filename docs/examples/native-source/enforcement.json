@@ -1,0 +1,59 @@
+{
+  "build": {
+    "initializedPids": [
+      3688,
+      4260,
+      7872,
+      18812,
+      20768,
+      24096,
+      25368,
+      25400,
+      28356,
+      29324,
+      33600,
+      33756,
+      36072,
+      36344,
+      37120,
+      41040,
+      41596,
+      42344,
+      43744,
+      43800,
+      44364,
+      44740
+    ],
+    "allInitializeClosed": true,
+    "denied": {
+      "https.request o1.ingest.sentry.io": 3
+    },
+    "socketDelegationsNotOSConnections": {},
+    "childExecutables": {
+      "C:\\Program Files\\nodejs\\node.exe": 4,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js": 15
+    }
+  },
+  "server": {
+    "initializedPids": [
+      13924,
+      17908,
+      19104,
+      23712,
+      28600
+    ],
+    "allInitializeClosed": true,
+    "denied": {
+      "fetch:https: registry.npmjs.org": 2
+    },
+    "socketDelegationsNotOSConnections": {
+      "127.0.0.1": 4,
+      "93.184.216.34": 2
+    },
+    "childExecutables": {
+      "C:\\Program Files\\nodejs\\node.exe": 2,
+      "C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js": 2
+    }
+  },
+  "physicalWire": "All external source socket delegations in server log are instrumented, not actual OS connections; see native-seams.jsonl and capture checks."
+}
