@@ -10,6 +10,7 @@ if (process.argv[2] === 'worker') {
     await new Promise(done => handle.once('close', () => setImmediate(done)));
     const promise = promisify(cp.execFile)(process.execPath, ['-e', "process.stdout.write('out');process.stderr.write('err')"], { timeout: 1500 });
     const childPresent = !!promise.child;
+    promise.child?.stdin.end();
     const value = await promise;
     process.stdout.write(JSON.stringify({ callbacks, callbackHandle: handle instanceof cp.ChildProcess, value, childPresent }));
   })().catch(error => { console.error(error); process.exitCode = 1; });

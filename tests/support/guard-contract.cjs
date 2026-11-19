@@ -35,9 +35,11 @@ const callback = (shape) => new Promise((resolveResult, reject) => {
   });
   const promise = promisify(cp.execFile)(process.execPath, [fixture], { env: minimal, encoding: 'buffer', timeout: 2000 });
   assert.ok(promise.child instanceof cp.ChildProcess);
+  promise.child.stdin.end();
   const output = await promise; assert.ok(Buffer.isBuffer(output.stdout)); assert.equal(output.stdout.toString(), 'out'); assert.equal(output.stderr.toString(), 'err');
   const failed = promisify(cp.execFile)(process.execPath, ['-e', "process.stdout.write('out');process.stderr.write('err');process.exitCode=7"], { env: minimal });
   assert.ok(failed.child instanceof cp.ChildProcess);
+  failed.child.stdin.end();
   await assert.rejects(failed, e => e.code === 7 && e.stdout === 'out' && e.stderr === 'err');
   await assert.rejects(promisify(cp.execFile)('nonexistent-guard-contract-binary'), { code: 'ENOENT' });
   const abort = new AbortController();
@@ -53,6 +55,7 @@ const callback = (shape) => new Promise((resolveResult, reject) => {
   }
   for (const args of [[{ env: minimal, silent: true }], [[], { env: minimal, silent: true }]]) {
     const p = cp.fork(fixture, ...args); p.stdout.resume(); p.stderr.resume();
+    p.stdin?.end();
     const message = await new Promise(done => p.once('message', done)); assert.equal(message.guarded, true);
     await new Promise(done => p.once('close', done));
   }
