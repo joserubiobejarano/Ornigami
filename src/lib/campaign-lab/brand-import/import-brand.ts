@@ -11,6 +11,10 @@ export const BRAND_IMPORT_LIMITS = Object.freeze({
   resources: E.resources, totalBytes: E.totalBytes, networkMs: 10_000,
   redirects: 2, tags: 256, rasters: E.rasterCount,
 });
+export const BRAND_TEXT_IMPORT_LIMITS = Object.freeze({
+  resources: 4, totalBytes: 1024 * 1024, networkMs: 10_000,
+  redirects: 2, tags: 128, rasters: 0,
+});
 type Limits = { [K in keyof typeof BRAND_IMPORT_LIMITS]: number };
 export type BrandResourceReader = (url: string, options: ResourceReadOptions) => Promise<PublicResource>;
 type Entry = {
@@ -23,6 +27,8 @@ export type ImportLedger = {
   limits: Limits; logicalReads: number; maxHttpAttempts: number; scheduledHttpAttemptBound: number;
   retainedBytes: number; chargedBytes: number; cancellation: "CANCELLED" | "DEADLINE" | null;
   discoveryTags: number; issues: string[]; entries: Entry[];
+  resourcePolicy?: "html-css/1.0.0";
+  evidenceNotes?: string[];
   evidenceWarnings?: { sourceId: string; issues: string[] }[];
   extractionFailures: { sourceId: string; outcome: string; issues: string[] }[];
 };
@@ -32,10 +38,14 @@ export type ImportLedger = {
  */
 export async function importBrandDraft(seed: string, reader: BrandResourceReader, options: {
   signal?: AbortSignal; limits?: Partial<Limits>; clock?: ResourceClock;
+  resourcePolicy?: "html-css";
 } = {}): Promise<{ draft: BrandKitDraft | null; ledger: ImportLedger; resources: SuppliedBrandResource[] }> {
-  const limits = { ...BRAND_IMPORT_LIMITS, ...options.limits };
+  if (options.resourcePolicy !== undefined && options.resourcePolicy !== "html-css") throw new TypeError("Unknown trusted resource policy");
+  const textOnly = options.resourcePolicy === "html-css";
+  const caps = textOnly ? BRAND_TEXT_IMPORT_LIMITS : BRAND_IMPORT_LIMITS;
+  const limits = { ...caps, ...options.limits };
   for (const key of Object.keys(limits) as (keyof Limits)[]) {
-    if (!Number.isSafeInteger(limits[key]) || limits[key] < (key === "redirects" ? 0 : 1) || limits[key] > BRAND_IMPORT_LIMITS[key]) {
+    if (!Number.isSafeInteger(limits[key]) || limits[key] < (key === "redirects" || (textOnly && key === "rasters") ? 0 : 1) || limits[key] > caps[key]) {
       throw new TypeError("Invalid trusted import limits");
     }
   }
@@ -46,6 +56,7 @@ export async function importBrandDraft(seed: string, reader: BrandResourceReader
     version: "ornigami-brand-import/1.1.0", extractorVersion: "ornigami-brand-evidence/1.0.0",
     status: "rejected", limits, logicalReads: 0, maxHttpAttempts: limits.resources * (limits.redirects + 1),
     scheduledHttpAttemptBound: 0, retainedBytes: 0, chargedBytes: 0, cancellation: null,
+    ...(textOnly ? { resourcePolicy: "html-css/1.0.0" as const, evidenceNotes: ["HTML_CSS_ONLY"] } : {}),
     discoveryTags: 0, issues: [], entries: [], extractionFailures: [],
   };
   const resources: SuppliedBrandResource[] = [];
@@ -119,6 +130,10 @@ export async function importBrandDraft(seed: string, reader: BrandResourceReader
         let rasters = 0;
         for (const candidate of discovery.resources) {
           if (!check()) break;
+          if (textOnly && candidate.kind !== "css") {
+            if (!ledger.evidenceNotes!.includes("MEDIA_NOT_FETCHED")) ledger.evidenceNotes!.push("MEDIA_NOT_FETCHED");
+            continue;
+          }
           if (ledger.logicalReads >= limits.resources) { issue("RESOURCE_LIMIT"); break; }
           if (ledger.chargedBytes >= limits.totalBytes) { issue("BYTE_BUDGET"); break; }
           if (candidate.kind === "raster" && rasters++ >= limits.rasters) { issue("RASTER_LIMIT"); continue; }
@@ -132,6 +147,7 @@ export async function importBrandDraft(seed: string, reader: BrandResourceReader
     // Collection/native decoding is not preemptible. Recheck after every await;
     // a late result may never publish as a successful draft.
     if (!check()) { draft = null; ledger.status = "cancelled"; }
+    if (draft && textOnly) draft.gaps.push("URL review reads HTML and directly linked CSS only; images, fonts, scripts and recursive CSS imports are not fetched. No rendered/computed styles.");
     if (draft) ledger.extractionFailures = draft.sources.filter(failedExtraction)
       .map(s => ({ sourceId: s.id, outcome: s.outcome, issues: s.issues }));
     if (draft) ledger.evidenceWarnings = draft.sources.filter(s => s.issues.length).map(s => ({ sourceId: s.id, issues: [...s.issues] }));

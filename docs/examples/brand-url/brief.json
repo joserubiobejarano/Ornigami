@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "brandName": "Rose Supply",
+  "productName": "Rose Supply ceramic cup",
+  "audience": "Home coffee drinkers",
+  "objective": "Present the exact bundle and purchase destination",
+  "offer": "Cup + lid, €24 · offer ends 30 November 2026",
+  "destinationUrl": "https://rose.example/products/rose",
+  "facts": [
+    {
+      "label": "Capacity",
+      "value": "350 ml"
+    },
+    {
+      "label": "Material",
+      "value": "Glazed ceramic"
+    }
+  ],
+  "alt": "Synthetic Rose Supply ceramic cup packshot",
+  "rights": "Synthetic fixture created locally; approved for this local test."
+}

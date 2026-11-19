@@ -1,0 +1,70 @@
+[
+  {
+    "directory": ".local/url-initial",
+    "revision": "3329275df706c388",
+    "direction": "clear",
+    "palette": [
+      {
+        "role": "accent",
+        "value": "#6b2340",
+        "originalValue": "#6b2340ff",
+        "review": "selected"
+      },
+      {
+        "role": "page",
+        "value": "#fff8fa",
+        "originalValue": "#fff8faff",
+        "review": "selected"
+      },
+      {
+        "role": "surface",
+        "value": "#f5e6ea",
+        "originalValue": "#f5e6eaff",
+        "review": "selected"
+      }
+    ],
+    "effectiveAccent": "#6b2340",
+    "verifiedFiles": 13,
+    "fonts": [
+      "Inter"
+    ],
+    "packshotSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "snapshotFalseFlagsPreserved": true,
+    "htmlReceiptAgreement": true,
+    "references": 23
+  },
+  {
+    "directory": ".local/url-corrected",
+    "revision": "6dcd21c8efb48e88",
+    "direction": "clear",
+    "palette": [
+      {
+        "role": "accent",
+        "value": "#4b2030",
+        "originalValue": "#12345680",
+        "review": "corrected"
+      },
+      {
+        "role": "page",
+        "value": "#fff8fa",
+        "originalValue": "#fff8faff",
+        "review": "selected"
+      },
+      {
+        "role": "surface",
+        "value": "#f5e6ea",
+        "originalValue": "#f5e6eaff",
+        "review": "selected"
+      }
+    ],
+    "effectiveAccent": "#4b2030",
+    "verifiedFiles": 13,
+    "fonts": [
+      "Inter"
+    ],
+    "packshotSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "snapshotFalseFlagsPreserved": true,
+    "htmlReceiptAgreement": true,
+    "references": 23
+  }
+]

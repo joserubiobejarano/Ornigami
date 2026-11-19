@@ -1,0 +1,24 @@
+{
+  "image": {
+    "alt": "Synthetic Rose Supply ceramic cup packshot",
+    "height": 700,
+    "width": 600
+  },
+  "rect": {
+    "bottom": 757.140625,
+    "height": 736.234375,
+    "left": 466,
+    "right": 1375,
+    "top": 20.90625,
+    "width": 909,
+    "x": 466,
+    "y": 20.90625
+  },
+  "style": "--cp-page: #fff8fa; --cp-surface: #f5e6ea; --cp-ink: #1f2a24; --cp-muted: #60695f; --cp-accent: #4b2030; --cp-accent-ink: #fffaf1; --cp-line: #d5cdbf; --cp-display-font: var(--font-sans), ui-sans-serif, system-ui, sans-serif; --cp-body-font: var(--font-sans), ui-sans-serif, system-ui, sans-serif; --cp-display-weight: 700; --cp-display-tracking: -0.035em; --cp-label-case: uppercase; --cp-label-tracking: 0.14em; --cp-image-radius: 12px; --cp-image-fit: contain; --cp-image-max-height: 330px; --cp-image-inset: 0px; --cp-button-radius: 999px; --cp-image-aspect: 600 / 700; --cp-detail-bg: #1f2a24; --cp-detail-ink: #f6f3ec; --cp-image-blend: normal;",
+  "text": "Rose SupplyRose Supply ceramic cupCup + lid, €24 · offer ends 30 November 2026Shop now (opens in a new tab)Capacity350 mlMaterialGlazed ceramicRose Supply© 2026 Rose Supply",
+  "viewport": {
+    "documentWidth": 1425,
+    "height": 900,
+    "width": 1440
+  }
+}

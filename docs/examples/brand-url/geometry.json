@@ -1,0 +1,27 @@
+[
+  {
+    "file": "article-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "article-mobile.jpg",
+    "width": 360,
+    "height": 780
+  },
+  {
+    "file": "editor-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "url-review-desktop.jpg",
+    "width": 1425,
+    "height": 891
+  },
+  {
+    "file": "url-review-mobile.jpg",
+    "width": 360,
+    "height": 780
+  }
+]

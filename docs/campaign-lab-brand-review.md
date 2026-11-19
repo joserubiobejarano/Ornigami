@@ -1,5 +1,7 @@
 # Saved brand evidence review and application
 
+Current optional URL entry uses the same review/apply path: [Session 1 HTML/CSS URL workflow](./campaign-lab-brand-url.md), development-only and non-live by default. This saved-file acceptance remains retained evidence.
+
 Follow-up: [combined recovery and TLS verification](./campaign-lab-brand-recovery.md)
 demonstrates and fixes external-control recovery, simplifies evidence defaults,
 and verifies a fresh local approval/export with both histories preserved.

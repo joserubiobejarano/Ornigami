@@ -1,0 +1,10 @@
+{
+  "focusTag": "A",
+  "focusVisible": true,
+  "outline": "rgb(31, 42, 36) solid 3px",
+  "viewport": {
+    "documentWidth": 360,
+    "height": 812,
+    "width": 375
+  }
+}

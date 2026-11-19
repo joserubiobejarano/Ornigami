@@ -1,0 +1,20 @@
+{
+  "mode": "off",
+  "server": "http://127.0.0.1:3029",
+  "externalRequests": 0,
+  "source": "app-owned synthetic transport only",
+  "records": [
+    {
+      "label": "disabled-before-source-work",
+      "status": 503,
+      "summary": null,
+      "mode": null
+    },
+    {
+      "label": "disabled-before-body-validation",
+      "status": 503,
+      "summary": null,
+      "mode": null
+    }
+  ]
+}

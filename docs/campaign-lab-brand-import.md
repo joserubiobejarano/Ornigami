@@ -1,5 +1,7 @@
 # Bounded offline brand-import integration
 
+Current development-only URL HTML/CSS policy and API: [Session 1 URL review](./campaign-lab-brand-url.md). It is off by default; synthetic verification does not authorize live enablement. The full offline/raster integration below remains retained history.
+
 Current local saved-evidence review/application checkpoint: [working browser journey](./campaign-lab-brand-review.md). The foundation/integration scope below is historical; no live URL importer is authorized.
 
 19 November 2026. Implemented library checkpoint, not a customer importer.

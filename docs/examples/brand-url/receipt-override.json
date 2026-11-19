@@ -1,0 +1,341 @@
+{
+  "schemaVersion": 1,
+  "kind": "campaign-lab-local-export",
+  "exportedAt": "2026-11-19T19:51:38.693Z",
+  "revisionIdentityVersion": 6,
+  "approval": {
+    "scope": "local-preview",
+    "revision": "253ce5a4daca0f08",
+    "approvedAt": "2026-11-19T19:51:38.307Z",
+    "renderedRevision": "253ce5a4daca0f08"
+  },
+  "preview": {
+    "status": "confirmed",
+    "notice": null,
+    "productName": "Rose Supply ceramic cup",
+    "brandName": "Rose Supply",
+    "offer": "Cup + lid, €24 · offer ends 30 November 2026",
+    "destinationUrl": "https://rose.example/products/rose",
+    "actionLabel": "Shop now",
+    "template": {
+      "id": "single-product-offer",
+      "version": "1.0.0",
+      "layout": "offer-led-one-photo",
+      "sections": [
+        "hero",
+        "hero-facts",
+        "close"
+      ]
+    },
+    "visualDirection": {
+      "id": "clear",
+      "version": "1.0.0",
+      "brandKitSnapshot": {
+        "schemaVersion": "ornigami-brand-snapshot/1.0.0",
+        "draftSchemaVersion": "1.0.0",
+        "extractorVersion": "ornigami-brand-evidence/1.0.0",
+        "provenance": "imported-claims-unverified",
+        "reviewMethod": "local-operator-palette",
+        "selections": [
+          {
+            "role": "accent",
+            "value": "#4b2030",
+            "candidateId": "05348b7004084ec3cf7f10bfd0be2fc7e32b6c56489687d92028a9c2438b8179",
+            "originalValue": "#12345680",
+            "sourceId": "26b024b89d85e919a8c1c60c552dd375de128338a185c5a09dcb0edbb6335c97",
+            "sourceSha256": "29e7ac8440dec82a30c88aea5851421ae043c76fc63546e87ec744851c639003",
+            "method": "css-declaration",
+            "category": "ui-color",
+            "review": "corrected"
+          },
+          {
+            "role": "page",
+            "value": "#fff8fa",
+            "candidateId": "6d62ebe61f22fe1b508e4ec822176fe11823e635450d12dd8c4a91641f9060c0",
+            "originalValue": "#fff8faff",
+            "sourceId": "26b024b89d85e919a8c1c60c552dd375de128338a185c5a09dcb0edbb6335c97",
+            "sourceSha256": "29e7ac8440dec82a30c88aea5851421ae043c76fc63546e87ec744851c639003",
+            "method": "css-declaration",
+            "category": "ui-color",
+            "review": "selected"
+          },
+          {
+            "role": "surface",
+            "value": "#f5e6ea",
+            "candidateId": "7e3ae2d15d5f7ab02c868c2c12228ccc9bda01704d19fa1732b3e740acf0e4be",
+            "originalValue": "#f5e6eaff",
+            "sourceId": "26b024b89d85e919a8c1c60c552dd375de128338a185c5a09dcb0edbb6335c97",
+            "sourceSha256": "29e7ac8440dec82a30c88aea5851421ae043c76fc63546e87ec744851c639003",
+            "method": "css-declaration",
+            "category": "ui-color",
+            "review": "selected"
+          }
+        ],
+        "ownerConfirmed": false,
+        "campaignFactsApproved": false,
+        "mediaRightsApproved": false,
+        "sourceBytesVerified": false
+      },
+      "tokens": {
+        "page": "#fff8fa",
+        "surface": "#f5e6ea",
+        "ink": "#1f2a24",
+        "muted": "#60695f",
+        "accent": "#123456",
+        "accentInk": "#fffaf1",
+        "line": "#d5cdbf",
+        "displayFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "bodyFont": "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+        "displayWeight": 700,
+        "displayTracking": "-0.035em",
+        "labelCase": "uppercase",
+        "labelTracking": "0.14em",
+        "imageRadius": "12px",
+        "buttonRadius": "999px",
+        "heroImage": "framed",
+        "heroOrder": "product-first",
+        "prefersEditorial": false,
+        "detailBackground": "#1f2a24",
+        "detailInk": "#f6f3ec",
+        "imageBlend": "normal",
+        "showWordmarkMark": false
+      }
+    },
+    "imagePresentation": {
+      "fit": "contain",
+      "frame": "compact"
+    },
+    "motion": {
+      "recipe": "none",
+      "recipeVersion": "1.1.0",
+      "runtimeVersion": null,
+      "settings": {
+        "emphasisMs": 0,
+        "emphasisScale": 1,
+        "easing": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "actionFeedbackMs": 150,
+        "inspectionFeedbackMs": 0,
+        "inspection": "none"
+      },
+      "runtimeIdentity": null
+    },
+    "appearance": {
+      "accent": "#123456",
+      "accentInk": "#fffaf1"
+    }
+  },
+  "verification": {
+    "offer": "confirmed",
+    "destination": "direct",
+    "rights": "confirmed",
+    "provisional": false
+  },
+  "provenance": {
+    "source": "browser-intake",
+    "pilotId": "browser-offer",
+    "pilotStatus": "confirmed",
+    "status": "confirmed",
+    "note": "Local browser brief · not publication approval.",
+    "editorChanges": [],
+    "offer": {
+      "value": "Cup + lid, €24 · offer ends 30 November 2026",
+      "sourceValue": "Cup + lid, €24 · offer ends 30 November 2026",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#fixture.brief.offer",
+      "note": "Local browser brief · not publication approval.",
+      "reviewedBy": null,
+      "reviewedOn": null
+    },
+    "destination": {
+      "value": "https://rose.example/products/rose",
+      "sourceValue": "https://rose.example/products/rose",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#fixture.brief.destinationUrl",
+      "note": "Local browser brief · not publication approval.",
+      "reviewedBy": null,
+      "reviewedOn": null
+    },
+    "offerPrice": {
+      "value": null,
+      "sourceValue": null,
+      "status": "missing",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#fixture.brief.offerPrice",
+      "note": "Local browser brief · not publication approval.",
+      "reviewedBy": null,
+      "reviewedOn": null
+    },
+    "rights": {
+      "value": "Synthetic fixture created locally; approved for this local test.",
+      "sourceValue": "Synthetic fixture created locally; approved for this local test.",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "browser-intake:browser-offer#assets.browser-offer-packshot.rights",
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19"
+    },
+    "packshot": {
+      "value": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "sourceValue": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "status": "confirmed",
+      "changedByEditor": false,
+      "source": "Browser intake upload: packshot.png",
+      "reviewedBy": "Local browser operator",
+      "reviewedOn": "2026-11-19",
+      "assetId": "browser-offer-packshot",
+      "contentHash": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6"
+    },
+    "missingEvidence": [
+      "offer reviewer identity/date",
+      "destination reviewer identity/date",
+      "approved price emphasis"
+    ],
+    "ownerConfirmed": false,
+    "assetBytesVerified": false,
+    "operatorAttestation": {
+      "offer": "confirmed",
+      "destination": "direct",
+      "rights": "confirmed",
+      "provisional": false
+    },
+    "assetIdentity": {
+      "source": "browser-computed",
+      "declaredSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "exportedSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "localExportHashMatches": true,
+      "serverBytesVerified": false
+    }
+  },
+  "asset": {
+    "id": "browser-offer-packshot",
+    "contentHash": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "exportedSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "file": "packshot-cdb29be4bb74777f.png",
+    "width": 600,
+    "height": 700,
+    "alt": "Synthetic Rose Supply ceramic cup packshot"
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "copyright": "Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)",
+      "licenseName": "SIL Open Font License 1.1",
+      "licenseFile": "fonts/LICENSE-Inter-OFL-1.1.txt",
+      "files": [
+        "fonts/inter-102cedf9.woff2",
+        "fonts/inter-9950bb9f.woff2",
+        "fonts/inter-e9a9f400.woff2",
+        "fonts/inter-6ebb342f.woff2",
+        "fonts/inter-d2d3f42f.woff2",
+        "fonts/inter-323b64e0.woff2",
+        "fonts/inter-4bcb7e00.woff2"
+      ]
+    }
+  ],
+  "references": {
+    "stylesheets": [
+      "styles.css"
+    ],
+    "images": [
+      "packshot-cdb29be4bb74777f.png"
+    ],
+    "fonts": [
+      "fonts/inter-102cedf9.woff2",
+      "fonts/inter-323b64e0.woff2",
+      "fonts/inter-4bcb7e00.woff2",
+      "fonts/inter-6ebb342f.woff2",
+      "fonts/inter-9950bb9f.woff2",
+      "fonts/inter-d2d3f42f.woff2",
+      "fonts/inter-e9a9f400.woff2"
+    ],
+    "cssUrls": [
+      "fonts/inter-102cedf9.woff2",
+      "fonts/inter-323b64e0.woff2",
+      "fonts/inter-4bcb7e00.woff2",
+      "fonts/inter-6ebb342f.woff2",
+      "fonts/inter-9950bb9f.woff2",
+      "fonts/inter-d2d3f42f.woff2",
+      "fonts/inter-e9a9f400.woff2"
+    ],
+    "checked": 23
+  },
+  "files": [
+    {
+      "path": "fonts/inter-102cedf9.woff2",
+      "bytes": 25844,
+      "sha256": "fccca918fea40089dacadc7045861314d1a6bc91f1f323cc1eeb22ebcdb321b5"
+    },
+    {
+      "path": "fonts/inter-323b64e0.woff2",
+      "bytes": 85272,
+      "sha256": "a28eb6d3ccb534ae0c94ca999371df024aab60b08c3c8a5720ee9e32fa0faaa2"
+    },
+    {
+      "path": "fonts/inter-4bcb7e00.woff2",
+      "bytes": 48432,
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "path": "fonts/inter-6ebb342f.woff2",
+      "bytes": 19044,
+      "sha256": "46dd4cdca58c26ae87cc6927657bf83b2e8abfc39ffd0ab176e301a8d28d22bf"
+    },
+    {
+      "path": "fonts/inter-9950bb9f.woff2",
+      "bytes": 18744,
+      "sha256": "aebf2ab4a4ce6810d73c1ac7be7cafb4e5ec4cee2d6db5fb3e09691747ec4bd6"
+    },
+    {
+      "path": "fonts/inter-d2d3f42f.woff2",
+      "bytes": 10280,
+      "sha256": "8db00ff46c67b22cda8bed865acf7077651cac8d2841d5b40980556b48961931"
+    },
+    {
+      "path": "fonts/inter-e9a9f400.woff2",
+      "bytes": 11272,
+      "sha256": "a2e2c783ca6f9c20486e81e72a279203e86730bbf8f01ff6a5ee9dbd09e1c271"
+    },
+    {
+      "path": "fonts/LICENSE-Inter-OFL-1.1.txt",
+      "bytes": 4379,
+      "sha256": "ddb6b909eacbd14ffc6406c3d24860105ace1a62cc5db5d03c6c89e19382dc8a"
+    },
+    {
+      "path": "fonts/NOTICE.txt",
+      "bytes": 1693,
+      "sha256": "1e421d632ff9ff4811f35d9a2a0b60e43091f52a439f9fcdcd04b025ef795a49"
+    },
+    {
+      "path": "index.html",
+      "bytes": 7160,
+      "sha256": "dd36eaa2c129408119fac88afb6be5353846190a1fdc27bd3f2c52dcceda18f3"
+    },
+    {
+      "path": "packshot-cdb29be4bb74777f.png",
+      "bytes": 19930,
+      "sha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6"
+    },
+    {
+      "path": "README.txt",
+      "bytes": 669,
+      "sha256": "838111c1439884201ec2c4b5b5c47b3e45137ccee47b2567bc6bb6382cfb465a"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 15635,
+      "sha256": "60c4b2ad4b65426c2783ccbf23f1c84c3949882503bad829e874e13f1091485c"
+    }
+  ],
+  "checks": {
+    "approvalRevisionMatchesRenderedRevision": true,
+    "renderedValuesAreCurrent": true,
+    "requiredImagesLoaded": true,
+    "editorControlsExcluded": true,
+    "internalNotesExcluded": true,
+    "allResourceReferencesResolve": true,
+    "htmlAndReceiptAgree": true,
+    "fontLicensesIncluded": true
+  }
+}

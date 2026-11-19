@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
-import { BrandEvidenceFileReader, PALETTE_ROLES, reviewPalette, type BrandKitSnapshot, type PaletteRole } from "@/lib/campaign-lab/brand-review";
+import { PALETTE_ROLES, reviewPalette, type BrandKitSnapshot, type PaletteRole } from "@/lib/campaign-lab/brand-review";
+import { BrandEvidenceSelection, type EvidenceSelectionResult } from "@/lib/campaign-lab/brand-url-client";
 import type { BrandKitDraft } from "@/lib/campaign-lab/brand-import/evidence-types";
 import { resolveVisualDirection } from "@/lib/campaign-lab/visual-directions";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import { Label } from "@/components/ui/label";
 type Choice = { candidateId: string; value: string };
 export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onApply }: { snapshot?: BrandKitSnapshot; directionId?: string; accentOverride?: string; onApply: (snapshot?: BrandKitSnapshot) => void }) {
   const id = useId();
-  const reader = useRef(new BrandEvidenceFileReader());
+  const reader = useRef(new BrandEvidenceSelection());
+  const [websiteUrl,setWebsiteUrl] = useState("");
   const [draft,setDraft] = useState<BrandKitDraft | null>(null);
   const [choices,setChoices] = useState<Partial<Record<PaletteRole,Choice>>>({});
   const [importValid,setImportValid] = useState(false);
@@ -29,7 +31,10 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
     setImportValid(false);
     setImportError("");
     setNotice("");
-    const result = await reader.current.read(file);
+    const result = await reader.current.file(file);
+    finish(result);
+  }
+  function finish(result: EvidenceSelectionResult) {
     if (result.stale) return;
     setPending(false);
     if (result.error) setImportError(result.error);
@@ -37,9 +42,14 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
       setImportValid(true);
       setDraft(result.draft);
       setChoices({});
-      setNotice("Evidence loaded. Select roles, review contrast, then apply.");
+      setNotice(result.notice ?? "Evidence loaded. Select roles, review contrast, then apply.");
     }
   }
+  async function loadUrl() {
+    setPending(true); setImportValid(false); setImportError(""); setNotice("");
+    finish(await reader.current.url(websiteUrl));
+  }
+  function cancel() { reader.current.cancel(); setPending(false); }
   // Recompute from current inputs, including controls outside this panel.
   const validation = draft && importValid && !pending
     ? reviewPalette(draft, choices, resolveVisualDirection(directionId).tokens, accentOverride)
@@ -52,9 +62,15 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
   }
   const colors=draft?.candidates.filter(c => c.category==="ui-color" || c.category==="raster-color") ?? [];
   return <details className="my-4 min-w-0 rounded-xl border border-[#c9bda8] bg-[#fffdf8] p-4" data-brand-review>
-    <summary className="min-h-8 cursor-pointer font-semibold">Brand evidence JSON (optional){snapshot ? " · palette applied" : ""}</summary>
+    <summary className="min-h-8 cursor-pointer font-semibold">Brand evidence (optional){snapshot ? " · palette applied" : ""}</summary>
     <div className="mt-3 space-y-3 text-sm">
       <p>Review colors only. This does not confirm ownership, campaign facts or media rights.</p>
+      <Label htmlFor={`${id}-url`}>Website URL</Label>
+      <div className="flex flex-wrap gap-2">
+        <Input id={`${id}-url`} type="url" className="min-w-0 flex-1 basis-48" maxLength={2048} placeholder="https://brand.example" value={websiteUrl} onChange={e=>{cancel();setImportValid(false);setImportError("");setNotice("");setWebsiteUrl(e.target.value);}} />
+        <Button type="button" disabled={pending || !websiteUrl} onClick={()=>void loadUrl()}>Read website colors</Button>
+        {pending ? <Button type="button" variant="secondary" onClick={cancel}>Cancel read</Button> : null}
+      </div>
       <Label htmlFor={`${id}-file`}>Brand evidence JSON</Label>
       <Input id={`${id}-file`} type="file" accept=".json,application/json" onChange={e => { const file=e.currentTarget.files?.[0]; e.currentTarget.value=""; void load(file); }} />
       {pending ? <p role="status">Reading evidence…</p> : null}

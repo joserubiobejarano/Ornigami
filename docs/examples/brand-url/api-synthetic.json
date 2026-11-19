@@ -1,0 +1,117 @@
+{
+  "mode": "synthetic",
+  "server": "http://127.0.0.1:3029",
+  "externalRequests": 0,
+  "source": "app-owned synthetic transport only",
+  "records": [
+    {
+      "label": "healthy",
+      "status": 200,
+      "summary": {
+        "status": "complete",
+        "logicalReads": 2,
+        "chargedBytes": 478,
+        "retainedBytes": 478
+      },
+      "mode": "synthetic"
+    },
+    {
+      "label": "partial-css-cdn",
+      "status": 200,
+      "summary": {
+        "status": "partial",
+        "logicalReads": 4,
+        "chargedBytes": 262758,
+        "retainedBytes": 614
+      },
+      "mode": "synthetic"
+    },
+    {
+      "label": "js-only",
+      "status": 200,
+      "summary": {
+        "status": "incomplete",
+        "logicalReads": 1,
+        "chargedBytes": 55,
+        "retainedBytes": 55
+      },
+      "mode": "synthetic"
+    },
+    {
+      "label": "missing",
+      "status": 200,
+      "summary": {
+        "status": "rejected",
+        "logicalReads": 1,
+        "chargedBytes": 26,
+        "retainedBytes": 26
+      },
+      "mode": "synthetic"
+    },
+    {
+      "label": "unsupported",
+      "status": 200,
+      "summary": {
+        "status": "rejected",
+        "logicalReads": 1,
+        "chargedBytes": 14,
+        "retainedBytes": 14
+      },
+      "mode": "synthetic"
+    },
+    {
+      "label": "misleading",
+      "status": 200,
+      "summary": {
+        "status": "partial",
+        "logicalReads": 2,
+        "chargedBytes": 83,
+        "retainedBytes": 83
+      },
+      "mode": "synthetic"
+    },
+    {
+      "label": "private-redirect",
+      "status": 422,
+      "summary": {
+        "status": "rejected",
+        "logicalReads": 1,
+        "chargedBytes": 524288,
+        "retainedBytes": 0
+      },
+      "mode": null
+    },
+    {
+      "label": "invalid-url",
+      "status": 400,
+      "summary": null,
+      "mode": null
+    },
+    {
+      "label": "client-transport",
+      "status": 400,
+      "summary": null,
+      "mode": null
+    },
+    {
+      "label": "oversized-utf8",
+      "status": 413,
+      "summary": null,
+      "mode": null
+    },
+    {
+      "label": "foreign-origin",
+      "status": 403,
+      "summary": null,
+      "mode": null
+    },
+    {
+      "label": "active-cap",
+      "statuses": [
+        200,
+        200,
+        429
+      ]
+    }
+  ]
+}

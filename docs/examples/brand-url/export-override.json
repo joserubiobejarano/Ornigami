@@ -1,0 +1,36 @@
+[
+  {
+    "directory": ".local/url-override",
+    "revision": "253ce5a4daca0f08",
+    "direction": "clear",
+    "palette": [
+      {
+        "role": "accent",
+        "value": "#4b2030",
+        "originalValue": "#12345680",
+        "review": "corrected"
+      },
+      {
+        "role": "page",
+        "value": "#fff8fa",
+        "originalValue": "#fff8faff",
+        "review": "selected"
+      },
+      {
+        "role": "surface",
+        "value": "#f5e6ea",
+        "originalValue": "#f5e6eaff",
+        "review": "selected"
+      }
+    ],
+    "effectiveAccent": "#123456",
+    "verifiedFiles": 13,
+    "fonts": [
+      "Inter"
+    ],
+    "packshotSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+    "snapshotFalseFlagsPreserved": true,
+    "htmlReceiptAgreement": true,
+    "references": 23
+  }
+]
