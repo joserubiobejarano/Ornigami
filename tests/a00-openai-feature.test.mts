@@ -23,19 +23,28 @@ test("OPENAI_ENABLED is a strict explicit opt-in", () => {
 test("cached OpenAI client checks the opt-in before each SDK call", async () => {
   let instances = 0;
   const calls: unknown[][] = [];
+  const clientOptions: unknown[] = [];
   class MockOpenAI {
     chat = { completions: { create: async (...args: unknown[]) => {
       calls.push(args);
       return { choices: [{ message: { content: "Draft reply" } }] };
     } } };
-    constructor() { instances += 1; }
+    constructor(options: unknown) {
+      instances += 1;
+      clientOptions.push(options);
+    }
   }
+  const openaiConfig = loadTs<typeof import("../src/lib/openai-config.ts")>(
+    "src/lib/openai-config.ts",
+    { openai: { default: MockOpenAI } },
+  );
   setEnabled(undefined);
   process.env.OPENAI_API_KEY = "test-openai-key";
   const openai = loadTs<typeof import("../src/lib/openai.ts")>("src/lib/openai.ts", {
     openai: { default: MockOpenAI },
     "@/lib/env": { getRequiredEnv: () => "test-openai-key" },
     "@/lib/openai-feature": { isOpenAIEnabled: () => process.env.OPENAI_ENABLED === "true" },
+    "@/lib/openai-config": openaiConfig,
   });
   await assert.rejects(openai.generateReviewReply({ businessName: "Test", city: "Test", rating: 5, text: "Good", tone: "warm" }));
   await assert.rejects(openai.generateProfileAudit({ mode: "quick", urlOrName: "Test" }));
@@ -46,6 +55,11 @@ test("cached OpenAI client checks the opt-in before each SDK call", async () => 
   await openai.generateReviewReply({ businessName: "Test", city: "Test", rating: 5, text: "Good", tone: "warm" });
   assert.equal(instances, 1);
   assert.equal(calls.length, 1);
+  assert.deepEqual(clientOptions, [{
+    apiKey: "test-openai-key",
+    timeout: openaiConfig.OPENAI_REQUEST_TIMEOUT_MS,
+    maxRetries: openaiConfig.OPENAI_MAX_RETRIES,
+  }]);
   setEnabled("false");
   await assert.rejects(openai.generateProfileAudit({ mode: "quick", urlOrName: "Test" }));
   assert.equal(instances, 1);
