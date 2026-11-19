@@ -43,9 +43,8 @@ if (!['before','after'].includes(phase)) throw new Error('Specify before or afte
 const out = resolve('.local/typography', phase);
 mkdirSync(out,{recursive:true});
 const css = readFileSync('src/components/campaign-lab/campaign-page.module.css','utf8');
-const fontOut = resolve('.local/type-fonts');
-const fonts = (await import(pathToFileURL(join(fontOut,'responses.cjs')).href)).default;
-const fontCss = Object.values(fonts).join('\n').replace(/url\(([^)]+)\)/g,(_m,path)=>`url(/fonts/${path.split('/').at(-1)})`);
+const fontOut = resolve('public/fonts');
+const fontCss = readFileSync('src/app/local-fonts.css','utf8');
 const cases = frozenTypeCases();
 const stress = [
   ['long', 'Rose Supply hand-glazed ceramic travel cup with matching lid and insulated sleeve'],

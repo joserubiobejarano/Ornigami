@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./local-fonts.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { LayoutFrame } from "@/components/layout-frame";
 import { Toaster } from "sonner";
@@ -7,30 +8,8 @@ import { ThemeSync } from "@/components/theme-sync";
 import { MotionProvider } from "@/components/motion-provider";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getOptionalEnv } from "@/lib/env";
-import { Bricolage_Grotesque, Geist_Mono, Inter } from "next/font/google";
 
 export const dynamic = "force-dynamic";
-
-const displayFont = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["700", "800"],
-  display: "swap",
-});
-
-const sansFont = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-
-const monoFont = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "600"],
-  display: "swap",
-});
 
 const siteUrl = getOptionalEnv("NEXT_PUBLIC_APP_URL") || "https://ornigami.com";
 
@@ -63,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} antialiased flex min-h-screen flex-col`}>
+      <body className={`antialiased flex min-h-screen flex-col`}>
         <AuthProvider>
           <MotionProvider>
             <ThemeSync />

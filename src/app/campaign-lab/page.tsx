@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Jost } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import { CampaignLab } from "@/components/campaign-lab/campaign-lab";
@@ -8,20 +7,6 @@ import { normalizeFixtureId } from "@/lib/campaign-lab/fixtures";
 import { loadCampaignCatalog } from "@/lib/campaign-lab/pilots/local-pilot";
 
 export const dynamic = "force-dynamic";
-
-const directionDisplay = EB_Garamond({
-  subsets: ["latin"],
-  variable: "--font-direction-display",
-  weight: ["400", "500"],
-  display: "swap",
-});
-
-const directionBody = Jost({
-  subsets: ["latin"],
-  variable: "--font-direction-body",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Campaign Lab — Ornigami",
@@ -49,7 +34,6 @@ export default async function CampaignLabPage({ searchParams }: CampaignLabPageP
 
   return (
     <div
-      className={`${directionDisplay.variable} ${directionBody.variable}`}
       style={{ display: "contents" }}
     >
       <CampaignLab key={fixtureId} initialFixtureId={fixtureId} catalog={catalog} />

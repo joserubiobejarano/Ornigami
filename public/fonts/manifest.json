@@ -1,0 +1,956 @@
+{
+  "sourceBuild": "C:/Users/joser/.local/ornigami-brand-url-session1/.next",
+  "delivery": "Unmodified WOFF2, normal style, exact inherited @font-face weights and unicode ranges. Latin was preloaded by next/font; all delivered subsets retained.",
+  "bindings": {
+    "Bricolage Grotesque": {
+      "variable": "--font-display",
+      "requestedWeights": "700 800"
+    },
+    "Inter": {
+      "variable": "--font-sans",
+      "requestedWeights": "400 600"
+    },
+    "Geist Mono": {
+      "variable": "--font-mono",
+      "requestedWeights": "400 600"
+    },
+    "EB Garamond": {
+      "variable": "--font-direction-display",
+      "requestedWeights": "400 500"
+    },
+    "Jost": {
+      "variable": "--font-direction-body",
+      "requestedWeights": "400 700"
+    }
+  },
+  "fonts": [
+    {
+      "file": "93a6e477e1480c92-s.woff2",
+      "family": "Bricolage Grotesque",
+      "sha256": "ea16948d4a91b77221f119ad27d4ac7a7581c98cf990712047f89a531a49ef28",
+      "bytes": 8652,
+      "embeddedFamily": [
+        "Bricolage Grotesque 96pt ExtraBold"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)"
+      ],
+      "licenseURL": [
+        "https://scripts.sil.org/OFL"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 200.0,
+          "max": 800.0,
+          "default": 800.0
+        }
+      ],
+      "unicodeRange": "u+0102-0103,u+0110-0111,u+0128-0129,u+0168-0169,u+01a0-01a1,u+01af-01b0,u+0300-0301,u+0303-0304,u+0308-0309,u+0323,u+0329,u+1ea0-1ef9,u+20ab",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/93a6e477e1480c92-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Bricolage-Grotesque-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "700",
+        "800"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "c7e0cf6c760983e7-s.woff2",
+      "family": "Bricolage Grotesque",
+      "sha256": "a22c997a894377f36d81c904163e0c05fbbcd32f0ca2e7beedb86b39be1296a1",
+      "bytes": 18740,
+      "embeddedFamily": [
+        "Bricolage Grotesque 96pt ExtraBold"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)"
+      ],
+      "licenseURL": [
+        "https://scripts.sil.org/OFL"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 200.0,
+          "max": 800.0,
+          "default": 800.0
+        }
+      ],
+      "unicodeRange": "u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c4,u+2113,u+2c60-2c7f,u+a720-a7ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/c7e0cf6c760983e7-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Bricolage-Grotesque-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "700",
+        "800"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "9d5a263311222317-s.p.woff2",
+      "family": "Bricolage Grotesque",
+      "sha256": "4fd48b2c1ab27220e71f15f990550261b35245c3bdfd8d8025b4bdac0459ee2d",
+      "bytes": 41236,
+      "embeddedFamily": [
+        "Bricolage Grotesque 96pt ExtraBold"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)"
+      ],
+      "licenseURL": [
+        "https://scripts.sil.org/OFL"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 200.0,
+          "max": 800.0,
+          "default": 800.0
+        }
+      ],
+      "unicodeRange": "u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/9d5a263311222317-s.p.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Bricolage-Grotesque-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "700",
+        "800"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "ba9851c3c22cd980-s.woff2",
+      "family": "Inter",
+      "sha256": "fccca918fea40089dacadc7045861314d1a6bc91f1f323cc1eeb22ebcdb321b5",
+      "bytes": 25844,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0460-052f,u+1c80-1c8a,u+20b4,u+2de0-2dff,u+a640-a69f,u+fe2e-fe2f",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/ba9851c3c22cd980-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "21350d82a1f187e9-s.woff2",
+      "family": "Inter",
+      "sha256": "aebf2ab4a4ce6810d73c1ac7be7cafb4e5ec4cee2d6db5fb3e09691747ec4bd6",
+      "bytes": 18744,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0301,u+0400-045f,u+0490-0491,u+04b0-04b1,u+2116",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/21350d82a1f187e9-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "c5fe6dc8356a8c31-s.woff2",
+      "family": "Inter",
+      "sha256": "a2e2c783ca6f9c20486e81e72a279203e86730bbf8f01ff6a5ee9dbd09e1c271",
+      "bytes": 11272,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+1f??",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/c5fe6dc8356a8c31-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "19cfc7226ec3afaa-s.woff2",
+      "family": "Inter",
+      "sha256": "46dd4cdca58c26ae87cc6927657bf83b2e8abfc39ffd0ab176e301a8d28d22bf",
+      "bytes": 19044,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0370-0377,u+037a-037f,u+0384-038a,u+038c,u+038e-03a1,u+03a3-03ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/19cfc7226ec3afaa-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "df0a9ae256c0569c-s.woff2",
+      "family": "Inter",
+      "sha256": "8db00ff46c67b22cda8bed865acf7077651cac8d2841d5b40980556b48961931",
+      "bytes": 10280,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0102-0103,u+0110-0111,u+0128-0129,u+0168-0169,u+01a0-01a1,u+01af-01b0,u+0300-0301,u+0303-0304,u+0308-0309,u+0323,u+0329,u+1ea0-1ef9,u+20ab",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/df0a9ae256c0569c-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "8e9860b6e62d6359-s.woff2",
+      "family": "Inter",
+      "sha256": "a28eb6d3ccb534ae0c94ca999371df024aab60b08c3c8a5720ee9e32fa0faaa2",
+      "bytes": 85272,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c4,u+2113,u+2c60-2c7f,u+a720-a7ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/8e9860b6e62d6359-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "e4af272ccee01ff0-s.p.woff2",
+      "family": "Inter",
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+      "bytes": 48432,
+      "embeddedFamily": [
+        "Inter"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/e4af272ccee01ff0-s.p.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Inter-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "013b72fa676f92e0-s.woff2",
+      "family": "Geist Mono",
+      "sha256": "e27f657e38d52887baa3b6b2f812bef93dfdd356f0810e40edd4ee284cc7e9f6",
+      "bytes": 6204,
+      "embeddedFamily": [
+        "Geist Mono"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0460-052f,u+1c80-1c8a,u+20b4,u+2de0-2dff,u+a640-a69f,u+fe2e-fe2f",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/013b72fa676f92e0-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Geist-Mono-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "b9408752a0c24fb9-s.woff2",
+      "family": "Geist Mono",
+      "sha256": "75b3bedbebc35f347c0ae3b416aa871941555357e7b0f83767eb5987875589ed",
+      "bytes": 12872,
+      "embeddedFamily": [
+        "Geist Mono"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0301,u+0400-045f,u+0490-0491,u+04b0-04b1,u+2116",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/b9408752a0c24fb9-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Geist-Mono-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "65f03d54ccadf4a8-s.woff2",
+      "family": "Geist Mono",
+      "sha256": "d67e4a94ba498635f764ddca7d1ec4271f5642f032eb24b426764480f66f8497",
+      "bytes": 5892,
+      "embeddedFamily": [
+        "Geist Mono"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+2000-2001,u+2004-2008,u+200a,u+23b8-23bd,u+2500-259f",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/65f03d54ccadf4a8-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Geist-Mono-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "e038a29029a234f2-s.woff2",
+      "family": "Geist Mono",
+      "sha256": "16e1d48b6dd29eb240aec5db36184eb182933c082cd43de7f35af686d58087d2",
+      "bytes": 7728,
+      "embeddedFamily": [
+        "Geist Mono"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0102-0103,u+0110-0111,u+0128-0129,u+0168-0169,u+01a0-01a1,u+01af-01b0,u+0300-0301,u+0303-0304,u+0308-0309,u+0323,u+0329,u+1ea0-1ef9,u+20ab",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/e038a29029a234f2-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Geist-Mono-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "2b5b02fc7e511755-s.woff2",
+      "family": "Geist Mono",
+      "sha256": "745994b5cd950ec201b66526375f057d540847cccfc70f4f24f5f571d26d3923",
+      "bytes": 14712,
+      "embeddedFamily": [
+        "Geist Mono"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c4,u+2113,u+2c60-2c7f,u+a720-a7ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/2b5b02fc7e511755-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Geist-Mono-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "7d4881bb7e1bf84d-s.p.woff2",
+      "family": "Geist Mono",
+      "sha256": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
+      "bytes": 23108,
+      "embeddedFamily": [
+        "Geist Mono"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/7d4881bb7e1bf84d-s.p.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Geist-Mono-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "600"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "062340a5902d57de-s.woff2",
+      "family": "EB Garamond",
+      "sha256": "2db942ef6f5237810b751b686706fbd08969a28d055318a9a8fb4a1ec99bbcce",
+      "bytes": 33932,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0460-052f,u+1c80-1c8a,u+20b4,u+2de0-2dff,u+a640-a69f,u+fe2e-fe2f",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/062340a5902d57de-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "d63e13930677f53f-s.woff2",
+      "family": "EB Garamond",
+      "sha256": "171a104fa20c9ccf6c25945151a98b37ed2ae26986c2e01f9afda65ee2fa9f77",
+      "bytes": 25968,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0301,u+0400-045f,u+0490-0491,u+04b0-04b1,u+2116",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/d63e13930677f53f-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "69e44c27a0558172-s.woff2",
+      "family": "EB Garamond",
+      "sha256": "65f7302476afd8d89c200101a987691cd99da017e25fb4bf8f57c385f69e9b6f",
+      "bytes": 11476,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+1f??",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/69e44c27a0558172-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "2913b528b2922316-s.woff2",
+      "family": "EB Garamond",
+      "sha256": "19e98f32f56c0f648cc511d29305b295f6f63a7cf1f1c72eb8516dd21e69a705",
+      "bytes": 19868,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0370-0377,u+037a-037f,u+0384-038a,u+038c,u+038e-03a1,u+03a3-03ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/2913b528b2922316-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "548b5aa0a10194aa-s.woff2",
+      "family": "EB Garamond",
+      "sha256": "d858010614321f668ca37def13edb91c98f9747d5126092a9dcbff264d6eb948",
+      "bytes": 10936,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0102-0103,u+0110-0111,u+0128-0129,u+0168-0169,u+01a0-01a1,u+01af-01b0,u+0300-0301,u+0303-0304,u+0308-0309,u+0323,u+0329,u+1ea0-1ef9,u+20ab",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/548b5aa0a10194aa-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "af2852512783d6fe-s.woff2",
+      "family": "EB Garamond",
+      "sha256": "c2fa6862b03629214873944b171b0df1189420be52aabd82142d45f96fdce588",
+      "bytes": 113756,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c4,u+2113,u+2c60-2c7f,u+a720-a7ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/af2852512783d6fe-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "c679f70df756412c-s.p.woff2",
+      "family": "EB Garamond",
+      "sha256": "68fd4b247dde89984ee835d99953d235e4927be2b1b732ad81173b519869cee8",
+      "bytes": 44172,
+      "embeddedFamily": [
+        "EB Garamond"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)"
+      ],
+      "licenseURL": [
+        "https://openfontlicense.org"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "max": 800.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/c679f70df756412c-s.p.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-EB-Garamond-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "b8c37bb59076c047-s.woff2",
+      "family": "Jost",
+      "sha256": "184c3af415cddd52af31cf70166bf351adb70b09e64fdb1948109192a26c2c0d",
+      "bytes": 10140,
+      "embeddedFamily": [
+        "Jost"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)"
+      ],
+      "licenseURL": [
+        "http://scripts.sil.org/OFL"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0301,u+0400-045f,u+0490-0491,u+04b0-04b1,u+2116",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/b8c37bb59076c047-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Jost-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600",
+        "700"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "5bbac197f803cc34-s.woff2",
+      "family": "Jost",
+      "sha256": "b2a539cd1f2bbf123e66bafa988bbd32249a7ba3335aec377a9fc1b37734b1ed",
+      "bytes": 17204,
+      "embeddedFamily": [
+        "Jost"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)"
+      ],
+      "licenseURL": [
+        "http://scripts.sil.org/OFL"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c4,u+2113,u+2c60-2c7f,u+a720-a7ff",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/5bbac197f803cc34-s.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Jost-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600",
+        "700"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    },
+    {
+      "file": "9dd75fadc5b3df29-s.p.woff2",
+      "family": "Jost",
+      "sha256": "235d8f8964bfdf105fc0c3e4c77b5e70f31bee1dad611d59318b5f2a5cb64d90",
+      "bytes": 26588,
+      "embeddedFamily": [
+        "Jost"
+      ],
+      "typographicFamily": [],
+      "copyright": [
+        "Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)"
+      ],
+      "licenseURL": [
+        "http://scripts.sil.org/OFL"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100.0,
+          "max": 900.0,
+          "default": 400.0
+        }
+      ],
+      "unicodeRange": "u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd",
+      "style": "normal",
+      "source": "C:/Users/joser/.local/ornigami-brand-url-session1/.next/static/media/9dd75fadc5b3df29-s.p.woff2",
+      "admission": "Pre-failure Session 1 build; same source selected by accepted typography helper.",
+      "licenseFile": "LICENSE-Jost-OFL-1.1.txt",
+      "licenseEvidence": "Embedded name IDs 0 and 14 (copyright and OFL URL); standard OFL 1.1 text already recorded in src/lib/campaign-lab/font-licenses.ts.",
+      "declaredWeights": [
+        "400",
+        "500",
+        "600",
+        "700"
+      ],
+      "subset": "Exact unicode-range retained (see unicodeRange); no charset expansion or subset re-encoding."
+    }
+  ],
+  "notes": [
+    "Normal style only in the inherited web-font loaders. No italic files were requested.",
+    "Exact inherited font-face declarations retained, including the requested static weight descriptors over variable programs; existing browser weight synthesis behavior is preserved.",
+    "Intentional system-primary Georgia/Arial in Editorial and system fallback stacks are not bundled. See docs/examples/offline-fonts/system-font-limit.json. They are not aliases for the five admitted web-font families."
+  ]
+}

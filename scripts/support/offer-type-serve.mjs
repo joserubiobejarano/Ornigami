@@ -2,7 +2,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, sep, extname } from 'node:path';
-const root=resolve('.local/typography'); const fonts=resolve('.local/type-fonts');
+const root=resolve('.local/typography'); const fonts=resolve('public/fonts');
 createServer(async(req,res)=>{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405).end();return;}
   const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);

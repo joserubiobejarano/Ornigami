@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Jost } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import { isCampaignLabAvailable } from "@/lib/campaign-lab/availability";
@@ -23,20 +22,6 @@ export const metadata: Metadata = {
     follow: false,
   },
 };
-
-const directionDisplay = EB_Garamond({
-  subsets: ["latin"],
-  variable: "--font-direction-display",
-  weight: ["400", "500"],
-  display: "swap",
-});
-
-const directionBody = Jost({
-  subsets: ["latin"],
-  variable: "--font-direction-body",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 type PreviewFrameProps = {
   label: "A" | "B";
@@ -87,7 +72,7 @@ export default async function MomisaDirectionPage() {
     previews = buildMomisaDirectionPreviews(input);
   } catch (error) {
     return (
-      <main className={`${directionDisplay.variable} ${directionBody.variable} ${styles.page}`}>
+      <main className={`${styles.page}`}>
         <header className={styles.header}>
           <p className={styles.eyebrow}>Campaign Lab · local only</p>
           <h1 className={styles.title}>Momisa direction comparison could not render</h1>
@@ -103,7 +88,7 @@ export default async function MomisaDirectionPage() {
 
   return (
     <main
-      className={`${directionDisplay.variable} ${directionBody.variable} ${styles.page}`}
+      className={`${styles.page}`}
     >
       <header className={styles.header}>
         <p className={styles.eyebrow}>Campaign Lab · local only</p>

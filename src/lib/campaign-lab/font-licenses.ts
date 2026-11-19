@@ -148,6 +148,16 @@ const LICENSES: readonly BundledFontLicense[] = [
   JOST_LICENSE,
 ];
 
+// New self-hosted faces use exact real names, not the historical alias matcher.
+const LOCAL_LICENSES: readonly BundledFontLicense[] = [
+    ["Bricolage Grotesque", "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)"],
+    ["Geist Mono", "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)"],
+  ].map(([family, copyright]) => ({
+    family, copyright, licenseName: "SIL Open Font License 1.1",
+    licenseFile: `fonts/LICENSE-${family.replaceAll(" ", "-")}-OFL-1.1.txt`,
+    licenseText: `${copyright}\n\n${OFL_1_1}\n`,
+  }));
+
 function normalizedFamily(family: string): string {
   return family
     .trim()
@@ -164,6 +174,7 @@ function normalizedFamily(family: string): string {
 export function findFontLicense(family: string): BundledFontLicense | null {
   const normalized = normalizedFamily(family);
   return (
+    LOCAL_LICENSES.find((license) => normalizedFamily(license.family) === normalized) ??
     LICENSES.find((license) => normalizedFamily(license.family) === normalized) ??
     LICENSES.find((license) =>
       normalized.includes(normalizedFamily(license.family)),

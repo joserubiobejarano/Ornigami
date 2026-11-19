@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Jost } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import { DirectionPreview } from "@/app/campaign-lab/direction/direction-preview";
@@ -15,20 +14,6 @@ export const metadata: Metadata = {
   title: "Momisa direction preview — Campaign Lab",
   robots: { index: false, follow: false },
 };
-
-const directionDisplay = EB_Garamond({
-  subsets: ["latin"],
-  variable: "--font-direction-display",
-  weight: ["400", "500"],
-  display: "swap",
-});
-
-const directionBody = Jost({
-  subsets: ["latin"],
-  variable: "--font-direction-body",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 type PreviewPageProps = {
   searchParams: Promise<{
@@ -60,7 +45,7 @@ export default async function DirectionPreviewPage({
 
   return (
     <main
-      className={`${directionDisplay.variable} ${directionBody.variable} ${styles.page}`}
+      className={`${styles.page}`}
     >
       <div className={styles.shell} data-preview-shell>
         <div className={styles.frame}>
