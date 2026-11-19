@@ -1,0 +1,1 @@
+First verification: evidence artifact blobs matched, but raw runtime worktree hash differed from Git blob for brand-url-api.ts. Inspection found only CRLF-to-LF normalization in four pre-existing text files. Preserved both hash bases in source-identity.json and confirmed byte equality after newline normalization. No runtime edit.

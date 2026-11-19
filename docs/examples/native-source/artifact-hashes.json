@@ -47,6 +47,10 @@
     "bytes": 1377,
     "sha256": "9ac411407c865db75374aa80b867b74b921e7ef01b4dff2784e3b4b62b56ddb5"
   },
+  "logs/final-artifact-verification.txt": {
+    "bytes": 333,
+    "sha256": "1e1ee691d17fb6f32298fb75bcf595f56be35c09a4526521dd1ba5a73937b446"
+  },
   "logs/fonts.log": {
     "bytes": 84,
     "sha256": "caf14a67732002e1eccdae4a96f124c5833a15fe274c2417661b5e5d93b01467"
@@ -140,8 +144,8 @@
     "sha256": "03e685bc4a1f22e717d718e0ca8de33210cca5854f79fb7733c7dd7e2e40544e"
   },
   "source-identity.json": {
-    "bytes": 3032,
-    "sha256": "c83a4c778db08d7c427ecc779581f0dd3f939dbeffd8a9ff8c19bee71d5f0e9d"
+    "bytes": 4558,
+    "sha256": "fd745b3f7201975d79f4a9e150c6eac0f0fc5ae2c7f51e8fc6b6551509e21127"
   },
   "stop-verification.json": {
     "bytes": 145,

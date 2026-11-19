@@ -33,5 +33,19 @@
     "scripts/support/native-run-control.mjs": "1bced67c2935162f3ffa95c311b2209363f2bfdedba8111ee65ddce1736c7d06",
     "scripts/support/native-app-server.mjs": "1a1587cfdd9c9d446bc224301cc576d91305a2e29c8542ab3c6875ba63ceee87",
     "scripts/native-source-readiness.mjs": "d336488d872747fc54a6df0a3acd7cb811c3fca8aec4b4ff46f89ccdb34fd472"
+  },
+  "runtimeSourceHashBasis": "runtimeSourceHashes are tested worktree bytes; committedRuntimeSourceHashes are Git blob bytes. Four pre-existing text files normalize CRLF to LF on commit; comparison confirms no other byte change.",
+  "committedRuntimeSourceHashes": {
+    "src/lib/campaign-lab/brand-source-bridge.ts": "d85f97e2c0bbee95d0a2a9b1c29c4acd85d7d3cf8179211d666d0a96409b76c1",
+    "src/lib/campaign-lab/brand-url-api.ts": "4e2769f649541bf37502317d2977be0099578a8e1da0c5c6ed7ae27c9d9130fa",
+    "src/app/api/campaign-lab/brand-evidence/route.ts": "03eb672a807126ea296cd0b6ef1d855e86dd2793e7e6b867b64f7d464f2d3428",
+    "scripts/support/native-backend.cjs": "9358d85fa0c3658410a078258c559dd4cfe58ae2683ad2ba363bd7a82e4832ef",
+    "scripts/support/source-window.cjs": "6c604af0f660e3f4547818ab5a199cc2fc419a01feac0d108a3466f91f07cfcb",
+    "scripts/support/offline-guard.cjs": "321f4c1a6fc59f2ce6bb41fa15269ea349fb573a9376fb4a4136a15ee24f95a6",
+    "scripts/support/native-bridge.cjs": "1189e84c59009d6875696f70df0eb6bba967a5664633ae8592b2775e5694cd44",
+    "scripts/support/native-fixtures.cjs": "63f4e3f8760c83fe96ac7e142f03869b74e6c0d3f797bacefe93c34fa74c0e80",
+    "scripts/support/native-run-control.mjs": "1bced67c2935162f3ffa95c311b2209363f2bfdedba8111ee65ddce1736c7d06",
+    "scripts/support/native-app-server.mjs": "1a1587cfdd9c9d446bc224301cc576d91305a2e29c8542ab3c6875ba63ceee87",
+    "scripts/native-source-readiness.mjs": "d336488d872747fc54a6df0a3acd7cb811c3fca8aec4b4ff46f89ccdb34fd472"
   }
 }
