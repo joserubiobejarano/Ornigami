@@ -55,6 +55,8 @@ await check('wrong URL/method/TLS binding and background/child calls stop before
   const g=setup();await g.controller.transaction(async()=>{
     await assert.rejects(g.controller.read(windows.POLICY.seed,options,async()=>{
       await g.controller.route('dns',{host:'www.iana.org'});const before=sample();
+      for(const url of ['https://fonts.googleapis.com/','https://registry.npmjs.org/next','https://o1.ingest.sentry.io/','https://outside.invalid/']) assert.throws(()=>https.request(url));
+      await assert.rejects(fetch('https://registry.npmjs.org/next'));assert.deepEqual(sample(),before);
       assert.throws(()=>g.controller.route('https.request',{url:windows.POLICY.seed,method:'POST',injectedAgent:true}));
       g.controller.route('https.request',{url:windows.POLICY.seed,method:'GET',injectedAgent:true});
       assert.throws(()=>g.controller.route('tls.connect',{host:'8.8.8.8',family:4,port:443,servername:'www.iana.org',rejectUnauthorized:true,checkServerIdentity(){},ALPNProtocols:['http/1.1']}));assert.deepEqual(sample(),before);throw Error('fixture stop');
