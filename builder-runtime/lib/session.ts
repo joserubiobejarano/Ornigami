@@ -108,31 +108,9 @@ export async function lookupBuilderSessionCookie(
 }
 
 /**
- * State-changing builder endpoints require same-origin evidence. HttpOnly
- * SameSite=Lax cookies are the session boundary; the explicit check protects
- * form and fetch posts from cross-site submission.
+ * State-changing builder endpoints require the full configured external
+ * origin. See `request-origin.ts`.
  */
-export function isSameOriginRequest(request: Request): boolean {
-  let expected: string;
-  try {
-    expected = new URL(request.url).origin;
-  } catch {
-    return false;
-  }
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      const originHost = new URL(origin).host;
-      const host = request.headers.get("host");
-      if (host && originHost === host) return true;
-      return originHost === new URL(expected).host;
-    } catch {
-      return false;
-    }
-  }
-  return request.headers.get("sec-fetch-site") === "same-origin";
-}
-
 export function sessionCookieOptions(
   config: BuilderRuntimeConfig,
   maxAgeSeconds = config.sessionTtlSeconds,

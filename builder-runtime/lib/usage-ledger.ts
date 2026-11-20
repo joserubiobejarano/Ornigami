@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 import {
+  builderAdmissionIsActiveInStore,
   withBuilderIdentityStore,
   type BuilderUsageRecord,
 } from "./identity-store.ts";
@@ -18,6 +19,7 @@ export type BuilderGenerationLimits = Readonly<{
 }>;
 
 export type BuilderUsageDenialCode =
+  | "session_inactive"
   | "duplicate"
   | "subject_requests"
   | "global_requests"
@@ -168,6 +170,20 @@ export async function reserveBuilderUsage(input: {
   const windowStart = now.getTime() - input.limits.windowSeconds * 1000;
 
   return withBuilderIdentityStore(input.storeDir, (store) => {
+    if (
+      !builderAdmissionIsActiveInStore(store, {
+        sessionId: input.sessionId,
+        subjectId: input.subjectId,
+        now,
+      })
+    ) {
+      return {
+        ok: false as const,
+        code: "session_inactive" as const,
+        retryAfterSeconds: null,
+      };
+    }
+
     expireStaleReservations(
       store.usage,
       now,

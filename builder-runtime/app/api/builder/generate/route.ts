@@ -10,9 +10,9 @@ import { runLimitedBuilderGeneration } from "@builder/lib/generation-limits";
 import type { BuilderLimitedGenerationFailure } from "@builder/lib/generation-limits";
 import {
   BUILDER_SUBJECT_HEADER,
-  isSameOriginRequest,
   lookupBuilderSessionRequest,
 } from "@builder/lib/session";
+import { isSameOriginRequest } from "@builder/lib/request-origin";
 import { createBuilderTestProvider } from "@builder/lib/test-provider";
 
 export const runtime = "nodejs";
@@ -35,6 +35,19 @@ function sessionChangedResponse(subjectId: string): Response {
   );
 }
 
+function sessionEndedResponse(subjectId: string): Response {
+  return Response.json(
+    {
+      ok: false,
+      error: "session_inactive",
+      code: "session_changed",
+      message:
+        "Your builder session ended during generation. The result was discarded.",
+    },
+    { status: 401, headers: headers(subjectId) },
+  );
+}
+
 function limitResponse(
   failure: BuilderLimitedGenerationFailure,
   subjectId: string,
@@ -42,19 +55,27 @@ function limitResponse(
   const status =
     failure.code === "accounting_unavailable"
       ? 503
-      : failure.code === "cancelled"
-        ? 408
-        : failure.code === "duplicate"
-          ? 409
-          : 429;
+      : failure.code === "session_inactive"
+        ? 401
+        : failure.code === "invalid_request"
+          ? 400
+          : failure.code === "cancelled"
+            ? 408
+            : failure.code === "duplicate"
+              ? 409
+              : 429;
   const error =
     failure.code === "accounting_unavailable"
       ? "accounting_unavailable"
-      : failure.code === "cancelled"
-        ? "generation_cancelled"
-        : failure.code === "duplicate"
-          ? "request_already_submitted"
-          : "generation_limit";
+      : failure.code === "session_inactive"
+        ? "session_inactive"
+        : failure.code === "invalid_request"
+          ? "invalid_request"
+          : failure.code === "cancelled"
+            ? "generation_cancelled"
+            : failure.code === "duplicate"
+              ? "request_already_submitted"
+              : "generation_limit";
   const responseHeaders = new Headers(headers(subjectId));
   if (failure.retryAfterSeconds !== null) {
     responseHeaders.set("Retry-After", String(failure.retryAfterSeconds));
@@ -103,7 +124,7 @@ export async function POST(request: Request) {
       { status: 404, headers: headers() },
     );
   }
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, lookup.config)) {
     return new Response(null, { status: 403, headers: headers() });
   }
   if (request.headers.get(BUILDER_SUBJECT_HEADER) !== lookup.subject.id) {
@@ -142,6 +163,11 @@ export async function POST(request: Request) {
     sessionId,
     requestKey: parsed.requestId,
     signal: request.signal,
+    beforeDispatch: async (signal) => {
+      if (lookup.config.testGenerationDelayMs > 0) {
+        await abortableDelay(lookup.config.testGenerationDelayMs, signal);
+      }
+    },
     generate: async (signal) => {
       let dispatched = false;
       const baseProvider =
@@ -159,9 +185,6 @@ export async function POST(request: Request) {
         : undefined;
 
       try {
-        if (lookup.config.testGenerationDelayMs > 0) {
-          await abortableDelay(lookup.config.testGenerationDelayMs, signal);
-        }
         const result: BuilderGenerationResponse = await runBuilderGeneration(
           parsed,
           {
@@ -198,7 +221,7 @@ export async function POST(request: Request) {
     after.session.id !== sessionId ||
     after.subject.id !== subjectId
   ) {
-    return sessionChangedResponse(subjectId);
+    return sessionEndedResponse(subjectId);
   }
 
   const response = Response.json(limited.result, {

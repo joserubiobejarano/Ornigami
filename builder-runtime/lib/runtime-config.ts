@@ -25,6 +25,10 @@ export type BuilderRuntimeConfig = Readonly<{
   testProvider: BuilderTestProviderMode;
   testProviderCostMicros: number;
   limits: BuilderGenerationLimits;
+  redeemWindowSeconds: number;
+  redeemClientAttemptLimit: number;
+  redeemGlobalAttemptLimit: number;
+  trustProxyHeaders: boolean;
 }>;
 
 export class BuilderRuntimeConfigurationError extends Error {
@@ -269,6 +273,42 @@ export function readBuilderRuntimeConfig(
     errors.push("NEXT_PUBLIC_APP_URL must be an absolute URL.");
   }
 
+  const redeemWindowSeconds = parseInteger(
+    env.BUILDER_RUNTIME_REDEEM_WINDOW_SECONDS,
+    60,
+    10,
+    3_600,
+    "BUILDER_RUNTIME_REDEEM_WINDOW_SECONDS",
+    errors,
+  );
+  const redeemClientAttemptLimit = parseInteger(
+    env.BUILDER_RUNTIME_REDEEM_CLIENT_ATTEMPT_LIMIT,
+    20,
+    1,
+    1_000,
+    "BUILDER_RUNTIME_REDEEM_CLIENT_ATTEMPT_LIMIT",
+    errors,
+  );
+  const redeemGlobalAttemptLimit = parseInteger(
+    env.BUILDER_RUNTIME_REDEEM_GLOBAL_ATTEMPT_LIMIT,
+    100,
+    1,
+    10_000,
+    "BUILDER_RUNTIME_REDEEM_GLOBAL_ATTEMPT_LIMIT",
+    errors,
+  );
+  if (redeemGlobalAttemptLimit < redeemClientAttemptLimit) {
+    errors.push(
+      "BUILDER_RUNTIME_REDEEM_GLOBAL_ATTEMPT_LIMIT must be at least BUILDER_RUNTIME_REDEEM_CLIENT_ATTEMPT_LIMIT.",
+    );
+  }
+  const trustProxyHeaders = env.BUILDER_RUNTIME_TRUST_PROXY_HEADERS === "1";
+
+  const storeHostId = env.BUILDER_RUNTIME_STORE_HOST_ID?.trim();
+  if (storeHostId && storeHostId.length > 255) {
+    errors.push("BUILDER_RUNTIME_STORE_HOST_ID must be at most 255 characters.");
+  }
+
   if (errors.length > 0) throw new BuilderRuntimeConfigurationError(errors);
 
   return {
@@ -284,6 +324,10 @@ export function readBuilderRuntimeConfig(
     testProvider,
     testProviderCostMicros,
     limits,
+    redeemWindowSeconds,
+    redeemClientAttemptLimit,
+    redeemGlobalAttemptLimit,
+    trustProxyHeaders,
   };
 }
 

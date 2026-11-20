@@ -16,6 +16,8 @@ import {
 } from "./access.ts";
 
 export const BUILDER_GENERATION_MAX_BODY_BYTES = 32_768;
+export const BUILDER_GENERATION_REQUEST_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const BODY_KEYS = new Set(["browserBrief", "requestId"]);
 
@@ -24,7 +26,7 @@ type ParsedBrowserBrief = Extract<BrowserOfferBriefParseResult, { ok: true }>;
 export type ParsedBuilderGenerationRequest =
   | {
       ok: true;
-      requestId?: string;
+      requestId: string;
       brief: ParsedBrowserBrief;
     }
   | {
@@ -57,9 +59,14 @@ export function parseBuilderGenerationRequest(
   }
 
   const requestId =
-    typeof body.requestId === "string"
-      ? body.requestId.slice(0, 120)
-      : undefined;
+    typeof body.requestId === "string" ? body.requestId.trim() : "";
+  if (!BUILDER_GENERATION_REQUEST_ID_PATTERN.test(requestId)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "A valid UUID requestId is required.",
+    };
+  }
   const unsupported = Object.keys(body).filter((key) => !BODY_KEYS.has(key));
   if (unsupported.length > 0) {
     return {

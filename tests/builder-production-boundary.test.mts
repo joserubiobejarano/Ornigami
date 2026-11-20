@@ -151,27 +151,34 @@ test("the closed builder API does not touch the request at all", async () => {
 test("the builder parser accepts only the bounded browser brief contract", () => {
   const accepted = parseBuilderGenerationRequest({
     browserBrief: browserBrief(),
-    requestId: "req-1",
+    requestId: "11111111-1111-4111-8111-111111111111",
   });
   assert.equal(accepted.ok, true);
   if (accepted.ok) {
-    assert.equal(accepted.requestId, "req-1");
+    assert.equal(accepted.requestId, "11111111-1111-4111-8111-111111111111");
     assert.equal(accepted.brief.context.ownerConfirmed, false);
     assert.equal(accepted.brief.context.assetBytesVerified, false);
   }
 
   for (const body of [
-    { fixtureId: "sparse" },
-    { values: {}, browserBrief: browserBrief() },
-    { browserBrief: browserBrief(), format: "advertorial" },
-    { browserBrief: browserBrief(), values: { format: "advertorial" } },
+    { browserBrief: browserBrief() },
+    { browserBrief: browserBrief(), requestId: "req-1" },
+    { browserBrief: browserBrief(), requestId: "1" },
+    { browserBrief: browserBrief(), requestId: "11111111-1111-4111-8111-11111111111z" },
+    { fixtureId: "sparse", requestId: "11111111-1111-4111-8111-111111111111" },
+    { values: {}, browserBrief: browserBrief(), requestId: "11111111-1111-4111-8111-111111111111" },
+    { browserBrief: browserBrief(), format: "advertorial", requestId: "11111111-1111-4111-8111-111111111111" },
+    { browserBrief: browserBrief(), values: { format: "advertorial" }, requestId: "11111111-1111-4111-8111-111111111111" },
   ]) {
     const rejected = parseBuilderGenerationRequest(body);
     assert.equal(rejected.ok, false, JSON.stringify(body));
     if (!rejected.ok) assert.equal(rejected.status, 400);
   }
 
-  const invalid = parseBuilderGenerationRequest({ browserBrief: { schemaVersion: 1 } });
+  const invalid = parseBuilderGenerationRequest({
+    browserBrief: { schemaVersion: 1 },
+    requestId: "11111111-1111-4111-8111-111111111111",
+  });
   assert.equal(invalid.ok, false);
   if (!invalid.ok) assert.equal(invalid.status, 422);
 });
@@ -179,7 +186,7 @@ test("the builder parser accepts only the bounded browser brief contract", () =>
 test("builder generation defaults to an offline deterministic draft and never reads lab provider settings", async () => {
   const parsed = parseBuilderGenerationRequest({
     browserBrief: browserBrief(),
-    requestId: "req-offline",
+    requestId: "22222222-2222-4222-8222-222222222222",
   });
   assert.equal(parsed.ok, true);
   if (!parsed.ok) return;
@@ -205,7 +212,7 @@ test("builder generation defaults to an offline deterministic draft and never re
 test("the qualified offer pipeline remains available to the isolated builder wrapper", async () => {
   const parsed = parseBuilderGenerationRequest({
     browserBrief: browserBrief(),
-    requestId: "req-offer",
+    requestId: "33333333-3333-4333-8333-333333333333",
   });
   assert.equal(parsed.ok, true);
   if (!parsed.ok) return;
@@ -235,10 +242,10 @@ test("the authorized handler still uses only the browser brief and injected work
       } as unknown as BuilderGenerationResponse;
     },
   });
-  const response = await handler(request({ browserBrief: browserBrief(), requestId: "req-2" }));
+  const response = await handler(request({ browserBrief: browserBrief(), requestId: "44444444-4444-4444-8444-444444444444" }));
   assert.equal(response.status, 200);
   const payload = await response.json();
-  assert.equal(payload.requestId, "req-2");
+  assert.equal(payload.requestId, "44444444-4444-4444-8444-444444444444");
   assert.equal(payload.browserBrief.source, "browser-offer");
   assert.ok(received);
   assert.equal((received as { brief?: { context?: { source?: string } } }).brief?.context?.source, "browser-offer");
@@ -248,7 +255,9 @@ test("builder runtime source has no legacy auth, billing, database, job or provi
   const files = [
     "src/lib/builder/access.ts",
     "src/lib/builder/config.ts",
+    "src/lib/builder/draft-storage.ts",
     "src/lib/builder/generation.ts",
+    "src/lib/builder/request-id.ts",
     "src/lib/builder/startup.ts",
     "src/app/builder/layout.tsx",
     "src/app/builder/page.tsx",

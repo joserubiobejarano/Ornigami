@@ -1,12 +1,15 @@
 import { createHash, randomBytes } from "node:crypto";
 import {
+  link,
   mkdir,
   open,
+  readdir,
   readFile,
   rename,
   rm,
   stat,
 } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 /**
@@ -17,11 +20,40 @@ import path from "node:path";
  */
 export const BUILDER_IDENTITY_STORE_VERSION = 1 as const;
 export const BUILDER_IDENTITY_STORE_FILE = "identity-store.json";
-const LOCK_FILE = "identity-store.lock";
+export const BUILDER_IDENTITY_LOCK_FILE = "identity-store.lock";
+const REAP_LOCK_FILE = "identity-store.reap.lock";
 const LOCK_WAIT_MS = 10_000;
 const LOCK_RETRY_MS = 25;
-const STALE_LOCK_MS = 30_000;
+const LOCK_METADATA_VERSION = 1;
+const MAX_LOCK_METADATA_BYTES = 4_096;
 const TOKEN_BYTES = 32;
+/**
+ * Stable identity for the local store host. Set
+ * BUILDER_RUNTIME_STORE_HOST_ID to a constant in containers so a stale lock
+ * from a replaced container can be proven dead. An empty or changed value
+ * fails closed instead of stealing a live lock.
+ */
+const STORE_HOST_ID =
+  process.env.BUILDER_RUNTIME_STORE_HOST_ID?.trim().slice(0, 255) ||
+  os.hostname();
+
+export type BuilderStoreLockOptions = Readonly<{
+  /** Bounded wait, primarily for focused tests and operator diagnostics. */
+  lockWaitMs?: number;
+}>;
+
+type BuilderLockMetadata = {
+  version: typeof LOCK_METADATA_VERSION;
+  token: string;
+  pid: number;
+  hostname: string;
+  acquiredAt: string;
+};
+
+type LockMetadataRead =
+  | { kind: "missing" }
+  | { kind: "invalid" }
+  | { kind: "valid"; metadata: BuilderLockMetadata };
 
 export type BuilderSubjectRecord = {
   id: string;
@@ -188,6 +220,19 @@ async function readStoreUnlocked(storeDir: string): Promise<BuilderIdentityStore
   }
 }
 
+async function syncDirectory(directory: string): Promise<void> {
+  try {
+    const handle = await open(directory, "r");
+    try {
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  } catch {
+    // Windows and some filesystems do not support directory fsync.
+  }
+}
+
 async function writeStoreUnlocked(
   storeDir: string,
   store: BuilderIdentityStore,
@@ -208,26 +253,270 @@ async function writeStoreUnlocked(
       await handle.close();
     }
     await rename(temporary, storePath(directory));
+    await syncDirectory(directory);
   } catch {
-    await rm(temporary, { force: true });
+    try {
+      await rm(temporary, { force: true });
+    } catch {
+      // The original write failure remains the actionable error.
+    }
     throw new BuilderStoreUnavailable();
   }
 }
 
-async function clearIfStale(lockPath: string): Promise<void> {
+function errnoCode(error: unknown): string | null {
+  return (error as NodeJS.ErrnoException | null)?.code ?? null;
+}
+
+function newLockMetadata(token: string, now: Date): BuilderLockMetadata {
+  return {
+    version: LOCK_METADATA_VERSION,
+    token,
+    pid: process.pid,
+    hostname: STORE_HOST_ID,
+    acquiredAt: now.toISOString(),
+  };
+}
+
+/**
+ * Creates a complete lock file with an atomic hard-link claim. The temporary
+ * file is synced before linking, so a reader never observes a partial lock
+ * owner record.
+ */
+async function writeExclusiveFile(
+  filePath: string,
+  metadata: BuilderLockMetadata,
+): Promise<boolean> {
+  const temporary = `${filePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
   try {
-    const details = await stat(lockPath);
-    if (Date.now() - details.mtimeMs > STALE_LOCK_MS) {
-      await rm(lockPath, { force: true });
+    const handle = await open(temporary, "wx", 0o600);
+    try {
+      await handle.writeFile(`${JSON.stringify(metadata)}\n`, "utf8");
+      await handle.sync();
+    } finally {
+      await handle.close();
     }
+    try {
+      await link(temporary, filePath);
+      return true;
+    } catch (error) {
+      if (errnoCode(error) === "EEXIST") return false;
+      throw new BuilderStoreUnavailable();
+    }
+  } catch (error) {
+    if (error instanceof BuilderStoreUnavailable) throw error;
+    throw new BuilderStoreUnavailable();
+  } finally {
+    try {
+      await rm(temporary, { force: true });
+    } catch {
+      // The claim outcome is already established; a leftover temp is inert.
+    }
+  }
+}
+
+async function readLockMetadata(filePath: string): Promise<LockMetadataRead> {
+  let size: number;
+  try {
+    const details = await stat(filePath);
+    if (!details.isFile() || details.size > MAX_LOCK_METADATA_BYTES) {
+      return { kind: "invalid" };
+    }
+    size = details.size;
+  } catch (error) {
+    return errnoCode(error) === "ENOENT"
+      ? { kind: "missing" }
+      : { kind: "invalid" };
+  }
+  if (size === 0) return { kind: "invalid" };
+
+  let raw: string;
+  try {
+    raw = await readFile(filePath, "utf8");
+  } catch (error) {
+    return errnoCode(error) === "ENOENT"
+      ? { kind: "missing" }
+      : { kind: "invalid" };
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return { kind: "invalid" };
+    }
+    const record = parsed as Record<string, unknown>;
+    if (
+      record.version !== LOCK_METADATA_VERSION ||
+      typeof record.token !== "string" ||
+      record.token.length === 0 ||
+      record.token.length > 128 ||
+      typeof record.pid !== "number" ||
+      !Number.isInteger(record.pid) ||
+      record.pid <= 0 ||
+      typeof record.hostname !== "string" ||
+      record.hostname.length === 0 ||
+      record.hostname.length > 255 ||
+      typeof record.acquiredAt !== "string" ||
+      !Number.isFinite(Date.parse(record.acquiredAt))
+    ) {
+      return { kind: "invalid" };
+    }
+    return {
+      kind: "valid",
+      metadata: {
+        version: LOCK_METADATA_VERSION,
+        token: record.token,
+        pid: record.pid,
+        hostname: record.hostname,
+        acquiredAt: record.acquiredAt,
+      },
+    };
   } catch {
-    // Another process may have released it already.
+    return { kind: "invalid" };
+  }
+}
+
+function processOwnerState(pid: number): "alive" | "dead" | "unknown" {
+  try {
+    process.kill(pid, 0);
+    return "alive";
+  } catch (error) {
+    return errnoCode(error) === "ESRCH" ? "dead" : "unknown";
+  }
+}
+
+function ownerIsProvablyInactive(metadata: BuilderLockMetadata): boolean {
+  return (
+    metadata.hostname === STORE_HOST_ID &&
+    processOwnerState(metadata.pid) === "dead"
+  );
+}
+
+/**
+ * Removes a file only when its recorded owner is provably dead on this host.
+ * Age is never used: a live but paused owner keeps the lock, and a
+ * different-host or corrupt owner is not auto-recovered.
+ *
+ * The file is first renamed to a unique quarantine path. If the moved bytes no
+ * longer carry the observed token, a successor replaced the file between the
+ * read and rename; the successor is restored rather than deleted.
+ */
+async function removeFileWithInactiveOwner(filePath: string): Promise<boolean> {
+  const observed = await readLockMetadata(filePath);
+  if (observed.kind !== "valid" || !ownerIsProvablyInactive(observed.metadata)) {
+    return false;
+  }
+
+  const quarantine = `${filePath}.stale.${process.pid}.${randomBytes(6).toString("hex")}`;
+  try {
+    await rename(filePath, quarantine);
+  } catch (error) {
+    if (errnoCode(error) === "ENOENT") return false;
+    throw new BuilderStoreUnavailable();
+  }
+
+  const moved = await readLockMetadata(quarantine);
+  if (moved.kind !== "valid" || moved.metadata.token !== observed.metadata.token) {
+    try {
+      await link(quarantine, filePath);
+    } catch {
+      throw new BuilderStoreUnavailable(
+        "Builder store lock recovery collided with a successor. Stop all writers and review the lock files.",
+      );
+    }
+    await rm(quarantine, { force: true });
+    return false;
+  }
+
+  await rm(quarantine, { force: true });
+  return true;
+}
+
+/**
+ * Releases only the file carrying this owner's token. A stale owner that
+ * resumes after a successor acquired the lock cannot remove the successor.
+ */
+async function releaseOwnedFile(
+  filePath: string,
+  token: string,
+): Promise<boolean> {
+  const observed = await readLockMetadata(filePath);
+  if (observed.kind !== "valid" || observed.metadata.token !== token) {
+    return false;
+  }
+
+  const quarantine = `${filePath}.release.${process.pid}.${randomBytes(6).toString("hex")}`;
+  try {
+    await rename(filePath, quarantine);
+  } catch (error) {
+    if (errnoCode(error) === "ENOENT") return false;
+    throw new BuilderStoreUnavailable();
+  }
+
+  const moved = await readLockMetadata(quarantine);
+  if (moved.kind !== "valid" || moved.metadata.token !== token) {
+    try {
+      await link(quarantine, filePath);
+    } catch {
+      throw new BuilderStoreUnavailable(
+        "Builder store lock release collided with a successor. Stop all writers and review the lock files.",
+      );
+    }
+    await rm(quarantine, { force: true });
+    return false;
+  }
+
+  await rm(quarantine, { force: true });
+  return true;
+}
+
+async function reapInactiveLock(lockPath: string): Promise<boolean> {
+  const reapPath = path.join(path.dirname(lockPath), REAP_LOCK_FILE);
+  const token = newToken();
+  if (!(await writeExclusiveFile(reapPath, newLockMetadata(token, new Date())))) {
+    await removeFileWithInactiveOwner(reapPath);
+    return false;
+  }
+  try {
+    return await removeFileWithInactiveOwner(lockPath);
+  } finally {
+    await releaseOwnedFile(reapPath, token);
+  }
+}
+
+async function cleanupOrphanTemporaryFiles(directory: string): Promise<void> {
+  let entries;
+  try {
+    entries = await readdir(directory, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".tmp")) continue;
+    if (
+      !entry.name.includes(BUILDER_IDENTITY_STORE_FILE) &&
+      !entry.name.includes(BUILDER_IDENTITY_LOCK_FILE) &&
+      !entry.name.includes(REAP_LOCK_FILE)
+    ) {
+      continue;
+    }
+    const match = /\.(\d+)\.[a-f0-9]+\.tmp$/.exec(entry.name);
+    if (!match) continue;
+    const pid = Number.parseInt(match[1], 10);
+    if (!Number.isFinite(pid) || pid <= 0 || pid === process.pid) continue;
+    if (processOwnerState(pid) !== "dead") continue;
+    try {
+      await rm(path.join(directory, entry.name), { force: true });
+    } catch {
+      // An orphan cleanup failure does not invalidate the current write.
+    }
   }
 }
 
 async function withStoreLock<T>(
   storeDir: string,
   operation: (store: BuilderIdentityStore) => Promise<T> | T,
+  options: BuilderStoreLockOptions = {},
 ): Promise<T> {
   const directory = path.resolve(storeDir);
   try {
@@ -235,39 +524,39 @@ async function withStoreLock<T>(
   } catch {
     throw new BuilderStoreUnavailable();
   }
-  const lockPath = path.join(directory, LOCK_FILE);
-  const deadline = Date.now() + LOCK_WAIT_MS;
-  let handle: Awaited<ReturnType<typeof open>> | null = null;
 
-  while (!handle) {
-    try {
-      handle = await open(lockPath, "wx", 0o600);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-        throw new BuilderStoreUnavailable();
-      }
-      await clearIfStale(lockPath);
-      if (Date.now() >= deadline) throw new BuilderStoreUnavailable();
-      await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_MS));
+  const lockPath = path.join(directory, BUILDER_IDENTITY_LOCK_FILE);
+  const waitMs =
+    options.lockWaitMs === undefined || !Number.isFinite(options.lockWaitMs)
+      ? LOCK_WAIT_MS
+      : Math.max(1, Math.min(60_000, Math.floor(options.lockWaitMs)));
+  const deadline = Date.now() + waitMs;
+  const token = newToken();
+  const metadata = newLockMetadata(token, new Date());
+
+  let acquired = false;
+  while (!acquired) {
+    if (await writeExclusiveFile(lockPath, metadata)) {
+      acquired = true;
+      break;
     }
+    await reapInactiveLock(lockPath);
+    if (Date.now() >= deadline) {
+      throw new BuilderStoreUnavailable(
+        "Builder identity storage is locked by another writer.",
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_MS));
   }
 
   try {
-    await handle.writeFile(
-      JSON.stringify({ pid: process.pid, at: new Date().toISOString() }),
-      "utf8",
-    );
+    await cleanupOrphanTemporaryFiles(directory);
     const store = await readStoreUnlocked(directory);
     const result = await operation(store);
     await writeStoreUnlocked(directory, store);
     return result;
   } finally {
-    try {
-      await handle.close();
-    } catch {
-      // The lock is still removed below.
-    }
-    await rm(lockPath, { force: true });
+    await releaseOwnedFile(lockPath, token);
   }
 }
 
@@ -284,8 +573,51 @@ export async function readBuilderIdentityStore(
 export async function withBuilderIdentityStore<T>(
   storeDir: string,
   operation: (store: BuilderIdentityStore) => Promise<T> | T,
+  options: BuilderStoreLockOptions = {},
 ): Promise<T> {
-  return withStoreLock(storeDir, operation);
+  return withStoreLock(storeDir, operation, options);
+}
+
+export type BuilderAdmissionStatus = "active" | "inactive" | "unavailable";
+
+/**
+ * Checks the server-side session and subject records without trusting a
+ * client claim. Used both by reservation (inside the write transaction) and by
+ * the final pre-dispatch recheck.
+ */
+export function builderAdmissionIsActiveInStore(
+  store: BuilderIdentityStore,
+  input: { sessionId: string; subjectId: string; now?: Date },
+): boolean {
+  const now = input.now ?? new Date();
+  const session = store.sessions.find((item) => item.id === input.sessionId);
+  if (
+    !session ||
+    session.subjectId !== input.subjectId ||
+    session.revokedAt ||
+    !Number.isFinite(Date.parse(session.expiresAt)) ||
+    Date.parse(session.expiresAt) <= now.getTime()
+  ) {
+    return false;
+  }
+  const subject = store.subjects.find((item) => item.id === input.subjectId);
+  return Boolean(subject && !subject.revokedAt);
+}
+
+export async function readBuilderAdmissionStatus(input: {
+  storeDir: string;
+  sessionId: string;
+  subjectId: string;
+  now?: Date;
+}): Promise<BuilderAdmissionStatus> {
+  try {
+    const store = await readStoreUnlocked(input.storeDir);
+    return builderAdmissionIsActiveInStore(store, input)
+      ? "active"
+      : "inactive";
+  } catch {
+    return "unavailable";
+  }
 }
 
 export async function issueBuilderInvite(input: {
@@ -408,7 +740,9 @@ export async function revokeBuilderSession(input: {
   now?: Date;
 }): Promise<boolean> {
   const now = input.now ?? new Date();
-  const digest = input.token ? tokenHash(input.token.trim()) : null;
+  const token = input.token?.trim();
+  if (!input.sessionId && (!token || token.length > 512)) return false;
+  const digest = token ? tokenHash(token) : null;
   return withStoreLock(input.storeDir, (store) => {
     const session = store.sessions.find(
       (item) =>

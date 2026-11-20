@@ -3,6 +3,11 @@
 20 November 2026. Local source only; no deployment, customer message, real
 provider call, paid call or publication.
 
+> Hardening follow-up: `docs/BUILDER_SERVER_HARDENING_20261120.md` adds
+> confirmed logout semantics, reservation-time session rechecks, safer store
+> locks, required UUID request ids, bounded redemption and exact configured
+> origin checks. The accounting rules below remain in force.
+
 ## Decision
 
 The builder runtime enforces per-subject and global generation request,
@@ -28,15 +33,19 @@ than making an unaccounted provider call.
 
 ## Accounting rules
 
-One accepted, authenticated, same-origin, validated generation request creates
-exactly one `reserved` usage record before dispatch. The client `requestId` is
-the idempotency key, scoped to `subjectId` + `sessionId`.
+One accepted, authenticated, same-origin, validated generation request with a
+required UUID request id creates exactly one `reserved` usage record before
+dispatch. The client `requestId` is the idempotency key, scoped to
+`subjectId` + `sessionId`.
 
 | Event | Request quota | Usage record | Spend exposure |
 | --- | --- | --- | --- |
 | Unauthenticated, cross-origin, closed mode or stale subject header | No | None | None |
 | Invalid body, malformed JSON or invalid brief | No | None | None |
 | Request/concurrency/spend limit denial | No | None | None |
+| Session/subject inactive at reservation | No | None | None |
+| Revocation after reservation, before dispatch | Yes | `failed` at `0` | Zero; no provider request |
+| Revocation after dispatch | Yes | `succeeded`/`unknown` | Actual or reservation; result discarded |
 | Duplicate `requestId` for the same subject and session | No | Existing record returned | Unchanged |
 | Accepted request before dispatch | Yes, one | `reserved` | Reservation micros |
 | Success with generated proposal | Yes | `succeeded` at actual micros | Actual micros |
@@ -115,6 +124,7 @@ provider remains disabled because the builder wrapper passes
 | `429 generation_limit`, code `subject_requests` / `global_requests` | The relevant request limit is reached; `Retry-After` is the seconds until the oldest request leaves the window. |
 | `429 generation_limit`, code `subject_concurrency` / `global_concurrency` | Another generation is running; `Retry-After` is the bounded lease wait. |
 | `429 generation_limit`, code `subject_spend` / `global_spend` | The spend cap is exhausted; contact the operator before another generation. |
+| `401 session_inactive` | The server session or subject ended before dispatch, or during generation. No preview is returned; reload and sign in again. |
 | `409 request_already_submitted` | This request id was already submitted; start a new generation. |
 | `503 accounting_unavailable` | Usage accounting cannot be verified; no provider request was made or the reservation remains held. |
 | `408 generation_cancelled` | The request was cancelled before dispatch. |

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import path from "node:path";
@@ -27,6 +28,18 @@ assert.equal(
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const results = [];
+const requestIds = {
+  a1: randomUUID(),
+  a2: randomUUID(),
+  a3: randomUUID(),
+  a4: randomUUID(),
+  b1: randomUUID(),
+  b2: randomUUID(),
+  b3: randomUUID(),
+  timeout: randomUUID(),
+  invalid: randomUUID(),
+  unknown: randomUUID(),
+};
 
 function record(name, detail) {
   results.push({ name, ...detail });
@@ -225,18 +238,25 @@ let server = null;
 try {
   server = await startServer({ BUILDER_RUNTIME_TEST_GENERATION_DELAY_MS: "250" });
   const identityA = await redeem(server, inviteA.token);
-  const first = await generate(server, identityA, "a-1");
+  const invalidRequestId = await generate(server, identityA, "1");
+  assert.equal(invalidRequestId.status, 400);
+  assert.equal(usageFor(listStore(), identityA.subjectId).length, 0);
+  record("invalid request id is denied before reservation", {
+    status: invalidRequestId.status,
+  });
+
+  const first = await generate(server, identityA, requestIds.a1);
   assert.equal(first.status, 200, JSON.stringify(first.payload));
   record("authenticated success", { status: first.status, revision: first.payload?.preview?.revision ?? null });
 
-  const duplicate = await generate(server, identityA, "a-1");
+  const duplicate = await generate(server, identityA, requestIds.a1);
   assert.equal(duplicate.status, 409);
   assert.equal(duplicate.payload?.error, "request_already_submitted");
   record("same request id is idempotent", { status: duplicate.status });
 
   const concurrent = await Promise.all([
-    generate(server, identityA, "a-2"),
-    generate(server, identityA, "a-3"),
+    generate(server, identityA, requestIds.a2),
+    generate(server, identityA, requestIds.a3),
   ]);
   const statuses = concurrent.map((item) => item.status).sort((a, b) => a - b);
   assert.deepEqual(statuses, [200, 429]);
@@ -252,7 +272,7 @@ try {
     spendMicros: spendFor(afterConcurrency, identityA.subjectId),
   });
 
-  const spendDenied = await generate(server, identityA, "a-4");
+  const spendDenied = await generate(server, identityA, requestIds.a4);
   assert.equal(spendDenied.status, 429);
   assert.equal(spendDenied.payload?.code, "subject_spend");
   record("spend cap denies before dispatch", { status: spendDenied.status, code: spendDenied.payload.code });
@@ -274,11 +294,11 @@ try {
     BUILDER_RUNTIME_GLOBAL_SPEND_LIMIT_MICROS: "1000000",
   });
   const identityB = await redeem(server, inviteB.token);
-  for (const id of ["b-1", "b-2"]) {
+  for (const id of [requestIds.b1, requestIds.b2]) {
     const response = await generate(server, identityB, id);
     assert.equal(response.status, 200, JSON.stringify(response.payload));
   }
-  const requestDenied = await generate(server, identityB, "b-3");
+  const requestDenied = await generate(server, identityB, requestIds.b3);
   assert.equal(requestDenied.status, 429);
   assert.equal(requestDenied.payload?.code, "subject_requests");
   record("restart preserves accounting and request window", {
@@ -300,11 +320,11 @@ try {
     BUILDER_RUNTIME_GLOBAL_SPEND_LIMIT_MICROS: "1000000",
   });
   const identityC = await redeem(server, inviteC.token);
-  const timeout = await generate(server, identityC, "c-timeout");
+  const timeout = await generate(server, identityC, requestIds.timeout);
   assert.equal(timeout.status, 200);
   assert.equal(timeout.payload?.generation?.code, "timeout");
   const afterTimeout = listStore();
-  const timeoutUsage = usageFor(afterTimeout, identityC.subjectId).find((item) => item.requestKey === "c-timeout");
+  const timeoutUsage = usageFor(afterTimeout, identityC.subjectId).find((item) => item.requestKey === requestIds.timeout);
   assert.equal(timeoutUsage?.state, "unknown");
   record("timeout is reserved as unknown", { state: timeoutUsage?.state, costMicros: timeoutUsage?.costMicros });
   await server.stop();
@@ -320,10 +340,10 @@ try {
     BUILDER_RUNTIME_SUBJECT_SPEND_LIMIT_MICROS: "1000000",
     BUILDER_RUNTIME_GLOBAL_SPEND_LIMIT_MICROS: "1000000",
   });
-  const invalid = await generate(server, identityC, "c-invalid");
+  const invalid = await generate(server, identityC, requestIds.invalid);
   assert.equal(invalid.status, 200);
   assert.equal(invalid.payload?.generation?.code, "invalid");
-  const invalidUsage = usageFor(listStore(), identityC.subjectId).find((item) => item.requestKey === "c-invalid");
+  const invalidUsage = usageFor(listStore(), identityC.subjectId).find((item) => item.requestKey === requestIds.invalid);
   assert.equal(invalidUsage?.state, "unknown");
   record("invalid output is reserved as unknown", { state: invalidUsage?.state });
   await server.stop();
@@ -339,10 +359,10 @@ try {
     BUILDER_RUNTIME_SUBJECT_SPEND_LIMIT_MICROS: "1000000",
     BUILDER_RUNTIME_GLOBAL_SPEND_LIMIT_MICROS: "1000000",
   });
-  const unknown = await generate(server, identityC, "c-unknown");
+  const unknown = await generate(server, identityC, requestIds.unknown);
   assert.equal(unknown.status, 200);
   assert.equal(unknown.payload?.generation?.code, "provider-error");
-  const unknownUsage = usageFor(listStore(), identityC.subjectId).find((item) => item.requestKey === "c-unknown");
+  const unknownUsage = usageFor(listStore(), identityC.subjectId).find((item) => item.requestKey === requestIds.unknown);
   assert.equal(unknownUsage?.state, "unknown");
   record("unknown provider outcome is reserved", { state: unknownUsage?.state });
   await server.stop();

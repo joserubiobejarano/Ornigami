@@ -6,6 +6,9 @@ import test from "node:test";
 import {
   BuilderStoreUnavailable,
   readBuilderIdentityStore,
+  revokeBuilderSession,
+  revokeBuilderSubject,
+  withBuilderIdentityStore,
 } from "../builder-runtime/lib/identity-store.ts";
 import {
   effectiveUsageCostMicros,
@@ -41,6 +44,31 @@ function limits(
   };
 }
 
+async function ensureActiveSession(
+  dir: string,
+  subjectId: string,
+  sessionId: string,
+): Promise<void> {
+  await withBuilderIdentityStore(dir, (store) => {
+    if (!store.subjects.some((subject) => subject.id === subjectId)) {
+      store.subjects.push({
+        id: subjectId,
+        label: "Synthetic ledger subject",
+        createdAt: new Date("2026-11-20T09:00:00.000Z").toISOString(),
+      });
+    }
+    if (!store.sessions.some((session) => session.id === sessionId)) {
+      store.sessions.push({
+        id: sessionId,
+        subjectId,
+        tokenHash: "synthetic-token-hash",
+        createdAt: new Date("2026-11-20T09:00:00.000Z").toISOString(),
+        expiresAt: new Date("2030-01-01T00:00:00.000Z").toISOString(),
+      });
+    }
+  });
+}
+
 async function reserve(
   dir: string,
   subjectId: string,
@@ -49,6 +77,7 @@ async function reserve(
   limitConfig: BuilderGenerationLimits = limits(),
   now?: Date,
 ) {
+  await ensureActiveSession(dir, subjectId, sessionId);
   return reserveBuilderUsage({
     storeDir: dir,
     subjectId,
@@ -58,6 +87,51 @@ async function reserve(
     ...(now ? { now } : {}),
   });
 }
+
+test("reservation requires an active server session and subject", async () => {
+  const dir = storeDir("admission");
+
+  const missing = await reserveBuilderUsage({
+    storeDir: dir,
+    subjectId: "sub_missing",
+    sessionId: "ses_missing",
+    requestKey: "admission-missing",
+    limits: limits(),
+  });
+  assert.equal(missing.ok, false);
+  if (!missing.ok) assert.equal(missing.code, "session_inactive");
+
+  await ensureActiveSession(dir, "sub_a", "ses_a");
+  const allowed = await reserve(dir, "sub_a", "ses_a", "admission-allowed");
+  assert.equal(allowed.ok, true);
+
+  await revokeBuilderSession({
+    storeDir: dir,
+    sessionId: "ses_a",
+  });
+  const revoked = await reserve(dir, "sub_a", "ses_a", "admission-revoked");
+  assert.equal(revoked.ok, false);
+  if (!revoked.ok) assert.equal(revoked.code, "session_inactive");
+
+  await ensureActiveSession(dir, "sub_b", "ses_b");
+  await revokeBuilderSubject({ storeDir: dir, subjectId: "sub_b" });
+  const subjectRevoked = await reserve(
+    dir,
+    "sub_b",
+    "ses_b",
+    "admission-subject-revoked",
+  );
+  assert.equal(subjectRevoked.ok, false);
+  if (!subjectRevoked.ok) assert.equal(subjectRevoked.code, "session_inactive");
+
+  const store = await readBuilderIdentityStore(dir);
+  assert.equal(
+    store.usage.length,
+    1,
+    "inactive admission must not append a usage record",
+  );
+  assert.equal(store.usage[0].requestKey, "admission-allowed");
+});
 
 test("a reservation is unique per request key and settlement is idempotent", async () => {
   const dir = storeDir("idempotent");
