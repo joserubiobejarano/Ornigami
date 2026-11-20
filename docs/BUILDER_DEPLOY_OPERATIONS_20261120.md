@@ -191,6 +191,10 @@ enabled. Browser evidence is written under the run's `browser/` directory
 
 ## Related evidence
 
+- [`docs/handoffs/BUILDER_STORE_MOUNT_INITIALIZATION_20261120.md`](./handoffs/BUILDER_STORE_MOUNT_INITIALIZATION_20261120.md)
+  — mounted primary/restore volume initialization, collected writable-path
+  evidence, real mount-only receipt and the next full Linux command at candidate
+  `5b335bc`.
 - [`docs/handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md`](./handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md)
   — exact commit, local self-test/lock/browser results and the pending Linux
   receipt for this session.
