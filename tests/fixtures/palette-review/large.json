@@ -1,0 +1,4040 @@
+{
+  "schemaVersion": "1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "outcome": "draft",
+  "sources": [
+    {
+      "id": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "kind": "css",
+      "requestedUrl": "https://palette.synthetic.invalid/base.css",
+      "finalUrl": "https://palette.synthetic.invalid/base.css",
+      "status": 200,
+      "contentType": "text/css",
+      "byteLength": 1109,
+      "sha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "outcome": "processed",
+      "issues": []
+    },
+    {
+      "id": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "kind": "css",
+      "requestedUrl": "https://palette.synthetic.invalid/dark-theme.css",
+      "finalUrl": "https://palette.synthetic.invalid/dark-theme.css",
+      "status": 200,
+      "contentType": "text/css",
+      "byteLength": 1152,
+      "sha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "outcome": "processed",
+      "issues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ]
+    },
+    {
+      "id": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "kind": "css",
+      "requestedUrl": "https://palette.synthetic.invalid/conditional.css",
+      "finalUrl": "https://palette.synthetic.invalid/conditional.css",
+      "status": 200,
+      "contentType": "text/css",
+      "byteLength": 1153,
+      "sha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "outcome": "processed",
+      "issues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ]
+    },
+    {
+      "id": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "kind": "raster",
+      "requestedUrl": "https://rose.example/photo.png",
+      "finalUrl": "https://rose.example/photo.png",
+      "status": 200,
+      "contentType": "image/png",
+      "byteLength": 19930,
+      "sha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "outcome": "processed",
+      "issues": [
+        "sampled-srgb-not-original-pixel-palette",
+        "image-purpose-and-rights-unknown"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "7382738f2dbc91af45a9d71364f3b7c19ae3e775903390804494032a2a6d36b5",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340ff",
+        "utf16Offset": 16
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "8961de6fff1fc4f57130bd78efbbea4791a98b81be2806dfc97f434a09799fee",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 43
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "8dc8634bba4ef09e98d1898077fa39e5e9817c8a5f05250f50375f5f50882d09",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6eaff",
+        "utf16Offset": 70
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6dec060954e3a2eb7f7aecb9f8e5fa28e209daf9565c5bb4df1a7a087351ccd2",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#ffffffff",
+      "evidence": {
+        "quote": "#ffffffff",
+        "utf16Offset": 97
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "293532b5f77ca61ad0f1e3f752d823e2a958e4c6ef575b793fd0453a7cc4120d",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#123456ff",
+      "evidence": {
+        "quote": "#123456ff",
+        "utf16Offset": 124
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "4f6b75a8f78eae023ef3ded642f1c605c8440c70477319601f2403e67bbbabb8",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#888888ff",
+      "evidence": {
+        "quote": "#888888ff",
+        "utf16Offset": 151
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c0a933ad3fd986763b382a49eb5be88aa48d8be814190078c1e1d6c9c1f3b468",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 178
+      },
+      "details": {
+        "property": "color",
+        "alpha": 0.5019607843137255
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "b357eaf85d4e6fb35c04c3c01c503616ca6d52ee0323fcf65873766919708bc8",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8f9ff",
+      "evidence": {
+        "quote": "#fff8f9ff",
+        "utf16Offset": 205
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c5975187efc8c14ea96dbf1eee213a6dde0f24aaea1395d6444f74e03672097c",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#163f64ff",
+      "evidence": {
+        "quote": "#163f64ff",
+        "utf16Offset": 232
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c26753fe92343737118fa6c5e08680321c453c2895ff66ac54832fbe576cb352",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#009978ff",
+      "evidence": {
+        "quote": "#009978ff",
+        "utf16Offset": 259
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a694fa46dcaccfb473db7279389605d49d5feb7a38c4b3d984862c39949c48d3",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#e6efffff",
+      "evidence": {
+        "quote": "#e6efffff",
+        "utf16Offset": 287
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "00c0e8acce48601e7534beda0b6029d2a644085bf08c4fd3cb78a78fed81ade9",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#efd160ff",
+      "evidence": {
+        "quote": "#efd160ff",
+        "utf16Offset": 315
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a0b87d8ef652cf4a4cc5bbaf442740e0005fb1cb71cbb8f461e523fad2743eda",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#8c56a0ff",
+      "evidence": {
+        "quote": "#8c56a0ff",
+        "utf16Offset": 343
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ce81149d806ce8429edd1ee713320598f3c456d62cd484471c0561e1bc63e10d",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#171813ff",
+      "evidence": {
+        "quote": "#171813ff",
+        "utf16Offset": 371
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "31d1d2aa0cd9057f9c897c07468a7bf40eb54b5539eb408b98fa72574a2ec4af",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5f9ffff",
+      "evidence": {
+        "quote": "#f5f9ffff",
+        "utf16Offset": 399
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "3caf318f1105b14ed81cc47aac3c5a80b280db5a32c3b98d6b6e05f10ae4604c",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#d86c30ff",
+      "evidence": {
+        "quote": "#d86c30ff",
+        "utf16Offset": 427
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a60154509ceded8e2dd40a9b66a607f1319b5ddb32340a90e9de786a24bf891f",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#a4b0b8ff",
+      "evidence": {
+        "quote": "#a4b0b8ff",
+        "utf16Offset": 455
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6e43ed0b156b543890795176699de0e75964157c00596acd558bf207419c6198",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#2e6c5aff",
+      "evidence": {
+        "quote": "#2e6c5aff",
+        "utf16Offset": 483
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2e7944fd8387b497ee495c02095d9863b38d85920d4637cf589bbdc886e08280",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f4eedaff",
+      "evidence": {
+        "quote": "#f4eedaff",
+        "utf16Offset": 511
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2ddb510ae170758418e22dca7c6b4a1a66c3f4599694a1e2a0cecf30a1a1d5f7",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#db91a7ff",
+      "evidence": {
+        "quote": "#db91a7ff",
+        "utf16Offset": 539
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "fd4609eb17c1d4a12a89a9ce14bfc1520c39f9a0a33f271e302f016fb025d874",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#4168a0ff",
+      "evidence": {
+        "quote": "#4168a0ff",
+        "utf16Offset": 567
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a59d73e9ac95ee069e0bf74eaeaff7a09840a1ada77845dc65d7a51ecb5e4311",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#dce6ddff",
+      "evidence": {
+        "quote": "#dce6ddff",
+        "utf16Offset": 595
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "3a12d3ab9769fe03ed802b65705cc5f0710d63b79a2a7f6347586c91bbaf366a",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f7fafaff",
+      "evidence": {
+        "quote": "#f7fafaff",
+        "utf16Offset": 623
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "9b1f3efeaeff01cb75a5e637e590145d001b9a0d50a32f14913449f983e80c86",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 651
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "fc6d6be68e6a080e568a272dbd5556962a6a234d612297199b8db5eda8c6c25e",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340ff",
+        "utf16Offset": 679
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "b98bb846222e785eaebb3f0902c0fb72244473fa95b41075c6add35674d92140",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 707
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d36daa18abe98ed7de286cb7a2185922e3ccfdf7386409dae8b430b3baa84e44",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6eaff",
+        "utf16Offset": 735
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "1f8e3b1afbcd740659b2fb1c2a38ec6ad6aef7a81c4977dafe3ec4370e53172a",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#ffffffff",
+      "evidence": {
+        "quote": "#ffffffff",
+        "utf16Offset": 763
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d86ab5ae8f8fd2d2d3fc5e8365200886f665d1b49b880564c57707fd38af8183",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#123456ff",
+      "evidence": {
+        "quote": "#123456ff",
+        "utf16Offset": 791
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "805c544ba41337265a990d1da1cd0cda0d8c5310a4d2642f649f90e1201a4b3e",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#888888ff",
+      "evidence": {
+        "quote": "#888888ff",
+        "utf16Offset": 819
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "3f5ff0bb9ce13c0b69b6d2b6721a90abc8268b20a2dc06efee74c42d05c5bdef",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 847
+      },
+      "details": {
+        "property": "color",
+        "alpha": 0.5019607843137255
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "1fde9ebc43783cfc1796c91b1aa62ece69a8d84c0c4709a0256bcab73eb10c65",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8f9ff",
+      "evidence": {
+        "quote": "#fff8f9ff",
+        "utf16Offset": 875
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "7d50225ecc9cc70f3b1a5c978ed7b14451ad4c961deaf3b53524f53729d810eb",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#163f64ff",
+      "evidence": {
+        "quote": "#163f64ff",
+        "utf16Offset": 903
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ae065159d9c0ce83cda7831b1db78bb2431d317c91eae7f14245482eb9cd4218",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#009978ff",
+      "evidence": {
+        "quote": "#009978ff",
+        "utf16Offset": 931
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2acc3c2641574d59f621972b778359717ca1a62e31ab744dc9aa446cbe2a57c4",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#e6efffff",
+      "evidence": {
+        "quote": "#e6efffff",
+        "utf16Offset": 959
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6387253a5da7d73fc678a4df157fce71bcdafad9484eeae6498ad59bd986cdcc",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#efd160ff",
+      "evidence": {
+        "quote": "#efd160ff",
+        "utf16Offset": 987
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "1c2f7e75f4d3a8eb6a91fd02aa1503d38571370dc44359af38ff13b75742166c",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#8c56a0ff",
+      "evidence": {
+        "quote": "#8c56a0ff",
+        "utf16Offset": 1015
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "9bfc99ee4378d2406e21a1cf636e9f0cac425bf168b8206d83936ae8f3dc4f47",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#171813ff",
+      "evidence": {
+        "quote": "#171813ff",
+        "utf16Offset": 1043
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6181b324b49e4af7cfb3f1b9873a8ad294b343cb0b01ef842d1008c7939dea9f",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5f9ffff",
+      "evidence": {
+        "quote": "#f5f9ffff",
+        "utf16Offset": 1071
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d3464b012ace67bda2fa76ac56266f2c28d83b632d4d08a46cc1486755f6d5c0",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#d86c30ff",
+      "evidence": {
+        "quote": "#d86c30ff",
+        "utf16Offset": 1099
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "ink",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d99add5313115f0d416d72a34e938dcf83d1eb3af3310040f7cffaaa25324972",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340ff",
+        "utf16Offset": 59
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d944092eb33bb1d5bf422ae043de7f66d4388017a34421cf7f533c575c5e9a66",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 86
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a9831ba86266d73be026fa3ce088d78e1a20825843eacc9633218c4aa644300f",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6eaff",
+        "utf16Offset": 113
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d6b0c8a0dfdac5c3afbeaf4377e8da40482bc765b85ec0f003d4d5d53a2e6381",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#ffffffff",
+      "evidence": {
+        "quote": "#ffffffff",
+        "utf16Offset": 140
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5b4c12b4f118db60be17f431f7ea4c8b3ee9ee5bbbc67012026a090cb47a8c40",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#123456ff",
+      "evidence": {
+        "quote": "#123456ff",
+        "utf16Offset": 167
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2b30014ee703d886b29a4180a222acaf1d942a779e3eb243941d8a17a45a322a",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#888888ff",
+      "evidence": {
+        "quote": "#888888ff",
+        "utf16Offset": 194
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "d5874b1bd7a0f97d5d3130fc87ba1f2c59026180abf53f14a5c135af9103f190",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 221
+      },
+      "details": {
+        "property": "color",
+        "alpha": 0.5019607843137255
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "68ff59a905230a86c3ef02ab374dc4607034c8f3da56b7c33e160f344652f913",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8f9ff",
+      "evidence": {
+        "quote": "#fff8f9ff",
+        "utf16Offset": 248
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "31de55bae21baf24e5d9ab836a47f9d755e03a2ffd632698ec7b58218a5c80ad",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#163f64ff",
+      "evidence": {
+        "quote": "#163f64ff",
+        "utf16Offset": 275
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c9ac16b58256c13b3aa9deb80df528ec699fc321674d25002c7bcbf90b2cd79e",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#009978ff",
+      "evidence": {
+        "quote": "#009978ff",
+        "utf16Offset": 302
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "27a13e134534a8c8450df0af10a76e188fd5fed88e40fc8cbc02c5b829d95a14",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#e6efffff",
+      "evidence": {
+        "quote": "#e6efffff",
+        "utf16Offset": 330
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "813f20d07c211eb3e405e757c4477e8346bdb7375476406d46e55f42afcf67f6",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#efd160ff",
+      "evidence": {
+        "quote": "#efd160ff",
+        "utf16Offset": 358
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "87976b43b9c017fef26deeed68b1fb9868f5f9ffccd15b97e5d9be44bd9ed7be",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#8c56a0ff",
+      "evidence": {
+        "quote": "#8c56a0ff",
+        "utf16Offset": 386
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "edbbf68293e62c053ea83b3098101255e88fc8edabb842317b7f6a271de5d516",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#171813ff",
+      "evidence": {
+        "quote": "#171813ff",
+        "utf16Offset": 414
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "df2273668bf1bcd388885064360a3b91e678f1ca23793756fed62cfa47e33dc3",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5f9ffff",
+      "evidence": {
+        "quote": "#f5f9ffff",
+        "utf16Offset": 442
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "cb169cc1eabe2edc7a82865cf90c6b4956ce2d362fd58b28c7f5000a3e26a1a1",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#d86c30ff",
+      "evidence": {
+        "quote": "#d86c30ff",
+        "utf16Offset": 470
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "06e71cbaa283a6700d9673fb23d54db468cf4cf26d1cfea510ea10d6c5625bb1",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#a4b0b8ff",
+      "evidence": {
+        "quote": "#a4b0b8ff",
+        "utf16Offset": 498
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "40cf5a79588faf152633d3fb2b0ed12d966edc4097c166c7fd6bce56cbf2de79",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#2e6c5aff",
+      "evidence": {
+        "quote": "#2e6c5aff",
+        "utf16Offset": 526
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "75e2fb633c901870d6561a0d0b8959b46b7418a2074346c048dd3d36a957d69a",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f4eedaff",
+      "evidence": {
+        "quote": "#f4eedaff",
+        "utf16Offset": 554
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "12fa351c50cfe3171e7d6d6766962163a41d528913cbd41a3eff4d194ab06c4c",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#db91a7ff",
+      "evidence": {
+        "quote": "#db91a7ff",
+        "utf16Offset": 582
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "beebced492956459117c2fdaab22ea0d561ba58ae4cc78838386ed488bdd3df5",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#4168a0ff",
+      "evidence": {
+        "quote": "#4168a0ff",
+        "utf16Offset": 610
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ce6cacf0898245dd294567851675b08a3b4fde171ff8c06c660d5424aba01e03",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#dce6ddff",
+      "evidence": {
+        "quote": "#dce6ddff",
+        "utf16Offset": 638
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "cda6ad4dd427771ad45b3fd33346d88279398186917ccc755cafba7a07d5f30b",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f7fafaff",
+      "evidence": {
+        "quote": "#f7fafaff",
+        "utf16Offset": 666
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "1de1fbd9f1a0f0e0699b6809821d8cb2164270634903ae725a17758ad861051e",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 694
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "8ebed1530ea96f00c7d53f871b3754c0433a75c11e57ca7df25874c41dca2929",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340ff",
+        "utf16Offset": 722
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "28fa71cc797a99de9700e033a73a6b06c1123ab2415e2d44c934d99c57660853",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 750
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "abcd5d7406a584733f75281dbf074c6d08a257dc6a8b5e6a290f38bb872f43b9",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6eaff",
+        "utf16Offset": 778
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "705fc576e83883f797779137420f059c78e3a722cadb648dbf885bf8411b3521",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#ffffffff",
+      "evidence": {
+        "quote": "#ffffffff",
+        "utf16Offset": 806
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "181ce4db75b5b5b60743fb70635f1f5c6b3fd8e7b1cbfbf45f1050f2aad6c32d",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#123456ff",
+      "evidence": {
+        "quote": "#123456ff",
+        "utf16Offset": 834
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5b2e89742b0fb909efd859911e751587417632fea3c6e2dd837696ad0932ca44",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#888888ff",
+      "evidence": {
+        "quote": "#888888ff",
+        "utf16Offset": 862
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "954ba52e4bdb21ba2cf8eb06c9d6b73e22504bd6a69a3670578234cdc8a73a1e",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 890
+      },
+      "details": {
+        "property": "color",
+        "alpha": 0.5019607843137255
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "b180f29995f29c7418043c5728d7edfcafb6bedc45953b0548a21dd2a56c0bd0",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8f9ff",
+      "evidence": {
+        "quote": "#fff8f9ff",
+        "utf16Offset": 918
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "422202e05623b13cdccf67ed1c18a91dd8fdb3bf2111a8a9e896a34fc3ce051a",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#163f64ff",
+      "evidence": {
+        "quote": "#163f64ff",
+        "utf16Offset": 946
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "4f034adf78435c83e39f5abd17a9aaba8486e0b44be7cb773479673dde0dbd41",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#009978ff",
+      "evidence": {
+        "quote": "#009978ff",
+        "utf16Offset": 974
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "7fa96f65fa920d591a12c140259a0aeb36b87789a4497cdeda9fe356b35b148e",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#e6efffff",
+      "evidence": {
+        "quote": "#e6efffff",
+        "utf16Offset": 1002
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "850a4b74f2e709bf613202bde334cacf236d0bd56fb55d87bb380887b6c6bad0",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#efd160ff",
+      "evidence": {
+        "quote": "#efd160ff",
+        "utf16Offset": 1030
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "056582f861db8d0364f8d7b130c7cb974303ebc09ecc621cceb33c055f24334f",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#8c56a0ff",
+      "evidence": {
+        "quote": "#8c56a0ff",
+        "utf16Offset": 1058
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "1477466d45a70ff42a4b889076268cafdee5a76bb1ca4e75f05183292012c529",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#171813ff",
+      "evidence": {
+        "quote": "#171813ff",
+        "utf16Offset": 1086
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "da16627d8ed2b69cc92d75886af50eec0dd3851eee81ee1429bf110566589196",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5f9ffff",
+      "evidence": {
+        "quote": "#f5f9ffff",
+        "utf16Offset": 1114
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "14ea194198a54c2232ee89f2b0a247bed62ea0edf3a1f0d10dfef464408d3fb3",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#d86c30ff",
+      "evidence": {
+        "quote": "#d86c30ff",
+        "utf16Offset": 1142
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a5b6c18926d63e2e02b7bb98fe028ba3df867d51682bd0fcbe69cc012d180c1d",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340ff",
+        "utf16Offset": 60
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "3989dd63cdb0936eaf7c3bc265a58978aaf8e6f48fbfbbd3b4b189f96fb07d00",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 87
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "fe9949cfe2c92626b62d28cad812ae4ce94e0d87cf64993b5c16388e822d58c4",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6eaff",
+        "utf16Offset": 114
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "63e7bf3614fea9fd577b02065694f5a69629f4bed3479e81f479e85a6885edac",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#ffffffff",
+      "evidence": {
+        "quote": "#ffffffff",
+        "utf16Offset": 141
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "fb0b49aa7eecb84d0dcfb4eac570b060d57f7d843c6d48fbfd7c0736a87ffd8a",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#123456ff",
+      "evidence": {
+        "quote": "#123456ff",
+        "utf16Offset": 168
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5027eac03b7f4e985793bca3cc250c5c6cd4404695905ad7a59261a468eeebbd",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#888888ff",
+      "evidence": {
+        "quote": "#888888ff",
+        "utf16Offset": 195
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "8871f8578994b2c8c4413d865db74d08558fb000c2254bfb9fc8e059298cde25",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 222
+      },
+      "details": {
+        "property": "color",
+        "alpha": 0.5019607843137255
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "bdc7e02f0246af39a60fcf71911a580f6bcabb8a3a9023c4a21c0143f9ee9bcb",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8f9ff",
+      "evidence": {
+        "quote": "#fff8f9ff",
+        "utf16Offset": 249
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "150da61ba823cca8dd842566deb8b2da78919adf40048b8f3b32eeefe30af750",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#163f64ff",
+      "evidence": {
+        "quote": "#163f64ff",
+        "utf16Offset": 276
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "574207d8221dfea8823cb2d851a4d98ba97b47ccc5b7959c7a6323b69192dac9",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#009978ff",
+      "evidence": {
+        "quote": "#009978ff",
+        "utf16Offset": 303
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "86948c4524d5fd372eb3a42688ca0f5158ffc1ae900220572177e07a572d9142",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#e6efffff",
+      "evidence": {
+        "quote": "#e6efffff",
+        "utf16Offset": 331
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "aff3449eea46ec9609d5b1b54d714002cf15ab760f5eeb318008d9bb54ceceb9",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#efd160ff",
+      "evidence": {
+        "quote": "#efd160ff",
+        "utf16Offset": 359
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ee3e6a7ab600c913b0837f7c1f0fdf29c8697eaf026fdf50b019b0c683d9b7c4",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#8c56a0ff",
+      "evidence": {
+        "quote": "#8c56a0ff",
+        "utf16Offset": 387
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "0164e33561ee7cc73e86967f15c2cca97b92bfb884dc31498cb34d58ef2e36dc",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#171813ff",
+      "evidence": {
+        "quote": "#171813ff",
+        "utf16Offset": 415
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c0f4b2a727613a268be438f8a039ceab1fc09e82335733cd5c97a5be7ccfcf53",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5f9ffff",
+      "evidence": {
+        "quote": "#f5f9ffff",
+        "utf16Offset": 443
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "8c6ec78f9d412ab1e30f413cfad6bd434a7072c552249a7122f56bf4814c13d7",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#d86c30ff",
+      "evidence": {
+        "quote": "#d86c30ff",
+        "utf16Offset": 471
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ec29c21e0556d1874f234ff6b328be8d507fbfc844a972df0150009b22c46bad",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#a4b0b8ff",
+      "evidence": {
+        "quote": "#a4b0b8ff",
+        "utf16Offset": 499
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "e8c1efb5002fc940065a186e11f22b5b1676a3e78c6b7134272ca8263b0aa212",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#2e6c5aff",
+      "evidence": {
+        "quote": "#2e6c5aff",
+        "utf16Offset": 527
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6a7a3a05df055948b43913b530564aedd651dbb9aa585626a0b4fb538195aec1",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f4eedaff",
+      "evidence": {
+        "quote": "#f4eedaff",
+        "utf16Offset": 555
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5f9921a2cc971e0c8d5d5a48e050d57d682de4df135724ebe1b931a6ba145e65",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#db91a7ff",
+      "evidence": {
+        "quote": "#db91a7ff",
+        "utf16Offset": 583
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "f61133ae62aee33cd927be1a57324a1dfc05ded20e33994c8476f91aead41f1a",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#4168a0ff",
+      "evidence": {
+        "quote": "#4168a0ff",
+        "utf16Offset": 611
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5e37dd46f2654b4ee62ba84a2c806de6503dd350e50a7afffc8fcf62a701ad02",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#dce6ddff",
+      "evidence": {
+        "quote": "#dce6ddff",
+        "utf16Offset": 639
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "464a77d8f1d1470369f81fc9afa8e6a22a465df6eadc700e984627d9ae15f45e",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f7fafaff",
+      "evidence": {
+        "quote": "#f7fafaff",
+        "utf16Offset": 667
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "8126e4381179bf3ec12a2b3befef44b0919fbc39fe5189353bdb58e1e4070634",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 695
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "11fcae059cc5dad9f868e02822a9ce8e2be94ceec5a86835969fafeb0a0ea828",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340ff",
+        "utf16Offset": 723
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "9c58652a89c055ef2701efc9c28143091a1b1056ecd119a68535a977b3190f6e",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8faff",
+        "utf16Offset": 751
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ea264a7532e1032b7557d4f86b28650b39c7638f75725b46108127980253973b",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6eaff",
+        "utf16Offset": 779
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "6bac54ab9af3c87a7f5885a0b81f19a4f6ac3b8557fdaf23be62fcbbda3ffa08",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#ffffffff",
+      "evidence": {
+        "quote": "#ffffffff",
+        "utf16Offset": 807
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "652f6252de1dd5ef83a21d7c2afea49e760ebb0b6108b81733ee5da335c5598e",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#123456ff",
+      "evidence": {
+        "quote": "#123456ff",
+        "utf16Offset": 835
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "be225f385dfeb388ddc5fd9cd5599816380de5225e673ca8d43f08e2d162dab6",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#888888ff",
+      "evidence": {
+        "quote": "#888888ff",
+        "utf16Offset": 863
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "0a47de6cb4b4266a5639b427d21cf677cd4306c75ec1bb74baabe225562fb02a",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#12345680",
+      "evidence": {
+        "quote": "#12345680",
+        "utf16Offset": 891
+      },
+      "details": {
+        "property": "color",
+        "alpha": 0.5019607843137255
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "e9f8ab1e081376c8d17a321e00d2f29dfe58b9199cfbecdff9cf5fa8c1ef096b",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8f9ff",
+      "evidence": {
+        "quote": "#fff8f9ff",
+        "utf16Offset": 919
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2e128f339b605d22f425af4dc6d70a6bfa4ff76d7977078507e73e8287c0cd2d",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#163f64ff",
+      "evidence": {
+        "quote": "#163f64ff",
+        "utf16Offset": 947
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a894ed885b0188468d8a3e58b2e5bc86e5f1969f15740d6e2feb443519475f7a",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#009978ff",
+      "evidence": {
+        "quote": "#009978ff",
+        "utf16Offset": 975
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "a892782697f6416307e69c43349f8e6b4342c032bb7838a3ee3a17632c7153dd",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#e6efffff",
+      "evidence": {
+        "quote": "#e6efffff",
+        "utf16Offset": 1003
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "41f8e80e3990d7971732b24d424c3a961a0724c533d6edf4dbe9ccc6b984ee3a",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#efd160ff",
+      "evidence": {
+        "quote": "#efd160ff",
+        "utf16Offset": 1031
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "b075fcfc8ca33a524d63e0a7099e95e6e8a3b0c9412d2c6e755535ae53c9a28a",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#8c56a0ff",
+      "evidence": {
+        "quote": "#8c56a0ff",
+        "utf16Offset": 1059
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "fc01da4dc7b103a410222b797996ac2dee60ad759f5e1c34637be0802ca47dc8",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#171813ff",
+      "evidence": {
+        "quote": "#171813ff",
+        "utf16Offset": 1087
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "52d72e8fd77d8bbb76817266b5532176308be7b0ec8d10deddc79d0d334c984d",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5f9ffff",
+      "evidence": {
+        "quote": "#f5f9ffff",
+        "utf16Offset": 1115
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "441675a777d306b9f87851c41870f900d8a2ab14cd283b3ac2bfbb361400c590",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#d86c30ff",
+      "evidence": {
+        "quote": "#d86c30ff",
+        "utf16Offset": 1143
+      },
+      "details": {
+        "property": "color",
+        "alpha": 1
+      },
+      "roleHint": {
+        "value": "conditional",
+        "reason": "Synthetic declaration context; this is not an approved brand role."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Synthetic literal declaration; visibility and role unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5e707002b0614258a32e52af798e6253b48f0a25390f4b1b9fd1a7ea29915d57",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#fff8faff",
+        "pixels": 2440,
+        "fraction": 0.6931818181818182,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "7a94fcdfebac692e1d21b36b8f9c386a8727e9973a5e32f6e14271857db1790d",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#6b2340ff",
+        "pixels": 569,
+        "fraction": 0.16164772727272728,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "5daa693afbc8da3b63d6d07f23abff5ac5c513430b6dbf41bfe435e115a42447",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#f5e6eaff",
+        "pixels": 488,
+        "fraction": 0.13863636363636364,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "f3ee5b42dfe07d716b863345fba8fd4b64755679267b7236ed9569a4031e101d",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#7d3c55ff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#7d3c55ff",
+        "pixels": 2,
+        "fraction": 0.0005681818181818182,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "2cfdba16b133cd6b1eba58a97094825f229d47c7ceea93311d615e985355461b",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#6e2844ff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#6e2844ff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ea8de4d71dbbe93e3a6437968f23312a18b0e8ca0ebe58e2b27387ec4602ad4b",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#712c47ff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#712c47ff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "e6a9033af9d1181c51158d1b34477ef752dca103d66616efeb2e40001e8e9928",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#722d49ff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#722d49ff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "ec739755391a17d691e3476efb4a62bf138b5a87287ab476f58314591cbd7d04",
+      "sourceId": "b534ac4cf35b3ec5fecde05c18ef6c9e798b368ebd421232bf6805f13b2c7ded",
+      "sourceSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+      "method": "raster-sample",
+      "category": "raster-color",
+      "observed": "#732f4aff",
+      "evidence": {
+        "quote": "Nearest-neighbour sample, maximum 64×64, converted to sRGB; no background composition.",
+        "utf16Offset": null
+      },
+      "details": {
+        "rgba": "#732f4aff",
+        "pixels": 1,
+        "fraction": 0.0002840909090909091,
+        "width": 600,
+        "height": 700
+      },
+      "roleHint": {
+        "value": "image-palette-only",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "low",
+        "reason": "Source occurrence or bounded image sample; identity relevance unverified.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "May depict a photograph or product; never ranked as website UI or brand colors.",
+        "Sample frequency is not brand confidence."
+      ],
+      "reviewStatus": "unreviewed"
+    }
+  ],
+  "acceptedValues": [],
+  "approvals": {
+    "brand": false,
+    "campaignFacts": false,
+    "mediaRights": false
+  },
+  "gaps": [
+    "SYNTHETIC PALETTE USABILITY FIXTURE. Not IANA evidence or a replay of live bodies.",
+    "Literal colors only; themes, cascade and computed applicability remain unresolved. Ownership, campaign facts and media rights are not approved."
+  ],
+  "limits": {
+    "resources": 12,
+    "totalBytes": 4194304,
+    "htmlBytes": 524288,
+    "cssBytes": 262144,
+    "rasterBytes": 524288,
+    "rasterCount": 4,
+    "rasterPixels": 4000000,
+    "sampleSide": 64,
+    "candidates": 256,
+    "evidenceChars": 240,
+    "textChars": 4000,
+    "urlChars": 2048
+  }
+}

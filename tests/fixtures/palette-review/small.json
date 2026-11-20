@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "1.0.0",
+  "extractorVersion": "ornigami-brand-evidence/1.0.0",
+  "outcome": "draft",
+  "sources": [
+    {
+      "id": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "kind": "html",
+      "requestedUrl": "https://rose.example/home",
+      "finalUrl": "https://rose.example/home",
+      "status": 200,
+      "contentType": "text/html",
+      "byteLength": 279,
+      "sha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "outcome": "processed",
+      "issues": []
+    }
+  ],
+  "candidates": [
+    {
+      "id": "3b0740dc2c349a9a22e57de6c671f52970966d8d4f7074beeea38a01307de8c8",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#fff8faff",
+      "evidence": {
+        "quote": "#fff8fa",
+        "utf16Offset": 103
+      },
+      "details": {
+        "property": "background",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Literal declaration/metadata; role and applicability unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "281e3a80adbffe6cba9443d1c5acb43f7b45874a8329e7116d21e11ee586fd62",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#f5e6eaff",
+      "evidence": {
+        "quote": "#f5e6ea",
+        "utf16Offset": 142
+      },
+      "details": {
+        "property": "background",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Literal declaration/metadata; role and applicability unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    },
+    {
+      "id": "c6ae83948628e015b3fb7f2118e42c7d2c936b37dc4e14bdb6166a6ada8e7c11",
+      "sourceId": "54e2294548733cae73d8dd9dc5d4716ce78d24c324c82e859e9c79bc88196e0f",
+      "sourceSha256": "484d525e5351efc511b8ade8464ee6deabf3248633ba02d3dc1bd9c3b0b5e24f",
+      "method": "css-declaration",
+      "category": "ui-color",
+      "observed": "#6b2340ff",
+      "evidence": {
+        "quote": "#6b2340",
+        "utf16Offset": 168
+      },
+      "details": {
+        "property": "background",
+        "alpha": 1,
+        "rank": 1
+      },
+      "roleHint": {
+        "value": "background-or-surface",
+        "reason": "Lexical property/metadata/attribute hint; not computed or accepted."
+      },
+      "confidence": {
+        "level": "medium",
+        "reason": "Literal declaration/metadata; role and applicability unresolved.",
+        "calibrated": false
+      },
+      "uncertainty": [
+        "Untrusted source evidence; review required, including marketplace versus seller identity.",
+        "Declaration presence does not establish visibility, ownership or brand role."
+      ],
+      "reviewStatus": "unreviewed"
+    }
+  ],
+  "acceptedValues": [],
+  "approvals": {
+    "brand": false,
+    "campaignFacts": false,
+    "mediaRights": false
+  },
+  "gaps": [
+    "SYNTHETIC small clean palette fixture; no source/ownership approval."
+  ],
+  "limits": {
+    "resources": 12,
+    "totalBytes": 4194304,
+    "htmlBytes": 524288,
+    "cssBytes": 262144,
+    "rasterBytes": 524288,
+    "rasterCount": 4,
+    "rasterPixels": 4000000,
+    "sampleSide": 64,
+    "candidates": 256,
+    "evidenceChars": 240,
+    "textChars": 4000,
+    "urlChars": 2048
+  }
+}
