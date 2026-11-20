@@ -296,6 +296,59 @@ test("storage and configuration failures fail closed", async () => {
   );
 });
 
+test("generation limits and the test provider remain closed unless explicitly enabled", () => {
+  const defaults = readBuilderRuntimeConfig({});
+  assert.equal(defaults.mode, "closed");
+  assert.equal(defaults.testProvider, "none");
+  assert.equal(defaults.testProviderCostMicros, 0);
+  assert.equal(defaults.providerTimeoutMs, 5_000);
+  assert.deepEqual(defaults.limits, {
+    windowSeconds: 24 * 60 * 60,
+    reservationLeaseSeconds: 300,
+    requestReserveMicros: 50_000,
+    subjectRequests: 30,
+    globalRequests: 300,
+    subjectConcurrency: 2,
+    globalConcurrency: 8,
+    subjectSpendMicros: 5_000_000,
+    globalSpendMicros: 50_000_000,
+  });
+
+  assert.throws(
+    () => readBuilderRuntimeConfig({ BUILDER_RUNTIME_TEST_PROVIDER: "success" }),
+    /ALLOW_TEST_HOOKS/,
+  );
+  assert.throws(
+    () =>
+      readBuilderRuntimeConfig({
+        BUILDER_RUNTIME_ALLOW_TEST_HOOKS: "1",
+        BUILDER_RUNTIME_TEST_PROVIDER: "sideways",
+      }),
+    /BUILDER_RUNTIME_TEST_PROVIDER/,
+  );
+  assert.throws(
+    () => readBuilderRuntimeConfig({ BUILDER_RUNTIME_SUBJECT_REQUEST_LIMIT: "0" }),
+    /BUILDER_RUNTIME_SUBJECT_REQUEST_LIMIT/,
+  );
+  assert.throws(
+    () =>
+      readBuilderRuntimeConfig({
+        BUILDER_RUNTIME_TEST_PROVIDER_COST_MICROS: "25000",
+      }),
+    /ALLOW_TEST_HOOKS/,
+  );
+
+  const configured = readBuilderRuntimeConfig({
+    BUILDER_RUNTIME_ALLOW_TEST_HOOKS: "1",
+    BUILDER_RUNTIME_TEST_PROVIDER: "timeout",
+    BUILDER_RUNTIME_TEST_PROVIDER_COST_MICROS: "25000",
+    BUILDER_RUNTIME_PROVIDER_TIMEOUT_MS: "250",
+  });
+  assert.equal(configured.testProvider, "timeout");
+  assert.equal(configured.testProviderCostMicros, 25_000);
+  assert.equal(configured.providerTimeoutMs, 250);
+});
+
 function mkdirSafe(directory: string): void {
   mkdirSync(directory, { recursive: true });
 }

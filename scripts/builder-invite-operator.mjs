@@ -5,6 +5,7 @@ import {
   revokeBuilderSession,
   revokeBuilderSubject,
 } from "../builder-runtime/lib/identity-store.ts";
+import { reconcileBuilderUsage } from "../builder-runtime/lib/usage-ledger.ts";
 
 function usage() {
   console.error(`Usage:
@@ -12,6 +13,7 @@ function usage() {
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-invite --store <dir> --id <inviteId> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-session --store <dir> --id <sessionId> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-subject --store <dir> --subject <subjectId> [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs reconcile-usage --store <dir> --id <usageId> --outcome succeeded|failed [--cost-micros N] --reason <text> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs list --store <dir> [--json]`);
   process.exitCode = 2;
 }
@@ -76,6 +78,35 @@ if (!store) {
   if (options.json) console.log(JSON.stringify({ revoked }));
   else console.log(revoked ? "Subject and its sessions revoked." : "Subject not found.");
   if (!revoked) process.exitCode = 1;
+} else if (command === "reconcile-usage") {
+  const outcome = options.outcome;
+  if (outcome !== "succeeded" && outcome !== "failed") {
+    throw new Error("--outcome must be succeeded or failed.");
+  }
+  const reason = options.reason?.trim();
+  if (!reason) throw new Error("--reason is required.");
+  const costMicros = options["cost-micros"]
+    ? Number.parseInt(options["cost-micros"], 10)
+    : undefined;
+  if (costMicros !== undefined && (!Number.isFinite(costMicros) || costMicros < 0)) {
+    throw new Error("--cost-micros must be a non-negative integer.");
+  }
+  const reconciled = await reconcileBuilderUsage({
+    storeDir: store,
+    usageId: options.id,
+    outcome,
+    costMicros,
+    reason,
+  });
+  if (options.json) console.log(JSON.stringify(reconciled));
+  else {
+    console.log(
+      reconciled.changed
+        ? `Usage ${reconciled.record.id} reconciled to ${reconciled.record.state} at ${reconciled.record.costMicros} micros.`
+        : `Usage ${reconciled.record.id} was already ${reconciled.record.state}; no change.`,
+    );
+  }
+  if (!reconciled.changed) process.exitCode = 1;
 } else if (command === "list") {
   const state = await readBuilderIdentityStore(store);
   const output = {

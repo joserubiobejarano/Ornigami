@@ -3,8 +3,15 @@ import path from "node:path";
 import { validateBuilderEnvironment } from "../../src/lib/builder/config.ts";
 
 import { builderStoreIsWritable } from "./identity-store.ts";
+import type { BuilderGenerationLimits } from "./usage-ledger.ts";
 
 export type BuilderRuntimeMode = "closed" | "invite";
+export type BuilderTestProviderMode =
+  | "none"
+  | "success"
+  | "invalid"
+  | "timeout"
+  | "unknown";
 
 export type BuilderRuntimeConfig = Readonly<{
   mode: BuilderRuntimeMode;
@@ -14,6 +21,10 @@ export type BuilderRuntimeConfig = Readonly<{
   secureCookies: boolean;
   appUrl: string;
   testGenerationDelayMs: number;
+  providerTimeoutMs: number;
+  testProvider: BuilderTestProviderMode;
+  testProviderCostMicros: number;
+  limits: BuilderGenerationLimits;
 }>;
 
 export class BuilderRuntimeConfigurationError extends Error {
@@ -30,6 +41,18 @@ const DEFAULT_SESSION_TTL_SECONDS = 8 * 60 * 60;
 const MAX_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const MAX_TEST_DELAY_MS = 5_000;
 export const BUILDER_SESSION_COOKIE = "ornigami_builder_session";
+
+const DEFAULT_LIMITS: BuilderGenerationLimits = {
+  windowSeconds: 24 * 60 * 60,
+  reservationLeaseSeconds: 300,
+  requestReserveMicros: 50_000,
+  subjectRequests: 30,
+  globalRequests: 300,
+  subjectConcurrency: 2,
+  globalConcurrency: 8,
+  subjectSpendMicros: 5_000_000,
+  globalSpendMicros: 50_000_000,
+};
 
 function parseInteger(
   value: string | undefined,
@@ -115,6 +138,130 @@ export function readBuilderRuntimeConfig(
     }
   }
 
+  const rawTestProvider = env.BUILDER_RUNTIME_TEST_PROVIDER?.trim().toLowerCase();
+  let testProvider: BuilderTestProviderMode = "none";
+  if (
+    rawTestProvider !== undefined &&
+    rawTestProvider !== "" &&
+    rawTestProvider !== "none"
+  ) {
+    if (!testHooks) {
+      errors.push(
+        "BUILDER_RUNTIME_TEST_PROVIDER requires BUILDER_RUNTIME_ALLOW_TEST_HOOKS=1.",
+      );
+    }
+    if (
+      rawTestProvider === "success" ||
+      rawTestProvider === "invalid" ||
+      rawTestProvider === "timeout" ||
+      rawTestProvider === "unknown"
+    ) {
+      testProvider = rawTestProvider;
+    } else {
+      errors.push(
+        'BUILDER_RUNTIME_TEST_PROVIDER must be "none", "success", "invalid", "timeout" or "unknown".',
+      );
+    }
+  }
+
+  const testProviderCostMicros = parseInteger(
+    env.BUILDER_RUNTIME_TEST_PROVIDER_COST_MICROS,
+    0,
+    0,
+    1_000_000_000,
+    "BUILDER_RUNTIME_TEST_PROVIDER_COST_MICROS",
+    errors,
+  );
+  if (testProviderCostMicros > 0 && !testHooks) {
+    errors.push(
+      "BUILDER_RUNTIME_TEST_PROVIDER_COST_MICROS requires BUILDER_RUNTIME_ALLOW_TEST_HOOKS=1.",
+    );
+  }
+
+  const providerTimeoutMs = parseInteger(
+    env.BUILDER_RUNTIME_PROVIDER_TIMEOUT_MS,
+    5_000,
+    50,
+    15_000,
+    "BUILDER_RUNTIME_PROVIDER_TIMEOUT_MS",
+    errors,
+  );
+
+  const limits: BuilderGenerationLimits = {
+    windowSeconds: parseInteger(
+      env.BUILDER_RUNTIME_LIMIT_WINDOW_SECONDS,
+      DEFAULT_LIMITS.windowSeconds,
+      60,
+      604_800,
+      "BUILDER_RUNTIME_LIMIT_WINDOW_SECONDS",
+      errors,
+    ),
+    reservationLeaseSeconds: parseInteger(
+      env.BUILDER_RUNTIME_RESERVATION_LEASE_SECONDS,
+      DEFAULT_LIMITS.reservationLeaseSeconds,
+      30,
+      3_600,
+      "BUILDER_RUNTIME_RESERVATION_LEASE_SECONDS",
+      errors,
+    ),
+    requestReserveMicros: parseInteger(
+      env.BUILDER_RUNTIME_REQUEST_RESERVE_MICROS,
+      DEFAULT_LIMITS.requestReserveMicros,
+      0,
+      1_000_000_000,
+      "BUILDER_RUNTIME_REQUEST_RESERVE_MICROS",
+      errors,
+    ),
+    subjectRequests: parseInteger(
+      env.BUILDER_RUNTIME_SUBJECT_REQUEST_LIMIT,
+      DEFAULT_LIMITS.subjectRequests,
+      1,
+      10_000,
+      "BUILDER_RUNTIME_SUBJECT_REQUEST_LIMIT",
+      errors,
+    ),
+    globalRequests: parseInteger(
+      env.BUILDER_RUNTIME_GLOBAL_REQUEST_LIMIT,
+      DEFAULT_LIMITS.globalRequests,
+      1,
+      100_000,
+      "BUILDER_RUNTIME_GLOBAL_REQUEST_LIMIT",
+      errors,
+    ),
+    subjectConcurrency: parseInteger(
+      env.BUILDER_RUNTIME_SUBJECT_CONCURRENCY_LIMIT,
+      DEFAULT_LIMITS.subjectConcurrency,
+      1,
+      100,
+      "BUILDER_RUNTIME_SUBJECT_CONCURRENCY_LIMIT",
+      errors,
+    ),
+    globalConcurrency: parseInteger(
+      env.BUILDER_RUNTIME_GLOBAL_CONCURRENCY_LIMIT,
+      DEFAULT_LIMITS.globalConcurrency,
+      1,
+      100,
+      "BUILDER_RUNTIME_GLOBAL_CONCURRENCY_LIMIT",
+      errors,
+    ),
+    subjectSpendMicros: parseInteger(
+      env.BUILDER_RUNTIME_SUBJECT_SPEND_LIMIT_MICROS,
+      DEFAULT_LIMITS.subjectSpendMicros,
+      0,
+      1_000_000_000_000,
+      "BUILDER_RUNTIME_SUBJECT_SPEND_LIMIT_MICROS",
+      errors,
+    ),
+    globalSpendMicros: parseInteger(
+      env.BUILDER_RUNTIME_GLOBAL_SPEND_LIMIT_MICROS,
+      DEFAULT_LIMITS.globalSpendMicros,
+      0,
+      1_000_000_000_000,
+      "BUILDER_RUNTIME_GLOBAL_SPEND_LIMIT_MICROS",
+      errors,
+    ),
+  };
+
   const appUrl = env.NEXT_PUBLIC_APP_URL?.trim() || "http://127.0.0.1:3041";
   try {
     new URL(appUrl);
@@ -133,6 +280,10 @@ export function readBuilderRuntimeConfig(
     secureCookies: !isLocalUrl(appUrl),
     appUrl,
     testGenerationDelayMs,
+    providerTimeoutMs,
+    testProvider,
+    testProviderCostMicros,
+    limits,
   };
 }
 

@@ -335,6 +335,11 @@ export async function runCampaignGeneration(
   };
   const timeoutMs = options.timeoutMs ?? resolveGenerationTimeoutMs(env);
   const controller = new AbortController();
+  const abortFromCaller = () => controller.abort();
+  if (options.signal) {
+    if (options.signal.aborted) controller.abort();
+    else options.signal.addEventListener("abort", abortFromCaller, { once: true });
+  }
 
   let raw: unknown;
   try {
@@ -385,6 +390,8 @@ export async function runCampaignGeneration(
       "The generation provider failed before returning a proposal.",
       diagnostics ? { diagnostics } : {},
     );
+  } finally {
+    options.signal?.removeEventListener("abort", abortFromCaller);
   }
 
   const validation = validateGenerationProposal(raw, request);

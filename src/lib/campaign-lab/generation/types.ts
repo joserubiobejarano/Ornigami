@@ -204,6 +204,8 @@ export type GenerationOptions = {
    */
   providerResolution?: ProviderResolution | null;
   timeoutMs?: number;
+  /** Caller cancellation is linked to the provider timeout controller. */
+  signal?: AbortSignal;
   env?: GenerationEnv;
   catalog?: CampaignCatalog;
   /** Test seam; production uses the app-owned runtime guidance pack. */

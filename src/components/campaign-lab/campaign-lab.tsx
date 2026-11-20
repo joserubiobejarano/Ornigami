@@ -656,6 +656,24 @@ export function CampaignLab({
           return;
         }
 
+        // A builder limit or accounting denial happens before dispatch. Keep
+        // the last accepted preview visible instead of replacing it with a
+        // fresh local draft, and surface the actionable server message.
+        if (
+          payload?.error === "generation_limit" ||
+          payload?.error === "accounting_unavailable" ||
+          payload?.error === "request_already_submitted" ||
+          payload?.error === "generation_cancelled"
+        ) {
+          setGeneration(
+            deterministicFallback(
+              payload.message ?? "This generation request could not be started.",
+            ),
+          );
+          setIssues([]);
+          return;
+        }
+
         setAcceptedPresentation({ preview: local.preview, recipe: recipeSnapshot });
         setGeneration(
           deterministicFallback(

@@ -53,9 +53,9 @@ export type BuilderSessionRecord = {
 };
 
 /**
- * Quota contract reserved for the next slice. Identity is already stable;
- * a later budget ledger must append reservations/outcomes here (or in a
- * compatible builder-only table) keyed by subjectId/sessionId/generationId.
+ * Builder-only generation ledger. `costMicros` is the effective spend for a
+ * final record; `reservedCostMicros` preserves the original reservation for
+ * audit. Older records without the optional fields remain readable.
  */
 export type BuilderUsageRecord = {
   id: string;
@@ -65,6 +65,13 @@ export type BuilderUsageRecord = {
   recordedAt: string;
   state: "reserved" | "succeeded" | "failed" | "unknown";
   costMicros: number | null;
+  /** Client-supplied idempotency key, scoped to subject/session. */
+  requestKey?: string;
+  reservedCostMicros?: number;
+  leaseExpiresAt?: string;
+  settledAt?: string;
+  settlementReason?: string;
+  reconciledAt?: string;
 };
 
 export type BuilderIdentityStore = {
@@ -268,6 +275,17 @@ export async function readBuilderIdentityStore(
   storeDir: string,
 ): Promise<BuilderIdentityStore> {
   return readStoreUnlocked(storeDir);
+}
+
+/**
+ * Serialized read/write transaction over the builder-only store. Identity and
+ * usage records share one lock so quota checks and reservations are atomic.
+ */
+export async function withBuilderIdentityStore<T>(
+  storeDir: string,
+  operation: (store: BuilderIdentityStore) => Promise<T> | T,
+): Promise<T> {
+  return withStoreLock(storeDir, operation);
 }
 
 export async function issueBuilderInvite(input: {
