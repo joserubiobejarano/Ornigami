@@ -302,6 +302,10 @@ test("generation limits and the test provider remain closed unless explicitly en
   assert.equal(defaults.testProvider, "none");
   assert.equal(defaults.testProviderCostMicros, 0);
   assert.equal(defaults.providerTimeoutMs, 5_000);
+  assert.equal(defaults.redeemWindowSeconds, 60);
+  assert.equal(defaults.redeemClientAttemptLimit, 20);
+  assert.equal(defaults.redeemGlobalAttemptLimit, 100);
+  assert.equal(defaults.trustProxyHeaders, false);
   assert.deepEqual(defaults.limits, {
     windowSeconds: 24 * 60 * 60,
     reservationLeaseSeconds: 300,
@@ -336,6 +340,15 @@ test("generation limits and the test provider remain closed unless explicitly en
         BUILDER_RUNTIME_TEST_PROVIDER_COST_MICROS: "25000",
       }),
     /ALLOW_TEST_HOOKS/,
+  );
+
+  assert.throws(
+    () =>
+      readBuilderRuntimeConfig({
+        BUILDER_RUNTIME_REDEEM_CLIENT_ATTEMPT_LIMIT: "10",
+        BUILDER_RUNTIME_REDEEM_GLOBAL_ATTEMPT_LIMIT: "5",
+      }),
+    /REDEEM_GLOBAL_ATTEMPT_LIMIT/,
   );
 
   const configured = readBuilderRuntimeConfig({

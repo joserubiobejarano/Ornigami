@@ -6,6 +6,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   invite: "This invitation cannot be used. Ask the operator for a current one.",
   session: "Your builder session ended. Enter a current invitation to continue.",
   unavailable: "Builder access is temporarily unavailable. Try again later.",
+  rate_limited:
+    "Too many invitation attempts. Wait a minute, then try again.",
+  request_too_large: "The invitation request was too large. Paste only the token.",
+  unsupported_media_type:
+    "The invitation form could not be read. Reload the page and try again.",
 };
 
 export function BuilderSignIn({ error }: { error?: string }) {

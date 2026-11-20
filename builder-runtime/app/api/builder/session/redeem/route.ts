@@ -5,13 +5,26 @@ import {
   BuilderStoreUnavailable,
   redeemBuilderInvite,
 } from "@builder/lib/identity-store";
-import { isSameOriginRequest, sessionCookieOptions } from "@builder/lib/session";
+import {
+  BUILDER_REDEEM_MAX_BODY_BYTES,
+  readBoundedUrlEncodedForm,
+} from "@builder/lib/bounded-form";
+import {
+  consumeRedemptionAttempt,
+  redemptionClientKey,
+} from "@builder/lib/redemption-limiter";
+import { isSameOriginRequest } from "@builder/lib/request-origin";
+import { sessionCookieOptions } from "@builder/lib/session";
 import { readBuilderRuntimeConfig } from "@builder/lib/runtime-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function failure(error: string, status: number): NextResponse {
+function failure(
+  error: string,
+  status: number,
+  extraHeaders: HeadersInit = {},
+): NextResponse {
   return NextResponse.json(
     { ok: false, error },
     {
@@ -19,6 +32,7 @@ function failure(error: string, status: number): NextResponse {
       headers: {
         "Cache-Control": "no-store",
         "X-Robots-Tag": "noindex, nofollow",
+        ...extraHeaders,
       },
     },
   );
@@ -34,21 +48,46 @@ export async function POST(request: Request) {
   if (config.mode !== "invite" || !config.storeDir) {
     return failure("invite", 404);
   }
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, config)) {
     return new NextResponse(null, {
       status: 403,
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow",
+      },
     });
   }
 
-  let form: FormData;
-  try {
-    form = await request.formData();
-  } catch {
+  const attempt = consumeRedemptionAttempt({
+    clientKey: redemptionClientKey(request, config.trustProxyHeaders),
+    windowSeconds: config.redeemWindowSeconds,
+    clientLimit: config.redeemClientAttemptLimit,
+    globalLimit: config.redeemGlobalAttemptLimit,
+  });
+  if (!attempt.ok) {
+    return failure("rate_limited", 429, {
+      "Retry-After": String(attempt.retryAfterSeconds),
+    });
+  }
+
+  const bounded = await readBoundedUrlEncodedForm(
+    request,
+    BUILDER_REDEEM_MAX_BODY_BYTES,
+  );
+  if (!bounded.ok) {
+    return failure(bounded.error, bounded.status);
+  }
+
+  const tokens = bounded.params.getAll("token");
+  if (tokens.length !== 1) {
     return failure("invite", 400);
   }
-  const token = form.get("token");
-  if (typeof token !== "string" || !token.trim()) {
+  const token = tokens[0].trim();
+  if (
+    !token ||
+    token.length > 512 ||
+    [...bounded.params.keys()].some((key) => key !== "token")
+  ) {
     return failure("invite", 400);
   }
 

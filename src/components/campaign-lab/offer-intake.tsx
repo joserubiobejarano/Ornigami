@@ -261,6 +261,8 @@ export type OfferIntakeProps = {
   recoveryScope?: string;
   /** Runtime session subject; sent with generation requests. */
   builderSubject?: string;
+  /** Builder-only hook when the server reports an ended session mid-request. */
+  onSessionInactive?: () => void;
 };
 
 export function OfferIntake({
@@ -268,6 +270,7 @@ export function OfferIntake({
   generationEndpoint,
   recoveryScope,
   builderSubject,
+  onSessionInactive,
 }: OfferIntakeProps = {}) {
   const builderSurface = surface === "builder";
   const storageKey = builderSurface
@@ -281,6 +284,7 @@ export function OfferIntake({
   const preparedBriefReadRef = useRef(0);
   const mountedRef = useRef(true);
   const submissionCount = useRef(0);
+  const persistencePaused = useRef(false);
 
   const [briefHydrated, setBriefHydrated] = useState(false);
   const [restoredBrief, setRestoredBrief] = useState(false);
@@ -381,7 +385,23 @@ export function OfferIntake({
   }, [storageKey]);
 
   useEffect(() => {
-    if (!briefHydrated) return;
+    if (!builderSurface) return;
+    const pausePersistence = () => {
+      persistencePaused.current = true;
+      try {
+        window.sessionStorage.removeItem(storageKey);
+      } catch {
+        // A blocked storage area is already private-by-default.
+      }
+    };
+    window.addEventListener("ornigami-builder-signout", pausePersistence);
+    return () => {
+      window.removeEventListener("ornigami-builder-signout", pausePersistence);
+    };
+  }, [builderSurface, storageKey]);
+
+  useEffect(() => {
+    if (!briefHydrated || persistencePaused.current) return;
     try {
       window.sessionStorage.setItem(
         storageKey,
@@ -834,6 +854,7 @@ export function OfferIntake({
           offerOnly={builderSurface}
           allowMotion={!builderSurface}
           builderSubject={builderSubject}
+          onSessionInactive={onSessionInactive}
           onEditorStateChange={handleEditorStateChange}
         />
       </div>

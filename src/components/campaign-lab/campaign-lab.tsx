@@ -1,6 +1,7 @@
 "use client";
 
 import { parseOfferComposition, resolveCampaignComposition } from "@/lib/campaign-lab/composition";
+import { createBuilderRequestId } from "@/lib/builder/request-id";
 
 import Link from "next/link";
 import { BrandEvidenceReview } from "./brand-evidence-review";
@@ -118,6 +119,8 @@ type CampaignLabProps = {
   previewNote?: string;
   exportVerification?: BrowserOfferVerification | null;
   exportPackshotBlob?: Blob | null;
+  /** Builder-only hook when the server reports an ended session mid-request. */
+  onSessionInactive?: () => void;
   onEditorStateChange?: (snapshot: {
     values: CampaignFormValues;
     revision: string | null;
@@ -180,6 +183,7 @@ export function CampaignLab({
   previewNote,
   exportVerification = null,
   exportPackshotBlob = null,
+  onSessionInactive,
   onEditorStateChange,
 }: CampaignLabProps) {
   const fixture = catalog.fixtures[initialFixtureId];
@@ -614,7 +618,12 @@ export function CampaignLab({
     }
 
     const browserRequest = browserBrief?.(snapshot) ?? null;
-    const requestId = requestGate.current.begin();
+    const attemptId = requestGate.current.begin();
+    // Builder requests use a globally unique id so a reload, remount or second
+    // tab cannot collide with an earlier scoped idempotency key.
+    const requestId = builderSubject
+      ? createBuilderRequestId()
+      : String(attemptId);
     inFlight.current?.abort();
     const controller = new AbortController();
     inFlight.current = controller;
@@ -634,21 +643,31 @@ export function CampaignLab({
           browserRequest
             ? {
                 browserBrief: browserRequest,
-                requestId: String(requestId),
+                requestId,
               }
             : {
                 fixtureId: fixture.id,
                 values: snapshot,
-                requestId: String(requestId),
+                requestId,
               },
         ),
         signal: controller.signal,
       });
 
       const payload = await response.json().catch(() => null);
-      if (!requestGate.current.isCurrent(requestId)) return;
+      if (!requestGate.current.isCurrent(attemptId)) return;
 
       if (!response.ok || !payload || payload.ok !== true) {
+        if (payload?.error === "session_inactive") {
+          setGeneration(
+            deterministicFallback(
+              payload.message ??
+                "Your builder session ended. Reloading the sign-in page.",
+            ),
+          );
+          onSessionInactive?.();
+          return;
+        }
         if (payload?.issues?.length) {
           setIssues(payload.issues as ValidationIssue[]);
           setDirty(true);
@@ -709,7 +728,7 @@ export function CampaignLab({
       setIssues([]);
       setDirty(false);
     } catch {
-      if (!requestGate.current.isCurrent(requestId)) return;
+      if (!requestGate.current.isCurrent(attemptId)) return;
       setAcceptedPresentation({ preview: local.preview, recipe: recipeSnapshot });
       setGeneration(
         deterministicFallback(
@@ -719,7 +738,7 @@ export function CampaignLab({
       setIssues([]);
       setDirty(false);
     } finally {
-      if (requestGate.current.isCurrent(requestId)) {
+      if (requestGate.current.isCurrent(attemptId)) {
         setGenerating(false);
         inFlight.current = null;
       }

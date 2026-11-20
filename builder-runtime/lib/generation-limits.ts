@@ -1,9 +1,10 @@
-import { randomBytes } from "node:crypto";
-
 import type { BuilderGenerationResponse } from "../../src/lib/builder/generation.ts";
 
 import type { BuilderRuntimeConfig } from "./runtime-config.ts";
-import type { BuilderUsageRecord } from "./identity-store.ts";
+import {
+  readBuilderAdmissionStatus,
+  type BuilderUsageRecord,
+} from "./identity-store.ts";
 import {
   logBuilderGenerationSignal,
   builderSubjectRef,
@@ -28,7 +29,11 @@ export type BuilderGenerationExecution =
 
 export type BuilderLimitedGenerationFailure =
   | {
-      code: "accounting_unavailable" | "cancelled";
+      code:
+        | "accounting_unavailable"
+        | "cancelled"
+        | "invalid_request"
+        | "session_inactive";
       message: string;
       retryAfterSeconds: null;
     }
@@ -50,6 +55,8 @@ export type BuilderLimitedGenerationResult =
     };
 
 const DENIAL_MESSAGES: Record<BuilderUsageDenialCode, string> = {
+  session_inactive:
+    "Your builder session ended before generation started. No provider request was made.",
   duplicate:
     "This generation request was already submitted. Start a new generation or wait for the earlier attempt to settle.",
   subject_requests:
@@ -115,8 +122,10 @@ export async function runLimitedBuilderGeneration(input: {
   config: BuilderRuntimeConfig;
   subjectId: string;
   sessionId: string;
-  requestKey?: string;
+  requestKey: string;
   signal: AbortSignal;
+  /** Test-only bounded delay, executed before the final admission recheck. */
+  beforeDispatch?: (signal: AbortSignal) => Promise<void>;
   generate: (signal: AbortSignal) => Promise<BuilderGenerationExecution>;
 }): Promise<BuilderLimitedGenerationResult> {
   const storeDir = input.config.storeDir;
@@ -142,9 +151,17 @@ export async function runLimitedBuilderGeneration(input: {
     };
   }
 
-  const requestKey =
-    input.requestKey?.trim().slice(0, 160) ||
-    `req_${randomBytes(12).toString("hex")}`;
+  const requestKey = input.requestKey.trim().slice(0, 160);
+  if (!requestKey) {
+    return {
+      ok: false,
+      failure: {
+        code: "invalid_request",
+        message: "A valid generation request id is required.",
+        retryAfterSeconds: null,
+      },
+    };
+  }
 
   let reservation;
   try {
@@ -189,15 +206,22 @@ export async function runLimitedBuilderGeneration(input: {
     costMicros: reservation.record.reservedCostMicros ?? undefined,
   });
 
-  if (input.signal.aborted) {
+  const releaseBeforeDispatch = async (reason: string): Promise<boolean> => {
     try {
       await settleBuilderUsage({
         storeDir,
         usageId: reservation.record.id,
         outcome: "failed",
-        reason: "cancelled_before_dispatch",
+        reason,
       });
+      return true;
     } catch {
+      return false;
+    }
+  };
+
+  if (input.signal.aborted) {
+    if (!(await releaseBeforeDispatch("cancelled_before_dispatch"))) {
       return {
         ok: false,
         failure: {
@@ -219,6 +243,83 @@ export async function runLimitedBuilderGeneration(input: {
       failure: {
         code: "cancelled",
         message: "The generation request was cancelled before dispatch.",
+        retryAfterSeconds: null,
+      },
+    };
+  }
+
+  if (input.beforeDispatch) {
+    try {
+      await input.beforeDispatch(input.signal);
+    } catch {
+      if (!(await releaseBeforeDispatch("cancelled_before_dispatch"))) {
+        return {
+          ok: false,
+          failure: {
+            code: "accounting_unavailable",
+            message:
+              "The generation was cancelled, but usage accounting could not record the release. No provider request was made.",
+            retryAfterSeconds: null,
+          },
+        };
+      }
+      return {
+        ok: false,
+        failure: {
+          code: "cancelled",
+          message: "The generation request was cancelled before dispatch.",
+          retryAfterSeconds: null,
+        },
+      };
+    }
+  }
+
+  const admission = await readBuilderAdmissionStatus({
+    storeDir,
+    subjectId: input.subjectId,
+    sessionId: input.sessionId,
+  });
+  if (admission === "unavailable") {
+    logBuilderGenerationSignal({
+      event: "settlement_unavailable",
+      subjectRef: builderSubjectRef(input.subjectId),
+      usageId: reservation.record.id,
+      code: "admission_recheck_unavailable",
+    });
+    return {
+      ok: false,
+      failure: {
+        code: "accounting_unavailable",
+        message:
+          "Generation is unavailable because the builder session could not be verified before dispatch. The reservation remains held and no provider request was made.",
+        retryAfterSeconds: null,
+      },
+    };
+  }
+  if (admission === "inactive") {
+    if (!(await releaseBeforeDispatch("session_revoked_before_dispatch"))) {
+      return {
+        ok: false,
+        failure: {
+          code: "accounting_unavailable",
+          message:
+            "The builder session ended before dispatch, but usage accounting could not record the release. No provider request was made.",
+          retryAfterSeconds: null,
+        },
+      };
+    }
+    logBuilderGenerationSignal({
+      event: "cancelled",
+      subjectRef: builderSubjectRef(input.subjectId),
+      usageId: reservation.record.id,
+      code: "session_inactive_before_dispatch",
+    });
+    return {
+      ok: false,
+      failure: {
+        code: "session_inactive",
+        message:
+          "Your builder session ended before generation started. No provider request was made.",
         retryAfterSeconds: null,
       },
     };
