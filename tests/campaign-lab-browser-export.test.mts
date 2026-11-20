@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildExportReceipt } from "../src/lib/campaign-lab/export.ts";
+import {
+  buildExportReceipt,
+  type CampaignExportPreview,
+} from "../src/lib/campaign-lab/export.ts";
 import { buildBrowserIntakeVerificationProvenance } from "../src/lib/campaign-lab/verification-provenance.ts";
 import type { ApprovedAsset, PilotDescriptor } from "../src/lib/campaign-lab/types.ts";
 
@@ -28,7 +31,7 @@ const asset: ApprovedAsset = {
   contentHash: "c".repeat(64),
 };
 
-function receiptPreview() {
+function receiptPreview(): CampaignExportPreview {
   const provenance = buildBrowserIntakeVerificationProvenance({
     pilot,
     manifest: {
@@ -112,6 +115,31 @@ test("browser export receipt identifies browser intake and separates identity ch
     exportedSha256: asset.contentHash,
     localExportHashMatches: true,
     serverBytesVerified: false,
+  });
+});
+
+test("an effective emphasis foreground is carried additively in receipt appearance", async () => {
+  const preview = receiptPreview();
+  preview.appearance = {
+    accent: "#244fae",
+    accentInk: "#fffaf1",
+    offerEmphasisInk: "#1f2a24",
+  };
+  const receipt = await buildExportReceipt({
+    preview,
+    approval: {
+      revision: preview.revision,
+      approvedAt: "2026-11-18T12:00:00.000Z",
+    },
+    exportedAt: "2026-11-18T12:01:00.000Z",
+    packshotFile: "packshot-cccccccccccccccc.webp",
+    packshotSha256: asset.contentHash,
+    files: [],
+  });
+  assert.deepEqual(receipt.preview.appearance, {
+    accent: "#244fae",
+    accentInk: "#fffaf1",
+    offerEmphasisInk: "#1f2a24",
   });
 });
 

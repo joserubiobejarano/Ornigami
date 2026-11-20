@@ -223,6 +223,9 @@
   font-weight: 650;
   line-height: 1.35;
   text-wrap: pretty;
+  /* An approved offer can contain a long unbroken token; wrap it rather than
+     clipping the article or hiding the remainder. */
+  overflow-wrap: anywhere;
 }
 
 /*
@@ -246,14 +249,17 @@
 }
 
 .offerPrice {
-  display: inline-block;
+  display: inline;
   margin-inline: 0.06em 0.01em;
-  color: var(--cp-accent);
+  color: var(--cp-offer-emphasis-ink, var(--cp-accent));
   font-size: 1.45em;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   line-height: 0.9;
-  white-space: nowrap;
+  /* Every offer treatment wraps the exact reviewed substring. Product focus
+     keeps its stronger type treatment without owning the wrapping rule. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .action {
@@ -416,10 +422,12 @@
 }
 
 .closeOffer {
+  width: 100%;
   color: var(--cp-muted);
   font-size: 0.72rem;
   letter-spacing: 0.01em;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .footer {
@@ -609,7 +617,9 @@
 
   .closeAction {
     width: auto;
-    flex: 0 0 auto;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
     align-items: flex-end;
   }
 

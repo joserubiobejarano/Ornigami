@@ -773,7 +773,7 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
-export const CAMPAIGN_REVISION_IDENTITY_VERSION = 6;
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 7;
 
 function canonicalText(value: string): string {
   return presentationText(value);
@@ -862,6 +862,13 @@ export function buildDraftRevisionIdentity(
       offerStyle: tokens.offerStyle ?? "tint",
       offerPriceEmphasis: Boolean(tokens.offerPriceEmphasis),
       highlightedPrice,
+      ...(highlightedPrice
+        ? {
+            offerEmphasisInk: canonicalColor(
+              tokens.offerEmphasisInk ?? tokens.accent,
+            ),
+          }
+        : {}),
       imageInset: canonicalLength(tokens.imageInset),
       mobileHeroOrder: tokens.mobileHeroOrder ?? "support-first",
       heroOrder: tokens.heroOrder,

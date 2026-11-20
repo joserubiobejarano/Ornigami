@@ -153,6 +153,7 @@ export function CampaignPage({
     "--cp-muted": tokens.muted,
     "--cp-accent": tokens.accent,
     "--cp-accent-ink": tokens.accentInk,
+    "--cp-offer-emphasis-ink": tokens.offerEmphasisInk ?? tokens.accent,
     "--cp-line": tokens.line,
     "--cp-display-font": tokens.displayFont,
     "--cp-body-font": tokens.bodyFont,

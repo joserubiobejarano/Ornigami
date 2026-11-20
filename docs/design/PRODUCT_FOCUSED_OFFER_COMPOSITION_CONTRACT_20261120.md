@@ -2,6 +2,12 @@
 
 20 November 2026. Additive to the ordinary development-only single-product offer workflow.
 
+> **Correction (20 November, independent review):** rendered identity is **7**
+> for new previews/exports after the reviewed-emphasis wrapping and readable-ink
+> correction. Template `1.0.1` and Product focus `1.1.0` are unchanged. Historical
+> v6 receipts remain readable. See the
+> [offer finishing-review fixes](./OFFER_FINISHING_REVIEW_FIXES_20261120.md).
+
 ## Input and compatibility
 
 `composition?: "direction-default" | "product-focus"` is independent of `directionId`, palette review and accent overrides. Both intake and preview expose the same native select. Prepared JSON and compatible session briefs remain schema version 1. Missing values retain existing direction behavior; explicit `direction-default` has the same rendered identity as omission. Invalid strings, objects, null and other types reject. Browser HTTP validation reports a composition issue with status 422. No client CSS, recipe or token map is accepted. A model still returns only angle/layout/sections/fact IDs; it cannot override composition.
@@ -18,7 +24,7 @@ In 1.1.0 the desktop support block starts immediately below the headline rather 
 
 Contained `product-hero` images alone receive bounded natural-aspect sizing. The maximum extent is `clamp(260px, 54cqi, 360px)` from the campaign container; width is the minimum of available width, extent and extent multiplied by approved aspect ratio. This bounds both axes without changing fit, cropping corners, altering image bytes or changing colors. Narrative, cover and role-less images do not receive the packshot sizing class. The natural arch, direction defaults, existing frames, type, palette, CTA, facts/footer and optional inspection remain independent.
 
-This remains template **1.0.1**, visual direction **1.0.0**, rendered identity **6**, and existing receipt schema. The additive recipe has its own version and only participates in canonical identity when active. Thus old default revisions remain reproducible, while a focused result has a different identity. Any future visible recipe change must bump its version. Historical receipts without composition remain readable; receipts that name 1.0.0 remain valid historical records but do not reproduce the 1.1.0 pixel result.
+This remains template **1.0.1**, visual direction **1.0.0**, existing receipt schema, and rendered identity **6** at the finishing checkpoint (**7** after the corrected emphasis wrapping/ink; see the correction above). The additive recipe has its own version and only participates in canonical identity when active. Thus old default revisions remain reproducible, while a focused result has a different identity. Any future visible recipe change must bump its version. Historical receipts without composition remain readable; receipts that name 1.0.0 remain valid historical records but do not reproduce the 1.1.0 pixel result.
 
 Active preview and receipt metadata is:
 

@@ -747,6 +747,13 @@ export function CampaignLab({
         appearance: {
           accent: preview.theme.tokens.accent,
           accentInk: preview.theme.tokens.accentInk,
+          ...(preview.brief.offerPrice?.trim()
+            ? {
+                offerEmphasisInk:
+                  preview.theme.tokens.offerEmphasisInk ??
+                  preview.theme.tokens.accent,
+              }
+            : {}),
         },
         asset: {
           id: preview.asset.id,

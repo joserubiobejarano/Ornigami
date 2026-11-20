@@ -19,6 +19,7 @@ import type {
   PilotBundle,
   ResolvedBrandTheme,
 } from "./types.ts";
+import { pickOfferEmphasisInk } from "./brand-review.ts";
 
 const harborTokens: BrandTokens = {
   page: "#f4eee4",
@@ -683,12 +684,16 @@ export function resolveBrandTheme(
 ): ResolvedBrandTheme {
   const brand = getBrand(brandId, catalog);
   const normalizedAccent = parseHexColor(accent ?? "") ? accent!.trim() : brand.tokens.accent;
+  const tokens = {
+    ...brand.tokens,
+    accent: normalizedAccent,
+    accentInk: pickAccentInk(normalizedAccent),
+  };
   return {
     brand,
     tokens: {
-      ...brand.tokens,
-      accent: normalizedAccent,
-      accentInk: pickAccentInk(normalizedAccent),
+      ...tokens,
+      offerEmphasisInk: pickOfferEmphasisInk(tokens),
     },
   };
 }

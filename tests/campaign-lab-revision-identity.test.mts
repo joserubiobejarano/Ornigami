@@ -4,7 +4,9 @@ import test from "node:test";
 import {
   CAMPAIGN_FIXTURES,
   createFormValues,
+  resolveBrandTheme,
 } from "../src/lib/campaign-lab/fixtures.ts";
+import { contrast, offerBackground } from "../src/lib/campaign-lab/brand-review.ts";
 import {
   CAMPAIGN_REVISION_IDENTITY_VERSION,
   buildCampaignPreview,
@@ -55,14 +57,57 @@ function themeWith(
 }
 
 test("revision identity is versioned and previews carry the version", () => {
-  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 6);
-  assert.equal(base.revisionIdentityVersion, 6);
+  assert.equal(CAMPAIGN_REVISION_IDENTITY_VERSION, 7);
+  assert.equal(base.revisionIdentityVersion, 7);
   assert.equal(
     buildDraftRevisionIdentity(base.brief, base.draft, base.asset, base.theme)
       .identityVersion,
-    6,
+    7,
   );
   assert.equal(revisionWith(), base.revision);
+});
+
+test("resolved emphasis ink participates in identity only when emphasis is active", () => {
+  const brief = {
+    ...base.brief,
+    offer: "Black Friday offer: $9",
+    offerPrice: "$9",
+  };
+  const paleTheme = resolveBrandTheme("harbor-field", "#f4eee4");
+  assert.equal(paleTheme.tokens.accent, "#f4eee4");
+  assert.ok(paleTheme.tokens.offerEmphasisInk);
+  assert.ok(
+    contrast(
+      paleTheme.tokens.offerEmphasisInk,
+      offerBackground(paleTheme.tokens),
+    ) >= 4.5,
+  );
+
+  const identity = buildDraftRevisionIdentity(
+    brief,
+    base.draft,
+    base.asset,
+    paleTheme,
+  );
+  assert.equal(
+    identity.appearance.offerEmphasisInk,
+    paleTheme.tokens.offerEmphasisInk,
+  );
+  assert.notEqual(
+    revisionWith({
+      brief,
+      theme: themeWith({ offerEmphasisInk: "#000000" }),
+    }),
+    revisionWith({ brief }),
+  );
+
+  const omitted = buildDraftRevisionIdentity(
+    { ...brief, offerPrice: undefined },
+    base.draft,
+    base.asset,
+    paleTheme,
+  );
+  assert.equal("offerEmphasisInk" in omitted.appearance, false);
 });
 
 test("rendered colour, type, spacing, radii, treatment, order, wordmark, and image dimensions participate", () => {

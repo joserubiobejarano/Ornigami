@@ -104,46 +104,66 @@ test("product focus renders headline, image, offer, action and facts in DOM orde
   }
 });
 
-test("reviewed offer emphasis wraps only the exact approved substring", async () => {
+test("reviewed offer emphasis wraps only the exact approved substring in every composition", async () => {
   const fixture = CAMPAIGN_FIXTURES.sparse;
-  const built = buildCampaignPreview(
-    fixture,
-    { ...createFormValues(fixture), composition: "product-focus" },
-    BASE_CATALOG,
-  );
-  assert.equal(built.ok, true);
-  if (!built.ok) return;
-  const base = built.preview;
   const { CampaignPage, React, renderToStaticMarkup } = await loadCampaignPage();
+  const longEmphasis = "Save 20% on the travel bottle from 27–30 November 2026";
 
-  const render = (offerPrice: string | undefined) =>
-    renderToStaticMarkup(
-      React.createElement(CampaignPage, {
-        brief: {
-          ...base.brief,
-          offer: "30% off, was $10, now $7.50",
-          offerPrice,
-        },
-        draft: base.draft,
-        asset: base.asset,
-        theme: base.theme,
-        headingId: "emphasis-heading",
-        imageRevision: base.revision,
-        imageStatus: "loaded",
-        imageAttempt: 0,
-        onImageStateChange() {},
-      }),
+  for (const composition of ["direction-default", "product-focus"] as const) {
+    const built = buildCampaignPreview(
+      fixture,
+      {
+        ...createFormValues(fixture),
+        composition,
+        offer: longEmphasis,
+        offerPrice: longEmphasis,
+      },
+      BASE_CATALOG,
     );
+    assert.equal(built.ok, true, composition);
+    if (!built.ok) continue;
+    const base = built.preview;
 
-  const exact = render("$7.50");
-  assert.match(exact, /data-role="offer-emphasis">\$7\.50<\/span>/);
-  assert.match(exact, /30% off, was \$10, now /);
-  assert.doesNotMatch(exact, /data-role="offer-emphasis">\$10</);
+    const render = (offer: string, offerPrice: string | undefined) =>
+      renderToStaticMarkup(
+        React.createElement(CampaignPage, {
+          brief: {
+            ...base.brief,
+            offer,
+            offerPrice,
+          },
+          draft: base.draft,
+          asset: base.asset,
+          theme: base.theme,
+          headingId: `emphasis-heading-${composition}`,
+          imageRevision: base.revision,
+          imageStatus: "loaded",
+          imageAttempt: 0,
+          onImageStateChange() {},
+        }),
+      );
 
-  const absent = render(undefined);
-  assert.doesNotMatch(absent, /data-role="offer-emphasis"/);
-  const mismatch = render("$8.00");
-  assert.doesNotMatch(mismatch, /data-role="offer-emphasis"/);
+    const shortOffer = "30% off, was $10, now $7.50";
+    const exact = render(shortOffer, "$7.50");
+    assert.match(exact, /data-role="offer-emphasis">\$7\.50<\/span>/);
+    assert.match(exact, /30% off, was \$10, now /);
+    assert.doesNotMatch(exact, /data-role="offer-emphasis">\$10</);
+    assert.match(exact, /--cp-offer-emphasis-ink/);
+
+    const absent = render(shortOffer, undefined);
+    assert.doesNotMatch(absent, /data-role="offer-emphasis"/);
+    const mismatch = render(shortOffer, "$8.00");
+    assert.doesNotMatch(mismatch, /data-role="offer-emphasis"/);
+
+    const long = render(longEmphasis, longEmphasis);
+    assert.match(
+      long,
+      new RegExp(
+        `data-role="offer-emphasis">${longEmphasis.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</span>`,
+      ),
+    );
+    assert.ok(long.includes(longEmphasis));
+  }
 });
 
 test("actual CampaignPage product-label markup follows shared whitespace normalization", async () => {
