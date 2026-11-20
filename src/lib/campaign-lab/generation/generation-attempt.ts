@@ -42,6 +42,8 @@ export function createGenerationAttempt(localSequence: number): GenerationAttemp
   }
   return Object.freeze({
     localSequence,
-    idempotencyKey: `gen_${browserUuid() ?? fallbackUuid()}`,
+    // The hardened builder route accepts a canonical UUID only. The key stays
+    // globally unique per attempt; the local sequence is never sent.
+    idempotencyKey: browserUuid() ?? fallbackUuid(),
   });
 }

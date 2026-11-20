@@ -13,7 +13,10 @@ test("a new attempt gets a unique HTTP key while local ordering stays separate",
   assert.equal(later.localSequence, 2);
   assert.notEqual(first.idempotencyKey, remounted.idempotencyKey);
   assert.notEqual(remounted.idempotencyKey, later.idempotencyKey);
-  assert.match(first.idempotencyKey, /^gen_[0-9a-f-]{36}$/i);
+  assert.match(
+    first.idempotencyKey,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  );
   assert.ok(Object.isFrozen(first));
 });
 
