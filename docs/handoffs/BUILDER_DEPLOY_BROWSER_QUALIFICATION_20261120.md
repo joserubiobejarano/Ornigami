@@ -13,9 +13,9 @@ live provider and test hooks stay disabled, and real Linux execution remains
 - Worktree: `C:/Users/joser/.local/ornigami-builder-deploy-browser-20261120`
 
 The Linux run must record its actual clean `git rev-parse HEAD` in
-`results.txt`. Commits after `9f4476c` are confined to documentation and the
-browser helper's ZIP-extraction fallback; they do not change builder web routes,
-access defaults, the store schema or the server quota contract.
+`results.txt`. Commits after `9f4476c` are confined to documentation and
+browser-helper refinements; they do not change builder web routes, access
+defaults, the store schema or the server quota contract.
 
 The implementation is confined to the qualification harness, the operator
 store-lock contract/diagnostics, focused tests and documentation. It does not
