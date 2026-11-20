@@ -169,6 +169,36 @@ try {
       `missing writable-path check for ${pathValue}`,
     );
   }
+  assert.ok(
+    qualifyScript.includes('flush_deferred_failures "writable paths"'),
+    "writable-path failures must be collected before failing",
+  );
+  const primaryFlow = qualifyScript.indexOf("# Invite runtime with read-only root");
+  const primaryInit = qualifyScript.lastIndexOf(
+    'initialize_store_root "$STORE_SOURCE"',
+  );
+  const primaryStart = qualifyScript.indexOf('start_runtime "$CONTAINER"', primaryInit);
+  assert.ok(
+    primaryInit >= 0 && primaryInit < primaryFlow && primaryFlow < primaryStart,
+    "primary store root must be initialized before the writer starts",
+  );
+  const backupFlow = qualifyScript.indexOf("# Backup while stopped");
+  const restoreInit = qualifyScript.indexOf(
+    'initialize_store_root "$RESTORE_SOURCE"',
+    backupFlow,
+  );
+  const restoreCopy = qualifyScript.indexOf(
+    'copy_store_in "$BACKUP_DIR/store"',
+    backupFlow,
+  );
+  const restoreStart = qualifyScript.indexOf(
+    'start_runtime "$RESTORE_CONTAINER"',
+    backupFlow,
+  );
+  assert.ok(
+    restoreInit >= 0 && restoreInit < restoreCopy && restoreCopy < restoreStart,
+    "restore root must be initialized before import and writer start",
+  );
   const builderDockerfile = readFileSync(
     path.join(root, "deploy", "builder", "Dockerfile"),
     "utf8",
@@ -232,6 +262,7 @@ try {
   writeFileSync(path.join(priorRun, "sentinel.txt"), "prior-run\n");
   const normal = runQualify({
     RUN_ID: "selftest-normal",
+    SELF_TEST_INITIALIZE_STORE: "1",
     SELF_TEST_CREATE_CONTAINER: "1",
     KEEP_VOLUMES: "1",
   });
@@ -250,6 +281,39 @@ try {
     1,
     "normal run must pass exactly one store mount",
   );
+  const callLines = calls().split(/\r?\n/);
+  const volumeLine = callLines.findIndex(
+    (line) =>
+      line.startsWith("volume create") &&
+      line.includes("ornigami-builder-store-selftest-normal"),
+  );
+  const setupLine = callLines.findIndex(
+    (line) =>
+      line.startsWith("run ") &&
+      line.includes("src=ornigami-builder-store-selftest-normal"),
+  );
+  const containerLine = callLines.findIndex(
+    (line) =>
+      line.startsWith("create ") &&
+      line.includes("--name ornigami-builder-qualify-selftest-normal"),
+  );
+  assert.ok(
+    volumeLine >= 0 && volumeLine < setupLine && setupLine < containerLine,
+    "new volume must be initialized after creation and before the writer container",
+  );
+  assert.equal(
+    existsSync(
+      path.join(
+        stubState,
+        "volumes",
+        "ornigami-builder-store-selftest-normal",
+        "initialized",
+      ),
+    ),
+    true,
+    "new volume root was not initialized",
+  );
+  pass("new volume initialized before writer start");
   assert.equal(resourceExists("networks", "ornigami-builder-qualify-net-selftest-normal"), false);
   assert.equal(
     resourceExists("containers", "ornigami-builder-qualify-selftest-normal"),
@@ -339,6 +403,7 @@ try {
     RUN_ID: "selftest-bind",
     STORE_MODE: "bind",
     STORE_DIR: bashAbsolute(bindStore),
+    SELF_TEST_INITIALIZE_STORE: "1",
     SELF_TEST_CREATE_CONTAINER: "1",
     KEEP_VOLUMES: "0",
   });
@@ -364,6 +429,53 @@ try {
     "bind run must pass exactly one store mount",
   );
   pass("bind mode created no named volume and cleaned up its network");
+
+  // 6b. An unowned/foreign volume is refused before any writer starts.
+  const foreign = runQualify({
+    RUN_ID: "selftest-foreign-volume",
+    SELF_TEST_FOREIGN_VOLUME: "1",
+    SELF_TEST_INITIALIZE_STORE: "1",
+    SELF_TEST_CREATE_CONTAINER: "1",
+    KEEP_ON_FAILURE: "0",
+  });
+  assert.notEqual(foreign.status, 0, "foreign volume must be refused");
+  assert.equal(resultsOk("selftest-foreign-volume"), false);
+  assert.equal(
+    resourceExists("containers", "ornigami-builder-qualify-selftest-foreign-volume"),
+    false,
+  );
+  assert.match(
+    `${foreign.stdout}\n${foreign.stderr}`,
+    /not owned by run/,
+    "ownership refusal was not explicit",
+  );
+  pass("unowned volume refused before writer start");
+
+  // 6c. A setup failure stops before the writer container and result file.
+  const setupFailure = runQualify({
+    RUN_ID: "selftest-setup-failure",
+    SELF_TEST_INITIALIZE_STORE: "1",
+    SELF_TEST_CREATE_CONTAINER: "1",
+    STUB_FAIL_SETUP: "1",
+    KEEP_ON_FAILURE: "0",
+  });
+  assert.notEqual(setupFailure.status, 0, "setup failure must fail the run");
+  assert.equal(resultsOk("selftest-setup-failure"), false);
+  assert.equal(
+    resourceExists("containers", "ornigami-builder-qualify-selftest-setup-failure"),
+    false,
+  );
+  assert.match(
+    calls(),
+    /run .*src=ornigami-builder-store-selftest-setup-failure/,
+    "setup run was not attempted",
+  );
+  assert.doesNotMatch(
+    calls(),
+    /create .*--name ornigami-builder-qualify-selftest-setup-failure/,
+    "writer container must not start after setup failure",
+  );
+  pass("setup failure stops before writer start");
 
   // 7. Mount construction failure aborts before results. A comma is invalid in
   //    the Docker --mount value and must never be silently dropped.

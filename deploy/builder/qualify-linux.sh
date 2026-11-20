@@ -19,6 +19,10 @@
 #   QUALIFY_SELF_TEST=1 ALLOW_DIRTY=1 ALLOW_NON_LINUX_ENGINE=1 \
 #   SOURCE_SHA="$(git rev-parse HEAD)" ENGINE=<stub-or-engine> \
 #   EVIDENCE_DIR=<new-path> ./deploy/builder/qualify-linux.sh
+#
+# MOUNT-ONLY (real engine; stops after the four writable-path probes):
+#   MOUNT_ONLY=1 BROWSER_PHASE=0 KEEP_VOLUMES=0 REMOVE_IMAGE=1 \
+#   SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
 
 set -euo pipefail
 
@@ -33,6 +37,7 @@ QUALIFY_SELF_TEST="${QUALIFY_SELF_TEST:-0}"
 KEEP_ON_FAILURE="${KEEP_ON_FAILURE:-1}"
 KEEP_VOLUMES="${KEEP_VOLUMES:-1}"
 REMOVE_IMAGE="${REMOVE_IMAGE:-0}"
+MOUNT_ONLY="${MOUNT_ONLY:-0}"
 STORE_MODE="${STORE_MODE:-volume}"
 STORE_HOST_ID="${BUILDER_RUNTIME_STORE_HOST_ID:-${STORE_HOST_ID:-ornigami-builder-store}}"
 NODE_BIN="${NODE_BIN:-node}"
@@ -158,6 +163,9 @@ fi
 if [[ "$BROWSER_PHASE" != "0" && "$BROWSER_PHASE" != "1" ]]; then
   fail "BROWSER_PHASE must be 0 or 1"
 fi
+if [[ "$MOUNT_ONLY" != "0" && "$MOUNT_ONLY" != "1" ]]; then
+  fail "MOUNT_ONLY must be 0 or 1"
+fi
 
 # The browser phase needs an exact loopback origin and a published loopback
 # port. The container itself stays on the internal no-egress network; only
@@ -262,6 +270,27 @@ check_contains() {
   fi
   printf 'ok\t%s\t%s\n' "$name" "$actual" >> "$EVIDENCE_DIR/checks.tsv"
   note "PASS $name"
+}
+DEFERRED_FAILURES=()
+record_result() {
+  local name="$1" actual="$2" expected="$3"
+  CHECK_COUNT=$((CHECK_COUNT + 1))
+  if [[ "$actual" != "$expected" ]]; then
+    DEFERRED_FAILURES+=("$name: expected [$expected], got [$actual]")
+    printf 'fail\t%s\t%s\n' "$name" "$actual" >> "$EVIDENCE_DIR/checks.tsv"
+    note "FAIL $name (collected): expected [$expected], got [$actual]"
+    return 0
+  fi
+  printf 'ok\t%s\t%s\n' "$name" "$actual" >> "$EVIDENCE_DIR/checks.tsv"
+  note "PASS $name"
+}
+flush_deferred_failures() {
+  local phase="$1"
+  if [[ ${#DEFERRED_FAILURES[@]} -gt 0 ]]; then
+    local joined
+    joined="$(printf '%s; ' "${DEFERRED_FAILURES[@]}")"
+    fail "$phase failed: $joined"
+  fi
 }
 
 created_container=0
@@ -395,6 +424,59 @@ build_store_mount_args() {
   return 0
 }
 
+verify_volume_owned() {
+  local name="$1" label
+  label="$("$ENGINE" volume inspect --format '{{ index .Labels "org.ornigami.qualify.run" }}' "$name" 2>/dev/null || true)"
+  [[ "$label" == "$RUN_ID" ]] \
+    || fail "Refusing to modify volume not owned by run $RUN_ID: $name (label [$label])"
+}
+
+initialize_volume_root() {
+  local name="$1"
+  verify_volume_owned "$name"
+  "$ENGINE" run --rm \
+    --label "org.ornigami.qualify.run=$RUN_ID" \
+    --network none --read-only --user 0:0 \
+    --mount "type=volume,src=$name,dst=/data/builder" \
+    "$IMAGE" -e '
+      const fs = require("node:fs");
+      const p = "/data/builder";
+      fs.chownSync(p, 1000, 1000);
+      fs.chmodSync(p, 0o700);
+      const s = fs.statSync(p);
+      if (s.uid !== 1000 || s.gid !== 1000 || (s.mode & 0o777) !== 0o700) {
+        throw new Error(`store root initialization failed: ${s.uid}:${s.gid} ${(s.mode & 0o777).toString(8)}`);
+      }
+    '
+  note "Initialized volume store root: $name (1000:1000, 0700)"
+}
+
+initialize_bind_root() {
+  local path="$1" actual
+  [[ "$path" == "$STORE_DIR" || "$path" == "$RESTORE_DIR" ]] \
+    || fail "Unexpected bind store root: $path"
+  [[ -d "$path" && ! -L "$path" ]] || fail "Bind store root is not a real directory: $path"
+  if [[ "$(id -u)" -eq 0 ]]; then
+    chown 1000:1000 "$path"
+  fi
+  chmod 0700 "$path"
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    actual="$(stat -c '%u:%g:%a' "$path")"
+    [[ "$actual" == "1000:1000:700" ]] \
+      || fail "Bind store root mismatch: $path expected 1000:1000:700, got $actual"
+  fi
+  note "Initialized bind store root: $path (1000:1000, 0700)"
+}
+
+initialize_store_root() {
+  local source="$1"
+  case "$STORE_MODE" in
+    volume) initialize_volume_root "$source" ;;
+    bind) initialize_bind_root "$source" ;;
+    *) fail "Unsupported store mode: $STORE_MODE" ;;
+  esac
+}
+
 # ---------------------------------------------------------------------------
 # Self-test: exercise run-scoped naming, collision guards and owned cleanup
 # without building or running the application. The local harness uses a stub
@@ -406,13 +488,19 @@ if [[ "$QUALIFY_SELF_TEST" == "1" ]]; then
     --label "org.ornigami.qualify.run=$RUN_ID" "$NETWORK" >/dev/null
   created_network=1
   if [[ "$STORE_MODE" == "volume" ]]; then
-    "$ENGINE" volume create \
-      --label "org.ornigami.qualify.run=$RUN_ID" "$STORE_VOLUME" >/dev/null
+    store_label="org.ornigami.qualify.run=$RUN_ID"
+    if [[ "${SELF_TEST_FOREIGN_VOLUME:-0}" == "1" ]]; then
+      store_label="foreign-volume"
+    fi
+    "$ENGINE" volume create --label "$store_label" "$STORE_VOLUME" >/dev/null
     created_store_volume=1
     STORE_SOURCE="$STORE_VOLUME"
   else
     mkdir "$STORE_DIR"
     STORE_SOURCE="$STORE_DIR"
+  fi
+  if [[ "${SELF_TEST_INITIALIZE_STORE:-0}" == "1" ]]; then
+    initialize_store_root "$STORE_SOURCE"
   fi
   if [[ "${SELF_TEST_CREATE_CONTAINER:-0}" == "1" ]]; then
     build_store_mount_args "$STORE_SOURCE" \
@@ -603,21 +691,42 @@ exec_node() {
 
 check_writable_path() {
   local name="$1" path="$2" expected_mode="$3"
-  local result actual_owner actual_mode actual_value
+  local result rc actual_owner actual_mode actual_value
+  set +e
   result="$("$ENGINE" exec -e "QUALIFY_PROBE_PATH=$path" "$CONTAINER" /nodejs/bin/node -e '
     const fs = require("node:fs");
     const p = process.env.QUALIFY_PROBE_PATH;
-    const s = fs.statSync(p);
-    const probe = p + "/.qualify-probe-" + process.pid;
-    fs.writeFileSync(probe, "ok", { flag: "wx" });
-    const value = fs.readFileSync(probe, "utf8");
-    fs.unlinkSync(probe);
-    process.stdout.write([s.uid + ":" + s.gid, (s.mode & 0o777).toString(8), value].join("|"));
-  ')"
+    let owner = "unknown";
+    let mode = "unknown";
+    let value = "fail";
+    try {
+      const s = fs.statSync(p);
+      owner = s.uid + ":" + s.gid;
+      mode = (s.mode & 0o777).toString(8);
+      const probe = p + "/.qualify-probe-" + process.pid;
+      try {
+        fs.writeFileSync(probe, "ok", { flag: "wx" });
+        value = fs.readFileSync(probe, "utf8");
+        fs.unlinkSync(probe);
+      } catch (error) {
+        value = "fail:" + (error.code || error.message);
+        try { fs.unlinkSync(probe); } catch {}
+      }
+    } catch (error) {
+      value = "fail:" + (error.code || error.message);
+    }
+    process.stdout.write([owner, mode, value].join("|"));
+  ' 2>&1)"
+  rc=$?
+  set -e
+  if [[ "$rc" -ne 0 ]]; then
+    result="${result//$'\n'/ }"
+    result="unknown|unknown|fail:probe-exit-$rc-$result"
+  fi
   IFS='|' read -r actual_owner actual_mode actual_value <<< "$result"
-  check "writable:$name:owner" "$actual_owner" "1000:1000"
-  check "writable:$name:mode" "$actual_mode" "$expected_mode"
-  check "writable:$name:write-delete" "$actual_value" "ok"
+  record_result "writable:$name:owner" "$actual_owner" "1000:1000"
+  record_result "writable:$name:mode" "$actual_mode" "$expected_mode"
+  record_result "writable:$name:write-delete" "$actual_value" "ok"
 }
 
 http_run() {
@@ -695,7 +804,6 @@ note "Create internal network and persistent store volume"
 created_network=1
 if [[ "$STORE_MODE" == "bind" ]]; then
   mkdir "$STORE_DIR"
-  if [[ "$(id -u)" -eq 0 ]]; then chown -R 1000:1000 "$STORE_DIR"; fi
   STORE_SOURCE="$STORE_DIR"
 else
   "$ENGINE" volume create \
@@ -703,6 +811,7 @@ else
   created_store_volume=1
   STORE_SOURCE="$STORE_VOLUME"
 fi
+initialize_store_root "$STORE_SOURCE"
 
 # ---------------------------------------------------------------------------
 # Invite runtime with read-only root, UID 1000 and the persistent volume.
@@ -725,6 +834,34 @@ check_writable_path "store" "/data/builder" "700"
 check_writable_path "tmp" "/tmp" "700"
 check_writable_path "next-cache" "/app/builder-runtime/.next/cache" "700"
 check_writable_path "home" "/home/node" "700"
+flush_deferred_failures "writable paths"
+
+if [[ "$MOUNT_ONLY" == "1" ]]; then
+  cat > "$EVIDENCE_DIR/results.txt" <<EOF
+ok=true
+mount_only=true
+self_test=false
+engine=$ENGINE
+source_sha=$SOURCE_SHA
+run_id=$RUN_ID
+image=$IMAGE
+app_url=$APP_URL
+store_mode=$STORE_MODE
+store_volume=$STORE_VOLUME
+runtime_user=1000:1000
+read_only_root=true
+writable_paths=/data/builder,/tmp,/app/builder-runtime/.next/cache,/home/node
+writable_owners=1000:1000
+writable_modes=0700
+writable_tmpfs_options=rw,noexec,nosuid,uid=1000,gid=1000,mode=0700
+checks=$CHECK_COUNT
+evidence_dir=$EVIDENCE_DIR
+EOF
+  note "PASS: mount-only qualification"
+  cat "$EVIDENCE_DIR/results.txt"
+  exit 0
+fi
+
 # The store file is created by the first operator write; its owner/mode is
 # checked after the synthetic invites below.
 
@@ -832,6 +969,8 @@ fi
 # Backup while stopped and restore into a fresh volume and fresh container.
 # ---------------------------------------------------------------------------
 note "Back up the stopped store and restore into a fresh container"
+LIST_BEFORE_BACKUP="$(op_json "$STORE_SOURCE" list)"
+printf '%s\n' "$LIST_BEFORE_BACKUP" > "$EVIDENCE_DIR/list-before-backup.json"
 "$ENGINE" stop "$CONTAINER" >/dev/null
 prepare_host_dir "$BACKUP_DIR/store"
 copy_store_out "$STORE_SOURCE" "$BACKUP_DIR/store"
@@ -846,6 +985,7 @@ if [[ "$STORE_MODE" == "volume" ]]; then
 else
   RESTORE_SOURCE="$RESTORE_DIR"
 fi
+initialize_store_root "$RESTORE_SOURCE"
 copy_store_in "$BACKUP_DIR/store" "$RESTORE_SOURCE"
 check "restore:hash" "$(store_hash "$RESTORE_SOURCE")" "$STORE_HASH_BASELINE"
 
@@ -855,9 +995,26 @@ wait_health "$RESTORE_CONTAINER"
 http_run "$RESTORE_CONTAINER" session "$COOKIE_A" --subject "$SUBJECT_A" >/dev/null
 http_run "$RESTORE_CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
 http_run "$RESTORE_CONTAINER" generate "$COOKIE_A" "$SUBJECT_A" "$("$NODE_BIN" -e 'process.stdout.write(require("node:crypto").randomUUID())')" --expect-status 429 --expect-code subject_concurrency >/dev/null
-exec_node "$RESTORE_CONTAINER" 'const fs=require("fs");const s=fs.statSync("/data/builder/identity-store.json");if(s.uid!==1000||s.gid!==1000)throw Error("restored store ownership drift")'
+check "restore:root-owner" \
+  "$(exec_node "$RESTORE_CONTAINER" 'const s=require("node:fs").statSync("/data/builder");process.stdout.write(`${s.uid}:${s.gid}`)')" "1000:1000"
+check "restore:root-mode" \
+  "$(exec_node "$RESTORE_CONTAINER" 'const s=require("node:fs").statSync("/data/builder");process.stdout.write((s.mode&0o777).toString(8))')" "700"
+check "restore:store-owner" \
+  "$(exec_node "$RESTORE_CONTAINER" 'const s=require("node:fs").statSync("/data/builder/identity-store.json");process.stdout.write(`${s.uid}:${s.gid}`)')" "1000:1000"
+check "restore:store-mode" \
+  "$(exec_node "$RESTORE_CONTAINER" 'const s=require("node:fs").statSync("/data/builder/identity-store.json");process.stdout.write((s.mode&0o777).toString(8))')" "600"
 USAGE_AFTER_RESTORE="$(op_json "$RESTORE_SOURCE" list | usage_key "$USAGE_ID")"
 check "restore:usage-unchanged" "$USAGE_AFTER_RESTORE" "$USAGE_BEFORE"
+LIST_AFTER_RESTORE="$(op_json "$RESTORE_SOURCE" list)"
+printf '%s\n' "$LIST_AFTER_RESTORE" > "$EVIDENCE_DIR/list-after-restore.json"
+"$NODE_BIN" -e '
+  const fs = require("node:fs");
+  const before = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const after = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+  const pick = (value) => ({ subjects: value.subjects, sessions: value.sessions, usage: value.usage });
+  if (JSON.stringify(pick(before)) !== JSON.stringify(pick(after))) process.exit(1);
+' "$EVIDENCE_DIR/list-before-backup.json" "$EVIDENCE_DIR/list-after-restore.json"
+check "restore:records-preserved" "true" "true"
 
 # ---------------------------------------------------------------------------
 # Safe operator lock recovery on the restore copy (never the authoritative
@@ -943,6 +1100,11 @@ store_sha256=$STORE_HASH_BASELINE
 backup_sha256=$HASH_BACKUP
 restart_preserved_store=true
 fresh_container_restore=true
+restore_root_owner=1000:1000
+restore_root_mode=0700
+restore_store_owner=1000:1000
+restore_store_mode=0600
+restore_records_preserved=true
 session_valid_after_restart=true
 session_revoked_after_restart=true
 unresolved_reservation_after_restart=true

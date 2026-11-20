@@ -110,6 +110,30 @@ case "$cmd" in
       *) echo "stub engine: unsupported container command: $sub" >&2; exit 1 ;;
     esac
     ;;
+  run)
+    [[ "$*" == *"--network none"* && "$*" == *"--read-only"* && "$*" == *"--user 0:0"* ]] \
+      || { echo "stub engine: setup run is not narrowly scoped" >&2; exit 1; }
+    volume=""
+    prev=""
+    for arg in "$@"; do
+      if [[ "$prev" == "--mount" ]]; then
+        case "$arg" in
+          type=volume,src=*,dst=/data/builder)
+            volume="${arg#type=volume,src=}"
+            volume="${volume%%,dst=/data/builder}"
+            ;;
+        esac
+      fi
+      prev="$arg"
+    done
+    [[ -n "$volume" && -d "$STATE/volumes/$volume" ]] \
+      || { echo "stub engine: setup run missing run-owned volume" >&2; exit 1; }
+    if [[ "${STUB_FAIL_SETUP:-0}" == "1" ]]; then
+      echo "stub engine: deliberate setup failure" >&2
+      exit 1
+    fi
+    printf 'initialized\n' > "$STATE/volumes/$volume/initialized"
+    exit 0 ;;
   create)
     if [[ "${STUB_FAIL_CREATE:-0}" == "1" ]]; then
       echo "stub engine: deliberate create failure" >&2

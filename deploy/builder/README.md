@@ -154,7 +154,10 @@ The script:
 4. builds the pinned image and verifies the revision, single-replica,
    operator-cli and run labels, `1000:1000` user, and builder health check;
 5. creates an internal (no-egress) network and a **named persistent volume**
-   labelled with the run id;
+   labelled with the run id, verifies that label, and initializes the new
+   volume root to `1000:1000` mode `0700` with a one-shot root container using
+   `--network none --read-only` and only the volume mount. Fresh bind roots are
+   explicitly chowned/chmodded to the same owner/mode before a writer starts;
 6. runs one invite container with `--read-only`, the volume at `/data/builder`,
    UID/GID 1000, and only these writes:
    - `/data/builder` — persistent store, `1000:1000`, mode `0700`;
@@ -163,11 +166,11 @@ The script:
      `rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700`;
    - `/home/node` — tmpfs
      `rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700`;
-7. checks the effective owner, mode, and write/delete behavior separately at
-   every declared writable path; verifies store file `0600`/UID 1000,
-   invite-mode anonymous `/builder` `307` to same-origin `/?error=session`,
-   anonymous session `401`, anonymous generation `404`, home `200`, and that
-   `/app` is not writable;
+7. collects the effective owner, mode, and write/delete result separately for
+   every declared writable path before failing the phase, then verifies store
+   file `0600`/UID 1000, invite-mode anonymous `/builder` `307` to same-origin
+   `/?error=session`, anonymous session `401`, anonymous generation `404`, home
+   `200`, and that `/app` is not writable;
 8. verifies the container cannot reach `https://example.com`;
 9. verifies no provider/database/billing/mail/Sentry environment variables;
 10. exercises the **supported operator CLI path** in the packaged image:
@@ -190,9 +193,11 @@ The script:
     fresh approved ZIP export, online operator revocation of subject A while its
     workspace is open (A clears and cannot generate), and subject B remaining
     unaffected;
-14. stops the container, backs up the volume, creates a **fresh volume**, copies
-    the backup into it, and starts a **fresh container**; repeats the session,
-    revocation and reservation checks and verifies the store hash;
+14. stops the container, backs up the volume, creates and initializes a
+    **fresh volume**, copies the backup into it, and starts a **fresh
+    container**; verifies the restore root is `1000:1000` mode `0700`, the store
+    file is `1000:1000` mode `0600`, and the store hash and all records are
+    preserved; repeats the session, revocation and reservation checks;
 15. on the restore copy only, injects a same-host/foreign-PID-namespace stale
     lock, proves `recover-lock` refuses without confirmation and with a wrong
     token, then proves the observed token plus `--confirm-no-writers` quarantines
@@ -217,6 +222,34 @@ Podman applies its user-namespace mapping, so the same option string can have a
 different host-visible owner; the in-container owner/mode probe is authoritative.
 The local stub asserts the exact arguments, but only the authorized Docker or
 Podman run proves real mount permissions.
+
+### Mounted store initialization
+
+A named-volume root is not assumed to inherit the image directory mode. After
+creating the run-owned primary or restore volume, the script verifies the
+`org.ornigami.qualify.run` label and runs one narrow setup container as `0:0`
+with `--network none --read-only` and only the new volume at `/data/builder`.
+That step chowns the root to `1000:1000`, chmods it to `0700`, and verifies the
+result before the writer starts or before backup data is imported. An unowned,
+foreign-labelled or wrong volume is refused without modification.
+
+Fresh bind mode is handled directly on the host: the newly created `STORE_DIR`
+and `RESTORE_DIR` roots are chowned to `1000:1000` when needed and chmodded to
+`0700` before use. The host-side owner/mode check runs on Linux; the local
+Windows stub only asserts the setup ordering and arguments because its POSIX
+mode reporting is not representative.
+
+The writable-path phase probes all four paths and records each owner, mode and
+write/delete result before reporting any collected failure. The store remains a
+separate persistent mount; the root filesystem stays read-only and the runtime
+stays at UID/GID `1000:1000`.
+
+For a real-engine preflight before a full rehearsal, set `MOUNT_ONLY=1` (and
+normally `BROWSER_PHASE=0 KEEP_VOLUMES=0 REMOVE_IMAGE=1`). The script still
+builds the exact image, creates and initializes the run-owned primary volume,
+starts the invite runtime with the real mount arguments, probes all four paths,
+writes a mount-only result, and stops before egress/operator/browser/restore.
+This is real mount evidence, not a stub or full acceptance.
 
 The browser phase needs Playwright/Chromium on the browser host. Install it under
 `scripts/framework-prototype/browser-tools` or set `BROWSER_PLAYWRIGHT` to its
@@ -473,8 +506,12 @@ all subject/session/usage records unchanged.
 - Linux/Node 22 build and dependency audit on the candidate.
 - Non-root `1000:1000`, read-only root, only documented writable paths.
 - Each writable path reports owner `1000:1000`, mode `0700` and a successful
-  write/delete probe; tmpfs retains `noexec,nosuid`; `/data/builder` remains a
-  separate persistent volume.
+  write/delete probe; all four results are collected before any phase failure;
+  tmpfs retains `noexec,nosuid`; `/data/builder` remains a separate persistent
+  volume.
+- The new primary and restore volume roots are initialized only after their run
+  label is verified, before a writer starts or data is imported; fresh bind
+  roots receive the same explicit owner/mode.
 - Named persistent volume, store `0600`, correct owner, single writer/one
   replica/one volume.
 - Health `200`; invite-mode anonymous `/builder` `307` to same-origin
@@ -483,7 +520,9 @@ all subject/session/usage records unchanged.
 - No runtime egress; no provider/database/mail/Sentry configuration.
 - Restart preserves the valid session, the revocation and the unresolved
   reservation; store hash and usage record unchanged.
-- Backup restores into a fresh volume and fresh container with the same state.
+- Backup restores into a fresh initialized volume and fresh container with the
+  restore root at `0700`, store file at `0600`, correct ownership, and the same
+  hash and records.
 - Same-host/foreign-PID-namespace stale lock is classified `foreign_scope` and
   is not auto-reaped; observed-token recovery quarantines it and preserves the
   store.
