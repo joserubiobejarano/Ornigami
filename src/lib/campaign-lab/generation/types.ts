@@ -1,6 +1,7 @@
 import type { OfferComposition } from "../composition.ts";
 import type { CampaignPreviewData } from "../template.ts";
 import type { ProviderDiagnostics } from "./provider-diagnostics.ts";
+import type { ProviderResolution } from "./provider-config.ts";
 
 export type GenerationEnv = Record<string, string | undefined>;
 import type {
@@ -196,6 +197,12 @@ export type GuidanceLoader = (
 
 export type GenerationOptions = {
   provider?: CampaignGenerationProvider;
+  /**
+   * Explicit provider decision for surfaces that must not read the Campaign Lab
+   * environment. `null` means no provider is available and no provider config
+   * is consulted.
+   */
+  providerResolution?: ProviderResolution | null;
   timeoutMs?: number;
   env?: GenerationEnv;
   catalog?: CampaignCatalog;

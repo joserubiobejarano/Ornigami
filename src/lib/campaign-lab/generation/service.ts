@@ -261,7 +261,9 @@ export async function runCampaignGeneration(
   const env = options.env ?? process.env;
   const resolution: ProviderResolution | null = options.provider
     ? null
-    : resolveGenerationProvider(env);
+    : options.providerResolution !== undefined
+      ? options.providerResolution
+      : resolveGenerationProvider(env);
   const providerId = options.provider?.id ?? resolution?.id ?? "none";
   const providerLabel = options.provider?.label ?? resolution?.label ?? "Generation";
 

@@ -14,6 +14,8 @@ function isInAppRoute(pathname: string): boolean {
     pathname === "/settings" ||
     pathname === "/connect" ||
     pathname.startsWith("/campaign-lab") ||
+    pathname === "/builder" ||
+    pathname.startsWith("/builder/") ||
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname === "/forgot-password" ||

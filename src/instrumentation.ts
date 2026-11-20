@@ -1,6 +1,26 @@
 import { isPrivatePreviewMode } from "@/lib/private-preview";
 
 export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Validate the builder boundary before any request can be served. Invalid
+    // or prematurely "enabled" builder configuration stops startup.
+    const { assertBuilderStartupConfiguration } = await import(
+      "./lib/builder/startup"
+    );
+    try {
+      assertBuilderStartupConfiguration();
+    } catch (error) {
+      // Next can report an instrumentation error after its listener is ready.
+      // Stop the process explicitly so a misconfigured builder cannot serve.
+      console.error(
+        error instanceof Error
+          ? error.message
+          : "Builder configuration is invalid.",
+      );
+      process.exit(1);
+    }
+  }
+
   if (isPrivatePreviewMode()) return;
 
   if (process.env.NEXT_RUNTIME === "nodejs") {

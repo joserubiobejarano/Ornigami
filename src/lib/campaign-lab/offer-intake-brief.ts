@@ -12,6 +12,13 @@ import { parseCampaignContext } from "./campaign-context.ts";
 export const OFFER_INTAKE_BRIEF_STORAGE_KEY =
   "ornigami.campaign-lab.offer-intake.brief.v1";
 
+/**
+ * The production builder uses a distinct tab-local key so laboratory drafts,
+ * including URL-import evidence, never appear in the builder and vice versa.
+ */
+export const BUILDER_OFFER_INTAKE_BRIEF_STORAGE_KEY =
+  "ornigami.builder.offer-intake.brief.v1";
+
 export type PersistedOfferIntakeBrief = {
   schemaVersion: 1;
   brandKitSnapshot?: BrandKitSnapshot;

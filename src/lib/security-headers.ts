@@ -19,7 +19,35 @@ export function buildContentSecurityPolicy(nonce: string): string {
   ].join("; ");
 }
 
+/**
+ * The builder only needs its own scripts, local styles, local/blob packshots and
+ * same-origin requests. Legacy billing, Google, mail, provider and database
+ * origins are deliberately absent.
+ */
+export function buildBuilderContentSecurityPolicy(nonce: string): string {
+  const developmentScriptPolicy = process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : "";
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline'",
+    `script-src 'self' 'nonce-${nonce}'${developmentScriptPolicy}`,
+    "connect-src 'self'",
+    "frame-src 'none'",
+    "object-src 'none'",
+  ].join("; ");
+}
+
 export function applyProxySecurityHeaders(headers: Headers, nonce: string): void {
   headers.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
   headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+}
+
+export function applyBuilderProxySecurityHeaders(headers: Headers, nonce: string): void {
+  headers.set("Content-Security-Policy", buildBuilderContentSecurityPolicy(nonce));
+  headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  headers.set("X-Robots-Tag", "noindex, nofollow");
 }

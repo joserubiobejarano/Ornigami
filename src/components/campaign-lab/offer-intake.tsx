@@ -31,6 +31,7 @@ import type {
 } from "@/lib/campaign-lab/browser-offer";
 import { browserOfferBriefFromIntake } from "@/lib/campaign-lab/browser-offer-brief";
 import {
+  BUILDER_OFFER_INTAKE_BRIEF_STORAGE_KEY,
   hasPersistedBriefContent,
   OFFER_INTAKE_BRIEF_STORAGE_KEY,
   parsePersistedOfferIntakeBrief,
@@ -249,7 +250,23 @@ function VerificationSummary({
   );
 }
 
-export function OfferIntake() {
+export type OfferIntakeProps = {
+  /**
+   * `builder` is the production surface: offer-only, static, manual assets and
+   * a distinct browser-storage namespace. The default preserves the local lab.
+   */
+  surface?: "lab" | "builder";
+  generationEndpoint?: string;
+};
+
+export function OfferIntake({
+  surface = "lab",
+  generationEndpoint,
+}: OfferIntakeProps = {}) {
+  const builderSurface = surface === "builder";
+  const storageKey = builderSurface
+    ? BUILDER_OFFER_INTAKE_BRIEF_STORAGE_KEY
+    : OFFER_INTAKE_BRIEF_STORAGE_KEY;
   const baseId = useId().replace(/:/g, "");
   const objectUrlRef = useRef<string | null>(null);
   const packshotReadRef = useRef(0);
@@ -324,7 +341,7 @@ export function OfferIntake() {
       if (cancelled) return;
       let raw: string | null = null;
       try {
-        raw = window.sessionStorage.getItem(OFFER_INTAKE_BRIEF_STORAGE_KEY);
+        raw = window.sessionStorage.getItem(storageKey);
       } catch {
         // Storage can be unavailable; the intake still works without recovery.
       }
@@ -350,13 +367,13 @@ export function OfferIntake() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!briefHydrated) return;
     try {
       window.sessionStorage.setItem(
-        OFFER_INTAKE_BRIEF_STORAGE_KEY,
+        storageKey,
         serializePersistedOfferIntakeBrief({
           directionId,
           composition,
@@ -388,6 +405,7 @@ export function OfferIntake() {
     productName,
     briefHydrated,
     rights,
+    storageKey,
   ]);
 
   useEffect(() => {
@@ -708,7 +726,9 @@ export function OfferIntake() {
         <div className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <p className="text-xs font-medium text-[#5f5a4f]">
-              Local session · text fields are restored after refresh; the packshot and local approval are not.
+              {builderSurface
+                ? "This beta saves nothing on the server. Text stays in this tab; the packshot and approval are not restored."
+                : "Local session · text fields are restored after refresh; the packshot and local approval are not."}
             </p>
             <Button
               type="button"
@@ -755,6 +775,9 @@ export function OfferIntake() {
           previewNote={renderedNote}
           exportVerification={renderedVerification?.verification ?? null}
           exportPackshotBlob={packshot?.file ?? null}
+          generationEndpoint={generationEndpoint}
+          offerOnly={builderSurface}
+          allowMotion={!builderSurface}
           onEditorStateChange={handleEditorStateChange}
         />
       </div>
@@ -765,26 +788,34 @@ export function OfferIntake() {
     <div data-intake-ready={briefHydrated ? "true" : "false"} className="min-h-screen bg-[#f5f1e8] text-[#1d2a22]">
       <header className="border-b border-[#ddd3c2] bg-[#fbf8f1]">
         <div className="mx-auto max-w-4xl px-4 py-5 sm:px-6">
-          <Link
-            href="/campaign-lab"
-            className="text-xs font-semibold text-[#5f5a4f] underline decoration-[#b8aa93] underline-offset-4 hover:text-[#1d2a22]"
-          >
-            Campaign Lab
-          </Link>
+          {builderSurface ? (
+            <span className="text-xs font-semibold text-[#5f5a4f]">
+              Ornigami Builder
+            </span>
+          ) : (
+            <Link
+              href="/campaign-lab"
+              className="text-xs font-semibold text-[#5f5a4f] underline decoration-[#b8aa93] underline-offset-4 hover:text-[#1d2a22]"
+            >
+              Campaign Lab
+            </Link>
+          )}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Offer intake
             </h1>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#c9bda8] bg-[#efe7d8] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#5b5346]">
               <span className="size-1.5 rounded-full bg-[#9a3f25]" aria-hidden="true" />
-              Local only · not published
+              {builderSurface ? "Private beta · export only" : "Local only · not published"}
             </span>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-8">
-        <BrandEvidenceReview key={evidenceSession} snapshot={brandKitSnapshot} directionId={directionId} accentOverride={accentOverride} onApply={setBrandKitSnapshot} />
+        {builderSurface ? null : (
+          <BrandEvidenceReview key={evidenceSession} snapshot={brandKitSnapshot} directionId={directionId} accentOverride={accentOverride} onApply={setBrandKitSnapshot} />
+        )}
         <fieldset className="mb-5 grid gap-3 sm:grid-cols-2"><legend className="mb-2 font-semibold">Visual direction</legend>
           {VISUAL_DIRECTIONS.map(direction => <label key={direction.id} className="flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border border-[#c9bda8] bg-[#fbf8f1] p-3">
             <input type="radio" name="visualDirection" value={direction.id} checked={directionId === direction.id} onChange={() => setDirectionId(direction.id)} />
@@ -1336,7 +1367,9 @@ export function OfferIntake() {
 
           <div className="flex flex-col gap-3 border-t border-[#ebe3d6] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#6d6a5f]">
-              Local session only. Text fields are restored after refresh; the packshot and local approval are not.
+              {builderSurface
+                ? "No server-side project or asset storage. Text stays in this tab; reselect the packshot and approve again after refresh."
+                : "Local session only. Text fields are restored after refresh; the packshot and local approval are not."}
             </p>
             <Button
               type="submit"
@@ -1351,7 +1384,9 @@ export function OfferIntake() {
                 ? "Reading prepared brief…"
                 : readingPackshot
                   ? "Reading packshot…"
-                  : "Open Campaign Lab preview"}
+                  : builderSurface
+                    ? "Open offer preview"
+                    : "Open Campaign Lab preview"}
             </Button>
           </div>
         </form>

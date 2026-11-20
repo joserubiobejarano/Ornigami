@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 import { randomBytes } from "node:crypto";
 
 import { auth } from "@/auth";
@@ -6,7 +7,12 @@ import { getAppBaseUrl } from "@/lib/app-base-url";
 import { getMiddlewareAccessState } from "@/lib/db/access";
 import { safeLogger } from "@/lib/safe-logger";
 import { shouldRedirectToGoogleConnect, shouldRedirectAfterAccessResolutionError } from "@/lib/disconnected-access-policy";
-import { applyProxySecurityHeaders, buildContentSecurityPolicy } from "@/lib/security-headers";
+import {
+  applyBuilderProxySecurityHeaders,
+  applyProxySecurityHeaders,
+  buildBuilderContentSecurityPolicy,
+  buildContentSecurityPolicy,
+} from "@/lib/security-headers";
 import { isPrivatePreviewMode } from "@/lib/private-preview";
 import {
   isRestrictedDeletionSession,
@@ -32,7 +38,40 @@ function withSecurityHeaders(response: NextResponse, nonce: string): NextRespons
   return response;
 }
 
-const authenticatedProxy = auth(async (req) => {
+function isBuilderSurface(pathname: string): boolean {
+  return (
+    pathname === "/builder" ||
+    pathname.startsWith("/builder/") ||
+    pathname === "/api/builder" ||
+    pathname.startsWith("/api/builder/")
+  );
+}
+
+/**
+ * Builder requests bypass the reputation Auth.js wrapper entirely. This keeps
+ * its CSRF/callback cookies, account-lifecycle checks and Google/GBP lookups
+ * out of the builder surface.
+ */
+function builderProxyResponse(req: NextRequest): NextResponse {
+  const nonce = randomBytes(16).toString("base64url");
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set(
+    "Content-Security-Policy",
+    buildBuilderContentSecurityPolicy(nonce),
+  );
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  applyBuilderProxySecurityHeaders(response.headers, nonce);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
+}
+
+type LegacyProxy = (
+  req: NextRequest,
+  event: NextFetchEvent,
+) => Promise<Response | void>;
+
+const legacyProxy = auth(async (req) => {
   const { pathname } = req.nextUrl;
   const sessionUser = req.auth?.user;
   const restrictedDeletionSession = isRestrictedDeletionSession(req.auth);
@@ -40,6 +79,7 @@ const authenticatedProxy = auth(async (req) => {
   const nonce = randomBytes(16).toString("base64url");
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+
   // Next.js reads the request CSP to apply the nonce to streamed inline
   // hydration scripts. The response CSP alone is too late for those scripts.
   requestHeaders.set("Content-Security-Policy", buildContentSecurityPolicy(nonce));
@@ -167,7 +207,15 @@ const authenticatedProxy = auth(async (req) => {
       headers: requestHeaders,
     },
   }), nonce);
-});
+}) as unknown as LegacyProxy;
+
+async function authenticatedProxy(
+  req: NextRequest,
+  event: NextFetchEvent,
+): Promise<Response> {
+  if (isBuilderSurface(req.nextUrl.pathname)) return builderProxyResponse(req);
+  return (await legacyProxy(req, event)) ?? NextResponse.next();
+}
 
 export const proxy = withPrivatePreviewIdentityPreflight({
   authenticatedProxy,

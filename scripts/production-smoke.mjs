@@ -175,7 +175,20 @@ try {
     body: JSON.stringify({ fixtureId: "sparse" }),
   });
   assert.equal(generation.status, 404, "Campaign Lab generation must remain development-only");
-  console.log("Production smoke passed: static CSP hash parity, nonce-bound hydration/rotation, protected dashboard, Open Graph image, anonymous auth/Google/billing boundaries, Campaign Lab development-only pages and generation gate.");
+
+  const builderPage = await request("/builder");
+  assert.equal(builderPage.status, 404, "the private builder must stay closed without builder authorization");
+  assert.equal(builderPage.headers.get("set-cookie"), null, "the closed builder must not create a legacy session cookie");
+  const builderCsp = builderPage.headers.get("content-security-policy") ?? "";
+  assert.match(builderCsp, /connect-src 'self'/, "builder CSP must stay same-origin");
+  assert.doesNotMatch(builderCsp, /stripe|googleapis|openai|neon|resend/i, "builder CSP must not inherit legacy provider origins");
+  const builderApi = await request("/api/builder/generate", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ browserBrief: { schemaVersion: 1 } }),
+  });
+  assert.equal(builderApi.status, 404, "the builder generation API must stay closed without builder authorization");
+  assert.deepEqual(await builderApi.json(), { ok: false, error: "Not found." });
+  console.log("Production smoke passed: static CSP hash parity, nonce-bound hydration/rotation, protected dashboard, Open Graph image, anonymous auth/Google/billing boundaries, Campaign Lab development-only pages and generation gate, closed builder page/API with builder-only CSP.");
   console.log("Note: static-csp-hashes.json is generated and parity-checked; it is not currently consumed by runtime CSP policy.");
 } finally {
   if (!exited()) {

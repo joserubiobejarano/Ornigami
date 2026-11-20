@@ -101,6 +101,12 @@ type CampaignLabProps = {
   initialFixtureId: FixtureId;
   catalog: CampaignCatalog;
   showFixtureNav?: boolean;
+  /** Separate server boundary for the production builder. */
+  generationEndpoint?: string;
+  /** Restrict the surface to the qualified single-product offer format. */
+  offerOnly?: boolean;
+  /** The production first beta is static; hide experimental presentations. */
+  allowMotion?: boolean;
   /** Browser-created briefs send this bounded contract instead of a fixture ID. */
   browserBrief?: (values: CampaignFormValues) => BrowserOfferBriefRequest;
   /** Keeps the uploaded packshot object URL local to this browser. */
@@ -161,6 +167,9 @@ export function CampaignLab({
   initialFixtureId,
   catalog,
   showFixtureNav = true,
+  generationEndpoint = "/api/campaign-lab/generate",
+  offerOnly = false,
+  allowMotion = true,
   browserBrief,
   browserAssetSrc,
   previewNotice,
@@ -271,7 +280,9 @@ export function CampaignLab({
   const advertorialPreview = isAdvertorialPreviewData(preview) ? preview : null;
   const advertorialFit = assessAdvertorialFit(fixture, values, catalog);
   const offerAlternative = evaluateOfferAlternative(fixture, values, catalog);
-  const format: CampaignFormat = values.format ?? defaultFormat(fixture);
+  const format: CampaignFormat = offerOnly
+    ? "offer"
+    : values.format ?? defaultFormat(fixture);
   const openingOptions = openingOptionsForFormat(fixture, format);
   const approvedHeroAssignment = fixture.brief.advertorial?.assetAssignments.find(
     (assignment) => assignment.role === "product-hero",
@@ -578,7 +589,11 @@ export function CampaignLab({
 
   async function handleGenerate() {
     const snapshot = { ...values };
-    const recipeSnapshot = pendingMotion;
+    if (offerOnly) {
+      snapshot.format = "offer";
+      delete snapshot.advertorialLayout;
+    }
+    const recipeSnapshot = offerOnly ? "none" : pendingMotion;
     let candidateCatalog = catalog;
     try { if (browserBrief) candidateCatalog = browserDirectionCatalog(catalog, snapshot.directionId, snapshot.brandKitSnapshot, snapshot.accentOverride); }
     catch (error) { invalidateGenerationRequest(); setIssues([{field:"accent",message:(error as Error).message}]); setDirty(true); setApproval(null); return; }
@@ -601,7 +616,7 @@ export function CampaignLab({
     setIssues([]);
 
     try {
-      const response = await fetch("/api/campaign-lab/generate", {
+      const response = await fetch(generationEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
@@ -963,7 +978,7 @@ export function CampaignLab({
           >
             <fieldset className="m-0 space-y-4 border-0 p-0">
               <legend className="mb-1 text-sm font-semibold">Campaign facts</legend>
-              {format === "offer" ? (
+              {format === "offer" && allowMotion ? (
                 <div className="space-y-1.5">
                   <Label htmlFor={`${baseId}-motion`}>Experimental presentation</Label>
                   <select id={`${baseId}-motion`} value={pendingMotion}
@@ -978,6 +993,7 @@ export function CampaignLab({
                 </div>
               ) : null}
 
+              {offerOnly ? null : (
               <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.format}>Format</Label>
                 <select
@@ -1011,6 +1027,7 @@ export function CampaignLab({
                   </p>
                 ) : null}
               </div>
+              )}
 
               {format === "advertorial" ? (
                 <div className="space-y-1.5">
