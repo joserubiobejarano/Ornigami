@@ -24,6 +24,10 @@ not reuse an image built from an older review or packaging branch.
 | `operator.sh` | Supported operator CLI wrapper: same image, no network, same UID, same persistent volume and store host id |
 | `tests/stub-engine.sh` | Local rerun-safety self-test engine (never builds or runs a container) |
 
+The review-only synthetic private staging package (actual-origin image build,
+retention, independent pull verification, edge/runtime/browser acceptance and
+rollback) is in [`private-staging/README.md`](./private-staging/README.md).
+
 ## Image design
 
 - Two-stage dependency install and one production dependency stage, using the

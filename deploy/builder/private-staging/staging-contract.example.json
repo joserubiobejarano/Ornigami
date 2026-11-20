@@ -1,0 +1,75 @@
+{
+  "status": "review-only",
+  "sourceSha": "4e3e00af212a3d97de582ab6fca6ecca8d0665dd",
+  "host": {
+    "kind": "dedicated-linux-x86_64-vps",
+    "provider": "pending",
+    "region": "pending",
+    "ipv4": "pending",
+    "ipv6": "pending",
+    "proxyCoexistence": "pending; do not alter shared Contabo/Coolify without explicit owner approval"
+  },
+  "origin": {
+    "https": "https://builder-staging.ornigami.com",
+    "dns": "pending",
+    "tls": "pending",
+    "pathPrefix": "unsupported; serve at origin root"
+  },
+  "privateAccess": {
+    "edge": "Caddy basic_auth with owner-held bcrypt record",
+    "application": "invite-only builder session gate",
+    "accessRecord": "pending protected owner reference"
+  },
+  "proxy": {
+    "ingress": "Caddy container on edge + builder_internal",
+    "appNetwork": "builder_internal",
+    "appNetworkInternal": true,
+    "appPublishedPort": "none",
+    "appUpstream": "app:3000",
+    "trustedForwarding": "Host and X-Forwarded-Proto replaced; alternate client-IP headers removed"
+  },
+  "volume": {
+    "name": "ornigami-builder-store-v1",
+    "mount": "/data/builder",
+    "replicas": 1,
+    "writers": 1,
+    "rootOwner": "1000:1000",
+    "rootMode": "0700",
+    "fileMode": "0600",
+    "initialization": "store-init completes before app starts"
+  },
+  "egress": {
+    "appNetwork": "internal-only",
+    "providerCredentials": "none",
+    "databaseCredentials": "none",
+    "mailBillingSentry": "none",
+    "expectedPublicHttps": "denied"
+  },
+  "rollback": {
+    "preferred": "stop or same-image BUILDER_RUNTIME_MODE=closed on the same volume",
+    "preserveStore": true,
+    "deleteOrEditStore": false,
+    "parentImageInviteMode": false
+  },
+  "image": {
+    "testedLoopbackLocalId": "sha256:954699fc57eedeae636830e82d056ca97e799bc1f6a49161582854129a73b980",
+    "actualOriginDigest": "pending independent build, private registry publication and pull",
+    "platform": "linux/amd64",
+    "origin": "https://builder-staging.ornigami.com"
+  },
+  "actionsEvidence": {
+    "runId": "44831470383",
+    "artifact": "builder-linux-qualification-44831470383-1",
+    "digest": "sha256:50f5965eaec8f5ea1359a33519d71fe082e554343ac81b9600962b359df7c7da",
+    "identityType": "evidence transport only; not an image digest"
+  },
+  "unconfirmed": [
+    "provider/region/IP and capacity",
+    "DNS A/AAAA and certificate issuance",
+    "Caddy image digest and host/proxy coexistence",
+    "BasicAuth user and bcrypt record custody",
+    "private registry destination and pull credentials",
+    "backup destination, encryption and retention",
+    "owner privacy, support, retention and custom-framework sign-off"
+  ]
+}

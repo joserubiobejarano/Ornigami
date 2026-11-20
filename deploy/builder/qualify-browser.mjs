@@ -19,7 +19,7 @@
  *   BUILDER_OPERATOR_STORE / BUILDER_RUNTIME_STORE_HOST_ID
  *                                forwarded to deploy/builder/operator.sh
  */
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -37,14 +37,28 @@ const root = process.cwd();
 const baseUrl = process.env.BROWSER_BASE_URL;
 if (!baseUrl) throw new Error("BROWSER_BASE_URL is required");
 const parsedBase = new URL(baseUrl);
-if (
-  parsedBase.protocol !== "http:" ||
-  !["127.0.0.1", "localhost", "[::1]"].includes(parsedBase.hostname)
-) {
+const loopbackOrigin =
+  parsedBase.protocol === "http:" &&
+  ["127.0.0.1", "localhost", "[::1]"].includes(parsedBase.hostname);
+const allowRemoteOrigin = process.env.BROWSER_ALLOW_REMOTE_ORIGIN === "1";
+if (!loopbackOrigin && !(allowRemoteOrigin && parsedBase.protocol === "https:")) {
   throw new Error(
-    "BROWSER_BASE_URL must be a loopback http origin for the isolated browser phase",
+    "BROWSER_BASE_URL must be a loopback http origin, or an https origin with BROWSER_ALLOW_REMOTE_ORIGIN=1",
   );
 }
+const basicUser = process.env.BROWSER_BASIC_AUTH_USER ?? "";
+const basicPassword = process.env.BROWSER_BASIC_AUTH_PASSWORD ?? "";
+if (
+  process.env.BROWSER_REQUIRE_BASIC_AUTH === "1" &&
+  (!basicUser || !basicPassword)
+) {
+  throw new Error("BROWSER_BASIC_AUTH_USER and BROWSER_BASIC_AUTH_PASSWORD are required");
+}
+const basicAuthorization =
+  basicUser || basicPassword
+    ? `Basic ${Buffer.from(`${basicUser}:${basicPassword}`).toString("base64")}`
+    : null;
+const authHeaders = basicAuthorization ? { authorization: basicAuthorization } : {};
 const evidenceDir =
   process.env.BROWSER_EVIDENCE_DIR ?? path.join(root, ".local", "browser-qualification");
 const downloads = path.join(evidenceDir, "downloads");
@@ -101,6 +115,7 @@ async function waitForOrigin(url, timeoutMs = 20_000) {
     try {
       const response = await fetch(url, {
         redirect: "manual",
+        headers: authHeaders,
         signal: AbortSignal.timeout(2000),
       });
       await response.body?.cancel();
@@ -256,6 +271,75 @@ function auditZip(name, zipPath) {
   };
 }
 
+async function auditCsp() {
+  const response = await fetch(baseUrl, {
+    redirect: "manual",
+    headers: authHeaders,
+    signal: AbortSignal.timeout(5000),
+  });
+  const csp = response.headers.get("content-security-policy") ?? "";
+  await response.body?.cancel();
+  const scriptSrc = csp.match(/(?:^|;)\s*script-src\s+([^;]+)/i)?.[1] ?? "";
+  const connectSrc = csp.match(/(?:^|;)\s*connect-src\s+([^;]+)/i)?.[1] ?? "";
+  check(
+    "csp:header",
+    csp.length > 0 &&
+      /'nonce-[^']+'/.test(scriptSrc) &&
+      !/'unsafe-(?:inline|eval)'/.test(scriptSrc) &&
+      /'self'/.test(connectSrc) &&
+      !/https?:\/\//.test(connectSrc),
+    { csp: csp.slice(0, 800) },
+  );
+}
+
+async function auditPageScripts(page, label) {
+  const entries = await page.evaluate(() =>
+    [...document.querySelectorAll("script[src]")].map((script) => ({
+      src: script.src,
+      integrity: script.integrity,
+    })),
+  );
+  const issues = [];
+  let verified = 0;
+  for (const entry of entries) {
+    let url;
+    try {
+      url = new URL(entry.src);
+    } catch {
+      issues.push({ src: "[invalid-url]", issue: "invalid-src" });
+      continue;
+    }
+    if (url.origin !== parsedBase.origin) {
+      issues.push({ src: url.origin, issue: "external-origin" });
+      continue;
+    }
+    if (!entry.integrity) {
+      issues.push({ src: url.pathname, issue: "missing-integrity" });
+      continue;
+    }
+    const response = await fetch(url.href, {
+      headers: authHeaders,
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) {
+      issues.push({ src: url.pathname, issue: `asset-${response.status}` });
+      await response.body?.cancel();
+      continue;
+    }
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const digest = `sha256-${createHash("sha256").update(bytes).digest("base64")}`;
+    if (!entry.integrity.split(/\s+/).includes(digest)) {
+      issues.push({ src: url.pathname, issue: "integrity-mismatch" });
+      continue;
+    }
+    verified += 1;
+  }
+  const audit = { label, scripts: entries.length, verified, issues };
+  results.scriptAudits ??= [];
+  results.scriptAudits.push(audit);
+  check(`sri:${label}`, entries.length > 0 && issues.length === 0, audit);
+}
+
 async function login(page, token) {
   await page.goto(baseUrl + "/", { waitUntil: "networkidle" });
   await page.locator('input[name="token"]').fill(token);
@@ -375,6 +459,8 @@ if (!readiness.ok) {
   process.exit(1);
 }
 
+await auditCsp();
+
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch({
   headless: true,
@@ -384,6 +470,9 @@ const browser = await chromium.launch({
 const contextA = await browser.newContext({
   acceptDownloads: true,
   viewport: { width: 1440, height: 900 },
+  ...(basicUser
+    ? { httpCredentials: { username: basicUser, password: basicPassword } }
+    : {}),
 });
 const pageA = await contextA.newPage();
 const generationRequests = [];
@@ -407,7 +496,7 @@ const captureRequests = (page) => {
 captureRequests(pageA);
 
 try {
-  const health = await fetch(baseUrl, { redirect: "manual" });
+  const health = await fetch(baseUrl, { redirect: "manual", headers: authHeaders });
   check("origin:reachable", health.status === 200, health.status);
 
   const inviteA = issueInvite("Browser synthetic A");
@@ -419,11 +508,13 @@ try {
     (await pageA.locator("[data-builder-subject-label]").innerText()) ===
       "Browser synthetic A",
   );
+  await auditPageScripts(pageA, "initial");
 
   const offer1 = "Browser offer 111111 for the travel bottle";
   await fillIntake(pageA, { offer: offer1, emphasis: "111111" });
   await openPreviewAndGenerate(pageA, offer1);
   check("generate:initial", true);
+  await auditPageScripts(pageA, "after-initial-generation");
   await pageA.screenshot({ path: path.join(screenshots, "a-initial-1440.png") });
 
   await pageA.reload({ waitUntil: "networkidle" });
@@ -489,6 +580,9 @@ try {
   const contextB = await browser.newContext({
     acceptDownloads: true,
     viewport: { width: 1440, height: 900 },
+    ...(basicUser
+      ? { httpCredentials: { username: basicUser, password: basicPassword } }
+      : {}),
   });
   const pageB = await contextB.newPage();
   captureRequests(pageB);
@@ -524,6 +618,7 @@ try {
     method: "POST",
     redirect: "manual",
     headers: {
+      ...authHeaders,
       origin: baseUrl,
       cookie: cookieA,
       "content-type": "application/json",
@@ -544,7 +639,7 @@ try {
   );
 
   const sessionB = await fetch(baseUrl + "/api/builder/session", {
-    headers: { cookie: cookieB },
+    headers: { ...authHeaders, cookie: cookieB },
     cache: "no-store",
   });
   check("revoke-a:b-session-active", sessionB.status === 200, sessionB.status);

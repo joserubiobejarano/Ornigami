@@ -196,6 +196,9 @@ phase is enabled. Browser evidence is written under the run's `browser/` directo
 
 ## Related evidence
 
+- [`deploy/builder/private-staging/README.md`](../deploy/builder/private-staging/README.md)
+  — review-only synthetic private staging package, actual-origin build/retain/
+  pull verification, acceptance commands and rollback.
 - [`docs/handoffs/BUILDER_STORE_MOUNT_INITIALIZATION_20261120.md`](./handoffs/BUILDER_STORE_MOUNT_INITIALIZATION_20261120.md)
   — mounted primary/restore volume initialization, collected writable-path
   evidence, real mount-only receipt and the next full Linux command at candidate

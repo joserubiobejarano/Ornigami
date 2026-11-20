@@ -1,0 +1,208 @@
+# Synthetic private staging package — builder
+
+Status: **review package only. Nothing was published, deployed, resolved in DNS,
+or exposed.** This package binds a future synthetic-only private staging
+acceptance to the qualified builder source
+`4e3e00af212a3d97de582ab6fca6ecca8d0665dd`.
+
+## Tested source and evidence
+
+| Item | Value |
+| --- | --- |
+| Tested candidate source | `4e3e00af212a3d97de582ab6fca6ecca8d0665dd` |
+| Passing Linux rehearsal | [run 44831470383](https://github.com/joserubiobejarano/Ornigami/actions/runs/44831470383) |
+| Rehearsal local image ID | `sha256:954699fc57eedeae636830e82d056ca97e799bc1f6a49161582854129a73b980` |
+| Rehearsal image platform | `linux/amd64` |
+| Rehearsal image origin label | `http://127.0.0.1:3100` (loopback only) |
+| Actions artifact | `builder-linux-qualification-44831470383-1` |
+| Actions artifact digest | `sha256:50f5965eaec8f5ea1359a33519d71fe082e554343ac81b9600962b359df7c7da` |
+
+The Actions artifact digest is **evidence transport identity**, not an image
+digest. The loopback image ID above is **not** a registry digest and must not be
+used to claim an actual-origin image is retained or deployable.
+
+## Proposed contract
+
+| Area | Proposal | Status |
+| --- | --- | --- |
+| Host | Dedicated Linux x86_64 VPS with Docker; provider, region, IP and capacity pending. Do not use the shared Contabo/Coolify host unless the owner explicitly selects it and resolves proxy/firewall coexistence. | Pending |
+| HTTPS origin | `https://builder-staging.ornigami.com` (root path, no prefix) | Pending DNS/TLS/edge approval |
+| Private access | Caddy BasicAuth at the edge with an owner-held bcrypt record, then builder invite-only session gate. No credential is committed. | Pending access record |
+| Proxy routing | Caddy container attached to `edge` and `builder_internal`; app only on `builder_internal`, no published app port. TLS terminates at Caddy. | Proposed |
+| App topology | One app replica, UID/GID `1000:1000`, read-only root, only documented writable paths. | Tested locally/Linux |
+| Volume | Named `ornigami-builder-store-v1` at `/data/builder`, one writer, root `1000:1000` mode `0700`, store file `0600`. Fresh volume initialized before writer/import. | Tested in rehearsal |
+| Runtime egress | App only on `builder_internal` (`internal: true`); no provider, database, mail, billing, Sentry or paid-service credentials. Caddy is the separate edge process. | Proposed/tested in container |
+| Rollback | Stop app or run this same image with `BUILDER_RUNTIME_MODE=closed` and the same volume. Preserve store/usage; do not use the old parent image in invite mode. | Tested in rehearsal |
+
+Pending target details: provider/region/IP, DNS A/AAAA, ACME contact/certificate
+issuer, Caddy image digest, BasicAuth user/hash custody, host firewall and
+existing proxy coexistence, backup directory/encryption/retention, owner
+privacy/support/retention sign-off and the exact private registry destination.
+
+## Actual-origin image
+
+The tested image was built for loopback. The actual staging image must be rebuilt
+from the same source with the real origin:
+
+```bash
+SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+APP_URL=https://builder-staging.ornigami.com \
+REGISTRY_REFERENCE=<private-registry>/ornigami-builder-staging@sha256:<digest-pending> \
+OUTPUT_DIR=<new-local-evidence-dir> \
+  deploy/builder/private-staging/build-and-retain.sh
+```
+
+The script requires a clean checkout at `SOURCE_SHA`, builds
+`linux/amd64`, verifies the revision/origin/user/platform labels, saves the image
+archive and writes `image-identity.json` with the local image ID and archive
+SHA-256. It does not push.
+
+After separate publication authorization:
+
+```bash
+docker tag <local-image> <private-registry>/ornigami-builder-staging:<source-sha>
+docker push <private-registry>/ornigami-builder-staging:<source-sha>
+docker image inspect --format '{{json .RepoDigests}}' <private-registry>/ornigami-builder-staging:<source-sha>
+```
+
+Retain the immutable `repo@sha256:<digest>`, not the mutable tag. On a separate
+host, independently pull and verify the exact digest:
+
+```bash
+IMAGE_REFERENCE=<private-registry>/ornigami-builder-staging@sha256:<digest> \
+EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+EXPECTED_ORIGIN=https://builder-staging.ornigami.com \
+EXPECTED_PLATFORM=linux/amd64 \
+EVIDENCE_DIR=<new-verification-dir> \
+  deploy/builder/private-staging/verify-retained-image.sh
+```
+
+Acceptance must name all four identities together: source SHA, immutable image
+digest, `linux/amd64` platform and the exact HTTPS origin. Do not substitute the
+Actions artifact digest, local image ID or mutable tag for the image digest.
+
+## Configuration references
+
+- [`compose.private-staging.reference.yml`](./compose.private-staging.reference.yml)
+  — one app, one Caddy edge, internal app network, one persistent volume, no app
+  port. All images/origin/access values are required inputs; nothing is deployed
+  by its presence.
+- [`Caddyfile.example`](./Caddyfile.example) — private BasicAuth, TLS, HSTS,
+  trusted Host/proto forwarding and removal of alternate client-IP headers.
+- [`staging-contract.example.json`](./staging-contract.example.json) —
+  machine-readable proposal with pending target fields and separate image vs
+  Actions evidence identities.
+
+The reference Compose includes a one-shot `store-init` service. It runs as
+`0:0`, with `--network none --read-only` semantics, only the persistent volume,
+and finishes before the app starts. It initializes the volume root to
+`1000:1000` mode `0700` and fails startup if the engine did not apply it.
+
+The Caddy and app image references are deliberately not defaulted to unpinned
+tags. The Caddy image must be selected and pinned separately. The BasicAuth
+bcrypt record must come from a protected owner reference; escape Compose `$`
+interpolation as required.
+
+## Acceptance commands and expected results
+
+Run only in the separately authorized synthetic staging session.
+
+### 1. Edge, TLS, private access, CSP, initial SRI
+
+```bash
+STAGING_ORIGIN=https://builder-staging.ornigami.com \
+STAGING_BASIC_AUTH_USER=<private-user> \
+STAGING_BASIC_AUTH_PASSWORD=<private-password> \
+STAGING_EVIDENCE_DIR=<new-edge-evidence-dir> \
+  node deploy/builder/private-staging/accept-edge.mjs
+```
+
+Expected: all checks `ok`: verified TLS, HTTP-to-HTTPS redirect, anonymous and
+wrong-credential denial, authorized `200`, HSTS, builder CSP without
+`unsafe-inline`/`unsafe-eval`, anonymous builder/session/generation denial,
+unexpected Host rejection, and initial script SRI/hash verification. No real
+invite or paid call is made.
+
+### 2. Browser/ZIP/revocation and dynamic SRI
+
+Run on the staging host with access to the packaged image and volume:
+
+```bash
+STAGING_ORIGIN=https://builder-staging.ornigami.com \
+STAGING_BASIC_AUTH_USER=<private-user> \
+STAGING_BASIC_AUTH_PASSWORD=<private-password> \
+BUILDER_OPERATOR_IMAGE=<image@sha256:digest> \
+BUILDER_OPERATOR_VOLUME=ornigami-builder-store-v1 \
+BUILDER_RUNTIME_STORE_HOST_ID=ornigami-builder-store-v1 \
+BROWSER_EVIDENCE_DIR=<new-browser-evidence-dir> \
+  deploy/builder/private-staging/accept-browser.sh
+```
+
+Expected: `browser_acceptance=pass`, `origin:reachable`, `csp:header`,
+`sri:initial`, `sri:after-initial-generation`, generation after refresh/edit,
+two-tab generation, replay `409`, fresh approved ZIP audit, online subject-A
+revocation while open, subject-B unaffected, and sign-out storage clearing.
+The reused browser journey also verifies authenticated ZIP contents and the
+existing revocation checks.
+
+### 3. Live runtime isolation and volume contract
+
+```bash
+APP_CONTAINER=<app-container> \
+PROXY_CONTAINER=<caddy-container> \
+STORE_VOLUME=ornigami-builder-store-v1 \
+EXPECTED_ORIGIN=https://builder-staging.ornigami.com \
+EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+EVIDENCE_DIR=<new-runtime-evidence-dir> \
+  deploy/builder/private-staging/accept-runtime.sh
+```
+
+Expected: read-only root, `1000:1000`, no published app port, only internal app
+network(s), denied public egress, no forbidden provider/database/mail/Sentry
+environment, volume label, root `1000:1000:700`, store file `1000:1000:600` when
+populated, and proxy publishing only 80/443. This script is read-only.
+
+### 4. Populated backup/restore, lock recovery and closed rollback
+
+```bash
+SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+APP_URL=https://builder-staging.ornigami.com \
+EVIDENCE_DIR=<new-partial-runtime-evidence-dir> \
+  deploy/builder/private-staging/accept-runtime-rollback.sh
+```
+
+Expected: the existing Linux harness passes restore root `0700`, store `0600`,
+hash/record preservation, foreign-scope lock recovery and same-image closed
+rollback. Because browser is intentionally skipped here, the result must contain
+`browser_journey=skipped`, `full_acceptance=false` and
+`acceptance_scope=partial`. It cannot be the full acceptance receipt by itself.
+
+Full acceptance requires the edge, staging browser, live runtime and
+runtime/rollback receipts together, plus the independently pulled image
+identity. Keep each receipt separate.
+
+## Rollback
+
+Preferred rollback on any staging failure:
+
+1. Remove the app from Caddy/proxy traffic; keep the proxy or return a closed
+   notice.
+2. Stop the app container. Do not run overlapping replicas.
+3. Preserve `ornigami-builder-store-v1` and every subject/session/usage record.
+4. Either leave it stopped or start **this same retained image** with
+   `BUILDER_RUNTIME_MODE=closed` and the same volume. Closed mode serves `/` with
+   `200`, keeps `/builder` `404` and session `401`, and preserves the store hash
+   and records.
+5. Do not delete the store, clear usage or edit `identity-store.json`.
+6. Do not run the old parent image in invite mode: it does not enforce
+   generation budgets.
+
+The existing qualification already proves the closed rollback contract; repeat
+it against the actual-origin image in step 4 above.
+
+## Boundary
+
+Publication, deployment, DNS, TLS/edge changes, registry push, real invitations
+and paid calls remain outside this package and require the separately authorized
+staging session. No customer data, secret, bcrypt record or connection string is
+committed here.

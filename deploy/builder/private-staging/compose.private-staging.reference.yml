@@ -1,0 +1,90 @@
+# Reference only. Do not deploy from this file without the authorized staging
+# session. The app has one replica, one writer and one persistent volume.
+name: ornigami-builder-staging
+
+services:
+  store-init:
+    image: ${BUILDER_IMAGE:?Set BUILDER_IMAGE to the exact reviewed image digest}
+    user: "0:0"
+    read_only: true
+    network_mode: none
+    restart: "no"
+    volumes:
+      - builder-store:/data/builder
+    entrypoint:
+      - /nodejs/bin/node
+      - -e
+      - >-
+        const fs=require('node:fs');const p='/data/builder';
+        fs.chownSync(p,1000,1000);fs.chmodSync(p,0o700);
+        const s=fs.statSync(p);
+        if(s.uid!==1000||s.gid!==1000||(s.mode&0o777)!==0o700)
+        throw new Error('store root initialization failed')
+
+  app:
+    image: ${BUILDER_IMAGE:?Set BUILDER_IMAGE to the exact reviewed image digest}
+    user: "1000:1000"
+    read_only: true
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    depends_on:
+      store-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_URL: ${STAGING_ORIGIN:?Set the approved https staging origin}
+      BUILDER_RUNTIME_MODE: invite
+      BUILDER_RUNTIME_STORE_DIR: /data/builder
+      BUILDER_RUNTIME_STORE_HOST_ID: ornigami-builder-store-v1
+      BUILDER_RUNTIME_SESSION_TTL_SECONDS: "3600"
+      BUILDER_RUNTIME_SUBJECT_CONCURRENCY_LIMIT: "1"
+      BUILDER_RUNTIME_ALLOW_TEST_HOOKS: "0"
+      BUILDER_RUNTIME_TEST_PROVIDER: none
+    volumes:
+      - builder-store:/data/builder
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700
+      - /app/builder-runtime/.next/cache:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700
+      - /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700
+    networks:
+      - builder_internal
+    # Intentionally no ports. Caddy is the only ingress and shares the internal
+    # app network; the app has no edge network route or public egress.
+
+  proxy:
+    image: ${CADDY_IMAGE:?Set a reviewed pinned Caddy image digest}
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?Set the approved ACME contact}
+      STAGING_HOST: ${STAGING_HOST:?Set the approved staging hostname}
+      STAGING_BASIC_AUTH_USER: ${STAGING_BASIC_AUTH_USER:?Set the private access user}
+      STAGING_BASIC_AUTH_HASH: ${STAGING_BASIC_AUTH_HASH:?Set the protected bcrypt record}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile.example:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - edge
+      - builder_internal
+
+networks:
+  builder_internal:
+    internal: true
+  edge: {}
+
+volumes:
+  builder-store:
+    name: ${BUILDER_STORE_VOLUME:-ornigami-builder-store-v1}
+    labels:
+      org.ornigami.staging: "true"
+  caddy-data:
+    name: ${CADDY_DATA_VOLUME:-ornigami-builder-caddy-data}
+  caddy-config:
+    name: ${CADDY_CONFIG_VOLUME:-ornigami-builder-caddy-config}
