@@ -9,8 +9,13 @@ live provider and test hooks stay disabled, and real Linux execution remains
 
 - Branch: `codex/ornigami-builder-deploy-browser-20261120`
 - Base: `d58566f228861ce54548f8a19daf8426d4cdd920`
-- Functional implementation: `9f4476c72d89492449f21275963022f7f815b4eb`
+- Core implementation: `9f4476c72d89492449f21275963022f7f815b4eb`
 - Worktree: `C:/Users/joser/.local/ornigami-builder-deploy-browser-20261120`
+
+The Linux run must record its actual clean `git rev-parse HEAD` in
+`results.txt`. Commits after `9f4476c` are confined to documentation and the
+browser helper's ZIP-extraction fallback; they do not change builder web routes,
+access defaults, the store schema or the server quota contract.
 
 The implementation is confined to the qualification harness, the operator
 store-lock contract/diagnostics, focused tests and documentation. It does not
