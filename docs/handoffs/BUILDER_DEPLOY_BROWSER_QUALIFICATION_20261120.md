@@ -128,8 +128,8 @@ NEXT_PUBLIC_APP_URL=http://127.0.0.1:3041 \
 
 # Invite runtime with a temporary store, live provider and test hooks disabled:
 BUILDER_RUNTIME_MODE=invite \
-BUILDER_RUNTIME_STORE_DIR=.local/browser-local/store \
-BUILDER_RUNTIME_STORE_HOST_ID=browser-local-host \
+BUILDER_RUNTIME_STORE_DIR=.local/browser-local2/store \
+BUILDER_RUNTIME_STORE_HOST_ID=browser-local2-host \
 BUILDER_RUNTIME_ALLOW_TEST_HOOKS=0 \
 BUILDER_RUNTIME_TEST_PROVIDER=none \
 NEXT_PUBLIC_APP_URL=http://127.0.0.1:3041 \
@@ -137,14 +137,14 @@ NEXT_PUBLIC_APP_URL=http://127.0.0.1:3041 \
     --hostname 127.0.0.1 --port 3041
 
 BROWSER_BASE_URL=http://127.0.0.1:3041 \
-BROWSER_EVIDENCE_DIR=.local/browser-local/evidence \
+BROWSER_EVIDENCE_DIR=.local/browser-local2/evidence \
 BROWSER_OPERATOR_MODE=local \
-BROWSER_OPERATOR_STORE_DIR=.local/browser-local/store \
-BUILDER_RUNTIME_STORE_HOST_ID=browser-local-host \
+BROWSER_OPERATOR_STORE_DIR=.local/browser-local2/store \
+BUILDER_RUNTIME_STORE_HOST_ID=browser-local2-host \
   node deploy/builder/qualify-browser.mjs
 ```
 
-Local browser evidence: `.local/browser-local/evidence/results.json`,
+Local browser evidence: `.local/browser-local2/evidence/results.json`,
 `downloads/browser-a.zip`, `extracted/browser-a/` and four screenshots. The
 exported revision is `3ffb03a5135b1d43`; the ZIP has 14 entries and matching
 meta/receipt/packshot hash. This is host-process evidence, not container/Linux
