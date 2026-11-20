@@ -191,6 +191,9 @@ enabled. Browser evidence is written under the run's `browser/` directory
 
 ## Related evidence
 
+- [`docs/handoffs/BUILDER_TMPFS_OWNERSHIP_20261120.md`](./handoffs/BUILDER_TMPFS_OWNERSHIP_20261120.md)
+  — explicit runtime tmpfs ownership/modes, per-path writable probes, local
+  mount-argument assertions and the next Linux command at candidate `b74ba38`.
 - [`docs/handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md`](./handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md)
   — exact commit, local self-test/lock/browser results and the pending Linux
   receipt for this session.
