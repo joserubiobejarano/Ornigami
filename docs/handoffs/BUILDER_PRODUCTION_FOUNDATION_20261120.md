@@ -131,6 +131,11 @@ Recorded local results (Windows x64, Node `v24.11.1`, npm `11.6.2`):
   `BUILDER_BETA_ACCESS_MODE=invite` exited with code `1` and
   `Builder configuration is invalid`; no request was served successfully.
 
+Not run in this slice: the full repository suite (the central checkpoint records
+pre-existing concurrent/staging failures), deployed-target checks, real-browser
+authoring, paid provider calls and publication. No production migration or
+customer message was sent.
+
 ## Rollback
 
 This slice adds no migrations, no provider configuration, no customer data and no
