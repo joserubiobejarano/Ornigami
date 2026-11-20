@@ -119,7 +119,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           BT="$GITHUB_WORKSPACE/scripts/framework-prototype/browser-tools"
-          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" npm ci --prefix "$BT" --no-audit --no-fund 2>&1 | tee "$RUNNER_TEMP/verify/playwright-install.log"
+          npm ci --prefix "$BT" --no-audit --no-fund 2>&1 | tee "$RUNNER_TEMP/verify/playwright-install.log"
+          sudo chmod -R a+rX "$BT/node_modules"
           sudo env PATH="$PATH" node "$BT/node_modules/playwright/cli.js" install-deps chromium 2>&1 | tee "$RUNNER_TEMP/verify/playwright-deps.log"
           sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
             node "$BT/node_modules/playwright/cli.js" install chromium 2>&1 | tee "$RUNNER_TEMP/verify/playwright-chromium-install.log"
