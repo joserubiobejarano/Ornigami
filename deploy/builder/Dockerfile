@@ -45,6 +45,7 @@ RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(proces
     && printf 'node:x:1000:\n' >> /etc/group \
     && touch /data/builder/.ornigami-volume \
     && chown 1000:1000 /app /app/qualify /home/node /data/builder /data/builder/.ornigami-volume \
+    && chmod 0700 /data/builder \
     && test "$(npm --version)" = 11.21.1
 WORKDIR /app
 USER 1000:1000

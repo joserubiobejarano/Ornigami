@@ -113,8 +113,8 @@ RUN=(
   "$ENGINE" run --rm
   --network none
   --read-only
-  --tmpfs /tmp:rw,noexec,nosuid,size=16m
-  --tmpfs /home/node:rw,noexec,nosuid,size=16m
+  --tmpfs /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700
+  --tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700
   --user 1000:1000
   "${MOUNT[@]}"
   -e "BUILDER_RUNTIME_STORE_HOST_ID=$HOST_ID"

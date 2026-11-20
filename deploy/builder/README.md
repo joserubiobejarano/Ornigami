@@ -30,9 +30,10 @@ not reuse an image built from an older review or packaging branch.
 - Build runs from the repository root; the application is
   `builder-runtime/`, not the legacy root app.
 - Runtime user is explicitly `1000:1000`.
-- `BUILDER_RUNTIME_STORE_DIR=/data/builder`; the directory is image-owned so a
-  fresh named volume inherits UID/GID 1000. A `.ornigami-volume` marker is
-  included only to make the directory non-empty; the app ignores it.
+- `BUILDER_RUNTIME_STORE_DIR=/data/builder`; the directory is image-owned at
+  `1000:1000` mode `0700` so a fresh named volume inherits that ownership and
+  mode. A `.ornigami-volume` marker is included only to make the directory
+  non-empty; the app ignores it.
 - Health check fetches `http://127.0.0.1:3000/` and requires `200`. Do not reuse
   the legacy `/robots.txt` health check; the builder runtime intentionally
   returns `404` for legacy paths.
@@ -156,13 +157,17 @@ The script:
    labelled with the run id;
 6. runs one invite container with `--read-only`, the volume at `/data/builder`,
    UID/GID 1000, and only these writes:
-   - `/data/builder` — persistent store;
-   - `/tmp` — tmpfs;
-   - `/app/builder-runtime/.next/cache` — tmpfs;
-   - `/home/node` — tmpfs;
-7. verifies UID/GID 1000, store file `0600`/UID 1000, invite-mode anonymous
-   `/builder` `307` to same-origin `/?error=session`, anonymous session `401`,
-   anonymous generation `404`, home `200`, and that `/app` is not writable;
+   - `/data/builder` — persistent store, `1000:1000`, mode `0700`;
+   - `/tmp` — tmpfs `rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700`;
+   - `/app/builder-runtime/.next/cache` — tmpfs
+     `rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700`;
+   - `/home/node` — tmpfs
+     `rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700`;
+7. checks the effective owner, mode, and write/delete behavior separately at
+   every declared writable path; verifies store file `0600`/UID 1000,
+   invite-mode anonymous `/builder` `307` to same-origin `/?error=session`,
+   anonymous session `401`, anonymous generation `404`, home `200`, and that
+   `/app` is not writable;
 8. verifies the container cannot reach `https://example.com`;
 9. verifies no provider/database/billing/mail/Sentry environment variables;
 10. exercises the **supported operator CLI path** in the packaged image:
@@ -198,6 +203,21 @@ The script:
     preserved;
 17. exports the final store and writes `results.txt` + `checks.tsv`.
 
+### Writable tmpfs ownership
+
+Every runtime tmpfs is explicit: `uid=1000,gid=1000,mode=0700` plus the existing
+`rw,noexec,nosuid` flags. Docker's default tmpfs root is root-owned with a
+different mode, which caused the cache probe to fail with `EACCES` when the
+options were implicit. The persistent `/data/builder` volume remains a separate
+mount and is never converted to tmpfs; it is image-owned at `1000:1000` mode
+`0700`.
+
+Docker accepts `uid`, `gid` and `mode` in the `--tmpfs` option string. Rootless
+Podman applies its user-namespace mapping, so the same option string can have a
+different host-visible owner; the in-container owner/mode probe is authoritative.
+The local stub asserts the exact arguments, but only the authorized Docker or
+Podman run proves real mount permissions.
+
 The browser phase needs Playwright/Chromium on the browser host. Install it under
 `scripts/framework-prototype/browser-tools` or set `BROWSER_PLAYWRIGHT` to its
 `index.mjs`; set `BROWSER_PHASE=0` only for a non-browser packaging smoke. A
@@ -228,7 +248,9 @@ BUILDER_RUNTIME_STORE_HOST_ID="ornigami-builder-store-v1" \
 The wrapper runs:
 
 ```text
-docker run --rm --network none --read-only --tmpfs /tmp:... --user 1000:1000
+docker run --rm --network none --read-only --user 1000:1000
+  --tmpfs /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700
+  --tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700
   --mount type=volume,src=<volume>,dst=/data/builder
   -e BUILDER_RUNTIME_STORE_HOST_ID=<same value as the runtime>
   <image> --experimental-strip-types /app/scripts/builder-invite-operator.mjs
@@ -450,6 +472,9 @@ all subject/session/usage records unchanged.
 - Clean merged candidate, `HEAD == SOURCE_SHA`, image label matches.
 - Linux/Node 22 build and dependency audit on the candidate.
 - Non-root `1000:1000`, read-only root, only documented writable paths.
+- Each writable path reports owner `1000:1000`, mode `0700` and a successful
+  write/delete probe; tmpfs retains `noexec,nosuid`; `/data/builder` remains a
+  separate persistent volume.
 - Named persistent volume, store `0600`, correct owner, single writer/one
   replica/one volume.
 - Health `200`; invite-mode anonymous `/builder` `307` to same-origin

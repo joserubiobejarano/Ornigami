@@ -70,6 +70,10 @@ const git = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8
 assert.equal(git.status, 0, git.stderr);
 const sourceSha = git.stdout.trim();
 assert.match(sourceSha, /^[0-9a-f]{40}$/);
+const qualifyScript = readFileSync(
+  path.join(root, "deploy", "builder", "qualify-linux.sh"),
+  "utf8",
+);
 
 function bashAbsolute(target) {
   if (process.platform !== "win32") return target;
@@ -133,6 +137,45 @@ function pass(name, detail = "") {
 }
 
 try {
+  // 0. The runtime mount arguments explicitly scope every writable tmpfs to
+  //    the runtime UID/GID and keep the existing noexec/nosuid flags.
+  const runtimeStart = qualifyScript.indexOf("start_runtime() {");
+  const runtimeEnd = qualifyScript.indexOf("# Build and image contract.", runtimeStart);
+  assert.ok(runtimeStart >= 0 && runtimeEnd > runtimeStart);
+  const runtimeBlock = qualifyScript.slice(runtimeStart, runtimeEnd);
+  for (const expected of [
+    "--read-only",
+    "--tmpfs /tmp:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700",
+    "--tmpfs /app/builder-runtime/.next/cache:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700",
+    "--tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700",
+    '"${STORE_MOUNT_ARGS[@]}"',
+    "--user 1000:1000",
+  ]) {
+    assert.ok(runtimeBlock.includes(expected), `runtime mount missing: ${expected}`);
+  }
+  assert.equal(
+    (runtimeBlock.match(/--tmpfs /g) ?? []).length,
+    3,
+    "runtime must declare exactly three tmpfs mounts",
+  );
+  for (const [name, pathValue] of [
+    ["store", "/data/builder"],
+    ["tmp", "/tmp"],
+    ["next-cache", "/app/builder-runtime/.next/cache"],
+    ["home", "/home/node"],
+  ]) {
+    assert.ok(
+      qualifyScript.includes(`check_writable_path "${name}" "${pathValue}" "700"`),
+      `missing writable-path check for ${pathValue}`,
+    );
+  }
+  const builderDockerfile = readFileSync(
+    path.join(root, "deploy", "builder", "Dockerfile"),
+    "utf8",
+  );
+  assert.match(builderDockerfile, /chmod 0700 \/data\/builder/);
+  pass("runtime tmpfs mounts, writable paths and store mode assert owner, mode and flags");
+
   // 1. A pre-existing evidence directory is never deleted or reused.
   const preEvidence = path.join(tempRoot, "pre-existing-evidence");
   mkdirSync(preEvidence, { recursive: true });
@@ -251,11 +294,14 @@ try {
     },
   );
   assert.equal(printVolume.status, 0, printVolume.stderr || printVolume.stdout);
+  const printVolumeOutput = printVolume.stdout.replace(/\\,/g, ",");
   for (const expected of [
     "docker run --rm",
     "--network none",
     "--read-only",
     "--user 1000:1000",
+    "--tmpfs /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700",
+    "--tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700",
     "type=volume",
     "src=operator-volume",
     "BUILDER_RUNTIME_STORE_HOST_ID=operator-host",
@@ -263,7 +309,7 @@ try {
     "lock-status --store /data/builder",
     "--json",
   ]) {
-    assert.match(printVolume.stdout, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(printVolumeOutput, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
   pass("operator wrapper prints the isolated named-volume command");
 

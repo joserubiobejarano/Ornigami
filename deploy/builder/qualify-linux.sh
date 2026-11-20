@@ -511,8 +511,8 @@ operator_run() {
   build_store_mount_args "$source" \
     || fail "operator mount construction failed for $source"
   "$ENGINE" run --rm --network none --read-only \
-    --tmpfs /tmp:rw,noexec,nosuid,size=16m \
-    --tmpfs /home/node:rw,noexec,nosuid,size=16m \
+    --tmpfs /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700 \
+    --tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700 \
     --user 1000:1000 "${STORE_MOUNT_ARGS[@]}" \
     -e "BUILDER_RUNTIME_STORE_HOST_ID=$STORE_HOST_ID" \
     "$IMAGE" --experimental-strip-types \
@@ -529,8 +529,8 @@ seed_run() {
   build_store_mount_args "$source" \
     || fail "seed mount construction failed for $source"
   "$ENGINE" run --rm --network none --read-only \
-    --tmpfs /tmp:rw,noexec,nosuid,size=16m \
-    --tmpfs /home/node:rw,noexec,nosuid,size=16m \
+    --tmpfs /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700 \
+    --tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700 \
     --user 1000:1000 "${STORE_MOUNT_ARGS[@]}" \
     --mount "type=bind,src=$ROOT/deploy/builder,dst=/app/qualify,readonly" \
     -e "BUILDER_RUNTIME_STORE_HOST_ID=$STORE_HOST_ID" \
@@ -601,6 +601,25 @@ exec_node() {
   "$ENGINE" exec "$name" /nodejs/bin/node -e "$*"
 }
 
+check_writable_path() {
+  local name="$1" path="$2" expected_mode="$3"
+  local result actual_owner actual_mode actual_value
+  result="$("$ENGINE" exec -e "QUALIFY_PROBE_PATH=$path" "$CONTAINER" /nodejs/bin/node -e '
+    const fs = require("node:fs");
+    const p = process.env.QUALIFY_PROBE_PATH;
+    const s = fs.statSync(p);
+    const probe = p + "/.qualify-probe-" + process.pid;
+    fs.writeFileSync(probe, "ok", { flag: "wx" });
+    const value = fs.readFileSync(probe, "utf8");
+    fs.unlinkSync(probe);
+    process.stdout.write([s.uid + ":" + s.gid, (s.mode & 0o777).toString(8), value].join("|"));
+  ')"
+  IFS='|' read -r actual_owner actual_mode actual_value <<< "$result"
+  check "writable:$name:owner" "$actual_owner" "1000:1000"
+  check "writable:$name:mode" "$actual_mode" "$expected_mode"
+  check "writable:$name:write-delete" "$actual_value" "ok"
+}
+
 http_run() {
   local name="$1"
   shift
@@ -619,9 +638,9 @@ start_runtime() {
   "$ENGINE" run -d --name "$name" \
     --label "org.ornigami.qualify.run=$RUN_ID" \
     --read-only \
-    --tmpfs /tmp:rw,noexec,nosuid,size=64m \
-    --tmpfs /app/builder-runtime/.next/cache:rw,noexec,nosuid,size=64m \
-    --tmpfs /home/node:rw,noexec,nosuid,size=16m \
+    --tmpfs /tmp:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700 \
+    --tmpfs /app/builder-runtime/.next/cache:rw,noexec,nosuid,size=64m,uid=1000,gid=1000,mode=0700 \
+    --tmpfs /home/node:rw,noexec,nosuid,size=16m,uid=1000,gid=1000,mode=0700 \
     "${STORE_MOUNT_ARGS[@]}" \
     --mount "type=bind,src=$ROOT/deploy/builder,dst=/app/qualify,readonly" \
     --network "$NETWORK" \
@@ -702,9 +721,12 @@ http_run "$CONTAINER" smoke --mode invite >/dev/null
 check "http:smoke:invite" "ok" "ok"
 
 exec_node "$CONTAINER" 'const fs=require("fs");try{fs.writeFileSync("/app/forbidden","x");process.exit(1)}catch(e){if(e.code!=="EROFS")throw e}'
-exec_node "$CONTAINER" 'const fs=require("fs");for(const p of ["/data/builder/.probe","/tmp/.probe","/app/builder-runtime/.next/cache/.probe","/home/node/.probe"]){fs.writeFileSync(p,"ok");fs.unlinkSync(p)}'
-# The store is created by the first operator write; its owner/mode is checked
-# after the synthetic invites below.
+check_writable_path "store" "/data/builder" "700"
+check_writable_path "tmp" "/tmp" "700"
+check_writable_path "next-cache" "/app/builder-runtime/.next/cache" "700"
+check_writable_path "home" "/home/node" "700"
+# The store file is created by the first operator write; its owner/mode is
+# checked after the synthetic invites below.
 
 note "Verify no external egress"
 if exec_node "$CONTAINER" 'fetch("https://example.com",{signal:AbortSignal.timeout(2500)}).then(()=>process.exit(1)).catch(()=>process.exit(0))'; then :; else
@@ -914,6 +936,9 @@ restore_source=$RESTORE_SOURCE
 runtime_user=1000:1000
 read_only_root=true
 writable_paths=/data/builder,/tmp,/app/builder-runtime/.next/cache,/home/node
+writable_owners=1000:1000
+writable_modes=0700
+writable_tmpfs_options=rw,noexec,nosuid,uid=1000,gid=1000,mode=0700
 store_sha256=$STORE_HASH_BASELINE
 backup_sha256=$HASH_BACKUP
 restart_preserved_store=true
