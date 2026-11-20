@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
-const appDir = join(process.cwd(), ".next", "server", "app");
-const outputFile = join(process.cwd(), ".next", "static-csp-hashes.json");
+const appRoot = process.argv[2] ? resolve(process.argv[2]) : process.cwd();
+const appDir = join(appRoot, ".next", "server", "app");
+const outputFile = join(appRoot, ".next", "static-csp-hashes.json");
 const hashes = new Set();
 
 function walk(directory) {

@@ -1,0 +1,7 @@
+@import "../../src/app/globals.css";
+@import "../../src/app/local-fonts.css";
+
+@source "../../src/components/campaign-lab";
+@source "../../src/components/builder";
+@source "../../src/components/ui";
+@source ".";

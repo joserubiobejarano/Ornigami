@@ -117,6 +117,7 @@ export function finalizeSRIManifest(distDirectory = resolve(process.cwd(), ".nex
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const result = finalizeSRIManifest();
+  const appDirectory = process.argv[2] ? resolve(process.argv[2]) : process.cwd();
+  const result = finalizeSRIManifest(join(appDirectory, ".next"));
   console.log(`Finalized SHA-256 SRI for ${result.manifestRelativePath}.`);
 }

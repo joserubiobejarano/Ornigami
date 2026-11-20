@@ -17,6 +17,8 @@
 
 # next.js
 /.next/
+/builder-runtime/.next/
+/builder-runtime/public/
 /out/
 
 # production
