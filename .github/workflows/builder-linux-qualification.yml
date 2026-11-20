@@ -168,8 +168,9 @@ jobs:
           echo "BUILDER_USER=$BUILDER_USER" >> "$GITHUB_ENV"
           sudo usermod -aG docker "$BUILDER_USER"
           sudo install -d -m 0755 -o "$BUILDER_USER" -g "$(id -gn "$BUILDER_USER")" /tmp/builder-qualification
-          sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
           sudo chmod -R a+rX "$GITHUB_WORKSPACE"
+          sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" git config --global --add safe.directory "$GITHUB_WORKSPACE"
           printf 'builder_user=%s\n' "$BUILDER_USER" | tee "$PREFLIGHT_DIR/builder-user.txt"
 
       - name: Clean install
