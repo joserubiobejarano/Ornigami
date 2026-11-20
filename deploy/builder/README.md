@@ -1,11 +1,11 @@
 # Builder-only Linux packaging and runtime qualification
 
 Status: packaging and the qualification harness are prepared on
-`codex/ornigami-builder-deploy-20261120` from `5a5db54`, with implementation
-commit `5a29d04`. **Linux execution is pending**: this workstation has no
-Docker, Podman, nerdctl or WSL engine. No image was built, pushed or deployed.
-Sessions 1 and 2 own application behavior; this directory owns image packaging,
-the supported operator path and runtime qualification.
+`codex/ornigami-builder-deploy-browser-20261120` from `d58566f`, with functional
+implementation `9f4476c`. **Linux execution is pending**: this workstation has
+no Docker, Podman, nerdctl or WSL engine. No image was built, pushed or
+deployed. Sessions 1 and 2 own application behavior; this directory owns image
+packaging, the supported operator path and runtime qualification.
 
 Final qualification must use the **merged candidate** with a clean worktree. Do
 not reuse an image built from an older review or packaging branch.
@@ -18,6 +18,7 @@ not reuse an image built from an older review or packaging branch.
 | `qualify-linux.sh` | Run-scoped Linux build/runtime qualification; exits `2` and prints the command plan when no engine exists |
 | `qualify-http.mjs` | Read-only HTTP journey helper mounted into the runtime container |
 | `qualify-seed.mjs` | Qualification-only synthetic reservation and stale-lock fixture, mounted read-only into a one-shot container |
+| `qualify-browser.mjs` | Playwright browser phase against the built container through a loopback-only test origin |
 | `operator.sh` | Supported operator CLI wrapper: same image, no network, same UID, same persistent volume and store host id |
 | `tests/stub-engine.sh` | Local rerun-safety self-test engine (never builds or runs a container) |
 
@@ -87,11 +88,13 @@ node scripts/builder-linux-qualify-self-test.mjs
 ```
 
 It runs `qualify-linux.sh` in `QUALIFY_SELF_TEST=1` mode with a stub engine and
-proves that an existing evidence directory, network, volume and container are
-refused and left intact, that a normal run removes only its own network and
-container, that `KEEP_VOLUMES=0` removes only its own volume, and that the
-operator wrapper prints the correct isolated command. It does not build or run
-the image.
+**9/9** checks: existing evidence, network, volume and container are refused and
+left intact; a normal run removes only its own network and container; the exact
+`type=volume,src=...,dst=/data/builder` and `type=bind,src=...,dst=/data/builder`
+mount pairs are asserted; `KEEP_VOLUMES=0` removes only the run-owned volume; bind
+mode creates no named volume; the operator wrapper prints the isolated command;
+and a mount-construction failure or engine-helper failure exits non-zero without
+ever writing `ok=true`. It does not build or run the image.
 
 ## Build
 
@@ -136,6 +139,11 @@ STORE_MODE=bind STORE_DIR=/absolute/new/empty/dir \
   SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
 ```
 
+The browser phase publishes only `127.0.0.1:<port>:3000`, requires Playwright
+Chromium on the browser host, and uses `BROWSER_PHASE=0` to skip. A non-loopback
+`APP_URL` is refused while it is enabled. The container remains on the internal
+default-deny network.
+
 The script:
 
 1. rejects a dirty worktree unless `ALLOW_DIRTY=1` is explicitly set for a
@@ -168,22 +176,37 @@ The script:
     - identity A's unresolved reservation still blocks generation with `429`
       `subject_concurrency`;
     - the store hash and the usage record are unchanged;
-13. stops the container, backs up the volume, creates a **fresh volume**, copies
+13. runs the **browser phase** against the container through a
+    `127.0.0.1:<port>` published port while the container remains on its
+    internal no-egress network. Live provider and test hooks stay disabled.
+    `qualify-browser.mjs` issues two synthetic subjects and proves generation
+    after refresh/edit, two-tab generation, replay deduplication, sign-out, a
+    fresh approved ZIP export, online operator revocation of subject A while its
+    workspace is open (A clears and cannot generate), and subject B remaining
+    unaffected;
+14. stops the container, backs up the volume, creates a **fresh volume**, copies
     the backup into it, and starts a **fresh container**; repeats the session,
     revocation and reservation checks and verifies the store hash;
-14. on the restore copy only, injects a foreign-host stale lock, proves
-    `recover-lock` refuses without confirmation and with a wrong token, then
-    proves the observed token plus `--confirm-no-writers` quarantines the lock
-    without changing the store and that `list` still reads it;
-15. starts the same image with `BUILDER_RUNTIME_MODE=closed` against the
+15. on the restore copy only, injects a same-host/foreign-PID-namespace stale
+    lock, proves `recover-lock` refuses without confirmation and with a wrong
+    token, then proves the observed token plus `--confirm-no-writers` quarantines
+    the lock without changing the store and that `list` still reads it;
+16. starts the same image with `BUILDER_RUNTIME_MODE=closed` against the
     authoritative volume, proves home `200`, `/builder` `404`, session `401`,
     the store hash is unchanged and all subject/session/usage records are
     preserved;
-16. exports the final store and writes `results.txt` + `checks.tsv`.
+17. exports the final store and writes `results.txt` + `checks.tsv`.
+
+The browser phase needs Playwright/Chromium on the browser host. Install it under
+`scripts/framework-prototype/browser-tools` or set `BROWSER_PLAYWRIGHT` to its
+`index.mjs`; set `BROWSER_PHASE=0` only for a non-browser packaging smoke. A
+non-loopback `APP_URL` is refused while the browser phase is enabled. On the
+Linux runner, `unzip` or `python3` is needed for ZIP audit.
 
 Evidence is written to the run directory (`results.txt`, `checks.tsv`,
-`qualify.log`, `operator.log`, `http.log`, `backup/`, `store-export/`,
-`list-before-closed.json`, `list-after-closed.json`). Do not commit `.local/`.
+`qualify.log`, `operator.log`, `http.log`, `browser/`, `backup/`,
+`store-export/`, `list-before-closed.json`, `list-after-closed.json`). Do not
+commit `.local/`.
 
 If no engine is present, the script prints the equivalent commands and exits
 `2`. That is the current status on this workstation.
@@ -222,7 +245,7 @@ with another writer except for the read-only `list`/`lock-status` commands; the
 store lock serializes writers, but the supported topology is one runtime writer
 plus short-lived operator processes.
 
-## Store host ID
+## Store host ID and process scope
 
 `BUILDER_RUNTIME_STORE_HOST_ID` is the stable logical host identity written into
 `identity-store.lock` and `identity-store.reap.lock` metadata. The default is the
@@ -234,19 +257,47 @@ helpers for the life of the volume**, for example:
 BUILDER_RUNTIME_STORE_HOST_ID=ornigami-builder-store-v1
 ```
 
-Keep it stable across restarts, container recreation and volume replacement. A
-different value makes existing locks foreign and unprovable; it does not
-authorize automatic takeover. The host id is metadata only; it is not a secret
-and does not replace the lock token.
+Keep it stable across restarts, container recreation and volume replacement. The
+host id is metadata only; it is not a secret and does not replace the lock token.
+
+A shared host id is not enough to compare liveness. The runtime and the packaged
+operator normally run in distinct PID namespaces, so a PID recorded by one is
+meaningless in the other. New locks and temp files therefore carry a process
+scope derived from the host id, the PID namespace identity (or the single-host
+fallback) and the boot identity. Automatic reaping and dead-owner temp cleanup
+only act when that scope matches the current process scope, the PID is provably
+dead, and the lock/temp was created after the current boot. Missing scope, a
+different PID namespace, a different boot or a foreign host is
+`foreign_scope`/`foreign_host` and is never auto-reaped.
+
+## Operator revocation while the runtime is online
+
+The supported operator can `issue`, `revoke-subject`, `revoke-session`,
+`reconcile-usage` and `list` while the runtime is serving traffic. It does not
+need to stop the runtime:
+
+- a free store lock is acquired normally;
+- a short live runtime transaction is waited for (the operator's normal
+  bounded lock wait);
+- the operator writes the revocation and releases the lock;
+- the open workspace notices the revoked session on its next 15-second/focus
+  session check, clears the subject draft, and returns to sign-in.
+
+Do **not** run a second runtime or a long-lived second writer. Only the
+short-lived operator transactions are supported alongside the runtime. If a
+stale/foreign lock blocks the operator, stop all writers and use the recovery
+procedure below; never delete the store or a live lock to force the revoke
+through.
 
 ## Safe lock recovery across process and container replacement
 
 Normal `docker stop` does not normally leave a store lock because locks are held
 only for the duration of one store transaction. Recovery is for a crash,
 `SIGKILL`, host-id change, corrupt owner metadata or a foreign volume. A stale
-runtime lock can look `live` after container replacement because a fresh
-container reuses low PIDs (often PID 1); do not rely on the automatic "same
-host + dead PID" reaper in that case. **Manual operator recovery is required.**
+runtime lock can look `live` or foreign after container replacement because a
+fresh container has a different PID namespace and may reuse low PIDs (often PID
+1); do not rely on the automatic same-scope reaper in that case. **Manual
+operator recovery is required.**
 
 Procedure:
 
@@ -264,7 +315,7 @@ Procedure:
    ```
 
    Record the `token` (and `reapLock.metadata.token` if present), the `owner`
-   state and the store SHA-256.
+   state, the `scope` and the store SHA-256.
 4. If `identity-store.json` is missing, corrupt or the wrong version, stop and
    restore the last accepted backup. Do not recover locks around a bad store.
 5. Recover only the locks you observed:
@@ -292,7 +343,8 @@ Procedure:
 
 Never delete or truncate `identity-store.json` to clear a lock or a usage limit.
 Never remove a quarantine file before the incident is reviewed. Do not copy a
-live lock file into a replacement volume.
+live lock file into a replacement volume. Foreign-scope temp files are preserved
+for review; only same-scope dead-owner temp files are removed automatically.
 
 ## Single replica and persistent volume
 
@@ -401,8 +453,12 @@ all subject/session/usage records unchanged.
 - Restart preserves the valid session, the revocation and the unresolved
   reservation; store hash and usage record unchanged.
 - Backup restores into a fresh volume and fresh container with the same state.
-- Foreign-host stale lock is refused without confirmation/wrong token;
-  observed-token recovery quarantines it and preserves the store.
+- Same-host/foreign-PID-namespace stale lock is classified `foreign_scope` and
+  is not auto-reaped; observed-token recovery quarantines it and preserves the
+  store.
+- Browser phase through the loopback-only published port passes with the live
+  provider and test hooks disabled, including online subject-A revocation and
+  subject-B isolation.
 - Closed rollback preserves usage and does not reopen without quotas.
 - Sessions 1 and 2 application journeys pass on the same merged image.
 

@@ -53,10 +53,15 @@ runtime. `deploy/builder/operator.sh` is the supported wrapper:
   `reconcile-usage`, `lock-status`, `recover-lock`, `list`.
 
 `lock-status` is read-only and reports the store version/hash, host id, lock and
-reap-lock owner state, token, PID, hostname, acquired time and temporary files.
-`list` is read-only. The other commands serialize through the store lock.
+reap-lock owner state, token, PID, hostname, process scope, acquired time and
+temporary files. `list` is read-only. The other commands serialize through the
+store lock.
 
-## Store host ID
+The operator can revoke a subject while the runtime is online. A free lock is
+acquired normally; a short live transaction is waited for. Only a stale or
+foreign lock is refused and requires the recovery sequence below.
+
+## Store host ID and process scope
 
 `BUILDER_RUNTIME_STORE_HOST_ID` is the stable logical host identity recorded in
 lock metadata. The default is the OS hostname, which changes when a container is
@@ -64,22 +69,38 @@ replaced. Use one stable value for the runtime, the operator wrapper and the
 qualification helpers for the life of a volume, for example
 `ornigami-builder-store-v1`.
 
-The host id is not a secret and does not replace the lock token. Changing it
-makes existing locks foreign and unprovable; it does not authorize takeover.
+The host id is not a secret and does not replace the lock token. A shared host id
+is **not** sufficient to compare process liveness: the runtime and the packaged
+operator normally run in different PID namespaces. Lock metadata and temp-file
+names therefore also carry a process scope derived from the host id, the Linux
+PID namespace identity (or the single-host fallback) and the boot identity.
+
+Automatic lock reaping and orphan-temp removal only act when the recorded scope
+matches the current process scope **and** the recorded PID is provably dead
+**and** the lock/temp was created after the current boot. Missing scope, a
+different PID namespace, a different boot or a foreign host is classified as
+`foreign_scope`/`foreign_host` and is never auto-reaped. That is deliberately
+conservative: cross-container recovery is an operator action, not a guess based
+on a PID that may belong to a different namespace.
 
 ## Lock recovery across process and container replacement
 
-Automatic reaping remains conservative: it removes a lock only when the recorded
-host matches the current host id and the recorded PID is provably dead. A fresh
-container commonly reuses low PIDs, so a stale runtime lock can look live; a
-replaced OS host makes it foreign. In both cases, recovery is a deliberate
-operator action.
+A live runtime and a packaged operator share the store host id but not a PID
+namespace. This does not block normal operation: a free store lock is acquired
+normally, and a short live transaction is waited for. The operator can issue,
+revoke or reconcile while the runtime is online because those commands only hold
+the lock for their own short transaction.
 
-The safe sequence is:
+The unsafe cases are stale or foreign locks: a crashed runtime, a `SIGKILL`, a
+replaced container, a changed host id or corrupt owner metadata. A fresh
+container may reuse low PIDs, so a stale runtime lock can look live; a replaced
+OS host makes it foreign. The automatic reaper will not touch either. The safe
+sequence is:
 
 1. Stop the runtime and every operator process; no rolling overlap.
 2. Back up the store volume while stopped.
-3. `operator.sh lock-status --json`; record the store hash and lock/reap tokens.
+3. `operator.sh lock-status --json`; record the store hash, owner state, scope
+   and lock/reap tokens.
 4. If the store is missing, corrupt or the wrong version, restore the last
    accepted backup instead of recovering locks.
 5. `operator.sh recover-lock --token <observed> --confirm-no-writers
@@ -88,12 +109,13 @@ The safe sequence is:
    `*.recovered.*` quarantine files, never deletes them, and verifies the store
    hash did not change. A successor lock is refused, not displaced.
 7. `operator.sh list --json`; reconcile `reserved`/`unknown` usage explicitly.
-8. Restart with the same host id and verify the expected session, revocation and
-   reservation state.
+8. Restart with the same host id and process scope model and verify the expected
+   session, revocation and reservation state.
 
 Never delete or truncate `identity-store.json` to clear a lock or a usage limit.
-Never copy a live lock into a replacement volume. Keep quarantine files for
-incident review.
+Never copy a live lock into a replacement volume. Keep quarantine files and any
+foreign-scope temp files for incident review. Preserve every identity and usage
+record; recovery only quarantines lock metadata.
 
 ## Restart, restore and closed-rollback state contract
 
@@ -119,20 +141,61 @@ volume must serve home `200`, `/builder` `404` and anonymous session `401`, leav
 the store hash unchanged and preserve every subject, session (including the
 revocation) and usage record.
 
+## Browser phase against the built container
+
+`deploy/builder/qualify-browser.mjs` runs against the built container through a
+**host-loopback-only** published port. The runtime stays on the internal
+default-deny network; publishing `127.0.0.1:<port>:3000` is ingress only and does
+not grant the container egress. The build/runtime origin is the same loopback
+URL. Live provider and test hooks remain disabled, so generation uses the
+deterministic local fallback.
+
+The phase issues two synthetic subjects through the packaged operator CLI, then
+proves:
+
+- generation after refresh and after "Edit brief inputs";
+- two tabs sharing one session both generate;
+- replaying one generation request returns `409 request_already_submitted` and
+  does not create a second reservation;
+- approval and a fresh ZIP export with matching receipt/meta/packshot hash and
+  zip integrity;
+- revoking subject A through the supported operator while A's workspace is open:
+  A's tabs reach sign-in, A's builder draft keys are empty, A cannot generate and
+  no A workspace text remains;
+- subject B's session remains active and B can still generate;
+- B signs out through the UI and its builder storage clears.
+
+Playwright/Chromium must be available on the browser host. The phase is enabled
+by default; set `BROWSER_PHASE=0` only for a non-browser packaging smoke. The
+qualification refuses a non-loopback `APP_URL` while the browser phase is
+enabled. Browser evidence is written under the run's `browser/` directory
+(`results.json`, downloads, extracted ZIP, screenshots).
+
 ## Verification status
 
-- Rerun-safety self-test: exercised locally with a stub engine; designed to
-  refuse existing evidence/resources and clean up only run-owned resources.
-- Operator CLI lock diagnostics/recovery: focused local tests pass.
+- Rerun-safety self-test: **9/9** local stub-engine checks. It asserts the exact
+  volume/bind `--mount` pair, refuses collisions, leaves pre-existing resources
+  intact, removes only run-owned resources, and proves a mount-construction or
+  engine-helper failure cannot produce `ok=true`.
+- Operator CLI lock diagnostics/recovery: focused local tests pass, including a
+  same-host/foreign-PID-namespace lock and a pre-boot lock that must not be
+  auto-reclaimed.
+- Browser phase: **25/25** local checks against a production builder process
+  with the live provider and test hooks disabled. This proves journey logic and
+  the online operator revocation; it is not container/Linux evidence.
 - Real build, non-root container, named volume, egress denial, restart,
-  fresh-container restore, lock recovery on the actual volume and closed
-  rollback: **pending Linux execution**.
+  fresh-container restore, lock recovery on the actual volume, browser phase
+  through the published container port, and closed rollback: **pending Linux
+  execution**.
 
 ## Related evidence
 
+- [`docs/handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md`](./handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md)
+  — exact commit, local self-test/lock/browser results and the pending Linux
+  receipt for this session.
 - [`docs/handoffs/BUILDER_LINUX_DEPLOY_QUALIFICATION_20261120.md`](./handoffs/BUILDER_LINUX_DEPLOY_QUALIFICATION_20261120.md)
-  — exact commit, commands, local check results and the pending Linux receipt.
+  — prior deploy qualification, commands and pending Linux receipt.
 - [`deploy/builder/README.md`](../deploy/builder/README.md) — image, operator,
-  lock-recovery and backup/restore runbook.
+  lock-recovery, browser-phase and backup/restore runbook.
 - [`docs/BUILDER_CANDIDATE_DECISIONS_20261120.md`](./BUILDER_CANDIDATE_DECISIONS_20261120.md)
   — application candidate gates and owner decisions.
