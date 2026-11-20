@@ -1,0 +1,16 @@
+{"time":"2026-11-20T01:37:33.513Z","pid":43992,"ppid":25620,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:38:59.432Z","pid":44316,"ppid":13100,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:38:59.432Z","pid":17488,"ppid":35540,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:38:59.441Z","pid":44316,"ppid":13100,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-20T01:38:59.465Z","pid":17488,"ppid":35540,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-20T01:38:59.489Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:38:59.510Z","pid":11268,"ppid":44316,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:38:59.521Z","pid":13828,"ppid":17488,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:38:59.748Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:38:59.993Z","pid":44316,"ppid":13100,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:39:00.007Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:39:01.010Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:39:01.262Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:39:02.056Z","pid":44316,"ppid":13100,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:39:02.080Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}
+{"time":"2026-11-20T01:39:02.370Z","pid":17488,"ppid":35540,"event":"connect","host":"127.0.0.1"}

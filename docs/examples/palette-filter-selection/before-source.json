@@ -1,0 +1,17 @@
+{
+  "applyDisabled": true,
+  "inspectedId": "7382738f2dbc91af45a9d71364f3b7c19ae3e775903390804494032a2a6d36b5",
+  "inspectedLabel": "1. palette.synthetic.invalid/base.css · medium confidence",
+  "pendingRoles": "accent#2f5d4aDirection defaultpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+  "provenance": "Dark pink · #6b2340\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #6b2340 for accent\nObservation provenance\n\ncss-declaration · medium: Synthetic literal declaration; visibility and role unresolved.\n\nContext hint: ink. Synthetic declaration context; this is not an approved brand role.\n\n#6b2340ff\n\nCandidate ID: 7382738f2dbc91af45a9d71364f3b7c19ae3e775903390804494032a2a6d36b5\n\nSource ID: 1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7\n\nClaimed SHA-256: 3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6\n\nOffset: 16 · review: unreviewed\n\nproperty: color\nalpha: 1",
+  "query": "",
+  "statuses": [
+    "Saved evidence loaded.",
+    "1–12 of 23 colors · 120 observations"
+  ],
+  "viewport": {
+    "documentWidth": 1425,
+    "height": 900,
+    "width": 1440
+  }
+}

@@ -1,0 +1,208 @@
+- banner:
+  - link "Campaign Lab":
+    - /url: /campaign-lab
+  - heading "Offer intake" [level=1]
+  - generic: Local only · not published
+- main:
+  - generic "Brand evidence (optional) · palette applied"
+  - paragraph: Review colors only. This does not confirm ownership, campaign facts or media rights.
+  - generic "Load or replace evidence"
+  - status: Palette applied. Generate, inspect and approve a fresh preview before export.
+  - paragraph: "Applied: accent #6b2340 · page #fff8fa · surface #f5e6ea"
+  - button "Remove reviewed palette"
+  - group "Pending palette":
+    - button "Choose color for accent":
+      - generic: accent
+      - generic: "#6b2340"
+      - generic: Pending
+    - button "Choose color for page":
+      - generic: page
+      - generic: "#fff8fa"
+      - generic: Pending
+    - button "Choose color for surface" [pressed]:
+      - generic: surface
+      - generic: "#f5e6ea"
+      - generic: Pending
+  - group "surface pending selection":
+    - generic "Correct / inspect selected surface"
+  - button "Apply reviewed palette" [active]
+  - generic: Pending selections change the campaign only when applied.
+  - group "Color evidence type":
+    - button "UI colors (23)" [pressed]
+    - button "Photo samples (8)"
+  - generic: Search colors or sources
+  - searchbox "Search colors or sources"
+  - button "Clear filters"
+  - generic "Source and opacity filters"
+  - generic: Filter source
+  - combobox "Filter source":
+    - option "All sources"
+    - option "palette.synthetic.invalid/base.css"
+    - option "palette.synthetic.invalid/dark-theme.css"
+    - option "palette.synthetic.invalid/conditional.css" [selected]
+    - option "rose.example/photo.png"
+  - generic: Filter opacity
+  - combobox "Filter opacity":
+    - option "Any opacity" [selected]
+    - option "Opaque"
+    - option "Translucent"
+  - status: 1–12 of 23 colors · 120 observations
+  - paragraph: Tab to colors; arrows browse, Home/End jump, Enter inspects.
+  - list "Color swatches":
+    - 'button "Browse Dark pink #6b2340, 6 observations"':
+      - generic: Dark pink
+      - generic: "#6b2340"
+      - generic: 6 observations
+    - 'button "Browse White #fff8fa, 9 observations"':
+      - generic: White
+      - generic: "#fff8fa"
+      - generic: 9 observations
+    - 'button "Browse Light gray #f5e6ea, 6 observations" [pressed]':
+      - generic: Light gray
+      - generic: "#f5e6ea"
+      - generic: 6 observations
+    - 'button "Browse White #ffffff, 6 observations"':
+      - generic: White
+      - generic: "#ffffff"
+      - generic: 6 observations
+    - 'button "Browse Dark blue #123456, 6 observations"':
+      - generic: Dark blue
+      - generic: "#123456"
+      - generic: 6 observations
+    - 'button "Browse Gray #888888, 6 observations"':
+      - generic: Gray
+      - generic: "#888888"
+      - generic: 6 observations
+    - 'button "Browse Translucent dark blue #12345680, 6 observations"':
+      - generic: Translucent dark blue
+      - generic: "#12345680"
+      - generic: 6 observations
+    - 'button "Browse White #fff8f9, 6 observations"':
+      - generic: White
+      - generic: "#fff8f9"
+      - generic: 6 observations
+    - 'button "Browse Dark blue #163f64, 6 observations"':
+      - generic: Dark blue
+      - generic: "#163f64"
+      - generic: 6 observations
+    - 'button "Browse Teal #009978, 6 observations"':
+      - generic: Teal
+      - generic: "#009978"
+      - generic: 6 observations
+    - 'button "Browse Light blue #e6efff, 6 observations"':
+      - generic: Light blue
+      - generic: "#e6efff"
+      - generic: 6 observations
+    - 'button "Browse Yellow #efd160, 6 observations"':
+      - generic: Yellow
+      - generic: "#efd160"
+      - generic: 6 observations
+  - generic "Color pages":
+    - button "Previous colors" [disabled]
+    - generic: 1 / 2
+    - button "Next colors"
+  - region "Color observation":
+    - paragraph: "Light gray · #f5e6ea"
+    - generic: Observation (6 total)
+    - combobox "Observation (6 total)":
+      - option "1. palette.synthetic.invalid/base.css · medium confidence · outside filters"
+      - option "2. palette.synthetic.invalid/base.css · medium confidence · outside filters"
+      - option "3. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters"
+      - option "4. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters"
+      - option "5. palette.synthetic.invalid/conditional.css · medium confidence" [selected]
+      - option "6. palette.synthetic.invalid/conditional.css · medium confidence"
+    - paragraph: palette.synthetic.invalid/conditional.css · UI observation
+    - paragraph: Synthetic conditional observation. Theme or conditional applicability unresolved. Presence and repetition do not establish ownership or a brand role.
+    - 'button "Use #f5e6ea for surface"'
+    - generic "Observation provenance"
+  - generic "Evidence warnings and sources"
+  - group "Visual direction":
+    - generic: Visual direction
+    - radio "Clear Sans type, framed product, direct hierarchy" [checked]
+    - generic: Clear
+    - text: Sans type, framed product, direct hierarchy
+    - radio "Editorial Serif type, warm palette, editorial hierarchy"
+    - generic: Editorial
+    - text: Serif type, warm palette, editorial hierarchy
+  - generic: Accent override (hex)
+  - textbox "Accent override (hex)":
+    - /placeholder: Optional — use direction default
+  - group "Prepared brief":
+    - generic: Prepared brief
+    - paragraph: Load a local JSON brief, review the populated fields, then select the packshot and confirm the exact inputs below.
+    - generic: Prepared brief JSON
+    - button "Prepared brief JSON"
+    - status: Prepared brief loaded. Review every field, select the packshot, and confirm the exact inputs below.
+  - group "Product and offer":
+    - generic: Product and offer
+    - generic: Brand name
+    - textbox "Brand name":
+      - /placeholder: Optional — neutral preview if blank
+      - text: Rose Supply
+    - generic: Product name
+    - textbox "Product name": Rose Supply ceramic cup
+    - generic: Audience
+    - textbox "Audience":
+      - /placeholder: Who is this campaign for?
+      - text: Home coffee drinkers
+    - generic: Campaign objective
+    - textbox "Campaign objective":
+      - /placeholder: What should the page achieve?
+      - text: Present the exact bundle and purchase destination
+    - paragraph: Optional. Used to choose the page opening; never rendered.
+    - generic: Offer
+    - textbox "Offer": Cup + lid, €24 · offer ends 30 November 2026
+    - paragraph: Automatic headlines only shorten a simple discount, optionally dated. Any other terms keep the product name, and the exact offer stays beside the CTA.
+    - generic: Destination URL
+    - textbox "Destination URL": https://rose.example/products/rose
+    - paragraph: A direct URL stays unconfirmed until you check the exact destination. Amazon search and placeholder URLs stay provisional after confirmation.
+  - group "Approved facts":
+    - generic: Approved facts
+    - paragraph: The offer page shows 2–3. All entered facts stay together.
+    - button "Add fact"
+    - generic: Label
+    - textbox "Label": Capacity
+    - generic: Approved value
+    - textbox "Approved value": 350 ml
+    - button "Remove" [disabled]
+    - generic: Label
+    - textbox "Label": Material
+    - generic: Approved value
+    - textbox "Approved value": Glazed ceramic
+    - button "Remove" [disabled]
+  - group "Packshot":
+    - generic: Packshot
+    - generic: Product image
+    - button "Product image"
+    - paragraph: packshot.png · 600 × 700 · SHA-256 recorded
+    - generic: Alt text
+    - textbox "Alt text": Synthetic Rose Supply ceramic cup packshot
+    - generic: Usage rights
+    - textbox "Usage rights": Synthetic fixture created locally; approved for this local test.
+  - group "Operator confirmations":
+    - generic: Operator confirmations
+    - checkbox "I confirm these exact offer terms:Cup + lid, €24 · offer ends 30 November 2026"
+    - text: "I confirm these exact offer terms:"
+    - strong: Cup + lid, €24 · offer ends 30 November 2026
+    - checkbox "I confirm this exact destination:https://rose.example/products/rose"
+    - text: "I confirm this exact destination:"
+    - strong: https://rose.example/products/rose
+    - checkbox "I confirm these media rights:Synthetic fixture created locally; approved for this local test."
+    - text: "I confirm these media rights:"
+    - strong: Synthetic fixture created locally; approved for this local test.
+  - paragraph: Commercial and media check
+  - paragraph: Current intake values
+  - paragraph: Offer
+  - paragraph: Offer provisional
+  - paragraph: Cup + lid, €24 · offer ends 30 November 2026
+  - paragraph: Destination
+  - paragraph: Direct URL · unconfirmed
+  - paragraph: https://rose.example/products/rose
+  - paragraph: Media
+  - paragraph: Media rights provisional
+  - paragraph: Synthetic fixture created locally; approved for this local test.
+  - paragraph: Local session only. Text fields are restored after refresh; the packshot and local approval are not.
+  - button "Open Campaign Lab preview"
+- region "Notifications alt+T"
+- button "Open Next.js Dev Tools":
+- alert

@@ -1,0 +1,17 @@
+{
+  "applyDisabled": false,
+  "inspectedId": "8961de6fff1fc4f57130bd78efbbea4791a98b81be2806dfc97f434a09799fee",
+  "inspectedLabel": "1. palette.synthetic.invalid/base.css · medium confidence",
+  "pendingRoles": "accent#6b2340Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+  "provenance": "White · #fff8fa\n\nObservation (9 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/base.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters\n5. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters\n6. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters\n7. palette.synthetic.invalid/conditional.css · medium confidence · outside filters\n8. palette.synthetic.invalid/conditional.css · medium confidence · outside filters\n9. palette.synthetic.invalid/conditional.css · medium confidence · outside filters\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #fff8fa for page\nObservation provenance",
+  "query": "",
+  "statuses": [
+    "Selected #6b2340 for accent. Apply after review.",
+    "1–12 of 23 colors · 120 observations"
+  ],
+  "viewport": {
+    "documentWidth": 360,
+    "height": 812,
+    "width": 375
+  }
+}

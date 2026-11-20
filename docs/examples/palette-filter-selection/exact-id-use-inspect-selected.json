@@ -1,0 +1,17 @@
+{
+  "applyDisabled": false,
+  "inspectedId": "d99add5313115f0d416d72a34e938dcf83d1eb3af3310040f7cffaaa25324972",
+  "inspectedLabel": "3. palette.synthetic.invalid/dark-theme.css · medium confidence",
+  "pendingRoles": "accent#6b2340Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+  "provenance": "Dark pink · #6b2340\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/dark-theme.css · UI observation\n\nSynthetic dark-theme observation. Theme or conditional applicability unresolved. Presence and repetition do not establish ownership or a brand role.\n\nUse #6b2340 for accent\nObservation provenance",
+  "query": "",
+  "statuses": [
+    "Selected #6b2340 for accent. Apply after review.",
+    "1–12 of 23 colors · 120 observations"
+  ],
+  "viewport": {
+    "documentWidth": 1425,
+    "height": 900,
+    "width": 1440
+  }
+}

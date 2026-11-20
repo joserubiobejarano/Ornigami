@@ -1,0 +1,91 @@
+{
+  "sourceFreeze": "75eb49885d92518e63804d8919ca72f0e0748f54",
+  "zipSha256": "22477b78eb7a7f9f5d566725cbcff0ed25b0bd5e9b53159a70adf438339838da",
+  "zipBytes": 281642,
+  "receiptSha256": "6099478844eceea9b2a1d8a628d7c8fb20e7876175544ace1b236d8f41ce02b6",
+  "approval": {
+    "scope": "local-preview",
+    "revision": "1af95a2d9eae59ba",
+    "approvedAt": "2026-11-20T01:36:00.778Z",
+    "renderedRevision": "1af95a2d9eae59ba"
+  },
+  "candidateLinks": [
+    {
+      "role": "accent",
+      "inspectedAndSelectedCandidateId": "d99add5313115f0d416d72a34e938dcf83d1eb3af3310040f7cffaaa25324972",
+      "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+      "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+      "sourceUrl": "https://palette.synthetic.invalid/dark-theme.css",
+      "originalValue": "#6b2340ff",
+      "value": "#6b2340",
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "sourceIssues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ]
+    },
+    {
+      "role": "page",
+      "inspectedAndSelectedCandidateId": "8961de6fff1fc4f57130bd78efbbea4791a98b81be2806dfc97f434a09799fee",
+      "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+      "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+      "sourceUrl": "https://palette.synthetic.invalid/base.css",
+      "originalValue": "#fff8faff",
+      "value": "#fff8fa",
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "sourceIssues": []
+    },
+    {
+      "role": "surface",
+      "inspectedAndSelectedCandidateId": "fe9949cfe2c92626b62d28cad812ae4ce94e0d87cf64993b5c16388e822d58c4",
+      "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+      "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+      "sourceUrl": "https://palette.synthetic.invalid/conditional.css",
+      "originalValue": "#f5e6eaff",
+      "value": "#f5e6ea",
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "sourceIssues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ]
+    }
+  ],
+  "inspectedUsedReceiptLinkageExact": true,
+  "browserInteractionAssertions": "pass",
+  "pendingAndAppliedChoicesRetained": true,
+  "frozenCommercialInputsFactsAltRightsPackshotExact": true,
+  "packshotSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+  "filesVerified": 13,
+  "fontPrograms": {
+    "fonts/inter-e5a8ee9f.woff2": "fccca918fea40089dacadc7045861314d1a6bc91f1f323cc1eeb22ebcdb321b5",
+    "fonts/inter-ab4d98e5.woff2": "aebf2ab4a4ce6810d73c1ac7be7cafb4e5ec4cee2d6db5fb3e09691747ec4bd6",
+    "fonts/inter-a38474c2.woff2": "a2e2c783ca6f9c20486e81e72a279203e86730bbf8f01ff6a5ee9dbd09e1c271",
+    "fonts/inter-11f16cb1.woff2": "46dd4cdca58c26ae87cc6927657bf83b2e8abfc39ffd0ab176e301a8d28d22bf",
+    "fonts/inter-94affe31.woff2": "8db00ff46c67b22cda8bed865acf7077651cac8d2841d5b40980556b48961931",
+    "fonts/inter-5e86cbbe.woff2": "a28eb6d3ccb534ae0c94ca999371df024aab60b08c3c8a5720ee9e32fa0faaa2",
+    "fonts/inter-79e3e8a6.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+  },
+  "fontsStylesCSSAndLicensesByteIdenticalToPriorAcceptedExport": true,
+  "priorAcceptedZipSha256": "290c6fba1e262db273d8b3477d4ffdd520056e53e7393f066a09550ebe781c78",
+  "falseAuthorityFlagsPreserved": true,
+  "template": {
+    "id": "single-product-offer",
+    "version": "1.0.1",
+    "layout": "offer-led-one-photo",
+    "sections": [
+      "hero",
+      "hero-facts",
+      "close"
+    ]
+  },
+  "revisionIdentityVersion": 6
+}

@@ -1,0 +1,14 @@
+{
+  "applyDisabled": false,
+  "pendingRoles": "accent#6b2340Pendingpage#fff8faPendingsurface#f5e6eaPending",
+  "query": "no-match",
+  "statuses": [
+    "Palette applied. Generate, inspect and approve a fresh preview before export.",
+    "No colors match. Clear filters or try another search. · 120 observations"
+  ],
+  "viewport": {
+    "documentWidth": 360,
+    "height": 812,
+    "width": 375
+  }
+}

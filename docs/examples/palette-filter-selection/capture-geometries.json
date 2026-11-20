@@ -1,0 +1,82 @@
+{
+  "after-exact-id.jpg": {
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "nativeJpegPixels": {
+      "width": 1425,
+      "height": 891
+    }
+  },
+  "after-explicit-outside.jpg": {
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "nativeJpegPixels": {
+      "width": 1425,
+      "height": 891
+    }
+  },
+  "after-source-mobile.jpg": {
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    },
+    "nativeJpegPixels": {
+      "width": 360,
+      "height": 780
+    }
+  },
+  "after-source.jpg": {
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "nativeJpegPixels": {
+      "width": 1425,
+      "height": 891
+    }
+  },
+  "before-exact-id.jpg": {
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "nativeJpegPixels": {
+      "width": 1425,
+      "height": 891
+    }
+  },
+  "before-source.jpg": {
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "nativeJpegPixels": {
+      "width": 1425,
+      "height": 891
+    }
+  },
+  "preview-desktop.jpg": {
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "nativeJpegPixels": {
+      "width": 1425,
+      "height": 891
+    }
+  },
+  "preview-mobile.jpg": {
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    },
+    "nativeJpegPixels": {
+      "width": 360,
+      "height": 780
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "base": "c6992856d3c17606bff9cbe469753fbb58ea1bf5",
+  "testedRuntime": "75eb49885d92518e63804d8919ca72f0e0748f54",
+  "runtimeHashes": {
+    "src/lib/campaign-lab/palette-browser.ts": {
+      "testedWorktreeSha256": "0d5792e7d6f19a87fa2e93ec4aa9a9e3a73ae368a5d4fc29ab474fecca0d2032",
+      "gitBlobSha256": "c433a42be93db14a242e6e46e766476023a2c3b9a7318d1a8c3f2c09a1c07081"
+    },
+    "src/components/campaign-lab/brand-evidence-review.tsx": {
+      "testedWorktreeSha256": "c8423a9f40d93541d8a49881f7da26708f69135829c252dc436a966dc59eaff7",
+      "gitBlobSha256": "91b2f66650462c921456ed68aebe0091aaf7bb8111302f47c469019146a50431"
+    }
+  },
+  "unchangedGitObjects": {
+    "public": "f92a32bd2b16d96c4c05c6b5942a65b30e7aa713",
+    "tests/fixtures/palette-review": "abe45631bccf81d9c017aba468ac7afa37e66748",
+    "src/lib/campaign-lab/brand-review.ts": "1f44fc6d1871d05ac3833decb3dc28e6970acd97",
+    "src/lib/campaign-lab/brand-url-client.ts": "4a7637d3c6748f4e97d002c62bc58cbc530c9491",
+    "src/lib/campaign-lab/brand-import": "2e7085ee42af895633a67e697738cbe0d0bb611b",
+    "src/lib/campaign-lab/export.ts": "efa4be5e8835c43c07708d55efdc4faf4afbcb58",
+    "src/lib/campaign-lab/template.ts": "084ec087afea48f84675a878b7db6d38740fead6",
+    "src/lib/campaign-lab/generation": "d99ee64a3b1cc98e48206d13aafe0f7be8445f21",
+    "src/lib/campaign-lab/visual-directions.ts": "e9ce22508816563464d0c086a69adc86a4a67741",
+    "scripts/support": "1cda4b8104d1adc3077f6c79c627fe1f8546eb46",
+    "scripts/offline-qualify.mjs": "41e92c857f6e4e00e2d5f8147f12e0ea0609a715",
+    "package.json": "b397db3f16d197461a6215f0d31d60ff9cfa509b",
+    "package-lock.json": "adf6efff9b051fb927a3971a74e996525e77fbcc"
+  }
+}

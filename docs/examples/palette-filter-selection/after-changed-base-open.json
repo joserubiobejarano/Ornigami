@@ -1,0 +1,17 @@
+{
+  "applyDisabled": true,
+  "inspectedId": "7382738f2dbc91af45a9d71364f3b7c19ae3e775903390804494032a2a6d36b5",
+  "inspectedLabel": "1. palette.synthetic.invalid/base.css · medium confidence",
+  "pendingRoles": "accent#2f5d4aDirection defaultpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+  "provenance": "Dark pink · #6b2340\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters\n4. palette.synthetic.invalid/dark-theme.css · medium confidence · outside filters\n5. palette.synthetic.invalid/conditional.css · medium confidence · outside filters\n6. palette.synthetic.invalid/conditional.css · medium confidence · outside filters\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #6b2340 for accent\nObservation provenance",
+  "query": "",
+  "statuses": [
+    "Saved evidence loaded.",
+    "1–12 of 23 colors · 120 observations"
+  ],
+  "viewport": {
+    "documentWidth": 1425,
+    "height": 900,
+    "width": 1440
+  }
+}

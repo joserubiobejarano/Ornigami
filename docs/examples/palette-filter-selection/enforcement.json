@@ -1,0 +1,68 @@
+{
+  "applicationGuard": {
+    "dev": {
+      "initializedPids": [
+        4832,
+        6556,
+        9952,
+        19028,
+        28560,
+        38284
+      ],
+      "allInitializedClosed": true,
+      "denied": {
+        "fetch:https: registry.npmjs.org": 2
+      },
+      "socketDelegations": {}
+    },
+    "build": {
+      "initializedPids": [
+        7560,
+        10696,
+        11596,
+        12672,
+        13036,
+        15292,
+        15768,
+        16448,
+        16564,
+        17296,
+        18184,
+        18980,
+        24128,
+        24936,
+        26948,
+        29124,
+        29988,
+        32472,
+        34404,
+        36476,
+        39772,
+        42380
+      ],
+      "allInitializedClosed": true,
+      "denied": {
+        "https.request o1.ingest.sentry.io": 3
+      },
+      "socketDelegations": {}
+    },
+    "node": {
+      "initializedPids": [
+        11268,
+        13828,
+        17488,
+        43992,
+        44316
+      ],
+      "allInitializedClosed": true,
+      "denied": {},
+      "socketDelegations": {
+        "127.0.0.1": 9
+      }
+    }
+  },
+  "testFailSafeProcesses": 44,
+  "physicalFallthrough": 0,
+  "unexpectedPhysicalCalls": 0,
+  "limit": "Trusted Node/JS enforcement, not an OS firewall or adversarial native-code sandbox."
+}

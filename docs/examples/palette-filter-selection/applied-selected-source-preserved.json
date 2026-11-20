@@ -1,0 +1,17 @@
+{
+  "applyDisabled": false,
+  "inspectedId": "fe9949cfe2c92626b62d28cad812ae4ce94e0d87cf64993b5c16388e822d58c4",
+  "inspectedLabel": "5. palette.synthetic.invalid/conditional.css · medium confidence",
+  "pendingRoles": "accent#6b2340Pendingpage#fff8faPendingsurface#f5e6eaPending",
+  "provenance": "Light gray · #f5e6ea\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/conditional.css · UI observation\n\nSynthetic conditional observation. Theme or conditional applicability unresolved. Presence and repetition do not establish ownership or a brand role.\n\nUse #f5e6ea for surface\nObservation provenance",
+  "query": "",
+  "statuses": [
+    "Palette applied. Generate, inspect and approve a fresh preview before export.",
+    "1–12 of 23 colors · 120 observations"
+  ],
+  "viewport": {
+    "documentWidth": 360,
+    "height": 812,
+    "width": 375
+  }
+}

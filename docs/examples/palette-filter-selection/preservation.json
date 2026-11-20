@@ -1,0 +1,9 @@
+{
+  "retiredRecordsVerified": 6,
+  "failedBodiesVerified": 19,
+  "failedBodyBytes": 373051,
+  "consumedClaimUnchanged": true,
+  "newAuthorityRecordOrClaim": false,
+  "priorAcceptedExportRetainedAt": "docs/examples/palette-review/rose-final-approved.zip",
+  "priorZipSha256": "290c6fba1e262db273d8b3477d4ffdd520056e53e7393f066a09550ebe781c78"
+}

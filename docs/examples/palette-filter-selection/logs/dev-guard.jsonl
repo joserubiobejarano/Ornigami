@@ -1,0 +1,14 @@
+{"time":"2026-11-20T01:27:28.305Z","pid":6556,"ppid":40048,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:27:28.569Z","pid":6556,"ppid":40048,"event":"child","method":"fork","file":"C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\server\\lib\\start-server.js"}
+{"time":"2026-11-20T01:27:28.625Z","pid":19028,"ppid":6556,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:27:30.413Z","pid":19028,"ppid":6556,"event":"denied","boundary":"fetch:https:","host":"registry.npmjs.org"}
+{"time":"2026-11-20T01:27:30.730Z","pid":19028,"ppid":6556,"event":"denied","boundary":"fetch:https:","host":"registry.npmjs.org"}
+{"time":"2026-11-20T01:27:30.754Z","pid":19028,"ppid":6556,"event":"child","method":"spawn","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-20T01:27:30.811Z","pid":28560,"ppid":19028,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:28:33.371Z","pid":19028,"ppid":6556,"event":"child","method":"spawnSync","file":"C:\\Program Files\\nodejs\\node.exe"}
+{"time":"2026-11-20T01:28:33.470Z","pid":4832,"ppid":19028,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:28:41.464Z","pid":19028,"ppid":6556,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:29:02.951Z","pid":19028,"ppid":6556,"event":"child","method":"fork","file":"C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js"}
+{"time":"2026-11-20T01:29:03.018Z","pid":38284,"ppid":19028,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
+{"time":"2026-11-20T01:29:04.069Z","pid":19028,"ppid":6556,"event":"child","method":"fork","file":"C:\\Users\\joser\\.local\\ornigami-campaign-lab-canary-execution\\node_modules\\next\\dist\\compiled\\jest-worker/processChild.js"}
+{"time":"2026-11-20T01:29:04.120Z","pid":9952,"ppid":19028,"event":"initialized","preload":"C:\\Users\\joser\\.local\\ornigami-palette-filter-selection\\scripts\\support\\offline-guard.cjs","sourceWindow":"closed","nativeBackendAvailable":true}
