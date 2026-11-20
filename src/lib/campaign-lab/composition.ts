@@ -3,7 +3,7 @@ import type { ApprovedAsset } from "./types.ts";
 export type OfferComposition = "direction-default" | "product-focus";
 export type CampaignCompositionPresentation = {
   id: "product-focus";
-  version: "1.0.0";
+  version: "1.1.0";
   narrowOrder: "headline-product-offer-action-facts";
   containedPackshot: boolean;
 };
@@ -23,7 +23,7 @@ export function resolveCampaignComposition(
 ): CampaignCompositionPresentation | undefined {
   if (parseOfferComposition(brief.composition) === "direction-default") return undefined;
   return {
-    id: "product-focus", version: "1.0.0",
+    id: "product-focus", version: "1.1.0",
     narrowOrder: "headline-product-offer-action-facts",
     containedPackshot: asset.role === "product-hero" && (asset.imageFit ?? "contain") === "contain",
   };

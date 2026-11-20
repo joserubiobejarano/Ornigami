@@ -91,6 +91,36 @@ test("rendered colour, type, spacing, radii, treatment, order, wordmark, and ima
   }
 });
 
+test("reviewed offer emphasis is exact and participates in revision identity", () => {
+  const date = base.brief.offer.slice(base.brief.offer.indexOf("27"));
+  const amount = "20%";
+  for (const offerPrice of [amount, date]) {
+    const brief = { ...base.brief, offerPrice };
+    const identity = buildDraftRevisionIdentity(
+      brief,
+      base.draft,
+      base.asset,
+      base.theme,
+    );
+    assert.equal(identity.appearance.highlightedPrice, offerPrice);
+    assert.notEqual(
+      calculateDraftRevision(brief, base.draft, base.asset, base.theme),
+      base.revision,
+    );
+  }
+
+  const mismatch = { ...base.brief, offerPrice: "not in the offer" };
+  assert.equal(
+    buildDraftRevisionIdentity(
+      mismatch,
+      base.draft,
+      base.asset,
+      base.theme,
+    ).appearance.highlightedPrice,
+    null,
+  );
+});
+
 test("non-rendered review notes and unused fact metadata do not change the revision", () => {
   const briefWithReviewNotes = {
     ...base.brief,

@@ -351,6 +351,8 @@ export type CampaignFormValues = {
   audience?: string;
   objective?: string;
   offer: string;
+  /** Exact reviewed substring of `offer`; the editor never infers a price. */
+  offerPrice?: string;
   destinationUrl: string;
   assetId: string;
   openingFocus?: string;
@@ -440,6 +442,7 @@ export type ValidationField =
   | "audience"
   | "objective"
   | "offer"
+  | "offerPrice"
   | "destinationUrl"
   | "assetId"
   | "openingFocus"

@@ -39,8 +39,8 @@ async function loadCampaignPage() {
       'function PreviewImage(props) { return React.createElement("img", { src: props.src, alt: props.alt, width: props.width, height: props.height, "data-preview-image": "stub" }); }',
     )
     .replace(
-      'import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";',
-      'function findApprovedOfferPrice(offer, approvedPrice) { const price = approvedPrice?.trim(); if (!price) return null; const start = offer.indexOf(price); if (start < 0) return null; return { start, end: start + price.length, text: price }; }',
+      /import \{\s*findApprovedOfferPrice,\s*shouldEmphasizeOffer,\s*\} from "@\/lib\/campaign-lab\/offer-emphasis";/,
+      'function findApprovedOfferPrice(offer, approvedPrice) { const price = approvedPrice?.trim(); if (!price) return null; const start = offer.indexOf(price); if (start < 0) return null; return { start, end: start + price.length, text: price }; } function shouldEmphasizeOffer(approvedPrice, tokenEnabled) { return Boolean(tokenEnabled) || Boolean(approvedPrice?.trim()); }',
     )
     .replace(
       /import \{[^}]*\} from "@\/lib\/campaign-lab\/presentation";/,
@@ -102,6 +102,48 @@ test("product focus renders headline, image, offer, action and facts in DOM orde
     assert.doesNotMatch(markup, /class="[^"]*productPackshot/);
     assert.match(markup, /data-composition="product-focus"/);
   }
+});
+
+test("reviewed offer emphasis wraps only the exact approved substring", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const built = buildCampaignPreview(
+    fixture,
+    { ...createFormValues(fixture), composition: "product-focus" },
+    BASE_CATALOG,
+  );
+  assert.equal(built.ok, true);
+  if (!built.ok) return;
+  const base = built.preview;
+  const { CampaignPage, React, renderToStaticMarkup } = await loadCampaignPage();
+
+  const render = (offerPrice: string | undefined) =>
+    renderToStaticMarkup(
+      React.createElement(CampaignPage, {
+        brief: {
+          ...base.brief,
+          offer: "30% off, was $10, now $7.50",
+          offerPrice,
+        },
+        draft: base.draft,
+        asset: base.asset,
+        theme: base.theme,
+        headingId: "emphasis-heading",
+        imageRevision: base.revision,
+        imageStatus: "loaded",
+        imageAttempt: 0,
+        onImageStateChange() {},
+      }),
+    );
+
+  const exact = render("$7.50");
+  assert.match(exact, /data-role="offer-emphasis">\$7\.50<\/span>/);
+  assert.match(exact, /30% off, was \$10, now /);
+  assert.doesNotMatch(exact, /data-role="offer-emphasis">\$10</);
+
+  const absent = render(undefined);
+  assert.doesNotMatch(absent, /data-role="offer-emphasis"/);
+  const mismatch = render("$8.00");
+  assert.doesNotMatch(mismatch, /data-role="offer-emphasis"/);
 });
 
 test("actual CampaignPage product-label markup follows shared whitespace normalization", async () => {

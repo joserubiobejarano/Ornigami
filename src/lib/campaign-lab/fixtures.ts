@@ -604,6 +604,7 @@ export function createFormValues(
     audience: fixture.brief.audience,
     objective: fixture.brief.objective,
     offer: fixture.brief.offer,
+    offerPrice: fixture.brief.offerPrice,
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
     openingFocus: openingFocusForFormat(fixture, format),
@@ -635,6 +636,10 @@ export function createCampaignBrief(fixture: CampaignFixture, values: CampaignFo
         ? optionalCampaignText(values.objective)
         : optionalCampaignText(fixture.brief.objective),
     offer: values.offer.trim(),
+    offerPrice:
+      values.offerPrice !== undefined
+        ? optionalCampaignText(values.offerPrice)
+        : fixture.brief.offerPrice,
     destinationUrl: values.destinationUrl.trim(),
     assetId: values.assetId,
     copy: opening?.copy ?? fixture.brief.copy,

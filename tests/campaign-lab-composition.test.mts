@@ -62,7 +62,7 @@ test("composition changes revision while typography, commercial inputs, assets a
   assert.deepEqual(focused.preview.theme, defaulted.preview.theme);
   assert.deepEqual(focused.preview.asset, defaulted.preview.asset);
   assert.equal(focused.preview.brief.offer, brief.offer);
-  assert.equal(focused.preview.composition?.version, "1.0.0");
+  assert.equal(focused.preview.composition?.version, "1.1.0");
   const p=focused.preview;
   const identity=buildDraftRevisionIdentity(p.brief,p.draft,p.asset,p.theme);
   assert.equal(identity.composition?.containedPackshot,true);

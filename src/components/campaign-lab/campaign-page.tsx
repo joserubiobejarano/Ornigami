@@ -12,7 +12,10 @@ import type {
   PreviewImageEvent,
   PreviewImageStatus,
 } from "@/lib/campaign-lab/editor";
-import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";
+import {
+  findApprovedOfferPrice,
+  shouldEmphasizeOffer,
+} from "@/lib/campaign-lab/offer-emphasis";
 import {
   showsProductLabel,
   shouldShowClose,
@@ -82,7 +85,9 @@ function Offer({
   const content = price ? (
     <>
       {offer.slice(0, price.start)}
-      <span className={styles.offerPrice}>{price.text}</span>
+      <span className={styles.offerPrice} data-role="offer-emphasis">
+        {price.text}
+      </span>
       {offer.slice(price.end)}
     </>
   ) : (
@@ -134,7 +139,10 @@ export function CampaignPage({
   const isProductSecond = Boolean(composition) || tokens.mobileHeroOrder === "product-second";
   const usesBlendedImage = Boolean(tokens.imageBlend && tokens.imageBlend !== "normal");
   const usesEditorialOffer = tokens.offerStyle === "editorial";
-  const usesPriceEmphasis = Boolean(tokens.offerPriceEmphasis);
+  const usesPriceEmphasis = shouldEmphasizeOffer(
+    brief.offerPrice,
+    tokens.offerPriceEmphasis,
+  );
   const showProductLabel = showsProductLabel(brief, draft);
   const showClose = shouldShowClose(brief, draft);
 
@@ -226,6 +234,7 @@ export function CampaignPage({
         usesBlendedImage ? styles.blendedImage : null,
         usesEditorialOffer ? styles.offerEditorial : null,
         isProductSecond ? styles.productSecond : null,
+        composition ? styles.productFocus : null,
         composition?.containedPackshot ? styles.productPackshot : null,
       ].join(" ")}
       style={style}
