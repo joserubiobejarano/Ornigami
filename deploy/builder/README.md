@@ -1,20 +1,25 @@
-# Builder-only Linux packaging
+# Builder-only Linux packaging and runtime qualification
 
-Status: packaging prepared from `7b8674358d5421c589bea22f55167276f4d391ec`.
-Linux execution is **pending** because this workstation has no Docker, Podman,
-or WSL engine. Sessions 1 and 2 own application behavior; this directory owns
-image packaging and local runtime checks only.
+Status: packaging and the qualification harness are prepared on
+`codex/ornigami-builder-deploy-20261120` from `5a5db54`, with implementation
+commit `5a29d04`. **Linux execution is pending**: this workstation has no
+Docker, Podman, nerdctl or WSL engine. No image was built, pushed or deployed.
+Sessions 1 and 2 own application behavior; this directory owns image packaging,
+the supported operator path and runtime qualification.
 
-Final qualification must use the **merged candidate** with a clean worktree.
-Do not reuse an image built from the review/packaging branch after the candidate
-changes.
+Final qualification must use the **merged candidate** with a clean worktree. Do
+not reuse an image built from an older review or packaging branch.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `Dockerfile` | Builder-only distroless image, non-root UID/GID 1000, `/data/builder` volume, builder health check |
-| `qualify-linux.sh` | Reproducible Linux build and runtime assertions; exits `2` and prints the command plan when no engine exists |
+| `Dockerfile` | Builder-only distroless image, non-root UID/GID 1000, `/data/builder` volume, builder health check, packaged operator CLI |
+| `qualify-linux.sh` | Run-scoped Linux build/runtime qualification; exits `2` and prints the command plan when no engine exists |
+| `qualify-http.mjs` | Read-only HTTP journey helper mounted into the runtime container |
+| `qualify-seed.mjs` | Qualification-only synthetic reservation and stale-lock fixture, mounted read-only into a one-shot container |
+| `operator.sh` | Supported operator CLI wrapper: same image, no network, same UID, same persistent volume and store host id |
+| `tests/stub-engine.sh` | Local rerun-safety self-test engine (never builds or runs a container) |
 
 ## Image design
 
@@ -31,8 +36,62 @@ changes.
   the legacy `/robots.txt` health check; the builder runtime intentionally
   returns `404` for legacy paths.
 - Image labels include the exact `org.opencontainers.image.revision`,
-  `org.ornigami.runtime=builder`, `org.ornigami.single-replica=true`, and the
+  `org.ornigami.runtime=builder`, `org.ornigami.single-replica=true`,
+  `org.ornigami.operator-cli=/app/scripts/builder-invite-operator.mjs` and the
   public origin.
+- The image also carries the operator CLI and its two source modules
+  (`identity-store.ts`, `usage-ledger.ts`), which use Node built-ins only. The
+  build stage smoke-tests `lock-status` so a broken operator import fails the
+  image build. `/app/qualify` is an empty image-owned directory used as the
+  read-only mount point for the qualification helpers; it is not part of the
+  web runtime.
+
+## Run-scoped rerun safety
+
+Every invocation derives a `RUN_ID` and refuses collisions. It never deletes or
+reuses:
+
+- an existing evidence directory (`EVIDENCE_DIR`, `BACKUP_DIR`, `RESTORE_DIR`,
+  `STORE_EXPORT_DIR`);
+- an existing image tag, container name, network or volume;
+- a bind store directory.
+
+Defaults are run-scoped:
+
+```text
+EVIDENCE_DIR      .local/builder-linux-qualification/runs/<RUN_ID>
+IMAGE             ornigami-builder:qualify-<RUN_ID>
+CONTAINER         ornigami-builder-qualify-<RUN_ID>
+RESTORE_CONTAINER ornigami-builder-qualify-<RUN_ID>-restore
+CLOSED_CONTAINER  ornigami-builder-qualify-<RUN_ID>-closed
+NETWORK           ornigami-builder-qualify-net-<RUN_ID>
+STORE_VOLUME      ornigami-builder-store-<RUN_ID>
+RESTORE_VOLUME    ornigami-builder-restore-<RUN_ID>
+```
+
+Every resource this run creates carries
+`org.ornigami.qualify.run=<RUN_ID>`. Cleanup removes a container, network,
+volume or image only after re-reading that label. A pre-existing resource
+without the label is left untouched even if a caller supplied its name.
+
+`KEEP_ON_FAILURE=1` (default) stops this run's containers but retains them,
+the network and the volumes for inspection. `KEEP_VOLUMES=1` (default) retains
+the run's named volumes after success; set `KEEP_VOLUMES=0` to remove only the
+run-owned volumes. `REMOVE_IMAGE=1` removes only an image labelled with this
+run id. Evidence and backups are never removed by a later run.
+
+Locally runnable rerun-safety check:
+
+```bash
+node scripts/builder-linux-qualify-self-test.mjs
+```
+
+It runs `qualify-linux.sh` in `QUALIFY_SELF_TEST=1` mode with a stub engine and
+proves that an existing evidence directory, network, volume and container are
+refused and left intact, that a normal run removes only its own network and
+container, that `KEEP_VOLUMES=0` removes only its own volume, and that the
+operator wrapper prints the correct isolated command. It does not build or run
+the image.
 
 ## Build
 
@@ -44,6 +103,7 @@ APP_URL="https://builder-staging.example"   # must equal the runtime origin
 
 docker build -f deploy/builder/Dockerfile \
   --platform linux/amd64 \
+  --label org.ornigami.qualify.run="candidate-build" \
   --build-arg NEXT_PUBLIC_APP_URL="$APP_URL" \
   --build-arg ORNIGAMI_SOURCE_SHA="$SOURCE_SHA" \
   -t ornigami-builder:"${SOURCE_SHA:0:12}" .
@@ -67,61 +127,180 @@ APP_URL="http://127.0.0.1:3100" \
 ./deploy/builder/qualify-linux.sh
 ```
 
+If the runner uses Podman, set `ENGINE=podman`. If it is root, keep the
+environment variables (`sudo -E`). The default store mode is a **named
+persistent volume**. Bind mode is still available for a non-final smoke:
+
+```bash
+STORE_MODE=bind STORE_DIR=/absolute/new/empty/dir \
+  SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
+```
+
 The script:
 
 1. rejects a dirty worktree unless `ALLOW_DIRTY=1` is explicitly set for a
    non-final smoke;
-2. requires `HEAD == SOURCE_SHA`;
-3. builds the pinned image and verifies the revision/single-replica labels,
-   `1000:1000` user, and builder health check;
-4. runs the container with `--read-only`, an internal (no-egress) network, and
-   only these writes:
-   - `/data/builder` — persistent store (bind mount in the local script;
-     named volume in staging);
+2. requires `HEAD == SOURCE_SHA` and 40-hex `SOURCE_SHA`;
+3. refuses every run-id/path/image/container/network/volume collision;
+4. builds the pinned image and verifies the revision, single-replica,
+   operator-cli and run labels, `1000:1000` user, and builder health check;
+5. creates an internal (no-egress) network and a **named persistent volume**
+   labelled with the run id;
+6. runs one invite container with `--read-only`, the volume at `/data/builder`,
+   UID/GID 1000, and only these writes:
+   - `/data/builder` — persistent store;
    - `/tmp` — tmpfs;
    - `/app/builder-runtime/.next/cache` — tmpfs;
    - `/home/node` — tmpfs;
-5. verifies UID/GID 1000, store file `0600`/UID 1000, `/builder` `404`,
-   session `401`, home `200`, and that `/app` is not writable;
-6. verifies the container cannot reach `https://example.com`;
-7. verifies no provider/database/billing/mail/Sentry environment variables are
-   present;
-8. restarts the container and checks the store survives;
-9. stops the container, copies the store, restores it into a **fresh
-   container**, and checks health, ownership, and store hash;
-10. stops the fresh container and starts the same image with
-    `BUILDER_RUNTIME_MODE=closed` against the same store, proving the
-    stop-or-close rollback preserves usage/identity records and leaves
-    `/builder` closed.
+7. verifies UID/GID 1000, store file `0600`/UID 1000, `/builder` `404`, session
+   `401`, home `200`, and that `/app` is not writable;
+8. verifies the container cannot reach `https://example.com`;
+9. verifies no provider/database/billing/mail/Sentry environment variables;
+10. exercises the **supported operator CLI path** in the packaged image:
+    `lock-status` reports the same store host id, then synthetic invites are
+    issued and listed;
+11. redeems two synthetic invites over HTTP, revokes identity B's session, and
+    seeds one unresolved reservation for identity A with the packaged
+    identity/usage modules;
+12. restarts the same container (one replica; no overlap) and checks:
+    - identity A's valid session still returns `200`;
+    - identity B's revoked session returns `401`;
+    - identity A's unresolved reservation still blocks generation with `429`
+      `subject_concurrency`;
+    - the store hash and the usage record are unchanged;
+13. stops the container, backs up the volume, creates a **fresh volume**, copies
+    the backup into it, and starts a **fresh container**; repeats the session,
+    revocation and reservation checks and verifies the store hash;
+14. on the restore copy only, injects a foreign-host stale lock, proves
+    `recover-lock` refuses without confirmation and with a wrong token, then
+    proves the observed token plus `--confirm-no-writers` quarantines the lock
+    without changing the store and that `list` still reads it;
+15. starts the same image with `BUILDER_RUNTIME_MODE=closed` against the
+    authoritative volume, proves home `200`, `/builder` `404`, session `401`,
+    the store hash is unchanged and all subject/session/usage records are
+    preserved;
+16. exports the final store and writes `results.txt` + `checks.tsv`.
 
-Evidence is written to `.local/builder-linux-qualification/` (`results.txt`,
-store, backup, restore). Do not commit `.local/`.
+Evidence is written to the run directory (`results.txt`, `checks.tsv`,
+`qualify.log`, `operator.log`, `http.log`, `backup/`, `store-export/`,
+`list-before-closed.json`, `list-after-closed.json`). Do not commit `.local/`.
 
 If no engine is present, the script prints the equivalent commands and exits
 `2`. That is the current status on this workstation.
 
-## Read-only-root writable paths
+## Supported operator CLI path
 
-| Path | Type | Why |
-| --- | --- | --- |
-| `/data/builder` | persistent volume | `identity-store.json` and transient `identity-store.lock`; single writer |
-| `/tmp` | tmpfs, noexec/nosuid | Node/Next temporary files |
-| `/app/builder-runtime/.next/cache` | tmpfs, noexec/nosuid | Next runtime cache if it writes one |
-| `/home/node` | tmpfs, noexec/nosuid | `HOME` compatibility; may be removable if Linux evidence shows no writes |
-| `/app` | read-only | application code and build output; must not be written |
+The image contains the operator CLI, so the supported path does not depend on
+the host Node version and always uses the same UID and volume as the runtime.
+Use the wrapper:
 
-Actual Linux execution must confirm this list. If the server fails to start or
-health-check under `--read-only`, inspect logs and add only the proven path to
-the documented tmpfs/volume set. Do not make the whole root writable to hide an
-unknown write.
+```bash
+BUILDER_OPERATOR_IMAGE="ornigami-builder:${SOURCE_SHA:0:12}" \
+BUILDER_OPERATOR_VOLUME="ornigami-builder-store" \
+BUILDER_RUNTIME_STORE_HOST_ID="ornigami-builder-store-v1" \
+  ./deploy/builder/operator.sh list --json
+```
 
-## Single replica
+The wrapper runs:
+
+```text
+docker run --rm --network none --read-only --tmpfs /tmp:... --user 1000:1000
+  --mount type=volume,src=<volume>,dst=/data/builder
+  -e BUILDER_RUNTIME_STORE_HOST_ID=<same value as the runtime>
+  <image> --experimental-strip-types /app/scripts/builder-invite-operator.mjs
+  <command> --store /data/builder ...
+```
+
+`BUILDER_OPERATOR_STORE=/absolute/host/dir` selects bind mode instead of a named
+volume. `--print-command` prints the exact engine command without running it.
+Supported commands are `issue`, `revoke-invite`, `revoke-session`,
+`revoke-subject`, `reconcile-usage`, `lock-status`, `recover-lock` and `list`.
+
+The operator is read/write only against the store volume. It has no network, no
+provider credentials and no application secrets. Do not run it concurrently
+with another writer except for the read-only `list`/`lock-status` commands; the
+store lock serializes writers, but the supported topology is one runtime writer
+plus short-lived operator processes.
+
+## Store host ID
+
+`BUILDER_RUNTIME_STORE_HOST_ID` is the stable logical host identity written into
+`identity-store.lock` and `identity-store.reap.lock` metadata. The default is the
+OS hostname, which changes when a container is replaced. **Set the same
+constant for the runtime, the operator wrapper and the seed/qualification
+helpers for the life of the volume**, for example:
+
+```text
+BUILDER_RUNTIME_STORE_HOST_ID=ornigami-builder-store-v1
+```
+
+Keep it stable across restarts, container recreation and volume replacement. A
+different value makes existing locks foreign and unprovable; it does not
+authorize automatic takeover. The host id is metadata only; it is not a secret
+and does not replace the lock token.
+
+## Safe lock recovery across process and container replacement
+
+Normal `docker stop` does not normally leave a store lock because locks are held
+only for the duration of one store transaction. Recovery is for a crash,
+`SIGKILL`, host-id change, corrupt owner metadata or a foreign volume. A stale
+runtime lock can look `live` after container replacement because a fresh
+container reuses low PIDs (often PID 1); do not rely on the automatic "same
+host + dead PID" reaper in that case. **Manual operator recovery is required.**
+
+Procedure:
+
+1. Stop **all** writers: remove the old runtime container and every operator
+   process. Do not run a replacement concurrently.
+2. Back up the entire store volume while stopped. Keep the backup private; it
+   contains identity/session hashes and usage metadata, not brief text.
+3. Inspect the locks with the packaged operator:
+
+   ```bash
+   BUILDER_OPERATOR_IMAGE=<image> \
+   BUILDER_OPERATOR_VOLUME=<volume> \
+   BUILDER_RUNTIME_STORE_HOST_ID=<same-as-runtime> \
+     ./deploy/builder/operator.sh lock-status --json
+   ```
+
+   Record the `token` (and `reapLock.metadata.token` if present), the `owner`
+   state and the store SHA-256.
+4. If `identity-store.json` is missing, corrupt or the wrong version, stop and
+   restore the last accepted backup. Do not recover locks around a bad store.
+5. Recover only the locks you observed:
+
+   ```bash
+   BUILDER_OPERATOR_IMAGE=<image> \
+   BUILDER_OPERATOR_VOLUME=<volume> \
+   BUILDER_RUNTIME_STORE_HOST_ID=<same-as-runtime> \
+     ./deploy/builder/operator.sh recover-lock \
+       --token <observed-lock-token> \
+       --confirm-no-writers \
+       [--reap-token <observed-reap-token>] --json
+   ```
+
+   Recovery requires the exact observed token and the explicit
+   `--confirm-no-writers` statement. It renames the lock(s) to timestamped
+   `*.recovered.*` quarantine files, never deletes them, and verifies that the
+   store hash did not change. If a successor lock appears, it refuses rather
+   than displacing it.
+6. Run `list --json` and confirm the synthetic/expected subjects, sessions and
+   usage records. Reconcile any `reserved`/`unknown` usage explicitly.
+7. Restart the runtime with the same `BUILDER_RUNTIME_STORE_HOST_ID` and verify
+   home `200`, anonymous `/builder` `404`, anonymous session `401`, and the
+   expected authenticated session/reservation state.
+
+Never delete or truncate `identity-store.json` to clear a lock or a usage limit.
+Never remove a quarantine file before the incident is reviewed. Do not copy a
+live lock file into a replacement volume.
+
+## Single replica and persistent volume
 
 `identity-store.json` is a local file with a process lock. It is not safe on a
-shared filesystem or across multiple replicas. The staging limit is **one
-running replica**, one writer, one dedicated read-write volume. Stop the old
-container before starting a replacement; do not run rolling overlap. Horizontal
-scaling requires a transactional shared ledger and a new review.
+shared filesystem or across multiple replicas. The supported topology is **one
+running replica, one writer, one dedicated read-write persistent volume**. Stop
+the old container before starting a replacement; do not run rolling overlap.
+Horizontal scaling requires a transactional shared ledger and a new review.
 
 ## Proxy and origin
 
@@ -156,8 +335,8 @@ No DNS, edge, staging, or account change is authorized by this file.
 
 Runtime has no provider, database, mail, payment, cron, or Sentry client. The
 expected policy is default-deny egress with only the reverse proxy path to the
-container. The local script uses an internal Docker/Podman network and proves a
-public HTTPS request fails.
+container. The script uses an internal Docker/Podman network and proves a public
+HTTPS request fails. The operator and seed helpers run with `--network none`.
 
 Build-time registry access is separate from runtime egress. Pin and pre-pull
 the base images and dependency toolchain on the authorized runner; do not add a
@@ -165,39 +344,33 @@ runtime network dependency to satisfy the build.
 
 ## Backup and restore into a fresh container
 
-Local bind-mount workflow (used by `qualify-linux.sh`):
+The qualification uses a named volume:
+
+```bash
+# Stop the runtime first. Do not copy a live store.
+docker run --rm --network none --user 1000:1000 \
+  --mount type=volume,src=<volume>,dst=/data/builder,readonly \
+  --mount type=bind,src=<private-backup-dir>,dst=/backup \
+  <image> -e 'const fs=require("fs");for(const f of fs.readdirSync("/data/builder"))fs.cpSync(`/data/builder/${f}`,`/backup/${f}`,{recursive:true})'
+```
+
+Start a **fresh** container with a **fresh** volume, copy the backup in while it
+is stopped, then start and verify the store hash, `0600`/UID 1000 ownership,
+home `200`, anonymous `/builder` `404`, anonymous session `401`, the valid
+session, the revoked session and the unresolved reservation. The qualification
+script performs this sequence and records the hashes.
+
+Bind-mount equivalent (replace the path with the run's bind store):
 
 ```bash
 docker stop ornigami-builder
 mkdir -p backup/store
-cp -a .local/builder-linux-qualification/store/. backup/store/
+cp -a <bind-store>/. backup/store/
 sha256sum backup/store/identity-store.json
-
-mkdir -p restore
-cp -a backup/store/. restore/
-chown -R 1000:1000 restore        # only when running as root
 ```
 
-Start a **fresh** container with `restore/` mounted at `/data/builder`, wait for
-health, and verify the store hash and `0600`/UID 1000 ownership. The evidence
-must show the restored container serving `/` `200`, anonymous `/builder` `404`,
-and anonymous session `401` before application-level session checks.
-
-Named-volume workflow for staging:
-
-```bash
-docker volume create ornigami-builder-store
-# run the image with:
-#   --mount type=volume,src=ornigami-builder-store,dst=/data/builder
-docker stop ornigami-builder
-docker cp -a ornigami-builder:/data/builder ./store-backup
-# create the replacement container with a NEW volume, copy the backup in while
-# stopped, then start it and verify hash/ownership/health.
-```
-
-Backup while stopped. Do not copy the lock file while a writer is active. Keep
-the backup accessible only to the operator; it contains identity/session hashes
-and usage records.
+Never overwrite an existing backup or evidence directory. Use a new timestamped
+path or a new run id.
 
 ## Stop-or-close rollback
 
@@ -213,21 +386,59 @@ Preferred rollback on any packaging/runtime failure:
    but does **not** enforce generation budgets. If a previous image is required,
    keep it closed until a quota-capable image is restored.
 
-The qualification script proves the closed rollback leaves the store hash
-unchanged. Application-level reconciliation of `unknown` records remains owned
-by Sessions 1 and 2.
+The qualification script proves the closed rollback leaves the store hash and
+all subject/session/usage records unchanged.
 
 ## Final qualification checklist
 
 - Clean merged candidate, `HEAD == SOURCE_SHA`, image label matches.
 - Linux/Node 22 build and dependency audit on the candidate.
 - Non-root `1000:1000`, read-only root, only documented writable paths.
-- Store `0600`, correct owner, single writer/volume/replica.
-- Health `200`; closed `/builder` `404`; anonymous session `401`.
+- Named persistent volume, store `0600`, correct owner, single writer/one
+  replica/one volume.
+- Health `200`; anonymous `/builder` `404`; anonymous session `401`.
 - No runtime egress; no provider/database/mail/Sentry configuration.
-- Restart preserves store; backup restores into a fresh container.
+- Restart preserves the valid session, the revocation and the unresolved
+  reservation; store hash and usage record unchanged.
+- Backup restores into a fresh volume and fresh container with the same state.
+- Foreign-host stale lock is refused without confirmation/wrong token;
+  observed-token recovery quarantines it and preserves the store.
 - Closed rollback preserves usage and does not reopen without quotas.
 - Sessions 1 and 2 application journeys pass on the same merged image.
 
-Staging deployment, DNS, external accounts, and paid services remain outside
-this packaging work and require separate authorization.
+Staging deployment, DNS, external accounts, registry publication, real
+invitations and paid services remain outside this packaging work and require
+separate authorization.
+
+## Exact Linux execution commands (pending)
+
+Run these on the authorized Linux runner from a clean checkout of the committed
+candidate:
+
+```bash
+git status --porcelain                 # must be empty
+SOURCE_SHA="$(git rev-parse HEAD)"
+APP_URL="http://127.0.0.1:3100"
+
+SOURCE_SHA="$SOURCE_SHA" APP_URL="$APP_URL" \
+  ./deploy/builder/qualify-linux.sh
+
+# The script prints the run directory, for example:
+#   .local/builder-linux-qualification/runs/<run-id>/
+# Upload results.txt, checks.tsv and the logs. Do not upload the store/backup
+# if it contains real data; this qualification uses synthetic identities only.
+
+# Inspect or operate the same run's volume:
+BUILDER_OPERATOR_IMAGE="ornigami-builder:qualify-<run-id>" \
+BUILDER_OPERATOR_VOLUME="ornigami-builder-store-<run-id>" \
+BUILDER_RUNTIME_STORE_HOST_ID="ornigami-builder-store" \
+  ./deploy/builder/operator.sh lock-status --json
+
+# Optional cleanup of only this run's volumes after evidence review:
+docker volume rm "ornigami-builder-store-<run-id>" \
+  "ornigami-builder-restore-<run-id>"
+```
+
+The result remains **pending Linux execution** until that run produces
+`ok=true` with the session/revocation/reservation, fresh-volume restore, lock
+recovery and closed-rollback checks.
