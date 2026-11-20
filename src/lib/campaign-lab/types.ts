@@ -1,3 +1,4 @@
+import type { OfferComposition } from "./composition.ts";
 import type { BrandKitSnapshot } from "./brand-review.ts";
 export const CAMPAIGN_LAB_TEMPLATE_ID = "single-product-offer" as const;
 
@@ -297,6 +298,7 @@ export type RequiredFactGroup = {
 export type CampaignBrief = {
   brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
+  composition?: OfferComposition;
   accentOverride?: string;
   fixtureId: FixtureId;
   brandId: BrandId;
@@ -341,6 +343,7 @@ export type CampaignFixture = {
 export type CampaignFormValues = {
   brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
+  composition?: OfferComposition;
   accentOverride?: string;
   brandId: BrandId;
   accent: string;
@@ -430,6 +433,7 @@ export type TemplateManifest = {
 
 export type ValidationField =
   | "directionId"
+  | "composition"
   | "brandId"
   | "accent"
   | "productName"

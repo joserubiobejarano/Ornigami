@@ -35,6 +35,7 @@ export function buildOpenAIUserPrompt(request: GenerationRequest): string {
         audience: request.campaign.audience,
         objective: request.campaign.objective,
         openingFocus: request.campaign.openingFocus,
+        ...(request.campaign.composition ? { composition: request.campaign.composition } : {}),
         productName: request.campaign.productName,
         productNoun: request.campaign.productNoun,
         offer: request.campaign.offer,

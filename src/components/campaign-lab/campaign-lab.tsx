@@ -1,5 +1,7 @@
 "use client";
 
+import { parseOfferComposition, resolveCampaignComposition } from "@/lib/campaign-lab/composition";
+
 import Link from "next/link";
 import { BrandEvidenceReview } from "./brand-evidence-review";
 import { VISUAL_DIRECTIONS, resolveVisualDirection, browserDirectionCatalog } from "@/lib/campaign-lab/visual-directions";
@@ -377,6 +379,7 @@ export function CampaignLab({
 
   const fieldIds: Record<ValidationField, string> = {
     directionId: "browser-visual-direction",
+    composition: "browser-composition",
     brandId: `${baseId}-brand-style`,
     accent: `${baseId}-accent`,
     productName: `${baseId}-product-name`,
@@ -722,6 +725,7 @@ export function CampaignLab({
         revision: preview.revision,
         revisionIdentityVersion: preview.revisionIdentityVersion,
         motion: (preview as CampaignPreviewData).motion,
+        ...(resolveCampaignComposition(preview.brief, preview.asset) ? { composition: resolveCampaignComposition(preview.brief, preview.asset) } : {}),
         imagePresentation: resolveCampaignImage(preview.asset, preview.theme.tokens),
         productName: preview.brief.productName,
         brandName: preview.theme.brand.name,
@@ -1361,6 +1365,7 @@ export function CampaignLab({
             <fieldset className="m-0 space-y-4 border-0 p-0">
               <legend className="mb-1 text-sm font-semibold">Brand styling</legend>
               {browserBrief ? <BrandEvidenceReview snapshot={values.brandKitSnapshot} directionId={values.directionId} accentOverride={values.accentOverride} onApply={snapshot => { setValues(current => ({ ...current, brandKitSnapshot: snapshot, accent: current.accentOverride || snapshot?.selections.find(v => v.role === "accent")?.value || resolveVisualDirection(current.directionId).tokens.accent })); clearChangedState("accent"); }} /> : null}
+              {browserBrief ? <div className="space-y-1"><Label htmlFor="browser-composition">Composition</Label><select id="browser-composition" className={nativeSelectClassName} value={values.composition ?? "direction-default"} onChange={event => { setValues(current => ({ ...current, composition: parseOfferComposition(event.target.value) })); clearChangedState("composition"); }}><option value="direction-default">Direction default</option><option value="product-focus">Product focus</option></select></div> : null}
               {browserBrief ? <div className="space-y-2"><Label htmlFor="browser-visual-direction">Visual direction</Label>
                 <select id="browser-visual-direction" className={nativeSelectClassName} value={values.directionId ?? "clear"} onChange={event => handleDirectionChange(event.target.value)}>
                   {VISUAL_DIRECTIONS.map(direction => <option key={direction.id} value={direction.id}>{direction.name}</option>)}

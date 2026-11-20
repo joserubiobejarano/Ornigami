@@ -1,3 +1,4 @@
+import { resolveCampaignComposition } from "../composition.ts";
 import {
   BASE_CATALOG,
   createCampaignBrief,
@@ -127,6 +128,7 @@ function buildGenerationRequest(
     campaign: {
       fixtureId: fixtureId as GenerationRequest["campaign"]["fixtureId"],
       openingFocus: brief.openingFocus ?? null,
+      ...(brief.composition ? { composition: brief.composition } : {}),
       audience: brief.audience?.trim() || null,
       objective: brief.objective?.trim() || null,
       productName: brief.productName,
@@ -428,6 +430,7 @@ export async function runCampaignGeneration(
   return {
     ok: true,
     preview: {
+      ...(resolveCampaignComposition(brief, asset) ? { composition: resolveCampaignComposition(brief, asset) } : {}),
       brief,
       draft: planned.draft,
       asset,

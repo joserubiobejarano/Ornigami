@@ -1,3 +1,4 @@
+import { parseOfferComposition, type OfferComposition } from "./composition.ts";
 import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import { resolveVisualDirection } from "./visual-directions.ts";
 ﻿import {
@@ -43,6 +44,7 @@ export type BrowserOfferBriefRequest = {
   schemaVersion: typeof BROWSER_OFFER_BRIEF_SCHEMA_VERSION;
   brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
+  composition?: OfferComposition;
   brandName?: string;
   productName: string;
   audience?: string;
@@ -81,6 +83,7 @@ const BRIEF_KEYS = new Set([
   "schemaVersion",
   "brandName",
   "directionId",
+  "composition",
   "brandKitSnapshot",
   "productName",
   "audience",
@@ -320,6 +323,8 @@ export function parseBrowserOfferBriefRequest(
     contextIssues.push(...context.issues);
   }
 
+  let composition: OfferComposition | undefined;
+  try { if (raw.composition !== undefined) composition = parseOfferComposition(raw.composition); } catch (error) { issues.push({ field: "composition", message: (error as Error).message }); }
   let directionId: string | undefined;
   try { directionId = resolveVisualDirection(raw.directionId).id; } catch (error) { issues.push({ field: "directionId", message: (error as Error).message }); }
   let accent: string | undefined;
@@ -390,6 +395,7 @@ export function parseBrowserOfferBriefRequest(
   const input: BrowserOfferIntakeInput = {
     ...(brandKitSnapshot ? { brandKitSnapshot } : {}),
     directionId,
+    ...(composition !== undefined ? { composition } : {}),
     ...(accent ? { accent } : {}),
     brandName: brandName.value,
     productName,
@@ -459,6 +465,7 @@ export function browserOfferBriefFromIntake(
     schemaVersion: BROWSER_OFFER_BRIEF_SCHEMA_VERSION,
     ...(input.brandKitSnapshot ? { brandKitSnapshot: parseBrandSnapshot(input.brandKitSnapshot) } : {}),
     ...(input.directionId !== undefined ? { directionId: input.directionId } : {}),
+    ...(input.composition !== undefined ? { composition: parseOfferComposition(input.composition) } : {}),
     ...(brandName ? { brandName } : {}),
     productName: input.productName,
     ...(input.audience !== undefined ? { audience: input.audience } : {}),

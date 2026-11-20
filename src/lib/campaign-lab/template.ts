@@ -1,3 +1,5 @@
+import { parseOfferComposition, resolveCampaignComposition } from "./composition.ts";
+import type { CampaignCompositionPresentation } from "./composition.ts";
 import { assetLookupIssue } from "./fixtures.ts";
 import { motionPresentation } from "./motion.ts";
 import type { MotionPresentation } from "./motion.ts";
@@ -182,6 +184,7 @@ export function validateCampaignForm(
   catalog: CampaignCatalog = BASE_CATALOG,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  try { parseOfferComposition(values.composition); } catch (error) { issues.push({ field: "composition", message: (error as Error).message }); }
 
   const context = parseCampaignContext(values);
   if (!context.ok) {
@@ -813,6 +816,7 @@ export function buildDraftRevisionIdentity(
   return {
     identityVersion: CAMPAIGN_REVISION_IDENTITY_VERSION,
     motion,
+    ...(resolveCampaignComposition(brief, asset) ? { composition: resolveCampaignComposition(brief, asset) } : {}),
     imagePresentation: resolveCampaignImage(asset, tokens),
     template: {
       id: draft.templateId,
@@ -904,6 +908,7 @@ export function shortRevision(revision: string): string {
 }
 
 export type CampaignPreviewData = {
+  composition?: CampaignCompositionPresentation;
   brief: CampaignBrief;
   draft: TemplateDraft;
   asset: ApprovedAsset;
@@ -978,6 +983,7 @@ export function buildCampaignPreview(
   return {
     ok: true,
     preview: {
+      ...(resolveCampaignComposition(brief, asset) ? { composition: resolveCampaignComposition(brief, asset) } : {}),
       brief,
       draft,
       asset,

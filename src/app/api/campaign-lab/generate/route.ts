@@ -1,3 +1,4 @@
+import { parseOfferComposition } from "@/lib/campaign-lab/composition";
 import { NextResponse } from "next/server";
 
 import { buildAdvertorialPreview } from "@/lib/campaign-lab/advertorial";
@@ -47,7 +48,10 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
   ) {
     return null;
   }
+  let composition;
+  try { composition = parseOfferComposition(record.composition); } catch { return null; }
   return {
+    composition,
     brandId: record.brandId as CampaignFormValues["brandId"],
     accent: record.accent as string,
     productName: record.productName as string,
@@ -152,6 +156,9 @@ export async function POST(request: Request) {
   try {
     const fixture = catalog.fixtures[fixtureId];
     const format = values.format ?? (fixture?.brief.advertorial ? "advertorial" : "offer");
+    if (format !== "offer" && values.composition === "product-focus") {
+      return json({ ok: false, message: "Product focus composition is supported for single-product offers only." }, 400);
+    }
     if (fixture && format === "advertorial") {
       const result = buildAdvertorialPreview(fixture, values, catalog);
       if (!result.ok) {

@@ -1,3 +1,4 @@
+import { parseOfferComposition, type OfferComposition } from "./composition.ts";
 import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import { resolveVisualDirection } from "./visual-directions.ts";
 import {
@@ -15,6 +16,7 @@ export type PersistedOfferIntakeBrief = {
   schemaVersion: 1;
   brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
+  composition?: OfferComposition;
   accent?: string;
   brandName: string;
   productName: string;
@@ -135,6 +137,7 @@ export function parsePreparedOfferIntakeBrief(
 
     const brief: PreparedOfferIntakeBrief = {
       ...(parsed.brandKitSnapshot !== undefined ? { brandKitSnapshot: parseBrandSnapshot(parsed.brandKitSnapshot) } : {}),
+      ...(parsed.composition !== undefined ? { composition: parseOfferComposition(parsed.composition) } : {}),
       ...(parsed.directionId !== undefined ? { directionId: resolveVisualDirection(parsed.directionId).id } : {}),
       ...(parsed.accent !== undefined ? { accent: optionalText(parsed, "accent", "Accent override") } : {}),
       brandName: optionalText(parsed, "brandName", "Brand name"),
@@ -216,6 +219,8 @@ export function parsePersistedOfferIntakeBrief(
   const record = parsed as Record<string, unknown>;
   if (record.schemaVersion !== 1) return null;
 
+  let composition: OfferComposition | undefined;
+  try { if (record.composition !== undefined) composition = parseOfferComposition(record.composition); } catch { return null; }
   let directionId: string;
   try { directionId = resolveVisualDirection(record.directionId).id; } catch { return null; }
   if (record.accent !== undefined && typeof record.accent !== "string") return null;
@@ -233,6 +238,7 @@ export function parsePersistedOfferIntakeBrief(
 
   return {
     schemaVersion: 1,
+    ...(composition !== undefined ? { composition } : {}),
     ...(brandKitSnapshot ? { brandKitSnapshot } : {}),
     ...(record.directionId !== undefined ? { directionId } : {}),
     ...(record.accent !== undefined ? { accent: text(record.accent) } : {}),

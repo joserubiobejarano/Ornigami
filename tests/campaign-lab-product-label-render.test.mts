@@ -27,6 +27,7 @@ async function loadCampaignPage() {
     "utf8",
   );
   source = source
+    .replace('import { resolveCampaignComposition } from "@/lib/campaign-lab/composition";', 'const { resolveCampaignComposition } = require("../../../src/lib/campaign-lab/composition.ts");')
     .replace('import { initializeCampaignMotion } from "@/lib/campaign-lab/motion-runtime";', 'const { initializeCampaignMotion } = require("../../../src/lib/campaign-lab/motion-runtime.ts");')
     .replace('import { MOTION_CSS } from "@/lib/campaign-lab/motion";', 'const { MOTION_CSS } = require("../../../src/lib/campaign-lab/motion.ts");')
     .replace(
@@ -71,6 +72,37 @@ async function loadCampaignPage() {
 function productLabelCount(html: string): number {
   return (html.match(/class="productLabel"/g) ?? []).length;
 }
+
+test("product focus renders headline, image, offer, action and facts in DOM order for both layouts", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const built = buildCampaignPreview(fixture, { ...createFormValues(fixture), composition: "product-focus" });
+  assert.ok(built.ok);
+  const p = built.preview;
+  const { CampaignPage, React, renderToStaticMarkup } = await loadCampaignPage();
+  for (const layout of ["offer-led-one-photo", "editorial-long-copy"] as const) {
+    const markup = renderToStaticMarkup(React.createElement(CampaignPage, {
+      brief: { ...p.brief, copy: { ...p.brief.copy, hideLede: false } },
+      draft: { ...p.draft, layout, sections: ["hero", "hero-facts", "close"] },
+      asset: p.asset, theme: p.theme, headingId: "composition-heading",
+      imageRevision: p.revision, imageStatus: "loaded", imageAttempt: 0, onImageStateChange() {},
+    }));
+    const positions = ['<h1', '<figure', 'data-role="offer"', 'data-role="action"', 'data-role="lede"', 'class="facts"'].map(token => markup.indexOf(token));
+    assert.ok(positions.every(p => p >= 0), markup);
+    assert.deepEqual(positions, [...positions].sort((a,b) => a-b));
+    assert.match(markup, /data-composition="product-focus"/);
+    assert.match(markup, /productPackshot/);
+    assert.doesNotMatch(markup, /class="[^"]*productFirst/);
+  }
+  for (const asset of [{ ...p.asset, role: "story-opening" }, { ...p.asset, imageFit: "cover" }]) {
+    const markup = renderToStaticMarkup(React.createElement(CampaignPage, {
+      brief: p.brief, draft: p.draft, asset, theme: p.theme,
+      headingId: "non-packshot-heading", imageRevision: p.revision,
+      imageStatus: "loaded", imageAttempt: 0, onImageStateChange() {},
+    }));
+    assert.doesNotMatch(markup, /class="[^"]*productPackshot/);
+    assert.match(markup, /data-composition="product-focus"/);
+  }
+});
 
 test("actual CampaignPage product-label markup follows shared whitespace normalization", async () => {
   const fixture = CAMPAIGN_FIXTURES.sparse;

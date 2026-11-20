@@ -1,5 +1,7 @@
 "use client";
 
+import { parseOfferComposition, type OfferComposition } from "@/lib/campaign-lab/composition";
+
 import { BrandEvidenceReview } from "./brand-evidence-review";
 import type { BrandKitSnapshot } from "@/lib/campaign-lab/brand-review";
 import Link from "next/link";
@@ -259,6 +261,7 @@ export function OfferIntake() {
   const [restoredBrief, setRestoredBrief] = useState(false);
   const [evidenceSession, setEvidenceSession] = useState(0);
   const [brandKitSnapshot, setBrandKitSnapshot] = useState<BrandKitSnapshot>();
+  const [composition, setComposition] = useState<OfferComposition>("direction-default");
   const [directionId, setDirectionId] = useState("clear");
   const [accentOverride, setAccentOverride] = useState("");
   const [brandName, setBrandName] = useState("");
@@ -329,6 +332,7 @@ export function OfferIntake() {
       if (brief) {
         setBrandKitSnapshot(brief.brandKitSnapshot);
         setDirectionId(brief.directionId ?? "clear");
+        setComposition(brief.composition ?? "direction-default");
         setAccentOverride(brief.accent ?? "");
         setBrandName(brief.brandName);
         setProductName(brief.productName);
@@ -355,6 +359,7 @@ export function OfferIntake() {
         OFFER_INTAKE_BRIEF_STORAGE_KEY,
         serializePersistedOfferIntakeBrief({
           directionId,
+          composition,
           brandKitSnapshot,
           accent: accentOverride,
           brandName,
@@ -372,7 +377,7 @@ export function OfferIntake() {
       // A full or blocked storage area must not block the intake.
     }
   }, [
-    directionId, accentOverride, brandKitSnapshot,
+    directionId, composition, accentOverride, brandKitSnapshot,
     alt,
     audience,
     brandName,
@@ -518,6 +523,7 @@ export function OfferIntake() {
     setEvidenceSession(current => current + 1);
     setBrandKitSnapshot(brief.brandKitSnapshot);
         setDirectionId(brief.directionId ?? "clear");
+        setComposition(brief.composition ?? "direction-default");
         setAccentOverride(brief.accent ?? "");
         setBrandName(brief.brandName);
     setProductName(brief.productName);
@@ -600,6 +606,7 @@ export function OfferIntake() {
     };
     setBrandKitSnapshot(snapshot.values.brandKitSnapshot);
     setDirectionId(snapshot.values.directionId ?? "clear");
+    setComposition(snapshot.values.composition ?? "direction-default");
     setAccentOverride(snapshot.values.accentOverride ?? "");
     setProductName(snapshot.values.productName);
     setAudience(snapshot.values.audience ?? "");
@@ -615,6 +622,7 @@ export function OfferIntake() {
     const input: BrowserOfferIntakeInput = {
       brandKitSnapshot,
       directionId,
+      composition,
       ...(accentOverride ? { accent: accentOverride } : {}),
       brandName,
       productName,
@@ -729,6 +737,7 @@ export function OfferIntake() {
             browserOfferBriefFromIntake({
               ...submitted.input,
               directionId: nextValues.directionId,
+              composition: nextValues.composition,
               brandKitSnapshot: nextValues.brandKitSnapshot,
               productName: nextValues.productName,
               audience: nextValues.audience,
@@ -782,6 +791,7 @@ export function OfferIntake() {
             <span><span className="block text-lg" style={{fontFamily:direction.tokens.displayFont}}>{direction.name}</span><span className="text-sm">{direction.description}</span></span>
           </label>)}
         </fieldset>
+        <div className="mb-5 space-y-1"><Label htmlFor="intake-composition">Composition</Label><select id="intake-composition" className="min-h-11 w-full rounded-lg border p-2" value={composition} onChange={event => setComposition(parseOfferComposition(event.target.value))}><option value="direction-default">Direction default</option><option value="product-focus">Product focus</option></select></div>
         <div className="mb-5 space-y-1"><Label htmlFor="intake-accent-override">Accent override (hex)</Label><Input className="min-h-11" id="intake-accent-override" value={accentOverride} placeholder="Optional — use direction default" onChange={event => { setAccentOverride(event.target.value); clearError("accent"); }} />{errors.accent ? <p role="alert">{errors.accent}</p> : null}</div>
         {restoredBrief ? (
           <div

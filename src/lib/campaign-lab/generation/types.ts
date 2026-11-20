@@ -1,3 +1,4 @@
+import type { OfferComposition } from "../composition.ts";
 import type { CampaignPreviewData } from "../template.ts";
 import type { ProviderDiagnostics } from "./provider-diagnostics.ts";
 
@@ -102,6 +103,7 @@ export type GenerationRequest = {
   campaign: {
     fixtureId: FixtureId;
     openingFocus: string | null;
+    composition?: OfferComposition;
     audience: string | null;
     objective: string | null;
     productName: string;

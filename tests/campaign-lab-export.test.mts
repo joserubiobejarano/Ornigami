@@ -234,6 +234,13 @@ test("HTML and receipt agreement checks revision, offer, destination and packsho
   });
 
   assert.doesNotThrow(() => assertHtmlReceiptAgreement(html, receipt));
+  const composition = { id: "product-focus", version: "1.0.0", narrowOrder: "headline-product-offer-action-facts", containedPackshot: true } as const;
+  const focusedReceipt = { ...receipt, preview: { ...receipt.preview, composition } };
+  assert.throws(() => assertHtmlReceiptAgreement(html, focusedReceipt), /composition/);
+  const focusedHtml = html.replace("</head>", `<meta name="campaign-lab-composition" content="${JSON.stringify(composition).replaceAll('"', '&quot;')}"></head>`);
+  assert.doesNotThrow(() => assertHtmlReceiptAgreement(focusedHtml, focusedReceipt));
+  assert.throws(() => assertHtmlReceiptAgreement(focusedHtml, receipt), /composition/);
+  assert.throws(() => assertHtmlReceiptAgreement(focusedHtml, { ...focusedReceipt, preview: { ...focusedReceipt.preview, composition: { ...composition, containedPackshot: false } } }), /composition/);
   assert.throws(() =>
     assertHtmlReceiptAgreement(
       html.replace("Free shipping through 30 November 2026", "A different offer"),

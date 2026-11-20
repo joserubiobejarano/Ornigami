@@ -1,3 +1,4 @@
+import type { CampaignCompositionPresentation } from "./composition.ts";
 import type { BrandKitSnapshot } from "./brand-review.ts";
 import { assertCurrentStory, resolveStory, storyRevision, isApprovedStorySvg, STORY_CSS } from "./story.ts";
 import type { StoryConfiguration, StorySource, StoryDefinition } from "./story.ts";
@@ -164,6 +165,7 @@ export type CampaignExportPreview = {
   story?: StoryConfiguration;
   assets?: ApprovedAsset[];
   imagePresentation?: CampaignImagePresentation;
+  composition?: CampaignCompositionPresentation;
   /** Absent on historical/static exports. Never accepts executable config. */
   motion?: MotionPresentation;
   status: "preview" | "confirmed";
@@ -258,6 +260,7 @@ export type CampaignExportReceipt = {
     story?: StoryConfiguration;
     motion?: MotionPresentation;
     imagePresentation?: CampaignImagePresentation;
+    composition?: CampaignCompositionPresentation;
   };
   verification: BrowserOfferVerification | null;
   provenance?: CampaignVerificationProvenance;
@@ -458,6 +461,7 @@ export function buildStandaloneDocument(input: {
   storyDefinition?: StoryDefinition;
   story?: StoryConfiguration;
   imagePresentation?: CampaignImagePresentation;
+  composition?: CampaignCompositionPresentation;
   motion?: MotionPresentation;
   title: string;
   bodyHtml: string;
@@ -479,6 +483,7 @@ export function buildStandaloneDocument(input: {
   const motionScripts = input.motion && input.motion.recipe !== "none"
     ? `<script type="application/json" id="ornigami-motion-config">${JSON.stringify(input.motion).replace(/</g, "\\u003c")}</script>\n<script src="./motion.js" defer></script>` : "";
   const agreementMeta = [
+    input.composition ? `<meta name="campaign-lab-composition" content="${escapeHtml(JSON.stringify(input.composition))}">` : null,
     input.imagePresentation ? `<meta name="campaign-lab-image-presentation" content="${escapeHtml(JSON.stringify(input.imagePresentation))}">` : null,
     input.offer !== undefined
       ? `<meta name="campaign-lab-offer" content="${escapeHtml(input.offer)}">`
@@ -800,6 +805,7 @@ export function captureCampaignExportSnapshot(
       ...(input.preview.story ? { story: JSON.parse(JSON.stringify(input.preview.story)) } : {}),
       ...(input.preview.assets ? { assets: input.preview.assets.map(asset => ({ ...asset })) } : {}),
       ...(input.preview.visualDirection ? { visualDirection: JSON.parse(JSON.stringify(input.preview.visualDirection)) } : {}),
+      ...(input.preview.composition ? { composition: { ...input.preview.composition } } : {}),
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion, settings: { ...input.preview.motion.settings } } } : {}),
       verification: input.preview.verification
@@ -1150,6 +1156,9 @@ export function assertHtmlReceiptAgreement(
       if (!html.includes(`src="./${asset.file}"`) || !html.includes(`alt="${escapeHtml(asset.alt)}"`)) throw new Error("Exported story asset reference/alt disagrees.");
     }
   }
+  if (metaContent(html, "campaign-lab-composition") !== (receipt.preview.composition ? JSON.stringify(receipt.preview.composition) : null)) {
+    throw new Error("Export composition does not match its receipt.");
+  }
   if (receipt.preview.imagePresentation && metaContent(html, "campaign-lab-image-presentation") !== JSON.stringify(receipt.preview.imagePresentation)) {
     throw new Error("The exported image presentation and receipt disagree.");
   }
@@ -1374,6 +1383,7 @@ export async function buildExportReceipt(input: {
       actionLabel: input.preview.actionLabel,
       template: input.preview.template,
       ...(input.preview.visualDirection ? { visualDirection: JSON.parse(JSON.stringify(input.preview.visualDirection)) } : {}),
+      ...(input.preview.composition ? { composition: { ...input.preview.composition } } : {}),
       ...(input.preview.imagePresentation ? { imagePresentation: { ...input.preview.imagePresentation } } : {}),
       ...(input.preview.story ? { story: input.preview.story } : {}),
       ...(input.preview.motion ? { motion: { ...input.preview.motion } } : {}),
@@ -1610,6 +1620,7 @@ export async function buildCampaignExportBundle(
     visualDirection: snapshot.preview.visualDirection,
     story: snapshot.preview.story,
     storyDefinition: snapshot.preview.storySource?.definition,
+    composition: snapshot.preview.composition,
     imagePresentation: snapshot.preview.imagePresentation,
     motion: snapshot.preview.motion,
     title: `${snapshot.preview.productName} — ${snapshot.preview.brandName}`,

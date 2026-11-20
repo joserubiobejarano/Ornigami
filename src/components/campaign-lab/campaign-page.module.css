@@ -150,6 +150,10 @@
   max-height: none;
 }
 
+.productSecond .offerHero .imageFrame {
+  order: 0;
+}
+
 .editorialHero {
   display: flex;
   flex-direction: column;
@@ -616,4 +620,15 @@
   .footer {
     padding: 15px 44px;
   }
+}
+
+/* Product-focus recipe 1.0.0. Container and approved aspect bound both axes;
+ * scoped to contained product heroes, leaving narrative/cover images intact. */
+.productPackshot .offerHero .imageFrame {
+  --product-extent: clamp(260px, 54cqi, 360px);
+  width: min(100%, var(--product-extent), calc(var(--product-extent) * var(--cp-image-ratio)));
+  max-height: none;
+  justify-self: center;
+  align-self: center;
+  aspect-ratio: var(--cp-image-aspect);
 }

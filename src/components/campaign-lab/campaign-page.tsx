@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveCampaignComposition } from "@/lib/campaign-lab/composition";
+
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import { initializeCampaignMotion } from "@/lib/campaign-lab/motion-runtime";
@@ -128,7 +130,8 @@ export function CampaignPage({
   const showHeroFacts = draft.sections.includes("hero-facts");
   const showDetail = draft.sections.includes("detail");
   const isProductFirst = tokens.heroOrder === "product-first";
-  const isProductSecond = tokens.mobileHeroOrder === "product-second";
+  const composition = resolveCampaignComposition(brief, asset);
+  const isProductSecond = Boolean(composition) || tokens.mobileHeroOrder === "product-second";
   const usesBlendedImage = Boolean(tokens.imageBlend && tokens.imageBlend !== "normal");
   const usesEditorialOffer = tokens.offerStyle === "editorial";
   const usesPriceEmphasis = Boolean(tokens.offerPriceEmphasis);
@@ -154,6 +157,7 @@ export function CampaignPage({
     "--cp-image-max-height": imagePresentation.frame === "natural-arch" ? "none" : "330px",
     "--cp-image-inset": tokens.imageInset ?? "0px",
     "--cp-button-radius": tokens.buttonRadius,
+    "--cp-image-ratio": String(asset.width > 0 && asset.height > 0 ? asset.width / asset.height : 1),
     "--cp-image-aspect": asset.width > 0 && asset.height > 0 ? `${asset.width} / ${asset.height}` : "4 / 5",
     "--cp-detail-bg": tokens.detailBackground,
     "--cp-detail-ink": tokens.detailInk,
@@ -217,13 +221,16 @@ export function CampaignPage({
       className={[
         styles.page,
         isEditorial ? styles.editorial : styles.offerLed,
-        isProductFirst ? styles.productFirst : styles.headlineFirst,
+        isProductFirst && !composition ? styles.productFirst : styles.headlineFirst,
         tokens.heroImage === "arch" ? styles.arch : styles.framed,
         usesBlendedImage ? styles.blendedImage : null,
         usesEditorialOffer ? styles.offerEditorial : null,
         isProductSecond ? styles.productSecond : null,
+        composition?.containedPackshot ? styles.productPackshot : null,
       ].join(" ")}
       style={style}
+      data-composition={composition?.id}
+      data-composition-version={composition?.version}
       aria-labelledby={headingId}
     >
       {motion?.recipe && motion.recipe !== "none" ? <style data-ornigami-motion-style="true">{MOTION_CSS}</style> : null}
@@ -235,7 +242,7 @@ export function CampaignPage({
       </header>
 
       <div>
-        {isEditorial ? (
+        {isEditorial && !composition ? (
           <section className={styles.editorialHero}>
             <div className={styles.editorialHeading}>
               {productLabel}
@@ -257,12 +264,13 @@ export function CampaignPage({
                 <div className={styles.headlineBlock}>
                   {productLabel}
                   {headline}
-                  {lede}
+                  {!composition ? lede : null}
                 </div>
                 {image}
                 <div className={styles.supportBlock}>
                   {offer}
                   {action}
+                  {composition ? lede : null}
                   {facts}
                 </div>
               </div>

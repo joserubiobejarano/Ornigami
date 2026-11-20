@@ -1,3 +1,4 @@
+import { parseOfferComposition, type OfferComposition } from "./composition.ts";
 import { parseBrandSnapshot, paletteTokens, type BrandKitSnapshot } from "./brand-review.ts";
 import { resolveVisualDirection } from "./visual-directions.ts";
 import { parseCampaignContext } from "./campaign-context.ts";
@@ -44,6 +45,7 @@ export type BrowserOfferConfirmations = {
 export type BrowserOfferIntakeInput = {
   brandKitSnapshot?: BrandKitSnapshot;
   directionId?: string;
+  composition?: OfferComposition;
   accent?: string;
   brandName?: string;
   productName: string;
@@ -78,6 +80,7 @@ export type BrowserOfferFactErrors = {
 };
 
 export type BrowserOfferIntakeErrors = {
+  composition?: string;
   directionId?: string;
   accent?: string;
   productName?: string;
@@ -248,6 +251,7 @@ export function validateBrowserOfferIntake(
   input: BrowserOfferIntakeInput,
 ): BrowserOfferIntakeValidation {
   const errors: BrowserOfferIntakeErrors = {};
+  try { parseOfferComposition(input.composition); } catch (error) { errors.composition = (error as Error).message; }
   try { resolveVisualDirection(input.directionId); } catch (error) { errors.directionId = (error as Error).message; }
   if (!errors.directionId) {
     try { paletteTokens(resolveVisualDirection(input.directionId).tokens, input.brandKitSnapshot, input.accent); }
@@ -398,6 +402,7 @@ export function buildBrowserOfferCatalog(
     brief: {
       ...(input.brandKitSnapshot ? { brandKitSnapshot: parseBrandSnapshot(input.brandKitSnapshot) } : {}),
       directionId: brand.visualDirection!.id,
+      ...(input.composition !== undefined ? { composition: parseOfferComposition(input.composition) } : {}),
       ...(input.accent ? { accentOverride: input.accent } : {}),
       fixtureId: BROWSER_OFFER_FIXTURE_ID,
       brandId: brand.id,
