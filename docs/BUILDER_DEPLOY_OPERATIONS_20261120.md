@@ -191,6 +191,10 @@ enabled. Browser evidence is written under the run's `browser/` directory
 
 ## Related evidence
 
+- [`docs/handoffs/BUILDER_HTTP_MODE_CORRECTION_20261120.md`](./handoffs/BUILDER_HTTP_MODE_CORRECTION_20261120.md)
+  — mode-aware invite/closed HTTP contract, Node 22.23.3 IPv6 identity
+  correction, toolchain/Bash test repairs, focused results and the next Linux
+  command at candidate `088f9cf`.
 - [`docs/handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md`](./handoffs/BUILDER_DEPLOY_BROWSER_QUALIFICATION_20261120.md)
   — exact commit, local self-test/lock/browser results and the pending Linux
   receipt for this session.
