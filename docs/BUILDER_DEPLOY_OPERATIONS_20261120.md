@@ -196,6 +196,10 @@ phase is enabled. Browser evidence is written under the run's `browser/` directo
 
 ## Related evidence
 
+- [`docs/handoffs/BUILDER_HOST_CONNECTION_DIAGNOSTIC_20261120.md`](./handoffs/BUILDER_HOST_CONNECTION_DIAGNOSTIC_20261120.md)
+  — Docker internal-network publish diagnosis, supported loopback-proxy path,
+  before/after restart evidence and the passing full qualification at
+  `4e3e00a`.
 - [`docs/handoffs/BUILDER_STORE_MOUNT_INITIALIZATION_20261120.md`](./handoffs/BUILDER_STORE_MOUNT_INITIALIZATION_20261120.md)
   — mounted primary/restore volume initialization, collected writable-path
   evidence, real mount-only receipt and the next full Linux command at candidate
