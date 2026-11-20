@@ -552,7 +552,7 @@ try {
   await pageB.locator("[data-builder-logout]").click();
   await pageB.waitForSelector('input[name="token"]', { timeout: 20_000 });
   await pageB.waitForTimeout(300);
-  check("signout:b-signed-out", pageB.url().includes("/"));
+  check("signout:b-signed-out", new URL(pageB.url()).pathname === "/");
   check("signout:b-storage-cleared", (await storageKeys(pageB)).length === 0);
 
   results.screenshots = readdirSync(screenshots)
