@@ -4,7 +4,8 @@ Status: implemented locally, **builder closed by default**. This record covers
 application/runtime containment only. It does not add invites, customer access,
 durable projects, generation budgets, publishing, billing or deployment.
 
-Source: branch `codex/ornigami-builder-runtime-isolation-20261120`, from exact
+Source: branch `codex/ornigami-builder-runtime-isolation-20261120`,
+implementation `5a5a3b9c992daa7630c505f02434f2fc7fa481d8`, from exact
 foundation tip `224238782a259afb65b8217284ed6b10ebc6cbf3`.
 
 ## Decision
