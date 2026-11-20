@@ -125,6 +125,46 @@ test("empty saved fields do not trigger the restored-brief notice", () => {
   assert.equal(hasPersistedBriefContent({ ...empty, offer: "30% off" }), true);
 });
 
+test("reviewed emphasis survives prepared and session briefs only when exact", () => {
+  const reviewed = { ...brief, offerPrice: "30 November 2026" };
+  const prepared = parsePreparedOfferIntakeBrief(
+    JSON.stringify({ schemaVersion: 1, ...reviewed }),
+  );
+  assert.equal(prepared.ok, true);
+  if (prepared.ok) assert.equal(prepared.brief.offerPrice, "30 November 2026");
+
+  const restored = parsePersistedOfferIntakeBrief(
+    serializePersistedOfferIntakeBrief(reviewed),
+  );
+  assert.equal(restored?.offerPrice, "30 November 2026");
+  assert.equal(
+    hasPersistedBriefContent({
+      ...restored!,
+      brandName: "",
+      productName: "",
+      audience: "",
+      objective: "",
+      offer: "",
+      destinationUrl: "",
+      alt: "",
+      rights: "",
+      facts: [],
+    }),
+    true,
+  );
+
+  const rejected = parsePreparedOfferIntakeBrief(
+    JSON.stringify({ schemaVersion: 1, ...brief, offerPrice: "31 November 2026" }),
+  );
+  assert.equal(rejected.ok, false);
+  if (!rejected.ok) assert.match(rejected.error, /Reviewed emphasis must match/i);
+
+  const legacy = parsePersistedOfferIntakeBrief(
+    serializePersistedOfferIntakeBrief(brief),
+  );
+  assert.equal(legacy?.offerPrice, undefined);
+});
+
 test("a prepared brief loads every text field verbatim", () => {
   const parsed = parsePreparedOfferIntakeBrief(
     JSON.stringify({

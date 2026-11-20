@@ -223,6 +223,9 @@
   font-weight: 650;
   line-height: 1.35;
   text-wrap: pretty;
+  /* An approved offer can contain a long unbroken token; wrap it rather than
+     clipping the article or hiding the remainder. */
+  overflow-wrap: anywhere;
 }
 
 /*
@@ -246,14 +249,17 @@
 }
 
 .offerPrice {
-  display: inline-block;
+  display: inline;
   margin-inline: 0.06em 0.01em;
-  color: var(--cp-accent);
+  color: var(--cp-offer-emphasis-ink, var(--cp-accent));
   font-size: 1.45em;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   line-height: 0.9;
-  white-space: nowrap;
+  /* Every offer treatment wraps the exact reviewed substring. Product focus
+     keeps its stronger type treatment without owning the wrapping rule. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .action {
@@ -416,10 +422,12 @@
 }
 
 .closeOffer {
+  width: 100%;
   color: var(--cp-muted);
   font-size: 0.72rem;
   letter-spacing: 0.01em;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .footer {
@@ -609,7 +617,9 @@
 
   .closeAction {
     width: auto;
-    flex: 0 0 auto;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
     align-items: flex-end;
   }
 
@@ -622,7 +632,7 @@
   }
 }
 
-/* Product-focus recipe 1.0.0. Container and approved aspect bound both axes;
+/* Product-focus recipe 1.1.0. Container and approved aspect bound both axes;
  * scoped to contained product heroes, leaving narrative/cover images intact. */
 .productPackshot .offerHero .imageFrame {
   --product-extent: clamp(260px, 54cqi, 360px);
@@ -631,4 +641,27 @@
   justify-self: center;
   align-self: center;
   aspect-ratio: var(--cp-image-aspect);
+}
+
+/* An explicit reviewed substring is the only price/offer emphasis source.
+ * The larger, heavier setting keeps it legible inside both offer treatments
+ * without turning the inline text into a badge or a link. */
+.productFocus .offerPrice {
+  display: inline;
+  margin-inline: 0.05em 0.02em;
+  font-size: 1.65em;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Product focus keeps the desktop two-column frame but starts the support
+ * block directly below the headline instead of stretching it to the image
+ * baseline. This closes the observed empty band without moving the packshot. */
+@media (min-width: 720px) {
+  .productFocus .offerHero .supportBlock {
+    align-self: start;
+  }
 }

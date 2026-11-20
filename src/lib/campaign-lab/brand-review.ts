@@ -54,18 +54,42 @@ export function contrast(a: string, b: string): number {
   const lum = (hex: string) => { const c = [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255).map(n => n <= .04045 ? n/12.92 : ((n+.055)/1.055)**2.4); return .2126*c[0]+.7152*c[1]+.0722*c[2]; };
   const x=lum(a), y=lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
 }
+
+/** The visible offer background: accent tint or the editorial page surface. */
+export function offerBackground(tokens: Pick<BrandTokens, "accent" | "page" | "offerStyle">): string {
+  if (tokens.offerStyle === "editorial") return tokens.page;
+  return "#"+[1,3,5].map(i=>Math.round(parseInt(tokens.accent.slice(i,i+2),16)*.09+parseInt(tokens.page.slice(i,i+2),16)*.91).toString(16).padStart(2,"0")).join("");
+}
+
+/**
+ * Resolves the emphasis foreground without changing the reviewed accent.
+ * Prefer the accent when it is readable, then the approved body ink, then an
+ * app-owned high-contrast ink. This keeps pale accents usable without
+ * discarding an imported palette or rewriting commercial text.
+ */
+export function pickOfferEmphasisInk(
+  tokens: Pick<BrandTokens, "accent" | "page" | "ink" | "accentInk" | "offerStyle">,
+): string {
+  const background = offerBackground(tokens);
+  const candidates = [tokens.accent, tokens.ink, tokens.accentInk, "#171813", "#fffaf1"];
+  for (const candidate of candidates) {
+    if (contrast(candidate, background) >= 4.5) return candidate.toLowerCase();
+  }
+  return contrast("#171813", background) >= contrast("#fffaf1", background) ? "#171813" : "#fffaf1";
+}
+
 export function paletteTokens(defaults: BrandTokens, raw?: BrandKitSnapshot, override?: string): BrandTokens {
   const tokens = { ...defaults };
   if (raw) for (const v of parseBrandSnapshot(raw).selections) tokens[v.role] = v.value.toLowerCase();
   if (override) tokens.accent = color.parse(override).toLowerCase();
   // The renderer owns the dependent action text role. Do not alter the observation.
   tokens.accentInk = contrast(tokens.accent,"#171813") >= contrast(tokens.accent,"#fffaf1") ? "#171813" : "#fffaf1";
+  tokens.offerEmphasisInk = pickOfferEmphasisInk(tokens);
   if (raw) {
     const pairs: [string,string,number][] = [["ink","page",4.5],["muted","page",4.5],["accent","page",4.5],["accentInk","accent",4.5],["detailInk","detailBackground",4.5]];
-    const mix = (a: string,b: string,ratio: number) => "#"+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*ratio+parseInt(b.slice(i,i+2),16)*(1-ratio)).toString(16).padStart(2,"0")).join("");
-    const tint=mix(tokens.accent,tokens.page,.09);
-    if (contrast(tokens.ink,tint)<4.5 || contrast(tokens.accent,tint)<4.5) throw new Error("Offer text on its accent tint needs 4.5:1 contrast. Correct the palette.");
-    const detailLabel=mix(tokens.detailInk,tokens.detailBackground,.62);
+    const tint=offerBackground(tokens);
+    if (contrast(tokens.ink,tint)<4.5 || contrast(tokens.accent,tint)<4.5) throw new Error("Offer text on its background needs 4.5:1 contrast. Correct the palette.");
+    const detailLabel="#"+[1,3,5].map(i=>Math.round(parseInt(tokens.detailInk.slice(i,i+2),16)*.62+parseInt(tokens.detailBackground.slice(i,i+2),16)*(1-.62)).toString(16).padStart(2,"0")).join("");
     if (contrast(detailLabel,tokens.detailBackground)<4.5) throw new Error("Dependent detail labels need 4.5:1 contrast.");
     for (const [fg,bg,min] of pairs) if (contrast(tokens[fg as keyof BrandTokens] as string,tokens[bg as keyof BrandTokens] as string) < min) throw new Error(`${fg} on ${bg} needs ${min}:1 contrast. Correct the palette or remove the active accent override.`);
   }

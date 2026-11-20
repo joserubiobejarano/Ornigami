@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { findApprovedOfferPrice } from "../src/lib/campaign-lab/offer-emphasis.ts";
+import {
+  findApprovedOfferPrice,
+  shouldEmphasizeOffer,
+} from "../src/lib/campaign-lab/offer-emphasis.ts";
 
 test("the reviewed final price is emphasised, not the first currency amount", () => {
   const offer = "30% off, was $10, now $7.50";
@@ -27,6 +30,13 @@ test("missing, blank, and non-matching approved prices keep the offer unstyled",
   assert.equal(findApprovedOfferPrice(offer, undefined), null);
   assert.equal(findApprovedOfferPrice(offer, "  "), null);
   assert.equal(findApprovedOfferPrice(offer, "$5.00"), null);
+});
+
+test("only an explicit reviewed substring or legacy token enables emphasis", () => {
+  assert.equal(shouldEmphasizeOffer(undefined), false);
+  assert.equal(shouldEmphasizeOffer("  "), false);
+  assert.equal(shouldEmphasizeOffer("$7.50"), true);
+  assert.equal(shouldEmphasizeOffer(undefined, true), true);
 });
 
 test("the complete offer text is preserved around the emphasised substring", () => {

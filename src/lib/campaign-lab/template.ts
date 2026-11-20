@@ -30,7 +30,10 @@ import type {
 } from "./types.ts";
 import { CAMPAIGN_LAB_TEMPLATE_ID } from "./types.ts";
 import { parseCampaignContext } from "./campaign-context.ts";
-import { findApprovedOfferPrice } from "./offer-emphasis.ts";
+import {
+  findApprovedOfferPrice,
+  shouldEmphasizeOffer,
+} from "./offer-emphasis.ts";
 import {
   presentationText,
   showsProductLabel,
@@ -225,6 +228,15 @@ export function validateCampaignForm(
     issues.push({
       field: "offer",
       message: `Offer must be ${SINGLE_PRODUCT_OFFER_TEMPLATE.limits.offer} characters or fewer.`,
+    });
+  }
+
+  const offerPrice = values.offerPrice?.trim() ?? "";
+  if (offerPrice && !offer.includes(offerPrice)) {
+    issues.push({
+      field: "offerPrice",
+      message:
+        "Reviewed emphasis must match the offer exactly, or be left blank for no emphasis.",
     });
   }
 
@@ -761,7 +773,7 @@ export function hashRevision(value: string): string {
   return `${(left >>> 0).toString(16).padStart(8, "0")}${(right >>> 0).toString(16).padStart(8, "0")}`;
 }
 
-export const CAMPAIGN_REVISION_IDENTITY_VERSION = 6;
+export const CAMPAIGN_REVISION_IDENTITY_VERSION = 7;
 
 function canonicalText(value: string): string {
   return presentationText(value);
@@ -809,7 +821,10 @@ export function buildDraftRevisionIdentity(
   const { tokens, brand } = theme;
   const showsDetail = draft.sections.includes("detail");
   const renderedLede = visibleLede(brief, draft);
-  const highlightedPrice = tokens.offerPriceEmphasis
+  const highlightedPrice = shouldEmphasizeOffer(
+    brief.offerPrice,
+    tokens.offerPriceEmphasis,
+  )
     ? findApprovedOfferPrice(brief.offer, brief.offerPrice)?.text ?? null
     : null;
 
@@ -847,6 +862,13 @@ export function buildDraftRevisionIdentity(
       offerStyle: tokens.offerStyle ?? "tint",
       offerPriceEmphasis: Boolean(tokens.offerPriceEmphasis),
       highlightedPrice,
+      ...(highlightedPrice
+        ? {
+            offerEmphasisInk: canonicalColor(
+              tokens.offerEmphasisInk ?? tokens.accent,
+            ),
+          }
+        : {}),
       imageInset: canonicalLength(tokens.imageInset),
       mobileHeroOrder: tokens.mobileHeroOrder ?? "support-first",
       heroOrder: tokens.heroOrder,

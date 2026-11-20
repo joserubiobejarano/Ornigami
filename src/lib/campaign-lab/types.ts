@@ -187,8 +187,13 @@ export type BrandTokens = {
    * Optional so existing brand tokens keep their approved revision.
    */
   offerStyle?: "tint" | "editorial";
-  /** Emphasise the currency amount inside the approved offer string. */
+  /** Emphasise the reviewed exact substring inside the approved offer string. */
   offerPriceEmphasis?: boolean;
+  /**
+   * Effective foreground for the reviewed emphasis. App-owned and derived from
+   * the final accent/treatment so a pale accent cannot hide the approved text.
+   */
+  offerEmphasisInk?: string;
   /** Optional inset between the product field edge and the image. */
   imageInset?: string;
   /**
@@ -351,6 +356,8 @@ export type CampaignFormValues = {
   audience?: string;
   objective?: string;
   offer: string;
+  /** Exact reviewed substring of `offer`; the editor never infers a price. */
+  offerPrice?: string;
   destinationUrl: string;
   assetId: string;
   openingFocus?: string;
@@ -440,6 +447,7 @@ export type ValidationField =
   | "audience"
   | "objective"
   | "offer"
+  | "offerPrice"
   | "destinationUrl"
   | "assetId"
   | "openingFocus"

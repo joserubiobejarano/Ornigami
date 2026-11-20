@@ -24,3 +24,15 @@ export function findApprovedOfferPrice(
     text: price,
   };
 }
+
+/**
+ * A reviewed substring is an explicit operator choice, so its presence is
+ * enough to enable emphasis. The token remains supported for existing private
+ * direction fixtures that declared emphasis before this field was exposed.
+ */
+export function shouldEmphasizeOffer(
+  approvedPrice: string | undefined,
+  tokenEnabled?: boolean,
+): boolean {
+  return Boolean(tokenEnabled) || Boolean(approvedPrice?.trim());
+}

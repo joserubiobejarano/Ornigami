@@ -36,6 +36,7 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
   const record = raw as Record<string, unknown>;
   const fields = ["brandId", "accent", "productName", "offer", "destinationUrl", "assetId"] as const;
   if (fields.some((field) => typeof record[field] !== "string")) return null;
+  if (record.offerPrice !== undefined && typeof record.offerPrice !== "string") return null;
   if (record.openingFocus !== undefined && typeof record.openingFocus !== "string") return null;
   if (record.format !== undefined && record.format !== "offer" && record.format !== "advertorial") {
     return null;
@@ -58,6 +59,7 @@ function readFormValues(raw: unknown): CampaignFormValues | null {
     audience: record.audience as string | undefined,
     objective: record.objective as string | undefined,
     offer: record.offer as string,
+    offerPrice: record.offerPrice as string | undefined,
     destinationUrl: record.destinationUrl as string,
     assetId: record.assetId as string,
     openingFocus: record.openingFocus,

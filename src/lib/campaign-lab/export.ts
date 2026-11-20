@@ -189,6 +189,8 @@ export type CampaignExportPreview = {
   appearance?: {
     accent: string;
     accentInk: string;
+    /** Effective reviewed-emphasis foreground when emphasis is active. */
+    offerEmphasisInk?: string;
   };
   asset: CampaignExportAsset;
   verification?: BrowserOfferVerification | null;
@@ -1214,6 +1216,15 @@ export function assertHtmlReceiptAgreement(
       "offer price",
       metaContent(html, "campaign-lab-offer-price"),
       receipt.preview.offerPrice,
+    ]);
+  }
+
+  if (receipt.preview.appearance?.offerEmphasisInk) {
+    const inlineInk = /--cp-offer-emphasis-ink\s*:\s*([^;"]+)/i.exec(html)?.[1]?.trim().toLowerCase() ?? null;
+    checks.push([
+      "offer emphasis ink",
+      inlineInk,
+      receipt.preview.appearance.offerEmphasisInk.toLowerCase(),
     ]);
   }
 

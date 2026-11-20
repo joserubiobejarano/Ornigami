@@ -397,6 +397,7 @@ export function CampaignLab({
     audience: `${baseId}-audience`,
     objective: `${baseId}-objective`,
     offer: `${baseId}-offer`,
+    offerPrice: `${baseId}-offer-price`,
     destinationUrl: `${baseId}-destination-url`,
     assetId: `${baseId}-product-image`,
     openingFocus: `${baseId}-opening-focus`,
@@ -495,6 +496,9 @@ export function CampaignLab({
     }
     setValues((current) => ({ ...current, [field]: value, ...(browserBrief && field === "accent" ? { accentOverride: value as string } : {}) }));
     clearChangedState(field as ValidationField);
+    if (field === "offer") {
+      setIssues((current) => current.filter((issue) => issue.field !== "offerPrice"));
+    }
   }
 
   function handleDirectionChange(value: string) {
@@ -758,6 +762,13 @@ export function CampaignLab({
         appearance: {
           accent: preview.theme.tokens.accent,
           accentInk: preview.theme.tokens.accentInk,
+          ...(preview.brief.offerPrice?.trim()
+            ? {
+                offerEmphasisInk:
+                  preview.theme.tokens.offerEmphasisInk ??
+                  preview.theme.tokens.accent,
+              }
+            : {}),
         },
         asset: {
           id: preview.asset.id,
@@ -1281,6 +1292,32 @@ export function CampaignLab({
                   </p>
                 ) : null}
               </div>
+
+              {format === "offer" ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor={fieldIds.offerPrice}>
+                    Reviewed offer emphasis (optional)
+                  </Label>
+                  <Input
+                    id={fieldIds.offerPrice}
+                    name="offerPrice"
+                    value={values.offerPrice ?? ""}
+                    onChange={(event) => handleValueChange("offerPrice", event.target.value)}
+                    autoComplete="off"
+                    aria-invalid={issueByField.has("offerPrice")}
+                    aria-describedby={describedBy("offerPrice")}
+                  />
+                  <p className="text-xs text-[#6d6a5f]">
+                    Exact text from the offer to emphasise. The renderer never infers a
+                    price, currency, reference price, or discount.
+                  </p>
+                  {issueByField.has("offerPrice") ? (
+                    <p id={`${fieldIds.offerPrice}-error`} className="text-xs font-medium text-[#a2382a]">
+                      {issueByField.get("offerPrice")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="space-y-1.5">
                 <Label htmlFor={fieldIds.destinationUrl}>Destination URL</Label>

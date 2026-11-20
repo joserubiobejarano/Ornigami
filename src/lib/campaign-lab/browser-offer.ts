@@ -52,6 +52,8 @@ export type BrowserOfferIntakeInput = {
   audience?: string;
   objective?: string;
   offer: string;
+  /** Exact reviewed substring of `offer`; no price/currency inference. */
+  offerPrice?: string;
   destinationUrl: string;
   facts: readonly BrowserOfferFactInput[];
   packshot: BrowserOfferPackshotInput | null;
@@ -87,6 +89,7 @@ export type BrowserOfferIntakeErrors = {
   audience?: string;
   objective?: string;
   offer?: string;
+  offerPrice?: string;
   destinationUrl?: string;
   facts?: string;
   factRows?: Record<number, BrowserOfferFactErrors>;
@@ -281,6 +284,12 @@ export function validateBrowserOfferIntake(
     errors.offer = `Use ${limits.offer} characters or fewer.`;
   }
 
+  const offerPrice = trimmed(input.offerPrice);
+  if (offerPrice && !offer.includes(offerPrice)) {
+    errors.offerPrice =
+      "Reviewed emphasis must match the offer exactly, or be left blank.";
+  }
+
   const destinationError = getDestinationUrlError(input.destinationUrl);
   if (destinationError) {
     errors.destinationUrl = destinationError;
@@ -410,6 +419,9 @@ export function buildBrowserOfferCatalog(
       audience: context.ok ? context.audience : undefined,
       objective: context.ok ? context.objective : undefined,
       offer: trimmed(input.offer),
+      ...(trimmed(input.offerPrice)
+        ? { offerPrice: trimmed(input.offerPrice) }
+        : {}),
       destinationUrl: trimmed(input.destinationUrl),
       assetId: asset.id,
       actionLabel: "Shop now",

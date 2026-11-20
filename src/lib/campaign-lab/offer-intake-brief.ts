@@ -30,6 +30,7 @@ export type PersistedOfferIntakeBrief = {
   audience: string;
   objective: string;
   offer: string;
+  offerPrice?: string;
   destinationUrl: string;
   facts: BrowserOfferFactInput[];
   alt: string;
@@ -93,6 +94,7 @@ function preparedValidationMessage(
   const messages = [
     errors.productName,
     errors.offer,
+    errors.offerPrice,
     errors.destinationUrl,
     errors.facts,
     errors.alt,
@@ -152,6 +154,9 @@ export function parsePreparedOfferIntakeBrief(
       audience: context.audience ?? "",
       objective: context.objective ?? "",
       offer: requiredText(parsed, "offer", "Offer"),
+      ...(parsed.offerPrice !== undefined
+        ? { offerPrice: optionalText(parsed, "offerPrice", "Reviewed emphasis") }
+        : {}),
       destinationUrl: requiredText(
         parsed,
         "destinationUrl",
@@ -168,6 +173,7 @@ export function parsePreparedOfferIntakeBrief(
       brandName: brief.brandName,
       productName: brief.productName,
       offer: brief.offer,
+      offerPrice: brief.offerPrice,
       destinationUrl: brief.destinationUrl,
       facts: brief.facts,
       packshot: {
@@ -254,6 +260,9 @@ export function parsePersistedOfferIntakeBrief(
     audience: text(record.audience),
     objective: text(record.objective),
     offer: text(record.offer),
+    ...(record.offerPrice !== undefined
+      ? { offerPrice: text(record.offerPrice) }
+      : {}),
     destinationUrl: text(record.destinationUrl),
     facts,
     alt: text(record.alt),
@@ -276,6 +285,7 @@ export function hasPersistedBriefContent(
       brief.audience?.trim() ||
       brief.objective?.trim() ||
       brief.offer.trim() ||
+      brief.offerPrice?.trim() ||
       brief.destinationUrl.trim() ||
       brief.alt.trim() ||
       brief.rights.trim() ||

@@ -253,6 +253,45 @@ test("a 180-character conditional offer uses the product name", () => {
   assert.equal(preview.preview.brief.offer, offer);
 });
 
+test("reviewed offer emphasis is an exact substring and is never inferred", () => {
+  const offer = "30% off, was $10, now $7.50";
+  const input: BrowserOfferIntakeInput = {
+    ...completeInput(),
+    offer,
+    offerPrice: "$7.50",
+    confirmations: {
+      ...completeInput().confirmations,
+      offer,
+    },
+  };
+  assert.equal(validateBrowserOfferIntake(input).valid, true);
+  const built = buildBrowserOfferCatalog(input);
+  assert.equal(built.fixture.brief.offerPrice, "$7.50");
+  const preview = buildCampaignPreview(
+    built.fixture,
+    createFormValues(built.fixture, built.catalog),
+    built.catalog,
+  );
+  assert.equal(preview.ok, true);
+  if (preview.ok) {
+    assert.equal(preview.preview.brief.offer, offer);
+    assert.equal(preview.preview.brief.offerPrice, "$7.50");
+  }
+
+  for (const offerPrice of ["$10.00", "$8.00", "not in the offer"]) {
+    const candidate = { ...input, offerPrice };
+    assert.equal(validateBrowserOfferIntake(candidate).valid, false, offerPrice);
+  }
+  assert.equal(
+    validateBrowserOfferIntake({ ...input, offerPrice: " $7.50 " }).valid,
+    true,
+  );
+
+  const blank = { ...input, offerPrice: "  " };
+  assert.equal(validateBrowserOfferIntake(blank).valid, true);
+  assert.equal(buildBrowserOfferCatalog(blank).fixture.brief.offerPrice, undefined);
+});
+
 test("a blank brand name uses the neutral preview identity", () => {
   const built = buildBrowserOfferCatalog({
     ...completeInput(),

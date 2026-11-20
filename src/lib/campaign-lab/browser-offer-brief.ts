@@ -12,6 +12,7 @@ import type {
   BrowserOfferVerification,
 } from "./browser-offer.ts";
 import { parseCampaignContext } from "./campaign-context.ts";
+import { SINGLE_PRODUCT_OFFER_TEMPLATE } from "./template.ts";
 import type { ValidationIssue } from "./types.ts";
 
 export const BROWSER_OFFER_BRIEF_SCHEMA_VERSION = 1 as const;
@@ -52,6 +53,8 @@ export type BrowserOfferBriefRequest = {
   /** Supported presentation choice; missing keeps the app-owned default accent. */
   accent?: string;
   offer: string;
+  /** Exact reviewed substring of `offer`; never inferred from currency text. */
+  offerPrice?: string;
   destinationUrl: string;
   facts: BrowserOfferFactInput[];
   asset: BrowserOfferBriefAsset;
@@ -90,6 +93,7 @@ const BRIEF_KEYS = new Set([
   "objective",
   "accent",
   "offer",
+  "offerPrice",
   "destinationUrl",
   "facts",
   "asset",
@@ -307,6 +311,15 @@ export function parseBrowserOfferBriefRequest(
   }
   const offer = requiredText(raw, "offer");
   if (!offer) issues.push({ field: "offer", message: "Offer is required." });
+  const offerPrice = optionalText(
+    raw,
+    "offerPrice",
+    "Reviewed emphasis",
+    SINGLE_PRODUCT_OFFER_TEMPLATE.limits.offer,
+  );
+  if (offerPrice.error) {
+    issues.push({ field: "offerPrice", message: offerPrice.error });
+  }
   const destinationUrl = requiredText(raw, "destinationUrl");
   if (!destinationUrl) {
     issues.push({
@@ -402,6 +415,7 @@ export function parseBrowserOfferBriefRequest(
     audience: context.ok ? context.audience : undefined,
     objective: context.ok ? context.objective : undefined,
     offer,
+    ...(offerPrice.value ? { offerPrice: offerPrice.value } : {}),
     destinationUrl,
     facts,
     packshot: {
@@ -422,6 +436,7 @@ export function parseBrowserOfferBriefRequest(
     add("audience", validation.errors.audience);
     add("objective", validation.errors.objective);
     add("offer", validation.errors.offer);
+    add("offerPrice", validation.errors.offerPrice);
     add("destinationUrl", validation.errors.destinationUrl);
     add("offer", validation.errors.facts);
     for (const row of Object.values(validation.errors.factRows ?? {})) {
@@ -472,6 +487,9 @@ export function browserOfferBriefFromIntake(
     ...(input.objective !== undefined ? { objective: input.objective } : {}),
     ...(options.accent ? { accent: options.accent } : {}),
     offer: input.offer,
+    ...(input.offerPrice !== undefined && input.offerPrice.trim()
+      ? { offerPrice: input.offerPrice.trim() }
+      : {}),
     destinationUrl: input.destinationUrl,
     facts: input.facts.map((fact) => ({ ...fact })),
     asset: {

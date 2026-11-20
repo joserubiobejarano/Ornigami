@@ -19,6 +19,7 @@ import type {
   PilotBundle,
   ResolvedBrandTheme,
 } from "./types.ts";
+import { pickOfferEmphasisInk } from "./brand-review.ts";
 
 const harborTokens: BrandTokens = {
   page: "#f4eee4",
@@ -604,6 +605,7 @@ export function createFormValues(
     audience: fixture.brief.audience,
     objective: fixture.brief.objective,
     offer: fixture.brief.offer,
+    offerPrice: fixture.brief.offerPrice,
     destinationUrl: fixture.brief.destinationUrl,
     assetId: fixture.assetId,
     openingFocus: openingFocusForFormat(fixture, format),
@@ -635,6 +637,10 @@ export function createCampaignBrief(fixture: CampaignFixture, values: CampaignFo
         ? optionalCampaignText(values.objective)
         : optionalCampaignText(fixture.brief.objective),
     offer: values.offer.trim(),
+    offerPrice:
+      values.offerPrice !== undefined
+        ? optionalCampaignText(values.offerPrice)
+        : fixture.brief.offerPrice,
     destinationUrl: values.destinationUrl.trim(),
     assetId: values.assetId,
     copy: opening?.copy ?? fixture.brief.copy,
@@ -678,12 +684,16 @@ export function resolveBrandTheme(
 ): ResolvedBrandTheme {
   const brand = getBrand(brandId, catalog);
   const normalizedAccent = parseHexColor(accent ?? "") ? accent!.trim() : brand.tokens.accent;
+  const tokens = {
+    ...brand.tokens,
+    accent: normalizedAccent,
+    accentInk: pickAccentInk(normalizedAccent),
+  };
   return {
     brand,
     tokens: {
-      ...brand.tokens,
-      accent: normalizedAccent,
-      accentInk: pickAccentInk(normalizedAccent),
+      ...tokens,
+      offerEmphasisInk: pickOfferEmphasisInk(tokens),
     },
   };
 }

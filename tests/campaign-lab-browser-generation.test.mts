@@ -128,6 +128,34 @@ test("the browser boundary rejects local sources, catalogs, and unknown fields",
   }
 });
 
+test("the HTTP browser brief carries only exact reviewed emphasis", () => {
+  const emphasis = "27-30 November 2026";
+  const parsed = parseBrowserOfferBriefRequest({
+    ...request(),
+    offerPrice: emphasis,
+  });
+  assert.equal(parsed.ok, true);
+  if (!parsed.ok) return;
+  assert.equal(parsed.input.offerPrice, emphasis);
+  assert.equal(
+    browserOfferBriefFromIntake(parsed.input).offerPrice,
+    emphasis,
+  );
+
+  const mismatch = parseBrowserOfferBriefRequest({
+    ...request(),
+    offerPrice: "28-30 November 2026",
+  });
+  assert.equal(mismatch.ok, false);
+  if (!mismatch.ok) {
+    assert.ok(mismatch.issues.some((issue) => issue.field === "offerPrice"));
+  }
+
+  const legacy = request();
+  delete legacy.offerPrice;
+  assert.equal(parseBrowserOfferBriefRequest(legacy).ok, true);
+});
+
 test("the client builder omits the packshot object URL and keeps metadata only", () => {
   const brief = browserOfferBriefFromIntake({
     brandName: "Harbor Field",

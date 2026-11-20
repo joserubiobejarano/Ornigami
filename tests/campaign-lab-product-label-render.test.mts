@@ -39,8 +39,8 @@ async function loadCampaignPage() {
       'function PreviewImage(props) { return React.createElement("img", { src: props.src, alt: props.alt, width: props.width, height: props.height, "data-preview-image": "stub" }); }',
     )
     .replace(
-      'import { findApprovedOfferPrice } from "@/lib/campaign-lab/offer-emphasis";',
-      'function findApprovedOfferPrice(offer, approvedPrice) { const price = approvedPrice?.trim(); if (!price) return null; const start = offer.indexOf(price); if (start < 0) return null; return { start, end: start + price.length, text: price }; }',
+      /import \{\s*findApprovedOfferPrice,\s*shouldEmphasizeOffer,\s*\} from "@\/lib\/campaign-lab\/offer-emphasis";/,
+      'function findApprovedOfferPrice(offer, approvedPrice) { const price = approvedPrice?.trim(); if (!price) return null; const start = offer.indexOf(price); if (start < 0) return null; return { start, end: start + price.length, text: price }; } function shouldEmphasizeOffer(approvedPrice, tokenEnabled) { return Boolean(tokenEnabled) || Boolean(approvedPrice?.trim()); }',
     )
     .replace(
       /import \{[^}]*\} from "@\/lib\/campaign-lab\/presentation";/,
@@ -101,6 +101,68 @@ test("product focus renders headline, image, offer, action and facts in DOM orde
     }));
     assert.doesNotMatch(markup, /class="[^"]*productPackshot/);
     assert.match(markup, /data-composition="product-focus"/);
+  }
+});
+
+test("reviewed offer emphasis wraps only the exact approved substring in every composition", async () => {
+  const fixture = CAMPAIGN_FIXTURES.sparse;
+  const { CampaignPage, React, renderToStaticMarkup } = await loadCampaignPage();
+  const longEmphasis = "Save 20% on the travel bottle from 27–30 November 2026";
+
+  for (const composition of ["direction-default", "product-focus"] as const) {
+    const built = buildCampaignPreview(
+      fixture,
+      {
+        ...createFormValues(fixture),
+        composition,
+        offer: longEmphasis,
+        offerPrice: longEmphasis,
+      },
+      BASE_CATALOG,
+    );
+    assert.equal(built.ok, true, composition);
+    if (!built.ok) continue;
+    const base = built.preview;
+
+    const render = (offer: string, offerPrice: string | undefined) =>
+      renderToStaticMarkup(
+        React.createElement(CampaignPage, {
+          brief: {
+            ...base.brief,
+            offer,
+            offerPrice,
+          },
+          draft: base.draft,
+          asset: base.asset,
+          theme: base.theme,
+          headingId: `emphasis-heading-${composition}`,
+          imageRevision: base.revision,
+          imageStatus: "loaded",
+          imageAttempt: 0,
+          onImageStateChange() {},
+        }),
+      );
+
+    const shortOffer = "30% off, was $10, now $7.50";
+    const exact = render(shortOffer, "$7.50");
+    assert.match(exact, /data-role="offer-emphasis">\$7\.50<\/span>/);
+    assert.match(exact, /30% off, was \$10, now /);
+    assert.doesNotMatch(exact, /data-role="offer-emphasis">\$10</);
+    assert.match(exact, /--cp-offer-emphasis-ink/);
+
+    const absent = render(shortOffer, undefined);
+    assert.doesNotMatch(absent, /data-role="offer-emphasis"/);
+    const mismatch = render(shortOffer, "$8.00");
+    assert.doesNotMatch(mismatch, /data-role="offer-emphasis"/);
+
+    const long = render(longEmphasis, longEmphasis);
+    assert.match(
+      long,
+      new RegExp(
+        `data-role="offer-emphasis">${longEmphasis.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</span>`,
+      ),
+    );
+    assert.ok(long.includes(longEmphasis));
   }
 });
 

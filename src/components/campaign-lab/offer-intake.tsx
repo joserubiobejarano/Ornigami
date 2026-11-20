@@ -286,6 +286,7 @@ export function OfferIntake({
   const [audience, setAudience] = useState("");
   const [objective, setObjective] = useState("");
   const [offer, setOffer] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
   const [destinationUrl, setDestinationUrl] = useState("");
   const [facts, setFacts] = useState<BrowserOfferFactInput[]>([
     { ...EMPTY_FACT },
@@ -324,6 +325,7 @@ export function OfferIntake({
   const audienceId = `${baseId}-audience`;
   const objectiveId = `${baseId}-objective`;
   const offerId = `${baseId}-offer`;
+  const offerPriceId = `${baseId}-offer-price`;
   const destinationId = `${baseId}-destination`;
   const factsId = `${baseId}-facts`;
   const packshotId = `${baseId}-packshot`;
@@ -356,6 +358,7 @@ export function OfferIntake({
         setAudience(brief.audience);
         setObjective(brief.objective);
         setOffer(brief.offer);
+        setOfferPrice(brief.offerPrice ?? "");
         setDestinationUrl(brief.destinationUrl);
         setFacts(brief.facts);
         setAlt(brief.alt);
@@ -384,6 +387,7 @@ export function OfferIntake({
           audience,
           objective,
           offer,
+          offerPrice,
           destinationUrl,
           facts,
           alt,
@@ -402,6 +406,7 @@ export function OfferIntake({
     facts,
     objective,
     offer,
+    offerPrice,
     productName,
     briefHydrated,
     rights,
@@ -548,6 +553,7 @@ export function OfferIntake({
     setAudience(brief.audience);
     setObjective(brief.objective);
     setOffer(brief.offer);
+    setOfferPrice(brief.offerPrice ?? "");
     setDestinationUrl(brief.destinationUrl);
     setFacts(brief.facts.map((fact) => ({ ...fact })));
     setAlt(brief.alt);
@@ -630,6 +636,7 @@ export function OfferIntake({
     setAudience(snapshot.values.audience ?? "");
     setObjective(snapshot.values.objective ?? "");
     setOffer(snapshot.values.offer);
+    setOfferPrice(snapshot.values.offerPrice ?? "");
     setDestinationUrl(snapshot.values.destinationUrl);
   }, []);
 
@@ -647,6 +654,7 @@ export function OfferIntake({
       audience,
       objective,
       offer,
+      offerPrice,
       destinationUrl,
       facts,
       packshot: packshot
@@ -763,6 +771,7 @@ export function OfferIntake({
               audience: nextValues.audience,
               objective: nextValues.objective,
               offer: nextValues.offer,
+              offerPrice: nextValues.offerPrice,
               destinationUrl: nextValues.destinationUrl,
               confirmations,
             }, {
@@ -1016,6 +1025,7 @@ export function OfferIntake({
                   setOffer(event.target.value);
                   setConfirmations((current) => ({ ...current, offer: null }));
                   clearError("offer");
+                  clearError("offerPrice");
                 }}
                 autoComplete="off"
                 required
@@ -1031,6 +1041,32 @@ export function OfferIntake({
                 Automatic headlines only shorten a simple discount, optionally dated. Any
                 other terms keep the product name, and the exact offer stays beside the CTA.
               </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor={offerPriceId}>Reviewed offer emphasis (optional)</Label>
+              <Input
+                id={offerPriceId}
+                value={offerPrice}
+                onChange={(event) => {
+                  setOfferPrice(event.target.value);
+                  clearError("offerPrice");
+                }}
+                autoComplete="off"
+                aria-invalid={Boolean(fieldError(errors, "offerPrice"))}
+                aria-describedby={`${offerPriceId}-hint${
+                  fieldError(errors, "offerPrice") ? ` ${offerPriceId}-error` : ""
+                }`}
+              />
+              <p id={`${offerPriceId}-hint`} className="text-xs text-[#6d6a5f]">
+                Paste the exact words or amount from the offer to emphasise. No price,
+                currency, or discount is inferred; leave blank for no emphasis.
+              </p>
+              {fieldError(errors, "offerPrice") ? (
+                <p id={`${offerPriceId}-error`} className="text-xs font-medium text-[#a2382a]">
+                  {fieldError(errors, "offerPrice")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-1.5">
