@@ -54,22 +54,35 @@ export const BUILDER_STORE_HOST_ID = STORE_HOST_ID;
  * treated as live or dead from this process. Cross-scope locks are recovered by
  * the explicit operator command instead of automatic reaping.
  */
-const BOOT_ID = (() => {
-  try {
-    return readFileSync("/proc/sys/kernel/random/boot_id", "utf8")
-      .trim()
-      .slice(0, 64);
-  } catch {
-    return "";
-  }
-})();
-const PID_NAMESPACE = (() => {
-  try {
-    return readlinkSync("/proc/self/ns/pid").slice(0, 128);
-  } catch {
-    return "";
-  }
-})();
+const TEST_HOOKS_ENABLED = process.env.BUILDER_RUNTIME_ALLOW_TEST_HOOKS === "1";
+const TEST_PID_NAMESPACE = TEST_HOOKS_ENABLED
+  ? process.env.BUILDER_RUNTIME_TEST_PID_NAMESPACE
+  : undefined;
+const TEST_BOOT_ID = TEST_HOOKS_ENABLED
+  ? process.env.BUILDER_RUNTIME_TEST_BOOT_ID
+  : undefined;
+const BOOT_ID =
+  TEST_BOOT_ID !== undefined
+    ? TEST_BOOT_ID
+    : (() => {
+        try {
+          return readFileSync("/proc/sys/kernel/random/boot_id", "utf8")
+            .trim()
+            .slice(0, 64);
+        } catch {
+          return "";
+        }
+      })();
+const PID_NAMESPACE =
+  TEST_PID_NAMESPACE !== undefined
+    ? TEST_PID_NAMESPACE
+    : (() => {
+        try {
+          return readlinkSync("/proc/self/ns/pid").slice(0, 128);
+        } catch {
+          return "";
+        }
+      })();
 const PROCESS_BOOT_MS = Date.now() - Math.max(0, os.uptime()) * 1000;
 
 export type BuilderStoreProcessScopeInfo = Readonly<{

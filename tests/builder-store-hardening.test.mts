@@ -106,75 +106,156 @@ test("Linux missing PID namespace or boot identity is an unproven scope", () => 
   assert.match(windows.token ?? "", /^[a-f0-9]{16}$/);
 });
 
-test("an unproven Linux scope disables reaping and orphan-temp cleanup", () => {
-  const childScript = path.join(tempRoot, "unproven-scope-child.mts");
+test("unreadable Linux PID/boot data disables reaping and cleanup; Windows fallback still reaps", () => {
+  const childScript = path.join(tempRoot, "scope-child.mts");
   writeFileSync(
     childScript,
     `import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-Object.defineProperty(process, "platform", { value: "linux" });
-process.env.BUILDER_RUNTIME_STORE_HOST_ID = "unproven-linux-host";
+const platform = process.argv[4];
+Object.defineProperty(process, "platform", { value: platform });
+process.env.BUILDER_RUNTIME_STORE_HOST_ID = "scope-simulation-host";
 const modulePath = process.argv[2];
 const workRoot = process.argv[3];
 const store = await import(pathToFileURL(modulePath).href);
-assert.equal(store.BUILDER_STORE_PROCESS_SCOPE_PROVEN, false);
-assert.equal(store.BUILDER_STORE_PROCESS_SCOPE, null);
-assert.equal(store.BUILDER_STORE_SCOPE_TOKEN, null);
 const dead = 2147483647;
-const dir = mkdtempSync(path.join(workRoot, "unproven-"));
-const temp = path.join(dir, \`.identity-store.json.\${dead}.abcdef1234567890.abcdef123456.tmp\`);
-writeFileSync(temp, "{partial");
-const issued = await store.issueBuilderInvite({
-  storeDir: dir,
-  label: "Unproven",
-  inviteTtlSeconds: 60,
-});
-assert.ok(issued.invite.id);
-assert.equal(existsSync(temp), true, "orphan temp cleanup must be disabled");
-writeFileSync(
-  path.join(dir, "identity-store.lock"),
+const host = "scope-simulation-host";
+const dir = mkdtempSync(path.join(workRoot, platform + "-"));
+const storeFile = path.join(dir, "identity-store.json");
+const lockFile = path.join(dir, "identity-store.lock");
+const sha = () =>
+  createHash("sha256").update(readFileSync(storeFile)).digest("hex");
+const lock = (token, scope) =>
   \`\${JSON.stringify({
     version: 1,
-    token: "unproven-stale",
+    token,
     pid: dead,
-    hostname: "unproven-linux-host",
-    scope: "anything",
+    hostname: host,
+    ...(scope === undefined ? {} : { scope }),
     acquiredAt: new Date().toISOString(),
-  })}\\n\`,
-);
-const inspection = await store.inspectBuilderStore(dir);
-assert.equal(inspection.lock.owner, "unproven_scope");
-assert.equal(inspection.hostId, "unproven-linux-host");
-let rejected = false;
-try {
-  await store.withBuilderIdentityStore(dir, () => "must-not-run", { lockWaitMs: 150 });
-} catch (error) {
-  rejected = error instanceof store.BuilderStoreUnavailable;
-}
-assert.equal(rejected, true, "automatic reaping must be disabled");
-assert.equal(existsSync(path.join(dir, "identity-store.lock")), true);
-console.log(JSON.stringify({ ok: true, reason: store.BUILDER_STORE_PROCESS_SCOPE_REASON }));
-`,
-  );
-  const result = spawnSync(
-    process.execPath,
-    [
-      "--experimental-strip-types",
-      childScript,
-      path.join(root, "builder-runtime", "lib", "identity-store.ts"),
-      tempRoot,
-    ],
-    { cwd: root, encoding: "utf8" },
-  );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-  const lastLine = result.stdout.trim().split(/\r?\n/).at(-1) ?? "";
+  })}\\n\`;
+
+if (platform === "linux") {
+  assert.equal(store.BUILDER_STORE_PROCESS_SCOPE_PROVEN, false);
+  assert.equal(store.BUILDER_STORE_PROCESS_SCOPE, null);
+  assert.equal(store.BUILDER_STORE_SCOPE_TOKEN, null);
   assert.equal(
-    JSON.parse(lastLine).reason,
+    store.BUILDER_STORE_PROCESS_SCOPE_REASON,
     "linux_missing_pid_namespace",
   );
+  const temp = path.join(dir, \`.identity-store.json.\${dead}.abcdef1234567890.abcdef123456.tmp\`);
+  writeFileSync(temp, "{partial");
+  const issued = await store.issueBuilderInvite({
+    storeDir: dir,
+    label: "Unproven",
+    inviteTtlSeconds: 60,
+  });
+  assert.ok(issued.invite.id, "ordinary invite write must succeed");
+  assert.equal(existsSync(temp), true, "orphan temp cleanup must be disabled");
+  writeFileSync(lockFile, lock("unproven-stale", "anything"));
+  const inspection = await store.inspectBuilderStore(dir);
+  assert.equal(inspection.lock.owner, "unproven_scope");
+  assert.equal(inspection.hostId, host);
+  let rejected = false;
+  try {
+    await store.withBuilderIdentityStore(dir, () => "must-not-run", { lockWaitMs: 150 });
+  } catch (error) {
+    rejected = error instanceof store.BuilderStoreUnavailable;
+  }
+  assert.equal(rejected, true, "automatic reaping must be disabled");
+  assert.equal(existsSync(lockFile), true, "automatic recovery must preserve the lock");
+  const before = sha();
+  const recovered = await store.recoverBuilderStoreLock({
+    storeDir: dir,
+    expectedToken: "unproven-stale",
+    confirmNoWriters: true,
+  });
+  assert.equal(recovered.recovered.includes("identity-store.lock"), true);
+  assert.equal(recovered.storeUnchanged, true);
+  assert.equal(existsSync(lockFile), false);
+  assert.equal(sha(), before, "confirmed recovery must preserve the store");
+  const listed = await store.readBuilderIdentityStore(dir);
+  assert.ok(listed.subjects.length >= 1, "records remain readable after recovery");
+} else {
+  assert.equal(store.BUILDER_STORE_PROCESS_SCOPE_PROVEN, true);
+  assert.equal(store.BUILDER_STORE_PROCESS_SCOPE, "scope-simulation-host|host|unknown-boot");
+  assert.match(store.BUILDER_STORE_SCOPE_TOKEN, /^[a-f0-9]{16}$/);
+  const issued = await store.issueBuilderInvite({
+    storeDir: dir,
+    label: "Windows fallback",
+    inviteTtlSeconds: 60,
+  });
+  assert.ok(issued.invite.id, "ordinary invite write must succeed");
+  const temp = path.join(
+    dir,
+    \`.identity-store.json.\${dead}.\${store.BUILDER_STORE_SCOPE_TOKEN}.abcdef123456.tmp\`,
+  );
+  writeFileSync(temp, "{partial");
+  await store.issueBuilderInvite({
+    storeDir: dir,
+    label: "Windows cleanup",
+    inviteTtlSeconds: 60,
+  });
+  assert.equal(existsSync(temp), false, "same-scope dead temp cleanup stays enabled");
+  writeFileSync(lockFile, lock("windows-stale", store.BUILDER_STORE_PROCESS_SCOPE));
+  const reaped = await store.withBuilderIdentityStore(
+    dir,
+    (state) => {
+      state.subjects.push({
+        id: "sub_after_windows_reap",
+        label: "After Windows reap",
+        createdAt: new Date().toISOString(),
+      });
+      return state.subjects.length;
+    },
+    { lockWaitMs: 2_000 },
+  );
+  assert.ok(reaped >= 2, "Windows fallback must still reap a dead same-scope lock");
+  assert.equal(existsSync(lockFile), false);
+  writeFileSync(lockFile, lock("windows-foreign", "another-container"));
+  const before = sha();
+  const recovered = await store.recoverBuilderStoreLock({
+    storeDir: dir,
+    expectedToken: "windows-foreign",
+    confirmNoWriters: true,
+  });
+  assert.equal(recovered.recovered.includes("identity-store.lock"), true);
+  assert.equal(recovered.storeUnchanged, true);
+  assert.equal(existsSync(lockFile), false);
+  assert.equal(sha(), before, "confirmed recovery must preserve the store");
+}
+console.log(JSON.stringify({ ok: true, platform, reason: store.BUILDER_STORE_PROCESS_SCOPE_REASON }));
+`,
+  );
+  const modulePath = path.join(root, "builder-runtime", "lib", "identity-store.ts");
+  for (const platform of ["linux", "win32"]) {
+    const result = spawnSync(
+      process.execPath,
+      ["--experimental-strip-types", childScript, modulePath, tempRoot, platform],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          BUILDER_RUNTIME_ALLOW_TEST_HOOKS: "1",
+          BUILDER_RUNTIME_TEST_PID_NAMESPACE: "",
+          BUILDER_RUNTIME_TEST_BOOT_ID: "",
+        },
+      },
+    );
+    assert.equal(result.status, 0, `${platform}: ${result.stderr || result.stdout}`);
+    const lastLine = result.stdout.trim().split(/\r?\n/).at(-1) ?? "";
+    const summary = JSON.parse(lastLine);
+    assert.equal(summary.platform, platform);
+    assert.equal(
+      summary.reason,
+      platform === "linux" ? "linux_missing_pid_namespace" : "proven",
+    );
+  }
 });
 
 function runOperator(args: string[]): Promise<{ code: number | null; output: string }> {

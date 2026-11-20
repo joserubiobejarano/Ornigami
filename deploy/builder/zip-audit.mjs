@@ -9,7 +9,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from "node:fs";
 import path from "node:path";
 
 const PYTHON_PROBE =
@@ -237,26 +237,33 @@ function requireFile(declared, value, label) {
  */
 export function auditZipBundle({
   zipPath,
-  extractDir,
+  extractDir: publishDir,
   pythonCandidates = undefined,
 }) {
   const validation = validateZipArchive(zipPath, { pythonCandidates });
 
-  if (!existsSync(extractDir)) mkdirSync(extractDir, { recursive: true });
-  const extracted = spawnSync(
-    validation.python,
-    ["-m", "zipfile", "-e", zipPath, extractDir],
-    { encoding: "utf8", timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
-  );
-  if (extracted.error || extracted.status !== 0) {
+  if (existsSync(publishDir)) {
     throw new ZipAuditError(
-      `ZIP extraction failed: ${
-        extracted.error?.message ?? (extracted.stderr || extracted.stdout)
-      }`,
+      `refusing to publish over pre-existing extracted output: ${publishDir}`,
     );
   }
+  mkdirSync(path.dirname(publishDir), { recursive: true });
+  const tempDir = mkdtempSync(path.join(path.dirname(publishDir), ".zip-audit-"));
+  try {
+    const extracted = spawnSync(
+      validation.python,
+      ["-m", "zipfile", "-e", zipPath, tempDir],
+      { encoding: "utf8", timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
+    );
+    if (extracted.error || extracted.status !== 0) {
+      throw new ZipAuditError(
+        `ZIP extraction failed: ${
+          extracted.error?.message ?? (extracted.stderr || extracted.stdout)
+        }`,
+      );
+    }
 
-  const receiptPath = path.join(extractDir, "receipt.json");
+    const receiptPath = path.join(tempDir, "receipt.json");
   if (!existsSync(receiptPath)) {
     throw new ZipAuditError("ZIP is missing receipt.json");
   }
@@ -310,7 +317,7 @@ export function auditZipBundle({
         `receipt.files length mismatch for ${file.path}: archive ${entry.fileSize}, receipt ${file.bytes}`,
       );
     }
-    const bytes = readFileSync(path.join(extractDir, file.path));
+    const bytes = readFileSync(path.join(tempDir, file.path));
     if (bytes.length !== file.bytes) {
       throw new ZipAuditError(
         `extracted length mismatch for ${file.path}: ${bytes.length} !== ${file.bytes}`,
@@ -354,7 +361,7 @@ export function auditZipBundle({
   if (String(assetFile.sha256).toLowerCase() !== String(asset.exportedSha256).toLowerCase()) {
     throw new ZipAuditError("receipt.asset file hash does not match exportedSha256");
   }
-  const assetBytes = readFileSync(path.join(extractDir, asset.file));
+  const assetBytes = readFileSync(path.join(tempDir, asset.file));
   if (sha256(assetBytes) !== String(asset.exportedSha256).toLowerCase()) {
     throw new ZipAuditError("packshot bytes do not match receipt.asset.exportedSha256");
   }
@@ -378,7 +385,7 @@ export function auditZipBundle({
         `receipt.assets[${index}] file hash does not match exportedSha256`,
       );
     }
-    const bytes = readFileSync(path.join(extractDir, extra.file));
+    const bytes = readFileSync(path.join(tempDir, extra.file));
     if (sha256(bytes) !== String(extra.exportedSha256).toLowerCase()) {
       throw new ZipAuditError(
         `receipt.assets[${index}] bytes do not match exportedSha256`,
@@ -422,7 +429,7 @@ export function auditZipBundle({
     }
   }
 
-  const html = readFileSync(path.join(extractDir, "index.html"), "utf8");
+  const html = readFileSync(path.join(tempDir, "index.html"), "utf8");
   const revision = metaContent(html, "campaign-lab-revision");
   const packshotHash = metaContent(html, "campaign-lab-packshot-sha256");
   const approvedRevision = receipt.approval?.revision;
@@ -478,6 +485,12 @@ export function auditZipBundle({
     }
   }
 
+  if (existsSync(publishDir)) {
+    throw new ZipAuditError(
+      `refusing to publish over pre-existing extracted output: ${publishDir}`,
+    );
+  }
+  renameSync(tempDir, publishDir);
   return {
     entries: validation.entries,
     names: validation.names,
@@ -486,6 +499,11 @@ export function auditZipBundle({
     receipt,
     asset,
     revision: approvedRevision,
+    publishedDir: publishDir,
     python: validation.python,
   };
+  } catch (error) {
+    rmSync(tempDir, { recursive: true, force: true });
+    throw error;
+  }
 }

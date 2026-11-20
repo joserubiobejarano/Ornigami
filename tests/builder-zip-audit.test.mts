@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -137,6 +138,53 @@ test("a valid archive passes CRC, inventory, length/hash and revision checks", (
   assert.equal(audit.files, 4);
   assert.equal(audit.archiveFiles, 4);
   assert.equal(audit.asset.file, "packshot-abc.webp");
+  assert.equal(audit.publishedDir, bundle.extractDir);
+  assert.equal(existsSync(bundle.extractDir), true);
+});
+
+test("a receipt hash failure publishes nothing and preserves pre-existing output", () => {
+  const bundle = makeBundle("hash-publish", { hashMismatch: true });
+  const previous = path.join(bundle.dir, "previous-output");
+  mkdirSync(previous, { recursive: true });
+  writeFileSync(path.join(previous, "sentinel.txt"), "keep\n");
+
+  assert.throws(
+    () =>
+      auditZipBundle({
+        zipPath: bundle.zipPath,
+        extractDir: bundle.extractDir,
+      }),
+    (error) => error instanceof ZipAuditError && /hash mismatch/i.test(error.message),
+  );
+  assert.equal(
+    existsSync(bundle.extractDir),
+    false,
+    "failed receipt integrity must not publish the extracted directory",
+  );
+  assert.equal(
+    readFileSync(path.join(previous, "sentinel.txt"), "utf8"),
+    "keep\n",
+    "pre-existing output must remain intact",
+  );
+
+  mkdirSync(bundle.extractDir, { recursive: true });
+  writeFileSync(path.join(bundle.extractDir, "old.txt"), "old\n");
+  const valid = makeBundle("hash-publish-valid");
+  assert.throws(
+    () =>
+      auditZipBundle({
+        zipPath: valid.zipPath,
+        extractDir: bundle.extractDir,
+      }),
+    (error) =>
+      error instanceof ZipAuditError &&
+      /pre-existing extracted output/i.test(error.message),
+  );
+  assert.equal(
+    readFileSync(path.join(bundle.extractDir, "old.txt"), "utf8"),
+    "old\n",
+    "a pre-existing published directory must not be replaced",
+  );
 });
 
 test("duplicate archive entries fail before extraction", () => {
@@ -196,6 +244,11 @@ test("a mismatched packshot asset fails qualification", () => {
     (error) =>
       error instanceof ZipAuditError &&
       /packshot|exportedSha256|hash/i.test(error.message),
+  );
+  assert.equal(
+    existsSync(bundle.extractDir),
+    false,
+    "asset failure must not publish extracted evidence",
   );
 });
 
