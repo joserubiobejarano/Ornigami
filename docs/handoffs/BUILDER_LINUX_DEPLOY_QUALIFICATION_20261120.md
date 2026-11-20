@@ -9,15 +9,14 @@ image digest exists.
 
 - Branch: `codex/ornigami-builder-deploy-20261120`
 - Base: `5a5db54b7764a7dbf98637874e31c0061a66cee8`
-- Implementation commit: `5a29d04cd784f440620a01460ec308e832e8e07b`
-- Branch tip (use this clean SHA for the Linux run): `ca7cd7286078e6a531bec28dc1d3253d03231352`
+- Functional implementation: `5a29d04cd784f440620a01460ec308e832e8e07b`
+- Functional code tip (implementation + docs + executable-bit fix): `ca7cd7286078e6a531bec28dc1d3253d03231352`
 - Worktree: `C:/Users/joser/.local/ornigami-builder-deploy-20261120`
 
-The tip contains the implementation, the evidence/operations documents and an
-executable-bit fix for `deploy/builder/operator.sh` and the stub engine. The
-functional implementation SHA is `5a29d04`; the Linux image revision should be
-the final clean tip actually checked out, so record the `git rev-parse HEAD`
-value in `results.txt`.
+The Linux run must record its actual clean `git rev-parse HEAD` in
+`results.txt`. Later documentation-only commits do not change the application,
+image inputs, operator CLI or qualification harness; the functional code tip is
+`ca7cd72`, and `5a29d04` is the implementation commit.
 
 The implementation is confined to `deploy/builder/`, the operator CLI and its
 additive store diagnostics, a local self-test script and focused tests. It does
