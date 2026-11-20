@@ -33,7 +33,7 @@ ENV PATH=/nodejs/bin:/busybox:/usr/local/bin:/usr/bin:/bin \
     NEXT_TELEMETRY_DISABLED=1
 COPY vendor/build-tools/npm-11.21.1.tgz /tmp/ornigami-npm.tgz
 RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(process.version!=="v22.23.3"||process.versions.openssl!=="3.5.8")throw Error("Unreviewed Node/OpenSSL version");if(crypto.createHash("sha256").update(fs.readFileSync("/tmp/ornigami-npm.tgz")).digest("hex")!=="dd77c48eb845f4856c2cdba347cfb52bd877a2655a1ea48ff0c4796e3df9dd7b")throw Error("npm checksum mismatch")' \
-    && mkdir -p /opt/ornigami-npm /app /home/node /data/builder /usr/bin /bin /usr/local/bin \
+    && mkdir -p /opt/ornigami-npm /app /app/qualify /home/node /data/builder /usr/bin /bin /usr/local/bin \
     && tar -xzf /tmp/ornigami-npm.tgz --strip-components=1 -C /opt/ornigami-npm \
     && rm /tmp/ornigami-npm.tgz \
     && ln -s /busybox/env /usr/bin/env \
@@ -44,7 +44,7 @@ RUN node -e 'const fs=require("node:fs"),crypto=require("node:crypto");if(proces
     && printf 'node:x:1000:1000:Ornigami Builder:/home/node:/sbin/nologin\n' >> /etc/passwd \
     && printf 'node:x:1000:\n' >> /etc/group \
     && touch /data/builder/.ornigami-volume \
-    && chown 1000:1000 /app /home/node /data/builder /data/builder/.ornigami-volume \
+    && chown 1000:1000 /app /app/qualify /home/node /data/builder /data/builder/.ornigami-volume \
     && test "$(npm --version)" = 11.21.1
 WORKDIR /app
 USER 1000:1000
@@ -75,7 +75,9 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
 RUN node -e 'const sha=process.env.ORNIGAMI_SOURCE_SHA??"";const url=process.env.NEXT_PUBLIC_APP_URL??"";if(!/^[0-9a-f]{40}$/.test(sha))throw Error("ORNIGAMI_SOURCE_SHA must be the exact 40-hex merged candidate SHA");let parsed;try{parsed=new URL(url)}catch{throw Error("NEXT_PUBLIC_APP_URL must be an absolute URL")};if(parsed.protocol!=="http:"&&parsed.protocol!=="https:")throw Error("NEXT_PUBLIC_APP_URL must be http(s)");if(process.env.BUILDER_RUNTIME_MODE&&process.env.BUILDER_RUNTIME_MODE!=="closed")throw Error("Do not bake invite mode into the image")' \
     && npm run builder:build \
     && mkdir -p builder-runtime/.next/cache \
-    && node -e 'const s=require("node:fs").statSync("builder-runtime/.next/cache");if(s.uid!==1000||s.gid!==1000)throw Error("Builder cache ownership drift")'
+    && node -e 'const s=require("node:fs").statSync("builder-runtime/.next/cache");if(s.uid!==1000||s.gid!==1000)throw Error("Builder cache ownership drift")' \
+    && node --experimental-strip-types scripts/builder-invite-operator.mjs lock-status --store /home/node/operator-check --json >/dev/null \
+    && rm -rf /home/node/operator-check
 
 FROM build-base AS prod-deps
 COPY --chown=1000:1000 package.json package-lock.json ./
@@ -91,6 +93,7 @@ LABEL org.opencontainers.image.revision=${ORNIGAMI_SOURCE_SHA} \
       org.ornigami.runtime=builder \
       org.ornigami.single-replica=true \
       org.ornigami.store-volume=/data/builder \
+      org.ornigami.operator-cli=/app/scripts/builder-invite-operator.mjs \
       org.ornigami.public-origin=${NEXT_PUBLIC_APP_URL}
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
@@ -109,6 +112,7 @@ COPY --from=build-base --chown=0:0 /etc/passwd /etc/passwd
 COPY --from=build-base --chown=0:0 /etc/group /etc/group
 COPY --from=build-base --chown=1000:1000 /home/node /home/node
 COPY --from=build-base --chown=1000:1000 /data/builder /data/builder
+COPY --from=build-base --chown=1000:1000 /app/qualify /app/qualify
 COPY --from=prod-deps --chown=1000:1000 /app/node_modules ./node_modules
 COPY --from=builder --chown=1000:1000 /app/builder-runtime/.next ./builder-runtime/.next
 COPY --from=builder --chown=1000:1000 /app/builder-runtime/public ./builder-runtime/public
@@ -117,6 +121,14 @@ COPY --from=builder --chown=1000:1000 /app/builder-runtime/next.config.ts ./buil
 COPY --from=builder --chown=1000:1000 /app/builder-runtime/tsconfig.json ./builder-runtime/tsconfig.json
 COPY --from=builder --chown=1000:1000 /app/package.json ./package.json
 COPY --from=builder --chown=1000:1000 /app/tsconfig.json ./tsconfig.json
+
+# Supported offline operator CLI path. The image already carries Node 22; these
+# three files are the complete dependency closure of the invite/usage operator
+# (Node built-ins only). Run it with `--network none`, the same UID and the same
+# store volume as the runtime. No application secret is included.
+COPY --from=builder --chown=1000:1000 /app/scripts/builder-invite-operator.mjs ./scripts/builder-invite-operator.mjs
+COPY --from=builder --chown=1000:1000 /app/builder-runtime/lib/identity-store.ts ./builder-runtime/lib/identity-store.ts
+COPY --from=builder --chown=1000:1000 /app/builder-runtime/lib/usage-ledger.ts ./builder-runtime/lib/usage-ledger.ts
 
 VOLUME ["/data/builder"]
 EXPOSE 3000

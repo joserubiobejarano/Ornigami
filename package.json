@@ -19,6 +19,7 @@
         "builder:start": "npm run builder:assets && next start builder-runtime",
         "builder:qualify:build": "node scripts/builder-runtime-qualify.mjs build",
         "builder:qualify:smoke": "node scripts/builder-runtime-qualify.mjs smoke",
+        "builder:qualify:self-test": "node scripts/builder-linux-qualify-self-test.mjs",
         "builder:invite": "node --experimental-strip-types scripts/builder-invite-operator.mjs",
         "builder:test:build": "node scripts/builder-runtime-qualify.mjs smoke",
         "test:performance": "node scripts/a23-performance.mjs run",

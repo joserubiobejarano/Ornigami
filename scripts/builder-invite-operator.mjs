@@ -1,6 +1,13 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import {
+  BUILDER_STORE_HOST_ID,
+  inspectBuilderStore,
   issueBuilderInvite,
   readBuilderIdentityStore,
+  recoverBuilderStoreLock,
   revokeBuilderInvite,
   revokeBuilderSession,
   revokeBuilderSubject,
@@ -14,6 +21,8 @@ function usage() {
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-session --store <dir> --id <sessionId> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-subject --store <dir> --subject <subjectId> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs reconcile-usage --store <dir> --id <usageId> --outcome succeeded|failed [--cost-micros N] --reason <text> [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs lock-status --store <dir> [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs recover-lock --store <dir> --token <lockToken> [--reap-token <token>] --confirm-no-writers [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs list --store <dir> [--json]`);
   process.exitCode = 2;
 }
@@ -27,6 +36,10 @@ function parse(argv) {
     const key = argument.slice(2);
     if (key === "json") {
       options.json = true;
+      continue;
+    }
+    if (key === "confirm-no-writers") {
+      options["confirm-no-writers"] = true;
       continue;
     }
     const value = rest[index + 1];
@@ -107,9 +120,80 @@ if (!store) {
     );
   }
   if (!reconciled.changed) process.exitCode = 1;
+} else if (command === "lock-status") {
+  const inspected = await inspectBuilderStore(store);
+  let storeHash = null;
+  try {
+    storeHash = createHash("sha256")
+      .update(readFileSync(path.join(inspected.storeDir, "identity-store.json")))
+      .digest("hex");
+  } catch {
+    // Missing or unreadable files are already reported by the inspection.
+  }
+  const output = { ...inspected, storeHash };
+  if (options.json) console.log(JSON.stringify(output));
+  else {
+    console.log(`Store:       ${output.storeDir}`);
+    console.log(`Host ID:     ${output.hostId}`);
+    console.log(`Store file:  ${output.storePresent ? `version ${output.storeVersion ?? "unknown"}` : "missing"}${output.storeError ? ` (${output.storeError})` : ""}`);
+    console.log(`Store SHA:   ${output.storeHash ?? "unavailable"}`);
+    for (const lock of [output.lock, output.reapLock]) {
+      if (!lock.present) {
+        console.log(`${lock.name}: absent`);
+      } else if (!lock.valid) {
+        console.log(`${lock.name}: INVALID metadata (manual recovery required)`);
+      } else {
+        console.log(
+          `${lock.name}: owner=${lock.owner} token=${lock.metadata.token} pid=${lock.metadata.pid} host=${lock.metadata.hostname} acquired=${lock.metadata.acquiredAt}`,
+        );
+      }
+    }
+    if (output.temporaryFiles.length > 0) {
+      console.log(`Temporary:   ${output.temporaryFiles.join(", ")}`);
+    }
+  }
+} else if (command === "recover-lock") {
+  if (options["confirm-no-writers"] !== true) {
+    throw new Error(
+      "--confirm-no-writers is required after stopping the runtime and every operator process.",
+    );
+  }
+  const token = options.token?.trim();
+  if (!token) {
+    throw new Error(
+      "--token is required. Copy the observed token from lock-status; it prevents displacing a successor lock.",
+    );
+  }
+  const recovered = await recoverBuilderStoreLock({
+    storeDir: store,
+    expectedToken: token,
+    expectedReapToken: options["reap-token"],
+    confirmNoWriters: true,
+  });
+  if (options.json) console.log(JSON.stringify(recovered));
+  else {
+    console.log(
+      `Recovered:   ${recovered.recovered.length > 0 ? recovered.recovered.join(", ") : "none"}`,
+    );
+    for (const file of recovered.quarantined) {
+      console.log(`Quarantine:  ${file}`);
+    }
+    console.log(`Store SHA:   ${recovered.storeHash}`);
+    console.log(`Store intact:${recovered.storeUnchanged ? " yes" : " NO"}`);
+  }
+  if (!recovered.storeUnchanged) {
+    console.error(
+      "The store changed during recovery. Stop, preserve the quarantine files, and investigate before restarting.",
+    );
+    process.exitCode = 1;
+  } else if (recovered.recovered.length === 0) {
+    console.error("No lock files were recovered.");
+    process.exitCode = 1;
+  }
 } else if (command === "list") {
   const state = await readBuilderIdentityStore(store);
   const output = {
+    hostId: BUILDER_STORE_HOST_ID,
     subjects: state.subjects.map((item) => ({
       id: item.id,
       label: item.label,

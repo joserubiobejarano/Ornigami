@@ -37,6 +37,15 @@ const STORE_HOST_ID =
   process.env.BUILDER_RUNTIME_STORE_HOST_ID?.trim().slice(0, 255) ||
   os.hostname();
 
+/**
+ * The stable logical host identity written into builder store lock metadata.
+ * A container replacement normally changes the OS hostname, so set this to the
+ * same constant for the runtime and every operator process that shares a store
+ * volume. A changed value makes existing locks foreign and unprovable; it does
+ * not authorize automatic takeover.
+ */
+export const BUILDER_STORE_HOST_ID = STORE_HOST_ID;
+
 export type BuilderStoreLockOptions = Readonly<{
   /** Bounded wait, primarily for focused tests and operator diagnostics. */
   lockWaitMs?: number;
@@ -390,6 +399,272 @@ function ownerIsProvablyInactive(metadata: BuilderLockMetadata): boolean {
     metadata.hostname === STORE_HOST_ID &&
     processOwnerState(metadata.pid) === "dead"
   );
+}
+
+export type BuilderStoreLockOwnerState =
+  | "missing"
+  | "invalid"
+  | "live"
+  | "dead"
+  | "foreign_host"
+  | "unprovable";
+
+export type BuilderStoreLockSnapshot = Readonly<{
+  name: string;
+  present: boolean;
+  valid: boolean;
+  owner: BuilderStoreLockOwnerState;
+  metadata: Readonly<{
+    version: 1;
+    token: string;
+    pid: number;
+    hostname: string;
+    acquiredAt: string;
+  }> | null;
+}>;
+
+export type BuilderStoreInspection = Readonly<{
+  storeDir: string;
+  hostId: string;
+  storePresent: boolean;
+  storeVersion: number | null;
+  storeError: string | null;
+  lock: BuilderStoreLockSnapshot;
+  reapLock: BuilderStoreLockSnapshot;
+  temporaryFiles: readonly string[];
+}>;
+
+/**
+ * Read-only diagnostics for the operator CLI. It never removes or rewrites a
+ * lock. A same-host PID can look live after a container replacement because a
+ * fresh container reuses low PIDs, so `recover-lock` requires an explicit
+ * no-writer confirmation and the observed token instead of trusting this state.
+ */
+export async function inspectBuilderStoreLock(
+  storeDir: string,
+  fileName: string = BUILDER_IDENTITY_LOCK_FILE,
+): Promise<BuilderStoreLockSnapshot> {
+  const name = path.basename(fileName);
+  const observed = await readLockMetadata(path.join(path.resolve(storeDir), name));
+  if (observed.kind === "missing") {
+    return { name, present: false, valid: false, owner: "missing", metadata: null };
+  }
+  if (observed.kind === "invalid") {
+    return { name, present: true, valid: false, owner: "invalid", metadata: null };
+  }
+  const metadata = observed.metadata;
+  let owner: BuilderStoreLockOwnerState;
+  if (metadata.hostname !== STORE_HOST_ID) {
+    owner = "foreign_host";
+  } else {
+    const state = processOwnerState(metadata.pid);
+    owner = state === "alive" ? "live" : state === "dead" ? "dead" : "unprovable";
+  }
+  return { name, present: true, valid: true, owner, metadata };
+}
+
+export async function inspectBuilderStore(
+  storeDir: string,
+): Promise<BuilderStoreInspection> {
+  const directory = path.resolve(storeDir);
+  let storePresent = false;
+  let storeVersion: number | null = null;
+  let storeError: string | null = null;
+  try {
+    const parsed: unknown = JSON.parse(
+      await readFile(path.join(directory, BUILDER_IDENTITY_STORE_FILE), "utf8"),
+    );
+    storePresent = true;
+    if (validStore(parsed)) storeVersion = parsed.version;
+    else storeError = "unsupported_store_shape";
+  } catch (error) {
+    if (errnoCode(error) !== "ENOENT") {
+      storePresent = true;
+      storeError = "unreadable_store";
+    }
+  }
+
+  let temporaryFiles: string[] = [];
+  try {
+    temporaryFiles = (await readdir(directory))
+      .filter(
+        (entry) =>
+          entry.endsWith(".tmp") &&
+          (entry.includes(BUILDER_IDENTITY_STORE_FILE) ||
+            entry.includes(BUILDER_IDENTITY_LOCK_FILE) ||
+            entry.includes(REAP_LOCK_FILE)),
+      )
+      .sort();
+  } catch {
+    // A missing directory is reported by the store fields.
+  }
+
+  return {
+    storeDir: directory,
+    hostId: STORE_HOST_ID,
+    storePresent,
+    storeVersion,
+    storeError,
+    lock: await inspectBuilderStoreLock(directory),
+    reapLock: await inspectBuilderStoreLock(directory, REAP_LOCK_FILE),
+    temporaryFiles,
+  };
+}
+
+export type BuilderStoreLockRecovery = Readonly<{
+  storeDir: string;
+  hostId: string;
+  recovered: readonly string[];
+  quarantined: readonly string[];
+  storeHash: string;
+  storeUnchanged: boolean;
+}>;
+
+/**
+ * Operator-only recovery for a lock that the automatic reaper cannot prove
+ * dead (a changed host id, a corrupt owner, or a replaced container whose PID
+ * namespace now maps an old owner to a live PID).
+ *
+ * Safety properties:
+ * - requires an explicit no-writer confirmation;
+ * - binds to the token observed by `lock-status`, so a successor lock is not
+ *   silently displaced;
+ * - refuses to proceed when `identity-store.json` is missing or unreadable;
+ * - renames locks to timestamped quarantine files instead of deleting them;
+ * - verifies that the store bytes did not change during recovery.
+ */
+export async function recoverBuilderStoreLock(input: {
+  storeDir: string;
+  expectedToken: string;
+  expectedReapToken?: string;
+  confirmNoWriters: boolean;
+}): Promise<BuilderStoreLockRecovery> {
+  if (!input.confirmNoWriters) {
+    throw new BuilderStoreUnavailable(
+      "Lock recovery requires an explicit no-writer confirmation.",
+    );
+  }
+
+  const directory = path.resolve(input.storeDir);
+  const storePath = path.join(directory, BUILDER_IDENTITY_STORE_FILE);
+  let storeBytes: Buffer;
+  try {
+    storeBytes = await readFile(storePath);
+  } catch {
+    throw new BuilderStoreUnavailable(
+      "identity-store.json is missing or unreadable; restore the store before lock recovery.",
+    );
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(storeBytes.toString("utf8"));
+  } catch {
+    throw new BuilderStoreUnavailable(
+      "identity-store.json is not valid JSON; restore it before lock recovery.",
+    );
+  }
+  if (!validStore(parsed)) {
+    throw new BuilderStoreUnavailable(
+      "identity-store.json has an unsupported shape; restore it before lock recovery.",
+    );
+  }
+  const beforeHash = createHash("sha256").update(storeBytes).digest("hex");
+
+  const mainPath = path.join(directory, BUILDER_IDENTITY_LOCK_FILE);
+  const reapPath = path.join(directory, REAP_LOCK_FILE);
+  const mainToken = input.expectedToken?.trim() ?? "";
+  const reapToken = input.expectedReapToken?.trim();
+  const mainObserved = await readLockMetadata(mainPath);
+  const reapObserved = await readLockMetadata(reapPath);
+
+  if (mainObserved.kind === "invalid") {
+    throw new BuilderStoreUnavailable(
+      "identity-store.lock metadata is unreadable; inspect it manually before recovery.",
+    );
+  }
+  if (mainObserved.kind === "valid" && !mainToken) {
+    throw new BuilderStoreUnavailable(
+      "The observed identity-store.lock token is required.",
+    );
+  }
+  if (mainObserved.kind === "valid" && mainToken !== mainObserved.metadata.token) {
+    throw new BuilderStoreUnavailable(
+      "identity-store.lock changed; run lock-status again before recovery.",
+    );
+  }
+  if (reapObserved.kind === "invalid") {
+    throw new BuilderStoreUnavailable(
+      "identity-store.reap.lock metadata is unreadable; inspect it manually before recovery.",
+    );
+  }
+  if (reapObserved.kind === "valid" && (!reapToken || reapToken !== reapObserved.metadata.token)) {
+    throw new BuilderStoreUnavailable(
+      "identity-store.reap.lock is present or changed; pass its observed token as --reap-token.",
+    );
+  }
+
+  const quarantined: string[] = [];
+  const recovered: string[] = [];
+  const quarantine = async (
+    filePath: string,
+    name: string,
+    token: string,
+  ): Promise<void> => {
+    const observed = await readLockMetadata(filePath);
+    if (observed.kind === "missing") return;
+    if (observed.kind !== "valid" || observed.metadata.token !== token) {
+      throw new BuilderStoreUnavailable(
+        `${name} changed during recovery; another writer may be active.`,
+      );
+    }
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const target = `${filePath}.recovered.${stamp}.${process.pid}.${randomBytes(4).toString("hex")}`;
+    try {
+      await rename(filePath, target);
+    } catch (error) {
+      if (errnoCode(error) === "ENOENT") return;
+      throw new BuilderStoreUnavailable();
+    }
+    const moved = await readLockMetadata(target);
+    if (moved.kind !== "valid" || moved.metadata.token !== token) {
+      try {
+        await link(target, filePath);
+      } catch {
+        // The mismatch is reported below; the quarantine file is preserved.
+      }
+      await rm(target, { force: true });
+      throw new BuilderStoreUnavailable(
+        `${name} changed during recovery; another writer may be active.`,
+      );
+    }
+    quarantined.push(target);
+    recovered.push(name);
+  };
+
+  if (reapObserved.kind === "valid") {
+    await quarantine(reapPath, REAP_LOCK_FILE, reapToken as string);
+  }
+  if (mainObserved.kind === "valid") {
+    await quarantine(mainPath, BUILDER_IDENTITY_LOCK_FILE, mainToken);
+  }
+
+  let afterHash: string;
+  try {
+    afterHash = createHash("sha256").update(await readFile(storePath)).digest("hex");
+  } catch {
+    throw new BuilderStoreUnavailable(
+      "identity-store.json disappeared during lock recovery; stop and restore the store.",
+    );
+  }
+
+  return {
+    storeDir: directory,
+    hostId: STORE_HOST_ID,
+    recovered,
+    quarantined,
+    storeHash: beforeHash,
+    storeUnchanged: beforeHash === afterHash,
+  };
 }
 
 /**
