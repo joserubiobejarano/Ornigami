@@ -19,12 +19,10 @@
  *   BUILDER_OPERATOR_STORE / BUILDER_RUNTIME_STORE_HOST_ID
  *                                forwarded to deploy/builder/operator.sh
  */
-import assert from "node:assert/strict";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
   writeFileSync,
 } from "node:fs";
@@ -32,6 +30,8 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+
+import { auditZipBundle } from "./zip-audit.mjs";
 
 const root = process.cwd();
 const baseUrl = process.env.BROWSER_BASE_URL;
@@ -198,77 +198,23 @@ function chromiumExecutable(chromium) {
   throw new Error("Chromium executable not found; install Playwright Chromium.");
 }
 
-function hashFile(file) {
-  return createHash("sha256").update(readFileSync(file)).digest("hex");
-}
-
-function extractZip(zipPath, dir) {
-  let result = spawnSync("unzip", ["-o", zipPath, "-d", dir], {
-    cwd: root,
-    encoding: "utf8",
-  });
-  if (result.status !== 0) {
-    result = spawnSync("python3", ["-m", "zipfile", "-e", zipPath, dir], {
-      cwd: root,
-      encoding: "utf8",
-    });
-  }
-  if (result.status !== 0) {
-    result = spawnSync("python", ["-m", "zipfile", "-e", zipPath, dir], {
-      cwd: root,
-      encoding: "utf8",
-    });
-  }
-  if (result.status !== 0) {
-    result = spawnSync("tar", ["-xf", zipPath, "-C", dir], {
-      cwd: root,
-      encoding: "utf8",
-    });
-  }
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-}
-
-function zipIntegrity(zipPath) {
-  for (const command of [
-    ["python3", ["-c", "import zipfile,sys,json; z=zipfile.ZipFile(sys.argv[1]); print(json.dumps({'bad':z.testzip(),'duplicates':len(z.namelist())!=len(set(z.namelist())),'entries':len(z.namelist())}))", zipPath]],
-    ["python", ["-c", "import zipfile,sys,json; z=zipfile.ZipFile(sys.argv[1]); print(json.dumps({'bad':z.testzip(),'duplicates':len(z.namelist())!=len(set(z.namelist())),'entries':len(z.namelist())}))", zipPath]],
-  ]) {
-    const result = spawnSync(command[0], command[1], { cwd: root, encoding: "utf8" });
-    if (result.status === 0) {
-      return JSON.parse(result.stdout.trim());
-    }
-  }
-  const result = spawnSync("unzip", ["-t", zipPath], { cwd: root, encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-  return { bad: null, duplicates: false, entries: null };
-}
-
 function auditZip(name, zipPath) {
   const dir = path.join(extracted, name);
-  mkdirSync(dir, { recursive: true });
-  extractZip(zipPath, dir);
-  const html = readFileSync(path.join(dir, "index.html"), "utf8");
-  const receipt = JSON.parse(readFileSync(path.join(dir, "receipt.json"), "utf8"));
-  const meta = (key) =>
-    new RegExp(`<meta\\s+name=["']${key}["']\\s+content=["']([^"']*)["']`, "i").exec(
-      html,
-    )?.[1] ?? null;
-  check(`${name}:revision`, receipt.approval.revision === meta("campaign-lab-revision"));
-  check(`${name}:offer`, receipt.preview.offer === meta("campaign-lab-offer"));
-  check(`${name}:price`, receipt.preview.offerPrice === meta("campaign-lab-offer-price"));
-  check(
-    `${name}:packshot`,
-    hashFile(path.join(dir, receipt.asset.file)) === receipt.asset.exportedSha256,
-  );
-  const zipInfo = zipIntegrity(zipPath);
-  check(`${name}:zip`, zipInfo.bad === null && !zipInfo.duplicates, zipInfo);
+  const audit = auditZipBundle({ zipPath, extractDir: dir });
+  check(`${name}:zip-audit`, true, {
+    entries: audit.entries,
+    files: audit.files,
+    archiveFiles: audit.archiveFiles,
+  });
   return {
     name,
     zip: path.relative(root, zipPath),
-    revision: receipt.approval.revision,
-    offer: receipt.preview.offer,
-    price: receipt.preview.offerPrice,
-    entries: zipInfo.entries,
+    revision: audit.revision,
+    offer: audit.receipt.preview.offer,
+    price: audit.receipt.preview.offerPrice,
+    entries: audit.entries,
+    files: audit.files,
+    auditTool: audit.python,
   };
 }
 

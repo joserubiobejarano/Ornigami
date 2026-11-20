@@ -71,15 +71,73 @@ const PID_NAMESPACE = (() => {
   }
 })();
 const PROCESS_BOOT_MS = Date.now() - Math.max(0, os.uptime()) * 1000;
-const PROCESS_SCOPE = `${STORE_HOST_ID}|${PID_NAMESPACE || "host"}|${
-  BOOT_ID || "unknown-boot"
-}`;
-const PROCESS_SCOPE_TOKEN = createHash("sha256")
-  .update(PROCESS_SCOPE)
-  .digest("hex")
-  .slice(0, 16);
+
+export type BuilderStoreProcessScopeInfo = Readonly<{
+  proven: boolean;
+  scope: string | null;
+  token: string | null;
+  reason: "proven" | "linux_missing_pid_namespace" | "linux_missing_boot_id";
+}>;
+
+/**
+ * Linux liveness is comparable only when both the PID namespace and boot id are
+ * available. If either read fails, the process scope is unproven: ordinary
+ * acquisition/release still works by token, but no automatic lock reaping or
+ * orphan-temp cleanup is allowed. Windows keeps the supported single-host
+ * fallback because PIDs are comparable across processes on that host.
+ */
+export function deriveBuilderStoreProcessScope(input: {
+  platform: NodeJS.Platform;
+  hostId: string;
+  pidNamespace: string | null;
+  bootId: string | null;
+}): BuilderStoreProcessScopeInfo {
+  if (input.platform === "linux") {
+    if (!input.pidNamespace) {
+      return {
+        proven: false,
+        scope: null,
+        token: null,
+        reason: "linux_missing_pid_namespace",
+      };
+    }
+    if (!input.bootId) {
+      return {
+        proven: false,
+        scope: null,
+        token: null,
+        reason: "linux_missing_boot_id",
+      };
+    }
+  }
+  const scope =
+    input.platform === "linux"
+      ? `${input.hostId}|${input.pidNamespace}|${input.bootId}`
+      : `${input.hostId}|host|unknown-boot`;
+  return {
+    proven: true,
+    scope,
+    token: createHash("sha256").update(scope).digest("hex").slice(0, 16),
+    reason: "proven",
+  };
+}
+
+const PROCESS_SCOPE_INFO = deriveBuilderStoreProcessScope({
+  platform: process.platform,
+  hostId: STORE_HOST_ID,
+  pidNamespace: PID_NAMESPACE || null,
+  bootId: BOOT_ID || null,
+});
+const PROCESS_SCOPE_PROVEN = PROCESS_SCOPE_INFO.proven;
+const PROCESS_SCOPE = PROCESS_SCOPE_INFO.scope;
+const PROCESS_SCOPE_TOKEN = PROCESS_SCOPE_INFO.token;
+const PROCESS_SCOPE_SEGMENT = PROCESS_SCOPE_TOKEN
+  ? `.${PROCESS_SCOPE_TOKEN}`
+  : ".unproven";
 
 export const BUILDER_STORE_PROCESS_SCOPE = PROCESS_SCOPE;
+export const BUILDER_STORE_PROCESS_SCOPE_PROVEN = PROCESS_SCOPE_PROVEN;
+export const BUILDER_STORE_PROCESS_SCOPE_REASON = PROCESS_SCOPE_INFO.reason;
 export const BUILDER_STORE_SCOPE_TOKEN = PROCESS_SCOPE_TOKEN;
 
 export type BuilderStoreLockOptions = Readonly<{
@@ -288,7 +346,7 @@ async function writeStoreUnlocked(
   await mkdir(directory, { recursive: true });
   const temporary = path.join(
     directory,
-    `.${BUILDER_IDENTITY_STORE_FILE}.${process.pid}.${PROCESS_SCOPE_TOKEN}.${randomBytes(6).toString("hex")}.tmp`,
+    `.${BUILDER_IDENTITY_STORE_FILE}.${process.pid}${PROCESS_SCOPE_SEGMENT}.${randomBytes(6).toString("hex")}.tmp`,
   );
   const payload = `${JSON.stringify(store, null, 2)}\n`;
   try {
@@ -321,7 +379,7 @@ function newLockMetadata(token: string, now: Date): BuilderLockMetadata {
     token,
     pid: process.pid,
     hostname: STORE_HOST_ID,
-    scope: PROCESS_SCOPE,
+    ...(PROCESS_SCOPE ? { scope: PROCESS_SCOPE } : {}),
     acquiredAt: now.toISOString(),
   };
 }
@@ -335,7 +393,7 @@ async function writeExclusiveFile(
   filePath: string,
   metadata: BuilderLockMetadata,
 ): Promise<boolean> {
-  const temporary = `${filePath}.${process.pid}.${PROCESS_SCOPE_TOKEN}.${randomBytes(6).toString("hex")}.tmp`;
+  const temporary = `${filePath}.${process.pid}${PROCESS_SCOPE_SEGMENT}.${randomBytes(6).toString("hex")}.tmp`;
   try {
     const handle = await open(temporary, "wx", 0o600);
     try {
@@ -439,6 +497,7 @@ function processOwnerState(pid: number): "alive" | "dead" | "unknown" {
 }
 
 function ownerIsProvablyInactive(metadata: BuilderLockMetadata): boolean {
+  if (!PROCESS_SCOPE_PROVEN || !PROCESS_SCOPE) return false;
   const acquiredAt = Date.parse(metadata.acquiredAt);
   return (
     metadata.hostname === STORE_HOST_ID &&
@@ -456,6 +515,7 @@ export type BuilderStoreLockOwnerState =
   | "dead"
   | "foreign_host"
   | "foreign_scope"
+  | "unproven_scope"
   | "unprovable";
 
 export type BuilderStoreLockSnapshot = Readonly<{
@@ -507,6 +567,8 @@ export async function inspectBuilderStoreLock(
   let owner: BuilderStoreLockOwnerState;
   if (metadata.hostname !== STORE_HOST_ID) {
     owner = "foreign_host";
+  } else if (!PROCESS_SCOPE_PROVEN || !PROCESS_SCOPE) {
+    owner = "unproven_scope";
   } else if (
     metadata.scope !== PROCESS_SCOPE ||
     !Number.isFinite(acquiredAt) ||
@@ -830,6 +892,7 @@ async function reapInactiveLock(lockPath: string): Promise<boolean> {
 }
 
 async function cleanupOrphanTemporaryFiles(directory: string): Promise<void> {
+  if (!PROCESS_SCOPE_PROVEN || !PROCESS_SCOPE_TOKEN) return;
   let entries;
   try {
     entries = await readdir(directory, { withFileTypes: true });
