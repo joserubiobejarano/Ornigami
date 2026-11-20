@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { BuilderShell } from "@/components/builder/builder-shell";
+import { lookupBuilderSessionCookie } from "@builder/lib/session";
+
+import {
+  BuilderRuntimeShell,
+  type BuilderShellSession,
+} from "./_components/builder-runtime-shell";
 
 import "./globals.css";
 
@@ -36,13 +41,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BuilderRuntimeLayout({
+export default async function BuilderRuntimeLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  const lookup = await lookupBuilderSessionCookie();
+  const session: BuilderShellSession | null =
+    lookup.status === "active"
+      ? {
+          subjectId: lookup.subject.id,
+          subjectLabel: lookup.subject.label,
+        }
+      : null;
+
   return (
     <html lang="en">
       <body className="antialiased flex min-h-screen flex-col">
-        <BuilderShell>{children}</BuilderShell>
+        <BuilderRuntimeShell session={session}>{children}</BuilderRuntimeShell>
       </body>
     </html>
   );

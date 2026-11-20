@@ -31,6 +31,9 @@ function routeFiles(directory: string): string[] {
 test("the builder runtime owns only the builder route surface", () => {
   assert.deepEqual(routeFiles(join(appRoot, "app")), [
     "app/api/builder/generate/route.ts",
+    "app/api/builder/session/logout/route.ts",
+    "app/api/builder/session/redeem/route.ts",
+    "app/api/builder/session/route.ts",
     "app/builder/page.tsx",
     "app/page.tsx",
   ]);
@@ -46,7 +49,17 @@ test("the builder application files have no legacy auth, provider, database, job
     "app/error.tsx",
     "app/global-error.tsx",
     "app/api/builder/generate/route.ts",
+    "app/api/builder/session/route.ts",
+    "app/api/builder/session/redeem/route.ts",
+    "app/api/builder/session/logout/route.ts",
     "app/_components/builder-closed.tsx",
+    "app/_components/builder-sign-in.tsx",
+    "app/_components/builder-logout-button.tsx",
+    "app/_components/builder-runtime-shell.tsx",
+    "app/_components/builder-runtime-workspace.tsx",
+    "lib/identity-store.ts",
+    "lib/runtime-config.ts",
+    "lib/session.ts",
     "proxy.ts",
     "instrumentation.ts",
     "next.config.ts",
@@ -67,8 +80,8 @@ test("the builder proxy and startup hook are independent of reputation Auth.js a
   const instrumentation = withoutComments(
     readFileSync(join(appRoot, "instrumentation.ts"), "utf8"),
   );
-  assert.match(instrumentation, /assertBuilderStartupConfiguration/);
-  assert.doesNotMatch(instrumentation, /Sentry|sentry|auth|database|stripe|resend|openai/i);
+  assert.match(instrumentation, /assertBuilderRuntimeStartupConfiguration/);
+  assert.doesNotMatch(instrumentation, /Sentry|sentry|next-auth|database|stripe|resend|openai/i);
 
   const nextConfig = withoutComments(
     readFileSync(join(appRoot, "next.config.ts"), "utf8"),

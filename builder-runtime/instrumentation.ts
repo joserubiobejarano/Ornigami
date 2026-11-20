@@ -5,11 +5,11 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
-  const { assertBuilderStartupConfiguration } = await import(
-    "@/lib/builder/startup"
+  const { assertBuilderRuntimeStartupConfiguration } = await import(
+    "@builder/lib/runtime-config"
   );
   try {
-    assertBuilderStartupConfiguration();
+    await assertBuilderRuntimeStartupConfiguration();
   } catch (error) {
     console.error(
       error instanceof Error

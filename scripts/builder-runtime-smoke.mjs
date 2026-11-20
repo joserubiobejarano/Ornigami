@@ -24,6 +24,9 @@ assert.deepEqual(
     "/_global-error/page",
     "/_not-found/page",
     "/api/builder/generate/route",
+    "/api/builder/session/logout/route",
+    "/api/builder/session/redeem/route",
+    "/api/builder/session/route",
     "/builder/page",
     "/page",
   ],
@@ -258,6 +261,30 @@ try {
   });
   assert.deepEqual(await api.json(), { ok: false, error: "Not found." });
 
+  const session = await request("/api/builder/session");
+  assert.equal(session.status, 401, "closed builder session endpoint must not report a subject");
+  assertBuilderResponse(session, "closed builder session");
+  await expectNotFound(
+    "/api/builder/session/redeem",
+    {
+      method: "POST",
+      headers: {
+        origin: baseUrl,
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: "token=synthetic-invite",
+    },
+    "closed builder redemption",
+  );
+  await expectNotFound(
+    "/api/builder/session/logout",
+    {
+      method: "POST",
+      headers: { origin: baseUrl },
+    },
+    "closed builder logout",
+  );
+
   const legacyRoutes = [
     "/login",
     "/signup",
@@ -318,7 +345,7 @@ try {
     }
     assert.ok(closed, `Invalid ${label} startup did not stop`);
     assert.equal(invalid.exitCode, 1, `Invalid ${label} startup must exit 1`);
-    assert.match(invalidOutput, /Builder configuration is invalid/);
+    assert.match(invalidOutput, /Builder (?:runtime )?configuration is invalid/);
   }
 
   console.log(

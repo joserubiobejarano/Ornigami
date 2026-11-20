@@ -257,15 +257,23 @@ export type OfferIntakeProps = {
    */
   surface?: "lab" | "builder";
   generationEndpoint?: string;
+  /** Runtime session subject; scopes tab recovery to that subject. */
+  recoveryScope?: string;
+  /** Runtime session subject; sent with generation requests. */
+  builderSubject?: string;
 };
 
 export function OfferIntake({
   surface = "lab",
   generationEndpoint,
+  recoveryScope,
+  builderSubject,
 }: OfferIntakeProps = {}) {
   const builderSurface = surface === "builder";
   const storageKey = builderSurface
-    ? BUILDER_OFFER_INTAKE_BRIEF_STORAGE_KEY
+    ? recoveryScope
+      ? `${BUILDER_OFFER_INTAKE_BRIEF_STORAGE_KEY}:${recoveryScope}`
+      : BUILDER_OFFER_INTAKE_BRIEF_STORAGE_KEY
     : OFFER_INTAKE_BRIEF_STORAGE_KEY;
   const baseId = useId().replace(/:/g, "");
   const objectUrlRef = useRef<string | null>(null);
@@ -512,6 +520,44 @@ export function OfferIntake({
     if (facts.length <= BROWSER_OFFER_MIN_FACTS) return;
     setFacts((current) => current.filter((_, factIndex) => factIndex !== index));
     setErrors((current) => ({ ...current, facts: undefined, factRows: undefined }));
+  }
+
+  function handlePreparedBriefDownload() {
+    const payload = serializePersistedOfferIntakeBrief({
+      directionId,
+      composition,
+      brandKitSnapshot,
+      accent: accentOverride || undefined,
+      brandName,
+      productName,
+      audience,
+      objective,
+      offer,
+      offerPrice: offerPrice || undefined,
+      destinationUrl,
+      facts,
+      alt,
+      rights,
+    });
+    const slug =
+      productName
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 48) || "campaign";
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `ornigami-prepared-brief-${slug}.json`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    setPreparedBriefNotice(
+      "Prepared brief downloaded. The packshot, confirmations and local approval are not included.",
+    );
   }
 
   async function handlePreparedBriefChange(file: File | null) {
@@ -787,6 +833,7 @@ export function OfferIntake({
           generationEndpoint={generationEndpoint}
           offerOnly={builderSurface}
           allowMotion={!builderSurface}
+          builderSubject={builderSubject}
           onEditorStateChange={handleEditorStateChange}
         />
       </div>
@@ -869,8 +916,9 @@ export function OfferIntake({
           >
             <legend className="mb-2 text-base font-semibold">Prepared brief</legend>
             <p className="text-xs text-[#6d6a5f]">
-              Load a local JSON brief, review the populated fields, then select the
-              packshot and confirm the exact inputs below.
+              {builderSurface
+                ? "Download the current text brief for export-only recovery, or load a prepared JSON brief. The packshot, confirmations and approval are never included."
+                : "Load a local JSON brief, review the populated fields, then select the packshot and confirm the exact inputs below."}
             </p>
             <div className="space-y-1.5">
               <Label htmlFor={preparedBriefId}>Prepared brief JSON</Label>
@@ -896,6 +944,17 @@ export function OfferIntake({
                         : undefined
                 }
               />
+              {builderSurface ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  data-prepared-brief-download
+                  onClick={handlePreparedBriefDownload}
+                >
+                  Download prepared brief
+                </Button>
+              ) : null}
               {readingPreparedBrief ? (
                 <p
                   id={`${preparedBriefId}-reading`}

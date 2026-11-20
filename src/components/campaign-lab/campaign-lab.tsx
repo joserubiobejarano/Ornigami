@@ -107,6 +107,8 @@ type CampaignLabProps = {
   offerOnly?: boolean;
   /** The production first beta is static; hide experimental presentations. */
   allowMotion?: boolean;
+  /** Runtime session subject; sent so a stale tab cannot act under a new session. */
+  builderSubject?: string;
   /** Browser-created briefs send this bounded contract instead of a fixture ID. */
   browserBrief?: (values: CampaignFormValues) => BrowserOfferBriefRequest;
   /** Keeps the uploaded packshot object URL local to this browser. */
@@ -170,6 +172,7 @@ export function CampaignLab({
   generationEndpoint = "/api/campaign-lab/generate",
   offerOnly = false,
   allowMotion = true,
+  builderSubject,
   browserBrief,
   browserAssetSrc,
   previewNotice,
@@ -622,7 +625,11 @@ export function CampaignLab({
     try {
       const response = await fetch(generationEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          ...(builderSubject ? { "x-builder-subject": builderSubject } : {}),
+        },
         body: JSON.stringify(
           browserRequest
             ? {

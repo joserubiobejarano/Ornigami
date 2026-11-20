@@ -35,6 +35,15 @@ const env = {
   NODE_OPTIONS: `--require="${resolve("scripts/support/offline-guard.cjs").replaceAll("\\", "/")}"`,
   ORNIGAMI_OFFLINE_LOG: eventLog,
 };
+for (const key of [
+  "BUILDER_RUNTIME_MODE",
+  "BUILDER_RUNTIME_STORE_DIR",
+  "BUILDER_RUNTIME_SESSION_TTL_SECONDS",
+  "BUILDER_RUNTIME_ALLOW_TEST_HOOKS",
+  "BUILDER_RUNTIME_TEST_GENERATION_DELAY_MS",
+]) {
+  if (process.env[key] !== undefined) env[key] = process.env[key];
+}
 
 const nextBin = resolve("node_modules/next/dist/bin/next");
 const commands = {
