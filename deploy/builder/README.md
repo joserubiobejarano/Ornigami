@@ -264,11 +264,12 @@ A shared host id is not enough to compare liveness. The runtime and the packaged
 operator normally run in distinct PID namespaces, so a PID recorded by one is
 meaningless in the other. New locks and temp files therefore carry a process
 scope derived from the host id, the PID namespace identity (or the single-host
-fallback) and the boot identity. Automatic reaping and dead-owner temp cleanup
-only act when that scope matches the current process scope, the PID is provably
-dead, and the lock/temp was created after the current boot. Missing scope, a
-different PID namespace, a different boot or a foreign host is
-`foreign_scope`/`foreign_host` and is never auto-reaped.
+fallback) and the boot identity. Automatic reaping acts only when that scope
+matches the current process scope, the PID is provably dead, and the lock was
+acquired after the current boot. Dead-owner temp cleanup only removes files with
+the same scope token; missing scope, a different PID namespace, a different boot
+or a foreign host is `foreign_scope`/`foreign_host` and is never auto-reaped.
+Foreign temp files are preserved for review.
 
 ## Operator revocation while the runtime is online
 
@@ -496,5 +497,7 @@ docker volume rm "ornigami-builder-store-<run-id>" \
 ```
 
 The result remains **pending Linux execution** until that run produces
-`ok=true` with the session/revocation/reservation, fresh-volume restore, lock
-recovery and closed-rollback checks.
+`ok=true` with the session/revocation/reservation, fresh-volume restore,
+same-host/foreign-scope lock recovery, browser phase and closed-rollback checks.
+The browser phase requires Playwright Chromium and `unzip`/`python3`; omit it
+only for a non-final `BROWSER_PHASE=0` packaging smoke.

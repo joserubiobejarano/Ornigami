@@ -208,6 +208,18 @@ function extractZip(zipPath, dir) {
     encoding: "utf8",
   });
   if (result.status !== 0) {
+    result = spawnSync("python3", ["-m", "zipfile", "-e", zipPath, dir], {
+      cwd: root,
+      encoding: "utf8",
+    });
+  }
+  if (result.status !== 0) {
+    result = spawnSync("python", ["-m", "zipfile", "-e", zipPath, dir], {
+      cwd: root,
+      encoding: "utf8",
+    });
+  }
+  if (result.status !== 0) {
     result = spawnSync("tar", ["-xf", zipPath, "-C", dir], {
       cwd: root,
       encoding: "utf8",

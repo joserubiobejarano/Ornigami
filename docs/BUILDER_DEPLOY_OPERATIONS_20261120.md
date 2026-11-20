@@ -75,11 +75,12 @@ operator normally run in different PID namespaces. Lock metadata and temp-file
 names therefore also carry a process scope derived from the host id, the Linux
 PID namespace identity (or the single-host fallback) and the boot identity.
 
-Automatic lock reaping and orphan-temp removal only act when the recorded scope
-matches the current process scope **and** the recorded PID is provably dead
-**and** the lock/temp was created after the current boot. Missing scope, a
-different PID namespace, a different boot or a foreign host is classified as
-`foreign_scope`/`foreign_host` and is never auto-reaped. That is deliberately
+Automatic lock reaping acts only when the recorded scope matches the current
+process scope, the recorded PID is provably dead, and the lock was acquired after
+the current boot. Orphan temp cleanup only removes files with the same scope
+token; missing scope, a different PID namespace, a different boot or a foreign
+host is classified as `foreign_scope`/`foreign_host` and is never auto-reaped.
+Foreign temp files are preserved for review. That is deliberately conservative:
 conservative: cross-container recovery is an operator action, not a guess based
 on a PID that may belong to a different namespace.
 
