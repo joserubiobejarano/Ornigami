@@ -136,7 +136,7 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
             </div></details>
           </div>
           <p role="status">{visible.length ? `${currentPage*PAGE_SIZE+1}–${Math.min((currentPage+1)*PAGE_SIZE,visible.length)} of ${visible.length} colors` : 'No colors match. Clear filters or try another search.'} · {groups.filter(g=>g.category===category).reduce((n,g)=>n+g.observations.length,0)} observations</p>
-          <p id={`${id}-keys`} className="sr-only">Tab to the colors; arrow keys browse, Home/End reach the first/last visible color, Enter inspects.</p>
+          <p id={`${id}-keys`} className="text-xs">Tab to colors; arrows browse, Home/End jump, Enter inspects.</p>
           <ul aria-label="Color swatches" aria-describedby={`${id}-keys`} className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6" onKeyDown={e=>{
             const buttons=Array.from(e.currentTarget.querySelectorAll('button'));
             const index=buttons.indexOf(e.target as HTMLButtonElement);
