@@ -1,33 +1,20 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 import { OfferIntake } from "@/components/campaign-lab/offer-intake";
-import { BUILDER_DRAFT_STORAGE_PREFIX } from "@/lib/builder/draft-storage";
+import { builderClientLifecycle } from "@builder/lib/client-lifecycle";
 
 /**
  * Runtime-only workspace adapter. The subject ID scopes tab recovery and is
  * sent with generation requests so a stale tab cannot act under a different
  * session.
  */
-const BUILDER_STORAGE_PREFIX = BUILDER_DRAFT_STORAGE_PREFIX;
-
 export function BuilderRuntimeWorkspace({
   subjectId,
 }: {
   subjectId: string;
 }) {
-  const clearScopedRecovery = useCallback(() => {
-    window.dispatchEvent(new Event("ornigami-builder-signout"));
-    try {
-      window.sessionStorage.removeItem(
-        `${BUILDER_STORAGE_PREFIX}:${subjectId}`,
-      );
-    } catch {
-      // Storage can be unavailable; the server session remains authoritative.
-    }
-  }, [subjectId]);
-
   useEffect(() => {
     let cancelled = false;
     const reload = () => {
@@ -38,7 +25,7 @@ export function BuilderRuntimeWorkspace({
         ? new BroadcastChannel("ornigami-builder-session")
         : null;
     channel?.addEventListener("message", () => {
-      clearScopedRecovery();
+      builderClientLifecycle.endWorkspace(subjectId, { broadcast: false });
       reload();
     });
 
@@ -49,13 +36,13 @@ export function BuilderRuntimeWorkspace({
           credentials: "same-origin",
         });
         if (!response.ok) {
-          clearScopedRecovery();
+          builderClientLifecycle.endWorkspace(subjectId);
           reload();
           return;
         }
         const payload = (await response.json()) as { subjectId?: unknown };
         if (payload.subjectId !== subjectId) {
-          clearScopedRecovery();
+          builderClientLifecycle.endWorkspace(subjectId);
           reload();
         }
       } catch {
@@ -78,7 +65,7 @@ export function BuilderRuntimeWorkspace({
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [subjectId, clearScopedRecovery]);
+  }, [subjectId]);
 
   return (
     <OfferIntake
@@ -86,8 +73,9 @@ export function BuilderRuntimeWorkspace({
       generationEndpoint="/api/builder/generate"
       recoveryScope={subjectId}
       builderSubject={subjectId}
+      lifecycle={builderClientLifecycle}
       onSessionInactive={() => {
-        clearScopedRecovery();
+        builderClientLifecycle.endWorkspace(subjectId);
         window.location.reload();
       }}
     />
