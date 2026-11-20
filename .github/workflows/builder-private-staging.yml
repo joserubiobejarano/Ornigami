@@ -85,6 +85,7 @@ jobs:
           sudo usermod -aG docker "$BUILDER_USER"
           sudo install -d -m 0755 -o "$BUILDER_USER" -g "$(id -gn "$BUILDER_USER")" \
             /tmp/builder-staging /tmp/builder-staging/xdg-config /tmp/builder-staging/xdg-cache "$EVIDENCE_ROOT"
+          sudo chmod 0777 /tmp/builder-staging "$EVIDENCE_ROOT"
           sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
           sudo chmod -R a+rX "$GITHUB_WORKSPACE"
           sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" git config --global --add safe.directory "$GITHUB_WORKSPACE"
