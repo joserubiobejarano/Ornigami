@@ -1,0 +1,534 @@
+name: Builder Linux qualification (temporary)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact 40-hex reviewed source commit
+        required: true
+        type: string
+      app_url:
+        description: Optional loopback origin; blank prefers http://127.0.0.1:3100
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: builder-linux-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    name: Builder Linux qualification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      EVIDENCE_DIR: /tmp/builder-qualification/evidence
+      RUN_ID: builder-${{ github.run_id }}-${{ github.run_attempt }}
+      IMAGE: ornigami-builder:qualify-builder-${{ github.run_id }}-${{ github.run_attempt }}
+      BROWSER_PHASE: "1"
+      KEEP_ON_FAILURE: "1"
+      KEEP_VOLUMES: "1"
+      REMOVE_IMAGE: "0"
+      DATABASE_URL: https://ci.invalid/database
+      OPENAI_API_KEY: ci-openai-key
+      STRIPE_SECRET_KEY: ci-stripe-key
+      STRIPE_WEBHOOK_SECRET: ci-stripe-webhook-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      AUTH_SECRET: ci-auth-secret
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_URL: http://127.0.0.1:3410
+      CRON_SECRET: ci-cron-secret
+      RESEND_API_KEY: ci-resend-key
+      EMAIL_FROM: ci@example.com
+      REPLY_TO_EMAIL: ci@example.com
+      TOKEN_ENCRYPTION_KEY: ci-token-encryption-key
+      REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ci-unsubscribe-secret
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3410
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Set up reviewed Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Verify exact clean source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          PREFLIGHT_DIR="$RUNNER_TEMP/builder-preflight"
+          echo "PREFLIGHT_DIR=$PREFLIGHT_DIR" >> "$GITHUB_ENV"
+          mkdir -p "$PREFLIGHT_DIR"
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$(git rev-parse HEAD)" == "$SOURCE_SHA" ]]
+          [[ -z "$(git status --porcelain --untracked-files=all)" ]]
+          git rev-parse HEAD | tee "$PREFLIGHT_DIR/source-sha.txt"
+          git status --porcelain --untracked-files=all | tee "$PREFLIGHT_DIR/source-status-before.txt"
+          printf 'ok\n' | tee "$PREFLIGHT_DIR/source-clean.txt"
+          printf '0\n' | tee "$PREFLIGHT_DIR/source-clean.exit"
+
+      - name: Preflight runner, tools and capacity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          {
+            echo "runner=$(uname -srm)"
+            echo "arch=$(uname -m)"
+            echo "os=$(. /etc/os-release; echo "${PRETTY_NAME:-unknown}")"
+            echo "uid=$(id -u)"
+            echo "user=$(id -un)"
+            echo "cpus=$(nproc)"
+            echo "memory_kib=$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+            echo "node=$(node --version)"
+            echo "npm=$(npm --version)"
+            echo "python=$(python3 --version 2>&1)"
+            echo "docker_client=$(docker --version)"
+            echo "docker_server=$(docker version --format '{{.Server.Version}}')"
+            echo "docker_root=$(docker info --format '{{.DockerRootDir}}')"
+            df -PB1 "$GITHUB_WORKSPACE" /tmp
+            python3 -c 'import sys, zipfile; assert sys.version_info[0] == 3; print("python3-zipfile=ok")'
+            ss -ltn || true
+          } | tee "$PREFLIGHT_DIR/preflight.txt"
+          [[ "$(uname -s)" == "Linux" ]]
+          [[ "$(uname -m)" == "x86_64" ]]
+          docker info >/dev/null
+          python3 -c 'import sys, zipfile; assert sys.version_info[0] == 3'
+          free_bytes=$(df -PB1 "$GITHUB_WORKSPACE" | awk 'NR == 2 {print $4}')
+          [[ "$free_bytes" =~ ^[0-9]+$ ]]
+          (( free_bytes >= 21474836480 ))
+          printf 'free_bytes=%s\n' "$free_bytes" | tee "$PREFLIGHT_DIR/workspace-capacity.txt"
+          printf '0\n' | tee "$PREFLIGHT_DIR/preflight.exit"
+          printf '0\n' | tee "$PREFLIGHT_DIR/workspace-capacity.exit"
+
+      - name: Select free loopback origin
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cat > "$PREFLIGHT_DIR/select-port.cjs" <<'NODE'
+          const net = require("node:net");
+          const probe = (port) => new Promise((resolve) => {
+            const server = net.createServer();
+            server.once("error", () => resolve(false));
+            server.listen(port, "127.0.0.1", () => server.close(() => resolve(true)));
+          });
+          (async () => {
+            if (await probe(3100)) {
+              console.log("http://127.0.0.1:3100");
+              return;
+            }
+            const server = net.createServer();
+            await new Promise((resolve, reject) => {
+              server.once("error", reject);
+              server.listen(0, "127.0.0.1", resolve);
+            });
+            const { port } = server.address();
+            await new Promise((resolve) => server.close(resolve));
+            console.log(`http://127.0.0.1:${port}`);
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          if [[ -n "${{ inputs.app_url }}" ]]; then
+            APP_URL="${{ inputs.app_url }}"
+            node -e 'const u=new URL(process.argv[1]);if(u.protocol!=="http:"||u.hostname!=="127.0.0.1"||!u.port)process.exit(2)' "$APP_URL"
+          else
+            APP_URL="$(node "$PREFLIGHT_DIR/select-port.cjs")"
+          fi
+          node -e 'const net=require("node:net");const u=new URL(process.argv[1]);const s=net.createServer();s.once("error",()=>process.exit(1));s.listen(Number(u.port),u.hostname,()=>s.close(()=>process.exit(0)));' "$APP_URL"
+          printf 'app_url=%s\n' "$APP_URL" | tee "$PREFLIGHT_DIR/loopback-port.txt"
+          printf '0\n' | tee "$PREFLIGHT_DIR/loopback-port.exit"
+          echo "APP_URL=$APP_URL" >> "$GITHUB_ENV"
+
+      - name: Prepare qualification user and directories
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          BUILDER_USER="$(id -nu 1000)"
+          echo "BUILDER_USER=$BUILDER_USER" >> "$GITHUB_ENV"
+          sudo usermod -aG docker "$BUILDER_USER"
+          sudo install -d -m 0755 -o "$BUILDER_USER" -g "$(id -gn "$BUILDER_USER")" /tmp/builder-qualification
+          sudo install -d -m 0755 -o "$BUILDER_USER" -g "$(id -gn "$BUILDER_USER")" /tmp/builder-qualification/xdg-config /tmp/builder-qualification/xdg-cache
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          sudo chmod -R a+rX "$GITHUB_WORKSPACE"
+          sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          printf 'builder_user=%s\n' "$BUILDER_USER" | tee "$PREFLIGHT_DIR/builder-user.txt"
+
+      - name: Clean install
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npm ci --no-audit --no-fund 2>&1 | tee "$PREFLIGHT_DIR/npm-ci.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$rc" | tee "$PREFLIGHT_DIR/npm-ci.exit"
+          exit "$rc"
+
+      - name: Dependency audits
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +e
+          npm audit --json > "$PREFLIGHT_DIR/audit-full.json" 2> "$PREFLIGHT_DIR/audit-full.err"
+          rc_full=$?
+          npm audit --omit=dev --json > "$PREFLIGHT_DIR/audit-production.json" 2> "$PREFLIGHT_DIR/audit-production.err"
+          rc_prod=$?
+          npm run security:audit > "$PREFLIGHT_DIR/security-audit.log" 2>&1
+          rc_policy=$?
+          npm ls --all --json > "$PREFLIGHT_DIR/npm-ls.json" 2> "$PREFLIGHT_DIR/npm-ls.err"
+          rc_ls=$?
+          set -e
+          printf '%s\n' "$rc_full" | tee "$PREFLIGHT_DIR/audit-full.exit"
+          printf '%s\n' "$rc_prod" | tee "$PREFLIGHT_DIR/audit-production.exit"
+          printf '%s\n' "$rc_policy" | tee "$PREFLIGHT_DIR/security-audit.exit"
+          printf '%s\n' "$rc_ls" | tee "$PREFLIGHT_DIR/npm-ls.exit"
+          exit 0
+
+      - name: Provide PostgreSQL 17 for isolated SQL tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          (
+            set -Eeuo pipefail
+            a12_postgres17_bin=/usr/lib/postgresql/17/bin
+            if [ ! -x "$a12_postgres17_bin/initdb" ]; then
+              sudo install -d /usr/share/postgresql-common/pgdg
+              sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+                -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+                https://www.postgresql.org/media/keys/ACCC4CF8.asc
+              a12_postgres17_codename=$( . /etc/os-release; printf '%s' "$VERSION_CODENAME" )
+              echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $a12_postgres17_codename-pgdg main" \
+                | sudo tee /etc/apt/sources.list.d/pgdg.list
+              sudo apt-get update
+              sudo apt-get install --no-install-recommends -y postgresql-17
+            fi
+            "$a12_postgres17_bin/pg_config" --version
+            echo "A04_PG_BIN=$a12_postgres17_bin" >> "$GITHUB_ENV"
+            echo "$a12_postgres17_bin" >> "$GITHUB_PATH"
+          ) 2>&1 | tee "$PREFLIGHT_DIR/postgres17.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$rc" | tee "$PREFLIGHT_DIR/postgres17.exit"
+          exit 0
+
+      - name: Lint, type generation, and TypeScript
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          run_check() {
+            local name="$1"
+            shift
+            set +e
+            "$@" 2>&1 | tee "$PREFLIGHT_DIR/$name.log"
+            local rc=${PIPESTATUS[0]}
+            set -e
+            printf '%s\n' "$rc" | tee "$PREFLIGHT_DIR/$name.exit"
+            return 0
+          }
+          run_check lint npm run lint
+          run_check typegen npm run typegen
+          run_check tsc npx tsc --noEmit
+          exit 0
+
+      - name: Full test suite
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npm test 2>&1 | tee "$PREFLIGHT_DIR/full-suite.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$rc" | tee "$PREFLIGHT_DIR/full-suite.exit"
+          exit "$rc"
+
+      - name: Account for test results and skipped checks
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          log="$PREFLIGHT_DIR/full-suite.log"
+          summary="$PREFLIGHT_DIR/full-suite-summary.txt"
+          skips="$PREFLIGHT_DIR/full-suite-skips.tsv"
+          failures="$PREFLIGHT_DIR/full-suite-failures.txt"
+          : > "$skips"
+          : > "$failures"
+          tests=0 pass=0 fail=0 skipped=0
+          if [[ -f "$log" ]]; then
+            tests="$(sed -n 's/^# tests //p' "$log" | tail -n1)"
+            pass="$(sed -n 's/^# pass //p' "$log" | tail -n1)"
+            fail="$(sed -n 's/^# fail //p' "$log" | tail -n1)"
+            skipped="$(sed -n 's/^# skipped //p' "$log" | tail -n1)"
+            awk '/^not ok [0-9]+/{print}' "$log" > "$failures"
+            awk '/# SKIP/{print}' "$log" > "$skips"
+          fi
+          tests="${tests:-0}"; pass="${pass:-0}"; fail="${fail:-0}"; skipped="${skipped:-0}"
+          {
+            printf 'tests=%s\n' "$tests"
+            printf 'pass=%s\n' "$pass"
+            printf 'fail=%s\n' "$fail"
+            printf 'skipped=%s\n' "$skipped"
+          } | tee "$summary"
+          printf 'skip_count=%s\n' "$(wc -l < "$skips")" | tee -a "$summary"
+          if [[ -s "$skips" ]]; then
+            echo "Skipped checks and reasons:" >&2
+            cat "$skips" >&2
+          fi
+          [[ "$tests" =~ ^[0-9]+$ && "$pass" =~ ^[0-9]+$ && "$fail" =~ ^[0-9]+$ && "$skipped" =~ ^[0-9]+$ ]]
+          (( fail == 0 ))
+          (( skipped == 0 ))
+          ! grep -q 'Bash is unavailable' "$skips"
+          (( pass == tests ))
+          printf '0\n' | tee "$PREFLIGHT_DIR/full-suite-accounting.exit"
+
+      - name: Re-establish exact clean source tree
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git status --porcelain --untracked-files=all | tee "$PREFLIGHT_DIR/source-status-after-checks.txt"
+          git reset --hard "$SOURCE_SHA"
+          git clean -fd > "$PREFLIGHT_DIR/git-clean.log" 2>&1 || true
+          [[ "$(git rev-parse HEAD)" == "$SOURCE_SHA" ]]
+          [[ -z "$(git status --porcelain --untracked-files=all)" ]]
+          printf 'clean\n' | tee "$PREFLIGHT_DIR/source-clean-after-checks.txt"
+
+      - name: Enable Chromium user-namespace sandbox
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          {
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+            sudo sysctl -w kernel.unprivileged_userns_clone=1 || true
+            sysctl kernel.apparmor_restrict_unprivileged_userns kernel.unprivileged_userns_clone 2>&1 || true
+          } | tee "$PREFLIGHT_DIR/chromium-sandbox-sysctl.txt"
+          sudo -u "$BUILDER_USER" unshare --user --map-root-user true
+          printf 'userns_sandbox=ok\n' | tee "$PREFLIGHT_DIR/chromium-sandbox.txt"
+
+      - name: Install pinned Playwright Chromium
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BT="$GITHUB_WORKSPACE/scripts/framework-prototype/browser-tools"
+          set +e
+          npm ci --prefix "$BT" --no-audit --no-fund 2>&1 | tee "$PREFLIGHT_DIR/playwright-install.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$rc" | tee "$PREFLIGHT_DIR/playwright-install.exit"
+          if [[ "$rc" -ne 0 ]]; then
+            exit "$rc"
+          fi
+          node "$BT/node_modules/playwright/cli.js" --version | tee "$PREFLIGHT_DIR/playwright-version.txt"
+          sudo env PATH="$PATH" node "$BT/node_modules/playwright/cli.js" install-deps chromium 2>&1 | tee "$PREFLIGHT_DIR/playwright-deps.log"
+          sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" PLAYWRIGHT_BROWSERS_PATH="/home/$BUILDER_USER/.cache/ms-playwright" \
+            node "$BT/node_modules/playwright/cli.js" install chromium 2>&1 | tee "$PREFLIGHT_DIR/playwright-chromium-install.log"
+          sudo chmod -R a+rX "$BT/node_modules"
+          sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" PLAYWRIGHT_BROWSERS_PATH="/home/$BUILDER_USER/.cache/ms-playwright" \
+            XDG_CONFIG_HOME=/tmp/builder-qualification/xdg-config XDG_CACHE_HOME=/tmp/builder-qualification/xdg-cache \
+            node --input-type=module -e '
+              import { pathToFileURL } from "node:url";
+              const mod = await import(pathToFileURL(process.argv[1]).href);
+              const executable = mod.chromium.executablePath();
+              console.log("chromium_executable=" + executable);
+              const browser = await mod.chromium.launch({ headless: true, chromiumSandbox: true, executablePath: executable });
+              await browser.close();
+              console.log("playwright_launch=ok");
+            ' "$BT/node_modules/playwright/index.mjs" 2>&1 | tee "$PREFLIGHT_DIR/playwright-smoke.log"
+
+      - name: Run builder Linux qualification
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          sudo -u "$BUILDER_USER" env \
+            HOME="/home/$BUILDER_USER" \
+            PATH="$PATH" \
+            SOURCE_SHA="$SOURCE_SHA" \
+            APP_URL="$APP_URL" \
+            BROWSER_PHASE="$BROWSER_PHASE" \
+            RUN_ID="$RUN_ID" \
+            EVIDENCE_DIR="$EVIDENCE_DIR" \
+            KEEP_ON_FAILURE="$KEEP_ON_FAILURE" \
+            KEEP_VOLUMES="$KEEP_VOLUMES" \
+            REMOVE_IMAGE="$REMOVE_IMAGE" \
+            PLAYWRIGHT_BROWSERS_PATH="/home/$BUILDER_USER/.cache/ms-playwright" \
+            XDG_CONFIG_HOME=/tmp/builder-qualification/xdg-config \
+            XDG_CACHE_HOME=/tmp/builder-qualification/xdg-cache \
+            ./deploy/builder/qualify-linux.sh 2>&1 | tee "$PREFLIGHT_DIR/qualification-console.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          printf '%s\n' "$rc" | tee "$PREFLIGHT_DIR/qualification.exit"
+          exit "$rc"
+
+      - name: Capture image identity and diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$PREFLIGHT_DIR/image" "$PREFLIGHT_DIR/diagnostics"
+          sudo chmod -R a+rX /tmp/builder-qualification 2>/dev/null || true
+          if docker image inspect "$IMAGE" >/dev/null 2>&1; then
+            docker image inspect --format '{{.Id}}' "$IMAGE" | tee "$PREFLIGHT_DIR/image/image-id.txt"
+            docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$IMAGE" | tee "$PREFLIGHT_DIR/image/revision-label.txt"
+            docker image inspect --format '{{ index .Config.Labels "org.ornigami.qualify.run" }}' "$IMAGE" | tee "$PREFLIGHT_DIR/image/run-label.txt"
+            docker image inspect --format '{{.Config.User}}' "$IMAGE" | tee "$PREFLIGHT_DIR/image/user.txt"
+            docker image inspect "$IMAGE" > "$PREFLIGHT_DIR/image/image-inspect.json"
+            printf '0\n' | tee "$PREFLIGHT_DIR/image/identity.exit"
+          else
+            printf 'image_not_present\n' | tee "$PREFLIGHT_DIR/image/image-id.txt"
+            printf '1\n' | tee "$PREFLIGHT_DIR/image/identity.exit"
+          fi
+          {
+            docker ps -a --filter "label=org.ornigami.qualify.run=$RUN_ID" --no-trunc
+            docker network ls --filter "label=org.ornigami.qualify.run=$RUN_ID"
+            docker volume ls --filter "label=org.ornigami.qualify.run=$RUN_ID"
+          } > "$PREFLIGHT_DIR/diagnostics/owned-resources.txt" 2>&1 || true
+          for name in "ornigami-builder-qualify-$RUN_ID" "ornigami-builder-qualify-$RUN_ID-restore" "ornigami-builder-qualify-$RUN_ID-closed"; do
+            if docker container inspect "$name" >/dev/null 2>&1; then
+              docker logs "$name" > "$PREFLIGHT_DIR/diagnostics/$name.log" 2>&1 || true
+              docker inspect "$name" > "$PREFLIGHT_DIR/diagnostics/$name.inspect.json" 2>&1 || true
+            fi
+          done
+          if [[ -f "$EVIDENCE_DIR/results.txt" ]]; then cp "$EVIDENCE_DIR/results.txt" "$PREFLIGHT_DIR/results.txt"; fi
+          if [[ -f "$EVIDENCE_DIR/checks.tsv" ]]; then cp "$EVIDENCE_DIR/checks.tsv" "$PREFLIGHT_DIR/checks.tsv"; fi
+          mkdir -p "$PREFLIGHT_DIR/evidence-bundle"
+          for item in results.txt checks.tsv qualify.log operator.log http.log list-before-closed.json list-after-closed.json browser; do
+            if [[ -e "$EVIDENCE_DIR/$item" ]]; then cp -a "$EVIDENCE_DIR/$item" "$PREFLIGHT_DIR/evidence-bundle/"; fi
+          done
+
+      - name: Summarize qualification
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          summary="$PREFLIGHT_DIR/summary.md"
+          status() {
+            local file="$1"
+            if [[ ! -f "$file" ]]; then printf 'not-run'; return; fi
+            local rc
+            rc="$(cat "$file")"
+            if [[ "$rc" == "0" ]]; then printf 'pass'; else printf 'fail (exit %s)' "$rc"; fi
+          }
+          result_flag() {
+            local key="$1"
+            if [[ -f "$EVIDENCE_DIR/results.txt" ]]; then
+              sed -n "s/^${key}=//p" "$EVIDENCE_DIR/results.txt" | head -n1
+            fi
+          }
+          browser_status() {
+            case "$(result_flag browser_journey)" in
+              true) printf 'pass' ;;
+              skipped) printf 'skipped' ;;
+              *) printf 'fail' ;;
+            esac
+          }
+          {
+            echo "# Builder Linux qualification summary"
+            echo
+            echo "- Source SHA: \`$SOURCE_SHA\`"
+            echo "- Checked-out SHA: \`$(git rev-parse HEAD)\`"
+            echo "- Run ID: \`$RUN_ID\`"
+            echo "- App URL: \`${APP_URL:-unset}\`"
+            echo "- Local image tag: \`$IMAGE\`"
+            echo "- Local image ID: \`$(cat "$PREFLIGHT_DIR/image/image-id.txt" 2>/dev/null || echo unavailable)\`"
+            echo "- Revision label: \`$(cat "$PREFLIGHT_DIR/image/revision-label.txt" 2>/dev/null || echo unavailable)\`"
+            echo "- Evidence directory: \`$EVIDENCE_DIR\`"
+            echo "- Preflight directory: \`$PREFLIGHT_DIR\`"
+            echo
+            echo "| Check | Status | Detail |"
+            echo "| --- | --- | --- |"
+            printf '| exact clean source | %s | HEAD %s |\n' "$(status "$PREFLIGHT_DIR/source-clean.exit")" "$SOURCE_SHA"
+            printf '| Linux x86_64 runner | %s | %s |\n' "$(status "$PREFLIGHT_DIR/preflight.exit")" "$(uname -srm)"
+            printf '| Docker daemon | %s | %s |\n' "$(status "$PREFLIGHT_DIR/preflight.exit")" "$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo unavailable)"
+            printf '| Python 3 zipfile | %s | %s |\n' "$(status "$PREFLIGHT_DIR/preflight.exit")" "$(python3 --version 2>&1)"
+            printf '| workspace capacity | %s | %s |\n' "$(status "$PREFLIGHT_DIR/workspace-capacity.exit")" "$(cat "$PREFLIGHT_DIR/workspace-capacity.txt" 2>/dev/null || echo unavailable)"
+            printf '| free loopback port | %s | %s |\n' "$(status "$PREFLIGHT_DIR/loopback-port.exit")" "${APP_URL:-unset}"
+            printf '| clean install | %s | %s |\n' "$(status "$PREFLIGHT_DIR/npm-ci.exit")" "npm ci"
+            printf '| pinned Playwright Chromium | %s | %s |\n' "$(status "$PREFLIGHT_DIR/playwright-install.exit")" "$(cat "$PREFLIGHT_DIR/playwright-version.txt" 2>/dev/null || echo unavailable)"
+            printf '| full dependency audit | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/audit-full.exit")" "$(cat "$PREFLIGHT_DIR/audit-full.exit" 2>/dev/null || echo na)"
+            printf '| production dependency audit | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/audit-production.exit")" "$(cat "$PREFLIGHT_DIR/audit-production.exit" 2>/dev/null || echo na)"
+            printf '| release audit policy | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/security-audit.exit")" "$(cat "$PREFLIGHT_DIR/security-audit.exit" 2>/dev/null || echo na)"
+            printf '| lint | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/lint.exit")" "$(cat "$PREFLIGHT_DIR/lint.exit" 2>/dev/null || echo na)"
+            printf '| type generation | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/typegen.exit")" "$(cat "$PREFLIGHT_DIR/typegen.exit" 2>/dev/null || echo na)"
+            printf '| TypeScript | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/tsc.exit")" "$(cat "$PREFLIGHT_DIR/tsc.exit" 2>/dev/null || echo na)"
+            printf '| full test suite | %s | exit %s |\n' "$(status "$PREFLIGHT_DIR/full-suite.exit")" "$(cat "$PREFLIGHT_DIR/full-suite.exit" 2>/dev/null || echo na)"
+            printf '| full suite skips | %s | %s |\n' "$(sed -n 's/^skipped=//p' "$PREFLIGHT_DIR/full-suite-summary.txt" 2>/dev/null || echo na)" "$(cat "$PREFLIGHT_DIR/full-suite-skips.tsv" 2>/dev/null | tr '\n' ' ' || echo none)"
+            printf '| builder Linux qualification | %s | ok=%s checks=%s |\n' "$(status "$PREFLIGHT_DIR/qualification.exit")" "$(result_flag ok)" "$(result_flag checks)"
+            printf '| browser phase | %s | %s |\n' "$(browser_status)" "$(result_flag browser_origin)"
+            printf '| image identity | %s | %s |\n' "$(status "$PREFLIGHT_DIR/image/identity.exit")" "$(cat "$PREFLIGHT_DIR/image/revision-label.txt" 2>/dev/null || echo unavailable)"
+          } > "$summary"
+          cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+          cat "$summary"
+
+      - name: Enforce builder artifact qualification
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          require_zero() {
+            local name="$1" file="$PREFLIGHT_DIR/$1.exit"
+            [[ -f "$file" ]] || { echo "missing exit record for $name" >&2; return 1; }
+            [[ "$(cat "$file")" == "0" ]] || { echo "$name failed with exit $(cat "$file")" >&2; return 1; }
+          }
+          for name in npm-ci audit-full audit-production security-audit npm-ls lint typegen tsc full-suite full-suite-accounting; do
+            require_zero "$name"
+          done
+          grep -qx 'skipped=0' "$PREFLIGHT_DIR/full-suite-summary.txt"
+          results="$EVIDENCE_DIR/results.txt"
+          checks="$EVIDENCE_DIR/checks.tsv"
+          [[ -f "$results" ]]
+          [[ -f "$checks" ]]
+          grep -qx 'ok=true' "$results"
+          grep -qx 'browser_phase=1' "$results"
+          grep -qx 'browser_journey=true' "$results"
+          grep -qx "source_sha=$SOURCE_SHA" "$results"
+          for flag in runtime_user=1000:1000 read_only_root=true egress_blocked=true single_replica=true restart_preserved_store=true fresh_container_restore=true session_valid_after_restart=true session_revoked_after_restart=true unresolved_reservation_after_restart=true lock_recovery=true closed_rollback_preserved_store=true closed_records_preserved=true; do
+            grep -qx "$flag" "$results"
+          done
+          for name in http:smoke:invite http:smoke:closed browser:journey operator:host-id operator:empty-lock store:owned-0600 restart:usage-unchanged restart:store-unchanged backup:hash restore:hash restore:usage-unchanged lock:foreign-scope lock:recovered lock:store-unchanged lock:hash lock:store-readable closed:smoke closed:store-unchanged closed:records-preserved export:hash; do
+            grep -q "$name" "$checks"
+          done
+          [[ "$(cat "$PREFLIGHT_DIR/image/revision-label.txt")" == "$SOURCE_SHA" ]]
+          node -e '
+            const fs = require("node:fs");
+            const r = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const names = new Set((r.checks || []).map((check) => check.name));
+            const required = ["login:a", "b:initial-generation", "idempotency:replay-409", "revoke-a:workspace-cleared", "revoke-a:second-tab-cleared", "revoke-a:no-workspace-text", "revoke-a:cannot-generate", "revoke-a:b-session-active", "revoke-a:b-can-generate", "signout:b-signed-out", "browser-a:zip-audit"];
+            if (r.ok !== true) throw new Error("browser results are not ok");
+            for (const name of required) if (!names.has(name)) throw new Error("missing browser check " + name);
+            if (!Array.isArray(r.exports) || r.exports.length < 1) throw new Error("missing browser ZIP export evidence");
+          ' "$PREFLIGHT_DIR/evidence-bundle/browser/results.json"
+          echo "Builder artifact qualification passed."
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: builder-linux-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/builder-preflight
+          if-no-files-found: warn
+          retention-days: 30
