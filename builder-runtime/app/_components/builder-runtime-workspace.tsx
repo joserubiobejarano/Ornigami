@@ -3,14 +3,13 @@
 import { useEffect } from "react";
 
 import { OfferIntake } from "@/components/campaign-lab/offer-intake";
+import { builderClientLifecycle } from "@builder/lib/client-lifecycle";
 
 /**
  * Runtime-only workspace adapter. The subject ID scopes tab recovery and is
  * sent with generation requests so a stale tab cannot act under a different
  * session.
  */
-const BUILDER_STORAGE_PREFIX = "ornigami.builder.offer-intake.brief.v1";
-
 export function BuilderRuntimeWorkspace({
   subjectId,
 }: {
@@ -18,15 +17,6 @@ export function BuilderRuntimeWorkspace({
 }) {
   useEffect(() => {
     let cancelled = false;
-    const clearScopedRecovery = () => {
-      try {
-        window.sessionStorage.removeItem(
-          `${BUILDER_STORAGE_PREFIX}:${subjectId}`,
-        );
-      } catch {
-        // Storage can be unavailable; the server session remains authoritative.
-      }
-    };
     const reload = () => {
       if (!cancelled) window.location.reload();
     };
@@ -35,7 +25,7 @@ export function BuilderRuntimeWorkspace({
         ? new BroadcastChannel("ornigami-builder-session")
         : null;
     channel?.addEventListener("message", () => {
-      clearScopedRecovery();
+      builderClientLifecycle.endWorkspace(subjectId, { broadcast: false });
       reload();
     });
 
@@ -46,13 +36,13 @@ export function BuilderRuntimeWorkspace({
           credentials: "same-origin",
         });
         if (!response.ok) {
-          clearScopedRecovery();
+          builderClientLifecycle.endWorkspace(subjectId);
           reload();
           return;
         }
         const payload = (await response.json()) as { subjectId?: unknown };
         if (payload.subjectId !== subjectId) {
-          clearScopedRecovery();
+          builderClientLifecycle.endWorkspace(subjectId);
           reload();
         }
       } catch {
@@ -83,6 +73,7 @@ export function BuilderRuntimeWorkspace({
       generationEndpoint="/api/builder/generate"
       recoveryScope={subjectId}
       builderSubject={subjectId}
+      lifecycle={builderClientLifecycle}
     />
   );
 }

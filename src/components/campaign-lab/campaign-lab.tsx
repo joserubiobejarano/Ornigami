@@ -60,6 +60,8 @@ import {
   openingOptionsForFormat,
 } from "@/lib/campaign-lab/fixtures";
 import { GenerationRequestGate } from "@/lib/campaign-lab/generation/client-gate";
+import { createGenerationAttempt } from "@/lib/campaign-lab/generation/generation-attempt";
+import type { CampaignDraftLifecycle } from "@/lib/campaign-lab/draft-lifecycle";
 import {
   DESIGN_GUIDANCE_PACK_VERSION,
   DESIGN_HARNESS_VERSION,
@@ -109,6 +111,8 @@ type CampaignLabProps = {
   allowMotion?: boolean;
   /** Runtime session subject; sent so a stale tab cannot act under a new session. */
   builderSubject?: string;
+  /** Shared sign-out/expiry lifecycle for persistence and pending work. */
+  lifecycle?: CampaignDraftLifecycle;
   /** Browser-created briefs send this bounded contract instead of a fixture ID. */
   browserBrief?: (values: CampaignFormValues) => BrowserOfferBriefRequest;
   /** Keeps the uploaded packshot object URL local to this browser. */
@@ -173,6 +177,7 @@ export function CampaignLab({
   offerOnly = false,
   allowMotion = true,
   builderSubject,
+  lifecycle,
   browserBrief,
   browserAssetSrc,
   previewNotice,
@@ -595,6 +600,7 @@ export function CampaignLab({
   }
 
   async function handleGenerate() {
+    if (lifecycle && !lifecycle.canPersist()) return;
     const snapshot = { ...values };
     if (offerOnly) {
       snapshot.format = "offer";
@@ -614,9 +620,11 @@ export function CampaignLab({
     }
 
     const browserRequest = browserBrief?.(snapshot) ?? null;
-    const requestId = requestGate.current.begin();
+    const attempt = createGenerationAttempt(requestGate.current.begin());
+    const requestId = attempt.localSequence;
     inFlight.current?.abort();
     const controller = new AbortController();
+    lifecycle?.registerPendingWork(controller);
     inFlight.current = controller;
     setGenerating(true);
     setApproval(null);
@@ -634,12 +642,12 @@ export function CampaignLab({
           browserRequest
             ? {
                 browserBrief: browserRequest,
-                requestId: String(requestId),
+                requestId: attempt.idempotencyKey,
               }
             : {
                 fixtureId: fixture.id,
                 values: snapshot,
-                requestId: String(requestId),
+                requestId: attempt.idempotencyKey,
               },
         ),
         signal: controller.signal,
@@ -719,6 +727,7 @@ export function CampaignLab({
       setIssues([]);
       setDirty(false);
     } finally {
+      lifecycle?.releasePendingWork(controller);
       if (requestGate.current.isCurrent(requestId)) {
         setGenerating(false);
         inFlight.current = null;
@@ -734,6 +743,7 @@ export function CampaignLab({
   }
 
   async function handleExport() {
+    if (lifecycle && !lifecycle.canPersist()) return;
     if (
       !exportCapability.ok ||
       !approval ||
@@ -812,6 +822,7 @@ export function CampaignLab({
 
     exportAbortRef.current?.abort();
     const controller = new AbortController();
+    lifecycle?.registerPendingWork(controller);
     exportAbortRef.current = controller;
     setExportError(null);
     setExportStatus(null);
@@ -829,6 +840,7 @@ export function CampaignLab({
           : "The standalone export could not be prepared.",
       );
     } finally {
+      lifecycle?.releasePendingWork(controller);
       if (exportAbortRef.current === controller) {
         exportAbortRef.current = null;
       }

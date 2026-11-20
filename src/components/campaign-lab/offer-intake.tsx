@@ -42,6 +42,7 @@ import {
   PackshotReadError,
   readPackshotFile,
 } from "@/lib/campaign-lab/packshot";
+import type { CampaignDraftLifecycle } from "@/lib/campaign-lab/draft-lifecycle";
 import type {
   CampaignCatalog,
   CampaignFixture,
@@ -261,6 +262,8 @@ export type OfferIntakeProps = {
   recoveryScope?: string;
   /** Runtime session subject; sent with generation requests. */
   builderSubject?: string;
+  /** Stops draft persistence and cancels pending work during sign-out. */
+  lifecycle?: CampaignDraftLifecycle;
 };
 
 export function OfferIntake({
@@ -268,6 +271,7 @@ export function OfferIntake({
   generationEndpoint,
   recoveryScope,
   builderSubject,
+  lifecycle,
 }: OfferIntakeProps = {}) {
   const builderSurface = surface === "builder";
   const storageKey = builderSurface
@@ -355,6 +359,7 @@ export function OfferIntake({
       } catch {
         // Storage can be unavailable; the intake still works without recovery.
       }
+      if (lifecycle && !lifecycle.canPersist()) return;
       const brief = parsePersistedOfferIntakeBrief(raw);
       if (brief) {
         setBrandKitSnapshot(brief.brandKitSnapshot);
@@ -378,10 +383,11 @@ export function OfferIntake({
     return () => {
       cancelled = true;
     };
-  }, [storageKey]);
+  }, [storageKey, lifecycle]);
 
   useEffect(() => {
     if (!briefHydrated) return;
+    if (lifecycle && !lifecycle.canPersist()) return;
     try {
       window.sessionStorage.setItem(
         storageKey,
@@ -419,6 +425,7 @@ export function OfferIntake({
     briefHydrated,
     rights,
     storageKey,
+    lifecycle,
   ]);
 
   useEffect(() => {
@@ -588,6 +595,10 @@ export function OfferIntake({
       return;
     }
 
+    if (lifecycle && !lifecycle.canPersist()) {
+      setReadingPreparedBrief(false);
+      return;
+    }
     const brief = parsed.brief;
     setEvidenceSession(current => current + 1);
     setBrandKitSnapshot(brief.brandKitSnapshot);
@@ -834,6 +845,7 @@ export function OfferIntake({
           offerOnly={builderSurface}
           allowMotion={!builderSurface}
           builderSubject={builderSubject}
+          lifecycle={lifecycle}
           onEditorStateChange={handleEditorStateChange}
         />
       </div>
