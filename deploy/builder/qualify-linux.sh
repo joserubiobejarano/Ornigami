@@ -257,6 +257,17 @@ remove_container() {
     fi
   fi
 }
+stop_owned_container() {
+  local name="$1" created="$2"
+  [[ "$created" == "1" ]] || return 0
+  if "$ENGINE" container inspect "$name" >/dev/null 2>&1; then
+    if container_owned "$name"; then
+      "$ENGINE" stop "$name" >/dev/null 2>&1 || true
+    else
+      note "Leaving unowned container untouched: $name"
+    fi
+  fi
+}
 remove_network() {
   [[ "$created_network" == "1" ]] || return 0
   if "$ENGINE" network inspect "$NETWORK" >/dev/null 2>&1; then
@@ -298,9 +309,9 @@ cleanup() {
   local status=$?
   set +e
   if [[ "$status" -ne 0 && "$KEEP_ON_FAILURE" == "1" ]]; then
-    for name in "$CONTAINER" "$RESTORE_CONTAINER" "$CLOSED_CONTAINER"; do
-      "$ENGINE" stop "$name" >/dev/null 2>&1 || true
-    done
+    stop_owned_container "$CONTAINER" "$created_container"
+    stop_owned_container "$RESTORE_CONTAINER" "$created_restore_container"
+    stop_owned_container "$CLOSED_CONTAINER" "$created_closed_container"
     note "Failure: retained this run's containers/network/volumes for inspection."
     note "Evidence: $EVIDENCE_DIR"
     exit "$status"

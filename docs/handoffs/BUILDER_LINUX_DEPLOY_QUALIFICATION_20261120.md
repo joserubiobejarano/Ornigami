@@ -10,13 +10,13 @@ image digest exists.
 - Branch: `codex/ornigami-builder-deploy-20261120`
 - Base: `5a5db54b7764a7dbf98637874e31c0061a66cee8`
 - Functional implementation: `5a29d04cd784f440620a01460ec308e832e8e07b`
-- Functional code tip (implementation + docs + executable-bit fix): `ca7cd7286078e6a531bec28dc1d3253d03231352`
 - Worktree: `C:/Users/joser/.local/ornigami-builder-deploy-20261120`
 
 The Linux run must record its actual clean `git rev-parse HEAD` in
-`results.txt`. Later documentation-only commits do not change the application,
-image inputs, operator CLI or qualification harness; the functional code tip is
-`ca7cd72`, and `5a29d04` is the implementation commit.
+`results.txt`. Commits after `5a29d04` are confined to the qualification
+harness, the operator diagnostics, tests, executable bits and documentation;
+they do not change the builder web routes, access defaults or server quota
+contract.
 
 The implementation is confined to `deploy/builder/`, the operator CLI and its
 additive store diagnostics, a local self-test script and focused tests. It does
