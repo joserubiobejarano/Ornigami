@@ -5,8 +5,9 @@ production application boundary for an invite-only creation/export beta. It does
 not open customer access, publish pages, add billing, migrate data or authorize a
 deployment.
 
-Source: branch `codex/ornigami-production-foundation-20261120`, based on accepted
-builder commit `923f39962d4ecd0d6312bd1bed34797fc9283b94`.
+Source: branch `codex/ornigami-production-foundation-20261120`, implementation
+commit `82e4b08a3efe9d3166eed362cabe2d2d6671f3cd`, based on accepted builder
+commit `923f39962d4ecd0d6312bd1bed34797fc9283b94`.
 
 ## Frozen first-beta scope
 

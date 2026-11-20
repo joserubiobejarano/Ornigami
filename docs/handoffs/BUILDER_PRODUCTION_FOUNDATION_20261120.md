@@ -1,5 +1,12 @@
 # Builder production foundation handoff — 20 November 2026
 
+## Source
+
+- Branch: `codex/ornigami-production-foundation-20261120`
+- Base: `923f39962d4ecd0d6312bd1bed34797fc9283b94`
+- Implementation commit: `82e4b08a3efe9d3166eed362cabe2d2d6671f3cd`
+- Worktree: `C:/Users/joser/.local/ornigami-production-foundation`
+
 ## What landed
 
 A production route and service boundary for the first invite-only
