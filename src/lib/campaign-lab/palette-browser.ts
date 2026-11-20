@@ -38,17 +38,42 @@ export function groupPaletteColors(draft: BrandKitDraft): ColorGroup[] {
   return [...groups.values()];
 }
 
-/** Filter groups, not their membership: hidden observations never disappear. */
-export function filterPaletteColors(groups: ColorGroup[], query: string, sourceId: string, opacity: string): ColorGroup[] {
-  const words=query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return groups.filter(group=>{
-    if(opacity==='opaque' && !group.color.endsWith('ff') || opacity==='alpha' && group.color.endsWith('ff')) return false;
-    return group.observations.some(({candidate,source})=>{
-      if(sourceId && source.id!==sourceId) return false;
+export type PaletteFilters = { query: string; sourceId: string; opacity: string };
+export type PaletteInspection = { candidateId: string; filtersKey: string };
+const queryWords = (query: string) => query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+const filtersKey = (filters: PaletteFilters) => JSON.stringify([queryWords(filters.query),filters.sourceId,filters.opacity]);
+
+/** Source and every query word must match one original observation. */
+export function matchingPaletteObservations(group: ColorGroup, filters: PaletteFilters): ColorObservation[] {
+  if(filters.opacity==='opaque' && !group.color.endsWith('ff') || filters.opacity==='alpha' && group.color.endsWith('ff')) return [];
+  const words=queryWords(filters.query);
+  return group.observations.filter(({candidate,source})=>{
+      if(filters.sourceId && source.id!==filters.sourceId) return false;
       const text=[group.label,group.color,source.finalUrl,source.id,source.sha256,candidate.id,candidate.method,candidate.roleHint?.value,candidate.roleHint?.reason,candidate.evidence.quote,...candidate.uncertainty,...source.issues].join(' ').toLowerCase();
       return words.every(word=>text.includes(word));
-    });
   });
+}
+
+/** Filter groups, not their membership: hidden observations never disappear. */
+export function filterPaletteColors(groups: ColorGroup[], query: string, sourceId: string, opacity: string): ColorGroup[] {
+  return groups.filter(group=>matchingPaletteObservations(group,{query,sourceId,opacity}).length>0);
+}
+
+/** An explicit inspection belongs to these filters, never to later filter intent. */
+export function paletteInspectionFor(candidateId: string, filters: PaletteFilters): PaletteInspection {
+  return {candidateId,filtersKey:filtersKey(filters)};
+}
+
+/** Exact ID first, otherwise first matching observation in original source order.
+ * An explicit member choice is retained only for the same filters and disclosed
+ * if outside them. No role choices or accepted appearance are inputs/mutated. */
+export function resolvePaletteInspection(group: ColorGroup, filters: PaletteFilters, selection?: PaletteInspection) {
+  const matching=matchingPaletteObservations(group,filters);
+  if(!matching.length) return undefined;
+  const explicit=selection?.filtersKey===filtersKey(filters)
+    ? group.observations.find(o=>o.candidate.id===selection.candidateId) : undefined;
+  const observation=explicit ?? matching.find(o=>o.candidate.id===filters.query.trim().toLowerCase()) ?? matching[0];
+  return {observation,matching,outsideFilters:!matching.includes(observation)};
 }
 
 export function choosePaletteObservation(choices: PaletteChoices, role: PaletteRole, candidate: EvidenceCandidate): PaletteChoices {

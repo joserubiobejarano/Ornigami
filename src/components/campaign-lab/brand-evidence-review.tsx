@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { PALETTE_ROLES, reviewPalette, type BrandKitSnapshot, type PaletteRole } from "@/lib/campaign-lab/brand-review";
-import { choosePaletteObservation, filterPaletteColors, groupPaletteColors, type PaletteChoices } from "@/lib/campaign-lab/palette-browser";
+import { choosePaletteObservation, filterPaletteColors, groupPaletteColors, paletteInspectionFor, resolvePaletteInspection, type PaletteChoices, type PaletteInspection } from "@/lib/campaign-lab/palette-browser";
 import { BrandEvidenceSelection, type EvidenceSelectionResult } from "@/lib/campaign-lab/brand-url-client";
 import type { BrandKitDraft } from "@/lib/campaign-lab/brand-import/evidence-types";
 import { resolveVisualDirection } from "@/lib/campaign-lab/visual-directions";
@@ -31,7 +31,7 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
   const [category,setCategory] = useState<'ui-color'|'raster-color'>('ui-color');
   const [page,setPage] = useState(0);
   const [inspectKey,setInspectKey] = useState("");
-  const [observationId,setObservationId] = useState("");
+  const [inspection,setInspection] = useState<PaletteInspection>();
   const [focusKey,setFocusKey] = useState("");
   const [correctionOpen,setCorrectionOpen] = useState(false);
   const firstRole = useRef<HTMLButtonElement>(null);
@@ -43,7 +43,7 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
     setPending(false);
     if(result.error) { setImportError(result.error);setNotice("Previous evidence and pending selections are kept."); }
     if(result.draft) {
-      setDraft(result.draft);setChoices({});setInspectKey('');setObservationId('');
+      setDraft(result.draft);setChoices({});setInspectKey('');setInspection(undefined);
       clearFilters();setCategory('ui-color');setRole('accent');setLoaderOpen(false);setCorrectionOpen(false);
       setNotice(result.notice ?? "Saved evidence loaded.");
     }
@@ -66,12 +66,15 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
   const pages=Math.max(1,Math.ceil(visible.length/PAGE_SIZE)), currentPage=Math.min(page,pages-1);
   const shown=visible.slice(currentPage*PAGE_SIZE,(currentPage+1)*PAGE_SIZE);
   const inspecting=visible.find(g=>g.key===inspectKey);
-  const observation=inspecting?.observations.find(o=>o.candidate.id===observationId) ?? inspecting?.observations[0];
+  const filters={query,sourceId,opacity};
+  const resolvedInspection=inspecting ? resolvePaletteInspection(inspecting,filters,inspection) : undefined;
+  const observation=resolvedInspection?.observation;
   const activeChoice=choices[role], activeCandidate=draft?.candidates.find(c=>c.id===activeChoice?.candidateId);
   function inspectSelected() {
     const group=groups.find(g=>g.observations.some(o=>o.candidate.id===activeChoice?.candidateId));
     if(!group) return;
-    clearFilters();setCategory(group.category);setInspectKey(group.key);setObservationId(activeChoice!.candidateId);
+    clearFilters();setCategory(group.category);setInspectKey(group.key);
+    setInspection(paletteInspectionFor(activeChoice!.candidateId,{query:'',sourceId:'',opacity:'all'}));
     setPage(Math.floor(groups.filter(g=>g.category===group.category).indexOf(group)/PAGE_SIZE));
   }
   function apply() {
@@ -146,16 +149,17 @@ export function BrandEvidenceReview({ snapshot, directionId, accentOverride, onA
             if(target===undefined) return;
             e.preventDefault();buttons[Math.max(0,Math.min(buttons.length-1,target))]?.focus();
           }}>
-            {shown.map(group=><li key={group.key} className="min-w-0"><button type="button" tabIndex={group.key===(shown.some(g=>g.key===focusKey) ? focusKey : shown[0]?.key) ? 0 : -1} onFocus={()=>setFocusKey(group.key)} aria-label={`Browse ${group.label} ${displayColor(group.color)}, ${group.observations.length} observations`} aria-pressed={inspectKey===group.key} className={`${control} w-full min-w-0 space-y-1 px-2 text-left ${inspectKey===group.key ? 'ring-2 ring-[#171813]' : ''}`} onClick={()=>{setInspectKey(group.key);setObservationId(group.observations[0].candidate.id);}}>
+            {shown.map(group=><li key={group.key} className="min-w-0"><button type="button" tabIndex={group.key===(shown.some(g=>g.key===focusKey) ? focusKey : shown[0]?.key) ? 0 : -1} onFocus={()=>setFocusKey(group.key)} aria-label={`Browse ${group.label} ${displayColor(group.color)}, ${group.observations.length} observations`} aria-pressed={inspectKey===group.key} className={`${control} w-full min-w-0 space-y-1 px-2 text-left ${inspectKey===group.key ? 'ring-2 ring-[#171813]' : ''}`} onClick={()=>{setInspectKey(group.key);setInspection(undefined);}}>
               <span aria-hidden="true" className="block h-9 rounded border border-black/25" style={{backgroundColor:group.color}} /><span className="block text-xs">{group.label}</span><span className="block break-all text-xs">{displayColor(group.color)}</span><span className="block text-xs">{group.observations.length} observations</span>
             </button></li>)}
           </ul>
           {pages>1 ? <div className="flex items-center justify-between gap-2" aria-label="Color pages"><button type="button" className={control} disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>Previous colors</button><span>{currentPage+1} / {pages}</span><button type="button" className={control} disabled={currentPage===pages-1} onClick={()=>setPage(currentPage+1)}>Next colors</button></div> : null}
           {inspecting && observation ? <section className="space-y-3 rounded border border-[#b2aa9b] bg-white p-3" aria-label="Color observation">
             <p className="font-semibold">{inspecting.label} · {displayColor(inspecting.color)}</p><Label htmlFor={`${id}-observation`}>Observation ({inspecting.observations.length} total)</Label>
-            <select id={`${id}-observation`} className={`${control} w-full min-w-0 max-w-full`} value={observation.candidate.id} onChange={e=>setObservationId(e.target.value)}>{inspecting.observations.map((o,i)=><option key={o.candidate.id} value={o.candidate.id}>{i+1}. {sourceName(o.source.finalUrl)} · {o.candidate.confidence.level} confidence</option>)}</select>
+            <select id={`${id}-observation`} className={`${control} w-full min-w-0 max-w-full`} value={observation.candidate.id} onChange={e=>setInspection(paletteInspectionFor(e.target.value,filters))}>{inspecting.observations.map((o,i)=><option key={o.candidate.id} value={o.candidate.id}>{i+1}. {sourceName(o.source.finalUrl)} · {o.candidate.confidence.level} confidence{!resolvedInspection?.matching.includes(o) ? ' · outside filters' : ''}</option>)}</select>
+            {resolvedInspection?.outsideFilters ? <p role="status">Outside current filters. Use will explicitly select this observation from {sourceName(observation.source.finalUrl)}.</p> : null}
             <p className="break-words">{sourceName(observation.source.finalUrl)} · {observation.candidate.category==='ui-color' ? 'UI observation' : 'Photo sample'}</p><p>{observation.candidate.uncertainty.join(' ')}</p>
-            <button type="button" className={control} onClick={()=>{setChoices(previous=>choosePaletteObservation(previous,role,observation.candidate));setCorrectionOpen(!observation.candidate.observed.toLowerCase().endsWith('ff'));setNotice(`Selected ${displayColor(inspecting.color)} for ${role}. Apply after review.`);}}>Use {displayColor(inspecting.color)} for {role}</button>
+            <button type="button" className={control} onClick={()=>{setChoices(previous=>choosePaletteObservation(previous,role,observation.candidate));setCorrectionOpen(!observation.candidate.observed.toLowerCase().endsWith('ff'));setNotice(`Selected ${displayColor(inspecting.color)} for ${role}. Apply after review.`);}}>Use {resolvedInspection?.outsideFilters ? 'outside-filter ' : ''}{displayColor(inspecting.color)} for {role}</button>
             <details className="break-words"><summary className="min-h-8 cursor-pointer">Observation provenance</summary><p>{observation.candidate.method} · {observation.candidate.confidence.level}: {observation.candidate.confidence.reason}</p><p>Context hint: {observation.candidate.roleHint?.value ?? 'unresolved'}. {observation.candidate.roleHint?.reason}</p><blockquote className="border-l-2 pl-2">{observation.candidate.evidence.quote}</blockquote><p>Candidate ID: {observation.candidate.id}</p><p>Source ID: {observation.candidate.sourceId}</p><p>Claimed SHA-256: {observation.candidate.sourceSha256}</p><p>Offset: {observation.candidate.evidence.utf16Offset ?? 'not applicable'} · review: {observation.candidate.reviewStatus}</p><dl>{Object.entries(observation.candidate.details).map(([key,value])=><div key={key}><dt className="inline">{key}: </dt><dd className="inline">{String(value)}</dd></div>)}</dl><p>{observation.source.issues.join(' · ')}</p></details>
           </section> : null}
         </>}
