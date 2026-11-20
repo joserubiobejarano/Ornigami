@@ -79,6 +79,7 @@ function createRuntimeHarness(env: Record<string, string | undefined>) {
   let captureCalls = 0;
   let flushCalls = 0;
   let sdkImports = 0;
+  let builderValidations = 0;
   const modules = new Map<string, { exports: Record<string, unknown> }>();
   const sentry = {
     init: () => { initCalls += 1; },
@@ -110,6 +111,7 @@ function createRuntimeHarness(env: Record<string, string | undefined>) {
       }
       if (id === "./src/lib/sentry-options") return { SENTRY_OPTIONS: { sendDefaultPii: false } };
       if (id === "./src/lib/sentry-server-events") return { sanitizeServerEvent: (event: unknown) => event };
+      if (id === "./lib/builder/startup") return { assertBuilderStartupConfiguration: () => { builderValidations += 1; } };
       if (id === "../sentry.server.config") return load("sentry.server.config.ts");
       if (id === "../sentry.edge.config") return load("sentry.edge.config.ts");
       throw new Error(`Unexpected runtime dependency: ${id}`);
@@ -127,6 +129,7 @@ function createRuntimeHarness(env: Record<string, string | undefined>) {
     get captureCalls() { return captureCalls; },
     get flushCalls() { return flushCalls; },
     get sdkImports() { return sdkImports; },
+    get builderValidations() { return builderValidations; },
   };
 }
 
@@ -140,6 +143,7 @@ test("private Preview skips server and edge initialization and request-error tra
     };
     await instrumentation.register();
     await instrumentation.onRequestError(new Error("synthetic private server error"));
+    assert.equal(harness.builderValidations, runtime === "nodejs" ? 1 : 0);
     const config = harness.load(runtime === "nodejs" ? "sentry.server.config.ts" : "sentry.edge.config.ts") as {
       registerSentry: () => Promise<void>;
     };
@@ -154,6 +158,7 @@ test("private Preview skips server and edge initialization and request-error tra
   const coolifyInstrumentation = coolifyHarness.load("src/instrumentation.ts") as { register: () => Promise<void>; onRequestError: (error: unknown) => Promise<void> };
   await coolifyInstrumentation.register();
   await coolifyInstrumentation.onRequestError(new Error("synthetic private Coolify error"));
+  assert.equal(coolifyHarness.builderValidations, 0);
   assert.equal(coolifyHarness.initCalls + coolifyHarness.captureCalls + coolifyHarness.flushCalls + coolifyHarness.sdkImports, 0);
 });
 
@@ -172,6 +177,7 @@ test("ordinary Preview and Production retain runtime Sentry initialization and r
       };
       await instrumentation.register();
       await instrumentation.onRequestError(new Error("synthetic ordinary error"));
+      assert.equal(harness.builderValidations, runtime === "nodejs" ? 1 : 0);
       assert.equal(harness.initCalls, 1);
       assert.equal(harness.captureCalls, 1);
       assert.equal(harness.flushCalls, 1);

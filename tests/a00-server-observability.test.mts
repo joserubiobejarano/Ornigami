@@ -49,6 +49,7 @@ test("installed server SDK filters source data and acknowledges explicit request
     assert.equal(envelopes.length, 0);
     const hook = loadTs<typeof import('../src/instrumentation.ts')>('src/instrumentation.ts', {
       '@/lib/private-preview': normalModePrivatePreviewMock,
+      './lib/builder/startup': { assertBuilderStartupConfiguration: () => undefined },
       '../sentry.server.config': { registerSentry: async () => undefined },
       '../sentry.edge.config': { registerSentry: async () => undefined },
       '@sentry/nextjs': Sentry,
@@ -82,10 +83,11 @@ test("installed server SDK filters source data and acknowledges explicit request
 
 test("Next server registration initializes the appropriate runtime and request hook never passes source data", async () => {
   const previous = process.env.NEXT_RUNTIME;
-  let nodeLoads = 0; let edgeLoads = 0;
+  let nodeLoads = 0; let edgeLoads = 0; let builderValidations = 0;
   const captures: unknown[] = []; const tags: Record<string,string> = {}; let cleared = false;
   const hook = loadTs<typeof import("../src/instrumentation.ts")>("src/instrumentation.ts", {
     '@/lib/private-preview': normalModePrivatePreviewMock,
+    './lib/builder/startup': { assertBuilderStartupConfiguration: () => { builderValidations += 1; } },
     get ['../sentry.server.config']() { nodeLoads += 1; return { registerSentry: async () => undefined }; },
     get ['../sentry.edge.config']() { edgeLoads += 1; return { registerSentry: async () => undefined }; },
     '@sentry/nextjs': {
@@ -97,6 +99,7 @@ test("Next server registration initializes the appropriate runtime and request h
   try {
     process.env.NEXT_RUNTIME = 'nodejs'; await hook.register();
     process.env.NEXT_RUNTIME = 'edge'; await hook.register();
+    assert.equal(builderValidations, 1, 'builder startup validation runs once for the Node runtime');
     assert.ok(nodeLoads > 0); assert.ok(edgeLoads > 0);
     await hook.onRequestError(Object.assign(new Error('private token and query'), { digest: '12345' }));
     assert.equal(cleared, true);
