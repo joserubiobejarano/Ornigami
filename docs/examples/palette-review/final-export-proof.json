@@ -1,0 +1,109 @@
+{
+  "artifact": "rose-final-approved.zip",
+  "zipBytes": 281642,
+  "zipSha256": "290c6fba1e262db273d8b3477d4ffdd520056e53e7393f066a09550ebe781c78",
+  "receiptSha256": "b0193cffb2541024179c63b6f85a0d952d524e6fc07095cb1de63280cffb6798",
+  "approval": {
+    "scope": "local-preview",
+    "revision": "9bb8a66f71e530ae",
+    "approvedAt": "2026-11-20T01:10:53.689Z",
+    "renderedRevision": "9bb8a66f71e530ae"
+  },
+  "filesVerified": 13,
+  "referencesVerifiedByExistingVerifier": 23,
+  "frozenInputsAndUnicodeExact": true,
+  "packshotSha256": "cdb29be4bb74777f7d10c9eae5b3ada849e6701190cc2bfdc546bdc7fee3c1d6",
+  "fonts": {
+    "fonts/inter-e5a8ee9f.woff2": "fccca918fea40089dacadc7045861314d1a6bc91f1f323cc1eeb22ebcdb321b5",
+    "fonts/inter-ab4d98e5.woff2": "aebf2ab4a4ce6810d73c1ac7be7cafb4e5ec4cee2d6db5fb3e09691747ec4bd6",
+    "fonts/inter-a38474c2.woff2": "a2e2c783ca6f9c20486e81e72a279203e86730bbf8f01ff6a5ee9dbd09e1c271",
+    "fonts/inter-11f16cb1.woff2": "46dd4cdca58c26ae87cc6927657bf83b2e8abfc39ffd0ab176e301a8d28d22bf",
+    "fonts/inter-94affe31.woff2": "8db00ff46c67b22cda8bed865acf7077651cac8d2841d5b40980556b48961931",
+    "fonts/inter-5e86cbbe.woff2": "a28eb6d3ccb534ae0c94ca999371df024aab60b08c3c8a5720ee9e32fa0faaa2",
+    "fonts/inter-79e3e8a6.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+  },
+  "fontProgramsAndExportedLicensesEqualAdmittedBaseline": true,
+  "CSSIdenticalAfterFontURLAliasesMappedToProgramHashes": true,
+  "fontAliasNote": "Existing exporter derives names from loopback URLs; this run uses port 3041 and the reviewed native archive used port 3043.",
+  "template": {
+    "id": "single-product-offer",
+    "version": "1.0.1",
+    "layout": "offer-led-one-photo",
+    "sections": [
+      "hero",
+      "hero-facts",
+      "close"
+    ]
+  },
+  "revisionIdentityVersion": 6,
+  "falseFlagsPreserved": true,
+  "candidateLinks": [
+    {
+      "selection": {
+        "role": "accent",
+        "value": "#163f64",
+        "candidateId": "31de55bae21baf24e5d9ab836a47f9d755e03a2ffd632698ec7b58218a5c80ad",
+        "originalValue": "#163f64ff",
+        "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+        "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+        "method": "css-declaration",
+        "category": "ui-color",
+        "review": "selected"
+      },
+      "sourceUrl": "https://palette.synthetic.invalid/dark-theme.css",
+      "sourceIssues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ],
+      "uncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "quote": "#163f64ff"
+    },
+    {
+      "selection": {
+        "role": "page",
+        "value": "#fff8fa",
+        "candidateId": "8961de6fff1fc4f57130bd78efbbea4791a98b81be2806dfc97f434a09799fee",
+        "originalValue": "#fff8faff",
+        "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+        "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+        "method": "css-declaration",
+        "category": "ui-color",
+        "review": "selected"
+      },
+      "sourceUrl": "https://palette.synthetic.invalid/base.css",
+      "sourceIssues": [],
+      "uncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "quote": "#fff8faff"
+    },
+    {
+      "selection": {
+        "role": "surface",
+        "value": "#f5e6ea",
+        "candidateId": "fe9949cfe2c92626b62d28cad812ae4ce94e0d87cf64993b5c16388e822d58c4",
+        "originalValue": "#f5e6eaff",
+        "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+        "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+        "method": "css-declaration",
+        "category": "ui-color",
+        "review": "selected"
+      },
+      "sourceUrl": "https://palette.synthetic.invalid/conditional.css",
+      "sourceIssues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ],
+      "uncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "quote": "#f5e6eaff"
+    }
+  ],
+  "distinctSelectedSourceCount": 3
+}

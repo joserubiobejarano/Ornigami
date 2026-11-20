@@ -1,0 +1,21 @@
+▲ Next.js 16.4.5 (webpack)
+- Local:         http://127.0.0.1:3041
+- Network:       http://127.0.0.1:3041
+✓ Ready in 572ms
+✓ Running next.config.ts took 1076ms
+○ Compiling /instrumentation ...
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+○ Compiling proxy ...
+○ Compiling /campaign-lab/offer/page ...
+ GET /campaign-lab/offer 200 in 17.0s (next.js: 16.0s, proxy.ts: 467ms, application-code: 537ms)
+ GET /campaign-lab/offer 200 in 384ms (next.js: 8ms, proxy.ts: 279ms, application-code: 97ms)
+○ Compiling /api/auth/[...nextauth]/route ...
+ GET /campaign-lab/offer 200 in 514ms (next.js: 38ms, proxy.ts: 220ms, application-code: 256ms)
+ GET /api/auth/session 200 in 5.0s (next.js: 4.9s, proxy.ts: 13ms, application-code: 58ms)
+ GET /api/auth/session 200 in 34ms (next.js: 12ms, proxy.ts: 10ms, application-code: 11ms)
+ GET /api/auth/session 200 in 27ms (next.js: 6ms, proxy.ts: 10ms, application-code: 11ms)
+ GET /api/auth/session 200 in 24ms (next.js: 6ms, proxy.ts: 9ms, application-code: 10ms)
+○ Compiling /api/campaign-lab/generate/route ...
+ POST /api/campaign-lab/generate 200 in 4.8s (next.js: 4.5s, proxy.ts: 13ms, application-code: 265ms)

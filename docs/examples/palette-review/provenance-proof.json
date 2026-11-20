@@ -1,0 +1,74 @@
+{
+  "synthetic": true,
+  "liveReplay": false,
+  "allCandidateSourceLinksExact": true,
+  "selectedSourceCount": 3,
+  "observations": [
+    {
+      "selection": {
+        "role": "accent",
+        "value": "#163f64",
+        "candidateId": "31de55bae21baf24e5d9ab836a47f9d755e03a2ffd632698ec7b58218a5c80ad",
+        "originalValue": "#163f64ff",
+        "sourceId": "38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf",
+        "sourceSha256": "4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe",
+        "method": "css-declaration",
+        "category": "ui-color",
+        "review": "selected"
+      },
+      "sourceUrl": "https://palette.synthetic.invalid/dark-theme.css",
+      "sourceIssues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ],
+      "originalUncertainty": [
+        "Synthetic dark-theme observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "quote": "#163f64ff"
+    },
+    {
+      "selection": {
+        "role": "page",
+        "value": "#fff8fa",
+        "candidateId": "8961de6fff1fc4f57130bd78efbbea4791a98b81be2806dfc97f434a09799fee",
+        "originalValue": "#fff8faff",
+        "sourceId": "1b652ea70ed7df06227d6043a9bb818eb6b29fef63a7c63de95c15d03430d4b7",
+        "sourceSha256": "3235b98f8c3114ba09305f070b6273d6e2f09f821a14f667046129dd0bb094e6",
+        "method": "css-declaration",
+        "category": "ui-color",
+        "review": "selected"
+      },
+      "sourceUrl": "https://palette.synthetic.invalid/base.css",
+      "sourceIssues": [],
+      "originalUncertainty": [
+        "Synthetic base observation.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "quote": "#fff8faff"
+    },
+    {
+      "selection": {
+        "role": "surface",
+        "value": "#f5e6ea",
+        "candidateId": "fe9949cfe2c92626b62d28cad812ae4ce94e0d87cf64993b5c16388e822d58c4",
+        "originalValue": "#f5e6eaff",
+        "sourceId": "3359975f0da2e8791868a1ce6d64c05d806b09a791db71e83b894d205a3107e1",
+        "sourceSha256": "c2be26707c52e8dadf792ff55969fc5b9c46b605f2ca0b67528c8d38107bc033",
+        "method": "css-declaration",
+        "category": "ui-color",
+        "review": "selected"
+      },
+      "sourceUrl": "https://palette.synthetic.invalid/conditional.css",
+      "sourceIssues": [
+        "conditional-or-multiple-theme-evidence-unresolved"
+      ],
+      "originalUncertainty": [
+        "Synthetic conditional observation.",
+        "Theme or conditional applicability unresolved.",
+        "Presence and repetition do not establish ownership or a brand role."
+      ],
+      "quote": "#f5e6eaff"
+    }
+  ]
+}

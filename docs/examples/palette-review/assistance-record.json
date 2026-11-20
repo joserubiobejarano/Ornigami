@@ -1,0 +1,37 @@
+{
+  "operator": "Codex agent, not an independent customer/neutral usability study",
+  "discovery": "Visual swatches, broad color names and blue search; no JSON editing for role assignment, no numbered color dropdown hunting or CSS inspection required to discover colors. Provenance opened separately for verification.",
+  "steps": [
+    "Native file choosers loaded deterministic large/small/empty saved drafts. Baseline recorded with the same large fixture before the component change.",
+    "Keyboard import focus landed on Accent; ArrowRight/Home/End moved focus and Enter inspected a swatch. Current-source blue search/keyboard was repeated with the visible hint.",
+    "Changed observation within duplicate groups to exercise dark-theme/conditional source identities; no group representative was substituted in the snapshot.",
+    "Exercised no results, Clear filters, source and opacity filters, second-page access, photo separation, alpha correction, contrast failure/recovery and external override/direction changes.",
+    "A malformed local file failed; valid draft, pending correction and Apply remained usable. Delayed success/error/cancellation authority remained covered by unchanged selection-stream regressions.",
+    "Frozen Rose prepared brief and original packshot loaded normally. Three commercial/media confirmations remained separate from source evidence.",
+    "Explicit Apply, local-test generation and approval completed. Reloaded saved evidence and changed pending selections while the prior exact approval/export remained valid; explicit appearance Apply locked export, followed by generation/fresh approval.",
+    "1440x900 and 375x812 review, native download retention and viewport reset. Repeated final normal journey at b079fbf after the caption-only change.",
+    "Owned development process trees terminated after identity verification; production check processes exited normally."
+  ],
+  "measuredInteractionFacts": {
+    "before": {
+      "repeatedColorSelects": 3,
+      "optionsPerSelectIncludingDefault": 129
+    },
+    "after": {
+      "UIObservations": 120,
+      "UIGroups": 23,
+      "photoObservations": 8,
+      "photoGroups": 8,
+      "visibleGroupsPerPage": 12,
+      "secondPageGroups": 11,
+      "swatchTabStopsPerPage": 1
+    }
+  },
+  "limits": [
+    "No measured time-saving or independent usability claim.",
+    "Only current desktop browser runtime and requested widths; screen-reader/OS/touch/cross-engine behavior not independently audited.",
+    "Broad color names are browsing aids; roles, ownership and computed CSS remain unresolved. Explicit hex correction is still required for alpha evidence.",
+    "Very large duplicate groups still use one provenance-observation selector; all identities remain reachable."
+  ],
+  "failures": "See failures.json; original raw failures and intermediate captures/outputs remain in .local/palette-review."
+}

@@ -1,0 +1,232 @@
+- paragraph: Local session · text fields are restored after refresh; the packshot and local approval are not.
+- button "Edit brief inputs"
+- paragraph: Commercial and media check
+- paragraph: Revision 1af95a2d9e · rendered values
+- paragraph: Offer
+- paragraph: Offer entered
+- paragraph: Cup + lid, €24 · offer ends 30 November 2026
+- paragraph: Destination
+- paragraph: Direct URL · confirmed
+- paragraph: https://rose.example/products/rose
+- paragraph: Media
+- paragraph: Media rights recorded
+- paragraph: Synthetic fixture created locally; approved for this local test.
+- paragraph: Pending edits · not rendered
+- paragraph: The preview and footer still describe revision 1af95a2d9e. Approval is cleared for pending edits. Generate preview to validate these values.
+- paragraph: Offer
+- paragraph: Offer entered
+- paragraph: Cup + lid, €24 · offer ends 30 November 2026
+- paragraph: Destination
+- paragraph: Direct URL · confirmed
+- paragraph: https://rose.example/products/rose
+- paragraph: Media
+- paragraph: Media rights recorded
+- paragraph: Synthetic fixture created locally; approved for this local test.
+- banner:
+  - paragraph: Ornigami · campaign workflow
+  - heading "Campaign Lab" [level=1]
+  - generic: Local only · not published
+  - generic: Browser offer intake · confirmed inputs
+- main:
+  - complementary "Campaign brief":
+    - heading "Campaign brief" [level=2]
+    - paragraph: A single-product offer entered in the local browser intake.
+    - paragraph: Local browser brief · not publication approval.
+    - generic: Browser offer
+    - group "Campaign facts":
+      - generic: Campaign facts
+      - generic: Experimental presentation
+      - combobox "Experimental presentation":
+        - option "Static reference" [selected]
+        - option "Restrained product motion"
+        - option "Product inspection"
+      - generic: Format
+      - combobox "Format":
+        - option "Single-product offer · v1.0.1" [selected]
+        - option "Single-product advertorial · v1.0.0 · inputs missing"
+      - paragraph: The existing direct-offer workflow. Use it when the brief has no approved story.
+      - generic: Product name
+      - textbox "Product name": Rose Supply ceramic cup
+      - generic: Audience
+      - textbox "Audience":
+        - /placeholder: Who is this campaign for?
+        - text: Home coffee drinkers
+      - generic: Campaign objective
+      - textbox "Campaign objective":
+        - /placeholder: What should the page achieve?
+        - text: Present the exact bundle and purchase destination
+      - paragraph: Audience and objective guide generation and are not rendered as page copy.
+      - generic: Offer
+      - textbox "Offer": Cup + lid, €24 · offer ends 30 November 2026
+      - generic: Destination URL
+      - textbox "Destination URL": https://rose.example/products/rose
+      - generic: Product image
+      - combobox "Product image":
+        - option "Select an approved image"
+        - option "Rose Supply product image — approved" [selected]
+      - paragraph: browser-offer-packshot · reviewed 2026-11-20
+      - generic "Approved asset record"
+    - group "Brand styling":
+      - generic: Brand styling
+      - generic "Brand evidence (optional) · palette applied"
+      - paragraph: Review colors only. This does not confirm ownership, campaign facts or media rights.
+      - generic "Load or replace evidence"
+      - status: Palette applied. Generate, inspect and approve a fresh preview before export.
+      - paragraph: "Applied: accent #163f64 · page #fff8fa · surface #f5e6ea"
+      - button "Remove reviewed palette"
+      - group "Pending palette":
+        - button "Choose color for accent":
+          - generic: accent
+          - generic: "#163f64"
+          - generic: Pending
+        - button "Choose color for page":
+          - generic: page
+          - generic: "#fff8fa"
+          - generic: Pending
+        - button "Choose color for surface" [pressed]:
+          - generic: surface
+          - generic: "#f5e6ea"
+          - generic: Pending
+      - group "surface pending selection":
+        - generic "Correct / inspect selected surface"
+      - button "Apply reviewed palette" [active]
+      - generic: Pending selections change the campaign only when applied.
+      - group "Color evidence type":
+        - button "UI colors (23)" [pressed]
+        - button "Photo samples (8)"
+      - generic: Search colors or sources
+      - searchbox "Search colors or sources"
+      - button "Clear filters"
+      - generic "Source and opacity filters"
+      - option "All sources" [selected]
+      - option "palette.synthetic.invalid/base.css"
+      - option "palette.synthetic.invalid/dark-theme.css"
+      - option "palette.synthetic.invalid/conditional.css"
+      - option "rose.example/photo.png"
+      - option "Any opacity" [selected]
+      - option "Opaque"
+      - option "Translucent"
+      - status: 1–12 of 23 colors · 120 observations
+      - paragraph: Tab to the colors; arrow keys browse, Home/End reach the first/last visible color, Enter inspects.
+      - list "Color swatches":
+        - 'button "Browse Dark pink #6b2340, 6 observations"':
+          - generic: Dark pink
+          - generic: "#6b2340"
+          - generic: 6 observations
+        - 'button "Browse White #fff8fa, 9 observations"':
+          - generic: White
+          - generic: "#fff8fa"
+          - generic: 9 observations
+        - 'button "Browse Light gray #f5e6ea, 6 observations" [pressed]':
+          - generic: Light gray
+          - generic: "#f5e6ea"
+          - generic: 6 observations
+        - 'button "Browse White #ffffff, 6 observations"':
+          - generic: White
+          - generic: "#ffffff"
+          - generic: 6 observations
+        - 'button "Browse Dark blue #123456, 6 observations"':
+          - generic: Dark blue
+          - generic: "#123456"
+          - generic: 6 observations
+        - 'button "Browse Gray #888888, 6 observations"':
+          - generic: Gray
+          - generic: "#888888"
+          - generic: 6 observations
+        - 'button "Browse Translucent dark blue #12345680, 6 observations"':
+          - generic: Translucent dark blue
+          - generic: "#12345680"
+          - generic: 6 observations
+        - 'button "Browse White #fff8f9, 6 observations"':
+          - generic: White
+          - generic: "#fff8f9"
+          - generic: 6 observations
+        - 'button "Browse Dark blue #163f64, 6 observations"':
+          - generic: Dark blue
+          - generic: "#163f64"
+          - generic: 6 observations
+        - 'button "Browse Teal #009978, 6 observations"':
+          - generic: Teal
+          - generic: "#009978"
+          - generic: 6 observations
+        - 'button "Browse Light blue #e6efff, 6 observations"':
+          - generic: Light blue
+          - generic: "#e6efff"
+          - generic: 6 observations
+        - 'button "Browse Yellow #efd160, 6 observations"':
+          - generic: Yellow
+          - generic: "#efd160"
+          - generic: 6 observations
+      - generic "Color pages":
+        - button "Previous colors" [disabled]
+        - generic: 1 / 2
+        - button "Next colors"
+      - region "Color observation":
+        - paragraph: "Light gray · #f5e6ea"
+        - generic: Observation (6 total)
+        - combobox "Observation (6 total)":
+          - option "1. palette.synthetic.invalid/base.css · medium confidence"
+          - option "2. palette.synthetic.invalid/base.css · medium confidence"
+          - option "3. palette.synthetic.invalid/dark-theme.css · medium confidence"
+          - option "4. palette.synthetic.invalid/dark-theme.css · medium confidence"
+          - option "5. palette.synthetic.invalid/conditional.css · medium confidence" [selected]
+          - option "6. palette.synthetic.invalid/conditional.css · medium confidence"
+        - paragraph: palette.synthetic.invalid/conditional.css · UI observation
+        - paragraph: Synthetic conditional observation. Theme or conditional applicability unresolved. Presence and repetition do not establish ownership or a brand role.
+        - 'button "Use #f5e6ea for surface"'
+        - generic "Observation provenance"
+      - generic "Evidence warnings and sources"
+      - generic: Visual direction
+      - combobox "Visual direction":
+        - option "Clear" [selected]
+        - option "Editorial"
+      - button "Use reviewed / direction accent"
+      - generic: Accent color
+      - code: "#163f64"
+      - generic: Accent override (hex)
+      - textbox "Accent override (hex)":
+        - /placeholder: "#2f5d4a"
+      - textbox "Accent color": "#163f64"
+      - paragraph: Used for the offer rule and primary action. Action text contrast adjusts automatically.
+    - button "Generate preview"
+    - button "Approve preview locally" [disabled]
+    - status: Changes not yet validated. Generate preview to validate.
+    - paragraph: Local review status
+    - generic: Needs fresh preview
+    - paragraph: Not approved. Changes need a fresh preview.
+    - status: Required images are loaded. Generate a fresh preview before approving the edit.
+    - paragraph: Local preview approval applies only to revision 1af95a2d9e in this browser session; it is not publication approval. Editing any field or generating a new revision clears it.
+    - paragraph: Standalone export
+    - generic: Locked
+    - paragraph: The brief has edits that are not rendered. Generate a fresh preview and approve that revision before exporting.
+    - paragraph: The local ZIP contains index.html, styles.css, the approved packshot and a revision receipt. Only the rendered direct-offer page is included; editor controls and internal notes are excluded.
+    - button "Export approved page" [disabled]
+    - paragraph: Draft source
+    - generic: Local test output
+    - paragraph: Local test output · Local test provider. Opening offer-led; sections hero → hero-facts → close; facts capacity, material. Harness 1.0.0; guidance pack 1.0.0.
+  - region "Campaign preview":
+    - heading "Campaign preview" [level=2]
+    - paragraph: Single product offer · v1.0.1 · Offer-led, one photo
+    - generic "1af95a2d9eae59ba": Revision 1af95a2d9e
+    - status: Local test output · Local test provider. Opening offer-led; sections hero → hero-facts → close; facts capacity, material. Harness 1.0.0; guidance pack 1.0.0.
+    - status: Preview out of date. Approval is cleared. Showing the last valid preview, revision 1af95a2d9e. Generate a fresh preview to review your edits.
+    - article "Rose Supply ceramic cup":
+      - paragraph: Rose Supply
+      - heading "Rose Supply ceramic cup" [level=1]
+      - paragraph: Cup + lid, €24 · offer ends 30 November 2026
+      - link "Shop now (opens in a new tab)":
+        - /url: https://rose.example/products/rose
+        - text: Shop now
+        - generic: (opens in a new tab)
+      - list:
+        - generic: Capacity
+        - generic: 350 ml
+        - generic: Material
+        - generic: Glazed ceramic
+      - figure:
+        - img "Synthetic Rose Supply ceramic cup packshot"
+      - generic: Rose Supply
+      - generic: © 2026 Rose Supply
+- region "Notifications alt+T"
+- button "Open Next.js Dev Tools":
+- alert: Offer intake — Ornigami

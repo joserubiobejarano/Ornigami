@@ -1,0 +1,504 @@
+- banner:
+  - link "Campaign Lab":
+    - /url: /campaign-lab
+  - heading "Offer intake" [level=1]
+  - generic: Local only · not published
+- main:
+  - generic "Brand evidence (optional)"
+  - paragraph: Review colors only. This does not confirm ownership, campaign facts or media rights.
+  - generic: Website URL
+  - textbox "Website URL" [active]:
+    - /placeholder: https://brand.example
+  - button "Read website colors" [disabled]
+  - generic: Brand evidence JSON
+  - button "Brand evidence JSON"
+  - status: Evidence loaded. Select roles, review contrast, then apply.
+  - paragraph: draft · 4 sources · 120 UI colors · 8 photograph/sample colors
+  - generic "Evidence warnings and sources"
+  - group "accent":
+    - generic: accent
+    - generic: accent evidence
+    - combobox "accent evidence":
+      - option "Keep direction default" [selected]
+      - 'option "1. #6b2340ff · ink · css-declaration"'
+      - 'option "2. #fff8faff · ink · css-declaration"'
+      - 'option "3. #f5e6eaff · ink · css-declaration"'
+      - 'option "4. #ffffffff · ink · css-declaration"'
+      - 'option "5. #123456ff · ink · css-declaration"'
+      - 'option "6. #888888ff · ink · css-declaration"'
+      - 'option "7. #12345680 · ink · css-declaration"'
+      - 'option "8. #fff8f9ff · ink · css-declaration"'
+      - 'option "9. #163f64ff · ink · css-declaration"'
+      - 'option "10. #009978ff · ink · css-declaration"'
+      - 'option "11. #e6efffff · ink · css-declaration"'
+      - 'option "12. #efd160ff · ink · css-declaration"'
+      - 'option "13. #8c56a0ff · ink · css-declaration"'
+      - 'option "14. #171813ff · ink · css-declaration"'
+      - 'option "15. #f5f9ffff · ink · css-declaration"'
+      - 'option "16. #d86c30ff · ink · css-declaration"'
+      - 'option "17. #a4b0b8ff · ink · css-declaration"'
+      - 'option "18. #2e6c5aff · ink · css-declaration"'
+      - 'option "19. #f4eedaff · ink · css-declaration"'
+      - 'option "20. #db91a7ff · ink · css-declaration"'
+      - 'option "21. #4168a0ff · ink · css-declaration"'
+      - 'option "22. #dce6ddff · ink · css-declaration"'
+      - 'option "23. #f7fafaff · ink · css-declaration"'
+      - 'option "24. #fff8faff · ink · css-declaration"'
+      - 'option "25. #6b2340ff · ink · css-declaration"'
+      - 'option "26. #fff8faff · ink · css-declaration"'
+      - 'option "27. #f5e6eaff · ink · css-declaration"'
+      - 'option "28. #ffffffff · ink · css-declaration"'
+      - 'option "29. #123456ff · ink · css-declaration"'
+      - 'option "30. #888888ff · ink · css-declaration"'
+      - 'option "31. #12345680 · ink · css-declaration"'
+      - 'option "32. #fff8f9ff · ink · css-declaration"'
+      - 'option "33. #163f64ff · ink · css-declaration"'
+      - 'option "34. #009978ff · ink · css-declaration"'
+      - 'option "35. #e6efffff · ink · css-declaration"'
+      - 'option "36. #efd160ff · ink · css-declaration"'
+      - 'option "37. #8c56a0ff · ink · css-declaration"'
+      - 'option "38. #171813ff · ink · css-declaration"'
+      - 'option "39. #f5f9ffff · ink · css-declaration"'
+      - 'option "40. #d86c30ff · ink · css-declaration"'
+      - 'option "41. #6b2340ff · conditional · css-declaration"'
+      - 'option "42. #fff8faff · conditional · css-declaration"'
+      - 'option "43. #f5e6eaff · conditional · css-declaration"'
+      - 'option "44. #ffffffff · conditional · css-declaration"'
+      - 'option "45. #123456ff · conditional · css-declaration"'
+      - 'option "46. #888888ff · conditional · css-declaration"'
+      - 'option "47. #12345680 · conditional · css-declaration"'
+      - 'option "48. #fff8f9ff · conditional · css-declaration"'
+      - 'option "49. #163f64ff · conditional · css-declaration"'
+      - 'option "50. #009978ff · conditional · css-declaration"'
+      - 'option "51. #e6efffff · conditional · css-declaration"'
+      - 'option "52. #efd160ff · conditional · css-declaration"'
+      - 'option "53. #8c56a0ff · conditional · css-declaration"'
+      - 'option "54. #171813ff · conditional · css-declaration"'
+      - 'option "55. #f5f9ffff · conditional · css-declaration"'
+      - 'option "56. #d86c30ff · conditional · css-declaration"'
+      - 'option "57. #a4b0b8ff · conditional · css-declaration"'
+      - 'option "58. #2e6c5aff · conditional · css-declaration"'
+      - 'option "59. #f4eedaff · conditional · css-declaration"'
+      - 'option "60. #db91a7ff · conditional · css-declaration"'
+      - 'option "61. #4168a0ff · conditional · css-declaration"'
+      - 'option "62. #dce6ddff · conditional · css-declaration"'
+      - 'option "63. #f7fafaff · conditional · css-declaration"'
+      - 'option "64. #fff8faff · conditional · css-declaration"'
+      - 'option "65. #6b2340ff · conditional · css-declaration"'
+      - 'option "66. #fff8faff · conditional · css-declaration"'
+      - 'option "67. #f5e6eaff · conditional · css-declaration"'
+      - 'option "68. #ffffffff · conditional · css-declaration"'
+      - 'option "69. #123456ff · conditional · css-declaration"'
+      - 'option "70. #888888ff · conditional · css-declaration"'
+      - 'option "71. #12345680 · conditional · css-declaration"'
+      - 'option "72. #fff8f9ff · conditional · css-declaration"'
+      - 'option "73. #163f64ff · conditional · css-declaration"'
+      - 'option "74. #009978ff · conditional · css-declaration"'
+      - 'option "75. #e6efffff · conditional · css-declaration"'
+      - 'option "76. #efd160ff · conditional · css-declaration"'
+      - 'option "77. #8c56a0ff · conditional · css-declaration"'
+      - 'option "78. #171813ff · conditional · css-declaration"'
+      - 'option "79. #f5f9ffff · conditional · css-declaration"'
+      - 'option "80. #d86c30ff · conditional · css-declaration"'
+      - 'option "81. #6b2340ff · conditional · css-declaration"'
+      - 'option "82. #fff8faff · conditional · css-declaration"'
+      - 'option "83. #f5e6eaff · conditional · css-declaration"'
+      - 'option "84. #ffffffff · conditional · css-declaration"'
+      - 'option "85. #123456ff · conditional · css-declaration"'
+      - 'option "86. #888888ff · conditional · css-declaration"'
+      - 'option "87. #12345680 · conditional · css-declaration"'
+      - 'option "88. #fff8f9ff · conditional · css-declaration"'
+      - 'option "89. #163f64ff · conditional · css-declaration"'
+      - 'option "90. #009978ff · conditional · css-declaration"'
+      - 'option "91. #e6efffff · conditional · css-declaration"'
+      - 'option "92. #efd160ff · conditional · css-declaration"'
+      - 'option "93. #8c56a0ff · conditional · css-declaration"'
+      - 'option "94. #171813ff · conditional · css-declaration"'
+      - 'option "95. #f5f9ffff · conditional · css-declaration"'
+      - 'option "96. #d86c30ff · conditional · css-declaration"'
+      - 'option "97. #a4b0b8ff · conditional · css-declaration"'
+      - 'option "98. #2e6c5aff · conditional · css-declaration"'
+      - 'option "99. #f4eedaff · conditional · css-declaration"'
+      - 'option "100. #db91a7ff · conditional · css-declaration"'
+      - 'option "101. #4168a0ff · conditional · css-declaration"'
+      - 'option "102. #dce6ddff · conditional · css-declaration"'
+      - 'option "103. #f7fafaff · conditional · css-declaration"'
+      - 'option "104. #fff8faff · conditional · css-declaration"'
+      - 'option "105. #6b2340ff · conditional · css-declaration"'
+      - 'option "106. #fff8faff · conditional · css-declaration"'
+      - 'option "107. #f5e6eaff · conditional · css-declaration"'
+      - 'option "108. #ffffffff · conditional · css-declaration"'
+      - 'option "109. #123456ff · conditional · css-declaration"'
+      - 'option "110. #888888ff · conditional · css-declaration"'
+      - 'option "111. #12345680 · conditional · css-declaration"'
+      - 'option "112. #fff8f9ff · conditional · css-declaration"'
+      - 'option "113. #163f64ff · conditional · css-declaration"'
+      - 'option "114. #009978ff · conditional · css-declaration"'
+      - 'option "115. #e6efffff · conditional · css-declaration"'
+      - 'option "116. #efd160ff · conditional · css-declaration"'
+      - 'option "117. #8c56a0ff · conditional · css-declaration"'
+      - 'option "118. #171813ff · conditional · css-declaration"'
+      - 'option "119. #f5f9ffff · conditional · css-declaration"'
+      - 'option "120. #d86c30ff · conditional · css-declaration"'
+      - 'option "1. #fff8faff · image sample"'
+      - 'option "2. #6b2340ff · image sample"'
+      - 'option "3. #f5e6eaff · image sample"'
+      - 'option "4. #7d3c55ff · image sample"'
+      - 'option "5. #6e2844ff · image sample"'
+      - 'option "6. #712c47ff · image sample"'
+      - 'option "7. #722d49ff · image sample"'
+      - 'option "8. #732f4aff · image sample"'
+  - group "page":
+    - generic: page
+    - generic: page evidence
+    - combobox "page evidence":
+      - option "Keep direction default" [selected]
+      - 'option "1. #6b2340ff · ink · css-declaration"'
+      - 'option "2. #fff8faff · ink · css-declaration"'
+      - 'option "3. #f5e6eaff · ink · css-declaration"'
+      - 'option "4. #ffffffff · ink · css-declaration"'
+      - 'option "5. #123456ff · ink · css-declaration"'
+      - 'option "6. #888888ff · ink · css-declaration"'
+      - 'option "7. #12345680 · ink · css-declaration"'
+      - 'option "8. #fff8f9ff · ink · css-declaration"'
+      - 'option "9. #163f64ff · ink · css-declaration"'
+      - 'option "10. #009978ff · ink · css-declaration"'
+      - 'option "11. #e6efffff · ink · css-declaration"'
+      - 'option "12. #efd160ff · ink · css-declaration"'
+      - 'option "13. #8c56a0ff · ink · css-declaration"'
+      - 'option "14. #171813ff · ink · css-declaration"'
+      - 'option "15. #f5f9ffff · ink · css-declaration"'
+      - 'option "16. #d86c30ff · ink · css-declaration"'
+      - 'option "17. #a4b0b8ff · ink · css-declaration"'
+      - 'option "18. #2e6c5aff · ink · css-declaration"'
+      - 'option "19. #f4eedaff · ink · css-declaration"'
+      - 'option "20. #db91a7ff · ink · css-declaration"'
+      - 'option "21. #4168a0ff · ink · css-declaration"'
+      - 'option "22. #dce6ddff · ink · css-declaration"'
+      - 'option "23. #f7fafaff · ink · css-declaration"'
+      - 'option "24. #fff8faff · ink · css-declaration"'
+      - 'option "25. #6b2340ff · ink · css-declaration"'
+      - 'option "26. #fff8faff · ink · css-declaration"'
+      - 'option "27. #f5e6eaff · ink · css-declaration"'
+      - 'option "28. #ffffffff · ink · css-declaration"'
+      - 'option "29. #123456ff · ink · css-declaration"'
+      - 'option "30. #888888ff · ink · css-declaration"'
+      - 'option "31. #12345680 · ink · css-declaration"'
+      - 'option "32. #fff8f9ff · ink · css-declaration"'
+      - 'option "33. #163f64ff · ink · css-declaration"'
+      - 'option "34. #009978ff · ink · css-declaration"'
+      - 'option "35. #e6efffff · ink · css-declaration"'
+      - 'option "36. #efd160ff · ink · css-declaration"'
+      - 'option "37. #8c56a0ff · ink · css-declaration"'
+      - 'option "38. #171813ff · ink · css-declaration"'
+      - 'option "39. #f5f9ffff · ink · css-declaration"'
+      - 'option "40. #d86c30ff · ink · css-declaration"'
+      - 'option "41. #6b2340ff · conditional · css-declaration"'
+      - 'option "42. #fff8faff · conditional · css-declaration"'
+      - 'option "43. #f5e6eaff · conditional · css-declaration"'
+      - 'option "44. #ffffffff · conditional · css-declaration"'
+      - 'option "45. #123456ff · conditional · css-declaration"'
+      - 'option "46. #888888ff · conditional · css-declaration"'
+      - 'option "47. #12345680 · conditional · css-declaration"'
+      - 'option "48. #fff8f9ff · conditional · css-declaration"'
+      - 'option "49. #163f64ff · conditional · css-declaration"'
+      - 'option "50. #009978ff · conditional · css-declaration"'
+      - 'option "51. #e6efffff · conditional · css-declaration"'
+      - 'option "52. #efd160ff · conditional · css-declaration"'
+      - 'option "53. #8c56a0ff · conditional · css-declaration"'
+      - 'option "54. #171813ff · conditional · css-declaration"'
+      - 'option "55. #f5f9ffff · conditional · css-declaration"'
+      - 'option "56. #d86c30ff · conditional · css-declaration"'
+      - 'option "57. #a4b0b8ff · conditional · css-declaration"'
+      - 'option "58. #2e6c5aff · conditional · css-declaration"'
+      - 'option "59. #f4eedaff · conditional · css-declaration"'
+      - 'option "60. #db91a7ff · conditional · css-declaration"'
+      - 'option "61. #4168a0ff · conditional · css-declaration"'
+      - 'option "62. #dce6ddff · conditional · css-declaration"'
+      - 'option "63. #f7fafaff · conditional · css-declaration"'
+      - 'option "64. #fff8faff · conditional · css-declaration"'
+      - 'option "65. #6b2340ff · conditional · css-declaration"'
+      - 'option "66. #fff8faff · conditional · css-declaration"'
+      - 'option "67. #f5e6eaff · conditional · css-declaration"'
+      - 'option "68. #ffffffff · conditional · css-declaration"'
+      - 'option "69. #123456ff · conditional · css-declaration"'
+      - 'option "70. #888888ff · conditional · css-declaration"'
+      - 'option "71. #12345680 · conditional · css-declaration"'
+      - 'option "72. #fff8f9ff · conditional · css-declaration"'
+      - 'option "73. #163f64ff · conditional · css-declaration"'
+      - 'option "74. #009978ff · conditional · css-declaration"'
+      - 'option "75. #e6efffff · conditional · css-declaration"'
+      - 'option "76. #efd160ff · conditional · css-declaration"'
+      - 'option "77. #8c56a0ff · conditional · css-declaration"'
+      - 'option "78. #171813ff · conditional · css-declaration"'
+      - 'option "79. #f5f9ffff · conditional · css-declaration"'
+      - 'option "80. #d86c30ff · conditional · css-declaration"'
+      - 'option "81. #6b2340ff · conditional · css-declaration"'
+      - 'option "82. #fff8faff · conditional · css-declaration"'
+      - 'option "83. #f5e6eaff · conditional · css-declaration"'
+      - 'option "84. #ffffffff · conditional · css-declaration"'
+      - 'option "85. #123456ff · conditional · css-declaration"'
+      - 'option "86. #888888ff · conditional · css-declaration"'
+      - 'option "87. #12345680 · conditional · css-declaration"'
+      - 'option "88. #fff8f9ff · conditional · css-declaration"'
+      - 'option "89. #163f64ff · conditional · css-declaration"'
+      - 'option "90. #009978ff · conditional · css-declaration"'
+      - 'option "91. #e6efffff · conditional · css-declaration"'
+      - 'option "92. #efd160ff · conditional · css-declaration"'
+      - 'option "93. #8c56a0ff · conditional · css-declaration"'
+      - 'option "94. #171813ff · conditional · css-declaration"'
+      - 'option "95. #f5f9ffff · conditional · css-declaration"'
+      - 'option "96. #d86c30ff · conditional · css-declaration"'
+      - 'option "97. #a4b0b8ff · conditional · css-declaration"'
+      - 'option "98. #2e6c5aff · conditional · css-declaration"'
+      - 'option "99. #f4eedaff · conditional · css-declaration"'
+      - 'option "100. #db91a7ff · conditional · css-declaration"'
+      - 'option "101. #4168a0ff · conditional · css-declaration"'
+      - 'option "102. #dce6ddff · conditional · css-declaration"'
+      - 'option "103. #f7fafaff · conditional · css-declaration"'
+      - 'option "104. #fff8faff · conditional · css-declaration"'
+      - 'option "105. #6b2340ff · conditional · css-declaration"'
+      - 'option "106. #fff8faff · conditional · css-declaration"'
+      - 'option "107. #f5e6eaff · conditional · css-declaration"'
+      - 'option "108. #ffffffff · conditional · css-declaration"'
+      - 'option "109. #123456ff · conditional · css-declaration"'
+      - 'option "110. #888888ff · conditional · css-declaration"'
+      - 'option "111. #12345680 · conditional · css-declaration"'
+      - 'option "112. #fff8f9ff · conditional · css-declaration"'
+      - 'option "113. #163f64ff · conditional · css-declaration"'
+      - 'option "114. #009978ff · conditional · css-declaration"'
+      - 'option "115. #e6efffff · conditional · css-declaration"'
+      - 'option "116. #efd160ff · conditional · css-declaration"'
+      - 'option "117. #8c56a0ff · conditional · css-declaration"'
+      - 'option "118. #171813ff · conditional · css-declaration"'
+      - 'option "119. #f5f9ffff · conditional · css-declaration"'
+      - 'option "120. #d86c30ff · conditional · css-declaration"'
+      - 'option "1. #fff8faff · image sample"'
+      - 'option "2. #6b2340ff · image sample"'
+      - 'option "3. #f5e6eaff · image sample"'
+      - 'option "4. #7d3c55ff · image sample"'
+      - 'option "5. #6e2844ff · image sample"'
+      - 'option "6. #712c47ff · image sample"'
+      - 'option "7. #722d49ff · image sample"'
+      - 'option "8. #732f4aff · image sample"'
+  - group "surface":
+    - generic: surface
+    - generic: surface evidence
+    - combobox "surface evidence":
+      - option "Keep direction default" [selected]
+      - 'option "1. #6b2340ff · ink · css-declaration"'
+      - 'option "2. #fff8faff · ink · css-declaration"'
+      - 'option "3. #f5e6eaff · ink · css-declaration"'
+      - 'option "4. #ffffffff · ink · css-declaration"'
+      - 'option "5. #123456ff · ink · css-declaration"'
+      - 'option "6. #888888ff · ink · css-declaration"'
+      - 'option "7. #12345680 · ink · css-declaration"'
+      - 'option "8. #fff8f9ff · ink · css-declaration"'
+      - 'option "9. #163f64ff · ink · css-declaration"'
+      - 'option "10. #009978ff · ink · css-declaration"'
+      - 'option "11. #e6efffff · ink · css-declaration"'
+      - 'option "12. #efd160ff · ink · css-declaration"'
+      - 'option "13. #8c56a0ff · ink · css-declaration"'
+      - 'option "14. #171813ff · ink · css-declaration"'
+      - 'option "15. #f5f9ffff · ink · css-declaration"'
+      - 'option "16. #d86c30ff · ink · css-declaration"'
+      - 'option "17. #a4b0b8ff · ink · css-declaration"'
+      - 'option "18. #2e6c5aff · ink · css-declaration"'
+      - 'option "19. #f4eedaff · ink · css-declaration"'
+      - 'option "20. #db91a7ff · ink · css-declaration"'
+      - 'option "21. #4168a0ff · ink · css-declaration"'
+      - 'option "22. #dce6ddff · ink · css-declaration"'
+      - 'option "23. #f7fafaff · ink · css-declaration"'
+      - 'option "24. #fff8faff · ink · css-declaration"'
+      - 'option "25. #6b2340ff · ink · css-declaration"'
+      - 'option "26. #fff8faff · ink · css-declaration"'
+      - 'option "27. #f5e6eaff · ink · css-declaration"'
+      - 'option "28. #ffffffff · ink · css-declaration"'
+      - 'option "29. #123456ff · ink · css-declaration"'
+      - 'option "30. #888888ff · ink · css-declaration"'
+      - 'option "31. #12345680 · ink · css-declaration"'
+      - 'option "32. #fff8f9ff · ink · css-declaration"'
+      - 'option "33. #163f64ff · ink · css-declaration"'
+      - 'option "34. #009978ff · ink · css-declaration"'
+      - 'option "35. #e6efffff · ink · css-declaration"'
+      - 'option "36. #efd160ff · ink · css-declaration"'
+      - 'option "37. #8c56a0ff · ink · css-declaration"'
+      - 'option "38. #171813ff · ink · css-declaration"'
+      - 'option "39. #f5f9ffff · ink · css-declaration"'
+      - 'option "40. #d86c30ff · ink · css-declaration"'
+      - 'option "41. #6b2340ff · conditional · css-declaration"'
+      - 'option "42. #fff8faff · conditional · css-declaration"'
+      - 'option "43. #f5e6eaff · conditional · css-declaration"'
+      - 'option "44. #ffffffff · conditional · css-declaration"'
+      - 'option "45. #123456ff · conditional · css-declaration"'
+      - 'option "46. #888888ff · conditional · css-declaration"'
+      - 'option "47. #12345680 · conditional · css-declaration"'
+      - 'option "48. #fff8f9ff · conditional · css-declaration"'
+      - 'option "49. #163f64ff · conditional · css-declaration"'
+      - 'option "50. #009978ff · conditional · css-declaration"'
+      - 'option "51. #e6efffff · conditional · css-declaration"'
+      - 'option "52. #efd160ff · conditional · css-declaration"'
+      - 'option "53. #8c56a0ff · conditional · css-declaration"'
+      - 'option "54. #171813ff · conditional · css-declaration"'
+      - 'option "55. #f5f9ffff · conditional · css-declaration"'
+      - 'option "56. #d86c30ff · conditional · css-declaration"'
+      - 'option "57. #a4b0b8ff · conditional · css-declaration"'
+      - 'option "58. #2e6c5aff · conditional · css-declaration"'
+      - 'option "59. #f4eedaff · conditional · css-declaration"'
+      - 'option "60. #db91a7ff · conditional · css-declaration"'
+      - 'option "61. #4168a0ff · conditional · css-declaration"'
+      - 'option "62. #dce6ddff · conditional · css-declaration"'
+      - 'option "63. #f7fafaff · conditional · css-declaration"'
+      - 'option "64. #fff8faff · conditional · css-declaration"'
+      - 'option "65. #6b2340ff · conditional · css-declaration"'
+      - 'option "66. #fff8faff · conditional · css-declaration"'
+      - 'option "67. #f5e6eaff · conditional · css-declaration"'
+      - 'option "68. #ffffffff · conditional · css-declaration"'
+      - 'option "69. #123456ff · conditional · css-declaration"'
+      - 'option "70. #888888ff · conditional · css-declaration"'
+      - 'option "71. #12345680 · conditional · css-declaration"'
+      - 'option "72. #fff8f9ff · conditional · css-declaration"'
+      - 'option "73. #163f64ff · conditional · css-declaration"'
+      - 'option "74. #009978ff · conditional · css-declaration"'
+      - 'option "75. #e6efffff · conditional · css-declaration"'
+      - 'option "76. #efd160ff · conditional · css-declaration"'
+      - 'option "77. #8c56a0ff · conditional · css-declaration"'
+      - 'option "78. #171813ff · conditional · css-declaration"'
+      - 'option "79. #f5f9ffff · conditional · css-declaration"'
+      - 'option "80. #d86c30ff · conditional · css-declaration"'
+      - 'option "81. #6b2340ff · conditional · css-declaration"'
+      - 'option "82. #fff8faff · conditional · css-declaration"'
+      - 'option "83. #f5e6eaff · conditional · css-declaration"'
+      - 'option "84. #ffffffff · conditional · css-declaration"'
+      - 'option "85. #123456ff · conditional · css-declaration"'
+      - 'option "86. #888888ff · conditional · css-declaration"'
+      - 'option "87. #12345680 · conditional · css-declaration"'
+      - 'option "88. #fff8f9ff · conditional · css-declaration"'
+      - 'option "89. #163f64ff · conditional · css-declaration"'
+      - 'option "90. #009978ff · conditional · css-declaration"'
+      - 'option "91. #e6efffff · conditional · css-declaration"'
+      - 'option "92. #efd160ff · conditional · css-declaration"'
+      - 'option "93. #8c56a0ff · conditional · css-declaration"'
+      - 'option "94. #171813ff · conditional · css-declaration"'
+      - 'option "95. #f5f9ffff · conditional · css-declaration"'
+      - 'option "96. #d86c30ff · conditional · css-declaration"'
+      - 'option "97. #a4b0b8ff · conditional · css-declaration"'
+      - 'option "98. #2e6c5aff · conditional · css-declaration"'
+      - 'option "99. #f4eedaff · conditional · css-declaration"'
+      - 'option "100. #db91a7ff · conditional · css-declaration"'
+      - 'option "101. #4168a0ff · conditional · css-declaration"'
+      - 'option "102. #dce6ddff · conditional · css-declaration"'
+      - 'option "103. #f7fafaff · conditional · css-declaration"'
+      - 'option "104. #fff8faff · conditional · css-declaration"'
+      - 'option "105. #6b2340ff · conditional · css-declaration"'
+      - 'option "106. #fff8faff · conditional · css-declaration"'
+      - 'option "107. #f5e6eaff · conditional · css-declaration"'
+      - 'option "108. #ffffffff · conditional · css-declaration"'
+      - 'option "109. #123456ff · conditional · css-declaration"'
+      - 'option "110. #888888ff · conditional · css-declaration"'
+      - 'option "111. #12345680 · conditional · css-declaration"'
+      - 'option "112. #fff8f9ff · conditional · css-declaration"'
+      - 'option "113. #163f64ff · conditional · css-declaration"'
+      - 'option "114. #009978ff · conditional · css-declaration"'
+      - 'option "115. #e6efffff · conditional · css-declaration"'
+      - 'option "116. #efd160ff · conditional · css-declaration"'
+      - 'option "117. #8c56a0ff · conditional · css-declaration"'
+      - 'option "118. #171813ff · conditional · css-declaration"'
+      - 'option "119. #f5f9ffff · conditional · css-declaration"'
+      - 'option "120. #d86c30ff · conditional · css-declaration"'
+      - 'option "1. #fff8faff · image sample"'
+      - 'option "2. #6b2340ff · image sample"'
+      - 'option "3. #f5e6eaff · image sample"'
+      - 'option "4. #7d3c55ff · image sample"'
+      - 'option "5. #6e2844ff · image sample"'
+      - 'option "6. #712c47ff · image sample"'
+      - 'option "7. #722d49ff · image sample"'
+      - 'option "8. #732f4aff · image sample"'
+  - paragraph: Ink/muted text on page, offer tint, accent text, action text and keyboard focus must remain readable. Unselected roles use direction defaults.
+  - button "Apply reviewed palette" [disabled]
+  - group "Visual direction":
+    - generic: Visual direction
+    - radio "Clear Sans type, framed product, direct hierarchy" [checked]
+    - generic: Clear
+    - text: Sans type, framed product, direct hierarchy
+    - radio "Editorial Serif type, warm palette, editorial hierarchy"
+    - generic: Editorial
+    - text: Serif type, warm palette, editorial hierarchy
+  - generic: Accent override (hex)
+  - textbox "Accent override (hex)":
+    - /placeholder: Optional — use direction default
+  - group "Prepared brief":
+    - generic: Prepared brief
+    - paragraph: Load a local JSON brief, review the populated fields, then select the packshot and confirm the exact inputs below.
+    - generic: Prepared brief JSON
+    - button "Prepared brief JSON"
+  - group "Product and offer":
+    - generic: Product and offer
+    - generic: Brand name
+    - textbox "Brand name":
+      - /placeholder: Optional — neutral preview if blank
+    - generic: Product name
+    - textbox "Product name"
+    - generic: Audience
+    - textbox "Audience":
+      - /placeholder: Who is this campaign for?
+    - generic: Campaign objective
+    - textbox "Campaign objective":
+      - /placeholder: What should the page achieve?
+    - paragraph: Optional. Used to choose the page opening; never rendered.
+    - generic: Offer
+    - textbox "Offer"
+    - paragraph: Automatic headlines only shorten a simple discount, optionally dated. Any other terms keep the product name, and the exact offer stays beside the CTA.
+    - generic: Destination URL
+    - textbox "Destination URL"
+    - paragraph: A direct URL stays unconfirmed until you check the exact destination. Amazon search and placeholder URLs stay provisional after confirmation.
+  - group "Approved facts":
+    - generic: Approved facts
+    - paragraph: The offer page shows 2–3. All entered facts stay together.
+    - button "Add fact"
+    - generic: Label
+    - textbox "Label"
+    - generic: Approved value
+    - textbox "Approved value"
+    - button "Remove" [disabled]
+    - generic: Label
+    - textbox "Label"
+    - generic: Approved value
+    - textbox "Approved value"
+    - button "Remove" [disabled]
+  - group "Packshot":
+    - generic: Packshot
+    - generic: Product image
+    - button "Product image"
+    - paragraph: PNG, JPEG, or WebP.
+    - generic: Alt text
+    - textbox "Alt text"
+    - generic: Usage rights
+    - textbox "Usage rights"
+  - group "Operator confirmations":
+    - generic: Operator confirmations
+    - checkbox "I confirm these exact offer terms:not entered" [disabled]
+    - text: "I confirm these exact offer terms:"
+    - strong: not entered
+    - checkbox "I confirm this exact destination:not entered" [disabled]
+    - text: "I confirm this exact destination:"
+    - strong: not entered
+    - checkbox "I confirm these media rights:not entered" [disabled]
+    - text: "I confirm these media rights:"
+    - strong: not entered
+  - paragraph: Commercial and media check
+  - paragraph: Current intake values
+  - paragraph: Offer
+  - paragraph: Offer missing
+  - paragraph: Not entered
+  - paragraph: Destination
+  - paragraph: Destination missing
+  - paragraph: Not entered
+  - paragraph: Media
+  - paragraph: Media rights missing
+  - paragraph: Not entered
+  - paragraph: Local session only. Text fields are restored after refresh; the packshot and local approval are not.
+  - button "Open Campaign Lab preview"
+- region "Notifications alt+T"
+- button "Open Next.js Dev Tools":
+- alert

@@ -1,0 +1,365 @@
+[
+  {
+    "name": "large initial / keyboard import focus",
+    "activeName": "Choose color for accent",
+    "alerts": [],
+    "applyDisabled": true,
+    "roles": "accent#2f5d4aDirection defaultpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Saved evidence loaded.",
+      "1–12 of 23 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Dark pink #6b2340, 6 observations",
+        "tabIndex": 0
+      },
+      {
+        "name": "Browse White #fff8fa, 9 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Light gray #f5e6ea, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse White #ffffff, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark blue #123456, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Gray #888888, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse White #fff8f9, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark blue #163f64, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Teal #009978, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Light blue #e6efff, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Yellow #efd160, 6 observations",
+        "tabIndex": -1
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "explicit duplicate observation chosen, pending only",
+    "activeName": null,
+    "alerts": [],
+    "applyDisabled": false,
+    "inspector": "Dark pink · #6b2340\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/dark-theme.css · UI observation\n\nSynthetic dark-theme observation. Theme or conditional applicability unresolved. Presence and repetition do not establish ownership or a brand role.\n\nUse #6b2340 for accent\nObservation provenance\n\ncss-declaration · medium: Synthetic literal declaration; visibility and role unresolved.\n\nContext hint: conditional. Synthetic declaration context; this is not an approved brand role.\n\n#6b2340ff\n\nCandidate ID: d99add5313115f0d416d72a34e938dcf83d1eb3af3310040f7cffaaa25324972\n\nSource ID: 38f5b897ce20742f84fa48424e1424a20068b09b55aeb3a4fe8a6dc41cccc1cf\n\nClaimed SHA-256: 4729671c2929a00b67f76e3d5b4a4e1e8338d88ab1598c31f36b81989da2b5fe\n\nOffset: 59 · review: unreviewed\n\nproperty: color\nalpha: 1\n\nconditional-or-multiple-theme-evidence-unresolved",
+    "roles": "accent#6b2340Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Selected #6b2340 for accent. Apply after review.",
+      "1–12 of 23 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Dark pink #6b2340, 6 observations",
+        "tabIndex": 0
+      },
+      {
+        "name": "Browse White #fff8fa, 9 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Light gray #f5e6ea, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse White #ffffff, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark blue #123456, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Gray #888888, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse White #fff8f9, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark blue #163f64, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Teal #009978, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Light blue #e6efff, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Yellow #efd160, 6 observations",
+        "tabIndex": -1
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "no results preserves pending accent",
+    "activeName": null,
+    "alerts": [],
+    "applyDisabled": false,
+    "roles": "accent#6b2340Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Selected #6b2340 for accent. Apply after review.",
+      "No colors match. Clear filters or try another search. · 120 observations"
+    ],
+    "swatches": [],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "alpha requires opaque correction",
+    "activeName": null,
+    "alerts": [
+      "Use opaque six-digit hex corrections. Translucency cannot be applied."
+    ],
+    "applyDisabled": true,
+    "inspector": "Translucent dark blue · #12345680\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #12345680 for accent\nObservation provenance",
+    "roles": "accent#12345680Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Selected #12345680 for accent. Apply after review.",
+      "1–1 of 1 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": 0
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "contrast failure",
+    "activeName": null,
+    "alerts": [
+      "Offer text on its accent tint needs 4.5:1 contrast. Correct the palette."
+    ],
+    "applyDisabled": true,
+    "inspector": "Translucent dark blue · #12345680\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #12345680 for accent\nObservation provenance",
+    "roles": "accent#888888Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Selected #12345680 for accent. Apply after review.",
+      "1–1 of 1 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": 0
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "opaque correction and contrast recovery",
+    "activeName": null,
+    "alerts": [],
+    "applyDisabled": false,
+    "inspector": "Translucent dark blue · #12345680\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #12345680 for accent\nObservation provenance",
+    "roles": "accent#123456Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Selected #12345680 for accent. Apply after review.",
+      "1–1 of 1 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": 0
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "external override immediately blocks contrast",
+    "activeName": null,
+    "alerts": [
+      "Offer text on its accent tint needs 4.5:1 contrast. Correct the palette."
+    ],
+    "applyDisabled": true,
+    "inspector": "Translucent dark blue · #12345680\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #12345680 for accent\nObservation provenance",
+    "roles": "accent#ffffffOverridepage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Selected #12345680 for accent. Apply after review.",
+      "1–1 of 1 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": 0
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "failed replacement keeps valid draft and Apply",
+    "activeName": null,
+    "alerts": [
+      "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+    ],
+    "applyDisabled": false,
+    "inspector": "Translucent dark blue · #12345680\n\nObservation (6 total)\n1. palette.synthetic.invalid/base.css · medium confidence\n2. palette.synthetic.invalid/base.css · medium confidence\n3. palette.synthetic.invalid/dark-theme.css · medium confidence\n4. palette.synthetic.invalid/dark-theme.css · medium confidence\n5. palette.synthetic.invalid/conditional.css · medium confidence\n6. palette.synthetic.invalid/conditional.css · medium confidence\n\npalette.synthetic.invalid/base.css · UI observation\n\nSynthetic base observation. Presence and repetition do not establish ownership or a brand role.\n\nUse #12345680 for accent\nObservation provenance",
+    "roles": "accent#123456Pendingpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Previous evidence and pending selections are kept.",
+      "1–12 of 23 colors · 120 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse Dark pink #6b2340, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse White #fff8fa, 9 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Light gray #f5e6ea, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse White #ffffff, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark blue #123456, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Gray #888888, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Translucent dark blue #12345680, 6 observations",
+        "tabIndex": 0
+      },
+      {
+        "name": "Browse White #fff8f9, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark blue #163f64, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Teal #009978, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Light blue #e6efff, 6 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Yellow #efd160, 6 observations",
+        "tabIndex": -1
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "small fixture: three reachable colors",
+    "activeName": "Choose color for accent",
+    "alerts": [],
+    "applyDisabled": true,
+    "roles": "accent#2f5d4aDirection defaultpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Saved evidence loaded.",
+      "1–3 of 3 colors · 3 observations"
+    ],
+    "swatches": [
+      {
+        "name": "Browse White #fff8fa, 1 observations",
+        "tabIndex": 0
+      },
+      {
+        "name": "Browse Light gray #f5e6ea, 1 observations",
+        "tabIndex": -1
+      },
+      {
+        "name": "Browse Dark pink #6b2340, 1 observations",
+        "tabIndex": -1
+      }
+    ],
+    "viewport": {
+      "documentWidth": 1425,
+      "height": 900,
+      "width": 1440
+    }
+  },
+  {
+    "name": "insufficient fixture preserves manual/default path",
+    "activeName": "Choose color for accent",
+    "alerts": [],
+    "applyDisabled": true,
+    "roles": "accent#2f5d4aDirection defaultpage#f6f3ecDirection defaultsurface#e8e2d6Direction default",
+    "statuses": [
+      "Saved evidence loaded."
+    ],
+    "swatches": [],
+    "viewport": {
+      "documentWidth": 360,
+      "height": 812,
+      "width": 375
+    }
+  }
+]

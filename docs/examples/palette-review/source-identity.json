@@ -1,0 +1,23 @@
+{
+  "base": "13b1e9a8d62b76181b1bb0da6adfb7196945916e",
+  "testedRuntime": "b079fbf7e56a3269c9124efc5f5176eec1f56951",
+  "unchangedGitObjects": {
+    "public": "f92a32bd2b16d96c4c05c6b5942a65b30e7aa713",
+    "src/lib/campaign-lab/brand-review.ts": "1f44fc6d1871d05ac3833decb3dc28e6970acd97",
+    "src/lib/campaign-lab/brand-import": "2e7085ee42af895633a67e697738cbe0d0bb611b",
+    "src/lib/campaign-lab/export.ts": "efa4be5e8835c43c07708d55efdc4faf4afbcb58",
+    "src/lib/campaign-lab/template.ts": "084ec087afea48f84675a878b7db6d38740fead6",
+    "src/lib/campaign-lab/generation": "d99ee64a3b1cc98e48206d13aafe0f7be8445f21",
+    "src/lib/campaign-lab/visual-directions.ts": "e9ce22508816563464d0c086a69adc86a4a67741",
+    "scripts/support": "1cda4b8104d1adc3077f6c79c627fe1f8546eb46",
+    "scripts/offline-qualify.mjs": "41e92c857f6e4e00e2d5f8147f12e0ea0609a715",
+    "package.json": "b397db3f16d197461a6215f0d31d60ff9cfa509b",
+    "package-lock.json": "adf6efff9b051fb927a3971a74e996525e77fbcc"
+  },
+  "changedRuntimeGitBlobHashes": {
+    "src/components/campaign-lab/brand-evidence-review.tsx": "db25cbee84409e562fa2965a87d15d5796aab982ad9a6946dbfb0e426d5b4233",
+    "src/lib/campaign-lab/palette-browser.ts": "ee0093cd15dd5195f64db7296881fde865fc3f293f564dd909af40a3bd1ba716"
+  },
+  "firstBrowserBehaviorFreeze": "9ee34da5cefff54f7b4636355f03d223cdec92d9",
+  "subsequentChange": "Only the keyboard-help paragraph changed from screen-reader-only to visible; all checks and a fresh full browser/export journey repeated at testedRuntime."
+}

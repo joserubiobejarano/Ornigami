@@ -1,0 +1,164 @@
+- banner:
+  - link "Campaign Lab":
+    - /url: /campaign-lab
+  - heading "Offer intake" [level=1]
+  - generic: Local only · not published
+- main:
+  - generic "Brand evidence (optional)"
+  - paragraph: Review colors only. This does not confirm ownership, campaign facts or media rights.
+  - generic "Load or replace evidence"
+  - status: "Selected #12345680 for accent. Apply after review."
+  - group "Pending palette":
+    - button "Choose color for accent" [pressed]:
+      - generic: accent
+      - generic: "#163f64"
+      - generic: Override
+    - button "Choose color for page":
+      - generic: page
+      - generic: "#f2ebde"
+      - generic: Direction default
+    - button "Choose color for surface":
+      - generic: surface
+      - generic: "#e6dbc8"
+      - generic: Direction default
+  - paragraph: "Accent override #163f64 wins over the reviewed accent. Clear it outside this panel to expose the selection."
+  - group "accent pending selection":
+    - generic "Correct / inspect selected accent"
+    - paragraph: "Observed: #12345680"
+    - generic: accent opaque value / correction
+    - textbox "accent opaque value / correction":
+      - /placeholder: "#123456"
+      - text: "#123456"
+    - paragraph: Translucent observation. Enter an opaque correction; no background is inferred.
+    - button "Inspect selected observation"
+    - button "Keep direction default for accent"
+  - button "Apply reviewed palette"
+  - generic: Pending selections change the campaign only when applied.
+  - group "Color evidence type":
+    - button "UI colors (23)" [pressed]
+    - button "Photo samples (8)"
+  - generic: Search colors or sources
+  - searchbox "Search colors or sources"
+  - button "Clear filters"
+  - generic "Source and opacity filters"
+  - generic: Filter source
+  - combobox "Filter source":
+    - option "All sources" [selected]
+    - option "palette.synthetic.invalid/base.css"
+    - option "palette.synthetic.invalid/dark-theme.css"
+    - option "palette.synthetic.invalid/conditional.css"
+    - option "rose.example/photo.png"
+  - generic: Filter opacity
+  - combobox "Filter opacity":
+    - option "Any opacity"
+    - option "Opaque"
+    - option "Translucent" [selected]
+  - status: 1–1 of 1 colors · 120 observations
+  - paragraph: Tab to the colors; arrow keys browse, Home/End reach the first/last visible color, Enter inspects.
+  - list "Color swatches":
+    - 'button "Browse Translucent dark blue #12345680, 6 observations" [pressed]':
+      - generic: Translucent dark blue
+      - generic: "#12345680"
+      - generic: 6 observations
+  - region "Color observation":
+    - paragraph: "Translucent dark blue · #12345680"
+    - generic: Observation (6 total)
+    - combobox "Observation (6 total)":
+      - option "1. palette.synthetic.invalid/base.css · medium confidence" [selected]
+      - option "2. palette.synthetic.invalid/base.css · medium confidence"
+      - option "3. palette.synthetic.invalid/dark-theme.css · medium confidence"
+      - option "4. palette.synthetic.invalid/dark-theme.css · medium confidence"
+      - option "5. palette.synthetic.invalid/conditional.css · medium confidence"
+      - option "6. palette.synthetic.invalid/conditional.css · medium confidence"
+    - paragraph: palette.synthetic.invalid/base.css · UI observation
+    - paragraph: Synthetic base observation. Presence and repetition do not establish ownership or a brand role.
+    - 'button "Use #12345680 for accent"'
+    - generic "Observation provenance"
+  - generic "Evidence warnings and sources"
+  - group "Visual direction":
+    - generic: Visual direction
+    - radio "Clear Sans type, framed product, direct hierarchy"
+    - generic: Clear
+    - text: Sans type, framed product, direct hierarchy
+    - radio "Editorial Serif type, warm palette, editorial hierarchy" [checked] [active]
+    - generic: Editorial
+    - text: Serif type, warm palette, editorial hierarchy
+  - generic: Accent override (hex)
+  - textbox "Accent override (hex)":
+    - /placeholder: Optional — use direction default
+    - text: "#163f64"
+  - group "Prepared brief":
+    - generic: Prepared brief
+    - paragraph: Load a local JSON brief, review the populated fields, then select the packshot and confirm the exact inputs below.
+    - generic: Prepared brief JSON
+    - button "Prepared brief JSON"
+  - group "Product and offer":
+    - generic: Product and offer
+    - generic: Brand name
+    - textbox "Brand name":
+      - /placeholder: Optional — neutral preview if blank
+    - generic: Product name
+    - textbox "Product name"
+    - generic: Audience
+    - textbox "Audience":
+      - /placeholder: Who is this campaign for?
+    - generic: Campaign objective
+    - textbox "Campaign objective":
+      - /placeholder: What should the page achieve?
+    - paragraph: Optional. Used to choose the page opening; never rendered.
+    - generic: Offer
+    - textbox "Offer"
+    - paragraph: Automatic headlines only shorten a simple discount, optionally dated. Any other terms keep the product name, and the exact offer stays beside the CTA.
+    - generic: Destination URL
+    - textbox "Destination URL"
+    - paragraph: A direct URL stays unconfirmed until you check the exact destination. Amazon search and placeholder URLs stay provisional after confirmation.
+  - group "Approved facts":
+    - generic: Approved facts
+    - paragraph: The offer page shows 2–3. All entered facts stay together.
+    - button "Add fact"
+    - generic: Label
+    - textbox "Label"
+    - generic: Approved value
+    - textbox "Approved value"
+    - button "Remove" [disabled]
+    - generic: Label
+    - textbox "Label"
+    - generic: Approved value
+    - textbox "Approved value"
+    - button "Remove" [disabled]
+  - group "Packshot":
+    - generic: Packshot
+    - generic: Product image
+    - button "Product image"
+    - paragraph: PNG, JPEG, or WebP.
+    - generic: Alt text
+    - textbox "Alt text"
+    - generic: Usage rights
+    - textbox "Usage rights"
+  - group "Operator confirmations":
+    - generic: Operator confirmations
+    - checkbox "I confirm these exact offer terms:not entered" [disabled]
+    - text: "I confirm these exact offer terms:"
+    - strong: not entered
+    - checkbox "I confirm this exact destination:not entered" [disabled]
+    - text: "I confirm this exact destination:"
+    - strong: not entered
+    - checkbox "I confirm these media rights:not entered" [disabled]
+    - text: "I confirm these media rights:"
+    - strong: not entered
+  - paragraph: Commercial and media check
+  - paragraph: Current intake values
+  - paragraph: Offer
+  - paragraph: Offer missing
+  - paragraph: Not entered
+  - paragraph: Destination
+  - paragraph: Destination missing
+  - paragraph: Not entered
+  - paragraph: Media
+  - paragraph: Media rights missing
+  - paragraph: Not entered
+  - paragraph: Local session only. Text fields are restored after refresh; the packshot and local approval are not.
+  - button "Open Campaign Lab preview"
+- region "Notifications alt+T"
+- button "Open Next.js Dev Tools":
+- alert: Offer intake — Ornigami

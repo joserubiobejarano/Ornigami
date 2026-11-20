@@ -1,0 +1,101 @@
+{
+  "after-desktop-final.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 1425,
+      "height": 891
+    },
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "after-mobile-final.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 360,
+      "height": 780
+    },
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    }
+  },
+  "before-desktop.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 1425,
+      "height": 891
+    },
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "before-mobile.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 360,
+      "height": 780
+    },
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    }
+  },
+  "empty-mobile.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 360,
+      "height": 780
+    },
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    }
+  },
+  "final-preview-desktop.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 1425,
+      "height": 891
+    },
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "final-preview-mobile.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 360,
+      "height": 780
+    },
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    }
+  },
+  "no-results.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 1425,
+      "height": 891
+    },
+    "requestedViewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "small-mobile.jpg": {
+    "format": "JPEG",
+    "pixels": {
+      "width": 360,
+      "height": 780
+    },
+    "requestedViewport": {
+      "width": 375,
+      "height": 812
+    }
+  }
+}

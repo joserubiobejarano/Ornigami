@@ -1,0 +1,23 @@
+{
+  "initialSuiteHarness": {
+    "status": "304 passed / 42 failed / 1 cancelled; no skips",
+    "reason": "Application guard blocks CPU-only injected TLS fixture paths. No production guard change. Existing suite passed 347/347 with test-only DNS/socket physical fail-safe preserving in-memory TLS.",
+    "rawLog": "C:\\Users\\joser\\.local\\ornigami-palette-review-usability\\.local\\palette-review\\campaign-first.log",
+    "sha256": "30d0305e9206dc5a69151751383bc3be66cc8e324c61f8cc0da0aa8172882fa7"
+  },
+  "initialExtendedAudit": {
+    "reason": "Expected NOTICE bytes to match across loopback ports; only exporter-derived font aliases differ. Corrected comparison maps aliases to exact admitted font program hashes. License bytes themselves are identical; no artifact modified.",
+    "rawLog": "C:\\Users\\joser\\.local\\ornigami-palette-review-usability\\.local\\palette-review\\extended-export-first.log",
+    "sha256": "c2436841664d5297cfc094b6e9874abe62078f87bece36ae3c658ace6896d71a"
+  },
+  "browser": [
+    "First cold navigation hit CDP timeout; normal DOM inspection succeeded after compilation.",
+    "After stopping the first dev server, its old tab retained an error document; navigation reported a data-error-page URL policy rejection. A fresh tab reached the same running loopback app normally. No direct-file or policy bypass."
+  ],
+  "patchTool": "An attempted atomic delete/add patch was rejected before editing; separate patch operations succeeded.",
+  "preservedOutputs": [
+    ".local/palette-review/pre-build-owned-dev-output",
+    ".local/palette-review/first-owned-build"
+  ],
+  "limitations": "Logs/captures from intermediate layouts, first exports and all observed failures remain under .local/palette-review."
+}

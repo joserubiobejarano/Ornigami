@@ -1,0 +1,5 @@
+{
+  "creationDate": "2026-11-20T02:06:57.511738+01:00",
+  "pid": 43044,
+  "commandLine": "\"C:\\Program Files\\nodejs\\node.exe\" scripts/offline-qualify.mjs dev"
+}
