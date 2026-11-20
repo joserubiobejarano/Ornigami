@@ -199,6 +199,22 @@ try {
     restoreInit >= 0 && restoreInit < restoreCopy && restoreCopy < restoreStart,
     "restore root must be initialized before import and writer start",
   );
+  const browserSection = qualifyScript.slice(
+    qualifyScript.indexOf("FULL_ACCEPTANCE=false"),
+    qualifyScript.indexOf("# Backup while stopped"),
+  );
+  assert.match(browserSection, /FULL_ACCEPTANCE=false/);
+  assert.match(browserSection, /FULL_ACCEPTANCE=true/);
+  assert.match(qualifyScript, /full_acceptance=\$FULL_ACCEPTANCE/);
+  assert.match(qualifyScript, /host_connection=loopback-proxy/);
+  assert.ok(
+    existsSync(path.join(root, "deploy", "builder", "qualify-proxy.mjs")),
+    "loopback proxy helper is missing",
+  );
+  assert.ok(
+    existsSync(path.join(root, "deploy", "builder", "qualify-connectivity.mjs")),
+    "connectivity diagnostic helper is missing",
+  );
   const builderDockerfile = readFileSync(
     path.join(root, "deploy", "builder", "Dockerfile"),
     "utf8",

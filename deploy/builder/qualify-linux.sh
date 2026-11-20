@@ -23,6 +23,10 @@
 # MOUNT-ONLY (real engine; stops after the four writable-path probes):
 #   MOUNT_ONLY=1 BROWSER_PHASE=0 KEEP_VOLUMES=0 REMOVE_IMAGE=1 \
 #   SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
+#
+# DIAGNOSTIC (real engine; host path before/after same-container restart):
+#   DIAGNOSTIC=1 BROWSER_PHASE=1 KEEP_VOLUMES=0 \
+#   SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
 
 set -euo pipefail
 
@@ -38,6 +42,7 @@ KEEP_ON_FAILURE="${KEEP_ON_FAILURE:-1}"
 KEEP_VOLUMES="${KEEP_VOLUMES:-1}"
 REMOVE_IMAGE="${REMOVE_IMAGE:-0}"
 MOUNT_ONLY="${MOUNT_ONLY:-0}"
+DIAGNOSTIC="${DIAGNOSTIC:-0}"
 STORE_MODE="${STORE_MODE:-volume}"
 STORE_HOST_ID="${BUILDER_RUNTIME_STORE_HOST_ID:-${STORE_HOST_ID:-ornigami-builder-store}}"
 NODE_BIN="${NODE_BIN:-node}"
@@ -165,6 +170,12 @@ if [[ "$BROWSER_PHASE" != "0" && "$BROWSER_PHASE" != "1" ]]; then
 fi
 if [[ "$MOUNT_ONLY" != "0" && "$MOUNT_ONLY" != "1" ]]; then
   fail "MOUNT_ONLY must be 0 or 1"
+fi
+if [[ "$DIAGNOSTIC" != "0" && "$DIAGNOSTIC" != "1" ]]; then
+  fail "DIAGNOSTIC must be 0 or 1"
+fi
+if [[ "$DIAGNOSTIC" == "1" && "$BROWSER_PHASE" != "1" ]]; then
+  fail "DIAGNOSTIC requires BROWSER_PHASE=1"
 fi
 
 # The browser phase needs an exact loopback origin and a published loopback
@@ -300,6 +311,16 @@ created_network=0
 created_store_volume=0
 created_restore_volume=0
 created_image=0
+PROXY_PID=""
+PROXY_TARGET=""
+
+stop_host_proxy() {
+  if [[ -n "$PROXY_PID" ]]; then
+    kill "$PROXY_PID" 2>/dev/null || true
+    wait "$PROXY_PID" 2>/dev/null || true
+    PROXY_PID=""
+  fi
+}
 
 container_owned() {
   local name="$1" label
@@ -368,6 +389,7 @@ remove_image() {
 cleanup() {
   local status=$?
   set +e
+  stop_host_proxy
   if [[ "$status" -ne 0 && "$KEEP_ON_FAILURE" == "1" ]]; then
     stop_owned_container "$CONTAINER" "$created_container"
     stop_owned_container "$RESTORE_CONTAINER" "$created_restore_container"
@@ -737,11 +759,7 @@ http_run() {
 }
 
 start_runtime() {
-  local name="$1" source="$2" mode="$3" publish="${4:-0}"
-  local publish_args=()
-  if [[ "$publish" == "1" ]]; then
-    publish_args=(-p "127.0.0.1:$HOST_PORT:3000")
-  fi
+  local name="$1" source="$2" mode="$3"
   build_store_mount_args "$source" \
     || fail "runtime mount construction failed for $source"
   "$ENGINE" run -d --name "$name" \
@@ -753,7 +771,6 @@ start_runtime() {
     "${STORE_MOUNT_ARGS[@]}" \
     --mount "type=bind,src=$ROOT/deploy/builder,dst=/app/qualify,readonly" \
     --network "$NETWORK" \
-    "${publish_args[@]}" \
     --user 1000:1000 \
     -e NODE_ENV=production \
     -e BUILDER_RUNTIME_MODE="$mode" \
@@ -767,6 +784,63 @@ start_runtime() {
     -e QUALIFY_ORIGIN="$APP_URL" \
     -e NEXT_PUBLIC_APP_URL="$APP_URL" \
     "$IMAGE" >/dev/null
+}
+
+start_host_proxy() {
+  local name="$1" target_ip
+  stop_host_proxy
+  target_ip="$("$ENGINE" inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$name")"
+  [[ -n "$target_ip" ]] || fail "runtime container has no private network address"
+  PROXY_TARGET="$target_ip:3000"
+  "$NODE_BIN" deploy/builder/qualify-proxy.mjs \
+    --listen "127.0.0.1:$HOST_PORT" --target "$PROXY_TARGET" \
+    > "$EVIDENCE_DIR/proxy.log" 2>&1 &
+  PROXY_PID=$!
+  local deadline=$((SECONDS + 10))
+  while (( SECONDS < deadline )); do
+    if "$NODE_BIN" -e '
+      const net = require("node:net");
+      const socket = net.connect({ host: "127.0.0.1", port: Number(process.argv[1]) });
+      socket.once("connect", () => { socket.destroy(); process.exit(0); });
+      socket.once("error", () => process.exit(1));
+      setTimeout(() => process.exit(1), 500);
+    ' "$HOST_PORT"; then
+      note "Host loopback proxy ready: 127.0.0.1:$HOST_PORT -> $PROXY_TARGET"
+      return 0
+    fi
+    kill -0 "$PROXY_PID" 2>/dev/null || fail "host loopback proxy exited early"
+    sleep 0.2
+  done
+  fail "host loopback proxy did not become ready"
+}
+
+collect_connectivity() {
+  local label="$1"
+  local prefix="$EVIDENCE_DIR/connectivity-$label"
+  local in_rc=0
+  set +e
+  http_run "$CONTAINER" smoke --mode invite >/dev/null
+  in_rc=$?
+  set -e
+  {
+    "$ENGINE" inspect --format '{{json .State}}' "$CONTAINER"
+    "$ENGINE" inspect --format '{{json .NetworkSettings.Networks}}' "$CONTAINER"
+    "$ENGINE" inspect --format '{{json .HostConfig.PortBindings}}' "$CONTAINER"
+    "$ENGINE" port "$CONTAINER" 3000 || true
+    "$ENGINE" network inspect "$NETWORK"
+  } > "$prefix-engine.txt" 2>&1 || true
+  {
+    "$ENGINE" ps -a --filter "label=org.ornigami.qualify.run=$RUN_ID" --no-trunc
+    ss -ltnp 2>/dev/null || true
+  } > "$prefix-process.txt" 2>&1 || true
+  "$NODE_BIN" deploy/builder/qualify-connectivity.mjs \
+    --label "$label" \
+    --origin "$APP_URL" \
+    --proxy-target "$PROXY_TARGET" \
+    --in-container-ok "$in_rc" \
+    --engine-evidence "$prefix-engine.txt" \
+    --output "$prefix.json" \
+    --wait-ms 10000 || true
 }
 
 # ---------------------------------------------------------------------------
@@ -817,10 +891,8 @@ initialize_store_root "$STORE_SOURCE"
 # Invite runtime with read-only root, UID 1000 and the persistent volume.
 # ---------------------------------------------------------------------------
 note "Start invite runtime with read-only root"
-RUNTIME_PUBLISH=0
-if [[ "$BROWSER_PHASE" == "1" ]]; then RUNTIME_PUBLISH=1; fi
 created_container=1
-start_runtime "$CONTAINER" "$STORE_SOURCE" invite "$RUNTIME_PUBLISH"
+start_runtime "$CONTAINER" "$STORE_SOURCE" invite
 wait_health "$CONTAINER"
 check "runtime:read-only-root" \
   "$("$ENGINE" inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$CONTAINER")" "true"
@@ -860,6 +932,10 @@ EOF
   note "PASS: mount-only qualification"
   cat "$EVIDENCE_DIR/results.txt"
   exit 0
+fi
+
+if [[ "$BROWSER_PHASE" == "1" ]]; then
+  start_host_proxy "$CONTAINER"
 fi
 
 # The store file is created by the first operator write; its owner/mode is
@@ -920,9 +996,18 @@ STORE_HASH_BASELINE="$(store_hash "$STORE_SOURCE")"
 # Restart: a valid session, a revocation and an unresolved reservation retain
 # their intended behavior. One replica only: the same container is restarted.
 # ---------------------------------------------------------------------------
+if [[ "$DIAGNOSTIC" == "1" ]]; then
+  collect_connectivity "before-restart"
+fi
 note "Restart the same container and verify state"
 "$ENGINE" restart "$CONTAINER" >/dev/null
 wait_health "$CONTAINER"
+if [[ "$BROWSER_PHASE" == "1" ]]; then
+  start_host_proxy "$CONTAINER"
+fi
+if [[ "$DIAGNOSTIC" == "1" ]]; then
+  collect_connectivity "after-restart"
+fi
 http_run "$CONTAINER" session "$COOKIE_A" --subject "$SUBJECT_A" >/dev/null
 http_run "$CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
 http_run "$CONTAINER" generate "$COOKIE_A" "$SUBJECT_A" "$("$NODE_BIN" -e 'process.stdout.write(require("node:crypto").randomUUID())')" --expect-status 429 --expect-code subject_concurrency >/dev/null
@@ -930,13 +1015,55 @@ USAGE_AFTER_RESTART="$(op_json "$STORE_SOURCE" list | usage_key "$USAGE_ID")"
 check "restart:usage-unchanged" "$USAGE_AFTER_RESTART" "$USAGE_BEFORE"
 check "restart:store-unchanged" "$(store_hash "$STORE_SOURCE")" "$STORE_HASH_BASELINE"
 
+if [[ "$DIAGNOSTIC" == "1" ]]; then
+  for label in before-restart after-restart; do
+    summary="$EVIDENCE_DIR/connectivity-$label.json"
+    for key in inContainer hostTcp hostHttp; do
+      value="$("$NODE_BIN" -e '
+        const fs = require("node:fs");
+        const value = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+        process.stdout.write(value[process.argv[2]]?.ok ? "true" : "false");
+      ' "$summary" "$key" 2>/dev/null || printf 'false')"
+      record_result "connectivity:$label:$key" "$value" "true"
+    done
+  done
+  flush_deferred_failures "connectivity"
+  cat > "$EVIDENCE_DIR/results.txt" <<EOF
+ok=true
+diagnostic=true
+self_test=false
+engine=$ENGINE
+source_sha=$SOURCE_SHA
+run_id=$RUN_ID
+image=$IMAGE
+app_url=$APP_URL
+host_connection=loopback-proxy
+proxy_target=$PROXY_TARGET
+ingress_loopback_only=true
+store_mode=$STORE_MODE
+store_volume=$STORE_VOLUME
+runtime_user=1000:1000
+read_only_root=true
+writable_paths=/data/builder,/tmp,/app/builder-runtime/.next/cache,/home/node
+writable_owners=1000:1000
+writable_modes=0700
+writable_tmpfs_options=rw,noexec,nosuid,uid=1000,gid=1000,mode=0700
+checks=$CHECK_COUNT
+evidence_dir=$EVIDENCE_DIR
+EOF
+  note "PASS: before/after-restart host connectivity diagnostic"
+  cat "$EVIDENCE_DIR/results.txt"
+  exit 0
+fi
+
 # ---------------------------------------------------------------------------
 # Browser phase against the built container through the loopback-only test
 # origin. The container remains on the internal default-deny network; the
-# published port is host-loopback ingress only. Test hooks and the live
-# provider stay disabled. The operator revokes synthetic subject A while its
-# workspace is open, then signs out synthetic subject B.
+# host proxy is loopback-only ingress. Test hooks and the live provider stay
+# disabled. The operator revokes synthetic subject A while its workspace is
+# open, then signs out synthetic subject B.
 # ---------------------------------------------------------------------------
+FULL_ACCEPTANCE=false
 if [[ "$BROWSER_PHASE" == "1" ]]; then
   note "Run the browser phase against $APP_URL"
   browser_env=(
@@ -955,6 +1082,7 @@ if [[ "$BROWSER_PHASE" == "1" ]]; then
   fi
   env "${browser_env[@]}" "$NODE_BIN" deploy/builder/qualify-browser.mjs
   check "browser:journey" "ok" "ok"
+  FULL_ACCEPTANCE=true
   # The browser phase legitimately writes synthetic subjects, sessions and
   # usage. Capture the post-browser store for the backup/restore/lock checks;
   # the earlier restart hash remains the proof that the seeded state survived
@@ -962,7 +1090,7 @@ if [[ "$BROWSER_PHASE" == "1" ]]; then
   STORE_HASH_BASELINE="$(store_hash "$STORE_SOURCE")"
   [[ "$STORE_HASH_BASELINE" != "missing" ]] || fail "post-browser store hash is missing"
 else
-  note "BROWSER_PHASE=0: browser journey skipped"
+  note "BROWSER_PHASE=0: browser journey skipped; this is partial evidence, not full acceptance"
 fi
 
 # ---------------------------------------------------------------------------
@@ -1060,6 +1188,7 @@ created_closed_container=1
 start_runtime "$CLOSED_CONTAINER" "$STORE_SOURCE" closed
 wait_health "$CLOSED_CONTAINER"
 http_run "$CLOSED_CONTAINER" smoke --mode closed >/dev/null
+check "http:smoke:closed" "ok" "ok"
 check "closed:smoke" "ok" "ok"
 check "closed:store-unchanged" "$(store_hash "$STORE_SOURCE")" "$HASH_BEFORE_CLOSED"
 LIST_AFTER_CLOSED="$(op_json "$STORE_SOURCE" list)"
@@ -1115,8 +1244,12 @@ closed_records_preserved=true
 single_replica=true
 browser_phase=$BROWSER_PHASE
 browser_origin=$APP_URL
-browser_loopback_publish=${HOST_PORT:-none}
+host_connection=loopback-proxy
+proxy_target=${PROXY_TARGET:-none}
+browser_loopback_proxy=${HOST_PORT:-none}
 browser_journey=$([[ "$BROWSER_PHASE" == "1" ]] && printf 'true' || printf 'skipped')
+full_acceptance=$FULL_ACCEPTANCE
+acceptance_scope=$([[ "$FULL_ACCEPTANCE" == "true" ]] && printf 'full' || printf 'partial')
 checks=$CHECK_COUNT
 evidence_dir=$EVIDENCE_DIR
 EOF

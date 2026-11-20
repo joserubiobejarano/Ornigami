@@ -145,11 +145,15 @@ revocation) and usage record.
 ## Browser phase against the built container
 
 `deploy/builder/qualify-browser.mjs` runs against the built container through a
-**host-loopback-only** published port. The runtime stays on the internal
-default-deny network; publishing `127.0.0.1:<port>:3000` is ingress only and does
-not grant the container egress. The build/runtime origin is the same loopback
-URL. Live provider and test hooks remain disabled, so generation uses the
-deterministic local fallback.
+**host-loopback-only** proxy. Docker does not publish ports on an `--internal`
+network, so the runtime is started without `-p`; `qualify-proxy.mjs` listens on
+`127.0.0.1:<port>` and forwards TCP to the runtime's private container IP on
+port `3000`. The runtime stays on the internal default-deny network; the proxy
+adds ingress only and does not grant egress. The build/runtime origin is the
+same loopback URL. Live provider and test hooks remain disabled, so generation
+uses the deterministic local fallback. The browser script performs a bounded
+host HTTP readiness check before Chromium and records fetch code/cause without
+request secrets.
 
 The phase issues two synthetic subjects through the packaged operator CLI, then
 proves:
@@ -167,9 +171,10 @@ proves:
 - B signs out through the UI and its builder storage clears.
 
 Playwright/Chromium must be available on the browser host. The phase is enabled
-by default; set `BROWSER_PHASE=0` only for a non-browser packaging smoke. The
-qualification refuses a non-loopback `APP_URL` while the browser phase is
-enabled. Browser evidence is written under the run's `browser/` directory
+by default; `BROWSER_PHASE=0` produces partial evidence only
+(`full_acceptance=false`, `acceptance_scope=partial`) and is never full
+acceptance. The qualification refuses a non-loopback `APP_URL` while the browser
+phase is enabled. Browser evidence is written under the run's `browser/` directory
 (`results.json`, downloads, extracted ZIP, screenshots).
 
 ## Verification status
@@ -186,7 +191,7 @@ enabled. Browser evidence is written under the run's `browser/` directory
   the online operator revocation; it is not container/Linux evidence.
 - Real build, non-root container, named volume, egress denial, restart,
   fresh-container restore, lock recovery on the actual volume, browser phase
-  through the published container port, and closed rollback: **pending Linux
+  through the loopback host proxy, and closed rollback: **pending Linux
   execution**.
 
 ## Related evidence

@@ -78,6 +78,44 @@ function check(name, ok, detail) {
   }
 }
 
+function describeFetchError(error) {
+  const cause = error?.cause ?? {};
+  return {
+    name: error?.name ?? null,
+    message: error?.message ?? String(error),
+    code: error?.code ?? cause.code ?? null,
+    causeCode: cause.code ?? null,
+    causeMessage: cause.message ?? null,
+    syscall: cause.syscall ?? null,
+    address: cause.address ?? null,
+    port: cause.port ?? null,
+  };
+}
+
+async function waitForOrigin(url, timeoutMs = 20_000) {
+  const deadline = Date.now() + timeoutMs;
+  let attempts = 0;
+  let last = { ok: false, attempts, error: { code: "NO_ATTEMPT", message: "origin not attempted" } };
+  while (Date.now() < deadline) {
+    attempts += 1;
+    try {
+      const response = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(2000),
+      });
+      await response.body?.cancel();
+      if (response.status === 200) {
+        return { ok: true, attempts, status: response.status, origin: url };
+      }
+      last = { ok: false, attempts, status: response.status, origin: url };
+    } catch (error) {
+      last = { ok: false, attempts, origin: url, error: describeFetchError(error) };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return last;
+}
+
 function findBash() {
   if (process.env.BASH) return process.env.BASH;
   if (process.platform === "win32") {
@@ -317,6 +355,26 @@ function cookieHeader(cookies) {
   return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
 }
 
+const readiness = await waitForOrigin(baseUrl, 20_000);
+results.readiness = readiness;
+if (!readiness.ok) {
+  results.completedAt = new Date().toISOString();
+  results.ok = false;
+  results.error = "origin_not_ready";
+  writeFileSync(
+    path.join(evidenceDir, "results.json"),
+    `${JSON.stringify(results, null, 2)}\n`,
+  );
+  console.error(
+    JSON.stringify(
+      { ok: false, error: "origin_not_ready", readiness, checks: results.checks },
+      null,
+      2,
+    ),
+  );
+  process.exit(1);
+}
+
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch({
   headless: true,
@@ -528,11 +586,23 @@ try {
   results.completedAt = new Date().toISOString();
   results.ok = false;
   results.error = error instanceof Error ? error.message : String(error);
+  results.errorDetail = describeFetchError(error);
   writeFileSync(
     path.join(evidenceDir, "results.json"),
     `${JSON.stringify(results, null, 2)}\n`,
   );
-  console.error(JSON.stringify({ ok: false, error: results.error, checks: results.checks }, null, 2));
+  console.error(
+    JSON.stringify(
+      {
+        ok: false,
+        error: results.error,
+        errorDetail: results.errorDetail,
+        checks: results.checks,
+      },
+      null,
+      2,
+    ),
+  );
   process.exitCode = 1;
 } finally {
   await contextA.close();

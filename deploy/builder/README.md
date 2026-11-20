@@ -19,6 +19,8 @@ not reuse an image built from an older review or packaging branch.
 | `qualify-http.mjs` | Read-only, mode-aware HTTP journey helper mounted into the runtime container; invite requires the 307 sign-in redirect, closed requires 404 |
 | `qualify-seed.mjs` | Qualification-only synthetic reservation and stale-lock fixture, mounted read-only into a one-shot container |
 | `qualify-browser.mjs` | Playwright browser phase against the built container through a loopback-only test origin |
+| `qualify-proxy.mjs` | Loopback-only host TCP proxy from `127.0.0.1:<port>` to the runtime's private container IP |
+| `qualify-connectivity.mjs` | Bounded host TCP/HTTP diagnostic with error code/cause and loopback-only origin checks |
 | `operator.sh` | Supported operator CLI wrapper: same image, no network, same UID, same persistent volume and store host id |
 | `tests/stub-engine.sh` | Local rerun-safety self-test engine (never builds or runs a container) |
 
@@ -140,10 +142,18 @@ STORE_MODE=bind STORE_DIR=/absolute/new/empty/dir \
   SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
 ```
 
-The browser phase publishes only `127.0.0.1:<port>:3000`, requires Playwright
-Chromium on the browser host, and uses `BROWSER_PHASE=0` to skip. A non-loopback
-`APP_URL` is refused while it is enabled. The container remains on the internal
-default-deny network.
+The browser phase uses a host-side TCP proxy bound only to
+`127.0.0.1:<port>` and forwards to the runtime's private container IP on port
+`3000`. Docker does not honor published ports on an `--internal` network, so
+the runtime is never started with `-p`. The container remains on the internal
+default-deny network; the proxy adds loopback-only ingress and no egress. A
+non-loopback `APP_URL` is refused. `qualify-browser.mjs` performs a bounded host
+HTTP readiness check before launching Chromium and records Node fetch error
+codes/causes without request secrets.
+
+`BROWSER_PHASE=0` is partial evidence only: the result sets
+`browser_journey=skipped`, `full_acceptance=false` and
+`acceptance_scope=partial`. It cannot be presented as full acceptance.
 
 The script:
 
@@ -185,9 +195,10 @@ The script:
     - identity A's unresolved reservation still blocks generation with `429`
       `subject_concurrency`;
     - the store hash and the usage record are unchanged;
-13. runs the **browser phase** against the container through a
-    `127.0.0.1:<port>` published port while the container remains on its
-    internal no-egress network. Live provider and test hooks stay disabled.
+13. runs the **browser phase** against the container through a loopback-only
+    host proxy (`127.0.0.1:<port>` -> private container IP:3000) while the
+    container remains on its internal no-egress network. Live provider and test
+    hooks stay disabled.
     `qualify-browser.mjs` issues two synthetic subjects and proves generation
     after refresh/edit, two-tab generation, replay deduplication, sign-out, a
     fresh approved ZIP export, online operator revocation of subject A while its
@@ -251,11 +262,19 @@ starts the invite runtime with the real mount arguments, probes all four paths,
 writes a mount-only result, and stops before egress/operator/browser/restore.
 This is real mount evidence, not a stub or full acceptance.
 
+For the host connection path, `DIAGNOSTIC=1 BROWSER_PHASE=1` records
+in-container HTTP, host TCP, host HTTP at the exact loopback origin, and live
+engine port/network/health/lifecycle evidence before and after the same-container
+restart, then exits before Chromium. It is a diagnostic, not full acceptance.
+
 The browser phase needs Playwright/Chromium on the browser host. Install it under
 `scripts/framework-prototype/browser-tools` or set `BROWSER_PLAYWRIGHT` to its
-`index.mjs`; set `BROWSER_PHASE=0` only for a non-browser packaging smoke. A
-non-loopback `APP_URL` is refused while the browser phase is enabled. On the
-Linux runner, `unzip` or `python3` is needed for ZIP audit.
+`index.mjs`. A non-loopback `APP_URL` is refused while the browser phase is
+enabled. The script waits up to 20 seconds for the loopback origin to return
+`200` before launching Chromium; failures record the underlying fetch
+`code`/`causeCode`/`causeMessage`. On the Linux runner, `unzip` or `python3` is
+needed for ZIP audit. `BROWSER_PHASE=0` produces partial evidence only and is
+never full acceptance.
 
 Evidence is written to the run directory (`results.txt`, `checks.tsv`,
 `qualify.log`, `operator.log`, `http.log`, `browser/`, `backup/`,
@@ -526,9 +545,13 @@ all subject/session/usage records unchanged.
 - Same-host/foreign-PID-namespace stale lock is classified `foreign_scope` and
   is not auto-reaped; observed-token recovery quarantines it and preserves the
   store.
-- Browser phase through the loopback-only published port passes with the live
+- Browser phase through the loopback-only host proxy passes with the live
   provider and test hooks disabled, including online subject-A revocation and
-  subject-B isolation.
+  subject-B isolation; the host origin is reachable before and after the
+  same-container restart.
+- A skipped browser phase is rejected as full acceptance: the result is
+  `acceptance_scope=partial`, `full_acceptance=false` and
+  `browser_journey=skipped`.
 - Closed rollback preserves usage and does not reopen without quotas.
 - Sessions 1 and 2 application journeys pass on the same merged image.
 
@@ -566,7 +589,7 @@ docker volume rm "ornigami-builder-store-<run-id>" \
 ```
 
 The result remains **pending Linux execution** until that run produces
-`ok=true` with the session/revocation/reservation, fresh-volume restore,
-same-host/foreign-scope lock recovery, browser phase and closed-rollback checks.
-The browser phase requires Playwright Chromium and `unzip`/`python3`; omit it
-only for a non-final `BROWSER_PHASE=0` packaging smoke.
+`ok=true` with `full_acceptance=true`, the session/revocation/reservation,
+fresh-volume restore, same-host/foreign-scope lock recovery, browser phase and
+closed-rollback checks. The browser phase requires Playwright Chromium and
+`unzip`/`python3`; `BROWSER_PHASE=0` is partial evidence only.
