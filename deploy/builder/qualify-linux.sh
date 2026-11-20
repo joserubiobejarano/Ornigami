@@ -698,8 +698,8 @@ check "runtime:read-only-root" \
   "$("$ENGINE" inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$CONTAINER")" "true"
 check "runtime:user" \
   "$(exec_node "$CONTAINER" 'process.stdout.write(`${process.getuid()}:${process.getgid()}`)')" "1000:1000"
-http_run "$CONTAINER" smoke >/dev/null
-check "http:smoke" "ok" "ok"
+http_run "$CONTAINER" smoke --mode invite >/dev/null
+check "http:smoke:invite" "ok" "ok"
 
 exec_node "$CONTAINER" 'const fs=require("fs");try{fs.writeFileSync("/app/forbidden","x");process.exit(1)}catch(e){if(e.code!=="EROFS")throw e}'
 exec_node "$CONTAINER" 'const fs=require("fs");for(const p of ["/data/builder/.probe","/tmp/.probe","/app/builder-runtime/.next/cache/.probe","/home/node/.probe"]){fs.writeFileSync(p,"ok");fs.unlinkSync(p)}'
@@ -880,7 +880,7 @@ printf '%s\n' "$LIST_BEFORE_CLOSED" > "$EVIDENCE_DIR/list-before-closed.json"
 created_closed_container=1
 start_runtime "$CLOSED_CONTAINER" "$STORE_SOURCE" closed
 wait_health "$CLOSED_CONTAINER"
-http_run "$CLOSED_CONTAINER" smoke >/dev/null
+http_run "$CLOSED_CONTAINER" smoke --mode closed >/dev/null
 check "closed:smoke" "ok" "ok"
 check "closed:store-unchanged" "$(store_hash "$STORE_SOURCE")" "$HASH_BEFORE_CLOSED"
 LIST_AFTER_CLOSED="$(op_json "$STORE_SOURCE" list)"

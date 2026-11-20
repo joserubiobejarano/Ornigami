@@ -134,7 +134,11 @@ test("HTTP, IPv6 and IP-literal TLS preserve the correct identity without DNS", 
     assert.equal(f.connections[0].secure, secure);
     assert.equal(f.connections[0].options.servername, undefined);
     if (secure) {
-      assert.equal(f.connections[0].options.checkServerIdentity!("ignored", { subjectaltname: `IP Address:${ip}` } as PeerCertificate), undefined);
+      const identity = f.connections[0].options.checkServerIdentity!;
+      assert.equal(identity("ignored", { subjectaltname: `IP Address:${ip}` } as PeerCertificate), undefined);
+      assert.equal(identity("ignored", { subjectaltname: "IP Address:2606:4700:4700:0:0:0:0:1111" } as PeerCertificate), undefined);
+      assert.ok(identity("ignored", { subjectaltname: "IP Address:2606:4700:4700::8888" } as PeerCertificate));
+      assert.ok(identity("ignored", { subjectaltname: "DNS:brand.example" } as PeerCertificate));
       assert.match(f.sockets[0].wire, /Host: \[2606:4700:4700::1111\]/);
     }
     await cleaned(f);

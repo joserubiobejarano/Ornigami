@@ -16,7 +16,7 @@ not reuse an image built from an older review or packaging branch.
 | --- | --- |
 | `Dockerfile` | Builder-only distroless image, non-root UID/GID 1000, `/data/builder` volume, builder health check, packaged operator CLI |
 | `qualify-linux.sh` | Run-scoped Linux build/runtime qualification; exits `2` and prints the command plan when no engine exists |
-| `qualify-http.mjs` | Read-only HTTP journey helper mounted into the runtime container |
+| `qualify-http.mjs` | Read-only, mode-aware HTTP journey helper mounted into the runtime container; invite requires the 307 sign-in redirect, closed requires 404 |
 | `qualify-seed.mjs` | Qualification-only synthetic reservation and stale-lock fixture, mounted read-only into a one-shot container |
 | `qualify-browser.mjs` | Playwright browser phase against the built container through a loopback-only test origin |
 | `operator.sh` | Supported operator CLI wrapper: same image, no network, same UID, same persistent volume and store host id |
@@ -160,8 +160,9 @@ The script:
    - `/tmp` — tmpfs;
    - `/app/builder-runtime/.next/cache` — tmpfs;
    - `/home/node` — tmpfs;
-7. verifies UID/GID 1000, store file `0600`/UID 1000, `/builder` `404`, session
-   `401`, home `200`, and that `/app` is not writable;
+7. verifies UID/GID 1000, store file `0600`/UID 1000, invite-mode anonymous
+   `/builder` `307` to same-origin `/?error=session`, anonymous session `401`,
+   anonymous generation `404`, home `200`, and that `/app` is not writable;
 8. verifies the container cannot reach `https://example.com`;
 9. verifies no provider/database/billing/mail/Sentry environment variables;
 10. exercises the **supported operator CLI path** in the packaged image:
@@ -339,8 +340,9 @@ Procedure:
 6. Run `list --json` and confirm the synthetic/expected subjects, sessions and
    usage records. Reconcile any `reserved`/`unknown` usage explicitly.
 7. Restart the runtime with the same `BUILDER_RUNTIME_STORE_HOST_ID` and verify
-   home `200`, anonymous `/builder` `404`, anonymous session `401`, and the
-   expected authenticated session/reservation state.
+   home `200`, invite-mode anonymous `/builder` `307` to same-origin
+   `/?error=session`, anonymous session `401`, anonymous generation `404`, and
+   the expected authenticated session/reservation state.
 
 Never delete or truncate `identity-store.json` to clear a lock or a usage limit.
 Never remove a quarantine file before the incident is reviewed. Do not copy a
@@ -409,9 +411,10 @@ docker run --rm --network none --user 1000:1000 \
 
 Start a **fresh** container with a **fresh** volume, copy the backup in while it
 is stopped, then start and verify the store hash, `0600`/UID 1000 ownership,
-home `200`, anonymous `/builder` `404`, anonymous session `401`, the valid
-session, the revoked session and the unresolved reservation. The qualification
-script performs this sequence and records the hashes.
+home `200`, invite-mode anonymous `/builder` `307` to same-origin
+`/?error=session`, anonymous session `401`, anonymous generation `404`, the
+valid session, the revoked session and the unresolved reservation. The
+qualification script performs this sequence and records the hashes.
 
 Bind-mount equivalent (replace the path with the run's bind store):
 
@@ -449,7 +452,9 @@ all subject/session/usage records unchanged.
 - Non-root `1000:1000`, read-only root, only documented writable paths.
 - Named persistent volume, store `0600`, correct owner, single writer/one
   replica/one volume.
-- Health `200`; anonymous `/builder` `404`; anonymous session `401`.
+- Health `200`; invite-mode anonymous `/builder` `307` to same-origin
+  `/?error=session`; closed-mode `/builder` `404`; anonymous session `401`;
+  anonymous generation `404`.
 - No runtime egress; no provider/database/mail/Sentry configuration.
 - Restart preserves the valid session, the revocation and the unresolved
   reservation; store hash and usage record unchanged.

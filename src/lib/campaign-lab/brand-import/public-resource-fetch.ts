@@ -97,6 +97,33 @@ function normalize(raw: string, base?: URL): URL {
 }
 const hostname = (url: URL) => url.hostname.replace(/^\[|\]$/g, "");
 
+function canonicalIp(address: string): string | null {
+  const family = net.isIP(address);
+  if (family === 4) return new URL(`http://${address}/`).hostname;
+  if (family === 6) return new URL(`http://[${address}]/`).hostname.slice(1, -1);
+  return null;
+}
+
+/**
+ * Node 22.23.3 applies domainToASCII() to the hostname before IP detection in
+ * tls.checkServerIdentity(), so a valid IPv6 literal is treated as a DNS name
+ * and rejected as "Cert does not contain a DNS name". Keep Node's verification
+ * for every case it accepts, and for IPv6 only recover an exact IP SAN match.
+ * A missing or different IP SAN still returns Node's original error.
+ */
+function checkTlsServerIdentity(host: string, cert: tls.PeerCertificate): Error | undefined {
+  const nodeResult = tls.checkServerIdentity(host, cert);
+  if (!nodeResult || net.isIP(host) !== 6) return nodeResult;
+  const expected = canonicalIp(host);
+  const altNames = cert.subjectaltname ?? "";
+  const ips = altNames
+    .split(/\s*,\s*/)
+    .filter((name) => name.startsWith("IP Address:"))
+    .map((name) => canonicalIp(name.slice(11).trim()))
+    .filter((value): value is string => value !== null);
+  return expected && ips.includes(expected) ? undefined : nodeResult;
+}
+
 /** Creates a Node-only reader. Production callers should use the default transport. */
 export function createPublicResourceReader(transport: ResourceTransport = nodeTransport, clock: ResourceClock = resourceClock) {
   return async function readPublicResource(raw: string, options: ResourceReadOptions): Promise<PublicResource> {
@@ -157,7 +184,7 @@ export function createPublicResourceReader(transport: ResourceTransport = nodeTr
             ...destination,
             servername: net.isIP(host) ? undefined : host,
             rejectUnauthorized: true,
-            checkServerIdentity: (_name, cert) => tls.checkServerIdentity(host, cert),
+            checkServerIdentity: (_name, cert) => checkTlsServerIdentity(host, cert),
             ALPNProtocols: ["http/1.1"],
           }) : transport.connectTcp(destination);
         };

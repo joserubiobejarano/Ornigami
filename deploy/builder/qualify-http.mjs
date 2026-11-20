@@ -44,19 +44,72 @@ async function cancel(response) {
 }
 
 async function smoke() {
+  const mode = option("--mode");
+  if (mode !== "invite" && mode !== "closed") {
+    fail("smoke requires --mode invite or --mode closed", { mode });
+  }
   const home = await fetch(`${baseUrl}/`, { redirect: "manual" });
   await cancel(home);
   expectStatus(home, 200, "home");
+
   const builder = await fetch(`${baseUrl}/builder`, { redirect: "manual" });
   await cancel(builder);
-  expectStatus(builder, 404, "anonymous /builder");
+  const location = builder.headers.get("location");
+  if (mode === "invite") {
+    expectStatus(builder, 307, "invite anonymous /builder");
+    if (!location) fail("invite anonymous /builder redirect is missing Location");
+    let target;
+    try {
+      target = new URL(location, baseUrl);
+    } catch {
+      fail("invite anonymous /builder Location is not a valid URL", { location });
+    }
+    const allowedOrigins = new Set([new URL(baseUrl).origin, new URL(origin).origin]);
+    if (!allowedOrigins.has(target.origin)) {
+      fail("invite anonymous /builder redirect left the qualification origin", {
+        location,
+        target: target.href,
+      });
+    }
+    if (target.pathname !== "/" || target.search !== "?error=session") {
+      fail("invite anonymous /builder redirect target is not /?error=session", {
+        location,
+        target: target.href,
+      });
+    }
+  } else {
+    expectStatus(builder, 404, "closed anonymous /builder");
+    if (location) {
+      fail("closed anonymous /builder must not redirect", { location });
+    }
+  }
+
   const session = await fetch(`${baseUrl}/api/builder/session`, {
     redirect: "manual",
     cache: "no-store",
   });
   await cancel(session);
   expectStatus(session, 401, "anonymous session");
-  evidence({ ok: true, check: "smoke", home: 200, builder: 404, session: 401 });
+
+  const generation = await fetch(`${baseUrl}/api/builder/generate`, {
+    method: "POST",
+    redirect: "manual",
+    headers: { origin },
+    body: JSON.stringify({ requestId: randomUUID() }),
+  });
+  await cancel(generation);
+  expectStatus(generation, 404, "anonymous generation");
+
+  evidence({
+    ok: true,
+    check: "smoke",
+    mode,
+    home: 200,
+    builder: builder.status,
+    builderLocation: location,
+    session: 401,
+    generation: 404,
+  });
 }
 
 async function redeem(token) {

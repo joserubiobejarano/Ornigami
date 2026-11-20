@@ -54,7 +54,22 @@ test('output binds stopped compiler, complete bootstrap scans, source and OCI co
   const blob=path.join(f.owned,'frontend/oci/blobs/sha256',f.output.frontend.manifestDigest.slice(7));fs.appendFileSync(blob,' ');assert.throws(()=>loadToolchainOutput(f.options),/content drift/);
 }));
 test('output rejects malformed source/run before loading evidence',()=>{
-  assert.throws(()=>loadToolchainOutput({sourceSha:undefined,runId:undefined,attempt:undefined}),/source\/run/);
+  const keys=['SOURCE_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','RUNNER_TEMP','ORNIGAMI_EVIDENCE_DIR'];
+  const before=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
+  try{
+    // Simulate inherited GitHub Actions values. Explicit invalid options must
+    // still fail before any evidence path is read.
+    Object.assign(process.env,{SOURCE_SHA:'a'.repeat(40),GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'1',RUNNER_TEMP:os.tmpdir(),ORNIGAMI_EVIDENCE_DIR:path.join(os.tmpdir(),'missing-evidence')});
+    const base={temp:os.tmpdir(),evidence:path.join(os.tmpdir(),'missing-evidence'),recipeDirectory};
+    for(const input of [
+      {sourceSha:'',runId:'123',attempt:'1'},
+      {sourceSha:'a'.repeat(40),runId:'',attempt:'1'},
+      {sourceSha:'a'.repeat(40),runId:'123',attempt:'2'},
+      {sourceSha:'not-a-sha',runId:'123',attempt:'1'},
+    ])assert.throws(()=>loadToolchainOutput({...base,...input}),/source\/run/);
+  }finally{
+    for(const key of keys){if(before[key]===undefined)delete process.env[key];else process.env[key]=before[key];}
+  }
 });
 test('tooling gate CLI writes tooling prerequisites and skips dependent stages without accepting aggregate',()=>sandbox(root=>{
   const f=fixture(root),repo=path.join(root,'repo'),scripts=path.join(repo,'scripts/framework-prototype'),toolchain=path.join(repo,'deploy/coolify/toolchain');

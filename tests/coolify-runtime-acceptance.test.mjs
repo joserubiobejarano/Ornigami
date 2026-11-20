@@ -108,7 +108,25 @@ const receiptWriter = pythonBlocks.find((block) => block.includes('"runtime-http
 const failureWriter = pythonBlocks.find((block) => block.includes('"failure-evidence.txt"'));
 const cleanupFailureWriter = harness.match(/python3 - "\$report" "\$status" "\$report_dir" <<'PY'(?:[ \t]+\|\|[^\r\n]*)?\r?\n([\s\S]*?)\r?\nPY/)?.[1];
 const python = process.env.PYTHON3 ?? (process.platform === "win32" ? "python" : "python3");
-const bash = process.env.BASH ?? (process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash");
+function findBash() {
+  const candidates = [
+    process.env.BASH,
+    process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "/bin/bash",
+    process.platform === "win32" ? "C:/Program Files/Git/usr/bin/bash.exe" : "/usr/bin/bash",
+    "bash",
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    const probe = spawnSync(candidate, ["-c", "exit 0"], { encoding: "utf8", windowsHide: true });
+    if (probe.status !== 0) continue;
+    if (candidate.includes("/") || candidate.includes("\\")) return candidate;
+    const locator = process.platform === "win32" ? "where" : "which";
+    const located = spawnSync(locator, [candidate], { encoding: "utf8", windowsHide: true });
+    const first = located.stdout?.split(/\r?\n/).map((line) => line.trim()).find(Boolean);
+    return first || candidate;
+  }
+  return process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "/bin/bash";
+}
+const bash = findBash();
 assert.ok(receiptWriter, "runtime receipt Python writer must be present");
 assert.ok(failureWriter, "failure receipt Python writer must be present");
 assert.ok(cleanupFailureWriter, "late cleanup failure receipt writer must be present");
