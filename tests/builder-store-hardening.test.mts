@@ -16,6 +16,8 @@ import test from "node:test";
 
 import {
   BUILDER_IDENTITY_LOCK_FILE,
+  BUILDER_STORE_PROCESS_SCOPE,
+  BUILDER_STORE_SCOPE_TOKEN,
   BuilderStoreUnavailable,
   issueBuilderInvite,
   readBuilderIdentityStore,
@@ -37,13 +39,19 @@ function lockPath(directory: string): string {
   return path.join(directory, BUILDER_IDENTITY_LOCK_FILE);
 }
 
-function lockMetadata(token: string, pid: number) {
+function lockMetadata(
+  token: string,
+  pid: number,
+  overrides: Record<string, unknown> = {},
+) {
   return {
     version: 1,
     token,
     pid,
     hostname: hostname(),
-    acquiredAt: new Date("2026-01-01T00:00:00.000Z").toISOString(),
+    scope: BUILDER_STORE_PROCESS_SCOPE,
+    acquiredAt: new Date().toISOString(),
+    ...overrides,
   };
 }
 
@@ -111,6 +119,62 @@ test("a lock owned by a provably dead process is reclaimed", async () => {
   assert.equal(store.subjects[0]?.id, "sub_reclaimed");
 });
 
+test("a same-host lock from another PID namespace is not auto-reclaimed", async () => {
+  const dir = storeDir("foreign-scope");
+  const file = lockPath(dir);
+  writeFileSync(
+    file,
+    `${JSON.stringify(
+      lockMetadata("foreign-scope-owner", deadPid(), {
+        scope: "another-container-pid-namespace",
+      }),
+    )}\n`,
+  );
+
+  await assert.rejects(
+    withBuilderIdentityStore(dir, () => "must-not-run", { lockWaitMs: 150 }),
+    (error) => error instanceof BuilderStoreUnavailable,
+  );
+  assert.equal(existsSync(file), true);
+  rmSync(file, { force: true });
+});
+
+test("a same-host lock without a process scope is not auto-reclaimed", async () => {
+  const dir = storeDir("missing-scope");
+  const file = lockPath(dir);
+  writeFileSync(
+    file,
+    `${JSON.stringify(lockMetadata("missing-scope-owner", deadPid(), { scope: undefined }))}\n`,
+  );
+
+  await assert.rejects(
+    withBuilderIdentityStore(dir, () => "must-not-run", { lockWaitMs: 150 }),
+    (error) => error instanceof BuilderStoreUnavailable,
+  );
+  assert.equal(existsSync(file), true);
+  rmSync(file, { force: true });
+});
+
+test("a same-host lock acquired before this boot is not auto-reclaimed", async () => {
+  const dir = storeDir("pre-boot");
+  const file = lockPath(dir);
+  writeFileSync(
+    file,
+    `${JSON.stringify(
+      lockMetadata("pre-boot-owner", deadPid(), {
+        acquiredAt: "2020-01-01T00:00:00.000Z",
+      }),
+    )}\n`,
+  );
+
+  await assert.rejects(
+    withBuilderIdentityStore(dir, () => "must-not-run", { lockWaitMs: 150 }),
+    (error) => error instanceof BuilderStoreUnavailable,
+  );
+  assert.equal(existsSync(file), true);
+  rmSync(file, { force: true });
+});
+
 test("a resumed old owner cannot remove its successor's lock", async () => {
   const dir = storeDir("successor-lock");
   const file = lockPath(dir);
@@ -155,21 +219,30 @@ test("an interrupted write leaves the old store readable and dead-owner temp fil
   const before = await readBuilderIdentityStore(dir);
 
   const dead = deadPid();
+  const scope = BUILDER_STORE_SCOPE_TOKEN;
   const storeTemp = path.join(
     dir,
-    `.identity-store.json.${dead}.abcdef123456.tmp`,
+    `.identity-store.json.${dead}.${scope}.abcdef123456.tmp`,
   );
   const lockTemp = path.join(
     dir,
-    `identity-store.lock.${dead}.abcdef123456.tmp`,
+    `identity-store.lock.${dead}.${scope}.abcdef123456.tmp`,
   );
   const liveTemp = path.join(
     dir,
-    `.identity-store.json.${process.pid}.abcdef123456.tmp`,
+    `.identity-store.json.${process.pid}.${scope}.abcdef123456.tmp`,
   );
-  writeFileSync(storeTemp, "{ partial");
-  writeFileSync(lockTemp, "{ partial");
-  writeFileSync(liveTemp, "{ partial");
+  const foreignTemp = path.join(
+    dir,
+    `.identity-store.json.${dead}.${"0".repeat(16)}.abcdef123456.tmp`,
+  );
+  const legacyTemp = path.join(
+    dir,
+    `.identity-store.json.${dead}.abcdef123456.tmp`,
+  );
+  for (const file of [storeTemp, lockTemp, liveTemp, foreignTemp, legacyTemp]) {
+    writeFileSync(file, "{ partial");
+  }
 
   const result = await issueBuilderInvite({
     storeDir: dir,
@@ -180,12 +253,24 @@ test("an interrupted write leaves the old store readable and dead-owner temp fil
   assert.equal(existsSync(storeTemp), false);
   assert.equal(existsSync(lockTemp), false);
   assert.equal(existsSync(liveTemp), true, "a live owner's temp file is preserved");
+  assert.equal(
+    existsSync(foreignTemp),
+    true,
+    "a temp file from another PID namespace is preserved",
+  );
+  assert.equal(
+    existsSync(legacyTemp),
+    true,
+    "a temp file without a proven scope is preserved",
+  );
 
   const after = await readBuilderIdentityStore(dir);
   assert.deepEqual(after.subjects[0], before.subjects[0]);
   assert.deepEqual(after.usage[0], before.usage[0]);
   assert.equal(after.invites.length, 1);
-  rmSync(liveTemp, { force: true });
+  for (const file of [liveTemp, foreignTemp, legacyTemp]) {
+    rmSync(file, { force: true });
+  }
 });
 
 test("concurrent operator CLI and runtime writes preserve identity and usage records", async () => {

@@ -68,7 +68,11 @@ if (command === "reserve") {
   );
 } else if (command === "stale-lock") {
   const token = option("--token") ?? `qualify-${randomUUID()}`;
-  const hostname = option("--hostname") ?? "replaced-builder-container";
+  const hostname =
+    option("--hostname") ??
+    process.env.BUILDER_RUNTIME_STORE_HOST_ID ??
+    "replaced-builder-container";
+  const scope = option("--scope") ?? "replaced-container-pid-namespace";
   const pid = Number.parseInt(option("--pid") ?? "2147483647", 10);
   await mkdir(store, { recursive: true });
   await writeFile(
@@ -78,11 +82,12 @@ if (command === "reserve") {
       token,
       pid,
       hostname,
+      scope,
       acquiredAt: "2020-01-01T00:00:00.000Z",
     })}\n`,
     { mode: 0o600 },
   );
-  console.log(JSON.stringify({ ok: true, token, hostname, pid }));
+  console.log(JSON.stringify({ ok: true, token, hostname, scope, pid }));
 } else {
   fail(`unknown command: ${command}`);
 }

@@ -62,12 +62,18 @@ function hashStore(dir: string): string {
     .digest("hex");
 }
 
-function lockBytes(token: string, hostname = hostId, pid = 2_147_483_647) {
+function lockBytes(
+  token: string,
+  hostname = hostId,
+  pid = 2_147_483_647,
+  scope?: string,
+) {
   return `${JSON.stringify({
     version: 1,
     token,
     pid,
     hostname,
+    ...(scope ? { scope } : {}),
     acquiredAt: "2020-01-01T00:00:00.000Z",
   })}\n`;
 }
@@ -101,6 +107,15 @@ test("the supported operator path reports the store host and lock state", async 
   assert.equal(foreign.lock.owner, "foreign_host");
   assert.equal(foreign.lock.metadata.token, "foreign-token");
   assert.equal(foreign.lock.metadata.pid, 2_147_483_647);
+
+  writeFileSync(
+    path.join(dir, "identity-store.lock"),
+    lockBytes("scope-token", hostId, 2_147_483_647, "another-container-pid-namespace"),
+  );
+  const foreignScope = await operatorJson(["lock-status", "--store", dir]);
+  assert.equal(foreignScope.lock.owner, "foreign_scope");
+  assert.equal(foreignScope.lock.metadata.scope, "another-container-pid-namespace");
+  assert.equal(foreignScope.lock.metadata.token, "scope-token");
 });
 
 test("recover-lock refuses without confirmation or the observed token", async () => {
@@ -115,7 +130,15 @@ test("recover-lock refuses without confirmation or the observed token", async ()
     "600",
   ]);
   const lockFile = path.join(dir, "identity-store.lock");
-  writeFileSync(lockFile, lockBytes("observed-token", "replaced-builder-container"));
+  writeFileSync(
+    lockFile,
+    lockBytes(
+      "observed-token",
+      hostId,
+      2_147_483_647,
+      "another-container-pid-namespace",
+    ),
+  );
   const before = hashStore(dir);
 
   const noConfirmation = await runOperator([
@@ -154,8 +177,24 @@ test("confirmed recovery quarantines only the observed lock and preserves the st
   ]);
   const lockFile = path.join(dir, "identity-store.lock");
   const reapFile = path.join(dir, "identity-store.reap.lock");
-  writeFileSync(lockFile, lockBytes("runtime-token", "replaced-builder-container"));
-  writeFileSync(reapFile, lockBytes("reap-token", hostId));
+  writeFileSync(
+    lockFile,
+    lockBytes(
+      "runtime-token",
+      hostId,
+      2_147_483_647,
+      "another-container-pid-namespace",
+    ),
+  );
+  writeFileSync(
+    reapFile,
+    lockBytes(
+      "reap-token",
+      hostId,
+      2_147_483_647,
+      "another-container-pid-namespace",
+    ),
+  );
   const before = hashStore(dir);
 
   const missingReapToken = await runOperator([

@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { readFileSync, readlinkSync } from "node:fs";
 import {
   link,
   mkdir,
@@ -46,6 +47,41 @@ const STORE_HOST_ID =
  */
 export const BUILDER_STORE_HOST_ID = STORE_HOST_ID;
 
+/**
+ * Process liveness is only comparable inside the same PID namespace and the
+ * same boot. A runtime and an operator container can share the logical store
+ * host id while having distinct PID namespaces, so a remote PID must never be
+ * treated as live or dead from this process. Cross-scope locks are recovered by
+ * the explicit operator command instead of automatic reaping.
+ */
+const BOOT_ID = (() => {
+  try {
+    return readFileSync("/proc/sys/kernel/random/boot_id", "utf8")
+      .trim()
+      .slice(0, 64);
+  } catch {
+    return "";
+  }
+})();
+const PID_NAMESPACE = (() => {
+  try {
+    return readlinkSync("/proc/self/ns/pid").slice(0, 128);
+  } catch {
+    return "";
+  }
+})();
+const PROCESS_BOOT_MS = Date.now() - Math.max(0, os.uptime()) * 1000;
+const PROCESS_SCOPE = `${STORE_HOST_ID}|${PID_NAMESPACE || "host"}|${
+  BOOT_ID || "unknown-boot"
+}`;
+const PROCESS_SCOPE_TOKEN = createHash("sha256")
+  .update(PROCESS_SCOPE)
+  .digest("hex")
+  .slice(0, 16);
+
+export const BUILDER_STORE_PROCESS_SCOPE = PROCESS_SCOPE;
+export const BUILDER_STORE_SCOPE_TOKEN = PROCESS_SCOPE_TOKEN;
+
 export type BuilderStoreLockOptions = Readonly<{
   /** Bounded wait, primarily for focused tests and operator diagnostics. */
   lockWaitMs?: number;
@@ -56,6 +92,8 @@ type BuilderLockMetadata = {
   token: string;
   pid: number;
   hostname: string;
+  /** Present on new locks; missing means the owner scope is unprovable. */
+  scope?: string;
   acquiredAt: string;
 };
 
@@ -250,7 +288,7 @@ async function writeStoreUnlocked(
   await mkdir(directory, { recursive: true });
   const temporary = path.join(
     directory,
-    `.${BUILDER_IDENTITY_STORE_FILE}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`,
+    `.${BUILDER_IDENTITY_STORE_FILE}.${process.pid}.${PROCESS_SCOPE_TOKEN}.${randomBytes(6).toString("hex")}.tmp`,
   );
   const payload = `${JSON.stringify(store, null, 2)}\n`;
   try {
@@ -283,6 +321,7 @@ function newLockMetadata(token: string, now: Date): BuilderLockMetadata {
     token,
     pid: process.pid,
     hostname: STORE_HOST_ID,
+    scope: PROCESS_SCOPE,
     acquiredAt: now.toISOString(),
   };
 }
@@ -296,7 +335,7 @@ async function writeExclusiveFile(
   filePath: string,
   metadata: BuilderLockMetadata,
 ): Promise<boolean> {
-  const temporary = `${filePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
+  const temporary = `${filePath}.${process.pid}.${PROCESS_SCOPE_TOKEN}.${randomBytes(6).toString("hex")}.tmp`;
   try {
     const handle = await open(temporary, "wx", 0o600);
     try {
@@ -365,6 +404,10 @@ async function readLockMetadata(filePath: string): Promise<LockMetadataRead> {
       typeof record.hostname !== "string" ||
       record.hostname.length === 0 ||
       record.hostname.length > 255 ||
+      (record.scope !== undefined &&
+        (typeof record.scope !== "string" ||
+          record.scope.length === 0 ||
+          record.scope.length > 512)) ||
       typeof record.acquiredAt !== "string" ||
       !Number.isFinite(Date.parse(record.acquiredAt))
     ) {
@@ -377,6 +420,7 @@ async function readLockMetadata(filePath: string): Promise<LockMetadataRead> {
         token: record.token,
         pid: record.pid,
         hostname: record.hostname,
+        ...(record.scope === undefined ? {} : { scope: record.scope }),
         acquiredAt: record.acquiredAt,
       },
     };
@@ -395,8 +439,12 @@ function processOwnerState(pid: number): "alive" | "dead" | "unknown" {
 }
 
 function ownerIsProvablyInactive(metadata: BuilderLockMetadata): boolean {
+  const acquiredAt = Date.parse(metadata.acquiredAt);
   return (
     metadata.hostname === STORE_HOST_ID &&
+    metadata.scope === PROCESS_SCOPE &&
+    Number.isFinite(acquiredAt) &&
+    acquiredAt >= PROCESS_BOOT_MS &&
     processOwnerState(metadata.pid) === "dead"
   );
 }
@@ -407,6 +455,7 @@ export type BuilderStoreLockOwnerState =
   | "live"
   | "dead"
   | "foreign_host"
+  | "foreign_scope"
   | "unprovable";
 
 export type BuilderStoreLockSnapshot = Readonly<{
@@ -419,6 +468,7 @@ export type BuilderStoreLockSnapshot = Readonly<{
     token: string;
     pid: number;
     hostname: string;
+    scope: string | null;
     acquiredAt: string;
   }> | null;
 }>;
@@ -453,14 +503,34 @@ export async function inspectBuilderStoreLock(
     return { name, present: true, valid: false, owner: "invalid", metadata: null };
   }
   const metadata = observed.metadata;
+  const acquiredAt = Date.parse(metadata.acquiredAt);
   let owner: BuilderStoreLockOwnerState;
   if (metadata.hostname !== STORE_HOST_ID) {
     owner = "foreign_host";
+  } else if (
+    metadata.scope !== PROCESS_SCOPE ||
+    !Number.isFinite(acquiredAt) ||
+    acquiredAt < PROCESS_BOOT_MS
+  ) {
+    owner = "foreign_scope";
   } else {
     const state = processOwnerState(metadata.pid);
     owner = state === "alive" ? "live" : state === "dead" ? "dead" : "unprovable";
   }
-  return { name, present: true, valid: true, owner, metadata };
+  return {
+    name,
+    present: true,
+    valid: true,
+    owner,
+    metadata: {
+      version: metadata.version,
+      token: metadata.token,
+      pid: metadata.pid,
+      hostname: metadata.hostname,
+      scope: metadata.scope ?? null,
+      acquiredAt: metadata.acquiredAt,
+    },
+  };
 }
 
 export async function inspectBuilderStore(
@@ -775,8 +845,8 @@ async function cleanupOrphanTemporaryFiles(directory: string): Promise<void> {
     ) {
       continue;
     }
-    const match = /\.(\d+)\.[a-f0-9]+\.tmp$/.exec(entry.name);
-    if (!match) continue;
+    const match = /\.(\d+)\.([a-f0-9]{16})\.[a-f0-9]+\.tmp$/.exec(entry.name);
+    if (!match || match[2] !== PROCESS_SCOPE_TOKEN) continue;
     const pid = Number.parseInt(match[1], 10);
     if (!Number.isFinite(pid) || pid <= 0 || pid === process.pid) continue;
     if (processOwnerState(pid) !== "dead") continue;

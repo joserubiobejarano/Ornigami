@@ -111,6 +111,10 @@ case "$cmd" in
     esac
     ;;
   create)
+    if [[ "${STUB_FAIL_CREATE:-0}" == "1" ]]; then
+      echo "stub engine: deliberate create failure" >&2
+      exit 1
+    fi
     name="$(find_name "$@")"
     mkdir -p "$STATE/containers/$name"
     find_label "$@" > "$STATE/containers/$name/label"

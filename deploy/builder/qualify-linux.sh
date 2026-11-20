@@ -26,6 +26,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 SOURCE_SHA="${SOURCE_SHA:-$(git rev-parse HEAD)}"
+APP_URL_EXPLICIT="${APP_URL:+1}"
 APP_URL="${APP_URL:-http://127.0.0.1:3100}"
 ALLOW_DIRTY="${ALLOW_DIRTY:-0}"
 QUALIFY_SELF_TEST="${QUALIFY_SELF_TEST:-0}"
@@ -35,6 +36,8 @@ REMOVE_IMAGE="${REMOVE_IMAGE:-0}"
 STORE_MODE="${STORE_MODE:-volume}"
 STORE_HOST_ID="${BUILDER_RUNTIME_STORE_HOST_ID:-${STORE_HOST_ID:-ornigami-builder-store}}"
 NODE_BIN="${NODE_BIN:-node}"
+BROWSER_PHASE="${BROWSER_PHASE:-1}"
+HOST_PORT=""
 
 RUN_ID="${RUN_ID:-${SOURCE_SHA:0:12}-$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM:-0}}"
 EVIDENCE_ROOT="${EVIDENCE_ROOT:-$ROOT/.local/builder-linux-qualification}"
@@ -42,6 +45,7 @@ EVIDENCE_DIR="${EVIDENCE_DIR:-$EVIDENCE_ROOT/runs/$RUN_ID}"
 BACKUP_DIR="${BACKUP_DIR:-$EVIDENCE_DIR/backup}"
 RESTORE_DIR="${RESTORE_DIR:-$EVIDENCE_DIR/restore}"
 STORE_EXPORT_DIR="${STORE_EXPORT_DIR:-$EVIDENCE_DIR/store-export}"
+BROWSER_EVIDENCE_DIR="${BROWSER_EVIDENCE_DIR:-$EVIDENCE_DIR/browser}"
 IMAGE="${IMAGE:-ornigami-builder:qualify-$RUN_ID}"
 CONTAINER="${CONTAINER:-ornigami-builder-qualify-$RUN_ID}"
 RESTORE_CONTAINER="${RESTORE_CONTAINER:-$CONTAINER-restore}"
@@ -62,6 +66,7 @@ EVIDENCE_DIR="$(abspath "$EVIDENCE_DIR")"
 BACKUP_DIR="$(abspath "$BACKUP_DIR")"
 RESTORE_DIR="$(abspath "$RESTORE_DIR")"
 STORE_EXPORT_DIR="$(abspath "$STORE_EXPORT_DIR")"
+BROWSER_EVIDENCE_DIR="$(abspath "$BROWSER_EVIDENCE_DIR")"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
@@ -150,6 +155,31 @@ fi
 if ! "$ENGINE" info >/dev/null 2>&1; then
   fail "$ENGINE is present but its daemon is not usable"
 fi
+if [[ "$BROWSER_PHASE" != "0" && "$BROWSER_PHASE" != "1" ]]; then
+  fail "BROWSER_PHASE must be 0 or 1"
+fi
+
+# The browser phase needs an exact loopback origin and a published loopback
+# port. The container itself stays on the internal no-egress network; only
+# ingress from the host loopback is added.
+if [[ "$BROWSER_PHASE" == "1" ]]; then
+  if [[ -n "$APP_URL_EXPLICIT" ]]; then
+    HOST_PORT="$("$NODE_BIN" -e 'const u=new URL(process.argv[1]);process.stdout.write(u.port)' "$APP_URL")"
+    [[ -n "$HOST_PORT" ]] \
+      || fail "BROWSER_PHASE requires an explicit loopback port in APP_URL"
+  else
+    HOST_PORT="$("$NODE_BIN" -e 'const net=require("node:net");const s=net.createServer();s.listen(0,"127.0.0.1",()=>{process.stdout.write(String(s.address().port));s.close()})')"
+    APP_URL="http://127.0.0.1:$HOST_PORT"
+  fi
+  APP_URL_PROTOCOL="$("$NODE_BIN" -e 'process.stdout.write(new URL(process.argv[1]).protocol)' "$APP_URL")"
+  APP_URL_HOST="$("$NODE_BIN" -e 'process.stdout.write(new URL(process.argv[1]).hostname)' "$APP_URL")"
+  [[ "$APP_URL_PROTOCOL" == "http:" ]] \
+    || fail "BROWSER_PHASE requires APP_URL=http://127.0.0.1:<port>"
+  [[ "$APP_URL_HOST" == "127.0.0.1" ]] \
+    || fail "BROWSER_PHASE requires a 127.0.0.1 APP_URL (set BROWSER_PHASE=0 for a non-browser smoke)"
+  [[ "$HOST_PORT" =~ ^[0-9]+$ && "$HOST_PORT" -ge 1 && "$HOST_PORT" -le 65535 ]] \
+    || fail "APP_URL must include a valid loopback port"
+fi
 
 # ---------------------------------------------------------------------------
 # Collision checks: never reuse or delete another run's resources.
@@ -185,6 +215,7 @@ require_absent_path "EVIDENCE_DIR" "$EVIDENCE_DIR"
 require_absent_path "BACKUP_DIR" "$BACKUP_DIR"
 require_absent_path "RESTORE_DIR" "$RESTORE_DIR"
 require_absent_path "STORE_EXPORT_DIR" "$STORE_EXPORT_DIR"
+require_absent_path "BROWSER_EVIDENCE_DIR" "$BROWSER_EVIDENCE_DIR"
 require_absent_image
 require_absent_container "$CONTAINER"
 require_absent_container "$RESTORE_CONTAINER"
@@ -337,6 +368,33 @@ note "Evidence: $EVIDENCE_DIR"
 note "Store mode: $STORE_MODE ($STORE_VOLUME)"
 note "Store host ID: $STORE_HOST_ID"
 
+# Build the exact --mount pair once. A failure must abort the run; never let an
+# empty or partially built mount array reach the engine.
+build_store_mount_args() {
+  local source="$1"
+  STORE_MOUNT_ARGS=()
+  if [[ -z "$source" || "$source" == *","* || "$source" == *$'\n'* ]]; then
+    return 1
+  fi
+  case "$STORE_MODE" in
+    volume)
+      [[ "$source" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || return 1
+      STORE_MOUNT_ARGS=(--mount "type=volume,src=$source,dst=/data/builder")
+      ;;
+    bind)
+      [[ "$source" = /* && -d "$source" ]] || return 1
+      STORE_MOUNT_ARGS=(--mount "type=bind,src=$source,dst=/data/builder")
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+  [[ ${#STORE_MOUNT_ARGS[@]} -eq 2 ]] || return 1
+  [[ "${STORE_MOUNT_ARGS[0]}" == "--mount" ]] || return 1
+  [[ "${STORE_MOUNT_ARGS[1]}" == "type=$STORE_MODE,src=$source,dst=/data/builder" ]] || return 1
+  return 0
+}
+
 # ---------------------------------------------------------------------------
 # Self-test: exercise run-scoped naming, collision guards and owned cleanup
 # without building or running the application. The local harness uses a stub
@@ -357,11 +415,11 @@ if [[ "$QUALIFY_SELF_TEST" == "1" ]]; then
     STORE_SOURCE="$STORE_DIR"
   fi
   if [[ "${SELF_TEST_CREATE_CONTAINER:-0}" == "1" ]]; then
-    local_mounts=()
-    mapfile -t local_mounts < <(store_mount_args "$STORE_SOURCE")
+    build_store_mount_args "$STORE_SOURCE" \
+      || fail "SELF-TEST: could not construct mount arguments for $STORE_SOURCE"
     "$ENGINE" create --name "$CONTAINER" \
       --label "org.ornigami.qualify.run=$RUN_ID" \
-      --network "$NETWORK" "${local_mounts[@]}" "$IMAGE" >/dev/null
+      --network "$NETWORK" "${STORE_MOUNT_ARGS[@]}" "$IMAGE" >/dev/null
     created_container=1
   fi
   cat > "$EVIDENCE_DIR/results.txt" <<EOF
@@ -385,15 +443,6 @@ fi
 # ---------------------------------------------------------------------------
 # Helpers.
 # ---------------------------------------------------------------------------
-store_mount_args() {
-  local source="$1"
-  if [[ "$STORE_MODE" == "volume" ]]; then
-    printf '%s\n' "--mount" "type=volume,src=$source,dst=/data/builder"
-  else
-    printf '%s\n' "--mount" "type=bind,src=$source,dst=/data/builder"
-  fi
-}
-
 prepare_host_dir() {
   mkdir -p "$1"
   if [[ "$(id -u)" -eq 0 ]]; then
@@ -459,12 +508,12 @@ usage_key() {
 operator_run() {
   local source="$1"
   shift
-  local mounts=()
-  mapfile -t mounts < <(store_mount_args "$source")
+  build_store_mount_args "$source" \
+    || fail "operator mount construction failed for $source"
   "$ENGINE" run --rm --network none --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=16m \
     --tmpfs /home/node:rw,noexec,nosuid,size=16m \
-    --user 1000:1000 "${mounts[@]}" \
+    --user 1000:1000 "${STORE_MOUNT_ARGS[@]}" \
     -e "BUILDER_RUNTIME_STORE_HOST_ID=$STORE_HOST_ID" \
     "$IMAGE" --experimental-strip-types \
     /app/scripts/builder-invite-operator.mjs "$@"
@@ -477,12 +526,12 @@ op_json() {
 seed_run() {
   local source="$1"
   shift
-  local mounts=()
-  mapfile -t mounts < <(store_mount_args "$source")
+  build_store_mount_args "$source" \
+    || fail "seed mount construction failed for $source"
   "$ENGINE" run --rm --network none --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=16m \
     --tmpfs /home/node:rw,noexec,nosuid,size=16m \
-    --user 1000:1000 "${mounts[@]}" \
+    --user 1000:1000 "${STORE_MOUNT_ARGS[@]}" \
     --mount "type=bind,src=$ROOT/deploy/builder,dst=/app/qualify,readonly" \
     -e "BUILDER_RUNTIME_STORE_HOST_ID=$STORE_HOST_ID" \
     "$IMAGE" --experimental-strip-types \
@@ -560,18 +609,23 @@ http_run() {
 }
 
 start_runtime() {
-  local name="$1" source="$2" mode="$3"
-  local mounts=()
-  mapfile -t mounts < <(store_mount_args "$source")
+  local name="$1" source="$2" mode="$3" publish="${4:-0}"
+  local publish_args=()
+  if [[ "$publish" == "1" ]]; then
+    publish_args=(-p "127.0.0.1:$HOST_PORT:3000")
+  fi
+  build_store_mount_args "$source" \
+    || fail "runtime mount construction failed for $source"
   "$ENGINE" run -d --name "$name" \
     --label "org.ornigami.qualify.run=$RUN_ID" \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
     --tmpfs /app/builder-runtime/.next/cache:rw,noexec,nosuid,size=64m \
     --tmpfs /home/node:rw,noexec,nosuid,size=16m \
-    "${mounts[@]}" \
+    "${STORE_MOUNT_ARGS[@]}" \
     --mount "type=bind,src=$ROOT/deploy/builder,dst=/app/qualify,readonly" \
     --network "$NETWORK" \
+    "${publish_args[@]}" \
     --user 1000:1000 \
     -e NODE_ENV=production \
     -e BUILDER_RUNTIME_MODE="$mode" \
@@ -635,8 +689,10 @@ fi
 # Invite runtime with read-only root, UID 1000 and the persistent volume.
 # ---------------------------------------------------------------------------
 note "Start invite runtime with read-only root"
+RUNTIME_PUBLISH=0
+if [[ "$BROWSER_PHASE" == "1" ]]; then RUNTIME_PUBLISH=1; fi
 created_container=1
-start_runtime "$CONTAINER" "$STORE_SOURCE" invite
+start_runtime "$CONTAINER" "$STORE_SOURCE" invite "$RUNTIME_PUBLISH"
 wait_health "$CONTAINER"
 check "runtime:read-only-root" \
   "$("$ENGINE" inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$CONTAINER")" "true"
@@ -716,6 +772,41 @@ check "restart:usage-unchanged" "$USAGE_AFTER_RESTART" "$USAGE_BEFORE"
 check "restart:store-unchanged" "$(store_hash "$STORE_SOURCE")" "$STORE_HASH_BASELINE"
 
 # ---------------------------------------------------------------------------
+# Browser phase against the built container through the loopback-only test
+# origin. The container remains on the internal default-deny network; the
+# published port is host-loopback ingress only. Test hooks and the live
+# provider stay disabled. The operator revokes synthetic subject A while its
+# workspace is open, then signs out synthetic subject B.
+# ---------------------------------------------------------------------------
+if [[ "$BROWSER_PHASE" == "1" ]]; then
+  note "Run the browser phase against $APP_URL"
+  browser_env=(
+    "BROWSER_BASE_URL=$APP_URL"
+    "BROWSER_EVIDENCE_DIR=$BROWSER_EVIDENCE_DIR"
+    "BROWSER_OPERATOR_MODE=container"
+    "BROWSER_PACKSHOT=$ROOT/public/campaign-assets/harbor-field-bottle.webp"
+    "ENGINE=$ENGINE"
+    "BUILDER_OPERATOR_IMAGE=$IMAGE"
+    "BUILDER_RUNTIME_STORE_HOST_ID=$STORE_HOST_ID"
+  )
+  if [[ "$STORE_MODE" == "volume" ]]; then
+    browser_env+=("BUILDER_OPERATOR_VOLUME=$STORE_VOLUME")
+  else
+    browser_env+=("BUILDER_OPERATOR_STORE=$STORE_DIR")
+  fi
+  env "${browser_env[@]}" "$NODE_BIN" deploy/builder/qualify-browser.mjs
+  check "browser:journey" "ok" "ok"
+  # The browser phase legitimately writes synthetic subjects, sessions and
+  # usage. Capture the post-browser store for the backup/restore/lock checks;
+  # the earlier restart hash remains the proof that the seeded state survived
+  # the restart before the browser phase.
+  STORE_HASH_BASELINE="$(store_hash "$STORE_SOURCE")"
+  [[ "$STORE_HASH_BASELINE" != "missing" ]] || fail "post-browser store hash is missing"
+else
+  note "BROWSER_PHASE=0: browser journey skipped"
+fi
+
+# ---------------------------------------------------------------------------
 # Backup while stopped and restore into a fresh volume and fresh container.
 # ---------------------------------------------------------------------------
 note "Back up the stopped store and restore into a fresh container"
@@ -752,10 +843,11 @@ check "restore:usage-unchanged" "$USAGE_AFTER_RESTORE" "$USAGE_BEFORE"
 # ---------------------------------------------------------------------------
 note "Exercise safe lock recovery on the restore copy"
 "$ENGINE" stop "$RESTORE_CONTAINER" >/dev/null
-STALE_JSON="$(seed_run "$RESTORE_SOURCE" stale-lock --store /data/builder --token "qualify-stale-lock" --hostname "replaced-builder-container")"
+STALE_JSON="$(seed_run "$RESTORE_SOURCE" stale-lock --store /data/builder --token "qualify-stale-lock" --scope "replaced-container-pid-namespace")"
 STALE_TOKEN="$(printf '%s' "$STALE_JSON" | json_field token)"
 LOCK_STATUS="$(op_json "$RESTORE_SOURCE" lock-status)"
-check "lock:foreign-host" "$(printf '%s' "$LOCK_STATUS" | json_field lock owner)" "foreign_host"
+check "lock:foreign-scope" "$(printf '%s' "$LOCK_STATUS" | json_field lock owner)" "foreign_scope"
+check "lock:scope" "$(printf '%s' "$LOCK_STATUS" | json_field lock metadata scope)" "replaced-container-pid-namespace"
 check "lock:token" "$(printf '%s' "$LOCK_STATUS" | json_field lock metadata token)" "$STALE_TOKEN"
 REAP_TOKEN="$(printf '%s' "$LOCK_STATUS" | json_field reapLock metadata token)"
 if operator_run "$RESTORE_SOURCE" recover-lock --token "$STALE_TOKEN" --json >/dev/null 2>&1; then
@@ -834,6 +926,10 @@ egress_blocked=true
 closed_rollback_preserved_store=true
 closed_records_preserved=true
 single_replica=true
+browser_phase=$BROWSER_PHASE
+browser_origin=$APP_URL
+browser_loopback_publish=${HOST_PORT:-none}
+browser_journey=$([[ "$BROWSER_PHASE" == "1" ]] && printf 'true' || printf 'skipped')
 checks=$CHECK_COUNT
 evidence_dir=$EVIDENCE_DIR
 EOF

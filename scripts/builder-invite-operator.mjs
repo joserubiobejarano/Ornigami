@@ -144,7 +144,7 @@ if (!store) {
         console.log(`${lock.name}: INVALID metadata (manual recovery required)`);
       } else {
         console.log(
-          `${lock.name}: owner=${lock.owner} token=${lock.metadata.token} pid=${lock.metadata.pid} host=${lock.metadata.hostname} acquired=${lock.metadata.acquiredAt}`,
+          `${lock.name}: owner=${lock.owner} token=${lock.metadata.token} pid=${lock.metadata.pid} host=${lock.metadata.hostname} scope=${lock.metadata.scope ?? "unprovable"} acquired=${lock.metadata.acquiredAt}`,
         );
       }
     }

@@ -113,6 +113,18 @@ function calls() {
   const file = path.join(stubState, "calls.log");
   return existsSync(file) ? readFileSync(file, "utf8") : "";
 }
+function createCall(name) {
+  const line = calls()
+    .split(/\r?\n/)
+    .find((entry) => entry.startsWith("create ") && entry.includes(`--name ${name} `));
+  assert.ok(line, `missing create call for ${name}`);
+  return line;
+}
+function resultsOk(runId) {
+  const file = path.join(evidenceRoot, "runs", runId, "results.txt");
+  if (!existsSync(file)) return false;
+  return /^ok=true$/m.test(readFileSync(file, "utf8"));
+}
 
 const results = [];
 function pass(name, detail = "") {
@@ -184,6 +196,17 @@ try {
   const resultsFile = path.join(evidenceRoot, "runs", "selftest-normal", "results.txt");
   assert.equal(existsSync(resultsFile), true, "self-test results were not written");
   assert.match(readFileSync(resultsFile, "utf8"), /self_test=true/);
+  const normalCreate = createCall("ornigami-builder-qualify-selftest-normal");
+  assert.match(
+    normalCreate,
+    /--mount type=volume,src=ornigami-builder-store-selftest-normal,dst=\/data\/builder/,
+    "normal run must pass the exact volume mount",
+  );
+  assert.equal(
+    (normalCreate.match(/--mount/g) ?? []).length,
+    1,
+    "normal run must pass exactly one store mount",
+  );
   assert.equal(resourceExists("networks", "ornigami-builder-qualify-net-selftest-normal"), false);
   assert.equal(
     resourceExists("containers", "ornigami-builder-qualify-selftest-normal"),
@@ -270,13 +293,64 @@ try {
     RUN_ID: "selftest-bind",
     STORE_MODE: "bind",
     STORE_DIR: bashAbsolute(bindStore),
+    SELF_TEST_CREATE_CONTAINER: "1",
     KEEP_VOLUMES: "0",
   });
   assert.equal(bindRun.status, 0, `${bindRun.stdout}\n${bindRun.stderr}`);
   assert.equal(existsSync(bindStore), true, "bind store directory was not created");
   assert.equal(resourceExists("volumes", "ornigami-builder-store-selftest-bind"), false);
   assert.equal(resourceExists("networks", "ornigami-builder-qualify-net-selftest-bind"), false);
+  assert.equal(
+    resourceExists("containers", "ornigami-builder-qualify-selftest-bind"),
+    false,
+  );
+  const bindCreate = createCall("ornigami-builder-qualify-selftest-bind");
+  assert.match(
+    bindCreate,
+    new RegExp(
+      `--mount type=bind,src=${bashAbsolute(bindStore).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")},dst=/data/builder`,
+    ),
+    "bind run must pass the exact bind mount",
+  );
+  assert.equal(
+    (bindCreate.match(/--mount/g) ?? []).length,
+    1,
+    "bind run must pass exactly one store mount",
+  );
   pass("bind mode created no named volume and cleaned up its network");
+
+  // 7. Mount construction failure aborts before results. A comma is invalid in
+  //    the Docker --mount value and must never be silently dropped.
+  const badMount = runQualify({
+    RUN_ID: "selftest-bad-mount",
+    STORE_VOLUME: "bad,volume",
+    SELF_TEST_CREATE_CONTAINER: "1",
+    KEEP_ON_FAILURE: "0",
+  });
+  assert.notEqual(badMount.status, 0, "invalid mount source must fail the run");
+  assert.equal(resultsOk("selftest-bad-mount"), false);
+  assert.equal(
+    existsSync(path.join(evidenceRoot, "runs", "selftest-bad-mount", "results.txt")),
+    false,
+    "mount failure must not write ok=true",
+  );
+  pass("mount construction failure aborts without an ok result");
+
+  // 8. A helper/engine failure also aborts before results.
+  const createFailure = runQualify({
+    RUN_ID: "selftest-create-failure",
+    SELF_TEST_CREATE_CONTAINER: "1",
+    STUB_FAIL_CREATE: "1",
+    KEEP_ON_FAILURE: "0",
+  });
+  assert.notEqual(createFailure.status, 0, "engine create failure must fail the run");
+  assert.equal(resultsOk("selftest-create-failure"), false);
+  assert.equal(
+    existsSync(path.join(evidenceRoot, "runs", "selftest-create-failure", "results.txt")),
+    false,
+    "helper failure must not write ok=true",
+  );
+  pass("helper failure aborts without an ok result");
 
   console.log(
     JSON.stringify(
