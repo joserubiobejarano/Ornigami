@@ -168,6 +168,7 @@ jobs:
           echo "BUILDER_USER=$BUILDER_USER" >> "$GITHUB_ENV"
           sudo usermod -aG docker "$BUILDER_USER"
           sudo install -d -m 0755 -o "$BUILDER_USER" -g "$(id -gn "$BUILDER_USER")" /tmp/builder-qualification
+          sudo install -d -m 0755 -o "$BUILDER_USER" -g "$(id -gn "$BUILDER_USER")" /tmp/builder-qualification/xdg-config /tmp/builder-qualification/xdg-cache
           sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
           sudo chmod -R a+rX "$GITHUB_WORKSPACE"
           sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -294,6 +295,7 @@ jobs:
             node "$BT/node_modules/playwright/cli.js" install chromium 2>&1 | tee "$PREFLIGHT_DIR/playwright-chromium-install.log"
           sudo chmod -R a+rX "$BT/node_modules"
           sudo -u "$BUILDER_USER" env HOME="/home/$BUILDER_USER" PLAYWRIGHT_BROWSERS_PATH="/home/$BUILDER_USER/.cache/ms-playwright" \
+            XDG_CONFIG_HOME=/tmp/builder-qualification/xdg-config XDG_CACHE_HOME=/tmp/builder-qualification/xdg-cache \
             node --input-type=module -e '
               import { pathToFileURL } from "node:url";
               const mod = await import(pathToFileURL(process.argv[1]).href);
@@ -322,6 +324,8 @@ jobs:
             KEEP_VOLUMES="$KEEP_VOLUMES" \
             REMOVE_IMAGE="$REMOVE_IMAGE" \
             PLAYWRIGHT_BROWSERS_PATH="/home/$BUILDER_USER/.cache/ms-playwright" \
+            XDG_CONFIG_HOME=/tmp/builder-qualification/xdg-config \
+            XDG_CACHE_HOME=/tmp/builder-qualification/xdg-cache \
             ./deploy/builder/qualify-linux.sh 2>&1 | tee "$PREFLIGHT_DIR/qualification-console.log"
           rc=${PIPESTATUS[0]}
           set -e
