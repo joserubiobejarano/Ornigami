@@ -505,10 +505,10 @@ jobs:
           grep -qx 'browser_phase=1' "$results"
           grep -qx 'browser_journey=true' "$results"
           grep -qx "source_sha=$SOURCE_SHA" "$results"
-          for flag in runtime_user=1000:1000 read_only_root=true egress_blocked=true single_replica=true restart_preserved_store=true fresh_container_restore=true session_valid_after_restart=true session_revoked_after_restart=true unresolved_reservation_after_restart=true lock_recovery=true closed_rollback_preserved_store=true closed_records_preserved=true; do
+          for flag in runtime_user=1000:1000 read_only_root=true writable_owners=1000:1000 writable_modes=0700 writable_tmpfs_options=rw,noexec,nosuid,uid=1000,gid=1000,mode=0700 egress_blocked=true single_replica=true restart_preserved_store=true fresh_container_restore=true session_valid_after_restart=true session_revoked_after_restart=true unresolved_reservation_after_restart=true lock_recovery=true closed_rollback_preserved_store=true closed_records_preserved=true; do
             grep -qx "$flag" "$results"
           done
-          for name in http:smoke:invite http:smoke:closed browser:journey operator:host-id operator:empty-lock store:owned-0600 restart:usage-unchanged restart:store-unchanged backup:hash restore:hash restore:usage-unchanged lock:foreign-scope lock:recovered lock:store-unchanged lock:hash lock:store-readable closed:smoke closed:store-unchanged closed:records-preserved export:hash; do
+          for name in writable:store:owner writable:store:mode writable:store:write-delete writable:tmp:owner writable:tmp:mode writable:tmp:write-delete writable:next-cache:owner writable:next-cache:mode writable:next-cache:write-delete writable:home:owner writable:home:mode writable:home:write-delete http:smoke:invite http:smoke:closed browser:journey operator:host-id operator:empty-lock store:owned-0600 restart:usage-unchanged restart:store-unchanged backup:hash restore:hash restore:usage-unchanged lock:foreign-scope lock:recovered lock:store-unchanged lock:hash lock:store-readable closed:smoke closed:store-unchanged closed:records-preserved export:hash; do
             grep -q "$name" "$checks"
           done
           [[ "$(cat "$PREFLIGHT_DIR/image/revision-label.txt")" == "$SOURCE_SHA" ]]
