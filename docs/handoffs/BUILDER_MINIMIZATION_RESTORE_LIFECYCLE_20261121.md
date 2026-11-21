@@ -1,5 +1,10 @@
 # Handoff — builder restore-attempt lifecycle correction
 
+> Historical evidence. The later journal intent-commitments tip (`9319370`,
+> handoff `ebb487d`) supersedes the v1/v2 journal and gate/receipt formats with
+> journal v2, gate/receipt v3 and ordered `{id,intentDigest}` commitments. This
+> record is preserved unchanged apart from this supersession note.
+
 Date: 21 November 2026
 Branch: `codex/ornigami-builder-minimization-20261121`
 Base: `44e116366a0aca09b09bd22e87c7216ce2a8dc93`

@@ -564,7 +564,7 @@ test("same image and prepared attempt with changed journal intent stays closed a
   // Same image, same attempt and same event-id sequence, but changed intent.
   // Replay must not silently rebind the prepared attempt; the gate stays closed.
   const changed = JSON.parse(readFileSync(journalAB, "utf8")) as {
-    events: Array<Record<string, unknown> & { id: string; effectAt: string }>;
+    events: Array<Record<string, unknown> & { id: string }>;
   };
   changed.events[1] = recommitEvent({
     ...changed.events[1]!,

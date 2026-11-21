@@ -151,6 +151,31 @@ test(
 );
 
 test(
+  "obsolete action switches are rejected instead of silently remapped",
+  { skip: !bashAvailable && "bash is required for the shell harness checks" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-rehearsal-obsolete-"));
+    try {
+      const tools = setupTools(tempDir);
+      const base = baseEnv(tempDir, tools);
+      for (const [name, value] of [
+        ["REHEARSAL_MODE", "prepare"],
+        ["PLAN_ONLY", "1"],
+        ["EXECUTE", "1"],
+        ["RESUME", "1"],
+      ]) {
+        const result = runRehearsal({ ...base, [name]: value }, "plan");
+        assert.notEqual(result.status, 0, name);
+        assert.match(`${result.stdout}\n${result.stderr}`, new RegExp(`${name} is obsolete`));
+        assert.match(`${result.stdout}\n${result.stderr}`, /ACTION=plan\|checkpoint\|qualify/);
+      }
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
   "checkpoint then resume routes every engine invocation and qualifies the same image",
   { skip: !bashAvailable && "bash is required for the shell harness checks" },
   () => {

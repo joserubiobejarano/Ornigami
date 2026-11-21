@@ -108,9 +108,11 @@ test("exact-candidate rehearsal checkpoints, routes daemons explicitly and reuse
   assert.match(rehearsal, /build-and-retain\.sh/);
   assert.match(rehearsal, /verify-image-archive\.mjs/);
   assert.match(rehearsal, /qualify-existing-image\.sh/);
-  assert.match(rehearsal, /ACTION="\$\{ACTION:-\}"/);
+  assert.match(rehearsal, /ACTION="\$\{ACTION:-plan\}"/);
   assert.match(rehearsal, /ACTION=checkpoint/);
   assert.match(rehearsal, /ACTION=qualify/);
+  assert.match(rehearsal, /REHEARSAL_MODE PLAN_ONLY EXECUTE RESUME/);
+  assert.match(rehearsal, /is obsolete/);
   assert.match(rehearsal, /daemon_identity/);
   assert.match(rehearsal, /resolve to the same daemon/);
   assert.match(rehearsal, /Podman context routing is unsupported/);

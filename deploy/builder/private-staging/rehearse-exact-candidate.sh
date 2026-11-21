@@ -10,8 +10,9 @@
 #                      verify archive/receipt/edge identity, then qualify the
 #                      same immutable image ID
 #
-# Legacy switches remain: PLAN_ONLY=1 selects plan; EXECUTE=1 selects checkpoint;
-# RESUME=1 selects qualify. The default is plan.
+# Canonical interface: ACTION=plan|checkpoint|qualify. The default is plan.
+# Obsolete REHEARSAL_MODE/PLAN_ONLY/EXECUTE/RESUME inputs are rejected rather
+# than silently mapped to a different action.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
@@ -24,26 +25,20 @@ VERIFY_ENGINE_INPUT="${VERIFY_ENGINE:-}"
 VERIFY_ENGINE_BIN_INPUT="${VERIFY_ENGINE_BIN:-}"
 PHASE_ENGINE_INPUT="${PHASE_ENGINE:-}"
 PHASE_ENGINE_BIN_INPUT="${PHASE_ENGINE_BIN:-}"
-ACTION="${ACTION:-}"
-PLAN_ONLY="${PLAN_ONLY:-}"
-EXECUTE="${EXECUTE:-0}"
-RESUME="${RESUME:-0}"
-if [[ -z "$ACTION" ]]; then
-  if [[ "$RESUME" == "1" ]]; then
-    ACTION="qualify"
-  elif [[ "$EXECUTE" == "1" || "$PLAN_ONLY" == "0" ]]; then
-    ACTION="checkpoint"
-  else
-    ACTION="plan"
+ACTION="${ACTION:-plan}"
+for obsolete in REHEARSAL_MODE PLAN_ONLY EXECUTE RESUME; do
+  if [[ -n "${!obsolete:-}" ]]; then
+    echo "FAIL: $obsolete is obsolete; use ACTION=plan|checkpoint|qualify." >&2
+    exit 1
   fi
-fi
+done
 case "$ACTION" in
-  plan) PLAN_ONLY=1 EXECUTE=0 RESUME=0 ;;
-  checkpoint) PLAN_ONLY=0 EXECUTE=1 RESUME=0 ;;
-  qualify) PLAN_ONLY=0 EXECUTE=1 RESUME=1 ;;
-  *) fail_action="ACTION must be plan, checkpoint or qualify: $ACTION" ;;
+  plan|checkpoint|qualify) ;;
+  *)
+    echo "FAIL: ACTION must be plan, checkpoint or qualify: $ACTION" >&2
+    exit 1
+    ;;
 esac
-if [[ -n "${fail_action:-}" ]]; then echo "FAIL: $fail_action" >&2; exit 1; fi
 
 CHECKPOINT_FILE="$REHEARSAL_DIR/checkpoint.json"
 ARCHIVE_VERIFY_DIR="$REHEARSAL_DIR/archive-verification"
@@ -137,8 +132,6 @@ if [[ "$ACTION" != "qualify" ]]; then
   [[ -z "$(git status --porcelain)" || "${ALLOW_DIRTY:-0}" == "1" ]] \
     || fail "worktree must be clean (or set ALLOW_DIRTY=1 for a deliberate non-final smoke)"
 fi
-[[ "$PLAN_ONLY" == "0" || "$PLAN_ONLY" == "1" ]] || fail "PLAN_ONLY must be 0 or 1"
-[[ "$EXECUTE" == "0" || "$EXECUTE" == "1" ]] || fail "EXECUTE must be 0 or 1"
 "$NODE_BIN" -e '
   const value = process.argv[1];
   const url = new URL(value);
