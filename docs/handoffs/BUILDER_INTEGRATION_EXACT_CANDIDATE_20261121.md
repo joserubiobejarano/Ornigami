@@ -45,12 +45,18 @@ Results:
 
 | Gate | Result |
 | --- | --- |
-| Full repository suite (`node scripts/test.mjs`) | **1445/1445 passed**, zero failures/skips |
+| Full repository suite (`node scripts/test.mjs`, serial on Windows) | **1447/1447 passed**, zero failures/skips |
 | TypeScript (`tsc --noEmit`) | passed |
 | Full lint (`eslint .`) | passed with 0 errors (27 existing warnings) |
-| Private staging package/closure tests | 23/23 passed |
+| Private staging package/closure tests | 24/24 passed |
+| Minimisation/restore lifecycle tests | 18/18 passed |
+| Local rehearsal prepare/resume routing with stub engines | passed |
 | Builder Linux qualification self-test | 13/13 passed |
 | `git diff --check` | passed |
+
+The full suite was run with `--test-concurrency=1` because parallel Windows runs
+can hit the already-documented temporary-PostgreSQL `EBUSY` cleanup and builder
+store-lock timing flakes. No test was skipped or weakened.
 
 ### Reported fast-glob failure
 
@@ -84,14 +90,19 @@ closed-rollback journey with:
    A+B, restore the older snapshot, replay A+B;
 7. preservation of receipt A while only B is applied, and denial of both A and B
    after the second restore;
-8. unchanged usage rows, accounting snapshot, lock recovery and closed rollback.
+8. a same-image/changed-intent negative replay after the second attempt is
+   prepared: replay rejects the changed journal, keeps the gate closed and the
+   store hash unchanged, and leaves the control subject active; the exact
+   prepared journal then completes the same attempt;
+9. unchanged usage rows, accounting snapshot, lock recovery and closed rollback.
 
 The results receipt records `minimization_applied`,
 `restore_gate_blocked_reopen`, `restore_replay_completed`,
 `restored_access_denied`, `second_restore_cycle`,
-`second_restore_receipt_history_preserved`, the journal hashes and the minimised
-store hashes. `accept-runtime-rollback.sh` fails closed if any of those markers
-is missing.
+`second_restore_receipt_history_preserved`,
+`same_id_changed_intent_replay_blocked`, `changed_intent_gate_preserved`,
+`control_subject_access`, the journal hashes and the minimised store hashes.
+`accept-runtime-rollback.sh` fails closed if any of those markers is missing.
 
 ## One exact-candidate rehearsal
 
@@ -99,18 +110,24 @@ is missing.
 reviewable plan and, only with explicit authorization, executes it:
 
 1. build the exact candidate source SHA once;
-2. retain the local archive and its receipt;
+2. retain the local archive and its receipt in an explicitly authorized custody
+   directory;
 3. independently load and verify that archive on a daemon context separate from
    the build daemon;
-4. run edge, browser, runtime, restore, minimisation, replay, second restore and
-   closed rollback with that one immutable image ID;
-5. reconcile source SHA, harness SHA, image ID, archive SHA-256/size and the
-   effective HTTPS origin across every receipt.
+4. stop at the durable `edge-setup` checkpoint;
+5. resume against the matching private HTTPS edge and run edge, browser,
+   runtime, restore, minimisation, replay, same-ID/changed-intent negative,
+   second restore and closed rollback with that one immutable image ID;
+6. reconcile source SHA, harness SHA, image ID, archive SHA-256/size, custody
+   path and the effective HTTPS origin across every receipt.
 
-The default is `PLAN_ONLY=1`; it contacts no engine, registry or origin. Execution
-requires `EXECUTE=1`, `PLAN_ONLY=0`, a fresh archive-verification daemon and all
-staging credentials/edge inputs. It never pushes an image, deploys, changes DNS
-or opens customer admission.
+The default is `REHEARSAL_MODE=plan`; it contacts no engine, registry or origin.
+Prepare/resume require the runner, daemon, edge and artifact-custody authority
+flags plus a fresh archive-verification daemon and all staging credentials/edge
+inputs. The script never pushes an image, deploys, changes DNS or opens customer
+admission. Rehearsal routing and the checkpoint/resume path are exercised locally
+with stub build/verify engines and a stub qualification runner before any remote
+execution request.
 
 Required immutable-identity chain:
 

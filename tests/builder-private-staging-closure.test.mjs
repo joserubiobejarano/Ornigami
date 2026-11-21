@@ -706,3 +706,119 @@ test(
     }
   },
 );
+
+test(
+  "rehearsal routing stops at edge-setup and resumes with the same image ID using stub engines",
+  { skip: !bashAvailable && "bash is required for the rehearsal routing check" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-rehearsal-routing-"));
+    try {
+      const state = path.join(tempDir, "state");
+      const binDir = path.join(tempDir, "bin");
+      mkdirSync(binDir, { recursive: true });
+      const stubEngine = path.join(binDir, "docker");
+      copyFileSync(path.join(root, "deploy", "builder", "tests", "stub-rehearsal-engine.sh"), stubEngine);
+      chmodSync(stubEngine, 0o755);
+      const stubQualification = path.join(binDir, "qualify-existing-image.sh");
+      copyFileSync(path.join(root, "deploy", "builder", "tests", "stub-rehearsal-qualification.sh"), stubQualification);
+      chmodSync(stubQualification, 0o755);
+      let verifyEngine = relative(stubEngine);
+      const extraEnv = {};
+      if (process.platform === "win32") {
+        const wrapper = path.join(binDir, "docker.cmd");
+        writeFileSync(
+          wrapper,
+          `@echo off\r\n"${bash.replace(/\//g, "\\")}" "${stubEngine.replace(/\//g, "\\")}" %*\r\n`,
+        );
+        verifyEngine = wrapper;
+        extraEnv.ENGINE_SHELL = "1";
+      }
+      const rehearsalDir = path.join(tempDir, "rehearsal");
+      const custodyDir = path.join(tempDir, "custody");
+      const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout.trim();
+      const rehearsalImageId = `sha256:${"c".repeat(64)}`;
+      const origin = "https://builder-staging.ornigami.test";
+      const common = {
+        ...process.env,
+        SOURCE_SHA: head,
+        HARNESS_SHA: head,
+        APP_URL: origin,
+        REHEARSAL_DIR: relative(rehearsalDir),
+        ARTIFACT_CUSTODY_DIR: relative(custodyDir),
+        STUB_STATE: relative(state),
+        STUB_IMAGE_ID: rehearsalImageId,
+        STUB_SOURCE_SHA: head,
+        STUB_ORIGIN: origin,
+        BUILD_ENGINE: relative(stubEngine),
+        VERIFY_ENGINE: verifyEngine,
+        PHASE_ENGINE: relative(stubEngine),
+        ...extraEnv,
+        BUILD_CONTEXT: "stub-build-daemon",
+        VERIFY_CONTEXT: "stub-verify-daemon",
+        PHASE_CONTEXT: "stub-verify-daemon",
+        NODE_BIN: "node",
+        ALLOW_DIRTY: "1",
+        PLAN_ONLY: "0",
+        RUNNER_AUTHORIZED: "1",
+        DAEMON_AUTHORIZED: "1",
+        ARTIFACT_CUSTODY_AUTHORIZED: "1",
+      };
+      const prepare = spawnSync(
+        bash,
+        ["deploy/builder/private-staging/rehearse-exact-candidate.sh"],
+        {
+          cwd: root,
+          encoding: "utf8",
+          env: { ...common, REHEARSAL_MODE: "prepare" },
+        },
+      );
+      assert.equal(prepare.status, 0, `${prepare.stdout}\n${prepare.stderr}`);
+      const checkpoint = JSON.parse(
+        readFileSync(path.join(rehearsalDir, "rehearsal-checkpoint.json"), "utf8"),
+      );
+      assert.equal(checkpoint.state, "edge-setup");
+      assert.equal(checkpoint.imageId, rehearsalImageId);
+      assert.equal(checkpoint.applicationOrigin, origin);
+      assert.equal(existsSync(checkpoint.archivePath), true);
+      assert.equal(existsSync(path.join(state, "qualification-calls.log")), false, "prepare must stop before edge setup");
+
+      const resume = spawnSync(
+        bash,
+        ["deploy/builder/private-staging/rehearse-exact-candidate.sh"],
+        {
+          cwd: root,
+          encoding: "utf8",
+          env: {
+            ...common,
+            REHEARSAL_MODE: "resume",
+            EDGE_AUTHORIZED: "1",
+            QUALIFICATION_RUNNER: relative(stubQualification),
+            STAGING_BASIC_AUTH_USER: "synthetic",
+            STAGING_BASIC_AUTH_PASSWORD: "synthetic",
+            EDGE_APP_CONTAINER: "edge-app",
+            EDGE_PROXY_CONTAINER: "edge-proxy",
+            BUILDER_OPERATOR_VOLUME: "edge-store",
+            BUILDER_RUNTIME_STORE_HOST_ID: "edge-host",
+          },
+        },
+      );
+      assert.equal(resume.status, 0, `${resume.stdout}\n${resume.stderr}`);
+      const identities = JSON.parse(
+        readFileSync(path.join(rehearsalDir, "rehearsal-identities.json"), "utf8"),
+      );
+      assert.equal(identities.imageId, rehearsalImageId);
+      assert.equal(identities.applicationOrigin, origin);
+      assert.equal(identities.checkpointStop, "edge-setup");
+      assert.equal(identities.checkpointResumed, true);
+      assert.equal(identities.sameImageIdForEveryPhase, true);
+      assert.equal(identities.sameIdChangedIntentReplayBlocked, true);
+      assert.equal(identities.controlSubjectAccess, true);
+      const calls = readFileSync(path.join(state, "qualification-calls.log"), "utf8").trim().split(/\r?\n/);
+      assert.equal(calls.length, 1, "resume must invoke the qualification harness once");
+      assert.ok(calls[0].startsWith(`${rehearsalImageId}\t${origin}\t`));
+      assert.equal(existsSync(path.join(rehearsalDir, "REHEARSAL_COMPLETE.txt")), true);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);

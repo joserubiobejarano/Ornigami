@@ -78,6 +78,9 @@ for expected in \
   "second_restore_applied_events=1" \
   "second_restore_replayed_events=2" \
   "second_restore_receipt_history_preserved=true" \
+  "same_id_changed_intent_replay_blocked=true" \
+  "changed_intent_gate_preserved=true" \
+  "control_subject_access=true" \
   "fresh_container_restore=true" \
   "lock_recovery=true" \
   "closed_rollback_preserved_store=true" \

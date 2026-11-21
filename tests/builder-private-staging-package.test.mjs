@@ -91,9 +91,13 @@ test("synthetic Linux journey exercises minimisation, restored denial, journal r
     "restored_access_denied=true",
     "second_restore_cycle=true",
     "second_restore_receipt_history_preserved=true",
+    "same_id_changed_intent_replay_blocked=true",
+    "changed_intent_gate_preserved=true",
+    "control_subject_access=true",
   ]) {
     assert.ok(qualify.includes(expected), expected);
   }
+  assert.ok(qualify.indexOf("changed-intent") >= 0, "changed-intent negative replay is missing");
 });
 
 test("exact-candidate rehearsal builds once, verifies the archive independently and reuses one image ID", () => {
@@ -102,8 +106,14 @@ test("exact-candidate rehearsal builds once, verifies the archive independently 
   assert.match(rehearsal, /verify-image-archive\.mjs/);
   assert.match(rehearsal, /qualify-existing-image\.sh/);
   assert.match(rehearsal, /BUILD_CONTEXT" != "\$VERIFY_CONTEXT/);
-  assert.match(rehearsal, /IMAGE_REFERENCE="\$IMAGE_ID"/);
+  assert.match(rehearsal, /IMAGE_REFERENCE="\$checkpoint_image"/);
   assert.match(rehearsal, /PLAN_ONLY="\$\{PLAN_ONLY:-1\}"/);
+  assert.match(rehearsal, /REHEARSAL_MODE="\$\{REHEARSAL_MODE:-\}"/);
+  assert.match(rehearsal, /state": "edge-setup"/);
+  assert.match(rehearsal, /RUNNER_AUTHORIZED/);
+  assert.match(rehearsal, /DAEMON_AUTHORIZED/);
+  assert.match(rehearsal, /EDGE_AUTHORIZED/);
+  assert.match(rehearsal, /ARTIFACT_CUSTODY_AUTHORIZED/);
   assert.match(rehearsal, /"customerAdmission": "closed"/);
   assert.doesNotMatch(rehearsal, /docker\s+push|registry.*push/i);
 });

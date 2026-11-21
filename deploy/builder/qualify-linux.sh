@@ -1173,26 +1173,32 @@ check "operator:empty-lock" "$(printf '%s' "$LOCK_STATUS_EMPTY" | json_field loc
 
 INVITE_A_JSON="$(op_json "$STORE_SOURCE" issue --label "Qualify identity A" --ttl-seconds 3600)"
 INVITE_B_JSON="$(op_json "$STORE_SOURCE" issue --label "Qualify identity B" --ttl-seconds 3600)"
+INVITE_C_JSON="$(op_json "$STORE_SOURCE" issue --label "Qualify control C" --ttl-seconds 3600)"
 TOKEN_A="$(printf '%s' "$INVITE_A_JSON" | json_field token)"
 TOKEN_B="$(printf '%s' "$INVITE_B_JSON" | json_field token)"
+TOKEN_C="$(printf '%s' "$INVITE_C_JSON" | json_field token)"
 SUBJECT_A="$(printf '%s' "$INVITE_A_JSON" | json_field subjectId)"
 SUBJECT_B="$(printf '%s' "$INVITE_B_JSON" | json_field subjectId)"
-[[ -n "$TOKEN_A" && -n "$TOKEN_B" ]] || fail "operator did not return invite tokens"
+SUBJECT_C="$(printf '%s' "$INVITE_C_JSON" | json_field subjectId)"
+[[ -n "$TOKEN_A" && -n "$TOKEN_B" && -n "$TOKEN_C" ]] || fail "operator did not return invite tokens"
 
-exec_node "$CONTAINER" 'const fs=require("fs");const p="/data/builder/identity-store.json";const s=fs.statSync(p);if(s.uid!==1000||s.gid!==1000)throw Error(`store ownership ${s.uid}:${s.gid}`);if((s.mode&0o777)!==0o600)throw Error(`store mode ${(s.mode&0o777).toString(8)}`);const j=JSON.parse(fs.readFileSync(p,"utf8"));if(j.version!==1||!Array.isArray(j.usage)||j.subjects.length<2)throw Error("unexpected store shape")'
+exec_node "$CONTAINER" 'const fs=require("fs");const p="/data/builder/identity-store.json";const s=fs.statSync(p);if(s.uid!==1000||s.gid!==1000)throw Error(`store ownership ${s.uid}:${s.gid}`);if((s.mode&0o777)!==0o600)throw Error(`store mode ${(s.mode&0o777).toString(8)}`);const j=JSON.parse(fs.readFileSync(p,"utf8"));if(j.version!==1||!Array.isArray(j.usage)||j.subjects.length<3)throw Error("unexpected store shape")'
 check "store:owned-0600" "true" "true"
 
-note "Redeem two synthetic invites"
+note "Redeem three synthetic invites (A and B targets, C control)"
 COOKIE_A="$(http_run "$CONTAINER" redeem "$TOKEN_A" --print-cookie)"
 COOKIE_B="$(http_run "$CONTAINER" redeem "$TOKEN_B" --print-cookie)"
-[[ -n "$COOKIE_A" && -n "$COOKIE_B" ]] || fail "redeem did not return session cookies"
+COOKIE_C="$(http_run "$CONTAINER" redeem "$TOKEN_C" --print-cookie)"
+[[ -n "$COOKIE_A" && -n "$COOKIE_B" && -n "$COOKIE_C" ]] || fail "redeem did not return session cookies"
 http_run "$CONTAINER" session "$COOKIE_A" --subject "$SUBJECT_A" >/dev/null
 http_run "$CONTAINER" session "$COOKIE_B" --subject "$SUBJECT_B" >/dev/null
+http_run "$CONTAINER" session "$COOKIE_C" --subject "$SUBJECT_C" >/dev/null
 
 LIST_JSON="$(op_json "$STORE_SOURCE" list)"
 SESSION_A="$(printf '%s' "$LIST_JSON" | find_session_id "$SUBJECT_A")"
 SESSION_B="$(printf '%s' "$LIST_JSON" | find_session_id "$SUBJECT_B")"
-[[ -n "$SESSION_A" && -n "$SESSION_B" ]] || fail "could not resolve synthetic session ids"
+SESSION_C="$(printf '%s' "$LIST_JSON" | find_session_id "$SUBJECT_C")"
+[[ -n "$SESSION_A" && -n "$SESSION_B" && -n "$SESSION_C" ]] || fail "could not resolve synthetic session ids"
 
 note "Revoke identity B and seed identity A's unresolved reservation"
 op_json "$STORE_SOURCE" revoke-session --id "$SESSION_B" >/dev/null
@@ -1223,6 +1229,7 @@ if [[ "$DIAGNOSTIC" == "1" ]]; then
 fi
 http_run "$CONTAINER" session "$COOKIE_A" --subject "$SUBJECT_A" >/dev/null
 http_run "$CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
+http_run "$CONTAINER" session "$COOKIE_C" --subject "$SUBJECT_C" >/dev/null
 http_run "$CONTAINER" generate "$COOKIE_A" "$SUBJECT_A" "$("$NODE_BIN" -e 'process.stdout.write(require("node:crypto").randomUUID())')" --expect-status 429 --expect-code subject_concurrency >/dev/null
 USAGE_AFTER_RESTART="$(op_json "$STORE_SOURCE" list | usage_key "$USAGE_ID")"
 check "restart:usage-unchanged" "$USAGE_AFTER_RESTART" "$USAGE_BEFORE"
@@ -1406,7 +1413,9 @@ start_runtime "$RESTORE_CONTAINER" "$RESTORE_SOURCE" invite
 wait_health "$RESTORE_CONTAINER"
 http_run "$RESTORE_CONTAINER" session "$COOKIE_A" --expect-status 401 >/dev/null
 http_run "$RESTORE_CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
+http_run "$RESTORE_CONTAINER" session "$COOKIE_C" --subject "$SUBJECT_C" >/dev/null
 check "restore:access-denied" "true" "true"
+check "restore:control-access" "true" "true"
 check "restore:root-owner" \
   "$(exec_node "$RESTORE_CONTAINER" 'const s=require("node:fs").statSync("/data/builder");process.stdout.write(`${s.uid}:${s.gid}`)')" "1000:1000"
 check "restore:root-mode" \
@@ -1474,6 +1483,47 @@ RESTORE2_PREPARE_JSON="$(op_json "$RESTORE2_SOURCE" restore-prepare --journal /d
 check "second-restore:gate-prepared" "$(printf '%s' "$RESTORE2_PREPARE_JSON" | json_field prepared)" "true"
 RESTORE2_GATE_STATUS="$(operator_run "$RESTORE2_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
 check "second-restore:gate-blocks-reopen" "$(printf '%s' "$RESTORE2_GATE_STATUS" | json_field replayReady)" "false"
+
+# Negative same-image/changed-intent attempt: the attempt was prepared with
+# journal A+B, so replay must reject a different journal hash/evidence rather
+# than silently rebinding. The gate, store and control subject stay intact.
+"$NODE_BIN" -e '
+  const fs = require("node:fs");
+  const journal = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  if (!Array.isArray(journal.events) || journal.events.length !== 2) {
+    throw new Error("expected the A+B journal");
+  }
+  journal.events[0].effectAt = "2030-01-01T00:00:00.000Z";
+  fs.writeFileSync(process.argv[2], `${JSON.stringify(journal, null, 2)}\n`, { mode: 0o600 });
+' "$BACKUP2_DIR/journal-AB.json" "$BACKUP2_DIR/journal-changed-intent.json"
+copy_store_file_in "$BACKUP2_DIR/journal-changed-intent.json" "$RESTORE2_SOURCE" "minimization-journal.json"
+set +e
+operator_run "$RESTORE2_SOURCE" replay-minimization --journal /data/builder/minimization-journal.json --json >/dev/null 2>>"$OP_LOG"
+CHANGED_INTENT_RC=$?
+set -e
+[[ "$CHANGED_INTENT_RC" -ne 0 ]] || fail "changed-intent replay was accepted"
+check "second-restore:changed-intent-rejected" "true" "true"
+check "second-restore:changed-intent-store-unchanged" "$(store_hash "$RESTORE2_SOURCE")" "$STORE_HASH_MINIMIZED_A"
+check "second-restore:changed-intent-gate-preserved" "$(store_file_exists "$RESTORE2_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "present"
+RESTORE2_CHANGED_STATUS="$(operator_run "$RESTORE2_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
+check "second-restore:changed-intent-blocks-reopen" "$(printf '%s' "$RESTORE2_CHANGED_STATUS" | json_field replayReady)" "false"
+LIST_AFTER_CHANGED_INTENT="$(op_json "$RESTORE2_SOURCE" list)"
+printf '%s\n' "$LIST_AFTER_CHANGED_INTENT" > "$EVIDENCE_DIR/list-after-changed-intent.json"
+CONTROL_AFTER_CHANGED_INTENT="$("$NODE_BIN" -e '
+  const fs = require("node:fs");
+  const [file, subjectId, sessionId] = process.argv.slice(1);
+  const state = JSON.parse(fs.readFileSync(file, "utf8"));
+  const subject = state.subjects.find((item) => item.id === subjectId);
+  const session = state.sessions.find((item) => item.id === sessionId);
+  process.stdout.write(
+    subject && !subject.revokedAt && session && !session.revokedAt ? "true" : "false",
+  );
+' "$EVIDENCE_DIR/list-after-changed-intent.json" "$SUBJECT_C" "$SESSION_C")"
+check "second-restore:control-access-preserved" "$CONTROL_AFTER_CHANGED_INTENT" "true"
+check "second-restore:control-usage-preserved" "$(op_json "$RESTORE2_SOURCE" list | usage_key "$USAGE_ID")" "$USAGE_BEFORE"
+
+# Restore the exact prepared journal and complete the same attempt.
+copy_store_file_in "$BACKUP2_DIR/journal-AB.json" "$RESTORE2_SOURCE" "minimization-journal.json"
 REPLAY_AB_JSON="$(op_json "$RESTORE2_SOURCE" replay-minimization --journal /data/builder/minimization-journal.json)"
 check "second-restore:replay-status" "$(printf '%s' "$REPLAY_AB_JSON" | json_field status)" "complete"
 check "second-restore:replay-events" "$(printf '%s' "$REPLAY_AB_JSON" | json_field journalEventCount)" "2"
@@ -1491,7 +1541,9 @@ start_runtime "$RESTORE2_CONTAINER" "$RESTORE2_SOURCE" invite
 wait_health "$RESTORE2_CONTAINER"
 http_run "$RESTORE2_CONTAINER" session "$COOKIE_A" --expect-status 401 >/dev/null
 http_run "$RESTORE2_CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
+http_run "$RESTORE2_CONTAINER" session "$COOKIE_C" --subject "$SUBJECT_C" >/dev/null
 check "second-restore:access-denied" "true" "true"
+check "second-restore:control-access" "true" "true"
 USAGE_AFTER_RESTORE2="$(op_json "$RESTORE2_SOURCE" list | usage_key "$USAGE_ID")"
 check "second-restore:usage-unchanged-after-replay" "$USAGE_AFTER_RESTORE2" "$USAGE_BEFORE"
 LIST_AFTER_RESTORE2="$(op_json "$RESTORE2_SOURCE" list)"
@@ -1624,6 +1676,9 @@ second_restore_backup_sha256=$HASH_BACKUP2
 second_restore_applied_events=1
 second_restore_replayed_events=2
 second_restore_receipt_history_preserved=true
+same_id_changed_intent_replay_blocked=true
+changed_intent_gate_preserved=true
+control_subject_access=true
 session_valid_after_restart=true
 session_revoked_after_restart=true
 unresolved_reservation_after_restart=true

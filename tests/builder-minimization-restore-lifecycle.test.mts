@@ -454,6 +454,104 @@ test("two-cycle restore accepts a newer journal, revokes B, and preserves the pr
   assertUsagePreserved(restored);
 });
 
+test("same image and prepared attempt with changed journal intent stays closed and preserves control access", async () => {
+  const { primary, journal: journalA } = await setupPrimaryWithA("changed-intent");
+  const base = path.dirname(primary);
+  const restore1 = path.join(base, "restore1");
+  const restore2 = path.join(base, "restore2");
+  copyStore(primary, restore1);
+  await prepareBuilderRestoreReplay({ storeDir: restore1, journalPath: journalA });
+  await replayBuilderMinimizationJournal({ storeDir: restore1, journalPath: journalA });
+  const receiptA = readReceipt(restore1);
+
+  // Snapshot restore A before B, then grow the journal to A+B.
+  copyStore(restore1, restore2);
+  copyFileSync(
+    path.join(restore1, BUILDER_MINIMIZATION_JOURNAL_FILE),
+    path.join(restore2, BUILDER_MINIMIZATION_JOURNAL_FILE),
+  );
+  copyFileSync(receiptPath(restore1), receiptPath(restore2));
+  const planB = await planBuilderSubjectMinimization({
+    storeDir: restore1,
+    subjectId: SUBJECT_B,
+    now: new Date(EFFECT_AT),
+  });
+  await applyBuilderSubjectMinimization({ storeDir: restore1, plan: planB });
+  const journalAB = path.join(base, "journal-AB.json");
+  copyJournal(restore1, journalAB);
+
+  const prepared = await prepareBuilderRestoreReplay({
+    storeDir: restore2,
+    journalPath: journalAB,
+  });
+  assert.equal(prepared.prepared, true);
+  const beforeChangedIntent = hashStore(restore2);
+  assert.equal(
+    existsSync(path.join(restore2, BUILDER_RESTORE_REPLAY_GATE_FILE)),
+    true,
+  );
+
+  // Same image, same attempt and same event-id sequence, but changed intent.
+  // Replay must not silently rebind the prepared attempt; the gate stays closed.
+  const changed = JSON.parse(readFileSync(journalAB, "utf8")) as {
+    events: Array<{ effectAt: string }>;
+  };
+  changed.events[0]!.effectAt = "2026-11-21T13:00:00.000Z";
+  const changedJournal = path.join(base, "journal-changed-intent.json");
+  writeFileSync(changedJournal, `${JSON.stringify(changed, null, 2)}\n`);
+
+  await assert.rejects(
+    replayBuilderMinimizationJournal({
+      storeDir: restore2,
+      journalPath: changedJournal,
+    }),
+    (error) =>
+      error instanceof BuilderMinimizationRejected &&
+      error.code === "replay_conflict",
+  );
+  assert.equal(hashStore(restore2), beforeChangedIntent);
+  assert.equal(
+    existsSync(path.join(restore2, BUILDER_RESTORE_REPLAY_GATE_FILE)),
+    true,
+  );
+  assert.equal(
+    existsSync(attemptReceiptPath(restore2, prepared.attemptId)),
+    false,
+  );
+  await assertStartupBlocked(restore2);
+  const blocked = readStore(restore2);
+  assertControlIntact(blocked);
+  assert.equal(
+    blocked.subjects.find((item) => item.id === SUBJECT_B)?.revokedAt,
+    undefined,
+  );
+
+  // The exact prepared journal still completes the same attempt.
+  const receiptB = await replayBuilderMinimizationJournal({
+    storeDir: restore2,
+    journalPath: journalAB,
+  });
+  assert.equal(receiptB.attemptId, prepared.attemptId);
+  assert.equal(receiptB.previousReceiptIds.includes(receiptA.receiptId), true);
+  assert.equal(receiptB.appliedEventIds.length, 1);
+  assert.equal(
+    existsSync(path.join(restore2, BUILDER_RESTORE_REPLAY_GATE_FILE)),
+    false,
+  );
+  await assertStartupAccepted(restore2);
+  const restored = readStore(restore2);
+  assert.equal(
+    restored.subjects.find((item) => item.id === SUBJECT_A)?.label,
+    BUILDER_MINIMIZED_LABEL,
+  );
+  assert.equal(
+    restored.subjects.find((item) => item.id === SUBJECT_B)?.revokedAt,
+    EFFECT_AT,
+  );
+  assertControlIntact(restored);
+  assertUsagePreserved(restored);
+});
+
 test("missing or corrupt journal leaves the first restore attempt closed", async () => {
   const { primary, journal } = await setupPrimaryWithA("missing-corrupt");
   const base = path.dirname(primary);
@@ -614,7 +712,11 @@ test("journal growth is accepted but incomplete or divergent history stays close
   );
   await assertStartupBlocked(corruptReceiptBackup);
 
-  // The correctly grown journal completes the same closed attempt.
+  // Corrected evidence requires an explicit re-prepare; replay never rebinds.
+  await prepareBuilderRestoreReplay({
+    storeDir: restoreAB,
+    journalPath: journalAB,
+  });
   const receiptAB = await replayBuilderMinimizationJournal({
     storeDir: restoreAB,
     journalPath: journalAB,

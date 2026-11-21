@@ -74,6 +74,9 @@ below also replays it, revokes the newer subject and verifies accounting.
 - missing/corrupt journal before the first gate, followed by startup rejection;
 - a backup containing only the previous latest receipt;
 - journal growth accepted while incomplete or divergent history stays closed;
+- a same-image/prepared-attempt changed-intent journal rejected with
+  `replay_conflict`, with the gate and store unchanged, control subject active,
+  and the exact prepared journal completing the same attempt;
 - corrupt historical receipt keeping the gate closed;
 - interruption at `gate_closed`, `gate_prepared`, `store_written`,
   `journal_written`, `receipt_written` and `gate_removed`;

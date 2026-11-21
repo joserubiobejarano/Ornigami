@@ -1174,6 +1174,7 @@ async function prepareRestoreGate(
   storeHash: string,
   priorReceipts: readonly BuilderRestoreReplayReceipt[],
   now: Date,
+  allowPreparedRebind: boolean,
 ): Promise<BuilderRestoreReplayGate> {
   if (gate.phase === "prepared") {
     if (
@@ -1182,14 +1183,20 @@ async function prepareRestoreGate(
     ) {
       return gate;
     }
+    if (!allowPreparedRebind) {
+      throw new BuilderMinimizationRejected(
+        "replay_conflict",
+        "This restore attempt is already prepared with different journal evidence; keep the gate closed and run restore-prepare explicitly before replaying corrected evidence.",
+      );
+    }
     if (gate.storeBeforeHash !== storeHash) {
       throw new BuilderMinimizationRejected(
         "replay_conflict",
         "This restore attempt is bound to different journal evidence and has already changed the store; keep the gate closed.",
       );
     }
-    // No effects have been written yet. Allow the closed attempt to be
-    // re-prepared for corrected evidence rather than stranding the store.
+    // No effects have been written yet. An explicit restore-prepare may bind
+    // corrected evidence; replay itself may not silently change intent.
     const rebound: BuilderRestoreReplayGate = {
       ...gate,
       phase: "prepared",
@@ -1362,6 +1369,7 @@ export async function prepareBuilderRestoreReplay(input: {
           snapshot.storeHash,
           priorReceipts,
           now,
+          true,
         );
         await completeNoOpRestoreAttempt({
           directory,
@@ -1392,6 +1400,7 @@ export async function prepareBuilderRestoreReplay(input: {
         snapshot.storeHash,
         priorReceipts,
         now,
+        true,
       );
       return {
         prepared: gate.phase === "closed",
@@ -1451,6 +1460,7 @@ export async function replayBuilderMinimizationJournal(
         snapshot.storeHash,
         priorReceipts,
         now,
+        false,
       );
       const backupJournal = await readBackupJournalPrefix(directory, source);
 

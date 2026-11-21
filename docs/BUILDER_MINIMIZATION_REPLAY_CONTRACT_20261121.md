@@ -109,7 +109,11 @@ A restore attempt is explicit and durable before evidence loading:
 A failed attempt can be re-prepared for corrected evidence only while the store
 hash still equals the prepared pre-restore hash and no effects were written.
 After effects exist, retries must use the same journal. This prevents silently
-discarding a partial restore.
+discarding a partial restore. Replay itself never rebinds an already prepared
+attempt to different journal bytes: a changed journal hash or event sequence is
+rejected with `replay_conflict`, the gate remains closed, and the unchanged
+store and control subjects stay intact. Corrected evidence must first pass an
+explicit `restore-prepare`; replay then uses that prepared binding.
 
 The gate write is the first durable action. If it cannot be synced, the restore
 command fails and the store must remain stopped; do not open a restored store

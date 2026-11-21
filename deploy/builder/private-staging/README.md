@@ -301,11 +301,17 @@ rollback. It also applies a reviewed minimisation to the stopped authoritative
 store, prepares and replays the resulting journal into an older backup, verifies
 that the minimised subject is denied after restore, and runs a second restore
 cycle from a newer snapshot where journal A+B is replayed while receipt A is
-preserved and only B is applied. The results must record
-`minimization_applied=true`, `restore_gate_blocked_reopen=true`,
-`restore_replay_completed=true`, `restored_access_denied=true`,
-`second_restore_cycle=true` and
-`second_restore_receipt_history_preserved=true`. In existing-image mode the
+preserved and only B is applied. It also performs a same-image/changed-intent
+negative replay: after the second attempt is prepared, a journal with different
+evidence is rejected, the gate stays closed, the store hash is unchanged and
+the control subject remains active; the exact prepared journal then completes
+the same attempt. The results must record `minimization_applied=true`,
+`restore_gate_blocked_reopen=true`, `restore_replay_completed=true`,
+`restored_access_denied=true`, `second_restore_cycle=true`,
+`second_restore_receipt_history_preserved=true`,
+`same_id_changed_intent_replay_blocked=true`,
+`changed_intent_gate_preserved=true` and `control_subject_access=true`. In
+existing-image mode the
 harness builds nothing; the results must record `image_mode=existing`, the exact
 `image_id`, the application source SHA and the harness SHA separately. Because
 browser is intentionally skipped here, the result must contain
@@ -321,28 +327,57 @@ Keep each receipt separate.
 ### One exact-candidate rehearsal
 
 `rehearse-exact-candidate.sh` prepares (and, only when separately authorized,
-executes) one sequence: build the exact source SHA once, retain the archive,
-load and verify that archive on an independent daemon context, then run every
-edge/browser/runtime/restore/replay/rollback phase with that one immutable image
-ID. It defaults to `PLAN_ONLY=1` and contacts no engine, registry or origin.
-Execution requires `EXECUTE=1`, `PLAN_ONLY=0` and different build/verify daemon
-contexts:
+executes) one sequence: build the exact source SHA once, retain the archive and
+receipt in an authorized custody directory, load and verify that archive on an
+independent daemon context, stop at the `edge-setup` checkpoint, then resume
+against the matching private HTTPS edge and run every
+edge/browser/runtime/restore/replay/same-ID-changed-intent/second-restore/closed
+phase with that one immutable image ID. It defaults to `REHEARSAL_MODE=plan` and
+contacts no engine, registry or origin.
+
+Prepare (build, retain, independently verify, then stop):
 
 ```bash
 SOURCE_SHA=<exact-candidate-sha> \
 APP_URL=https://builder-staging.ornigami.com \
 HARNESS_SHA=<harness-sha> \
 REHEARSAL_DIR=<new-empty-directory> \
-BUILD_CONTEXT=build-runner \
-VERIFY_CONTEXT=isolated-daemon \
+REHEARSAL_MODE=prepare \
+PLAN_ONLY=0 \
+RUNNER_AUTHORIZED=1 DAEMON_AUTHORIZED=1 ARTIFACT_CUSTODY_AUTHORIZED=1 \
+ARTIFACT_CUSTODY_DIR=<new-authorized-custody-directory> \
+BUILD_CONTEXT=build-runner VERIFY_CONTEXT=isolated-daemon \
+PHASE_CONTEXT=isolated-daemon \
+  deploy/builder/private-staging/rehearse-exact-candidate.sh
+```
+
+Resume (same source, image, origin, archive and custody; no rebuild):
+
+```bash
+SOURCE_SHA=<exact-candidate-sha> \
+APP_URL=https://builder-staging.ornigami.com \
+HARNESS_SHA=<harness-sha> \
+REHEARSAL_DIR=<prepared-directory> \
+REHEARSAL_MODE=resume \
+PLAN_ONLY=0 \
+RUNNER_AUTHORIZED=1 DAEMON_AUTHORIZED=1 EDGE_AUTHORIZED=1 \
+ARTIFACT_CUSTODY_AUTHORIZED=1 \
+BUILD_CONTEXT=build-runner VERIFY_CONTEXT=isolated-daemon \
+PHASE_CONTEXT=isolated-daemon \
+STAGING_BASIC_AUTH_USER=<private-user> \
+STAGING_BASIC_AUTH_PASSWORD=<private-password> \
+EDGE_APP_CONTAINER=<running-edge-app-container> \
+EDGE_PROXY_CONTAINER=<running-caddy-container> \
+BUILDER_OPERATOR_VOLUME=<store-volume> \
+BUILDER_RUNTIME_STORE_HOST_ID=<store-host-id> \
   deploy/builder/private-staging/rehearse-exact-candidate.sh
 ```
 
 The script links the source SHA, harness SHA, immutable image ID, archive
-SHA-256 and size, effective HTTPS origin and every phase receipt. It never
-pushes, deploys, changes DNS or opens customer admission. Remote execution,
-archive custody/storage and any registry publication require explicit
-authorization before `EXECUTE=1`.
+SHA-256 and size, effective HTTPS origin, checkpoint and every phase receipt. It
+never pushes, deploys, changes DNS or opens customer admission. Remote
+execution, archive custody/storage and any registry publication require explicit
+authorization before prepare/resume.
 
 ## Qualification evidence matrix
 
@@ -356,6 +391,8 @@ authorization before `EXECUTE=1`.
 | Edge runtime isolation/proxy bindings | Structural parser regressions | Live app/proxy container inspection |
 | Populated restart/restore/lock/closed rollback | Existing Linux harness, stub mount-only path | Real isolated volume/container execution |
 | Archive handoff | Receipt/hash/bypass/incomplete tests | Fresh/isolated daemon load and independent custody |
+| Rehearsal routing/checkpoint/resume | Stub build/verify engines and stub qualification receipt | Real runner, daemon, edge and custody |
+| Same-ID/changed-intent restore | Lifecycle rejection, gate-preservation and control-subject regression | Repeat on the accepted image's synthetic store |
 | Public/real-customer admission | Not covered | Separate customer/privacy/security/host gates |
 
 ## Rollback
