@@ -50,7 +50,7 @@ fi
 COMMAND="$1"
 shift
 case "$COMMAND" in
-  issue|revoke-invite|revoke-session|revoke-subject|reconcile-usage|lock-status|recover-lock|list) ;;
+  issue|revoke-invite|revoke-session|revoke-subject|reconcile-usage|minimize|minimize-apply|restore-prepare|replay-minimization|replay-status|lock-status|recover-lock|list) ;;
   *)
     echo "Unsupported operator command: $COMMAND" >&2
     usage >&2
