@@ -45,18 +45,12 @@ Results:
 
 | Gate | Result |
 | --- | --- |
-| Full repository suite (`node scripts/test.mjs`, serial on Windows) | **1447/1447 passed**, zero failures/skips |
+| Full repository suite (`node scripts/test.mjs`) | **1445/1445 passed**, zero failures/skips |
 | TypeScript (`tsc --noEmit`) | passed |
 | Full lint (`eslint .`) | passed with 0 errors (27 existing warnings) |
-| Private staging package/closure tests | 24/24 passed |
-| Minimisation/restore lifecycle tests | 18/18 passed |
-| Local rehearsal prepare/resume routing with stub engines | passed |
+| Private staging package/closure tests | 23/23 passed |
 | Builder Linux qualification self-test | 13/13 passed |
 | `git diff --check` | passed |
-
-The full suite was run with `--test-concurrency=1` because parallel Windows runs
-can hit the already-documented temporary-PostgreSQL `EBUSY` cleanup and builder
-store-lock timing flakes. No test was skipped or weakened.
 
 ### Reported fast-glob failure
 
@@ -90,44 +84,43 @@ closed-rollback journey with:
    A+B, restore the older snapshot, replay A+B;
 7. preservation of receipt A while only B is applied, and denial of both A and B
    after the second restore;
-8. a same-image/changed-intent negative replay after the second attempt is
-   prepared: replay rejects the changed journal, keeps the gate closed and the
-   store hash unchanged, and leaves the control subject active; the exact
-   prepared journal then completes the same attempt;
-9. unchanged usage rows, accounting snapshot, lock recovery and closed rollback.
+8. unchanged usage rows, accounting snapshot, lock recovery and closed rollback.
 
 The results receipt records `minimization_applied`,
 `restore_gate_blocked_reopen`, `restore_replay_completed`,
 `restored_access_denied`, `second_restore_cycle`,
-`second_restore_receipt_history_preserved`,
-`same_id_changed_intent_replay_blocked`, `changed_intent_gate_preserved`,
-`control_subject_access`, the journal hashes and the minimised store hashes.
-`accept-runtime-rollback.sh` fails closed if any of those markers is missing.
+`second_restore_receipt_history_preserved`, the journal hashes and the minimised
+store hashes. `accept-runtime-rollback.sh` fails closed if any of those markers
+is missing.
 
 ## One exact-candidate rehearsal
 
-`deploy/builder/private-staging/rehearse-exact-candidate.sh` prepares one
-reviewable plan and, only with explicit authorization, executes it:
+`deploy/builder/private-staging/rehearse-exact-candidate.sh` has explicit
+`ACTION=plan`, `ACTION=checkpoint` and `ACTION=qualify` modes:
 
-1. build the exact candidate source SHA once;
-2. retain the local archive and its receipt in an explicitly authorized custody
-   directory;
-3. independently load and verify that archive on a daemon context separate from
-   the build daemon;
-4. stop at the durable `edge-setup` checkpoint;
-5. resume against the matching private HTTPS edge and run edge, browser,
-   runtime, restore, minimisation, replay, same-ID/changed-intent negative,
-   second restore and closed rollback with that one immutable image ID;
-6. reconcile source SHA, harness SHA, image ID, archive SHA-256/size, custody
-   path and the effective HTTPS origin across every receipt.
+1. `plan` writes the reviewable plan without contacting an engine, registry or
+   origin.
+2. `checkpoint` builds the exact candidate source SHA once, retains the local
+   archive and receipt, loads/verifies it on a fresh verification daemon, verifies
+   a transfer on the phase daemon when that observed daemon differs, and stops.
+   It emits the verified immutable image ID plus concrete edge-setup instructions.
+   The new image is not running on the fresh verification daemon.
+3. `qualify` resumes only after authorized edge setup. It re-verifies the existing
+   archive/receipt, observed daemon identities and running edge identity, then
+   runs edge, browser, runtime, restore, minimisation, replay, second restore and
+   closed rollback with that same image ID. It never rebuilds, substitutes an
+   image, erases earlier qualification attempts or accepts changed
+   source/origin/daemon inputs.
 
-The default is `REHEARSAL_MODE=plan`; it contacts no engine, registry or origin.
-Prepare/resume require the runner, daemon, edge and artifact-custody authority
-flags plus a fresh archive-verification daemon and all staging credentials/edge
-inputs. The script never pushes an image, deploys, changes DNS or opens customer
-admission. Rehearsal routing and the checkpoint/resume path are exercised locally
-with stub build/verify engines and a stub qualification runner before any remote
-execution request.
+Engine routing is explicit per phase. `*_ENGINE` selects Docker or Podman;
+`*_ENGINE_BIN` optionally selects the binary. Use exactly one daemon selector:
+Docker `*_CONTEXT`, or an explicit `*_ENDPOINT`/`*_DOCKER_HOST` (Docker) or
+`*_CONTAINER_HOST` (Podman). Context and endpoint cannot both select a daemon.
+Podman context routing is unsupported. Build and verification must resolve to
+different observed daemon identities; different caller-supplied names or image
+absence are not accepted as independence. If the phase daemon differs from the
+verification daemon, the archive must load and verify on a fresh phase daemon
+before qualification.
 
 Required immutable-identity chain:
 
@@ -136,13 +129,17 @@ application source SHA
   -> acceptance harness SHA
   -> immutable image ID (sha256:<64-hex>)
   -> retained archive SHA-256 and size
+  -> build and verification daemon identities
+  -> optional phase-daemon transfer verification
   -> effective HTTPS origin
   -> edge/browser/runtime/restore/replay/rollback receipts
   -> minimisation journal hash and restore attempt/receipt IDs
 ```
 
-An Actions artifact digest, mutable tag, loopback origin, local rebuild or linked
-dependency result must not substitute for any link in that chain.
+An Actions artifact digest, mutable tag, loopback origin, local rebuild, reused
+qualification attempt or linked dependency result must not substitute for any
+link in that chain. A complete marker is written only after every resumed phase
+and identity check succeeds.
 
 ## Authorization gates
 

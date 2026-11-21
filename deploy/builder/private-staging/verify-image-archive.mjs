@@ -107,13 +107,11 @@ function sha256File(file) {
 }
 
 function run(engine, args) {
-  // Production executes the engine directly. A local/CI wrapper may opt into
-  // shell execution explicitly; it cannot change any verification assertion.
-  return spawnSync(engine, args, {
-    encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024,
-    shell: process.env.ENGINE_SHELL === "1",
-  });
+  const runner = process.env.ENGINE_SHELL ?? "";
+  if (runner) {
+    return spawnSync(runner, [engine, ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  }
+  return spawnSync(engine, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 }
 
 const evidenceDir = process.env.EVIDENCE_DIR ?? null;

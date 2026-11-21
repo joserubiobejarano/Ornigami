@@ -21,8 +21,8 @@ note() { echo "==> $*"; }
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "SOURCE_SHA must be 40 hex"
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ "$(git rev-parse HEAD)" == "$SOURCE_SHA" ]] || fail "HEAD does not equal SOURCE_SHA"
-if [[ "$ALLOW_DIRTY" != "1" ]]; then
-  [[ -z "$(git status --porcelain)" ]] || fail "worktree must be clean"
+if [[ "$ALLOW_DIRTY" != "1" && -n "$(git status --porcelain)" ]]; then
+  fail "worktree must be clean (or set ALLOW_DIRTY=1 for a deliberate non-final smoke)"
 fi
 [[ "$APP_URL" == https://* ]] || fail "actual staging APP_URL must use https"
 [[ ! -e "$OUTPUT_DIR" ]] || fail "OUTPUT_DIR already exists: $OUTPUT_DIR"
