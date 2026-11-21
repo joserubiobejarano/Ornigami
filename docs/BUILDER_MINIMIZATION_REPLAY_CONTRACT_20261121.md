@@ -15,9 +15,9 @@ as proposals, not adopted policy.
 | Reviewed dry run | `minimize --store <dir> --subject <id> --plan-out <file>` | Prints or writes affected record IDs and categories, store hash, expected result hash and accounting snapshot. No tokens, labels or request content. |
 | Explicit apply | `minimize-apply --store <dir> --plan <file> --confirm-subject <id>` | Validates the reviewed plan against the current store, appends a durable journal request, revokes the subject's sessions and unused invites, minimises labels/token hashes, preserves usage rows, and writes a receipt. |
 | Durable journal | `minimization-journal.json` | Append-only event evidence under the existing store lock. Pending/completed phases, no labels or credentials. |
-| Restore gate | `restore-prepare --store <restored> --journal <file>` | Writes `restore-replay-gate.json` before a restored store is opened. |
-| Offline replay | `replay-minimization --store <restored> --journal <file>` | Reapplies journaled revocations/minimisations to an older backup, verifies accounting invariants, writes `restore-replay-receipt.json`, then removes the gate. |
-| Reopen check | `replay-status --store <dir>` and runtime startup | Fails closed while a gate has no complete receipt, or while a journal request is pending. |
+| Restore gate | `restore-prepare --store <restored> --journal <file>` | Opens a durable attempt id and writes a `closed` gate before any journal or receipt evidence is loaded. |
+| Offline replay | `replay-minimization --store <restored> --journal <file>` | Reapplies journaled revocations/minimisations to an older backup, verifies continuity and accounting invariants, writes an attempt receipt, then removes the gate only after verifying that attempt. |
+| Reopen check | `replay-status --store <dir>` and runtime startup | Fails closed while a gate lacks a complete receipt for its own attempt, or while a journal request is pending. A verified receipt removes the gate. |
 
 The operator wrapper and image include the same commands. The plan file may live
 inside the mounted store directory so the packaged operator can read it without
@@ -86,6 +86,50 @@ Idempotency: the reviewed `planId` and journal `planId` are unique. Repeating
 the same apply after a completed request returns `already_applied` without a
 second event. Repeating replay returns the same store hash and no new effects.
 
+### Restore attempt lifecycle
+
+A restore attempt is explicit and durable before evidence loading:
+
+1. `restore-prepare` or a direct `replay-minimization` acquires the existing
+   store lock and writes `restore-replay-gate.json` with a new `attemptId` and
+   `phase: "closed"`.
+2. Only then is the journal, receipt history or identity store read. A missing,
+   corrupt, incomplete or divergent input throws and leaves the gate closed.
+3. After the journal and continuity checks pass, the gate becomes
+   `phase: "prepared"` with the journal hash, ordered journal event ids and the
+   pre-restore store hash.
+4. Store effects, derived journal and an attempt-scoped receipt are written in
+   that order.
+5. The gate is removed only after a receipt for the same `attemptId` matches the
+   prepared journal sequence, the pre-restore hash, the current store hash and
+   all accounting invariants.
+
+A failed attempt can be re-prepared for corrected evidence only while the store
+hash still equals the prepared pre-restore hash and no effects were written.
+After effects exist, retries must use the same journal. This prevents silently
+discarding a partial restore.
+
+| Restore interruption | Durable state | Reopen behaviour |
+| --- | --- | --- |
+| After closed gate | Gate, no journal binding | Blocked; retry may bind evidence |
+| After prepared gate | Gate bound to journal, no receipt | Blocked; retry same journal |
+| After store write | Minimised store, no receipt | Blocked; retry verifies/receipts |
+| After derived journal write | Store and journal, no receipt | Blocked; retry receipts |
+| After receipt write | Complete receipt, gate still present | Startup verifies receipt and removes gate |
+| After gate removal | Complete receipt, no gate | Startup allowed |
+
+Startup, admission and ordinary writers share one gate contract:
+
+- invite-mode startup checks the gate before the writable probe; a verified
+  current-attempt receipt removes the gate, otherwise startup fails;
+- session lookup and admission report `unavailable` while any gate exists;
+- ordinary store writers (invite, reservation, settlement, reconciliation,
+  revocation, minimisation plan/apply) fail with `BuilderStoreUnavailable` or
+  `restore_pending` while any gate exists;
+- `list`, `lock-status` and lock recovery remain available for diagnosis;
+- the supported restore topology still requires every writer and the runtime to
+  be stopped before copying a backup, preparing, replaying and reopening.
+
 ## 4. Plan binding and rejection rules
 
 A plan contains:
@@ -125,9 +169,19 @@ Supported synthetic restore sequence:
 
 Replay behaviour:
 
+- opens a durable closed gate before reading the journal, receipt history or
+  store, so missing/corrupt input leaves the store closed;
 - requires a parseable, supported journal; missing or corrupt evidence fails;
-- rejects a backup journal containing an event missing from the supplied
-  journal (incomplete evidence);
+- requires the backup's own journal event sequence to be a prefix of the supplied
+  journal; a missing, reordered or divergent prefix fails;
+- requires every historical receipt's ordered `journalEventIds` to be a prefix
+  of the supplied journal. A newer journal may grow the event sequence; it may
+  not drop or replace receipted events;
+- preserves every attempt receipt in
+  `restore-replay-receipt.<attemptId>.json` and refreshes the stable
+  `restore-replay-receipt.json` latest copy. If a backup contains only the latest
+  copy, that receipt is archived under its attempt id before the latest copy is
+  replaced;
 - applies each journaled event by subject scope, so a session/invite created
   between the plan and the backup cannot remain active;
 - treats a journaled subject absent from an older backup as already outside the
@@ -136,24 +190,35 @@ Replay behaviour:
 - verifies usage rows and all accounting totals are byte-for-byte unchanged;
 - verifies usage-to-subject/session relationships and idempotency-key
   uniqueness;
-- writes `restore-replay-receipt.json` with the journal hash, event IDs, before
-  and after store hashes, accounting snapshots and invariant results;
+- writes an attempt-scoped receipt with the attempt id, prior receipt ids,
+  journal hash, ordered event ids, before/after store hashes, accounting
+  snapshots and invariant results;
 - writes all journal events into the restored store as `completed` with replay
   evidence, so startup does not see a pending event;
-- removes `restore-replay-gate.json` only after the receipt passes the same
-  checks the runtime performs.
+- removes `restore-replay-gate.json` only after the current attempt receipt
+  passes the same checks the runtime performs.
+
+Two-cycle restore is supported without deleting receipts. A successful restore
+A may be followed by ordinary operation, minimization B, a new backup/restore,
+and replay of the newer A+B journal. Receipt A remains historical evidence; the
+new attempt records A as a prior receipt and applies only the new effects.
+A journal that omits A, reorders A, or diverges from the backup's own journal
+fails and leaves the new gate closed.
 
 Missing, incomplete or inconsistent evidence leaves the gate in place. Runtime
-startup refuses to open the store until a complete receipt matches the journal
-hash and current store hash, and all invariant flags are true. `restore-prepare`
-closes the window between copying a backup and the first replay attempt; the
-supported restore path must call it. If both prepare and replay are skipped
-entirely, the runtime cannot infer that an arbitrary store is a restored older
-backup — that is a process violation, not an automatic detection.
+startup refuses to open the store until a complete receipt exists for the gate's
+own attempt, matches the prepared event sequence and current store hash, and all
+invariant flags are true. A verified receipt removes the gate and permits
+ordinary operation. `restore-prepare` closes the window between copying a backup
+and the first replay attempt; the supported restore path must call it. If both
+prepare and replay are skipped entirely, the runtime cannot infer that an
+arbitrary store is a restored older backup — that is a process violation, not an
+automatic detection.
 
 Replay is idempotent: a second replay of the same journal makes no store change,
-keeps the same store hash, and returns a complete receipt with no applied
-events.
+keeps the same store hash, and returns a new complete receipt with no applied
+events. Repeated preparation returns the same open attempt; preparation after a
+verified restore records a no-op attempt receipt and leaves the store open.
 
 ## 6. Compatibility and rollback implications
 
@@ -161,14 +226,22 @@ events.
 - The minimised store is readable by the current and earlier builder binaries:
   subject/invite/session records remain, usage is unchanged, and revokedAt/token
   tombstones deny access.
-- The journal, replay gate and receipt are new sidecar files. An earlier binary
-  ignores them and does **not** fail closed on a pending journal or an unreplayed
-  restore gate.
-- Therefore a rollback to an earlier binary after a pending apply or before a
-  restore replay is unsupported. Either finish/verify the current request with
-  this image, or keep the store closed and preserve all sidecars for review.
+- The journal, replay gate and attempt receipts are new sidecar files. An earlier
+  binary ignores them and does **not** fail closed on a pending journal, an
+  unreplayed restore gate or corrupt receipt history.
+- Therefore a rollback to an earlier binary after a pending apply, an open
+  restore attempt or a receipted v2 restore is unsupported. Either finish/verify
+  the current request with this image, or keep the store closed and preserve all
+  sidecars for review.
+- Gate and receipt format is version `2`. Version `1` artifacts from
+  `44e1163` are preserved but fail closed under this binary; they are not
+  auto-migrated. Do not delete them to force the store open.
+- Receipt history is append-only by attempt id. The stable
+  `restore-replay-receipt.json` copy is only a convenience pointer; historical
+  attempt files are the evidence. Do not delete either to bypass a conflict.
 - Do not delete `minimization-journal.json`, `restore-replay-gate.json`,
-  `restore-replay-receipt.json`, usage rows or the store to bypass a limit.
+  `restore-replay-receipt.json`, `restore-replay-receipt.<attemptId>.json`, usage
+  rows or the store to bypass a limit.
 - The existing single-replica/one-writer rule still applies. Journal write
   ordering assumes the existing local filesystem and lock; shared-filesystem or
   multi-replica operation remains unsupported.

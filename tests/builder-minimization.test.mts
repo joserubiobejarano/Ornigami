@@ -762,7 +762,11 @@ test("missing, corrupt, incomplete, and internally inconsistent replay evidence 
   assert.equal(hashStore(backup), beforeHash);
   assert.equal(
     existsSync(path.join(backup, BUILDER_RESTORE_REPLAY_GATE_FILE)),
-    false,
+    true,
+  );
+  await assert.rejects(
+    assertBuilderStoreReplayReady(backup),
+    (error) => error instanceof BuilderStoreUnavailable,
   );
 
   const corruptJournal = path.join(evidence, "corrupt.json");
@@ -777,6 +781,10 @@ test("missing, corrupt, incomplete, and internally inconsistent replay evidence 
       error.code === "invalid_journal",
   );
   assert.equal(hashStore(backup), beforeHash);
+  assert.equal(
+    existsSync(path.join(backup, BUILDER_RESTORE_REPLAY_GATE_FILE)),
+    true,
+  );
 
   const incompleteBackup = storeDir("replay-incomplete-backup");
   copyStore(backup, incompleteBackup);
@@ -803,7 +811,11 @@ test("missing, corrupt, incomplete, and internally inconsistent replay evidence 
   assert.equal(hashStore(incompleteBackup), incompleteHash);
   assert.equal(
     existsSync(path.join(incompleteBackup, BUILDER_RESTORE_REPLAY_GATE_FILE)),
-    false,
+    true,
+  );
+  await assert.rejects(
+    assertBuilderStoreReplayReady(incompleteBackup),
+    (error) => error instanceof BuilderStoreUnavailable,
   );
 
   const inconsistentBackup = storeDir("replay-inconsistent-backup");
@@ -833,7 +845,11 @@ test("missing, corrupt, incomplete, and internally inconsistent replay evidence 
   assert.equal(hashStore(inconsistentBackup), inconsistentHash);
   assert.equal(
     existsSync(path.join(inconsistentBackup, BUILDER_RESTORE_REPLAY_GATE_FILE)),
-    false,
+    true,
+  );
+  await assert.rejects(
+    assertBuilderStoreReplayReady(inconsistentBackup),
+    (error) => error instanceof BuilderStoreUnavailable,
   );
 });
 

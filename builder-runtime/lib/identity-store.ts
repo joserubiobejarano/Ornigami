@@ -31,6 +31,7 @@ export const BUILDER_MINIMIZATION_JOURNAL_VERSION = 1 as const;
 export const BUILDER_MINIMIZATION_JOURNAL_FILE = "minimization-journal.json";
 export const BUILDER_RESTORE_REPLAY_GATE_FILE = "restore-replay-gate.json";
 export const BUILDER_RESTORE_REPLAY_RECEIPT_FILE = "restore-replay-receipt.json";
+export const BUILDER_RESTORE_REPLAY_RECEIPT_PREFIX = "restore-replay-receipt.";
 export const BUILDER_MINIMIZED_LABEL = "[minimized]";
 /**
  * A stable non-secret tombstone. It is not a valid credential hash: every
@@ -364,11 +365,22 @@ export type BuilderMinimizationJournal = {
   events: BuilderMinimizationJournalEvent[];
 };
 
+/**
+ * A restore attempt is durably opened before any journal, receipt or store
+ * evidence is loaded. `closed` is the fail-closed state; `prepared` binds the
+ * attempt to one journal and one store hash. Attempts are never silently
+ * reused for a different journal.
+ */
 export type BuilderRestoreReplayGate = {
-  version: 1;
-  journalHash: string;
+  version: 2;
+  attemptId: string;
+  phase: "closed" | "prepared";
   startedAt: string;
-  storeBeforeHash: string;
+  preparedAt?: string;
+  journalHash?: string;
+  journalEventIds?: string[];
+  storeBeforeHash?: string;
+  previousReceiptIds: string[];
 };
 
 export type BuilderRestoreReplayInvariants = Readonly<{
@@ -379,11 +391,14 @@ export type BuilderRestoreReplayInvariants = Readonly<{
 }>;
 
 export type BuilderRestoreReplayReceipt = {
-  version: 1;
+  version: 2;
   kind: "builder-minimization-replay";
+  attemptId: string;
   receiptId: string;
+  previousReceiptIds: string[];
   journalFile: string;
   journalHash: string;
+  journalEventIds: string[];
   journalEventCount: number;
   appliedEventIds: string[];
   alreadyAppliedEventIds: string[];
@@ -502,6 +517,8 @@ function validStore(value: unknown): value is BuilderIdentityStore {
 
 const HASH_PATTERN = /^[a-f0-9]{64}$/;
 const EVENT_ID_PATTERN = /^mnj_[a-f0-9]{24}$/;
+const ATTEMPT_ID_PATTERN = /^rra_[a-f0-9]{24}$/;
+const RECEIPT_ID_PATTERN = /^rrp_[a-f0-9]{24}$/;
 const RECORD_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,160}$/;
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -717,14 +734,77 @@ export function validBuilderMinimizationJournal(
   return true;
 }
 
+function validEventIdList(value: unknown): value is string[] {
+  if (!Array.isArray(value) || value.length > 100_000) return false;
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (
+      typeof item !== "string" ||
+      !EVENT_ID_PATTERN.test(item) ||
+      seen.has(item)
+    ) {
+      return false;
+    }
+    seen.add(item);
+  }
+  return true;
+}
+
+function validReceiptIdList(value: unknown): value is string[] {
+  if (!Array.isArray(value) || value.length > 10_000) return false;
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (
+      typeof item !== "string" ||
+      !RECEIPT_ID_PATTERN.test(item) ||
+      seen.has(item)
+    ) {
+      return false;
+    }
+    seen.add(item);
+  }
+  return true;
+}
+
 function validReplayGate(value: unknown): value is BuilderRestoreReplayGate {
   if (!isRecord(value)) return false;
+  if (
+    !hasOnlyKeys(
+      value,
+      ["version", "attemptId", "phase", "startedAt", "previousReceiptIds"],
+      ["preparedAt", "journalHash", "journalEventIds", "storeBeforeHash"],
+    )
+  ) {
+    return false;
+  }
+  if (value.version !== 2) return false;
+  if (typeof value.attemptId !== "string" || !ATTEMPT_ID_PATTERN.test(value.attemptId)) {
+    return false;
+  }
+  if (value.phase !== "closed" && value.phase !== "prepared") return false;
+  if (!validDate(value.startedAt)) return false;
+  if (!validReceiptIdList(value.previousReceiptIds)) return false;
+  if (value.preparedAt !== undefined && !validDate(value.preparedAt)) return false;
+  if (value.journalHash !== undefined && !validHash(value.journalHash)) return false;
+  if (value.journalEventIds !== undefined && !validEventIdList(value.journalEventIds)) {
+    return false;
+  }
+  if (value.storeBeforeHash !== undefined && !validHash(value.storeBeforeHash)) {
+    return false;
+  }
+  if (value.phase === "prepared") {
+    return Boolean(
+      value.preparedAt &&
+        value.journalHash &&
+        value.journalEventIds &&
+        value.storeBeforeHash,
+    );
+  }
   return (
-    hasOnlyKeys(value, ["version", "journalHash", "startedAt", "storeBeforeHash"]) &&
-    value.version === 1 &&
-    validHash(value.journalHash) &&
-    validDate(value.startedAt) &&
-    validHash(value.storeBeforeHash)
+    value.preparedAt === undefined &&
+    value.journalHash === undefined &&
+    value.journalEventIds === undefined &&
+    value.storeBeforeHash === undefined
   );
 }
 
@@ -733,9 +813,12 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
   const required = [
     "version",
     "kind",
+    "attemptId",
     "receiptId",
+    "previousReceiptIds",
     "journalFile",
     "journalHash",
+    "journalEventIds",
     "journalEventCount",
     "appliedEventIds",
     "alreadyAppliedEventIds",
@@ -749,8 +832,14 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
     "createdAt",
   ];
   if (!hasOnlyKeys(value, required)) return false;
-  if (value.version !== 1 || value.kind !== "builder-minimization-replay") return false;
-  if (typeof value.receiptId !== "string" || !boundedId(value.receiptId)) return false;
+  if (value.version !== 2 || value.kind !== "builder-minimization-replay") return false;
+  if (typeof value.attemptId !== "string" || !ATTEMPT_ID_PATTERN.test(value.attemptId)) {
+    return false;
+  }
+  if (typeof value.receiptId !== "string" || !RECEIPT_ID_PATTERN.test(value.receiptId)) {
+    return false;
+  }
+  if (!validReceiptIdList(value.previousReceiptIds)) return false;
   if (
     typeof value.journalFile !== "string" ||
     value.journalFile.length === 0 ||
@@ -759,12 +848,23 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
     return false;
   }
   if (!validHash(value.journalHash)) return false;
-  if (!Number.isSafeInteger(value.journalEventCount) || (value.journalEventCount as number) < 0) {
+  if (!validEventIdList(value.journalEventIds)) return false;
+  if (
+    !Number.isSafeInteger(value.journalEventCount) ||
+    value.journalEventCount !== value.journalEventIds.length
+  ) {
     return false;
   }
-  if (!uniqueBoundedIds(value.appliedEventIds)) return false;
-  if (!uniqueBoundedIds(value.alreadyAppliedEventIds)) return false;
+  if (!validEventIdList(value.appliedEventIds)) return false;
+  if (!validEventIdList(value.alreadyAppliedEventIds)) return false;
   if (!uniqueBoundedIds(value.absentSubjectIds)) return false;
+  const applied = new Set(value.appliedEventIds);
+  const already = new Set(value.alreadyAppliedEventIds);
+  for (const id of applied) if (already.has(id)) return false;
+  const journalIds = new Set(value.journalEventIds);
+  for (const id of applied) if (!journalIds.has(id)) return false;
+  for (const id of already) if (!journalIds.has(id)) return false;
+  for (const id of journalIds) if (!applied.has(id) && !already.has(id)) return false;
   if (!validHash(value.storeBeforeHash) || !validHash(value.storeAfterHash)) return false;
   if (!validBuilderMinimizationAccountingSnapshot(value.accountingBefore)) return false;
   if (!validBuilderMinimizationAccountingSnapshot(value.accountingAfter)) return false;
@@ -971,6 +1071,16 @@ export async function removeBuilderRestoreReplayGate(storeDir: string): Promise<
   });
 }
 
+function restoreReplayReceiptFileName(attemptId: string): string {
+  return `${BUILDER_RESTORE_REPLAY_RECEIPT_PREFIX}${attemptId}.json`;
+}
+
+/**
+ * Preserve every attempt receipt in an attempt-specific file and refresh the
+ * stable latest-receipt copy for operators. The attempt-specific write happens
+ * first so a crash between the two writes is recoverable from the gate's
+ * attempt id.
+ */
 export async function writeBuilderRestoreReplayReceiptUnlocked(
   storeDir: string,
   receipt: BuilderRestoreReplayReceipt,
@@ -978,10 +1088,51 @@ export async function writeBuilderRestoreReplayReceiptUnlocked(
   if (!validReplayReceipt(receipt)) {
     throw new BuilderStoreUnavailable("Refusing to write an invalid restore replay receipt.");
   }
+  const directory = path.resolve(storeDir);
+  const payload = `${JSON.stringify(receipt, null, 2)}\n`;
+
+  // A backup may contain only the stable latest-receipt copy. Archive it under
+  // its attempt id before replacing the latest copy with a newer attempt.
+  const existingLatest = await readJsonEvidence(
+    path.join(directory, BUILDER_RESTORE_REPLAY_RECEIPT_FILE),
+  );
+  if (existingLatest.present) {
+    if (existingLatest.error || !validReplayReceipt(existingLatest.value)) {
+      throw new BuilderStoreUnavailable(
+        "Refusing to replace an unreadable restore replay receipt.",
+      );
+    }
+    const existing = existingLatest.value;
+    const archiveName = restoreReplayReceiptFileName(existing.attemptId);
+    const archiveRead = await readJsonEvidence(path.join(directory, archiveName));
+    if (archiveRead.present) {
+      if (
+        archiveRead.error ||
+        !validReplayReceipt(archiveRead.value) ||
+        archiveRead.value.receiptId !== existing.receiptId
+      ) {
+        throw new BuilderStoreUnavailable(
+          "Refusing to replace a conflicting restore replay receipt archive.",
+        );
+      }
+    } else {
+      await writeJsonFileAtomic(
+        directory,
+        archiveName,
+        `${JSON.stringify(existing, null, 2)}\n`,
+      );
+    }
+  }
+
+  await writeJsonFileAtomic(
+    directory,
+    restoreReplayReceiptFileName(receipt.attemptId),
+    payload,
+  );
   return writeJsonFileAtomic(
-    path.resolve(storeDir),
+    directory,
     BUILDER_RESTORE_REPLAY_RECEIPT_FILE,
-    `${JSON.stringify(receipt, null, 2)}\n`,
+    payload,
   );
 }
 
@@ -1038,49 +1189,199 @@ export async function readBuilderRestoreReplayReceipt(
   };
 }
 
-/**
- * Startup/restore gate. A normal primary store has no gate. A failed or
- * interrupted offline replay leaves the gate behind, so the restored store
- * cannot be opened until a complete receipt for the same journal and store
- * hash exists.
- */
-export async function assertBuilderStoreReplayReady(storeDir: string): Promise<void> {
+export async function readBuilderRestoreReplayReceiptForAttempt(
+  storeDir: string,
+  attemptId: string,
+): Promise<
+  Readonly<{
+    present: boolean;
+    valid: boolean;
+    value: BuilderRestoreReplayReceipt | null;
+    error: string | null;
+  }>
+> {
   const directory = path.resolve(storeDir);
-  const gateRead = await readJsonEvidence(
-    path.join(directory, BUILDER_RESTORE_REPLAY_GATE_FILE),
+  if (!ATTEMPT_ID_PATTERN.test(attemptId)) {
+    return { present: false, valid: false, value: null, error: "invalid_attempt" };
+  }
+  const attemptRead = await readJsonEvidence(
+    path.join(directory, restoreReplayReceiptFileName(attemptId)),
   );
-  if (!gateRead.present) return;
-  if (gateRead.error || !validReplayGate(gateRead.value)) {
-    throw new BuilderStoreUnavailable(
-      "Restore replay gate is present but unreadable; run the offline replay again.",
-    );
+  if (attemptRead.present) {
+    const valid =
+      !attemptRead.error &&
+      validReplayReceipt(attemptRead.value) &&
+      attemptRead.value.attemptId === attemptId;
+    return {
+      present: true,
+      valid,
+      value: valid ? (attemptRead.value as BuilderRestoreReplayReceipt) : null,
+      error: attemptRead.error ?? (valid ? null : "invalid_receipt"),
+    };
   }
-  const receiptRead = await readJsonEvidence(
-    path.join(directory, BUILDER_RESTORE_REPLAY_RECEIPT_FILE),
+  const latest = await readBuilderRestoreReplayReceipt(directory);
+  if (latest.present && latest.value?.attemptId === attemptId) return latest;
+  return {
+    present: latest.present,
+    valid: false,
+    value: null,
+    error: latest.error ?? "attempt_receipt_missing",
+  };
+}
+
+export type BuilderRestoreReplayReceiptHistory = Readonly<{
+  present: boolean;
+  receipts: readonly BuilderRestoreReplayReceipt[];
+  errors: readonly string[];
+}>;
+
+/**
+ * Reads every preserved receipt, including the latest copy. Duplicate copies of
+ * the same attempt are deduplicated. Any unreadable or conflicting receipt is
+ * reported as an error so restore preparation can leave the gate closed.
+ */
+export async function readBuilderRestoreReplayReceiptHistory(
+  storeDir: string,
+): Promise<BuilderRestoreReplayReceiptHistory> {
+  const directory = path.resolve(storeDir);
+  let names: string[];
+  try {
+    names = (await readdir(directory))
+      .filter(
+        (name) =>
+          name === BUILDER_RESTORE_REPLAY_RECEIPT_FILE ||
+          (name.startsWith(BUILDER_RESTORE_REPLAY_RECEIPT_PREFIX) &&
+            name.endsWith(".json")),
+      )
+      .sort();
+  } catch (error) {
+    if (errnoCode(error) === "ENOENT") {
+      return { present: false, receipts: [], errors: [] };
+    }
+    return { present: true, receipts: [], errors: ["receipt_directory_unreadable"] };
+  }
+
+  const receipts: BuilderRestoreReplayReceipt[] = [];
+  const errors: string[] = [];
+  const byAttempt = new Map<string, BuilderRestoreReplayReceipt>();
+  for (const name of names) {
+    const read = await readJsonEvidence(path.join(directory, name));
+    if (!read.present || read.error || !validReplayReceipt(read.value)) {
+      errors.push(name);
+      continue;
+    }
+    const receipt = read.value;
+    if (
+      name !== BUILDER_RESTORE_REPLAY_RECEIPT_FILE &&
+      name !== restoreReplayReceiptFileName(receipt.attemptId)
+    ) {
+      errors.push(name);
+      continue;
+    }
+    const existing = byAttempt.get(receipt.attemptId);
+    if (existing) {
+      if (existing.receiptId !== receipt.receiptId) errors.push(name);
+      continue;
+    }
+    byAttempt.set(receipt.attemptId, receipt);
+    receipts.push(receipt);
+  }
+  receipts.sort(
+    (left, right) =>
+      left.createdAt.localeCompare(right.createdAt) ||
+      left.receiptId.localeCompare(right.receiptId),
   );
-  if (!receiptRead.present || receiptRead.error || !validReplayReceipt(receiptRead.value)) {
-    throw new BuilderStoreUnavailable(
-      "Restored store has no valid replay receipt; do not open it.",
+  return { present: names.length > 0, receipts, errors };
+}
+
+/**
+ * Startup/restore gate. A normal primary store has no gate. A gate is written
+ * before any journal/receipt loading and stays closed until a complete receipt
+ * for the same attempt and store hash exists. A verified receipt removes the
+ * gate so ordinary operation can resume.
+ */
+export async function assertBuilderStoreReplayReady(
+  storeDir: string,
+  options: { cleanup?: boolean } = {},
+): Promise<void> {
+  const directory = path.resolve(storeDir);
+  const check = async (): Promise<void> => {
+    const gateRead = await readBuilderRestoreReplayGate(directory);
+    if (!gateRead.present) {
+      const history = await readBuilderRestoreReplayReceiptHistory(directory);
+      if (history.errors.length > 0) {
+        throw new BuilderStoreUnavailable(
+          "Restore replay receipt history is corrupt; do not open the store.",
+        );
+      }
+      return;
+    }
+    if (gateRead.error || !gateRead.valid || !gateRead.value) {
+      throw new BuilderStoreUnavailable(
+        "Restore replay gate is present but unreadable; run the offline replay again.",
+      );
+    }
+    const gate = gateRead.value;
+    if (
+      gate.phase !== "prepared" ||
+      !gate.journalHash ||
+      !gate.journalEventIds ||
+      !gate.storeBeforeHash
+    ) {
+      throw new BuilderStoreUnavailable(
+        "Restored store is closed at an unverified restore attempt.",
+      );
+    }
+    const receiptRead = await readBuilderRestoreReplayReceiptForAttempt(
+      directory,
+      gate.attemptId,
     );
-  }
-  const receipt = receiptRead.value;
-  const gate = gateRead.value;
-  if (receipt.journalHash !== gate.journalHash) {
-    throw new BuilderStoreUnavailable(
-      "Restore replay receipt does not match the pending replay gate.",
-    );
-  }
-  const currentHash = await readBuilderIdentityStoreHash(directory);
-  if (receipt.storeAfterHash !== currentHash) {
-    throw new BuilderStoreUnavailable(
-      "Restored store changed after replay; run the offline replay again.",
-    );
-  }
-  if (Object.values(receipt.invariants).some((item) => item !== true)) {
-    throw new BuilderStoreUnavailable(
-      "Restore replay receipt reports a failed accounting invariant.",
-    );
-  }
+    if (!receiptRead.present || !receiptRead.valid || !receiptRead.value) {
+      throw new BuilderStoreUnavailable(
+        "Restored store has no valid receipt for its current restore attempt; do not open it.",
+      );
+    }
+    const receipt = receiptRead.value;
+    if (
+      receipt.attemptId !== gate.attemptId ||
+      receipt.journalHash !== gate.journalHash ||
+      receipt.storeBeforeHash !== gate.storeBeforeHash ||
+      receipt.previousReceiptIds.length !== gate.previousReceiptIds.length ||
+      receipt.previousReceiptIds.some(
+        (id, index) => id !== gate.previousReceiptIds[index],
+      )
+    ) {
+      throw new BuilderStoreUnavailable(
+        "Restore replay receipt does not match the pending replay gate.",
+      );
+    }
+    if (
+      receipt.journalEventIds.length !== gate.journalEventIds.length ||
+      receipt.journalEventIds.some(
+        (id, index) => id !== gate.journalEventIds?.[index],
+      )
+    ) {
+      throw new BuilderStoreUnavailable(
+        "Restore replay receipt does not match the prepared journal event sequence.",
+      );
+    }
+    const currentHash = await readBuilderIdentityStoreHash(directory);
+    if (receipt.storeAfterHash !== currentHash) {
+      throw new BuilderStoreUnavailable(
+        "Restored store changed after replay; run the offline replay again.",
+      );
+    }
+    if (Object.values(receipt.invariants).some((item) => item !== true)) {
+      throw new BuilderStoreUnavailable(
+        "Restore replay receipt reports a failed accounting invariant.",
+      );
+    }
+    if (options.cleanup !== false) {
+      await removeBuilderRestoreReplayGate(directory);
+    }
+  };
+  if (options.cleanup === false) return check();
+  return withBuilderStoreRawLock(directory, check);
 }
 
 function errnoCode(error: unknown): string | null {
@@ -1385,7 +1686,7 @@ export async function inspectBuilderStore(
 
   let replayReady = true;
   try {
-    await assertBuilderStoreReplayReady(directory);
+    await assertBuilderStoreReplayReady(directory, { cleanup: false });
   } catch {
     replayReady = false;
   }
@@ -1401,7 +1702,7 @@ export async function inspectBuilderStore(
     journal,
     restore: {
       gatePresent: (await readJsonEvidence(path.join(directory, BUILDER_RESTORE_REPLAY_GATE_FILE))).present,
-      receiptPresent: (await readJsonEvidence(path.join(directory, BUILDER_RESTORE_REPLAY_RECEIPT_FILE))).present,
+      receiptPresent: (await readBuilderRestoreReplayReceiptHistory(directory)).present,
       replayReady,
     },
     temporaryFiles,
@@ -1703,16 +2004,16 @@ export type BuilderStoreFileTransaction = Readonly<{
   writeJournal: (journal: BuilderMinimizationJournal) => Promise<string>;
 }>;
 
-/**
- * Low-level locked transaction used by the minimisation/replay path. Unlike
- * withBuilderIdentityStore it does not auto-write, and it deliberately permits
- * a pending journal so the same command can finish an interrupted request.
- */
-async function withStoreLockFiles<T>(
+type BuilderStoreLockLease = Readonly<{
+  directory: string;
+  lockPath: string;
+  token: string;
+}>;
+
+async function acquireStoreLock(
   storeDir: string,
-  operation: (transaction: BuilderStoreFileTransaction) => Promise<T> | T,
   options: BuilderStoreLockOptions = {},
-): Promise<T> {
+): Promise<BuilderStoreLockLease> {
   const directory = path.resolve(storeDir);
   try {
     await mkdir(directory, { recursive: true });
@@ -1744,25 +2045,75 @@ async function withStoreLockFiles<T>(
     await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_MS));
   }
 
+  return { directory, lockPath, token };
+}
+
+async function withStoreLockDirectory<T>(
+  storeDir: string,
+  operation: (directory: string) => Promise<T> | T,
+  options: BuilderStoreLockOptions = {},
+): Promise<T> {
+  const lease = await acquireStoreLock(storeDir, options);
   try {
-    await cleanupOrphanTemporaryFiles(directory);
-    const snapshot = await readStoreSnapshotUnlocked(directory);
-    const journalRead = await readBuilderMinimizationJournalUnlocked(directory);
-    const transaction: BuilderStoreFileTransaction = {
-      directory,
-      store: snapshot.store,
-      storeBytes: snapshot.bytes,
-      storeHash: snapshot.hash,
-      journal: journalRead.journal,
-      journalPresent: journalRead.present,
-      journalHash: journalRead.hash,
-      writeStore: () => writeStoreUnlocked(directory, snapshot.store),
-      writeJournal: (journal) =>
-        writeBuilderMinimizationJournalUnlocked(directory, journal),
-    };
-    return await operation(transaction);
+    await cleanupOrphanTemporaryFiles(lease.directory);
+    return await operation(lease.directory);
   } finally {
-    await releaseOwnedFile(lockPath, token);
+    await releaseOwnedFile(lease.lockPath, lease.token);
+  }
+}
+
+/**
+ * Lock-only transaction for restore preparation. It deliberately does not read
+ * identity-store.json or the journal, so a closed gate can be written before
+ * any fallible evidence is loaded.
+ */
+export async function withBuilderStoreRawLock<T>(
+  storeDir: string,
+  operation: (directory: string) => Promise<T> | T,
+  options: BuilderStoreLockOptions = {},
+): Promise<T> {
+  return withStoreLockDirectory(storeDir, operation, options);
+}
+
+/**
+ * Low-level locked transaction used by the minimisation/replay path. Unlike
+ * withBuilderIdentityStore it does not auto-write, and it deliberately permits
+ * a pending journal so the same command can finish an interrupted request.
+ */
+async function withStoreLockFiles<T>(
+  storeDir: string,
+  operation: (transaction: BuilderStoreFileTransaction) => Promise<T> | T,
+  options: BuilderStoreLockOptions = {},
+): Promise<T> {
+  return withStoreLockDirectory(
+    storeDir,
+    async (directory) => {
+      const snapshot = await readStoreSnapshotUnlocked(directory);
+      const journalRead = await readBuilderMinimizationJournalUnlocked(directory);
+      const transaction: BuilderStoreFileTransaction = {
+        directory,
+        store: snapshot.store,
+        storeBytes: snapshot.bytes,
+        storeHash: snapshot.hash,
+        journal: journalRead.journal,
+        journalPresent: journalRead.present,
+        journalHash: journalRead.hash,
+        writeStore: () => writeStoreUnlocked(directory, snapshot.store),
+        writeJournal: (journal) =>
+          writeBuilderMinimizationJournalUnlocked(directory, journal),
+      };
+      return await operation(transaction);
+    },
+    options,
+  );
+}
+
+async function assertNoBuilderRestoreGate(directory: string): Promise<void> {
+  const gate = await readBuilderRestoreReplayGate(directory);
+  if (gate.present) {
+    throw new BuilderStoreUnavailable(
+      "Builder store is closed pending restore replay.",
+    );
   }
 }
 
@@ -1774,6 +2125,7 @@ async function withStoreLock<T>(
   return withStoreLockFiles(
     storeDir,
     async (transaction) => {
+      await assertNoBuilderRestoreGate(transaction.directory);
       if (builderMinimizationJournalHasPending(transaction.journal)) {
         throw new BuilderStoreUnavailable(
           "A pending builder minimisation journal entry must be completed before the store accepts another write.",
@@ -1804,6 +2156,24 @@ export async function readBuilderIdentityStore(
   storeDir: string,
 ): Promise<BuilderIdentityStore> {
   return readStoreUnlocked(storeDir);
+}
+
+export async function readBuilderIdentityStoreSnapshot(
+  storeDir: string,
+): Promise<Readonly<{ store: BuilderIdentityStore; storeHash: string }>> {
+  const snapshot = await readStoreSnapshotUnlocked(storeDir);
+  return { store: snapshot.store, storeHash: snapshot.hash };
+}
+
+/**
+ * Atomic store write for an already-held raw lock. Ordinary code must use
+ * withBuilderIdentityStore instead.
+ */
+export async function writeBuilderIdentityStore(
+  storeDir: string,
+  store: BuilderIdentityStore,
+): Promise<string> {
+  return writeStoreUnlocked(storeDir, store);
 }
 
 /**
@@ -1851,6 +2221,8 @@ export async function readBuilderAdmissionStatus(input: {
   now?: Date;
 }): Promise<BuilderAdmissionStatus> {
   try {
+    const gate = await readBuilderRestoreReplayGate(input.storeDir);
+    if (gate.present) return "unavailable";
     const journal = await readBuilderMinimizationJournalUnlocked(input.storeDir);
     if (builderMinimizationJournalHasPending(journal.journal)) {
       return "unavailable";
@@ -1968,6 +2340,12 @@ export async function validateBuilderSession(input: {
   if (!token || token.length > 512) return null;
   const now = input.now ?? new Date();
   const digest = tokenHash(token);
+  const gate = await readBuilderRestoreReplayGate(input.storeDir);
+  if (gate.present) {
+    throw new BuilderStoreUnavailable(
+      "Builder storage is closed pending restore replay.",
+    );
+  }
   const journal = await readBuilderMinimizationJournalUnlocked(input.storeDir);
   if (builderMinimizationJournalHasPending(journal.journal)) {
     throw new BuilderStoreUnavailable(
