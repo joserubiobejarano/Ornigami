@@ -13,10 +13,27 @@ import tls from "node:tls";
 const origin = process.env.STAGING_ORIGIN;
 const user = process.env.STAGING_BASIC_AUTH_USER;
 const password = process.env.STAGING_BASIC_AUTH_PASSWORD;
+const expectedImageId = process.env.EXPECTED_IMAGE_ID ?? "";
+const expectedSourceSha = process.env.EXPECTED_SOURCE_SHA ?? "";
+const harnessSha = process.env.HARNESS_SHA ?? "";
 const evidenceDir =
   process.env.STAGING_EVIDENCE_DIR ?? path.join(process.cwd(), ".local", "private-staging-acceptance");
 if (!origin) throw new Error("STAGING_ORIGIN is required");
 if (!user || !password) throw new Error("STAGING_BASIC_AUTH_USER/PASSWORD are required");
+if (!/^sha256:[0-9a-f]{64}$/.test(expectedImageId)) {
+  throw new Error("EXPECTED_IMAGE_ID must be the immutable sha256:<64-hex> image ID");
+}
+if (!/^[0-9a-f]{40}$/.test(expectedSourceSha)) {
+  throw new Error("EXPECTED_SOURCE_SHA must be the application's 40-hex source SHA");
+}
+if (!/^[0-9a-f]{40}$/.test(harnessSha)) {
+  throw new Error("HARNESS_SHA must be the 40-hex acceptance harness commit");
+}
+const identity = {
+  applicationSourceSha: expectedSourceSha,
+  harnessSha,
+  imageId: expectedImageId,
+};
 const base = new URL(origin);
 if (base.protocol !== "https:") throw new Error("STAGING_ORIGIN must use https:");
 mkdirSync(evidenceDir, { recursive: true });
@@ -203,31 +220,56 @@ await check("sri:initial", async () => {
   const page = await authorized(base.href);
   const tags = scriptTags(page.body).filter((tag) => tag.src);
   const issues = [];
+  const scripts = [];
   let verified = 0;
   for (const tag of tags) {
     const url = new URL(tag.src, base);
+    const script = {
+      src: url.href,
+      path: url.pathname,
+      integrity: tag.integrity ?? "",
+      sha256: null,
+      verified: false,
+    };
     if (url.origin !== base.origin) {
+      script.issue = "external-origin";
       issues.push({ src: url.origin, issue: "external-origin" });
+      scripts.push(script);
       continue;
     }
     if (!tag.integrity) {
+      script.issue = "missing-integrity";
       issues.push({ src: url.pathname, issue: "missing-integrity" });
+      scripts.push(script);
       continue;
     }
     const asset = await authorized(url.href);
     const digest = `sha256-${createHash("sha256").update(Buffer.from(asset.body)).digest("base64")}`;
+    script.sha256 = `sha256-${createHash("sha256").update(Buffer.from(asset.body)).digest("hex")}`;
     if (!tag.integrity.split(/\s+/).includes(digest)) {
+      script.issue = "integrity-mismatch";
       issues.push({ src: url.pathname, issue: "integrity-mismatch" });
+      scripts.push(script);
       continue;
     }
+    script.verified = true;
+    scripts.push(script);
     verified += 1;
   }
-  return { ok: tags.length > 0 && issues.length === 0, detail: { scripts: tags.length, verified, issues } };
+  writeFileSync(
+    path.join(evidenceDir, "edge-sri-scripts.json"),
+    `${JSON.stringify({ label: "initial", scripts, verified, issues, completedAt: new Date().toISOString() }, null, 2)}\n`,
+  );
+  return {
+    ok: tags.length > 0 && issues.length === 0,
+    detail: { scripts: tags.length, verified, issues, scriptRecords: scripts },
+  };
 });
 
 const failed = checks.filter((entry) => !entry.ok && !entry.skipped);
 const result = {
   origin: base.origin,
+  identity,
   completedAt: new Date().toISOString(),
   ok: failed.length === 0,
   checks,

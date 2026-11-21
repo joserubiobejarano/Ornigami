@@ -146,14 +146,17 @@ STORE_MODE=bind STORE_DIR=/absolute/new/empty/dir \
   SOURCE_SHA="$(git rev-parse HEAD)" ./deploy/builder/qualify-linux.sh
 ```
 
-The browser phase uses a host-side TCP proxy bound only to
-`127.0.0.1:<port>` and forwards to the runtime's private container IP on port
-`3000`. Docker does not honor published ports on an `--internal` network, so
-the runtime is never started with `-p`. The container remains on the internal
-default-deny network; the proxy adds loopback-only ingress and no egress. A
-non-loopback `APP_URL` is refused. `qualify-browser.mjs` performs a bounded host
-HTTP readiness check before launching Chromium and records Node fetch error
-codes/causes without request secrets.
+The browser phase has two explicit scopes. `QUALIFICATION_PATH=http-loopback`
+uses a host-side TCP proxy bound only to `127.0.0.1:<port>` and forwards to the
+runtime's private container IP on port `3000`; it is valid only when the image's
+configured origin is that loopback origin and is diagnostic, not HTTPS
+acceptance. `QUALIFICATION_PATH=https-edge` targets the exact HTTPS application
+origin with private BasicAuth; the runtime application/effective origin stays
+HTTPS and is never replaced by loopback. Docker does not honor published ports
+on an `--internal` network, so the runtime is never started with `-p`. The
+container remains on the internal default-deny network whenever it is local.
+`qualify-browser.mjs` performs a bounded readiness check before launching
+Chromium and records Node fetch error codes/causes without request secrets.
 
 `BROWSER_PHASE=0` is partial evidence only: the result sets
 `browser_journey=skipped`, `full_acceptance=false` and
@@ -273,9 +276,10 @@ restart, then exits before Chromium. It is a diagnostic, not full acceptance.
 
 The browser phase needs Playwright/Chromium on the browser host. Install it under
 `scripts/framework-prototype/browser-tools` or set `BROWSER_PLAYWRIGHT` to its
-`index.mjs`. A non-loopback `APP_URL` is refused while the browser phase is
-enabled. The script waits up to 20 seconds for the loopback origin to return
-`200` before launching Chromium; failures record the underlying fetch
+`index.mjs`. `http-loopback` requires the exact loopback application origin;
+`https-edge` requires the exact HTTPS origin and private BasicAuth and must not
+replace it with loopback. The script waits up to 20 seconds for the target to
+return `200` before launching Chromium; failures record the underlying fetch
 `code`/`causeCode`/`causeMessage`. On the Linux runner, `unzip` or `python3` is
 needed for ZIP audit. `BROWSER_PHASE=0` produces partial evidence only and is
 never full acceptance.

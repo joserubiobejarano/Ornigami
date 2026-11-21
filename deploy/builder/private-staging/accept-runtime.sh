@@ -8,11 +8,17 @@ PROXY_CONTAINER="${PROXY_CONTAINER:-}"
 STORE_VOLUME="${STORE_VOLUME:?STORE_VOLUME is required}"
 EXPECTED_ORIGIN="${EXPECTED_ORIGIN:?EXPECTED_ORIGIN is required}"
 EXPECTED_SOURCE_SHA="${EXPECTED_SOURCE_SHA:?EXPECTED_SOURCE_SHA is required}"
+EXPECTED_IMAGE_ID="${EXPECTED_IMAGE_ID:?EXPECTED_IMAGE_ID is required}"
+EXPECTED_USER="${EXPECTED_USER:-1000:1000}"
+HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
 EVIDENCE_DIR="${EVIDENCE_DIR:?EVIDENCE_DIR must be a new directory}"
 ENGINE="${ENGINE:-docker}"
+NODE_BIN="${NODE_BIN:-node}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
+[[ "$EXPECTED_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]] || fail "EXPECTED_IMAGE_ID must be immutable sha256:<64-hex>"
+[[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ ! -e "$EVIDENCE_DIR" ]] || fail "EVIDENCE_DIR already exists: $EVIDENCE_DIR"
 mkdir -p "$EVIDENCE_DIR"
 CHECKS="$EVIDENCE_DIR/checks.tsv"
@@ -31,7 +37,8 @@ check() {
 [[ "$("$ENGINE" inspect --format '{{.State.Running}}' "$APP_CONTAINER")" == "true" ]]
 [[ "$("$ENGINE" inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$APP_CONTAINER")" == "healthy" ]]
 check "app:read-only-root" "$("$ENGINE" inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$APP_CONTAINER")" "true"
-check "app:user" "$("$ENGINE" inspect --format '{{.Config.User}}' "$APP_CONTAINER")" "1000:1000"
+check "app:user" "$("$ENGINE" inspect --format '{{.Config.User}}' "$APP_CONTAINER")" "$EXPECTED_USER"
+check "app:image-id" "$("$ENGINE" inspect --format '{{.Image}}' "$APP_CONTAINER")" "$EXPECTED_IMAGE_ID"
 APP_PORTS="$("$ENGINE" inspect --format '{{json .HostConfig.PortBindings}}' "$APP_CONTAINER")"
 [[ "$APP_PORTS" == "{}" || "$APP_PORTS" == "null" ]] || fail "app has published ports: $APP_PORTS"
 printf 'ok\tapp:no-published-ports\t%s\n' "$APP_PORTS" >> "$CHECKS"
@@ -78,9 +85,11 @@ printf 'ok\tvolume:store-file\t%s\n' "$STORE_STAT" >> "$CHECKS"
 
 if [[ -n "$PROXY_CONTAINER" ]]; then
   PROXY_PORTS="$("$ENGINE" inspect --format '{{json .HostConfig.PortBindings}}' "$PROXY_CONTAINER")"
-  [[ "$PROXY_PORTS" == *'"80/tcp"'* && "$PROXY_PORTS" == *'"443/tcp"'* ]] || fail "proxy does not publish 80/443"
-  [[ "$PROXY_PORTS" != *'"3000/tcp"'* ]] || fail "proxy publishes app port 3000"
-  printf 'ok\tproxy:ports\t80/443-only\n' >> "$CHECKS"
+  "$NODE_BIN" deploy/builder/private-staging/proxy-bindings.mjs \
+    --bindings-json "$PROXY_PORTS" \
+    --output "$EVIDENCE_DIR/proxy-bindings.json" >/dev/null \
+    || fail "proxy published ports are not the approved structure: $PROXY_PORTS"
+  printf 'ok\tproxy:ports\t80/tcp=80,443/tcp=443,443/udp=443 wildcard-only\n' >> "$CHECKS"
   PROXY_NETWORKS="$("$ENGINE" inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{"\n"}}{{end}}' "$PROXY_CONTAINER")"
   shared=0
   while IFS= read -r network; do
@@ -94,4 +103,13 @@ else
 fi
 
 printf 'ok=true\n' > "$EVIDENCE_DIR/results.txt"
+cat > "$EVIDENCE_DIR/identity.json" <<EOF
+{
+  "applicationSourceSha": "$EXPECTED_SOURCE_SHA",
+  "harnessSha": "$HARNESS_SHA",
+  "imageId": "$EXPECTED_IMAGE_ID",
+  "origin": "$EXPECTED_ORIGIN",
+  "effectiveRuntimeOrigin": "$EXPECTED_ORIGIN"
+}
+EOF
 note "Runtime acceptance passed; evidence: $EVIDENCE_DIR"
