@@ -174,6 +174,7 @@ jobs:
           docker ps -a --no-trunc > "$EVIDENCE_ROOT/logs/docker-ps-close.txt" 2>&1
           docker volume ls > "$EVIDENCE_ROOT/logs/docker-volumes-close.txt" 2>&1
           printf 'access_closed=true\n' > "$EVIDENCE_ROOT/access-closed.txt"
+          sudo chmod -R a+rX "$EVIDENCE_ROOT"
           exit 0
 
       - name: Upload staging evidence
