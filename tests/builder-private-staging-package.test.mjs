@@ -53,6 +53,7 @@ test("staging acceptance distinguishes source, image digest, platform, origin an
     "build-and-retain.sh",
     "verify-retained-image.sh",
     "qualify-existing-image.sh",
+    "rehearse-exact-candidate.sh",
     "verify-image-archive.mjs",
     "image-identity.mjs",
     "proxy-bindings.mjs",
@@ -71,6 +72,40 @@ test("staging contract keeps Actions evidence separate from image identity", () 
   assert.equal(contract.volume.replicas, 1);
   assert.equal(contract.volume.writers, 1);
   assert.equal(contract.egress.appNetwork, "internal-only");
+});
+
+test("synthetic Linux journey exercises minimisation, restored denial, journal replay and a second restore", () => {
+  const qualify = readFileSync(path.join(root, "deploy", "builder", "qualify-linux.sh"), "utf8");
+  const replay = qualify.indexOf("replay-minimization");
+  const secondRestore = qualify.indexOf('note "Prepare and replay the second restore cycle"');
+  assert.ok(qualify.indexOf("minimize-apply") >= 0, "minimisation apply is missing");
+  assert.ok(qualify.indexOf("restore-prepare") >= 0, "restore prepare is missing");
+  assert.ok(replay >= 0, "journal replay is missing");
+  assert.ok(secondRestore > replay, "second restore must follow first replay");
+  assert.ok(qualify.indexOf("RESTORE2_VOLUME") >= 0, "second restore volume is missing");
+  assert.ok(qualify.indexOf("restore:access-denied") >= 0, "restored access denial is missing");
+  assert.ok(qualify.indexOf("second-restore:receipt-a-preserved") >= 0, "receipt history check is missing");
+  for (const expected of [
+    "restore_gate_blocked_reopen=true",
+    "restore_replay_completed=true",
+    "restored_access_denied=true",
+    "second_restore_cycle=true",
+    "second_restore_receipt_history_preserved=true",
+  ]) {
+    assert.ok(qualify.includes(expected), expected);
+  }
+});
+
+test("exact-candidate rehearsal builds once, verifies the archive independently and reuses one image ID", () => {
+  const rehearsal = read("rehearse-exact-candidate.sh");
+  assert.match(rehearsal, /build-and-retain\.sh/);
+  assert.match(rehearsal, /verify-image-archive\.mjs/);
+  assert.match(rehearsal, /qualify-existing-image\.sh/);
+  assert.match(rehearsal, /BUILD_CONTEXT" != "\$VERIFY_CONTEXT/);
+  assert.match(rehearsal, /IMAGE_REFERENCE="\$IMAGE_ID"/);
+  assert.match(rehearsal, /PLAN_ONLY="\$\{PLAN_ONLY:-1\}"/);
+  assert.match(rehearsal, /"customerAdmission": "closed"/);
+  assert.doesNotMatch(rehearsal, /docker\s+push|registry.*push/i);
 });
 
 test("browser acceptance supports actual HTTPS origin, private access and dynamic SRI", () => {

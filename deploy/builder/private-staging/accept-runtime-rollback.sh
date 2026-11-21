@@ -67,6 +67,17 @@ for expected in \
   "restore_root_mode=0700" \
   "restore_store_mode=0600" \
   "restore_records_preserved=true" \
+  "restore_records_match_minimized_source=true" \
+  "minimization_applied=true" \
+  "minimization_journal_events=2" \
+  "restore_gate_blocked_reopen=true" \
+  "restore_replay_completed=true" \
+  "restore_replay_ready=true" \
+  "restored_access_denied=true" \
+  "second_restore_cycle=true" \
+  "second_restore_applied_events=1" \
+  "second_restore_replayed_events=2" \
+  "second_restore_receipt_history_preserved=true" \
   "fresh_container_restore=true" \
   "lock_recovery=true" \
   "closed_rollback_preserved_store=true" \

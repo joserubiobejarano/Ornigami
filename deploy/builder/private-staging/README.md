@@ -297,10 +297,19 @@ EVIDENCE_DIR=<new-partial-runtime-evidence-dir> \
 
 Expected: the existing Linux harness passes restore root `0700`, store `0600`,
 hash/record preservation, foreign-scope lock recovery and same-image closed
-rollback. In existing-image mode the harness builds nothing; the results must
-record `image_mode=existing`, the exact `image_id`, the application source SHA
-and the harness SHA separately. Because browser is intentionally skipped here,
-the result must contain `browser_journey=skipped`, `full_acceptance=false` and
+rollback. It also applies a reviewed minimisation to the stopped authoritative
+store, prepares and replays the resulting journal into an older backup, verifies
+that the minimised subject is denied after restore, and runs a second restore
+cycle from a newer snapshot where journal A+B is replayed while receipt A is
+preserved and only B is applied. The results must record
+`minimization_applied=true`, `restore_gate_blocked_reopen=true`,
+`restore_replay_completed=true`, `restored_access_denied=true`,
+`second_restore_cycle=true` and
+`second_restore_receipt_history_preserved=true`. In existing-image mode the
+harness builds nothing; the results must record `image_mode=existing`, the exact
+`image_id`, the application source SHA and the harness SHA separately. Because
+browser is intentionally skipped here, the result must contain
+`browser_journey=skipped`, `full_acceptance=false` and
 `acceptance_scope=partial`. It cannot be the full acceptance receipt by itself.
 
 Full acceptance requires the edge, staging browser, live runtime and
@@ -308,6 +317,32 @@ runtime/rollback receipts together, plus the independently pulled or
 archive-loaded image identity. Each receipt must name the same application
 source SHA and immutable image ID while recording the harness SHA separately.
 Keep each receipt separate.
+
+### One exact-candidate rehearsal
+
+`rehearse-exact-candidate.sh` prepares (and, only when separately authorized,
+executes) one sequence: build the exact source SHA once, retain the archive,
+load and verify that archive on an independent daemon context, then run every
+edge/browser/runtime/restore/replay/rollback phase with that one immutable image
+ID. It defaults to `PLAN_ONLY=1` and contacts no engine, registry or origin.
+Execution requires `EXECUTE=1`, `PLAN_ONLY=0` and different build/verify daemon
+contexts:
+
+```bash
+SOURCE_SHA=<exact-candidate-sha> \
+APP_URL=https://builder-staging.ornigami.com \
+HARNESS_SHA=<harness-sha> \
+REHEARSAL_DIR=<new-empty-directory> \
+BUILD_CONTEXT=build-runner \
+VERIFY_CONTEXT=isolated-daemon \
+  deploy/builder/private-staging/rehearse-exact-candidate.sh
+```
+
+The script links the source SHA, harness SHA, immutable image ID, archive
+SHA-256 and size, effective HTTPS origin and every phase receipt. It never
+pushes, deploys, changes DNS or opens customer admission. Remote execution,
+archive custody/storage and any registry publication require explicit
+authorization before `EXECUTE=1`.
 
 ## Qualification evidence matrix
 

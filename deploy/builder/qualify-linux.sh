@@ -63,16 +63,20 @@ RUN_ID="${RUN_ID:-${SOURCE_SHA:0:12}-$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM:-0}}
 EVIDENCE_ROOT="${EVIDENCE_ROOT:-$ROOT/.local/builder-linux-qualification}"
 EVIDENCE_DIR="${EVIDENCE_DIR:-$EVIDENCE_ROOT/runs/$RUN_ID}"
 BACKUP_DIR="${BACKUP_DIR:-$EVIDENCE_DIR/backup}"
+BACKUP2_DIR="${BACKUP2_DIR:-$EVIDENCE_DIR/backup2}"
 RESTORE_DIR="${RESTORE_DIR:-$EVIDENCE_DIR/restore}"
+RESTORE2_DIR="${RESTORE2_DIR:-$EVIDENCE_DIR/restore2}"
 STORE_EXPORT_DIR="${STORE_EXPORT_DIR:-$EVIDENCE_DIR/store-export}"
 BROWSER_EVIDENCE_DIR="${BROWSER_EVIDENCE_DIR:-$EVIDENCE_DIR/browser}"
 IMAGE="${IMAGE:-ornigami-builder:qualify-$RUN_ID}"
 CONTAINER="${CONTAINER:-ornigami-builder-qualify-$RUN_ID}"
 RESTORE_CONTAINER="${RESTORE_CONTAINER:-$CONTAINER-restore}"
+RESTORE2_CONTAINER="${RESTORE2_CONTAINER:-$CONTAINER-restore2}"
 CLOSED_CONTAINER="${CLOSED_CONTAINER:-$CONTAINER-closed}"
 NETWORK="${NETWORK:-ornigami-builder-qualify-net-$RUN_ID}"
 STORE_VOLUME="${STORE_VOLUME:-ornigami-builder-store-$RUN_ID}"
 RESTORE_VOLUME="${RESTORE_VOLUME:-ornigami-builder-restore-$RUN_ID}"
+RESTORE2_VOLUME="${RESTORE2_VOLUME:-ornigami-builder-restore2-$RUN_ID}"
 STORE_DIR="${STORE_DIR:-}"
 
 abspath() {
@@ -84,7 +88,9 @@ abspath() {
 EVIDENCE_ROOT="$(abspath "$EVIDENCE_ROOT")"
 EVIDENCE_DIR="$(abspath "$EVIDENCE_DIR")"
 BACKUP_DIR="$(abspath "$BACKUP_DIR")"
+BACKUP2_DIR="$(abspath "$BACKUP2_DIR")"
 RESTORE_DIR="$(abspath "$RESTORE_DIR")"
+RESTORE2_DIR="$(abspath "$RESTORE2_DIR")"
 STORE_EXPORT_DIR="$(abspath "$STORE_EXPORT_DIR")"
 BROWSER_EVIDENCE_DIR="$(abspath "$BROWSER_EVIDENCE_DIR")"
 
@@ -302,7 +308,9 @@ require_absent_volume() {
 
 require_absent_path "EVIDENCE_DIR" "$EVIDENCE_DIR"
 require_absent_path "BACKUP_DIR" "$BACKUP_DIR"
+require_absent_path "BACKUP2_DIR" "$BACKUP2_DIR"
 require_absent_path "RESTORE_DIR" "$RESTORE_DIR"
+require_absent_path "RESTORE2_DIR" "$RESTORE2_DIR"
 require_absent_path "STORE_EXPORT_DIR" "$STORE_EXPORT_DIR"
 require_absent_path "BROWSER_EVIDENCE_DIR" "$BROWSER_EVIDENCE_DIR"
 if [[ "$IMAGE_MODE" == "build" ]]; then
@@ -310,11 +318,13 @@ if [[ "$IMAGE_MODE" == "build" ]]; then
 fi
 require_absent_container "$CONTAINER"
 require_absent_container "$RESTORE_CONTAINER"
+require_absent_container "$RESTORE2_CONTAINER"
 require_absent_container "$CLOSED_CONTAINER"
 require_absent_network
 require_absent_volume "$STORE_VOLUME"
 if [[ "$STORE_MODE" == "volume" ]]; then
   require_absent_volume "$RESTORE_VOLUME"
+  require_absent_volume "$RESTORE2_VOLUME"
 fi
 if [[ "$STORE_MODE" == "bind" ]]; then
   [[ -n "$STORE_DIR" ]] || fail "STORE_DIR is required when STORE_MODE=bind"
@@ -378,10 +388,12 @@ flush_deferred_failures() {
 
 created_container=0
 created_restore_container=0
+created_restore2_container=0
 created_closed_container=0
 created_network=0
 created_store_volume=0
 created_restore_volume=0
+created_restore2_volume=0
 created_image=0
 PROXY_PID=""
 PROXY_TARGET=""
@@ -465,6 +477,7 @@ cleanup() {
   if [[ "$status" -ne 0 && "$KEEP_ON_FAILURE" == "1" ]]; then
     stop_owned_container "$CONTAINER" "$created_container"
     stop_owned_container "$RESTORE_CONTAINER" "$created_restore_container"
+    stop_owned_container "$RESTORE2_CONTAINER" "$created_restore2_container"
     stop_owned_container "$CLOSED_CONTAINER" "$created_closed_container"
     note "Failure: retained this run's containers/network/volumes for inspection."
     note "Evidence: $EVIDENCE_DIR"
@@ -472,11 +485,13 @@ cleanup() {
   fi
   remove_container "$CONTAINER" "$created_container"
   remove_container "$RESTORE_CONTAINER" "$created_restore_container"
+  remove_container "$RESTORE2_CONTAINER" "$created_restore2_container"
   remove_container "$CLOSED_CONTAINER" "$created_closed_container"
   remove_network
   if [[ "$KEEP_VOLUMES" != "1" ]]; then
     remove_volume "$STORE_VOLUME" "$created_store_volume"
     remove_volume "$RESTORE_VOLUME" "$created_restore_volume"
+    remove_volume "$RESTORE2_VOLUME" "$created_restore2_volume"
   fi
   remove_image
   exit "$status"
@@ -759,6 +774,72 @@ copy_store_in() {
     prepare_host_dir "$dest"
     cp -a "$source/." "$dest/"
   fi
+}
+
+copy_store_file_out() {
+  local source="$1" file="$2" dest="$3"
+  prepare_host_dir "$(dirname "$dest")"
+  if [[ "$STORE_MODE" == "volume" ]]; then
+    "$ENGINE" run --rm --network none --user 1000:1000 \
+      --mount "type=volume,src=$source,dst=/data/builder,readonly" \
+      --mount "type=bind,src=$(dirname "$dest"),dst=/out" \
+      "$IMAGE" -e 'const fs=require("fs");const [src,dst]=process.argv.slice(1);fs.copyFileSync(src,dst)' \
+      "/data/builder/$file" "/out/$(basename "$dest")"
+  else
+    cp "$source/$file" "$dest"
+  fi
+}
+
+copy_store_file_in() {
+  local source="$1" dest="$2" file="$3"
+  if [[ "$STORE_MODE" == "volume" ]]; then
+    "$ENGINE" run --rm --network none --user 1000:1000 \
+      --mount "type=bind,src=$(dirname "$source"),dst=/in,readonly" \
+      --mount "type=volume,src=$dest,dst=/data/builder" \
+      "$IMAGE" -e 'const fs=require("fs");const [src,dst]=process.argv.slice(1);fs.copyFileSync(src,dst)' \
+      "/in/$(basename "$source")" "/data/builder/$file"
+  else
+    prepare_host_dir "$dest"
+    cp "$source" "$dest/$file"
+  fi
+}
+
+store_file_exists() {
+  local source="$1" file="$2"
+  if [[ "$STORE_MODE" == "volume" ]]; then
+    "$ENGINE" run --rm --network none --user 1000:1000 \
+      --mount "type=volume,src=$source,dst=/data/builder,readonly" \
+      "$IMAGE" -e 'process.exit(require("fs").existsSync(process.argv[1]) ? 0 : 1)' \
+      "/data/builder/$file" >/dev/null 2>&1
+  else
+    [[ -f "$source/$file" ]]
+  fi
+}
+
+journal_event_count() {
+  "$NODE_BIN" -e '
+    const fs = require("node:fs");
+    const journal = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    process.stdout.write(String(journal.events.length));
+  ' "$1"
+}
+
+json_array_count() {
+  "$NODE_BIN" -e '
+    let input = "";
+    process.stdin.on("data", (chunk) => (input += chunk));
+    process.stdin.on("end", () => {
+      const value = JSON.parse(input.trim().split(/\r?\n/).at(-1));
+      for (const segment of process.argv.slice(1)) {
+        const next = Array.isArray(value) ? value[Number(segment)] : value?.[segment];
+        if (Array.isArray(next)) {
+          process.stdout.write(String(next.length));
+          return;
+        }
+      }
+      process.stdout.write("0");
+    });
+  ' "$@"
 }
 
 wait_health() {
@@ -1261,24 +1342,71 @@ copy_store_out "$STORE_SOURCE" "$BACKUP_DIR/store"
 HASH_BACKUP="$(sha256_of "$BACKUP_DIR/store/identity-store.json")"
 check "backup:hash" "$HASH_BACKUP" "$STORE_HASH_BASELINE"
 
+# ---------------------------------------------------------------------------
+# Minimise subject A in the stopped authoritative store. The backup above
+# predates this effect, so the first restore below must replay the journal to
+# deny A again. Usage rows and every other subject must remain unchanged.
+# ---------------------------------------------------------------------------
+note "Apply reviewed minimisation A to the stopped authoritative store"
+PLAN_A_JSON="$(op_json "$STORE_SOURCE" minimize --subject "$SUBJECT_A")"
+check "minimize:subject-a-plan" "$(printf '%s' "$PLAN_A_JSON" | json_field subjectId)" "$SUBJECT_A"
+PLAN_A_RESULT_HASH="$(printf '%s' "$PLAN_A_JSON" | json_field expectedResultHash)"
+MINIMIZE_A_JSON="$(op_json "$STORE_SOURCE" minimize-apply --plan "$PLAN_A_JSON" --confirm-subject "$SUBJECT_A")"
+check "minimize:subject-a-status" "$(printf '%s' "$MINIMIZE_A_JSON" | json_field status)" "applied"
+check "minimize:subject-a-input" "$(printf '%s' "$MINIMIZE_A_JSON" | json_field storeBeforeHash)" "$STORE_HASH_BASELINE"
+STORE_HASH_MINIMIZED_A="$(store_hash "$STORE_SOURCE")"
+check "minimize:subject-a-result" "$STORE_HASH_MINIMIZED_A" "$PLAN_A_RESULT_HASH"
+USAGE_AFTER_MIN_A="$(op_json "$STORE_SOURCE" list | usage_key "$USAGE_ID")"
+check "minimize:usage-unchanged" "$USAGE_AFTER_MIN_A" "$USAGE_BEFORE"
+LIST_AFTER_MIN_A="$(op_json "$STORE_SOURCE" list)"
+printf '%s\n' "$LIST_AFTER_MIN_A" > "$EVIDENCE_DIR/list-authoritative-after-min-a.json"
+copy_store_file_out "$STORE_SOURCE" "minimization-journal.json" "$BACKUP_DIR/journal-A.json"
+[[ -f "$BACKUP_DIR/journal-A.json" ]] || fail "minimisation journal A was not captured"
+JOURNAL_A_SHA="$(sha256_of "$BACKUP_DIR/journal-A.json")"
+check "minimize:journal-events" "$(journal_event_count "$BACKUP_DIR/journal-A.json")" "1"
+
 if [[ "$STORE_MODE" == "volume" ]]; then
   "$ENGINE" volume create \
     --label "org.ornigami.qualify.run=$RUN_ID" "$RESTORE_VOLUME" >/dev/null
   created_restore_volume=1
   RESTORE_SOURCE="$RESTORE_VOLUME"
 else
+  mkdir "$RESTORE_DIR"
   RESTORE_SOURCE="$RESTORE_DIR"
 fi
 initialize_store_root "$RESTORE_SOURCE"
 copy_store_in "$BACKUP_DIR/store" "$RESTORE_SOURCE"
-check "restore:hash" "$(store_hash "$RESTORE_SOURCE")" "$STORE_HASH_BASELINE"
+# The restored backup predates minimisation A. Supply the newer journal before
+# the gate is opened so replay can prove the restored access denial.
+copy_store_file_in "$BACKUP_DIR/journal-A.json" "$RESTORE_SOURCE" "minimization-journal.json"
+check "restore:pre-replay-hash" "$(store_hash "$RESTORE_SOURCE")" "$STORE_HASH_BASELINE"
+
+note "Prepare the first restore attempt; the gate must block reopening"
+RESTORE_PREPARE_JSON="$(op_json "$RESTORE_SOURCE" restore-prepare --journal /data/builder/minimization-journal.json)"
+check "restore:gate-prepared" "$(printf '%s' "$RESTORE_PREPARE_JSON" | json_field prepared)" "true"
+check "restore:gate-attempt" "$(store_file_exists "$RESTORE_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "present"
+RESTORE_GATE_STATUS="$(operator_run "$RESTORE_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
+check "restore:gate-blocks-reopen" "$(printf '%s' "$RESTORE_GATE_STATUS" | json_field replayReady)" "false"
+
+note "Replay journal A into the older backup and verify restored access denial"
+REPLAY_A_JSON="$(op_json "$RESTORE_SOURCE" replay-minimization --journal /data/builder/minimization-journal.json)"
+check "restore:replay-status" "$(printf '%s' "$REPLAY_A_JSON" | json_field status)" "complete"
+check "restore:replay-events" "$(printf '%s' "$REPLAY_A_JSON" | json_field journalEventCount)" "1"
+check "restore:replay-applied-events" "$(printf '%s' "$REPLAY_A_JSON" | json_array_count appliedEventIds)" "1"
+check "restore:replay-hash" "$(printf '%s' "$REPLAY_A_JSON" | json_field storeAfterHash)" "$STORE_HASH_MINIMIZED_A"
+check "restore:gate-removed" "$(store_file_exists "$RESTORE_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "missing"
+RESTORE_REPLAY_READY="$(op_json "$RESTORE_SOURCE" replay-status)"
+check "restore:replay-ready" "$(printf '%s' "$RESTORE_REPLAY_READY" | json_field replayReady)" "true"
+REPLAY_A_RECEIPT_ID="$(printf '%s' "$REPLAY_A_JSON" | json_field receiptId)"
+REPLAY_A_ATTEMPT_ID="$(printf '%s' "$REPLAY_A_JSON" | json_field attemptId)"
+[[ -n "$REPLAY_A_RECEIPT_ID" && -n "$REPLAY_A_ATTEMPT_ID" ]] || fail "replay A did not return receipt and attempt ids"
 
 created_restore_container=1
 start_runtime "$RESTORE_CONTAINER" "$RESTORE_SOURCE" invite
 wait_health "$RESTORE_CONTAINER"
-http_run "$RESTORE_CONTAINER" session "$COOKIE_A" --subject "$SUBJECT_A" >/dev/null
+http_run "$RESTORE_CONTAINER" session "$COOKIE_A" --expect-status 401 >/dev/null
 http_run "$RESTORE_CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
-http_run "$RESTORE_CONTAINER" generate "$COOKIE_A" "$SUBJECT_A" "$("$NODE_BIN" -e 'process.stdout.write(require("node:crypto").randomUUID())')" --expect-status 429 --expect-code subject_concurrency >/dev/null
+check "restore:access-denied" "true" "true"
 check "restore:root-owner" \
   "$(exec_node "$RESTORE_CONTAINER" 'const s=require("node:fs").statSync("/data/builder");process.stdout.write(`${s.uid}:${s.gid}`)')" "1000:1000"
 check "restore:root-mode" \
@@ -1297,44 +1425,123 @@ printf '%s\n' "$LIST_AFTER_RESTORE" > "$EVIDENCE_DIR/list-after-restore.json"
   const after = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
   const pick = (value) => ({ subjects: value.subjects, sessions: value.sessions, usage: value.usage });
   if (JSON.stringify(pick(before)) !== JSON.stringify(pick(after))) process.exit(1);
-' "$EVIDENCE_DIR/list-before-backup.json" "$EVIDENCE_DIR/list-after-restore.json"
-check "restore:records-preserved" "true" "true"
+' "$EVIDENCE_DIR/list-authoritative-after-min-a.json" "$EVIDENCE_DIR/list-after-restore.json"
+check "restore:records-match-minimized-source" "true" "true"
+
+# ---------------------------------------------------------------------------
+# Second restore cycle. Snapshot the first restored store before minimising B,
+# grow the journal to A+B, restore the older snapshot and replay the newer
+# journal. Receipt A must remain historical while only B is applied.
+# ---------------------------------------------------------------------------
+note "Snapshot the first restore, minimise B, and replay A+B into a second restore"
+"$ENGINE" stop "$RESTORE_CONTAINER" >/dev/null
+prepare_host_dir "$BACKUP2_DIR/store"
+copy_store_out "$RESTORE_SOURCE" "$BACKUP2_DIR/store"
+HASH_BACKUP2="$(sha256_of "$BACKUP2_DIR/store/identity-store.json")"
+check "second-restore:backup-hash" "$HASH_BACKUP2" "$STORE_HASH_MINIMIZED_A"
+PLAN_B_JSON="$(op_json "$RESTORE_SOURCE" minimize --subject "$SUBJECT_B")"
+PLAN_B_RESULT_HASH="$(printf '%s' "$PLAN_B_JSON" | json_field expectedResultHash)"
+MINIMIZE_B_JSON="$(op_json "$RESTORE_SOURCE" minimize-apply --plan "$PLAN_B_JSON" --confirm-subject "$SUBJECT_B")"
+check "second-restore:minimize-status" "$(printf '%s' "$MINIMIZE_B_JSON" | json_field status)" "applied"
+STORE_HASH_MINIMIZED_AB="$(store_hash "$RESTORE_SOURCE")"
+check "second-restore:minimize-result" "$STORE_HASH_MINIMIZED_AB" "$PLAN_B_RESULT_HASH"
+USAGE_AFTER_MIN_B="$(op_json "$RESTORE_SOURCE" list | usage_key "$USAGE_ID")"
+check "second-restore:usage-unchanged" "$USAGE_AFTER_MIN_B" "$USAGE_BEFORE"
+LIST_AFTER_MIN_B="$(op_json "$RESTORE_SOURCE" list)"
+printf '%s\n' "$LIST_AFTER_MIN_B" > "$EVIDENCE_DIR/list-authoritative-after-min-b.json"
+copy_store_file_out "$RESTORE_SOURCE" "minimization-journal.json" "$BACKUP2_DIR/journal-AB.json"
+JOURNAL_AB_SHA="$(sha256_of "$BACKUP2_DIR/journal-AB.json")"
+check "second-restore:journal-events" "$(journal_event_count "$BACKUP2_DIR/journal-AB.json")" "2"
+
+if [[ "$STORE_MODE" == "volume" ]]; then
+  "$ENGINE" volume create \
+    --label "org.ornigami.qualify.run=$RUN_ID" "$RESTORE2_VOLUME" >/dev/null
+  created_restore2_volume=1
+  RESTORE2_SOURCE="$RESTORE2_VOLUME"
+else
+  mkdir "$RESTORE2_DIR"
+  RESTORE2_SOURCE="$RESTORE2_DIR"
+fi
+initialize_store_root "$RESTORE2_SOURCE"
+# Replace the snapshot's older journal A with the newer A+B journal. The
+# identity-store bytes still predate B, which is the state replay must fix.
+cp "$BACKUP2_DIR/journal-AB.json" "$BACKUP2_DIR/store/minimization-journal.json"
+copy_store_in "$BACKUP2_DIR/store" "$RESTORE2_SOURCE"
+check "second-restore:pre-replay-hash" "$(store_hash "$RESTORE2_SOURCE")" "$STORE_HASH_MINIMIZED_A"
+
+note "Prepare and replay the second restore cycle"
+RESTORE2_PREPARE_JSON="$(op_json "$RESTORE2_SOURCE" restore-prepare --journal /data/builder/minimization-journal.json)"
+check "second-restore:gate-prepared" "$(printf '%s' "$RESTORE2_PREPARE_JSON" | json_field prepared)" "true"
+RESTORE2_GATE_STATUS="$(operator_run "$RESTORE2_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
+check "second-restore:gate-blocks-reopen" "$(printf '%s' "$RESTORE2_GATE_STATUS" | json_field replayReady)" "false"
+REPLAY_AB_JSON="$(op_json "$RESTORE2_SOURCE" replay-minimization --journal /data/builder/minimization-journal.json)"
+check "second-restore:replay-status" "$(printf '%s' "$REPLAY_AB_JSON" | json_field status)" "complete"
+check "second-restore:replay-events" "$(printf '%s' "$REPLAY_AB_JSON" | json_field journalEventCount)" "2"
+check "second-restore:replay-applied-events" "$(printf '%s' "$REPLAY_AB_JSON" | json_array_count appliedEventIds)" "1"
+check "second-restore:replay-history-events" "$(printf '%s' "$REPLAY_AB_JSON" | json_array_count alreadyAppliedEventIds)" "1"
+check "second-restore:previous-receipt" "$(printf '%s' "$REPLAY_AB_JSON" | json_field previousReceiptIds 0)" "$REPLAY_A_RECEIPT_ID"
+check "second-restore:receipt-a-preserved" "$(store_file_exists "$RESTORE2_SOURCE" "restore-replay-receipt.${REPLAY_A_ATTEMPT_ID}.json" && printf 'present' || printf 'missing')" "present"
+check "second-restore:replay-hash" "$(printf '%s' "$REPLAY_AB_JSON" | json_field storeAfterHash)" "$STORE_HASH_MINIMIZED_AB"
+check "second-restore:gate-removed" "$(store_file_exists "$RESTORE2_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "missing"
+RESTORE2_REPLAY_READY="$(op_json "$RESTORE2_SOURCE" replay-status)"
+check "second-restore:replay-ready" "$(printf '%s' "$RESTORE2_REPLAY_READY" | json_field replayReady)" "true"
+
+created_restore2_container=1
+start_runtime "$RESTORE2_CONTAINER" "$RESTORE2_SOURCE" invite
+wait_health "$RESTORE2_CONTAINER"
+http_run "$RESTORE2_CONTAINER" session "$COOKIE_A" --expect-status 401 >/dev/null
+http_run "$RESTORE2_CONTAINER" session "$COOKIE_B" --expect-status 401 >/dev/null
+check "second-restore:access-denied" "true" "true"
+USAGE_AFTER_RESTORE2="$(op_json "$RESTORE2_SOURCE" list | usage_key "$USAGE_ID")"
+check "second-restore:usage-unchanged-after-replay" "$USAGE_AFTER_RESTORE2" "$USAGE_BEFORE"
+LIST_AFTER_RESTORE2="$(op_json "$RESTORE2_SOURCE" list)"
+printf '%s\n' "$LIST_AFTER_RESTORE2" > "$EVIDENCE_DIR/list-after-restore2.json"
+"$NODE_BIN" -e '
+  const fs = require("node:fs");
+  const before = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const after = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+  const pick = (value) => ({ subjects: value.subjects, sessions: value.sessions, usage: value.usage });
+  if (JSON.stringify(pick(before)) !== JSON.stringify(pick(after))) process.exit(1);
+' "$EVIDENCE_DIR/list-authoritative-after-min-b.json" "$EVIDENCE_DIR/list-after-restore2.json"
+check "second-restore:records-match-minimized-source" "true" "true"
 
 # ---------------------------------------------------------------------------
 # Safe operator lock recovery on the restore copy (never the authoritative
 # store). The stale lock simulates a replaced container with a foreign host id.
 # ---------------------------------------------------------------------------
-note "Exercise safe lock recovery on the restore copy"
-"$ENGINE" stop "$RESTORE_CONTAINER" >/dev/null
-STALE_JSON="$(seed_run "$RESTORE_SOURCE" stale-lock --store /data/builder --token "qualify-stale-lock" --scope "replaced-container-pid-namespace")"
+note "Exercise safe lock recovery on the second restore copy"
+"$ENGINE" stop "$RESTORE2_CONTAINER" >/dev/null
+LOCK_SOURCE="$RESTORE2_SOURCE"
+STALE_JSON="$(seed_run "$LOCK_SOURCE" stale-lock --store /data/builder --token "qualify-stale-lock" --scope "replaced-container-pid-namespace")"
 STALE_TOKEN="$(printf '%s' "$STALE_JSON" | json_field token)"
-LOCK_STATUS="$(op_json "$RESTORE_SOURCE" lock-status)"
+LOCK_STATUS="$(op_json "$LOCK_SOURCE" lock-status)"
 check "lock:foreign-scope" "$(printf '%s' "$LOCK_STATUS" | json_field lock owner)" "foreign_scope"
 check "lock:scope" "$(printf '%s' "$LOCK_STATUS" | json_field lock metadata scope)" "replaced-container-pid-namespace"
 check "lock:token" "$(printf '%s' "$LOCK_STATUS" | json_field lock metadata token)" "$STALE_TOKEN"
 REAP_TOKEN="$(printf '%s' "$LOCK_STATUS" | json_field reapLock metadata token)"
-if operator_run "$RESTORE_SOURCE" recover-lock --token "$STALE_TOKEN" --json >/dev/null 2>&1; then
+if operator_run "$LOCK_SOURCE" recover-lock --token "$STALE_TOKEN" --json >/dev/null 2>&1; then
   fail "recover-lock accepted recovery without --confirm-no-writers"
 fi
-if operator_run "$RESTORE_SOURCE" recover-lock --token "wrong-token" --confirm-no-writers --json >/dev/null 2>&1; then
+if operator_run "$LOCK_SOURCE" recover-lock --token "wrong-token" --confirm-no-writers --json >/dev/null 2>&1; then
   fail "recover-lock accepted a token that did not match the observed lock"
 fi
 RECOVER_ARGS=(--token "$STALE_TOKEN" --confirm-no-writers)
 if [[ -n "$REAP_TOKEN" ]]; then
   RECOVER_ARGS+=(--reap-token "$REAP_TOKEN")
 fi
-RECOVER_JSON="$(op_json "$RESTORE_SOURCE" recover-lock "${RECOVER_ARGS[@]}")"
+RECOVER_JSON="$(op_json "$LOCK_SOURCE" recover-lock "${RECOVER_ARGS[@]}")"
 check_contains "lock:recovered" "$(printf '%s' "$RECOVER_JSON" | json_field recovered)" "identity-store.lock"
 check "lock:store-unchanged" "$(printf '%s' "$RECOVER_JSON" | json_field storeUnchanged)" "true"
-check "lock:hash" "$(printf '%s' "$RECOVER_JSON" | json_field storeHash)" "$STORE_HASH_BASELINE"
-op_json "$RESTORE_SOURCE" list >/dev/null
-check "lock:store-readable" "$(op_json "$RESTORE_SOURCE" list | json_field usage 0 id)" "$USAGE_ID"
+check "lock:hash" "$(printf '%s' "$RECOVER_JSON" | json_field storeHash)" "$STORE_HASH_MINIMIZED_AB"
+op_json "$LOCK_SOURCE" list >/dev/null
+check "lock:store-readable" "$(op_json "$LOCK_SOURCE" list | json_field usage 0 id)" "$USAGE_ID"
 
 # ---------------------------------------------------------------------------
 # Same-image closed rollback on the authoritative volume. Records survive.
 # ---------------------------------------------------------------------------
-note "Stop the fresh restore and start the same image in closed mode"
+note "Stop the fresh restores and start the same image in closed mode"
 "$ENGINE" stop "$RESTORE_CONTAINER" >/dev/null 2>&1 || true
+"$ENGINE" stop "$RESTORE2_CONTAINER" >/dev/null 2>&1 || true
 "$ENGINE" stop "$CONTAINER" >/dev/null 2>&1 || true
 LIST_BEFORE_CLOSED="$(op_json "$STORE_SOURCE" list)"
 HASH_BEFORE_CLOSED="$(store_hash "$STORE_SOURCE")"
@@ -1385,6 +1592,7 @@ store_mode=$STORE_MODE
 store_host_id=$STORE_HOST_ID
 store_volume=$STORE_VOLUME
 restore_source=$RESTORE_SOURCE
+restore2_source=$RESTORE2_SOURCE
 runtime_user=1000:1000
 read_only_root=true
 writable_paths=/data/builder,/tmp,/app/builder-runtime/.next/cache,/home/node
@@ -1400,6 +1608,22 @@ restore_root_mode=0700
 restore_store_owner=1000:1000
 restore_store_mode=0600
 restore_records_preserved=true
+restore_records_match_minimized_source=true
+minimization_applied=true
+minimization_journal_events=2
+minimization_journal_sha256=$JOURNAL_AB_SHA
+minimized_store_sha256=$STORE_HASH_MINIMIZED_AB
+restore_gate_blocked_reopen=true
+restore_replay_completed=true
+restore_replay_ready=true
+restored_access_denied=true
+first_restore_journal_sha256=$JOURNAL_A_SHA
+first_restore_replay_events=1
+second_restore_cycle=true
+second_restore_backup_sha256=$HASH_BACKUP2
+second_restore_applied_events=1
+second_restore_replayed_events=2
+second_restore_receipt_history_preserved=true
 session_valid_after_restart=true
 session_revoked_after_restart=true
 unresolved_reservation_after_restart=true
