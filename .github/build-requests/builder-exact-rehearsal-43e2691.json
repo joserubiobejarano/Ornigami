@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "applicationSourceSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
+  "harnessSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
+  "workflowFile": ".github/workflows/builder-exact-rehearsal-43e2691.yml",
+  "expectedOrigin": "https://builder-rehearsal.invalid",
+  "expectedStagingHost": "builder-rehearsal.invalid",
+  "expectedPlatform": "linux/amd64",
+  "expectedUser": "1000:1000",
+  "buildDaemon": "docker-in-docker service on the hosted runner",
+  "verifyPhaseDaemon": "host runner Docker daemon",
+  "archiveCustody": {
+    "destination": "github-actions-artifact",
+    "repository": "joserubiobejarano/Ornigami",
+    "retentionDays": 7,
+    "access": "repository artifact access; synthetic image and receipt only"
+  },
+  "budget": {
+    "dispatches": 1,
+    "attempts": 1,
+    "executeTimeoutMinutes": 90,
+    "retrievalTimeoutMinutes": 15,
+    "maxArchiveBytes": 3221225472,
+    "maxArtifactBytes": 3758096384
+  },
+  "customerAdmission": "closed"
+}

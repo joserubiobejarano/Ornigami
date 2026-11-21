@@ -1,0 +1,337 @@
+name: Builder exact-candidate synthetic rehearsal (43e2691)
+
+on:
+  push:
+    branches:
+      - ci/builder-exact-rehearsal-43e2691-20261121
+    paths:
+      - .github/build-requests/builder-exact-rehearsal-43e2691.json
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: builder-exact-rehearsal-43e2691
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    name: Execute exact candidate on synthetic Linux edge
+    if: >-
+      github.event.created == false &&
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      github.run_attempt == 1 &&
+      github.ref == 'refs/heads/ci/builder-exact-rehearsal-43e2691-20261121'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    services:
+      dind:
+        image: docker:27-dind
+        options: --privileged
+        env:
+          DOCKER_TLS_CERTDIR: ""
+        ports:
+          - 2375:2375
+    env:
+      SOURCE_SHA: 43e2691e7d347d6e48e0ed65c0a828567b24c7a3
+      HARNESS_SHA: 43e2691e7d347d6e48e0ed65c0a828567b24c7a3
+      STAGING_ORIGIN: https://builder-rehearsal.invalid
+      STAGING_HOST: builder-rehearsal.invalid
+      CADDY_IMAGE: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+      BUILDER_STORE_VOLUME: ornigami-builder-rehearsal-store-43e2691
+      BUILDER_RUNTIME_STORE_HOST_ID: ornigami-builder-rehearsal-store-v1
+      STAGING_BASIC_AUTH_USER: staging-operator
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: https://ci.invalid/database
+      OPENAI_API_KEY: ci-openai-key
+      STRIPE_SECRET_KEY: ci-stripe-key
+      STRIPE_WEBHOOK_SECRET: ci-stripe-webhook-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      AUTH_SECRET: ci-auth-secret
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      CRON_SECRET: ci-cron-secret
+      RESEND_API_KEY: ci-resend-key
+      EMAIL_FROM: ci@example.com
+      REPLY_TO_EMAIL: ci@example.com
+      TOKEN_ENCRYPTION_KEY: ci-token-encryption-key
+      REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ci-unsubscribe-secret
+      NEXT_PUBLIC_APP_URL: https://ci.invalid
+      EVIDENCE_ROOT: /tmp/ornigami-exact-rehearsal-43e2691
+      REHEARSAL_DIR: /tmp/ornigami-exact-rehearsal-43e2691/rehearsal
+      ARTIFACT_NAME: builder-exact-rehearsal-43e2691-${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Check out bundle control plane
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Validate request and record workflow identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v jq >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y jq
+          }
+          request=.github/build-requests/builder-exact-rehearsal-43e2691.json
+          test -f "$request"
+          jq -e '
+            .schemaVersion == 1 and
+            .applicationSourceSha == "43e2691e7d347d6e48e0ed65c0a828567b24c7a3" and
+            .harnessSha == .applicationSourceSha and
+            .expectedOrigin == "https://builder-rehearsal.invalid" and
+            .expectedStagingHost == "builder-rehearsal.invalid" and
+            .archiveCustody.destination == "github-actions-artifact" and
+            .budget.dispatches == 1 and
+            .budget.attempts == 1
+          ' "$request" >/dev/null
+          echo "WORKFLOW_SHA=$GITHUB_SHA" >> "$GITHUB_ENV"
+          echo "WORKFLOW_REF=$GITHUB_REF" >> "$GITHUB_ENV"
+          {
+            printf 'workflow_sha=%s\n' "$GITHUB_SHA"
+            printf 'workflow_ref=%s\n' "$GITHUB_REF"
+            printf 'run_id=%s\n' "$GITHUB_RUN_ID"
+            printf 'run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'harness_sha=%s\n' "$HARNESS_SHA"
+          } > "$RUNNER_TEMP/workflow-identity.txt"
+
+      - name: Fetch exact source and verify ancestry
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          source_root="$RUNNER_TEMP/source"
+          mkdir -p "$source_root"
+          git -C "$source_root" init --quiet
+          git -C "$source_root" remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git -C "$source_root" fetch --quiet --no-tags origin "$SOURCE_SHA"
+          actual="$(git -C "$source_root" rev-parse FETCH_HEAD)"
+          test "$actual" = "$SOURCE_SHA"
+          git -C "$source_root" checkout --quiet --detach "$SOURCE_SHA"
+          test "$(git -C "$source_root" rev-parse HEAD)" = "$SOURCE_SHA"
+          test -z "$(git -C "$source_root" status --porcelain --untracked-files=all)"
+          git -C "$source_root" merge-base --is-ancestor 340ee97c51ca56c87cd9ec36bc642f2e67ea67bd "$SOURCE_SHA"
+          git -C "$source_root" merge-base --is-ancestor ebb487da11118ff458ecbdf1d268f2ebd5ceb5b1 "$SOURCE_SHA"
+          echo "SOURCE_ROOT=$source_root" >> "$GITHUB_ENV"
+          {
+            printf 'source_root=%s\n' "$source_root"
+            printf 'source_head=%s\n' "$(git -C "$source_root" rev-parse HEAD)"
+            printf '340ee97_ancestor=yes\n'
+            printf 'ebb487d_ancestor=yes\n'
+          } > "$RUNNER_TEMP/source-identity.txt"
+
+      - name: Install supported Node and vendored npm
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v xz >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xz-utils
+          }
+          sudo mkdir -p /opt/ornigami-node /opt/ornigami-npm
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/SHASUMS256.txt
+          grep ' node-v22.23.3-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+          sudo tar -xJf node-v22.23.3-linux-x64.tar.xz -C /opt/ornigami-node --strip-components=1
+          sudo tar -xzf "$SOURCE_ROOT/vendor/build-tools/npm-11.21.1.tgz" -C /opt/ornigami-npm --strip-components=1
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm
+          node_bin=/opt/ornigami-node/bin/node
+          npm_cli=/opt/ornigami-npm/bin/npm-cli.js
+          test "$("$node_bin" --version)" = "v22.23.3"
+          test "$("$node_bin" -p 'process.versions.openssl')" = "3.5.8"
+          test "$("$node_bin" "$npm_cli" --version)" = "11.21.1"
+          echo "/opt/ornigami-node/bin" >> "$GITHUB_PATH"
+          echo "NODE_BIN=$node_bin" >> "$GITHUB_ENV"
+          echo "NPM_CLI_FOR_REHEARSAL=$npm_cli" >> "$GITHUB_ENV"
+
+      - name: Install Linux test and browser prerequisites
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y jq curl xz-utils libnss3-tools
+          pg_bin=/usr/lib/postgresql/17/bin
+          if [[ ! -x "$pg_bin/initdb" ]]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc
+            codename="$(. /etc/os-release; printf '%s' "$VERSION_CODENAME")"
+            echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $codename-pgdg main" \
+              | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y postgresql-17
+          fi
+          "$pg_bin/pg_config" --version
+          echo "A04_PG_BIN=$pg_bin" >> "$GITHUB_ENV"
+          echo "$pg_bin" >> "$GITHUB_PATH"
+
+      - name: Create isolated builder user and evidence root
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          builder_user="$(id -nu 1000)"
+          builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
+          sudo usermod -aG docker "$builder_user"
+          sudo install -d -m 0755 -o "$builder_user" -g "$(id -gn "$builder_user")" "$EVIDENCE_ROOT" "$REHEARSAL_DIR"
+          sudo chown -R "$builder_user":"$(id -gn "$builder_user")" "$SOURCE_ROOT"
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm "$GITHUB_WORKSPACE"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          sudo -u "$builder_user" env HOME="$builder_home" PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund \
+            --prefix "$SOURCE_ROOT/scripts/framework-prototype/browser-tools"
+          sudo env PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install-deps chromium
+          sudo -u "$builder_user" env HOME="$builder_home" PLAYWRIGHT_BROWSERS_PATH="$builder_home/.cache/ms-playwright" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install chromium
+          sudo chmod -R a+rX "$SOURCE_ROOT/scripts/framework-prototype/browser-tools" "$builder_home/.cache/ms-playwright"
+          echo "BUILDER_USER=$builder_user" >> "$GITHUB_ENV"
+          echo "BUILDER_HOME=$builder_home" >> "$GITHUB_ENV"
+
+      - name: Execute checkpoint, private edge, qualification and closure
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE_ROOT/logs"
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            SOURCE_SHA="$SOURCE_SHA" \
+            HARNESS_SHA="$HARNESS_SHA" \
+            WORKFLOW_SHA="$WORKFLOW_SHA" \
+            REHEARSAL_DIR="$REHEARSAL_DIR" \
+            EVIDENCE_ROOT="$EVIDENCE_ROOT" \
+            STAGING_ORIGIN="$STAGING_ORIGIN" \
+            STAGING_HOST="$STAGING_HOST" \
+            CADDY_IMAGE="$CADDY_IMAGE" \
+            BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            BUILD_CONTEXT=default \
+            VERIFY_ENGINE=docker VERIFY_CONTEXT=default \
+            PHASE_ENGINE=docker PHASE_CONTEXT=default \
+            STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" \
+            BUILDER_STORE_VOLUME="$BUILDER_STORE_VOLUME" \
+            BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
+            NPM_CLI_FOR_REHEARSAL="$NPM_CLI_FOR_REHEARSAL" \
+            BROWSER_PLAYWRIGHT="$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs" \
+            PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            bash "$GITHUB_WORKSPACE/deploy/builder/private-staging/run-exact-rehearsal-linux.sh" \
+            2>&1 | tee "$EVIDENCE_ROOT/logs/rehearsal-console.log"
+
+      - name: Record archive and evidence custody bundle
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$EVIDENCE_ROOT/logs"
+          cp "$RUNNER_TEMP/workflow-identity.txt" "$EVIDENCE_ROOT/logs/workflow-identity.txt" 2>/dev/null || true
+          cp "$RUNNER_TEMP/source-identity.txt" "$EVIDENCE_ROOT/logs/source-identity.txt" 2>/dev/null || true
+          if [[ -f "$EVIDENCE_ROOT/custody/custody-receipt.json" ]]; then
+            cp "$EVIDENCE_ROOT/custody/custody-receipt.json" "$EVIDENCE_ROOT/logs/custody-receipt.json"
+          fi
+          find "$EVIDENCE_ROOT" -maxdepth 3 -type f -printf '%p\t%s\n' | sort > "$EVIDENCE_ROOT/logs/evidence-files.txt" || true
+          if [[ -f "$EVIDENCE_ROOT/custody/archive-receipt.json" ]]; then
+            printf 'archive_ready=true\n' >> "$GITHUB_ENV"
+          else
+            printf 'archive_ready=false\n' >> "$GITHUB_ENV"
+          fi
+
+      - name: Upload synthetic archive and evidence to custody
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.EVIDENCE_ROOT }}
+          if-no-files-found: warn
+          retention-days: 7
+
+  retrieve-verify:
+    name: Retrieve custody and independently load/verify
+    needs: execute
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out verifier scripts
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+          clean: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Download custody artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: builder-exact-rehearsal-43e2691-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retrieved
+
+      - name: Independently load and verify retrieved archive
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          root="$RUNNER_TEMP/retrieved"
+          archive="$(find "$root" -type f -name '*.tar' | head -n 1)"
+          receipt="$(find "$root" -type f -name 'archive-receipt.json' | head -n 1)"
+          custody="$(find "$root" -type f -name 'custody-receipt.json' | head -n 1)"
+          test -n "$archive" && test -f "$archive"
+          test -n "$receipt" && test -f "$receipt"
+          test -n "$custody" && test -f "$custody"
+          image_id="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.imageId)' "$receipt")"
+          source_sha="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.applicationSourceSha)' "$receipt")"
+          origin="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.origin)' "$receipt")"
+          harness_sha="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.harnessSha)' "$custody")"
+          evidence="$RUNNER_TEMP/retrieval-evidence"
+          ARCHIVE_PATH="$archive" RECEIPT_PATH="$receipt" \
+          EXPECTED_SOURCE_SHA="$source_sha" EXPECTED_IMAGE_ID="$image_id" \
+          EXPECTED_ORIGIN="$origin" EXPECTED_PLATFORM=linux/amd64 EXPECTED_USER=1000:1000 \
+          HARNESS_SHA="$harness_sha" EVIDENCE_DIR="$evidence" REQUIRE_FRESH_DAEMON=1 ENGINE=docker \
+            node deploy/builder/private-staging/verify-image-archive.mjs
+          archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
+          archive_bytes="$(stat -c '%s' "$archive")"
+          node - "$custody" "$archive_sha" "$archive_bytes" <<'NODE'
+          const fs = require("node:fs");
+          const [file, sha, bytes] = process.argv.slice(2);
+          const receipt = JSON.parse(fs.readFileSync(file, "utf8"));
+          if (receipt.archiveSha256 !== sha) throw new Error("retrieved archive hash mismatch");
+          if (String(receipt.archiveBytes) !== String(bytes)) throw new Error("retrieved archive size mismatch");
+          NODE
+          cat > "$evidence/retrieval-receipt.json" <<EOF
+          {
+            "status": "complete",
+            "applicationSourceSha": "$source_sha",
+            "harnessSha": "$harness_sha",
+            "imageId": "$image_id",
+            "applicationOrigin": "$origin",
+            "archiveSha256": "$archive_sha",
+            "archiveBytes": $archive_bytes,
+            "sourceArtifact": "${{ github.run_id }}-${{ github.run_attempt }}",
+            "retrievalDaemonId": "$(docker info --format '{{.ID}}')",
+            "customerAdmission": "closed"
+          }
+          EOF
+          cat "$evidence/retrieval-receipt.json"
+
+      - name: Upload retrieval verification receipt
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-exact-rehearsal-43e2691-retrieval-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retrieval-evidence
+          if-no-files-found: error
+          retention-days: 7
