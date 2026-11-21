@@ -39,6 +39,33 @@ case "$cmd" in
     sub="${1:-}"
     shift || true
     if [[ "$sub" == "inspect" ]]; then
+      if [[ -n "${STUB_EXISTING_IMAGE_ID:-}" ]]; then
+        fmt=""
+        args=("$@")
+        for ((i = 0; i < ${#args[@]}; i++)); do
+          if [[ "${args[$i]}" == "--format" ]]; then fmt="${args[$((i + 1))]}"; fi
+        done
+        name="$(last_arg "$@")"
+        if [[ -z "$fmt" ]]; then
+          cat <<JSON
+[{"Id":"$STUB_EXISTING_IMAGE_ID","Os":"${STUB_EXISTING_PLATFORM%%/*}","Architecture":"${STUB_EXISTING_PLATFORM#*/}","Config":{"User":"${STUB_EXISTING_USER:-1000:1000}","Healthcheck":{"Test":["CMD","/nodejs/bin/node","-e","fetch('http://127.0.0.1:3000/')"]},"Labels":{"org.opencontainers.image.revision":"$STUB_EXISTING_SOURCE_SHA","org.ornigami.public-origin":"$STUB_EXISTING_ORIGIN","org.ornigami.single-replica":"true","org.ornigami.operator-cli":"/app/scripts/builder-invite-operator.mjs","org.ornigami.qualify.run":"${STUB_EXISTING_RUN_LABEL:-stub-build}"}}}]
+JSON
+          exit 0
+        fi
+        case "$fmt" in
+          *'{{.Id}}'*) printf '%s' "$STUB_EXISTING_IMAGE_ID" ;;
+          *'org.opencontainers.image.revision'*) printf '%s' "$STUB_EXISTING_SOURCE_SHA" ;;
+          *'org.ornigami.public-origin'*) printf '%s' "$STUB_EXISTING_ORIGIN" ;;
+          *'{{.Os}}/{{.Architecture}}'*) printf '%s' "${STUB_EXISTING_PLATFORM:-linux/amd64}" ;;
+          *'org.ornigami.single-replica'*) printf 'true' ;;
+          *'org.ornigami.operator-cli'*) printf '/app/scripts/builder-invite-operator.mjs' ;;
+          *'org.ornigami.qualify.run'*) printf '%s' "${STUB_EXISTING_RUN_LABEL:-stub-build}" ;;
+          *'{{json .Config.Healthcheck}}'*) printf '%s' '{"Test":["CMD","/nodejs/bin/node","-e","fetch(http://127.0.0.1:3000/)"]}' ;;
+          *'{{.Config.User}}'*) printf '%s' "${STUB_EXISTING_USER:-1000:1000}" ;;
+          *) printf 'true' ;;
+        esac
+        exit 0
+      fi
       name="$(last_arg "$@")"
       [[ -d "$STATE/images/$name" ]] || exit 1
       exit 0

@@ -13,16 +13,30 @@ APP_URL="${APP_URL:?APP_URL is required}"
 EVIDENCE_DIR="${EVIDENCE_DIR:?EVIDENCE_DIR must be a new directory}"
 RUN_ID="${RUN_ID:-staging-runtime-$(date -u +%Y%m%dT%H%M%SZ)}"
 ENGINE="${ENGINE:-docker}"
+IMAGE_MODE="${IMAGE_MODE:-build}"
+EXPECTED_IMAGE_ID="${EXPECTED_IMAGE_ID:-}"
+HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
 
 [[ "$APP_URL" == https://* ]] || fail "APP_URL must be the actual https origin"
+[[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ ! -e "$EVIDENCE_DIR" ]] || fail "EVIDENCE_DIR already exists: $EVIDENCE_DIR"
+if [[ "$IMAGE_MODE" == "existing" ]]; then
+  [[ "$EXPECTED_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]] || fail "existing-image mode requires EXPECTED_IMAGE_ID"
+else
+  [[ -z "$EXPECTED_IMAGE_ID" || "$EXPECTED_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]] || fail "EXPECTED_IMAGE_ID must be immutable"
+fi
 
 note "Running synthetic runtime/restore/lock/closed-rollback checks"
 SOURCE_SHA="$SOURCE_SHA" \
 APP_URL="$APP_URL" \
+IMAGE_MODE="$IMAGE_MODE" \
+IMAGE="${EXPECTED_IMAGE_ID:-${IMAGE:-ornigami-builder:qualify-$RUN_ID}}" \
+EXPECTED_IMAGE_ID="$EXPECTED_IMAGE_ID" \
+EXPECTED_ORIGIN="$APP_URL" \
+HARNESS_SHA="$HARNESS_SHA" \
 BROWSER_PHASE=0 \
 RUN_ID="$RUN_ID" \
 EVIDENCE_DIR="$EVIDENCE_DIR" \
@@ -36,6 +50,9 @@ RESULTS="$EVIDENCE_DIR/results.txt"
 [[ -f "$RESULTS" ]] || fail "qualification results are missing"
 for expected in \
   "ok=true" \
+  "image_mode=$IMAGE_MODE" \
+  "application_source_sha=$SOURCE_SHA" \
+  "harness_sha=$HARNESS_SHA" \
   "browser_journey=skipped" \
   "full_acceptance=false" \
   "acceptance_scope=partial" \
@@ -49,6 +66,10 @@ for expected in \
   "egress_blocked=true"; do
   grep -qx "$expected" "$RESULTS" || fail "missing result: $expected"
 done
+grep -Eq '^image_id=sha256:[0-9a-f]{64}$' "$RESULTS" || fail "results do not record an immutable image ID"
+if [[ "$IMAGE_MODE" == "existing" ]]; then
+  grep -qx "image_id=$EXPECTED_IMAGE_ID" "$RESULTS" || fail "results did not use the supplied image ID"
+fi
 
 cat > "$EVIDENCE_DIR/PARTIAL.txt" <<EOF
 This run exercised the actual-origin image's runtime, populated synthetic

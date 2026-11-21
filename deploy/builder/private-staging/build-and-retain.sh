@@ -12,11 +12,13 @@ REGISTRY_REFERENCE="${REGISTRY_REFERENCE:-}"
 OUTPUT_DIR="${OUTPUT_DIR:?OUTPUT_DIR must be a new directory}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 IMAGE="${IMAGE:-ornigami-builder:actual-${SOURCE_SHA:0:12}}"
+HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
 
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "SOURCE_SHA must be 40 hex"
+[[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ "$(git rev-parse HEAD)" == "$SOURCE_SHA" ]] || fail "HEAD does not equal SOURCE_SHA"
 [[ -z "$(git status --porcelain)" ]] || fail "worktree must be clean"
 [[ "$APP_URL" == https://* ]] || fail "actual staging APP_URL must use https"
@@ -56,10 +58,14 @@ ARCHIVE_BYTES="$(stat -c '%s' "$ARCHIVE")"
 
 cat > "$OUTPUT_DIR/image-identity.json" <<EOF
 {
+  "applicationSourceSha": "$SOURCE_SHA",
+  "harnessSha": "$HARNESS_SHA",
   "sourceSha": "$SOURCE_SHA",
   "origin": "$APP_URL",
   "platform": "$PLATFORM",
+  "user": "$IMAGE_USER",
   "imageReference": "$IMAGE",
+  "imageId": "$IMAGE_ID",
   "localImageId": "$IMAGE_ID",
   "revisionLabel": "$REVISION",
   "originLabel": "$ORIGIN_LABEL",
@@ -68,7 +74,31 @@ cat > "$OUTPUT_DIR/image-identity.json" <<EOF
   "archiveBytes": $ARCHIVE_BYTES,
   "registryReference": "${REGISTRY_REFERENCE:-pending}",
   "registryDigest": "pending independent push and pull",
-  "actionsEvidenceDigest": "separate record; never used as image identity"
+  "actionsEvidenceDigest": "separate record; never used as image identity",
+  "reproducibility": "not proven; verify this archive and image ID on a fresh daemon"
+}
+EOF
+
+cat > "$OUTPUT_DIR/archive-receipt.json" <<EOF
+{
+  "schemaVersion": 1,
+  "receiptType": "builder-image-archive",
+  "applicationSourceSha": "$SOURCE_SHA",
+  "harnessSha": "$HARNESS_SHA",
+  "imageId": "$IMAGE_ID",
+  "revisionLabel": "$REVISION",
+  "origin": "$ORIGIN_LABEL",
+  "platform": "$IMAGE_PLATFORM",
+  "user": "$IMAGE_USER",
+  "imageReference": "$IMAGE",
+  "archivePath": "$ARCHIVE",
+  "archiveSha256": "$ARCHIVE_SHA256",
+  "archiveBytes": $ARCHIVE_BYTES,
+  "registryReference": "${REGISTRY_REFERENCE:-pending}",
+  "registryDigest": "pending independent push and pull",
+  "handoffComplete": false,
+  "archiveVerifiedOnFreshDaemon": false,
+  "reproducibility": "not proven from source alone"
 }
 EOF
 
@@ -90,6 +120,15 @@ then record the immutable repo digest:
 Independently pull and verify on a separate host with:
 
   deploy/builder/private-staging/verify-retained-image.sh
+
+Verify the local archive handoff on a fresh/isolated daemon with:
+
+  ARCHIVE_PATH=$ARCHIVE RECEIPT_PATH=$OUTPUT_DIR/archive-receipt.json \\
+  EVIDENCE_DIR=<new-archive-verification-dir> \\
+    node deploy/builder/private-staging/verify-image-archive.mjs
+
+The archive receipt is incomplete until that fresh-daemon check passes. This
+script does not claim bit-for-bit reproducibility from source.
 EOF
 
 note "Wrote $OUTPUT_DIR/image-identity.json"

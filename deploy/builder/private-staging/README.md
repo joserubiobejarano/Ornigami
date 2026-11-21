@@ -21,6 +21,15 @@ The Actions artifact digest is **evidence transport identity**, not an image
 digest. The loopback image ID above is **not** a registry digest and must not be
 used to claim an actual-origin image is retained or deployable.
 
+Run `44845147243` later qualified an actual-origin image locally. It recorded
+image ID `sha256:f9a28737303852399ea604d569bd08c6ebc9293a75e4c01852f419f36ba40d12`
+and rebuilt `sha256:4ec0396623b49cc94ba5f3b75c4b2eafa270999b39991b30c2daf9ade9d652f`
+for the restore/rollback harness. Those two IDs are different, so the historical
+package did not pass the same image through every phase. Its archive was
+ephemeral and not retained, and bit-for-bit reproducibility from source was not
+proven. See the [correction](../../../docs/handoffs/BUILDER_PRIVATE_STAGING_ACCEPTANCE_4E3E00A_CORRECTION_20261121.md)
+and use the existing-image path below for fresh evidence.
+
 ## Proposed contract
 
 | Area | Proposal | Status |
@@ -54,8 +63,55 @@ OUTPUT_DIR=<new-local-evidence-dir> \
 
 The script requires a clean checkout at `SOURCE_SHA`, builds
 `linux/amd64`, verifies the revision/origin/user/platform labels, saves the image
-archive and writes `image-identity.json` with the local image ID and archive
-SHA-256. It does not push.
+archive and writes `image-identity.json` plus `archive-receipt.json` with the
+local image ID and archive SHA-256. It does not push. The receipt remains
+`handoffComplete=false` until the archive is loaded and verified on a fresh or
+isolated daemon:
+
+```bash
+ARCHIVE_PATH=<archive.tar> \
+RECEIPT_PATH=<image-identity-dir>/archive-receipt.json \
+EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
+EXPECTED_ORIGIN=https://builder-staging.ornigami.com \
+EXPECTED_PLATFORM=linux/amd64 \
+EXPECTED_USER=1000:1000 \
+HARNESS_SHA=<harness-commit> \
+EVIDENCE_DIR=<new-archive-verification-dir> \
+  node deploy/builder/private-staging/verify-image-archive.mjs
+```
+
+This script checks the archive hash, requires the image to be absent on the
+target daemon, loads it, and re-verifies the exact immutable image ID, source
+SHA, origin, platform and user. A missing archive, missing receipt, hash
+mismatch or identity mismatch exits non-zero and records an incomplete handoff.
+Neither the local image ID nor an archive checksum proves bit-for-bit
+reproducibility from source.
+
+## Existing-image qualification
+
+Use this path when an image was built or retained elsewhere. It accepts only an
+immutable reference (`sha256:<64-hex>` or `repo@sha256:<64-hex>`), resolves it to
+the local image ID, and verifies source, origin, platform and user **before**
+creating run resources. It never rebuilds, retags a substitute or falls back to
+a build. The same resolved ID is used for the packaged operator, browser phase,
+restart, fresh-volume restore, lock recovery and closed rollback.
+
+```bash
+IMAGE_REFERENCE=sha256:f9a28737303852399ea604d569bd08c6ebc9293a75e4c01852f419f36ba40d12 \
+EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+EXPECTED_ORIGIN=https://builder-staging.ornigami.com \
+EXPECTED_PLATFORM=linux/amd64 \
+EXPECTED_USER=1000:1000 \
+HARNESS_SHA=<harness-commit> \
+EVIDENCE_DIR=<new-existing-image-evidence-dir> \
+  deploy/builder/private-staging/qualify-existing-image.sh
+```
+
+The summary records `applicationSourceSha`, `harnessSha` and `imageId`
+separately. `runtime/` contains the full qualification evidence, including the
+same immutable ID in every phase. Registry references are only pulled when
+`PULL_EXISTING_IMAGE=1` is explicitly set; no tag is created.
 
 After separate publication authorization:
 
@@ -113,6 +169,9 @@ Run only in the separately authorized synthetic staging session.
 STAGING_ORIGIN=https://builder-staging.ornigami.com \
 STAGING_BASIC_AUTH_USER=<private-user> \
 STAGING_BASIC_AUTH_PASSWORD=<private-password> \
+EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
+EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+HARNESS_SHA=<harness-commit> \
 STAGING_EVIDENCE_DIR=<new-edge-evidence-dir> \
   node deploy/builder/private-staging/accept-edge.mjs
 ```
@@ -120,8 +179,10 @@ STAGING_EVIDENCE_DIR=<new-edge-evidence-dir> \
 Expected: all checks `ok`: verified TLS, HTTP-to-HTTPS redirect, anonymous and
 wrong-credential denial, authorized `200`, HSTS, builder CSP without
 `unsafe-inline`/`unsafe-eval`, anonymous builder/session/generation denial,
-unexpected Host rejection, and initial script SRI/hash verification. No real
-invite or paid call is made.
+unexpected Host rejection, and initial script SRI/hash verification. The result
+records the application source SHA, harness SHA and immutable image ID
+separately, and `edge-sri-scripts.json` records each script URL, declared
+integrity and observed SHA-256. No real invite or paid call is made.
 
 ### 2. Browser/ZIP/revocation and dynamic SRI
 
@@ -131,19 +192,28 @@ Run on the staging host with access to the packaged image and volume:
 STAGING_ORIGIN=https://builder-staging.ornigami.com \
 STAGING_BASIC_AUTH_USER=<private-user> \
 STAGING_BASIC_AUTH_PASSWORD=<private-password> \
-BUILDER_OPERATOR_IMAGE=<image@sha256:digest> \
+BUILDER_OPERATOR_IMAGE=sha256:<resolved-image-id> \
 BUILDER_OPERATOR_VOLUME=ornigami-builder-store-v1 \
 BUILDER_RUNTIME_STORE_HOST_ID=ornigami-builder-store-v1 \
+IMAGE_MODE=existing \
+EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
+EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+HARNESS_SHA=<harness-commit> \
 BROWSER_EVIDENCE_DIR=<new-browser-evidence-dir> \
   deploy/builder/private-staging/accept-browser.sh
 ```
 
-Expected: `browser_acceptance=pass`, `origin:reachable`, `csp:header`,
-`sri:initial`, `sri:after-initial-generation`, generation after refresh/edit,
-two-tab generation, replay `409`, fresh approved ZIP audit, online subject-A
-revocation while open, subject-B unaffected, and sign-out storage clearing.
-The reused browser journey also verifies authenticated ZIP contents and the
-existing revocation checks.
+Expected: `browser_acceptance=pass`, `origin:reachable`, `csp:header`, script
+audits at the login page, after login, after generation, after refresh, after
+edit, in a second tab and for subject B. Every audit records script URLs,
+declared integrity, observed SHA-256, and inserted/removed delta scripts. It also
+covers two-tab generation, replay `409`, a fresh approved ZIP audit, online
+subject-A revocation while open, subject-B unaffected, and sign-out storage
+clearing. The reused browser journey also verifies authenticated ZIP contents and
+the existing revocation checks. Generation and refresh did not add script URLs in
+the recorded historical run, but its two summary-only audits did not retain URLs
+or hashes. The updated harness establishes the actual login/generation delta and
+does not claim dynamic-chunk coverage without it.
 
 ### 3. Live runtime isolation and volume contract
 
@@ -153,33 +223,47 @@ PROXY_CONTAINER=<caddy-container> \
 STORE_VOLUME=ornigami-builder-store-v1 \
 EXPECTED_ORIGIN=https://builder-staging.ornigami.com \
 EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
+EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
+HARNESS_SHA=<harness-commit> \
 EVIDENCE_DIR=<new-runtime-evidence-dir> \
   deploy/builder/private-staging/accept-runtime.sh
 ```
 
-Expected: read-only root, `1000:1000`, no published app port, only internal app
-network(s), denied public egress, no forbidden provider/database/mail/Sentry
-environment, volume label, root `1000:1000:700`, store file `1000:1000:600` when
-populated, and proxy publishing only 80/443. This script is read-only.
+Expected: read-only root, `1000:1000`, the exact immutable image ID, no
+published app port, only internal app network(s), denied public egress, no
+forbidden provider/database/mail/Sentry environment, volume label, root
+`1000:1000:700`, store file `1000:1000:600` when populated, and proxy
+publishing only the approved bindings. Proxy `HostConfig.PortBindings` is parsed
+structurally: container ports/protocols must be exactly `80/tcp`, `443/tcp` and
+`443/udp`; host ports must be `80`, `443` and `443`; bind addresses must be the
+wildcard form. Any extra container port (including `8080`), altered host port,
+unexpected address or extra protocol fails. This script is read-only.
 
 ### 4. Populated backup/restore, lock recovery and closed rollback
 
 ```bash
 SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
 APP_URL=https://builder-staging.ornigami.com \
+IMAGE_MODE=existing \
+EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
+HARNESS_SHA=<harness-commit> \
 EVIDENCE_DIR=<new-partial-runtime-evidence-dir> \
   deploy/builder/private-staging/accept-runtime-rollback.sh
 ```
 
 Expected: the existing Linux harness passes restore root `0700`, store `0600`,
 hash/record preservation, foreign-scope lock recovery and same-image closed
-rollback. Because browser is intentionally skipped here, the result must contain
-`browser_journey=skipped`, `full_acceptance=false` and
+rollback. In existing-image mode the harness builds nothing; the results must
+record `image_mode=existing`, the exact `image_id`, the application source SHA
+and the harness SHA separately. Because browser is intentionally skipped here,
+the result must contain `browser_journey=skipped`, `full_acceptance=false` and
 `acceptance_scope=partial`. It cannot be the full acceptance receipt by itself.
 
 Full acceptance requires the edge, staging browser, live runtime and
-runtime/rollback receipts together, plus the independently pulled image
-identity. Keep each receipt separate.
+runtime/rollback receipts together, plus the independently pulled or
+archive-loaded image identity. Each receipt must name the same application
+source SHA and immutable image ID while recording the harness SHA separately.
+Keep each receipt separate.
 
 ## Rollback
 

@@ -26,6 +26,12 @@
     "appNetworkInternal": true,
     "appPublishedPort": "none",
     "appUpstream": "app:3000",
+    "publishedBindings": [
+      { "containerPort": 80, "protocol": "tcp", "hostPort": 80, "addresses": ["0.0.0.0", "::"] },
+      { "containerPort": 443, "protocol": "tcp", "hostPort": 443, "addresses": ["0.0.0.0", "::"] },
+      { "containerPort": 443, "protocol": "udp", "hostPort": 443, "addresses": ["0.0.0.0", "::"] }
+    ],
+    "rejections": "any additional container port, protocol, host port, bind address or duplicate binding",
     "trustedForwarding": "Host and X-Forwarded-Proto replaced; alternate client-IP headers removed"
   },
   "volume": {
@@ -55,7 +61,15 @@
     "testedLoopbackLocalId": "sha256:954699fc57eedeae636830e82d056ca97e799bc1f6a49161582854129a73b980",
     "actualOriginDigest": "pending independent build, private registry publication and pull",
     "platform": "linux/amd64",
-    "origin": "https://builder-staging.ornigami.com"
+    "origin": "https://builder-staging.ornigami.com",
+    "historicalRun": {
+      "runId": "44845147243",
+      "httpsBrowserImageId": "sha256:f9a28737303852399ea604d569bd08c6ebc9293a75e4c01852f419f36ba40d12",
+      "rollbackRebuiltImageId": "sha256:4ec0396623b49cc94ba5f3b75c4b2eafa270999b39991b30c2daf9ade9d652f",
+      "sameImageAcrossPhases": false
+    },
+    "archiveHandoff": "incomplete; historical archive was ephemeral and not retained",
+    "reproducibility": "not proven from source alone"
   },
   "actionsEvidence": {
     "runId": "44831470383",

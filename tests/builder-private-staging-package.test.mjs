@@ -38,6 +38,9 @@ test("staging acceptance distinguishes source, image digest, platform, origin an
   assert.match(readme, /immutable `repo@sha256:<digest>`/);
   assert.match(readme, /Actions artifact digest is \*\*evidence transport identity\*\*, not an image/);
   assert.match(readme, /full_acceptance=false/);
+  assert.match(readme, /Existing-image qualification/);
+  assert.match(readme, /never rebuilds, retags a substitute or falls back to\s+a build/);
+  assert.match(readme, /Neither the local image ID nor an archive checksum proves bit-for-bit\s+reproducibility from source/);
   for (const file of [
     "accept-edge.mjs",
     "accept-browser.sh",
@@ -45,6 +48,11 @@ test("staging acceptance distinguishes source, image digest, platform, origin an
     "accept-runtime-rollback.sh",
     "build-and-retain.sh",
     "verify-retained-image.sh",
+    "qualify-existing-image.sh",
+    "verify-image-archive.mjs",
+    "image-identity.mjs",
+    "proxy-bindings.mjs",
+    "sri-script-audit.mjs",
   ]) {
     assert.ok(existsSync(path.join(root, "deploy", "builder", "private-staging", file)), file);
   }
@@ -68,4 +76,28 @@ test("browser acceptance supports actual HTTPS origin, private access and dynami
   assert.match(browser, /httpCredentials/);
   assert.match(browser, /sri:\$\{label\}/);
   assert.match(browser, /csp:header/);
+  assert.match(browser, /scriptRecords/);
+  assert.match(browser, /inserted/);
+  assert.match(browser, /removed/);
+  assert.match(browser, /BROWSER_IMAGE_ID/);
+});
+
+test("edge and runtime acceptance record the image identity and parse proxy bindings structurally", () => {
+  const edge = readFileSync(
+    path.join(root, "deploy", "builder", "private-staging", "accept-edge.mjs"),
+    "utf8",
+  );
+  assert.match(edge, /EXPECTED_IMAGE_ID/);
+  assert.match(edge, /EXPECTED_SOURCE_SHA/);
+  assert.match(edge, /HARNESS_SHA/);
+  assert.match(edge, /edge-sri-scripts\.json/);
+  assert.match(edge, /scriptRecords/);
+
+  const runtime = readFileSync(
+    path.join(root, "deploy", "builder", "private-staging", "accept-runtime.sh"),
+    "utf8",
+  );
+  assert.match(runtime, /EXPECTED_IMAGE_ID/);
+  assert.match(runtime, /proxy-bindings\.mjs/);
+  assert.doesNotMatch(runtime, /PROXY_PORTS" != \*'"3000\/tcp"'/);
 });

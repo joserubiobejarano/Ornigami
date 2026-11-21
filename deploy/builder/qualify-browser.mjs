@@ -32,6 +32,7 @@ import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { auditZipBundle } from "./zip-audit.mjs";
+import { diffScriptAudits, updateScriptRegistry } from "./private-staging/sri-script-audit.mjs";
 
 const root = process.cwd();
 const baseUrl = process.env.BROWSER_BASE_URL;
@@ -77,11 +78,18 @@ const results = {
   startedAt: new Date().toISOString(),
   baseUrl,
   operatorMode,
+  identity: {
+    applicationSourceSha: process.env.BROWSER_SOURCE_SHA ?? null,
+    harnessSha: process.env.BROWSER_HARNESS_SHA ?? null,
+    imageId: process.env.BROWSER_IMAGE_ID ?? null,
+  },
   checks: [],
   requestKeys: [],
   exports: [],
   screenshots: [],
   subjects: {},
+  scriptAudits: [],
+  scriptRegistry: [],
 };
 function check(name, ok, detail) {
   results.checks.push({ name, ok: Boolean(ok), ...(ok ? {} : { detail }) });
@@ -300,21 +308,37 @@ async function auditPageScripts(page, label) {
     })),
   );
   const issues = [];
+  const scriptRecords = [];
   let verified = 0;
   for (const entry of entries) {
+    const record = {
+      src: entry.src,
+      path: null,
+      integrity: entry.integrity ?? "",
+      sha256: null,
+      integrityDigest: null,
+      verified: false,
+    };
     let url;
     try {
       url = new URL(entry.src);
+      record.path = url.pathname;
     } catch {
+      record.issue = "invalid-src";
       issues.push({ src: "[invalid-url]", issue: "invalid-src" });
+      scriptRecords.push(record);
       continue;
     }
     if (url.origin !== parsedBase.origin) {
+      record.issue = "external-origin";
       issues.push({ src: url.origin, issue: "external-origin" });
+      scriptRecords.push(record);
       continue;
     }
     if (!entry.integrity) {
+      record.issue = "missing-integrity";
       issues.push({ src: url.pathname, issue: "missing-integrity" });
+      scriptRecords.push(record);
       continue;
     }
     const response = await fetch(url.href, {
@@ -322,30 +346,52 @@ async function auditPageScripts(page, label) {
       signal: AbortSignal.timeout(5000),
     });
     if (!response.ok) {
+      record.issue = `asset-${response.status}`;
       issues.push({ src: url.pathname, issue: `asset-${response.status}` });
       await response.body?.cancel();
+      scriptRecords.push(record);
       continue;
     }
     const bytes = Buffer.from(await response.arrayBuffer());
-    const digest = `sha256-${createHash("sha256").update(bytes).digest("base64")}`;
-    if (!entry.integrity.split(/\s+/).includes(digest)) {
+    record.sha256 = createHash("sha256").update(bytes).digest("hex");
+    record.integrityDigest = `sha256-${createHash("sha256").update(bytes).digest("base64")}`;
+    if (!entry.integrity.split(/\s+/).includes(record.integrityDigest)) {
+      record.issue = "integrity-mismatch";
       issues.push({ src: url.pathname, issue: "integrity-mismatch" });
+      scriptRecords.push(record);
       continue;
     }
+    record.verified = true;
+    scriptRecords.push(record);
     verified += 1;
   }
-  const audit = { label, scripts: entries.length, verified, issues };
-  results.scriptAudits ??= [];
+  const previous = results.scriptAudits.at(-1);
+  const audit = {
+    label,
+    completedAt: new Date().toISOString(),
+    scripts: entries.length,
+    verified,
+    issues,
+    scriptRecords,
+    inserted: [],
+    removed: [],
+  };
+  const delta = diffScriptAudits(previous, { ...audit, scriptRecords });
+  audit.inserted = delta.inserted.map((script) => script.src);
+  audit.removed = delta.removed.map((script) => script.src);
   results.scriptAudits.push(audit);
+  results.scriptRegistry = updateScriptRegistry(results.scriptRegistry, audit);
   check(`sri:${label}`, entries.length > 0 && issues.length === 0, audit);
 }
 
-async function login(page, token) {
+async function login(page, token, label) {
   await page.goto(baseUrl + "/", { waitUntil: "networkidle" });
+  await auditPageScripts(page, `${label}:login-page`);
   await page.locator('input[name="token"]').fill(token);
   await page.getByRole("button", { name: "Enter builder" }).click();
   await page.waitForURL("**/builder");
   await page.waitForSelector('[data-intake-ready="true"]');
+  await auditPageScripts(page, label);
 }
 
 async function reselectPackshotAndConfirm(page) {
@@ -502,13 +548,12 @@ try {
   const inviteA = issueInvite("Browser synthetic A");
   const inviteB = issueInvite("Browser synthetic B");
   results.subjects = { A: inviteA.subjectId, B: inviteB.subjectId };
-  await login(pageA, inviteA.token);
+  await login(pageA, inviteA.token, "initial");
   check(
     "login:a",
     (await pageA.locator("[data-builder-subject-label]").innerText()) ===
       "Browser synthetic A",
   );
-  await auditPageScripts(pageA, "initial");
 
   const offer1 = "Browser offer 111111 for the travel bottle";
   await fillIntake(pageA, { offer: offer1, emphasis: "111111" });
@@ -526,6 +571,7 @@ try {
   await reselectPackshotAndConfirm(pageA);
   await openPreviewAndGenerate(pageA, offer1);
   check("generate:after-refresh", true);
+  await auditPageScripts(pageA, "after-refresh");
 
   await pageA.getByRole("button", { name: "Edit brief inputs" }).click();
   await pageA.waitForSelector('[data-intake-ready="true"]');
@@ -535,6 +581,7 @@ try {
   await reselectPackshotAndConfirm(pageA);
   await openPreviewAndGenerate(pageA, offer2);
   check("generate:after-edit", true);
+  await auditPageScripts(pageA, "after-edit");
 
   const exportA = await approveAndExport(pageA, "browser-a");
   results.exports.push(auditZip("browser-a", exportA.zipPath));
@@ -543,9 +590,11 @@ try {
   captureRequests(pageA2);
   await pageA2.goto(baseUrl + "/builder", { waitUntil: "networkidle" });
   await pageA2.waitForSelector('[data-intake-ready="true"]');
+  await auditPageScripts(pageA2, "second-tab");
   const offer3 = "Second tab browser offer 333333 for the travel bottle";
   await fillIntake(pageA2, { offer: offer3, emphasis: "333333" });
   await openPreviewAndGenerate(pageA2, offer3);
+  await auditPageScripts(pageA2, "after-second-tab");
   check("two-tabs:second-preview", true);
   await pageA2.screenshot({ path: path.join(screenshots, "a-two-tabs-1440.png") });
   check(
@@ -586,7 +635,7 @@ try {
   });
   const pageB = await contextB.newPage();
   captureRequests(pageB);
-  await login(pageB, inviteB.token);
+  await login(pageB, inviteB.token, "b-login");
   check(
     "login:b",
     (await pageB.locator("[data-builder-subject-label]").innerText()) ===
@@ -596,6 +645,7 @@ try {
   await fillIntake(pageB, { offer: offerB, emphasis: "444444" });
   await openPreviewAndGenerate(pageB, offerB);
   check("b:initial-generation", true);
+  await auditPageScripts(pageB, "after-b-generation");
   const cookiesA = await contextA.cookies(baseUrl);
   const cookiesB = await contextB.cookies(baseUrl);
   const cookieA = cookieHeader(cookiesA);
@@ -657,6 +707,19 @@ try {
   results.screenshots = readdirSync(screenshots)
     .sort()
     .map((name) => path.relative(root, path.join(screenshots, name)));
+  results.scriptDeltaSummary = results.scriptAudits.map((audit) => ({
+    label: audit.label,
+    inserted: audit.inserted,
+    removed: audit.removed,
+  }));
+  const insertedAfterLogin = results.scriptAudits
+    .filter((audit) => audit.label !== "initial:login-page" && audit.label !== "b-login:login-page")
+    .flatMap((audit) => audit.inserted.map((src) => ({ label: audit.label, src })));
+  results.additionalChunksAfterLogin = insertedAfterLogin;
+  results.dynamicChunkFinding =
+    insertedAfterLogin.length === 0
+      ? "No additional script[src] URLs were inserted after the login landing page in the audited interactions."
+      : `${insertedAfterLogin.length} script[src] URL(s) were inserted after the login landing page; see scriptAudits.`;
   results.completedAt = new Date().toISOString();
   results.ok = results.checks.every((entry) => entry.ok);
   writeFileSync(
