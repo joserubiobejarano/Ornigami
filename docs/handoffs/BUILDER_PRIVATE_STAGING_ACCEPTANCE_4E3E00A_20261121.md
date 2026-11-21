@@ -39,8 +39,9 @@ VPS route were **not** created or verified.
 | Revision label | `4e3e00af212a3d97de582ab6fca6ecca8d0665dd` |
 | Origin label | `https://builder-staging.ornigami.com` |
 | Platform / user | `linux/amd64` / `1000:1000` |
-| Retained archive SHA-256 | `9fbf72ae11f64177587c65417968a5ba5b6237475a829726edae671da2c55a56` |
-| Retained archive size | 999,698,432 bytes |
+| Image size | 967,033,490 bytes |
+| Created archive SHA-256 | `9fbf72ae11f64177587c65417968a5ba5b6237475a829726edae671da2c55a56` |
+| Created archive size | 999,698,432 bytes |
 | Image Node / npm / OpenSSL | `22.23.3` / `11.21.1` / `3.5.8` |
 | Framework | Next.js `16.4.5` |
 | Caddy edge | `caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d` |
@@ -48,8 +49,9 @@ VPS route were **not** created or verified.
 
 The image was built from the exact source with `APP_URL=https://builder-staging.ornigami.com`
 and verified against the approved origin, revision, platform and user labels.
-The local archive was retained on the runner only; it was not uploaded or
-published.
+The local archive was created on the ephemeral runner and was not uploaded or
+published; it did not survive the job. The image is reproducible from the exact
+source SHA. The archive SHA is a one-run integrity record, not a registry digest.
 
 ## Phase evidence
 
