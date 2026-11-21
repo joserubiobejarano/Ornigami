@@ -2,7 +2,10 @@ import path from "node:path";
 
 import { validateBuilderEnvironment } from "../../src/lib/builder/config.ts";
 
-import { builderStoreIsWritable } from "./identity-store.ts";
+import {
+  assertBuilderStoreReplayReady,
+  builderStoreIsWritable,
+} from "./identity-store.ts";
 import type { BuilderGenerationLimits } from "./usage-ledger.ts";
 
 export type BuilderRuntimeMode = "closed" | "invite";
@@ -336,6 +339,15 @@ export async function assertBuilderRuntimeStartupConfiguration(
 ): Promise<BuilderRuntimeConfig> {
   const config = readBuilderRuntimeConfig(env);
   if (config.mode === "invite" && config.storeDir) {
+    try {
+      await assertBuilderStoreReplayReady(config.storeDir);
+    } catch (error) {
+      throw new BuilderRuntimeConfigurationError([
+        error instanceof Error
+          ? error.message
+          : "Builder restore replay evidence is incomplete.",
+      ]);
+    }
     if (!(await builderStoreIsWritable(config.storeDir))) {
       throw new BuilderRuntimeConfigurationError([
         `Builder identity storage is not writable at ${config.storeDir}.`,

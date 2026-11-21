@@ -316,7 +316,11 @@ docker run --rm --network none --read-only --user 1000:1000
 `BUILDER_OPERATOR_STORE=/absolute/host/dir` selects bind mode instead of a named
 volume. `--print-command` prints the exact engine command without running it.
 Supported commands are `issue`, `revoke-invite`, `revoke-session`,
-`revoke-subject`, `reconcile-usage`, `lock-status`, `recover-lock` and `list`.
+`revoke-subject`, `reconcile-usage`, `minimize`, `minimize-apply`,
+`restore-prepare`, `replay-minimization`, `replay-status`, `lock-status`,
+`recover-lock` and `list`. See
+[`../../docs/BUILDER_MINIMIZATION_REPLAY_CONTRACT_20261121.md`](../../docs/BUILDER_MINIMIZATION_REPLAY_CONTRACT_20261121.md)
+for the assisted-minimisation and restore-replay contract.
 
 The operator is read/write only against the store volume. It has no network, no
 provider credentials and no application secrets. Do not run it concurrently

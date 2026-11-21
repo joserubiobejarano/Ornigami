@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import {
   BUILDER_STORE_HOST_ID,
+  assertBuilderStoreReplayReady,
   inspectBuilderStore,
   issueBuilderInvite,
   readBuilderIdentityStore,
@@ -12,6 +13,13 @@ import {
   revokeBuilderSession,
   revokeBuilderSubject,
 } from "../builder-runtime/lib/identity-store.ts";
+import {
+  applyBuilderSubjectMinimization,
+  parseBuilderSubjectMinimizationPlan,
+  planBuilderSubjectMinimization,
+  prepareBuilderRestoreReplay,
+  replayBuilderMinimizationJournal,
+} from "../builder-runtime/lib/minimization.ts";
 import { reconcileBuilderUsage } from "../builder-runtime/lib/usage-ledger.ts";
 
 function usage() {
@@ -21,6 +29,11 @@ function usage() {
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-session --store <dir> --id <sessionId> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs revoke-subject --store <dir> --subject <subjectId> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs reconcile-usage --store <dir> --id <usageId> --outcome succeeded|failed [--cost-micros N] --reason <text> [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs minimize --store <dir> --subject <subjectId> [--plan-out <file>] [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs minimize-apply --store <dir> --plan <file|json> [--confirm-subject <subjectId>] [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs restore-prepare --store <restoredDir> --journal <file> [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs replay-minimization --store <restoredDir> --journal <file> [--json]
+  node --experimental-strip-types scripts/builder-invite-operator.mjs replay-status --store <dir> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs lock-status --store <dir> [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs recover-lock --store <dir> --token <lockToken> [--reap-token <token>] --confirm-no-writers [--json]
   node --experimental-strip-types scripts/builder-invite-operator.mjs list --store <dir> [--json]`);
@@ -120,6 +133,121 @@ if (!store) {
     );
   }
   if (!reconciled.changed) process.exitCode = 1;
+} else if (command === "minimize") {
+  const subject = options.subject?.trim();
+  if (!subject) throw new Error("--subject is required for a minimisation plan.");
+  const plan = await planBuilderSubjectMinimization({
+    storeDir: store,
+    subjectId: subject,
+  });
+  if (options["plan-out"]) {
+    const target = path.resolve(options["plan-out"]);
+    writeFileSync(target, `${JSON.stringify(plan, null, 2)}\n`, { mode: 0o600 });
+  }
+  if (options.json) {
+    console.log(JSON.stringify(plan));
+  } else {
+    console.log(`Plan:       ${plan.planId}`);
+    console.log(`Subject:    ${plan.subjectId}`);
+    console.log(`Store SHA:  ${plan.storeHash}`);
+    console.log(`Result SHA: ${plan.expectedResultHash}`);
+    console.log(`Effect at:  ${plan.effectAt}`);
+    console.log(`Subject:    ${plan.affected.subject.categories.join(", ") || "no change"}`);
+    for (const invite of plan.affected.invites) {
+      console.log(`Invite:     ${invite.id} [${invite.categories.join(", ") || "no change"}]`);
+    }
+    for (const session of plan.affected.sessions) {
+      console.log(`Session:    ${session.id} [${session.categories.join(", ") || "no change"}]`);
+    }
+    console.log(
+      `Usage:      ${plan.affected.usage.ids.length} record(s) preserved [${plan.affected.usage.categories.join(", ")}]`,
+    );
+    console.log(
+      `Accounting: settled=${plan.accounting.settledCostMicros} reserved=${plan.accounting.reservedCostMicros} unknown=${plan.accounting.unknownCostMicros} requests=${plan.accounting.requestKeys}`,
+    );
+    if (options["plan-out"]) console.log(`Plan file:  ${path.resolve(options["plan-out"])}`);
+    else console.log("Dry run only. Re-run with --plan-out and review before minimize-apply.");
+  }
+} else if (command === "minimize-apply") {
+  const planArg = options.plan?.trim();
+  if (!planArg) throw new Error("--plan <file|json> is required.");
+  const rawPlan = planArg.startsWith("{")
+    ? planArg
+    : readFileSync(path.resolve(planArg), "utf8");
+  const plan = parseBuilderSubjectMinimizationPlan(rawPlan);
+  if (options["confirm-subject"] && options["confirm-subject"] !== plan.subjectId) {
+    throw new Error("--confirm-subject does not match the reviewed plan subject.");
+  }
+  const receipt = await applyBuilderSubjectMinimization({
+    storeDir: store,
+    plan,
+  });
+  if (options.json) console.log(JSON.stringify(receipt));
+  else {
+    console.log(`Plan:       ${receipt.planId}`);
+    console.log(`Subject:    ${receipt.subjectId}`);
+    console.log(`Event:      ${receipt.eventId ?? "none"}`);
+    console.log(`Status:     ${receipt.status}`);
+    console.log(`Store SHA:  ${receipt.storeBeforeHash} -> ${receipt.storeAfterHash}`);
+    console.log(
+      `Accounting: settled=${receipt.accountingAfter.settledCostMicros} reserved=${receipt.accountingAfter.reservedCostMicros} unknown=${receipt.accountingAfter.unknownCostMicros} requests=${receipt.accountingAfter.requestKeys}`,
+    );
+  }
+} else if (command === "restore-prepare") {
+  const journal = options.journal?.trim();
+  if (!journal) throw new Error("--journal is required before reopening a restored store.");
+  const prepared = await prepareBuilderRestoreReplay({
+    storeDir: store,
+    journalPath: journal,
+  });
+  if (options.json) console.log(JSON.stringify(prepared));
+  else if (prepared.alreadyReplayed) {
+    console.log("This store already has a complete replay receipt for the journal.");
+  } else {
+    console.log(`Replay gate: ${prepared.prepared ? "written" : "already present"}`);
+    console.log(`Journal SHA: ${prepared.journalHash}`);
+    console.log(`Store SHA:   ${prepared.storeHash}`);
+    console.log("The store remains closed until replay-minimization completes.");
+  }
+} else if (command === "replay-minimization") {
+  const journal = options.journal?.trim();
+  if (!journal) throw new Error("--journal is required for restore replay.");
+  const receipt = await replayBuilderMinimizationJournal({
+    storeDir: store,
+    journalPath: journal,
+  });
+  if (options.json) console.log(JSON.stringify(receipt));
+  else {
+    console.log(`Receipt:    ${receipt.receiptId}`);
+    console.log(`Journal:    ${receipt.journalFile} (${receipt.journalHash})`);
+    console.log(`Events:     ${receipt.journalEventCount}`);
+    console.log(`Applied:    ${receipt.appliedEventIds.length}`);
+    console.log(`No-op:      ${receipt.alreadyAppliedEventIds.length}`);
+    console.log(`Absent:     ${receipt.absentSubjectIds.length}`);
+    console.log(`Store SHA:  ${receipt.storeBeforeHash} -> ${receipt.storeAfterHash}`);
+    console.log(
+      `Accounting: settled=${receipt.accountingAfter.settledCostMicros} reserved=${receipt.accountingAfter.reservedCostMicros} unknown=${receipt.accountingAfter.unknownCostMicros} requests=${receipt.accountingAfter.requestKeys}`,
+    );
+    console.log("Replay complete. The restored store may be opened.");
+  }
+} else if (command === "replay-status") {
+  try {
+    await assertBuilderStoreReplayReady(store);
+    if (options.json) console.log(JSON.stringify({ replayReady: true }));
+    else console.log("Restore replay evidence is complete; the store may be opened.");
+  } catch (error) {
+    if (options.json) {
+      console.log(
+        JSON.stringify({
+          replayReady: false,
+          error: error instanceof Error ? error.message : "replay incomplete",
+        }),
+      );
+    } else {
+      console.error(error instanceof Error ? error.message : "Replay evidence is incomplete.");
+    }
+    process.exitCode = 1;
+  }
 } else if (command === "lock-status") {
   const inspected = await inspectBuilderStore(store);
   let storeHash = null;

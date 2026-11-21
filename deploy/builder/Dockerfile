@@ -130,6 +130,7 @@ COPY --from=builder --chown=1000:1000 /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=1000:1000 /app/scripts/builder-invite-operator.mjs ./scripts/builder-invite-operator.mjs
 COPY --from=builder --chown=1000:1000 /app/builder-runtime/lib/identity-store.ts ./builder-runtime/lib/identity-store.ts
 COPY --from=builder --chown=1000:1000 /app/builder-runtime/lib/usage-ledger.ts ./builder-runtime/lib/usage-ledger.ts
+COPY --from=builder --chown=1000:1000 /app/builder-runtime/lib/minimization.ts ./builder-runtime/lib/minimization.ts
 
 VOLUME ["/data/builder"]
 EXPOSE 3000
