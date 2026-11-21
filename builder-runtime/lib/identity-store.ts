@@ -27,7 +27,7 @@ export const BUILDER_IDENTITY_LOCK_FILE = "identity-store.lock";
  * categories only: never labels, invite tokens, session tokens or request
  * content. It is written under the same store lock as identity-store.json.
  */
-export const BUILDER_MINIMIZATION_JOURNAL_VERSION = 1 as const;
+export const BUILDER_MINIMIZATION_JOURNAL_VERSION = 2 as const;
 export const BUILDER_MINIMIZATION_JOURNAL_FILE = "minimization-journal.json";
 export const BUILDER_RESTORE_REPLAY_GATE_FILE = "restore-replay-gate.json";
 export const BUILDER_RESTORE_REPLAY_RECEIPT_FILE = "restore-replay-receipt.json";
@@ -336,34 +336,49 @@ export type BuilderMinimizationSummary = Readonly<{
   usageRecordsPreserved: number;
 }>;
 
-export type BuilderMinimizationJournalEvent = {
+/**
+ * The immutable minimisation request. Lifecycle metadata (pending/completed,
+ * completion hashes and replay timestamps) is deliberately excluded so a
+ * durable request can advance without changing its intent digest.
+ */
+export type BuilderMinimizationIntent = {
   version: typeof BUILDER_MINIMIZATION_JOURNAL_VERSION;
   id: string;
   kind: "subject_minimization";
-  /**
-   * pending means the durable request exists but its store effects may not be
-   * complete. Any ordinary store writer must fail closed until it is resolved.
-   */
-  phase: "pending" | "completed";
   subjectId: string;
   planId: string;
   plannedStoreHash: string;
   expectedResultHash: string;
   effectAt: string;
   createdAt: string;
+  effects: BuilderMinimizationEffects;
+  summary: BuilderMinimizationSummary;
+  accounting: BuilderMinimizationAccountingSnapshot;
+};
+
+export type BuilderMinimizationJournalEvent = BuilderMinimizationIntent & {
+  /** SHA-256 over the canonical immutable intent. */
+  intentDigest: string;
+  /**
+   * pending means the durable request exists but its store effects may not be
+   * complete. Any ordinary store writer must fail closed until it is resolved.
+   */
+  phase: "pending" | "completed";
   completedAt?: string;
   resultStoreHash?: string;
   replayedAt?: string;
   replayedStoreHash?: string;
-  effects: BuilderMinimizationEffects;
-  summary: BuilderMinimizationSummary;
-  accounting: BuilderMinimizationAccountingSnapshot;
 };
 
 export type BuilderMinimizationJournal = {
   version: typeof BUILDER_MINIMIZATION_JOURNAL_VERSION;
   events: BuilderMinimizationJournalEvent[];
 };
+
+export type BuilderRestoreReplayCommitment = Readonly<{
+  id: string;
+  intentDigest: string;
+}>;
 
 /**
  * A restore attempt is durably opened before any journal, receipt or store
@@ -372,13 +387,13 @@ export type BuilderMinimizationJournal = {
  * reused for a different journal.
  */
 export type BuilderRestoreReplayGate = {
-  version: 2;
+  version: 3;
   attemptId: string;
   phase: "closed" | "prepared";
   startedAt: string;
   preparedAt?: string;
   journalHash?: string;
-  journalEventIds?: string[];
+  journalCommitments?: readonly BuilderRestoreReplayCommitment[];
   storeBeforeHash?: string;
   previousReceiptIds: string[];
 };
@@ -391,14 +406,14 @@ export type BuilderRestoreReplayInvariants = Readonly<{
 }>;
 
 export type BuilderRestoreReplayReceipt = {
-  version: 2;
+  version: 3;
   kind: "builder-minimization-replay";
   attemptId: string;
   receiptId: string;
   previousReceiptIds: string[];
   journalFile: string;
   journalHash: string;
-  journalEventIds: string[];
+  journalCommitments: BuilderRestoreReplayCommitment[];
   journalEventCount: number;
   appliedEventIds: string[];
   alreadyAppliedEventIds: string[];
@@ -651,6 +666,51 @@ export function validBuilderMinimizationSummary(
   );
 }
 
+export function canonicalBuilderJson(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalBuilderJson).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalBuilderJson(record[key])}`)
+    .join(",")}}`;
+}
+
+export function hashBuilderCanonicalJson(value: unknown): string {
+  return createHash("sha256")
+    .update(canonicalBuilderJson(value))
+    .digest("hex");
+}
+
+export function builderMinimizationIntentFromEvent(
+  event: BuilderMinimizationJournalEvent,
+): BuilderMinimizationIntent {
+  return {
+    version: event.version,
+    id: event.id,
+    kind: event.kind,
+    subjectId: event.subjectId,
+    planId: event.planId,
+    plannedStoreHash: event.plannedStoreHash,
+    expectedResultHash: event.expectedResultHash,
+    effectAt: event.effectAt,
+    createdAt: event.createdAt,
+    effects: event.effects,
+    summary: event.summary,
+    accounting: event.accounting,
+  };
+}
+
+export function computeBuilderMinimizationIntentDigest(
+  intent: BuilderMinimizationIntent,
+): string {
+  return hashBuilderCanonicalJson(intent);
+}
+
 function validJournalEvent(value: unknown): value is BuilderMinimizationJournalEvent {
   if (!isRecord(value)) return false;
   const required = [
@@ -667,6 +727,7 @@ function validJournalEvent(value: unknown): value is BuilderMinimizationJournalE
     "effects",
     "summary",
     "accounting",
+    "intentDigest",
   ];
   const optional = [
     "completedAt",
@@ -683,6 +744,7 @@ function validJournalEvent(value: unknown): value is BuilderMinimizationJournalE
   if (!validHash(value.planId)) return false;
   if (!validHash(value.plannedStoreHash)) return false;
   if (!validHash(value.expectedResultHash)) return false;
+  if (!validHash(value.intentDigest)) return false;
   if (!validDate(value.effectAt) || !validDate(value.createdAt)) return false;
   if (value.completedAt !== undefined && !validDate(value.completedAt)) return false;
   if (value.resultStoreHash !== undefined && !validHash(value.resultStoreHash)) return false;
@@ -711,8 +773,16 @@ function validJournalEvent(value: unknown): value is BuilderMinimizationJournalE
       effects.sessions.filter((item) => item.minimizeToken).length,
     usageRecordsPreserved: effects.usageIds.length,
   };
-  return (Object.keys(expectedSummary) as Array<keyof typeof expectedSummary>).every(
-    (key) => summary[key] === expectedSummary[key],
+  const summaryMatches = (
+    Object.keys(expectedSummary) as Array<keyof typeof expectedSummary>
+  ).every((key) => summary[key] === expectedSummary[key]);
+  if (!summaryMatches) return false;
+  const event = value as unknown as BuilderMinimizationJournalEvent;
+  return (
+    event.intentDigest ===
+    computeBuilderMinimizationIntentDigest(
+      builderMinimizationIntentFromEvent(event),
+    )
   );
 }
 
@@ -766,18 +836,43 @@ function validReceiptIdList(value: unknown): value is string[] {
   return true;
 }
 
+function validCommitmentList(
+  value: unknown,
+): value is BuilderRestoreReplayCommitment[] {
+  if (!Array.isArray(value) || value.length > 100_000) return false;
+  const ids = new Set<string>();
+  const digests = new Set<string>();
+  for (const item of value) {
+    if (!isRecord(item) || !hasOnlyKeys(item, ["id", "intentDigest"])) {
+      return false;
+    }
+    if (
+      typeof item.id !== "string" ||
+      !EVENT_ID_PATTERN.test(item.id) ||
+      !validHash(item.intentDigest) ||
+      ids.has(item.id) ||
+      digests.has(item.intentDigest)
+    ) {
+      return false;
+    }
+    ids.add(item.id);
+    digests.add(item.intentDigest);
+  }
+  return true;
+}
+
 function validReplayGate(value: unknown): value is BuilderRestoreReplayGate {
   if (!isRecord(value)) return false;
   if (
     !hasOnlyKeys(
       value,
       ["version", "attemptId", "phase", "startedAt", "previousReceiptIds"],
-      ["preparedAt", "journalHash", "journalEventIds", "storeBeforeHash"],
+      ["preparedAt", "journalHash", "journalCommitments", "storeBeforeHash"],
     )
   ) {
     return false;
   }
-  if (value.version !== 2) return false;
+  if (value.version !== 3) return false;
   if (typeof value.attemptId !== "string" || !ATTEMPT_ID_PATTERN.test(value.attemptId)) {
     return false;
   }
@@ -786,7 +881,10 @@ function validReplayGate(value: unknown): value is BuilderRestoreReplayGate {
   if (!validReceiptIdList(value.previousReceiptIds)) return false;
   if (value.preparedAt !== undefined && !validDate(value.preparedAt)) return false;
   if (value.journalHash !== undefined && !validHash(value.journalHash)) return false;
-  if (value.journalEventIds !== undefined && !validEventIdList(value.journalEventIds)) {
+  if (
+    value.journalCommitments !== undefined &&
+    !validCommitmentList(value.journalCommitments)
+  ) {
     return false;
   }
   if (value.storeBeforeHash !== undefined && !validHash(value.storeBeforeHash)) {
@@ -796,14 +894,14 @@ function validReplayGate(value: unknown): value is BuilderRestoreReplayGate {
     return Boolean(
       value.preparedAt &&
         value.journalHash &&
-        value.journalEventIds &&
+        value.journalCommitments &&
         value.storeBeforeHash,
     );
   }
   return (
     value.preparedAt === undefined &&
     value.journalHash === undefined &&
-    value.journalEventIds === undefined &&
+    value.journalCommitments === undefined &&
     value.storeBeforeHash === undefined
   );
 }
@@ -818,7 +916,7 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
     "previousReceiptIds",
     "journalFile",
     "journalHash",
-    "journalEventIds",
+    "journalCommitments",
     "journalEventCount",
     "appliedEventIds",
     "alreadyAppliedEventIds",
@@ -832,7 +930,7 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
     "createdAt",
   ];
   if (!hasOnlyKeys(value, required)) return false;
-  if (value.version !== 2 || value.kind !== "builder-minimization-replay") return false;
+  if (value.version !== 3 || value.kind !== "builder-minimization-replay") return false;
   if (typeof value.attemptId !== "string" || !ATTEMPT_ID_PATTERN.test(value.attemptId)) {
     return false;
   }
@@ -848,10 +946,10 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
     return false;
   }
   if (!validHash(value.journalHash)) return false;
-  if (!validEventIdList(value.journalEventIds)) return false;
+  if (!validCommitmentList(value.journalCommitments)) return false;
   if (
     !Number.isSafeInteger(value.journalEventCount) ||
-    value.journalEventCount !== value.journalEventIds.length
+    value.journalEventCount !== value.journalCommitments.length
   ) {
     return false;
   }
@@ -861,7 +959,9 @@ function validReplayReceipt(value: unknown): value is BuilderRestoreReplayReceip
   const applied = new Set(value.appliedEventIds);
   const already = new Set(value.alreadyAppliedEventIds);
   for (const id of applied) if (already.has(id)) return false;
-  const journalIds = new Set(value.journalEventIds);
+  const journalIds = new Set(
+    value.journalCommitments.map((commitment) => commitment.id),
+  );
   for (const id of applied) if (!journalIds.has(id)) return false;
   for (const id of already) if (!journalIds.has(id)) return false;
   for (const id of journalIds) if (!applied.has(id) && !already.has(id)) return false;
@@ -1325,7 +1425,7 @@ export async function assertBuilderStoreReplayReady(
     if (
       gate.phase !== "prepared" ||
       !gate.journalHash ||
-      !gate.journalEventIds ||
+      !gate.journalCommitments ||
       !gate.storeBeforeHash
     ) {
       throw new BuilderStoreUnavailable(
@@ -1356,13 +1456,18 @@ export async function assertBuilderStoreReplayReady(
       );
     }
     if (
-      receipt.journalEventIds.length !== gate.journalEventIds.length ||
-      receipt.journalEventIds.some(
-        (id, index) => id !== gate.journalEventIds?.[index],
-      )
+      receipt.journalCommitments.length !== gate.journalCommitments.length ||
+      receipt.journalCommitments.some((commitment, index) => {
+        const prepared = gate.journalCommitments?.[index];
+        return (
+          !prepared ||
+          commitment.id !== prepared.id ||
+          commitment.intentDigest !== prepared.intentDigest
+        );
+      })
     ) {
       throw new BuilderStoreUnavailable(
-        "Restore replay receipt does not match the prepared journal event sequence.",
+        "Restore replay receipt does not match the prepared journal commitments.",
       );
     }
     const currentHash = await readBuilderIdentityStoreHash(directory);

@@ -8,7 +8,11 @@ import {
   BUILDER_MINIMIZATION_JOURNAL_VERSION,
   BuilderStoreUnavailable,
   assertBuilderStoreReplayReady,
+  builderMinimizationIntentFromEvent,
   builderMinimizationJournalHasPending,
+  canonicalBuilderJson,
+  computeBuilderMinimizationIntentDigest,
+  hashBuilderCanonicalJson,
   readBuilderIdentityStoreSnapshot,
   readBuilderMinimizationJournalUnlocked,
   readBuilderRestoreReplayGate,
@@ -30,9 +34,11 @@ import {
   type BuilderMinimizationAffectedRecords,
   type BuilderMinimizationCategory,
   type BuilderMinimizationEffects,
+  type BuilderMinimizationIntent,
   type BuilderMinimizationJournal,
   type BuilderMinimizationJournalEvent,
   type BuilderMinimizationSummary,
+  type BuilderRestoreReplayCommitment,
   type BuilderRestoreReplayGate,
   type BuilderRestoreReplayReceipt,
 } from "./identity-store.ts";
@@ -150,24 +156,6 @@ function validDate(value: unknown): value is string {
 
 function validHash(value: unknown): value is string {
   return typeof value === "string" && HASH_PATTERN.test(value);
-}
-
-function canonicalJson(value: unknown): string {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(canonicalJson).join(",")}]`;
-  }
-  const record = value as Record<string, unknown>;
-  return `{${Object.keys(record)
-    .sort()
-    .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
-    .join(",")}}`;
-}
-
-function hashValue(value: unknown): string {
-  return createHash("sha256").update(canonicalJson(value)).digest("hex");
 }
 
 function hashBytes(bytes: Buffer | string): string {
@@ -322,7 +310,7 @@ function assertAccountingPreserved(
   before: BuilderMinimizationAccountingSnapshot,
   after: BuilderMinimizationAccountingSnapshot,
 ): void {
-  if (canonicalJson(before) !== canonicalJson(after)) {
+  if (canonicalBuilderJson(before) !== canonicalBuilderJson(after)) {
     throw new BuilderMinimizationRejected(
       "incompatible_store",
       "Minimisation/replay would change usage accounting; refusing to continue.",
@@ -543,7 +531,7 @@ export async function planBuilderSubjectMinimization(input: {
         accounting,
         expectedAccounting,
       };
-      return { ...body, planId: hashValue(body) };
+      return { ...body, planId: hashBuilderCanonicalJson(body) };
     },
     input.lockWaitMs === undefined ? {} : { lockWaitMs: input.lockWaitMs },
   );
@@ -660,18 +648,18 @@ export function parseBuilderSubjectMinimizationPlan(
     reject("invalid_plan", "Plan expected accounting snapshot is invalid.");
   }
   const expectedAffected = describeBuilderSubjectMinimization(value.effects);
-  if (canonicalJson(value.affected) !== canonicalJson(expectedAffected)) {
+  if (canonicalBuilderJson(value.affected) !== canonicalBuilderJson(expectedAffected)) {
     reject("invalid_plan", "Plan affected-record metadata is not consistent.");
   }
   const expectedSummary = summarizeEffects(value.effects);
-  if (canonicalJson(value.summary) !== canonicalJson(expectedSummary)) {
+  if (canonicalBuilderJson(value.summary) !== canonicalBuilderJson(expectedSummary)) {
     reject("invalid_plan", "Plan summary is not consistent.");
   }
-  if (canonicalJson(value.accounting) !== canonicalJson(value.expectedAccounting)) {
+  if (canonicalBuilderJson(value.accounting) !== canonicalBuilderJson(value.expectedAccounting)) {
     reject("invalid_plan", "Plan accounting must be unchanged by minimisation.");
   }
   const { planId, ...body } = value;
-  if (hashValue(body) !== planId) {
+  if (hashBuilderCanonicalJson(body) !== planId) {
     reject("invalid_plan", "Plan id does not match the reviewed plan content.");
   }
   return value as BuilderSubjectMinimizationPlan;
@@ -681,15 +669,17 @@ function journalEventMatchesPlan(
   event: BuilderMinimizationJournalEvent,
   plan: BuilderSubjectMinimizationPlan,
 ): boolean {
+  const intent = builderMinimizationIntentFromEvent(event);
   return (
+    event.intentDigest === computeBuilderMinimizationIntentDigest(intent) &&
     event.subjectId === plan.subjectId &&
     event.planId === plan.planId &&
     event.plannedStoreHash === plan.storeHash &&
     event.expectedResultHash === plan.expectedResultHash &&
     event.effectAt === plan.effectAt &&
-    canonicalJson(event.effects) === canonicalJson(plan.effects) &&
-    canonicalJson(event.summary) === canonicalJson(plan.summary) &&
-    canonicalJson(event.accounting) === canonicalJson(plan.accounting)
+    canonicalBuilderJson(event.effects) === canonicalBuilderJson(plan.effects) &&
+    canonicalBuilderJson(event.summary) === canonicalBuilderJson(plan.summary) &&
+    canonicalBuilderJson(event.accounting) === canonicalBuilderJson(plan.accounting)
   );
 }
 
@@ -697,11 +687,10 @@ function newJournalEvent(
   plan: BuilderSubjectMinimizationPlan,
   now: Date,
 ): BuilderMinimizationJournalEvent {
-  return {
+  const intent: BuilderMinimizationIntent = {
     version: BUILDER_MINIMIZATION_JOURNAL_VERSION,
     id: `mnj_${randomBytes(12).toString("hex")}`,
     kind: "subject_minimization",
-    phase: "pending",
     subjectId: plan.subjectId,
     planId: plan.planId,
     plannedStoreHash: plan.storeHash,
@@ -711,6 +700,11 @@ function newJournalEvent(
     effects: plan.effects,
     summary: plan.summary,
     accounting: plan.accounting,
+  };
+  return {
+    ...intent,
+    intentDigest: computeBuilderMinimizationIntentDigest(intent),
+    phase: "pending",
   };
 }
 
@@ -801,7 +795,7 @@ export async function applyBuilderSubjectMinimization(input: {
         );
       }
       if (
-        canonicalJson(accountingBefore) !== canonicalJson(plan.accounting)
+        canonicalBuilderJson(accountingBefore) !== canonicalBuilderJson(plan.accounting)
       ) {
         throw new BuilderMinimizationRejected(
           "incompatible_store",
@@ -824,8 +818,8 @@ export async function applyBuilderSubjectMinimization(input: {
         computeBuilderMinimizationAccounting(expectedStore);
       assertAccountingPreserved(accountingBefore, expectedAccounting);
       if (
-        canonicalJson(expectedAccounting) !==
-        canonicalJson(plan.expectedAccounting)
+        canonicalBuilderJson(expectedAccounting) !==
+        canonicalBuilderJson(plan.expectedAccounting)
       ) {
         throw new BuilderMinimizationRejected(
           "incompatible_store",
@@ -1085,10 +1079,39 @@ function newRestoreAttemptId(): string {
   return `rra_${randomBytes(12).toString("hex")}`;
 }
 
-function sameIdSequence(left: readonly string[], right: readonly string[]): boolean {
+function sourceCommitments(
+  source: Awaited<ReturnType<typeof readJournalFile>>,
+): BuilderRestoreReplayCommitment[] {
+  return source.journal.events.map((event) => ({
+    id: event.id,
+    intentDigest: event.intentDigest,
+  }));
+}
+
+function sameCommitmentSequence(
+  left: readonly BuilderRestoreReplayCommitment[],
+  right: readonly BuilderRestoreReplayCommitment[],
+): boolean {
   return (
     left.length === right.length &&
-    left.every((id, index) => id === right[index])
+    left.every((commitment, index) => {
+      const other = right[index];
+      return (
+        Boolean(other) &&
+        commitment.id === other.id &&
+        commitment.intentDigest === other.intentDigest
+      );
+    })
+  );
+}
+
+function commitmentPrefix(
+  prefix: readonly BuilderRestoreReplayCommitment[],
+  full: readonly BuilderRestoreReplayCommitment[],
+): boolean {
+  return (
+    prefix.length <= full.length &&
+    sameCommitmentSequence(prefix, full.slice(0, prefix.length))
   );
 }
 
@@ -1109,18 +1132,12 @@ function assertReceiptContinuity(
   priorReceipts: readonly BuilderRestoreReplayReceipt[],
   source: Awaited<ReturnType<typeof readJournalFile>>,
 ): void {
-  const sourceIds = source.journal.events.map((event) => event.id);
+  const commitments = sourceCommitments(source);
   for (const receipt of priorReceipts) {
-    if (
-      receipt.journalEventIds.length > sourceIds.length ||
-      !sameIdSequence(
-        receipt.journalEventIds,
-        sourceIds.slice(0, receipt.journalEventIds.length),
-      )
-    ) {
+    if (!commitmentPrefix(receipt.journalCommitments, commitments)) {
       throw new BuilderMinimizationRejected(
         "incomplete_replay",
-        "The supplied journal is missing or divergent from previously receipted restore events; keep the gate closed.",
+        "The supplied journal is missing or divergent from previously receipted restore commitments; keep the gate closed.",
       );
     }
   }
@@ -1131,10 +1148,9 @@ function receiptMatchesSource(
   source: Awaited<ReturnType<typeof readJournalFile>>,
   storeHash: string,
 ): boolean {
-  const sourceIds = source.journal.events.map((event) => event.id);
   return (
     receipt.journalHash === source.hash &&
-    sameIdSequence(receipt.journalEventIds, sourceIds) &&
+    sameCommitmentSequence(receipt.journalCommitments, sourceCommitments(source)) &&
     receipt.storeAfterHash === storeHash &&
     Object.values(receipt.invariants).every((item) => item === true)
   );
@@ -1155,7 +1171,7 @@ async function ensureRestoreGate(
     return existing.value;
   }
   const gate: BuilderRestoreReplayGate = {
-    version: 2,
+    version: 3,
     attemptId: newRestoreAttemptId(),
     phase: "closed",
     startedAt: nowIso(now),
@@ -1170,7 +1186,7 @@ async function prepareRestoreGate(
   directory: string,
   gate: BuilderRestoreReplayGate,
   source: Awaited<ReturnType<typeof readJournalFile>>,
-  eventIds: string[],
+  commitments: BuilderRestoreReplayCommitment[],
   storeHash: string,
   priorReceipts: readonly BuilderRestoreReplayReceipt[],
   now: Date,
@@ -1178,7 +1194,7 @@ async function prepareRestoreGate(
   if (gate.phase === "prepared") {
     if (
       gate.journalHash === source.hash &&
-      sameIdSequence(gate.journalEventIds ?? [], eventIds)
+      sameCommitmentSequence(gate.journalCommitments ?? [], commitments)
     ) {
       return gate;
     }
@@ -1195,7 +1211,7 @@ async function prepareRestoreGate(
       phase: "prepared",
       preparedAt: nowIso(now),
       journalHash: source.hash,
-      journalEventIds: eventIds,
+      journalCommitments: commitments,
       storeBeforeHash: storeHash,
       previousReceiptIds: priorReceipts.map((receipt) => receipt.receiptId),
     };
@@ -1208,7 +1224,7 @@ async function prepareRestoreGate(
     phase: "prepared",
     preparedAt: nowIso(now),
     journalHash: source.hash,
-    journalEventIds: eventIds,
+    journalCommitments: commitments,
     storeBeforeHash: storeHash,
     previousReceiptIds: priorReceipts.map((receipt) => receipt.receiptId),
   };
@@ -1222,15 +1238,15 @@ async function readBackupJournalPrefix(
   source: Awaited<ReturnType<typeof readJournalFile>>,
 ) {
   const backup = await readBuilderMinimizationJournalUnlocked(directory);
-  const backupIds = backup.journal.events.map((event) => event.id);
-  const sourceIds = source.journal.events.map((event) => event.id);
-  if (
-    backupIds.length > sourceIds.length ||
-    !sameIdSequence(backupIds, sourceIds.slice(0, backupIds.length))
-  ) {
+  const backupCommitments: BuilderRestoreReplayCommitment[] =
+    backup.journal.events.map((event) => ({
+      id: event.id,
+      intentDigest: event.intentDigest,
+    }));
+  if (!commitmentPrefix(backupCommitments, sourceCommitments(source))) {
     throw new BuilderMinimizationRejected(
       "incomplete_replay",
-      "The backup journal is not a prefix of the supplied journal; keep the gate closed.",
+      "The backup journal is not a commitment prefix of the supplied journal; keep the gate closed.",
     );
   }
   return backup;
@@ -1245,7 +1261,7 @@ function replayInvariants(
   return {
     usageUnchanged: accountingBefore.usageHash === accountingAfter.usageHash,
     accountingPreserved:
-      canonicalJson(accountingBefore) === canonicalJson(accountingAfter),
+      canonicalBuilderJson(accountingBefore) === canonicalBuilderJson(accountingAfter),
     relationshipsValid: verifyBuilderAccountingRelationships(store).length === 0,
     effectsComplete,
   };
@@ -1262,18 +1278,19 @@ async function completeNoOpRestoreAttempt(input: {
   priorReceipt: BuilderRestoreReplayReceipt;
   replayedAt: string;
 }): Promise<BuilderRestoreReplayReceipt> {
-  const eventIds = input.source.journal.events.map((event) => event.id);
+  const commitments = sourceCommitments(input.source);
+  const eventIds = commitments.map((commitment) => commitment.id);
   const accounting = computeBuilderMinimizationAccounting(input.store);
   const receipt: BuilderRestoreReplayReceipt = {
-    version: 2,
+    version: 3,
     kind: "builder-minimization-replay",
     attemptId: input.preparedGate.attemptId,
     receiptId: `rrp_${randomBytes(12).toString("hex")}`,
     previousReceiptIds: input.priorReceipts.map((item) => item.receiptId),
     journalFile: input.journalFile,
     journalHash: input.source.hash,
-    journalEventIds: eventIds,
-    journalEventCount: eventIds.length,
+    journalCommitments: commitments,
+    journalEventCount: commitments.length,
     appliedEventIds: [],
     alreadyAppliedEventIds: eventIds,
     absentSubjectIds: input.priorReceipt.absentSubjectIds,
@@ -1325,7 +1342,7 @@ export async function prepareBuilderRestoreReplay(input: {
       assertReceiptContinuity(priorReceipts, source);
       const snapshot = await readBuilderIdentityStoreSnapshot(directory);
       assertAccountingRelationships(snapshot.store);
-      const eventIds = source.journal.events.map((event) => event.id);
+      const commitments = sourceCommitments(source);
       const currentReceipt = history.find(
         (receipt) => receipt.attemptId === gate.attemptId,
       );
@@ -1358,7 +1375,7 @@ export async function prepareBuilderRestoreReplay(input: {
           directory,
           gate,
           source,
-          eventIds,
+          commitments,
           snapshot.storeHash,
           priorReceipts,
           now,
@@ -1388,7 +1405,7 @@ export async function prepareBuilderRestoreReplay(input: {
         directory,
         gate,
         source,
-        eventIds,
+        commitments,
         snapshot.storeHash,
         priorReceipts,
         now,
@@ -1425,7 +1442,7 @@ export async function replayBuilderMinimizationJournal(
       assertReceiptContinuity(priorReceipts, source);
       const snapshot = await readBuilderIdentityStoreSnapshot(directory);
       assertAccountingRelationships(snapshot.store);
-      const eventIds = source.journal.events.map((event) => event.id);
+      const commitments = sourceCommitments(source);
       const currentReceipt = history.find(
         (receipt) => receipt.attemptId === gate.attemptId,
       );
@@ -1447,7 +1464,7 @@ export async function replayBuilderMinimizationJournal(
         directory,
         gate,
         source,
-        eventIds,
+        commitments,
         snapshot.storeHash,
         priorReceipts,
         now,
@@ -1523,15 +1540,15 @@ export async function replayBuilderMinimizationJournal(
         effectsComplete,
       );
       const receipt: BuilderRestoreReplayReceipt = {
-        version: 2,
+        version: 3,
         kind: "builder-minimization-replay",
         attemptId: preparedGate.attemptId,
         receiptId: `rrp_${randomBytes(12).toString("hex")}`,
         previousReceiptIds: priorReceipts.map((item) => item.receiptId),
         journalFile,
         journalHash: source.hash,
-        journalEventIds: eventIds,
-        journalEventCount: eventIds.length,
+        journalCommitments: commitments,
+        journalEventCount: commitments.length,
         appliedEventIds,
         alreadyAppliedEventIds,
         absentSubjectIds,
