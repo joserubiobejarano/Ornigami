@@ -5,6 +5,8 @@ adopted. No retention period, purge, automatic expiry, scheduler, customer
 admission, deployment or real-store operation is authorized.**
 
 Start point: `f73e93fccb42d1752d77e51e9e6374752b4f23d6`.
+Restore-attempt lifecycle correction: `57254a95391e2f8a2672176d0cf25aa7cb8f56e6`
+(from `44e116366a0aca09b09bd22e87c7216ce2a8dc93`).
 Owner proposals read at `d6549ba454e26f1e01914c4189c9388550fe89a3` are treated
 as proposals, not adopted policy.
 
@@ -108,6 +110,10 @@ A failed attempt can be re-prepared for corrected evidence only while the store
 hash still equals the prepared pre-restore hash and no effects were written.
 After effects exist, retries must use the same journal. This prevents silently
 discarding a partial restore.
+
+The gate write is the first durable action. If it cannot be synced, the restore
+command fails and the store must remain stopped; do not open a restored store
+whose gate could not be written.
 
 | Restore interruption | Durable state | Reopen behaviour |
 | --- | --- | --- |
