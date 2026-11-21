@@ -19,9 +19,11 @@ IMAGE_MODE="${IMAGE_MODE:-build}"
 EXPECTED_IMAGE_ID="${EXPECTED_IMAGE_ID:-}"
 EXPECTED_SOURCE_SHA="${EXPECTED_SOURCE_SHA:-}"
 HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
+QUALIFICATION_PATH="${QUALIFICATION_PATH:-https-edge}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 [[ "$STAGING_ORIGIN" == https://* ]] || fail "STAGING_ORIGIN must be https"
+[[ "$QUALIFICATION_PATH" == "https-edge" ]] || fail "browser acceptance requires QUALIFICATION_PATH=https-edge"
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ "$IMAGE_MODE" != "existing" || "$BUILDER_OPERATOR_IMAGE" =~ ^sha256:[0-9a-f]{64}$ ]] \
   || fail "existing-image mode requires BUILDER_OPERATOR_IMAGE to be the immutable image ID"
@@ -46,6 +48,9 @@ cat > "$BROWSER_EVIDENCE_DIR/identity.json" <<EOF
   "harnessSha": "$HARNESS_SHA",
   "imageId": "$OPERATOR_IMAGE_ID",
   "imageMode": "$IMAGE_MODE",
+  "qualificationPath": "$QUALIFICATION_PATH",
+  "applicationOrigin": "$STAGING_ORIGIN",
+  "effectiveRuntimeOrigin": "$STAGING_ORIGIN",
   "operatorImageInput": "$BUILDER_OPERATOR_IMAGE"
 }
 EOF
@@ -61,13 +66,15 @@ BROWSER_PACKSHOT="$ROOT/public/campaign-assets/harbor-field-bottle.webp" \
 BROWSER_IMAGE_ID="$OPERATOR_IMAGE_ID" \
 BROWSER_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
 BROWSER_HARNESS_SHA="$HARNESS_SHA" \
+BROWSER_APPLICATION_ORIGIN="$STAGING_ORIGIN" \
+BROWSER_QUALIFICATION_PATH="$QUALIFICATION_PATH" \
 ENGINE="$ENGINE" \
 BUILDER_OPERATOR_IMAGE="$OPERATOR_IMAGE_ID" \
 BUILDER_OPERATOR_VOLUME="$BUILDER_OPERATOR_VOLUME" \
 BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
   node deploy/builder/qualify-browser.mjs
 
-node -e '
+STAGING_ORIGIN="$STAGING_ORIGIN" node -e '
   const fs = require("node:fs");
   const r = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
   const required = [
@@ -113,6 +120,12 @@ node -e '
   }
   if (!r.identity || !/^sha256:[0-9a-f]{64}$/.test(r.identity.imageId || "")) {
     throw new Error("browser results did not record the immutable image ID");
+  }
+  if (r.identity.qualificationPath !== "https-edge") {
+    throw new Error("browser results did not record HTTPS edge qualification");
+  }
+  if (r.identity.applicationOrigin !== process.env.STAGING_ORIGIN) {
+    throw new Error("browser results did not preserve the application origin");
   }
   if (!/^[0-9a-f]{40}$/.test(r.identity.applicationSourceSha || "") ||
       !/^[0-9a-f]{40}$/.test(r.identity.harnessSha || "")) {

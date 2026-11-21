@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -15,7 +16,7 @@ import {
   diffScriptAudits,
   updateScriptRegistry,
 } from "../deploy/builder/private-staging/sri-script-audit.mjs";
-import { verifyArchiveReceipt } from "../deploy/builder/private-staging/verify-image-archive.mjs";
+import { evaluateArchiveHandoff, verifyArchiveReceipt } from "../deploy/builder/private-staging/verify-image-archive.mjs";
 
 const root = process.cwd();
 const imageId = `sha256:${"a".repeat(64)}`;
@@ -173,6 +174,37 @@ test("archive receipt verification rejects hash, source and image mismatches", (
   assert.equal(verifyArchiveReceipt({ ...receipt, archiveSha256: "" }, { archiveSha256: "d".repeat(64) }).ok, false);
 });
 
+test("archive handoff cannot be complete when fresh-daemon requirements are bypassed or missing", () => {
+  const completeChecks = {
+    archivePresent: true,
+    receiptPresent: true,
+    archiveHashPerformed: true,
+    archiveHashMatched: true,
+    receiptIdentityValid: true,
+    freshDaemonRequired: true,
+    freshDaemonVerified: true,
+    imageAbsentBeforeLoad: true,
+    loadPerformed: true,
+    loadSucceeded: true,
+    loadedImageInspected: true,
+    identityVerified: true,
+  };
+  assert.equal(evaluateArchiveHandoff(completeChecks).complete, true);
+  for (const [name, value] of [
+    ["freshDaemonRequired", false],
+    ["freshDaemonVerified", false],
+    ["imageAbsentBeforeLoad", false],
+    ["loadPerformed", false],
+    ["loadSucceeded", false],
+    ["identityVerified", false],
+  ]) {
+    const result = evaluateArchiveHandoff({ ...completeChecks, [name]: value });
+    assert.equal(result.complete, false, name);
+    assert.equal(result.independentHandoff, false, name);
+    assert.ok(result.missing.includes(name), name);
+  }
+});
+
 function findBash() {
   if (process.env.BASH) return process.env.BASH;
   if (process.platform === "win32") {
@@ -204,7 +236,7 @@ function setupStub(tempDir) {
 }
 
 test(
-  "existing-image qualification resolves the exact ID and never invokes a build",
+  "http-loopback qualification executes beyond validation and never invokes a build",
   { skip: !bashAvailable && "bash is required for the shell harness checks" },
   () => {
     const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-existing-image-"));
@@ -218,21 +250,22 @@ test(
         STUB_STATE: state,
         STUB_EXISTING_IMAGE_ID: imageId,
         STUB_EXISTING_SOURCE_SHA: sourceSha,
-        STUB_EXISTING_ORIGIN: "https://builder-staging.ornigami.test",
+        STUB_EXISTING_ORIGIN: "http://127.0.0.1:3100",
         STUB_EXISTING_PLATFORM: "linux/amd64",
         STUB_EXISTING_USER: "1000:1000",
         HARNESS_SHA: harnessSha,
         IMAGE_REFERENCE: imageId,
         EXPECTED_SOURCE_SHA: sourceSha,
-        EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
+        EXPECTED_ORIGIN: "http://127.0.0.1:3100",
         EXPECTED_PLATFORM: "linux/amd64",
         EXPECTED_USER: "1000:1000",
+        QUALIFICATION_PATH: "http-loopback",
         EVIDENCE_DIR: evidence,
-        QUALIFY_SELF_TEST: "1",
         ALLOW_DIRTY: "1",
         ALLOW_NON_LINUX_ENGINE: "1",
         BROWSER_PHASE: "0",
-        RUN_ID: "existing-image-selftest",
+        MOUNT_ONLY: "1",
+        RUN_ID: "existing-image-loopback",
         TMPDIR: os.tmpdir().split(path.sep).join("/"),
       };
       const result = spawnSync(bash, ["deploy/builder/private-staging/qualify-existing-image.sh"], {
@@ -244,14 +277,22 @@ test(
       const calls = readFileSync(path.join(tempDir, "state", "calls.log"), "utf8");
       assert.doesNotMatch(calls, /^build\b/m, "existing-image mode must not invoke a build");
       assert.match(calls, /^image inspect /m);
+      assert.match(calls, /^network create /m, "mount-only path must create its run-scoped network");
+      assert.match(calls, /^volume create /m, "mount-only path must create its run-scoped volume");
       const results = readFileSync(path.join(tempDir, "evidence", "runtime", "results.txt"), "utf8");
       assert.match(results, /^image_mode=existing$/m);
       assert.match(results, new RegExp(`^image_id=${imageId}$`, "m"));
       assert.match(results, new RegExp(`^application_source_sha=${sourceSha}$`, "m"));
       assert.match(results, new RegExp(`^harness_sha=${harnessSha}$`, "m"));
+      assert.match(results, /^qualification_path=http-loopback$/m);
+      assert.match(results, /^effective_runtime_origin=http:\/\/127\.0\.0\.1:3100$/m);
+      assert.match(results, /^mount_only=true$/m);
       const summary = JSON.parse(readFileSync(path.join(tempDir, "evidence", "existing-image-qualification.json"), "utf8"));
       assert.equal(summary.buildInvoked, false);
       assert.equal(summary.imageId, imageId);
+      assert.equal(summary.qualificationPath, "http-loopback");
+      assert.equal(summary.httpsAcceptance, false);
+      assert.equal(summary.fullHttpsAcceptance, false);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
@@ -282,6 +323,10 @@ test(
           IMAGE_MODE: "existing",
           IMAGE: imageId,
           SOURCE_SHA: "e".repeat(40),
+          APP_URL: "https://builder-staging.ornigami.test",
+          QUALIFICATION_PATH: "https-edge",
+          APPLICATION_ORIGIN: "https://builder-staging.ornigami.test",
+          BROWSER_ORIGIN: "https://builder-staging.ornigami.test",
           EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
           EXPECTED_PLATFORM: "linux/amd64",
           EXPECTED_USER: "1000:1000",
@@ -332,6 +377,10 @@ test(
           IMAGE_MODE: "existing",
           IMAGE: imageId,
           SOURCE_SHA: sourceSha,
+          APP_URL: "https://builder-staging.ornigami.test",
+          QUALIFICATION_PATH: "https-edge",
+          APPLICATION_ORIGIN: "https://builder-staging.ornigami.test",
+          BROWSER_ORIGIN: "https://builder-staging.ornigami.test",
           EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
           EXPECTED_PLATFORM: "linux/amd64",
           EXPECTED_USER: "1000:1000",
@@ -353,6 +402,210 @@ test(
       assert.match(results, /^image_mode=existing$/m);
       assert.match(results, new RegExp(`^image_id=${imageId}$`, "m"));
       assert.match(results, /^ok=true$/m);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "https-edge mount-only qualification keeps the HTTPS runtime origin and never builds",
+  { skip: !bashAvailable && "bash is required for the shell harness checks" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-existing-image-https-"));
+    try {
+      const stubEngine = setupStub(tempDir);
+      const state = relative(path.join(tempDir, "state"));
+      const evidence = relative(path.join(tempDir, "evidence"));
+      const result = spawnSync(bash, ["deploy/builder/qualify-linux.sh"], {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          ENGINE: stubEngine,
+          STUB_STATE: state,
+          STUB_EXISTING_IMAGE_ID: imageId,
+          STUB_EXISTING_SOURCE_SHA: sourceSha,
+          STUB_EXISTING_ORIGIN: "https://builder-staging.ornigami.test",
+          STUB_EXISTING_PLATFORM: "linux/amd64",
+          STUB_EXISTING_USER: "1000:1000",
+          IMAGE_MODE: "existing",
+          IMAGE: imageId,
+          SOURCE_SHA: sourceSha,
+          APP_URL: "https://builder-staging.ornigami.test",
+          QUALIFICATION_PATH: "https-edge",
+          APPLICATION_ORIGIN: "https://builder-staging.ornigami.test",
+          BROWSER_ORIGIN: "https://builder-staging.ornigami.test",
+          EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
+          EXPECTED_PLATFORM: "linux/amd64",
+          EXPECTED_USER: "1000:1000",
+          HARNESS_SHA: harnessSha,
+          MOUNT_ONLY: "1",
+          EVIDENCE_DIR: evidence,
+          ALLOW_DIRTY: "1",
+          ALLOW_NON_LINUX_ENGINE: "1",
+          BROWSER_PHASE: "0",
+          RUN_ID: "existing-image-https-mount",
+        },
+      });
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      const calls = readFileSync(path.join(tempDir, "state", "calls.log"), "utf8");
+      assert.doesNotMatch(calls, /^build\b/m, "existing-image mode must not invoke a build");
+      assert.match(calls, /^network create /m);
+      assert.match(calls, /^volume create /m);
+      const results = readFileSync(path.join(tempDir, "evidence", "results.txt"), "utf8");
+      assert.match(results, /^qualification_path=https-edge$/m);
+      assert.match(results, /^application_origin=https:\/\/builder-staging\.ornigami\.test$/m);
+      assert.match(results, /^browser_origin=https:\/\/builder-staging\.ornigami\.test$/m);
+      assert.match(results, /^effective_runtime_origin=https:\/\/builder-staging\.ornigami\.test$/m);
+      assert.match(results, /^diagnostic_transport_origin=$/m);
+      assert.match(results, /^https_acceptance=false$/m);
+      assert.doesNotMatch(results, /effective_runtime_origin=http:\/\/127\.0\.0\.1/m);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "https-edge qualification rejects conflicting origin inputs before run resources",
+  { skip: !bashAvailable && "bash is required for the shell harness checks" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-existing-image-conflict-"));
+    try {
+      const stubEngine = setupStub(tempDir);
+      const state = relative(path.join(tempDir, "state"));
+      const evidence = relative(path.join(tempDir, "evidence"));
+      const result = spawnSync(bash, ["deploy/builder/private-staging/qualify-existing-image.sh"], {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          ENGINE: stubEngine,
+          STUB_STATE: state,
+          STUB_EXISTING_IMAGE_ID: imageId,
+          STUB_EXISTING_SOURCE_SHA: sourceSha,
+          STUB_EXISTING_ORIGIN: "https://builder-staging.ornigami.test",
+          HARNESS_SHA: harnessSha,
+          IMAGE_REFERENCE: imageId,
+          EXPECTED_SOURCE_SHA: sourceSha,
+          EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
+          QUALIFICATION_PATH: "https-edge",
+          STAGING_ORIGIN: "https://builder-staging.ornigami.test",
+          APP_URL: "http://127.0.0.1:3100",
+          EVIDENCE_DIR: evidence,
+          ALLOW_DIRTY: "1",
+          ALLOW_NON_LINUX_ENGINE: "1",
+        },
+      });
+      assert.notEqual(result.status, 0, "conflicting APP_URL must fail");
+      assert.match(`${result.stdout}\n${result.stderr}`, /APP_URL .* conflicts with the image origin/);
+      assert.equal(existsSync(path.join(tempDir, "evidence")), false, "evidence must not be created");
+      const calls = existsSync(path.join(tempDir, "state", "calls.log"))
+        ? readFileSync(path.join(tempDir, "state", "calls.log"), "utf8")
+        : "";
+      assert.doesNotMatch(calls, /^build\b/m);
+      assert.doesNotMatch(calls, /^network create/m);
+      assert.doesNotMatch(calls, /^volume create/m);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "https-edge qualification rejects a conflicting staging origin before run resources",
+  { skip: !bashAvailable && "bash is required for the shell harness checks" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-existing-image-staging-conflict-"));
+    try {
+      const stubEngine = setupStub(tempDir);
+      const state = relative(path.join(tempDir, "state"));
+      const evidence = relative(path.join(tempDir, "evidence"));
+      const result = spawnSync(bash, ["deploy/builder/private-staging/qualify-existing-image.sh"], {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          ENGINE: stubEngine,
+          STUB_STATE: state,
+          STUB_EXISTING_IMAGE_ID: imageId,
+          STUB_EXISTING_SOURCE_SHA: sourceSha,
+          STUB_EXISTING_ORIGIN: "https://builder-staging.ornigami.test",
+          HARNESS_SHA: harnessSha,
+          IMAGE_REFERENCE: imageId,
+          EXPECTED_SOURCE_SHA: sourceSha,
+          EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
+          QUALIFICATION_PATH: "https-edge",
+          STAGING_ORIGIN: "https://other-staging.ornigami.test",
+          EVIDENCE_DIR: evidence,
+        },
+      });
+      assert.notEqual(result.status, 0, "conflicting STAGING_ORIGIN must fail");
+      assert.match(`${result.stdout}\n${result.stderr}`, /STAGING_ORIGIN .* conflicts with the image origin/);
+      assert.equal(existsSync(path.join(tempDir, "evidence")), false, "evidence must not be created");
+      const calls = existsSync(path.join(tempDir, "state", "calls.log"))
+        ? readFileSync(path.join(tempDir, "state", "calls.log"), "utf8")
+        : "";
+      assert.doesNotMatch(calls, /^build\b/m);
+      assert.doesNotMatch(calls, /^network create/m);
+      assert.doesNotMatch(calls, /^volume create/m);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "https-edge qualification rejects an edge container running a different image before run resources",
+  { skip: !bashAvailable && "bash is required for the shell harness checks" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-existing-image-edge-mismatch-"));
+    try {
+      const stubEngine = setupStub(tempDir);
+      const state = relative(path.join(tempDir, "state"));
+      const containerDir = path.join(tempDir, "state", "containers", "edge-app");
+      mkdirSync(containerDir, { recursive: true });
+      writeFileSync(path.join(containerDir, "label"), "edge");
+      writeFileSync(path.join(containerDir, "image"), otherImageId);
+      writeFileSync(path.join(containerDir, "running"), "true\n");
+      const evidence = relative(path.join(tempDir, "evidence"));
+      const result = spawnSync(bash, ["deploy/builder/private-staging/qualify-existing-image.sh"], {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          ENGINE: stubEngine,
+          STUB_STATE: state,
+          STUB_EXISTING_IMAGE_ID: imageId,
+          STUB_EXISTING_SOURCE_SHA: sourceSha,
+          STUB_EXISTING_ORIGIN: "https://builder-staging.ornigami.test",
+          STUB_EXISTING_PLATFORM: "linux/amd64",
+          STUB_EXISTING_USER: "1000:1000",
+          HARNESS_SHA: harnessSha,
+          IMAGE_REFERENCE: imageId,
+          EXPECTED_SOURCE_SHA: sourceSha,
+          EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
+          QUALIFICATION_PATH: "https-edge",
+          STAGING_ORIGIN: "https://builder-staging.ornigami.test",
+          STAGING_BASIC_AUTH_USER: "synthetic",
+          STAGING_BASIC_AUTH_PASSWORD: "synthetic",
+          EDGE_APP_CONTAINER: "edge-app",
+          EDGE_PROXY_CONTAINER: "edge-proxy",
+          BUILDER_OPERATOR_VOLUME: "edge-store",
+          BUILDER_RUNTIME_STORE_HOST_ID: "edge-host",
+          EVIDENCE_DIR: evidence,
+          ALLOW_DIRTY: "1",
+          ALLOW_NON_LINUX_ENGINE: "1",
+        },
+      });
+      assert.notEqual(result.status, 0, "edge image mismatch must fail");
+      assert.match(`${result.stdout}\n${result.stderr}`, /edge app container image mismatch/);
+      assert.equal(existsSync(path.join(tempDir, "evidence")), false, "evidence must not be created");
+      const calls = readFileSync(path.join(tempDir, "state", "calls.log"), "utf8");
+      assert.doesNotMatch(calls, /^build\b/m);
+      assert.doesNotMatch(calls, /^network create/m);
+      assert.doesNotMatch(calls, /^volume create/m);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
@@ -386,6 +639,67 @@ test(
       const record = JSON.parse(readFileSync(path.join(evidence, "archive-verification.json"), "utf8"));
       assert.equal(record.complete, false);
       assert.match(record.reason, /archive is missing/);
+      assert.equal(record.checks.archivePresent, false);
+      assert.equal(existsSync(path.join(evidence, "ACCEPTED.txt")), false);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "archive fresh-daemon bypass remains an incomplete, non-independent handoff",
+  { skip: !bashAvailable && "bash is required for the shell harness checks" },
+  () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "ornigami-archive-bypass-"));
+    try {
+      const archive = path.join(tempDir, "archive.tar");
+      const receiptPath = path.join(tempDir, "receipt.json");
+      const evidence = path.join(tempDir, "evidence");
+      const archiveBytes = Buffer.from("synthetic archive bytes");
+      writeFileSync(archive, archiveBytes);
+      const archiveSha256 = createHash("sha256").update(archiveBytes).digest("hex");
+      writeFileSync(
+        receiptPath,
+        JSON.stringify({
+          applicationSourceSha: sourceSha,
+          harnessSha,
+          imageId,
+          origin: "https://builder-staging.ornigami.test",
+          platform: "linux/amd64",
+          user: "1000:1000",
+          archiveSha256,
+          archiveBytes: archiveBytes.length,
+        }),
+      );
+      const result = spawnSync(
+        process.execPath,
+        ["deploy/builder/private-staging/verify-image-archive.mjs"],
+        {
+          cwd: root,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            ARCHIVE_PATH: archive,
+            RECEIPT_PATH: receiptPath,
+            EVIDENCE_DIR: evidence,
+            ENGINE: "docker",
+            REQUIRE_FRESH_DAEMON: "0",
+            EXPECTED_SOURCE_SHA: sourceSha,
+            EXPECTED_IMAGE_ID: imageId,
+            EXPECTED_ORIGIN: "https://builder-staging.ornigami.test",
+            HARNESS_SHA: harnessSha,
+          },
+        },
+      );
+      assert.notEqual(result.status, 0, "bypass must not pass");
+      const record = JSON.parse(readFileSync(path.join(evidence, "archive-verification.json"), "utf8"));
+      assert.equal(record.complete, false);
+      assert.notEqual(record.independentHandoff, true);
+      assert.match(record.reason, /fresh-daemon image-absence requirement was bypassed/);
+      assert.equal(record.checks.archivePresent, true);
+      assert.equal(record.checks.receiptPresent, true);
+      assert.equal(record.checks.freshDaemonRequired, false);
       assert.equal(existsSync(path.join(evidence, "ACCEPTED.txt")), false);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });

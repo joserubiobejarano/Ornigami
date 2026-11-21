@@ -82,6 +82,8 @@ const results = {
     applicationSourceSha: process.env.BROWSER_SOURCE_SHA ?? null,
     harnessSha: process.env.BROWSER_HARNESS_SHA ?? null,
     imageId: process.env.BROWSER_IMAGE_ID ?? null,
+    applicationOrigin: process.env.BROWSER_APPLICATION_ORIGIN ?? baseUrl,
+    qualificationPath: process.env.BROWSER_QUALIFICATION_PATH ?? null,
   },
   checks: [],
   requestKeys: [],

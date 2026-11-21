@@ -16,11 +16,13 @@ ENGINE="${ENGINE:-docker}"
 IMAGE_MODE="${IMAGE_MODE:-build}"
 EXPECTED_IMAGE_ID="${EXPECTED_IMAGE_ID:-}"
 HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
+QUALIFICATION_PATH="${QUALIFICATION_PATH:-https-edge}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
 
 [[ "$APP_URL" == https://* ]] || fail "APP_URL must be the actual https origin"
+[[ "$QUALIFICATION_PATH" == "https-edge" ]] || fail "runtime/restore/rollback wrapper requires QUALIFICATION_PATH=https-edge"
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ ! -e "$EVIDENCE_DIR" ]] || fail "EVIDENCE_DIR already exists: $EVIDENCE_DIR"
 if [[ "$IMAGE_MODE" == "existing" ]]; then
@@ -32,6 +34,9 @@ fi
 note "Running synthetic runtime/restore/lock/closed-rollback checks"
 SOURCE_SHA="$SOURCE_SHA" \
 APP_URL="$APP_URL" \
+QUALIFICATION_PATH="$QUALIFICATION_PATH" \
+APPLICATION_ORIGIN="$APP_URL" \
+BROWSER_ORIGIN="$APP_URL" \
 IMAGE_MODE="$IMAGE_MODE" \
 IMAGE="${EXPECTED_IMAGE_ID:-${IMAGE:-ornigami-builder:qualify-$RUN_ID}}" \
 EXPECTED_IMAGE_ID="$EXPECTED_IMAGE_ID" \
@@ -51,6 +56,9 @@ RESULTS="$EVIDENCE_DIR/results.txt"
 for expected in \
   "ok=true" \
   "image_mode=$IMAGE_MODE" \
+  "qualification_path=$QUALIFICATION_PATH" \
+  "application_origin=$APP_URL" \
+  "effective_runtime_origin=$APP_URL" \
   "application_source_sha=$SOURCE_SHA" \
   "harness_sha=$HARNESS_SHA" \
   "browser_journey=skipped" \

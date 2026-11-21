@@ -40,6 +40,10 @@ test("staging acceptance distinguishes source, image digest, platform, origin an
   assert.match(readme, /full_acceptance=false/);
   assert.match(readme, /Existing-image qualification/);
   assert.match(readme, /never rebuilds, retags a substitute or falls back to\s+a build/);
+  assert.match(readme, /QUALIFICATION_PATH=https-edge/);
+  assert.match(readme, /QUALIFICATION_PATH=http-loopback/);
+  assert.match(readme, /effectiveRuntimeOrigin/);
+  assert.match(readme, /REQUIRE_FRESH_DAEMON=0/);
   assert.match(readme, /Neither the local image ID nor an archive checksum proves bit-for-bit\s+reproducibility from source/);
   for (const file of [
     "accept-edge.mjs",
@@ -80,6 +84,8 @@ test("browser acceptance supports actual HTTPS origin, private access and dynami
   assert.match(browser, /inserted/);
   assert.match(browser, /removed/);
   assert.match(browser, /BROWSER_IMAGE_ID/);
+  assert.match(browser, /BROWSER_QUALIFICATION_PATH/);
+  assert.match(browser, /BROWSER_APPLICATION_ORIGIN/);
 });
 
 test("edge and runtime acceptance record the image identity and parse proxy bindings structurally", () => {

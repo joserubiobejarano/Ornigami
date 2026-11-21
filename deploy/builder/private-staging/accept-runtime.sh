@@ -108,7 +108,8 @@ cat > "$EVIDENCE_DIR/identity.json" <<EOF
   "applicationSourceSha": "$EXPECTED_SOURCE_SHA",
   "harnessSha": "$HARNESS_SHA",
   "imageId": "$EXPECTED_IMAGE_ID",
-  "origin": "$EXPECTED_ORIGIN"
+  "origin": "$EXPECTED_ORIGIN",
+  "effectiveRuntimeOrigin": "$EXPECTED_ORIGIN"
 }
 EOF
 note "Runtime acceptance passed; evidence: $EVIDENCE_DIR"

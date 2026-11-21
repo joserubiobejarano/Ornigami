@@ -84,7 +84,9 @@ EVIDENCE_DIR=<new-archive-verification-dir> \
 This script checks the archive hash, requires the image to be absent on the
 target daemon, loads it, and re-verifies the exact immutable image ID, source
 SHA, origin, platform and user. A missing archive, missing receipt, hash
-mismatch or identity mismatch exits non-zero and records an incomplete handoff.
+mismatch, pre-existing image or identity mismatch exits non-zero and records an
+incomplete handoff. `REQUIRE_FRESH_DAEMON=0` is a deliberate bypass and always
+exits incomplete/non-independent, recording which checks were performed.
 Neither the local image ID nor an archive checksum proves bit-for-bit
 reproducibility from source.
 
@@ -94,13 +96,28 @@ Use this path when an image was built or retained elsewhere. It accepts only an
 immutable reference (`sha256:<64-hex>` or `repo@sha256:<64-hex>`), resolves it to
 the local image ID, and verifies source, origin, platform and user **before**
 creating run resources. It never rebuilds, retags a substitute or falls back to
-a build. The same resolved ID is used for the packaged operator, browser phase,
-restart, fresh-volume restore, lock recovery and closed rollback.
+a build. `QUALIFICATION_PATH` selects the scope explicitly.
+
+### HTTPS private-edge path
+
+An HTTPS image must use this path. It verifies the running edge app container is
+the same image ID and origin, then runs edge, browser/ZIP/revocation, edge
+runtime and isolated populated restart/restore/lock/closed rollback receipts
+with that same ID.
 
 ```bash
+QUALIFICATION_PATH=https-edge \
 IMAGE_REFERENCE=sha256:f9a28737303852399ea604d569bd08c6ebc9293a75e4c01852f419f36ba40d12 \
 EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
 EXPECTED_ORIGIN=https://builder-staging.ornigami.com \
+STAGING_ORIGIN=https://builder-staging.ornigami.com \
+STAGING_BASIC_AUTH_USER=<private-user> \
+STAGING_BASIC_AUTH_PASSWORD=<private-password> \
+EDGE_APP_CONTAINER=<running-edge-app-container> \
+EDGE_PROXY_CONTAINER=<running-caddy-container> \
+EDGE_STORE_VOLUME=ornigami-builder-store-v1 \
+BUILDER_OPERATOR_VOLUME=ornigami-builder-store-v1 \
+BUILDER_RUNTIME_STORE_HOST_ID=ornigami-builder-store-v1 \
 EXPECTED_PLATFORM=linux/amd64 \
 EXPECTED_USER=1000:1000 \
 HARNESS_SHA=<harness-commit> \
@@ -108,10 +125,35 @@ EVIDENCE_DIR=<new-existing-image-evidence-dir> \
   deploy/builder/private-staging/qualify-existing-image.sh
 ```
 
-The summary records `applicationSourceSha`, `harnessSha` and `imageId`
-separately. `runtime/` contains the full qualification evidence, including the
-same immutable ID in every phase. Registry references are only pulled when
-`PULL_EXISTING_IMAGE=1` is explicitly set; no tag is created.
+The summary records `applicationSourceSha`, `harnessSha`, `imageId`,
+`applicationOrigin` and `effectiveRuntimeOrigin` separately. The effective
+runtime origin remains the HTTPS application origin; no loopback address is
+substituted. `edge/`, `browser/`, `runtime-edge/` and `rollback/` must all name
+the same image ID. An app container running a different image, a conflicting
+`APP_URL`/`STAGING_ORIGIN`, a non-HTTPS origin, or missing edge prerequisites
+fails before the evidence directory or run resources are created.
+
+### Diagnostic HTTP-loopback path
+
+This is a separately identified local diagnostic scope. It is only valid for an
+image whose configured origin is `http://127.0.0.1:<port>`; it never counts as
+HTTPS acceptance.
+
+```bash
+QUALIFICATION_PATH=http-loopback \
+IMAGE_REFERENCE=sha256:<loopback-image-id> \
+EXPECTED_SOURCE_SHA=<source-sha> \
+EXPECTED_ORIGIN=http://127.0.0.1:3100 \
+EXPECTED_PLATFORM=linux/amd64 \
+EXPECTED_USER=1000:1000 \
+HARNESS_SHA=<harness-commit> \
+EVIDENCE_DIR=<new-loopback-evidence-dir> \
+  deploy/builder/private-staging/qualify-existing-image.sh
+```
+
+Its receipts explicitly record `https_acceptance=false` and
+`acceptance_scope=diagnostic-http-loopback`. Registry references are only pulled
+when `PULL_EXISTING_IMAGE=1` is explicitly set; no tag is created.
 
 After separate publication authorization:
 
@@ -199,6 +241,7 @@ IMAGE_MODE=existing \
 EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
 EXPECTED_SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
 HARNESS_SHA=<harness-commit> \
+QUALIFICATION_PATH=https-edge \
 BROWSER_EVIDENCE_DIR=<new-browser-evidence-dir> \
   deploy/builder/private-staging/accept-browser.sh
 ```
@@ -244,6 +287,7 @@ unexpected address or extra protocol fails. This script is read-only.
 ```bash
 SOURCE_SHA=4e3e00af212a3d97de582ab6fca6ecca8d0665dd \
 APP_URL=https://builder-staging.ornigami.com \
+QUALIFICATION_PATH=https-edge \
 IMAGE_MODE=existing \
 EXPECTED_IMAGE_ID=sha256:<resolved-image-id> \
 HARNESS_SHA=<harness-commit> \
@@ -264,6 +308,20 @@ runtime/rollback receipts together, plus the independently pulled or
 archive-loaded image identity. Each receipt must name the same application
 source SHA and immutable image ID while recording the harness SHA separately.
 Keep each receipt separate.
+
+## Qualification evidence matrix
+
+| Behavior | Local coverage in this package | Still requires real Linux/edge execution |
+| --- | --- | --- |
+| Immutable reference resolution, source/origin/platform/user checks | Focused unit tests and stub-engine shell tests | Image from the accepted registry/archive |
+| Existing-image mode cannot build or retag | Stub-engine call log assertions on mount-only and failure paths | Confirm with the real engine and exact retained ID |
+| HTTPS vs loopback origin contract | Shell regression with conflicting inputs and HTTPS mount-only receipt | Full HTTPS browser against the private edge |
+| Edge/TLS/private access/CSP/initial SRI | Edge script contract checks | Real DNS/TLS/Caddy/BasicAuth endpoint |
+| Browser/ZIP/revocation/dynamic SRI | Browser harness contract checks | Real browser run through the HTTPS edge |
+| Edge runtime isolation/proxy bindings | Structural parser regressions | Live app/proxy container inspection |
+| Populated restart/restore/lock/closed rollback | Existing Linux harness, stub mount-only path | Real isolated volume/container execution |
+| Archive handoff | Receipt/hash/bypass/incomplete tests | Fresh/isolated daemon load and independent custody |
+| Public/real-customer admission | Not covered | Separate customer/privacy/security/host gates |
 
 ## Rollback
 

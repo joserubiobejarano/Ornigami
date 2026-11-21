@@ -20,6 +20,13 @@
     "application": "invite-only builder session gate",
     "accessRecord": "pending protected owner reference"
   },
+  "qualification": {
+    "paths": ["https-edge", "http-loopback"],
+    "httpsEdge": "required for an HTTPS image; same image ID for edge, browser/ZIP/revocation, edge runtime and isolated restore/rollback",
+    "httpLoopback": "diagnostic only for an image whose configured origin is loopback; never HTTPS acceptance",
+    "originContract": "application origin and effective runtime origin remain identical; a diagnostic transport cannot replace them",
+    "archiveFreshDaemonBypass": "never complete or independent"
+  },
   "proxy": {
     "ingress": "Caddy container on edge + builder_internal",
     "appNetwork": "builder_internal",

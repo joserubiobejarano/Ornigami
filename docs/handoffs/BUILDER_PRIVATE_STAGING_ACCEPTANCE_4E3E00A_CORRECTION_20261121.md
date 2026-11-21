@@ -115,6 +115,27 @@ evidence directory.
    explicitly. Do not substitute an Actions artifact digest, local image ID,
    mutable tag or rebuilt image for the accepted image ID.
 
+## Follow-up correction — HTTPS origin and archive independence
+
+A later review found two remaining defects in the first closure:
+
+- The existing-image wrapper validated an HTTPS image origin and then let the
+  loopback browser phase replace the runtime application origin with
+  `http://127.0.0.1:<port>`. That is now rejected. `QUALIFICATION_PATH` is
+  explicit: `https-edge` keeps the HTTPS application/effective runtime origin,
+  requires the running edge app to be the same image ID, and only `http-loopback`
+  images may use the local diagnostic transport. Loopback receipts record
+  `https_acceptance=false`.
+- `verify-image-archive.mjs` allowed `REQUIRE_FRESH_DAEMON=0` to bypass image
+  absence while still returning `complete=true`. A bypass now always returns
+  `complete=false`, `independentHandoff=false`, records the performed check
+  flags, and exits non-zero.
+
+The full HTTPS private-edge command and the evidence matrix are in
+`deploy/builder/private-staging/README.md`. Shell regressions now execute the
+mount-only runtime path, not only self-test/validation modes, and cover
+conflicting origins and a pre-existing edge container with a different image.
+
 ## Remaining gates
 
 - Public DNS, public ACME TLS, a dedicated public VPS route and registry

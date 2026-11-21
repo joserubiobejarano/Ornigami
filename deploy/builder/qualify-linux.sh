@@ -36,9 +36,12 @@ cd "$ROOT"
 SOURCE_SHA="${SOURCE_SHA:-$(git rev-parse HEAD)}"
 APP_URL_EXPLICIT="${APP_URL:+1}"
 APP_URL="${APP_URL:-http://127.0.0.1:3100}"
+QUALIFICATION_PATH="${QUALIFICATION_PATH:-}"
+APPLICATION_ORIGIN="${APPLICATION_ORIGIN:-}"
+BROWSER_ORIGIN="${BROWSER_ORIGIN:-}"
 IMAGE_MODE="${IMAGE_MODE:-build}"
 HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
-EXPECTED_ORIGIN="${EXPECTED_ORIGIN:-$APP_URL}"
+EXPECTED_ORIGIN="${EXPECTED_ORIGIN:-}"
 EXPECTED_PLATFORM="${EXPECTED_PLATFORM:-linux/amd64}"
 EXPECTED_USER="${EXPECTED_USER:-1000:1000}"
 PLATFORM="${PLATFORM:-$EXPECTED_PLATFORM}"
@@ -175,7 +178,7 @@ fi
 if [[ "$STORE_MODE" != "volume" && "$STORE_MODE" != "bind" ]]; then
   fail "STORE_MODE must be volume or bind"
 fi
-if [[ "$QUALIFY_SELF_TEST" != "1" && "$IMAGE_VALIDATE_ONLY" != "1" && "$(id -u)" -ne 0 && "$(id -u)" -ne 1000 ]]; then
+if [[ "$QUALIFY_SELF_TEST" != "1" && "$IMAGE_VALIDATE_ONLY" != "1" && "${ALLOW_NON_LINUX_ENGINE:-0}" != "1" && "$(id -u)" -ne 0 && "$(id -u)" -ne 1000 ]]; then
   fail "Run as root or UID 1000 so the UID 1000 container can write the backup/evidence helpers"
 fi
 if ! "$ENGINE" info >/dev/null 2>&1; then
@@ -197,6 +200,58 @@ if [[ "$DIAGNOSTIC" == "1" && "$BROWSER_PHASE" != "1" ]]; then
   fail "DIAGNOSTIC requires BROWSER_PHASE=1"
 fi
 
+# Resolve the path and origins before any run resource is created. The image's
+# configured application origin is never replaced by a diagnostic address.
+if [[ -z "$QUALIFICATION_PATH" ]]; then
+  if [[ "$APP_URL" == https://* ]]; then
+    QUALIFICATION_PATH="https-edge"
+  else
+    QUALIFICATION_PATH="http-loopback"
+  fi
+fi
+if [[ "$QUALIFICATION_PATH" != "http-loopback" && "$QUALIFICATION_PATH" != "https-edge" ]]; then
+  fail "QUALIFICATION_PATH must be http-loopback or https-edge"
+fi
+if [[ "$DIAGNOSTIC" == "1" && "$QUALIFICATION_PATH" != "http-loopback" ]]; then
+  fail "DIAGNOSTIC is only supported with http-loopback qualification"
+fi
+
+if [[ "$QUALIFICATION_PATH" == "http-loopback" && "$BROWSER_PHASE" == "1" && -z "$APP_URL_EXPLICIT" ]]; then
+  HOST_PORT="$("$NODE_BIN" -e 'const net=require("node:net");const s=net.createServer();s.listen(0,"127.0.0.1",()=>{process.stdout.write(String(s.address().port));s.close()})')"
+  APP_URL="http://127.0.0.1:$HOST_PORT"
+fi
+
+APPLICATION_ORIGIN="${APPLICATION_ORIGIN:-$APP_URL}"
+BROWSER_ORIGIN="${BROWSER_ORIGIN:-$APPLICATION_ORIGIN}"
+EXPECTED_ORIGIN="${EXPECTED_ORIGIN:-$APPLICATION_ORIGIN}"
+[[ "$APP_URL" == "$APPLICATION_ORIGIN" ]] \
+  || fail "APP_URL [$APP_URL] conflicts with APPLICATION_ORIGIN [$APPLICATION_ORIGIN]"
+[[ "$BROWSER_ORIGIN" == "$APPLICATION_ORIGIN" ]] \
+  || fail "browser/diagnostic origin [$BROWSER_ORIGIN] must equal the configured application origin [$APPLICATION_ORIGIN]; a loopback transport cannot replace an HTTPS application origin"
+[[ "$EXPECTED_ORIGIN" == "$APPLICATION_ORIGIN" ]] \
+  || fail "EXPECTED_ORIGIN [$EXPECTED_ORIGIN] conflicts with APPLICATION_ORIGIN [$APPLICATION_ORIGIN]"
+"$NODE_BIN" -e '
+  const value = process.argv[1];
+  const url = new URL(value);
+  if (url.origin !== value || url.pathname !== "/" || url.search || url.hash) process.exit(1);
+' "$APPLICATION_ORIGIN" || fail "APPLICATION_ORIGIN must be an exact origin such as https://builder.example"
+
+if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
+  [[ "$APPLICATION_ORIGIN" == https://* ]] \
+    || fail "https-edge qualification requires an HTTPS application origin"
+  if [[ "$BROWSER_PHASE" == "1" ]]; then
+    BROWSER_BASIC_AUTH_USER="${BROWSER_BASIC_AUTH_USER:-${STAGING_BASIC_AUTH_USER:-}}"
+    BROWSER_BASIC_AUTH_PASSWORD="${BROWSER_BASIC_AUTH_PASSWORD:-${STAGING_BASIC_AUTH_PASSWORD:-}}"
+    [[ -n "$BROWSER_BASIC_AUTH_USER" && -n "$BROWSER_BASIC_AUTH_PASSWORD" ]] \
+      || fail "https-edge browser qualification requires STAGING_BASIC_AUTH_USER/PASSWORD"
+  fi
+else
+  [[ "$APPLICATION_ORIGIN" =~ ^http://127\.0\.0\.1:([0-9]+)$ ]] \
+    || fail "http-loopback qualification requires APPLICATION_ORIGIN=http://127.0.0.1:<port>"
+  HOST_PORT="${BASH_REMATCH[1]}"
+  [[ "$HOST_PORT" -ge 1 && "$HOST_PORT" -le 65535 ]] || fail "loopback origin has an invalid port"
+fi
+
 if [[ "$IMAGE_MODE" == "existing" ]]; then
   "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1 \
     || fail "existing image ID is not present on this daemon: $IMAGE"
@@ -212,27 +267,8 @@ if [[ "$IMAGE_MODE" == "existing" ]]; then
   [[ "$EXISTING_USER" == "$EXPECTED_USER" ]] || fail "user mismatch: expected $EXPECTED_USER, got $EXISTING_USER"
 fi
 
-# The browser phase needs an exact loopback origin and a published loopback
-# port. The container itself stays on the internal no-egress network; only
-# ingress from the host loopback is added.
-if [[ "$BROWSER_PHASE" == "1" ]]; then
-  if [[ -n "$APP_URL_EXPLICIT" ]]; then
-    HOST_PORT="$("$NODE_BIN" -e 'const u=new URL(process.argv[1]);process.stdout.write(u.port)' "$APP_URL")"
-    [[ -n "$HOST_PORT" ]] \
-      || fail "BROWSER_PHASE requires an explicit loopback port in APP_URL"
-  else
-    HOST_PORT="$("$NODE_BIN" -e 'const net=require("node:net");const s=net.createServer();s.listen(0,"127.0.0.1",()=>{process.stdout.write(String(s.address().port));s.close()})')"
-    APP_URL="http://127.0.0.1:$HOST_PORT"
-  fi
-  APP_URL_PROTOCOL="$("$NODE_BIN" -e 'process.stdout.write(new URL(process.argv[1]).protocol)' "$APP_URL")"
-  APP_URL_HOST="$("$NODE_BIN" -e 'process.stdout.write(new URL(process.argv[1]).hostname)' "$APP_URL")"
-  [[ "$APP_URL_PROTOCOL" == "http:" ]] \
-    || fail "BROWSER_PHASE requires APP_URL=http://127.0.0.1:<port>"
-  [[ "$APP_URL_HOST" == "127.0.0.1" ]] \
-    || fail "BROWSER_PHASE requires a 127.0.0.1 APP_URL (set BROWSER_PHASE=0 for a non-browser smoke)"
-  [[ "$HOST_PORT" =~ ^[0-9]+$ && "$HOST_PORT" -ge 1 && "$HOST_PORT" -le 65535 ]] \
-    || fail "APP_URL must include a valid loopback port"
-fi
+# The browser target was resolved with the application origin above. HTTPS
+# runs against the private edge; loopback runs use the run-owned host proxy.
 
 # ---------------------------------------------------------------------------
 # Collision checks: never reuse or delete another run's resources.
@@ -940,6 +976,12 @@ image_id=$IMAGE_ID
 run_id=$RUN_ID
 image=$IMAGE
 app_url=$APP_URL
+application_origin=$APPLICATION_ORIGIN
+browser_origin=$BROWSER_ORIGIN
+qualification_path=$QUALIFICATION_PATH
+effective_runtime_origin=$APPLICATION_ORIGIN
+https_acceptance=${HTTPS_ACCEPTANCE:-false}
+diagnostic_transport_origin=${HOST_PORT:+http://127.0.0.1:$HOST_PORT}
 expected_origin=$EXPECTED_ORIGIN
 checks=$CHECK_COUNT
 evidence_dir=$EVIDENCE_DIR
@@ -1002,6 +1044,12 @@ image_id=$IMAGE_ID
 run_id=$RUN_ID
 image=$IMAGE
 app_url=$APP_URL
+application_origin=$APPLICATION_ORIGIN
+browser_origin=$BROWSER_ORIGIN
+qualification_path=$QUALIFICATION_PATH
+effective_runtime_origin=$APPLICATION_ORIGIN
+https_acceptance=${HTTPS_ACCEPTANCE:-false}
+diagnostic_transport_origin=${HOST_PORT:+http://127.0.0.1:$HOST_PORT}
 store_mode=$STORE_MODE
 store_volume=$STORE_VOLUME
 runtime_user=1000:1000
@@ -1018,7 +1066,7 @@ EOF
   exit 0
 fi
 
-if [[ "$BROWSER_PHASE" == "1" ]]; then
+if [[ "$BROWSER_PHASE" == "1" && "$QUALIFICATION_PATH" == "http-loopback" ]]; then
   start_host_proxy "$CONTAINER"
 fi
 
@@ -1086,7 +1134,7 @@ fi
 note "Restart the same container and verify state"
 "$ENGINE" restart "$CONTAINER" >/dev/null
 wait_health "$CONTAINER"
-if [[ "$BROWSER_PHASE" == "1" ]]; then
+if [[ "$BROWSER_PHASE" == "1" && "$QUALIFICATION_PATH" == "http-loopback" ]]; then
   start_host_proxy "$CONTAINER"
 fi
 if [[ "$DIAGNOSTIC" == "1" ]]; then
@@ -1125,6 +1173,12 @@ image_id=$IMAGE_ID
 run_id=$RUN_ID
 image=$IMAGE
 app_url=$APP_URL
+application_origin=$APPLICATION_ORIGIN
+browser_origin=$BROWSER_ORIGIN
+qualification_path=$QUALIFICATION_PATH
+effective_runtime_origin=$APPLICATION_ORIGIN
+https_acceptance=${HTTPS_ACCEPTANCE:-false}
+diagnostic_transport_origin=${HOST_PORT:+http://127.0.0.1:$HOST_PORT}
 host_connection=loopback-proxy
 proxy_target=$PROXY_TARGET
 ingress_loopback_only=true
@@ -1145,25 +1199,36 @@ EOF
 fi
 
 # ---------------------------------------------------------------------------
-# Browser phase against the built container through the loopback-only test
-# origin. The container remains on the internal default-deny network; the
-# host proxy is loopback-only ingress. Test hooks and the live provider stay
-# disabled. The operator revokes synthetic subject A while its workspace is
-# open, then signs out synthetic subject B.
+# Browser phase. HTTPS runs against the private edge; the supported loopback
+# diagnostic runs through the run-owned host proxy. The application origin is
+# never replaced by the diagnostic transport.
 # ---------------------------------------------------------------------------
 FULL_ACCEPTANCE=false
+HTTPS_ACCEPTANCE=false
 if [[ "$BROWSER_PHASE" == "1" ]]; then
-  note "Run the browser phase against $APP_URL"
+  note "Run the browser phase against $BROWSER_ORIGIN ($QUALIFICATION_PATH)"
   browser_env=(
-    "BROWSER_BASE_URL=$APP_URL"
+    "BROWSER_BASE_URL=$BROWSER_ORIGIN"
     "BROWSER_EVIDENCE_DIR=$BROWSER_EVIDENCE_DIR"
     "BROWSER_OPERATOR_MODE=container"
     "BROWSER_PACKSHOT=$ROOT/public/campaign-assets/harbor-field-bottle.webp"
     "ENGINE=$ENGINE"
     "BUILDER_OPERATOR_IMAGE=$IMAGE"
-    "BUILDER_RUNTIME_STORE_HOST_ID=$STORE_HOST_ID"
+    "BUILDER_RUNTIME_STORE_HOST_ID=${BROWSER_OPERATOR_STORE_HOST_ID:-$STORE_HOST_ID}"
   )
-  if [[ "$STORE_MODE" == "volume" ]]; then
+  if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
+    browser_env+=(
+      "BROWSER_ALLOW_REMOTE_ORIGIN=1"
+      "BROWSER_REQUIRE_BASIC_AUTH=1"
+      "BROWSER_BASIC_AUTH_USER=$BROWSER_BASIC_AUTH_USER"
+      "BROWSER_BASIC_AUTH_PASSWORD=$BROWSER_BASIC_AUTH_PASSWORD"
+    )
+  fi
+  if [[ -n "${BROWSER_OPERATOR_VOLUME:-}" ]]; then
+    browser_env+=("BUILDER_OPERATOR_VOLUME=$BROWSER_OPERATOR_VOLUME")
+  elif [[ -n "${BROWSER_OPERATOR_STORE:-}" ]]; then
+    browser_env+=("BUILDER_OPERATOR_STORE=$BROWSER_OPERATOR_STORE")
+  elif [[ "$STORE_MODE" == "volume" ]]; then
     browser_env+=("BUILDER_OPERATOR_VOLUME=$STORE_VOLUME")
   else
     browser_env+=("BUILDER_OPERATOR_STORE=$STORE_DIR")
@@ -1171,6 +1236,9 @@ if [[ "$BROWSER_PHASE" == "1" ]]; then
   env "${browser_env[@]}" "$NODE_BIN" deploy/builder/qualify-browser.mjs
   check "browser:journey" "ok" "ok"
   FULL_ACCEPTANCE=true
+  if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
+    HTTPS_ACCEPTANCE=true
+  fi
   # The browser phase legitimately writes synthetic subjects, sessions and
   # usage. Capture the post-browser store for the backup/restore/lock checks;
   # the earlier restart hash remains the proof that the seeded state survived
@@ -1307,6 +1375,12 @@ image_id=$IMAGE_ID
 run_id=$RUN_ID
 image=$IMAGE
 app_url=$APP_URL
+application_origin=$APPLICATION_ORIGIN
+browser_origin=$BROWSER_ORIGIN
+qualification_path=$QUALIFICATION_PATH
+effective_runtime_origin=$APPLICATION_ORIGIN
+https_acceptance=${HTTPS_ACCEPTANCE:-false}
+diagnostic_transport_origin=${HOST_PORT:+http://127.0.0.1:$HOST_PORT}
 store_mode=$STORE_MODE
 store_host_id=$STORE_HOST_ID
 store_volume=$STORE_VOLUME
@@ -1335,13 +1409,21 @@ closed_rollback_preserved_store=true
 closed_records_preserved=true
 single_replica=true
 browser_phase=$BROWSER_PHASE
-browser_origin=$APP_URL
-host_connection=loopback-proxy
+host_connection=$([[ "$QUALIFICATION_PATH" == "https-edge" ]] && printf 'external-private-edge' || printf 'loopback-proxy')
 proxy_target=${PROXY_TARGET:-none}
 browser_loopback_proxy=${HOST_PORT:-none}
 browser_journey=$([[ "$BROWSER_PHASE" == "1" ]] && printf 'true' || printf 'skipped')
 full_acceptance=$FULL_ACCEPTANCE
-acceptance_scope=$([[ "$FULL_ACCEPTANCE" == "true" ]] && printf 'full' || printf 'partial')
+https_acceptance=$HTTPS_ACCEPTANCE
+acceptance_scope=$(
+  if [[ "$FULL_ACCEPTANCE" != "true" ]]; then
+    printf 'partial'
+  elif [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
+    printf 'full-https-private-edge'
+  else
+    printf 'diagnostic-http-loopback'
+  fi
+)
 checks=$CHECK_COUNT
 evidence_dir=$EVIDENCE_DIR
 EOF

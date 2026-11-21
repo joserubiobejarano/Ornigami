@@ -138,28 +138,36 @@ JSON
     esac
     ;;
   run)
-    [[ "$*" == *"--network none"* && "$*" == *"--read-only"* && "$*" == *"--user 0:0"* ]] \
-      || { echo "stub engine: setup run is not narrowly scoped" >&2; exit 1; }
-    volume=""
-    prev=""
-    for arg in "$@"; do
-      if [[ "$prev" == "--mount" ]]; then
-        case "$arg" in
-          type=volume,src=*,dst=/data/builder)
-            volume="${arg#type=volume,src=}"
-            volume="${volume%%,dst=/data/builder}"
-            ;;
-        esac
+    if [[ "$*" == *"--network none"* && "$*" == *"--read-only"* && "$*" == *"--user 0:0"* ]]; then
+      volume=""
+      prev=""
+      for arg in "$@"; do
+        if [[ "$prev" == "--mount" ]]; then
+          case "$arg" in
+            type=volume,src=*,dst=/data/builder)
+              volume="${arg#type=volume,src=}"
+              volume="${volume%%,dst=/data/builder}"
+              ;;
+          esac
+        fi
+        prev="$arg"
+      done
+      [[ -n "$volume" && -d "$STATE/volumes/$volume" ]] \
+        || { echo "stub engine: setup run missing run-owned volume" >&2; exit 1; }
+      if [[ "${STUB_FAIL_SETUP:-0}" == "1" ]]; then
+        echo "stub engine: deliberate setup failure" >&2
+        exit 1
       fi
-      prev="$arg"
-    done
-    [[ -n "$volume" && -d "$STATE/volumes/$volume" ]] \
-      || { echo "stub engine: setup run missing run-owned volume" >&2; exit 1; }
-    if [[ "${STUB_FAIL_SETUP:-0}" == "1" ]]; then
-      echo "stub engine: deliberate setup failure" >&2
-      exit 1
+      printf 'initialized\n' > "$STATE/volumes/$volume/initialized"
+      exit 0
     fi
-    printf 'initialized\n' > "$STATE/volumes/$volume/initialized"
+    name="$(find_name "$@")"
+    [[ -n "$name" ]] || { echo "stub engine: runtime run without --name" >&2; exit 1; }
+    mkdir -p "$STATE/containers/$name"
+    find_label "$@" > "$STATE/containers/$name/label"
+    last_arg "$@" > "$STATE/containers/$name/image"
+    printf 'true\n' > "$STATE/containers/$name/running"
+    printf 'healthy\n' > "$STATE/containers/$name/health"
     exit 0 ;;
   create)
     if [[ "${STUB_FAIL_CREATE:-0}" == "1" ]]; then
@@ -176,12 +184,42 @@ JSON
     [[ -d "$STATE/containers/$name" ]] || exit 1
     if [[ "$fmt" == *"org.ornigami.qualify.run"* ]]; then
       cat "$STATE/containers/$name/label"
+    elif [[ "$fmt" == *"org.opencontainers.image.revision"* ]]; then
+      printf '%s' "${STUB_EXISTING_SOURCE_SHA:-stub-source}"
+    elif [[ "$fmt" == *"org.ornigami.public-origin"* ]]; then
+      printf '%s' "${STUB_EXISTING_ORIGIN:-stub-origin}"
+    elif [[ "$fmt" == *".State.Running"* ]]; then
+      cat "$STATE/containers/$name/running" 2>/dev/null || printf 'true'
     elif [[ "$fmt" == *".State.Health"* ]]; then
-      printf 'healthy'
+      cat "$STATE/containers/$name/health" 2>/dev/null || printf 'healthy'
     elif [[ "$fmt" == *"ReadonlyRootfs"* ]]; then
       printf 'true'
+    elif [[ "$fmt" == *".Config.User"* ]]; then
+      printf '1000:1000'
+    elif [[ "$fmt" == *".Image"* ]]; then
+      cat "$STATE/containers/$name/image" 2>/dev/null || printf '%s' "${STUB_EXISTING_IMAGE_ID:-stub-image}"
     else
       printf 'true'
+    fi
+    ;;
+  exec)
+    probe=""
+    prev=""
+    for arg in "$@"; do
+      if [[ "$prev" == "-e" ]]; then
+        case "$arg" in
+          QUALIFY_PROBE_PATH=*) probe="${arg#QUALIFY_PROBE_PATH=}" ;;
+        esac
+      fi
+      prev="$arg"
+    done
+    if [[ -n "$probe" ]]; then
+      printf '1000:1000|700|ok'
+    else
+      case "$*" in
+        *"process.getuid"*) printf '1000:1000' ;;
+        *) printf 'ok' ;;
+      esac
     fi
     ;;
   rm)

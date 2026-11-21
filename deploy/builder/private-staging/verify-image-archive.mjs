@@ -78,6 +78,30 @@ export function verifyArchiveReceipt(
   };
 }
 
+export function evaluateArchiveHandoff(checks) {
+  const required = [
+    "archivePresent",
+    "receiptPresent",
+    "archiveHashPerformed",
+    "archiveHashMatched",
+    "receiptIdentityValid",
+    "freshDaemonRequired",
+    "freshDaemonVerified",
+    "imageAbsentBeforeLoad",
+    "loadPerformed",
+    "loadSucceeded",
+    "loadedImageInspected",
+    "identityVerified",
+  ];
+  const missing = required.filter((name) => checks?.[name] !== true);
+  const complete = missing.length === 0;
+  return {
+    complete,
+    independentHandoff: complete,
+    missing,
+  };
+}
+
 function sha256File(file) {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
 }
@@ -88,7 +112,7 @@ function run(engine, args) {
 
 const evidenceDir = process.env.EVIDENCE_DIR ?? null;
 function incomplete(reason, details = {}) {
-  const result = { ok: false, complete: false, reason, ...details, completedAt: new Date().toISOString() };
+  const result = { ok: false, complete: false, independentHandoff: false, reason, ...details, completedAt: new Date().toISOString() };
   if (evidenceDir && !existsSync(evidenceDir)) {
     mkdirSync(evidenceDir, { recursive: true });
     writeFileSync(path.join(evidenceDir, "archive-verification.json"), `${JSON.stringify(result, null, 2)}\n`);
@@ -103,21 +127,42 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const receiptPath = process.env.RECEIPT_PATH;
   const engine = process.env.ENGINE ?? "docker";
   const requireFresh = process.env.REQUIRE_FRESH_DAEMON ?? "1";
-  if (!archivePath) incomplete("ARCHIVE_PATH is required");
-  if (!receiptPath) incomplete("RECEIPT_PATH is required");
-  if (!existsSync(archivePath)) incomplete(`archive is missing: ${archivePath}`);
-  if (!existsSync(receiptPath)) incomplete(`archive receipt is missing: ${receiptPath}`);
-  if (!evidenceDir) incomplete("EVIDENCE_DIR is required for a verifiable handoff");
-  if (existsSync(evidenceDir)) incomplete(`EVIDENCE_DIR already exists and will not be reused: ${evidenceDir}`);
+  const checks = {
+    archivePresent: Boolean(archivePath && existsSync(archivePath)),
+    receiptPresent: Boolean(receiptPath && existsSync(receiptPath)),
+    archiveHashPerformed: false,
+    archiveHashMatched: false,
+    receiptIdentityValid: false,
+    freshDaemonRequired: requireFresh === "1",
+    freshDaemonVerified: false,
+    imageAbsentBeforeLoad: false,
+    loadPerformed: false,
+    loadSucceeded: false,
+    loadedImageInspected: false,
+    identityVerified: false,
+  };
+  if (!archivePath) incomplete("ARCHIVE_PATH is required", { checks });
+  if (!receiptPath) incomplete("RECEIPT_PATH is required", { checks });
+  if (!checks.archivePresent) incomplete(`archive is missing: ${archivePath}`, { checks });
+  if (!checks.receiptPresent) incomplete(`archive receipt is missing: ${receiptPath}`, { checks });
+  if (!evidenceDir) incomplete("EVIDENCE_DIR is required for a verifiable handoff", { checks });
+  if (existsSync(evidenceDir)) incomplete(`EVIDENCE_DIR already exists and will not be reused: ${evidenceDir}`, { checks });
+  if (requireFresh !== "1") {
+    incomplete(
+      "fresh-daemon image-absence requirement was bypassed; archive handoff is not independent",
+      { checks },
+    );
+  }
 
   let receipt;
   try {
     receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
   } catch (error) {
-    incomplete(`archive receipt is unreadable: ${error.message}`);
+    incomplete(`archive receipt is unreadable: ${error.message}`, { checks });
   }
   const archiveSha256 = sha256File(archivePath);
   const archiveBytes = statSync(archivePath).size;
+  checks.archiveHashPerformed = true;
   const receiptCheck = verifyArchiveReceipt(receipt, {
     archiveSha256,
     archiveBytes,
@@ -128,22 +173,33 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     expectedPlatform: process.env.EXPECTED_PLATFORM,
     expectedUser: process.env.EXPECTED_USER,
   });
-  if (!receiptCheck.ok) incomplete(receiptCheck.errors.join("; "), { receiptCheck });
+  checks.archiveHashMatched =
+    Boolean(receipt?.archiveSha256) && receipt.archiveSha256 === archiveSha256;
+  checks.receiptIdentityValid = receiptCheck.ok;
+  if (!receiptCheck.ok) incomplete(receiptCheck.errors.join("; "), { receiptCheck, checks });
 
   const before = run(engine, ["image", "inspect", "--format", "{{.Id}}", receiptCheck.imageId]);
-  if (requireFresh === "1" && before.status === 0) {
+  checks.imageAbsentBeforeLoad = before.status !== 0;
+  checks.freshDaemonVerified = checks.freshDaemonRequired && checks.imageAbsentBeforeLoad;
+  if (!checks.imageAbsentBeforeLoad) {
     incomplete(`target daemon already has ${receiptCheck.imageId}; a fresh daemon is required to prove archive loading`, {
       existingImageId: before.stdout.trim(),
+      receiptCheck,
+      checks,
     });
   }
+  checks.loadPerformed = true;
   const load = run(engine, ["load", "-i", archivePath]);
-  if (load.status !== 0) {
-    incomplete(`engine load failed: ${load.stderr || load.stdout}`, { receiptCheck });
+  checks.loadSucceeded = load.status === 0;
+  if (!checks.loadSucceeded) {
+    incomplete(`engine load failed: ${load.stderr || load.stdout}`, { receiptCheck, checks });
   }
   const inspect = run(engine, ["image", "inspect", receiptCheck.imageId]);
-  if (inspect.status !== 0) {
+  checks.loadedImageInspected = inspect.status === 0;
+  if (!checks.loadedImageInspected) {
     incomplete(`loaded image ID is absent after load: ${receiptCheck.imageId}`, {
       receiptCheck,
+      checks,
       load: `${load.stdout}${load.stderr}`.trim(),
     });
   }
@@ -151,7 +207,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try {
     inspectJson = JSON.parse(inspect.stdout);
   } catch (error) {
-    incomplete(`loaded image inspect is not JSON: ${error.message}`, { receiptCheck });
+    incomplete(`loaded image inspect is not JSON: ${error.message}`, { receiptCheck, checks });
   }
   const identity = verifyImageIdentity(inspectJson, {
     expectedImageId: receiptCheck.imageId,
@@ -160,24 +216,37 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     expectedPlatform: receiptCheck.platform,
     expectedUser: receiptCheck.user,
   });
-  if (!identity.ok) incomplete(identity.errors.join("; "), { receiptCheck, identity });
+  checks.identityVerified = identity.ok;
+  if (!identity.ok) incomplete(identity.errors.join("; "), { receiptCheck, identity, checks });
+
+  const handoff = evaluateArchiveHandoff(checks);
+  if (!handoff.complete) {
+    incomplete(`archive handoff is incomplete: ${handoff.missing.join(", ")}`, {
+      receiptCheck,
+      identity,
+      checks,
+    });
+  }
 
   mkdirSync(evidenceDir, { recursive: true });
   const result = {
     ok: true,
     complete: true,
+    independentHandoff: true,
     applicationSourceSha: receiptCheck.sourceSha,
     harnessSha: receiptCheck.harnessSha ?? process.env.HARNESS_SHA ?? null,
     imageId: receiptCheck.imageId,
+    applicationOrigin: receiptCheck.origin,
     archiveSha256,
     archiveBytes,
     archivePath,
     receiptPath,
     loadedImageId: identity.observed.imageId,
     identity,
+    checks,
     completedAt: new Date().toISOString(),
   };
   writeFileSync(path.join(evidenceDir, "archive-verification.json"), `${JSON.stringify(result, null, 2)}\n`);
-  writeFileSync(path.join(evidenceDir, "ACCEPTED.txt"), "archive_handoff=verified\ncomplete=true\n");
+  writeFileSync(path.join(evidenceDir, "ACCEPTED.txt"), "archive_handoff=verified\ncomplete=true\nindependent=true\n");
   console.log(JSON.stringify(result, null, 2));
 }
