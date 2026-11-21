@@ -96,14 +96,23 @@ test("synthetic Linux journey exercises minimisation, restored denial, journal r
   }
 });
 
-test("exact-candidate rehearsal builds once, verifies the archive independently and reuses one image ID", () => {
+test("exact-candidate rehearsal checkpoints, routes daemons explicitly and reuses one image ID", () => {
   const rehearsal = read("rehearse-exact-candidate.sh");
   assert.match(rehearsal, /build-and-retain\.sh/);
   assert.match(rehearsal, /verify-image-archive\.mjs/);
   assert.match(rehearsal, /qualify-existing-image\.sh/);
-  assert.match(rehearsal, /BUILD_CONTEXT" != "\$VERIFY_CONTEXT/);
-  assert.match(rehearsal, /IMAGE_REFERENCE="\$IMAGE_ID"/);
-  assert.match(rehearsal, /PLAN_ONLY="\$\{PLAN_ONLY:-1\}"/);
+  assert.match(rehearsal, /ACTION="\$\{ACTION:-\}"/);
+  assert.match(rehearsal, /ACTION=checkpoint/);
+  assert.match(rehearsal, /ACTION=qualify/);
+  assert.match(rehearsal, /daemon_identity/);
+  assert.match(rehearsal, /resolve to the same daemon/);
+  assert.match(rehearsal, /Podman context routing is unsupported/);
+  assert.match(rehearsal, /ENGINE_BIN/);
+  assert.match(rehearsal, /phase-archive-verification/);
+  assert.match(rehearsal, /CHECKPOINT_READY\.txt/);
+  assert.match(rehearsal, /IMAGE_REFERENCE="\$CHECKPOINT_IMAGE_ID"/);
+  assert.match(rehearsal, /qualification-attempt-/);
+  assert.match(rehearsal, /No engine, registry or origin was contacted/);
   assert.match(rehearsal, /"customerAdmission": "closed"/);
   assert.doesNotMatch(rehearsal, /docker\s+push|registry.*push/i);
 });

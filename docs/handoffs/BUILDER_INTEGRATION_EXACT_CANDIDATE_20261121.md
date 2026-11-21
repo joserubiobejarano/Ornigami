@@ -95,22 +95,32 @@ is missing.
 
 ## One exact-candidate rehearsal
 
-`deploy/builder/private-staging/rehearse-exact-candidate.sh` prepares one
-reviewable plan and, only with explicit authorization, executes it:
+`deploy/builder/private-staging/rehearse-exact-candidate.sh` has explicit
+`ACTION=plan`, `ACTION=checkpoint` and `ACTION=qualify` modes:
 
-1. build the exact candidate source SHA once;
-2. retain the local archive and its receipt;
-3. independently load and verify that archive on a daemon context separate from
-   the build daemon;
-4. run edge, browser, runtime, restore, minimisation, replay, second restore and
-   closed rollback with that one immutable image ID;
-5. reconcile source SHA, harness SHA, image ID, archive SHA-256/size and the
-   effective HTTPS origin across every receipt.
+1. `plan` writes the reviewable plan without contacting an engine, registry or
+   origin.
+2. `checkpoint` builds the exact candidate source SHA once, retains the local
+   archive and receipt, loads/verifies it on a fresh verification daemon, verifies
+   a transfer on the phase daemon when that observed daemon differs, and stops.
+   It emits the verified immutable image ID plus concrete edge-setup instructions.
+   The new image is not running on the fresh verification daemon.
+3. `qualify` resumes only after authorized edge setup. It re-verifies the existing
+   archive/receipt, observed daemon identities and running edge identity, then
+   runs edge, browser, runtime, restore, minimisation, replay, second restore and
+   closed rollback with that same image ID. It never rebuilds, substitutes an
+   image, erases earlier qualification attempts or accepts changed
+   source/origin/daemon inputs.
 
-The default is `PLAN_ONLY=1`; it contacts no engine, registry or origin. Execution
-requires `EXECUTE=1`, `PLAN_ONLY=0`, a fresh archive-verification daemon and all
-staging credentials/edge inputs. It never pushes an image, deploys, changes DNS
-or opens customer admission.
+Engine routing is explicit per phase. `*_ENGINE` selects Docker or Podman;
+`*_ENGINE_BIN` optionally selects the binary. Use exactly one daemon selector:
+Docker `*_CONTEXT`, or an explicit `*_ENDPOINT`/`*_DOCKER_HOST` (Docker) or
+`*_CONTAINER_HOST` (Podman). Context and endpoint cannot both select a daemon.
+Podman context routing is unsupported. Build and verification must resolve to
+different observed daemon identities; different caller-supplied names or image
+absence are not accepted as independence. If the phase daemon differs from the
+verification daemon, the archive must load and verify on a fresh phase daemon
+before qualification.
 
 Required immutable-identity chain:
 
@@ -119,13 +129,17 @@ application source SHA
   -> acceptance harness SHA
   -> immutable image ID (sha256:<64-hex>)
   -> retained archive SHA-256 and size
+  -> build and verification daemon identities
+  -> optional phase-daemon transfer verification
   -> effective HTTPS origin
   -> edge/browser/runtime/restore/replay/rollback receipts
   -> minimisation journal hash and restore attempt/receipt IDs
 ```
 
-An Actions artifact digest, mutable tag, loopback origin, local rebuild or linked
-dependency result must not substitute for any link in that chain.
+An Actions artifact digest, mutable tag, loopback origin, local rebuild, reused
+qualification attempt or linked dependency result must not substitute for any
+link in that chain. A complete marker is written only after every resumed phase
+and identity check succeeds.
 
 ## Authorization gates
 

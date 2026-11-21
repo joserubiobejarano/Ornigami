@@ -320,29 +320,84 @@ Keep each receipt separate.
 
 ### One exact-candidate rehearsal
 
-`rehearse-exact-candidate.sh` prepares (and, only when separately authorized,
-executes) one sequence: build the exact source SHA once, retain the archive,
-load and verify that archive on an independent daemon context, then run every
-edge/browser/runtime/restore/replay/rollback phase with that one immutable image
-ID. It defaults to `PLAN_ONLY=1` and contacts no engine, registry or origin.
-Execution requires `EXECUTE=1`, `PLAN_ONLY=0` and different build/verify daemon
-contexts:
+`rehearse-exact-candidate.sh` has three explicit actions:
+
+1. `ACTION=plan` (default) validates inputs and writes the plan/RUNBOOK. It
+   contacts no engine, registry or origin.
+2. `ACTION=checkpoint` builds the exact source SHA once, retains the archive,
+   verifies it on a fresh daemon, verifies a transfer on the phase daemon when
+   that daemon is different, and stops with `CHECKPOINT_READY.txt`. The new image
+   is not running on the verification daemon; edge setup remains an explicit
+   external authorization step.
+3. `ACTION=qualify` resumes from `checkpoint.json`, re-verifies the existing
+   archive/receipt, the observed daemon identities and the running edge app, then
+   runs qualification with that same immutable image ID. It never builds again,
+   substitutes an image, erases prior attempts or accepts changed
+   source/origin/daemon inputs.
+
+Engine routing is per phase:
+
+- `*_ENGINE` is `docker` or `podman`; `*_ENGINE_BIN` optionally names the binary.
+- Use one daemon selector: a Docker `*_CONTEXT`, or an explicit endpoint via
+  `*_ENDPOINT`, `*_DOCKER_HOST` (Docker) or `*_CONTAINER_HOST` (Podman).
+- Do not combine a non-default context with an endpoint. Podman context routing
+  is not supported; use an explicit endpoint.
+- Observed daemon identities, not selector names or image absence, decide
+  independence. Build and verification resolving to the same observed daemon
+  fails before build. Docker identity uses the daemon `ID`; Podman identity uses
+  `Host.Hostname` plus `Store.GraphRoot`.
+- If the phase daemon differs from the verification daemon, the archive is
+  loaded and verified on a fresh phase daemon before qualification.
+
+Plan:
 
 ```bash
+ACTION=plan \
 SOURCE_SHA=<exact-candidate-sha> \
 APP_URL=https://builder-staging.ornigami.com \
-HARNESS_SHA=<harness-sha> \
-REHEARSAL_DIR=<new-empty-directory> \
+REHEARSAL_DIR=<new-directory> \
 BUILD_CONTEXT=build-runner \
 VERIFY_CONTEXT=isolated-daemon \
+PHASE_CONTEXT=isolated-daemon \
   deploy/builder/private-staging/rehearse-exact-candidate.sh
 ```
 
-The script links the source SHA, harness SHA, immutable image ID, archive
-SHA-256 and size, effective HTTPS origin and every phase receipt. It never
-pushes, deploys, changes DNS or opens customer admission. Remote execution,
-archive custody/storage and any registry publication require explicit
-authorization before `EXECUTE=1`.
+Checkpoint:
+
+```bash
+ACTION=checkpoint \
+SOURCE_SHA=<exact-candidate-sha> \
+APP_URL=https://builder-staging.ornigami.com \
+HARNESS_SHA=<harness-sha> \
+REHEARSAL_DIR=<same-new-directory> \
+BUILD_ENGINE=docker BUILD_CONTEXT=build-runner \
+VERIFY_ENGINE=docker VERIFY_CONTEXT=isolated-daemon \
+PHASE_ENGINE=docker PHASE_CONTEXT=isolated-daemon \
+  deploy/builder/private-staging/rehearse-exact-candidate.sh
+```
+
+After the checkpoint prints the verified image ID, configure the private HTTPS
+edge with that exact ID. Then resume:
+
+```bash
+ACTION=qualify \
+REHEARSAL_DIR=<same-directory> \
+EDGE_APP_CONTAINER=<running-edge-app> \
+EDGE_PROXY_CONTAINER=<running-caddy> \
+EDGE_STORE_VOLUME=<edge-store-volume> \
+BUILDER_OPERATOR_VOLUME=<edge-store-volume> \
+BUILDER_RUNTIME_STORE_HOST_ID=<edge-store-host-id> \
+STAGING_BASIC_AUTH_USER=<private-user> \
+STAGING_BASIC_AUTH_PASSWORD=<private-password> \
+  deploy/builder/private-staging/rehearse-exact-candidate.sh
+```
+
+Supply the same source/origin/daemon inputs if overriding checkpoint defaults;
+changed values are rejected. The script links source SHA, harness SHA, immutable
+image ID, archive SHA-256/size, effective HTTPS origin, daemon identities and
+every phase receipt. It never pushes, deploys, changes DNS or opens customer
+admission. Remote execution, edge changes, archive custody/storage and any
+registry publication require explicit authorization.
 
 ## Qualification evidence matrix
 

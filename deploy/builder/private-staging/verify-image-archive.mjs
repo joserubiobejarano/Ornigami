@@ -107,6 +107,10 @@ function sha256File(file) {
 }
 
 function run(engine, args) {
+  const runner = process.env.ENGINE_SHELL ?? "";
+  if (runner) {
+    return spawnSync(runner, [engine, ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  }
   return spawnSync(engine, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 }
 
