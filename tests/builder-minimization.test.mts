@@ -23,6 +23,8 @@ import {
   BUILDER_RESTORE_REPLAY_RECEIPT_FILE,
   BuilderStoreUnavailable,
   assertBuilderStoreReplayReady,
+  builderMinimizationIntentFromEvent,
+  computeBuilderMinimizationIntentDigest,
   issueBuilderInvite,
   readBuilderAdmissionStatus,
   readBuilderIdentityStore,
@@ -226,10 +228,11 @@ function readJournal(directory: string) {
   return JSON.parse(
     readFileSync(path.join(directory, BUILDER_MINIMIZATION_JOURNAL_FILE), "utf8"),
   ) as {
-    version: 1;
+    version: 2;
     events: Array<{
       id: string;
       planId: string;
+      intentDigest: string;
       phase: "pending" | "completed";
       resultStoreHash?: string;
       replayedAt?: string;
@@ -789,14 +792,20 @@ test("missing, corrupt, incomplete, and internally inconsistent replay evidence 
   const incompleteBackup = storeDir("replay-incomplete-backup");
   copyStore(backup, incompleteBackup);
   const source = JSON.parse(readFileSync(sourceJournal, "utf8"));
-  const extra = {
+  const extraEvent = {
     ...source.events[0],
     id: `mnj_${"0".repeat(24)}`,
     planId: "1".repeat(64),
   };
+  const extra = {
+    ...extraEvent,
+    intentDigest: computeBuilderMinimizationIntentDigest(
+      builderMinimizationIntentFromEvent(extraEvent),
+    ),
+  };
   writeFileSync(
     path.join(incompleteBackup, BUILDER_MINIMIZATION_JOURNAL_FILE),
-    `${JSON.stringify({ version: 1, events: [extra] }, null, 2)}\n`,
+    `${JSON.stringify({ version: 2, events: [extra] }, null, 2)}\n`,
   );
   const incompleteHash = hashStore(incompleteBackup);
   await assert.rejects(

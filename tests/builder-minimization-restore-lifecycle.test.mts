@@ -21,6 +21,8 @@ import {
   BUILDER_RESTORE_REPLAY_GATE_FILE,
   BUILDER_RESTORE_REPLAY_RECEIPT_FILE,
   BuilderStoreUnavailable,
+  builderMinimizationIntentFromEvent,
+  computeBuilderMinimizationIntentDigest,
   issueBuilderInvite,
   readBuilderAdmissionStatus,
   serializeBuilderIdentityStore,
@@ -254,12 +256,12 @@ function attemptReceiptPath(directory: string, attemptId: string): string {
 
 function readReceipt(directory: string) {
   return JSON.parse(readFileSync(receiptPath(directory), "utf8")) as {
-    version: 2;
+    version: 3;
     attemptId: string;
     receiptId: string;
     previousReceiptIds: string[];
     journalHash: string;
-    journalEventIds: string[];
+    journalCommitments: Array<{ id: string; intentDigest: string }>;
     appliedEventIds: string[];
     alreadyAppliedEventIds: string[];
     storeBeforeHash: string;
@@ -271,6 +273,59 @@ function readJournalEventIds(journalPath: string): string[] {
   return JSON.parse(readFileSync(journalPath, "utf8")).events.map(
     (event: { id: string }) => event.id,
   );
+}
+
+function readJournal(journalPath: string) {
+  return JSON.parse(readFileSync(journalPath, "utf8")) as {
+    version: number;
+    events: JournalEventRecord[];
+  };
+}
+
+function writeJournal(journalPath: string, journal: unknown): void {
+  writeFileSync(journalPath, `${JSON.stringify(journal, null, 2)}\n`);
+}
+
+function recommitEvent(event: Record<string, unknown> & { id: string }) {
+  const withDigest = event as unknown as Parameters<
+    typeof builderMinimizationIntentFromEvent
+  >[0];
+  return {
+    ...event,
+    intentDigest: computeBuilderMinimizationIntentDigest(
+      builderMinimizationIntentFromEvent(withDigest),
+    ),
+  };
+}
+
+async function expectRejectedAndClosed(input: {
+  backup: string;
+  journalPath: string;
+  code: string;
+}): Promise<void> {
+  const before = hashStore(input.backup);
+  await assert.rejects(
+    replayBuilderMinimizationJournal({
+      storeDir: input.backup,
+      journalPath: input.journalPath,
+    }),
+    (error) =>
+      error instanceof BuilderMinimizationRejected &&
+      error.code === input.code,
+  );
+  assert.equal(hashStore(input.backup), before);
+  assert.equal(
+    existsSync(path.join(input.backup, BUILDER_RESTORE_REPLAY_GATE_FILE)),
+    true,
+  );
+  const store = readStore(input.backup);
+  assert.equal(
+    store.subjects.find((item) => item.id === SUBJECT_B)?.revokedAt,
+    undefined,
+  );
+  assertControlIntact(store);
+  assertUsagePreserved(store);
+  await assertStartupBlocked(input.backup);
 }
 
 function startupEnv(directory: string) {
@@ -329,6 +384,21 @@ async function setupPrimaryWithA(name: string) {
   const journal = path.join(evidence, "journal-A.json");
   copyJournal(primary, journal);
   return { base, primary, evidence, journal };
+}
+
+async function setupRestoredA(name: string) {
+  const setup = await setupPrimaryWithA(name);
+  const restored = path.join(setup.base, "restored-a");
+  copyStore(setup.primary, restored);
+  await prepareBuilderRestoreReplay({
+    storeDir: restored,
+    journalPath: setup.journal,
+  });
+  await replayBuilderMinimizationJournal({
+    storeDir: restored,
+    journalPath: setup.journal,
+  });
+  return { ...setup, restored, receipt: readReceipt(restored) };
 }
 
 function assertUsagePreserved(store: BuilderIdentityStore): void {
@@ -426,7 +496,7 @@ test("two-cycle restore accepts a newer journal, revokes B, and preserves the pr
   });
   assert.equal(receiptB.attemptId, prepared.attemptId);
   assert.equal(receiptB.previousReceiptIds.includes(receiptA.receiptId), true);
-  assert.equal(receiptB.journalEventIds.length, 2);
+  assert.equal(receiptB.journalCommitments.length, 2);
   assert.equal(receiptB.appliedEventIds.length, 1);
   assert.equal(receiptB.alreadyAppliedEventIds.length, 1);
   assert.equal(existsSync(attemptReceiptPath(restore2, receiptA.attemptId)), true);
@@ -494,11 +564,20 @@ test("same image and prepared attempt with changed journal intent stays closed a
   // Same image, same attempt and same event-id sequence, but changed intent.
   // Replay must not silently rebind the prepared attempt; the gate stays closed.
   const changed = JSON.parse(readFileSync(journalAB, "utf8")) as {
-    events: Array<{ effectAt: string }>;
+    events: Array<Record<string, unknown> & { id: string; effectAt: string }>;
   };
-  changed.events[0]!.effectAt = "2026-11-21T13:00:00.000Z";
+  changed.events[1] = recommitEvent({
+    ...changed.events[1]!,
+    effectAt: "2026-11-21T13:00:00.000Z",
+  });
+  assert.notEqual(
+    changed.events[1]!.intentDigest,
+    (JSON.parse(readFileSync(journalAB, "utf8")) as {
+      events: Array<{ intentDigest: string }>;
+    }).events[1]!.intentDigest,
+  );
   const changedJournal = path.join(base, "journal-changed-intent.json");
-  writeFileSync(changedJournal, `${JSON.stringify(changed, null, 2)}\n`);
+  writeJournal(changedJournal, changed);
 
   await assert.rejects(
     replayBuilderMinimizationJournal({
@@ -722,7 +801,7 @@ test("journal growth is accepted but incomplete or divergent history stays close
     journalPath: journalAB,
   });
   assert.equal(receiptAB.previousReceiptIds.includes(receiptA.receiptId), true);
-  assert.equal(receiptAB.journalEventIds.length, 2);
+  assert.equal(receiptAB.journalCommitments.length, 2);
   await assertStartupAccepted(restoreAB);
 });
 
@@ -905,6 +984,239 @@ test("repeated preparation and replay preserve attempt history and idempotent ef
     inviteTtlSeconds: 60,
   });
   assert.match(issued.invite.id, /^inv_/);
+});
+
+type JournalEventRecord = Record<string, unknown> & {
+  id: string;
+  intentDigest?: string;
+  subjectId: string;
+  effects: Record<string, unknown> & {
+    subject: Record<string, unknown>;
+    usageIds: string[];
+  };
+  accounting: Record<string, unknown> & { effectiveCostMicros: number };
+  createdAt: string;
+};
+
+const immutableIntentMutations: Array<{
+  name: string;
+  mutate: (event: JournalEventRecord) => JournalEventRecord;
+}> = [
+  {
+    name: "subject",
+    mutate: (event) => ({
+      ...event,
+      subjectId: SUBJECT_B,
+      effects: {
+        ...event.effects,
+        subject: { ...event.effects.subject, id: SUBJECT_B },
+      },
+    }),
+  },
+  {
+    name: "effects",
+    mutate: (event) => ({
+      ...event,
+      effects: {
+        ...event.effects,
+        usageIds: [...event.effects.usageIds].reverse(),
+      },
+    }),
+  },
+  {
+    name: "timestamps",
+    mutate: (event) => ({
+      ...event,
+      createdAt: "2026-11-22T12:00:00.000Z",
+      effectAt: "2026-11-22T12:00:00.000Z",
+    }),
+  },
+  {
+    name: "plan evidence",
+    mutate: (event) => ({ ...event, planId: "f".repeat(64) }),
+  },
+  {
+    name: "accounting evidence",
+    mutate: (event) => ({
+      ...event,
+      accounting: {
+        ...event.accounting,
+        effectiveCostMicros: Number(event.accounting.effectiveCostMicros) + 1,
+      },
+    }),
+  },
+];
+
+test("reused event ids with altered immutable intent are rejected before effects", async () => {
+  const { base, journal } = await setupPrimaryWithA("altered-immutable-intent");
+  const source = readJournal(journal);
+  for (const [index, mutation] of immutableIntentMutations.entries()) {
+    const backup = path.join(base, `stale-digest-${index}`);
+    writeStore(backup, fixtureStore());
+    const changed = structuredClone(source);
+    changed.events[0] = mutation.mutate(
+      changed.events[0] as JournalEventRecord,
+    );
+    const changedPath = path.join(base, `stale-digest-${index}.json`);
+    writeJournal(changedPath, changed);
+    await expectRejectedAndClosed({
+      backup,
+      journalPath: changedPath,
+      code: "invalid_journal",
+    });
+  }
+});
+
+test("recomputed digest cannot override receipt-only prior evidence", async () => {
+  const { base, restored, journal } = await setupRestoredA("recomputed-receipt");
+  const source = readJournal(journal);
+  for (const [index, mutation] of immutableIntentMutations.entries()) {
+    const backup = path.join(base, `recomputed-${index}`);
+    copyStore(restored, backup);
+    copyFileSync(receiptPath(restored), receiptPath(backup));
+    const changed = structuredClone(source);
+    changed.events[0] = recommitEvent(
+      mutation.mutate(changed.events[0] as JournalEventRecord),
+    ) as JournalEventRecord;
+    const changedPath = path.join(base, `recomputed-${index}.json`);
+    writeJournal(changedPath, changed);
+    await expectRejectedAndClosed({
+      backup,
+      journalPath: changedPath,
+      code: "incomplete_replay",
+    });
+  }
+});
+
+test("changed content prefix plus appended events cannot pass backup-journal commitments", async () => {
+  const { base, primary, restored } = await setupRestoredA(
+    "changed-prefix-appended",
+  );
+  const planB = await planBuilderSubjectMinimization({
+    storeDir: primary,
+    subjectId: SUBJECT_B,
+    now: new Date(EFFECT_AT),
+  });
+  await applyBuilderSubjectMinimization({ storeDir: primary, plan: planB });
+  const journalAB = path.join(base, "journal-AB.json");
+  copyJournal(primary, journalAB);
+  const sourceAB = readJournal(journalAB);
+  assert.equal(sourceAB.events.length, 2);
+
+  const backup = path.join(base, "backup");
+  copyDirectory(restored, backup);
+  const changed = structuredClone(sourceAB);
+  changed.events[0] = recommitEvent({
+    ...(changed.events[0] as JournalEventRecord),
+    subjectId: SUBJECT_B,
+    effects: {
+      ...(changed.events[0] as JournalEventRecord).effects,
+      subject: {
+        ...(changed.events[0] as JournalEventRecord).effects.subject,
+        id: SUBJECT_B,
+      },
+    },
+  }) as JournalEventRecord;
+  const changedPath = path.join(base, "changed-prefix-AB.json");
+  writeJournal(changedPath, changed);
+
+  await expectRejectedAndClosed({
+    backup,
+    journalPath: changedPath,
+    code: "incomplete_replay",
+  });
+});
+
+test("legitimate lifecycle metadata changes do not alter immutable intent commitments", async () => {
+  const { base, restored, journal } = await setupRestoredA("lifecycle-metadata");
+  const source = readJournal(journal);
+  const lifecycleJournal = structuredClone(source);
+  lifecycleJournal.events[0] = {
+    ...(lifecycleJournal.events[0] as JournalEventRecord),
+    phase: "completed",
+    completedAt: "2026-11-22T12:00:00.000Z",
+    resultStoreHash: "e".repeat(64),
+    replayedAt: "2026-11-22T12:00:00.000Z",
+    replayedStoreHash: "d".repeat(64),
+  } as JournalEventRecord;
+  const lifecyclePath = path.join(base, "lifecycle-metadata.json");
+  writeJournal(lifecyclePath, lifecycleJournal);
+
+  const completedBackup = path.join(base, "lifecycle-completed");
+  copyStore(restored, completedBackup);
+  copyFileSync(receiptPath(restored), receiptPath(completedBackup));
+  const receipt = await replayBuilderMinimizationJournal({
+    storeDir: completedBackup,
+    journalPath: lifecyclePath,
+  });
+  assert.equal(receipt.status, "complete");
+  await assertStartupAccepted(completedBackup);
+  const completedStore = readStore(completedBackup);
+  assert.equal(
+    completedStore.subjects.find((item) => item.id === SUBJECT_A)?.revokedAt,
+    EFFECT_AT,
+  );
+  assertControlIntact(completedStore);
+  assertUsagePreserved(completedStore);
+
+  const pendingJournal = structuredClone(source);
+  const pendingEvent = {
+    ...(pendingJournal.events[0] as JournalEventRecord),
+    phase: "pending",
+  } as JournalEventRecord;
+  delete pendingEvent.completedAt;
+  delete pendingEvent.resultStoreHash;
+  delete pendingEvent.replayedAt;
+  delete pendingEvent.replayedStoreHash;
+  pendingJournal.events[0] = pendingEvent;
+  const pendingPath = path.join(base, "lifecycle-pending.json");
+  writeJournal(pendingPath, pendingJournal);
+
+  const pendingBackup = path.join(base, "lifecycle-pending");
+  copyStore(restored, pendingBackup);
+  copyFileSync(receiptPath(restored), receiptPath(pendingBackup));
+  const pendingReceipt = await replayBuilderMinimizationJournal({
+    storeDir: pendingBackup,
+    journalPath: pendingPath,
+  });
+  assert.equal(pendingReceipt.status, "complete");
+  await assertStartupAccepted(pendingBackup);
+});
+
+test("evidence without intent commitments fails closed", async () => {
+  const { base, journal } = await setupPrimaryWithA("legacy-evidence");
+  const source = readJournal(journal);
+
+  const legacyJournal = structuredClone(source);
+  legacyJournal.version = 1;
+  const legacyEvent = { ...(legacyJournal.events[0] as JournalEventRecord) };
+  delete legacyEvent.intentDigest;
+  legacyEvent.version = 1;
+  legacyJournal.events[0] = legacyEvent as JournalEventRecord;
+  const legacyPath = path.join(base, "legacy-journal.json");
+  writeJournal(legacyPath, legacyJournal);
+  const legacyBackup = path.join(base, "legacy-journal-backup");
+  writeStore(legacyBackup, fixtureStore());
+  await expectRejectedAndClosed({
+    backup: legacyBackup,
+    journalPath: legacyPath,
+    code: "invalid_journal",
+  });
+
+  const { restored } = await setupRestoredA("legacy-receipt");
+  const legacyReceiptBackup = path.join(base, "legacy-receipt-backup");
+  copyStore(restored, legacyReceiptBackup);
+  const legacyReceipt = JSON.parse(readFileSync(receiptPath(restored), "utf8"));
+  legacyReceipt.version = 2;
+  delete legacyReceipt.journalCommitments;
+  writeFileSync(receiptPath(legacyReceiptBackup), `${JSON.stringify(legacyReceipt, null, 2)}\n`);
+  const validJournalPath = path.join(base, "valid-journal.json");
+  copyJournal(restored, validJournalPath);
+  await expectRejectedAndClosed({
+    backup: legacyReceiptBackup,
+    journalPath: validJournalPath,
+    code: "incomplete_replay",
+  });
 });
 
 test.after(() => {

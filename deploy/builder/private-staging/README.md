@@ -305,8 +305,23 @@ preserved and only B is applied. The results must record
 `minimization_applied=true`, `restore_gate_blocked_reopen=true`,
 `restore_replay_completed=true`, `restored_access_denied=true`,
 `second_restore_cycle=true` and
-`second_restore_receipt_history_preserved=true`. In existing-image mode the
-harness builds nothing; the results must record `image_mode=existing`, the exact
+`second_restore_receipt_history_preserved=true`.
+
+Journal events are version `2` with canonical `intentDigest`; prepared gates and
+attempt receipts are version `3` with ordered `{id,intentDigest}`
+`journalCommitments`. The same-image negative cases must pass both before and
+after preparation: a reused-id journal with a recomputed digest is rejected by
+the preserved receipt/backup commitments before preparation, and different
+evidence submitted after preparation is rejected by the prepared-attempt guard.
+Both must leave the store hash unchanged, keep the gate closed and leave the
+control subject active. Required markers are
+`changed_intent_before_prepare_blocked=true`,
+`changed_evidence_after_prepare_blocked=true`,
+`prior_commitments_preserved=true`, `same_id_changed_intent_replay_blocked=true`,
+`changed_intent_gate_preserved=true` and `control_subject_access=true`.
+
+In existing-image mode the harness builds nothing; the results must record
+`image_mode=existing`, the exact
 `image_id`, the application source SHA and the harness SHA separately. Because
 browser is intentionally skipped here, the result must contain
 `browser_journey=skipped`, `full_acceptance=false` and

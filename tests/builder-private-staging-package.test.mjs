@@ -91,9 +91,16 @@ test("synthetic Linux journey exercises minimisation, restored denial, journal r
     "restored_access_denied=true",
     "second_restore_cycle=true",
     "second_restore_receipt_history_preserved=true",
+    "same_id_changed_intent_replay_blocked=true",
+    "changed_intent_gate_preserved=true",
+    "changed_intent_before_prepare_blocked=true",
+    "changed_evidence_after_prepare_blocked=true",
+    "prior_commitments_preserved=true",
+    "control_subject_access=true",
   ]) {
     assert.ok(qualify.includes(expected), expected);
   }
+  assert.ok(qualify.includes("qualify-mutate-journal.mjs"), "recomputed digest helper is missing");
 });
 
 test("exact-candidate rehearsal checkpoints, routes daemons explicitly and reuses one image ID", () => {

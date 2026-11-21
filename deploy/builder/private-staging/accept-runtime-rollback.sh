@@ -80,6 +80,9 @@ for expected in \
   "second_restore_receipt_history_preserved=true" \
   "same_id_changed_intent_replay_blocked=true" \
   "changed_intent_gate_preserved=true" \
+  "changed_intent_before_prepare_blocked=true" \
+  "changed_evidence_after_prepare_blocked=true" \
+  "prior_commitments_preserved=true" \
   "control_subject_access=true" \
   "fresh_container_restore=true" \
   "lock_recovery=true" \

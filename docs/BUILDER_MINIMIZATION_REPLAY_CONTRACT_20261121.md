@@ -51,7 +51,54 @@ There is no full purge, no aggregate/tombstone compaction, no row deletion, no
 automatic retention expiry and no quota/spend reset. Deleting a subject must
 never create new capacity; the minimisation path does not touch usage rows.
 
-## 3. Writer coordination and crash-consistency contract
+## 3. Immutable intent and journal commitments
+
+Journal events now separate immutable minimisation intent from lifecycle
+metadata.
+
+Immutable intent (journal format version `2`) is a canonical JSON object
+covering:
+
+- event id and kind;
+- subject id;
+- reviewed `planId`;
+- planned input and expected result store hashes;
+- `effectAt` and event `createdAt`;
+- exact effects, summary and accounting snapshot.
+
+The event carries `intentDigest = SHA-256(canonicalIntent)`. The mutable
+lifecycle fields (`phase`, `completedAt`, `resultStoreHash`, `replayedAt`,
+`replayedStoreHash`) are outside the digest, so pending → completed and replay
+metadata can advance without changing intent.
+
+Gate and receipt format version `3` record an ordered
+`journalCommitments: [{ id, intentDigest }]` sequence. Continuity checks compare
+these commitments, not event ids alone:
+
+- a prior receipt's commitment sequence must be a prefix of the supplied
+  journal;
+- the restored backup's own journal commitment sequence must be a prefix of the
+  supplied journal;
+- a prepared gate's commitments must equal the current attempt receipt's
+  commitments.
+
+A reused event id with changed subject, effects, timestamps, plan evidence or
+accounting fails the intent digest check. Recomputing the digest beside modified
+content still fails because the earlier receipt and backup journal hold the
+original commitments. Applying a judged plan also rechecks the event intent
+against the reviewed plan fields before effects.
+
+Evidence without these commitments fails closed:
+
+- journal version `1` events without `intentDigest`;
+- gate/receipt version `2` without `journalCommitments`;
+- missing, duplicate, misnamed or conflicting receipt commitments.
+
+A first restore with no earlier receipt or backup-journal commitment can only
+validate the self-consistent journal supplied to it. Once an earlier receipt or
+backup journal exists, changed content under reused ids is rejected.
+
+## 4. Writer coordination and crash-consistency contract
 
 The existing `identity-store.lock` remains the only writer lock. Journal, store
 and receipt writes use a same-directory temporary file, `fsync`, atomic rename
@@ -98,8 +145,8 @@ A restore attempt is explicit and durable before evidence loading:
 2. Only then is the journal, receipt history or identity store read. A missing,
    corrupt, incomplete or divergent input throws and leaves the gate closed.
 3. After the journal and continuity checks pass, the gate becomes
-   `phase: "prepared"` with the journal hash, ordered journal event ids and the
-   pre-restore store hash.
+   `phase: "prepared"` with the journal hash, ordered `{id, intentDigest}`
+   commitments and the pre-restore store hash.
 4. Store effects, derived journal and an attempt-scoped receipt are written in
    that order.
 5. The gate is removed only after a receipt for the same `attemptId` matches the
@@ -110,10 +157,12 @@ A failed attempt can be re-prepared for corrected evidence only while the store
 hash still equals the prepared pre-restore hash and no effects were written.
 After effects exist, retries must use the same journal. This prevents silently
 discarding a partial restore. Replay itself never rebinds an already prepared
-attempt to different journal bytes: a changed journal hash or event sequence is
-rejected with `replay_conflict`, the gate remains closed, and the unchanged
-store and control subjects stay intact. Corrected evidence must first pass an
-explicit `restore-prepare`; replay then uses that prepared binding.
+attempt to different journal evidence: a changed journal hash or changed
+ordered `{id,intentDigest}` commitments are rejected with `replay_conflict`,
+the gate remains closed, and the unchanged store and control subjects stay
+intact. Corrected evidence must first pass an explicit `restore-prepare`; replay
+then uses that prepared binding. A recomputed digest does not override earlier
+receipt or backup-journal commitments.
 
 The gate write is the first durable action. If it cannot be synced, the restore
 command fails and the store must remain stopped; do not open a restored store
@@ -140,7 +189,7 @@ Startup, admission and ordinary writers share one gate contract:
 - the supported restore topology still requires every writer and the runtime to
   be stopped before copying a backup, preparing, replaying and reopening.
 
-## 4. Plan binding and rejection rules
+## 5. Plan binding and rejection rules
 
 A plan contains:
 
@@ -166,7 +215,7 @@ Apply rejects without mutation when:
 `--confirm-subject` is an additional operator guard against applying the right
 file to the wrong subject; it does not replace plan review.
 
-## 5. Offline restore replay
+## 6. Offline restore replay
 
 Supported synthetic restore sequence:
 
@@ -182,11 +231,13 @@ Replay behaviour:
 - opens a durable closed gate before reading the journal, receipt history or
   store, so missing/corrupt input leaves the store closed;
 - requires a parseable, supported journal; missing or corrupt evidence fails;
-- requires the backup's own journal event sequence to be a prefix of the supplied
-  journal; a missing, reordered or divergent prefix fails;
-- requires every historical receipt's ordered `journalEventIds` to be a prefix
-  of the supplied journal. A newer journal may grow the event sequence; it may
-  not drop or replace receipted events;
+- validates every supplied event's canonical immutable intent digest;
+- requires the backup's own `{id, intentDigest}` commitment sequence to be a
+  prefix of the supplied journal; a missing, reordered or content-divergent
+  prefix fails;
+- requires every historical receipt's ordered `journalCommitments` to be a
+  prefix of the supplied journal. A newer journal may grow the sequence; it may
+  not drop, replace or alter receipted intent;
 - preserves every attempt receipt in
   `restore-replay-receipt.<attemptId>.json` and refreshes the stable
   `restore-replay-receipt.json` latest copy. If a backup contains only the latest
@@ -201,8 +252,8 @@ Replay behaviour:
 - verifies usage-to-subject/session relationships and idempotency-key
   uniqueness;
 - writes an attempt-scoped receipt with the attempt id, prior receipt ids,
-  journal hash, ordered event ids, before/after store hashes, accounting
-  snapshots and invariant results;
+  journal hash, ordered `{id, intentDigest}` commitments, before/after store
+  hashes, accounting snapshots and invariant results;
 - writes all journal events into the restored store as `completed` with replay
   evidence, so startup does not see a pending event;
 - removes `restore-replay-gate.json` only after the current attempt receipt
@@ -230,7 +281,7 @@ keeps the same store hash, and returns a new complete receipt with no applied
 events. Repeated preparation returns the same open attempt; preparation after a
 verified restore records a no-op attempt receipt and leaves the store open.
 
-## 6. Compatibility and rollback implications
+## 7. Compatibility and rollback implications
 
 - `identity-store.json` remains version `1`; no migration is required.
 - The minimised store is readable by the current and earlier builder binaries:
@@ -240,12 +291,15 @@ verified restore records a no-op attempt receipt and leaves the store open.
   binary ignores them and does **not** fail closed on a pending journal, an
   unreplayed restore gate or corrupt receipt history.
 - Therefore a rollback to an earlier binary after a pending apply, an open
-  restore attempt or a receipted v2 restore is unsupported. Either finish/verify
+  restore attempt or a receipted v3 restore is unsupported. Either finish/verify
   the current request with this image, or keep the store closed and preserve all
   sidecars for review.
-- Gate and receipt format is version `2`. Version `1` artifacts from
-  `44e1163` are preserved but fail closed under this binary; they are not
-  auto-migrated. Do not delete them to force the store open.
+- Journal format is version `2` with immutable `intentDigest` commitments.
+  Gate/receipt format is version `3` with ordered `journalCommitments`.
+- Version `1` journals and version `2` gates/receipts are preserved but fail
+  closed under this binary; they are not auto-migrated because they lack the
+  commitments needed to prove content continuity. Do not delete them to force
+  the store open.
 - Receipt history is append-only by attempt id. The stable
   `restore-replay-receipt.json` copy is only a convenience pointer; historical
   attempt files are the evidence. Do not delete either to bypass a conflict.
@@ -259,7 +313,7 @@ verified restore records a no-op attempt receipt and leaves the store open.
   does not enforce generation budgets. This contract does not change that
   rollback warning.
 
-## 7. Explicitly pending owner policy
+## 8. Explicitly pending owner policy
 
 Not implemented or authorized by this contract:
 

@@ -842,6 +842,24 @@ json_array_count() {
   ' "$@"
 }
 
+check_control_access() {
+  local source="$1" label="$2" list control
+  list="$(op_json "$source" list)"
+  printf '%s\n' "$list" > "$EVIDENCE_DIR/list-$label.json"
+  control="$("$NODE_BIN" -e '
+    const fs = require("node:fs");
+    const [file, subjectId, sessionId] = process.argv.slice(1);
+    const state = JSON.parse(fs.readFileSync(file, "utf8"));
+    const subject = state.subjects.find((item) => item.id === subjectId);
+    const session = state.sessions.find((item) => item.id === sessionId);
+    process.stdout.write(
+      subject && !subject.revokedAt && session && !session.revokedAt ? "true" : "false",
+    );
+  ' "$EVIDENCE_DIR/list-$label.json" "$SUBJECT_C" "$SESSION_C")"
+  check "second-restore:control-access-$label" "$control" "true"
+  check "second-restore:control-usage-$label" "$(printf '%s' "$list" | usage_key "$USAGE_ID")" "$USAGE_BEFORE"
+}
+
 wait_health() {
   local name="$1"
   local deadline=$((SECONDS + 120))
@@ -1472,55 +1490,57 @@ else
   RESTORE2_SOURCE="$RESTORE2_DIR"
 fi
 initialize_store_root "$RESTORE2_SOURCE"
-# Replace the snapshot's older journal A with the newer A+B journal. The
-# identity-store bytes still predate B, which is the state replay must fix.
-cp "$BACKUP2_DIR/journal-AB.json" "$BACKUP2_DIR/store/minimization-journal.json"
+# Start from the snapshot with its original journal A and receipt A commitments.
 copy_store_in "$BACKUP2_DIR/store" "$RESTORE2_SOURCE"
 check "second-restore:pre-replay-hash" "$(store_hash "$RESTORE2_SOURCE")" "$STORE_HASH_MINIMIZED_A"
 
+# Negative 1: changed intent with reused event ids before preparation. The
+# journal is structurally valid and carries a recomputed intent digest, but the
+# preserved receipt and backup-journal commitments must still reject it.
+"$NODE_BIN" --experimental-strip-types deploy/builder/qualify-mutate-journal.mjs \
+  --input "$BACKUP2_DIR/journal-AB.json" \
+  --output "$BACKUP2_DIR/journal-changed-pre.json" \
+  --index 0 --subject "$SUBJECT_C"
+copy_store_file_in "$BACKUP2_DIR/journal-changed-pre.json" "$RESTORE2_SOURCE" "minimization-journal.json"
+set +e
+operator_run "$RESTORE2_SOURCE" restore-prepare --journal /data/builder/minimization-journal.json --json >/dev/null 2>>"$OP_LOG"
+CHANGED_PREPARE_RC=$?
+set -e
+[[ "$CHANGED_PREPARE_RC" -ne 0 ]] || fail "changed intent was prepared despite preserved prior commitments"
+check "second-restore:changed-intent-before-prepare-rejected" "true" "true"
+check "second-restore:changed-intent-before-prepare-store-unchanged" "$(store_hash "$RESTORE2_SOURCE")" "$STORE_HASH_MINIMIZED_A"
+check "second-restore:changed-intent-before-prepare-gate-preserved" "$(store_file_exists "$RESTORE2_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "present"
+RESTORE2_PRE_CHANGED_STATUS="$(operator_run "$RESTORE2_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
+check "second-restore:changed-intent-before-prepare-blocks-reopen" "$(printf '%s' "$RESTORE2_PRE_CHANGED_STATUS" | json_field replayReady)" "false"
+check_control_access "$RESTORE2_SOURCE" "before-prepare"
+
+# Explicit correction with the exact A+B journal, then prepare the same restore.
+copy_store_file_in "$BACKUP2_DIR/journal-AB.json" "$RESTORE2_SOURCE" "minimization-journal.json"
 note "Prepare and replay the second restore cycle"
 RESTORE2_PREPARE_JSON="$(op_json "$RESTORE2_SOURCE" restore-prepare --journal /data/builder/minimization-journal.json)"
 check "second-restore:gate-prepared" "$(printf '%s' "$RESTORE2_PREPARE_JSON" | json_field prepared)" "true"
 RESTORE2_GATE_STATUS="$(operator_run "$RESTORE2_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
 check "second-restore:gate-blocks-reopen" "$(printf '%s' "$RESTORE2_GATE_STATUS" | json_field replayReady)" "false"
 
-# Negative same-image/changed-intent attempt: the attempt was prepared with
-# journal A+B, so replay must reject a different journal hash/evidence rather
-# than silently rebinding. The gate, store and control subject stay intact.
-"$NODE_BIN" -e '
-  const fs = require("node:fs");
-  const journal = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-  if (!Array.isArray(journal.events) || journal.events.length !== 2) {
-    throw new Error("expected the A+B journal");
-  }
-  journal.events[0].effectAt = "2030-01-01T00:00:00.000Z";
-  fs.writeFileSync(process.argv[2], `${JSON.stringify(journal, null, 2)}\n`, { mode: 0o600 });
-' "$BACKUP2_DIR/journal-AB.json" "$BACKUP2_DIR/journal-changed-intent.json"
-copy_store_file_in "$BACKUP2_DIR/journal-changed-intent.json" "$RESTORE2_SOURCE" "minimization-journal.json"
+# Negative 2: changed evidence after preparation. The digest is recomputed and
+# only the new B event changes, so prior receipt A still matches; replay must
+# reject the prepared-attempt substitution and keep the gate closed.
+"$NODE_BIN" --experimental-strip-types deploy/builder/qualify-mutate-journal.mjs \
+  --input "$BACKUP2_DIR/journal-AB.json" \
+  --output "$BACKUP2_DIR/journal-changed-post.json" \
+  --index 1 --effect-at "2030-01-01T00:00:00.000Z"
+copy_store_file_in "$BACKUP2_DIR/journal-changed-post.json" "$RESTORE2_SOURCE" "minimization-journal.json"
 set +e
 operator_run "$RESTORE2_SOURCE" replay-minimization --journal /data/builder/minimization-journal.json --json >/dev/null 2>>"$OP_LOG"
 CHANGED_INTENT_RC=$?
 set -e
-[[ "$CHANGED_INTENT_RC" -ne 0 ]] || fail "changed-intent replay was accepted"
-check "second-restore:changed-intent-rejected" "true" "true"
-check "second-restore:changed-intent-store-unchanged" "$(store_hash "$RESTORE2_SOURCE")" "$STORE_HASH_MINIMIZED_A"
-check "second-restore:changed-intent-gate-preserved" "$(store_file_exists "$RESTORE2_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "present"
+[[ "$CHANGED_INTENT_RC" -ne 0 ]] || fail "changed evidence after preparation was accepted"
+check "second-restore:changed-evidence-after-prepare-rejected" "true" "true"
+check "second-restore:changed-evidence-after-prepare-store-unchanged" "$(store_hash "$RESTORE2_SOURCE")" "$STORE_HASH_MINIMIZED_A"
+check "second-restore:changed-evidence-after-prepare-gate-preserved" "$(store_file_exists "$RESTORE2_SOURCE" "restore-replay-gate.json" && printf 'present' || printf 'missing')" "present"
 RESTORE2_CHANGED_STATUS="$(operator_run "$RESTORE2_SOURCE" replay-status --json 2>>"$OP_LOG" || true)"
-check "second-restore:changed-intent-blocks-reopen" "$(printf '%s' "$RESTORE2_CHANGED_STATUS" | json_field replayReady)" "false"
-LIST_AFTER_CHANGED_INTENT="$(op_json "$RESTORE2_SOURCE" list)"
-printf '%s\n' "$LIST_AFTER_CHANGED_INTENT" > "$EVIDENCE_DIR/list-after-changed-intent.json"
-CONTROL_AFTER_CHANGED_INTENT="$("$NODE_BIN" -e '
-  const fs = require("node:fs");
-  const [file, subjectId, sessionId] = process.argv.slice(1);
-  const state = JSON.parse(fs.readFileSync(file, "utf8"));
-  const subject = state.subjects.find((item) => item.id === subjectId);
-  const session = state.sessions.find((item) => item.id === sessionId);
-  process.stdout.write(
-    subject && !subject.revokedAt && session && !session.revokedAt ? "true" : "false",
-  );
-' "$EVIDENCE_DIR/list-after-changed-intent.json" "$SUBJECT_C" "$SESSION_C")"
-check "second-restore:control-access-preserved" "$CONTROL_AFTER_CHANGED_INTENT" "true"
-check "second-restore:control-usage-preserved" "$(op_json "$RESTORE2_SOURCE" list | usage_key "$USAGE_ID")" "$USAGE_BEFORE"
+check "second-restore:changed-evidence-after-prepare-blocks-reopen" "$(printf '%s' "$RESTORE2_CHANGED_STATUS" | json_field replayReady)" "false"
+check_control_access "$RESTORE2_SOURCE" "after-prepare"
 
 # Restore the exact prepared journal and complete the same attempt.
 copy_store_file_in "$BACKUP2_DIR/journal-AB.json" "$RESTORE2_SOURCE" "minimization-journal.json"
@@ -1678,6 +1698,9 @@ second_restore_replayed_events=2
 second_restore_receipt_history_preserved=true
 same_id_changed_intent_replay_blocked=true
 changed_intent_gate_preserved=true
+changed_intent_before_prepare_blocked=true
+changed_evidence_after_prepare_blocked=true
+prior_commitments_preserved=true
 control_subject_access=true
 session_valid_after_restart=true
 session_revoked_after_restart=true
