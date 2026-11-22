@@ -640,6 +640,7 @@ test("directly invoked private-staging helpers are executable in the frozen cand
   }
   const bundlePaths = [
     "deploy/builder/private-staging/run-exact-rehearsal-linux.sh",
+    "deploy/builder/private-staging/run-retained-image-qualification-linux.sh",
     "deploy/builder/private-staging/run-candidate-gates.sh",
     "deploy/builder/private-staging/cleanup-owned-resources.sh",
     "deploy/builder/private-staging/finalize-rehearsal-status.sh",

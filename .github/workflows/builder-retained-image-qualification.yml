@@ -1,0 +1,538 @@
+name: Retained immutable image qualification
+
+on:
+  push:
+    branches:
+      - ci/retained-image-qualification-20261122
+    paths:
+      - .github/build-requests/builder-retained-image-qualification.json
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: retained-image-qualification
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_SHA: 6ef785961d3f5c6084650ee9a119b78943a598e6
+  SOURCE_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+  HARNESS_SHA: 6ef785961d3f5c6084650ee9a119b78943a598e6
+  PRODUCER_HARNESS_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+  IMAGE_REFERENCE: sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57
+  ARCHIVE_SHA256: a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df
+  ARCHIVE_BYTES: "1000632832"
+  PROJECT: ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+  EVIDENCE_ROOT: /tmp/ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+  RUNNER_LOG_ROOT: /tmp/ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}/logs
+  EMERGENCY_DIAGNOSTICS_ROOT: /tmp/ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
+  BUILDER_EVIDENCE_ROOT: /tmp/ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}/builder
+  EXPORT_STAGING: /tmp/ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}/staging
+  UPLOAD_STAGING: /tmp/ornigami-retained-qualification-${{ github.run_id }}-${{ github.run_attempt }}/upload
+  ARTIFACT_NAME: builder-retained-image-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+  STAGING_ORIGIN: https://builder-rehearsal.invalid
+  STAGING_HOST: builder-rehearsal.invalid
+  CADDY_IMAGE: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+  BUILDER_STORE_VOLUME: ornigami-retained-store-${{ github.run_id }}-${{ github.run_attempt }}
+  BUILDER_RUNTIME_STORE_HOST_ID: ornigami-builder-store-v1
+  STAGING_BASIC_AUTH_USER: staging-operator
+  MAX_ARCHIVE_BYTES: "3221225472"
+  MAX_ARTIFACT_BYTES: "3758096384"
+  MAX_DIAGNOSTIC_BYTES: "67108864"
+  MAX_RETRIEVAL_ARTIFACT_BYTES: "67108864"
+
+jobs:
+  qualify:
+    name: Qualify retained immutable image
+    if: >-
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      github.event.created == true &&
+      github.event.before == '0000000000000000000000000000000000000000' &&
+      github.run_attempt == 1 &&
+      github.ref == 'refs/heads/ci/retained-image-qualification-20261122'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Create runner-owned emergency roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$RUNNER_LOG_ROOT" "$EMERGENCY_DIAGNOSTICS_ROOT" "$EVIDENCE_ROOT/receipts"
+          chmod 0700 "$EVIDENCE_ROOT" "$RUNNER_LOG_ROOT" "$EMERGENCY_DIAGNOSTICS_ROOT" "$EVIDENCE_ROOT/receipts"
+          {
+            printf 'workflow_sha=%s\n' "${{ github.sha }}"
+            printf 'candidate_sha=%s\n' "$CANDIDATE_SHA"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'harness_sha=%s\n' "$HARNESS_SHA"
+            printf 'producer_harness_sha=%s\n' "$PRODUCER_HARNESS_SHA"
+            printf 'image=%s\n' "$IMAGE_REFERENCE"
+            printf 'archive_sha256=%s\n' "$ARCHIVE_SHA256"
+            printf 'archive_bytes=%s\n' "$ARCHIVE_BYTES"
+            printf 'run_id=%s-%s\n' "${{ github.run_id }}" "${{ github.run_attempt }}"
+            printf 'runner_user=%s\n' "$(id -un)"
+          } > "$RUNNER_LOG_ROOT/run-identity.txt"
+
+      - name: Check out control plane
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Verify control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+
+      - name: Check out current harness candidate
+        uses: actions/checkout@v5
+        with:
+          ref: 6ef785961d3f5c6084650ee9a119b78943a598e6
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify harness identity and modes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="${{ github.sha }}" \
+          SOURCE_SHA="$CANDIDATE_SHA" \
+          HARNESS_SHA="$CANDIDATE_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/harness-identity.txt"
+          echo "SOURCE_ROOT=$GITHUB_WORKSPACE/candidate-source" >> "$GITHUB_ENV"
+
+      - name: Create builder and owned roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          runner_user="$(id -un)"
+          runner_group="$(id -gn)"
+          builder_user="$(id -nu 1000)"
+          builder_group="$(id -gn "$builder_user")"
+          builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
+          test "$runner_user" != "$builder_user"
+          test "$(id -u "$builder_user")" = "1000"
+          if ! getent group docker >/dev/null; then sudo groupadd docker; fi
+          if ! id -nG "$builder_user" | tr ' ' '\n' | grep -qx docker; then sudo usermod -aG docker "$builder_user"; fi
+          sudo chown -R "$builder_user":"$builder_group" "$SOURCE_ROOT"
+          sudo install -d -m 0755 -o "$runner_user" -g "$runner_group" "$EVIDENCE_ROOT"
+          sudo install -d -m 0700 -o "$builder_user" -g "$builder_group" "$BUILDER_EVIDENCE_ROOT"
+          sudo install -d -m 2770 -o "$builder_user" -g "$runner_group" "$EXPORT_STAGING"
+          sudo install -d -m 0700 -o "$runner_user" -g "$runner_group" "$UPLOAD_STAGING"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          {
+            echo "BUILDER_USER=$builder_user"
+            echo "BUILDER_GROUP=$builder_group"
+            echo "BUILDER_HOME=$builder_home"
+            echo "REHEARSAL_RUNNER_USER=$runner_user"
+            echo "REHEARSAL_RUNNER_GROUP=$runner_group"
+          } >> "$GITHUB_ENV"
+
+      - name: Install supported Node and vendored npm
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v xz >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xz-utils
+          }
+          sudo mkdir -p /opt/ornigami-node /opt/ornigami-npm
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/SHASUMS256.txt
+          grep ' node-v22.23.3-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+          sudo tar -xJf node-v22.23.3-linux-x64.tar.xz -C /opt/ornigami-node --strip-components=1
+          sudo tar -xzf "$SOURCE_ROOT/vendor/build-tools/npm-11.21.1.tgz" -C /opt/ornigami-npm --strip-components=1
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm
+          node_bin=/opt/ornigami-node/bin/node
+          npm_cli=/opt/ornigami-npm/bin/npm-cli.js
+          test "$("$node_bin" --version)" = "v22.23.3"
+          test "$("$node_bin" -p 'process.versions.openssl')" = "3.5.8"
+          test "$("$node_bin" "$npm_cli" --version)" = "11.21.1"
+          echo "/opt/ornigami-node/bin" >> "$GITHUB_PATH"
+          echo "NODE_BIN=$node_bin" >> "$GITHUB_ENV"
+          echo "NPM_CLI_FOR_REHEARSAL=$npm_cli" >> "$GITHUB_ENV"
+
+      - name: Install browser tools and Chromium as builder
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y jq curl xz-utils libnss3-tools
+          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund \
+            --prefix "$SOURCE_ROOT/scripts/framework-prototype/browser-tools"
+          sudo env PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install-deps chromium
+          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install chromium
+          sudo chmod -R a+rX "$SOURCE_ROOT/scripts/framework-prototype/browser-tools" "$BUILDER_HOME/.cache/ms-playwright"
+
+      - name: Require browser smoke before qualification
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          smoke_root=/tmp/ornigami-retained-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          sudo install -d -m 0755 -o "$BUILDER_USER" -g "$BUILDER_GROUP" "$smoke_root"
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            BROWSER_PLAYWRIGHT="$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs" \
+            BROWSER_SMOKE_EVIDENCE_DIR="$smoke_root" \
+            NODE_BIN="$NODE_BIN" \
+            NODE_OPTIONS="--max-old-space-size=512" \
+            bash -c 'cd "$SOURCE_ROOT" && exec "$NODE_BIN" scripts/browser-smoke.mjs' \
+            2>&1 | tee "$RUNNER_LOG_ROOT/browser-smoke-console.txt"
+          node -e '
+            const fs=require("node:fs");
+            const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+            if (r.ok !== true) throw new Error(`browser smoke failed: ${JSON.stringify(r.error)}`);
+            if (r.sandbox !== "no-sandbox") throw new Error(`unexpected sandbox mode: ${r.sandbox}`);
+            console.log(JSON.stringify({ok:r.ok,sandbox:r.sandbox,uid:r.effectiveUid,gid:r.effectiveGid,browser:r.browserVersion},null,2));
+          ' "$smoke_root/browser-smoke.json"
+          cp "$smoke_root/browser-smoke.json" "$RUNNER_LOG_ROOT/browser-smoke.json"
+          cp "$smoke_root/browser-smoke.png" "$RUNNER_LOG_ROOT/browser-smoke.png"
+
+      - name: Download retained archive from run 45030190736
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          retained="$RUNNER_TEMP/retained"
+          rm -rf "$retained"
+          gh run download 45030190736 \
+            -n builder-exact-rehearsal-0d68551-staged-45030190736-1 \
+            -D "$retained"
+          archive="$(find "$retained" -type f -name '*.tar' -print -quit)"
+          receipt="$(find "$retained" -type f -name 'archive-receipt.json' -print -quit)"
+          [[ -n "$archive" && -f "$archive" ]] || { echo "FAIL: retained archive missing" >&2; exit 1; }
+          [[ -n "$receipt" && -f "$receipt" ]] || { echo "FAIL: retained archive receipt missing" >&2; exit 1; }
+          actual_sha="$(sha256sum "$archive" | awk '{print $1}')"
+          actual_bytes="$(stat -c '%s' "$archive")"
+          test "$actual_sha" = "$ARCHIVE_SHA256"
+          test "$actual_bytes" = "$ARCHIVE_BYTES"
+          input=/tmp/ornigami-retained-input-${{ github.run_id }}-${{ github.run_attempt }}
+          rm -rf "$input"
+          install -d -m 0755 "$input"
+          install -m 0644 "$archive" "$input/$(basename "$archive")"
+          install -m 0644 "$receipt" "$input/archive-receipt.json"
+          printf 'retained_archive=%s\nretained_receipt=%s\nsha256=%s\nbytes=%s\n' \
+            "$input/$(basename "$archive")" "$input/archive-receipt.json" "$actual_sha" "$actual_bytes" \
+            > "$RUNNER_LOG_ROOT/retained-archive.txt"
+          echo "ARCHIVE_PATH=$input/$(basename "$archive")" >> "$GITHUB_ENV"
+          echo "ARCHIVE_RECEIPT_PATH=$input/archive-receipt.json" >> "$GITHUB_ENV"
+
+      - name: Qualify retained image with fresh stores and private edge
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            SOURCE_SHA="$SOURCE_SHA" \
+            HARNESS_SHA="$HARNESS_SHA" \
+            PRODUCER_HARNESS_SHA="$PRODUCER_HARNESS_SHA" \
+            WORKFLOW_SHA="${{ github.sha }}" \
+            IMAGE_REFERENCE="$IMAGE_REFERENCE" \
+            ARCHIVE_PATH="$ARCHIVE_PATH" \
+            ARCHIVE_RECEIPT_PATH="$ARCHIVE_RECEIPT_PATH" \
+            ARCHIVE_SHA256="$ARCHIVE_SHA256" \
+            ARCHIVE_BYTES="$ARCHIVE_BYTES" \
+            APP_URL="$STAGING_ORIGIN" \
+            CADDY_IMAGE="$CADDY_IMAGE" \
+            PROJECT="$PROJECT" \
+            EVIDENCE_ROOT="$BUILDER_EVIDENCE_ROOT" \
+            EXPORT_STAGING="$EXPORT_STAGING" \
+            BUILDER_STORE_VOLUME="$BUILDER_STORE_VOLUME" \
+            BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
+            STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" \
+            BROWSER_PLAYWRIGHT="$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs" \
+            PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            BUILDER_USER="$BUILDER_USER" \
+            DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+            bash "$GITHUB_WORKSPACE/deploy/builder/private-staging/run-retained-image-qualification-linux.sh" \
+            2>&1 | tee "$RUNNER_LOG_ROOT/retained-qualification.log"
+
+      - name: Record retained-image custody
+        id: custody_record
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_LOG_ROOT"
+          if find "$EXPORT_STAGING" -type f -name archive-receipt.json -print -quit 2>/dev/null | grep -q .; then
+            echo "archive_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "archive_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+          find "$EXPORT_STAGING" -maxdepth 5 -type f -printf '%p\t%s\n' 2>/dev/null | sort > "$RUNNER_LOG_ROOT/export-staging-files.txt" || true
+
+      - name: Stage approved evidence with bounded diagnostics
+        id: stage
+        if: always()
+        shell: bash
+        env:
+          MAX_ARCHIVE_BYTES: ${{ env.MAX_ARCHIVE_BYTES }}
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_ARTIFACT_BYTES }}
+          MAX_DIAGNOSTIC_BYTES: ${{ env.MAX_DIAGNOSTIC_BYTES }}
+        run: |
+          set +e
+          upload_root="$UPLOAD_STAGING"
+          if ! mkdir -p "$upload_root" 2>/dev/null; then
+            upload_root="$EVIDENCE_ROOT/upload"
+          fi
+          rm -rf "$upload_root"
+          mkdir -p -m 0700 "$upload_root"
+          sources="$RUNNER_LOG_ROOT"
+          if [[ -d "$EXPORT_STAGING" ]]; then sources="$EXPORT_STAGING|$RUNNER_LOG_ROOT"; fi
+          SOURCE_ROOTS="$sources" UPLOAD_ROOT="$upload_root" \
+          MAX_ARCHIVE_BYTES="$MAX_ARCHIVE_BYTES" MAX_ARTIFACT_BYTES="$MAX_ARTIFACT_BYTES" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$RUNNER_LOG_ROOT/staging-receipt.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$RUNNER_LOG_ROOT/staging.json" 2>&1
+          stage_rc=$?
+          set -e
+          echo "UPLOAD_ROOT=$upload_root" >> "$GITHUB_ENV"
+          echo "upload_root=$upload_root" >> "$GITHUB_OUTPUT"
+          echo "stage_exit=$stage_rc" >> "$GITHUB_OUTPUT"
+          echo "stage_ok=$([[ "$stage_rc" == "0" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Check upload budgets
+        id: upload_budget
+        if: always()
+        shell: bash
+        env:
+          UPLOAD_ROOT: ${{ steps.stage.outputs.upload_root }}
+          MAX_ARCHIVE_BYTES: ${{ env.MAX_ARCHIVE_BYTES }}
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_ARTIFACT_BYTES }}
+          MAX_DIAGNOSTIC_BYTES: ${{ env.MAX_DIAGNOSTIC_BYTES }}
+          DIAGNOSTICS_DIR: ${{ env.EMERGENCY_DIAGNOSTICS_ROOT }}
+          RECEIPT_PATH: ${{ env.RUNNER_LOG_ROOT }}/upload-budget-receipt.json
+        run: |
+          set +e
+          export UPLOAD_ROOT="${UPLOAD_ROOT:-$UPLOAD_STAGING}"
+          node deploy/builder/private-staging/check-upload-budget.mjs \
+            > "$RUNNER_LOG_ROOT/upload-budget.json" 2>&1
+          budget_rc=$?
+          set -e
+          upload_allowed=false
+          if [[ "$budget_rc" == "0" && "${{ steps.custody_record.outputs.archive_ready }}" == "true" && "${{ steps.stage.outputs.stage_ok }}" == "true" ]]; then
+            upload_allowed=true
+          fi
+          echo "upload_allowed=$upload_allowed" >> "$GITHUB_OUTPUT"
+          echo "budget_exit=$budget_rc" >> "$GITHUB_OUTPUT"
+          if [[ "$upload_allowed" != "true" ]]; then
+            mkdir -p "$EMERGENCY_DIAGNOSTICS_ROOT"
+            SOURCE_ROOTS="$RUNNER_LOG_ROOT" \
+            UPLOAD_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
+            MAX_ARCHIVE_BYTES="0" \
+            MAX_ARTIFACT_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+            MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+            RECEIPT_PATH="$EVIDENCE_ROOT/receipts/diagnostics-staging.json" \
+              node deploy/builder/private-staging/stage-approved-evidence.mjs \
+              > "$EVIDENCE_ROOT/receipts/diagnostics-staging-console.json" 2>&1 || true
+            printf 'retained-image diagnostics for %s\n' "${{ github.sha }}" > "$EMERGENCY_DIAGNOSTICS_ROOT/EMERGENCY.txt"
+            DIAGNOSTICS_DIR="$EMERGENCY_DIAGNOSTICS_ROOT" \
+            MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+            RECEIPT_PATH="$EVIDENCE_ROOT/receipts/diagnostics-budget.json" \
+              node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+              > "$EVIDENCE_ROOT/receipts/diagnostics-budget-console.json" 2>&1
+          fi
+
+      - name: Upload retained-image custody
+        id: custody_upload
+        if: always() && steps.upload_budget.outputs.upload_allowed == 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ steps.stage.outputs.upload_root }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload bounded retained-image diagnostics
+        if: always() && steps.upload_budget.outputs.upload_allowed != 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-diagnostics
+          path: ${{ env.EMERGENCY_DIAGNOSTICS_ROOT }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce final retained-image status
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ "${{ steps.custody_upload.outcome }}" == "success" ]]; then
+            echo "custody_uploaded=true"
+          else
+            echo "custody_uploaded=false"
+          fi
+          test -f "$RUNNER_LOG_ROOT/final-status.txt" || cp "$EXPORT_STAGING/final-status.txt" "$RUNNER_LOG_ROOT/final-status.txt"
+          test -f "$RUNNER_LOG_ROOT/final-status.txt"
+          cat "$RUNNER_LOG_ROOT/final-status.txt"
+          grep -qx 'final_status=0' "$RUNNER_LOG_ROOT/final-status.txt"
+    outputs:
+      custody_uploaded: ${{ steps.custody_upload.outcome == 'success' && 'true' || 'false' }}
+
+  retrieve:
+    name: Fresh retrieval and independent archive verification
+    needs: qualify
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out verifier scripts
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          clean: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Download original retained archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          original="$RUNNER_TEMP/original"
+          rm -rf "$original"
+          gh run download 45030190736 \
+            -n builder-exact-rehearsal-0d68551-staged-45030190736-1 \
+            -D "$original"
+          archive="$(find "$original" -type f -name '*.tar' -print -quit)"
+          receipt="$(find "$original" -type f -name 'archive-receipt.json' -print -quit)"
+          [[ -n "$archive" && -f "$archive" ]] || { echo "FAIL: original archive missing" >&2; exit 1; }
+          [[ -n "$receipt" && -f "$receipt" ]] || { echo "FAIL: original archive receipt missing" >&2; exit 1; }
+          sha="$(sha256sum "$archive" | awk '{print $1}')"
+          bytes="$(stat -c '%s' "$archive")"
+          test "$sha" = "a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df"
+          test "$bytes" = "1000632832"
+          printf 'archive=%s\nreceipt=%s\nsha256=%s\nbytes=%s\n' "$archive" "$receipt" "$sha" "$bytes" > "$RUNNER_TEMP/original-identity.txt"
+          echo "ORIGINAL_ARCHIVE=$archive" >> "$GITHUB_ENV"
+          echo "ORIGINAL_RECEIPT=$receipt" >> "$GITHUB_ENV"
+
+      - name: Download qualification custody if present
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set +e
+          custody="$RUNNER_TEMP/qualification-custody"
+          rm -rf "$custody"
+          gh run download ${{ github.run_id }} \
+            -n builder-retained-image-qualification-${{ github.run_id }}-${{ github.run_attempt }} \
+            -D "$custody" > "$RUNNER_TEMP/custody-download.log" 2>&1
+          rc=$?
+          set -e
+          echo "custody_download_exit=$rc" > "$RUNNER_TEMP/custody-download-status.txt"
+          if [[ "$rc" == "0" ]]; then
+            echo "QUALIFICATION_CUSTODY=$custody" >> "$GITHUB_ENV"
+          fi
+          exit 0
+
+      - name: Independently load and verify original archive
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          evidence="$RUNNER_TEMP/archive-verification"
+          ARCHIVE_PATH="$ORIGINAL_ARCHIVE" RECEIPT_PATH="$ORIGINAL_RECEIPT" \
+          EXPECTED_SOURCE_SHA=156259d0c4330b185a0844711b7004b0b4467887 \
+          EXPECTED_IMAGE_ID=sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57 \
+          EXPECTED_ORIGIN=https://builder-rehearsal.invalid \
+          EXPECTED_PLATFORM=linux/amd64 EXPECTED_USER=1000:1000 \
+          HARNESS_SHA=156259d0c4330b185a0844711b7004b0b4467887 \
+          EVIDENCE_DIR="$evidence" REQUIRE_FRESH_DAEMON=1 ENGINE=docker \
+            node deploy/builder/private-staging/verify-image-archive.mjs
+          cp "$evidence/archive-verification.json" "$RUNNER_TEMP/archive-verification.json"
+
+      - name: Check qualification custody and retrieval budget
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          evidence="$RUNNER_TEMP/retrieval-evidence"
+          mkdir -p "$evidence"
+          cp "$RUNNER_TEMP/archive-verification.json" "$evidence/"
+          cp "$RUNNER_TEMP/original-identity.txt" "$evidence/"
+          status="not-present"
+          if [[ -n "${QUALIFICATION_CUSTODY:-}" ]]; then
+            final="$(find "$QUALIFICATION_CUSTODY" -type f -name 'retained-image-custody-receipt.json' -print -quit)"
+            if [[ -n "$final" && -f "$final" ]]; then
+              node - "$final" "$evidence/qualification-receipt.json" <<'NODE'
+              const fs=require("node:fs");
+              const [source,target]=process.argv.slice(2);
+              const r=JSON.parse(fs.readFileSync(source,"utf8"));
+              if (r.imageId !== "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57") throw new Error("qualification image mismatch");
+              if (r.producerApplicationSourceSha !== "156259d0c4330b185a0844711b7004b0b4467887") throw new Error("qualification source mismatch");
+              if (r.consumerHarnessSha !== "6ef785961d3f5c6084650ee9a119b78943a598e6") throw new Error("qualification consumer harness mismatch");
+              if (r.status !== "complete") throw new Error("qualification is not complete");
+              fs.copyFileSync(source,target);
+              NODE
+              status="complete"
+            fi
+          fi
+          echo "qualification_status=$status" > "$evidence/qualification-status.txt"
+          WORKFLOW_SHA="${{ github.sha }}" RETRIEVAL_DAEMON_ID="$(docker info --format '{{.ID}}')" QUALIFICATION_STATUS="$status" RETRIEVAL_RECEIPT="$evidence/retrieval-receipt.json" node - "$RUNNER_TEMP/archive-verification.json" "$RUNNER_TEMP/original-identity.txt" <<'NODE'
+          const fs=require("node:fs");
+          const [verificationPath, identityPath]=process.argv.slice(2);
+          const verification=JSON.parse(fs.readFileSync(verificationPath,"utf8"));
+          const identity=Object.fromEntries(fs.readFileSync(identityPath,"utf8").trim().split(/\r?\n/).map((line)=>{const i=line.indexOf("=");return [line.slice(0,i),line.slice(i+1)];}));
+          if (verification.complete !== true || verification.independentHandoff !== true) throw new Error("original archive verification is incomplete");
+          if (verification.imageId !== "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57") throw new Error("original archive image identity changed");
+          if (identity.sha256 !== "a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df") throw new Error("original archive hash changed");
+          if (identity.bytes !== "1000632832") throw new Error("original archive size changed");
+          const receipt={
+            schemaVersion:1,
+            status:"complete",
+            producerApplicationSourceSha:"156259d0c4330b185a0844711b7004b0b4467887",
+            producerHarnessSha:"156259d0c4330b185a0844711b7004b0b4467887",
+            consumerHarnessSha:"6ef785961d3f5c6084650ee9a119b78943a598e6",
+            workflowSha:process.env.WORKFLOW_SHA,
+            imageId:"sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57",
+            archiveSha256:identity.sha256,
+            archiveBytes:Number(identity.bytes),
+            archiveVerification:"complete",
+            archiveIndependentHandoff:true,
+            freshDaemonId:process.env.RETRIEVAL_DAEMON_ID,
+            qualificationStatus:process.env.QUALIFICATION_STATUS,
+            customerAdmission:"closed",
+          };
+          fs.writeFileSync(process.env.RETRIEVAL_RECEIPT,`${JSON.stringify(receipt,null,2)}\n`);
+          console.log(JSON.stringify(receipt,null,2));
+          NODE
+          UPLOAD_ROOT="$evidence" MAX_ARCHIVE_BYTES="0" MAX_ARTIFACT_BYTES="$MAX_RETRIEVAL_ARTIFACT_BYTES" RECEIPT_RESERVE_BYTES="0" \
+            RECEIPT_PATH="$evidence/retrieval-budget.json" \
+            node deploy/builder/private-staging/check-upload-budget.mjs
+
+      - name: Upload retrieval evidence
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-retained-image-retrieval-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retrieval-evidence
+          if-no-files-found: error
+          retention-days: 7
