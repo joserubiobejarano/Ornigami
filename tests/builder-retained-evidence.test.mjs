@@ -66,6 +66,49 @@ test("prepare_retained_evidence_root creates every write destination", () => {
   }
 });
 
+test("the real wrapper prepares every evidence directory before archive access", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const evidence = path.join(root, "evidence");
+    const sourceRoot = path.join(root, "source");
+    mkdirSync(sourceRoot, { recursive: true });
+    const result = spawnSync(
+      findBash(),
+      [path.resolve("deploy/builder/private-staging/run-retained-image-qualification-linux.sh")],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          SOURCE_ROOT: bashPath(sourceRoot),
+          SOURCE_SHA: "156259d0c4330b185a0844711b7004b0b4467887",
+          HARNESS_SHA: "b1c6cce04f1fd5ad6ffdbdc3834bf28e8c1a2144",
+          PRODUCER_HARNESS_SHA: "156259d0c4330b185a0844711b7004b0b4467887",
+          WORKFLOW_SHA: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          IMAGE_REFERENCE: "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57",
+          ARCHIVE_PATH: bashPath(path.join(root, "archive.tar")),
+          ARCHIVE_RECEIPT_PATH: bashPath(path.join(root, "archive-receipt.json")),
+          ARCHIVE_SHA256: "a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df",
+          ARCHIVE_BYTES: "1000632832",
+          APP_URL: "https://builder-rehearsal.invalid",
+          CADDY_IMAGE: "caddy:2.10.2-alpine",
+          PROJECT: "ornigami-evidence-test",
+          EVIDENCE_ROOT: bashPath(evidence),
+          EXPORT_STAGING: bashPath(path.join(root, "stage")),
+          BUILDER_STORE_VOLUME: "ornigami-evidence-test-store",
+          BUILDER_RUNTIME_STORE_HOST_ID: "ornigami-builder-store-v1",
+          RETAINED_EVIDENCE_PREPARE_ONLY: "1",
+        },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    for (const name of ["logs", "custody", "edge", "secrets", "existing-image", "existing-image/edge"]) {
+      assert.ok(existsSync(path.join(evidence, name)), name);
+    }
+  } finally {
+    cleanup();
+  }
+});
+
 test("export_retained_evidence copies the complete approved set", () => {
   const { root, cleanup } = fixture();
   try {

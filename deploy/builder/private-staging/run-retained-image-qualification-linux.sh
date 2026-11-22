@@ -59,6 +59,13 @@ assert_loopback_tcp() {
   done <<< "$listeners"
 }
 
+# Test-only seam. It is disabled unless an explicit test sets it and stops
+# before archive access, image load or any edge/network action.
+if [[ "${RETAINED_EVIDENCE_PREPARE_ONLY:-0}" == "1" ]]; then
+  note "Evidence preparation self-test; stopping before archive access"
+  exit 0
+fi
+
 [[ "$IMAGE_REFERENCE" =~ ^sha256:[0-9a-f]{64}$ ]] || fail "IMAGE_REFERENCE must be an immutable image ID"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "SOURCE_SHA must be 40 hex"
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
