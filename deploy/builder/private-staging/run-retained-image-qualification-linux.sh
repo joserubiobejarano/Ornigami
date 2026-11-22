@@ -36,7 +36,7 @@ CADDY_DATA_VOLUME="${PROJECT}-caddy-data"
 CADDY_CONFIG_VOLUME="${PROJECT}-caddy-config"
 LOG_DIR="$EVIDENCE_ROOT/logs"
 CUSTODY_DIR="$EVIDENCE_ROOT/custody"
-mkdir -p "$REHEARSAL_DIR" "$STAGING_DIR" "$LOG_DIR" "$CUSTODY_DIR" "$EVIDENCE_ROOT/secrets"
+mkdir -p "$REHEARSAL_DIR" "$STAGING_DIR" "$LOG_DIR" "$CUSTODY_DIR" "$EVIDENCE_ROOT/secrets" "$EVIDENCE_ROOT/edge"
 chmod 700 "$EVIDENCE_ROOT/secrets"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }

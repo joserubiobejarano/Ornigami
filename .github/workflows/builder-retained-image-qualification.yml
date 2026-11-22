@@ -492,7 +492,7 @@ jobs:
               if (r.consumerHarnessSha !== "6ef785961d3f5c6084650ee9a119b78943a598e6") throw new Error("qualification consumer harness mismatch");
               if (r.status !== "complete") throw new Error("qualification is not complete");
               fs.copyFileSync(source,target);
-              NODE
+          NODE
               status="complete"
             fi
           fi

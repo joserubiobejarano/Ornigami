@@ -42,6 +42,14 @@ test("archive retrieval is independent of qualification success", () => {
   assert.match(workflow, /r\.status !== "complete"/);
 });
 
+test("retained evidence roots exist before the first write", () => {
+  const mkdir = wrapper.indexOf('"$EVIDENCE_ROOT/edge"');
+  const firstEdgeWrite = wrapper.indexOf("caddy-digests.json");
+  assert.ok(mkdir > 0, "wrapper must create the edge evidence directory");
+  assert.ok(firstEdgeWrite > mkdir, "edge evidence directory must be created before use");
+  assert.doesNotMatch(workflow, /^ {12,}NODE$/m);
+});
+
 test("browser mode is explicit before the retained journey", () => {
   assert.match(workflow, /Require browser smoke before qualification/);
   assert.match(workflow, /r\.sandbox !== "no-sandbox"/);
