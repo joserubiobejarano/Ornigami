@@ -627,6 +627,7 @@ test("directly invoked private-staging helpers are executable in the frozen cand
   }
   const bundlePaths = [
     "deploy/builder/private-staging/run-exact-rehearsal-linux.sh",
+    "deploy/builder/private-staging/run-candidate-gates.sh",
     "deploy/builder/private-staging/cleanup-owned-resources.sh",
     "deploy/builder/private-staging/finalize-rehearsal-status.sh",
     "deploy/builder/private-staging/assert-closed-smoke.sh",
@@ -652,6 +653,22 @@ test("endpoint probe bounds every attempt and retains classification and diagnos
   assert.match(script, /loopback-only/);
   assert.match(script, /\[::1\]/);
   assert.doesNotMatch(script, /for _ in \$\(seq 1 [0-9]+\)/);
+});
+
+test("serialized gate discovery is identical to scripts/test.mjs discovery", () => {
+  const expected = readdirSync("tests")
+    .filter((name) => /\.test\.(?:mts|mjs)$/.test(name))
+    .sort()
+    .map((name) => path.join("tests", name).split(path.sep).join("/"));
+  const result = spawnSync(
+    bash,
+    ["-c", "find tests -maxdepth 1 -type f \\( -name '*.test.mjs' -o -name '*.test.mts' \\) | sort"],
+    { cwd: root, encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const actual = result.stdout.trim().split(/\r?\n/).filter(Boolean);
+  assert.deepEqual(actual, expected);
+  assert.ok(actual.length > 0);
 });
 
 test("request file records the candidate correction and readiness workflow", () => {

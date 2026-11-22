@@ -1,0 +1,257 @@
+name: Builder rehearsal candidate gate debug (bounded)
+
+# One optional 10-minute Linux validation of the exact builder -> candidate-test
+# environment and command used by the full rehearsal. It installs dependencies
+# and PostgreSQL, then runs the real run-candidate-gates.sh helper as the
+# builder with deliberately contaminated rehearsal selectors. It does not build,
+# start an edge, or claim qualification.
+
+on:
+  push:
+    branches:
+      - codex/ornigami-rehearsal-readiness-20261122
+    paths:
+      - .github/debug-requests/builder-rehearsal-gate.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: builder-rehearsal-gate-debug
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Exact builder test gate
+    if: >-
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/codex/ornigami-rehearsal-readiness-20261122')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SOURCE_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+      HARNESS_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+      EMERGENCY_ROOT: /tmp/ornigami-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}
+      RUNNER_LOG_ROOT: /tmp/ornigami-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}/logs
+      EMERGENCY_DIAGNOSTICS_ROOT: /tmp/ornigami-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
+      MAX_DIAGNOSTIC_BYTES: "67108864"
+
+    steps:
+      - name: Create runner-owned gate-debug roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$RUNNER_LOG_ROOT" "$EMERGENCY_DIAGNOSTICS_ROOT" "$EMERGENCY_ROOT/receipts"
+          chmod 0700 "$EMERGENCY_ROOT" "$RUNNER_LOG_ROOT" "$EMERGENCY_DIAGNOSTICS_ROOT" "$EMERGENCY_ROOT/receipts"
+          {
+            printf 'workflow_sha=%s\n' "${{ github.sha }}"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'harness_sha=%s\n' "$HARNESS_SHA"
+            printf 'run_id=%s-%s\n' "${{ github.run_id }}" "${{ github.run_attempt }}"
+            printf 'runner_user=%s\n' "$(id -un)"
+          } > "$RUNNER_LOG_ROOT/gate-debug-identity.txt"
+
+      - name: Check out control plane
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Verify control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+
+      - name: Check out exact candidate source
+        uses: actions/checkout@v5
+        with:
+          ref: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify candidate identities and modes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="${{ github.sha }}" \
+          SOURCE_SHA="$SOURCE_SHA" \
+          HARNESS_SHA="$HARNESS_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/candidate-identity.txt"
+          echo "SOURCE_ROOT=$GITHUB_WORKSPACE/candidate-source" >> "$GITHUB_ENV"
+
+      - name: Create isolated UID-1000 builder and builder-owned candidate
+        id: builder_setup
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          runner_user="$(id -un)"
+          builder_user="$(id -nu 1000)"
+          builder_group="$(id -gn "$builder_user")"
+          builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
+          test "$(id -u "$builder_user")" = "1000"
+          test "$runner_user" != "$builder_user"
+          sudo chown -R "$builder_user":"$builder_group" "$SOURCE_ROOT"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          {
+            echo "BUILDER_USER=$builder_user"
+            echo "BUILDER_UID=1000"
+            echo "BUILDER_GROUP=$builder_group"
+            echo "BUILDER_HOME=$builder_home"
+          } >> "$GITHUB_ENV"
+
+      - name: Install supported Node and vendored npm
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v xz >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xz-utils
+          }
+          sudo mkdir -p /opt/ornigami-node /opt/ornigami-npm
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/SHASUMS256.txt
+          grep ' node-v22.23.3-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+          sudo tar -xJf node-v22.23.3-linux-x64.tar.xz -C /opt/ornigami-node --strip-components=1
+          sudo tar -xzf "$SOURCE_ROOT/vendor/build-tools/npm-11.21.1.tgz" -C /opt/ornigami-npm --strip-components=1
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm
+          node_bin=/opt/ornigami-node/bin/node
+          npm_cli=/opt/ornigami-npm/bin/npm-cli.js
+          test "$("$node_bin" --version)" = "v22.23.3"
+          test "$("$node_bin" -p 'process.versions.openssl')" = "3.5.8"
+          test "$("$node_bin" "$npm_cli" --version)" = "11.21.1"
+          echo "/opt/ornigami-node/bin" >> "$GITHUB_PATH"
+          echo "NODE_BIN=$node_bin" >> "$GITHUB_ENV"
+          echo "NPM_CLI_FOR_REHEARSAL=$npm_cli" >> "$GITHUB_ENV"
+
+      - name: Install PostgreSQL 17
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y jq curl
+          pg_bin=/usr/lib/postgresql/17/bin
+          if [[ ! -x "$pg_bin/initdb" ]]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc
+            codename="$(. /etc/os-release; printf '%s' "$VERSION_CODENAME")"
+            echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $codename-pgdg main" \
+              | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y postgresql-17
+          fi
+          "$pg_bin/pg_config" --version
+          test -x "$pg_bin/initdb"
+          test -x "$pg_bin/postgres"
+          echo "A04_PG_BIN=$pg_bin" >> "$GITHUB_ENV"
+          echo "$pg_bin" >> "$GITHUB_PATH"
+
+      - name: Run exact candidate gate as builder with contaminated selectors
+        id: candidate_gate
+        shell: bash
+        run: |
+          set +e
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            NODE_BIN="$NODE_BIN" \
+            NPM_CLI_FOR_REHEARSAL="$NPM_CLI_FOR_REHEARSAL" \
+            A04_PG_BIN="$A04_PG_BIN" \
+            PG_BIN="$A04_PG_BIN" \
+            BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            BUILD_CONTEXT="default" \
+            VERIFY_ENDPOINT="unix:///verify.sock" \
+            PHASE_ENDPOINT="unix:///phase.sock" \
+            BUILD_ENGINE="docker" \
+            REHEARSAL_DIR="/tmp/ornigami-gate-debug-rehearsal" \
+            ACTION="checkpoint" \
+            SOURCE_SHA="$SOURCE_SHA" \
+            HARNESS_SHA="$HARNESS_SHA" \
+            WORKFLOW_SHA="${{ github.sha }}" \
+            STAGING_ORIGIN="https://builder-rehearsal.invalid" \
+            STAGING_HOST="builder-rehearsal.invalid" \
+            DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+            NODE_OPTIONS="--max-old-space-size=1024" \
+            bash deploy/builder/private-staging/run-candidate-gates.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/candidate-gate.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+          tests="$(sed -n 's/^# tests //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
+          pass="$(sed -n 's/^# pass //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
+          fail="$(sed -n 's/^# fail //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
+          skipped="$(sed -n 's/^# skipped //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
+          {
+            printf 'gate_exit=%s\n' "$rc"
+            printf 'tests=%s\n' "${tests:-unknown}"
+            printf 'pass=%s\n' "${pass:-unknown}"
+            printf 'fail=%s\n' "${fail:-unknown}"
+            printf 'skipped=%s\n' "${skipped:-unknown}"
+          } > "$RUNNER_LOG_ROOT/gate-summary.txt"
+          cat "$RUNNER_LOG_ROOT/gate-summary.txt"
+          if [[ "$rc" != "0" || "$fail" != "0" || -z "$tests" || "$pass" == "0" ]]; then
+            echo "gate_ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "gate_ok=true" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Gate candidate test evidence
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cat "$RUNNER_LOG_ROOT/gate-summary.txt" 2>/dev/null || true
+          grep -q 'candidate_gate_pg_bin=' "$RUNNER_LOG_ROOT/candidate-gate.log"
+          grep -q 'candidate_gate_initdb=' "$RUNNER_LOG_ROOT/candidate-gate.log"
+          grep -q 'candidate_gate_postgres=' "$RUNNER_LOG_ROOT/candidate-gate.log"
+          grep -q 'candidate_gate_rehearsal_selectors_cleared=true' "$RUNNER_LOG_ROOT/candidate-gate.log"
+          grep -q 'candidate_gate_status=pass' "$RUNNER_LOG_ROOT/candidate-gate.log"
+          test "${{ steps.candidate_gate.outputs.gate_ok }}" = "true"
+
+      - name: Stage bounded gate-debug diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          SOURCE_ROOTS="$RUNNER_LOG_ROOT" \
+          UPLOAD_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
+          MAX_ARCHIVE_BYTES="0" \
+          MAX_ARTIFACT_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-staging.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$EMERGENCY_ROOT/receipts/diagnostics-staging-console.json" 2>&1 || true
+          printf 'gate-debug diagnostics for %s\n' "${{ github.sha }}" > "$EMERGENCY_DIAGNOSTICS_ROOT/GATE_DEBUG.txt"
+          DIAGNOSTICS_DIR="$EMERGENCY_DIAGNOSTICS_ROOT" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-budget.json" \
+            node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+            > "$EMERGENCY_ROOT/receipts/diagnostics-budget-console.json" 2>&1 || true
+          exit 0
+
+      - name: Upload bounded gate-debug diagnostics
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EMERGENCY_DIAGNOSTICS_ROOT }}
+          if-no-files-found: error
+          retention-days: 7
