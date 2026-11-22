@@ -3,7 +3,9 @@
 Baseline control-plane tip: `a42badc8c9c1e0f98c5520887b1cb3657b05d449`.
 Worktree/branch: `C:/Users/joser/.local/ornigami-beta-readiness-20261122`,
 `codex/ornigami-beta-readiness-20261122`.
-Implementation commit: `57e97e0d933c3b96065ae56a942966ed9206eb3a`.
+Implementation/test tip before this record update: `c3ee2c362d127d17e91123e2db04baaee6646390`.
+Primary implementation: `57e97e0d933c3b96065ae56a942966ed9206eb3a`;
+inside-store refusal/test: `086459a343ff30a0a3cb52430102e8824b750d24`.
 
 This slice did not rebuild or re-qualify the accepted image, deploy, publish,
 change DNS, send messages, admit customers or use a real store/customer data.
@@ -71,6 +73,7 @@ gate/files/receipt and during replay with resumable closed gates; pending
 journal/gate/lock/unexpected-file backup refusal; missing acknowledgement and
 non-empty output refusal; CLI end-to-end; POSIX mode assertions.
 
+The retained-qualification bundle/package checks also passed (`30/30`).
 Existing builder suites also passed:
 
 ```text
