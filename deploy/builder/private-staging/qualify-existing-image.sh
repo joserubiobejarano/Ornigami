@@ -155,7 +155,7 @@ if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
   QUALIFICATION_PATH=https-edge \
   BROWSER_EVIDENCE_DIR="$EVIDENCE_DIR/browser" \
   ENGINE="$ENGINE" \
-    "$ROOT/deploy/builder/private-staging/accept-browser.sh"
+    bash "$ROOT/deploy/builder/private-staging/accept-browser.sh"
 
   note "Running edge runtime/isolation acceptance"
   APP_CONTAINER="$EDGE_APP_CONTAINER" \
@@ -169,7 +169,7 @@ if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
   ENGINE="$ENGINE" \
   NODE_BIN="$NODE_BIN" \
   PROXY_BINDING_PROFILE="$PROXY_BINDING_PROFILE" \
-    "$ROOT/deploy/builder/private-staging/accept-runtime.sh"
+    bash "$ROOT/deploy/builder/private-staging/accept-runtime.sh"
 
   note "Running isolated populated restart/restore/lock/closed rollback"
   SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
@@ -180,7 +180,7 @@ if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
   HARNESS_SHA="$HARNESS_SHA" \
   EVIDENCE_DIR="$EVIDENCE_DIR/rollback" \
   ENGINE="$ENGINE" \
-    "$ROOT/deploy/builder/private-staging/accept-runtime-rollback.sh"
+    bash "$ROOT/deploy/builder/private-staging/accept-runtime-rollback.sh"
 
   "$NODE_BIN" -e '
     const fs = require("node:fs");
@@ -253,7 +253,7 @@ else
   HARNESS_SHA="$HARNESS_SHA" \
   MOUNT_ONLY="$MOUNT_ONLY" \
   EVIDENCE_DIR="$EVIDENCE_DIR/runtime" \
-    "$ROOT/deploy/builder/qualify-linux.sh"
+    bash "$ROOT/deploy/builder/qualify-linux.sh"
 
   RUNTIME_RESULTS="$EVIDENCE_DIR/runtime/results.txt"
   [[ -f "$RUNTIME_RESULTS" ]] || fail "runtime qualification results are missing"
