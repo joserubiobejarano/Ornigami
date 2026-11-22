@@ -27,10 +27,15 @@ The foundational builder baseline is `c455da34e63e1e811d178ac0b7836a7528f6492d` 
 with consumer harness `b1c6cce` on the synthetic private HTTPS edge. Do not
 repeat the build, archive retrieval or qualification for this unchanged image.
 The remaining work is the operations-readiness slice: encrypted backup/recovery,
-owner decisions, support/retention policy, custom-Next ownership and a
-low-assistance usability exercise. See [the qualification record](./BUILDER_RETAINED_IMAGE_QUALIFICATION_20261122_R2.md),
-[custody index](./BUILDER_QUALIFICATION_CUSTODY_INDEX_20261122.md) and
-[backup/recovery](./BUILDER_BACKUP_RESTORE_20261122.md).
+owner-selected retention/support policy implementation, custom-Next maintenance
+and a low-assistance usability exercise. The owner approved the preparation
+policy on 22 November (30-day off-host backups with destination pending,
+assisted deletion periods, Jose as interim support/custom-Next owner, one
+Linux unpaid export-only pilot); concrete storage, support address, hosting and
+admission approval remain pending. See [the qualification record](./BUILDER_RETAINED_IMAGE_QUALIFICATION_20261122_R2.md),
+[custody index](./BUILDER_QUALIFICATION_CUSTODY_INDEX_20261122.md),
+[backup/recovery](./BUILDER_BACKUP_RESTORE_20261122.md) and
+[owner decisions](./OWNER_DECISIONS_BETA_20261122.md).
 
 **Integrated builder checkpoint (20 November):** accepted locally at `51291908ed1652414fa95c8e26657eb06c0fbc72` on `codex/ornigami-builder-integration-review-20261120` in `C:/Users/joser/.local/ornigami-builder-integration-review-20261120`. The separate `builder-runtime/` builds and starts without reputation credentials and stays closed. Product focus 1.1.0 and reviewed offer emphasis are integrated; wrapping/contrast corrections use rendered identity 7. Independent combined verification passed 416 selected tests, TypeScript, focused lint, both builds/smokes, the two original browser reproductions and five ZIP audits. Builder build/smoke recorded zero denied egress attempts. See [integration review](./BUILDER_INTEGRATION_REVIEW_20261120.md). Invites, subject-scoped recovery, service budgets and hosted acceptance remain open; no deployment or paid-call authority is added.
 

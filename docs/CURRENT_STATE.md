@@ -37,6 +37,19 @@ source. Historical `harness-identity.txt` evidence uses the generic label
 evidence and read that field as the checkout SHA, while the application source
 remains `156259d0c433...`.
 
+**Beta-preparation policy accepted (22 November 2026):** the owner approved
+Jose as backup custodian/recovery operator and support/access owner; daily
+encrypted 30-day off-host backups (destination pending); assisted deletion only
+with 30-day logs/credentials, 30-day label minimization after closure, 365-day
+closed support/rights records and a 13-month settled-usage review; best-effort
+two-business-day support with no SLA; Jose as interim custom-Next maintainer
+with a bounded retirement assessment, not a rewrite; and one Linux host,
+one writer, private HTTPS edge for a one-business unpaid export-only pilot.
+Provider/region/domain/spend, the support address, the final customer notice and
+explicit admission approval remain pending. No purchase, deployment, customer
+admission or automatic purge is authorized. See
+[owner decisions](./OWNER_DECISIONS_BETA_20261122.md).
+
 ## What exists
 
 | Area | Observed implementation | Limit |

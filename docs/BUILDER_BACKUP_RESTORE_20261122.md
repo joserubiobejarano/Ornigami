@@ -242,8 +242,17 @@ script; running the tool from a new image requires a separately scoped image
 build/qualification. The tool can be run from a clean source/operator checkout
 against a stopped volume.
 
-## Owner decisions still required
+## Owner policy decisions
 
-See [the consolidated decision request](./OWNER_DECISIONS_BETA_20261122.md).
-Until those decisions are answered, backup destination/frequency/retention/key
-custody and customer admission remain pending.
+The owner approved preparation policy on 22 November 2026: Jose is backup
+custodian/recovery operator; encrypted backups daily while active and before
+maintenance; 30-day retention; off-host copies; encryption secret in the
+owner's password manager with only a temporary private file for the tool; target
+24-hour snapshot age (not a recovery SLA); admission closed when journal/
+accounting evidence cannot be reconciled. The exact off-host destination remains
+pending; no service purchase/configuration is authorized.
+
+Retention/support/custom-Next/hosting decisions are in
+[the owner record](./OWNER_DECISIONS_BETA_20261122.md). Customer admission,
+concrete storage, support address and persistent deployment remain closed or
+pending.

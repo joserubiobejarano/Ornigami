@@ -132,15 +132,38 @@ new image would require separate build/qualification.
 
 ## 4. Owner decisions
 
-One consolidated request is in
-[OWNER_DECISIONS_BETA_20261122.md](./OWNER_DECISIONS_BETA_20261122.md). It asks
-for decisions on backup destination/frequency/retention/key custody/recovery
-operator, record retention/assisted deletion, support ownership/channel/response,
-custom-Next maintainer or retirement, and hosting/admission scope.
+The owner provided these decisions for **preparing** an invite-only, unpaid,
+export-only beta; they do not authorize admission, purchases or deployment.
+Details are in [OWNER_DECISIONS_BETA_20261122.md](./OWNER_DECISIONS_BETA_20261122.md).
 
-No decision is approved on the owner's behalf. No message was sent under the
-current authorization, so all five remain **pending**. Existing documents are
-proposals, not adopted policy.
+- Backup: Jose is custodian/recovery operator; encrypted daily backups and
+  before maintenance; 30-day retention; off-host; secret in the owner's password
+  manager and a temporary private file only; target 24-hour snapshot age (not an
+  SLA); admission closed if evidence cannot be reconciled. Exact off-host
+  destination pending; no purchase/configuration without approval.
+- Retention: assisted deletion/minimization only; 30 days for operational logs
+  and expired/revoked credential material; minimize identifying labels within
+  30 days after closure; 365 days for closed support/rights records; review
+  settled usage after 13 months; no accounting deletion or capacity reset;
+  reserved/unknown exposure preserved with monthly review; deletion/replay
+  evidence retained while backups could resurrect data; no automatic purge yet.
+- Support: Jose owns support/access; direct email address pending; best-effort
+  two-business-day acknowledgement; no 24/7/SLA; no new mailbox/ticketing/
+  automated customer messaging.
+- Custom Next: Jose is accountable interim maintainer with engineering/agent
+  assistance; security updates require review and documented requalification;
+  prepare a bounded official-Next retirement assessment preserving CSP/SRI, no
+  rewrite yet; this is not acceptance of unresolved vulnerabilities.
+- Hosting: intended one Linux x86_64 host, one runtime/writer, local persistent
+  storage, private HTTPS edge; provider/region/domain/spending pending; one
+  business, invite-only, operator-assisted, unpaid, export-only; live paid
+  providers/public self-service/publishing off; real admission needs verified
+  recovery, implemented policy, customer notice and explicit owner approval;
+  no persistent deployment yet.
+
+Still pending: exact off-host backup destination, support address, hosting
+provider/region/domain/spend, final customer notice and explicit admission
+approval. No admission or purchase follows from this record.
 
 ## 5. Low-assistance usability exercise
 
