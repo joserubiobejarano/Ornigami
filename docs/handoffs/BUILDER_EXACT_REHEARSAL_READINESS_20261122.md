@@ -1,9 +1,10 @@
 # Exact-candidate rehearsal readiness repair — 22 November 2026
 
-Status: **two full synthetic Linux attempts were executed and both failed at the
-candidate test gate. No image or archive exists. Remote execution is stopped.
-Another full attempt requires expanded approval. Customer admission remains
-closed.**
+Status: **the clean candidate gate passed on Linux (1461/1461, zero skips). The
+staged build job verified the gate receipt and stopped before any build on a
+one-line lockfile-hash receipt bug. No image or archive exists. Remote execution
+is stopped; one corrected staged workflow requires expanded approval. Customer
+admission remains closed.**
 
 ## Frozen identities
 
@@ -93,25 +94,53 @@ No image, checkpoint, edge, qualification, archive or retrieval occurred.
 `final_status=1`, `cleanup_failures=0`,
 `reason=preserved_primary_failure`.
 
+## Staged attempt (run 45027216169)
+
+The clean no-DinD gate job passed in 5m12s:
+
+```text
+applicationSourceSha=156259d0c4330b185a0844711b7004b0b4467887
+harnessSha=156259d0c4330b185a0844711b7004b0b4467887
+controlPlaneSha=fa8b690c7d5d538bfe611555a93b58d19287404b
+lockfileSha256=63c735ef9283fc20518cdc261cff793369c99c8f860f2feae7c40306d8beca02
+postgres=PostgreSQL 17.12 (Ubuntu 17.12-1.pgdg24.04+1)
+suiteCount=217  tests=1461  pass=1461  fail=0  skipped=0
+allowlist=PATH,HOME,LANG,NODE_OPTIONS,A04_PG_BIN,PG_BIN,NODE_BIN,NPM_CLI_FOR_REHEARSAL
+```
+
+The build job downloaded and verified the receipt against its exact checkout
+(all identity, lockfile and log hashes matched), passed readiness and ownership
+preflight, then failed before build:
+
+```text
+cp: cannot stat '63c735ef...beca02': No such file or directory
+```
+
+The script tried to copy the lockfile-hash string as a file. The fix is committed
+on codex `cbab7c9` (`printf '%s\n' "$EXPECTED_LOCKFILE_SHA256" > ...`). No image,
+checkpoint, edge, qualification, archive or retrieval occurred. The failed
+staged branch and run are preserved; no retry was attempted.
+
 ## Custody
 
 | Run | Artifact | Size | Expiry |
 | --- | --- | --- | --- |
 | `44980225963` | `builder-exact-rehearsal-0d68551-readiness-44980225963-1-diagnostics` | 86,086 B | `2026-11-29T03:24:51Z` |
 | `45022904023` | `builder-exact-rehearsal-0d68551-readiness-45022904023-1-diagnostics` | 85,319 B | `2026-11-29T12:38:47Z` |
-| `45022113531` | `builder-gate-debug-45022113531-1` | bounded | seven days |
+| `45022113531` | `builder-gate-debug-45022113531-1` | bounded | `2026-11-29T12:29:48Z` |
+| `45026173636` | `builder-gate-debug-45026173636-1` | bounded | seven days |
+| `45027216169` | `builder-gate-receipt-45027216169-1` | 79,514 B | `2026-11-29T13:28:27Z` |
+| `45027216169` | `builder-exact-rehearsal-0d68551-staged-45027216169-1-diagnostics` | 12,761 B | `2026-11-29T13:29:54Z` |
 
 Local retained copies are under `.local/retained/`.
 
 ## Remaining blocker and next step
 
-The lock failure has a demonstrated environment cause and a local fix with an
-executable regression. The PostgreSQL `pg_ctl start` failure occurred only in
-the full job (the same test passed in the no-DinD gate-debug); the missing
-server log is the blocker to proving whether it was a port/resource interaction
-with the full job environment. A future attempt should capture the retained
-`postgres.log`, and preferably run the gate in the no-DinD job that already
-passed, then continue conditionally into the DinD build. This requires expanded
-approval; no further remote execution was attempted.
+The candidate gate and receipt handoff are green and verified. The only
+remaining defect is the corrected lockfile-hash receipt write, committed at
+`cbab7c9`. The smallest next step is one expanded-approval staged workflow from
+`cbab7c9` (or a child request commit) using the same no-DinD gate and the
+corrected build handoff, followed by the fresh retrieval job. No further remote
+execution was attempted.
 
 Public hosting and customer admission remain out of scope.
