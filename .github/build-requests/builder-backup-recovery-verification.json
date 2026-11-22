@@ -3,10 +3,11 @@
   "purpose": "verify builder encrypted backup/recovery safety contract on Linux/Node 22",
   "branch": "ci/builder-backup-recovery-verify-20261122",
   "workflow": ".github/workflows/builder-backup-recovery-verification.yml",
-  "attempts": 1,
+  "attempts": 1,\n  "dispatch": "linux-verification-1",
   "timeoutMinutes": 15,
   "maxDiagnosticBytes": 67108864,
   "retentionDays": 7,
   "syntheticOnly": true,
   "customerAdmission": "closed"
 }
+
