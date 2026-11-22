@@ -29,28 +29,33 @@ command -v "$NODE_BIN" >/dev/null 2>&1 || { echo "FAIL: Node binary not found: $
 
 cd "$SOURCE_ROOT"
 
-# Rehearsal orchestration variables must not leak into the candidate suite. This
-# process is a child, so the parent still holds the values used later by
-# ACTION=checkpoint and ACTION=qualify.
-unset BUILD_ENDPOINT VERIFY_ENDPOINT PHASE_ENDPOINT \
-      BUILD_CONTEXT VERIFY_CONTEXT PHASE_CONTEXT \
-      BUILD_ENGINE VERIFY_ENGINE PHASE_ENGINE \
-      BUILD_ENGINE_BIN VERIFY_ENGINE_BIN PHASE_ENGINE_BIN \
-      REHEARSAL_DIR ACTION SOURCE_SHA HARNESS_SHA WORKFLOW_SHA \
-      DOCKER_HOST_ENDPOINT BUILD_DAEMON_READINESS_SECONDS \
-      HOST_DAEMON_READINESS_SECONDS DAEMON_PROBE_TIMEOUT_SECONDS \
-      STAGING_ORIGIN STAGING_HOST APP_URL \
-      BUILDER_RUNTIME_STORE_HOST_ID BUILDER_RUNTIME_STORE_DIR \
-      BUILDER_RUNTIME_MODE BUILDER_RUNTIME_SESSION_TTL_SECONDS \
-      BUILDER_RUNTIME_SUBJECT_CONCURRENCY_LIMIT BUILDER_RUNTIME_ALLOW_TEST_HOOKS \
-      BUILDER_RUNTIME_TEST_PROVIDER BUILDER_RUNTIME_TEST_PID_NAMESPACE \
-      BUILDER_RUNTIME_TEST_BOOT_ID BUILDER_STORE_VOLUME BUILDER_OPERATOR_VOLUME \
-      BUILDER_IMAGE PROJECT EVIDENCE_ROOT EXPORT_STAGING \
-      PLAYWRIGHT_BROWSERS_PATH BROWSER_PLAYWRIGHT STAGING_BASIC_AUTH_USER
+# Explicit allowlist boundary for every candidate command. Production and
+# rehearsal selectors cannot silently affect the suite; only toolchain, home/
+# temp, PostgreSQL, CI, network-trust and documented fixture configuration pass.
+ALLOWLIST_NAMES=(
+  PATH HOME TMPDIR TEMP TMP LANG LC_ALL LC_CTYPE LC_MESSAGES TZ
+  CI GITHUB_ACTIONS NODE_OPTIONS NODE_EXTRA_CA_CERTS SSL_CERT_FILE SSL_CERT_DIR
+  HTTP_PROXY HTTPS_PROXY NO_PROXY http_proxy https_proxy no_proxy
+  SYSTEMROOT WINDIR COMSPEC PATHEXT
+  A04_PG_BIN A06_PG_BIN A07_PG_BIN A08_PG_BIN PG_BIN PGDATA PGHOST PGPORT PGUSER
+  NODE_BIN NPM_CLI_FOR_REHEARSAL PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD NEXT_TELEMETRY_DISABLED
+)
+GATE_ENV=()
+GATE_ALLOWLIST=()
+for name in "${ALLOWLIST_NAMES[@]}"; do
+  if [[ -n "${!name+x}" ]]; then
+    GATE_ENV+=("${name}=${!name}")
+    GATE_ALLOWLIST+=("$name")
+  fi
+done
+if [[ ! " ${GATE_ALLOWLIST[*]} " =~ " PG_BIN " ]]; then
+  GATE_ENV+=("PG_BIN=$A04_PG_BIN")
+  GATE_ALLOWLIST+=("PG_BIN")
+fi
 
-# Preserve the PostgreSQL/toolchain values the test processes need.
-export A04_PG_BIN
-export PG_BIN="${PG_BIN:-$A04_PG_BIN}"
+run_gate() {
+  env -i "${GATE_ENV[@]}" "$@"
+}
 
 mapfile -t candidate_test_suites < <(
   find tests -maxdepth 1 -type f \( -name '*.test.mjs' -o -name '*.test.mts' \) | sort
@@ -68,14 +73,15 @@ mapfile -t candidate_test_suites < <(
   printf 'candidate_gate_postgres=%s\n' "$A04_PG_BIN/postgres"
   printf 'candidate_gate_test_count=%s\n' "${#candidate_test_suites[@]}"
   printf 'candidate_gate_test_concurrency=%s\n' "$CANDIDATE_TEST_JOBS"
+  printf 'candidate_gate_environment_allowlist=%s\n' "$(IFS=,; printf '%s' "${GATE_ALLOWLIST[*]}")"
   printf 'candidate_gate_rehearsal_selectors_cleared=true\n'
 } >&2
 
-"$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund
-"$NODE_BIN" --experimental-strip-types --test --test-concurrency="$CANDIDATE_TEST_JOBS" "${candidate_test_suites[@]}"
-"$NODE_BIN" node_modules/typescript/bin/tsc --noEmit
-"$NODE_BIN" node_modules/eslint/bin/eslint.js .
-"$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" run security:audit
-"$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" run test:security
+run_gate "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund
+run_gate "$NODE_BIN" --experimental-strip-types --test --test-concurrency="$CANDIDATE_TEST_JOBS" "${candidate_test_suites[@]}"
+run_gate "$NODE_BIN" node_modules/typescript/bin/tsc --noEmit
+run_gate "$NODE_BIN" node_modules/eslint/bin/eslint.js .
+run_gate "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" run security:audit
+run_gate "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" run test:security
 
 printf 'candidate_gate_status=pass\n'

@@ -37,6 +37,9 @@ DOCKER_HOST_ENDPOINT="${DOCKER_HOST_ENDPOINT:-unix:///var/run/docker.sock}"
 BUILD_DAEMON_READINESS_SECONDS="${BUILD_DAEMON_READINESS_SECONDS:-420}"
 HOST_DAEMON_READINESS_SECONDS="${HOST_DAEMON_READINESS_SECONDS:-20}"
 DAEMON_PROBE_TIMEOUT_SECONDS="${DAEMON_PROBE_TIMEOUT_SECONDS:-20}"
+CANDIDATE_GATE_RECEIPT="${CANDIDATE_GATE_RECEIPT:-}"
+CANDIDATE_GATE_LOG="${CANDIDATE_GATE_LOG:-}"
+SKIP_CANDIDATE_GATES="${SKIP_CANDIDATE_GATES:-0}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT="${PROJECT:-ornigami-builder-rehearsal-${SOURCE_SHA:0:12}}"
@@ -92,6 +95,7 @@ export_approved_evidence() {
   if [[ -d "$EVIDENCE_ROOT/checkpoint" ]]; then cp -R "$EVIDENCE_ROOT/checkpoint/." "$stage/checkpoint/"; fi
   if [[ -d "$EVIDENCE_ROOT/edge" ]]; then cp -R "$EVIDENCE_ROOT/edge/." "$stage/edge/"; fi
   if [[ -d "$EVIDENCE_ROOT/custody" ]]; then cp -R "$EVIDENCE_ROOT/custody/." "$stage/custody/"; fi
+  if [[ -d "$EVIDENCE_ROOT/gate" ]]; then cp -R "$EVIDENCE_ROOT/gate/." "$stage/gate/"; fi
   for file in host.txt daemons.txt package-lock.json access-closed.txt cleanup-receipt.txt; do
     if [[ -f "$EVIDENCE_ROOT/$file" ]]; then cp "$EVIDENCE_ROOT/$file" "$stage/$file"; fi
   done
@@ -313,17 +317,39 @@ assert_loopback_tcp "${BASH_REMATCH[1]}" "build-daemon-api"
 note "Build daemon: $BUILD_DAEMON_ID"
 note "Verify/phase daemon: $HOST_DAEMON_ID"
 
-note "Run candidate dependency, test, TypeScript, lint and security gates"
-[[ -n "${A04_PG_BIN:-}" ]] || fail "A04_PG_BIN is required for the Linux full suite"
-[[ -x "$A04_PG_BIN/initdb" ]] || fail "A04_PG_BIN does not contain initdb: $A04_PG_BIN"
-[[ -x "$A04_PG_BIN/postgres" ]] || fail "A04_PG_BIN does not contain postgres: $A04_PG_BIN"
-SOURCE_ROOT="$SOURCE_ROOT" \
-NPM_CLI_FOR_REHEARSAL="$NPM_CLI_FOR_REHEARSAL" \
-NODE_BIN="${NODE_BIN:-node}" \
-A04_PG_BIN="$A04_PG_BIN" \
-PG_BIN="${PG_BIN:-$A04_PG_BIN}" \
-  bash "$SCRIPT_DIR/run-candidate-gates.sh" 2>&1 | tee "$LOG_DIR/candidate-gates.log"
-cp "$SOURCE_ROOT/package-lock.json" "$EVIDENCE_ROOT/package-lock.json"
+if [[ "$SKIP_CANDIDATE_GATES" == "1" ]]; then
+  note "Verify the clean candidate-gate receipt; do not rerun the full suite"
+  [[ -n "$CANDIDATE_GATE_RECEIPT" && -f "$CANDIDATE_GATE_RECEIPT" ]] \
+    || fail "CANDIDATE_GATE_RECEIPT is required and must exist when SKIP_CANDIDATE_GATES=1"
+  [[ -n "$CANDIDATE_GATE_LOG" && -f "$CANDIDATE_GATE_LOG" ]] \
+    || fail "CANDIDATE_GATE_LOG is required and must exist when SKIP_CANDIDATE_GATES=1"
+  EXPECTED_LOCKFILE_SHA256="$(sha256sum "$SOURCE_ROOT/package-lock.json" | awk '{print $1}')"
+  RECEIPT_PATH="$CANDIDATE_GATE_RECEIPT" \
+  GATE_LOG_PATH="$CANDIDATE_GATE_LOG" \
+  EXPECTED_SOURCE_SHA="$SOURCE_SHA" \
+  EXPECTED_HARNESS_SHA="$HARNESS_SHA" \
+  EXPECTED_CONTROL_PLANE_SHA="$WORKFLOW_SHA" \
+  EXPECTED_LOCKFILE_SHA256="$EXPECTED_LOCKFILE_SHA256" \
+    node "$SCRIPT_DIR/verify-candidate-gate-receipt.mjs" \
+    > "$LOG_DIR/gate-receipt-verification.json" 2>&1
+  mkdir -p "$EVIDENCE_ROOT/gate"
+  cp "$CANDIDATE_GATE_RECEIPT" "$EVIDENCE_ROOT/gate/candidate-gate-receipt.json"
+  cp "$CANDIDATE_GATE_LOG" "$EVIDENCE_ROOT/gate/candidate-gate.log"
+  cp "$SOURCE_ROOT/package-lock.json" "$EVIDENCE_ROOT/package-lock.json"
+  cp "$EXPECTED_LOCKFILE_SHA256" "$EVIDENCE_ROOT/gate/package-lock.sha256"
+else
+  note "Run candidate dependency, test, TypeScript, lint and security gates"
+  [[ -n "${A04_PG_BIN:-}" ]] || fail "A04_PG_BIN is required for the Linux full suite"
+  [[ -x "$A04_PG_BIN/initdb" ]] || fail "A04_PG_BIN does not contain initdb: $A04_PG_BIN"
+  [[ -x "$A04_PG_BIN/postgres" ]] || fail "A04_PG_BIN does not contain postgres: $A04_PG_BIN"
+  SOURCE_ROOT="$SOURCE_ROOT" \
+  NPM_CLI_FOR_REHEARSAL="$NPM_CLI_FOR_REHEARSAL" \
+  NODE_BIN="${NODE_BIN:-node}" \
+  A04_PG_BIN="$A04_PG_BIN" \
+  PG_BIN="${PG_BIN:-$A04_PG_BIN}" \
+    bash "$SCRIPT_DIR/run-candidate-gates.sh" 2>&1 | tee "$LOG_DIR/candidate-gates.log"
+  cp "$SOURCE_ROOT/package-lock.json" "$EVIDENCE_ROOT/package-lock.json"
+fi
 
 note "ACTION=checkpoint: build once, retain, independently verify, stop"
 (

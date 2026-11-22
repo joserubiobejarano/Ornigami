@@ -42,6 +42,10 @@ function makeExecutable(file, body) {
   chmodSync(file, 0o755);
 }
 
+function shellQuote(value) {
+  return `'${String(value).replaceAll("'", "'\\''")}'`;
+}
+
 function fixture() {
   const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-gate-boundary-"));
   const source = path.join(dir, "source");
@@ -67,27 +71,29 @@ function fixture() {
   makeExecutable(path.join(pg, "initdb"), "#!/usr/bin/env bash\nexit 0\n");
   makeExecutable(path.join(pg, "postgres"), "#!/usr/bin/env bash\nexit 0\n");
 
-  const calls = path.join(dir, "calls.jsonl");
+  const calls = path.join(dir, "calls.tsv");
+  const envKeys = path.join(dir, "env-keys.txt");
   const fakeNode = path.join(fakeBin, "node");
   makeExecutable(fakeNode, `#!/usr/bin/env bash
 set -euo pipefail
 {
   printf 'ARGV'
   for arg in "$@"; do printf '\\t%s' "$arg"; done
-  printf '\\tENV\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' \\
+  printf '\\tENV\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' \\
     "\${A04_PG_BIN:-}" "\${PG_BIN:-}" "\${BUILD_ENDPOINT:-}" "\${BUILD_CONTEXT:-}" \\
     "\${SOURCE_SHA:-}" "\${HARNESS_SHA:-}" "\${STAGING_ORIGIN:-}" "\${NODE_OPTIONS:-}" \\
-    "\${BUILDER_RUNTIME_STORE_HOST_ID:-}"
-} >> "\${FAKE_NODE_LOG:?}"
+    "\${BUILDER_RUNTIME_STORE_HOST_ID:-}" "\${CI:-}"
+} >> ${shellQuote(calls)}
+env | cut -d= -f1 | sort | tr '\\n' ',' >> ${shellQuote(envKeys)}
+printf '\\n' >> ${shellQuote(envKeys)}
 exit 0
 `);
-  return { dir, source, pg, npmCli, fakeBin, calls };
+  return { dir, source, pg, npmCli, fakeBin, calls, envKeys };
 }
 
 function contaminatedEnv(f, overrides = {}) {
   return {
     ...process.env,
-    FAKE_NODE_LOG: f.calls,
     NODE_BIN: path.join(f.fakeBin, "node"),
     NPM_CLI_FOR_REHEARSAL: f.npmCli,
     SOURCE_ROOT: f.source,
@@ -105,8 +111,23 @@ function contaminatedEnv(f, overrides = {}) {
     WORKFLOW_SHA: "c".repeat(40),
     STAGING_ORIGIN: "https://builder-rehearsal.invalid",
     STAGING_HOST: "builder-rehearsal.invalid",
+    STAGING_BASIC_AUTH_USER: "synthetic",
     DOCKER_HOST_ENDPOINT: "unix:///var/run/docker.sock",
+    DOCKER_HOST: "unix:///var/run/docker.sock",
+    DOCKER_CONTEXT: "default",
     BUILDER_RUNTIME_STORE_HOST_ID: "ornigami-builder-rehearsal-store-v1",
+    BUILDER_RUNTIME_SESSION_TTL_SECONDS: "3600",
+    BUILDER_RUNTIME_SUBJECT_CONCURRENCY_LIMIT: "1",
+    BUILDER_RUNTIME_ALLOW_TEST_HOOKS: "0",
+    BUILDER_RUNTIME_TEST_PROVIDER: "none",
+    BUILDER_STORE_VOLUME: "ornigami-builder-rehearsal-store-0d68551",
+    BUILDER_OPERATOR_VOLUME: "ornigami-builder-rehearsal-store-0d68551",
+    PROJECT: "ornigami-builder-rehearsal-test",
+    EVIDENCE_ROOT: path.join(f.dir, "builder-evidence"),
+    EXPORT_STAGING: path.join(f.dir, "staging"),
+    PLAYWRIGHT_BROWSERS_PATH: path.join(f.dir, "ms-playwright"),
+    BROWSER_PLAYWRIGHT: path.join(f.dir, "playwright.mjs"),
+    CI: "true",
     NODE_OPTIONS: "--max-old-space-size=256",
     ...overrides,
   };
@@ -149,13 +170,21 @@ function readCalls(file) {
       const parts = line.split("\t");
       const envIndex = parts.indexOf("ENV");
       const argv = parts.slice(1, envIndex);
-      const [A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS, BUILDER_RUNTIME_STORE_HOST_ID] =
+      const [A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS, BUILDER_RUNTIME_STORE_HOST_ID, CI] =
         parts.slice(envIndex + 1);
       return {
         argv,
-        env: { A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS, BUILDER_RUNTIME_STORE_HOST_ID },
+        env: { A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS, BUILDER_RUNTIME_STORE_HOST_ID, CI },
       };
     });
+}
+
+function readEnvKeySets(file) {
+  if (!existsSync(file)) return [];
+  return readFileSync(file, "utf8")
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => new Set(line.split(",").filter(Boolean)));
 }
 
 test("candidate gate hands tests an isolated environment and preserves PG/toolchain values", { skip: !bashAvailable && "bash is required" }, () => {
@@ -167,6 +196,7 @@ test("candidate gate hands tests an isolated environment and preserves PG/toolch
     assert.match(result.stderr, /candidate_gate_initdb=/);
     assert.match(result.stderr, /candidate_gate_postgres=/);
     assert.match(result.stderr, /candidate_gate_test_count=2/);
+    assert.match(result.stderr, /candidate_gate_environment_allowlist=/);
     assert.match(result.stderr, /candidate_gate_rehearsal_selectors_cleared=true/);
     assert.match(result.stdout, /candidate_gate_status=pass/);
 
@@ -182,8 +212,53 @@ test("candidate gate hands tests an isolated environment and preserves PG/toolch
     assert.equal(testCall.env.A04_PG_BIN, f.pg);
     assert.equal(testCall.env.PG_BIN, f.pg);
     assert.equal(testCall.env.NODE_OPTIONS, "--max-old-space-size=256");
+    assert.equal(testCall.env.CI, "true");
     for (const key of ["BUILD_ENDPOINT", "BUILD_CONTEXT", "SOURCE_SHA", "HARNESS_SHA", "STAGING_ORIGIN", "BUILDER_RUNTIME_STORE_HOST_ID"]) {
       assert.equal(testCall.env[key], "", `${key} leaked into the test subprocess`);
+    }
+
+    const envKeySets = readEnvKeySets(f.envKeys);
+    assert.equal(envKeySets.length, 6);
+    const forbiddenExact = new Set([
+      "ACTION",
+      "BUILD_CONTEXT",
+      "BUILD_ENDPOINT",
+      "BUILD_ENGINE",
+      "BUILDER_IMAGE",
+      "BUILDER_OPERATOR_VOLUME",
+      "BUILDER_RUNTIME_ALLOW_TEST_HOOKS",
+      "BUILDER_RUNTIME_SESSION_TTL_SECONDS",
+      "BUILDER_RUNTIME_STORE_HOST_ID",
+      "BUILDER_RUNTIME_SUBJECT_CONCURRENCY_LIMIT",
+      "BUILDER_RUNTIME_TEST_PROVIDER",
+      "BUILDER_STORE_VOLUME",
+      "BROWSER_PLAYWRIGHT",
+      "DOCKER_CONTEXT",
+      "DOCKER_HOST",
+      "DOCKER_HOST_ENDPOINT",
+      "EVIDENCE_ROOT",
+      "EXPORT_STAGING",
+      "HARNESS_SHA",
+      "PHASE_ENDPOINT",
+      "PLAYWRIGHT_BROWSERS_PATH",
+      "PROJECT",
+      "REHEARSAL_DIR",
+      "SOURCE_SHA",
+      "STAGING_BASIC_AUTH_USER",
+      "STAGING_HOST",
+      "STAGING_ORIGIN",
+      "VERIFY_ENDPOINT",
+      "WORKFLOW_SHA",
+    ]);
+    const forbiddenPrefixes = ["BUILD_", "BUILDER_", "BROWSER_", "DOCKER_", "PHASE_", "REHEARSAL_", "STAGING_", "VERIFY_"];
+    for (const keys of envKeySets) {
+      for (const key of keys) {
+        assert.equal(forbiddenExact.has(key), false, `forbidden key leaked: ${key}`);
+        assert.equal(forbiddenPrefixes.some((prefix) => key.startsWith(prefix)), false, `forbidden prefix leaked: ${key}`);
+      }
+      for (const required of ["A04_PG_BIN", "PG_BIN", "PATH", "HOME"]) {
+        assert.equal(keys.has(required), true, `required key missing: ${required}`);
+      }
     }
 
     const parent = readFileSync(parentLog, "utf8");

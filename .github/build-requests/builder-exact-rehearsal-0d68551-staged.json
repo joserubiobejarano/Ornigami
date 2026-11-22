@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 7,
+  "bundleBaseSha": "1e6243f10debb6438f2f3560361e2270fbb9980c",
+  "previousFailedFullRun": 45022904023,
+  "passingGateDebugRun": 45022113531,
+  "applicationSourceSha": "156259d0c4330b185a0844711b7004b0b4467887",
+  "harnessSha": "156259d0c4330b185a0844711b7004b0b4467887",
+  "candidateCorrection": {
+    "parent": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
+    "reason": "disposable PostgreSQL fixtures removed their startup log in finally; capture bounded evidence before cleanup",
+    "scope": "test-fixture diagnostics only; no application behavior change"
+  },
+  "workflowFile": ".github/workflows/builder-exact-rehearsal-0d68551-staged.yml",
+  "trigger": {
+    "branch": "ci/builder-exact-rehearsal-0d68551-staged-20261122",
+    "event": "initial branch creation push only",
+    "before": "0000000000000000000000000000000000000000",
+    "subsequentPushes": "do not schedule"
+  },
+  "gate": {
+    "job": "gate",
+    "services": "none",
+    "timeoutMinutes": 15,
+    "helper": "deploy/builder/private-staging/run-candidate-gates.sh",
+    "environment": "explicit allowlist; runtime/request/store/browser/docker selectors excluded",
+    "receipt": "control-plane, application, harness, lockfile, suite count and results"
+  },
+  "execute": {
+    "job": "execute",
+    "needs": "gate",
+    "timeoutMinutes": 90,
+    "services": "docker:27-dind loopback-only",
+    "candidateGate": "skipped after exact receipt verification"
+  },
+  "retrieval": {
+    "timeoutMinutes": 15,
+    "freshRunner": true
+  },
+  "expectedOrigin": "https://builder-rehearsal.invalid",
+  "expectedStagingHost": "builder-rehearsal.invalid",
+  "expectedPlatform": "linux/amd64",
+  "expectedUser": "1000:1000",
+  "archiveCustody": {
+    "destination": "github-actions-artifact",
+    "repository": "joserubiobejarano/Ornigami",
+    "retentionDays": 7,
+    "maxArchiveBytes": 3221225472,
+    "maxArtifactBytes": 3758096384,
+    "maxDiagnosticBytes": 67108864,
+    "maxRetrievalArtifactBytes": 67108864
+  },
+  "budget": {
+    "gateInvestigations": 2,
+    "stagedWorkflow": 1,
+    "gateTimeoutMinutes": 15,
+    "executeTimeoutMinutes": 90,
+    "retrievalTimeoutMinutes": 15,
+    "retentionDays": 7
+  },
+  "customerAdmission": "closed"
+}

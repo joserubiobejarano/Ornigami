@@ -48,6 +48,9 @@ const PRIORITY = [
   "docker-readiness-build.json",
   "docker-readiness-host.json",
   "rehearsal-console.log",
+  "candidate-gate.log",
+  "gate-receipt.json",
+  "gate-receipt-verification.json",
 ];
 
 function walk(entry) {

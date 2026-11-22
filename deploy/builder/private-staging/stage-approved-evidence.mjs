@@ -74,7 +74,9 @@ const PRIORITY_NAMES = [
   "docker-readiness-build.json",
   "docker-readiness-host.json",
   "rehearsal-console.log",
-  "candidate-gates.log",
+  "candidate-gate.log",
+  "gate-receipt.json",
+  "gate-receipt-verification.json",
   "checkpoint.log",
   "qualify.log",
 ];

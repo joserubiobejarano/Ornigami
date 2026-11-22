@@ -1,0 +1,1009 @@
+name: Builder exact-candidate staged rehearsal (0d68551)
+
+on:
+  push:
+    branches:
+      - ci/builder-exact-rehearsal-0d68551-staged-20261122
+    paths:
+      - .github/build-requests/builder-exact-rehearsal-0d68551-staged.json
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: builder-exact-rehearsal-0d68551-staged
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Clean candidate gate (no DinD)
+    if: >-
+      github.event.created == true &&
+      github.event.before == '0000000000000000000000000000000000000000' &&
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      github.run_attempt == 1 &&
+      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+      HARNESS_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+      GATE_EVIDENCE: /tmp/ornigami-gate-staged-${{ github.run_id }}-${{ github.run_attempt }}
+      GATE_RUNNER_LOG_ROOT: /tmp/ornigami-gate-staged-${{ github.run_id }}-${{ github.run_attempt }}/logs
+    steps:
+      - name: Create runner-owned gate roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$GATE_RUNNER_LOG_ROOT" "$GATE_EVIDENCE"
+          chmod 0700 "$GATE_EVIDENCE" "$GATE_RUNNER_LOG_ROOT"
+          printf 'gate_evidence=%s\n' "$GATE_EVIDENCE" > "$GATE_RUNNER_LOG_ROOT/gate-root.txt"
+
+      - name: Check out bundle control plane at triggering SHA
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Verify control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git rev-parse HEAD > "$GATE_RUNNER_LOG_ROOT/control-plane-head.txt"
+
+      - name: Validate one initial-publication trigger
+        shell: bash
+        env:
+          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122
+          REQUEST_PATH: .github/build-requests/builder-exact-rehearsal-0d68551-staged.json
+          EXPECTED_SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          EXPECTED_HARNESS_SHA: ${{ env.HARNESS_SHA }}
+          EVENT_CREATED: ${{ github.event.created }}
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          set -Eeuo pipefail
+          node deploy/builder/private-staging/rehearsal-event-gate.mjs \
+            | tee "$GATE_RUNNER_LOG_ROOT/event-gate.json"
+
+      - name: Check out exact candidate source
+        uses: actions/checkout@v5
+        with:
+          ref: 156259d0c4330b185a0844711b7004b0b4467887
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact source, harness and ancestry
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "SOURCE_ROOT=$GITHUB_WORKSPACE/candidate-source" >> "$GITHUB_ENV"
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="${{ github.sha }}" \
+          SOURCE_SHA="$SOURCE_SHA" \
+          HARNESS_SHA="$HARNESS_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            | tee "$GATE_RUNNER_LOG_ROOT/source-identity.txt"
+
+      - name: Create isolated UID-1000 builder and builder-owned candidate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          runner_user="$(id -un)"
+          builder_user="$(id -nu 1000)"
+          builder_group="$(id -gn "$builder_user")"
+          builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
+          test "$(id -u "$builder_user")" = "1000"
+          test "$runner_user" != "$builder_user"
+          sudo chown -R "$builder_user":"$builder_group" "$SOURCE_ROOT"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          {
+            echo "BUILDER_USER=$builder_user"
+            echo "BUILDER_UID=1000"
+            echo "BUILDER_GROUP=$builder_group"
+            echo "BUILDER_HOME=$builder_home"
+          } >> "$GITHUB_ENV"
+
+      - name: Install supported Node and vendored npm
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v xz >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xz-utils
+          }
+          sudo mkdir -p /opt/ornigami-node /opt/ornigami-npm
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/SHASUMS256.txt
+          grep ' node-v22.23.3-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+          sudo tar -xJf node-v22.23.3-linux-x64.tar.xz -C /opt/ornigami-node --strip-components=1
+          sudo tar -xzf "$SOURCE_ROOT/vendor/build-tools/npm-11.21.1.tgz" -C /opt/ornigami-npm --strip-components=1
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm
+          node_bin=/opt/ornigami-node/bin/node
+          npm_cli=/opt/ornigami-npm/bin/npm-cli.js
+          test "$("$node_bin" --version)" = "v22.23.3"
+          test "$("$node_bin" -p 'process.versions.openssl')" = "3.5.8"
+          test "$("$node_bin" "$npm_cli" --version)" = "11.21.1"
+          echo "/opt/ornigami-node/bin" >> "$GITHUB_PATH"
+          echo "NODE_BIN=$node_bin" >> "$GITHUB_ENV"
+          echo "NPM_CLI_FOR_REHEARSAL=$npm_cli" >> "$GITHUB_ENV"
+
+      - name: Install PostgreSQL 17
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y jq curl
+          pg_bin=/usr/lib/postgresql/17/bin
+          if [[ ! -x "$pg_bin/initdb" ]]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc
+            codename="$(. /etc/os-release; printf '%s' "$VERSION_CODENAME")"
+            echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $codename-pgdg main" \
+              | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y postgresql-17
+          fi
+          "$pg_bin/pg_config" --version
+          test -x "$pg_bin/initdb"
+          test -x "$pg_bin/postgres"
+          echo "A04_PG_BIN=$pg_bin" >> "$GITHUB_ENV"
+          echo "$pg_bin" >> "$GITHUB_PATH"
+
+      - name: Run exact candidate gate as builder
+        id: candidate_gate
+        shell: bash
+        run: |
+          set +e
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            NODE_BIN="$NODE_BIN" \
+            NPM_CLI_FOR_REHEARSAL="$NPM_CLI_FOR_REHEARSAL" \
+            A04_PG_BIN="$A04_PG_BIN" \
+            PG_BIN="$A04_PG_BIN" \
+            BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            BUILD_CONTEXT="default" \
+            BUILDER_RUNTIME_STORE_HOST_ID="ornigami-builder-rehearsal-store-v1" \
+            PROJECT="ornigami-gate-contamination-probe" \
+            EVIDENCE_ROOT="/tmp/ornigami-gate-contamination-probe" \
+            EXPORT_STAGING="/tmp/ornigami-gate-contamination-probe/staging" \
+            STAGING_ORIGIN="https://builder-rehearsal.invalid" \
+            NODE_OPTIONS="--max-old-space-size=1024" \
+            bash deploy/builder/private-staging/run-candidate-gates.sh \
+            2>&1 | tee "$GATE_RUNNER_LOG_ROOT/candidate-gate.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+          suite_count="$(find "$SOURCE_ROOT/tests" -maxdepth 1 -type f \( -name '*.test.mjs' -o -name '*.test.mts' \) | wc -l)"
+          set +e
+          GATE_LOG_PATH="$GATE_RUNNER_LOG_ROOT/candidate-gate.log" \
+          RECEIPT_PATH="$GATE_RUNNER_LOG_ROOT/gate-receipt.json" \
+          APPLICATION_SOURCE_SHA="$SOURCE_SHA" \
+          HARNESS_SHA="$HARNESS_SHA" \
+          CONTROL_PLANE_SHA="${{ github.sha }}" \
+          CANDIDATE_HEAD="$(git -C "$SOURCE_ROOT" rev-parse HEAD)" \
+          LOCKFILE_PATH="$SOURCE_ROOT/package-lock.json" \
+          BUILDER_USER="$BUILDER_USER" \
+          NODE_VERSION="$("$NODE_BIN" --version)" \
+          NPM_VERSION="$("$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" --version)" \
+          PG_VERSION="$("$A04_PG_BIN/pg_config" --version)" \
+          SUITE_COUNT="$suite_count" \
+            node deploy/builder/private-staging/write-gate-receipt.mjs \
+            > "$GATE_RUNNER_LOG_ROOT/gate-receipt-console.json" 2>&1
+          receipt_rc=$?
+          set -e
+
+          if [[ "$receipt_rc" != "0" || "$rc" != "0" ]]; then
+            printf 'gate_status=failed\ngate_exit=%s\nreceipt_exit=%s\n' "$rc" "$receipt_rc" \
+              > "$GATE_RUNNER_LOG_ROOT/gate-failure.txt"
+            echo "gate_ok=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "gate_ok=true" >> "$GITHUB_OUTPUT"
+
+      - name: Verify gate receipt and summarize
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ ! -f "$GATE_RUNNER_LOG_ROOT/gate-receipt.json" ]]; then
+            printf 'status=failed\nreason=receipt_missing\n' > "$GATE_RUNNER_LOG_ROOT/gate-summary.txt"
+            exit 1
+          fi
+          EXPECTED_LOCKFILE_SHA256="$(sha256sum "$SOURCE_ROOT/package-lock.json" | awk '{print $1}')"
+          RECEIPT_PATH="$GATE_RUNNER_LOG_ROOT/gate-receipt.json" \
+          GATE_LOG_PATH="$GATE_RUNNER_LOG_ROOT/candidate-gate.log" \
+          EXPECTED_SOURCE_SHA="$SOURCE_SHA" \
+          EXPECTED_HARNESS_SHA="$HARNESS_SHA" \
+          EXPECTED_CONTROL_PLANE_SHA="${{ github.sha }}" \
+          EXPECTED_LOCKFILE_SHA256="$EXPECTED_LOCKFILE_SHA256" \
+            node deploy/builder/private-staging/verify-candidate-gate-receipt.mjs \
+            | tee "$GATE_RUNNER_LOG_ROOT/gate-receipt-verification.json"
+          node -e '
+            const fs=require("node:fs");
+            const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+            fs.writeFileSync(process.argv[2], [
+              `status=${r.status}`,
+              `tests=${r.tests}`,
+              `pass=${r.pass}`,
+              `fail=${r.fail}`,
+              `skipped=${r.skipped}`,
+              `todo=${r.todo}`,
+              `suite_count=${r.suiteCount}`,
+              `control_plane_sha=${r.controlPlaneSha}`,
+              `application_source_sha=${r.applicationSourceSha}`,
+              `lockfile_sha256=${r.lockfileSha256}`,
+            ].join("\n")+"\n");
+          ' "$GATE_RUNNER_LOG_ROOT/gate-receipt.json" "$GATE_RUNNER_LOG_ROOT/gate-summary.txt"
+          cat "$GATE_RUNNER_LOG_ROOT/gate-summary.txt"
+
+      - name: Stage bounded gate evidence
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          SOURCE_ROOTS="$GATE_RUNNER_LOG_ROOT" \
+          UPLOAD_ROOT="$GATE_EVIDENCE" \
+          MAX_ARCHIVE_BYTES="0" \
+          MAX_ARTIFACT_BYTES="67108864" \
+          MAX_DIAGNOSTIC_BYTES="67108864" \
+          RECEIPT_PATH="$GATE_RUNNER_LOG_ROOT/gate-staging-receipt.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$GATE_RUNNER_LOG_ROOT/gate-staging-console.json" 2>&1 || true
+          printf 'gate evidence for %s\n' "${{ github.sha }}" > "$GATE_EVIDENCE/GATE.txt"
+          DIAGNOSTICS_DIR="$GATE_EVIDENCE" \
+          MAX_DIAGNOSTIC_BYTES="67108864" \
+          RECEIPT_PATH="$GATE_RUNNER_LOG_ROOT/gate-budget.json" \
+            node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+            > "$GATE_RUNNER_LOG_ROOT/gate-budget-console.json" 2>&1 || true
+          exit 0
+
+      - name: Upload gate receipt and log
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-gate-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.GATE_EVIDENCE }}
+          if-no-files-found: error
+          retention-days: 7
+
+  execute:
+    name: Execute exact candidate on synthetic Linux edge
+    needs: gate
+    if: >-
+      github.event.created == true &&
+      github.event.before == '0000000000000000000000000000000000000000' &&
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      github.run_attempt == 1 &&
+      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      custody_uploaded: ${{ steps.custody_result.outputs.custody_uploaded }}
+    services:
+      dind:
+        image: docker:27-dind@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
+        options: --privileged
+        env:
+          DOCKER_TLS_CERTDIR: ""
+        ports:
+          - 127.0.0.1:2375:2375
+    env:
+      WORKFLOW_SHA: ${{ github.sha }}
+      SOURCE_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+      HARNESS_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+      RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      PROJECT: ornigami-builder-rehearsal-0d68551-staged-${{ github.run_id }}-${{ github.run_attempt }}
+      EVIDENCE_ROOT: /tmp/ornigami-exact-rehearsal-0d68551-staged
+      EMERGENCY_ROOT: /tmp/ornigami-exact-rehearsal-emergency-0d68551-staged-${{ github.run_id }}-${{ github.run_attempt }}
+      RUNNER_LOG_ROOT: /tmp/ornigami-exact-rehearsal-emergency-0d68551-staged-${{ github.run_id }}-${{ github.run_attempt }}/logs
+      EMERGENCY_DIAGNOSTICS_ROOT: /tmp/ornigami-exact-rehearsal-emergency-0d68551-staged-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
+      BUILDER_EVIDENCE_ROOT: /tmp/ornigami-exact-rehearsal-0d68551-staged/builder
+      EXPORT_STAGING: /tmp/ornigami-exact-rehearsal-0d68551-staged/staging
+      UPLOAD_STAGING: /tmp/ornigami-exact-rehearsal-0d68551-staged/upload
+      REHEARSAL_DIR: /tmp/ornigami-exact-rehearsal-0d68551-staged/builder/rehearsal
+      ARTIFACT_NAME: builder-exact-rehearsal-0d68551-staged-${{ github.run_id }}-${{ github.run_attempt }}
+      BUILD_DAEMON_READINESS_SECONDS: "420"
+      HOST_DAEMON_READINESS_SECONDS: "20"
+      MAX_ARCHIVE_BYTES: "3221225472"
+      MAX_ARTIFACT_BYTES: "3758096384"
+      MAX_DIAGNOSTIC_BYTES: "67108864"
+      MAX_RETRIEVAL_ARTIFACT_BYTES: "67108864"
+      STAGING_ORIGIN: https://builder-rehearsal.invalid
+      STAGING_HOST: builder-rehearsal.invalid
+      CADDY_IMAGE: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+      BUILDER_STORE_VOLUME: ornigami-builder-rehearsal-store-0d68551
+      BUILDER_RUNTIME_STORE_HOST_ID: ornigami-builder-rehearsal-store-v1
+      STAGING_BASIC_AUTH_USER: staging-operator
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: https://ci.invalid/database
+      OPENAI_API_KEY: ci-openai-key
+      STRIPE_SECRET_KEY: ci-stripe-key
+      STRIPE_WEBHOOK_SECRET: ci-stripe-webhook-secret
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      AUTH_SECRET: ci-auth-secret
+      NEXTAUTH_SECRET: ci-nextauth-secret
+      CRON_SECRET: ci-cron-secret
+      RESEND_API_KEY: ci-resend-key
+      EMAIL_FROM: ci@example.com
+      REPLY_TO_EMAIL: ci@example.com
+      TOKEN_ENCRYPTION_KEY: ci-token-encryption-key
+      REVIEW_BOOSTER_UNSUBSCRIBE_SECRET: ci-unsubscribe-secret
+      NEXT_PUBLIC_APP_URL: https://ci.invalid
+
+    steps:
+      - name: Create runner-owned emergency diagnostics before repository or builder setup
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$EMERGENCY_ROOT/logs" "$EMERGENCY_ROOT/receipts" "$EMERGENCY_DIAGNOSTICS_ROOT"
+          chmod 0700 "$EMERGENCY_ROOT" "$EMERGENCY_ROOT/logs" "$EMERGENCY_ROOT/receipts" "$EMERGENCY_DIAGNOSTICS_ROOT"
+          {
+            printf 'workflow_sha=%s\n' "$WORKFLOW_SHA"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'harness_sha=%s\n' "$HARNESS_SHA"
+            printf 'run_id=%s\n' "$RUN_ID"
+            printf 'workflow_ref=%s\n' "${{ github.ref }}"
+            printf 'event_created=%s\n' "${{ github.event.created }}"
+            printf 'event_before=%s\n' "${{ github.event.before }}"
+            printf 'runner_user=%s\n' "$(id -un)"
+            printf 'runner_uid=%s\n' "$(id -u)"
+          } > "$RUNNER_LOG_ROOT/run-identity.txt"
+          printf 'emergency_root=%s\n' "$EMERGENCY_ROOT" > "$EMERGENCY_DIAGNOSTICS_ROOT/EMERGENCY.txt"
+
+      - name: Check out bundle control plane at triggering SHA
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Verify control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$WORKFLOW_SHA"
+          test "$(git rev-parse "$WORKFLOW_SHA^{commit}")" = "$WORKFLOW_SHA"
+          cp "$RUNNER_LOG_ROOT/run-identity.txt" "$RUNNER_LOG_ROOT/control-plane-identity.txt"
+          printf 'control_plane_head=%s\n' "$(git rev-parse HEAD)" >> "$RUNNER_LOG_ROOT/control-plane-identity.txt"
+
+      - name: Validate one initial-publication trigger
+        shell: bash
+        env:
+          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122
+          REQUEST_PATH: .github/build-requests/builder-exact-rehearsal-0d68551-staged.json
+          EXPECTED_SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          EXPECTED_HARNESS_SHA: ${{ env.HARNESS_SHA }}
+          EVENT_CREATED: ${{ github.event.created }}
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          set -Eeuo pipefail
+          node deploy/builder/private-staging/rehearsal-event-gate.mjs \
+            | tee "$RUNNER_LOG_ROOT/event-gate.json"
+
+      - name: Check out exact candidate source
+        uses: actions/checkout@v5
+        with:
+          ref: 156259d0c4330b185a0844711b7004b0b4467887
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact source, harness and ancestry
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "SOURCE_ROOT=$GITHUB_WORKSPACE/candidate-source" >> "$GITHUB_ENV"
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="$WORKFLOW_SHA" \
+          SOURCE_SHA="$SOURCE_SHA" \
+          HARNESS_SHA="$HARNESS_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            | tee "$RUNNER_LOG_ROOT/source-identity.txt"
+
+      - name: Download clean candidate gate receipt
+        uses: actions/download-artifact@v4
+        with:
+          name: builder-gate-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/gate-receipt
+
+      - name: Verify gate receipt against exact checkout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          gate_receipt="$(find "$RUNNER_TEMP/gate-receipt" -type f -name gate-receipt.json -print -quit)"
+          gate_log="$(find "$RUNNER_TEMP/gate-receipt" -type f -name candidate-gate.log -print -quit)"
+          test -n "$gate_receipt" && test -f "$gate_receipt"
+          test -n "$gate_log" && test -f "$gate_log"
+          EXPECTED_LOCKFILE_SHA256="$(sha256sum "$SOURCE_ROOT/package-lock.json" | awk '{print $1}')"
+          RECEIPT_PATH="$gate_receipt" \
+          GATE_LOG_PATH="$gate_log" \
+          EXPECTED_SOURCE_SHA="$SOURCE_SHA" \
+          EXPECTED_HARNESS_SHA="$HARNESS_SHA" \
+          EXPECTED_CONTROL_PLANE_SHA="$WORKFLOW_SHA" \
+          EXPECTED_LOCKFILE_SHA256="$EXPECTED_LOCKFILE_SHA256" \
+            node deploy/builder/private-staging/verify-candidate-gate-receipt.mjs \
+            | tee "$RUNNER_LOG_ROOT/gate-receipt-verification.json"
+          gate_input="/tmp/ornigami-gate-input-${{ github.run_id }}-${{ github.run_attempt }}"
+          rm -rf "$gate_input"
+          install -d -m 0755 "$gate_input"
+          install -m 0644 "$gate_receipt" "$gate_input/gate-receipt.json"
+          install -m 0644 "$gate_log" "$gate_input/candidate-gate.log"
+          echo "CANDIDATE_GATE_RECEIPT=$gate_input/gate-receipt.json" >> "$GITHUB_ENV"
+          echo "CANDIDATE_GATE_LOG=$gate_input/candidate-gate.log" >> "$GITHUB_ENV"
+
+      - name: Create isolated UID-1000 builder and owned roots
+        id: builder_setup
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          runner_user="$(id -un)"
+          runner_uid="$(id -u)"
+          runner_group="$(id -gn)"
+          builder_user="$(id -nu 1000)"
+          builder_uid="$(id -u "$builder_user")"
+          builder_group="$(id -gn "$builder_user")"
+          builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
+          test "$builder_uid" = "1000"
+          test "$runner_uid" != "$builder_uid"
+          test "$runner_user" != "$builder_user"
+          if ! getent group docker >/dev/null; then
+            sudo groupadd docker
+          fi
+          if ! id -nG "$builder_user" | tr ' ' '\n' | grep -qx docker; then
+            sudo usermod -aG docker "$builder_user"
+          fi
+          sudo install -d -m 0755 -o "$runner_user" -g "$runner_group" "$EVIDENCE_ROOT"
+          sudo install -d -m 0700 -o "$builder_user" -g "$builder_group" "$BUILDER_EVIDENCE_ROOT"
+          sudo install -d -m 2770 -o "$builder_user" -g "$runner_group" "$EXPORT_STAGING"
+          sudo install -d -m 0700 -o "$runner_user" -g "$runner_group" "$UPLOAD_STAGING"
+          test ! -e "$REHEARSAL_DIR"
+          sudo chown -R "$builder_user":"$builder_group" "$SOURCE_ROOT"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          {
+            echo "BUILDER_USER=$builder_user"
+            echo "BUILDER_UID=$builder_uid"
+            echo "BUILDER_GROUP=$builder_group"
+            echo "BUILDER_HOME=$builder_home"
+            echo "BUILDER_GROUPS=$(id -Gn "$builder_user" | tr ' ' ',')"
+            echo "REHEARSAL_RUNNER_USER=$runner_user"
+            echo "REHEARSAL_RUNNER_UID=$runner_uid"
+            echo "REHEARSAL_RUNNER_GROUP=$runner_group"
+          } >> "$GITHUB_ENV"
+
+      - name: Probe published build daemon readiness as the builder
+        id: build_daemon_probe
+        if: always() && steps.builder_setup.outcome == 'success'
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$RUNNER_LOG_ROOT"
+          BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="tcp://127.0.0.1:2375" \
+            EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=build \
+            OVERALL_TIMEOUT_SECONDS="$BUILD_DAEMON_READINESS_SECONDS" \
+            PROBE_TIMEOUT_SECONDS="20" \
+            bash deploy/builder/private-staging/probe-docker-endpoint.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/build-daemon-readiness-console.txt"
+          build_rc=${PIPESTATUS[0]}
+          echo "build_probe_exit=$build_rc" >> "$GITHUB_OUTPUT"
+          if [[ "$build_rc" == "0" ]]; then
+            echo "build_probe_ok=true" >> "$GITHUB_OUTPUT"
+            rm -f "$RUNNER_LOG_ROOT/build-daemon-readiness-failure.txt"
+          else
+            echo "build_probe_ok=false" >> "$GITHUB_OUTPUT"
+            {
+              printf 'status=1\n'
+              printf 'assertion=build_daemon_readiness\n'
+              printf 'expected=docker info succeeds as builder on tcp://127.0.0.1:2375\n'
+              printf 'observed=probe exit %s\n' "$build_rc"
+              printf 'effective_user=%s\n' "$BUILDER_USER"
+              printf 'receipt=docker-readiness-build.json\n'
+              printf 'diagnostics=docker-readiness-build-diagnostics.txt\n'
+            } > "$RUNNER_LOG_ROOT/build-daemon-readiness-failure.txt"
+          fi
+
+          # The host daemon is probed independently and its result is retained
+          # even when the build daemon never becomes ready.
+          BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="unix:///var/run/docker.sock" \
+            EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=host \
+            OVERALL_TIMEOUT_SECONDS="$HOST_DAEMON_READINESS_SECONDS" \
+            PROBE_TIMEOUT_SECONDS="10" \
+            bash deploy/builder/private-staging/probe-docker-endpoint.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/host-daemon-readiness-console.txt"
+          host_rc=${PIPESTATUS[0]}
+          echo "host_probe_exit=$host_rc" >> "$GITHUB_OUTPUT"
+          if [[ "$host_rc" == "0" ]]; then
+            echo "host_probe_ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "host_probe_ok=false" >> "$GITHUB_OUTPUT"
+            {
+              printf 'status=1\n'
+              printf 'assertion=host_daemon_readiness\n'
+              printf 'expected=docker info succeeds as builder on unix:///var/run/docker.sock\n'
+              printf 'observed=probe exit %s\n' "$host_rc"
+              printf 'effective_user=%s\n' "$BUILDER_USER"
+              printf 'receipt=docker-readiness-host.json\n'
+            } >> "$RUNNER_LOG_ROOT/build-daemon-readiness-failure.txt"
+          fi
+          exit 0
+
+      - name: Linux ownership and profile preflight before installation
+        id: ownership_preflight
+        if: always() && steps.builder_setup.outcome == 'success'
+        shell: bash
+        run: |
+          set +e
+          RUNNER_USER="$REHEARSAL_RUNNER_USER" \
+          BUILDER_USER="$BUILDER_USER" \
+          SOURCE_ROOT="$SOURCE_ROOT" \
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          EMERGENCY_DIAGNOSTICS_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
+          RUNNER_LOG_ROOT="$RUNNER_LOG_ROOT" \
+          BUILDER_EVIDENCE_ROOT="$BUILDER_EVIDENCE_ROOT" \
+          EXPORT_STAGING="$EXPORT_STAGING" \
+          UPLOAD_STAGING="$UPLOAD_STAGING" \
+          DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+          DOCKER_BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+          PREFLIGHT_BUILD_DOCKER_TIMEOUT_SECONDS="60" \
+            bash deploy/builder/private-staging/verify-linux-ownership.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/ownership-preflight-console.txt"
+          rc=${PIPESTATUS[0]}
+          echo "preflight_exit=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "preflight_ok=true" >> "$GITHUB_OUTPUT"; else echo "preflight_ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Linux ownership preflight regression (Linux-only)
+        id: ownership_regression
+        if: always() && steps.builder_setup.outcome == 'success'
+        shell: bash
+        run: |
+          set +e
+          PREFLIGHT_TEST_RUNNER_USER="$REHEARSAL_RUNNER_USER" \
+          PREFLIGHT_TEST_BUILDER_USER="$BUILDER_USER" \
+          DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+          DOCKER_BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            node --test tests/builder-linux-ownership-preflight.test.mjs \
+            2>&1 | tee "$RUNNER_LOG_ROOT/ownership-preflight-regression.log"
+          rc=${PIPESTATUS[0]}
+          echo "regression_exit=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "regression_ok=true" >> "$GITHUB_OUTPUT"; else echo "regression_ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Gate Linux readiness and ownership before installation
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          failed=0
+          if [[ "${{ steps.build_daemon_probe.outputs.build_probe_ok }}" != "true" ]]; then
+            echo "FAIL: build daemon readiness probe did not pass" >&2
+            failed=1
+          fi
+          if [[ "${{ steps.build_daemon_probe.outputs.host_probe_ok }}" != "true" ]]; then
+            echo "FAIL: host daemon readiness probe did not pass" >&2
+            failed=1
+          fi
+          if [[ "${{ steps.ownership_preflight.outputs.preflight_ok }}" != "true" ]]; then
+            echo "FAIL: Linux ownership/profile preflight did not pass" >&2
+            failed=1
+          fi
+          if [[ "${{ steps.ownership_regression.outputs.regression_ok }}" != "true" ]]; then
+            echo "FAIL: Linux ownership regression did not pass" >&2
+            failed=1
+          fi
+          if [[ "$failed" != "0" ]]; then
+            for file in \
+              "$RUNNER_LOG_ROOT/build-daemon-readiness-failure.txt" \
+              "$RUNNER_LOG_ROOT/ownership-preflight-failure.txt"; do
+              if [[ -f "$file" ]]; then
+                echo "--- $file ---" >&2
+                cat "$file" >&2
+              fi
+            done
+            for file in \
+              "$RUNNER_LOG_ROOT/build-daemon-readiness-build.log" \
+              "$RUNNER_LOG_ROOT/build-daemon-readiness-host.log"; do
+              if [[ -f "$file" ]]; then
+                echo "--- $file (tail) ---" >&2
+                tail -n 40 "$file" >&2
+              fi
+            done
+            exit 1
+          fi
+          echo "Linux readiness, ownership and regression gates passed."
+
+      - name: Install supported Node and vendored npm
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v xz >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xz-utils
+          }
+          sudo mkdir -p /opt/ornigami-node /opt/ornigami-npm
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/SHASUMS256.txt
+          grep ' node-v22.23.3-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+          sudo tar -xJf node-v22.23.3-linux-x64.tar.xz -C /opt/ornigami-node --strip-components=1
+          sudo tar -xzf "$SOURCE_ROOT/vendor/build-tools/npm-11.21.1.tgz" -C /opt/ornigami-npm --strip-components=1
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm
+          node_bin=/opt/ornigami-node/bin/node
+          npm_cli=/opt/ornigami-npm/bin/npm-cli.js
+          test "$("$node_bin" --version)" = "v22.23.3"
+          test "$("$node_bin" -p 'process.versions.openssl')" = "3.5.8"
+          test "$("$node_bin" "$npm_cli" --version)" = "11.21.1"
+          echo "/opt/ornigami-node/bin" >> "$GITHUB_PATH"
+          echo "NODE_BIN=$node_bin" >> "$GITHUB_ENV"
+          echo "NPM_CLI_FOR_REHEARSAL=$npm_cli" >> "$GITHUB_ENV"
+
+      - name: Install Linux test and browser prerequisites
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y jq curl xz-utils libnss3-tools
+          pg_bin=/usr/lib/postgresql/17/bin
+          if [[ ! -x "$pg_bin/initdb" ]]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --max-time 30 --retry 2 \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc
+            codename="$(. /etc/os-release; printf '%s' "$VERSION_CODENAME")"
+            echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $codename-pgdg main" \
+              | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y postgresql-17
+          fi
+          "$pg_bin/pg_config" --version
+          test -x "$pg_bin/initdb"
+          test -x "$pg_bin/postgres"
+          echo "A04_PG_BIN=$pg_bin" >> "$GITHUB_ENV"
+          echo "$pg_bin" >> "$GITHUB_PATH"
+          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund \
+            --prefix "$SOURCE_ROOT/scripts/framework-prototype/browser-tools"
+          sudo env PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install-deps chromium
+          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install chromium
+          sudo chmod -R a+rX "$SOURCE_ROOT/scripts/framework-prototype/browser-tools" "$BUILDER_HOME/.cache/ms-playwright"
+
+      - name: Execute checkpoint, private edge, qualification and closure
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_LOG_ROOT"
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            SOURCE_SHA="$SOURCE_SHA" \
+            HARNESS_SHA="$HARNESS_SHA" \
+            WORKFLOW_SHA="$WORKFLOW_SHA" \
+            REHEARSAL_DIR="$REHEARSAL_DIR" \
+            EVIDENCE_ROOT="$BUILDER_EVIDENCE_ROOT" \
+            EXPORT_STAGING="$EXPORT_STAGING" \
+            PROJECT="$PROJECT" \
+            STAGING_ORIGIN="$STAGING_ORIGIN" \
+            STAGING_HOST="$STAGING_HOST" \
+            CADDY_IMAGE="$CADDY_IMAGE" \
+            BUILDER_USER="$BUILDER_USER" \
+            DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+            BUILD_DAEMON_READINESS_SECONDS="$BUILD_DAEMON_READINESS_SECONDS" \
+            HOST_DAEMON_READINESS_SECONDS="$HOST_DAEMON_READINESS_SECONDS" \
+            DAEMON_PROBE_TIMEOUT_SECONDS="20" \
+            BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            BUILD_CONTEXT=default \
+            VERIFY_ENGINE=docker VERIFY_CONTEXT=default \
+            PHASE_ENGINE=docker PHASE_CONTEXT=default \
+            STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" \
+            BUILDER_STORE_VOLUME="$BUILDER_STORE_VOLUME" \
+            BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
+            A04_PG_BIN="$A04_PG_BIN" \
+            PG_BIN="$A04_PG_BIN" \
+            CANDIDATE_GATE_RECEIPT="$CANDIDATE_GATE_RECEIPT" \
+            CANDIDATE_GATE_LOG="$CANDIDATE_GATE_LOG" \
+            SKIP_CANDIDATE_GATES=1 \
+            NPM_CLI_FOR_REHEARSAL="$NPM_CLI_FOR_REHEARSAL" \
+            BROWSER_PLAYWRIGHT="$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs" \
+            PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            bash "$GITHUB_WORKSPACE/deploy/builder/private-staging/run-exact-rehearsal-linux.sh" \
+            2>&1 | tee "$RUNNER_LOG_ROOT/rehearsal-console.log"
+
+      - name: Record archive and evidence custody bundle
+        id: custody_record
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_LOG_ROOT"
+          cp "$RUNNER_LOG_ROOT/run-identity.txt" "$RUNNER_LOG_ROOT/workflow-identity.txt" 2>/dev/null || true
+          if [[ -f "$EXPORT_STAGING/final-status.txt" ]]; then
+            cp "$EXPORT_STAGING/final-status.txt" "$RUNNER_LOG_ROOT/final-status.txt" 2>/dev/null || true
+          fi
+          if find "$EXPORT_STAGING" -type f -name archive-receipt.json -print -quit 2>/dev/null | grep -q .; then
+            echo "archive_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "archive_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+          find "$EXPORT_STAGING" -maxdepth 4 -type f -printf '%p\t%s\n' 2>/dev/null | sort > "$RUNNER_LOG_ROOT/export-staging-files.txt" || true
+
+      - name: Stage approved evidence with bounded diagnostics
+        id: stage
+        if: always()
+        shell: bash
+        env:
+          MAX_ARCHIVE_BYTES: ${{ env.MAX_ARCHIVE_BYTES }}
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_ARTIFACT_BYTES }}
+          MAX_DIAGNOSTIC_BYTES: ${{ env.MAX_DIAGNOSTIC_BYTES }}
+        run: |
+          set +e
+          upload_root="$UPLOAD_STAGING"
+          if ! mkdir -p "$upload_root" 2>/dev/null; then
+            upload_root="$EMERGENCY_ROOT/upload"
+          fi
+          rm -rf "$upload_root"
+          mkdir -p -m 0700 "$upload_root"
+          sources="$RUNNER_LOG_ROOT"
+          if [[ -d "$EXPORT_STAGING" ]]; then
+            sources="$EXPORT_STAGING|$RUNNER_LOG_ROOT"
+          fi
+          SOURCE_ROOTS="$sources" \
+          UPLOAD_ROOT="$upload_root" \
+          MAX_ARCHIVE_BYTES="$MAX_ARCHIVE_BYTES" \
+          MAX_ARTIFACT_BYTES="$MAX_ARTIFACT_BYTES" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$RUNNER_LOG_ROOT/staging-receipt.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$RUNNER_LOG_ROOT/staging.json" 2>&1
+          stage_rc=$?
+          set -e
+          echo "UPLOAD_ROOT=$upload_root" >> "$GITHUB_ENV"
+          echo "upload_root=$upload_root" >> "$GITHUB_OUTPUT"
+          echo "stage_exit=$stage_rc" >> "$GITHUB_OUTPUT"
+          echo "stage_ok=$([[ "$stage_rc" == "0" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Check upload budgets and bound the final diagnostics directory
+        id: upload_budget
+        if: always()
+        shell: bash
+        env:
+          UPLOAD_ROOT: ${{ steps.stage.outputs.upload_root }}
+          MAX_ARCHIVE_BYTES: ${{ env.MAX_ARCHIVE_BYTES }}
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_ARTIFACT_BYTES }}
+          MAX_DIAGNOSTIC_BYTES: ${{ env.MAX_DIAGNOSTIC_BYTES }}
+          DIAGNOSTICS_DIR: ${{ env.EMERGENCY_DIAGNOSTICS_ROOT }}
+          RECEIPT_PATH: ${{ env.RUNNER_LOG_ROOT }}/upload-budget-receipt.json
+        run: |
+          set +e
+          export UPLOAD_ROOT="${UPLOAD_ROOT:-$UPLOAD_STAGING}"
+          node deploy/builder/private-staging/check-upload-budget.mjs \
+            > "$RUNNER_LOG_ROOT/upload-budget.json" 2>&1
+          budget_rc=$?
+          set -e
+          upload_allowed=false
+          if [[ "$budget_rc" == "0" && "${{ steps.custody_record.outputs.archive_ready }}" == "true" && "${{ steps.stage.outputs.stage_ok }}" == "true" ]]; then
+            upload_allowed=true
+          fi
+          echo "upload_allowed=$upload_allowed" >> "$GITHUB_OUTPUT"
+          echo "budget_exit=$budget_rc" >> "$GITHUB_OUTPUT"
+          if [[ "$upload_allowed" != "true" ]]; then
+            # Rebuild the emergency diagnostics from runner-owned logs only.
+            # This never copies the failed upload directory and never appends
+            # without a bound.
+            mkdir -p "$EMERGENCY_DIAGNOSTICS_ROOT"
+            SOURCE_ROOTS="$RUNNER_LOG_ROOT" \
+            UPLOAD_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
+            MAX_ARCHIVE_BYTES="0" \
+            MAX_ARTIFACT_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+            MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+            RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-staging-receipt.json" \
+              node deploy/builder/private-staging/stage-approved-evidence.mjs \
+              > "$EMERGENCY_ROOT/receipts/diagnostics-staging.json" 2>&1 || true
+            if [[ -f "$RUNNER_LOG_ROOT/upload-budget.json" ]]; then
+              head -c 65536 "$RUNNER_LOG_ROOT/upload-budget.json" \
+                > "$EMERGENCY_DIAGNOSTICS_ROOT/upload-budget.json" || true
+            fi
+            if [[ ! -f "$EMERGENCY_DIAGNOSTICS_ROOT/EMERGENCY.txt" ]]; then
+              printf 'emergency diagnostics rebuilt from runner-owned logs; evidence root unavailable\n' \
+                > "$EMERGENCY_DIAGNOSTICS_ROOT/EMERGENCY.txt"
+            fi
+            test -f "$EMERGENCY_DIAGNOSTICS_ROOT/EMERGENCY.txt"
+            DIAGNOSTICS_DIR="$EMERGENCY_DIAGNOSTICS_ROOT" \
+            MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+            RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-budget.json" \
+              node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+              > "$EMERGENCY_ROOT/receipts/diagnostics-budget-console.json" 2>&1
+          fi
+
+      - name: Upload synthetic archive and evidence to custody
+        id: custody_upload
+        if: always() && steps.upload_budget.outputs.upload_allowed == 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ steps.stage.outputs.upload_root }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload bounded emergency diagnostics
+        if: always() && steps.upload_budget.outputs.upload_allowed != 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-diagnostics
+          path: ${{ env.EMERGENCY_DIAGNOSTICS_ROOT }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Record custody result
+        id: custody_result
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ "${{ steps.upload_budget.outputs.upload_allowed }}" == "true" && "${{ steps.custody_upload.outcome }}" == "success" ]]; then
+            echo "custody_uploaded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "custody_uploaded=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enforce final rehearsal and custody status
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          readiness_failure="$RUNNER_LOG_ROOT/build-daemon-readiness-failure.txt"
+          if [[ -f "$readiness_failure" ]]; then
+            echo "Daemon readiness failure preserved as the primary status:" >&2
+            cat "$readiness_failure" >&2
+            exit 1
+          fi
+          preflight_failure="$RUNNER_LOG_ROOT/ownership-preflight-failure.txt"
+          if [[ -f "$preflight_failure" ]]; then
+            echo "Preflight failure preserved as the primary status:" >&2
+            cat "$preflight_failure" >&2
+            preflight_status="$(sed -n 's/^status=//p' "$preflight_failure" | head -n 1)"
+            case "$preflight_status" in
+              ''|*[!0-9]*) preflight_status=1 ;;
+            esac
+            exit "$preflight_status"
+          fi
+          if [[ "${{ steps.custody_result.outputs.custody_uploaded }}" != "true" ]]; then
+            echo "FAIL: custody upload is incomplete" >&2
+            exit 1
+          fi
+          if [[ ! -f "$RUNNER_LOG_ROOT/final-status.txt" && -f "$EXPORT_STAGING/final-status.txt" ]]; then
+            cp "$EXPORT_STAGING/final-status.txt" "$RUNNER_LOG_ROOT/final-status.txt" || true
+          fi
+          test -f "$RUNNER_LOG_ROOT/final-status.txt"
+          grep -qx 'final_status=0' "$RUNNER_LOG_ROOT/final-status.txt" || {
+            cat "$RUNNER_LOG_ROOT/final-status.txt" >&2
+            exit 1
+          }
+
+  retrieve-verify:
+    name: Retrieve custody and independently load/verify
+    needs: execute
+    if: always() && needs.execute.outputs.custody_uploaded == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      WORKFLOW_SHA: ${{ github.sha }}
+      MAX_RETRIEVAL_ARTIFACT_BYTES: "67108864"
+    steps:
+      - name: Check out verifier scripts at triggering SHA
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          clean: true
+
+      - name: Verify retrieval control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$WORKFLOW_SHA"
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Download custody artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: builder-exact-rehearsal-0d68551-staged-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retrieved
+
+      - name: Independently load and verify retrieved archive
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          root="$RUNNER_TEMP/retrieved"
+          archive="$(find "$root" -type f -name '*.tar' | head -n 1)"
+          receipt="$(find "$root" -type f -name 'archive-receipt.json' | head -n 1)"
+          custody="$(find "$root" -type f -name 'custody-receipt.json' | head -n 1)"
+          test -n "$archive" && test -f "$archive"
+          test -n "$receipt" && test -f "$receipt"
+          test -n "$custody" && test -f "$custody"
+          image_id="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.imageId)' "$receipt")"
+          source_sha="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.applicationSourceSha)' "$receipt")"
+          origin="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.origin)' "$receipt")"
+          harness_sha="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.harnessSha)' "$custody")"
+          evidence="$RUNNER_TEMP/retrieval-evidence"
+          ARCHIVE_PATH="$archive" RECEIPT_PATH="$receipt" \
+          EXPECTED_SOURCE_SHA="$source_sha" EXPECTED_IMAGE_ID="$image_id" \
+          EXPECTED_ORIGIN="$origin" EXPECTED_PLATFORM=linux/amd64 EXPECTED_USER=1000:1000 \
+          HARNESS_SHA="$harness_sha" EVIDENCE_DIR="$evidence" REQUIRE_FRESH_DAEMON=1 ENGINE=docker \
+            node deploy/builder/private-staging/verify-image-archive.mjs
+          archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
+          archive_bytes="$(stat -c '%s' "$archive")"
+          node - "$custody" "$archive_sha" "$archive_bytes" <<'NODE'
+          const fs = require("node:fs");
+          const [file, sha, bytes] = process.argv.slice(2);
+          const receipt = JSON.parse(fs.readFileSync(file, "utf8"));
+          if (receipt.archiveSha256 !== sha) throw new Error("retrieved archive hash mismatch");
+          if (String(receipt.archiveBytes) !== String(bytes)) throw new Error("retrieved archive size mismatch");
+          NODE
+          cat > "$evidence/retrieval-receipt.json" <<EOF
+          {
+            "status": "complete",
+            "applicationSourceSha": "$source_sha",
+            "harnessSha": "$harness_sha",
+            "imageId": "$image_id",
+            "applicationOrigin": "$origin",
+            "archiveSha256": "$archive_sha",
+            "archiveBytes": $archive_bytes,
+            "sourceArtifact": "${{ github.run_id }}-${{ github.run_attempt }}",
+            "retrievalDaemonId": "$(docker info --format '{{.ID}}')",
+            "customerAdmission": "closed"
+          }
+          EOF
+          cat "$evidence/retrieval-receipt.json"
+
+      - name: Check retrieval upload budget
+        shell: bash
+        env:
+          UPLOAD_ROOT: ${{ runner.temp }}/retrieval-evidence
+          MAX_ARCHIVE_BYTES: "0"
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_RETRIEVAL_ARTIFACT_BYTES }}
+          RECEIPT_RESERVE_BYTES: "0"
+          RECEIPT_PATH: ${{ runner.temp }}/retrieval-evidence/retrieval-budget.json
+        run: |
+          set -Eeuo pipefail
+          node deploy/builder/private-staging/check-upload-budget.mjs
+
+      - name: Upload retrieval verification receipt
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-exact-rehearsal-0d68551-staged-retrieval-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/retrieval-evidence
+          if-no-files-found: error
+          retention-days: 7

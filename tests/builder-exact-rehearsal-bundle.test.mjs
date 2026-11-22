@@ -13,6 +13,7 @@ import {
 } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
@@ -563,7 +564,9 @@ test(
 );
 
 const readinessCandidate = "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816";
+const stagedCandidate = "156259d0c4330b185a0844711b7004b0b4467887";
 const readinessWorkflow = ".github/workflows/builder-exact-rehearsal-0d68551-readiness.yml";
+const stagedWorkflow = ".github/workflows/builder-exact-rehearsal-0d68551-staged.yml";
 
 test("readiness workflow gates installation on bounded probes and ownership fixtures in order", () => {
   const workflow = readFileSync(readinessWorkflow, "utf8");
@@ -620,10 +623,20 @@ test("directly invoked private-staging helpers are executable in the frozen cand
     "deploy/builder/private-staging/rehearse-exact-candidate.sh",
     "deploy/builder/qualify-linux.sh",
   ];
-  for (const path of candidatePaths) {
-    const result = spawnSync("git", ["ls-tree", readinessCandidate, path], { cwd: root, encoding: "utf8" });
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /^100755 /, `candidate helper is not executable: ${path}`);
+  for (const candidate of [readinessCandidate, stagedCandidate]) {
+    const available = spawnSync("git", ["cat-file", "-e", `${candidate}^{commit}`], {
+      cwd: root,
+      encoding: "utf8",
+    }).status === 0;
+    // Incidentals such as the repository Quality job use a shallow checkout
+    // that may not contain older candidate commits. The rehearsal checkout and
+    // verify-exact-identities.sh always fetch the exact candidate.
+    if (!available) continue;
+    for (const path of candidatePaths) {
+      const result = spawnSync("git", ["ls-tree", candidate, path], { cwd: root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /^100755 /, `candidate helper is not executable: ${path}`);
+    }
   }
   const bundlePaths = [
     "deploy/builder/private-staging/run-exact-rehearsal-linux.sh",
@@ -683,5 +696,117 @@ test("request file records the candidate correction and readiness workflow", () 
   assert.equal(request.trigger.branch, "ci/builder-exact-rehearsal-0d68551-readiness-20261122");
   assert.equal(request.customerAdmission, "closed");
   assert.equal(request.budget.lightweightDebugRuns, 4);
+});
+
+test("staged workflow runs a clean no-DinD gate before the build job", () => {
+  const workflow = readFileSync(stagedWorkflow, "utf8");
+  const gateStart = workflow.indexOf("Clean candidate gate (no DinD)");
+  const executeStart = workflow.indexOf("Execute exact candidate on synthetic Linux edge");
+  assert.ok(gateStart > 0 && gateStart < executeStart);
+  const gateBlock = workflow.slice(gateStart, executeStart);
+  assert.doesNotMatch(gateBlock, /^    services:/m);
+  assert.match(gateBlock, /run-candidate-gates\.sh/);
+  assert.match(gateBlock, /write-gate-receipt\.mjs/);
+  assert.match(gateBlock, /Install PostgreSQL 17/);
+  assert.match(gateBlock, /builder-gate-receipt-/);
+  assert.match(workflow, /needs: gate/);
+  assert.match(workflow, /verify-candidate-gate-receipt\.mjs/);
+  assert.match(workflow, /SKIP_CANDIDATE_GATES=1/);
+  assert.match(workflow, /CANDIDATE_GATE_RECEIPT/);
+  assert.match(workflow, /156259d0c4330b185a0844711b7004b0b4467887/);
+  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-staged-20261122/);
+  assert.match(workflow, /builder-exact-rehearsal-0d68551-staged-retrieval-/);
+});
+
+test("staged request records the new candidate and clean-gate handoff", () => {
+  const request = JSON.parse(readFileSync(
+    ".github/build-requests/builder-exact-rehearsal-0d68551-staged.json",
+    "utf8",
+  ));
+  assert.equal(request.applicationSourceSha, stagedCandidate);
+  assert.equal(request.harnessSha, stagedCandidate);
+  assert.equal(request.workflowFile, stagedWorkflow);
+  assert.equal(request.trigger.branch, "ci/builder-exact-rehearsal-0d68551-staged-20261122");
+  assert.equal(request.customerAdmission, "closed");
+  assert.equal(request.budget.stagedWorkflow, 1);
+});
+
+test("gate receipt binds identities and selects the complete global suite result", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-gate-receipt-"));
+  try {
+    const log = path.join(dir, "candidate-gate.log");
+    const lockfile = path.join(dir, "package-lock.json");
+    const receipt = path.join(dir, "gate-receipt.json");
+    const nested = [
+      "# tests 7",
+      "# pass 7",
+      "# fail 0",
+      "# skipped 0",
+      "# todo 0",
+    ].join("\n");
+    const global = [
+      "# tests 1461",
+      "# pass 1459",
+      "# fail 0",
+      "# skipped 2",
+      "# todo 0",
+    ].join("\n");
+    writeFileSync(log, `synthetic gate log\n${nested}\nmore output\n${global}\n`);
+    writeFileSync(lockfile, "synthetic lockfile\n");
+    const source = "a".repeat(40);
+    const harness = "b".repeat(40);
+    const control = "c".repeat(40);
+    const created = runNode("deploy/builder/private-staging/write-gate-receipt.mjs", {
+      GATE_LOG_PATH: log,
+      RECEIPT_PATH: receipt,
+      APPLICATION_SOURCE_SHA: source,
+      HARNESS_SHA: harness,
+      CONTROL_PLANE_SHA: control,
+      CANDIDATE_HEAD: source,
+      LOCKFILE_PATH: lockfile,
+      BUILDER_USER: "builder",
+      NODE_VERSION: "v22.23.3",
+      NPM_VERSION: "11.21.1",
+      PG_VERSION: "pg_config (PostgreSQL) 17.0",
+      SUITE_COUNT: "217",
+    });
+    assert.equal(created.status, 0, `${created.stdout}\n${created.stderr}`);
+    const parsed = JSON.parse(readFileSync(receipt, "utf8"));
+    assert.equal(parsed.status, "passed");
+    assert.equal(parsed.tests, 1461);
+    assert.equal(parsed.pass, 1459);
+    assert.equal(parsed.fail, 0);
+    assert.equal(parsed.skipped, 2);
+    assert.equal(parsed.suiteCount, 217);
+    assert.equal(parsed.controlPlaneSha, control);
+    assert.equal(
+      parsed.gateLogSha256,
+      createHash("sha256").update(readFileSync(log)).digest("hex"),
+    );
+
+    const verified = runNode("deploy/builder/private-staging/verify-candidate-gate-receipt.mjs", {
+      RECEIPT_PATH: receipt,
+      GATE_LOG_PATH: log,
+      EXPECTED_SOURCE_SHA: source,
+      EXPECTED_HARNESS_SHA: harness,
+      EXPECTED_CONTROL_PLANE_SHA: control,
+      EXPECTED_LOCKFILE_SHA256: createHash("sha256").update(readFileSync(lockfile)).digest("hex"),
+    });
+    assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
+    assert.match(verified.stdout, /"ok": true/);
+
+    const tampered = runNode("deploy/builder/private-staging/verify-candidate-gate-receipt.mjs", {
+      RECEIPT_PATH: receipt,
+      GATE_LOG_PATH: log,
+      EXPECTED_SOURCE_SHA: source,
+      EXPECTED_HARNESS_SHA: harness,
+      EXPECTED_CONTROL_PLANE_SHA: "d".repeat(40),
+      EXPECTED_LOCKFILE_SHA256: createHash("sha256").update(readFileSync(lockfile)).digest("hex"),
+    });
+    assert.notEqual(tampered.status, 0);
+    assert.match(`${tampered.stdout}\n${tampered.stderr}`, /controlPlaneSha mismatch/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
