@@ -1,11 +1,12 @@
 {
-  "schemaVersion": 2,
-  "bundleBaseSha": "d916ff2d1e270217703df4a96c361fff26a41265",
-  "applicationSourceSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
-  "harnessSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
-  "workflowFile": ".github/workflows/builder-exact-rehearsal-43e2691.yml",
+  "schemaVersion": 3,
+  "bundleBaseSha": "170c5cc69864d079f4c2a6b20bdc8406c11df9dc",
+  "applicationSourceSha": "0d68551324ce3f441478f613d2f4eb48b9be4f3f",
+  "harnessSha": "0d68551324ce3f441478f613d2f4eb48b9be4f3f",
+  "harnessBaselineSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
+  "workflowFile": ".github/workflows/builder-exact-rehearsal-0d68551.yml",
   "trigger": {
-    "branch": "ci/builder-exact-rehearsal-43e2691-20261121",
+    "branch": "ci/builder-exact-rehearsal-0d68551-20261122",
     "event": "initial branch creation push only",
     "before": "0000000000000000000000000000000000000000",
     "subsequentPushes": "do not schedule"
@@ -21,6 +22,7 @@
   "verifyPhaseDaemon": "host runner Docker daemon",
   "edge": {
     "image": "caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+    "bindingProfile": "loopback",
     "bindings": [
       "127.0.0.1:80:80",
       "127.0.0.1:443:443",
@@ -28,6 +30,26 @@
     ],
     "dns": "host mapping 127.0.0.1 builder-rehearsal.invalid",
     "tls": "Caddy internal private CA"
+  },
+  "ownership": {
+    "runner": {
+      "evidenceParent": "/tmp/ornigami-exact-rehearsal-0d68551",
+      "emergencyRoot": "/tmp/ornigami-exact-rehearsal-emergency-0d68551-<run>-<attempt>",
+      "logs": "runner 0700",
+      "diagnostics": "runner 0700",
+      "uploadStaging": "runner 0700"
+    },
+    "builder": {
+      "user": "distinct UID-1000 account, never the runner user",
+      "evidenceRoot": "builder 0700",
+      "rehearsalDir": "builder, created by ACTION=checkpoint, absent before",
+      "store": "builder root 0700, store file 0600"
+    },
+    "handoff": {
+      "exportStaging": "builder:runner 2770 setgid",
+      "exportedFiles": "0640, exported directories 0750",
+      "rule": "runner reads approved synthetic evidence only through export staging; runner upload/diagnostics/log roots are unreadable to the builder"
+    }
   },
   "archiveCustody": {
     "destination": "github-actions-artifact",
