@@ -41,6 +41,12 @@ const PRIORITY = [
   "upload-budget.json",
   "final-status.txt",
   "ownership-preflight.txt",
+  "ownership-preflight-failure.txt",
+  "ownership-preflight-console.txt",
+  "build-daemon-readiness-console.txt",
+  "build-daemon-readiness-failure.txt",
+  "docker-readiness-build.json",
+  "docker-readiness-host.json",
   "rehearsal-console.log",
 ];
 

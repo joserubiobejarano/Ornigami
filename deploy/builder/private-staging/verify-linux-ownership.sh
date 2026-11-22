@@ -219,41 +219,6 @@ require_builder_flag "builder_candidate_helper" "$SOURCE_ROOT/deploy/builder/pri
 require_builder_flag "builder_control_helper" "$CONTROL_ROOT/deploy/builder/private-staging/run-exact-rehearsal-linux.sh" "r" "readable control wrapper"
 require_builder_flag "builder_home_write" "$builder_home" "w" "writable builder home"
 
-# Docker endpoints selected by the workflow. A distinct build daemon is only
-# usable if the builder can reach both it and the host verify/phase daemon.
-if [[ "$PREFLIGHT_SKIP_DOCKER" == "1" ]]; then
-  record "docker_checks" "skipped" "$RUNNER_USER"
-else
-  docker_bin="$(as_builder bash -c 'command -v docker' 2>/dev/null || true)"
-  if [[ -z "$docker_bin" ]]; then
-    fail "builder_docker_client" "docker on the builder PATH" "not found" "$BUILDER_USER"
-  fi
-  record "builder_docker_client" "$docker_bin" "$BUILDER_USER"
-
-  host_daemon="$(as_builder env DOCKER_HOST="$DOCKER_HOST_ENDPOINT" "$docker_bin" info --format '{{.ID}}' 2>/dev/null || true)"
-  if [[ -z "$host_daemon" ]]; then
-    fail "builder_host_docker" "docker info succeeds as builder on $DOCKER_HOST_ENDPOINT" "failed" "$BUILDER_USER"
-  fi
-  record "builder_host_docker_id" "$host_daemon" "$BUILDER_USER"
-
-  build_daemon=""
-  for _ in $(seq 1 15); do
-    if build_daemon="$(as_builder env DOCKER_HOST="$DOCKER_BUILD_ENDPOINT" "$docker_bin" info --format '{{.ID}}' 2>/dev/null)"; then
-      break
-    fi
-    build_daemon=""
-    sleep 1
-  done
-  if [[ -z "$build_daemon" ]]; then
-    fail "builder_build_docker" "docker info succeeds as builder on $DOCKER_BUILD_ENDPOINT" "failed" "$BUILDER_USER"
-  fi
-  record "builder_build_docker_id" "$build_daemon" "$BUILDER_USER"
-  if [[ "$build_daemon" == "$host_daemon" ]]; then
-    fail "distinct_docker_daemons" "build daemon differs from host daemon" "both are $host_daemon" "$BUILDER_USER"
-  fi
-  record "distinct_docker_daemons" "true" "$BUILDER_USER"
-fi
-
 # --- builder-private evidence root (observed as builder) -------------------
 require_mode "builder_evidence_owner_mode" "$(builder_stat '%u:%g:%a' "$BUILDER_EVIDENCE_ROOT")" \
   "$builder_uid:$builder_gid:700" "$BUILDER_USER"
@@ -339,6 +304,64 @@ fi
 record "loopback_profile" "valid" "$BUILDER_USER"
 record "wildcard_profile" "valid" "$BUILDER_USER"
 record "mixed_profiles_rejected" "true" "$BUILDER_USER"
+
+# --- Docker endpoint capability, observed last -----------------------------
+# A DinD startup failure must not prevent the filesystem fixtures above from
+# running or being retained. The workflow also probes the published endpoint
+# independently; this check proves both endpoints work as the builder and that
+# their observed daemon identities differ.
+if [[ "$PREFLIGHT_SKIP_DOCKER" == "1" ]]; then
+  record "docker_checks" "skipped" "$RUNNER_USER"
+else
+  docker_bin="$(as_builder bash -c 'command -v docker' 2>/dev/null || true)"
+  if [[ -z "$docker_bin" ]]; then
+    fail "builder_docker_client" "docker on the builder PATH" "not found" "$BUILDER_USER"
+  fi
+  record "builder_docker_client" "$docker_bin" "$BUILDER_USER"
+
+  probe_timeout="${PREFLIGHT_DOCKER_PROBE_TIMEOUT_SECONDS:-10}"
+  host_deadline="${PREFLIGHT_HOST_DOCKER_TIMEOUT_SECONDS:-20}"
+  build_deadline="${PREFLIGHT_BUILD_DOCKER_TIMEOUT_SECONDS:-60}"
+  host_daemon=""
+  host_deadline_at=$(( $(date +%s) + host_deadline ))
+  while :; do
+    if host_daemon="$(as_builder env DOCKER_HOST="$DOCKER_HOST_ENDPOINT" timeout --signal=TERM --kill-after=3 "$probe_timeout" "$docker_bin" info --format '{{.ID}}' 2>/dev/null)" \
+      && [[ -n "$host_daemon" ]]; then
+      break
+    fi
+    host_daemon=""
+    [[ $(date +%s) -lt $host_deadline_at ]] || break
+    sleep 1
+  done
+  if [[ -z "$host_daemon" ]]; then
+    fail "builder_host_docker" "docker info succeeds as builder on $DOCKER_HOST_ENDPOINT" "failed after ${host_deadline}s" "$BUILDER_USER"
+  fi
+  record "builder_host_docker_id" "$host_daemon" "$BUILDER_USER"
+
+  [[ "$DOCKER_BUILD_ENDPOINT" =~ ^tcp://(127\.0\.0\.1|\[::1\]):[0-9]+$ ]] \
+    || fail "builder_build_endpoint_loopback" "loopback-only build endpoint" "$DOCKER_BUILD_ENDPOINT" "$RUNNER_USER"
+
+  build_daemon=""
+  build_deadline_at=$(( $(date +%s) + build_deadline ))
+  while :; do
+    if build_daemon="$(as_builder env DOCKER_HOST="$DOCKER_BUILD_ENDPOINT" timeout --signal=TERM --kill-after=3 "$probe_timeout" "$docker_bin" info --format '{{.ID}}' 2>/dev/null)" \
+      && [[ -n "$build_daemon" ]]; then
+      break
+    fi
+    build_daemon=""
+    [[ $(date +%s) -lt $build_deadline_at ]] || break
+    sleep 1
+  done
+  if [[ -z "$build_daemon" ]]; then
+    record "builder_build_docker_last_status" "failed" "$BUILDER_USER"
+    fail "builder_build_docker" "docker info succeeds as builder on $DOCKER_BUILD_ENDPOINT" "failed after ${build_deadline}s" "$BUILDER_USER"
+  fi
+  record "builder_build_docker_id" "$build_daemon" "$BUILDER_USER"
+  if [[ "$build_daemon" == "$host_daemon" ]]; then
+    fail "distinct_docker_daemons" "build daemon differs from host daemon" "both are $host_daemon" "$BUILDER_USER"
+  fi
+  record "distinct_docker_daemons" "true" "$BUILDER_USER"
+fi
 
 write_summary 0
 write_json 0

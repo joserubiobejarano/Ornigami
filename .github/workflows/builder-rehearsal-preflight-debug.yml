@@ -1,0 +1,297 @@
+name: Builder rehearsal preflight debug (bounded)
+
+# Lightweight Linux harness debugging. This workflow never installs project
+# dependencies, never builds the application image, and only exercises the
+# production preflight/readiness helpers plus the self-contained shell tests.
+# It is dispatched manually so debugging pushes do not schedule rehearsal runs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_readiness_seconds:
+        description: Overall deadline for the published build daemon probe
+        required: false
+        default: "420"
+      run_negative_probe:
+        description: Exercise bounded failure classification against a closed port
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: builder-rehearsal-preflight-debug
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Bounded Linux preflight and readiness debug
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      dind:
+        image: docker:27-dind@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
+        options: --privileged
+        env:
+          DOCKER_TLS_CERTDIR: ""
+        ports:
+          - 127.0.0.1:2375:2375
+    env:
+      SOURCE_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+      HARNESS_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+      EMERGENCY_ROOT: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}
+      RUNNER_LOG_ROOT: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/logs
+      EMERGENCY_DIAGNOSTICS_ROOT: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
+      BUILDER_EVIDENCE_ROOT: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/builder
+      EXPORT_STAGING: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/staging
+      UPLOAD_STAGING: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/upload
+      MAX_DIAGNOSTIC_BYTES: "67108864"
+
+    steps:
+      - name: Create runner-owned debug roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$RUNNER_LOG_ROOT" "$EMERGENCY_DIAGNOSTICS_ROOT" "$EMERGENCY_ROOT/receipts"
+          chmod 0700 "$EMERGENCY_ROOT" "$RUNNER_LOG_ROOT" "$EMERGENCY_DIAGNOSTICS_ROOT" "$EMERGENCY_ROOT/receipts"
+          {
+            printf 'workflow_sha=%s\n' "${{ github.sha }}"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'harness_sha=%s\n' "$HARNESS_SHA"
+            printf 'run_id=%s-%s\n' "${{ github.run_id }}" "${{ github.run_attempt }}"
+            printf 'runner_user=%s\n' "$(id -un)"
+            printf 'runner_uid=%s\n' "$(id -u)"
+            printf 'build_readiness_seconds=%s\n' "${{ inputs.build_readiness_seconds }}"
+          } > "$RUNNER_LOG_ROOT/debug-identity.txt"
+
+      - name: Check out exact control-plane commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Verify control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git rev-parse HEAD > "$RUNNER_LOG_ROOT/control-plane-head.txt"
+
+      - name: Create isolated UID-1000 builder and owned roots
+        id: builder_setup
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          runner_user="$(id -un)"
+          runner_group="$(id -gn)"
+          builder_user="$(id -nu 1000)"
+          builder_uid="$(id -u "$builder_user")"
+          builder_group="$(id -gn "$builder_user")"
+          test "$builder_uid" = "1000"
+          test "$runner_user" != "$builder_user"
+          if ! getent group docker >/dev/null; then sudo groupadd docker; fi
+          if ! id -nG "$builder_user" | tr ' ' '\n' | grep -qx docker; then
+            sudo usermod -aG docker "$builder_user"
+          fi
+          sudo install -d -m 0755 -o "$runner_user" -g "$runner_group" "$(dirname "$BUILDER_EVIDENCE_ROOT")"
+          sudo install -d -m 0700 -o "$builder_user" -g "$builder_group" "$BUILDER_EVIDENCE_ROOT"
+          sudo install -d -m 2770 -o "$builder_user" -g "$runner_group" "$EXPORT_STAGING"
+          sudo install -d -m 0700 -o "$runner_user" -g "$runner_group" "$UPLOAD_STAGING"
+          {
+            echo "BUILDER_USER=$builder_user"
+            echo "BUILDER_UID=$builder_uid"
+            echo "BUILDER_GROUP=$builder_group"
+            echo "BUILDER_HOME=$(getent passwd "$builder_user" | cut -d: -f6)"
+            echo "REHEARSAL_RUNNER_USER=$runner_user"
+            echo "REHEARSAL_RUNNER_UID=$(id -u "$runner_user")"
+            echo "REHEARSAL_RUNNER_GROUP=$runner_group"
+          } >> "$GITHUB_ENV"
+
+      - name: Probe the exact published build daemon endpoint as builder
+        id: build_probe
+        shell: bash
+        run: |
+          set +e
+          BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="tcp://127.0.0.1:2375" \
+            EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=build \
+            OVERALL_TIMEOUT_SECONDS="${{ inputs.build_readiness_seconds }}" \
+            PROBE_TIMEOUT_SECONDS="20" \
+            bash deploy/builder/private-staging/probe-docker-endpoint.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/build-daemon-readiness-console.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Probe the host daemon endpoint as builder
+        id: host_probe
+        shell: bash
+        run: |
+          set +e
+          BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="unix:///var/run/docker.sock" \
+            EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=host \
+            OVERALL_TIMEOUT_SECONDS="20" PROBE_TIMEOUT_SECONDS="10" \
+            bash deploy/builder/private-staging/probe-docker-endpoint.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/host-daemon-readiness-console.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Exercise bounded failure classification and endpoint rejection
+        id: negative_probe
+        if: ${{ inputs.run_negative_probe == 'true' }}
+        shell: bash
+        run: |
+          set +e
+          BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="tcp://127.0.0.1:2399" \
+            EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=negative-closed-port \
+            OVERALL_TIMEOUT_SECONDS="5" PROBE_TIMEOUT_SECONDS="2" PROBE_INTERVAL_SECONDS="1" \
+            bash deploy/builder/private-staging/probe-docker-endpoint.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/negative-probe-console.txt"
+          closed_rc=${PIPESTATUS[0]}
+          echo "closed_port_rc=$closed_rc" >> "$GITHUB_OUTPUT"
+
+          BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="tcp://0.0.0.0:2375" \
+            EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=negative-non-loopback \
+            OVERALL_TIMEOUT_SECONDS="2" PROBE_TIMEOUT_SECONDS="1" \
+            bash deploy/builder/private-staging/probe-docker-endpoint.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/negative-non-loopback-console.txt"
+          nonloopback_rc=${PIPESTATUS[0]}
+          echo "nonloopback_rc=$nonloopback_rc" >> "$GITHUB_OUTPUT"
+
+          closed_ok=false
+          nonloopback_ok=false
+          [[ "$closed_rc" != "0" ]] && closed_ok=true
+          [[ "$nonloopback_rc" != "0" ]] && nonloopback_ok=true
+          echo "closed_ok=$closed_ok" >> "$GITHUB_OUTPUT"
+          echo "nonloopback_ok=$nonloopback_ok" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Run Linux ownership and profile preflight
+        id: ownership_preflight
+        shell: bash
+        run: |
+          set +e
+          debug_source="$EMERGENCY_ROOT/source"
+          sudo rm -rf "$debug_source"
+          sudo install -d -m 0755 -o "$REHEARSAL_RUNNER_USER" -g "$REHEARSAL_RUNNER_GROUP" \
+            "$debug_source/deploy/builder/private-staging"
+          sudo cp deploy/builder/private-staging/proxy-bindings.mjs \
+            deploy/builder/private-staging/run-exact-rehearsal-linux.sh \
+            "$debug_source/deploy/builder/private-staging/"
+          sudo chown -R "$BUILDER_USER:$BUILDER_GROUP" "$debug_source"
+          RUNNER_USER="$REHEARSAL_RUNNER_USER" \
+          BUILDER_USER="$BUILDER_USER" \
+          SOURCE_ROOT="$debug_source" \
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          EMERGENCY_DIAGNOSTICS_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
+          RUNNER_LOG_ROOT="$RUNNER_LOG_ROOT" \
+          BUILDER_EVIDENCE_ROOT="$BUILDER_EVIDENCE_ROOT" \
+          EXPORT_STAGING="$EXPORT_STAGING" \
+          UPLOAD_STAGING="$UPLOAD_STAGING" \
+          DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+          DOCKER_BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+          PREFLIGHT_BUILD_DOCKER_TIMEOUT_SECONDS="20" \
+            bash deploy/builder/private-staging/verify-linux-ownership.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/ownership-preflight-console.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Run Linux ownership regression
+        id: ownership_regression
+        shell: bash
+        run: |
+          set +e
+          PREFLIGHT_TEST_RUNNER_USER="$REHEARSAL_RUNNER_USER" \
+          PREFLIGHT_TEST_BUILDER_USER="$BUILDER_USER" \
+          DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+          DOCKER_BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            node --test tests/builder-linux-ownership-preflight.test.mjs \
+            2>&1 | tee "$RUNNER_LOG_ROOT/ownership-preflight-regression.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Run self-contained bundle and candidate harness tests
+        id: harness_tests
+        shell: bash
+        run: |
+          set +e
+          node --test \
+            tests/builder-exact-rehearsal-bundle.test.mjs \
+            tests/builder-exact-candidate-rehearsal.test.mjs \
+            2>&1 | tee "$RUNNER_LOG_ROOT/harness-tests.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
+      - name: Gate debug evidence
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          failed=0
+          check() { # name expected actual
+            if [[ "$3" != "$2" ]]; then echo "FAIL: $1 expected=$2 actual=$3" >&2; failed=1; fi
+          }
+          check build_probe true "${{ steps.build_probe.outputs.ok }}"
+          check host_probe true "${{ steps.host_probe.outputs.ok }}"
+          if [[ "${{ inputs.run_negative_probe }}" == "true" ]]; then
+            check negative_closed_port true "${{ steps.negative_probe.outputs.closed_ok }}"
+            check negative_non_loopback true "${{ steps.negative_probe.outputs.nonloopback_ok }}"
+          fi
+          check ownership_preflight true "${{ steps.ownership_preflight.outputs.ok }}"
+          check ownership_regression true "${{ steps.ownership_regression.outputs.ok }}"
+          check harness_tests true "${{ steps.harness_tests.outputs.ok }}"
+          if [[ "$failed" != "0" ]]; then
+            for file in \
+              "$RUNNER_LOG_ROOT/ownership-preflight-failure.txt" \
+              "$RUNNER_LOG_ROOT/docker-readiness-build-diagnostics.txt" \
+              "$RUNNER_LOG_ROOT/docker-readiness-host-diagnostics.txt"; do
+              [[ -f "$file" ]] && { echo "--- $file ---" >&2; tail -n 60 "$file" >&2; }
+            done
+            exit 1
+          fi
+          echo "All bounded debug gates passed."
+
+      - name: Stage bounded debug diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          SOURCE_ROOTS="$RUNNER_LOG_ROOT" \
+          UPLOAD_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
+          MAX_ARCHIVE_BYTES="0" \
+          MAX_ARTIFACT_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-staging.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$EMERGENCY_ROOT/receipts/diagnostics-staging-console.json" 2>&1 || true
+          printf 'debug diagnostics for %s\n' "${{ github.sha }}" > "$EMERGENCY_DIAGNOSTICS_ROOT/DEBUG.txt"
+          DIAGNOSTICS_DIR="$EMERGENCY_DIAGNOSTICS_ROOT" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-budget.json" \
+            node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+            > "$EMERGENCY_ROOT/receipts/diagnostics-budget-console.json" 2>&1 || true
+          exit 0
+
+      - name: Upload bounded debug diagnostics
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EMERGENCY_DIAGNOSTICS_ROOT }}
+          if-no-files-found: error
+          retention-days: 7

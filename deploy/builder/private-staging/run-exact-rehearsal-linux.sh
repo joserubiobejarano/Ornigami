@@ -32,6 +32,11 @@ BUILDER_RUNTIME_STORE_HOST_ID="${BUILDER_RUNTIME_STORE_HOST_ID:-ornigami-builder
 BROWSER_PLAYWRIGHT="${BROWSER_PLAYWRIGHT:-}"
 PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-}"
 NPM_CLI_FOR_REHEARSAL="${NPM_CLI_FOR_REHEARSAL:?NPM_CLI_FOR_REHEARSAL is required}"
+BUILDER_USER="${BUILDER_USER:-$(id -un)}"
+DOCKER_HOST_ENDPOINT="${DOCKER_HOST_ENDPOINT:-unix:///var/run/docker.sock}"
+BUILD_DAEMON_READINESS_SECONDS="${BUILD_DAEMON_READINESS_SECONDS:-420}"
+HOST_DAEMON_READINESS_SECONDS="${HOST_DAEMON_READINESS_SECONDS:-20}"
+DAEMON_PROBE_TIMEOUT_SECONDS="${DAEMON_PROBE_TIMEOUT_SECONDS:-20}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT="${PROJECT:-ornigami-builder-rehearsal-${SOURCE_SHA:0:12}}"
@@ -98,12 +103,28 @@ export_approved_evidence() {
       [[ -d "$directory" ]] && cp -R "$directory" "$stage/"
     done
   fi
+  # Preserve the built archive and its receipt even when qualification fails
+  # after the checkpoint. This makes a failed full rehearsal reviewable without
+  # a second run; the staging budget still enforces the archive/artifact caps.
+  if [[ -f "$IMAGE_DIR/archive-receipt.json" ]]; then
+    mkdir -p "$stage/custody"
+    cp "$IMAGE_DIR/archive-receipt.json" "$stage/custody/archive-receipt.json"
+  fi
+  if [[ -f "$IMAGE_DIR/image-identity.json" ]]; then
+    mkdir -p "$stage/custody"
+    cp "$IMAGE_DIR/image-identity.json" "$stage/custody/image-identity.json"
+  fi
+  if [[ -n "${ARCHIVE_PATH:-}" && -f "$ARCHIVE_PATH" && ! -f "$stage/custody/$(basename "$ARCHIVE_PATH")" ]]; then
+    mkdir -p "$stage/custody"
+    cp "$ARCHIVE_PATH" "$stage/custody/$(basename "$ARCHIVE_PATH")"
+  fi
   find "$stage" -mindepth 1 -type d -exec chmod 0750 {} +
   find "$stage" -type f -exec chmod 0640 {} +
 }
 
 cleanup() {
   local status=$? compose_status=0 ownership_status=0 ca_status=0
+  local origin_unreachable=0 http_listener_absent=0 https_listener_absent=0
   set +e
   if [[ -f "$STAGING_DIR/compose.yml" ]]; then
     env BUILDER_IMAGE="${IMAGE_ID:-unavailable}" CADDY_IMAGE="$CADDY_IMAGE" \
@@ -121,7 +142,7 @@ cleanup() {
     compose_status=$?
   fi
   DOCKER_BIN=docker PROJECT="$PROJECT" EVIDENCE_DIR="$EVIDENCE_ROOT" \
-    "$SCRIPT_DIR/cleanup-owned-resources.sh" > "$LOG_DIR/cleanup-owned-resources.log" 2>&1
+    bash "$SCRIPT_DIR/cleanup-owned-resources.sh" > "$LOG_DIR/cleanup-owned-resources.log" 2>&1
   ownership_status=$?
   if [[ "$compose_status" -ne 0 ]]; then
     CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
@@ -130,6 +151,34 @@ cleanup() {
   if [[ "$ownership_status" -ne 0 ]]; then
     CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
   fi
+
+  # Prove the private origin is closed and both published listeners are gone.
+  # Use --resolve so DNS/hosts removal cannot mask a still-running listener.
+  if curl -ksS --max-time 5 --resolve "$STAGING_HOST:443:127.0.0.1" \
+    -o /dev/null "https://$STAGING_HOST/" 2>/dev/null; then
+    origin_unreachable=0
+  else
+    origin_unreachable=1
+  fi
+  if [[ -z "$(ss -ltn "sport = :80" 2>/dev/null | awk 'NR > 1')" ]]; then
+    http_listener_absent=1
+  fi
+  if [[ -z "$(ss -ltn "sport = :443" 2>/dev/null | awk 'NR > 1')" ]]; then
+    https_listener_absent=1
+  fi
+  [[ "$origin_unreachable" == "1" ]] || {
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: private origin still answered after cleanup: $STAGING_ORIGIN" >> "$LOG_DIR/cleanup-owned-resources.log"
+  }
+  [[ "$http_listener_absent" == "1" ]] || {
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: port 80 still has a listener after cleanup" >> "$LOG_DIR/cleanup-owned-resources.log"
+  }
+  [[ "$https_listener_absent" == "1" ]] || {
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: port 443 still has a listener after cleanup" >> "$LOG_DIR/cleanup-owned-resources.log"
+  }
+
   if grep -q "[[:space:]]$STAGING_HOST\$" /etc/hosts 2>/dev/null; then
     sudo sed -i "\\|[[:space:]]$STAGING_HOST\$|d" /etc/hosts
   fi
@@ -151,6 +200,9 @@ cleanup() {
     printf 'compose_down_exit=%s\n' "$compose_status"
     printf 'owned_resource_cleanup_exit=%s\n' "$ownership_status"
     printf 'ca_cleanup_exit=%s\n' "$ca_status"
+    printf 'origin_unreachable=%s\n' "$origin_unreachable"
+    printf 'http_listener_absent=%s\n' "$http_listener_absent"
+    printf 'https_listener_absent=%s\n' "$https_listener_absent"
     if [[ -f "$EVIDENCE_ROOT/cleanup-receipt.txt" ]]; then
       cat "$EVIDENCE_ROOT/cleanup-receipt.txt"
     fi
@@ -161,7 +213,7 @@ cleanup() {
     echo "FAIL: approved evidence export failed" >> "$LOG_DIR/cleanup-owned-resources.log"
   fi
   write_final_status() {
-    "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" \
+    bash "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" \
       > "$EVIDENCE_ROOT/final-status.txt" 2>&1
     cp "$EVIDENCE_ROOT/final-status.txt" "$CUSTODY_DIR/final-status.txt" 2>/dev/null || return 1
     if [[ -d "$EXPORT_STAGING" ]]; then
@@ -174,7 +226,7 @@ cleanup() {
     CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
     write_final_status || true
   fi
-  "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" >/dev/null
+  bash "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" >/dev/null
   local final=$?
   cat "$EVIDENCE_ROOT/final-status.txt"
   exit "$final"
@@ -199,14 +251,29 @@ chmod 700 "$EVIDENCE_ROOT/secrets"
   printf 'host_docker_server=%s\n' "$(docker version --format '{{.Server.Version}}')"
 } > "$EVIDENCE_ROOT/host.txt"
 
-HOST_DAEMON_ID="$(docker info --format '{{.ID}}')"
-for _ in $(seq 1 60); do
-  if BUILD_DAEMON_ID="$(env DOCKER_HOST="$BUILD_ENDPOINT" docker info --format '{{.ID}}' 2>/dev/null)"; then
-    break
-  fi
-  sleep 2
-done
-[[ -n "${BUILD_DAEMON_ID:-}" ]] || fail "build daemon did not become available at $BUILD_ENDPOINT"
+note "Probe the exact host and build daemon endpoints as the builder"
+PROBE_LABEL=host BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="$DOCKER_HOST_ENDPOINT" \
+  EVIDENCE_DIR="$LOG_DIR" OVERALL_TIMEOUT_SECONDS="$HOST_DAEMON_READINESS_SECONDS" \
+  PROBE_TIMEOUT_SECONDS="$DAEMON_PROBE_TIMEOUT_SECONDS" \
+  bash "$SCRIPT_DIR/probe-docker-endpoint.sh" \
+  > "$LOG_DIR/docker-readiness-host-console.json" 2> "$LOG_DIR/docker-readiness-host.log" \
+  || fail "host Docker endpoint did not become ready at $DOCKER_HOST_ENDPOINT"
+
+PROBE_LABEL=build BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="$BUILD_ENDPOINT" \
+  EVIDENCE_DIR="$LOG_DIR" OVERALL_TIMEOUT_SECONDS="$BUILD_DAEMON_READINESS_SECONDS" \
+  PROBE_TIMEOUT_SECONDS="$DAEMON_PROBE_TIMEOUT_SECONDS" \
+  bash "$SCRIPT_DIR/probe-docker-endpoint.sh" \
+  > "$LOG_DIR/docker-readiness-build-console.json" 2> "$LOG_DIR/docker-readiness-build.log" \
+  || fail "build daemon did not become ready at $BUILD_ENDPOINT (see retained readiness diagnostics)"
+
+HOST_DAEMON_ID="$(read_field "$LOG_DIR/docker-readiness-host.json" daemonId)"
+BUILD_DAEMON_ID="$(read_field "$LOG_DIR/docker-readiness-build.json" daemonId)"
+HOST_READINESS_ATTEMPTS="$(read_field "$LOG_DIR/docker-readiness-host.json" attempts)"
+BUILD_READINESS_ATTEMPTS="$(read_field "$LOG_DIR/docker-readiness-build.json" attempts)"
+HOST_READINESS_ELAPSED_MS="$(read_field "$LOG_DIR/docker-readiness-host.json" elapsedMs)"
+BUILD_READINESS_ELAPSED_MS="$(read_field "$LOG_DIR/docker-readiness-build.json" elapsedMs)"
+[[ -n "$HOST_DAEMON_ID" ]] || fail "host daemon ID is empty after a successful readiness probe"
+[[ -n "$BUILD_DAEMON_ID" ]] || fail "build daemon ID is empty after a successful readiness probe"
 [[ "$BUILD_DAEMON_ID" != "$HOST_DAEMON_ID" ]] || fail "build and verification daemons are not independent"
 [[ "$BUILD_ENDPOINT" =~ ^tcp://127\.0\.0\.1:([0-9]+)$ ]] \
   || fail "build daemon API must be a loopback-only TCP endpoint: $BUILD_ENDPOINT"
@@ -215,7 +282,12 @@ assert_loopback_tcp "${BASH_REMATCH[1]}" "build-daemon-api"
 {
   printf 'host_daemon_id=%s\n' "$HOST_DAEMON_ID"
   printf 'build_daemon_id=%s\n' "$BUILD_DAEMON_ID"
+  printf 'host_endpoint=%s\n' "$DOCKER_HOST_ENDPOINT"
   printf 'build_endpoint=%s\n' "$BUILD_ENDPOINT"
+  printf 'host_readiness_attempts=%s\n' "$HOST_READINESS_ATTEMPTS"
+  printf 'build_readiness_attempts=%s\n' "$BUILD_READINESS_ATTEMPTS"
+  printf 'host_readiness_elapsed_ms=%s\n' "$HOST_READINESS_ELAPSED_MS"
+  printf 'build_readiness_elapsed_ms=%s\n' "$BUILD_READINESS_ELAPSED_MS"
   printf 'build_api_loopback_only=true\n'
 } > "$EVIDENCE_ROOT/daemons.txt"
 note "Build daemon: $BUILD_DAEMON_ID"
@@ -374,7 +446,7 @@ CLOSED_SESSION="$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AU
   printf 'builder=%s\n' "$CLOSED_BUILDER"
   printf 'session=%s\n' "$CLOSED_SESSION"
 } | tee "$EVIDENCE_ROOT/edge/closed-smoke.txt"
-"$SCRIPT_DIR/assert-closed-smoke.sh" "$CLOSED_HOME" "$CLOSED_BUILDER" "$CLOSED_SESSION" \
+bash "$SCRIPT_DIR/assert-closed-smoke.sh" "$CLOSED_HOME" "$CLOSED_BUILDER" "$CLOSED_SESSION" \
   | tee -a "$EVIDENCE_ROOT/edge/closed-smoke.txt"
 
 note "Install the private Caddy CA for Node and Chromium"

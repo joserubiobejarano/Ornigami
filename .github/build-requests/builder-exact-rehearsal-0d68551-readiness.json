@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 5,
+  "bundleBaseSha": "87a064e9856da169f691306379f2120e78c22981",
+  "previousFailedRun": 44977330367,
+  "applicationSourceSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
+  "harnessSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
+  "candidateCorrection": {
+    "parent": "0d68551324ce3f441478f613d2f4eb48b9be4f3f",
+    "reason": "directly invoked private-staging helpers were committed 100644; the candidate also lacked explicit loopback profile forwarding",
+    "scope": "file modes plus explicit bash invocation and PROXY_BINDING_PROFILE forwarding; no application behavior change"
+  },
+  "workflowFile": ".github/workflows/builder-exact-rehearsal-0d68551-readiness.yml",
+  "trigger": {
+    "branch": "ci/builder-exact-rehearsal-0d68551-readiness-20261122",
+    "event": "initial branch creation push only",
+    "before": "0000000000000000000000000000000000000000",
+    "subsequentPushes": "do not schedule"
+  },
+  "expectedOrigin": "https://builder-rehearsal.invalid",
+  "expectedStagingHost": "builder-rehearsal.invalid",
+  "expectedPlatform": "linux/amd64",
+  "expectedUser": "1000:1000",
+  "buildDaemon": {
+    "image": "docker:27-dind@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce",
+    "apiBinding": "127.0.0.1:2375",
+    "readiness": "bounded builder probe of tcp://127.0.0.1:2375 with per-probe timeout and overall deadline"
+  },
+  "verifyPhaseDaemon": "host runner Docker daemon",
+  "preflight": {
+    "readinessProbe": "deploy/builder/private-staging/probe-docker-endpoint.sh",
+    "ownershipScript": "deploy/builder/private-staging/verify-linux-ownership.sh",
+    "ownershipRegression": "tests/builder-linux-ownership-preflight.test.mjs",
+    "ownershipRunsBeforeDockerCapability": true,
+    "gateBeforeInstallation": true
+  },
+  "archiveCustody": {
+    "destination": "github-actions-artifact",
+    "repository": "joserubiobejarano/Ornigami",
+    "retentionDays": 7,
+    "access": "repository artifact access; synthetic image, receipts and sanitized evidence only"
+  },
+  "budget": {
+    "lightweightDebugRuns": 4,
+    "debugTimeoutMinutes": 10,
+    "dispatches": 1,
+    "attempts": 1,
+    "executeTimeoutMinutes": 90,
+    "retrievalTimeoutMinutes": 15,
+    "maxArchiveBytes": 3221225472,
+    "maxArtifactBytes": 3758096384,
+    "maxDiagnosticBytes": 67108864,
+    "maxRetrievalArtifactBytes": 67108864,
+    "retentionDays": 7
+  },
+  "customerAdmission": "closed"
+}

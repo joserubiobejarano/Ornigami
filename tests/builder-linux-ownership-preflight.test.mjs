@@ -395,3 +395,85 @@ test("selected Docker endpoints are reachable as the builder with distinct IDs",
     cleanup(fixture);
   }
 });
+
+test("bounded endpoint probe records readiness, classification and retained diagnostics", { skip }, () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-endpoint-probe-"));
+  try {
+    chmodSync(dir, 0o755);
+    const bin = path.join(dir, "bin");
+    mkdirSync(bin, { mode: 0o755 });
+    chmodSync(bin, 0o755);
+    const evidence = path.join(dir, "logs");
+    mkdirSync(evidence, { mode: 0o700 });
+    chmodSync(evidence, 0o700);
+
+    const successDocker = path.join(bin, "docker-success");
+    writeFileSync(successDocker, `#!/usr/bin/env bash
+set -euo pipefail
+case "$1" in
+  info) printf 'fake-daemon-id\\n' ;;
+  version) printf '27.5.1\\n' ;;
+  *) echo "unexpected docker invocation: $*" >&2; exit 1 ;;
+esac
+`, { mode: 0o755 });
+    chmodSync(successDocker, 0o755);
+
+    const failureDocker = path.join(bin, "docker-failure");
+    writeFileSync(failureDocker, `#!/usr/bin/env bash
+set -euo pipefail
+echo "Cannot connect to the Docker daemon at \\${DOCKER_HOST:-unknown}. Is the docker daemon running?" >&2
+exit 1
+`, { mode: 0o755 });
+    chmodSync(failureDocker, 0o755);
+
+    const probe = "deploy/builder/private-staging/probe-docker-endpoint.sh";
+    const baseEnv = {
+      ...process.env,
+      BUILDER_USER: builderUser,
+      DOCKER_ENDPOINT: "tcp://127.0.0.1:2399",
+      EVIDENCE_DIR: evidence,
+      PROBE_LABEL: "unit-success",
+      OVERALL_TIMEOUT_SECONDS: "3",
+      PROBE_TIMEOUT_SECONDS: "1",
+      PROBE_INTERVAL_SECONDS: "1",
+      DOCKER_BIN: successDocker,
+    };
+    const success = run(bash, [probe], { env: baseEnv });
+    assert.equal(success.status, 0, `${success.stdout}\n${success.stderr}`);
+    const successReceipt = JSON.parse(readFileSync(path.join(evidence, "docker-readiness-unit-success.json"), "utf8"));
+    assert.equal(successReceipt.ok, true);
+    assert.equal(successReceipt.daemonId, "fake-daemon-id");
+    assert.equal(successReceipt.builderUser, builderUser);
+    assert.equal(successReceipt.attempts, 1);
+
+    const failure = run(bash, [probe], {
+      env: {
+        ...baseEnv,
+        PROBE_LABEL: "unit-failure",
+        DOCKER_BIN: failureDocker,
+      },
+    });
+    assert.notEqual(failure.status, 0);
+    const failureReceipt = JSON.parse(readFileSync(path.join(evidence, "docker-readiness-unit-failure.json"), "utf8"));
+    assert.equal(failureReceipt.ok, false);
+    assert.equal(failureReceipt.classification, "transient_startup");
+    assert.ok(failureReceipt.attempts >= 1);
+    assert.equal(existsSync(path.join(evidence, "docker-readiness-unit-failure-diagnostics.txt")), true);
+    assert.match(
+      readFileSync(path.join(evidence, "docker-readiness-unit-failure-diagnostics.txt"), "utf8"),
+      /last_classification=transient_startup/,
+    );
+
+    const nonLoopback = run(bash, [probe], {
+      env: {
+        ...baseEnv,
+        PROBE_LABEL: "unit-non-loopback",
+        DOCKER_ENDPOINT: "tcp://0.0.0.0:2375",
+      },
+    });
+    assert.equal(nonLoopback.status, 2);
+    assert.match(`${nonLoopback.stdout}\n${nonLoopback.stderr}`, /loopback-only/);
+  } finally {
+    sudo(["rm", "-rf", "--", dir]);
+  }
+});

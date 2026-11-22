@@ -440,6 +440,37 @@ test("final diagnostics enforcement stays bounded after every append", () => {
   }
 });
 
+test("staging retains a bounded tail of a priority console log", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-stage-priority-"));
+  try {
+    const runnerRoot = path.join(dir, "logs");
+    const uploadRoot = path.join(dir, "upload");
+    mkdirSync(runnerRoot, { recursive: true });
+    writeFileSync(path.join(runnerRoot, "final-status.txt"), "final_status=1\n");
+    writeFileSync(path.join(runnerRoot, "rehearsal-console.log"), Buffer.alloc(10000, 65));
+    writeFileSync(path.join(runnerRoot, "unimportant.log"), Buffer.alloc(10000, 66));
+    const result = runNode("deploy/builder/private-staging/stage-approved-evidence.mjs", {
+      SOURCE_ROOTS: runnerRoot,
+      UPLOAD_ROOT: uploadRoot,
+      MAX_ARCHIVE_BYTES: "0",
+      MAX_ARTIFACT_BYTES: "2000",
+      MAX_DIAGNOSTIC_BYTES: "1200",
+      RECEIPT_RESERVE_BYTES: "0",
+      RECEIPT_PATH: path.join(dir, "staging-receipt.json"),
+    });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    const priority = path.join(uploadRoot, "logs", "rehearsal-console.log");
+    assert.equal(existsSync(priority), true, "priority console log must be retained");
+    assert.ok(statSync(priority).size <= 1200);
+    const receipt = JSON.parse(readFileSync(path.join(dir, "staging-receipt.json"), "utf8"));
+    assert.equal(receipt.diagnosticsTruncated, true);
+    assert.ok(receipt.skipped.some((entry) => entry.reason === "diagnostic_truncated"));
+    assert.equal(existsSync(path.join(uploadRoot, "logs", "unimportant.log")), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("proxy binding profiles reject mixed, extra and changed bindings through the CLI", () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-proxy-"));
   try {
@@ -530,3 +561,109 @@ test(
     assert.equal(runBash(script, ["7", "1"]).status, 7);
   },
 );
+
+const readinessCandidate = "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816";
+const readinessWorkflow = ".github/workflows/builder-exact-rehearsal-0d68551-readiness.yml";
+
+test("readiness workflow gates installation on bounded probes and ownership fixtures in order", () => {
+  const workflow = readFileSync(readinessWorkflow, "utf8");
+  const probeStep = workflow.indexOf("Probe published build daemon readiness");
+  const preflightStep = workflow.indexOf("Linux ownership and profile preflight");
+  const regressionStep = workflow.indexOf("Linux ownership preflight regression");
+  const gateStep = workflow.indexOf("Gate Linux readiness and ownership");
+  const installStep = workflow.indexOf("Install supported Node");
+  const buildStep = workflow.indexOf("Execute checkpoint, private edge");
+  assert.ok(probeStep >= 0 && probeStep < preflightStep, "readiness probe must precede ownership preflight");
+  assert.ok(preflightStep < regressionStep, "ownership preflight must precede its regression");
+  assert.ok(regressionStep < gateStep, "regression must precede the installation gate");
+  assert.ok(gateStep < installStep && gateStep < buildStep, "gate must precede installation and execution");
+  assert.match(workflow, /probe-docker-endpoint\.sh/);
+  assert.match(workflow, /build_probe_ok/);
+  assert.match(workflow, /preflight_ok/);
+  assert.match(workflow, /regression_ok/);
+  assert.match(workflow, /SOURCE_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816/);
+  assert.match(workflow, /HARNESS_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816/);
+  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-readiness-20261122/);
+  assert.match(workflow, /ref: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816/);
+  assert.match(workflow, /builder-exact-rehearsal-0d68551-readiness-retrieval-/);
+  assert.match(workflow, /build-daemon-readiness-failure\.txt/);
+  assert.match(workflow, /actions\/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f/);
+  const gate = workflow.slice(gateStep, installStep);
+  assert.match(gate, /build-daemon-readiness-build\.log/);
+  assert.match(gate, /ownership-preflight-failure\.txt/);
+  assert.doesNotMatch(workflow, /0d68551324ce3f441478f613d2f4eb48b9be4f3f/);
+});
+
+test("debug workflow is manual, bounded and does not install or build", () => {
+  const workflow = readFileSync(".github/workflows/builder-rehearsal-preflight-debug.yml", "utf8");
+  assert.match(workflow, /^on:\n  workflow_dispatch:/m);
+  assert.match(workflow, /timeout-minutes: 10/);
+  assert.match(workflow, /probe-docker-endpoint\.sh/);
+  assert.match(workflow, /OVERALL_TIMEOUT_SECONDS/);
+  assert.match(workflow, /PROBE_TIMEOUT_SECONDS/);
+  assert.match(workflow, /negative-closed-port/);
+  assert.match(workflow, /tcp:\/\/0\.0\.0\.0:2375/);
+  assert.match(workflow, /builder-linux-ownership-preflight\.test\.mjs/);
+  assert.match(workflow, /enforce-diagnostics-budget\.mjs/);
+  assert.doesNotMatch(workflow, /npm ci/);
+  assert.doesNotMatch(workflow, /docker build|rehearse-exact-candidate\.sh/);
+});
+
+test("directly invoked private-staging helpers are executable in the frozen candidate and bundle", () => {
+  const candidatePaths = [
+    "deploy/builder/private-staging/build-and-retain.sh",
+    "deploy/builder/private-staging/qualify-existing-image.sh",
+    "deploy/builder/private-staging/accept-browser.sh",
+    "deploy/builder/private-staging/accept-runtime.sh",
+    "deploy/builder/private-staging/accept-runtime-rollback.sh",
+    "deploy/builder/private-staging/rehearse-exact-candidate.sh",
+    "deploy/builder/qualify-linux.sh",
+  ];
+  for (const path of candidatePaths) {
+    const result = spawnSync("git", ["ls-tree", readinessCandidate, path], { cwd: root, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^100755 /, `candidate helper is not executable: ${path}`);
+  }
+  const bundlePaths = [
+    "deploy/builder/private-staging/run-exact-rehearsal-linux.sh",
+    "deploy/builder/private-staging/cleanup-owned-resources.sh",
+    "deploy/builder/private-staging/finalize-rehearsal-status.sh",
+    "deploy/builder/private-staging/assert-closed-smoke.sh",
+    "deploy/builder/private-staging/probe-docker-endpoint.sh",
+  ];
+  for (const path of bundlePaths) {
+    const result = spawnSync("git", ["ls-files", "-s", "--", path], { cwd: root, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^100755 /, `bundle helper is not executable: ${path}`);
+  }
+});
+
+test("endpoint probe bounds every attempt and retains classification and diagnostics", () => {
+  const script = readFileSync("deploy/builder/private-staging/probe-docker-endpoint.sh", "utf8");
+  assert.match(script, /OVERALL_TIMEOUT_SECONDS/);
+  assert.match(script, /PROBE_TIMEOUT_SECONDS/);
+  assert.match(script, /--signal=TERM --kill-after=3/);
+  assert.match(script, /transient_startup/);
+  assert.match(script, /access_or_config/);
+  assert.match(script, /empty_response/);
+  assert.match(script, /daemonId/);
+  assert.match(script, /diagnostics/);
+  assert.match(script, /loopback-only/);
+  assert.match(script, /\[::1\]/);
+  assert.doesNotMatch(script, /for _ in \$\(seq 1 [0-9]+\)/);
+});
+
+test("request file records the candidate correction and readiness workflow", () => {
+  const request = JSON.parse(readFileSync(
+    ".github/build-requests/builder-exact-rehearsal-0d68551-readiness.json",
+    "utf8",
+  ));
+  assert.equal(request.applicationSourceSha, readinessCandidate);
+  assert.equal(request.harnessSha, readinessCandidate);
+  assert.equal(request.candidateCorrection.parent, "0d68551324ce3f441478f613d2f4eb48b9be4f3f");
+  assert.equal(request.workflowFile, readinessWorkflow);
+  assert.equal(request.trigger.branch, "ci/builder-exact-rehearsal-0d68551-readiness-20261122");
+  assert.equal(request.customerAdmission, "closed");
+  assert.equal(request.budget.lightweightDebugRuns, 4);
+});
+

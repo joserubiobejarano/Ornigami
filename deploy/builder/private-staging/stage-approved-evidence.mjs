@@ -7,11 +7,14 @@
  * staged directory before any artifact upload.
  */
 import {
+  closeSync,
   copyFileSync,
   existsSync,
   lstatSync,
   mkdirSync,
+  openSync,
   readdirSync,
+  readSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -61,8 +64,50 @@ for (const source of sourceRoots) {
   }
 }
 
+const PRIORITY_NAMES = [
+  "final-status.txt",
+  "ownership-preflight.txt",
+  "ownership-preflight-failure.txt",
+  "ownership-preflight-console.txt",
+  "build-daemon-readiness-console.txt",
+  "build-daemon-readiness-failure.txt",
+  "docker-readiness-build.json",
+  "docker-readiness-host.json",
+  "rehearsal-console.log",
+  "candidate-gates.log",
+  "checkpoint.log",
+  "qualify.log",
+];
+
+function diagnosticPriority(relative) {
+  const normalized = relative.split(path.sep).join("/");
+  const index = PRIORITY_NAMES.findIndex(
+    (name) => normalized === name || normalized.endsWith(`/${name}`),
+  );
+  return index < 0 ? PRIORITY_NAMES.length : index;
+}
+
+function copyTail(source, target, maxBytes) {
+  const size = lstatSync(source).size;
+  const bytes = Math.min(maxBytes, size);
+  if (bytes <= 0) return 0;
+  mkdirSync(path.dirname(target), { recursive: true });
+  const buffer = Buffer.alloc(bytes);
+  const fd = openSync(source, "r");
+  try {
+    readSync(fd, buffer, 0, bytes, Math.max(0, size - bytes));
+  } finally {
+    closeSync(fd);
+  }
+  writeFileSync(target, buffer);
+  return bytes;
+}
+
 candidates.sort((a, b) => {
   if (a.archive !== b.archive) return a.archive ? -1 : 1;
+  const priorityA = diagnosticPriority(a.relative);
+  const priorityB = diagnosticPriority(b.relative);
+  if (priorityA !== priorityB) return priorityA - priorityB;
   return a.relative.localeCompare(b.relative);
 });
 
@@ -93,7 +138,21 @@ for (const file of candidates) {
     artifactBytes += file.bytes;
     continue;
   }
-  if (diagnosticBytes + file.bytes > maxDiagnosticBytes) {
+  const remainingDiagnosticBytes = maxDiagnosticBytes - diagnosticBytes;
+  if (file.bytes > remainingDiagnosticBytes) {
+    const isPriority = diagnosticPriority(file.relative) < PRIORITY_NAMES.length;
+    if (
+      isPriority &&
+      remainingDiagnosticBytes > 1024 &&
+      artifactBytes + remainingDiagnosticBytes + receiptReserveBytes <= maxArtifactBytes
+    ) {
+      const copied = copyTail(file.absolute, target, remainingDiagnosticBytes);
+      diagnosticsTruncated = true;
+      diagnosticBytes += copied;
+      artifactBytes += copied;
+      skipped.push({ ...file, reason: "diagnostic_truncated", copiedBytes: copied });
+      continue;
+    }
     diagnosticsTruncated = true;
     skipped.push({ ...file, reason: "diagnostic_limit" });
     continue;
