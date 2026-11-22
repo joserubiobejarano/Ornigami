@@ -5,8 +5,10 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import os from "node:os";
@@ -340,10 +342,169 @@ test("upload budget counts duplicate archives and the complete artifact set", ()
     });
     assert.equal(artifactOverflow.status, 2);
     assert.ok(JSON.parse(artifactOverflow.stdout).overflowReasons.includes("artifact_limit"));
+
+    const rootE = path.join(dir, "diagnostic-overflow");
+    mkdirSync(rootE);
+    writeFileSync(path.join(rootE, "archive.tar"), Buffer.alloc(10));
+    writeFileSync(path.join(rootE, "console.log"), Buffer.alloc(500));
+    const diagnosticOverflow = runNode(script, {
+      UPLOAD_ROOT: rootE,
+      MAX_ARCHIVE_BYTES: "100",
+      MAX_ARTIFACT_BYTES: "1000",
+      MAX_DIAGNOSTIC_BYTES: "100",
+      RECEIPT_RESERVE_BYTES: "0",
+    });
+    assert.equal(diagnosticOverflow.status, 2);
+    const diagnosticReceipt = JSON.parse(diagnosticOverflow.stdout);
+    assert.ok(diagnosticReceipt.overflowReasons.includes("diagnostic_limit"));
+    assert.equal(diagnosticReceipt.diagnosticBytes, 500);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("staging copies archives first and bounds diagnostics during the copy", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-stage-"));
+  try {
+    const exportRoot = path.join(dir, "staging");
+    const runnerRoot = path.join(dir, "logs");
+    const uploadRoot = path.join(dir, "upload");
+    mkdirSync(path.join(exportRoot, "custody"), { recursive: true });
+    mkdirSync(runnerRoot, { recursive: true });
+    writeFileSync(path.join(exportRoot, "custody", "archive.tar"), Buffer.alloc(300));
+    writeFileSync(path.join(exportRoot, "custody", "custody-receipt.json"), Buffer.alloc(20));
+    writeFileSync(path.join(runnerRoot, "small.log"), Buffer.alloc(40));
+    writeFileSync(path.join(runnerRoot, "oversized.log"), Buffer.alloc(5000));
+    writeFileSync(path.join(runnerRoot, "another.log"), Buffer.alloc(30));
+
+    const result = runNode("deploy/builder/private-staging/stage-approved-evidence.mjs", {
+      SOURCE_ROOTS: `${exportRoot}|${runnerRoot}`,
+      UPLOAD_ROOT: uploadRoot,
+      MAX_ARCHIVE_BYTES: "1000",
+      MAX_ARTIFACT_BYTES: "1000",
+      MAX_DIAGNOSTIC_BYTES: "100",
+      RECEIPT_RESERVE_BYTES: "0",
+      RECEIPT_PATH: path.join(dir, "staging-receipt.json"),
+    });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    const receipt = JSON.parse(readFileSync(path.join(dir, "staging-receipt.json"), "utf8"));
+    assert.equal(receipt.archiveBytes, 300);
+    assert.equal(receipt.diagnosticBytes, 90);
+    assert.equal(receipt.diagnosticsTruncated, true);
+    assert.equal(existsSync(path.join(uploadRoot, "staging", "custody", "archive.tar")), true);
+    assert.equal(existsSync(path.join(uploadRoot, "logs", "oversized.log")), false);
+    const diagnosticTotal = [
+      path.join(uploadRoot, "staging", "custody", "custody-receipt.json"),
+      path.join(uploadRoot, "logs", "small.log"),
+      path.join(uploadRoot, "logs", "another.log"),
+    ].reduce((total, file) => total + statSync(file).size, 0);
+    assert.equal(diagnosticTotal, 90);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("final diagnostics enforcement stays bounded after every append", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-diagnostics-"));
+  try {
+    const diagnostics = path.join(dir, "diagnostics");
+    mkdirSync(diagnostics, { recursive: true });
+    writeFileSync(path.join(diagnostics, "EMERGENCY.txt"), Buffer.alloc(40));
+    writeFileSync(path.join(diagnostics, "oversized.log"), Buffer.alloc(4000));
+    writeFileSync(path.join(diagnostics, "upload-budget.json"), Buffer.alloc(300));
+
+    const enforce = (max) => runNode("deploy/builder/private-staging/enforce-diagnostics-budget.mjs", {
+      DIAGNOSTICS_DIR: diagnostics,
+      MAX_DIAGNOSTIC_BYTES: String(max),
+      RECEIPT_PATH: path.join(dir, "diagnostics-budget.json"),
+    });
+
+    const pass = enforce(1000);
+    assert.equal(pass.status, 0, `${pass.stdout}\n${pass.stderr}`);
+    const total = readdirSync(diagnostics)
+      .map((name) => statSync(path.join(diagnostics, name)).size)
+      .reduce((sum, bytes) => sum + bytes, 0);
+    assert.ok(total <= 1000, `diagnostics total ${total} exceeds limit`);
+    assert.equal(existsSync(path.join(diagnostics, "EMERGENCY.txt")), true);
+
+    // A new append after the first enforcement must be bounded again.
+    writeFileSync(path.join(diagnostics, "late.log"), Buffer.alloc(4096));
+    const second = enforce(1000);
+    assert.equal(second.status, 0, `${second.stdout}\n${second.stderr}`);
+    const afterAppend = readdirSync(diagnostics)
+      .map((name) => statSync(path.join(diagnostics, name)).size)
+      .reduce((sum, bytes) => sum + bytes, 0);
+    assert.ok(afterAppend <= 1000, `diagnostics total ${afterAppend} exceeds limit after append`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("proxy binding profiles reject mixed, extra and changed bindings through the CLI", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "ornigami-proxy-"));
+  try {
+    const loopback = {
+      "80/tcp": [{ HostIp: "127.0.0.1", HostPort: "80" }],
+      "443/tcp": [{ HostIp: "127.0.0.1", HostPort: "443" }],
+      "443/udp": [{ HostIp: "127.0.0.1", HostPort: "443" }],
+    };
+    const wildcard = {
+      "80/tcp": [{ HostIp: "", HostPort: "80" }],
+      "443/tcp": [{ HostIp: "0.0.0.0", HostPort: "443" }],
+      "443/udp": [{ HostIp: "::", HostPort: "443" }],
+    };
+    const cli = (bindings, profile) => spawnSync(process.execPath, [
+      "deploy/builder/private-staging/proxy-bindings.mjs",
+      "--bindings-json", JSON.stringify(bindings),
+      "--profile", profile,
+    ], { cwd: root, encoding: "utf8" });
+
+    assert.equal(cli(loopback, "loopback").status, 0);
+    assert.equal(cli(wildcard, "wildcard").status, 0);
+    assert.equal(cli(loopback, "wildcard").status, 1);
+    assert.equal(cli(wildcard, "loopback").status, 1);
+    assert.equal(cli({ ...loopback, "8080/tcp": [{ HostIp: "127.0.0.1", HostPort: "8080" }] }, "loopback").status, 1);
+    assert.equal(cli({ ...loopback, "443/tcp": [{ HostIp: "0.0.0.0", HostPort: "443" }] }, "loopback").status, 1);
+    assert.equal(cli({ ...loopback, "443/tcp": [{ HostIp: "127.0.0.1", HostPort: "8443" }] }, "loopback").status, 1);
+    assert.equal(cli(loopback, "unknown").status, 1);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("bundle workflow keeps the emergency root, staging and preflight order", () => {
+  const workflow = readFileSync(".github/workflows/builder-exact-rehearsal-0d68551.yml", "utf8");
+  const emergency = workflow.indexOf("Create runner-owned emergency diagnostics");
+  const checkout = workflow.indexOf("Check out bundle control plane");
+  const preflight = workflow.indexOf("verify-linux-ownership.sh");
+  const install = workflow.indexOf("Install supported Node");
+  const stage = workflow.indexOf("stage-approved-evidence.mjs");
+  const enforce = workflow.indexOf("enforce-diagnostics-budget.mjs");
+  assert.ok(emergency >= 0 && emergency < checkout, "emergency diagnostics must be created before checkout");
+  assert.ok(preflight >= 0 && preflight < install, "ownership preflight must run before installation");
+  assert.ok(stage >= 0 && enforce > stage, "diagnostics must be enforced after staging and appends");
+  assert.match(workflow, /EMERGENCY_ROOT: \/tmp\/ornigami-exact-rehearsal-emergency-0d68551-/);
+  assert.match(workflow, /SOURCE_SHA: 0d68551324ce3f441478f613d2f4eb48b9be4f3f/);
+  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-20261122/);
+  assert.doesNotMatch(workflow, /EVIDENCE_ROOT\/diagnostics/);
+  assert.doesNotMatch(workflow, /cp -a "\$EVIDENCE_ROOT\/logs/);
+  const runScript = readFileSync("deploy/builder/private-staging/run-exact-rehearsal-linux.sh", "utf8");
+  assert.match(runScript, /--profile loopback/);
+  assert.match(runScript, /PROXY_BINDING_PROFILE=loopback/);
+  assert.match(runScript, /proxy_binding_profile=loopback/);
+});
+
+test(
+  "all bundle shell helpers are syntactically valid",
+  { skip: !bashAvailable && "bash is required" },
+  () => {
+    const directory = path.join(root, "deploy", "builder", "private-staging");
+    for (const name of readdirSync(directory).filter((entry) => entry.endsWith(".sh"))) {
+      const result = spawnSync(bash, ["-n", path.join(directory, name)], { encoding: "utf8" });
+      assert.equal(result.status, 0, `${name}\n${result.stderr}`);
+    }
+  },
+);
 
 test(
   "final status preserves an earlier failure while cleanup failures prevent success",

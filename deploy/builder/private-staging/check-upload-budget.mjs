@@ -3,8 +3,13 @@
  * Enforce artifact size limits before upload.
  *
  * All archive copies count toward maxArchiveBytes; every regular file counts
- * toward maxArtifactBytes. On overflow, an optional bounded diagnostic copy is
- * produced without any archive payload.
+ * toward maxArtifactBytes; every non-archive file counts toward
+ * maxDiagnosticBytes. The check runs after staging has copied and bounded the
+ * evidence, so archives, total upload and diagnostics are all measured on the
+ * final directory that would be uploaded.
+ *
+ * On overflow an optional bounded diagnostic copy is produced without any
+ * archive payload. It never copies more than maxDiagnosticBytes in total.
  */
 import {
   copyFileSync,
@@ -12,7 +17,6 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -51,23 +55,27 @@ function walk(directory) {
   return files;
 }
 
+const isArchive = (file) => /\.(tar|tar\.gz|tgz)$/i.test(file.path);
+
 const files = walk(root);
-const archives = files.filter((file) => /\.(tar|tar\.gz|tgz)$/i.test(file.path));
+const archives = files.filter(isArchive);
+const diagnosticFiles = files.filter((file) => !isArchive(file));
 const archiveBytes = archives.reduce((total, file) => total + file.bytes, 0);
+const diagnosticBytes = diagnosticFiles.reduce((total, file) => total + file.bytes, 0);
 const artifactBytes = files.reduce((total, file) => total + file.bytes, 0);
 const artifactBytesWithReceipt = artifactBytes + receiptReserveBytes;
 const overflowReasons = [];
 if (archiveBytes > maxArchiveBytes) overflowReasons.push("archive_limit");
+if (diagnosticBytes > maxDiagnosticBytes) overflowReasons.push("diagnostic_limit");
 if (artifactBytesWithReceipt > maxArtifactBytes) overflowReasons.push("artifact_limit");
 
-let diagnostics = null;
+let diagnosticsFallback = null;
 if (overflowReasons.length > 0 && diagnosticsDir) {
   mkdirSync(diagnosticsDir, { recursive: true });
   const reserve = 8192;
   let bytes = 0;
   const copied = [];
-  for (const file of files) {
-    if (/\.(tar|tar\.gz|tgz)$/i.test(file.path)) continue;
+  for (const file of diagnosticFiles) {
     if (bytes + file.bytes + reserve > maxDiagnosticBytes) continue;
     const destination = path.join(diagnosticsDir, file.path);
     mkdirSync(path.dirname(destination), { recursive: true });
@@ -75,7 +83,7 @@ if (overflowReasons.length > 0 && diagnosticsDir) {
     bytes += file.bytes;
     copied.push({ path: file.path, bytes: file.bytes });
   }
-  diagnostics = { directory: diagnosticsDir, bytes, files: copied, maxBytes: maxDiagnosticBytes };
+  diagnosticsFallback = { directory: diagnosticsDir, bytes, files: copied, maxBytes: maxDiagnosticBytes };
 }
 
 const result = {
@@ -84,13 +92,15 @@ const result = {
   archiveFiles: archives.map((file) => ({ path: file.path, bytes: file.bytes })),
   archiveBytes,
   archiveCopies: archives.length,
+  diagnosticBytes,
   artifactBytes,
   artifactBytesWithReceipt,
   receiptReserveBytes,
   maxArchiveBytes,
   maxArtifactBytes,
+  maxDiagnosticBytes,
   overflowReasons,
-  diagnostics,
+  diagnosticsFallback,
 };
 if (receiptPath) {
   mkdirSync(path.dirname(receiptPath), { recursive: true });

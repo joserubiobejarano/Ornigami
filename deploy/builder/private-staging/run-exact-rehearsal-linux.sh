@@ -16,6 +16,7 @@ HARNESS_SHA="${HARNESS_SHA:?HARNESS_SHA is required}"
 WORKFLOW_SHA="${WORKFLOW_SHA:?WORKFLOW_SHA is required}"
 REHEARSAL_DIR="${REHEARSAL_DIR:?REHEARSAL_DIR is required}"
 EVIDENCE_ROOT="${EVIDENCE_ROOT:?EVIDENCE_ROOT is required}"
+EXPORT_STAGING="${EXPORT_STAGING:?EXPORT_STAGING is required}"
 STAGING_ORIGIN="${STAGING_ORIGIN:?STAGING_ORIGIN is required}"
 STAGING_HOST="${STAGING_HOST:?STAGING_HOST is required}"
 CADDY_IMAGE="${CADDY_IMAGE:?CADDY_IMAGE is required}"
@@ -77,6 +78,30 @@ node -e 'const [a,b]=process.argv.slice(1);const p=require("node:path");process.
 BASIC_PASSWORD=""
 BASIC_HASH=""
 CLEANUP_FAILURES=0
+
+export_approved_evidence() {
+  local stage="$EXPORT_STAGING" file directory
+  [[ -d "$stage" ]] || { echo "FAIL: approved export staging is missing: $stage" >&2; return 1; }
+  mkdir -p "$stage/logs" "$stage/checkpoint" "$stage/edge" "$stage/custody"
+  if [[ -d "$EVIDENCE_ROOT/logs" ]]; then cp -R "$EVIDENCE_ROOT/logs/." "$stage/logs/"; fi
+  if [[ -d "$EVIDENCE_ROOT/checkpoint" ]]; then cp -R "$EVIDENCE_ROOT/checkpoint/." "$stage/checkpoint/"; fi
+  if [[ -d "$EVIDENCE_ROOT/edge" ]]; then cp -R "$EVIDENCE_ROOT/edge/." "$stage/edge/"; fi
+  if [[ -d "$EVIDENCE_ROOT/custody" ]]; then cp -R "$EVIDENCE_ROOT/custody/." "$stage/custody/"; fi
+  for file in host.txt daemons.txt package-lock.json access-closed.txt cleanup-receipt.txt; do
+    if [[ -f "$EVIDENCE_ROOT/$file" ]]; then cp "$EVIDENCE_ROOT/$file" "$stage/$file"; fi
+  done
+  if [[ -d "$REHEARSAL_DIR" ]]; then
+    for file in checkpoint.json CHECKPOINT_READY.txt rehearsal-identities.json REHEARSAL_COMPLETE.txt; do
+      if [[ -f "$REHEARSAL_DIR/$file" ]]; then cp "$REHEARSAL_DIR/$file" "$stage/$file"; fi
+    done
+    for directory in "$REHEARSAL_DIR"/qualification-attempt-*; do
+      [[ -d "$directory" ]] && cp -R "$directory" "$stage/"
+    done
+  fi
+  find "$stage" -mindepth 1 -type d -exec chmod 0750 {} +
+  find "$stage" -type f -exec chmod 0640 {} +
+}
+
 cleanup() {
   local status=$? compose_status=0 ownership_status=0 ca_status=0
   set +e
@@ -131,10 +156,26 @@ cleanup() {
     fi
   } > "$EVIDENCE_ROOT/access-closed.txt"
   cp "$EVIDENCE_ROOT/access-closed.txt" "$CUSTODY_DIR/access-closed.txt" 2>/dev/null || true
-  "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" \
-    > "$EVIDENCE_ROOT/final-status.txt" 2>&1
+  if ! export_approved_evidence; then
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: approved evidence export failed" >> "$LOG_DIR/cleanup-owned-resources.log"
+  fi
+  write_final_status() {
+    "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" \
+      > "$EVIDENCE_ROOT/final-status.txt" 2>&1
+    cp "$EVIDENCE_ROOT/final-status.txt" "$CUSTODY_DIR/final-status.txt" 2>/dev/null || return 1
+    if [[ -d "$EXPORT_STAGING" ]]; then
+      cp "$EVIDENCE_ROOT/final-status.txt" "$EXPORT_STAGING/final-status.txt" 2>/dev/null || return 1
+      chmod 0640 "$EXPORT_STAGING/final-status.txt" 2>/dev/null || return 1
+    fi
+    return 0
+  }
+  if ! write_final_status; then
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    write_final_status || true
+  fi
+  "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" >/dev/null
   local final=$?
-  cp "$EVIDENCE_ROOT/final-status.txt" "$CUSTODY_DIR/final-status.txt" 2>/dev/null || true
   cat "$EVIDENCE_ROOT/final-status.txt"
   exit "$final"
 }
@@ -268,6 +309,25 @@ for port in 80 443; do
   if ss -ltn "sport = :$port" | grep -q LISTEN; then fail "host port $port is already in use"; fi
 done
 
+note "Validate generated Compose bindings with the real loopback profile"
+python3 - "$STAGING_DIR/compose.yml" "$EVIDENCE_ROOT/edge/generated-compose-bindings.json" <<'PY'
+import json, re, sys
+source, target = sys.argv[1], sys.argv[2]
+text = open(source, encoding="utf-8").read()
+result = {}
+for match in re.finditer(r'-\s*"([^"]+):([0-9]+):([0-9]+)(/udp)?"', text):
+    host_ip, host_port, container_port, udp = match.groups()
+    protocol = "udp" if udp else "tcp"
+    key = f"{container_port}/{protocol}"
+    result.setdefault(key, []).append({"HostIp": host_ip, "HostPort": host_port})
+json.dump(result, open(target, "w", encoding="utf-8"), indent=2)
+PY
+node "$SOURCE_ROOT/deploy/builder/private-staging/proxy-bindings.mjs" \
+  --input "$EVIDENCE_ROOT/edge/generated-compose-bindings.json" \
+  --profile loopback \
+  --output "$EVIDENCE_ROOT/edge/generated-bindings-validation.json" >/dev/null \
+  || fail "generated Compose bindings are not the approved loopback profile"
+
 compose() {
   local mode="$1"; shift
   env BUILDER_IMAGE="$IMAGE_ID" CADDY_IMAGE="$CADDY_IMAGE" \
@@ -337,6 +397,7 @@ compose invite up -d --force-recreate app 2>&1 | tee "$LOG_DIR/compose-up-invite
 APP_ID="$(wait_app_healthy invite)"
 PROXY_ID="$(compose invite ps -q proxy)"
 wait_edge
+printf 'proxy_binding_profile=loopback\n' > "$EVIDENCE_ROOT/edge/proxy-binding-profile.txt"
 
 note "ACTION=qualify: same image ID through every required phase"
 (
@@ -348,6 +409,7 @@ note "ACTION=qualify: same image ID through every required phase"
     PHASE_ENGINE="$PHASE_ENGINE" PHASE_CONTEXT="$PHASE_CONTEXT" \
     STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" \
     STAGING_BASIC_AUTH_PASSWORD="$BASIC_PASSWORD" \
+    PROXY_BINDING_PROFILE=loopback \
     EDGE_APP_CONTAINER="$APP_ID" EDGE_PROXY_CONTAINER="$PROXY_ID" \
     EDGE_STORE_VOLUME="$BUILDER_STORE_VOLUME" \
     BUILDER_OPERATOR_VOLUME="$BUILDER_STORE_VOLUME" \
