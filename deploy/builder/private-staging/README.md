@@ -133,6 +133,18 @@ the same image ID. An app container running a different image, a conflicting
 `APP_URL`/`STAGING_ORIGIN`, a non-HTTPS origin, or missing edge prerequisites
 fails before the evidence directory or run resources are created.
 
+### Retained-archive wrapper
+
+`run-retained-image-qualification-linux.sh` loads a retained archive, verifies
+the producer receipt and immutable image ID, and then delegates to
+`qualify-existing-image.sh` with fresh run-owned Compose project, store and edge
+volumes. It records `producerApplicationSourceSha`, `producerHarnessSha` and
+`consumerHarnessSha` separately, copies the original archive receipt unchanged,
+and never runs a build. A missing `edge/` evidence root, changed archive hash or
+size, receipt/image mismatch, or a dirty candidate fails before qualification.
+The wrapper is intended for hosted Linux runs where the host Docker daemon is
+used directly and no DinD service is present.
+
 ### Diagnostic HTTP-loopback path
 
 This is a separately identified local diagnostic scope. It is only valid for an
