@@ -33,7 +33,7 @@ jobs:
       CANDIDATE_SHA: 6ef785961d3f5c6084650ee9a119b78943a598e6
       EMERGENCY_ROOT: /tmp/ornigami-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
       RUNNER_LOG_ROOT: /tmp/ornigami-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}/logs
-      SMOKE_ROOT: /tmp/ornigami-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}/smoke
+      SMOKE_ROOT: /tmp/ornigami-browser-smoke-data-${{ github.run_id }}-${{ github.run_attempt }}
       MAX_DIAGNOSTIC_BYTES: "67108864"
 
     steps:
