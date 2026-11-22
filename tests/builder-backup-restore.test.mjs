@@ -260,6 +260,7 @@ test("restore writes a fresh closed store and refuses admission before replay", 
     assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
     const gate = await readBuilderRestoreReplayGate(restored);
     assert.equal(gate.valid, true);
+    assert.ok(gate.value);
     assert.equal(gate.value.phase, "closed");
     assert.equal(await readBuilderAdmissionStatus({
       storeDir: restored,

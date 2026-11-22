@@ -84,7 +84,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           set +e
-          node --experimental-strip-types --test tests/builder-backup-restore.test.mts \
+          node --experimental-strip-types --test tests/builder-backup-restore.test.mjs \
             2>&1 | tee "$EVIDENCE/logs/backup-restore-test.log"
           rc=${PIPESTATUS[0]}
           set -e

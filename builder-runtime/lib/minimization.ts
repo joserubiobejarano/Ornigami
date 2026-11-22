@@ -1289,6 +1289,7 @@ async function completeNoOpRestoreAttempt(input: {
   priorReceipts: readonly BuilderRestoreReplayReceipt[];
   priorReceipt: BuilderRestoreReplayReceipt;
   replayedAt: string;
+  keepGateClosed?: boolean;
 }): Promise<BuilderRestoreReplayReceipt> {
   const commitments = sourceCommitments(input.source);
   const eventIds = commitments.map((commitment) => commitment.id);

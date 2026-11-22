@@ -69,7 +69,7 @@ Full mechanics and limits: [BUILDER_BACKUP_RESTORE_20261122.md](./BUILDER_BACKUP
 Executed on Windows 11 x64, Node `v24.11.1`:
 
 ```text
-node --experimental-strip-types --test tests/builder-backup-restore.test.mts
+node --experimental-strip-types --test tests/builder-backup-restore.test.mjs
 20/20 pass
 ```
 

@@ -572,7 +572,7 @@ function validatePayload(payload) {
   }
 }
 
-export async function createEncryptedBackup({ storeDir, out, passphraseFile, receiptPath }) {
+export async function createEncryptedBackup({ storeDir, out, passphraseFile, receiptPath = undefined }) {
   if (!out) fail("backup_output", "--out is required.");
   if (isInside(storeDir, out)) fail("backup_output_inside_store", "Backup archive must be outside the store directory.");
   if (receiptPath && isInside(storeDir, receiptPath)) fail("backup_receipt_inside_store", "Backup receipt must be outside the store directory.");
@@ -639,7 +639,7 @@ export async function restoreEncryptedBackup({
   archive,
   out,
   passphraseFile,
-  receiptPath,
+  receiptPath = undefined,
   acknowledgePointInTime = false,
 }) {
   if (!out) fail("restore_output", "--out is required.");
@@ -903,7 +903,7 @@ async function recloseRestoredStore(storeDir) {
 export async function replayRestoredStore({
   storeDir,
   journalPath,
-  receiptPath,
+  receiptPath = undefined,
   acknowledgeUsageWindow = false,
   acknowledgeOpenUsage = false,
 }) {
@@ -986,9 +986,9 @@ export async function replayRestoredStore({
 export async function reconcileRestoredStore({
   storeDir,
   reconciliationPath,
-  receiptPath,
-  restoreReceiptPath,
-  replayReceiptPath,
+  receiptPath = undefined,
+  restoreReceiptPath = undefined,
+  replayReceiptPath = undefined,
   acknowledgeOpenUsage = false,
 }) {
   if (!storeDir) fail("reconcile_store", "--store is required.");
