@@ -14,9 +14,12 @@ HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
 EVIDENCE_DIR="${EVIDENCE_DIR:?EVIDENCE_DIR must be a new directory}"
 ENGINE="${ENGINE:-docker}"
 NODE_BIN="${NODE_BIN:-node}"
+PROXY_BINDING_PROFILE="${PROXY_BINDING_PROFILE:-wildcard}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
+[[ "$PROXY_BINDING_PROFILE" == "wildcard" || "$PROXY_BINDING_PROFILE" == "loopback" ]] \
+  || fail "PROXY_BINDING_PROFILE must be wildcard or loopback"
 [[ "$EXPECTED_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]] || fail "EXPECTED_IMAGE_ID must be immutable sha256:<64-hex>"
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ ! -e "$EVIDENCE_DIR" ]] || fail "EVIDENCE_DIR already exists: $EVIDENCE_DIR"
@@ -87,9 +90,11 @@ if [[ -n "$PROXY_CONTAINER" ]]; then
   PROXY_PORTS="$("$ENGINE" inspect --format '{{json .HostConfig.PortBindings}}' "$PROXY_CONTAINER")"
   "$NODE_BIN" deploy/builder/private-staging/proxy-bindings.mjs \
     --bindings-json "$PROXY_PORTS" \
+    --profile "$PROXY_BINDING_PROFILE" \
     --output "$EVIDENCE_DIR/proxy-bindings.json" >/dev/null \
-    || fail "proxy published ports are not the approved structure: $PROXY_PORTS"
-  printf 'ok\tproxy:ports\t80/tcp=80,443/tcp=443,443/udp=443 wildcard-only\n' >> "$CHECKS"
+    || fail "proxy published ports are not the approved $PROXY_BINDING_PROFILE structure: $PROXY_PORTS"
+  printf 'ok\tproxy:ports\t80/tcp=80,443/tcp=443,443/udp=443 %s\n' "$PROXY_BINDING_PROFILE" >> "$CHECKS"
+  printf 'ok\tproxy:binding-profile\t%s\n' "$PROXY_BINDING_PROFILE" >> "$CHECKS"
   PROXY_NETWORKS="$("$ENGINE" inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{"\n"}}{{end}}' "$PROXY_CONTAINER")"
   shared=0
   while IFS= read -r network; do
@@ -102,14 +107,15 @@ else
   printf 'skip\tproxy:inspection\tPROXY_CONTAINER not supplied\n' >> "$CHECKS"
 fi
 
-printf 'ok=true\n' > "$EVIDENCE_DIR/results.txt"
+printf 'ok=true\nproxy_binding_profile=%s\n' "$PROXY_BINDING_PROFILE" > "$EVIDENCE_DIR/results.txt"
 cat > "$EVIDENCE_DIR/identity.json" <<EOF
 {
   "applicationSourceSha": "$EXPECTED_SOURCE_SHA",
   "harnessSha": "$HARNESS_SHA",
   "imageId": "$EXPECTED_IMAGE_ID",
   "origin": "$EXPECTED_ORIGIN",
-  "effectiveRuntimeOrigin": "$EXPECTED_ORIGIN"
+  "effectiveRuntimeOrigin": "$EXPECTED_ORIGIN",
+  "proxyBindingProfile": "$PROXY_BINDING_PROFILE"
 }
 EOF
 note "Runtime acceptance passed; evidence: $EVIDENCE_DIR"

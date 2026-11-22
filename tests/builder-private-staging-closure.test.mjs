@@ -111,6 +111,30 @@ test("proxy port bindings require the exact approved structure", () => {
     assert.equal(result.ok, false, name);
     assert.ok(result.errors.length > 0, name);
   }
+
+  const loopback = {
+    "80/tcp": [{ HostIp: "127.0.0.1", HostPort: "80" }],
+    "443/tcp": [{ HostIp: "127.0.0.1", HostPort: "443" }],
+    "443/udp": [{ HostIp: "127.0.0.1", HostPort: "443" }],
+  };
+  const loopbackResult = validateProxyBindings(loopback, "loopback");
+  assert.equal(loopbackResult.ok, true, JSON.stringify(loopbackResult.errors));
+  assert.equal(loopbackResult.profile, "loopback");
+  assert.equal(validateProxyBindings(loopback).ok, false, "wildcard profile must reject loopback addresses");
+  assert.equal(validateProxyBindings(approved, "loopback").ok, false, "loopback profile must reject wildcard addresses");
+  for (const [name, value] of [
+    ["loopback extra port", { ...loopback, "8080/tcp": [{ HostIp: "127.0.0.1", HostPort: "8080" }] }],
+    ["loopback changed host port", { ...loopback, "443/tcp": [{ HostIp: "127.0.0.1", HostPort: "8443" }] }],
+    ["loopback wildcard mixed", { ...loopback, "443/tcp": [{ HostIp: "0.0.0.0", HostPort: "443" }] }],
+    ["loopback non-loopback address", { ...loopback, "443/tcp": [{ HostIp: "10.0.0.5", HostPort: "443" }] }],
+    ["loopback duplicate", { ...loopback, "443/tcp": [{ HostIp: "127.0.0.1", HostPort: "443" }, { HostIp: "127.0.0.1", HostPort: "443" }] }],
+    ["loopback missing udp", { ...loopback, "443/udp": [] }],
+  ]) {
+    const result = validateProxyBindings(value, "loopback");
+    assert.equal(result.ok, false, name);
+    assert.ok(result.errors.length > 0, name);
+  }
+  assert.equal(validateProxyBindings(loopback, "unknown").ok, false);
 });
 
 test("SRI audit history records inserted and later removed script URLs and hashes", () => {
