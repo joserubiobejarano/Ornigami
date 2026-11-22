@@ -52,11 +52,15 @@ test("archive retrieval is independent of qualification success", () => {
   );
 });
 
-test("retained evidence roots are prepared before the first write", () => {
+test("retained evidence roots and browser mode are set before the first use", () => {
   const prepare = wrapper.indexOf("prepare_retained_evidence_root");
   const firstEdgeWrite = wrapper.indexOf("caddy-digests.json");
+  const browserMode = wrapper.indexOf('BROWSER_MODE="$(retained_browser_mode)"');
+  const browserModeUse = wrapper.indexOf('BROWSER_MODE="$BROWSER_MODE"');
   assert.ok(prepare > 0, "wrapper must prepare the evidence root");
   assert.ok(firstEdgeWrite > prepare, "evidence root must be prepared before use");
+  assert.ok(browserMode > 0, "wrapper must derive the browser mode through the helper");
+  assert.ok(browserModeUse > browserMode, "browser mode must be set before the journey env");
   assert.doesNotMatch(workflow, /^ {12,}NODE$/m);
 });
 
@@ -66,7 +70,7 @@ test("browser mode is explicit before the retained journey", () => {
   assert.match(workflow, /r\.browserMode !== "no-sandbox"/);
   assert.match(workflow, /BROWSER_CHROMIUM_SANDBOX="\$BROWSER_CHROMIUM_SANDBOX"/);
   assert.match(wrapper, /BROWSER_CHROMIUM_SANDBOX/);
-  assert.match(wrapper, /BROWSER_MODE=no-sandbox/);
+  assert.match(wrapper, /BROWSER_MODE="\$\(retained_browser_mode\)"/);
   assert.equal(request.browserSandbox, "explicit synthetic-CI exception; BROWSER_CHROMIUM_SANDBOX=0");
   assert.equal(request.customerAdmission, "closed");
 });

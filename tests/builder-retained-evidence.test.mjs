@@ -233,6 +233,42 @@ test("a file where a staging directory is required is rejected before copying", 
   }
 });
 
+test("browser mode derivation accepts only explicit supported values", () => {
+  const { cleanup } = fixture();
+  try {
+    for (const [value, expected] of [
+      ["", "no-sandbox"],
+      ["0", "no-sandbox"],
+      ["1", "sandbox"],
+    ]) {
+      const result = run(
+        `
+        set -Eeuo pipefail
+        source ${quote(bashPath(library))}
+        retained_browser_mode
+        `,
+        { BROWSER_CHROMIUM_SANDBOX: value },
+      );
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout, expected);
+    }
+    for (const value of ["true", "false", "yes", "sandbox", " 1 "]) {
+      const result = run(
+        `
+        set -Eeuo pipefail
+        source ${quote(bashPath(library))}
+        retained_browser_mode
+        `,
+        { BROWSER_CHROMIUM_SANDBOX: value },
+      );
+      assert.notEqual(result.status, 0, value);
+      assert.match(result.stderr, /BROWSER_CHROMIUM_SANDBOX must be 0 or 1/);
+    }
+  } finally {
+    cleanup();
+  }
+});
+
 test("host identity records the actual daemon ID and both harness identities", () => {
   const { root, cleanup } = fixture();
   try {
