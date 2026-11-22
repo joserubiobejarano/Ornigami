@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "purpose": "exact browser launch smoke as builder",
+  "candidateSha": "6ef785961d3f5c6084650ee9a119b78943a598e6",
+  "attempt": 1,
+  "sandbox": "default (synthetic CI exception)"
+}
