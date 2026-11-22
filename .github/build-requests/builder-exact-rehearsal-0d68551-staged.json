@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "bundleBaseSha": "1e6243f10debb6438f2f3560361e2270fbb9980c",
+  "bundleBaseSha": "f63c7fcf522c0d0ef59339ccaaa1f71883b112f7",
   "previousFailedFullRun": 45022904023,
   "passingGateDebugRun": 45022113531,
   "applicationSourceSha": "156259d0c4330b185a0844711b7004b0b4467887",
@@ -12,7 +12,7 @@
   },
   "workflowFile": ".github/workflows/builder-exact-rehearsal-0d68551-staged.yml",
   "trigger": {
-    "branch": "ci/builder-exact-rehearsal-0d68551-staged-20261122",
+    "branch": "ci/builder-exact-rehearsal-0d68551-staged-run4-20261122",
     "event": "initial branch creation push only",
     "before": "0000000000000000000000000000000000000000",
     "subsequentPushes": "do not schedule"
@@ -55,7 +55,11 @@
     "gateTimeoutMinutes": 15,
     "executeTimeoutMinutes": 90,
     "retrievalTimeoutMinutes": 15,
-    "retentionDays": 7
+    "retentionDays": 7,
+    "dispatches": 1,
+    "attempts": 1
   },
-  "customerAdmission": "closed"
+  "customerAdmission": "closed",
+  "previousFailedStagedRun": 45027216169
 }
+
