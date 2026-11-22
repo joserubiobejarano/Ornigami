@@ -14,6 +14,7 @@
  *   BROWSER_OPERATOR_MODE        container (default) or local
  *   BROWSER_PACKSHOT             synthetic packshot path
  *   BROWSER_PLAYWRIGHT           optional explicit playwright/index.mjs
+ *   BROWSER_CHROMIUM_SANDBOX     set to 1 only where the Chromium sandbox works
  *   BROWSER_OPERATOR_STORE_DIR   store path for local operator mode
  *   ENGINE / BUILDER_OPERATOR_IMAGE / BUILDER_OPERATOR_VOLUME /
  *   BUILDER_OPERATOR_STORE / BUILDER_RUNTIME_STORE_HOST_ID
@@ -512,7 +513,13 @@ await auditCsp();
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch({
   headless: true,
-  chromiumSandbox: true,
+  // The synthetic CI client runs as the unprivileged builder on a hosted runner
+  // where Chromium's user-namespace sandbox can be unavailable (SIGTRAP /
+  // crashpad startup failure). The application runtime remains read-only,
+  // non-root, internal-network-only and separately contained; the browser is a
+  // test client that visits only the private loopback edge. Opt in explicitly
+  // only on a host where the Chromium sandbox is known to work.
+  chromiumSandbox: process.env.BROWSER_CHROMIUM_SANDBOX === "1",
   executablePath: chromiumExecutable(chromium),
 });
 const contextA = await browser.newContext({
