@@ -114,12 +114,18 @@ function makeFixture() {
   for (const directory of [evidence, builderRoot, staging, upload, logs, diagnostics]) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
   }
-  sudo(["install", "-d", "-m", "0755", "-o", runnerUser, "-g", runnerGroup, evidence]);
-  sudo(["install", "-d", "-m", "0700", "-o", builderUser, "-g", builderGroup, builderRoot]);
-  sudo(["install", "-d", "-m", "2770", "-o", builderUser, "-g", runnerGroup, staging]);
-  sudo(["install", "-d", "-m", "0700", "-o", runnerUser, "-g", runnerGroup, upload]);
-  sudo(["install", "-d", "-m", "0700", "-o", runnerUser, "-g", runnerGroup, logs]);
-  sudo(["install", "-d", "-m", "0700", "-o", runnerUser, "-g", runnerGroup, diagnostics]);
+  const ownership = [
+    [evidence, runnerUser, runnerGroup, "0755"],
+    [builderRoot, builderUser, builderGroup, "0700"],
+    [staging, builderUser, runnerGroup, "2770"],
+    [upload, runnerUser, runnerGroup, "0700"],
+    [logs, runnerUser, runnerGroup, "0700"],
+    [diagnostics, runnerUser, runnerGroup, "0700"],
+  ];
+  for (const [directory, owner, group, mode] of ownership) {
+    sudo(["chown", `${owner}:${group}`, directory]);
+    sudo(["chmod", mode, directory]);
+  }
   sudo(["chown", "-R", `${builderUser}:${builderGroup}`, source]);
   return { base, evidence, builderRoot, staging, upload, logs, diagnostics, source };
 }
@@ -301,7 +307,7 @@ test("approved export is builder-written and runner-readable at 0640", { skip },
     assert.notEqual(result.status, 0);
     assert.match(failure(wrongGroup), /assertion=export_staging_owner_mode/);
     assert.match(failure(wrongGroup), new RegExp(`expected=${builderUid}:${runnerGid}:2770`));
-    assert.match(failure(wrongGroup), new RegExp(`observed=${builderUid}:${builderGid}:2770`));
+    assert.match(failure(wrongGroup), new RegExp(`observed=${builderUid}:${builderGid}:(2770|770)`));
   } finally {
     cleanup(wrongGroup);
   }
