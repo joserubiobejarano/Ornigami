@@ -336,7 +336,7 @@ if [[ "$SKIP_CANDIDATE_GATES" == "1" ]]; then
   cp "$CANDIDATE_GATE_RECEIPT" "$EVIDENCE_ROOT/gate/candidate-gate-receipt.json"
   cp "$CANDIDATE_GATE_LOG" "$EVIDENCE_ROOT/gate/candidate-gate.log"
   cp "$SOURCE_ROOT/package-lock.json" "$EVIDENCE_ROOT/package-lock.json"
-  cp "$EXPECTED_LOCKFILE_SHA256" "$EVIDENCE_ROOT/gate/package-lock.sha256"
+  printf '%s\n' "$EXPECTED_LOCKFILE_SHA256" > "$EVIDENCE_ROOT/gate/package-lock.sha256"
 else
   note "Run candidate dependency, test, TypeScript, lint and security gates"
   [[ -n "${A04_PG_BIN:-}" ]] || fail "A04_PG_BIN is required for the Linux full suite"
