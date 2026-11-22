@@ -583,7 +583,7 @@ test("readiness workflow gates installation on bounded probes and ownership fixt
   assert.match(workflow, /regression_ok/);
   assert.match(workflow, /SOURCE_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816/);
   assert.match(workflow, /HARNESS_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816/);
-  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-readiness-20261122/);
+  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-qualify-20261122/);
   assert.match(workflow, /ref: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816/);
   assert.match(workflow, /builder-exact-rehearsal-0d68551-readiness-retrieval-/);
   assert.match(workflow, /build-daemon-readiness-failure\.txt/);
@@ -680,8 +680,8 @@ test("request file records the candidate correction and readiness workflow", () 
   assert.equal(request.harnessSha, readinessCandidate);
   assert.equal(request.candidateCorrection.parent, "0d68551324ce3f441478f613d2f4eb48b9be4f3f");
   assert.equal(request.workflowFile, readinessWorkflow);
-  assert.equal(request.trigger.branch, "ci/builder-exact-rehearsal-0d68551-readiness-20261122");
+  assert.equal(request.trigger.branch, "ci/builder-exact-rehearsal-0d68551-qualify-20261122");
   assert.equal(request.customerAdmission, "closed");
-  assert.equal(request.budget.lightweightDebugRuns, 4);
+  assert.equal(request.budget.lightweightDebugRuns, 1);
 });
 

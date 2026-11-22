@@ -1,7 +1,21 @@
 {
-  "schemaVersion": 5,
-  "bundleBaseSha": "87a064e9856da169f691306379f2120e78c22981",
+  "schemaVersion": 6,
+  "bundleBaseSha": "c3d98ab058b3451d7a6f12599197855c7f0fcf63",
   "previousFailedRun": 44977330367,
+  "previousFullRun": 44980225963,
+  "gateDebugRun": 45022113531,
+  "gateDebugBundle": "48d3e9a7cfcfa3d983b1f401bb98ea774fb65092",
+  "gateDebugResult": {
+    "tests": 1460,
+    "pass": 1460,
+    "fail": 0,
+    "skipped": 0,
+    "postgres": "/usr/lib/postgresql/17/bin",
+    "initdb": "/usr/lib/postgresql/17/bin/initdb",
+    "postgresBinary": "/usr/lib/postgresql/17/bin/postgres",
+    "builderUser": "ubuntu",
+    "selectorsCleared": true
+  },
   "applicationSourceSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
   "harnessSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
   "candidateCorrection": {
@@ -9,9 +23,16 @@
     "reason": "directly invoked private-staging helpers were committed 100644; the candidate also lacked explicit loopback profile forwarding",
     "scope": "file modes plus explicit bash invocation and PROXY_BINDING_PROFILE forwarding; no application behavior change"
   },
+  "candidateGate": {
+    "helper": "deploy/builder/private-staging/run-candidate-gates.sh",
+    "testConcurrency": 1,
+    "discovery": "same as scripts/test.mjs: tests/*.test.mjs and tests/*.test.mts, sorted",
+    "postgresCheck": "A04_PG_BIN/initdb and A04_PG_BIN/postgres must be executable",
+    "selectorBoundary": "child process clears rehearsal selectors only"
+  },
   "workflowFile": ".github/workflows/builder-exact-rehearsal-0d68551-readiness.yml",
   "trigger": {
-    "branch": "ci/builder-exact-rehearsal-0d68551-readiness-20261122",
+    "branch": "ci/builder-exact-rehearsal-0d68551-qualify-20261122",
     "event": "initial branch creation push only",
     "before": "0000000000000000000000000000000000000000",
     "subsequentPushes": "do not schedule"
@@ -40,7 +61,7 @@
     "access": "repository artifact access; synthetic image, receipts and sanitized evidence only"
   },
   "budget": {
-    "lightweightDebugRuns": 4,
+    "lightweightDebugRuns": 1,
     "debugTimeoutMinutes": 10,
     "dispatches": 1,
     "attempts": 1,
