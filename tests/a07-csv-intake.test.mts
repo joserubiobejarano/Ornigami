@@ -6,6 +6,7 @@ import { createServer } from "node:net";
 import test from "node:test";
 
 import { loadTs as loadSameRealmTs } from "./a02-test-support.mts";
+import { runDisposablePgCommand } from "./pg-startup-diagnostics.mts";
 import { parseCsv, CsvParseError } from "../src/modules/review-booster/services/csv-parsing.service.ts";
 import { isValidCustomerPhone, normalizePermissionAt, normalizePermissionEvidence, normalizeVisitedAt } from "../src/modules/review-booster/services/intake-input.service.ts";
 import { loadTs } from "./auth-test-harness.mts";
@@ -280,14 +281,26 @@ test("CSV insertion uses the partial unique index outcome and enforces persisted
   const dataDir = join(dir, "data");
   let started = false;
   try {
-    execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
-    appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
     const logFile = join(dir, "postgres.log");
-    try {
-      execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
-    } catch (error) {
-      throw new Error(`Disposable PostgreSQL startup failed:\n${existsSync(logFile) ? readFileSync(logFile, "utf8") : "No PostgreSQL log"}`, { cause: error });
-    }
+    runDisposablePgCommand({
+      label: "a07-initdb",
+      command: pgExe("initdb"),
+      args: ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"],
+      pgBin: binDir,
+      port,
+      dataDir,
+      logFile,
+    });
+    appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
+    runDisposablePgCommand({
+      label: "a07-pg_ctl-start",
+      command: pgExe("pg_ctl"),
+      args: ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"],
+      pgBin: binDir,
+      port,
+      dataDir,
+      logFile,
+    });
     started = true;
     const migrationsDir = join(process.cwd(), "neon/migrations");
     const migrations = readdirSync(migrationsDir).filter((name) => /^\d{3}_.+\.sql$/.test(name)).sort((a, b) => Number(a.slice(0, 3)) - Number(b.slice(0, 3)));
