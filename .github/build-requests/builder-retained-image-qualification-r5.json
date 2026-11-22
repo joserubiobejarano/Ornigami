@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "purpose": "qualify the retained immutable image from run 45030190736 without rebuilding, second authorized attempt after routine setup fixes",
-  "branch": "ci/retained-image-qualification-20261122-r2",
+  "branch": "ci/retained-image-qualification-20261122-r5",
   "workflow": ".github/workflows/builder-retained-image-qualification.yml",
   "dispatches": 1,
   "attempts": 1,
@@ -22,3 +22,4 @@
   "browserSandbox": "explicit synthetic-CI exception; BROWSER_CHROMIUM_SANDBOX=0",
   "customerAdmission": "closed"
 }
+
