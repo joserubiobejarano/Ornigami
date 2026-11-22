@@ -3,7 +3,7 @@ name: Builder exact-candidate staged rehearsal (0d68551)
 on:
   push:
     branches:
-      - ci/builder-exact-rehearsal-0d68551-staged-20261122
+      - ci/builder-exact-rehearsal-0d68551-staged-run2-20261122
     paths:
       - .github/build-requests/builder-exact-rehearsal-0d68551-staged.json
 
@@ -23,7 +23,7 @@ jobs:
       github.event.before == '0000000000000000000000000000000000000000' &&
       github.repository == 'joserubiobejarano/Ornigami' &&
       github.run_attempt == 1 &&
-      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122'
+      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-staged-run2-20261122'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -59,7 +59,7 @@ jobs:
       - name: Validate one initial-publication trigger
         shell: bash
         env:
-          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122
+          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-staged-run2-20261122
           REQUEST_PATH: .github/build-requests/builder-exact-rehearsal-0d68551-staged.json
           EXPECTED_SOURCE_SHA: ${{ env.SOURCE_SHA }}
           EXPECTED_HARNESS_SHA: ${{ env.HARNESS_SHA }}
@@ -290,7 +290,7 @@ jobs:
       github.event.before == '0000000000000000000000000000000000000000' &&
       github.repository == 'joserubiobejarano/Ornigami' &&
       github.run_attempt == 1 &&
-      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122'
+      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-staged-run2-20261122'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     outputs:
@@ -388,7 +388,7 @@ jobs:
       - name: Validate one initial-publication trigger
         shell: bash
         env:
-          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-staged-20261122
+          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-staged-run2-20261122
           REQUEST_PATH: .github/build-requests/builder-exact-rehearsal-0d68551-staged.json
           EXPECTED_SOURCE_SHA: ${{ env.SOURCE_SHA }}
           EXPECTED_HARNESS_SHA: ${{ env.HARNESS_SHA }}
