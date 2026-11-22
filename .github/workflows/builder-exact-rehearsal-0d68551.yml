@@ -3,7 +3,7 @@ name: Builder exact-candidate synthetic rehearsal (0d68551)
 on:
   push:
     branches:
-      - ci/builder-exact-rehearsal-0d68551-20261122
+      - ci/builder-exact-rehearsal-0d68551-preflight-20261122
     paths:
       - .github/build-requests/builder-exact-rehearsal-0d68551.json
 
@@ -23,7 +23,7 @@ jobs:
       github.event.before == '0000000000000000000000000000000000000000' &&
       github.repository == 'joserubiobejarano/Ornigami' &&
       github.run_attempt == 1 &&
-      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-20261122'
+      github.ref == 'refs/heads/ci/builder-exact-rehearsal-0d68551-preflight-20261122'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     outputs:
@@ -119,7 +119,7 @@ jobs:
       - name: Validate one initial-publication trigger
         shell: bash
         env:
-          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-20261122
+          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-0d68551-preflight-20261122
           REQUEST_PATH: .github/build-requests/builder-exact-rehearsal-0d68551.json
           EXPECTED_SOURCE_SHA: ${{ env.SOURCE_SHA }}
           EXPECTED_HARNESS_SHA: ${{ env.HARNESS_SHA }}
@@ -170,6 +170,12 @@ jobs:
           test "$builder_uid" = "1000"
           test "$runner_uid" != "$builder_uid"
           test "$runner_user" != "$builder_user"
+          if ! getent group docker >/dev/null; then
+            sudo groupadd docker
+          fi
+          if ! id -nG "$builder_user" | tr ' ' '\n' | grep -qx docker; then
+            sudo usermod -aG docker "$builder_user"
+          fi
           sudo install -d -m 0755 -o "$runner_user" -g "$runner_group" "$EVIDENCE_ROOT"
           sudo install -d -m 0700 -o "$builder_user" -g "$builder_group" "$BUILDER_EVIDENCE_ROOT"
           sudo install -d -m 2770 -o "$builder_user" -g "$runner_group" "$EXPORT_STAGING"
@@ -195,13 +201,27 @@ jobs:
           RUNNER_USER="$REHEARSAL_RUNNER_USER" \
           BUILDER_USER="$BUILDER_USER" \
           SOURCE_ROOT="$SOURCE_ROOT" \
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
           EMERGENCY_DIAGNOSTICS_ROOT="$EMERGENCY_DIAGNOSTICS_ROOT" \
           RUNNER_LOG_ROOT="$RUNNER_LOG_ROOT" \
           BUILDER_EVIDENCE_ROOT="$BUILDER_EVIDENCE_ROOT" \
           EXPORT_STAGING="$EXPORT_STAGING" \
           UPLOAD_STAGING="$UPLOAD_STAGING" \
+          DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+          DOCKER_BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
             bash deploy/builder/private-staging/verify-linux-ownership.sh \
-            | tee "$RUNNER_LOG_ROOT/ownership-preflight-console.txt"
+            2>&1 | tee "$RUNNER_LOG_ROOT/ownership-preflight-console.txt"
+
+      - name: Linux ownership preflight regression (Linux-only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          PREFLIGHT_TEST_RUNNER_USER="$REHEARSAL_RUNNER_USER" \
+          PREFLIGHT_TEST_BUILDER_USER="$BUILDER_USER" \
+          DOCKER_HOST_ENDPOINT="unix:///var/run/docker.sock" \
+          DOCKER_BUILD_ENDPOINT="tcp://127.0.0.1:2375" \
+            node --test tests/builder-linux-ownership-preflight.test.mjs \
+            2>&1 | tee "$RUNNER_LOG_ROOT/ownership-preflight-regression.log"
 
       - name: Install supported Node and vendored npm
         shell: bash
@@ -434,6 +454,16 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          preflight_failure="$RUNNER_LOG_ROOT/ownership-preflight-failure.txt"
+          if [[ -f "$preflight_failure" ]]; then
+            echo "Preflight failure preserved as the primary status:" >&2
+            cat "$preflight_failure" >&2
+            preflight_status="$(sed -n 's/^status=//p' "$preflight_failure" | head -n 1)"
+            case "$preflight_status" in
+              ''|*[!0-9]*) preflight_status=1 ;;
+            esac
+            exit "$preflight_status"
+          fi
           if [[ "${{ steps.custody_result.outputs.custody_uploaded }}" != "true" ]]; then
             echo "FAIL: custody upload is incomplete" >&2
             exit 1
