@@ -61,6 +61,15 @@ test("retained evidence roots and browser mode are set before the first use", ()
   assert.ok(firstEdgeWrite > prepare, "evidence root must be prepared before use");
   assert.ok(browserMode > 0, "wrapper must derive the browser mode through the helper");
   assert.ok(browserModeUse > browserMode, "browser mode must be set before the journey env");
+
+  const browserHome = wrapper.indexOf('BROWSER_HOME="$EVIDENCE_ROOT/browser-home"');
+  const browserSmoke = wrapper.indexOf("browser-home-smoke");
+  const journey = wrapper.indexOf('note "Qualify the retained immutable image"');
+  assert.ok(browserHome > 0, "wrapper must create a fresh journey browser home");
+  assert.ok(browserSmoke > browserHome, "journey-home smoke must follow browser-home setup");
+  assert.ok(journey > browserSmoke, "journey-home smoke must precede the journey");
+  assert.match(wrapper, /HOME="\$BROWSER_HOME"/);
+  assert.match(wrapper, /XDG_CONFIG_HOME="\$BROWSER_HOME\/\.config"/);
   assert.doesNotMatch(workflow, /^ {12,}NODE$/m);
 });
 

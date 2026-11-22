@@ -122,6 +122,38 @@ export_retained_evidence() {
   find "$stage" -type f -exec chmod 0640 {} + || return 1
 }
 
+install_private_ca_nss() {
+  local home="$1" certificate="$2" password_file="$3" list_file="$4"
+  local certutil_bin="${CERTUTIL_BIN:-certutil}"
+  [[ -n "$home" && -f "$certificate" ]] || {
+    retained_fail "browser NSS home and CA certificate are required"
+    return 1
+  }
+  retained_require_dir "$home" "browser NSS home" || return 1
+  rm -rf "$home/.pki" || {
+    retained_fail "could not reset the browser NSS directory"
+    return 1
+  }
+  mkdir -p "$home/.pki" "$home/.pki/nssdb" || {
+    retained_fail "could not create the browser NSS directory"
+    return 1
+  }
+  chmod 700 "$home/.pki" "$home/.pki/nssdb" 2>/dev/null || true
+  printf '\n' > "$password_file" || return 1
+  "$certutil_bin" -d "sql:$home/.pki/nssdb" -N -f "$password_file" || {
+    retained_fail "could not initialize the browser NSS database"
+    return 1
+  }
+  "$certutil_bin" -d "sql:$home/.pki/nssdb" -A -t "C,," -n OrnigamiBuilderRehearsal -i "$certificate" || {
+    retained_fail "could not add the private CA to the browser NSS database"
+    return 1
+  }
+  "$certutil_bin" -d "sql:$home/.pki/nssdb" -L > "$list_file" || {
+    retained_fail "could not list the browser NSS database"
+    return 1
+  }
+}
+
 retained_browser_mode() {
   case "${BROWSER_CHROMIUM_SANDBOX:-0}" in
     0|"") printf 'no-sandbox' ;;

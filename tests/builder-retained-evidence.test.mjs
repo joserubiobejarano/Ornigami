@@ -233,6 +233,43 @@ test("a file where a staging directory is required is rejected before copying", 
   }
 });
 
+test("install_private_ca_nss creates a fresh NSS database with the pinned CA", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const home = path.join(root, "browser-home");
+    const certificate = path.join(root, "root.crt");
+    const password = path.join(root, "password");
+    const list = path.join(root, "list.txt");
+    const certutil = path.join(root, "certutil");
+    const log = path.join(root, "certutil.log");
+    mkdirSync(home, { recursive: true });
+    writeFileSync(certificate, "CERT\n");
+    writeFileSync(
+      certutil,
+      `#!/usr/bin/env bash
+printf '%s\\n' "$*" >> ${quote(bashPath(log))}
+if [[ "$1" == "-d" && "$3" == "-L" ]]; then printf 'OrnigamiBuilderRehearsal\\n'; fi
+exit 0
+`,
+    );
+    chmodSync(certutil, 0o755);
+    const result = run(
+      `
+      set -Eeuo pipefail
+      source ${quote(bashPath(library))}
+      install_private_ca_nss ${quote(bashPath(home))} ${quote(bashPath(certificate))} ${quote(bashPath(password))} ${quote(bashPath(list))}
+      `,
+      { CERTUTIL_BIN: bashPath(certutil) },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(existsSync(path.join(home, ".pki", "nssdb")));
+    assert.match(readFileSync(log, "utf8"), /-A -t C,, -n OrnigamiBuilderRehearsal/);
+    assert.match(readFileSync(list, "utf8"), /OrnigamiBuilderRehearsal/);
+  } finally {
+    cleanup();
+  }
+});
+
 test("browser mode derivation accepts only explicit supported values", () => {
   const { cleanup } = fixture();
   try {
