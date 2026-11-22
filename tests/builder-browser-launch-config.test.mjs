@@ -2,20 +2,42 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   browserLaunchOptions,
+  browserMode,
   browserSandboxEnabled,
+  parseBrowserSandbox,
 } from "../deploy/builder/browser-launch-config.mjs";
 import { buildBrowserSmokeReport } from "../deploy/builder/browser-smoke-report.mjs";
 
 test("browser sandbox is opt-in and the default is the synthetic CI exception", () => {
+  assert.equal(parseBrowserSandbox(undefined), false);
+  assert.equal(parseBrowserSandbox(""), false);
+  assert.equal(parseBrowserSandbox("0"), false);
+  assert.equal(parseBrowserSandbox("1"), true);
   assert.equal(browserSandboxEnabled({}), false);
   assert.equal(browserSandboxEnabled({ BROWSER_CHROMIUM_SANDBOX: "0" }), false);
-  assert.equal(browserSandboxEnabled({ BROWSER_CHROMIUM_SANDBOX: "true" }), false);
   assert.equal(browserSandboxEnabled({ BROWSER_CHROMIUM_SANDBOX: "1" }), true);
+  assert.equal(browserMode({}), "no-sandbox");
+  assert.equal(browserMode({ BROWSER_CHROMIUM_SANDBOX: "1" }), "sandbox");
   assert.deepEqual(browserLaunchOptions({}), { headless: true, chromiumSandbox: false });
   assert.deepEqual(browserLaunchOptions({ BROWSER_CHROMIUM_SANDBOX: "1" }), {
     headless: true,
     chromiumSandbox: true,
   });
+});
+
+test("unsupported browser sandbox values are rejected instead of silently disabled", () => {
+  for (const value of ["true", "false", "yes", "sandbox", "no-sandbox", " 1 ", "01"]) {
+    assert.throws(
+      () => browserSandboxEnabled({ BROWSER_CHROMIUM_SANDBOX: value }),
+      /BROWSER_CHROMIUM_SANDBOX must be "0" or "1"/,
+      value,
+    );
+    assert.throws(
+      () => browserLaunchOptions({ BROWSER_CHROMIUM_SANDBOX: value }),
+      /BROWSER_CHROMIUM_SANDBOX must be "0" or "1"/,
+      value,
+    );
+  }
 });
 
 test("browser smoke report records identity, paths, mode and bounded failure text", () => {
@@ -44,6 +66,7 @@ test("browser smoke report records identity, paths, mode and bounded failure tex
   assert.equal(report.home, "/home/builder");
   assert.equal(report.xdgConfigHome, "/home/builder/.config");
   assert.equal(report.xdgCacheHome, "/home/builder/.cache");
+  assert.equal(report.browserMode, "no-sandbox");
   assert.equal(report.sandbox, "no-sandbox");
   assert.equal(report.error.message, "launch failed");
   assert.equal(report.stderr.length, 64 * 1024);

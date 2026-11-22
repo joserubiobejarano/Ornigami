@@ -111,6 +111,7 @@ writeFileSync(
 );
 console.log(JSON.stringify({
   ok: report.ok,
+  browserMode: report.browserMode,
   sandbox: report.sandbox,
   effectiveUid: report.effectiveUid,
   effectiveGid: report.effectiveGid,

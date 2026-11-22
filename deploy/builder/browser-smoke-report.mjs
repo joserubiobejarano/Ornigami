@@ -37,6 +37,7 @@ export function buildBrowserSmokeReport({
     tmpdir: tmpdir ?? null,
     timezone,
     writable,
+    browserMode: launchOptions.chromiumSandbox === true ? "sandbox" : "no-sandbox",
     sandbox: launchOptions.chromiumSandbox === true ? "sandbox" : "no-sandbox",
     launchOptions,
     executablePath,

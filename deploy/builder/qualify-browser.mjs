@@ -75,17 +75,21 @@ const packshot =
   path.join(root, "public", "campaign-assets", "harbor-field-bottle.webp");
 const operatorMode = process.env.BROWSER_OPERATOR_MODE ?? "container";
 const operatorStoreDir = process.env.BROWSER_OPERATOR_STORE_DIR ?? null;
+const launchOptions = browserLaunchOptions();
+const effectiveBrowserMode = launchOptions.chromiumSandbox ? "sandbox" : "no-sandbox";
 
 const results = {
   startedAt: new Date().toISOString(),
   baseUrl,
   operatorMode,
+  browserMode: effectiveBrowserMode,
   identity: {
     applicationSourceSha: process.env.BROWSER_SOURCE_SHA ?? null,
     harnessSha: process.env.BROWSER_HARNESS_SHA ?? null,
     imageId: process.env.BROWSER_IMAGE_ID ?? null,
     applicationOrigin: process.env.BROWSER_APPLICATION_ORIGIN ?? baseUrl,
     qualificationPath: process.env.BROWSER_QUALIFICATION_PATH ?? null,
+    browserMode: effectiveBrowserMode,
   },
   checks: [],
   requestKeys: [],
@@ -513,7 +517,7 @@ await auditCsp();
 
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch({
-  ...browserLaunchOptions(),
+  ...launchOptions,
   executablePath: chromiumExecutable(chromium),
 });
 const contextA = await browser.newContext({

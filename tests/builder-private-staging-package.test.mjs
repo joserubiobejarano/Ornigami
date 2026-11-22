@@ -139,6 +139,18 @@ test("browser acceptance supports actual HTTPS origin, private access and dynami
   assert.match(browser, /BROWSER_IMAGE_ID/);
   assert.match(browser, /BROWSER_QUALIFICATION_PATH/);
   assert.match(browser, /BROWSER_APPLICATION_ORIGIN/);
+  assert.equal(
+    (browser.match(/browserMode: effectiveBrowserMode/g) ?? []).length,
+    2,
+  );
+
+  const accept = readFileSync(
+    path.join(root, "deploy", "builder", "private-staging", "accept-browser.sh"),
+    "utf8",
+  );
+  assert.match(accept, /BROWSER_CHROMIUM_SANDBOX must be 0 or 1/);
+  assert.match(accept, /"browserMode": "\$BROWSER_MODE"/);
+  assert.match(accept, /r\.identity\.browserMode !== process\.env\.BROWSER_MODE/);
 });
 
 test("edge and runtime acceptance record the image identity and parse proxy bindings structurally", () => {
