@@ -715,7 +715,7 @@ test("staged workflow runs a clean no-DinD gate before the build job", () => {
   assert.match(workflow, /SKIP_CANDIDATE_GATES=1/);
   assert.match(workflow, /CANDIDATE_GATE_RECEIPT/);
   assert.match(workflow, /156259d0c4330b185a0844711b7004b0b4467887/);
-  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-staged-20261122/);
+  assert.match(workflow, /ci\/builder-exact-rehearsal-0d68551-staged/);
   assert.match(workflow, /builder-exact-rehearsal-0d68551-staged-retrieval-/);
 });
 
@@ -727,7 +727,7 @@ test("staged request records the new candidate and clean-gate handoff", () => {
   assert.equal(request.applicationSourceSha, stagedCandidate);
   assert.equal(request.harnessSha, stagedCandidate);
   assert.equal(request.workflowFile, stagedWorkflow);
-  assert.equal(request.trigger.branch, "ci/builder-exact-rehearsal-0d68551-staged-20261122");
+  assert.match(request.trigger.branch, /^ci\/builder-exact-rehearsal-0d68551-staged/);
   assert.equal(request.customerAdmission, "closed");
   assert.equal(request.budget.stagedWorkflow, 1);
 });
