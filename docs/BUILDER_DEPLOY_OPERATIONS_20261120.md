@@ -5,6 +5,13 @@ real invitation was issued and no paid call was made. Linux execution remains
 **pending** because no Docker, Podman, nerdctl or WSL engine is available on this
 workstation.
 
+> **Update 22 November 2026:** a retained image/archive was later qualified in
+> the hosted Linux synthetic edge (run `45043028345`). This 20 November record
+> remains historical; do not repeat the build/qualification for the unchanged
+> image. New operator backup/recovery mechanics are in
+> [the backup record](./BUILDER_BACKUP_RESTORE_20261122.md); customer admission
+> and persistent deployment remain closed.
+
 ## Decision
 
 `deploy/builder` owns the builder-only image, its Linux qualification harness,

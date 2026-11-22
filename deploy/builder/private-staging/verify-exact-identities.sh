@@ -69,8 +69,8 @@ fi
 cat <<EOF
 controlPlaneHead=$control_head
 workflowSha=$WORKFLOW_SHA
-applicationSourceSha=$SOURCE_SHA
-harnessSha=$HARNESS_SHA
+sourceCheckoutSha=$SOURCE_SHA
+harnessCheckoutSha=$HARNESS_SHA
 sourceClean=true
 requiredTipsAncestors=$REQUIRE_TIPS
 EOF

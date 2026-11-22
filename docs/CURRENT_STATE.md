@@ -1,6 +1,6 @@
 # Ornigami current state
 
-Updated 20 November 2026, Europe/Madrid. This checkpoint describes observed progress; the [roadmap](./ROADMAP.md) owns priorities and the [builder plan](./LANDING_PAGE_BUILDER_PLAN.md) describes the target product.
+Updated 22 November 2026, Europe/Madrid. This checkpoint describes observed progress; the [roadmap](./ROADMAP.md) owns priorities and the [builder plan](./LANDING_PAGE_BUILDER_PLAN.md) describes the target product.
 
 ## Position
 
@@ -15,6 +15,27 @@ The foundational builder implementation is `c455da34e63e1e811d178ac0b7836a7528f6
 **Earlier product-focus checkpoint (20 November):** accepted at clean `923f39962d4ecd0d6312bd1bed34797fc9283b94` in `C:/Users/joser/.local/ornigami-product-focused-offer`. Recipe 1.0.0 is independent of direction and survives normal intake/API/persistence/generation/fallback/revision approval/export; omitted/default behavior remains compatible. Independent [review](./design/PRODUCT_FOCUSED_OFFER_COMPOSITION_REVIEW_20261120.md) passed 361 tests, TypeScript, focused lint, 125 artifact hashes and three ZIP/receipt/input-identity audits. Private mobile product recognition and tablet proportions improved. Price emphasis, desktop spacing and broader brand/customer quality remain bounded finishing work. The creation/export engine is ready for a production-delivery phase; hosted customer access/publication is not implemented or accepted. See [launch readiness](./LAUNCH_READINESS.md) for proposed scope and conditional estimates.
 
 The narrow beta/public estimates are recorded centrally in [launch readiness](./LAUNCH_READINESS.md). They assume one focused engineer with agent support, prompt decisions, one provider and one offer workflow. They are not a public launch date or percentage complete.
+
+**Retained image qualification accepted (22 November 2026):** run
+`45043028345` passed the existing-image qualification and independent
+fresh-runner retrieval for application source
+`156259d0c4330b185a0844711b7004b0b4467887`, consumer harness
+`b1c6cce04f1fd5ad6ffdbdc3834bf28e8c1a2144`, image
+`sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57`
+and archive `a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df`.
+The accepted scope is the synthetic, loopback-only private HTTPS edge with the
+explicit `no-sandbox` CI browser exception. It is **GO** for that synthetic
+scope only; customer admission, registry publication, public DNS/ACME,
+persistent deployment and default-branch merge remain closed. Do not rebuild or
+re-qualify this unchanged image without a demonstrated defect. See the
+[qualification record](./BUILDER_RETAINED_IMAGE_QUALIFICATION_20261122_R2.md)
+and [custody index](./BUILDER_QUALIFICATION_CUSTODY_INDEX_20261122.md).
+
+The consumer checkout `b1c6cce` is a **harness checkout**, not the application
+source. Historical `harness-identity.txt` evidence uses the generic label
+`applicationSourceSha` for that candidate checkout; preserve the original
+evidence and read that field as the checkout SHA, while the application source
+remains `156259d0c433...`.
 
 ## What exists
 

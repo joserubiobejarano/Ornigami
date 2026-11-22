@@ -5,6 +5,15 @@ this SHA until the Linux/image and owner gates below pass.** Access stays
 closed, the live provider stays disabled, and no real invitation, deployment,
 DNS/edge change or paid call is authorized by this file.
 
+> **Update 22 November 2026:** the retained image/archive in this record's
+> successor was accepted for the synthetic loopback private HTTPS edge in run
+> `45043028345` (source `156259d`, image `sha256:d50ef...`, consumer harness
+> `b1c6cce`). That is **not** customer admission or deployment authority. The
+> privacy, support, retention, custom-Next and hosting decisions in this file
+> remain proposals/owner decisions and are still pending. See
+> [the accepted result](./BUILDER_RETAINED_IMAGE_QUALIFICATION_20261122_R2.md)
+> and [owner decisions](./OWNER_DECISIONS_BETA_20261122.md).
+
 ## Exact source
 
 - Candidate branch: `codex/ornigami-builder-final-integration-20261120`

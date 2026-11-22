@@ -21,13 +21,24 @@ The foundational builder baseline is `c455da34e63e1e811d178ac0b7836a7528f6492d` 
 
 ### Immediate work
 
+**Retained-image qualification is accepted (22 November 2026).** Run
+`45043028345` qualified application source `156259d0c433` / image
+`sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57`
+with consumer harness `b1c6cce` on the synthetic private HTTPS edge. Do not
+repeat the build, archive retrieval or qualification for this unchanged image.
+The remaining work is the operations-readiness slice: encrypted backup/recovery,
+owner decisions, support/retention policy, custom-Next ownership and a
+low-assistance usability exercise. See [the qualification record](./BUILDER_RETAINED_IMAGE_QUALIFICATION_20261122_R2.md),
+[custody index](./BUILDER_QUALIFICATION_CUSTODY_INDEX_20261122.md) and
+[backup/recovery](./BUILDER_BACKUP_RESTORE_20261122.md).
+
 **Integrated builder checkpoint (20 November):** accepted locally at `51291908ed1652414fa95c8e26657eb06c0fbc72` on `codex/ornigami-builder-integration-review-20261120` in `C:/Users/joser/.local/ornigami-builder-integration-review-20261120`. The separate `builder-runtime/` builds and starts without reputation credentials and stays closed. Product focus 1.1.0 and reviewed offer emphasis are integrated; wrapping/contrast corrections use rendered identity 7. Independent combined verification passed 416 selected tests, TypeScript, focused lint, both builds/smokes, the two original browser reproductions and five ZIP audits. Builder build/smoke recorded zero denied egress attempts. See [integration review](./BUILDER_INTEGRATION_REVIEW_20261120.md). Invites, subject-scoped recovery, service budgets and hosted acceptance remain open; no deployment or paid-call authority is added.
 
 **Earlier product-focus checkpoint (20 November):** accepted at clean `923f39962d4ecd0d6312bd1bed34797fc9283b94` in `C:/Users/joser/.local/ornigami-product-focused-offer`. Recipe 1.0.0 is independent of direction and survives normal intake/API/persistence/generation/fallback/revision approval/export; omitted/default behavior remains compatible. Independent [review](./design/PRODUCT_FOCUSED_OFFER_COMPOSITION_REVIEW_20261120.md) passed 361 tests, TypeScript, focused lint, 125 artifact hashes and three ZIP/receipt/input-identity audits. Private mobile product recognition and tablet proportions improved. Price emphasis, desktop spacing and broader brand/customer quality remain bounded finishing work. The creation/export engine is ready for a production-delivery phase; hosted customer access/publication is not implemented or accepted. See [launch readiness](./LAUNCH_READINESS.md) for proposed scope and conditional estimates.
 
 1. Build builder-specific invite identity, single-use redemption, durable revocation/session metadata and subject-scoped export-only recovery. Include a usable prepared-brief download/import path and safe logout/account-switch cleanup. Keep generation disabled and default access closed.
 2. Implement per-subject/global generation budgets, concurrency/rate/spend controls and failure/unknown-outcome accounting against that identity/store contract. A live provider canary requires fresh bounded authority; existing allowances are exhausted.
-3. Qualify the selected target runtime, current dependency/security state, privacy/operations and low-assistance customer journey before hosted beta use. Hosted campaign publishing remains a separate scope with accepted-revision URLs, failure preservation and rollback/unpublish.
+3. Complete operations readiness for the accepted synthetic image: portable encrypted backup/restore, owner-held custody before artifact expiry, owner decisions on backup/retention/support/custom-Next/hosting, and a low-assistance synthetic usability exercise. Do not repeat image qualification unless the runtime or a demonstrated defect changes. Hosted campaign publishing remains a separate scope with accepted-revision URLs, failure preservation and rollback/unpublish.
 4. Retain the accepted static recipes and finishing corrections. Reopen visual work only for a reproducible defect or changed requirement; defer additional formats, general brand cloning and motion expansion.
 
 See [launch readiness](./LAUNCH_READINESS.md) for 2–4 focused engineering weeks to an invite-only creation/export beta and 6–10 to a narrow hosted public MVP, with explicit scope/decision/quality assumptions. These are planning estimates, not commitments or deployment authority.
@@ -73,6 +84,13 @@ The palette collector/review/apply and bounded local native source canary are co
 - Offline local-test authoring remains within its assigned scope. No fresh paid-model/source operation, billing/credential change, deployment or public traffic action is authorized by these docs. No customer launch date is committed.
 
 ## Retained legacy reputation-app backlog
+
+**Historical note (22 November 2026):** the builder retained-image
+qualification was accepted in run `45043028345`. Earlier instructions in this
+legacy section to prepare a fresh exact candidate, build another image or repeat
+builder Linux qualification are historical and must not be applied to the
+accepted builder image without a demonstrated defect or changed runtime. The
+legacy reputation application and its VPS backlog remain separate.
 
 The remainder preserves earlier decisions, receipts, operational constraints, and unfinished legacy work. Its old priority statements and dates are historical. Existing obligations to any retained service/data remain; those tasks require their own explicit scope and do not replace the builder priorities above.
 

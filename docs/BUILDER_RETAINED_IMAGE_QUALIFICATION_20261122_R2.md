@@ -24,6 +24,12 @@ runtime and rollback phases; no build was invoked.
 | Browser mode | `no-sandbox` (explicit synthetic-CI exception) |
 | Customer admission | `closed` |
 
+The archived `harness-identity.txt` used the historical label
+`applicationSourceSha` for the **consumer checkout** `b1c6cce`. That field is a
+checkout identity, not the application source. The original evidence is
+preserved unchanged; future identity output uses `sourceCheckoutSha` and
+`harnessCheckoutSha`, and the application source remains `156259d0c433`.
+
 The producer receipt was copied unchanged. It still records
 `handoffComplete: false` and `registryReference: pending`; no registry
 publication occurred.

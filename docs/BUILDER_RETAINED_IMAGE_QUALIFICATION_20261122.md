@@ -1,5 +1,11 @@
 # Retained-image qualification, 22 November 2026
 
+> **Historical failure record.** This attempt (`45034113780`) was superseded by
+> the successful retained-image qualification in run `45043028345`. Preserve
+> this record as failure evidence; do not repeat its next-step recommendation
+> for the unchanged image. See
+> [the accepted result](./BUILDER_RETAINED_IMAGE_QUALIFICATION_20261122_R2.md).
+
 This record covers the browser diagnosis, retained-archive verification and
 single retained-image qualification attempt for run `45030190736`. It is a
 failure record, not a qualification receipt.
@@ -125,6 +131,6 @@ hashes; it is not a generated retrieval receipt.
 - Registry publication, public DNS/ACME, persistent deployment and
   default-branch merge: not attempted.
 
-The smallest remaining issue is the missing edge evidence directory, now fixed
-in `d0ffbe5`. A further qualification requires fresh explicit authorization; no
-automatic retry was made.
+The missing edge evidence directory was fixed in `d0ffbe5`. This attempt is
+historical: the unchanged image was later accepted in run `45043028345`. Do not
+retry this failed attempt or rebuild the unchanged image.
