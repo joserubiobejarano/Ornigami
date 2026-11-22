@@ -92,6 +92,31 @@ jobs:
           test "$(git rev-parse HEAD)" = "${{ github.sha }}"
           git rev-parse HEAD > "$RUNNER_LOG_ROOT/control-plane-head.txt"
 
+      - name: Check out exact candidate and verify identities/modes
+        id: candidate_identity
+        shell: bash
+        run: |
+          set +e
+          actions_checkout_ref="$SOURCE_SHA"
+          # Check out the exact reachable candidate commit from the local control
+          # plane; this is the same immutable SHA the real workflow checks out.
+          rm -rf candidate-source
+          git clone --quiet "$GITHUB_WORKSPACE" candidate-source
+          git -C candidate-source checkout --quiet --detach "$actions_checkout_ref"
+          git -C candidate-source rev-parse HEAD > "$RUNNER_LOG_ROOT/candidate-head.txt"
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="${{ github.sha }}" \
+          SOURCE_SHA="$SOURCE_SHA" \
+          HARNESS_SHA="$HARNESS_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/candidate-identity.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [[ "$rc" == "0" ]]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+          exit 0
+
       - name: Create isolated UID-1000 builder and owned roots
         id: builder_setup
         shell: bash
@@ -260,6 +285,7 @@ jobs:
           }
           check build_probe true "${{ steps.build_probe.outputs.ok }}"
           check host_probe true "${{ steps.host_probe.outputs.ok }}"
+          check candidate_identity true "${{ steps.candidate_identity.outputs.ok }}"
           if [[ "$RUN_NEGATIVE_PROBE" == "true" ]]; then
             check negative_closed_port true "${{ steps.negative_probe.outputs.closed_ok }}"
             check negative_non_loopback true "${{ steps.negative_probe.outputs.nonloopback_ok }}"
