@@ -92,17 +92,20 @@ jobs:
           test "$(git rev-parse HEAD)" = "${{ github.sha }}"
           git rev-parse HEAD > "$RUNNER_LOG_ROOT/control-plane-head.txt"
 
-      - name: Check out exact candidate and verify identities/modes
+      - name: Check out exact candidate source
+        uses: actions/checkout@v5
+        with:
+          ref: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact candidate identities and modes
         id: candidate_identity
         shell: bash
         run: |
           set +e
-          actions_checkout_ref="$SOURCE_SHA"
-          # Check out the exact reachable candidate commit from the local control
-          # plane; this is the same immutable SHA the real workflow checks out.
-          rm -rf candidate-source
-          git clone --quiet "$GITHUB_WORKSPACE" candidate-source
-          git -C candidate-source checkout --quiet --detach "$actions_checkout_ref"
           git -C candidate-source rev-parse HEAD > "$RUNNER_LOG_ROOT/candidate-head.txt"
           CONTROL_ROOT="$GITHUB_WORKSPACE" \
           SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
