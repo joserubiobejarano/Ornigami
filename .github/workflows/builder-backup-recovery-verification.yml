@@ -3,9 +3,9 @@ name: Builder backup/recovery Linux verification
 on:
   push:
     branches:
-      - ci/builder-backup-recovery-verify-20261122
+      - ci/builder-backup-recovery-verify-20261122-b
     paths:
-      - .github/build-requests/builder-backup-recovery-verification.json
+      - .github/build-requests/builder-backup-recovery-verification-b.json
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
       github.event.created == true &&
       github.event.before == '0000000000000000000000000000000000000000' &&
       github.run_attempt == 1 &&
-      github.ref == 'refs/heads/ci/builder-backup-recovery-verify-20261122'
+      github.ref == 'refs/heads/ci/builder-backup-recovery-verify-20261122-b'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -142,3 +142,4 @@ jobs:
           path: ${{ env.DIAGNOSTICS }}
           if-no-files-found: error
           retention-days: 7
+
