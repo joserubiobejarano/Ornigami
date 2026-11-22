@@ -294,6 +294,9 @@ note "Build daemon: $BUILD_DAEMON_ID"
 note "Verify/phase daemon: $HOST_DAEMON_ID"
 
 note "Run candidate dependency, test, TypeScript, lint and security gates"
+[[ -n "${A04_PG_BIN:-}" ]] || fail "A04_PG_BIN is required for the Linux full suite"
+[[ -x "$A04_PG_BIN/initdb" ]] || fail "A04_PG_BIN does not contain initdb: $A04_PG_BIN"
+[[ -x "$A04_PG_BIN/postgres" ]] || fail "A04_PG_BIN does not contain postgres: $A04_PG_BIN"
 (
   cd "$SOURCE_ROOT"
   # Rehearsal orchestration variables must not leak into the candidate suite.

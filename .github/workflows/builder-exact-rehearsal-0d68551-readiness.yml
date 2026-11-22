@@ -381,6 +381,8 @@ jobs:
             sudo apt-get install --no-install-recommends -y postgresql-17
           fi
           "$pg_bin/pg_config" --version
+          test -x "$pg_bin/initdb"
+          test -x "$pg_bin/postgres"
           echo "A04_PG_BIN=$pg_bin" >> "$GITHUB_ENV"
           echo "$pg_bin" >> "$GITHUB_PATH"
           sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PATH="/opt/ornigami-node/bin:$PATH" \
