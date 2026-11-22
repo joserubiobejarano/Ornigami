@@ -195,7 +195,7 @@ jobs:
           APPLICATION_SOURCE_SHA="$SOURCE_SHA" \
           HARNESS_SHA="$HARNESS_SHA" \
           CONTROL_PLANE_SHA="${{ github.sha }}" \
-          CANDIDATE_HEAD="$(git -C "$SOURCE_ROOT" rev-parse HEAD)" \
+          CANDIDATE_HEAD="$(sudo -u "$BUILDER_USER" -- git -C "$SOURCE_ROOT" rev-parse HEAD)" \
           LOCKFILE_PATH="$SOURCE_ROOT/package-lock.json" \
           BUILDER_USER="$BUILDER_USER" \
           NODE_VERSION="$("$NODE_BIN" --version)" \
