@@ -296,9 +296,25 @@ note "Verify/phase daemon: $HOST_DAEMON_ID"
 note "Run candidate dependency, test, TypeScript, lint and security gates"
 (
   cd "$SOURCE_ROOT"
+  # Rehearsal orchestration variables must not leak into the candidate suite.
+  # The suite has its own tests for BUILD_CONTEXT/BUILD_ENDPOINT precedence and
+  # would otherwise inherit the live rehearsal selectors.
+  unset BUILD_ENDPOINT VERIFY_ENDPOINT PHASE_ENDPOINT \
+        BUILD_CONTEXT VERIFY_CONTEXT PHASE_CONTEXT \
+        BUILD_ENGINE VERIFY_ENGINE PHASE_ENGINE \
+        BUILD_ENGINE_BIN VERIFY_ENGINE_BIN PHASE_ENGINE_BIN \
+        REHEARSAL_DIR ACTION SOURCE_SHA HARNESS_SHA WORKFLOW_SHA \
+        DOCKER_HOST_ENDPOINT BUILD_DAEMON_READINESS_SECONDS \
+        HOST_DAEMON_READINESS_SECONDS DAEMON_PROBE_TIMEOUT_SECONDS
   {
     node "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund
-    node scripts/test.mjs
+    # Same discovery as scripts/test.mjs, serialized so timing-sensitive lock
+    # fixtures do not race other test files on a loaded CI runner.
+    mapfile -t candidate_test_suites < <(
+      find tests -maxdepth 1 -type f \( -name '*.test.mjs' -o -name '*.test.mts' \) | sort
+    )
+    [[ "${#candidate_test_suites[@]}" -gt 0 ]] || { echo "FAIL: no candidate test suites discovered" >&2; exit 1; }
+    node --experimental-strip-types --test --test-concurrency=1 "${candidate_test_suites[@]}"
     node node_modules/typescript/bin/tsc --noEmit
     node node_modules/eslint/bin/eslint.js .
     node "$NPM_CLI_FOR_REHEARSAL" run security:audit
