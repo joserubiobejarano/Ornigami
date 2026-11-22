@@ -47,6 +47,7 @@ test("retained evidence roots exist before the first write", () => {
   const firstEdgeWrite = wrapper.indexOf("caddy-digests.json");
   assert.ok(mkdir > 0, "wrapper must create the edge evidence directory");
   assert.ok(firstEdgeWrite > mkdir, "edge evidence directory must be created before use");
+  assert.match(wrapper, /archive-producer-identity\.txt host\.txt cleanup-receipt\.txt access-closed\.txt/);
   assert.doesNotMatch(workflow, /^ {12,}NODE$/m);
 });
 

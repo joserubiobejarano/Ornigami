@@ -128,7 +128,7 @@ export_approved_evidence() {
     [[ -f "$stage/custody/archive-receipt.json" ]] || cp "$ARCHIVE_RECEIPT_PATH" "$stage/custody/archive-receipt.json"
   fi
   if [[ -d "$EVIDENCE_ROOT/edge" ]]; then cp -R "$EVIDENCE_ROOT/edge/." "$stage/edge/"; fi
-  for file in image-inspect.json image-identity-verification.json archive-producer-identity.txt access-closed.txt; do
+  for file in image-inspect.json image-identity-verification.json archive-producer-identity.txt host.txt cleanup-receipt.txt access-closed.txt; do
     if [[ -f "$EVIDENCE_ROOT/$file" ]]; then cp "$EVIDENCE_ROOT/$file" "$stage/$file"; fi
   done
   if [[ -d "$REHEARSAL_DIR/existing-image-qualification" ]]; then
