@@ -29,6 +29,7 @@ jobs:
     env:
       SOURCE_SHA: 156259d0c4330b185a0844711b7004b0b4467887
       HARNESS_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+      WORKFLOW_SHA: ${{ github.sha }}
       GATE_EVIDENCE: /tmp/ornigami-gate-staged-${{ github.run_id }}-${{ github.run_attempt }}
       GATE_RUNNER_LOG_ROOT: /tmp/ornigami-gate-staged-${{ github.run_id }}-${{ github.run_attempt }}/logs
     steps:

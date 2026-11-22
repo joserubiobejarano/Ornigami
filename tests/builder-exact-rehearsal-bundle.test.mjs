@@ -709,6 +709,7 @@ test("staged workflow runs a clean no-DinD gate before the build job", () => {
   assert.match(gateBlock, /write-gate-receipt\.mjs/);
   assert.match(gateBlock, /Install PostgreSQL 17/);
   assert.match(gateBlock, /builder-gate-receipt-/);
+  assert.match(gateBlock, /WORKFLOW_SHA: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /needs: gate/);
   assert.match(workflow, /verify-candidate-gate-receipt\.mjs/);
   assert.match(workflow, /SKIP_CANDIDATE_GATES=1/);
