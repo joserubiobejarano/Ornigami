@@ -335,12 +335,39 @@ docker cp "$PROXY_ID:$CA_PATH" "$EVIDENCE_ROOT/edge/root.crt"
 sudo chmod 0644 "$EVIDENCE_ROOT/edge/root.crt"
 sudo cp "$EVIDENCE_ROOT/edge/root.crt" /usr/local/share/ca-certificates/ornigami-builder-rehearsal-ca.crt
 sudo update-ca-certificates 2>&1 | tee "$LOG_DIR/ca-update.log"
-rm -rf "$HOME/.pki"
-install -d -m 0700 "$HOME/.pki" "$HOME/.pki/nssdb"
-printf '\n' > "$EVIDENCE_ROOT/edge/nss-empty-password"
-certutil -d "sql:$HOME/.pki/nssdb" -N -f "$EVIDENCE_ROOT/edge/nss-empty-password"
-certutil -d "sql:$HOME/.pki/nssdb" -A -t "C,," -n OrnigamiBuilderRehearsal -i "$EVIDENCE_ROOT/edge/root.crt"
-certutil -d "sql:$HOME/.pki/nssdb" -L > "$EVIDENCE_ROOT/edge/nss-ca-list.txt"
+BROWSER_HOME="$EVIDENCE_ROOT/browser-home"
+BROWSER_SMOKE_HOME="$EVIDENCE_ROOT/browser-smoke-home"
+retained_require_dir "$BROWSER_HOME" "browser home"
+retained_require_dir "$BROWSER_SMOKE_HOME" "browser smoke home"
+chmod 700 "$BROWSER_HOME" "$BROWSER_SMOKE_HOME" 2>/dev/null || true
+install_private_ca_nss \
+  "$BROWSER_HOME" "$EVIDENCE_ROOT/edge/root.crt" \
+  "$EVIDENCE_ROOT/edge/nss-empty-password" "$EVIDENCE_ROOT/edge/nss-ca-list.txt"
+install_private_ca_nss \
+  "$BROWSER_SMOKE_HOME" "$EVIDENCE_ROOT/edge/root.crt" \
+  "$EVIDENCE_ROOT/edge/nss-smoke-empty-password" "$EVIDENCE_ROOT/edge/nss-smoke-ca-list.txt"
+
+BROWSER_SMOKE_EVIDENCE="$EVIDENCE_ROOT/edge/browser-home-smoke"
+retained_require_dir "$BROWSER_SMOKE_EVIDENCE" "browser home smoke evidence"
+note "Require browser launch in the journey home before qualification"
+(
+  HOME="$BROWSER_SMOKE_HOME" \
+  XDG_CONFIG_HOME="$BROWSER_SMOKE_HOME/.config" \
+  XDG_CACHE_HOME="$BROWSER_SMOKE_HOME/.cache" \
+  PLAYWRIGHT_BROWSERS_PATH="$PLAYWRIGHT_BROWSERS_PATH" \
+  BROWSER_PLAYWRIGHT="$BROWSER_PLAYWRIGHT" \
+  BROWSER_CHROMIUM_SANDBOX="$BROWSER_CHROMIUM_SANDBOX" \
+  BROWSER_SMOKE_EVIDENCE_DIR="$BROWSER_SMOKE_EVIDENCE" \
+    node "$SOURCE_ROOT/scripts/browser-smoke.mjs"
+) 2>&1 | tee "$LOG_DIR/browser-home-smoke-console.txt"
+node -e '
+  const fs = require("node:fs");
+  const r = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  if (r.ok !== true) throw new Error(`browser home smoke failed: ${JSON.stringify(r.error)}`);
+  if (r.browserMode !== "no-sandbox") throw new Error(`unexpected browser mode: ${r.browserMode}`);
+  if (r.home !== process.argv[2]) throw new Error(`unexpected browser home: ${r.home} !== ${process.argv[2]}`);
+  console.log(JSON.stringify({ ok: r.ok, browserMode: r.browserMode, home: r.home, browser: r.browserVersion }, null, 2));
+' "$BROWSER_SMOKE_EVIDENCE/browser-smoke.json" "$BROWSER_SMOKE_HOME"
 
 note "Start the retained image in invite mode"
 compose invite up -d --force-recreate app 2>&1 | tee "$LOG_DIR/compose-up-invite.log"
@@ -356,10 +383,23 @@ else
   BROWSER_CHROMIUM_SANDBOX=0
 fi
 
+{
+  id
+  printf 'HOME=%s\n' "$BROWSER_HOME"
+  printf 'XDG_CONFIG_HOME=%s\n' "$BROWSER_HOME/.config"
+  printf 'XDG_CACHE_HOME=%s\n' "$BROWSER_HOME/.cache"
+  ls -ld "$BROWSER_HOME" "$BROWSER_HOME/.pki" "$BROWSER_HOME/.pki/nssdb" 2>&1
+  df -h /tmp "$BROWSER_HOME" 2>&1
+  certutil -d "sql:$BROWSER_HOME/.pki/nssdb" -L 2>&1
+} > "$EVIDENCE_ROOT/edge/journey-environment.txt" 2>&1 || true
+
 note "Qualify the retained immutable image"
 (
   cd "$SOURCE_ROOT"
   env QUALIFICATION_PATH=https-edge \
+    HOME="$BROWSER_HOME" \
+    XDG_CONFIG_HOME="$BROWSER_HOME/.config" \
+    XDG_CACHE_HOME="$BROWSER_HOME/.cache" \
     IMAGE_REFERENCE="$IMAGE_REFERENCE" \
     EXPECTED_SOURCE_SHA="$SOURCE_SHA" EXPECTED_ORIGIN="$APP_URL" STAGING_ORIGIN="$APP_URL" \
     STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" STAGING_BASIC_AUTH_PASSWORD="$BASIC_PASSWORD" \
