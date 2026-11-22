@@ -277,10 +277,19 @@ published app port, only internal app network(s), denied public egress, no
 forbidden provider/database/mail/Sentry environment, volume label, root
 `1000:1000:700`, store file `1000:1000:600` when populated, and proxy
 publishing only the approved bindings. Proxy `HostConfig.PortBindings` is parsed
-structurally: container ports/protocols must be exactly `80/tcp`, `443/tcp` and
-`443/udp`; host ports must be `80`, `443` and `443`; bind addresses must be the
-wildcard form. Any extra container port (including `8080`), altered host port,
-unexpected address or extra protocol fails. This script is read-only.
+structurally against the explicit `PROXY_BINDING_PROFILE`:
+
+- `wildcard` (default; existing internet-facing scope): container
+  ports/protocols exactly `80/tcp`, `443/tcp`, `443/udp`; host ports `80`, `443`,
+  `443`; bind addresses empty, `0.0.0.0` or `::`.
+- `loopback` (temporary local private-edge scope): the same exact container/host
+  ports, but bind addresses only `127.0.0.1` or `::1`.
+
+The selected profile is recorded in `checks.tsv`, `results.txt`,
+`identity.json` and `proxy-bindings.json`. Any extra container port (including
+`8080`), altered host port, unexpected address, extra protocol, duplicate
+binding or mixture of wildcard and loopback addresses fails. This script is
+read-only.
 
 ### 4. Populated backup/restore, lock recovery and closed rollback
 
