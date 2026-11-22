@@ -355,7 +355,7 @@ EOF
   env "${build_env[@]}" \
     SOURCE_SHA="$SOURCE_SHA" APP_URL="$APP_URL" HARNESS_SHA="$HARNESS_SHA" \
     OUTPUT_DIR="$IMAGE_OUTPUT_DIR" PLATFORM="$PLATFORM" ALLOW_DIRTY="${ALLOW_DIRTY:-0}" \
-    "$ROOT/deploy/builder/private-staging/build-and-retain.sh"
+    bash "$ROOT/deploy/builder/private-staging/build-and-retain.sh"
 
   IMAGE_ID="$(field "$IMAGE_OUTPUT_DIR/archive-receipt.json" imageId)"
   ARCHIVE_PATH="$(field "$IMAGE_OUTPUT_DIR/archive-receipt.json" archivePath)"
@@ -631,8 +631,9 @@ env "${phase_env[@]}" \
   EDGE_STORE_VOLUME="$EDGE_STORE_VOLUME" BUILDER_OPERATOR_VOLUME="$BUILDER_OPERATOR_VOLUME" \
   BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
   EXPECTED_PLATFORM="$PLATFORM" EXPECTED_USER="$EXPECTED_USER" HARNESS_SHA="$HARNESS_SHA" \
+  PROXY_BINDING_PROFILE="${PROXY_BINDING_PROFILE:-loopback}" \
   EVIDENCE_DIR="$QUALIFICATION_DIR" \
-  "$QUALIFICATION_SCRIPT"
+  bash "$QUALIFICATION_SCRIPT"
 QUALIFICATION_STATUS=$?
 set -e
 if [[ "$QUALIFICATION_STATUS" -ne 0 ]]; then

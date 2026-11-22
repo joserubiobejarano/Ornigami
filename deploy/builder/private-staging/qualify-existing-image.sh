@@ -28,6 +28,7 @@ PULL_EXISTING_IMAGE="${PULL_EXISTING_IMAGE:-0}"
 HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
 APP_URL_INPUT="${APP_URL:-}"
 MOUNT_ONLY="${MOUNT_ONLY:-0}"
+PROXY_BINDING_PROFILE="${PROXY_BINDING_PROFILE:-wildcard}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
@@ -38,6 +39,8 @@ note() { echo "==> $*"; }
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
 [[ "$QUALIFICATION_PATH" == "https-edge" || "$QUALIFICATION_PATH" == "http-loopback" ]] \
   || fail "QUALIFICATION_PATH must be https-edge or http-loopback"
+[[ "$PROXY_BINDING_PROFILE" == "wildcard" || "$PROXY_BINDING_PROFILE" == "loopback" ]] \
+  || fail "PROXY_BINDING_PROFILE must be wildcard or loopback"
 [[ ! -e "$EVIDENCE_DIR" ]] || fail "EVIDENCE_DIR already exists: $EVIDENCE_DIR"
 command -v "$ENGINE" >/dev/null 2>&1 || fail "$ENGINE is required"
 command -v "$NODE_BIN" >/dev/null 2>&1 || fail "$NODE_BIN is required"
@@ -152,7 +155,7 @@ if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
   QUALIFICATION_PATH=https-edge \
   BROWSER_EVIDENCE_DIR="$EVIDENCE_DIR/browser" \
   ENGINE="$ENGINE" \
-    "$ROOT/deploy/builder/private-staging/accept-browser.sh"
+    bash "$ROOT/deploy/builder/private-staging/accept-browser.sh"
 
   note "Running edge runtime/isolation acceptance"
   APP_CONTAINER="$EDGE_APP_CONTAINER" \
@@ -165,7 +168,8 @@ if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
   EVIDENCE_DIR="$EVIDENCE_DIR/runtime-edge" \
   ENGINE="$ENGINE" \
   NODE_BIN="$NODE_BIN" \
-    "$ROOT/deploy/builder/private-staging/accept-runtime.sh"
+  PROXY_BINDING_PROFILE="$PROXY_BINDING_PROFILE" \
+    bash "$ROOT/deploy/builder/private-staging/accept-runtime.sh"
 
   note "Running isolated populated restart/restore/lock/closed rollback"
   SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
@@ -176,7 +180,7 @@ if [[ "$QUALIFICATION_PATH" == "https-edge" ]]; then
   HARNESS_SHA="$HARNESS_SHA" \
   EVIDENCE_DIR="$EVIDENCE_DIR/rollback" \
   ENGINE="$ENGINE" \
-    "$ROOT/deploy/builder/private-staging/accept-runtime-rollback.sh"
+    bash "$ROOT/deploy/builder/private-staging/accept-runtime-rollback.sh"
 
   "$NODE_BIN" -e '
     const fs = require("node:fs");
@@ -249,7 +253,7 @@ else
   HARNESS_SHA="$HARNESS_SHA" \
   MOUNT_ONLY="$MOUNT_ONLY" \
   EVIDENCE_DIR="$EVIDENCE_DIR/runtime" \
-    "$ROOT/deploy/builder/qualify-linux.sh"
+    bash "$ROOT/deploy/builder/qualify-linux.sh"
 
   RUNTIME_RESULTS="$EVIDENCE_DIR/runtime/results.txt"
   [[ -f "$RUNTIME_RESULTS" ]] || fail "runtime qualification results are missing"
