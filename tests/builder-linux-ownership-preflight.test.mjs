@@ -421,7 +421,7 @@ esac
     const failureDocker = path.join(bin, "docker-failure");
     writeFileSync(failureDocker, `#!/usr/bin/env bash
 set -euo pipefail
-echo "Cannot connect to the Docker daemon at \\${DOCKER_HOST:-unknown}. Is the docker daemon running?" >&2
+echo "Cannot connect to the Docker daemon at \${DOCKER_HOST:-unknown}. Is the docker daemon running?" >&2
 exit 1
 `, { mode: 0o755 });
     chmodSync(failureDocker, 0o755);

@@ -115,6 +115,7 @@ jobs:
           sudo install -d -m 0700 -o "$builder_user" -g "$builder_group" "$BUILDER_EVIDENCE_ROOT"
           sudo install -d -m 2770 -o "$builder_user" -g "$runner_group" "$EXPORT_STAGING"
           sudo install -d -m 0700 -o "$runner_user" -g "$runner_group" "$UPLOAD_STAGING"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
           {
             echo "BUILDER_USER=$builder_user"
             echo "BUILDER_UID=$builder_uid"
