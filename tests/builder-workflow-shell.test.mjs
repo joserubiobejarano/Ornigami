@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
@@ -88,20 +88,34 @@ test("every Bash run block in the retained workflows passes YAML-decoded bash -n
 test("the historical indented heredoc is caught by the same YAML-decoded check", () => {
   const directory = mkdtempSync(path.join(os.tmpdir(), "ornigami-workflow-shell-old-"));
   try {
-    const historical = execFileSync(
-      "git",
-      [
-        "show",
-        "e3d8a1d1844cd647d1d63f7e6185c185e33b9911:.github/workflows/builder-retained-image-qualification.yml",
-      ],
-      { encoding: "utf8" },
-    );
-    const failures = syntaxCheck(shellRunBlocks(historical), directory);
-    assert.ok(failures.length >= 1, "historical bad heredoc must be rejected");
+    const fixture = readFileSync("tests/fixtures/builder-bad-heredoc-workflow.yml", "utf8");
+    const fixtureFailures = syntaxCheck(shellRunBlocks(fixture), directory);
+    assert.ok(fixtureFailures.length >= 1, "historical bad heredoc fixture must be rejected");
     assert.ok(
-      failures.some((entry) => /unexpected end of file|syntax error/i.test(entry.error)),
-      JSON.stringify(failures),
+      fixtureFailures.some((entry) => /unexpected end of file|syntax error/i.test(entry.error)),
+      JSON.stringify(fixtureFailures),
     );
+
+    // A shallow CI checkout may not contain the historical commit. When it is
+    // available, check the actual historical workflow as a second witness.
+    try {
+      const historical = execFileSync(
+        "git",
+        [
+          "show",
+          "e3d8a1d1844cd647d1d63f7e6185c185e33b9911:.github/workflows/builder-retained-image-qualification.yml",
+        ],
+        { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+      );
+      const failures = syntaxCheck(shellRunBlocks(historical), directory);
+      assert.ok(failures.length >= 1, "historical bad heredoc must be rejected");
+      assert.ok(
+        failures.some((entry) => /unexpected end of file|syntax error/i.test(entry.error)),
+        JSON.stringify(failures),
+      );
+    } catch (error) {
+      if (error?.status !== 128) throw error;
+    }
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

@@ -1,0 +1,67 @@
+name: historical bad heredoc fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  retrieve:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: historical indented heredoc
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          evidence="$RUNNER_TEMP/retrieval-evidence"
+          mkdir -p "$evidence"
+          cp "$RUNNER_TEMP/archive-verification.json" "$evidence/"
+          cp "$RUNNER_TEMP/original-identity.txt" "$evidence/"
+          status="not-present"
+          if [[ -n "${QUALIFICATION_CUSTODY:-}" ]]; then
+            final="$(find "$QUALIFICATION_CUSTODY" -type f -name 'retained-image-custody-receipt.json' -print -quit)"
+            if [[ -n "$final" && -f "$final" ]]; then
+              node - "$final" "$evidence/qualification-receipt.json" <<'NODE'
+              const fs=require("node:fs");
+              const [source,target]=process.argv.slice(2);
+              const r=JSON.parse(fs.readFileSync(source,"utf8"));
+              if (r.imageId !== "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57") throw new Error("qualification image mismatch");
+              if (r.producerApplicationSourceSha !== "156259d0c4330b185a0844711b7004b0b4467887") throw new Error("qualification source mismatch");
+              if (r.consumerHarnessSha !== "6ef785961d3f5c6084650ee9a119b78943a598e6") throw new Error("qualification consumer harness mismatch");
+              if (r.status !== "complete") throw new Error("qualification is not complete");
+              fs.copyFileSync(source,target);
+              NODE
+              status="complete"
+            fi
+          fi
+          echo "qualification_status=$status" > "$evidence/qualification-status.txt"
+          WORKFLOW_SHA="${{ github.sha }}" RETRIEVAL_DAEMON_ID="$(docker info --format '{{.ID}}')" QUALIFICATION_STATUS="$status" RETRIEVAL_RECEIPT="$evidence/retrieval-receipt.json" node - "$RUNNER_TEMP/archive-verification.json" "$RUNNER_TEMP/original-identity.txt" <<'NODE'
+          const fs=require("node:fs");
+          const [verificationPath, identityPath]=process.argv.slice(2);
+          const verification=JSON.parse(fs.readFileSync(verificationPath,"utf8"));
+          const identity=Object.fromEntries(fs.readFileSync(identityPath,"utf8").trim().split(/\r?\n/).map((line)=>{const i=line.indexOf("=");return [line.slice(0,i),line.slice(i+1)];}));
+          if (verification.complete !== true || verification.independentHandoff !== true) throw new Error("original archive verification is incomplete");
+          if (verification.imageId !== "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57") throw new Error("original archive image identity changed");
+          if (identity.sha256 !== "a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df") throw new Error("original archive hash changed");
+          if (identity.bytes !== "1000632832") throw new Error("original archive size changed");
+          const receipt={
+            schemaVersion:1,
+            status:"complete",
+            producerApplicationSourceSha:"156259d0c4330b185a0844711b7004b0b4467887",
+            producerHarnessSha:"156259d0c4330b185a0844711b7004b0b4467887",
+            consumerHarnessSha:"6ef785961d3f5c6084650ee9a119b78943a598e6",
+            workflowSha:process.env.WORKFLOW_SHA,
+            imageId:"sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57",
+            archiveSha256:identity.sha256,
+            archiveBytes:Number(identity.bytes),
+            archiveVerification:"complete",
+            archiveIndependentHandoff:true,
+            freshDaemonId:process.env.RETRIEVAL_DAEMON_ID,
+            qualificationStatus:process.env.QUALIFICATION_STATUS,
+            customerAdmission:"closed",
+          };
+          fs.writeFileSync(process.env.RETRIEVAL_RECEIPT,`${JSON.stringify(receipt,null,2)}\n`);
+          console.log(JSON.stringify(receipt,null,2));
+          NODE
+          UPLOAD_ROOT="$evidence" MAX_ARCHIVE_BYTES="0" MAX_ARTIFACT_BYTES="$MAX_RETRIEVAL_ARTIFACT_BYTES" RECEIPT_RESERVE_BYTES="0" \
+            RECEIPT_PATH="$evidence/retrieval-budget.json" \
+            node deploy/builder/private-staging/check-upload-budget.mjs
+          
