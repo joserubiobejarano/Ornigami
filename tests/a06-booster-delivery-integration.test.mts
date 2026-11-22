@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { join, resolve, sep } from "node:path";
 import test from "node:test";
 import { loadTs } from "./a02-test-support.mts";
+import { runDisposablePgCommand } from "./pg-startup-diagnostics.mts";
 
 const root = process.cwd();
 const testRoot = resolve(root, ".next");
@@ -46,10 +47,26 @@ test("atomic runner serializes real PostgreSQL quota claims and safely recovers 
   const dataDir = join(dir, "data");
   let started = false;
   try {
-    execFileSync(pgExe("initdb"), ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"], { stdio: "ignore" });
-    appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
     const logFile = join(dir, "postgres.log");
-    execFileSync(pgExe("pg_ctl"), ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"], { stdio: "ignore" });
+    runDisposablePgCommand({
+      label: "a06-initdb",
+      command: pgExe("initdb"),
+      args: ["-D", dataDir, "-U", "postgres", "-A", "trust", "--no-locale", "--encoding=UTF8"],
+      pgBin,
+      port,
+      dataDir,
+      logFile,
+    });
+    appendFileSync(join(dataDir, "postgresql.conf"), "\nunix_socket_directories = ''\n");
+    runDisposablePgCommand({
+      label: "a06-pg_ctl-start",
+      command: pgExe("pg_ctl"),
+      args: ["-D", dataDir, "-l", logFile, "-o", `-h 127.0.0.1 -p ${port} -F`, "-w", "start"],
+      pgBin,
+      port,
+      dataDir,
+      logFile,
+    });
     started = true;
 
     psql(`CREATE TABLE public.users(id uuid PRIMARY KEY);
