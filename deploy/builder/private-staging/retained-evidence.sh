@@ -122,6 +122,17 @@ export_retained_evidence() {
   find "$stage" -type f -exec chmod 0640 {} + || return 1
 }
 
+retained_browser_mode() {
+  case "${BROWSER_CHROMIUM_SANDBOX:-0}" in
+    0|"") printf 'no-sandbox' ;;
+    1) printf 'sandbox' ;;
+    *)
+      retained_fail "BROWSER_CHROMIUM_SANDBOX must be 0 or 1"
+      return 1
+      ;;
+  esac
+}
+
 record_retained_host_identity() {
   local root="$1" source="$2" producer="$3" consumer="$4" workflow="$5"
   local origin="$6" image="$7" archive_sha="$8" archive_bytes="$9"

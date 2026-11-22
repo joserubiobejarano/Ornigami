@@ -349,6 +349,13 @@ PROXY_ID="$(compose invite ps -q proxy)"
 wait_edge
 printf 'proxy_binding_profile=loopback\n' > "$EVIDENCE_ROOT/edge/proxy-binding-profile.txt"
 
+BROWSER_MODE="$(retained_browser_mode)" || fail "unsupported browser mode"
+if [[ "$BROWSER_MODE" == "sandbox" ]]; then
+  BROWSER_CHROMIUM_SANDBOX=1
+else
+  BROWSER_CHROMIUM_SANDBOX=0
+fi
+
 note "Qualify the retained immutable image"
 (
   cd "$SOURCE_ROOT"
@@ -388,12 +395,6 @@ if (receipt.sameImageIdAcrossPhases !== true) throw new Error("phases did not us
 if (receipt.fullHttpsAcceptance !== true) throw new Error("full HTTPS acceptance is not complete");
 console.log(JSON.stringify({ ok: true, phases: receipt.phases }, null, 2));
 NODE
-
-case "${BROWSER_CHROMIUM_SANDBOX:-0}" in
-  0|"") BROWSER_MODE=no-sandbox; BROWSER_CHROMIUM_SANDBOX=0 ;;
-  1) BROWSER_MODE=sandbox; BROWSER_CHROMIUM_SANDBOX=1 ;;
-  *) fail "BROWSER_CHROMIUM_SANDBOX must be 0 or 1" ;;
-esac
 
 note "Record retained-image custody without rewriting the producer receipt"
 cp "$ARCHIVE_PATH" "$CUSTODY_DIR/$(basename "$ARCHIVE_PATH")"
