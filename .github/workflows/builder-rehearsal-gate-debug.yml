@@ -9,7 +9,7 @@ name: Builder rehearsal candidate gate debug (bounded)
 on:
   push:
     branches:
-      - codex/ornigami-rehearsal-readiness-20261122
+      - codex/ornigami-gate-contract-20261122
     paths:
       - .github/debug-requests/builder-rehearsal-gate.json
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
     if: >-
       github.repository == 'joserubiobejarano/Ornigami' &&
       (github.event_name == 'workflow_dispatch' ||
-       github.ref == 'refs/heads/codex/ornigami-rehearsal-readiness-20261122')
+       github.ref == 'refs/heads/codex/ornigami-gate-contract-20261122')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:

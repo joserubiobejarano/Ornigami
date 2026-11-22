@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
   "purpose": "request one bounded Linux candidate-gate debug run",
-  "bundleSha": "ee82cb7def4a34f706e1aa7dc876d4bdc71e90e0",
+  "bundleSha": "1f57d62f7215bf31e98476fa543b8d0217141e56",
   "candidateSha": "156259d0c4330b185a0844711b7004b0b4467887",
-  "timeoutMinutes": 10,
+  "timeoutMinutes": 10, "attempt": 2,
   "customerAdmission": "closed"
 }
+
 
