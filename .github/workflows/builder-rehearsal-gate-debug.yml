@@ -32,8 +32,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      SOURCE_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
-      HARNESS_SHA: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+      SOURCE_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+      HARNESS_SHA: 156259d0c4330b185a0844711b7004b0b4467887
       EMERGENCY_ROOT: /tmp/ornigami-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}
       RUNNER_LOG_ROOT: /tmp/ornigami-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}/logs
       EMERGENCY_DIAGNOSTICS_ROOT: /tmp/ornigami-gate-debug-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
@@ -71,7 +71,7 @@ jobs:
       - name: Check out exact candidate source
         uses: actions/checkout@v5
         with:
-          ref: 863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816
+          ref: 156259d0c4330b185a0844711b7004b0b4467887
           path: candidate-source
           fetch-depth: 0
           clean: true
@@ -194,22 +194,47 @@ jobs:
           rc=${PIPESTATUS[0]}
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
 
-          tests="$(sed -n 's/^# tests //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
-          pass="$(sed -n 's/^# pass //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
-          fail="$(sed -n 's/^# fail //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
-          skipped="$(sed -n 's/^# skipped //p' "$RUNNER_LOG_ROOT/candidate-gate.log" | tail -n 1)"
-          {
-            printf 'gate_exit=%s\n' "$rc"
-            printf 'tests=%s\n' "${tests:-unknown}"
-            printf 'pass=%s\n' "${pass:-unknown}"
-            printf 'fail=%s\n' "${fail:-unknown}"
-            printf 'skipped=%s\n' "${skipped:-unknown}"
-          } > "$RUNNER_LOG_ROOT/gate-summary.txt"
+          node - "$RUNNER_LOG_ROOT/candidate-gate.log" "$RUNNER_LOG_ROOT/gate-summary.txt" "$rc" <<'NODE'
+          const fs = require("node:fs");
+          const [logPath, summaryPath, rc] = process.argv.slice(2);
+          const lines = fs.readFileSync(logPath, "utf8").split(/\r?\n/);
+          const blocks = [];
+          let current = null;
+          for (const line of lines) {
+            const tests = /^# tests (\d+)$/.exec(line);
+            if (tests) { current = { tests: Number(tests[1]), pass: null, fail: null, skipped: null, todo: null }; blocks.push(current); continue; }
+            if (!current) continue;
+            const pass = /^# pass (\d+)$/.exec(line);
+            const fail = /^# fail (\d+)$/.exec(line);
+            const skipped = /^# skipped (\d+)$/.exec(line);
+            const todo = /^# todo (\d+)$/.exec(line);
+            if (pass) current.pass = Number(pass[1]);
+            else if (fail) current.fail = Number(fail[1]);
+            else if (skipped) current.skipped = Number(skipped[1]);
+            else if (todo) current.todo = Number(todo[1]);
+          }
+          const complete = blocks.filter((block) => block.pass !== null && block.fail !== null);
+          const global = complete.sort((a, b) => b.tests - a.tests)[0];
+          if (!global) throw new Error("no complete test summary block");
+          fs.writeFileSync(summaryPath, [
+            `gate_exit=${rc}`,
+            `tests=${global.tests}`,
+            `pass=${global.pass}`,
+            `fail=${global.fail}`,
+            `skipped=${global.skipped ?? 0}`,
+            `todo=${global.todo ?? 0}`,
+          ].join("\n") + "\n");
+          if (rc !== "0" || global.fail !== 0 || global.tests <= 0 || global.pass <= 0) {
+            fs.appendFileSync(summaryPath, "gate_ok=false\n");
+            process.exit(1);
+          }
+          fs.appendFileSync(summaryPath, "gate_ok=true\n");
+          NODE
           cat "$RUNNER_LOG_ROOT/gate-summary.txt"
-          if [[ "$rc" != "0" || "$fail" != "0" || -z "$tests" || "$pass" == "0" ]]; then
-            echo "gate_ok=false" >> "$GITHUB_OUTPUT"
-          else
+          if grep -qx 'gate_ok=true' "$RUNNER_LOG_ROOT/gate-summary.txt"; then
             echo "gate_ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "gate_ok=false" >> "$GITHUB_OUTPUT"
           fi
           exit 0
 
