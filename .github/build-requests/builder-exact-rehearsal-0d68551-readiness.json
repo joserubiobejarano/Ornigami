@@ -1,7 +1,8 @@
 {
   "schemaVersion": 5,
-  "bundleBaseSha": "87a064e9856da169f691306379f2120e78c22981",
+  "bundleBaseSha": "b83a11adba49da76d544d2ae38f229a4913c36c2",
   "previousFailedRun": 44977330367,
+  "debugEvidenceRuns": [44979679822, 44979807275, 44979954736, 44980069092],
   "applicationSourceSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
   "harnessSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
   "candidateCorrection": {
