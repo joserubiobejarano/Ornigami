@@ -33,6 +33,7 @@ import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { auditZipBundle } from "./zip-audit.mjs";
+import { browserLaunchOptions } from "./browser-launch-config.mjs";
 import { diffScriptAudits, updateScriptRegistry } from "./private-staging/sri-script-audit.mjs";
 
 const root = process.cwd();
@@ -512,14 +513,7 @@ await auditCsp();
 
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch({
-  headless: true,
-  // The synthetic CI client runs as the unprivileged builder on a hosted runner
-  // where Chromium's user-namespace sandbox can be unavailable (SIGTRAP /
-  // crashpad startup failure). The application runtime remains read-only,
-  // non-root, internal-network-only and separately contained; the browser is a
-  // test client that visits only the private loopback edge. Opt in explicitly
-  // only on a host where the Chromium sandbox is known to work.
-  chromiumSandbox: process.env.BROWSER_CHROMIUM_SANDBOX === "1",
+  ...browserLaunchOptions(),
   executablePath: chromiumExecutable(chromium),
 });
 const contextA = await browser.newContext({
