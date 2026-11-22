@@ -948,12 +948,12 @@ jobs:
         run: |
           set -Eeuo pipefail
           root="$RUNNER_TEMP/retrieved"
-          archive="$(find "$root" -type f -name '*.tar' | head -n 1)"
-          receipt="$(find "$root" -type f -name 'archive-receipt.json' | head -n 1)"
-          custody="$(find "$root" -type f -name 'custody-receipt.json' | head -n 1)"
-          test -n "$archive" && test -f "$archive"
-          test -n "$receipt" && test -f "$receipt"
-          test -n "$custody" && test -f "$custody"
+          archive="$(find "$root" -type f -name '*.tar' -print -quit)"
+          receipt="$(find "$root" -type f -name 'archive-receipt.json' -print -quit)"
+          custody="$(find "$root" -type f -name 'custody-receipt.json' -print -quit)"
+          [[ -n "$archive" && -f "$archive" ]] || { echo "FAIL: retrieved archive is missing under $root" >&2; exit 1; }
+          [[ -n "$receipt" && -f "$receipt" ]] || { echo "FAIL: retrieved archive-receipt.json is missing under $root" >&2; exit 1; }
+          [[ -n "$custody" && -f "$custody" ]] || { echo "FAIL: retrieved custody-receipt.json is missing under $root (qualification did not complete)" >&2; exit 1; }
           image_id="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.imageId)' "$receipt")"
           source_sha="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.applicationSourceSha)' "$receipt")"
           origin="$(node -e 'const r=require(process.argv[1]);process.stdout.write(r.origin)' "$receipt")"

@@ -1,10 +1,12 @@
 # Exact-candidate rehearsal readiness repair — 22 November 2026
 
-Status: **the clean candidate gate passed on Linux (1461/1461, zero skips). The
-staged build job verified the gate receipt and stopped before any build on a
-one-line lockfile-hash receipt bug. No image or archive exists. Remote execution
-is stopped; one corrected staged workflow requires expanded approval. Customer
-admission remains closed.**
+Status: **the clean candidate gate passed on Linux (1461/1461, zero skips).
+The build job verified the receipt, built the image once, retained and
+independently loaded the archive, and passed private-edge TLS/HTTP/CSP/SRI
+acceptance. Chromium then failed to launch (SIGTRAP/crashpad) before the browser
+journey, so runtime/rollback/journal phases and fresh-runner retrieval did not
+complete. The archive is retained; a local browser-sandbox correction is
+committed. Remote execution is stopped. Customer admission remains closed.**
 
 ## Frozen identities
 
@@ -121,6 +123,33 @@ on codex `cbab7c9` (`printf '%s\n' "$EXPECTED_LOCKFILE_SHA256" > ...`). No image
 checkpoint, edge, qualification, archive or retrieval occurred. The failed
 staged branch and run are preserved; no retry was attempted.
 
+## Staged attempt (run 45030190736)
+
+The corrected staged workflow ran on `ba1431f` against candidate `156259d`:
+
+- clean gate: 1461/1461, 0 failures, 0 skips, 217 suite files;
+- build daemon `ddcb62c2-d343-4b5b-a87a-12746b78b6d8` (27.5.1) and host daemon
+  `fb20f451-b428-4d99-946c-e0f8dfac42c1` (28.0.4) were distinct;
+- image `sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57`;
+- archive `a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df`,
+  1,000,632,832 bytes; locally recomputed and matched;
+- checkpoint archive verification complete/independent on the host daemon;
+- private edge acceptance 12/12 checks, including TLS, BasicAuth, CSP and 9
+  verified SRI scripts;
+- Chromium launch failed with `chrome_crashpad_handler: --database is required`
+  and SIGTRAP before the browser journey; only `browser/identity.json` exists;
+- runtime, restart, minimization, journal negatives, accounting, second restore,
+  lock recovery and closed rollback did not execute;
+- cleanup closed the origin and both listeners with zero owned resources;
+- custody upload succeeded; fresh-runner retrieval failed because qualification
+  did not produce `custody-receipt.json`.
+
+The browser was launched with `chromiumSandbox: true` as the unprivileged builder.
+The local correction at candidate `c39c37f` makes the synthetic CI client opt in
+to the sandbox only with `BROWSER_CHROMIUM_SANDBOX=1`; the application runtime
+containment is unchanged. Retrieval now fails explicitly when a required
+custody receipt is absent. Neither correction has been Linux-verified.
+
 ## Custody
 
 | Run | Artifact | Size | Expiry |
@@ -129,18 +158,18 @@ staged branch and run are preserved; no retry was attempted.
 | `45022904023` | `builder-exact-rehearsal-0d68551-readiness-45022904023-1-diagnostics` | 85,319 B | `2026-11-29T12:38:47Z` |
 | `45022113531` | `builder-gate-debug-45022113531-1` | bounded | `2026-11-29T12:29:48Z` |
 | `45026173636` | `builder-gate-debug-45026173636-1` | bounded | seven days |
-| `45027216169` | `builder-gate-receipt-45027216169-1` | 79,514 B | `2026-11-29T13:28:27Z` |
-| `45027216169` | `builder-exact-rehearsal-0d68551-staged-45027216169-1-diagnostics` | 12,761 B | `2026-11-29T13:29:54Z` |
+| `45030190736` | `builder-gate-receipt-45030190736-1` | 79,506 B | `2026-11-29T14:02:40Z` |
+| `45030190736` | `builder-exact-rehearsal-0d68551-staged-45030190736-1` | 256,994,265 B | `2026-11-29T14:06:24Z` |
 
 Local retained copies are under `.local/retained/`.
 
 ## Remaining blocker and next step
 
-The candidate gate and receipt handoff are green and verified. The only
-remaining defect is the corrected lockfile-hash receipt write, committed at
-`cbab7c9`. The smallest next step is one expanded-approval staged workflow from
-`cbab7c9` (or a child request commit) using the same no-DinD gate and the
-corrected build handoff, followed by the fresh retrieval job. No further remote
-execution was attempted.
+The retained archive is hash-verified locally, but the qualification is not
+complete: Chromium's user-namespace sandbox is unavailable on the hosted runner,
+so the browser journey never started. Candidate `c39c37f` corrects that test-client
+launch; it requires one fresh authorized staged workflow to rebuild/qualify and
+to produce the custody receipt needed for retrieval. No further remote execution
+was attempted.
 
 Public hosting and customer admission remain out of scope.
