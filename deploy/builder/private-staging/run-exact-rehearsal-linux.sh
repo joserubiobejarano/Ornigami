@@ -154,18 +154,28 @@ cleanup() {
 
   # Prove the private origin is closed and both published listeners are gone.
   # Use --resolve so DNS/hosts removal cannot mask a still-running listener.
-  if curl -ksS --max-time 5 --resolve "$STAGING_HOST:443:127.0.0.1" \
-    -o /dev/null "https://$STAGING_HOST/" 2>/dev/null; then
-    origin_unreachable=0
-  else
-    origin_unreachable=1
-  fi
-  if [[ -z "$(ss -ltn "sport = :80" 2>/dev/null | awk 'NR > 1')" ]]; then
-    http_listener_absent=1
-  fi
-  if [[ -z "$(ss -ltn "sport = :443" 2>/dev/null | awk 'NR > 1')" ]]; then
-    https_listener_absent=1
-  fi
+  # Container teardown can release the proxy socket a moment after `compose
+  # down`; allow a short bounded wait, then record the final observation.
+  for _ in {1..10}; do
+    if curl -ksS --max-time 5 --resolve "$STAGING_HOST:443:127.0.0.1" \
+      -o /dev/null "https://$STAGING_HOST/" 2>/dev/null; then
+      origin_unreachable=0
+    else
+      origin_unreachable=1
+    fi
+    if [[ -z "$(ss -ltn "sport = :80" 2>/dev/null | awk 'NR > 1')" ]]; then
+      http_listener_absent=1
+    else
+      http_listener_absent=0
+    fi
+    if [[ -z "$(ss -ltn "sport = :443" 2>/dev/null | awk 'NR > 1')" ]]; then
+      https_listener_absent=1
+    else
+      https_listener_absent=0
+    fi
+    [[ "$origin_unreachable" == "1" && "$http_listener_absent" == "1" && "$https_listener_absent" == "1" ]] && break
+    sleep 1
+  done
   [[ "$origin_unreachable" == "1" ]] || {
     CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
     echo "FAIL: private origin still answered after cleanup: $STAGING_ORIGIN" >> "$LOG_DIR/cleanup-owned-resources.log"
