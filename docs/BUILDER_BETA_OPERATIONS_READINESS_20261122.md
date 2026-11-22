@@ -3,9 +3,10 @@
 Baseline control-plane tip: `a42badc8c9c1e0f98c5520887b1cb3657b05d449`.
 Worktree/branch: `C:/Users/joser/.local/ornigami-beta-readiness-20261122`,
 `codex/ornigami-beta-readiness-20261122`.
-Implementation/test tip before this record update: `c3ee2c362d127d17e91123e2db04baaee6646390`.
+Implementation/test tip before this record update: `f3f909c107596b06533004a7043372059508baab`.
 Primary implementation: `57e97e0d933c3b96065ae56a942966ed9206eb3a`;
-inside-store refusal/test: `086459a343ff30a0a3cb52430102e8824b750d24`.
+safety correction: `f48d4e8a8f25c5abeb6ca02237baecf6f6c0a60c`;
+workflow shell regression: `f3f909c107596b06533004a7043372059508baab`.
 
 This slice did not rebuild or re-qualify the accepted image, deploy, publish,
 change DNS, send messages, admit customers or use a real store/customer data.
@@ -97,6 +98,22 @@ node --experimental-strip-types --test \
 ```
 
 Private local logs are under ignored `.local/beta-readiness/` with `SHA256SUMS`.
+
+### Linux/Node 22 verification
+
+Workflow run `45048672512` passed on Ubuntu 24.04, Node `v22.23.3`, OpenSSL
+`3.5.8`, kernel `7.0.0-1014-aws x86_64`, ext4:
+
+- backup/recovery tests: `20/20`;
+- focused builder suites: `57/57`;
+- qualification bundle/package: `30/30`;
+- the POSIX-only permission test executed (not skipped);
+- bounded diagnostics artifact `builder-backup-recovery-linux-45048672512-1`
+  is `7,645` bytes and expires `2026-11-29T17:18:53Z`.
+
+The Linux run proves the directory/FS mechanics, POSIX modes, no-clobber
+publication, reconciliation guard and CLI behavior. It does not prove an actual
+Docker volume snapshot, power-loss durability or owner-held key custody.
 
 ### Windows evidence vs Linux-only requirements
 

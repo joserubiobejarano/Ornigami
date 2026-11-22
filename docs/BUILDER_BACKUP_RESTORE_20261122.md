@@ -220,12 +220,15 @@ Linux-only requirements.
 
 ## Linux-only requirements before real use
 
-1. Run the tests on the target Linux/Node 22 image or operator host and confirm
-   POSIX mode assertions.
+1. The Linux/Node 22 test run `45048672512` passed `20/20` backup/recovery,
+   `57/57` focused builder and `30/30` bundle/package checks on Node
+   `v22.23.3`, OpenSSL `3.5.8`, ext4; the POSIX permission assertion executed.
 2. Stop the runtime and every operator writer; verify no lock/gate/temp state
    remains before backup.
 3. Snapshot the actual Docker volume or bind directory with the approved
-   host-level tool, preserving the store directory as a unit.
+   host-level tool, preserving the store directory as a unit. The Linux run used
+   a Linux filesystem directory, not an actual Docker volume; volume snapshot
+   semantics remain owner-gated.
 4. Deliver the passphrase through an owner-approved `0600` file or secret
    mechanism; never put it in command history, logs, receipts or the archive.
 5. Restore into a fresh run-owned volume/container, replay the latest
