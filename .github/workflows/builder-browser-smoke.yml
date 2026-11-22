@@ -1,0 +1,236 @@
+name: Builder browser launch smoke (bounded)
+
+# Browser-only investigation. It installs the exact pinned Playwright/browser,
+# runs as the builder identity, launches a data page, evaluates, screenshots and
+# closes. It never builds or serves the application image.
+
+on:
+  push:
+    branches:
+      - ci/browser-smoke-20261122
+    paths:
+      - .github/browser-smoke/request.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: builder-browser-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Exact browser launch smoke
+    if: >-
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/ci/browser-smoke-20261122')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CANDIDATE_SHA: 6ef785961d3f5c6084650ee9a119b78943a598e6
+      EMERGENCY_ROOT: /tmp/ornigami-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+      RUNNER_LOG_ROOT: /tmp/ornigami-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}/logs
+      SMOKE_ROOT: /tmp/ornigami-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}/smoke
+      MAX_DIAGNOSTIC_BYTES: "67108864"
+
+    steps:
+      - name: Create runner-owned smoke roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$RUNNER_LOG_ROOT" "$EMERGENCY_ROOT/receipts"
+          chmod 0700 "$EMERGENCY_ROOT" "$RUNNER_LOG_ROOT" "$EMERGENCY_ROOT/receipts"
+          {
+            printf 'workflow_sha=%s\n' "${{ github.sha }}"
+            printf 'candidate_sha=%s\n' "$CANDIDATE_SHA"
+            printf 'run_id=%s-%s\n' "${{ github.run_id }}" "${{ github.run_attempt }}"
+            printf 'runner_user=%s\n' "$(id -un)"
+          } > "$RUNNER_LOG_ROOT/smoke-identity.txt"
+
+      - name: Check out control plane
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Verify control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+
+      - name: Check out exact candidate
+        uses: actions/checkout@v5
+        with:
+          ref: 6ef785961d3f5c6084650ee9a119b78943a598e6
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify candidate identity and modes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="${{ github.sha }}" \
+          SOURCE_SHA="$CANDIDATE_SHA" \
+          HARNESS_SHA="$CANDIDATE_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            2>&1 | tee "$RUNNER_LOG_ROOT/candidate-identity.txt"
+          echo "SOURCE_ROOT=$GITHUB_WORKSPACE/candidate-source" >> "$GITHUB_ENV"
+
+      - name: Create builder-owned browser environment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! id -u 1000 >/dev/null 2>&1; then
+            sudo useradd --uid 1000 --user-group --create-home --shell /bin/bash builder
+          fi
+          runner_user="$(id -un)"
+          builder_user="$(id -nu 1000)"
+          builder_group="$(id -gn "$builder_user")"
+          builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
+          test "$runner_user" != "$builder_user"
+          sudo chown -R "$builder_user":"$builder_group" "$SOURCE_ROOT"
+          sudo install -d -m 0755 -o "$builder_user" -g "$builder_group" "$SMOKE_ROOT"
+          sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
+          {
+            echo "BUILDER_USER=$builder_user"
+            echo "BUILDER_UID=1000"
+            echo "BUILDER_GROUP=$builder_group"
+            echo "BUILDER_HOME=$builder_home"
+          } >> "$GITHUB_ENV"
+
+      - name: Install supported Node and vendored npm
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v xz >/dev/null || {
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xz-utils
+          }
+          sudo mkdir -p /opt/ornigami-node /opt/ornigami-npm
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+          curl -fsSLO https://nodejs.org/dist/v22.23.3/SHASUMS256.txt
+          grep ' node-v22.23.3-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+          sudo tar -xJf node-v22.23.3-linux-x64.tar.xz -C /opt/ornigami-node --strip-components=1
+          sudo tar -xzf "$SOURCE_ROOT/vendor/build-tools/npm-11.21.1.tgz" -C /opt/ornigami-npm --strip-components=1
+          sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm
+          node_bin=/opt/ornigami-node/bin/node
+          npm_cli=/opt/ornigami-npm/bin/npm-cli.js
+          test "$("$node_bin" --version)" = "v22.23.3"
+          test "$("$node_bin" -p 'process.versions.openssl')" = "3.5.8"
+          test "$("$node_bin" "$npm_cli" --version)" = "11.21.1"
+          echo "/opt/ornigami-node/bin" >> "$GITHUB_PATH"
+          echo "NODE_BIN=$node_bin" >> "$GITHUB_ENV"
+          echo "NPM_CLI_FOR_REHEARSAL=$npm_cli" >> "$GITHUB_ENV"
+
+      - name: Install pinned Playwright browser as builder
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libnss3-tools
+          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$NPM_CLI_FOR_REHEARSAL" ci --no-audit --no-fund \
+            --prefix "$SOURCE_ROOT/scripts/framework-prototype/browser-tools"
+          sudo env PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install-deps chromium
+          sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            "$NODE_BIN" "$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/cli.js" \
+            install chromium
+          sudo chmod -R a+rX "$SOURCE_ROOT/scripts/framework-prototype/browser-tools" "$BUILDER_HOME/.cache/ms-playwright"
+
+      - name: Run exact browser launch smoke as builder
+        id: smoke
+        shell: bash
+        run: |
+          set +e
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
+            BROWSER_PLAYWRIGHT="$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs" \
+            BROWSER_SMOKE_EVIDENCE_DIR="$SMOKE_ROOT" \
+            NODE_BIN="$NODE_BIN" \
+            NODE_OPTIONS="--max-old-space-size=512" \
+            bash -c 'cd "$SOURCE_ROOT" && exec "$NODE_BIN" scripts/browser-smoke.mjs' \
+            2>&1 | tee "$RUNNER_LOG_ROOT/browser-smoke-console.txt"
+          smoke_rc=${PIPESTATUS[0]}
+          echo "rc=$smoke_rc" >> "$GITHUB_OUTPUT"
+
+          sudo -u "$BUILDER_USER" env \
+            HOME="$BUILDER_HOME" \
+            PATH="/opt/ornigami-node/bin:$PATH" \
+            SOURCE_ROOT="$SOURCE_ROOT" \
+            NODE_BIN="$NODE_BIN" \
+            bash -c 'cd "$SOURCE_ROOT" && exec "$NODE_BIN" --test tests/builder-browser-launch-config.test.mjs' \
+            2>&1 | tee "$RUNNER_LOG_ROOT/browser-config-regression.log"
+          config_rc=${PIPESTATUS[0]}
+          echo "config_rc=$config_rc" >> "$GITHUB_OUTPUT"
+
+          if [[ "$smoke_rc" == "0" && "$config_rc" == "0" ]]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Gate browser smoke
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -f "$SMOKE_ROOT/browser-smoke.json"
+          test -f "$SMOKE_ROOT/browser-smoke.png"
+          node -e '
+            const fs=require("node:fs");
+            const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+            if (r.ok !== true) throw new Error(`browser smoke failed: ${JSON.stringify(r.error)}`);
+            if (r.sandbox !== "no-sandbox" && r.sandbox !== "sandbox") throw new Error("invalid sandbox mode");
+            if (r.effectiveUid === null) throw new Error("effective UID missing");
+            if (!r.executablePath) throw new Error("browser executable missing");
+            if (!r.browserVersion) throw new Error("browser version missing");
+            console.log(JSON.stringify({ok:true,sandbox:r.sandbox,uid:r.effectiveUid,gid:r.effectiveGid,browser:r.browserVersion,executable:r.executablePath},null,2));
+          ' "$SMOKE_ROOT/browser-smoke.json"
+          test "${{ steps.smoke.outputs.ok }}" = "true"
+
+      - name: Stage bounded browser diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          SOURCE_ROOTS="$RUNNER_LOG_ROOT|$SMOKE_ROOT" \
+          UPLOAD_ROOT="$EMERGENCY_ROOT/diagnostics" \
+          MAX_ARCHIVE_BYTES="0" \
+          MAX_ARTIFACT_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-staging.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$EMERGENCY_ROOT/receipts/diagnostics-staging-console.json" 2>&1 || true
+          DIAGNOSTICS_DIR="$EMERGENCY_ROOT/diagnostics" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EMERGENCY_ROOT/receipts/diagnostics-budget.json" \
+            node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+            > "$EMERGENCY_ROOT/receipts/diagnostics-budget-console.json" 2>&1 || true
+          exit 0
+
+      - name: Upload bounded browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EMERGENCY_ROOT }}/diagnostics
+          if-no-files-found: error
+          retention-days: 7
