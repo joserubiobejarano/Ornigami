@@ -50,6 +50,8 @@
     "maxRetrievalArtifactBytes": 67108864
   },
   "budget": {
+    "dispatches": 1,
+    "attempts": 1,
     "gateInvestigations": 2,
     "stagedWorkflow": 1,
     "gateTimeoutMinutes": 15,
@@ -59,4 +61,5 @@
   },
   "customerAdmission": "closed"
 }
+
 
