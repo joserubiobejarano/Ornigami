@@ -144,4 +144,3 @@ Until these are resolved, keep admission closed and use synthetic stores only.
 - No registry publication, public DNS/ACME, persistent deployment, default-branch
   merge, customer data/admission, paid provider call or external message.
 - The accepted image/archive and historical worktrees are preserved.
-

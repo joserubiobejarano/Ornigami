@@ -195,4 +195,3 @@ against a stopped volume.
 See [the consolidated decision request](./OWNER_DECISIONS_BETA_20261122.md).
 Until those decisions are answered, backup destination/frequency/retention/key
 custody and customer admission remain pending.
-
