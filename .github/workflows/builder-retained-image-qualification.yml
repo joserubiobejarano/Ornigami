@@ -3,9 +3,9 @@ name: Retained immutable image qualification
 on:
   push:
     branches:
-      - ci/retained-image-qualification-20261122-r2
+      - ci/retained-image-qualification-20261122-r4
     paths:
-      - .github/build-requests/builder-retained-image-qualification-r2.json
+      - .github/build-requests/builder-retained-image-qualification-r4.json
 
 permissions:
   contents: read
@@ -51,7 +51,7 @@ jobs:
       github.event.created == true &&
       github.event.before == '0000000000000000000000000000000000000000' &&
       github.run_attempt == 1 &&
-      github.ref == 'refs/heads/ci/retained-image-qualification-20261122-r2'
+      github.ref == 'refs/heads/ci/retained-image-qualification-20261122-r4'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -516,3 +516,6 @@ jobs:
           path: ${{ runner.temp }}/retrieval-evidence
           if-no-files-found: error
           retention-days: 7
+
+
+
