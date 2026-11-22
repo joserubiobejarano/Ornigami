@@ -1,12 +1,13 @@
 {
-  "schemaVersion": 3,
-  "bundleBaseSha": "170c5cc69864d079f4c2a6b20bdc8406c11df9dc",
+  "schemaVersion": 4,
+  "bundleBaseSha": "543cc34bb27fc30d7345d2dd757d5921b85c527d",
+  "previousFailedRun": 44975450125,
   "applicationSourceSha": "0d68551324ce3f441478f613d2f4eb48b9be4f3f",
   "harnessSha": "0d68551324ce3f441478f613d2f4eb48b9be4f3f",
   "harnessBaselineSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
   "workflowFile": ".github/workflows/builder-exact-rehearsal-0d68551.yml",
   "trigger": {
-    "branch": "ci/builder-exact-rehearsal-0d68551-20261122",
+    "branch": "ci/builder-exact-rehearsal-0d68551-preflight-20261122",
     "event": "initial branch creation push only",
     "before": "0000000000000000000000000000000000000000",
     "subsequentPushes": "do not schedule"
@@ -50,6 +51,25 @@
       "exportedFiles": "0640, exported directories 0750",
       "rule": "runner reads approved synthetic evidence only through export staging; runner upload/diagnostics/log roots are unreadable to the builder"
     }
+  },
+  "preflight": {
+    "script": "deploy/builder/private-staging/verify-linux-ownership.sh",
+    "regression": "tests/builder-linux-ownership-preflight.test.mjs",
+    "observesEffectiveUser": true,
+    "builderPrivateChecksAsBuilder": true,
+    "runnerDenialChecksAsRunner": true,
+    "capturesStdoutStderr": true,
+    "retainsFailureAssertion": true,
+    "retainsOriginalStatusCode": true,
+    "requiredCapabilities": [
+      "builder-passwordless-sudo",
+      "builder-sudo-write-/etc/hosts",
+      "builder-sudo-write-/usr/local/share/ca-certificates",
+      "builder-host-docker-endpoint",
+      "builder-build-docker-endpoint",
+      "distinct-docker-daemons",
+      "builder-source-and-helper-traversal"
+    ]
   },
   "archiveCustody": {
     "destination": "github-actions-artifact",
