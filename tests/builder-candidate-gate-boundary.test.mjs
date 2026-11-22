@@ -74,9 +74,10 @@ set -euo pipefail
 {
   printf 'ARGV'
   for arg in "$@"; do printf '\\t%s' "$arg"; done
-  printf '\\tENV\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' \\
+  printf '\\tENV\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' \\
     "\${A04_PG_BIN:-}" "\${PG_BIN:-}" "\${BUILD_ENDPOINT:-}" "\${BUILD_CONTEXT:-}" \\
-    "\${SOURCE_SHA:-}" "\${HARNESS_SHA:-}" "\${STAGING_ORIGIN:-}" "\${NODE_OPTIONS:-}"
+    "\${SOURCE_SHA:-}" "\${HARNESS_SHA:-}" "\${STAGING_ORIGIN:-}" "\${NODE_OPTIONS:-}" \\
+    "\${BUILDER_RUNTIME_STORE_HOST_ID:-}"
 } >> "\${FAKE_NODE_LOG:?}"
 exit 0
 `);
@@ -105,6 +106,7 @@ function contaminatedEnv(f, overrides = {}) {
     STAGING_ORIGIN: "https://builder-rehearsal.invalid",
     STAGING_HOST: "builder-rehearsal.invalid",
     DOCKER_HOST_ENDPOINT: "unix:///var/run/docker.sock",
+    BUILDER_RUNTIME_STORE_HOST_ID: "ornigami-builder-rehearsal-store-v1",
     NODE_OPTIONS: "--max-old-space-size=256",
     ...overrides,
   };
@@ -147,11 +149,11 @@ function readCalls(file) {
       const parts = line.split("\t");
       const envIndex = parts.indexOf("ENV");
       const argv = parts.slice(1, envIndex);
-      const [A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS] =
+      const [A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS, BUILDER_RUNTIME_STORE_HOST_ID] =
         parts.slice(envIndex + 1);
       return {
         argv,
-        env: { A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS },
+        env: { A04_PG_BIN, PG_BIN, BUILD_ENDPOINT, BUILD_CONTEXT, SOURCE_SHA, HARNESS_SHA, STAGING_ORIGIN, NODE_OPTIONS, BUILDER_RUNTIME_STORE_HOST_ID },
       };
     });
 }
@@ -180,7 +182,7 @@ test("candidate gate hands tests an isolated environment and preserves PG/toolch
     assert.equal(testCall.env.A04_PG_BIN, f.pg);
     assert.equal(testCall.env.PG_BIN, f.pg);
     assert.equal(testCall.env.NODE_OPTIONS, "--max-old-space-size=256");
-    for (const key of ["BUILD_ENDPOINT", "BUILD_CONTEXT", "SOURCE_SHA", "HARNESS_SHA", "STAGING_ORIGIN"]) {
+    for (const key of ["BUILD_ENDPOINT", "BUILD_CONTEXT", "SOURCE_SHA", "HARNESS_SHA", "STAGING_ORIGIN", "BUILDER_RUNTIME_STORE_HOST_ID"]) {
       assert.equal(testCall.env[key], "", `${key} leaked into the test subprocess`);
     }
 

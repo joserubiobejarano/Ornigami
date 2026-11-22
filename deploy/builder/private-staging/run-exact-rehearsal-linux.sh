@@ -118,6 +118,16 @@ export_approved_evidence() {
     mkdir -p "$stage/custody"
     cp "$ARCHIVE_PATH" "$stage/custody/$(basename "$ARCHIVE_PATH")"
   fi
+  # Candidate tests that start a disposable PostgreSQL instance write the
+  # server log under the candidate .next tree. Retain a bounded copy so a
+  # start failure is diagnosable without rerunning the gate.
+  if [[ -d "$SOURCE_ROOT/.next" ]]; then
+    mkdir -p "$stage/logs/pg"
+    while IFS= read -r -d '' pglog; do
+      relative="${pglog#"$SOURCE_ROOT/.next"/}"
+      head -c 1048576 "$pglog" > "$stage/logs/pg/${relative//\//_}" 2>/dev/null || true
+    done < <(find "$SOURCE_ROOT/.next" -maxdepth 4 -type f -name 'postgres.log' -print0 2>/dev/null)
+  fi
   find "$stage" -mindepth 1 -type d -exec chmod 0750 {} +
   find "$stage" -type f -exec chmod 0640 {} +
 }

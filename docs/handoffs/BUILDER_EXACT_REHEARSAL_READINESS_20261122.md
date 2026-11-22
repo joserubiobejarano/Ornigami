@@ -1,121 +1,117 @@
 # Exact-candidate rehearsal readiness repair — 22 November 2026
 
-Status: **one full synthetic Linux attempt was executed and failed at the
-candidate test gate. No archive exists. A second full attempt requires expanded
-approval. Customer admission remains closed.**
+Status: **two full synthetic Linux attempts were executed and both failed at the
+candidate test gate. No image or archive exists. Remote execution is stopped.
+Another full attempt requires expanded approval. Customer admission remains
+closed.**
 
 ## Frozen identities
 
 | Object | Identity |
 | --- | --- |
 | Execution-bundle baseline | `820aae6d41ccc9e7127c095f3a097904a44d0c5e` |
-| Readiness/execution bundle | `b83a11adba49da76d544d2ae38f229a4913c36c2` (full-run parent) |
-| Full-run request commit | `2662d6ce763f189e303d774914ff44de3fd5ca41` |
-| Original application/harness candidate | `0d68551324ce3f441478f613d2f4eb48b9be4f3f` |
-| Corrected application/harness candidate | `863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816` |
-| Candidate correction parent | `0d68551324ce3f441478f613d2f4eb48b9be4f3f` |
-| Preserved historical baseline | `43e2691e7d347d6e48e0ed65c0a828567b24c7a3` |
-| Trigger branch | `ci/builder-exact-rehearsal-0d68551-readiness-20261122` |
-| Full run | `44980225963` |
-| Previous failed run | `44977330367` (bundle `820aae6`, candidate `0d68551`) |
+| Candidate | `863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816` (parent `0d685513`) |
+| Candidate merge | `87a064e9856da169f691306379f2120e78c22981` |
+| Gate-debug bundle | `48d3e9a7cfcfa3d983b1f401bb98ea774fb65092` |
+| Final codex bundle tip | `c3d98ab058b3451d7a6f12599197855c7f0fcf63` |
+| Second full-run request commit | `fadf1072eb9f299a98370b80827e0daa0905daf6` |
+| Second full-run branch | `ci/builder-exact-rehearsal-0d68551-qualify-20261122` |
+| Second full run | `45022904023` |
+| First full run | `44980225963` |
+| Gate-debug run | `45022113531` |
 
-The candidate correction is mode/content only: directly invoked private-staging
-helpers that were committed `100644` are now `100755`, direct child-shell
-invocations use `bash`, and `PROXY_BINDING_PROFILE` is forwarded explicitly.
-No application behavior changed. Both original worktrees and all historical
-evidence remain untouched.
+The candidate correction is mode/content only: directly invoked helpers are
+`100755`, direct child-shell calls use `bash`, and the loopback proxy profile
+is forwarded. No application behavior change. Previous branches, runs and
+artifacts are preserved.
 
-## Root cause of the last preflight failure
+## Root causes repaired
 
-Run `44977330367` failed in `verify-linux-ownership.sh` at
-`builder_build_docker` after about half a second. The pinned `docker:27-dind`
-service was still starting; its container was running, but the published
-`tcp://127.0.0.1:2375` API was not ready. The old loop treated a zero exit
-status as success and broke immediately. On this Docker CLI, `docker info` can
-exit `0` with **empty stdout** while printing `Cannot connect to the Docker
-daemon ... Is the docker daemon running?` to stderr, so the loop never waited.
-This is reproduced deliberately in debug run `44979807275` against a closed
-port: five attempts, exit status `0`, empty stdout, `empty_response`.
+1. **DinD readiness was never waited for.** The old loop treated `docker info`
+   exit status `0` as success. Debug evidence showed exit `0` with empty stdout
+   and `Cannot connect ...` on stderr. The new probe requires a non-empty daemon
+   ID, has per-attempt timeout and overall deadline, and retains classification
+   and bounded diagnostics.
+2. **The candidate gate inherited the live rehearsal environment.** The helper
+   is a child process, so clearing selectors cannot affect later checkpoint or
+   qualification phases.
+3. **PostgreSQL was not propagated.** `A04_PG_BIN`/`PG_BIN` now reach the builder
+   test process; `initdb` and `postgres` must be executable before the suite.
+4. **The lock test still inherited `BUILDER_RUNTIME_STORE_HOST_ID`.** The live
+   store ID made the test lock's hostname fail the same-host comparison, so the
+   dead owner was never reclaimed. The gate helper now clears all
+   `BUILDER_RUNTIME_*`, store, volume, project and browser variables.
+5. **PG server logs were not retained.** Candidate `.next/**/postgres.log`
+   files are copied into staging (bounded to 1 MiB each) during cleanup.
+6. **Closure observation could race teardown.** Origin/listener closure now
+   retries for a short bounded period before recording failure.
 
-The pinned `27.5.1-dind` entrypoint has no extra sleep; in non-TLS mode it
-starts `dockerd` with `--host=tcp://0.0.0.0:2375`. Container liveness/health
-does not prove the published TCP API is ready. Readiness observes in debug
-runs were 9.5–13.2 seconds after job start.
+## Linux evidence
 
-## Repairs
-
-- Added `probe-docker-endpoint.sh`: builder-identity probe of the exact
-  endpoint, per-probe `timeout` and overall deadline, attempt/TSV retention,
-  daemon ID and server version, `transient_startup` / `access_or_config` /
-  `empty_response` classification, and bounded host listener/container/log
-  diagnostics on failure. Non-loopback TCP endpoints are rejected.
-- Moved Docker capability checks after all ownership/profile fixtures in
-  `verify-linux-ownership.sh`; DinD unavailability can no longer skip them.
-- Added independent workflow steps for the build probe, host probe, ownership
-  preflight and ownership regression, followed by a gate before installation.
-- Retained archives, receipts and identity files in export staging even when
-  qualification fails after the checkpoint.
-- Added verified origin/listener closure to cleanup (`origin_unreachable`,
-  `http_listener_absent`, `https_listener_absent`).
-- Priority diagnostics are retained as bounded tails instead of being dropped.
-- Added executable-mode verification for the exact candidate and bundle.
-- Added a path-triggered 10-minute debug workflow and Linux probe regression.
-
-## Bounded debug evidence
-
-| Run | Commit | Result | Notes |
-| --- | --- | --- | --- |
-| `44979679822` | `5bcfe93` | failed | probe/preflight passed; debug control-root traversal and fixture escaping defects found |
-| `44979807275` | `b4df72c` | passed | build ready 6 attempts/13.2s; host 1/0.1s; distinct daemons; all 27 harness tests passed |
-| `44979954736` | `bf6dc86` | passed | exact candidate identity/modes/ancestry verified |
-| `44980069092` | `b83a11a` | passed | exact `actions/checkout` of `863a8a7` verified |
-
-Debug run `44979807275` recorded:
+Gate-debug `45022113531` ran the exact builder → `run-candidate-gates.sh`
+command with deliberately contaminated selectors:
 
 ```text
-builder_host_docker_id=fb20f451-b428-4d99-946c-e0f8dfac42c1
-builder_build_docker_id=a6b9038d-f209-453b-8245-185b6b7c1601
-distinct_docker_daemons=true
-loopback_profile=valid
-wildcard_profile=valid
-mixed_profiles_rejected=true
+candidate_gate_pg_bin=/usr/lib/postgresql/17/bin
+candidate_gate_initdb=/usr/lib/postgresql/17/bin/initdb
+candidate_gate_postgres=/usr/lib/postgresql/17/bin/postgres
+candidate_gate_test_count=216
+candidate_gate_test_concurrency=1
+candidate_gate_rehearsal_selectors_cleared=true
+candidate_gate_status=pass
+# tests 1460
+# pass 1460
+# fail 0
+# skipped 0
 ```
 
-The builder was `packer` (UID 1000), the runner `runner` (UID 1001). Private
-roots stayed `0700/0600`, the export staging `2770`, and exported files
-`0640`.
+Readiness in the full runs remained green: distinct build/host daemons, loopback
+profile accepted, cross-profile rejected, private store modes `0700/0600`,
+export staging `2770`, and builder/runner identities distinct.
 
-## Full attempt outcome (run 44980225963)
+## Full attempt outcomes
 
-The single authorized full attempt was dispatched from
-`ci/builder-exact-rehearsal-0d68551-readiness-20261122` at `2662d6c` against
-candidate `863a8a7`. Trigger, immutable checkouts, ancestry/mode verification,
-builder setup, bounded build/host readiness, ownership preflight, ownership
-regression and the pre-installation gate all passed. DinD readiness was
-observed before installation.
+### `44980225963` (first)
 
-The run then failed at the candidate gate before any image was built:
+Passed trigger, checkout, ancestry/modes, readiness, ownership preflight and
+the pre-installation gate. Failed the candidate suite with 10 failures: two
+PostgreSQL path failures, seven leaked-`BUILD_ENDPOINT` fixture failures, one
+lock timeout. No image or archive.
 
-- 10 of 1460 tests failed;
-- two PostgreSQL tests fell back to the Windows default
-  `C:/Program Files/PostgreSQL/17/bin` because `A04_PG_BIN` was not propagated
-  through `sudo -u builder env`;
-- seven candidate-rehearsal tests inherited the live `BUILD_ENDPOINT` and
-  conflicted with their `BUILD_CONTEXT` fixture;
-- one lock-reclamation test timed out under parallel test-file load.
+### `45022904023` (second)
 
-No archive was produced and the retrieval job was skipped. The bounded
-diagnostics artifact
-`builder-exact-rehearsal-0d68551-readiness-44980225963-1-diagnostics`
-was retained for seven days. The failed branch and run remain unchanged.
+Passed the same early gates and reached the candidate suite. Final counts were
+`1460 tests, 1458 pass, 2 fail`:
 
-The codex bundle now adds `A04_PG_BIN`/`PG_BIN` propagation, clears rehearsal
-selectors before the candidate suite, and runs the same discovered suite
-serially with `--test-concurrency=1`. These corrections are not yet qualified
-by a Linux run; another full attempt requires expanded approval.
+- `atomic runner serializes real PostgreSQL quota claims and safely recovers
+  sends`: `pg_ctl ... start` failed. The disposable server log was not retained
+  from this run; retention was added afterwards.
+- `a lock owned by a provably dead process is reclaimed`: timed out because the
+  gate still inherited `BUILDER_RUNTIME_STORE_HOST_ID`; fixed after the run.
 
-## Remaining action
+No image, checkpoint, edge, qualification, archive or retrieval occurred.
+`final_status=1`, `cleanup_failures=0`,
+`reason=preserved_primary_failure`.
 
-The smallest remaining step is one expanded-approval full attempt using the
-corrected codex bundle and candidate `863a8a7`, followed by the 15-minute
-retrieval job. Public hosting and customer admission remain out of scope.
+## Custody
+
+| Run | Artifact | Size | Expiry |
+| --- | --- | --- | --- |
+| `44980225963` | `builder-exact-rehearsal-0d68551-readiness-44980225963-1-diagnostics` | 86,086 B | `2026-11-29T03:24:51Z` |
+| `45022904023` | `builder-exact-rehearsal-0d68551-readiness-45022904023-1-diagnostics` | 85,319 B | `2026-11-29T12:38:47Z` |
+| `45022113531` | `builder-gate-debug-45022113531-1` | bounded | seven days |
+
+Local retained copies are under `.local/retained/`.
+
+## Remaining blocker and next step
+
+The lock failure has a demonstrated environment cause and a local fix with an
+executable regression. The PostgreSQL `pg_ctl start` failure occurred only in
+the full job (the same test passed in the no-DinD gate-debug); the missing
+server log is the blocker to proving whether it was a port/resource interaction
+with the full job environment. A future attempt should capture the retained
+`postgres.log`, and preferably run the gate in the no-DinD job that already
+passed, then continue conditionally into the DinD build. This requires expanded
+approval; no further remote execution was attempted.
+
+Public hosting and customer admission remain out of scope.
