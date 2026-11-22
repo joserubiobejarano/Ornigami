@@ -19,23 +19,33 @@ jobs:
   execute:
     name: Execute exact candidate on synthetic Linux edge
     if: >-
-      github.event.created == false &&
+      github.event.created == true &&
+      github.event.before == '0000000000000000000000000000000000000000' &&
       github.repository == 'joserubiobejarano/Ornigami' &&
       github.run_attempt == 1 &&
       github.ref == 'refs/heads/ci/builder-exact-rehearsal-43e2691-20261121'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    outputs:
+      custody_uploaded: ${{ steps.custody_result.outputs.custody_uploaded }}
     services:
       dind:
-        image: docker:27-dind
+        image: docker:27-dind@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
         options: --privileged
         env:
           DOCKER_TLS_CERTDIR: ""
         ports:
-          - 2375:2375
+          - 127.0.0.1:2375:2375
     env:
+      WORKFLOW_SHA: ${{ github.sha }}
       SOURCE_SHA: 43e2691e7d347d6e48e0ed65c0a828567b24c7a3
       HARNESS_SHA: 43e2691e7d347d6e48e0ed65c0a828567b24c7a3
+      RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      PROJECT: ornigami-builder-rehearsal-43e2691-${{ github.run_id }}-${{ github.run_attempt }}
+      MAX_ARCHIVE_BYTES: "3221225472"
+      MAX_ARTIFACT_BYTES: "3758096384"
+      MAX_DIAGNOSTIC_BYTES: "67108864"
+      MAX_RETRIEVAL_ARTIFACT_BYTES: "67108864"
       STAGING_ORIGIN: https://builder-rehearsal.invalid
       STAGING_HOST: builder-rehearsal.invalid
       CADDY_IMAGE: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
@@ -64,67 +74,66 @@ jobs:
       ARTIFACT_NAME: builder-exact-rehearsal-43e2691-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
-      - name: Check out bundle control plane
+      - name: Check out bundle control plane at triggering SHA
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           clean: true
 
-      - name: Validate request and record workflow identity
+      - name: Verify control-plane identity
         shell: bash
         run: |
           set -Eeuo pipefail
-          command -v jq >/dev/null || {
-            sudo apt-get update
-            sudo apt-get install --no-install-recommends -y jq
-          }
-          request=.github/build-requests/builder-exact-rehearsal-43e2691.json
-          test -f "$request"
-          jq -e '
-            .schemaVersion == 1 and
-            .applicationSourceSha == "43e2691e7d347d6e48e0ed65c0a828567b24c7a3" and
-            .harnessSha == .applicationSourceSha and
-            .expectedOrigin == "https://builder-rehearsal.invalid" and
-            .expectedStagingHost == "builder-rehearsal.invalid" and
-            .archiveCustody.destination == "github-actions-artifact" and
-            .budget.dispatches == 1 and
-            .budget.attempts == 1
-          ' "$request" >/dev/null
-          echo "WORKFLOW_SHA=$GITHUB_SHA" >> "$GITHUB_ENV"
-          echo "WORKFLOW_REF=$GITHUB_REF" >> "$GITHUB_ENV"
+          test "$(git rev-parse HEAD)" = "$WORKFLOW_SHA"
+          test "$(git rev-parse "$WORKFLOW_SHA^{commit}")" = "$WORKFLOW_SHA"
           {
-            printf 'workflow_sha=%s\n' "$GITHUB_SHA"
+            printf 'control_plane_root=%s\n' "$GITHUB_WORKSPACE"
+            printf 'control_plane_head=%s\n' "$(git rev-parse HEAD)"
+            printf 'workflow_sha=%s\n' "$WORKFLOW_SHA"
             printf 'workflow_ref=%s\n' "$GITHUB_REF"
             printf 'run_id=%s\n' "$GITHUB_RUN_ID"
             printf 'run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
-            printf 'source_sha=%s\n' "$SOURCE_SHA"
-            printf 'harness_sha=%s\n' "$HARNESS_SHA"
+            printf 'event_created=%s\n' "${{ github.event.created }}"
+            printf 'event_before=%s\n' "${{ github.event.before }}"
           } > "$RUNNER_TEMP/workflow-identity.txt"
 
-      - name: Fetch exact source and verify ancestry
+      - name: Validate one initial-publication trigger
+        shell: bash
+        env:
+          EXPECTED_REF: refs/heads/ci/builder-exact-rehearsal-43e2691-20261121
+          REQUEST_PATH: .github/build-requests/builder-exact-rehearsal-43e2691.json
+          EXPECTED_SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          EXPECTED_HARNESS_SHA: ${{ env.HARNESS_SHA }}
+          EVENT_CREATED: ${{ github.event.created }}
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          set -Eeuo pipefail
+          node deploy/builder/private-staging/rehearsal-event-gate.mjs \
+            | tee "$RUNNER_TEMP/event-gate.json"
+
+      - name: Check out exact candidate source
+        uses: actions/checkout@v5
+        with:
+          ref: 43e2691e7d347d6e48e0ed65c0a828567b24c7a3
+          path: candidate-source
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact source, harness and ancestry
         shell: bash
         run: |
           set -Eeuo pipefail
-          source_root="$RUNNER_TEMP/source"
-          mkdir -p "$source_root"
-          git -C "$source_root" init --quiet
-          git -C "$source_root" remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
-          git -C "$source_root" fetch --quiet --no-tags origin "$SOURCE_SHA"
-          actual="$(git -C "$source_root" rev-parse FETCH_HEAD)"
-          test "$actual" = "$SOURCE_SHA"
-          git -C "$source_root" checkout --quiet --detach "$SOURCE_SHA"
-          test "$(git -C "$source_root" rev-parse HEAD)" = "$SOURCE_SHA"
-          test -z "$(git -C "$source_root" status --porcelain --untracked-files=all)"
-          git -C "$source_root" merge-base --is-ancestor 340ee97c51ca56c87cd9ec36bc642f2e67ea67bd "$SOURCE_SHA"
-          git -C "$source_root" merge-base --is-ancestor ebb487da11118ff458ecbdf1d268f2ebd5ceb5b1 "$SOURCE_SHA"
-          echo "SOURCE_ROOT=$source_root" >> "$GITHUB_ENV"
-          {
-            printf 'source_root=%s\n' "$source_root"
-            printf 'source_head=%s\n' "$(git -C "$source_root" rev-parse HEAD)"
-            printf '340ee97_ancestor=yes\n'
-            printf 'ebb487d_ancestor=yes\n'
-          } > "$RUNNER_TEMP/source-identity.txt"
+          echo "SOURCE_ROOT=$GITHUB_WORKSPACE/candidate-source" >> "$GITHUB_ENV"
+          CONTROL_ROOT="$GITHUB_WORKSPACE" \
+          SOURCE_ROOT="$GITHUB_WORKSPACE/candidate-source" \
+          WORKFLOW_SHA="$WORKFLOW_SHA" \
+          SOURCE_SHA="$SOURCE_SHA" \
+          HARNESS_SHA="$HARNESS_SHA" \
+          REQUIRE_TIPS=1 \
+            bash deploy/builder/private-staging/verify-exact-identities.sh \
+            | tee "$RUNNER_TEMP/source-identity.txt"
 
       - name: Install supported Node and vendored npm
         shell: bash
@@ -182,7 +191,8 @@ jobs:
           builder_user="$(id -nu 1000)"
           builder_home="$(getent passwd "$builder_user" | cut -d: -f6)"
           sudo usermod -aG docker "$builder_user"
-          sudo install -d -m 0755 -o "$builder_user" -g "$(id -gn "$builder_user")" "$EVIDENCE_ROOT" "$REHEARSAL_DIR"
+          sudo install -d -m 0755 -o "$builder_user" -g "$(id -gn "$builder_user")" "$EVIDENCE_ROOT"
+          test ! -e "$REHEARSAL_DIR"
           sudo chown -R "$builder_user":"$(id -gn "$builder_user")" "$SOURCE_ROOT"
           sudo chmod -R a+rX /opt/ornigami-node /opt/ornigami-npm "$GITHUB_WORKSPACE"
           sudo chmod a+rx /home/runner /home/runner/work 2>/dev/null || true
@@ -214,6 +224,7 @@ jobs:
             WORKFLOW_SHA="$WORKFLOW_SHA" \
             REHEARSAL_DIR="$REHEARSAL_DIR" \
             EVIDENCE_ROOT="$EVIDENCE_ROOT" \
+            PROJECT="$PROJECT" \
             STAGING_ORIGIN="$STAGING_ORIGIN" \
             STAGING_HOST="$STAGING_HOST" \
             CADDY_IMAGE="$CADDY_IMAGE" \
@@ -231,6 +242,7 @@ jobs:
             2>&1 | tee "$EVIDENCE_ROOT/logs/rehearsal-console.log"
 
       - name: Record archive and evidence custody bundle
+        id: custody_record
         if: always()
         shell: bash
         run: |
@@ -238,37 +250,115 @@ jobs:
           mkdir -p "$EVIDENCE_ROOT/logs"
           cp "$RUNNER_TEMP/workflow-identity.txt" "$EVIDENCE_ROOT/logs/workflow-identity.txt" 2>/dev/null || true
           cp "$RUNNER_TEMP/source-identity.txt" "$EVIDENCE_ROOT/logs/source-identity.txt" 2>/dev/null || true
+          cp "$RUNNER_TEMP/event-gate.json" "$EVIDENCE_ROOT/logs/event-gate.json" 2>/dev/null || true
           if [[ -f "$EVIDENCE_ROOT/custody/custody-receipt.json" ]]; then
             cp "$EVIDENCE_ROOT/custody/custody-receipt.json" "$EVIDENCE_ROOT/logs/custody-receipt.json"
           fi
           find "$EVIDENCE_ROOT" -maxdepth 3 -type f -printf '%p\t%s\n' | sort > "$EVIDENCE_ROOT/logs/evidence-files.txt" || true
           if [[ -f "$EVIDENCE_ROOT/custody/archive-receipt.json" ]]; then
-            printf 'archive_ready=true\n' >> "$GITHUB_ENV"
+            echo "archive_ready=true" >> "$GITHUB_OUTPUT"
           else
-            printf 'archive_ready=false\n' >> "$GITHUB_ENV"
+            echo "archive_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check upload budgets before custody upload
+        id: upload_budget
+        if: always()
+        shell: bash
+        env:
+          UPLOAD_ROOT: ${{ env.EVIDENCE_ROOT }}
+          MAX_ARCHIVE_BYTES: ${{ env.MAX_ARCHIVE_BYTES }}
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_ARTIFACT_BYTES }}
+          MAX_DIAGNOSTIC_BYTES: ${{ env.MAX_DIAGNOSTIC_BYTES }}
+          DIAGNOSTICS_DIR: ${{ env.EVIDENCE_ROOT }}/diagnostics
+          RECEIPT_PATH: ${{ env.EVIDENCE_ROOT }}/logs/upload-budget-receipt.json
+        run: |
+          set +e
+          node deploy/builder/private-staging/check-upload-budget.mjs \
+            > "$EVIDENCE_ROOT/logs/upload-budget.json" 2>&1
+          budget_rc=$?
+          set -e
+          upload_allowed=false
+          if [[ "$budget_rc" == "0" && "${{ steps.custody_record.outputs.archive_ready }}" == "true" ]]; then
+            upload_allowed=true
+          fi
+          echo "upload_allowed=$upload_allowed" >> "$GITHUB_OUTPUT"
+          echo "budget_exit=$budget_rc" >> "$GITHUB_OUTPUT"
+          if [[ "$upload_allowed" != "true" ]]; then
+            mkdir -p "$EVIDENCE_ROOT/diagnostics"
+            cp -a "$EVIDENCE_ROOT/logs/." "$EVIDENCE_ROOT/diagnostics/" 2>/dev/null || true
+            cat "$EVIDENCE_ROOT/logs/upload-budget.json" >> "$EVIDENCE_ROOT/diagnostics/upload-budget.txt" 2>/dev/null || true
+            test -d "$EVIDENCE_ROOT/diagnostics"
           fi
 
       - name: Upload synthetic archive and evidence to custody
-        if: always()
+        id: custody_upload
+        if: always() && steps.upload_budget.outputs.upload_allowed == 'true'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.EVIDENCE_ROOT }}
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
+
+      - name: Upload bounded diagnostics after budget overflow
+        if: always() && steps.upload_budget.outputs.upload_allowed != 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-diagnostics
+          path: ${{ env.EVIDENCE_ROOT }}/diagnostics
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Record custody result
+        id: custody_result
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ "${{ steps.upload_budget.outputs.upload_allowed }}" == "true" && "${{ steps.custody_upload.outcome }}" == "success" ]]; then
+            echo "custody_uploaded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "custody_uploaded=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enforce final rehearsal and custody status
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ "${{ steps.custody_result.outputs.custody_uploaded }}" != "true" ]]; then
+            echo "FAIL: custody upload is incomplete" >&2
+            exit 1
+          fi
+          test -f "$EVIDENCE_ROOT/final-status.txt"
+          grep -qx 'final_status=0' "$EVIDENCE_ROOT/final-status.txt" || {
+            cat "$EVIDENCE_ROOT/final-status.txt" >&2
+            exit 1
+          }
 
   retrieve-verify:
     name: Retrieve custody and independently load/verify
     needs: execute
+    if: always() && needs.execute.outputs.custody_uploaded == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      WORKFLOW_SHA: ${{ github.sha }}
+      MAX_RETRIEVAL_ARTIFACT_BYTES: "67108864"
     steps:
-      - name: Check out verifier scripts
+      - name: Check out verifier scripts at triggering SHA
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
           clean: true
+
+      - name: Verify retrieval control-plane identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$WORKFLOW_SHA"
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -327,6 +417,18 @@ jobs:
           }
           EOF
           cat "$evidence/retrieval-receipt.json"
+
+      - name: Check retrieval upload budget
+        shell: bash
+        env:
+          UPLOAD_ROOT: ${{ runner.temp }}/retrieval-evidence
+          MAX_ARCHIVE_BYTES: "0"
+          MAX_ARTIFACT_BYTES: ${{ env.MAX_RETRIEVAL_ARTIFACT_BYTES }}
+          RECEIPT_RESERVE_BYTES: "0"
+          RECEIPT_PATH: ${{ runner.temp }}/retrieval-evidence/retrieval-budget.json
+        run: |
+          set -Eeuo pipefail
+          node deploy/builder/private-staging/check-upload-budget.mjs
 
       - name: Upload retrieval verification receipt
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f

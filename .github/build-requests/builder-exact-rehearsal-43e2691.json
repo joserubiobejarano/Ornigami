@@ -1,19 +1,40 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "bundleBaseSha": "588aa66856cc68a903e6b63510ec40cfa2f8322a",
   "applicationSourceSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
   "harnessSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
   "workflowFile": ".github/workflows/builder-exact-rehearsal-43e2691.yml",
+  "trigger": {
+    "branch": "ci/builder-exact-rehearsal-43e2691-20261121",
+    "event": "initial branch creation push only",
+    "before": "0000000000000000000000000000000000000000",
+    "subsequentPushes": "do not schedule"
+  },
   "expectedOrigin": "https://builder-rehearsal.invalid",
   "expectedStagingHost": "builder-rehearsal.invalid",
   "expectedPlatform": "linux/amd64",
   "expectedUser": "1000:1000",
-  "buildDaemon": "docker-in-docker service on the hosted runner",
+  "buildDaemon": {
+    "image": "docker:27-dind@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce",
+    "apiBinding": "127.0.0.1:2375"
+  },
   "verifyPhaseDaemon": "host runner Docker daemon",
+  "edge": {
+    "image": "caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+    "bindings": [
+      "127.0.0.1:80:80",
+      "127.0.0.1:443:443",
+      "127.0.0.1:443:443/udp"
+    ],
+    "dns": "host mapping 127.0.0.1 builder-rehearsal.invalid",
+    "tls": "Caddy internal private CA"
+  },
   "archiveCustody": {
     "destination": "github-actions-artifact",
     "repository": "joserubiobejarano/Ornigami",
     "retentionDays": 7,
-    "access": "repository artifact access; synthetic image and receipt only"
+    "access": "repository artifact access; synthetic image, receipts and sanitized evidence only",
+    "expiryDecision": "download to approved custody or explicitly extend before expiry; expiry leaves no retained rehearsal archive"
   },
   "budget": {
     "dispatches": 1,
@@ -21,7 +42,10 @@
     "executeTimeoutMinutes": 90,
     "retrievalTimeoutMinutes": 15,
     "maxArchiveBytes": 3221225472,
-    "maxArtifactBytes": 3758096384
+    "maxArtifactBytes": 3758096384,
+    "maxDiagnosticBytes": 67108864,
+    "maxRetrievalArtifactBytes": 67108864,
+    "retentionDays": 7
   },
   "customerAdmission": "closed"
 }

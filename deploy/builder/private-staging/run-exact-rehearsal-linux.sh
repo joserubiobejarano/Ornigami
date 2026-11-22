@@ -32,15 +32,30 @@ BROWSER_PLAYWRIGHT="${BROWSER_PLAYWRIGHT:-}"
 PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-}"
 NPM_CLI_FOR_REHEARSAL="${NPM_CLI_FOR_REHEARSAL:?NPM_CLI_FOR_REHEARSAL is required}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT="${PROJECT:-ornigami-builder-rehearsal-${SOURCE_SHA:0:12}}"
 IMAGE_DIR="$REHEARSAL_DIR/image"
 STAGING_DIR="$REHEARSAL_DIR/edge"
 LOG_DIR="$EVIDENCE_ROOT/logs"
 CUSTODY_DIR="$EVIDENCE_ROOT/custody"
-mkdir -p "$REHEARSAL_DIR" "$LOG_DIR" "$EVIDENCE_ROOT/checkpoint" "$EVIDENCE_ROOT/edge" "$CUSTODY_DIR"
+# ACTION=checkpoint owns creation of REHEARSAL_DIR; only its parent exists here.
+mkdir -p "$(dirname "$REHEARSAL_DIR")" "$LOG_DIR" "$EVIDENCE_ROOT/checkpoint" "$EVIDENCE_ROOT/edge" "$CUSTODY_DIR"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
+
+assert_loopback_tcp() {
+  local port="$1" label="$2" listeners address
+  listeners="$(ss -ltn "sport = :$port" 2>/dev/null | awk 'NR > 1 { print $4 }')"
+  [[ -n "$listeners" ]] || fail "$label has no listener on port $port"
+  while IFS= read -r address; do
+    [[ -n "$address" ]] || continue
+    case "$address" in
+      "127.0.0.1:$port"|"[::1]:$port") ;;
+      *) fail "$label is not loopback-only: $address" ;;
+    esac
+  done <<< "$listeners"
+}
 read_field() {
   local file="$1" key="$2"
   node -e '
@@ -61,8 +76,9 @@ node -e 'const [a,b]=process.argv.slice(1);const p=require("node:path");process.
 
 BASIC_PASSWORD=""
 BASIC_HASH=""
+CLEANUP_FAILURES=0
 cleanup() {
-  local status=$?
+  local status=$? compose_status=0 ownership_status=0 ca_status=0
   set +e
   if [[ -f "$STAGING_DIR/compose.yml" ]]; then
     env BUILDER_IMAGE="${IMAGE_ID:-unavailable}" CADDY_IMAGE="$CADDY_IMAGE" \
@@ -76,25 +92,51 @@ cleanup() {
       ACME_EMAIL="staging@ornigami.invalid" STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" \
       STAGING_BASIC_AUTH_HASH="${BASIC_HASH:-}" BUILDER_STORE_VOLUME="$BUILDER_STORE_VOLUME" \
       docker compose -p "$PROJECT" --project-directory "$STAGING_DIR" -f "$STAGING_DIR/compose.yml" \
-      down -v --remove-orphans > "$LOG_DIR/compose-down.log" 2>&1 || true
+      down -v --remove-orphans > "$LOG_DIR/compose-down.log" 2>&1
+    compose_status=$?
   fi
-  docker ps -aq --filter "label=com.docker.compose.project=$PROJECT" | xargs -r docker rm -f >/dev/null 2>&1 || true
-  docker network ls -q --filter "label=com.docker.compose.project=$PROJECT" | xargs -r docker network rm >/dev/null 2>&1 || true
-  docker volume ls -q --filter "label=com.docker.compose.project=$PROJECT" | xargs -r docker volume rm >/dev/null 2>&1 || true
+  DOCKER_BIN=docker PROJECT="$PROJECT" EVIDENCE_DIR="$EVIDENCE_ROOT" \
+    "$SCRIPT_DIR/cleanup-owned-resources.sh" > "$LOG_DIR/cleanup-owned-resources.log" 2>&1
+  ownership_status=$?
+  if [[ "$compose_status" -ne 0 ]]; then
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: compose down exited $compose_status" >> "$LOG_DIR/cleanup-owned-resources.log"
+  fi
+  if [[ "$ownership_status" -ne 0 ]]; then
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+  fi
   if grep -q "[[:space:]]$STAGING_HOST\$" /etc/hosts 2>/dev/null; then
-    sudo sed -i "\\|[[:space:]]$STAGING_HOST\$|d" /etc/hosts || true
+    sudo sed -i "\\|[[:space:]]$STAGING_HOST\$|d" /etc/hosts
+  fi
+  if grep -q "[[:space:]]$STAGING_HOST\$" /etc/hosts 2>/dev/null; then
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: host mapping remains: $STAGING_HOST" >> "$LOG_DIR/cleanup-owned-resources.log"
   fi
   sudo rm -f /usr/local/share/ca-certificates/ornigami-builder-rehearsal-ca.crt
-  sudo update-ca-certificates >/dev/null 2>&1 || true
+  sudo update-ca-certificates >/dev/null 2>&1
+  ca_status=$?
+  if [[ "$ca_status" -ne 0 || -e /usr/local/share/ca-certificates/ornigami-builder-rehearsal-ca.crt ]]; then
+    CLEANUP_FAILURES=$((CLEANUP_FAILURES + 1))
+    echo "FAIL: private CA removal/trust update incomplete" >> "$LOG_DIR/cleanup-owned-resources.log"
+  fi
   rm -f "$EVIDENCE_ROOT/secrets/basic-password" "$EVIDENCE_ROOT/secrets/basic-hash"
   {
-    printf 'cleanup_exit=%s\n' "$status"
-    printf 'containers_remaining=%s\n' "$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT" | wc -l)"
-    printf 'networks_remaining=%s\n' "$(docker network ls -q --filter "label=com.docker.compose.project=$PROJECT" | wc -l)"
-    printf 'volumes_remaining=%s\n' "$(docker volume ls -q --filter "label=com.docker.compose.project=$PROJECT" | wc -l)"
+    printf 'primary_exit=%s\n' "$status"
+    printf 'cleanup_failures=%s\n' "$CLEANUP_FAILURES"
+    printf 'compose_down_exit=%s\n' "$compose_status"
+    printf 'owned_resource_cleanup_exit=%s\n' "$ownership_status"
+    printf 'ca_cleanup_exit=%s\n' "$ca_status"
+    if [[ -f "$EVIDENCE_ROOT/cleanup-receipt.txt" ]]; then
+      cat "$EVIDENCE_ROOT/cleanup-receipt.txt"
+    fi
   } > "$EVIDENCE_ROOT/access-closed.txt"
   cp "$EVIDENCE_ROOT/access-closed.txt" "$CUSTODY_DIR/access-closed.txt" 2>/dev/null || true
-  exit "$status"
+  "$SCRIPT_DIR/finalize-rehearsal-status.sh" "$status" "$CLEANUP_FAILURES" \
+    > "$EVIDENCE_ROOT/final-status.txt" 2>&1
+  local final=$?
+  cp "$EVIDENCE_ROOT/final-status.txt" "$CUSTODY_DIR/final-status.txt" 2>/dev/null || true
+  cat "$EVIDENCE_ROOT/final-status.txt"
+  exit "$final"
 }
 trap cleanup EXIT
 
@@ -125,10 +167,15 @@ for _ in $(seq 1 60); do
 done
 [[ -n "${BUILD_DAEMON_ID:-}" ]] || fail "build daemon did not become available at $BUILD_ENDPOINT"
 [[ "$BUILD_DAEMON_ID" != "$HOST_DAEMON_ID" ]] || fail "build and verification daemons are not independent"
+[[ "$BUILD_ENDPOINT" =~ ^tcp://127\.0\.0\.1:([0-9]+)$ ]] \
+  || fail "build daemon API must be a loopback-only TCP endpoint: $BUILD_ENDPOINT"
+assert_loopback_tcp "${BASH_REMATCH[1]}" "build-daemon-api"
+[[ ! -e "$REHEARSAL_DIR" ]] || fail "REHEARSAL_DIR must be absent before ACTION=checkpoint: $REHEARSAL_DIR"
 {
   printf 'host_daemon_id=%s\n' "$HOST_DAEMON_ID"
   printf 'build_daemon_id=%s\n' "$BUILD_DAEMON_ID"
   printf 'build_endpoint=%s\n' "$BUILD_ENDPOINT"
+  printf 'build_api_loopback_only=true\n'
 } > "$EVIDENCE_ROOT/daemons.txt"
 note "Build daemon: $BUILD_DAEMON_ID"
 note "Verify/phase daemon: $HOST_DAEMON_ID"
@@ -208,6 +255,9 @@ path = sys.argv[1]
 text = open(path, encoding="utf-8").read()
 text = text.replace("./Caddyfile.example", "./Caddyfile", 1)
 text = text.replace("BUILDER_RUNTIME_MODE: invite", "BUILDER_RUNTIME_MODE: ${BUILDER_RUNTIME_MODE:-invite}", 1)
+text = text.replace('- "80:80"', '- "127.0.0.1:80:80"')
+text = text.replace('- "443:443"', '- "127.0.0.1:443:443"')
+text = text.replace('- "443:443/udp"', '- "127.0.0.1:443:443/udp"')
 open(path, "w", encoding="utf-8").write(text)
 PY
 if ! getent hosts "$STAGING_HOST" | grep -q '^127\.0\.0\.1'; then
@@ -254,11 +304,18 @@ note "Start the edge with access closed"
 compose closed up -d 2>&1 | tee "$LOG_DIR/compose-up-closed.log"
 APP_ID="$(wait_app_healthy closed)"
 wait_edge
+assert_loopback_tcp 80 "edge-http"
+assert_loopback_tcp 443 "edge-https"
+CLOSED_HOME="$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AUTH_USER:$BASIC_PASSWORD" "https://$STAGING_HOST/")"
+CLOSED_BUILDER="$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AUTH_USER:$BASIC_PASSWORD" "https://$STAGING_HOST/builder")"
+CLOSED_SESSION="$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AUTH_USER:$BASIC_PASSWORD" "https://$STAGING_HOST/api/builder/session")"
 {
-  printf 'home=%s\n' "$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AUTH_USER:$BASIC_PASSWORD" "https://$STAGING_HOST/")"
-  printf 'builder=%s\n' "$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AUTH_USER:$BASIC_PASSWORD" "https://$STAGING_HOST/builder")"
-  printf 'session=%s\n' "$(curl -ksS -o /dev/null -w '%{http_code}' -u "$STAGING_BASIC_AUTH_USER:$BASIC_PASSWORD" "https://$STAGING_HOST/api/builder/session")"
+  printf 'home=%s\n' "$CLOSED_HOME"
+  printf 'builder=%s\n' "$CLOSED_BUILDER"
+  printf 'session=%s\n' "$CLOSED_SESSION"
 } | tee "$EVIDENCE_ROOT/edge/closed-smoke.txt"
+"$SCRIPT_DIR/assert-closed-smoke.sh" "$CLOSED_HOME" "$CLOSED_BUILDER" "$CLOSED_SESSION" \
+  | tee -a "$EVIDENCE_ROOT/edge/closed-smoke.txt"
 
 note "Install the private Caddy CA for Node and Chromium"
 PROXY_ID="$(compose closed ps -q proxy)"
