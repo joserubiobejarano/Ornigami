@@ -144,7 +144,7 @@ Executed on Windows 11 x64 with Node `v24.11.1`:
 
 ```text
 node --experimental-strip-types --test tests/builder-backup-restore.test.mts
-14/14 pass
+15/15 pass
 ```
 
 Covered:
@@ -195,3 +195,4 @@ against a stopped volume.
 See [the consolidated decision request](./OWNER_DECISIONS_BETA_20261122.md).
 Until those decisions are answered, backup destination/frequency/retention/key
 custody and customer admission remain pending.
+

@@ -741,6 +741,47 @@ test("backup refuses a pending journal, restore gate, lock or unexpected file", 
   }
 });
 
+test("backup and restore refuse evidence paths inside the store", async () => {
+  const fixture = await seedStore("inside");
+  const directory = fresh("inside-work");
+  const pass = passphraseFile(directory);
+  try {
+    await assert.rejects(
+      createEncryptedBackup({
+        storeDir: fixture.storeDir,
+        out: path.join(fixture.storeDir, "backup.ornibak"),
+        passphraseFile: pass,
+      }),
+      /outside the store/i,
+    );
+    await assert.rejects(
+      createEncryptedBackup({
+        storeDir: fixture.storeDir,
+        out: path.join(directory, "valid.ornibak"),
+        passphraseFile: pass,
+        receiptPath: path.join(fixture.storeDir, "backup-receipt.json"),
+      }),
+      /outside the store/i,
+    );
+    const archive = path.join(directory, "valid.ornibak");
+    await createEncryptedBackup({ storeDir: fixture.storeDir, out: archive, passphraseFile: pass });
+    const restored = path.join(directory, "restored");
+    await assert.rejects(
+      restoreEncryptedBackup({
+        archive,
+        out: restored,
+        passphraseFile: pass,
+        acknowledgePointInTime: true,
+        receiptPath: path.join(restored, "restore-receipt.json"),
+      }),
+      /outside the restored store/i,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+    rmSync(fixture.storeDir, { recursive: true, force: true });
+  }
+});
+
 test("restore refuses missing acknowledgement, existing output and passphrase leakage", async () => {
   const fixture = await seedStore("ack");
   const { directory, archive, pass, result } = await backupFixture(fixture, "ack-archive");

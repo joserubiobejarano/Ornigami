@@ -60,7 +60,7 @@ Executed on Windows 11 x64, Node `v24.11.1`:
 
 ```text
 node --experimental-strip-types --test tests/builder-backup-restore.test.mts
-14/14 pass
+15/15 pass
 ```
 
 Covered successful encrypted backup and fresh restore; wrong key, corrupt and
@@ -144,3 +144,4 @@ Until these are resolved, keep admission closed and use synthetic stores only.
 - No registry publication, public DNS/ACME, persistent deployment, default-branch
   merge, customer data/admission, paid provider call or external message.
 - The accepted image/archive and historical worktrees are preserved.
+

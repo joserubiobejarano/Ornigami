@@ -208,6 +208,11 @@ function receiptPathOrDefault(explicit, storeDirectory, suffix) {
   return explicit ?? `${storeDirectory}${suffix}`;
 }
 
+function isInside(parent, child) {
+  const relative = path.relative(path.resolve(parent), path.resolve(child));
+  return relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative);
+}
+
 function validateMode(mode, label) {
   if (!Number.isInteger(mode) || mode < 0 || mode > 0o777) {
     fail("backup_manifest", `Invalid ${label} mode.`);
@@ -536,6 +541,8 @@ function validatePayload(payload) {
 
 export async function createEncryptedBackup({ storeDir, out, passphraseFile, receiptPath }) {
   if (!out) fail("backup_output", "--out is required.");
+  if (isInside(storeDir, out)) fail("backup_output_inside_store", "Backup archive must be outside the store directory.");
+  if (receiptPath && isInside(storeDir, receiptPath)) fail("backup_receipt_inside_store", "Backup receipt must be outside the store directory.");
   if (existsSync(out)) fail("output_exists", `Refusing to overwrite existing archive: ${out}`);
   const payload = await snapshotStore(storeDir);
   const passphrase = readPassphrase(passphraseFile);
@@ -603,6 +610,7 @@ export async function restoreEncryptedBackup({
   acknowledgePointInTime = false,
 }) {
   if (!out) fail("restore_output", "--out is required.");
+  if (receiptPath && isInside(out, receiptPath)) fail("restore_receipt_inside_store", "Restore receipt must be outside the restored store directory.");
   if (!acknowledgePointInTime) {
     fail(
       "restore_acknowledgement",
@@ -699,6 +707,7 @@ export async function replayRestoredStore({
   acknowledgeOpenUsage = false,
 }) {
   if (!storeDir) fail("replay_store", "--store is required.");
+  if (receiptPath && isInside(storeDir, receiptPath)) fail("replay_receipt_inside_store", "Replay receipt must be outside the restored store directory.");
   if (!journalPath) fail("replay_journal", "--journal is required; admission needs the latest authoritative journal.");
   if (!acknowledgeUsageWindow) {
     fail(
