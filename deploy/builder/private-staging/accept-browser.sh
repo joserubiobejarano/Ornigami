@@ -22,6 +22,29 @@ HARNESS_SHA="${HARNESS_SHA:-$(git rev-parse HEAD)}"
 QUALIFICATION_PATH="${QUALIFICATION_PATH:-https-edge}"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
+if [[ -n "${BROWSER_CHROMIUM_SANDBOX:-}" ]]; then
+  case "$BROWSER_CHROMIUM_SANDBOX" in
+    1) BROWSER_MODE_FROM_ENV=sandbox ;;
+    0) BROWSER_MODE_FROM_ENV=no-sandbox ;;
+    *) fail "BROWSER_CHROMIUM_SANDBOX must be 0 or 1" ;;
+  esac
+  if [[ -n "${BROWSER_MODE:-}" && "$BROWSER_MODE" != "$BROWSER_MODE_FROM_ENV" ]]; then
+    fail "BROWSER_MODE [$BROWSER_MODE] conflicts with BROWSER_CHROMIUM_SANDBOX"
+  fi
+  BROWSER_MODE="$BROWSER_MODE_FROM_ENV"
+elif [[ -n "${BROWSER_MODE:-}" ]]; then
+  case "$BROWSER_MODE" in
+    sandbox|no-sandbox) ;;
+    *) fail "BROWSER_MODE must be sandbox or no-sandbox" ;;
+  esac
+else
+  BROWSER_MODE=no-sandbox
+fi
+if [[ "$BROWSER_MODE" == "sandbox" ]]; then
+  BROWSER_CHROMIUM_SANDBOX=1
+else
+  BROWSER_CHROMIUM_SANDBOX=0
+fi
 [[ "$STAGING_ORIGIN" == https://* ]] || fail "STAGING_ORIGIN must be https"
 [[ "$QUALIFICATION_PATH" == "https-edge" ]] || fail "browser acceptance requires QUALIFICATION_PATH=https-edge"
 [[ "$HARNESS_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "HARNESS_SHA must be 40 hex"
@@ -51,6 +74,7 @@ cat > "$BROWSER_EVIDENCE_DIR/identity.json" <<EOF
   "qualificationPath": "$QUALIFICATION_PATH",
   "applicationOrigin": "$STAGING_ORIGIN",
   "effectiveRuntimeOrigin": "$STAGING_ORIGIN",
+  "browserMode": "$BROWSER_MODE",
   "operatorImageInput": "$BUILDER_OPERATOR_IMAGE"
 }
 EOF
@@ -68,13 +92,14 @@ BROWSER_SOURCE_SHA="$EXPECTED_SOURCE_SHA" \
 BROWSER_HARNESS_SHA="$HARNESS_SHA" \
 BROWSER_APPLICATION_ORIGIN="$STAGING_ORIGIN" \
 BROWSER_QUALIFICATION_PATH="$QUALIFICATION_PATH" \
+BROWSER_CHROMIUM_SANDBOX="${BROWSER_CHROMIUM_SANDBOX:-}" \
 ENGINE="$ENGINE" \
 BUILDER_OPERATOR_IMAGE="$OPERATOR_IMAGE_ID" \
 BUILDER_OPERATOR_VOLUME="$BUILDER_OPERATOR_VOLUME" \
 BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
   node deploy/builder/qualify-browser.mjs
 
-STAGING_ORIGIN="$STAGING_ORIGIN" node -e '
+STAGING_ORIGIN="$STAGING_ORIGIN" BROWSER_MODE="$BROWSER_MODE" node -e '
   const fs = require("node:fs");
   const r = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
   const required = [
@@ -131,8 +156,11 @@ STAGING_ORIGIN="$STAGING_ORIGIN" node -e '
       !/^[0-9a-f]{40}$/.test(r.identity.harnessSha || "")) {
     throw new Error("browser results did not record source and harness SHAs");
   }
-  console.log(JSON.stringify({ ok: true, checks: r.checks.length, exports: r.exports.length, scriptAudits: r.scriptAudits.length }, null, 2));
+  if (r.identity.browserMode !== process.env.BROWSER_MODE) {
+    throw new Error(`browser results mode mismatch: ${r.identity.browserMode} !== ${process.env.BROWSER_MODE}`);
+  }
+  console.log(JSON.stringify({ ok: true, browserMode: r.identity.browserMode, checks: r.checks.length, exports: r.exports.length, scriptAudits: r.scriptAudits.length }, null, 2));
 ' "$BROWSER_EVIDENCE_DIR/results.json"
 
-printf 'browser_acceptance=pass\nfull_origin=staging\nimage_mode=%s\nimage_id=%s\napplication_source_sha=%s\nharness_sha=%s\n' \
-  "$IMAGE_MODE" "$OPERATOR_IMAGE_ID" "$EXPECTED_SOURCE_SHA" "$HARNESS_SHA" > "$BROWSER_EVIDENCE_DIR/ACCEPTED.txt"
+printf 'browser_acceptance=pass\nfull_origin=staging\nimage_mode=%s\nimage_id=%s\napplication_source_sha=%s\nharness_sha=%s\nbrowser_mode=%s\n' \
+  "$IMAGE_MODE" "$OPERATOR_IMAGE_ID" "$EXPECTED_SOURCE_SHA" "$HARNESS_SHA" "$BROWSER_MODE" > "$BROWSER_EVIDENCE_DIR/ACCEPTED.txt"
