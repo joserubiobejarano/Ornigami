@@ -21,10 +21,13 @@ process.env.BUILDER_RUNTIME_ALLOW_TEST_HOOKS = "1";
 
 const {
   createEncryptedBackup,
+  createReconciliationEvidence,
   inspectEncryptedBackup,
-  verifyEncryptedBackup,
+  publishBytesNoClobber,
+  reconcileRestoredStore,
   restoreEncryptedBackup,
   replayRestoredStore,
+  verifyEncryptedBackup,
 } = await import("../scripts/builder-backup-restore.mjs");
 const {
   BUILDER_MINIMIZATION_JOURNAL_FILE,
@@ -174,6 +177,22 @@ async function seedStore(name) {
 
 function receiptPath(directory, name = "receipt.json") {
   return path.join(directory, name);
+}
+
+async function evidenceFor(storeDir, directory, name = "reconciliation.json") {
+  const out = path.join(directory, name);
+  await createReconciliationEvidence({ storeDir, out });
+  return out;
+}
+
+async function releaseAdmission(storeDir, reconciliationPath, directory, extra = {}) {
+  return reconcileRestoredStore({
+    storeDir,
+    reconciliationPath,
+    acknowledgeOpenUsage: true,
+    receiptPath: path.join(directory, "reconciled.json"),
+    ...extra,
+  });
 }
 
 async function backupFixture(fixture, name) {
@@ -344,10 +363,26 @@ test("an older backup followed by newer minimisation replays to the latest autho
       acknowledgeUsageWindow: true,
       acknowledgeOpenUsage: true,
     });
-    assert.equal(replay.status, "complete");
-    assert.equal(replay.admissionClosed, false);
-    assert.equal(replay.usageReconciliationRequired, true);
+    assert.equal(replay.status, "replayed-closed");
+    assert.equal(replay.admissionClosed, true);
+    assert.equal(replay.reconciliationRequired, true);
     assert.equal(replay.postBackupUsageReconstructed, false);
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+    const restoredAfterReplay = await readBuilderIdentityStoreSnapshot(restored);
+    assert.equal(restoredAfterReplay.storeHash, liveAfter.storeHash);
+    assert.equal(JSON.stringify(restoredAfterReplay.store.usage), usageBefore);
+    assert.deepEqual(computeBuilderMinimizationAccounting(restoredAfterReplay.store), liveAccounting);
+    assert.equal(await readBuilderAdmissionStatus({
+      storeDir: restored,
+      sessionId: "ses_unused",
+      subjectId: "sub_unused",
+    }), "unavailable");
+
+    const reconciliation = await evidenceFor(fixture.storeDir, directory);
+    const reconciled = await releaseAdmission(restored, reconciliation, directory);
+    assert.equal(reconciled.status, "complete");
+    assert.equal(reconciled.admissionClosed, false);
+    assert.equal(reconciled.admissionBasis, "authoritative-usage-evidence");
     assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), false);
     const restoredAfter = await readBuilderIdentityStoreSnapshot(restored);
     assert.equal(restoredAfter.storeHash, liveAfter.storeHash);
@@ -400,10 +435,15 @@ test("repeated replay is idempotent and keeps the authoritative store hash", asy
       journalPath: path.join(fixture.storeDir, BUILDER_MINIMIZATION_JOURNAL_FILE),
       acknowledgeUsageWindow: true,
       acknowledgeOpenUsage: true,
-      receiptPath: path.join(directory, "second-replay.json"),
     });
     assert.equal(second.storeAfterHash, hash);
     assert.equal(first.storeAfterHash, hash);
+    assert.equal(second.restoreAttemptId, first.restoreAttemptId);
+    assert.equal(second.replayedAt, first.replayedAt);
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+    const reconciliation = await evidenceFor(fixture.storeDir, directory);
+    const reconciled = await releaseAdmission(restored, reconciliation, directory);
+    assert.equal(reconciled.status, "complete");
     assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), false);
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -457,16 +497,18 @@ test("missing journal or receipt history stays closed", async () => {
       acknowledgeUsageWindow: true,
       acknowledgeOpenUsage: true,
     });
-    assert.equal(receipt.status, "complete");
-    const historyFiles = readdirSync(missingHistory).filter((name) =>
-      name.startsWith("restore-replay-receipt."),
+    assert.equal(receipt.status, "replayed-closed");
+    const historyFiles = readdirSync(missingHistory).filter(
+      (name) => name === "restore-replay-receipt.json" || name.startsWith("restore-replay-receipt."),
     );
-    if (historyFiles.length > 0) {
-      rmSync(path.join(missingHistory, historyFiles[0]));
-      // A later replay after a completed attempt has no open gate; it remains
-      // readable but must not claim a new write.
-      await assertBuilderStoreReplayReady(missingHistory);
-    }
+    assert.ok(historyFiles.length > 0);
+    for (const name of historyFiles) rmSync(path.join(missingHistory, name));
+    const reconciliation = await evidenceFor(fixture.storeDir, directory);
+    await assert.rejects(
+      releaseAdmission(missingHistory, reconciliation, directory),
+      /receipt|history|invalid|corrupt|missing/i,
+    );
+    assert.equal(existsSync(path.join(missingHistory, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
   } finally {
     rmSync(directory, { recursive: true, force: true });
     rmSync(fixture.storeDir, { recursive: true, force: true });
@@ -539,6 +581,8 @@ test("corrupt or missing restore receipt history fails closed", async () => {
       name.startsWith("restore-replay-receipt."),
     );
     assert.ok(receiptFiles.length > 0);
+    const firstEvidence = await evidenceFor(fixture.storeDir, first.directory, "first-evidence.json");
+    await releaseAdmission(firstRestore, firstEvidence, first.directory);
 
     const secondArchive = path.join(first.directory, "with-history.ornibak");
     const secondPass = passphraseFile(first.directory, PASS);
@@ -566,6 +610,11 @@ test("corrupt or missing restore receipt history fails closed", async () => {
         acknowledgeUsageWindow: true,
         acknowledgeOpenUsage: true,
       }),
+      /receipt|history|invalid|corrupt/i,
+    );
+    const reconciliation = await evidenceFor(fixture.storeDir, first.directory);
+    await assert.rejects(
+      releaseAdmission(secondRestore, reconciliation, first.directory),
       /receipt|history|invalid|corrupt/i,
     );
     assert.equal(existsSync(path.join(secondRestore, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
@@ -618,9 +667,14 @@ test("interruption during replay preserves the closed gate and can resume", asyn
         journalPath: path.join(fixture.storeDir, BUILDER_MINIMIZATION_JOURNAL_FILE),
         acknowledgeUsageWindow: true,
         acknowledgeOpenUsage: true,
-        receiptPath: path.join(directory, "resumed-replay.json"),
       });
-      assert.equal(resumed.status, "complete", marker);
+      assert.equal(resumed.status, "replayed-closed", marker);
+      assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true, marker);
+      const reconciliation = await evidenceFor(fixture.storeDir, directory);
+      const reconciled = await releaseAdmission(restored, reconciliation, directory, {
+        receiptPath: path.join(directory, `reconciled-${marker}.json`),
+      });
+      assert.equal(reconciled.status, "complete", marker);
       assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), false, marker);
     } finally {
       rmSync(directory, { recursive: true, force: true });
@@ -658,6 +712,20 @@ test("unresolved reserved or unknown usage requires explicit acknowledgement", a
     });
     assert.equal(receipt.acknowledgeOpenUsage, true);
     assert.equal(receipt.usageReconciliationRequired, true);
+    assert.equal(receipt.admissionClosed, true);
+    const reconciliation = await evidenceFor(fixture.storeDir, directory);
+    await assert.rejects(
+      releaseAdmission(restored, reconciliation, directory, {
+        acknowledgeOpenUsage: false,
+        receiptPath: path.join(directory, "open-usage-blocked.json"),
+      }),
+      /reserved or unknown usage|open-usage/i,
+    );
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+    const reconciled = await releaseAdmission(restored, reconciliation, directory);
+    assert.equal(reconciled.status, "complete");
+    assert.equal(reconciled.admissionClosed, false);
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), false);
   } finally {
     rmSync(directory, { recursive: true, force: true });
     rmSync(fixture.storeDir, { recursive: true, force: true });
@@ -874,6 +942,282 @@ test("the operator CLI performs backup, restore and replay end to end", async ()
     );
     assert.equal(replay.status, 0, replay.stderr);
     assert.match(replay.stdout, /ornigami-builder-replay-receipt/);
+    assert.match(replay.stdout, /replayed-closed/);
+
+    const replayAgain = run(
+      "replay",
+      "--store",
+      restored,
+      "--journal",
+      path.join(fixture.storeDir, BUILDER_MINIMIZATION_JOURNAL_FILE),
+      "--acknowledge-usage-window",
+      "--acknowledge-open-usage",
+    );
+    assert.equal(replayAgain.status, 0, replayAgain.stderr);
+    assert.equal(replayAgain.stdout, replay.stdout);
+
+    const evidence = path.join(directory, "cli-reconciliation.json");
+    const evidenceRun = run("evidence", "--store", fixture.storeDir, "--out", evidence);
+    assert.equal(evidenceRun.status, 0, evidenceRun.stderr);
+    assert.match(evidenceRun.stdout, /ornigami-builder-usage-reconciliation/);
+
+    const reconcile = run(
+      "reconcile",
+      "--store",
+      restored,
+      "--reconciliation",
+      evidence,
+      "--acknowledge-open-usage",
+    );
+    assert.equal(reconcile.status, 0, reconcile.stderr);
+    assert.match(reconcile.stdout, /ornigami-builder-reconciliation-receipt/);
+    assert.match(reconcile.stdout, /"admissionClosed": false/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+    rmSync(fixture.storeDir, { recursive: true, force: true });
+  }
+});
+
+test("no-clobber publication preserves existing files and cleans only its own temporary file", async () => {
+  const directory = fresh("no-clobber");
+  try {
+    const file = path.join(directory, "artifact.bin");
+    writeFileSync(file, "existing\n");
+    await assert.rejects(
+      Promise.resolve().then(() => publishBytesNoClobber({ file, bytes: "replacement\n" })),
+      /overwrite/i,
+    );
+    assert.equal(readFileSync(file, "utf8"), "existing\n");
+
+    const race = path.join(directory, "race.bin");
+    const results = await Promise.allSettled([
+      Promise.resolve().then(() => publishBytesNoClobber({ file: race, bytes: "one\n" })),
+      Promise.resolve().then(() => publishBytesNoClobber({ file: race, bytes: "two\n" })),
+    ]);
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.equal(results.filter((result) => result.status === "rejected").length, 1);
+    assert.ok(["one\n", "two\n"].includes(readFileSync(race, "utf8")));
+
+    const before = path.join(directory, "before.bin");
+    process.env.BUILDER_BACKUP_TEST_ABORT_AFTER = "publish_before_link";
+    try {
+      await assert.rejects(
+        Promise.resolve().then(() => publishBytesNoClobber({ file: before, bytes: "before\n" })),
+        /publish_before_link/,
+      );
+    } finally {
+      delete process.env.BUILDER_BACKUP_TEST_ABORT_AFTER;
+    }
+    assert.equal(existsSync(before), false);
+
+    const after = path.join(directory, "after.bin");
+    process.env.BUILDER_BACKUP_TEST_ABORT_AFTER = "publish_after_link";
+    try {
+      await assert.rejects(
+        Promise.resolve().then(() => publishBytesNoClobber({ file: after, bytes: "after\n" })),
+        /publish_after_link/,
+      );
+    } finally {
+      delete process.env.BUILDER_BACKUP_TEST_ABORT_AFTER;
+    }
+    assert.equal(readFileSync(after, "utf8"), "after\n");
+    assert.equal(
+      readdirSync(directory).filter((name) => name.endsWith(".tmp")).length,
+      0,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("a competing JSON receipt is not replaced", async () => {
+  const fixture = await seedStore("receipt-clobber");
+  const directory = fresh("receipt-clobber-work");
+  const pass = passphraseFile(directory);
+  const archive = path.join(directory, "archive.ornibak");
+  const receipt = path.join(directory, "receipt.json");
+  try {
+    writeFileSync(receipt, "existing receipt\n");
+    await assert.rejects(
+      createEncryptedBackup({
+        storeDir: fixture.storeDir,
+        out: archive,
+        passphraseFile: pass,
+        receiptPath: receipt,
+      }),
+      /overwrite/i,
+    );
+    assert.equal(readFileSync(receipt, "utf8"), "existing receipt\n");
+    assert.equal(existsSync(archive), true);
+    assert.equal(readdirSync(directory).filter((name) => name.endsWith(".tmp")).length, 0);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+    rmSync(fixture.storeDir, { recursive: true, force: true });
+  }
+});
+
+test("post-backup usage or settlement keeps admission closed until a newer authoritative snapshot", async () => {
+  const fixture = await seedStore("post-backup");
+  const old = await backupFixture(fixture, "post-backup-old");
+  const restoredOld = path.join(old.directory, "restored-old");
+  try {
+    const live = await readBuilderIdentityStoreSnapshot(fixture.storeDir);
+    live.store.usage.push({
+      id: "use_dddddddddddddddddddddddd",
+      subjectId: fixture.subjectB,
+      sessionId: live.store.sessions.find((session) => session.subjectId === fixture.subjectB)?.id ?? "ses_missing",
+      generationId: "gen_post_backup",
+      recordedAt: "2026-11-22T12:00:00.000Z",
+      state: "succeeded",
+      costMicros: 70_000,
+      reservedCostMicros: 70_000,
+      requestKey: "request-post-backup",
+      settledAt: "2026-11-22T12:00:00.000Z",
+    });
+    await writeBuilderIdentityStore(fixture.storeDir, live.store);
+    const evidence = await evidenceFor(fixture.storeDir, old.directory, "post-backup-evidence.json");
+
+    await restoreEncryptedBackup({
+      archive: old.archive,
+      out: restoredOld,
+      passphraseFile: old.pass,
+      acknowledgePointInTime: true,
+    });
+    await replayRestoredStore({
+      storeDir: restoredOld,
+      journalPath: path.join(restoredOld, BUILDER_MINIMIZATION_JOURNAL_FILE),
+      acknowledgeUsageWindow: true,
+      acknowledgeOpenUsage: true,
+    });
+    await assert.rejects(
+      releaseAdmission(restoredOld, evidence, old.directory, {
+        receiptPath: path.join(old.directory, "post-backup-blocked.json"),
+      }),
+      /reconciliation blocked|store hash|usage ledger/i,
+    );
+    assert.equal(existsSync(path.join(restoredOld, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+    assert.equal(await readBuilderAdmissionStatus({
+      storeDir: restoredOld,
+      sessionId: "ses_unused",
+      subjectId: "sub_unused",
+    }), "unavailable");
+    const blocked = JSON.parse(
+      readFileSync(path.join(old.directory, "post-backup-blocked.json"), "utf8"),
+    );
+    assert.equal(blocked.admissionClosed, true);
+    assert.equal(blocked.status, "blocked");
+
+    const newer = await backupFixture(fixture, "post-backup-new");
+    const evidenceNew = await evidenceFor(fixture.storeDir, newer.directory, "post-backup-new-evidence.json");
+    const restoredNew = path.join(newer.directory, "restored-new");
+    await restoreEncryptedBackup({
+      archive: newer.archive,
+      out: restoredNew,
+      passphraseFile: newer.pass,
+      acknowledgePointInTime: true,
+    });
+    await replayRestoredStore({
+      storeDir: restoredNew,
+      journalPath: path.join(restoredNew, BUILDER_MINIMIZATION_JOURNAL_FILE),
+      acknowledgeUsageWindow: true,
+      acknowledgeOpenUsage: true,
+    });
+    const reconciled = await releaseAdmission(restoredNew, evidenceNew, newer.directory);
+    assert.equal(reconciled.status, "complete");
+    assert.equal(existsSync(path.join(restoredNew, BUILDER_RESTORE_REPLAY_GATE_FILE)), false);
+    const restoredStore = await readBuilderIdentityStoreSnapshot(restoredNew);
+    assert.ok(restoredStore.store.usage.some((record) => record.id === "use_dddddddddddddddddddddddd"));
+  } finally {
+    rmSync(old.directory, { recursive: true, force: true });
+    rmSync(fixture.storeDir, { recursive: true, force: true });
+  }
+});
+
+test("stale or missing reconciliation evidence keeps the gate closed", async () => {
+  const fixture = await seedStore("stale");
+  const directory = fresh("stale-work");
+  const archive = path.join(directory, "stale.ornibak");
+  const pass = passphraseFile(directory);
+  try {
+    const staleEvidence = await evidenceFor(fixture.storeDir, directory, "stale-evidence.json");
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await createEncryptedBackup({ storeDir: fixture.storeDir, out: archive, passphraseFile: pass });
+    const restored = path.join(directory, "restored");
+    await restoreEncryptedBackup({
+      archive,
+      out: restored,
+      passphraseFile: pass,
+      acknowledgePointInTime: true,
+    });
+    await replayRestoredStore({
+      storeDir: restored,
+      journalPath: path.join(restored, BUILDER_MINIMIZATION_JOURNAL_FILE),
+      acknowledgeUsageWindow: true,
+      acknowledgeOpenUsage: true,
+    });
+    await assert.rejects(
+      releaseAdmission(restored, staleEvidence, directory, {
+        receiptPath: path.join(directory, "stale-blocked.json"),
+      }),
+      /predates|reconciliation blocked/i,
+    );
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+    await assert.rejects(
+      reconcileRestoredStore({
+        storeDir: restored,
+        reconciliationPath: path.join(directory, "missing-evidence.json"),
+        receiptPath: path.join(directory, "missing-blocked.json"),
+        acknowledgeOpenUsage: true,
+      }),
+      /evidence is missing/i,
+    );
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+    rmSync(fixture.storeDir, { recursive: true, force: true });
+  }
+});
+
+test("interruption before admission release keeps the gate and can resume", async () => {
+  const fixture = await seedStore("reconcile-interrupt");
+  const { directory, archive, pass } = await backupFixture(fixture, "reconcile-interrupt-archive");
+  const restored = path.join(directory, "restored");
+  try {
+    await restoreEncryptedBackup({
+      archive,
+      out: restored,
+      passphraseFile: pass,
+      acknowledgePointInTime: true,
+    });
+    await replayRestoredStore({
+      storeDir: restored,
+      journalPath: path.join(restored, BUILDER_MINIMIZATION_JOURNAL_FILE),
+      acknowledgeUsageWindow: true,
+      acknowledgeOpenUsage: true,
+    });
+    const evidence = await evidenceFor(fixture.storeDir, directory);
+    process.env.BUILDER_BACKUP_TEST_ABORT_AFTER = "reconcile_before_release";
+    try {
+      await assert.rejects(
+        releaseAdmission(restored, evidence, directory, {
+          receiptPath: path.join(directory, "interrupted-reconcile.json"),
+        }),
+        /reconcile_before_release/,
+      );
+    } finally {
+      delete process.env.BUILDER_BACKUP_TEST_ABORT_AFTER;
+    }
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), true);
+    assert.equal(await readBuilderAdmissionStatus({
+      storeDir: restored,
+      sessionId: "ses_unused",
+      subjectId: "sub_unused",
+    }), "unavailable");
+    const reconciled = await releaseAdmission(restored, evidence, directory, {
+      receiptPath: path.join(directory, "resumed-reconcile.json"),
+    });
+    assert.equal(reconciled.status, "complete");
+    assert.equal(existsSync(path.join(restored, BUILDER_RESTORE_REPLAY_GATE_FILE)), false);
   } finally {
     rmSync(directory, { recursive: true, force: true });
     rmSync(fixture.storeDir, { recursive: true, force: true });

@@ -103,6 +103,11 @@ export type BuilderSubjectMinimizationReplayInput = Readonly<{
   now?: Date;
   lockWaitMs?: number;
   /**
+   * Replay the journal but leave the restore gate in place. Admission remains
+   * closed until a separate authoritative reconciliation releases it.
+   */
+  keepGateClosed?: boolean;
+  /**
    * Test-only, requires BUILDER_RUNTIME_ALLOW_TEST_HOOKS=1. It simulates a
    * process death at a named durability boundary.
    */
@@ -1318,7 +1323,7 @@ async function completeNoOpRestoreAttempt(input: {
   await writeBuilderRestoreReplayReceiptUnlocked(input.directory, receipt);
   testAbort("receipt_written");
   await assertBuilderStoreReplayReady(input.directory, { cleanup: false });
-  await removeBuilderRestoreReplayGate(input.directory);
+  if (!input.keepGateClosed) await removeBuilderRestoreReplayGate(input.directory);
   testAbort("gate_removed");
   return receipt;
 }
@@ -1464,7 +1469,7 @@ export async function replayBuilderMinimizationJournal(
           );
         }
         await assertBuilderStoreReplayReady(directory, { cleanup: false });
-        await removeBuilderRestoreReplayGate(directory);
+        if (!input.keepGateClosed) await removeBuilderRestoreReplayGate(directory);
         testAbort("gate_removed");
         return currentReceipt;
       }
@@ -1580,7 +1585,7 @@ export async function replayBuilderMinimizationJournal(
       await writeBuilderRestoreReplayReceiptUnlocked(directory, receipt);
       testAbort("receipt_written");
       await assertBuilderStoreReplayReady(directory, { cleanup: false });
-      await removeBuilderRestoreReplayGate(directory);
+      if (!input.keepGateClosed) await removeBuilderRestoreReplayGate(directory);
       testAbort("gate_removed");
       return receipt;
     },

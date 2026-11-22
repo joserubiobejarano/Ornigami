@@ -1,0 +1,138 @@
+name: Builder backup/recovery Linux verification
+
+on:
+  push:
+    branches:
+      - ci/builder-backup-recovery-verify-20261122
+    paths:
+      - .github/build-requests/builder-backup-recovery-verification.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: builder-backup-recovery-linux
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Linux/Node 22 backup and recovery contract
+    if: >-
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      github.event.created == true &&
+      github.event.before == '0000000000000000000000000000000000000000' &&
+      github.run_attempt == 1 &&
+      github.ref == 'refs/heads/ci/builder-backup-recovery-verify-20261122'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      EVIDENCE: /tmp/ornigami-backup-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+      DIAGNOSTICS: /tmp/ornigami-backup-recovery-${{ github.run_id }}-${{ github.run_attempt }}/diagnostics
+      MAX_DIAGNOSTIC_BYTES: "67108864"
+
+    steps:
+      - name: Create bounded evidence roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          mkdir -p "$EVIDENCE/logs" "$DIAGNOSTICS"
+          chmod 0700 "$EVIDENCE" "$EVIDENCE/logs" "$DIAGNOSTICS"
+          {
+            printf 'workflow_sha=%s\n' "${{ github.sha }}"
+            printf 'run_id=%s-%s\n' "${{ github.run_id }}" "${{ github.run_attempt }}"
+            printf 'runner_user=%s\n' "$(id -un)"
+            printf 'runner_uid=%s\n' "$(id -u)"
+          } > "$EVIDENCE/logs/run-identity.txt"
+
+      - name: Check out exactly the triggering commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          clean: true
+
+      - name: Set up Node 22.23.3
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.3"
+          package-manager-cache: false
+
+      - name: Verify Node and shell prerequisites
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(node --version)" = "v22.23.3"
+          test "$(node -p 'process.versions.openssl')" = "3.5.8"
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          node --check scripts/builder-backup-restore.mjs
+          {
+            printf 'node=%s\n' "$(node --version)"
+            printf 'openssl=%s\n' "$(node -p 'process.versions.openssl')"
+            printf 'kernel=%s\n' "$(uname -srm)"
+            printf 'filesystem=%s\n' "$(df -T /tmp | tail -n 1)"
+          } > "$EVIDENCE/logs/environment.txt"
+
+      - name: Run backup/recovery safety tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +e
+          node --experimental-strip-types --test tests/builder-backup-restore.test.mts \
+            2>&1 | tee "$EVIDENCE/logs/backup-restore-test.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          echo "backup_restore_exit=$rc" >> "$GITHUB_ENV"
+          test "$rc" = "0"
+
+      - name: Run focused builder regression suites
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --experimental-strip-types --test \
+            tests/builder-minimization-restore-lifecycle.test.mts \
+            tests/builder-store-hardening.test.mts \
+            tests/builder-identity-store.test.mts \
+            tests/builder-usage-ledger.test.mts \
+            tests/builder-runtime-isolation.test.mts \
+            tests/builder-minimization.test.mts \
+            2>&1 | tee "$EVIDENCE/logs/builder-regression.log"
+
+      - name: Run qualification bundle checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test \
+            tests/builder-exact-rehearsal-bundle.test.mjs \
+            tests/builder-private-staging-package.test.mjs \
+            2>&1 | tee "$EVIDENCE/logs/bundle-package.log"
+
+      - name: Stage bounded diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          SOURCE_ROOTS="$EVIDENCE/logs" \
+          UPLOAD_ROOT="$DIAGNOSTICS" \
+          MAX_ARCHIVE_BYTES="0" \
+          MAX_ARTIFACT_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EVIDENCE/logs/staging-receipt.json" \
+            node deploy/builder/private-staging/stage-approved-evidence.mjs \
+            > "$EVIDENCE/logs/staging-console.json" 2>&1
+          DIAGNOSTICS_DIR="$DIAGNOSTICS" \
+          MAX_DIAGNOSTIC_BYTES="$MAX_DIAGNOSTIC_BYTES" \
+          RECEIPT_PATH="$EVIDENCE/logs/diagnostics-budget.json" \
+            node deploy/builder/private-staging/enforce-diagnostics-budget.mjs \
+            > "$EVIDENCE/logs/diagnostics-budget-console.json" 2>&1
+          printf 'backup/recovery Linux diagnostics for %s\n' "${{ github.sha }}" > "$DIAGNOSTICS/README.txt"
+          exit 0
+
+      - name: Upload bounded diagnostics
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: builder-backup-recovery-linux-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.DIAGNOSTICS }}
+          if-no-files-found: error
+          retention-days: 7

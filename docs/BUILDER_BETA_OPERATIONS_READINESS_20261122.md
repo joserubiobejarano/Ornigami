@@ -47,12 +47,19 @@ lock, serialization, minimization journal, restore gate and replay modules.
 - Restore targets a fresh directory, writes a closed restore gate first,
   re-verifies every file and the accounting snapshot, and leaves admission
   unavailable.
-- Replay requires the latest authoritative journal and explicit point-in-time /
-  usage-window / open-usage acknowledgements. The gate is removed only after the
-  existing continuity and accounting checks pass.
+- Journal replay applies the latest authoritative minimization journal but
+  **does not release admission**; its receipt is `replayed-closed` with
+  `admissionClosed=true`.
+- Admission release requires a separate `evidence` capture from the latest
+  stopped live store and a `reconcile` check of store hash, usage hash,
+  accounting, journal/replay receipt and evidence freshness. Acknowledgements
+  alone never release the gate. Post-backup usage/settlement therefore stays
+  closed until a newer authoritative snapshot matches.
+- Publication uses an atomic no-clobber hard link; competing archives/receipts
+  remain intact and only this operation's temporary file is removed.
 - Receipts record archive hash/size, manifest file hashes, source store hash,
-  accounting snapshot, restore attempt, replay result, limitations and
-  `customerAdmission=closed`.
+  accounting snapshot, restore attempt, replay result, reconciliation evidence,
+  actual admission state, limitations and `customerAdmission=closed`.
 
 Full mechanics and limits: [BUILDER_BACKUP_RESTORE_20261122.md](./BUILDER_BACKUP_RESTORE_20261122.md).
 
@@ -62,16 +69,20 @@ Executed on Windows 11 x64, Node `v24.11.1`:
 
 ```text
 node --experimental-strip-types --test tests/builder-backup-restore.test.mts
-15/15 pass
+20/20 pass
 ```
 
 Covered successful encrypted backup and fresh restore; wrong key, corrupt and
 truncated archive; missing journal and corrupt/missing receipt history; older
-backup plus newer minimization/replay; repeated replay idempotence; reserved and
-unknown usage preservation; control-subject session behavior; interruption after
-gate/files/receipt and during replay with resumable closed gates; pending
-journal/gate/lock/unexpected-file backup refusal; missing acknowledgement and
-non-empty output refusal; CLI end-to-end; POSIX mode assertions.
+backup plus newer minimization, closed replay and evidence-backed release;
+post-backup usage/settlement blocking and newer-snapshot release; stale/missing
+evidence refusal; repeated default-path replay idempotence; reserved and unknown
+usage preservation; control-subject session behavior; no-clobber archive/JSON
+publication, competing outputs, concurrent publication and link interruption;
+interruption after gate/files/receipt, during replay and before admission
+release; pending journal/gate/lock/unexpected-file backup refusal; missing
+acknowledgement and non-empty output refusal; CLI end-to-end; POSIX mode
+assertions.
 
 The retained-qualification bundle/package checks also passed (`30/30`).
 Existing builder suites also passed:

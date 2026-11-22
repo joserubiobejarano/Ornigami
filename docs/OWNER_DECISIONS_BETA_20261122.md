@@ -7,6 +7,25 @@ participant was contacted under the current authorization.
 This is the single consolidated request. Please answer each item with an explicit
 decision, owner/date and any conditions. Unanswered items remain visibly pending.
 
+## Supported engineering constraints (not policy choices)
+
+The following are safety requirements already implemented and are not expanded
+by owner acknowledgement:
+
+- one host, one writer and a stopped-writer backup;
+- encrypted archive with authenticated integrity and private key/store/output
+  permissions;
+- fresh-directory/volume restore with a closed restore gate;
+- latest-authoritative minimization-journal replay;
+- separate authoritative usage/settlement evidence before admission release;
+- preserved reserved/unknown exposure and unchanged accounting relationships;
+- no invented records, no capacity reset and no admission while evidence is
+  missing or inconsistent;
+- no-clobber publication and repeatable default-path replay.
+
+The owner chooses the operational policy and destination; acknowledgement alone
+does not substitute for evidence.
+
 ## 1. Backup and recovery
 
 Proposal on record: no destination, frequency, retention, key custodian or

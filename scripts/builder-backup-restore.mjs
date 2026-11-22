@@ -34,12 +34,12 @@ import {
   closeSync,
   existsSync,
   fsyncSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   openSync,
   readFileSync,
   readdirSync,
-  renameSync,
   rmSync,
   statSync,
   writeSync,
@@ -69,7 +69,6 @@ import {
 } from "../builder-runtime/lib/identity-store.ts";
 import {
   computeBuilderMinimizationAccounting,
-  prepareBuilderRestoreReplay,
   replayBuilderMinimizationJournal,
 } from "../builder-runtime/lib/minimization.ts";
 
@@ -145,13 +144,28 @@ function deriveKey(passphrase, salt, kdf) {
   });
 }
 
+function fsyncDirectory(directory) {
+  let descriptor;
+  try {
+    descriptor = openSync(directory, "r");
+    fsyncSync(descriptor);
+  } catch (error) {
+    if (!["EINVAL", "EPERM", "EISDIR", "EBADF", "ENOTSUP"].includes(error.code)) throw error;
+  } finally {
+    if (descriptor !== undefined) {
+      try {
+        closeSync(descriptor);
+      } catch {}
+    }
+  }
+}
+
 function atomicWrite(file, bytes, mode = 0o600) {
   const parent = path.dirname(path.resolve(file));
   const parentStat = statSync(parent, { throwIfNoEntry: false });
   if (!parentStat || !parentStat.isDirectory()) {
     fail("output_parent", `Output parent directory is missing: ${parent}`);
   }
-  if (existsSync(file)) fail("output_exists", `Refusing to overwrite existing file: ${file}`);
   const temporary = path.join(parent, `.${path.basename(file)}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`);
   let descriptor;
   try {
@@ -161,7 +175,21 @@ function atomicWrite(file, bytes, mode = 0o600) {
     fsyncSync(descriptor);
     closeSync(descriptor);
     descriptor = undefined;
-    renameSync(temporary, file);
+    testAbort("publish_before_link");
+    try {
+      // A hard link is atomic and no-clobber: an existing final path is never
+      // replaced. The final name is visible only after the complete temporary
+      // file has been synced.
+      linkSync(temporary, file);
+    } catch (error) {
+      if (error.code === "EEXIST") {
+        fail("output_exists", `Refusing to overwrite existing file: ${file}`);
+      }
+      throw error;
+    }
+    testAbort("publish_after_link");
+    rmSync(temporary, { force: true });
+    fsyncDirectory(parent);
   } catch (error) {
     if (descriptor !== undefined) {
       try {
@@ -173,6 +201,11 @@ function atomicWrite(file, bytes, mode = 0o600) {
     } catch {}
     throw error;
   }
+}
+
+export function publishBytesNoClobber({ file, bytes, mode = 0o600 }) {
+  if (!file) fail("publish_path", "A destination path is required.");
+  atomicWrite(file, Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes), mode);
 }
 
 function writeJson(file, value, mode = 0o600) {
@@ -699,6 +732,174 @@ export async function restoreEncryptedBackup({
   return receipt;
 }
 
+function canonicalHash(value) {
+  return sha256(Buffer.from(canonicalJson(value), "utf8"));
+}
+
+function readJsonIfPresent(file, label) {
+  if (!existsSync(file)) return null;
+  try {
+    return JSON.parse(readFileSync(file, "utf8"));
+  } catch {
+    fail("receipt_invalid", `${label} is not valid JSON: ${file}`);
+  }
+}
+
+function receiptMatches(existing, expected, keys) {
+  if (!isRecord(existing)) return false;
+  return keys.every((key) => canonicalJson(existing[key]) === canonicalJson(expected[key]));
+}
+
+function writeReceiptOrReuse(file, receipt, keys) {
+  const existing = readJsonIfPresent(file, "receipt");
+  if (existing) {
+    if (receiptMatches(existing, receipt, keys)) return existing;
+    fail("receipt_conflict", `Existing receipt does not match this operation: ${file}`);
+  }
+  writeJson(file, receipt);
+  return receipt;
+}
+
+async function currentJournalEvidenceHash(storeDir) {
+  const read = await readBuilderMinimizationJournalUnlocked(storeDir);
+  const bytes = read.present
+    ? readFileSync(path.join(storeDir, BUILDER_MINIMIZATION_JOURNAL_FILE))
+    : Buffer.from(serializeBuilderMinimizationJournal(emptyBuilderMinimizationJournal()), "utf8");
+  return { present: read.present, hash: sha256(bytes), journal: read.journal };
+}
+
+async function readAuthoritativeEvidenceState(storeDir) {
+  return withBuilderStoreRawLock(
+    storeDir,
+    async (directory) => {
+      inspectStoreInventory(directory, { allowOwnLock: true });
+      const snapshot = await readBuilderIdentityStoreSnapshot(directory);
+      const journal = await currentJournalEvidenceHash(directory);
+      if (journal.present && builderMinimizationJournalHasPending(journal.journal)) {
+        fail("evidence_pending_journal", "Minimisation journal has a pending request; resolve it before evidence capture.");
+      }
+      const history = await readBuilderRestoreReplayReceiptHistory(directory);
+      if (history.errors.length > 0) {
+        fail("evidence_receipt_history", `Restore receipt history is corrupt: ${history.errors.join(", ")}`);
+      }
+      const files = readdirSync(directory)
+        .filter((name) => name === BUILDER_IDENTITY_STORE_FILE || name === BUILDER_MINIMIZATION_JOURNAL_FILE || allowedReceiptName(name))
+        .map((name) => ({ path: name, mode: statSync(path.join(directory, name)).mode & 0o777 }));
+      assertStorePermissions(directory, files);
+      return {
+        store: snapshot.store,
+        storeHash: snapshot.storeHash,
+        journalPresent: journal.present,
+        journalHash: journal.hash,
+        receiptIds: history.receipts.map((receipt) => receipt.receiptId),
+        accounting: computeBuilderMinimizationAccounting(snapshot.store),
+        usageSha256: canonicalHash(snapshot.store.usage),
+        journalLatestEventAt: journal.journal.events
+          .flatMap((event) => [event.createdAt, event.effectAt, event.completedAt])
+          .filter((value) => typeof value === "string")
+          .sort()
+          .at(-1) ?? null,
+      };
+    },
+    { lockWaitMs: 1_000 },
+  );
+}
+
+export async function createReconciliationEvidence({ storeDir, out }) {
+  if (!storeDir) fail("evidence_store", "--store is required.");
+  if (!out) fail("evidence_output", "--out is required.");
+  if (isInside(storeDir, out)) fail("evidence_output_inside_store", "Reconciliation evidence must be outside the store directory.");
+  if (existsSync(out)) fail("output_exists", `Refusing to overwrite existing evidence: ${out}`);
+  const state = await readAuthoritativeEvidenceState(storeDir);
+  const evidence = {
+    schemaVersion: 1,
+    kind: "ornigami-builder-usage-reconciliation",
+    capturedAt: new Date().toISOString(),
+    source: {
+      hostId: BUILDER_STORE_HOST_ID,
+      storeVersion: state.store.version,
+      storeHash: state.storeHash,
+      journalPresent: state.journalPresent,
+      journalHash: state.journalHash,
+      journalLatestEventAt: state.journalLatestEventAt,
+      usageSha256: state.usageSha256,
+      accounting: state.accounting,
+      receiptIds: state.receiptIds,
+    },
+    usage: state.store.usage,
+  };
+  evidence.evidenceId = canonicalHash(evidence);
+  writeJson(out, evidence);
+  return evidence;
+}
+
+function validateReconciliationEvidence(evidence) {
+  if (!isRecord(evidence) || evidence.schemaVersion !== 1 || evidence.kind !== "ornigami-builder-usage-reconciliation") {
+    fail("reconciliation_evidence", "Reconciliation evidence format is invalid.");
+  }
+  if (!Array.isArray(evidence.usage) || !isRecord(evidence.source)) {
+    fail("reconciliation_evidence", "Reconciliation evidence is missing usage or source metadata.");
+  }
+  if (typeof evidence.evidenceId !== "string" || !HASH_PATTERN.test(evidence.evidenceId)) {
+    fail("reconciliation_evidence", "Reconciliation evidence ID is invalid.");
+  }
+  const copy = { ...evidence };
+  delete copy.evidenceId;
+  if (canonicalHash(copy) !== evidence.evidenceId) {
+    fail("reconciliation_evidence", "Reconciliation evidence integrity check failed.");
+  }
+  const source = evidence.source;
+  if (
+    typeof source.storeHash !== "string" ||
+    !HASH_PATTERN.test(source.storeHash) ||
+    typeof source.usageSha256 !== "string" ||
+    !HASH_PATTERN.test(source.usageSha256) ||
+    typeof source.journalHash !== "string" ||
+    !HASH_PATTERN.test(source.journalHash) ||
+    !isRecord(source.accounting) ||
+    typeof evidence.capturedAt !== "string" ||
+    !Number.isFinite(Date.parse(evidence.capturedAt))
+  ) {
+    fail("reconciliation_evidence", "Reconciliation evidence source metadata is invalid.");
+  }
+  if (canonicalHash(evidence.usage) !== source.usageSha256) {
+    fail("reconciliation_evidence", "Reconciliation evidence usage hash does not match its usage records.");
+  }
+}
+
+function reconciliationMismatches(evidence, restored, restoreReceipt) {
+  const mismatches = [];
+  const source = evidence.source;
+  if (source.hostId !== BUILDER_STORE_HOST_ID) mismatches.push("authoritative store host id changed");
+  if (source.storeVersion !== restored.store.version) mismatches.push("store version changed");
+  if (source.storeHash !== restored.storeHash) mismatches.push("restored store hash does not match authoritative evidence");
+  if (source.usageSha256 !== canonicalHash(restored.store.usage)) mismatches.push("usage ledger does not match authoritative evidence");
+  if (canonicalJson(source.accounting) !== canonicalJson(computeBuilderMinimizationAccounting(restored.store))) {
+    mismatches.push("accounting snapshot does not match authoritative evidence");
+  }
+  if (restoreReceipt) {
+    if (typeof restoreReceipt.snapshotAsOf !== "string" || Date.parse(evidence.capturedAt) < Date.parse(restoreReceipt.snapshotAsOf)) {
+      mismatches.push("reconciliation evidence predates the backup snapshot");
+    }
+  } else {
+    mismatches.push("restore receipt is missing");
+  }
+  return mismatches;
+}
+
+async function recloseRestoredStore(storeDir) {
+  await writeBuilderRestoreReplayGateUnlocked(storeDir, {
+    version: 3,
+    attemptId: `rra_${randomBytes(12).toString("hex")}`,
+    phase: "closed",
+    startedAt: new Date().toISOString(),
+    previousReceiptIds: [],
+  });
+  if (process.platform !== "win32") {
+    chmodSync(path.join(storeDir, BUILDER_RESTORE_REPLAY_GATE_FILE), 0o600);
+  }
+}
+
 export async function replayRestoredStore({
   storeDir,
   journalPath,
@@ -708,68 +909,213 @@ export async function replayRestoredStore({
 }) {
   if (!storeDir) fail("replay_store", "--store is required.");
   if (receiptPath && isInside(storeDir, receiptPath)) fail("replay_receipt_inside_store", "Replay receipt must be outside the restored store directory.");
-  if (!journalPath) fail("replay_journal", "--journal is required; admission needs the latest authoritative journal.");
-  if (!acknowledgeUsageWindow) {
-    fail(
-      "replay_acknowledgement",
-      "Replay requires --acknowledge-usage-window; usage or settlement written after the snapshot cannot be reconstructed.",
-    );
+  if (!journalPath) fail("replay_journal", "--journal is required; journal replay needs the latest authoritative journal.");
+  const resolvedReceipt = receiptPathOrDefault(receiptPath, storeDir, ".replay-receipt.json");
+  const sourceJournalHash = sha256(readFileSync(journalPath));
+  const before = await readBuilderIdentityStoreSnapshot(storeDir);
+  const existing = readJsonIfPresent(resolvedReceipt, "replay receipt");
+  if (
+    existing &&
+    existing.kind === "ornigami-builder-replay-receipt" &&
+    existing.storeAfterHash === before.storeHash &&
+    existing.journalHash === sourceJournalHash &&
+    existing.admissionClosed === true
+  ) {
+    return existing;
   }
   const gate = await readBuilderRestoreReplayGate(storeDir);
   if (!gate.present) {
-    // A completed replay leaves no gate. Allow an idempotent second replay only
-    // when the existing receipt history already proves the store is verified.
-    await assertBuilderStoreReplayReady(storeDir);
-  } else {
-    if (!gate.valid || !gate.value) fail("replay_gate_invalid", "Restore gate is invalid or unreadable.");
-    if (gate.value.phase !== "closed" && gate.value.phase !== "prepared") {
-      fail("replay_gate_invalid", "Restore gate is not in a replayable phase.");
-    }
+    fail("replay_gate_missing", "No restore gate and no matching replay receipt; refusing to open an unverified store.");
   }
-  const before = await readBuilderIdentityStoreSnapshot(storeDir);
+  if (!gate.valid || !gate.value) fail("replay_gate_invalid", "Restore gate is invalid or unreadable.");
+  if (gate.value.phase !== "closed" && gate.value.phase !== "prepared") {
+    fail("replay_gate_invalid", "Restore gate is not in a replayable phase.");
+  }
   const accounting = computeBuilderMinimizationAccounting(before.store);
   if ((accounting.reservedRecords > 0 || accounting.unknownRecords > 0) && !acknowledgeOpenUsage) {
     fail(
       "replay_open_usage",
-      "Restore has reserved or unknown usage; pass --acknowledge-open-usage after reconciling them.",
+      "Restore has reserved or unknown usage; pass --acknowledge-open-usage after reviewing the exposure. This does not open admission.",
     );
   }
-  const preparation = await prepareBuilderRestoreReplay({ storeDir, journalPath });
-  let replayReceipt = null;
-  if (!preparation.alreadyReplayed) {
-    replayReceipt = await replayBuilderMinimizationJournal({ storeDir, journalPath });
-  }
-  await assertBuilderStoreReplayReady(storeDir);
+  const replayReceipt = await replayBuilderMinimizationJournal({
+    storeDir,
+    journalPath,
+    keepGateClosed: true,
+  });
+  await assertBuilderStoreReplayReady(storeDir, { cleanup: false });
+  testAbort("replay_after_journal");
   const after = await readBuilderIdentityStoreSnapshot(storeDir);
   const receipt = {
     schemaVersion: 1,
     kind: "ornigami-builder-replay-receipt",
-    status: "complete",
+    status: "replayed-closed",
     storeDir: path.resolve(storeDir),
     journalPath: path.resolve(journalPath),
-    restoreAttemptId: preparation.attemptId,
-    journalHash: preparation.journalHash,
+    restoreAttemptId: replayReceipt.attemptId,
+    journalHash: replayReceipt.journalHash,
     storeBeforeHash: before.storeHash,
     storeAfterHash: after.storeHash,
-    replayReceiptId: replayReceipt?.receiptId ?? null,
+    replayReceiptId: replayReceipt.receiptId,
     replayedAt: new Date().toISOString(),
-    acknowledgeUsageWindow: true,
+    acknowledgeUsageWindow,
     acknowledgeOpenUsage,
-    admissionClosed: false,
-    admissionScope: "operator-acknowledged",
+    admissionClosed: true,
+    admissionBasis: "pending-usage-reconciliation",
+    reconciliationRequired: true,
+    reconciliationStatus: "required",
     usageReconciliationRequired: true,
     postBackupUsageReconstructed: false,
     limitations: {
       pointInTimeSnapshot: true,
       postBackupUsageNotReconstructed: true,
       postBackupSettlementNotReconstructed: true,
-      reconciliationRequiredBeforeCustomerAdmission: true,
+      reconciliationRequiredBeforeAdmission: true,
     },
     customerAdmission: "closed",
   };
-  const resolvedReceipt = receiptPathOrDefault(receiptPath, storeDir, ".replay-receipt.json");
-  writeJson(resolvedReceipt, receipt);
-  return receipt;
+  return writeReceiptOrReuse(resolvedReceipt, receipt, [
+    "kind",
+    "restoreAttemptId",
+    "journalHash",
+    "storeBeforeHash",
+    "storeAfterHash",
+  ]);
+}
+
+export async function reconcileRestoredStore({
+  storeDir,
+  reconciliationPath,
+  receiptPath,
+  restoreReceiptPath,
+  replayReceiptPath,
+  acknowledgeOpenUsage = false,
+}) {
+  if (!storeDir) fail("reconcile_store", "--store is required.");
+  if (!reconciliationPath) fail("reconcile_evidence", "--reconciliation is required; acknowledgement alone cannot release admission.");
+  if (receiptPath && isInside(storeDir, receiptPath)) fail("reconcile_receipt_inside_store", "Reconciliation receipt must be outside the restored store directory.");
+  const resolvedReceipt = receiptPathOrDefault(receiptPath, storeDir, ".reconciliation-receipt.json");
+  const restoreReceiptFile = restoreReceiptPath ?? `${storeDir}.restore-receipt.json`;
+  const restoreReceipt = readJsonIfPresent(restoreReceiptFile, "restore receipt");
+  const evidence = readJsonIfPresent(reconciliationPath, "reconciliation evidence");
+  if (!evidence) fail("reconciliation_missing", "Authoritative reconciliation evidence is missing; the store remains closed.");
+  validateReconciliationEvidence(evidence);
+  const restored = await readBuilderIdentityStoreSnapshot(storeDir);
+  const replayReceiptFile = replayReceiptPath ?? `${storeDir}.replay-receipt.json`;
+  const replayReceipt = readJsonIfPresent(replayReceiptFile, "replay receipt");
+  const mismatches = reconciliationMismatches(evidence, restored, restoreReceipt);
+
+  const gate = await readBuilderRestoreReplayGate(storeDir);
+  const existing = readJsonIfPresent(resolvedReceipt, "reconciliation receipt");
+  if (!gate.present) {
+    if (
+      existing &&
+      existing.kind === "ornigami-builder-reconciliation-receipt" &&
+      existing.status === "complete" &&
+      existing.storeHash === restored.storeHash &&
+      existing.usageSha256 === evidence.source.usageSha256 &&
+      existing.evidenceSha256 === canonicalHash(evidence)
+    ) {
+      return existing;
+    }
+    fail("reconcile_gate_missing", "No restore gate and no matching completed reconciliation receipt.");
+  }
+  if (!gate.valid || !gate.value) fail("reconcile_gate_invalid", "Restore gate is invalid or unreadable.");
+  if (!replayReceipt) {
+    mismatches.push("replay receipt is missing");
+  } else {
+    if (replayReceipt.kind !== "ornigami-builder-replay-receipt" || replayReceipt.status !== "replayed-closed") {
+      mismatches.push("replay receipt is not a completed closed replay");
+    }
+    if (replayReceipt.storeAfterHash !== restored.storeHash) mismatches.push("replay receipt store hash does not match the restored store");
+    if (replayReceipt.journalHash !== evidence.source.journalHash) mismatches.push("replay receipt journal hash does not match authoritative evidence");
+    if (replayReceipt.restoreAttemptId !== gate.value.attemptId) mismatches.push("replay receipt attempt does not match the restore gate");
+  }
+
+  const baseReceipt = {
+    schemaVersion: 1,
+    kind: "ornigami-builder-reconciliation-receipt",
+    storeDir: path.resolve(storeDir),
+    reconciliationPath: path.resolve(reconciliationPath),
+    evidenceSha256: canonicalHash(evidence),
+    evidenceCapturedAt: evidence.capturedAt,
+    storeHash: restored.storeHash,
+    usageSha256: canonicalHash(restored.store.usage),
+    journalHash: evidence.source.journalHash,
+    accounting: computeBuilderMinimizationAccounting(restored.store),
+    acknowledgeOpenUsage,
+    postBackupUsageReconstructed: false,
+  };
+
+  if (mismatches.length > 0) {
+    const blocked = {
+      ...baseReceipt,
+      status: "blocked",
+      admissionClosed: true,
+      reconciliationStatus: "mismatch",
+      reason: mismatches.join("; "),
+      action: "Keep the store closed. Use a newer backup or authoritative usage evidence; do not invent usage, settlement or capacity.",
+      completedAt: new Date().toISOString(),
+      customerAdmission: "closed",
+    };
+    writeReceiptOrReuse(resolvedReceipt, blocked, ["kind", "status", "evidenceSha256", "storeHash", "reason"]);
+    fail("reconciliation_mismatch", `Reconciliation blocked: ${blocked.reason}`);
+  }
+
+  const accounting = computeBuilderMinimizationAccounting(restored.store);
+  if ((accounting.reservedRecords > 0 || accounting.unknownRecords > 0) && !acknowledgeOpenUsage) {
+    const blocked = {
+      ...baseReceipt,
+      status: "blocked",
+      admissionClosed: true,
+      reconciliationStatus: "open-usage-acknowledgement-required",
+      reason: "reserved or unknown usage remains in the restored store",
+      action: "Review the preserved exposure and pass --acknowledge-open-usage; this alone does not reconstruct it.",
+      completedAt: new Date().toISOString(),
+      customerAdmission: "closed",
+    };
+    writeReceiptOrReuse(resolvedReceipt, blocked, ["kind", "status", "evidenceSha256", "storeHash", "reason"]);
+    fail("reconciliation_open_usage", blocked.reason);
+  }
+
+  await assertBuilderStoreReplayReady(storeDir, { cleanup: false });
+  testAbort("reconcile_before_release");
+  const openReceipt = {
+    ...baseReceipt,
+    status: "complete",
+    admissionClosed: false,
+    reconciliationStatus: "verified",
+    admissionBasis: "authoritative-usage-evidence",
+    completedAt: new Date().toISOString(),
+    limitations: {
+      pointInTimeSnapshot: true,
+      postBackupUsageNotReconstructed: true,
+      postBackupSettlementNotReconstructed: true,
+      evidenceRequired: true,
+      acknowledgementIsNotEvidence: true,
+    },
+    customerAdmission: "closed",
+  };
+  if (existing) {
+    if (!receiptMatches(existing, openReceipt, ["kind", "status", "evidenceSha256", "storeHash", "usageSha256"])) {
+      fail("receipt_conflict", `Existing reconciliation receipt conflicts with this operation: ${resolvedReceipt}`);
+    }
+  }
+  await assertBuilderStoreReplayReady(storeDir);
+  try {
+    return writeReceiptOrReuse(resolvedReceipt, openReceipt, [
+      "kind",
+      "status",
+      "evidenceSha256",
+      "storeHash",
+      "usageSha256",
+    ]);
+  } catch (error) {
+    try {
+      await recloseRestoredStore(storeDir);
+    } catch {}
+    fail("reconciliation_receipt", `Admission release receipt failed; store was re-closed: ${error.message}`);
+  }
 }
 
 function jsonOutput(value) {
@@ -788,6 +1134,9 @@ function parseCommandArgs(args) {
       "passphrase-file": { type: "string" },
       receipt: { type: "string" },
       journal: { type: "string" },
+      reconciliation: { type: "string" },
+      "restore-receipt": { type: "string" },
+      "replay-receipt": { type: "string" },
       "acknowledge-point-in-time": { type: "boolean", default: false },
       "acknowledge-usage-window": { type: "boolean", default: false },
       "acknowledge-open-usage": { type: "boolean", default: false },
@@ -822,6 +1171,11 @@ async function main(argv) {
       receiptPath: options.receipt,
       acknowledgePointInTime: options["acknowledge-point-in-time"],
     });
+  } else if (command === "evidence") {
+    result = await createReconciliationEvidence({
+      storeDir: options.store,
+      out: options.out,
+    });
   } else if (command === "replay") {
     result = await replayRestoredStore({
       storeDir: options.store,
@@ -830,10 +1184,19 @@ async function main(argv) {
       acknowledgeUsageWindow: options["acknowledge-usage-window"],
       acknowledgeOpenUsage: options["acknowledge-open-usage"],
     });
+  } else if (command === "reconcile") {
+    result = await reconcileRestoredStore({
+      storeDir: options.store,
+      reconciliationPath: options.reconciliation,
+      receiptPath: options.receipt,
+      restoreReceiptPath: options["restore-receipt"],
+      replayReceiptPath: options["replay-receipt"],
+      acknowledgeOpenUsage: options["acknowledge-open-usage"],
+    });
   } else {
     fail(
       "cli",
-      "Usage: builder-backup-restore.mjs backup|inspect|verify|restore|replay ...",
+      "Usage: builder-backup-restore.mjs backup|inspect|verify|restore|evidence|replay|reconcile ...",
     );
   }
   jsonOutput(result);
