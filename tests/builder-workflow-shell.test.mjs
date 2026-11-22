@@ -14,6 +14,7 @@ const yaml = require("js-yaml");
 const workflows = [
   ".github/workflows/builder-retained-image-qualification.yml",
   ".github/workflows/builder-browser-smoke.yml",
+  ".github/workflows/builder-backup-recovery-verification.yml",
 ];
 
 function findBash() {

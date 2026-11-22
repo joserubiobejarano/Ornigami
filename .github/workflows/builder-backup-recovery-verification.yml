@@ -58,6 +58,12 @@ jobs:
           node-version: "22.23.3"
           package-manager-cache: false
 
+      - name: Install locked test dependencies
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+
       - name: Verify Node and shell prerequisites
         shell: bash
         run: |
