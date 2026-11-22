@@ -594,9 +594,10 @@ test("readiness workflow gates installation on bounded probes and ownership fixt
   assert.doesNotMatch(workflow, /0d68551324ce3f441478f613d2f4eb48b9be4f3f/);
 });
 
-test("debug workflow is manual, bounded and does not install or build", () => {
+test("debug workflow is path-triggered or manual, bounded and does not install or build", () => {
   const workflow = readFileSync(".github/workflows/builder-rehearsal-preflight-debug.yml", "utf8");
-  assert.match(workflow, /^on:\n  workflow_dispatch:/m);
+  assert.match(workflow, /\.github\/debug-requests\/builder-rehearsal-preflight\.json/);
+  assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /timeout-minutes: 10/);
   assert.match(workflow, /probe-docker-endpoint\.sh/);
   assert.match(workflow, /OVERALL_TIMEOUT_SECONDS/);

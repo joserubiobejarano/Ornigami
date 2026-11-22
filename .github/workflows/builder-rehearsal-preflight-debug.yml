@@ -6,6 +6,11 @@ name: Builder rehearsal preflight debug (bounded)
 # It is dispatched manually so debugging pushes do not schedule rehearsal runs.
 
 on:
+  push:
+    branches:
+      - codex/ornigami-rehearsal-readiness-20261122
+    paths:
+      - .github/debug-requests/builder-rehearsal-preflight.json
   workflow_dispatch:
     inputs:
       build_readiness_seconds:
@@ -28,6 +33,10 @@ concurrency:
 jobs:
   preflight:
     name: Bounded Linux preflight and readiness debug
+    if: >-
+      github.repository == 'joserubiobejarano/Ornigami' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.ref == 'refs/heads/codex/ornigami-rehearsal-readiness-20261122')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
@@ -48,6 +57,8 @@ jobs:
       EXPORT_STAGING: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/staging
       UPLOAD_STAGING: /tmp/ornigami-rehearsal-debug-${{ github.run_id }}-${{ github.run_attempt }}/upload
       MAX_DIAGNOSTIC_BYTES: "67108864"
+      BUILD_READINESS_SECONDS: ${{ inputs.build_readiness_seconds || '420' }}
+      RUN_NEGATIVE_PROBE: ${{ inputs.run_negative_probe || 'true' }}
 
     steps:
       - name: Create runner-owned debug roots
@@ -64,7 +75,7 @@ jobs:
             printf 'run_id=%s-%s\n' "${{ github.run_id }}" "${{ github.run_attempt }}"
             printf 'runner_user=%s\n' "$(id -un)"
             printf 'runner_uid=%s\n' "$(id -u)"
-            printf 'build_readiness_seconds=%s\n' "${{ inputs.build_readiness_seconds }}"
+            printf 'build_readiness_seconds=%s\n' "$BUILD_READINESS_SECONDS"
           } > "$RUNNER_LOG_ROOT/debug-identity.txt"
 
       - name: Check out exact control-plane commit
@@ -121,7 +132,7 @@ jobs:
           set +e
           BUILDER_USER="$BUILDER_USER" DOCKER_ENDPOINT="tcp://127.0.0.1:2375" \
             EVIDENCE_DIR="$RUNNER_LOG_ROOT" PROBE_LABEL=build \
-            OVERALL_TIMEOUT_SECONDS="${{ inputs.build_readiness_seconds }}" \
+            OVERALL_TIMEOUT_SECONDS="$BUILD_READINESS_SECONDS" \
             PROBE_TIMEOUT_SECONDS="20" \
             bash deploy/builder/private-staging/probe-docker-endpoint.sh \
             2>&1 | tee "$RUNNER_LOG_ROOT/build-daemon-readiness-console.txt"
@@ -147,7 +158,7 @@ jobs:
 
       - name: Exercise bounded failure classification and endpoint rejection
         id: negative_probe
-        if: ${{ inputs.run_negative_probe == 'true' }}
+        if: ${{ (inputs.run_negative_probe || 'true') == 'true' }}
         shell: bash
         run: |
           set +e
@@ -248,7 +259,7 @@ jobs:
           }
           check build_probe true "${{ steps.build_probe.outputs.ok }}"
           check host_probe true "${{ steps.host_probe.outputs.ok }}"
-          if [[ "${{ inputs.run_negative_probe }}" == "true" ]]; then
+          if [[ "$RUN_NEGATIVE_PROBE" == "true" ]]; then
             check negative_closed_port true "${{ steps.negative_probe.outputs.closed_ok }}"
             check negative_non_loopback true "${{ steps.negative_probe.outputs.nonloopback_ok }}"
           fi

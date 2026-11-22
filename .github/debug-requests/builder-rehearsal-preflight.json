@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "purpose": "request one bounded Linux preflight/readiness debug run",
+  "bundleSha": "3824a5a5875638376bee34a0c6c6bf258cbd1ba8",
+  "candidateSha": "863a8a77d7a6b71b72a4140f6fd9b2ff8ef11816",
+  "buildReadinessSeconds": 420,
+  "runNegativeProbe": true,
+  "customerAdmission": "closed"
+}
