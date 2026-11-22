@@ -1,117 +1,111 @@
-# Exact-candidate synthetic Linux rehearsal — 43e2691 approval bundle
+# Exact-candidate synthetic Linux rehearsal — 43e2691 repaired approval bundle
 
-Date: 21 November 2026
+Date: 22 November 2026
 Candidate: `43e2691e7d347d6e48e0ed65c0a828567b24c7a3`
-Status: **bundle prepared locally. No workflow was dispatched, no image was
+Bundle base: `588aa66856cc68a903e6b63510ec40cfa2f8322a`
+Repaired execution bundle: `d916ff2d1e270217703df4a96c361fff26a41265`
+Status: **bundle repaired locally. No workflow was dispatched, no image was
 built, no artifact was uploaded, no edge was started and no external action was
 taken. Customer admission remains closed.**
 
-## Authorization reconciliation
+Application source and harness remain unchanged at
+`43e2691e7d347d6e48e0ed65c0a828567b24c7a3`.
 
-| Role/input | Existing fact | Authority conclusion |
-| --- | --- | --- |
-| Operator | Local Windows agent/user; no Docker or Podman installed | Can prepare files and run static checks only |
-| Repository access | `gh` is authenticated to `joserubiobejarano/Ornigami` with `repo` and `workflow` scopes | Capability, not approval for a new dispatch/build/publi­cation |
-| Candidate reachability | `43e2691` is **not** on `origin` | A bundle-branch push is required to make the exact SHA fetchable |
-| Runner | GitHub-hosted `ubuntu-24.04` is the only observed Linux runner path | One new run requires explicit approval |
-| Build daemon | No local daemon; proposed Docker-in-Docker service on the hosted runner | Requires approval to start/pull images |
-| Verification/phase daemon | Host runner Docker daemon (fresh before archive load) | Requires approval |
-| Temporary HTTPS edge | No running edge; Caddy private-CA pattern exists in prior evidence | Requires approval for temporary local-CA edge |
-| Archive custody | No private custody destination is established | Approval must cover the proposed artifact destination or provide a private one |
-| Prior successful staging run | `44845147243` succeeded for an older source, but its archive was ephemeral and not retained | Historical evidence only; not authority or acceptance for `43e2691` |
+## Reviewed defects and repairs
 
-Configuration scopes, prior flags and old successful runs are not treated as
-current authorization.
+| Defect | Repair |
+| --- | --- |
+| Initial publication did not schedule | Job now requires the initial branch-creation push (`created=true`, before all-zero), exact branch, attempt 1. The event gate script verifies the same rule. Trigger is exactly one branch creation; later pushes do not schedule. |
+| Rehearsal directory pre-created | Workflow creates only `EVIDENCE_ROOT`; runner creates only the parent of `REHEARSAL_DIR`. The candidate's `ACTION=checkpoint` creates `REHEARSAL_DIR` itself. |
+| Mutable control/retrieval checkout | Both control-plane and retrieval checkouts use `${{ github.sha }}`; each verifies `HEAD == WORKFLOW_SHA`. Candidate source uses an authenticated `actions/checkout` at the exact `SOURCE_SHA` with `persist-credentials: false`. |
+| Closed-mode and cleanup results not enforced | Closed HTTP is asserted as home `200`, builder `404`, session `401`. Cleanup removes and verifies only positively labelled owned resources. Remaining resources or failed cleanup checks make a successful run fail; an earlier primary failure is preserved. |
+| Upload budgets not enforced | Every archive copy counts toward `maxArchiveBytes`; the complete upload set plus receipt reserve counts toward `maxArtifactBytes`. On overflow, only a bounded diagnostic copy without archives is prepared and uploaded. Retrieval evidence has its own upload limit. |
+| DinD/Caddy exposure | DinD is pinned to `docker:27-dind@sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce`, with API published only on `127.0.0.1:2375`. Runtime asserts the listener is loopback-only. Generated Caddy Compose ports are rewritten to `127.0.0.1:80:80`, `127.0.0.1:443:443` and `127.0.0.1:443:443/udp`, then asserted. |
+| Exact-source retrieval credentials | Removed manual `git init`/`git fetch`. The candidate is retrieved with the authenticated checkout action at the exact SHA; control-plane and candidate identities are verified separately. |
 
 ## Proposed topology
 
 - **Runner/operator:** one GitHub-hosted `ubuntu-24.04` runner in
   `joserubiobejarano/Ornigami`, operated by the repository owner.
-- **Build daemon:** `docker:27-dind` service on the same runner, exposed only at
-  `tcp://127.0.0.1:2375`. Its observed daemon ID must differ from the host daemon.
-- **Verification/phase daemon:** the runner's host Docker daemon. It starts with
-  no candidate image, loads the retained archive, and is then used for the edge,
-  browser, runtime/restore and closed-rollback phases.
-- **Helper bind mount:** the host daemon must see
-  `<SOURCE_ROOT>/deploy/builder` mounted read-only at `/app/qualify`. The bundle
-  checks this with the built image before qualification. Docker-in-Docker only
-  receives the build context; it is not used for helper bind mounts or phases.
-- **Temporary edge:** pinned `caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d`,
-  `tls internal`, BasicAuth with a generated synthetic password, host mapping
-  `127.0.0.1 builder-rehearsal.invalid`, ports 80/443 bound only on the ephemeral
-  runner. The Caddy CA is installed into the runner trust store and Chromium NSS.
+- **Build daemon:** pinned `docker:27-dind` service exposed only at
+  `tcp://127.0.0.1:2375`.
+- **Verification/phase daemon:** host runner Docker daemon. Observed daemon IDs
+  must differ.
+- **Helper bind mount:** host daemon must see
+  `<SOURCE_ROOT>/deploy/builder` read-only at `/app/qualify`; checked with the
+  built image before qualification.
+- **Temporary edge:** pinned Caddy image with internal CA, synthetic BasicAuth,
+  host mapping `127.0.0.1 builder-rehearsal.invalid`, and loopback-only host
+  bindings for ports 80/443.
 - **Effective origin:** `https://builder-rehearsal.invalid`. Public DNS, ACME,
   VPS routing and public certificate acceptance remain untested and unauthorized.
-- **Archive custody:** GitHub Actions artifact
-  `builder-exact-rehearsal-43e2691-<run>-<attempt>` in the same repository,
-  retention 7 days. It contains only the synthetic image archive, receipts and
-  sanitized evidence. A second job downloads it on a fresh runner, independently
-  loads/verifies it, and uploads a retrieval receipt.
-  - Access: repository artifact access. If repository artifact visibility is not
-    acceptable, the owner must provide a private custody destination/key before
-    approval; the bundle will not upload until then.
-- **Source fetch:** push this bundle branch (which contains `43e2691` as an
-  ancestor) to `origin`; the workflow fetches the exact SHA by object ID, checks
-  clean HEAD, verifies both required tips are ancestors and runs the candidate
-  harness at that SHA.
+- **Archive custody:** same-repository GitHub Actions artifact
+  `builder-exact-rehearsal-43e2691-<run>-<attempt>`, retention 7 days. A separate
+  fresh-runner job downloads it and independently loads/verifies the archive.
+  If repository artifact visibility is unacceptable, a private custody
+  destination/key must be supplied before approval.
 
-## Execution bundle
+## Trigger procedure
 
-- `.github/workflows/builder-exact-rehearsal-43e2691.yml`
-- `.github/build-requests/builder-exact-rehearsal-43e2691.json`
-- `deploy/builder/private-staging/run-exact-rehearsal-linux.sh`
-- candidate scripts at `43e2691`, including
-  `deploy/builder/private-staging/rehearse-exact-candidate.sh`
+1. Create the remote branch
+   `ci/builder-exact-rehearsal-43e2691-20261121` **once** at the final bundle tip
+   containing the request file and workflow.
+2. The initial branch-creation push is the only trigger. Do not push a second
+   request commit and do not reuse an existing branch.
+3. If the branch already exists, stop; use a new reviewed bundle/branch name
+   rather than an undocumented second push.
 
-The workflow performs:
+## Execution sequence
 
-1. clean supported Node `22.23.3` / vendored npm `11.21.1` install;
-2. full suite, TypeScript, lint, security audit and security tests;
-3. `ACTION=checkpoint` with the DIND build daemon and host verifier;
-4. archive/receipt retention and helper bind-mount check;
-5. temporary private-CA Caddy edge with the checkpoint image ID;
-6. `ACTION=qualify` through edge, browser/ZIP/revocation, runtime, restart,
-   minimisation, both journal negative cases, second restore, lock recovery and
-   closed rollback;
-7. access closure and owned-resource absence receipts;
-8. archive/evidence artifact upload and separate retrieval/load verification.
+1. Verify control-plane SHA, initial-creation event, exact source SHA, clean tree,
+   harness SHA and both required tip ancestries.
+2. Clean Node `22.23.3` / vendored npm `11.21.1` install.
+3. Full suite, TypeScript, lint, security audit and security tests.
+4. `ACTION=checkpoint`: build once, retain archive/receipt, independently verify,
+   stop at `edge-setup`.
+5. Start loopback-only temporary private-CA Caddy edge with the checkpoint image ID.
+6. `ACTION=qualify`: same immutable image through edge, browser/ZIP/revocation,
+   runtime, restart, minimisation, both journal negatives, second restore, lock
+   recovery and closed rollback.
+7. Close access; fail unless owned resources are absent and required closure checks pass.
+8. Upload archive/evidence only within budget; retrieve on a fresh runner and
+   independently verify the archive and identity.
 
-Test seams, stubs and live providers are disabled for the executed path. The
-candidate tree is not modified during the run.
-
-## Resource and storage budget
+## Resource and custody budget
 
 | Item | Limit |
 | --- | --- |
 | Dispatches/attempts | 1 / 1 |
 | Execute job | 90 minutes |
 | Retrieval job | 15 minutes |
-| Total runner time requested | 105 minutes |
 | Retained archive | 3 GiB maximum |
-| Total uploaded artifacts | 3.5 GiB maximum |
+| Total artifact bytes | 3.5 GiB maximum |
+| Bounded diagnostic fallback | 64 MiB maximum |
+| Retrieval artifact | 64 MiB maximum |
 | Artifact retention | 7 days |
-| Registry publication | none |
-| Public DNS/ACME/VPS deployment | none |
+| Registry/public deployment | none |
 
-Cleanup removes only run-owned containers, networks, volumes, host mapping and
-CA. The archive and evidence artifact must exist before cleanup is considered
-complete; failed attempts are preserved in the same artifact path.
+**Custody expiry:** the archive/evidence artifact expires **7 days after the
+run**. Before expiry, the owner must decide to download it into approved private
+custody or explicitly extend retention. Expiry leaves no retained rehearsal
+archive; there is no automatic extension.
 
 ## Approval request
 
-Approve exactly these external actions for candidate
+Approve exactly these external actions for
 `43e2691e7d347d6e48e0ed65c0a828567b24c7a3`:
 
-1. push this bundle branch to `origin`, making the exact candidate SHA fetchable;
-2. allow the push-triggered workflow to start one GitHub-hosted `ubuntu-24.04`
-   run (one attempt);
-3. allow pulling the pinned base/build/Caddy images needed by the workflow;
-4. allow one temporary private-CA HTTPS edge on that ephemeral runner with the
-   hostname mapping above;
+1. create/push the dedicated branch once at the final repaired bundle tip,
+   making the exact candidate SHA fetchable and scheduling exactly one run;
+2. allow one GitHub-hosted `ubuntu-24.04` execution and one retrieval job;
+3. allow pulling the pinned build/base/Caddy/DinD images required by the workflow;
+4. allow one temporary private-CA HTTPS edge with loopback-only bindings and the
+   stated hostname mapping;
 5. allow upload/download of the synthetic archive and evidence to the stated
    same-repository Actions artifact for 7 days, including retrieval verification.
 
 No real invitation, customer data, paid provider call, registry publication,
 public DNS change, persistent deployment or customer admission is requested.
+No execution evidence is claimed.
 
 **Customer admission remains closed.**

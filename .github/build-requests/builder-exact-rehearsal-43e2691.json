@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "bundleBaseSha": "588aa66856cc68a903e6b63510ec40cfa2f8322a",
+  "bundleBaseSha": "d916ff2d1e270217703df4a96c361fff26a41265",
   "applicationSourceSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
   "harnessSha": "43e2691e7d347d6e48e0ed65c0a828567b24c7a3",
   "workflowFile": ".github/workflows/builder-exact-rehearsal-43e2691.yml",
