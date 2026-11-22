@@ -143,7 +143,19 @@ volumes. It records `producerApplicationSourceSha`, `producerHarnessSha` and
 and never runs a build. A missing `edge/` evidence root, changed archive hash or
 size, receipt/image mismatch, or a dirty candidate fails before qualification.
 The wrapper is intended for hosted Linux runs where the host Docker daemon is
-used directly and no DinD service is present.
+used directly and no DinD service is present. `retained-evidence.sh` owns the
+real evidence-directory preparation and approved-evidence export;
+`write-retained-custody-receipt.mjs` and `write-retrieval-receipt.mjs` write
+atomic, upload-readable receipts. The retrieval receipt keeps archive
+verification and qualification as separate fields: a successful archive load is
+`archive-verified-qualification-incomplete` unless a valid complete
+qualification custody receipt is present. These helpers are exercised directly
+by tests with fresh fixture directories and command stubs.
+
+The synthetic browser client accepts only `BROWSER_CHROMIUM_SANDBOX=0` or `1`.
+Unsupported values are rejected rather than silently treated as the no-sandbox
+exception. The effective `browserMode` is recorded consistently in the smoke
+report, browser journey receipt, custody receipt and retrieval receipt.
 
 ### Diagnostic HTTP-loopback path
 

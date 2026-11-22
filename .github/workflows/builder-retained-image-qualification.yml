@@ -3,9 +3,9 @@ name: Retained immutable image qualification
 on:
   push:
     branches:
-      - ci/retained-image-qualification-20261122
+      - ci/retained-image-qualification-20261122-r2
     paths:
-      - .github/build-requests/builder-retained-image-qualification.json
+      - .github/build-requests/builder-retained-image-qualification-r2.json
 
 permissions:
   contents: read
@@ -16,10 +16,11 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CANDIDATE_SHA: 6ef785961d3f5c6084650ee9a119b78943a598e6
+  CANDIDATE_SHA: b1c6cce04f1fd5ad6ffdbdc3834bf28e8c1a2144
   SOURCE_SHA: 156259d0c4330b185a0844711b7004b0b4467887
-  HARNESS_SHA: 6ef785961d3f5c6084650ee9a119b78943a598e6
+  HARNESS_SHA: b1c6cce04f1fd5ad6ffdbdc3834bf28e8c1a2144
   PRODUCER_HARNESS_SHA: 156259d0c4330b185a0844711b7004b0b4467887
+  BROWSER_CHROMIUM_SANDBOX: "0"
   IMAGE_REFERENCE: sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57
   ARCHIVE_SHA256: a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df
   ARCHIVE_BYTES: "1000632832"
@@ -50,7 +51,7 @@ jobs:
       github.event.created == true &&
       github.event.before == '0000000000000000000000000000000000000000' &&
       github.run_attempt == 1 &&
-      github.ref == 'refs/heads/ci/retained-image-qualification-20261122'
+      github.ref == 'refs/heads/ci/retained-image-qualification-20261122-r2'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -90,7 +91,7 @@ jobs:
       - name: Check out current harness candidate
         uses: actions/checkout@v5
         with:
-          ref: 6ef785961d3f5c6084650ee9a119b78943a598e6
+          ref: b1c6cce04f1fd5ad6ffdbdc3834bf28e8c1a2144
           path: candidate-source
           fetch-depth: 0
           clean: true
@@ -197,14 +198,16 @@ jobs:
             BROWSER_SMOKE_EVIDENCE_DIR="$smoke_root" \
             NODE_BIN="$NODE_BIN" \
             NODE_OPTIONS="--max-old-space-size=512" \
+            BROWSER_CHROMIUM_SANDBOX="$BROWSER_CHROMIUM_SANDBOX" \
             bash -c 'cd "$SOURCE_ROOT" && exec "$NODE_BIN" scripts/browser-smoke.mjs' \
             2>&1 | tee "$RUNNER_LOG_ROOT/browser-smoke-console.txt"
           node -e '
             const fs=require("node:fs");
             const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
             if (r.ok !== true) throw new Error(`browser smoke failed: ${JSON.stringify(r.error)}`);
-            if (r.sandbox !== "no-sandbox") throw new Error(`unexpected sandbox mode: ${r.sandbox}`);
-            console.log(JSON.stringify({ok:r.ok,sandbox:r.sandbox,uid:r.effectiveUid,gid:r.effectiveGid,browser:r.browserVersion},null,2));
+            if (r.browserMode !== "no-sandbox") throw new Error(`unexpected browser mode: ${r.browserMode}`);
+            if (r.sandbox !== r.browserMode) throw new Error(`inconsistent sandbox field: ${r.sandbox}`);
+            console.log(JSON.stringify({ok:r.ok,browserMode:r.browserMode,sandbox:r.sandbox,uid:r.effectiveUid,gid:r.effectiveGid,browser:r.browserVersion},null,2));
           ' "$smoke_root/browser-smoke.json"
           cp "$smoke_root/browser-smoke.json" "$RUNNER_LOG_ROOT/browser-smoke.json"
           cp "$smoke_root/browser-smoke.png" "$RUNNER_LOG_ROOT/browser-smoke.png"
@@ -264,6 +267,7 @@ jobs:
             BUILDER_STORE_VOLUME="$BUILDER_STORE_VOLUME" \
             BUILDER_RUNTIME_STORE_HOST_ID="$BUILDER_RUNTIME_STORE_HOST_ID" \
             STAGING_BASIC_AUTH_USER="$STAGING_BASIC_AUTH_USER" \
+            BROWSER_CHROMIUM_SANDBOX="$BROWSER_CHROMIUM_SANDBOX" \
             BROWSER_PLAYWRIGHT="$SOURCE_ROOT/scripts/framework-prototype/browser-tools/node_modules/playwright/index.mjs" \
             PLAYWRIGHT_BROWSERS_PATH="$BUILDER_HOME/.cache/ms-playwright" \
             BUILDER_USER="$BUILDER_USER" \
@@ -471,7 +475,7 @@ jobs:
             node deploy/builder/private-staging/verify-image-archive.mjs
           cp "$evidence/archive-verification.json" "$RUNNER_TEMP/archive-verification.json"
 
-      - name: Check qualification custody and retrieval budget
+      - name: Write independent retrieval receipt
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -479,52 +483,28 @@ jobs:
           mkdir -p "$evidence"
           cp "$RUNNER_TEMP/archive-verification.json" "$evidence/"
           cp "$RUNNER_TEMP/original-identity.txt" "$evidence/"
-          status="not-present"
+          qualification_receipt=""
           if [[ -n "${QUALIFICATION_CUSTODY:-}" ]]; then
-            final="$(find "$QUALIFICATION_CUSTODY" -type f -name 'retained-image-custody-receipt.json' -print -quit)"
-            if [[ -n "$final" && -f "$final" ]]; then
-              node - "$final" "$evidence/qualification-receipt.json" <<'NODE'
-              const fs=require("node:fs");
-              const [source,target]=process.argv.slice(2);
-              const r=JSON.parse(fs.readFileSync(source,"utf8"));
-              if (r.imageId !== "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57") throw new Error("qualification image mismatch");
-              if (r.producerApplicationSourceSha !== "156259d0c4330b185a0844711b7004b0b4467887") throw new Error("qualification source mismatch");
-              if (r.consumerHarnessSha !== "6ef785961d3f5c6084650ee9a119b78943a598e6") throw new Error("qualification consumer harness mismatch");
-              if (r.status !== "complete") throw new Error("qualification is not complete");
-              fs.copyFileSync(source,target);
-          NODE
-              status="complete"
+            qualification_receipt="$(find "$QUALIFICATION_CUSTODY" -type f -name 'retained-image-custody-receipt.json' -print -quit 2>/dev/null || true)"
+            if [[ -n "$qualification_receipt" && -f "$qualification_receipt" ]]; then
+              cp "$qualification_receipt" "$evidence/qualification-receipt.json"
             fi
           fi
-          echo "qualification_status=$status" > "$evidence/qualification-status.txt"
-          WORKFLOW_SHA="${{ github.sha }}" RETRIEVAL_DAEMON_ID="$(docker info --format '{{.ID}}')" QUALIFICATION_STATUS="$status" RETRIEVAL_RECEIPT="$evidence/retrieval-receipt.json" node - "$RUNNER_TEMP/archive-verification.json" "$RUNNER_TEMP/original-identity.txt" <<'NODE'
-          const fs=require("node:fs");
-          const [verificationPath, identityPath]=process.argv.slice(2);
-          const verification=JSON.parse(fs.readFileSync(verificationPath,"utf8"));
-          const identity=Object.fromEntries(fs.readFileSync(identityPath,"utf8").trim().split(/\r?\n/).map((line)=>{const i=line.indexOf("=");return [line.slice(0,i),line.slice(i+1)];}));
-          if (verification.complete !== true || verification.independentHandoff !== true) throw new Error("original archive verification is incomplete");
-          if (verification.imageId !== "sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57") throw new Error("original archive image identity changed");
-          if (identity.sha256 !== "a44a81f843033f50479dad8d5dd196acc8587b9e5c31090b7794df51a680d7df") throw new Error("original archive hash changed");
-          if (identity.bytes !== "1000632832") throw new Error("original archive size changed");
-          const receipt={
-            schemaVersion:1,
-            status:"complete",
-            producerApplicationSourceSha:"156259d0c4330b185a0844711b7004b0b4467887",
-            producerHarnessSha:"156259d0c4330b185a0844711b7004b0b4467887",
-            consumerHarnessSha:"6ef785961d3f5c6084650ee9a119b78943a598e6",
-            workflowSha:process.env.WORKFLOW_SHA,
-            imageId:"sha256:d50ef3d2c02cf002433dfc48e03efdcae895f9ae3d1f6042b17bc9cfe8836b57",
-            archiveSha256:identity.sha256,
-            archiveBytes:Number(identity.bytes),
-            archiveVerification:"complete",
-            archiveIndependentHandoff:true,
-            freshDaemonId:process.env.RETRIEVAL_DAEMON_ID,
-            qualificationStatus:process.env.QUALIFICATION_STATUS,
-            customerAdmission:"closed",
-          };
-          fs.writeFileSync(process.env.RETRIEVAL_RECEIPT,`${JSON.stringify(receipt,null,2)}\n`);
-          console.log(JSON.stringify(receipt,null,2));
-          NODE
+          node deploy/builder/private-staging/write-retrieval-receipt.mjs \
+            --archive-verification "$RUNNER_TEMP/archive-verification.json" \
+            --identity "$RUNNER_TEMP/original-identity.txt" \
+            --qualification-receipt "$qualification_receipt" \
+            --output "$evidence/retrieval-receipt.json" \
+            --workflow-sha "${{ github.sha }}" \
+            --retrieval-daemon-id "$(docker info --format '{{.ID}}')" \
+            --expected-source-sha "$SOURCE_SHA" \
+            --expected-image-id "$IMAGE_REFERENCE" \
+            --expected-archive-sha256 "$ARCHIVE_SHA256" \
+            --expected-archive-bytes "$ARCHIVE_BYTES" \
+            --expected-producer-harness-sha "$PRODUCER_HARNESS_SHA" \
+            --expected-consumer-harness-sha "$HARNESS_SHA" \
+            --require-distinct-harness
+          node -e 'const fs=require("node:fs");const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(r.archiveVerification!=="complete"||r.retrievalStatus!=="complete")throw new Error("retrieval evidence is incomplete");console.log(JSON.stringify({status:r.status,qualificationStatus:r.qualificationStatus,archiveVerification:r.archiveVerification,freshDaemonId:r.freshDaemonId,qualificationDaemonId:r.qualificationDaemonId},null,2));' "$evidence/retrieval-receipt.json"
           UPLOAD_ROOT="$evidence" MAX_ARCHIVE_BYTES="0" MAX_ARTIFACT_BYTES="$MAX_RETRIEVAL_ARTIFACT_BYTES" RECEIPT_RESERVE_BYTES="0" \
             RECEIPT_PATH="$evidence/retrieval-budget.json" \
             node deploy/builder/private-staging/check-upload-budget.mjs

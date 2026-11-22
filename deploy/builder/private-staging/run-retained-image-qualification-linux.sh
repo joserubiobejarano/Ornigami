@@ -27,8 +27,11 @@ STAGING_BASIC_AUTH_USER="${STAGING_BASIC_AUTH_USER:-staging-operator}"
 BROWSER_PLAYWRIGHT="${BROWSER_PLAYWRIGHT:-}"
 PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-}"
 BUILDER_USER="${BUILDER_USER:-$(id -un)}"
+DOCKER_BIN="${DOCKER_BIN:-docker}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=retained-evidence.sh
+source "$SCRIPT_DIR/retained-evidence.sh"
 STAGING_HOST="$(node -e 'process.stdout.write(new URL(process.argv[1]).hostname)' "$APP_URL")"
 REHEARSAL_DIR="$EVIDENCE_ROOT/existing-image"
 STAGING_DIR="$REHEARSAL_DIR/edge"
@@ -36,8 +39,9 @@ CADDY_DATA_VOLUME="${PROJECT}-caddy-data"
 CADDY_CONFIG_VOLUME="${PROJECT}-caddy-config"
 LOG_DIR="$EVIDENCE_ROOT/logs"
 CUSTODY_DIR="$EVIDENCE_ROOT/custody"
-mkdir -p "$REHEARSAL_DIR" "$STAGING_DIR" "$LOG_DIR" "$CUSTODY_DIR" "$EVIDENCE_ROOT/secrets" "$EVIDENCE_ROOT/edge"
-chmod 700 "$EVIDENCE_ROOT/secrets"
+prepare_retained_evidence_root "$EVIDENCE_ROOT"
+retained_require_dir "$REHEARSAL_DIR" "rehearsal evidence"
+retained_require_dir "$STAGING_DIR" "edge evidence"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 note() { echo "==> $*"; }
@@ -117,25 +121,7 @@ BASIC_HASH=""
 CLEANUP_FAILURES=0
 
 export_approved_evidence() {
-  local stage="$EXPORT_STAGING" file directory
-  [[ -d "$stage" ]] || { echo "FAIL: approved export staging is missing: $stage" >&2; return 1; }
-  mkdir -p "$stage/logs" "$stage/custody" "$stage/edge"
-  if [[ -d "$LOG_DIR" ]]; then cp -R "$LOG_DIR/." "$stage/logs/"; fi
-  if [[ -d "$CUSTODY_DIR" ]]; then cp -R "$CUSTODY_DIR/." "$stage/custody/"; fi
-  if [[ -f "$ARCHIVE_PATH" && -f "$ARCHIVE_RECEIPT_PATH" ]]; then
-    mkdir -p "$stage/custody"
-    [[ -f "$stage/custody/$(basename "$ARCHIVE_PATH")" ]] || cp "$ARCHIVE_PATH" "$stage/custody/$(basename "$ARCHIVE_PATH")"
-    [[ -f "$stage/custody/archive-receipt.json" ]] || cp "$ARCHIVE_RECEIPT_PATH" "$stage/custody/archive-receipt.json"
-  fi
-  if [[ -d "$EVIDENCE_ROOT/edge" ]]; then cp -R "$EVIDENCE_ROOT/edge/." "$stage/edge/"; fi
-  for file in image-inspect.json image-identity-verification.json archive-producer-identity.txt host.txt cleanup-receipt.txt access-closed.txt; do
-    if [[ -f "$EVIDENCE_ROOT/$file" ]]; then cp "$EVIDENCE_ROOT/$file" "$stage/$file"; fi
-  done
-  if [[ -d "$REHEARSAL_DIR/existing-image-qualification" ]]; then
-    cp -R "$REHEARSAL_DIR/existing-image-qualification" "$stage/"
-  fi
-  find "$stage" -mindepth 1 -type d -exec chmod 0750 {} +
-  find "$stage" -type f -exec chmod 0640 {} +
+  export_retained_evidence "$EVIDENCE_ROOT" "$EXPORT_STAGING"
 }
 
 cleanup() {
@@ -223,20 +209,9 @@ cleanup() {
 trap cleanup EXIT
 
 note "Record producer/consumer and daemon identities"
-{
-  printf 'source_sha=%s\n' "$SOURCE_SHA"
-  printf 'producer_harness_sha=%s\n' "$PRODUCER_HARNESS_SHA"
-  printf 'consumer_harness_sha=%s\n' "$HARNESS_SHA"
-  printf 'workflow_sha=%s\n' "$WORKFLOW_SHA"
-  printf 'origin=%s\n' "$APP_URL"
-  printf 'image_id=%s\n' "$IMAGE_REFERENCE"
-  printf 'archive_sha256=%s\n' "$ARCHIVE_SHA256"
-  printf 'archive_bytes=%s\n' "$ARCHIVE_BYTES"
-  printf 'host_daemon_id=%s\n' "$(docker info --format '{{.ID}}')"
-  printf 'docker_client=%s\n' "$(docker --version)"
-  printf 'runner=%s\n' "$(uname -srm)"
-  printf 'node=%s\n' "$(node --version)"
-} > "$EVIDENCE_ROOT/host.txt"
+record_retained_host_identity \
+  "$EVIDENCE_ROOT" "$SOURCE_SHA" "$PRODUCER_HARNESS_SHA" "$HARNESS_SHA" "$WORKFLOW_SHA" \
+  "$APP_URL" "$IMAGE_REFERENCE" "$ARCHIVE_SHA256" "$ARCHIVE_BYTES"
 
 note "Pull pinned temporary edge and generate private access"
 docker pull "$CADDY_IMAGE" 2>&1 | tee "$LOG_DIR/caddy-pull.log"
@@ -380,6 +355,7 @@ note "Qualify the retained immutable image"
     EXPECTED_PLATFORM=linux/amd64 EXPECTED_USER=1000:1000 HARNESS_SHA="$HARNESS_SHA" \
     PROXY_BINDING_PROFILE=loopback EVIDENCE_DIR="$REHEARSAL_DIR/existing-image-qualification" \
     NODE_EXTRA_CA_CERTS="$EVIDENCE_ROOT/edge/root.crt" \
+    BROWSER_MODE="$BROWSER_MODE" BROWSER_CHROMIUM_SANDBOX="$BROWSER_CHROMIUM_SANDBOX" \
     BROWSER_PLAYWRIGHT="$BROWSER_PLAYWRIGHT" PLAYWRIGHT_BROWSERS_PATH="$PLAYWRIGHT_BROWSERS_PATH" \
     bash deploy/builder/private-staging/qualify-existing-image.sh
 ) 2>&1 | tee "$LOG_DIR/qualification.log"
@@ -406,8 +382,11 @@ if (receipt.fullHttpsAcceptance !== true) throw new Error("full HTTPS acceptance
 console.log(JSON.stringify({ ok: true, phases: receipt.phases }, null, 2));
 NODE
 
-BROWSER_MODE="no-sandbox"
-if [[ "${BROWSER_CHROMIUM_SANDBOX:-0}" == "1" ]]; then BROWSER_MODE="sandbox"; fi
+case "${BROWSER_CHROMIUM_SANDBOX:-0}" in
+  0|"") BROWSER_MODE=no-sandbox; BROWSER_CHROMIUM_SANDBOX=0 ;;
+  1) BROWSER_MODE=sandbox; BROWSER_CHROMIUM_SANDBOX=1 ;;
+  *) fail "BROWSER_CHROMIUM_SANDBOX must be 0 or 1" ;;
+esac
 
 note "Record retained-image custody without rewriting the producer receipt"
 cp "$ARCHIVE_PATH" "$CUSTODY_DIR/$(basename "$ARCHIVE_PATH")"
@@ -418,30 +397,23 @@ cp "$REHEARSAL_DIR/existing-image-qualification/existing-image-qualification.jso
 cp -R "$REHEARSAL_DIR/existing-image-qualification/." "$CUSTODY_DIR/existing-image-qualification" 2>/dev/null || true
 cp "$EVIDENCE_ROOT/host.txt" "$CUSTODY_DIR/host.txt"
 cp "$EVIDENCE_ROOT/archive-producer-identity.txt" "$CUSTODY_DIR/archive-producer-identity.txt"
-cat > "$CUSTODY_DIR/retained-image-custody-receipt.json" <<EOF
-{
-  "schemaVersion": 1,
-  "status": "complete",
-  "producerApplicationSourceSha": "$SOURCE_SHA",
-  "producerHarnessSha": "$PRODUCER_HARNESS_SHA",
-  "consumerHarnessSha": "$HARNESS_SHA",
-  "workflowSha": "$WORKFLOW_SHA",
-  "imageId": "$IMAGE_REFERENCE",
-  "archiveSha256": "$ACTUAL_ARCHIVE_SHA256",
-  "archiveBytes": $ACTUAL_ARCHIVE_BYTES,
-  "applicationOrigin": "$APP_URL",
-  "effectiveRuntimeOrigin": "$APP_URL",
-  "qualificationPath": "https-edge",
-  "sameImageIdForEveryPhase": true,
-  "buildInvoked": false,
-  "edgeAppContainer": "$APP_ID",
-  "edgeProxyContainer": "$PROXY_ID",
-  "storeVolume": "$BUILDER_STORE_VOLUME",
-  "daemonId": "$(docker info --format '{{.ID}}')",
-  "browserMode": "$BROWSER_MODE",
-  "customerAdmission": "closed"
-}
-EOF
+node "$SCRIPT_DIR/write-retained-custody-receipt.mjs" \
+  --output "$CUSTODY_DIR/retained-image-custody-receipt.json" \
+  --source-sha "$SOURCE_SHA" \
+  --producer-harness-sha "$PRODUCER_HARNESS_SHA" \
+  --consumer-harness-sha "$HARNESS_SHA" \
+  --workflow-sha "$WORKFLOW_SHA" \
+  --image-id "$IMAGE_REFERENCE" \
+  --archive-sha256 "$ACTUAL_ARCHIVE_SHA256" \
+  --archive-bytes "$ACTUAL_ARCHIVE_BYTES" \
+  --origin "$APP_URL" \
+  --qualification-path https-edge \
+  --app-container "$APP_ID" \
+  --proxy-container "$PROXY_ID" \
+  --store-volume "$BUILDER_STORE_VOLUME" \
+  --daemon-id "$("$DOCKER_BIN" info --format '{{.ID}}')" \
+  --browser-mode "$BROWSER_MODE" \
+  --require-distinct-harness >/dev/null
 cp -a "$LOG_DIR" "$CUSTODY_DIR/logs" 2>/dev/null || true
 cp -a "$EVIDENCE_ROOT/edge" "$CUSTODY_DIR/edge" 2>/dev/null || true
 
